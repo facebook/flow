@@ -4,7 +4,7 @@ slug: /types/utilities
 description: "Reference for Flow's built-in utility types: keyof, Partial, Required, Readonly, Pick, Omit, Exclude, Extract, and more."
 ---
 
-import {SinceVersion, UntilVersion} from '../../components/VersionTags';
+import {SinceVersion} from '../../components/VersionTags';
 
 Flow provides a set of utility types to operate on other types to create new types.
 
@@ -150,7 +150,6 @@ If you want to make other types read-only, you can use one of the following:
 
 This utility converts all of an object or interface's named fields to be optional,
 while maintaining all the object's other properties (e.g. exactness, variance).
-Use this utility instead of `$Shape`.
 
 Since Flow <SinceVersion version="0.212" />, it also converts all of a tuple type's elements to be [optional](./tuples.md#optional-tuple-elements).
 
@@ -167,7 +166,7 @@ const a: PartialPerson = {}; // OK
 const b: PartialPerson = {name: 'George'}; // OK
 const c: PartialPerson = {name: 'George', age: 123}; // OK
 
-c as Person; // ERROR: `PartialPerson` is not a `Person` (unlike with `$Shape`)
+c as Person; // ERROR: `PartialPerson` is not a `Person`
 ```
 
 For tuples:
@@ -489,10 +488,8 @@ Here `T` is inferred as `number` from the `items` argument. The `predicate` call
 
 ## `$KeyMirror<O>` {#toc-keymirror}
 
-`$KeyMirror<Obj>` is a special case of `$ObjMapi<Obj, F>`, when `F` is the identity
-function type, ie. `<K>(K) => K`. In other words, it maps each property of an object
-to the type of the property key. Instead of writing `$ObjMapi<Obj, <K>(K) => K>`,
-you can write `$KeyMirror<Obj>`. For example:
+`$KeyMirror<Obj>` maps each property of an object
+to the type of the property key. For example:
 ```js flow-check
 const obj = {
   a: true,
@@ -508,8 +505,6 @@ newObj.a as 'a'; // Works
 newObj.b as 'a'; // Error! String 'b' is incompatible with 'a'
 ```
 
-Tip: Prefer using `$KeyMirror` instead of `$ObjMapi` (if possible) to fix certain
-kinds of `[invalid-exported-annotation]` errors.
 
 ## `Class<T>` {#toc-class}
 
@@ -607,54 +602,6 @@ type Price = StringPrefix<'$', '1' | '2'>;
 ```
 
 When not specified, the type of the remainder is just `string`.
-
-## Removed utility types
-
-These utility types have been removed. Use the recommended replacements instead.
-
-### `$Diff<A, B>` <UntilVersion version="0.267" /> {#toc-diff}
-
-Removed. Use [`Omit`](#toc-omit) instead.
-
-### `$Rest<A, B>` <UntilVersion version="0.266" /> {#toc-rest}
-
-Removed. Use [`Omit`](#toc-omit) instead.
-
-### `$PropertyType<T, k>` <UntilVersion version="0.265" /> {#toc-propertytype}
-
-Removed. Use the `T['k']` [indexed access type](./indexed-access.md) instead.
-
-### `$ElementType<T, K>` <UntilVersion version="0.265" /> {#toc-elementtype}
-
-Removed. Use the `T[K]` [indexed access type](./indexed-access.md) instead.
-
-### `$TupleMap<T, F>` <UntilVersion version="0.247" /> {#toc-tuplemap}
-
-Removed. Use [Mapped Types](./mapped-types.md) instead.
-
-### `$Call<F, T...>` <UntilVersion version="0.247" /> {#toc-call}
-
-Removed. Use [Conditional Types](./conditional.md) or [Indexed Access Types](./indexed-access.md) instead.
-
-### `$ObjMap<T, F>` <UntilVersion version="0.246" /> {#toc-objmap}
-
-Removed. Use [Mapped Types](./mapped-types.md) instead.
-
-### `$ObjMapi<T, F>` <UntilVersion version="0.246" /> {#toc-objmapi}
-
-Removed. Use [Mapped Types](./mapped-types.md) instead.
-
-### `$ObjMapConst<O, T>` <UntilVersion version="0.246" /> {#toc-objmapconst}
-
-Removed. Use [Mapped Types](./mapped-types.md) instead.
-
-### `$Partial` <UntilVersion version="0.202" />
-
-Removed. Use [`Partial`](#toc-partial) instead.
-
-### `$Shape<T>` <UntilVersion version="0.206" /> {#toc-shape}
-
-Removed. Use [`Partial`](#toc-partial) instead.
 
 ## See Also {#toc-see-also}
 

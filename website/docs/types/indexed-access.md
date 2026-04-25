@@ -92,14 +92,7 @@ const isFriendly: Friendly = true; // Pet the cat
 
 ## Optional Indexed Access Types {#toc-optional-indexed-access-types}
 
-Optional Indexed Access Types work like optional chaining. They allow you to access properties from nullable object types.
-If before you did:
-
-```js
-type T = $ElementType<NonNullable<Obj>, 'prop'> | void;
-```
-
-You can now do:
+Optional Indexed Access Types work like optional chaining. They allow you to access properties from nullable object types:
 
 ```js
 type T = Obj?.['prop'];
@@ -138,15 +131,6 @@ To use Indexed Access Types, you need to upgrade your infrastructure so that it 
 - `flow` and `flow-parser`: 0.155
 - `prettier`: 2.3.2
 - `babel`: 7.14
-
-Indexed Access Types are a replacement for the [`$PropertyType`](./utilities.md#toc-propertytype) and [`$ElementType`](./utilities.md#toc-elementtype) utility types.
-If you're familiar with those utility types already, here is a quick conversion guide:
-- `$PropertyType<Obj, 'prop'>` &rarr;  `Obj['prop']`
-- `$ElementType<Obj, T>` &rarr; `Obj[T]`
-- `$ElementType<$PropertyType<Obj, 'prop'>, T>` &rarr; `Obj['prop'][T]`
-
-We have created an ESLint rule that warns on `$ElementType` and `$PropertyType` usage and recommends Indexed Access Types instead.
-It includes an auto-fixer that can handle most cases. You can simply enable this rule on your codebase and autofix all existing issues.
 
 Install [`eslint-plugin-fb-flow`](https://www.npmjs.com/package/eslint-plugin-fb-flow), and add `fb-flow` to your ESLint plugin list.
 Then enable the rule in your ESLint config:

@@ -4,7 +4,7 @@ slug: /errors
 description: "Learn how to suppress Flow's type errors."
 ---
 
-import {SinceVersion, UntilVersion} from '../../components/VersionTags';
+import {SinceVersion} from '../../components/VersionTags';
 
 Flow reports many different kinds of errors for many common programming mistakes, but not every JavaScript pattern can be understood by Flow.
 If you are confident your code is correct, and that Flow is
@@ -24,13 +24,6 @@ comments look like the following:
 A suppressor can be one of the following:
 - `$FlowFixMe`: for type errors that you intend to fix later
 - `$FlowExpectedError`: for a location where you expect Flow to produce a type error (for instance, when performing an invalid type cast).
-
-<details>
-  <summary>Removed suppressors</summary>
-
-- `$FlowIssue` <UntilVersion version="0.280" />: for a type error that you suspect is an issue with Flow
-- `$FlowIgnore` <UntilVersion version="0.280" />: for locations where you want Flow to ignore your code
-</details>
 
 Note that all of the suppressors behave identically; we simply recommend using them as described here for your own ease of reference.
 

@@ -4,7 +4,7 @@ slug: /config/options
 description: "Reference for all available .flowconfig [options] settings, including type checking behavior, module resolution, and more."
 ---
 
-import {SinceVersion, UntilVersion} from '../../components/VersionTags';
+import {SinceVersion} from '../../components/VersionTags';
 
 The `[options]` section in a `.flowconfig` file can contain several key-value
 pairs of the form:
@@ -845,44 +845,6 @@ relay_integration.excludes=<PROJECT_ROOT>/dirA
 relay_integration.excludes=<PROJECT_ROOT>/dirB
 ```
 
-### suppress_type <UntilVersion version="0.279" /> {#toc-suppress-type}
-
-Type: `string`
-
-This option lets you alias `any` with a given string. This is useful for
-explaining why you're using `any`. For example, let's say you sometimes want to
-sometimes use `any` to suppress an error and sometimes to mark a TODO. Your code
-might look like
-
-```
-const myString: any = 1 + 1;
-const myBoolean: any = 1 + 1;
-```
-
-If you add the following to your configuration:
-
-```
-[options]
-suppress_type=$FlowFixMe
-suppress_type=$FlowTODO
-```
-
-You can update your code to the more readable:
-
-```
-const myString: $FlowFixMe = 1 + 1;
-const myBoolean: $FlowTODO = 1 + 1;
-```
-
-> **Note:** You can specify `suppress_type` multiple times.
-
-You can achieve the same effect by adding the following to your global library
-definition:
-
-```
-type $FlowTODO = any;
-```
-
 ### traces {#toc-traces}
 
 Type: `integer`
@@ -892,10 +854,6 @@ types through the system), to the depth specified. This can be very expensive,
 so is disabled by default.
 
 ### use_unknown_in_catch_variables <SinceVersion version="0.293" /> {#toc-use-unknown-in-catch-variables}
-
-This config was first introduced as `use_mixed_in_catch_variables`
-<SinceVersion version="0.201" /> and renamed after
-<UntilVersion version="0.292" />.
 
 Type: `boolean`
 
@@ -909,100 +867,6 @@ try {
 
 in the above example, if the option is `true`, `catch` will be typed as
 `unknown` as it lacks an explicit type annotation.
-
-## Deprecated options
-
-The following options no longer exist in the latest version of Flow:
-
-### esproposal.class_instance_fields <UntilVersion version="0.148" /> {#toc-esproposal-class-instance-fields}
-
-Type: `enable | ignore | warn`
-
-Set this to `warn` to indicate that Flow should give a warning on use of
-instance [class fields](https://github.com/tc39/proposal-class-public-fields)
-per the pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore the
-syntax (i.e. Flow will not use this syntax to indicate the presence of a
-property on instances of the class).
-
-The default value of this option is `enable`, which allows use of this proposed
-syntax.
-
-### esproposal.class_static_fields <UntilVersion version="0.148" /> {#toc-esproposal-class-static-fields}
-
-Type: `enable | ignore | warn`
-
-Set this to `warn` to indicate that Flow should give a warning on use of static
-[class fields](https://github.com/tc39/proposal-class-public-fields) per the
-pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore the
-syntax (i.e. Flow will not use this syntax to indicate the presence of a static
-property on the class).
-
-The default value of this option is `enable`, which allows use of this proposed
-syntax.
-
-### esproposal.decorators <UntilVersion version="0.148" /> {#toc-esproposal-decorators}
-
-Type: `ignore | warn`
-
-Set this to `ignore` to indicate that Flow should ignore decorators.
-
-The default value of this option is `warn`, which gives a warning on use since
-this proposal is still very early-stage.
-
-### esproposal.export_star_as <UntilVersion version="0.148" /> {#toc-esproposal-export-star-as}
-
-Type: `enable | ignore | warn`
-
-Set this to `enable` to indicate that Flow should support the `export * as`
-syntax from
-[leebyron's proposal](https://github.com/leebyron/ecmascript-more-export-from).
-
-You may also set this to `ignore` to indicate that Flow should simply ignore the
-syntax. The default value of this option is `warn`, which gives a warning on use
-since this proposal is still very early-stage.
-
-### esproposal.optional_chaining <UntilVersion version="0.148" /> {#toc-esproposal-optional-chaining}
-
-Type: `enable | ignore | warn`
-
-Set this to `enable` to indicate that Flow should support the use of
-[optional chaining](https://github.com/tc39/proposal-optional-chaining) per the
-pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore the
-syntax.
-
-The default value of this option is `warn`, which gives a warning on use since
-this proposal is still very early-stage.
-
-### esproposal.nullish_coalescing <UntilVersion version="0.148" /> {#toc-esproposal-nullish-coalescing}
-
-Type: `enable | ignore | warn`
-
-Set this to `enable` to indicate that Flow should support the use of
-[nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing) per
-the pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore the
-syntax.
-
-The default value of this option is `warn`, which gives a warning on use since
-this proposal is still very early-stage.
-
-### inference_mode <SinceVersion version="0.184.0" /> <UntilVersion version="0.202.0" /> {#toc-inference-mode}
-
-Type: `classic | constrain-writes`
-
-Setting this to `constrain-writes` will enable the constrained-writes inference
-mode.
-
-For more info, see the [variable declaration docs](../lang/variables.md).
-
-The default value is `classic`
 
 ### log.file {#toc-log-file}
 
@@ -1042,50 +906,6 @@ configure the minimum amount of space needed on a filesystem for shared memory.
 
 By default it is 536870912 (2^29 bytes, which is half a gigabyte).
 
-### strip_root <UntilVersion version="0.48" /> {#toc-strip-root}
-
-Type: `boolean`
-
-Obsolete. Set this to `true` to always strip the root directory from file paths
-in error messages when using `--json`, `--from emacs`, and `--from vim`. Do not
-use this option. Instead, pass the command line flag `--strip-root`.
-
-By default this is `false`.
-
-### suppress_comment <UntilVersion version="0.126" /> {#toc-suppress-comment}
-
-Type: `regex`
-
-Defines a magical comment that suppresses any Flow errors on the following line.
-For example:
-
-```
-suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
-```
-
-will match a comment like this:
-
-```
-// $FlowFixMe: suppressing this error until we can refactor
-var x : string = 123;
-```
-
-and suppress the error. If there is no error on the next line (the suppression
-is unnecessary), an "Unused suppression" warning will be shown instead.
-
-If no suppression comments are specified in your config, Flow will apply one
-default: `// $FlowFixMe`.
-
-> **Note:** You can specify `suppress_comment` multiple times. If you do define
-> any `suppress_comment`s, the built-in `$FlowFixMe` suppression will be erased
-> in favor of the regexps you specify. If you wish to use `$FlowFixMe` with some
-> additional custom suppression comments, you must manually specify
-> `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
-
-> **Note:** In version v0.127.0, the option to specify the suppression comment
-> syntax was removed. `$FlowFixMe`, `$FlowIssue`, `$FlowExpectedError`, and
-> `$FlowIgnore` became the only standard suppressions.
-
 ### temp_dir {#toc-temp-dir}
 
 Type: `string`
@@ -1094,54 +914,3 @@ Tell Flow which directory to use as a temp directory. Can be overridden with the
 command line flag `--temp-dir`.
 
 The default value is `/tmp/flow`.
-
-### types_first <SinceVersion version="0.125.0" /> <UntilVersion version="0.142" /> {#toc-types-first}
-
-Type: `boolean`
-
-Flow builds intermediate artifacts to represent signatures of modules as they
-are checked. If this option is set to `false`, then these artifacts are built
-using inferred type information. If this option is set to `true`, then they are
-built using type annotations at module boundaries.
-
-The default value for `types_first` is `true` (as of version 0.134).
-
-### well_formed_exports <SinceVersion version="0.125.0" /> <UntilVersion version="0.142" /> {#toc-well-formed-exports}
-
-Type: `boolean`
-
-Enforce the following restrictions on file exports:
-
-- Statements manipulating `module.exports` and the `exports` alias may only
-  appear as top-level statements.
-- Parts of the source that are visible from a file's exports need to be
-  annotated unless their type can be trivially inferred (e.g. the exported
-  expression is a numeric literal). This is a requirement for types-first mode
-  to function properly. Failure to properly annotate exports raise
-  `signature-verification-failure`s.
-
-This option is set to `true` by default, since it is implied by
-[`types_first`](#toc-types-first), but the option is useful on its own
-when upgrading a project from classic mode to types-first mode.
-
-### well_formed_exports.includes <SinceVersion version="0.128.0" /> <UntilVersion version="0.142" /> {#toc-well-formed-exports-includes}
-
-Type: `string`
-
-Limit the scope of the `well_formed_exports` requirement to a specific directory
-of this project. For example
-
-```
-well_formed_exports=true
-well_formed_exports.includes=<PROJECT_ROOT>/dirA
-well_formed_exports.includes=<PROJECT_ROOT>/dirB
-```
-
-will only report export related errors in files under `dirA` and `dirB`. This
-option requires `well_formed_exports` to be set to `true`.
-
-The purpose of this option is to help prepare a codebase for Flow types-first
-mode.
-
-Between versions v0.125.0 and v0.127.0, this option was named
-`well_formed_exports.whitelist`.

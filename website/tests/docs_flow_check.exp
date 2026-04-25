@@ -5029,45 +5029,6 @@ No errors!
 === types/maybe.md block 6 ===
 No errors!
 
-=== types/mixed.md block 1 ===
-No errors!
-
-=== types/mixed.md block 2 ===
-No errors!
-
-=== types/mixed.md block 3 ===
-No errors!
-
-=== types/mixed.md block 4 ===
-No errors!
-
-=== types/mixed.md block 5 ===
-No errors!
-
-=== types/mixed.md block 6 ===
-Error ----------------------------------------------------------------------------------------------------------- -:3:10
-
-Cannot use operator `+` with operands string [1] and `unknown` [2] [unsafe-addition]
-
-   -:3:10
-   3|   return "" + value; // Error!
-               ^^^^^^^^^^
-
-References:
-   -:3:10
-   3|   return "" + value; // Error!
-               ^^ [1]
-   -:2:27
-   2| function stringify(value: mixed) {
-                                ^^^^^ [2]
-
-
-
-Found 1 error
-
-=== types/mixed.md block 7 ===
-No errors!
-
 === types/modules.md block 1 ===
 No errors!
 
@@ -7280,12 +7241,12 @@ error,
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    -:13:1
-   13| c as Person; // ERROR: `PartialPerson` is not a `Person` (unlike with `$Shape`)
+   13| c as Person; // ERROR: `PartialPerson` is not a `Person`
        ^ [1]
 
 References:
    -:13:6
-   13| c as Person; // ERROR: `PartialPerson` is not a `Person` (unlike with `$Shape`)
+   13| c as Person; // ERROR: `PartialPerson` is not a `Person`
             ^^^^^^ [2]
    -:2:15
                      v

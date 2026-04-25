@@ -4,8 +4,6 @@ slug: /react/types
 description: "Reference for all React utility types exported by Flow, including React.Node, React.Element, React.MixedElement, and more."
 ---
 
-import {SinceVersion, UntilVersion} from '../../components/VersionTags';
-
 React exports a handful of utility types that may be useful to you when typing
 advanced React patterns. In previous sections we have seen a few of them. The
 following is a complete reference for each of these types along with some
@@ -220,9 +218,6 @@ class MyComponent extends React.Component<{foo: number}> {
   }
 }
 
-// `React.ElementProps<>` requires `foo` even though it has a `defaultProp`.
-({foo: 42}) as React.ElementProps<typeof MyComponent>;
-
 // `React.ElementConfig<>` does not require `foo` since it has a `defaultProp`.
 ({}) as React.ElementConfig<typeof MyComponent>;
 ```
@@ -231,19 +226,6 @@ Note that `typeof Component` must be the type *of* a React component so you need
 `typeof` as in `React.ElementConfig<typeof MyComponent>`.
 
 
-## `React.ElementProps<typeof Component>` <UntilVersion version="0.287" /> {#toc-react-elementprops}
-
-:::warning
-Because [`React.ElementProps`](#toc-react-elementprops) does not preserve the optionality of `defaultProps`, [`React.ElementConfig`](#toc-react-elementconfig) (which does) is the right choice, especially for simple props pass-through as with [higher-order components](./hoc.md).
-Therefore, this type was removed in 0.288.0.
-:::
-
-Gets the props for a React element type, *without* preserving the optionality of `defaultProps`.
-`typeof Component` could be the type of a React class component, a function component, or a JSX intrinsic string.
-This type is used for the `props` property on [`ExactReactElement_DEPRECATED<typeof Component>`](#toc-react-element).
-
-Note that `typeof Component` must be the type *of* a React component so you need to use
-`typeof` as in `React.ElementProps<typeof MyComponent>`.
 ## `React.RefOf<Component>` {#toc-react-refof}
 
 When using [Component Syntax](./component-syntax.md), `React.RefOf<Component>` will give you
@@ -316,80 +298,6 @@ as a type, so the following is correct: `Foo as typeof Foo`.
 We want the type *of* `Bar` not the type of an instance of `Bar`.
 `Class<Bar>` would also work here, but we prefer `typeof` for consistency
 with function components.
-
-## Removed utility types
-
-These types used to exist, but no longer exist in latest versions of Flow.
-
-### `React.AbstractComponent<Config, Instance, Renders>` <UntilVersion version="0.250" /> {#toc-react-abstractcomponent}
-
-:::warning
-In Flow v0.243.0+, consider using [Component Types](./component-types.md) instead, which will make
-it easier to migrate your Flow code to React 19. The type was removed in Flow v0.251.0.
-:::
-
-`React.AbstractComponent<Config, Instance, Renders>` represents a component with
-a config of type Config and instance of type Instance that renders something of type Renders.
-
-The `Config` of a component is the type of the object you need to pass in to JSX in order
-to create an element with that component. The `Instance` of a component is the type of the value
-that is written to the `current` field of a ref object passed into the `ref` prop in JSX.
-`Renders` is a [Component Syntax](./component-syntax.md) feature that allows you to specify what your
-component renders via [Render Types](./render-types.md)
-
-`Config` is required, but `Instance` is optional and defaults to `unknown` and `Renders` is optional and defaults to `React.Node`.
-
-A class or function component with config `Config` may be used in places that expect
-`React.AbstractComponent<Config>`.
-
-This is Flow's most abstract representation of a React component, and is most useful for
-writing HOCs and library definitions.
-
-### `React.Config<Props, DefaultProps>` <UntilVersion version="0.256" /> {#toc-react-config}
-
-:::warning
-This type was removed in 0.257.0. This type is usually only useful for legacy class components.
-You can create your own equivalent type with
-
-```flow
-type ReactConfigShim<Props, DefaultProps> = Readonly<{
-  ...Omit<Props, keyof DefaultProps>, ...Partial<DefaultProps>
-}>;
-```
-:::
-
-Calculates a config object from props and default props.
-
-### `React.Ref<typeof Component>` <UntilVersion version="0.248" /> {#toc-react-ref}
-
-:::warning
-This type was removed in 0.249.0. You should use [`React.RefObject<T>`](#toc-react-refobject) or [`React.RefSetter<T>`](#toc-react-refsetter) instead.
-:::
-
-The type of the [ref prop on React elements][]. `React.Ref<typeof Component>`
-could be a string, ref object, or ref function.
-
-[ref prop on React elements]: https://react.dev/learn/manipulating-the-dom-with-refs
-
-The ref function will take one and only argument which will be the element
-instance which is retrieved using
-[`React.ElementRef<typeof Component>`](#toc-react-elementref) or null since
-[React will pass null into a ref function when unmounting][].
-
-[React will pass null into a ref function when unmounting]: https://react.dev/learn/manipulating-the-dom-with-refs#how-to-manage-a-list-of-refs-using-a-ref-callback
-
-Like [`React.ElementConfig<typeof Component>`](#toc-react-elementconfig), `typeof Component`
-must be the type *of* a React component so you need to use `typeof` as in
-`React.Ref<typeof MyComponent>`.
-
-The definition for `React.Ref<typeof Component>` is roughly:
-
-```js
-type Ref<C> =
-  | string
-  | (instance: React.ElementRef<C> | null) => unknown;
-  | { -current: React.ElementRef<ElementType> | null, ... }
-```
 
 ## See Also {#toc-see-also}
 
