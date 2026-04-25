@@ -710,18 +710,18 @@ References:
                                    ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- in_out_variance.js:19:38
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:19:48
 
 Cannot use `A` [1] in an input position because `A` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   in_out_variance.js:19:38
-   19| type BadInWriteonly<out A> = {-prop: A}; // ERROR: out in contravariant position // TODO: replace - with writeonly once implemented
-                                            ^
+   in_out_variance.js:19:48
+   19| type BadInWriteonly<out A> = { writeonly prop: A }; // ERROR: out in contravariant position
+                                                      ^
 
 References:
    in_out_variance.js:19:25
-   19| type BadInWriteonly<out A> = {-prop: A}; // ERROR: out in contravariant position // TODO: replace - with writeonly once implemented
+   19| type BadInWriteonly<out A> = { writeonly prop: A }; // ERROR: out in contravariant position
                                ^ [1]
 
 
