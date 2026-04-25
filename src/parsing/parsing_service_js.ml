@@ -581,4 +581,12 @@ let ensure_parsed ~reader options workers files =
       workers
       next
   in
+  let not_found =
+    if Sys.win32 then
+      FilenameSet.filter
+        (fun f -> String.length (File_key.to_string f) < 248)
+        not_found
+    else
+      not_found
+  in
   Lwt.return (FilenameSet.union changed not_found)

@@ -1031,10 +1031,13 @@ let expand_project_root_token_as_absolute ~root =
 
 let expand_project_root_token_as_relative str =
   let s = str |> Str.split_delim project_root_token |> String.concat "" in
-  if String.length s > 0 && (s.[0] = '/' || s.[0] = '\\') then
-    String.sub s 1 (String.length s - 1)
-  else
-    s
+  let s =
+    if String.length s > 0 && (s.[0] = '/' || s.[0] = '\\') then
+      String.sub s 1 (String.length s - 1)
+    else
+      s
+  in
+  Sys_utils.normalize_filename_dir_sep s
 
 let expand_builtin_root_token ~flowlib_dir =
   let flowlib_dir_str = File_path.to_string flowlib_dir |> Sys_utils.normalize_filename_dir_sep in

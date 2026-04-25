@@ -908,11 +908,12 @@ pub fn expand_project_root_token(root: &Path, s: &str) -> String {
 
 pub fn expand_project_root_token_as_relative(s: &str) -> String {
     let s = s.replace(PROJECT_ROOT_TOKEN, "");
-    if s.starts_with('/') || s.starts_with('\\') {
+    let s = if s.starts_with('/') || s.starts_with('\\') {
         s[1..].to_string()
     } else {
         s
-    }
+    };
+    normalize_filename_dir_sep(&s).into_owned()
 }
 
 pub fn expand_builtin_root_token(flowlib_dir: &Path, s: &str) -> String {

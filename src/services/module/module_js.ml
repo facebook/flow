@@ -581,7 +581,9 @@ module Node = struct
         let applicable =
           Base.Option.value_map
             applicable_dirname_opt
-            ~f:(fun prefix -> Files.is_prefix prefix (File_key.suffix importing_file))
+            ~f:(fun prefix ->
+              let suffix = File_key.suffix importing_file in
+              suffix = prefix || String.starts_with ~prefix:(prefix ^ "/") suffix)
             ~default:true
         in
         if applicable then
