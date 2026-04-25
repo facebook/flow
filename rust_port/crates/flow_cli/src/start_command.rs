@@ -244,7 +244,12 @@ fn main(
         shm_heap_size: Some(shared_mem_config.heap_size),
         shm_hash_table_pow: Some(shared_mem_config.hash_table_pow),
         profile: options_flags.profile,
-        verbose: server_options.verbose.is_some(),
+        debug: server_options.debug,
+        quiet: server_options.quiet,
+        verbose: server_options
+            .verbose
+            .as_ref()
+            .map(|verbose| verbose.as_ref().clone()),
         server_log_file: server_log_file.clone(),
         monitor_log_file: monitor_log_file.clone(),
         from: flow_event_logger::get_from_i_am_a_clown(),

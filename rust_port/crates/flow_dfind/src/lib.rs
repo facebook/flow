@@ -6,34 +6,27 @@
  */
 
 use std::collections::BTreeSet;
-use std::fs::File;
-use std::fs::OpenOptions;
-use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::sync::OnceLock;
-use std::sync::mpsc;
 
-use notify::Event;
-use notify::RecommendedWatcher;
-use notify::RecursiveMode;
-use notify::Watcher as _;
-use regex::Regex;
+use flow_daemon::Handle;
+use flow_daemon::StdioFd;
+use flow_daemon::from_channel;
+use flow_daemon::kill;
+use flow_daemon::null_fd;
+use flow_daemon::spawn;
+use flow_daemon::to_channel;
 
-fn excludes() -> &'static [Regex] {
-    static EXCLUDES: OnceLock<Vec<Regex>> = OnceLock::new();
-    EXCLUDES.get_or_init(|| {
-        [r".*/wiki/images/.*", r".*/\.git", r".*/\.svn", r".*/\.hg"]
-            .iter()
-            .map(|p| Regex::new(p).expect("dfind exclusion regex compiles"))
-            .collect()
-    })
-}
+pub mod dfind_server;
 
-fn is_excluded(path: &str) -> bool {
-    excludes().iter().any(|re| re.is_match(path))
-}
+use crate::dfind_server::Msg;
+use crate::dfind_server::Param;
+
+// ---------------------------------------------------------------------------
+// Public surface (must remain backwards-compatible with the existing callers
+// in `flow_server_monitor/src/file_watcher.rs`).
+// ---------------------------------------------------------------------------
 
 #[derive(Debug)]
 pub enum Error {
@@ -74,17 +67,6 @@ impl From<std::io::Error> for Error {
     }
 }
 
-struct Shared {
-    files: BTreeSet<String>,
-    stopped: bool,
-}
-
-pub struct Dfind {
-    watcher: Mutex<Option<RecommendedWatcher>>,
-    shared: Arc<Mutex<Shared>>,
-    log_file: Arc<Mutex<File>>,
-}
-
 #[derive(Debug, Clone)]
 pub struct DaemonFds {
     pub log_file: PathBuf,
@@ -96,161 +78,115 @@ pub struct InitArgs {
     pub roots: Vec<PathBuf>,
 }
 
+pub struct Dfind {
+    inner: Arc<Mutex<Option<Handle<Msg, ()>>>>,
+}
+
 pub fn init(fds: DaemonFds, args: InitArgs) -> Result<Dfind, Error> {
     let DaemonFds { log_file } = fds;
-    let mut log_file_handle = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&log_file)?;
-
     let InitArgs { scuba_table, roots } = args;
+    let entry = dfind_server::entry_point();
+    let pretty_pid = std::process::id();
+    let name = format!("file watching process for server {}", pretty_pid);
 
-    writeln!(
-        log_file_handle,
-        "starting dfind watcher (label={:?}, roots={:?})",
-        scuba_table, roots
-    )?;
-    log_file_handle.flush()?;
+    let stdin_fd = StdioFd::Owned(null_fd());
+    let stdout_fd = StdioFd::Owned(open_append(&log_file)?);
+    let stderr_fd = StdioFd::Owned(open_append(&log_file)?);
 
-    tracing::info!(
-        target: "flow_dfind",
-        "starting dfind watcher (label={:?}, roots={:?})",
+    let param = Param {
         scuba_table,
-        roots
-    );
-
-    let shared = Arc::new(Mutex::new(Shared {
-        files: BTreeSet::new(),
-        stopped: false,
-    }));
-    let log_file_arc = Arc::new(Mutex::new(log_file_handle));
-
-    let (tx, rx) = mpsc::channel::<Result<Event, notify::Error>>();
-    let mut watcher: RecommendedWatcher = notify::recommended_watcher(tx)?;
-    for root in &roots {
-        if let Err(err) = watcher.watch(root, RecursiveMode::Recursive) {
-            tracing::warn!(
-                target: "flow_dfind",
-                "failed to watch root {:?}: {}",
-                root,
-                err
-            );
-            write_log(
-                &log_file_arc,
-                format_args!("failed to watch root {:?}: {}", root, err),
-            );
-        }
-    }
-
-    let event_shared = shared.clone();
-    let event_log = log_file_arc.clone();
-    std::thread::Builder::new()
-        .name("flow-dfind-events".to_string())
-        .spawn(move || event_loop(rx, event_shared, event_log))
-        .map_err(|err| {
-            Error::Notify(notify::Error::generic(&format!(
-                "failed to spawn dfind event thread: {}",
-                err
-            )))
-        })?;
-
+        roots,
+        log_file,
+    };
+    let handle = spawn(
+        None,
+        Some(&name),
+        (stdin_fd, stdout_fd, stderr_fd),
+        entry,
+        param,
+    )?;
     Ok(Dfind {
-        watcher: Mutex::new(Some(watcher)),
-        shared,
-        log_file: log_file_arc,
+        inner: Arc::new(Mutex::new(Some(handle))),
     })
 }
 
-fn write_log(log_file: &Arc<Mutex<File>>, args: std::fmt::Arguments<'_>) {
-    let mut guard = match log_file.lock() {
-        Ok(guard) => guard,
-        Err(poisoned) => poisoned.into_inner(),
+fn open_append(path: &PathBuf) -> Result<std::fs::File, Error> {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    Ok(std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)?)
+}
+
+pub fn pid(d: &Dfind) -> Option<u32> {
+    let g = match d.inner.lock() {
+        Ok(g) => g,
+        Err(p) => p.into_inner(),
     };
-    match writeln!(*guard, "{}", args) {
-        Ok(()) => {}
-        Err(err) => tracing::warn!(
-            target: "flow_dfind",
-            "failed to write to dfind log file: {}",
-            err
-        ),
-    }
+    g.as_ref().map(|h| h.child.id())
 }
 
-fn event_loop(
-    rx: mpsc::Receiver<Result<Event, notify::Error>>,
-    shared: Arc<Mutex<Shared>>,
-    log_file: Arc<Mutex<File>>,
-) {
-    while let Ok(event_result) = rx.recv() {
-        match event_result {
-            Ok(event) => record_event(&shared, event),
-            Err(err) => {
-                tracing::warn!(
-                    target: "flow_dfind",
-                    "dfind notify error: {}",
-                    err
-                );
-                write_log(&log_file, format_args!("dfind notify error: {}", err));
-            }
+pub async fn wait_until_ready(d: &Dfind) {
+    let inner = Arc::clone(&d.inner);
+    let result: Result<(), String> = tokio::task::spawn_blocking(move || {
+        let mut g = inner.lock().expect("dfind handle mutex poisoned");
+        let h = g.as_mut().ok_or_else(|| "dfind: stopped".to_string())?;
+        let msg: Msg = from_channel(&mut h.channels.0, None);
+        if msg != Msg::Ready {
+            return Err(format!("dfind: expected Ready, got {:?}", msg));
         }
+        Ok(())
+    })
+    .await
+    .unwrap_or_else(|e| Err(format!("dfind wait_until_ready task panicked: {}", e)));
+    if let Err(e) = result {
+        tracing::warn!(target: "flow_dfind", "wait_until_ready failed: {}", e);
     }
 }
-
-fn record_event(shared: &Arc<Mutex<Shared>>, event: Event) {
-    if matches!(
-        event.kind,
-        notify::EventKind::Access(_) | notify::EventKind::Other
-    ) {
-        return;
-    }
-    let mut guard = match shared.lock() {
-        Ok(guard) => guard,
-        Err(poisoned) => {
-            tracing::error!(
-                target: "flow_dfind",
-                "dfind shared state poisoned; recovering"
-            );
-            poisoned.into_inner()
-        }
-    };
-    if guard.stopped {
-        return;
-    }
-    for path in event.paths {
-        let path_str = path.to_string_lossy().into_owned();
-        if is_excluded(&path_str) {
-            continue;
-        }
-        guard.files.insert(path_str);
-    }
-}
-
-pub async fn wait_until_ready(_d: &Dfind) {}
 
 pub async fn get_changes(d: &Dfind) -> Result<BTreeSet<String>, Error> {
-    let mut guard = match d.shared.lock() {
-        Ok(guard) => guard,
-        Err(poisoned) => poisoned.into_inner(),
-    };
-    if guard.stopped {
-        return Err(Error::Stopped);
-    }
-    Ok(std::mem::take(&mut guard.files))
+    let inner = Arc::clone(&d.inner);
+    tokio::task::spawn_blocking(move || -> Result<BTreeSet<String>, Error> {
+        let mut acc: BTreeSet<String> = BTreeSet::new();
+        loop {
+            let mut g = inner.lock().expect("dfind handle mutex poisoned");
+            let h = g.as_mut().ok_or(Error::Stopped)?;
+            to_channel(&mut h.channels.1, &(), true);
+            let msg: Msg = from_channel(&mut h.channels.0, None);
+            drop(g);
+            let diff = match msg {
+                Msg::Updates(s) => s,
+                Msg::Ready => {
+                    return Err(Error::Notify(notify::Error::generic(
+                        "dfind: unexpected Ready msg in get_changes loop",
+                    )));
+                }
+            };
+            if diff.is_empty() {
+                return Ok(acc);
+            }
+            acc.extend(diff);
+        }
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(Error::Notify(notify::Error::generic(&format!(
+            "dfind get_changes task panicked: {}",
+            e
+        ))))
+    })
 }
 
 pub fn stop(d: &Dfind) {
-    {
-        let mut guard = match d.shared.lock() {
-            Ok(guard) => guard,
-            Err(poisoned) => poisoned.into_inner(),
-        };
-        guard.stopped = true;
-    }
-    let mut watcher_guard = match d.watcher.lock() {
-        Ok(guard) => guard,
-        Err(poisoned) => poisoned.into_inner(),
+    let mut g = match d.inner.lock() {
+        Ok(g) => g,
+        Err(p) => p.into_inner(),
     };
-    drop(watcher_guard.take());
-    write_log(&d.log_file, format_args!("dfind watcher stopped"));
-    tracing::info!(target: "flow_dfind", "dfind watcher stopped");
+    if let Some(handle) = g.take() {
+        if let Err(e) = kill(handle) {
+            tracing::warn!(target: "flow_dfind", "dfind stop: kill failed: {}", e);
+        }
+    }
 }

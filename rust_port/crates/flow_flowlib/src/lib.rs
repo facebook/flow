@@ -76,8 +76,9 @@ pub fn path_of_libdir(libdir: &LibDir) -> &Path {
 fn mkdir(libdir: &LibDir) {
     let path = path_of_libdir(libdir);
     let parent_dir = path.parent().expect("libdir path should have a parent");
-    sys_utils::mkdir_no_fail(parent_dir);
-    sys_utils::mkdir_no_fail(path);
+    sys_utils::mkdir_no_fail(parent_dir)
+        .unwrap_or_else(|e| panic!("mkdir_no_fail({:?}): {}", parent_dir, e));
+    sys_utils::mkdir_no_fail(path).unwrap_or_else(|e| panic!("mkdir_no_fail({:?}): {}", path, e));
 }
 
 fn write_flowlib(dir: &Path, (filename, contents): &(&str, &str)) {

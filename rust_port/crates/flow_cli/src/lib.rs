@@ -10,8 +10,11 @@
 
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::OnceLock;
 
 use flow_common::options::Options;
+use flow_config::LazyMode;
+use flow_server_monitor::StartArgs;
 
 mod apply_code_action_command;
 mod ast_command;
@@ -28,7 +31,6 @@ mod command_utils;
 mod config_command;
 mod coverage_command;
 mod cycle_command;
-mod daemon;
 mod dump_impl_deps_command;
 mod dump_types_command;
 mod env_builder_debug_command;
@@ -78,6 +80,128 @@ pub(crate) fn get_options_with_root_and_flowconfig_name(
         no_flowlib,
         overrides,
     ))
+}
+
+fn parse_lazy_mode(s: &str) -> Option<LazyMode> {
+    match s {
+        "fs" => Some(LazyMode::Lazy),
+        "none" => Some(LazyMode::NonLazy),
+        "watchman" => Some(LazyMode::WatchmanDeprecated),
+        "true" => Some(LazyMode::Lazy),
+        _ => None,
+    }
+}
+
+fn build_monitor_options_and_start_args(
+    args: &flow_server_monitor::DaemonizeArgs,
+) -> (Arc<Options>, StartArgs) {
+    let lazy_mode = args.lazy_mode.as_deref().and_then(parse_lazy_mode);
+    let overrides = command_utils::MakeOptionsOverrides {
+        include_suppressions: if args.include_suppressions {
+            Some(true)
+        } else {
+            None
+        },
+        all: if args.all { Some(true) } else { None },
+        debug: args.debug,
+        lazy_mode,
+        long_lived_workers: args.long_lived_workers,
+        max_workers: args.max_workers,
+        profile: Some(args.profile),
+        quiet: args.quiet,
+        saved_state_fetcher: args.saved_state_fetcher,
+        saved_state_force_recheck: Some(args.saved_state_force_recheck),
+        saved_state_no_fallback: Some(args.saved_state_no_fallback),
+        saved_state_skip_version_check: Some(args.saved_state_skip_version_check),
+        saved_state_verify: Some(args.saved_state_verify),
+        temp_dir: Some(args.temp_dir.clone()),
+        verbose: args.verbose.clone(),
+        wait_for_recheck: args.wait_for_recheck,
+        ..Default::default()
+    };
+
+    let options = get_options_with_root_and_flowconfig_name(
+        args.no_flowlib,
+        args.ignore_version,
+        &args.root,
+        &args.flowconfig_name,
+        overrides,
+    );
+
+    let start_args = StartArgs {
+        flowconfig_name: args.flowconfig_name.clone(),
+        server_log_file: args.server_log_file.clone(),
+        monitor_log_file: args.monitor_log_file.clone(),
+        lazy_mode: args.lazy_mode.clone(),
+        no_flowlib: args.no_flowlib,
+        ignore_version: args.ignore_version,
+        wait_for_recheck: args.wait_for_recheck,
+        file_watcher: args.file_watcher.clone(),
+        file_watcher_debug: args.file_watcher_debug,
+        file_watcher_timeout: args.file_watcher_timeout,
+        file_watcher_mergebase_with: args.file_watcher_mergebase_with.clone(),
+        file_watcher_sync_timeout: args.file_watcher_sync_timeout,
+        shm_heap_size: args.shm_heap_size,
+        shm_hash_table_pow: args.shm_hash_table_pow,
+        from: args.from.clone(),
+        autostop: args.autostop,
+        no_restart: args.no_restart,
+    };
+
+    (options, start_args)
+}
+
+fn build_server_daemon_options(
+    args: &flow_server::server_daemon::ServerDaemonArgs,
+) -> Arc<Options> {
+    let lazy_mode = args.lazy_mode.as_deref().and_then(parse_lazy_mode);
+    let overrides = command_utils::MakeOptionsOverrides {
+        include_suppressions: if args.include_suppressions {
+            Some(true)
+        } else {
+            None
+        },
+        all: if args.all { Some(true) } else { None },
+        debug: args.debug,
+        lazy_mode,
+        long_lived_workers: args.long_lived_workers,
+        max_workers: args.max_workers,
+        profile: Some(args.profile),
+        quiet: args.quiet,
+        saved_state_fetcher: args.saved_state_fetcher,
+        saved_state_force_recheck: Some(args.saved_state_force_recheck),
+        saved_state_no_fallback: Some(args.saved_state_no_fallback),
+        saved_state_skip_version_check: Some(args.saved_state_skip_version_check),
+        saved_state_verify: Some(args.saved_state_verify),
+        temp_dir: Some(args.temp_dir.clone()),
+        verbose: args.verbose.clone(),
+        wait_for_recheck: args.wait_for_recheck,
+        ..Default::default()
+    };
+
+    get_options_with_root_and_flowconfig_name(
+        args.no_flowlib,
+        args.ignore_version,
+        &args.root,
+        &args.flowconfig_name,
+        overrides,
+    )
+}
+
+fn register_daemon_entry_points() {
+    static REGISTERED: OnceLock<()> = OnceLock::new();
+    REGISTERED.get_or_init(|| {
+        flow_dfind::dfind_server::register();
+        flow_server_monitor::flow_server_monitor_daemon::register(
+            build_monitor_options_and_start_args,
+        );
+        flow_server::server_daemon::register(build_server_daemon_options);
+    });
+}
+
+pub(crate) fn check_entry_point() {
+    register_daemon_entry_points();
+    flow_daemon::check_entry_point();
 }
 
 fn explicit_commands() -> Vec<command_spec::Command> {
@@ -215,7 +339,7 @@ pub fn main() {
         libc::signal(libc::SIGPIPE, libc::SIG_IGN);
     }
 
-    daemon::check_entry_point();
+    check_entry_point();
 
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(flow_shell_main));
     match result {

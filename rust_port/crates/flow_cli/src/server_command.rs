@@ -226,6 +226,11 @@ fn main(args: &arg_spec::Values) {
             flowconfig_name,
             server_log_file,
             monitor_log_file,
+            lazy_mode: lazy_mode
+                .map(command_utils::lazy_mode_arg)
+                .map(ToOwned::to_owned),
+            no_flowlib,
+            ignore_version,
             wait_for_recheck,
             file_watcher,
             file_watcher_debug: file_watcher_flags.file_watcher_debug,

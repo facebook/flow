@@ -7,52 +7,167 @@
 
 use std::fs;
 use std::path::Path;
+use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::atomic::AtomicUsize;
-use std::sync::atomic::Ordering;
+use std::sync::OnceLock;
 
 use flow_common::options::Options;
+use flow_common::options::SavedStateFetcher;
+use flow_common::verbose::Verbose;
 use flow_common_exit_status::FlowExitStatus;
+use flow_daemon::ChannelPair;
+use flow_daemon::Entry;
+use flow_daemon::Handle;
+use flow_daemon::StdioFd;
+use flow_event_logger::LoggingContext;
 use flow_server_files::server_files_js;
 
-mod pid_log {
-    use std::fs;
-    use std::io::Write;
-    use std::path::Path;
-    use std::sync::Mutex;
+/// The fixed daemon entry name for the server master child process.
+pub const SERVER_ENTRY_NAME: &str = "main_1";
 
-    static LOG_OC: Mutex<Option<fs::File>> = Mutex::new(None);
-    static ENABLED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+pub type ServerOptionsBuilder = fn(&ServerDaemonArgs) -> Arc<Options>;
 
-    pub fn init(pids_file: &str) {
-        let mut log_oc = LOG_OC.lock().unwrap();
-        assert!(log_oc.is_none());
-        if let Some(parent) = Path::new(pids_file).parent() {
-            let _mkdir_result = fs::create_dir_all(parent);
+static SERVER_ENTRY: OnceLock<Entry<ServerEntryParam, (), ()>> = OnceLock::new();
+static SERVER_OPTIONS_BUILDER: OnceLock<ServerOptionsBuilder> = OnceLock::new();
+
+/// Serializable subset of `Options` needed to reconstruct the server child.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ServerDaemonArgs {
+    pub flowconfig_name: String,
+    pub no_flowlib: bool,
+    pub ignore_version: bool,
+    pub include_suppressions: bool,
+    pub all: bool,
+    pub debug: bool,
+    pub quiet: bool,
+    pub lazy_mode: Option<String>,
+    pub long_lived_workers: Option<bool>,
+    pub max_workers: Option<i32>,
+    pub wait_for_recheck: Option<bool>,
+    pub profile: bool,
+    pub verbose: Option<Verbose>,
+    pub saved_state_fetcher: Option<SavedStateFetcher>,
+    pub saved_state_force_recheck: bool,
+    pub saved_state_no_fallback: bool,
+    pub saved_state_skip_version_check: bool,
+    pub saved_state_verify: bool,
+    pub root: PathBuf,
+    pub temp_dir: String,
+}
+
+impl ServerDaemonArgs {
+    pub fn of_options(
+        options: &Options,
+        lazy_mode: Option<String>,
+        no_flowlib: bool,
+        ignore_version: bool,
+    ) -> Self {
+        Self {
+            flowconfig_name: options.flowconfig_name.to_string(),
+            no_flowlib,
+            ignore_version,
+            include_suppressions: options.include_suppressions,
+            all: options.all,
+            debug: options.debug,
+            quiet: options.quiet,
+            lazy_mode,
+            long_lived_workers: Some(options.long_lived_workers),
+            max_workers: Some(options.max_workers),
+            wait_for_recheck: Some(options.wait_for_recheck),
+            profile: options.profile,
+            verbose: options
+                .verbose
+                .as_ref()
+                .map(|verbose| verbose.as_ref().clone()),
+            saved_state_fetcher: Some(options.saved_state_fetcher),
+            saved_state_force_recheck: options.saved_state_force_recheck,
+            saved_state_no_fallback: options.saved_state_no_fallback,
+            saved_state_skip_version_check: options.saved_state_skip_version_check,
+            saved_state_verify: options.saved_state_verify,
+            root: (*options.root).clone(),
+            temp_dir: options.temp_dir.to_string(),
         }
-        let file = fs::OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(pids_file)
-            .unwrap_or_else(|e| panic!("Failed to open pids file '{}': {}", pids_file, e));
-        *log_oc = Some(file);
     }
+}
 
-    pub fn log(reason: &str, no_fail: bool, pid: u32) {
-        if !ENABLED.load(std::sync::atomic::Ordering::SeqCst) {
-            return;
-        }
-        let mut log_oc = LOG_OC.lock().unwrap();
-        match log_oc.as_mut() {
-            None if no_fail => {}
-            None => panic!("Can't write pid to uninitialized pids log"),
-            Some(oc) => {
-                write!(oc, "{}\t{}\n", pid, reason).expect("failed to write pid log");
-                oc.flush().expect("failed to flush pid log");
-            }
-        }
+/// Serializable arguments shipped to the server master daemon child.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ServerEntryParam {
+    pub daemon_args: ServerDaemonArgs,
+    pub init_id: String,
+    pub argv: Vec<String>,
+    pub log_file: String,
+    pub file_watcher_pid: Option<u32>,
+    pub parent_pid: u32,
+    pub logging_context: LoggingContext,
+}
+
+pub fn entry_point(build: ServerOptionsBuilder) -> &'static Entry<ServerEntryParam, (), ()> {
+    let _ = SERVER_OPTIONS_BUILDER.set(build);
+    SERVER_ENTRY
+        .get_or_init(|| flow_daemon::register_entry_point(SERVER_ENTRY_NAME, server_entry_handler))
+}
+
+pub fn register(build: ServerOptionsBuilder) {
+    entry_point(build);
+}
+
+fn registered_entry_point() -> &'static Entry<ServerEntryParam, (), ()> {
+    SERVER_ENTRY.get().unwrap_or_else(|| {
+        panic!(
+            "server entry point not registered; call flow_server::server_daemon::register before \
+             daemon startup"
+        )
+    })
+}
+
+fn server_entry_handler(param: ServerEntryParam, pair: ChannelPair<(), ()>) {
+    let ServerEntryParam {
+        daemon_args,
+        init_id,
+        argv,
+        log_file: _log_file,
+        file_watcher_pid,
+        parent_pid,
+        logging_context,
+    } = param;
+    let ChannelPair(in_chan, out_chan) = pair;
+
+    flow_event_logger::restore_context(logging_context);
+    flow_event_logger::set_command(Some("server".to_string()));
+    flow_event_logger::init_flow_command(&init_id);
+
+    let build = *SERVER_OPTIONS_BUILDER.get().unwrap_or_else(|| {
+        panic!(
+            "server options builder not registered; call flow_server::server_daemon::register \
+             before daemon startup"
+        )
+    });
+    let options = build(&daemon_args);
+
+    set_hh_logger_min_level(&options);
+    log::info!("argv={}", argv.join(" "));
+    dump_server_options(&options);
+
+    let pids_file = flow_server_files::server_files_js::pids_file(
+        &options.flowconfig_name,
+        options.temp_dir.as_str(),
+        options.root.as_path(),
+    );
+    if let Err(e) = flow_daemon::pid_log::init(std::path::Path::new(&pids_file)) {
+        log::warn!("server: pid_log init failed: {}", e);
     }
+    flow_daemon::pid_log::log(Some("monitor"), false, parent_pid);
+    if let Some(pid) = file_watcher_pid {
+        flow_daemon::pid_log::log(Some("file_watcher"), false, pid);
+    }
+    flow_daemon::pid_log::log(Some("main"), false, std::process::id());
+
+    let in_stream = flow_daemon::into_in_stream(in_chan);
+    let out_stream = flow_daemon::into_out_stream(out_chan);
+    let channels: flow_server_env::monitor_rpc::Channels = (in_stream, out_stream);
+
+    crate::server::run_from_daemonize(&init_id, options, Some(channels));
 }
 
 fn hh_logger_level_of_env(env: &str) -> Option<log::LevelFilter> {
@@ -67,7 +182,7 @@ fn hh_logger_level_of_env(env: &str) -> Option<log::LevelFilter> {
     }
 }
 
-fn set_hh_logger_min_level(options: &Options) {
+pub fn set_hh_logger_min_level(options: &Options) {
     let level = if options.quiet {
         log::LevelFilter::Off
     } else if options.verbose.is_some() || options.debug {
@@ -81,7 +196,7 @@ fn set_hh_logger_min_level(options: &Options) {
     log::set_max_level(level);
 }
 
-fn dump_server_options(options: &Options) {
+pub fn dump_server_options(options: &Options) {
     let lazy_mode = if options.lazy_mode { "on" } else { "off" };
     log::info!("lazy_mode={}", lazy_mode);
     log::info!("max_workers={}", options.max_workers);
@@ -104,17 +219,6 @@ fn dump_server_options(options: &Options) {
         log::info!("Rollout {:?} set to {:?}", r, g);
     }
 }
-
-pub struct Args {
-    pub options: Arc<Options>,
-    pub init_id: String,
-    pub argv: Vec<String>,
-    pub parent_pid: u32,
-    pub parent_logger_pid: Option<u32>,
-    pub file_watcher_pid: Option<u32>,
-}
-
-pub type EntryPoint = Box<dyn Fn(Args) + Send + Sync>;
 
 pub fn try_open_log_file(file: &str) -> Result<fs::File, String> {
     if Path::new(file).exists() {
@@ -143,57 +247,18 @@ pub fn open_log_file(file: &str) -> fs::File {
     try_open_log_file(file).unwrap_or_else(|e| panic!("{}", e))
 }
 
-fn new_entry_point() -> String {
-    static CPT: AtomicUsize = AtomicUsize::new(0);
-    let n = CPT.fetch_add(1, Ordering::SeqCst) + 1;
-    format!("main_{}", n)
-}
-
-pub fn register_entry_point(
-    main: impl Fn(&str, Arc<Options>) + Send + Sync + 'static,
-) -> EntryPoint {
-    let _name = new_entry_point();
-    Box::new(move |args: Args| {
-        let Args {
-            options,
-            init_id,
-            argv,
-            parent_pid,
-            parent_logger_pid,
-            file_watcher_pid,
-        } = args;
-
-        set_hh_logger_min_level(&options);
-        log::info!("argv={}", argv.join(" "));
-        dump_server_options(&options);
-
-        let root = &options.root;
-        let tmp_dir = &options.temp_dir;
-        let flowconfig_name = &options.flowconfig_name;
-        let pids_file = server_files_js::pids_file(flowconfig_name, tmp_dir, root);
-        pid_log::init(&pids_file);
-        pid_log::log("monitor", false, parent_pid);
-        if let Some(pid) = parent_logger_pid {
-            pid_log::log("monitor_logger", false, pid);
-        }
-        if let Some(pid) = file_watcher_pid {
-            pid_log::log("file_watcher", false, pid);
-        }
-        pid_log::log("main", false, std::process::id());
-
-        main(&init_id, options);
-    })
-}
-
 pub fn daemonize(
-    _init_id: &str,
+    init_id: &str,
     log_file: &str,
-    _argv: &[String],
+    argv: &[String],
+    lazy_mode: Option<String>,
+    no_flowlib: bool,
+    ignore_version: bool,
     options: Arc<Options>,
-    _file_watcher_pid: Option<u32>,
-    _main_entry: &EntryPoint,
-) {
-    // Let's make sure this isn't all for naught before we fork
+    file_watcher_pid: Option<u32>,
+) -> Result<Handle<(), ()>, String> {
+    let entry = registered_entry_point();
+
     let root = &options.root;
     let tmp_dir = &options.temp_dir;
     let flowconfig_name = &options.flowconfig_name;
@@ -207,31 +272,23 @@ pub fn daemonize(
         flow_common_exit_status::exit(FlowExitStatus::LockStolen);
     }
 
-    let _log_fd = open_log_file(log_file);
-
-    // Daemon.spawn is creating a new process with log_fd as both the stdout
-    // and stderr. We are NOT leaking stdout and stderr. But the Windows
-    // implementation of OCaml does leak stdout and stderr. This means any process
-    // that waits for `flow start`'s stdout and stderr to close might wait
-    // forever.
-    //
-    // On Windows 10 (and 8 I think), you can just call `set_close_on_exec` on
-    // stdout and stderr and that seems to solve things. However, that call
-    // fails on Windows 7. After poking around for a few hours, I can't think
-    // of a solution other than manually implementing Unix.create_process
-    // correctly.
-    //
-    // So for now let's make Windows 7 not crash. It seems like `flow start` on
-    // Windows 7 doesn't actually leak stdio, so a no op is acceptable
-    let _name = format!("server master process watching {}", root.display());
-
-    let args = Args {
-        options,
-        init_id: _init_id.to_string(),
-        argv: _argv.to_vec(),
+    let name = format!("server master process watching {}", root.display());
+    let param = ServerEntryParam {
+        daemon_args: ServerDaemonArgs::of_options(&options, lazy_mode, no_flowlib, ignore_version),
+        init_id: init_id.to_string(),
+        argv: argv.to_vec(),
+        log_file: log_file.to_string(),
+        file_watcher_pid,
         parent_pid: std::process::id(),
-        parent_logger_pid: None,
-        file_watcher_pid: _file_watcher_pid,
+        logging_context: flow_event_logger::get_context(),
     };
-    _main_entry(args);
+
+    let stdio = (
+        StdioFd::Owned(flow_daemon::null_fd()),
+        StdioFd::Owned(try_open_log_file(log_file)?),
+        StdioFd::Owned(try_open_log_file(log_file)?),
+    );
+
+    flow_daemon::spawn(None, Some(&name), stdio, entry, param)
+        .map_err(|e| format!("Failed to spawn server daemon '{}': {}", name, e))
 }

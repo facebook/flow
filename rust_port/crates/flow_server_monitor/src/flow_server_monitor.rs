@@ -12,6 +12,7 @@ use std::sync::Mutex;
 
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
+use flow_common::verbose::Verbose;
 pub use flow_server::standalone::LazyStats;
 use flow_server_files::server_files_js;
 
@@ -21,6 +22,7 @@ use crate::flow_server_monitor_options::MonitorOptions;
 use crate::flow_server_monitor_options::SharedMemConfig;
 use crate::status_stream;
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct DaemonizeArgs {
     pub flowconfig_name: String,
     pub no_flowlib: bool,
@@ -42,7 +44,9 @@ pub struct DaemonizeArgs {
     pub shm_heap_size: Option<u64>,
     pub shm_hash_table_pow: Option<u32>,
     pub profile: bool,
-    pub verbose: bool,
+    pub debug: bool,
+    pub quiet: bool,
+    pub verbose: Option<Verbose>,
     pub server_log_file: String,
     pub monitor_log_file: String,
     pub from: Option<String>,
@@ -60,6 +64,9 @@ pub struct StartArgs {
     pub flowconfig_name: String,
     pub server_log_file: String,
     pub monitor_log_file: String,
+    pub lazy_mode: Option<String>,
+    pub no_flowlib: bool,
+    pub ignore_version: bool,
     pub wait_for_recheck: Option<bool>,
     pub file_watcher: FileWatcher,
     pub file_watcher_debug: bool,
@@ -87,186 +94,12 @@ fn remove_artifact_if_present(path: &str) {
     }
 }
 
-fn spawn_monitor_child(
-    args: &DaemonizeArgs,
-    extra_env: &[(&str, String)],
-    stdout: std::process::Stdio,
-) -> Result<std::process::Child, String> {
-    let DaemonizeArgs {
-        flowconfig_name,
-        no_flowlib,
-        ignore_version,
-        include_suppressions,
-        all,
-        wait: _,
-        no_restart,
-        autostop,
-        lazy_mode,
-        long_lived_workers,
-        max_workers,
-        wait_for_recheck,
-        file_watcher,
-        file_watcher_debug,
-        file_watcher_timeout,
-        file_watcher_mergebase_with,
-        file_watcher_sync_timeout,
-        shm_heap_size,
-        shm_hash_table_pow,
-        profile,
-        verbose,
-        server_log_file,
-        monitor_log_file,
-        from,
-        saved_state_fetcher,
-        saved_state_force_recheck,
-        saved_state_no_fallback,
-        saved_state_skip_version_check,
-        saved_state_verify,
-        no_cgroup,
-        root,
-        temp_dir,
-    } = args;
-
-    prepare_log_file(monitor_log_file)?;
-
-    // The daemon child IS the monitor process. Its stderr should be wired to the monitor log
-    // file, not the server log file. The server (which runs as a thread inside the monitor
-    // process) writes to the server log file via its own logger initialization.
-    let log_file = flow_server::server_daemon::try_open_log_file(monitor_log_file)?;
-    let exe = std::env::args_os()
-        .next()
-        .ok_or_else(|| "failed to get argv[0]".to_string())?;
-
-    let mut cmd = std::process::Command::new(&exe);
-    cmd.arg("server");
-    if *no_flowlib {
-        cmd.arg("--no-flowlib");
-    }
-    if *ignore_version {
-        cmd.arg("--ignore-version");
-    }
-    if *include_suppressions {
-        cmd.arg("--include-suppressed");
-    }
-    if *all {
-        cmd.arg("--all");
-    }
-    if *no_restart {
-        cmd.arg("--no-auto-restart");
-    }
-    if *autostop {
-        cmd.arg("--autostop");
-    }
-    if let Some(mode) = lazy_mode {
-        cmd.arg("--lazy-mode").arg(mode);
-    }
-    if let Some(long_lived_workers) = long_lived_workers {
-        cmd.arg("--long-lived-workers")
-            .arg(long_lived_workers.to_string());
-    }
-    if let Some(max_workers) = max_workers {
-        cmd.arg("--max-workers").arg(max_workers.to_string());
-    }
-    if let Some(wait_for_recheck) = wait_for_recheck {
-        cmd.arg("--wait-for-recheck")
-            .arg(wait_for_recheck.to_string());
-    }
-    let file_watcher_str = match file_watcher {
-        FileWatcher::NoFileWatcher => "none",
-        FileWatcher::DFind => "dfind",
-        FileWatcher::Watchman(_) => "watchman",
-        FileWatcher::EdenFS(_) => "edenfs",
-    };
-    cmd.arg("--file-watcher").arg(file_watcher_str);
-    if *file_watcher_debug {
-        cmd.arg("--file-watcher-debug");
-    }
-    if let Some(file_watcher_timeout) = file_watcher_timeout {
-        cmd.arg("--file-watcher-timeout")
-            .arg(file_watcher_timeout.to_string());
-    }
-    if let Some(file_watcher_mergebase_with) = file_watcher_mergebase_with {
-        cmd.arg("--file-watcher-mergebase-with")
-            .arg(file_watcher_mergebase_with);
-    }
-    if let Some(file_watcher_sync_timeout) = file_watcher_sync_timeout {
-        cmd.arg("--file-watcher-sync-timeout")
-            .arg(file_watcher_sync_timeout.to_string());
-    }
-    if let Some(shm_heap_size) = shm_heap_size {
-        cmd.arg("--sharedmemory-heap-size")
-            .arg(shm_heap_size.to_string());
-    }
-    if let Some(shm_hash_table_pow) = shm_hash_table_pow {
-        cmd.arg("--sharedmemory-hash-table-pow")
-            .arg(shm_hash_table_pow.to_string());
-    }
-    if *profile {
-        cmd.arg("--profile");
-    }
-    if *verbose {
-        cmd.arg("--verbose");
-    }
-    if *no_cgroup {
-        cmd.arg("--no-cgroup");
-    }
-    cmd.arg("--flowconfig-name").arg(flowconfig_name);
-    cmd.arg("--log-file").arg(server_log_file);
-    cmd.arg("--monitor-log-file").arg(monitor_log_file);
-    cmd.arg("--temp-dir").arg(temp_dir);
-    if let Some(from) = from {
-        cmd.arg("--from").arg(from);
-    }
-    if let Some(fetcher) = saved_state_fetcher {
-        let s = match fetcher {
-            SavedStateFetcher::DummyFetcher => "none",
-            SavedStateFetcher::LocalFetcher => "local",
-            SavedStateFetcher::ScmFetcher => "scm",
-            SavedStateFetcher::FbFetcher => "fb",
-        };
-        cmd.arg("--saved-state-fetcher").arg(s);
-    }
-    if *saved_state_force_recheck {
-        cmd.arg("--saved-state-force-recheck");
-    }
-    if *saved_state_no_fallback {
-        cmd.arg("--saved-state-no-fallback");
-    }
-    if *saved_state_skip_version_check {
-        cmd.arg("--saved-state-skip-version-check-DO_NOT_USE_OR_YOU_WILL_BE_FIRED");
-    }
-    if *saved_state_verify {
-        cmd.arg("--saved-state-verify");
-    }
-    for (k, v) in extra_env {
-        cmd.env(k, v);
-    }
-    cmd.arg(root.to_string_lossy().as_ref());
-    cmd.stdin(std::process::Stdio::null());
-    cmd.stdout(stdout);
-    cmd.stderr(std::process::Stdio::from(log_file));
-
-    cmd.spawn()
-        .map_err(|e| format!("failed to spawn server: {}", e))
-}
-
-pub fn daemonize_with_pipe(
-    args: DaemonizeArgs,
-    entry_point_name: &'static str,
-) -> Result<(std::process::Child, std::process::ChildStdout), String> {
-    let extra_env: [(&str, String); 1] = [(
-        crate::flow_server_monitor_daemon::ENTRY_POINT_ENV,
-        entry_point_name.to_string(),
-    )];
-
-    let mut child = spawn_monitor_child(&args, &extra_env, std::process::Stdio::piped())?;
-    let input_channel = child
-        .stdout
-        .take()
-        .ok_or_else(|| "child stdout pipe missing".to_string())?;
-
-    Ok((child, input_channel))
-}
+// `spawn_monitor_child` and `daemonize_with_pipe` (~150 lines of
+// CLI-flag re-encoding + `Stdio::piped` plumbing for the WaitMsg) were
+// removed in the daemon rewire (Step 3 of the daemon plan): the child is
+// now spawned by `flow_daemon::spawn` with the `MonitorEntryParam` shipped
+// via tempfile + bincode, and the `WaitMsg` flows over a typed
+// `flow_daemon` channel rather than `child.stdout`. See `daemonize` below.
 
 // We want to send a "Starting" message immediately and a "Ready" message when the Flow server is
 // ready for the first time. This function sends the "Starting" message immediately and sets up a
@@ -404,6 +237,9 @@ fn internal_start(
         flowconfig_name: _,
         server_log_file,
         monitor_log_file,
+        lazy_mode,
+        no_flowlib,
+        ignore_version,
         wait_for_recheck: _,
         file_watcher,
         file_watcher_debug: _,
@@ -422,6 +258,9 @@ fn internal_start(
         no_restart,
         server_log_file,
         server_options: (*options).clone(),
+        lazy_mode,
+        no_flowlib,
+        ignore_version,
         shared_mem_config: SharedMemConfig {
             heap_size: shm_heap_size.unwrap_or(0),
             hash_table_pow: shm_hash_table_pow.unwrap_or(0),
@@ -522,7 +361,14 @@ fn internal_start(
     Ok(())
 }
 
-// The entry point for creating a daemonized flow server monitor (like from `flow start`)
+// The entry point for creating a daemonized flow server monitor (like from
+// `flow start`). Spawns the monitor child process via `flow_daemon::spawn`,
+// passing a serialized `MonitorEntryParam` (the bincode-friendly equivalent
+// of OCaml's `Daemon.spawn ... entry_point state`). The previous Rust impl
+// re-encoded `DaemonizeArgs` as ~30 CLI flags here; that is gone. The child
+// dispatches via `HH_SERVER_DAEMON=monitor` (set by `flow_daemon::spawn` on
+// the child's env) and runs the registered monitor entry handler in
+// `flow_server_monitor_daemon`.
 pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
     // Let's make sure this isn't all for naught before we fork
     let root = args
@@ -541,33 +387,70 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
     remove_artifact_if_present(&socket_path);
 
     let wait = args.wait;
+    let monitor_log_file = args.monitor_log_file.clone();
+    let root_str = args.root.to_string_lossy().into_owned();
 
-    let (mut child, mut ic) =
-        daemonize_with_pipe(args, crate::flow_server_monitor_daemon::MONITOR_ENTRY_NAME)?;
-    let pid = child.id();
+    prepare_log_file(&monitor_log_file)?;
+    let log_for_stdout = flow_server::server_daemon::try_open_log_file(&monitor_log_file)?;
+    let log_for_stderr = flow_server::server_daemon::try_open_log_file(&monitor_log_file)?;
+
+    let entry = crate::flow_server_monitor_daemon::registered_entry_point();
+
+    // Stdio: stdin from /dev/null, stdout/stderr to the monitor log file.
+    // (`flow start` keeps the user's TTY clean by detaching stdio entirely.)
+    let stdio = (
+        flow_daemon::StdioFd::Owned(flow_daemon::null_fd()),
+        flow_daemon::StdioFd::Owned(log_for_stdout),
+        flow_daemon::StdioFd::Owned(log_for_stderr),
+    );
+
+    let init_id = std::env::var("FLOW_INIT_ID").unwrap_or_default();
+    let param = crate::flow_server_monitor_daemon::MonitorEntryParam {
+        daemonize_args: args,
+        init_id,
+        logging_context: flow_event_logger::get_context(),
+    };
+
+    let name = format!("monitor for {}", root_str);
+    let mut handle = flow_daemon::spawn(None, Some(&name), stdio, entry, param)
+        .map_err(|e| format!("failed to spawn monitor: {}", e))?;
+    let pid = handle.child.id();
+
+    // We never write to the child process so we can close this channel
+    // (mirrors OCaml `Daemon.close_out oc`).
+    if let Err(e) = flow_daemon::shutdown_out_write(&mut handle.channels.1) {
+        log::debug!("failed to shutdown monitor parent_out: {}", e);
+    }
 
     // If wait is true, wait for the "Ready" message.
-    // Otherwise, only wait for the "Starting message"
-    crate::flow_server_monitor_daemon::wait_loop(wait, &mut child, &mut ic);
-    drop(ic);
+    // Otherwise, only wait for the "Starting" message.
+    crate::flow_server_monitor_daemon::wait_loop(wait, &mut handle);
 
     Ok(pid)
 }
 
-// The entry point for creating a non-daemonized flow server monitor (like from `flow server`)
+// The entry point for creating a non-daemonized flow server monitor (like
+// from `flow server`). Always foreground: the previous `is_daemon` env-var
+// check is gone because the daemonized path now dispatches via
+// `flow_daemon::check_entry_point` BEFORE `start` is called, so there is no
+// in-process daemonized invocation of `start` anymore.
 pub fn start(options: Arc<Options>, args: StartArgs) -> Result<(), String> {
     // So this is a tricky situation. Technically this code is running in the `flow server` process.
     // However, we kind of want the actual Flow server to log using the "server" command, and we don't
     // want the monitor's logs to interfere. So instead, we'll pretend like the monitor was created
     // with some imaginary `flow monitor` command
     flow_event_logger::set_command(Some("monitor".to_string()));
+    internal_start(false, None, options, args)
+}
 
-    let is_daemon = std::env::var_os(crate::flow_server_monitor_daemon::ENTRY_POINT_ENV).is_some();
-    if is_daemon {
-        let waiting_fd: Box<dyn Write + Send> = Box::new(std::io::stdout());
-        internal_start(true, Some(waiting_fd), options, args)
-    } else {
-        //   internal_start ~is_daemon:false ?waiting_fd:None monitor_options
-        internal_start(false, None, options, args)
-    }
+/// Foreground entry used by daemon child processes. Same as `start` but
+/// passes a `waiting_fd` so the child can send `WaitMsg::Starting`/`Ready`
+/// back to the parent over the pipe `flow_daemon::spawn` set up.
+pub fn start_in_daemon(
+    waiting_fd: Box<dyn Write + Send>,
+    options: Arc<Options>,
+    args: StartArgs,
+) -> Result<(), String> {
+    flow_event_logger::set_command(Some("monitor".to_string()));
+    internal_start(true, Some(waiting_fd), options, args)
 }

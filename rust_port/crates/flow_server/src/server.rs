@@ -498,7 +498,7 @@ fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {
     }
 }
 
-fn run_from_daemonize(
+pub fn run_from_daemonize(
     _init_id: &str,
     _options: Arc<Options>,
     monitor_channels: Option<monitor_rpc::Channels>,
@@ -626,27 +626,20 @@ pub fn daemonize(
     init_id: &str,
     log_file: &str,
     argv: &[String],
+    lazy_mode: Option<String>,
+    no_flowlib: bool,
+    ignore_version: bool,
     file_watcher_pid: Option<u32>,
     options: Arc<Options>,
-    monitor_channels: Option<monitor_rpc::Channels>,
-) -> std::thread::JoinHandle<()> {
-    let monitor_channels_slot = std::sync::Arc::new(std::sync::Mutex::new(monitor_channels));
-    let entry_channels_slot = monitor_channels_slot.clone();
-    let entry = server_daemon::register_entry_point(move |init_id, options| {
-        let channels = entry_channels_slot.lock().unwrap().take();
-        run_from_daemonize(init_id, options, channels);
-    });
-    let init_id_owned = init_id.to_string();
-    let log_file_owned = log_file.to_string();
-    let argv_owned: Vec<String> = argv.to_vec();
-    std::thread::spawn(move || {
-        server_daemon::daemonize(
-            &init_id_owned,
-            &log_file_owned,
-            &argv_owned,
-            options,
-            file_watcher_pid,
-            &entry,
-        );
-    })
+) -> Result<flow_daemon::Handle<(), ()>, String> {
+    server_daemon::daemonize(
+        init_id,
+        log_file,
+        argv,
+        lazy_mode,
+        no_flowlib,
+        ignore_version,
+        options,
+        file_watcher_pid,
+    )
 }

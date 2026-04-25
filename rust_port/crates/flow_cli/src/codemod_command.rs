@@ -48,7 +48,6 @@ use tracing::level_filters::LevelFilter;
 use crate::command_spec;
 use crate::command_spec::arg_spec;
 use crate::command_utils;
-use crate::daemon;
 
 #[derive(Clone)]
 enum CodemodSubcommand {
@@ -102,7 +101,7 @@ static ENVIRONMENT_INITIALIZED: OnceLock<()> = OnceLock::new();
 fn initialize_environment() {
     ENVIRONMENT_INITIALIZED.get_or_init(|| {
         // Kickstart daemon processes
-        daemon::check_entry_point();
+        crate::check_entry_point();
         // Disable monitor updates as this is a single-use tool
         monitor_rpc::disable();
         // Improve backtraces

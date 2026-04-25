@@ -404,7 +404,10 @@ impl<P: ConnectionProcessor> Connection<P> {
 // ---- Channels ----
 
 // PipeBincodeChannel: used by ServerConnection (monitor↔server pipe). Each frame is a
-// bincode-serialized value over a File pipe, matching OCaml `Marshal_tools.{from,to}_fd_with_preamble`.
+// bincode-serialized value over a TcpStream-backed transport from `flow_daemon`,
+// matching OCaml `Marshal_tools.{from,to}_fd_with_preamble`. The underlying
+// transport is `TcpStream` (not `File`) so that this channel works on both
+// Unix and Windows -- on Windows, sockets are not files.
 pub struct PipeBincodeChannel<I, O>(std::marker::PhantomData<(I, O)>);
 
 impl<I, O> Channel for PipeBincodeChannel<I, O>
@@ -412,8 +415,8 @@ where
     I: Send + Sync + serde::de::DeserializeOwned + 'static,
     O: Send + Sync + serde::Serialize + 'static,
 {
-    type Reader = std::fs::File;
-    type Writer = std::fs::File;
+    type Reader = std::net::TcpStream;
+    type Writer = std::net::TcpStream;
     type InMessage = I;
     type OutMessage = O;
 

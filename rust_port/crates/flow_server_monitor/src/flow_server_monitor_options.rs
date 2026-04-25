@@ -8,7 +8,7 @@
 // These are all the little bits of information which the Flow server monitor needs in order to
 // function
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct WatchmanOptions {
     /// Turn on debugging messages for the file watcher
     pub debug: bool,
@@ -18,7 +18,7 @@ pub struct WatchmanOptions {
     pub sync_timeout: Option<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct EdenfsOptions {
     /// Turn on debugging messages for the EdenFS watcher
     pub edenfs_debug: bool,
@@ -34,7 +34,7 @@ pub struct EdenfsOptions {
     pub edenfs_watchman_fallback: WatchmanOptions,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum FileWatcher {
     NoFileWatcher,
     DFind,
@@ -47,7 +47,7 @@ pub use FileWatcher::EdenFS;
 pub use FileWatcher::NoFileWatcher;
 pub use FileWatcher::Watchman;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct SharedMemConfig {
     pub heap_size: u64,
     pub hash_table_pow: u32,
@@ -66,6 +66,12 @@ pub struct MonitorOptions {
     pub server_log_file: String,
     // The server's options
     pub server_options: flow_common::options::Options,
+    // The explicit lazy-mode CLI override, if one was provided.
+    pub lazy_mode: Option<String>,
+    // Whether bundled flowlib should be disabled when the monitor spawns servers.
+    pub no_flowlib: bool,
+    // Whether version checks should be ignored when the monitor spawns servers.
+    pub ignore_version: bool,
     // The shared memory config
     pub shared_mem_config: SharedMemConfig,
     // The argv of the process which created the server monitor

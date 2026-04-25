@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::fs::File;
 use std::io;
+use std::net::TcpStream;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -21,13 +21,18 @@ pub enum MonitorError {
     Disabled,
 }
 
-pub type Channels = (File, File);
+// The monitor<->server channel pair. Each `TcpStream` is one direction of
+// the cross-platform daemon transport set up in `flow_daemon::spawn`. We use
+// `TcpStream` rather than `std::fs::File` so that this type compiles on both
+// Unix and Windows -- on Windows, sockets are not files and cannot be
+// converted to `File` via `OwnedFd`.
+pub type Channels = (TcpStream, TcpStream);
 
 enum State {
     Uninitialized,
     Initialized {
-        infd: Arc<Mutex<File>>,
-        outfd: Arc<Mutex<File>>,
+        infd: Arc<Mutex<TcpStream>>,
+        outfd: Arc<Mutex<TcpStream>>,
     },
     Disabled,
 }
@@ -36,11 +41,11 @@ static STATE: Mutex<State> = Mutex::new(State::Uninitialized);
 
 fn with_channel<T>(
     select_channel: impl for<'a> FnOnce(
-        &'a Arc<Mutex<File>>,
-        &'a Arc<Mutex<File>>,
-    ) -> &'a Arc<Mutex<File>>,
+        &'a Arc<Mutex<TcpStream>>,
+        &'a Arc<Mutex<TcpStream>>,
+    ) -> &'a Arc<Mutex<TcpStream>>,
     on_disabled: impl FnOnce() -> T,
-    f: impl FnOnce(&mut File) -> T,
+    f: impl FnOnce(&mut TcpStream) -> T,
 ) -> T {
     let channel = {
         let state = STATE.lock().unwrap();
@@ -58,11 +63,11 @@ fn with_channel<T>(
     f(&mut channel)
 }
 
-fn with_infd<T>(on_disabled: impl FnOnce() -> T, f: impl FnOnce(&mut File) -> T) -> T {
+fn with_infd<T>(on_disabled: impl FnOnce() -> T, f: impl FnOnce(&mut TcpStream) -> T) -> T {
     with_channel(|infd, _outfd| infd, on_disabled, f)
 }
 
-fn with_outfd<T>(on_disabled: impl FnOnce() -> T, f: impl FnOnce(&mut File) -> T) -> T {
+fn with_outfd<T>(on_disabled: impl FnOnce() -> T, f: impl FnOnce(&mut TcpStream) -> T) -> T {
     with_channel(|_infd, outfd| outfd, on_disabled, f)
 }
 

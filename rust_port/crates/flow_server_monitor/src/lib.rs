@@ -25,4 +25,5 @@ pub use flow_server_monitor::LazyStats;
 pub use flow_server_monitor::StartArgs;
 pub use flow_server_monitor::daemonize;
 pub use flow_server_monitor::start;
+pub use flow_server_monitor::start_in_daemon;
 pub use flow_server_monitor_options as FlowServerMonitorOptions;

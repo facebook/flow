@@ -160,11 +160,13 @@ fn push_to_command_stream(cmd: Command) {
 // interacting with a Flow server instance
 pub mod server_instance {
     use std::sync::Arc;
+    use std::sync::Mutex;
     use std::sync::atomic::AtomicBool;
     use std::sync::atomic::Ordering;
     use std::thread::JoinHandle;
 
     use flow_common_exit_status::FlowExitStatus;
+    use flow_daemon::Handle;
     use flow_server_env::lsp_prot;
     use flow_server_env::monitor_prot;
 
@@ -179,7 +181,7 @@ pub mod server_instance {
         pub on_exit_thread: Option<JoinHandle<()>>,
         pub file_watcher_exit_thread: Option<JoinHandle<()>>,
         pub shutdown: Arc<AtomicBool>,
-        pub server_thread: Option<JoinHandle<()>>,
+        pub daemon_handle: Arc<Mutex<Option<Handle<(), ()>>>>,
     }
 
     fn handle_response(
@@ -471,7 +473,6 @@ pub mod server_instance {
         t.file_watcher_loop.take();
         t.file_watcher_exit_thread.take();
         t.on_exit_thread.take();
-        t.server_thread.take();
 
         let watcher = t.watcher.clone();
         let connection = t.connection.clone();
@@ -505,32 +506,6 @@ pub mod server_instance {
         super::exit(_error, &msg, code);
     }
 
-    /// `close_if_open fd` closes the `fd` file descriptor, ignoring errors if it's already closed.
-    ///
-    /// So it's actually important that we close the Lwt_unix.file_descr and not just the
-    /// underlying Unix.file_descr. Why?
-    ///
-    /// 1. Unix.file_descr is just an int
-    /// 2. File descriptors can be reused after they are closed
-    /// 3. You might get a reaaaally weird bug where your seemly closed Lwt_unix.file_descr
-    ///    suddenly starts getting data again. This totally happened to Gabe on halloween and it
-    ///    totally freaked him out.
-    ///
-    /// Lwt_unix.file_descr, on the otherhand, carries around some state, like whether it is open
-    /// or closed. So a closed Lwt_unix.file_descr won't resurrect.
-    fn close_if_open(fd: std::os::raw::c_int) {
-        #[cfg(unix)]
-        match nix::unistd::close(fd) {
-            Ok(()) => {}
-            Err(nix::errno::Errno::EBADF) => {} // If it's already closed, we'll get EBADF
-            Err(err) => {
-                log::error!("Error closing fd {}: {}", fd, err);
-            }
-        }
-        #[cfg(not(unix))]
-        log::error!("Closing raw fd {} is not supported on this platform", fd);
-    }
-
     static SERVER_NUM: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
 
     // Spawn a brand new Flow server
@@ -552,6 +527,9 @@ pub mod server_instance {
             shared_mem_config: _shared_mem_config,
             server_options: _server_options,
             server_log_file: _log_file,
+            lazy_mode,
+            no_flowlib,
+            ignore_version,
             argv: _argv,
             file_watcher,
             file_watcher_timeout: _file_watcher_timeout,
@@ -647,57 +625,44 @@ pub mod server_instance {
         );
         let server_options_arc = std::sync::Arc::new(_server_options.clone());
 
-        let (server_in_fd, monitor_out_fd) = nix::sys::socket::socketpair(
-            nix::sys::socket::AddressFamily::Unix,
-            nix::sys::socket::SockType::Stream,
-            None,
-            nix::sys::socket::SockFlag::empty(),
-        )
-        .expect("failed to create monitor->server socketpair");
-        let (monitor_in_fd, server_out_fd) = nix::sys::socket::socketpair(
-            nix::sys::socket::AddressFamily::Unix,
-            nix::sys::socket::SockType::Stream,
-            None,
-            nix::sys::socket::SockFlag::empty(),
-        )
-        .expect("failed to create server->monitor socketpair");
-        let server_thread = flow_server::server::daemonize(
+        let server_handle = flow_server::server::daemonize(
             &init_id,
             _log_file,
             _argv,
+            lazy_mode.clone(),
+            *no_flowlib,
+            *ignore_version,
             file_watcher_pid.map(|p| p as u32),
             server_options_arc,
-            Some((server_in_fd.into(), server_out_fd.into())),
-        );
-        let pid: i32 = std::process::id() as i32;
-        let in_fd = monitor_in_fd;
-        let out_fd = monitor_out_fd;
-
-        // we explicitly want to let Lwt determine the blocking mode here.
-        // the fd's created by Server.daemonize are (currently) pipes
-        // from Unix.pipe. Unix pipes are non-blocking, but Windows pipes
-        // are (currently?) blocking. we could explicitly use blocking mode
-        // on Windows, but it's too many implicit assumptions.
-        use std::os::fd::AsRawFd;
-        let in_raw_fd: std::os::raw::c_int = in_fd.as_raw_fd();
-        let out_raw_fd: std::os::raw::c_int = out_fd.as_raw_fd();
+        )
+        .unwrap_or_else(|e| panic!("failed to spawn server daemon: {}", e));
+        let pid: i32 = server_handle.child.id() as i32;
+        // Cross-platform: `TcpStream::try_clone` duplicates the socket on
+        // both Unix and Windows. The previous code used
+        // `nix::unistd::dup(BorrowedFd)`, which is Unix-only.
+        let in_stream = flow_daemon::descr_of_in_channel(&server_handle.channels.0)
+            .try_clone()
+            .expect("failed to dup server->monitor channel");
+        let out_stream = flow_daemon::descr_of_out_channel(&server_handle.channels.1)
+            .try_clone()
+            .expect("failed to dup monitor->server channel");
+        let daemon_handle = Arc::new(Mutex::new(Some(server_handle)));
+        let close_daemon_handle = daemon_handle.clone();
         let close = move || {
-            // Lwt.join will run these threads in parallel and only finish when EVERY thread has finished
-            // or failed
-            close_if_open(in_raw_fd);
-            close_if_open(out_raw_fd);
+            let mut guard = match close_daemon_handle.lock() {
+                Ok(guard) => guard,
+                Err(poisoned) => poisoned.into_inner(),
+            };
+            if let Some(handle) = guard.as_mut() {
+                flow_daemon::close_noerr(handle);
+            }
         };
 
         let server_num = SERVER_NUM.fetch_add(1, Ordering::SeqCst) + 1;
         let name = format!("server #{}", server_num);
 
-        let (start_fn, connection) = ServerConnection::create(
-            name.clone(),
-            std::fs::File::from(in_fd),
-            std::fs::File::from(out_fd),
-            close,
-            handle_response,
-        );
+        let (start_fn, connection) =
+            ServerConnection::create(name.clone(), in_stream, out_stream, close, handle_response);
         start_fn();
 
         log::info!("Spawned {} (pid={})", name, pid);
@@ -817,7 +782,7 @@ pub mod server_instance {
             on_exit_thread,
             file_watcher_exit_thread,
             shutdown,
-            server_thread: Some(server_thread),
+            daemon_handle,
         }
     }
 
@@ -825,7 +790,7 @@ pub mod server_instance {
         t.pid
     }
 
-    enum WaitStatus {
+    pub(super) enum WaitStatus {
         Exited(i32),
         Signaled(i32),
         Stopped(i32),
@@ -1097,25 +1062,46 @@ mod keep_alive_loop {
         Option<flow_server_env::server_status::RestartReason>,
     ) {
         let pid = server_instance::pid_of(server);
-        let server_thread = server.server_thread.take();
-        let wait_status = match server_thread {
-            Some(handle) => {
-                let join_result = handle.join();
-                match join_result {
-                    Ok(()) => nix::sys::wait::WaitStatus::Exited(
-                        nix::unistd::Pid::from_raw(pid),
-                        flow_common_exit_status::FlowExitStatus::UnknownError as i32,
-                    ),
-                    Err(_) => nix::sys::wait::WaitStatus::Signaled(
-                        nix::unistd::Pid::from_raw(pid),
-                        nix::sys::signal::Signal::SIGABRT,
-                        false,
-                    ),
+        let daemon_handle = {
+            let mut guard = match server.daemon_handle.lock() {
+                Ok(guard) => guard,
+                Err(poisoned) => poisoned.into_inner(),
+            };
+            guard.take()
+        };
+        let wait_status = match daemon_handle {
+            Some(mut handle) => match handle.child.wait() {
+                Ok(status) => {
+                    use std::os::unix::process::ExitStatusExt;
+                    match status.code() {
+                        Some(exit_code) => server_instance::WaitStatus::Exited(exit_code),
+                        None => {
+                            if let Some(signal) = status.signal() {
+                                server_instance::WaitStatus::Signaled(signal)
+                            } else if let Some(signal) = status.stopped_signal() {
+                                server_instance::WaitStatus::Stopped(signal)
+                            } else {
+                                log::error!(
+                                    "wait_for_server_to_die: unknown wait status for pid {}",
+                                    pid
+                                );
+                                return (monitor_state, None);
+                            }
+                        }
+                    }
                 }
-            }
+                Err(e) => {
+                    log::error!(
+                        "wait_for_server_to_die: failed to wait on server pid {}: {}",
+                        pid,
+                        e
+                    );
+                    return (monitor_state, None);
+                }
+            },
             None => {
                 log::error!(
-                    "wait_for_server_to_die: server_thread was None for pid {}",
+                    "wait_for_server_to_die: daemon_handle was None for pid {}",
                     pid
                 );
                 return (monitor_state, None);
@@ -1124,7 +1110,7 @@ mod keep_alive_loop {
         server_instance::cleanup(server);
 
         match wait_status {
-            nix::sys::wait::WaitStatus::Exited(_, exit_code) => {
+            server_instance::WaitStatus::Exited(exit_code) => {
                 let exit_type = server_instance::error_type_of_code(exit_code);
                 let exit_status_string = exit_type
                     .map(flow_common_exit_status::to_string)
@@ -1183,8 +1169,7 @@ mod keep_alive_loop {
                     }
                 }
             }
-            nix::sys::wait::WaitStatus::Signaled(_, signal, _) => {
-                let signal = signal as i32;
+            server_instance::WaitStatus::Signaled(signal) => {
                 log::error!(
                     "Flow server (pid {}) was killed with signal {}",
                     pid,
@@ -1200,11 +1185,10 @@ mod keep_alive_loop {
                     (monitor_state, None)
                 }
             }
-            nix::sys::wait::WaitStatus::Stopped(_, signal) => {
+            server_instance::WaitStatus::Stopped(signal) => {
                 // If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
                 // could try to signal it to resume. Or we could wait for it to start up again. But killing
                 // it and starting a new server seems easier
-                let signal = signal as i32;
                 log::error!(
                     "Flow server (pid {}) was stopped with signal {}. Sending sigkill",
                     pid,
@@ -1218,10 +1202,6 @@ mod keep_alive_loop {
                 ) {
                     log::warn!("Failed to send SIGKILL to server process ({}): {}", pid, e);
                 }
-                (monitor_state, None)
-            }
-            _ => {
-                log::error!("Flow server (pid {}) exited with unknown status", pid);
                 (monitor_state, None)
             }
         }

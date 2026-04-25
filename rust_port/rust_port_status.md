@@ -1033,11 +1033,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] flowlib.ml → `flow_flowlib/src/lib.rs`
 - [ ] hack_forked/
   - [x] dfind/
-    - [x] dfindAddFile.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
-    - [x] dfindEnv.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
-    - [x] dfindLibLwt.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
-    - [x] dfindMaybe.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
-    - [x] dfindServer.ml → `fbcode/flow/rust_port/crates/`flow_dfind/src/lib.rs`
+    - [x] dfindAddFile.ml → `flow_dfind/src/lib.rs`
+    - [x] dfindEnv.ml → `flow_dfind/src/lib.rs`
+    - [x] dfindLibLwt.ml → `flow_dfind/src/lib.rs`
+    - [x] dfindMaybe.ml → `flow_dfind/src/lib.rs`
+    - [x] dfindServer.ml → `flow_dfind/src/dfind_server.rs`
   - [ ] facebook/
     - [x] edenfs_watcher/
       - [x] edenfs_watcher.ml → `flow_edenfs_watcher/src/lib.rs` (thin Rust wrapper over `rust_edenfs_watcher::flow_api`)
@@ -1219,15 +1219,22 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] sys/
       - [ ] __tests__/
         - [ ] sys_utils_tests.ml
-      - [ ] daemon.ml
+      - [x] daemon.ml → `flow_daemon/src/daemon.rs`
       - [ ] file_path.ml
       - [ ] fork.ml
       - [ ] handle.ml
       - [x] lock.ml → `flow_common/src/lock.rs` (full port: `grab`, `release`, `blocking_grab_then_release`, `fd_of`, `check`)
-      - [ ] pidLog.ml
+      - [x] pidLog.ml → `flow_daemon/src/pid_log.rs`
       - [ ] printSignal.ml
       - [ ] proc_utils.ml
       - [ ] sys_utils.ml (partial → `flow_common/src/sys_utils.rs`)
+        - [x] `null_path`
+        - [x] `temp_dir_name`
+        - [x] `with_umask`
+        - [x] `expanduser`
+        - [x] `executable_path`
+        - [x] `mkdir_no_fail`
+        - [x] `pid_of_handle`
         - [x] `normalize_filename_dir_sep`
         - [ ] Other functions not ported
       - [ ] timeout.ml
@@ -1409,8 +1416,6 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `fallback_error_handler`
     - [x] `log_monitor_options`
     - [x] `daemonize`
-    - [x] `daemonize_with_pipe`
-    - [x] `spawn_monitor_child`
     - [x] `start`
   - [x] flowServerMonitorDaemon.ml → `flow_server_monitor/src/flow_server_monitor_daemon.rs`
     - [x] `start_function` type → `StartFunction`
@@ -2178,7 +2183,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `content_of_file_input`
   - [ ] watchman_expression_terms/
     - [x] watchman_expression_terms.ml → `flow_server_watchman_expression_terms/src/lib.rs`
-  - [ ] server.ml → `flow_server/src/server.rs` (daemon/monitor transport, background Lwt loops, and some exception handling paths are still simplified)
+  - [ ] server.ml → `flow_server/src/server.rs` (background Lwt loops and some exception handling paths are still simplified)
     - [x] `sample_init_memory`
     - [ ] `extract_flowlibs_or_exit` (`Flowlib.extract` panic/abort path is not wrapped into the OCaml-style `Could_not_extract_flowlibs` exit)
     - [x] `string_of_saved_state_fetcher`
@@ -2190,21 +2195,21 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `create_program_init`
     - [x] `detect_linux_distro`
     - [x] `check_supported_operating_system`
-    - [ ] `run` (monitor IPC is disabled and there is no parallel `ServerMonitorListener.listen_for_messages` thread)
+    - [x] `run`
     - [ ] `exit_msg_of_exception` (uses display text rather than OCaml's full backtrace string formatting)
     - [ ] `run_from_daemonize` (panic-string matching approximates the OCaml typed exception handling/exits)
     - [ ] `check_once` (`format_errors` callback wiring and `focus_targets` behavior are still simplified away)
-    - [ ] `daemonize` (delegates to `server_daemon::daemonize`, which still runs in-process instead of `Daemon.spawn`)
+    - [x] `daemonize`
   - [x] serverEnvBuild.ml → `flow_server/src/server_env_build.rs`
   - [x] serverWorker.ml → `flow_server/src/server_worker.rs`
-  - [ ] server_daemon.ml → `flow_server/src/server_daemon.rs` (daemon spawn/fork behavior is still replaced with an in-process call)
+  - [x] server_daemon.ml → `flow_server/src/server_daemon.rs` (real server-master child process via `flow_daemon::spawn`; serializable daemon payload replaces OCaml Marshal closures / `fork_spawn`)
     - [x] `Server_files` module → `flow_server_files::server_files_js`
-    - [x] `args` type → `Args`
-    - [x] `entry_point` type → `EntryPoint`
+    - [x] `args` type → `ServerEntryParam` (`ServerDaemonArgs` carries the serializable `Options` subset)
+    - [x] `entry_point` type → `Entry<ServerEntryParam, (), ()>`
     - [x] `open_log_file`
-    - [x] `new_entry_point`
-    - [x] `register_entry_point`
-    - [ ] `daemonize` (calls the entry point directly in-process; no `Daemon.spawn`, fork/exec, or detached server master process)
+    - [x] `new_entry_point` → `SERVER_ENTRY_NAME`
+    - [x] `register_entry_point` → `entry_point` / `register`
+    - [x] `daemonize`
 - [ ] services/
   - [x] autocomplete/ → `flow_services_autocomplete`
     - [x] __tests__/
