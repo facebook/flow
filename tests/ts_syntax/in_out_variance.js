@@ -20,3 +20,19 @@ type BadInWriteonly<out A> = { writeonly prop: A }; // ERROR: out in contravaria
 
 type InOut<in out A> = A; // ERROR: in out is always unsupported
 interface InOutInterface<in out A> { prop: A } // ERROR: in out is always unsupported
+
+// Function type annotations (distinct from type aliases evaluating to function types)
+type FnIn = <in T>(x: T) => void; // ERROR - in / out not allowed on function type parameters
+type FnOut = <out T>() => T; // ERROR - in / out not allowed on function type parameters
+
+// Method type parameters in classes
+class MethodHost {
+  contraMethod<in T>(x: T): void {} // ERROR - in / out not allowed on method type parameters
+  coMethod<out T>(): T { throw 0; } // ERROR - in / out not allowed on method type parameters
+}
+
+// Method type parameters in interfaces — currently accepted (no error)
+interface MethodInterface {
+  contraMethod<in T>(x: T): void; // OK
+  coMethod<out T>(): T; // OK
+}
