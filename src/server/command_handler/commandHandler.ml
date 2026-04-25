@@ -1273,7 +1273,23 @@ let batch_coverage ~options ~env ~batch =
     Error
       "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with '--no-lazy' to enable this command."
   else
-    let filter key = Base.List.exists ~f:(fun elt -> Files.is_prefix elt key) batch in
+    let normalize = Sys_utils.normalize_filename_dir_sep in
+    let batch = Base.List.map ~f:normalize batch in
+    let filter key =
+      let key = normalize key in
+      Base.List.exists
+        ~f:(fun elt ->
+          key = elt
+          || String.starts_with
+               ~prefix:
+                 ( if String.ends_with ~suffix:"/" elt then
+                   elt
+                 else
+                   elt ^ "/"
+                 )
+               key)
+        batch
+    in
     let coverage_map =
       FilenameMap.filter
         (fun key _ -> (not (File_key.is_lib_file key)) && File_key.to_string key |> filter)
