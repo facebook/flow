@@ -1439,6 +1439,28 @@ Found 1 error
 === lang/refinements.md block 17 ===
 No errors!
 
+=== lang/refinements.md block 18 ===
+Error ---------------------------------------------------------------------------------------------------------- -:12:15
+
+Cannot call `setLayout` with object literal bound to `value` because object literal [1] is incompatible with `T` [2].
+[incompatible-type]
+
+   -:12:15
+   12|     setLayout({kind: 'row', cols: 3}); // ERROR
+                     ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:8:22
+    8|   setLayout: (value: T) => void,
+                            ^ [2]
+
+
+
+Found 1 error
+
+=== lang/refinements.md block 19 ===
+No errors!
+
 === lang/subtypes.md block 1 ===
 No errors!
 
@@ -2380,6 +2402,9 @@ No errors!
 No errors!
 
 === react/component-syntax.md block 8 ===
+No errors!
+
+=== react/component-syntax.md block 9 ===
 Error ----------------------------------------------------------------------------------------------------------- -:5:10
 
 Cannot return `new Object()` because: [incompatible-type]
@@ -6759,6 +6784,98 @@ References:
 
 
 Found 1 error
+
+=== types/type-guards.md block 24 ===
+Error ----------------------------------------------------------------------------------------------------------- -:7:10
+
+Cannot return `x.tag === 'known'` because property `data` is extra in `Dynamic` [1] but missing in `Known` [2]. Exact
+objects do not accept extra props. [incompatible-type]
+
+The type of `x` [3] at the return expression `x.tag === 'known'` [4] needs to be compatible with the guard type
+`Known` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:7:10
+   7|   return x.tag === 'known'; // ERROR
+               ^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:6:24
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                             ^^^^^^^ [1]
+   -:6:39
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                                            ^^^^^ [2]
+   -:6:21
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                          ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------------- -:7:10
+
+Cannot return `x.tag === 'known'` because property `value` is missing in `Dynamic` [1] but exists in `Known` [2].
+[incompatible-type]
+
+The type of `x` [3] at the return expression `x.tag === 'known'` [4] needs to be compatible with the guard type
+`Known` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:7:10
+   7|   return x.tag === 'known'; // ERROR
+               ^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:6:24
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                             ^^^^^^^ [1]
+   -:6:39
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                                            ^^^^^ [2]
+   -:6:21
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                          ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------------- -:7:10
+
+Cannot return `x.tag === 'known'` because in property `tag`: `T` [1] is not exactly the same as `"known"` [2].
+[incompatible-type-guard]
+
+The type of `x` [3] at the return expression `x.tag === 'known'` [4] needs to be compatible with the guard type
+`Known` [5]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The above-mentioned two types must be the same because property `tag` is invariantly typed. To fix the error,
+- Either make `{data: number, tag: T}` [6] and `Known` [7] exactly the same
+- Or make property `tag` in `Known` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:7:10
+   7|   return x.tag === 'known'; // ERROR
+               ^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:3:25
+   3| type Dynamic<T> = {tag: T, data: number};
+                              ^ [1]
+   -:2:20
+   2| type Known = {tag: 'known', value: string};
+                         ^^^^^^^ [2]
+   -:6:21
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                          ^ [3]
+   -:6:39
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                                            ^^^^^ [5]
+   -:3:19
+   3| type Dynamic<T> = {tag: T, data: number};
+                        ^^^^^^^^^^^^^^^^^^^^^^ [6]
+   -:2:14
+   2| type Known = {tag: 'known', value: string};
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
+
+
+
+Found 3 errors
+
+=== types/type-guards.md block 25 ===
+No errors!
 
 === types/typeof.md block 1 ===
 No errors!

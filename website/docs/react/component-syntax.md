@@ -84,6 +84,26 @@ component FancyProps(
 }
 ```
 
+#### Disjoint Union Props
+
+You can use a rest parameter with a [disjoint union](../types/unions.md#toc-disjoint-object-unions) type to define a component that accepts one of several prop shapes. Refine the props inside the component body using the discriminant field:
+
+```js flow-check
+import * as React from 'react';
+
+type TextProps = {kind: 'text', text: string};
+type ImageProps = {kind: 'image', src: string, alt: string};
+type Props = TextProps | ImageProps;
+
+component MediaItem(...props: Props) {
+  if (props.kind === 'text') {
+    return <span>{props.text}</span>;
+  } else {
+    return <img src={props.src} alt={props.alt} />;
+  }
+}
+```
+
 ### Optional Parameters and Defaults
 
 Components allow you to declare optional parameters and specify defaults:
@@ -171,6 +191,34 @@ component UsesThis() {
   this.foo = 3; // ERROR: Accessing `this`
   return null;
 }
+```
+
+## `import typeof` with Generic Components {#toc-import-typeof-generics}
+
+When you use [`import typeof`](../types/typeof.md) on a generic component's default export, the imported type alias exposes the generic as a required type argument. This means you cannot use the imported type without supplying the argument explicitly:
+
+```js
+// GenericComp.js
+import * as React from 'react';
+
+component MyComp<T>(data: T, render: (item: T) => React.Node) {
+  return render(data);
+}
+
+export default MyComp;
+
+// Consumer.js
+import typeof MyComp from './GenericComp';
+
+type CompType = MyComp; // Error: missing 1 type argument
+```
+
+To preserve the polymorphism, use a namespace `import typeof` and index into it:
+
+```js
+import typeof * as GenericCompModule from './GenericComp';
+
+type CompType = GenericCompModule['default']; // Works
 ```
 
 ## Enable Component Syntax {#toc-enable-component-syntax}

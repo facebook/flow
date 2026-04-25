@@ -252,9 +252,11 @@ function func(value: ?string) {
 }
 ```
 
-## Refinement Invalidations {#toc-refinement-invalidations}
+## Limitations {#toc-limitations}
 
-It is also possible to invalidate refinements, for example:
+### Refinement Invalidations {#toc-refinement-invalidations}
+
+It is possible to invalidate refinements, for example:
 
 ```js flow-check
 function otherFunc() { /* ... */ }
@@ -304,6 +306,43 @@ function func(value: {prop?: string}) {
     const prop = value.prop;
     otherFunc();
     prop.charAt(0);
+  }
+}
+```
+
+### Refining a generic value does not narrow other values sharing the same type parameter
+
+When a function is generic, narrowing one parameter based on a runtime check does not narrow other parameters that share the same type parameter. Flow treats the type parameter as a single, fixed type for the entire call — refining the *value* of one parameter does not change the *type* `T` itself.
+
+```js flow-check
+type Row = {kind: 'row', cols: number};
+type Grid = {kind: 'grid', rows: number, cols: number};
+type Layout = Row | Grid;
+
+function updateLayout<T: Layout>(
+  layout: T,
+  setLayout: (value: T) => void,
+): void {
+  if (layout.kind === 'row') {
+    // `layout` is narrowed to `Row`, but `setLayout` is still `(T) => void`
+    setLayout({kind: 'row', cols: 3}); // ERROR
+  }
+}
+```
+
+To work around this, avoid the generic and use the concrete union type instead. Refinement then works as expected because `setLayout` accepts any `Layout` value:
+
+```js flow-check
+type Row = {kind: 'row', cols: number};
+type Grid = {kind: 'grid', rows: number, cols: number};
+type Layout = Row | Grid;
+
+function updateLayout(
+  layout: Layout,
+  setLayout: (value: Layout) => void,
+): void {
+  if (layout.kind === 'row') {
+    setLayout({kind: 'row', cols: 3});
   }
 }
 ```

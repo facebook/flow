@@ -355,6 +355,34 @@ function isNumberError2(x: unknown): x is number { // Error
 ```
 
 
+## Type Guards with Generic Union Members {#toc-type-guards-with-generics}
+
+Type guard functions can fail Flow's [consistency checks](#toc-consistency-checks-of-type-guard-functions) when a union member uses a generic type parameter in the property you refine on. Flow cannot prove the refined type is compatible with the guard type because the generic could overlap with the guard's literal:
+
+```js flow-check
+type Known = {tag: 'known', value: string};
+type Dynamic<T> = {tag: T, data: number};
+type Item<T> = Known | Dynamic<T>;
+
+function isKnown<T>(x: Item<T>): x is Known {
+  return x.tag === 'known'; // ERROR
+}
+```
+
+The error occurs because `T` could be `'known'`, making it impossible to distinguish `Known` from `Dynamic<T>` by checking `tag` alone.
+
+To fix this, add a separate literal discriminant property that does not use the generic. This gives Flow a concrete tag to refine on:
+
+```js flow-check
+type Known = {type: 'known', tag: 'known', value: string};
+type Dynamic<T> = {type: 'dynamic', tag: T, data: number};
+type Item<T> = Known | Dynamic<T>;
+
+function isKnown<T>(x: Item<T>): x is Known {
+  return x.type === 'known';
+}
+```
+
 ## Adoption {#toc-adoption}
 
 To use type guards, you need to upgrade your infrastructure so that it supports the syntax:
