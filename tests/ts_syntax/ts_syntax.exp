@@ -775,35 +775,67 @@ Variance modifiers cannot appear on a type parameter of a function. [unsupported
                   ^^^
 
 
-Error ----------------------------------------------------------------------------------------- in_out_variance.js:44:16
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:36:16
+
+Variance modifiers cannot appear on a type parameter of a method. [unsupported-variance-annotation]
+
+   36|   contraMethod<in T>(x: T): void; // ERROR - in / out not allowed on method type parameters
+                      ^^
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:37:12
+
+Variance modifiers cannot appear on a type parameter of a method. [unsupported-variance-annotation]
+
+   37|   coMethod<out T>(): T; // ERROR - in / out not allowed on method type parameters
+                  ^^^
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:41:16
 
 Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
 
-   44| type FnPlus = <+T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
+   41| type FnPlus = <+T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
                       ^
 
 
-Error ----------------------------------------------------------------------------------------- in_out_variance.js:45:17
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:42:17
 
 Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
 
-   45| type FnMinus = <-T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
+   42| type FnMinus = <-T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
                        ^
 
 
-Error ----------------------------------------------------------------------------------------- in_out_variance.js:48:16
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:45:16
 
 Variance modifiers cannot appear on a type parameter of a function. [unsupported-variance-annotation]
 
-   48|   contraMethod<-T>(x: T): void {} // ERROR - variance modifiers not allowed on method type parameters
+   45|   contraMethod<-T>(x: T): void {} // ERROR - variance modifiers not allowed on method type parameters
                       ^
 
 
-Error ----------------------------------------------------------------------------------------- in_out_variance.js:49:12
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:46:12
 
 Variance modifiers cannot appear on a type parameter of a function. [unsupported-variance-annotation]
 
-   49|   coMethod<+T>(): T { throw 0; } // ERROR - variance modifiers not allowed on method type parameters
+   46|   coMethod<+T>(): T { throw 0; } // ERROR - variance modifiers not allowed on method type parameters
+                  ^
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:50:16
+
+Variance modifiers cannot appear on a type parameter of a method. [unsupported-variance-annotation]
+
+   50|   contraMethod<-T>(x: T): void; // ERROR - variance modifiers not allowed on method type parameters
+                      ^
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:51:12
+
+Variance modifiers cannot appear on a type parameter of a method. [unsupported-variance-annotation]
+
+   51|   coMethod<+T>(): T; // ERROR - variance modifiers not allowed on method type parameters
                   ^
 
 
@@ -1328,4 +1360,4 @@ types. [unsupported-syntax]
 
 
 
-Found 142 errors
+Found 146 errors

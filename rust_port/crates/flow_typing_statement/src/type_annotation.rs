@@ -5285,6 +5285,11 @@ fn mk_method_func_sig<'a>(
         )
     }
 
+    error_on_unsupported_variance_annotation(
+        cx,
+        method_kind_to_string(meth_kind),
+        func.tparams.as_ref(),
+    );
     let saved_tparams_map = env.tparams_map.dupe();
     let (tparams, tparams_ast) = mk_type_param_declarations_inner(
         cx,

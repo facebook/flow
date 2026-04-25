@@ -2731,6 +2731,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       let { Ast.Type.Function.params; effect_; tparams = func_tparams; return = func_return; _ } =
         func
       in
+      error_on_unsupported_variance_annotation
+        env.cx
+        ~kind:(method_kind_to_string meth_kind)
+        func_tparams;
       let (tparams, env, tparams_ast) =
         mk_type_param_declarations env ~kind:Flow_ast_mapper.FunctionTypeTP func_tparams
       in

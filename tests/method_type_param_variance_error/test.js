@@ -18,10 +18,7 @@ class C {
 }
 
 // Interface method type parameters
-// TODO: should ERROR like the class-method case above, but currently accepted
-// silently because mk_method_func_sig in type_annotation.ml does not call
-// error_on_unsupported_variance_annotation. Will be fixed in a follow-up diff.
 interface I {
-  foo<+T>(x: T): void; // OK (TODO: should ERROR)
-  bar<-T>(): T; // OK (TODO: should ERROR)
+  foo<+T>(x: T): void; // ERROR
+  bar<-T>(): T; // ERROR
 }
