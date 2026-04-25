@@ -5,10 +5,10 @@ class B extends A {};
 
 type RWA = {p: A}
 type ROA = {readonly p: A}
-type WOA = {-p: A} // TODO: replace - with writeonly once implemented
+type WOA = {writeonly p: A}
 type RWB = {p: B}
 type ROB = {readonly p: B}
-type WOB = {-p: B} // TODO: replace - with writeonly once implemented
+type WOB = {writeonly p: B}
 
 declare var rwA: RWA;
 declare var roA: ROA;
@@ -22,10 +22,10 @@ declare var woB: WOB;
 
 type dRWA = {[string]: A};
 type dROA = {readonly [string]: A};
-type dWOA = {-[string]: A}; // TODO: replace - with writeonly once implemented
+type dWOA = {writeonly [string]: A};
 type dRWB = {[string]: B};
 type dROB = {readonly [string]: B};
-type dWOB = {-[string]: B}; // TODO: replace - with writeonly once implemented
+type dWOB = {writeonly [string]: B};
 
 declare var drwA: dRWA;
 declare var droA: dROA;
@@ -206,20 +206,15 @@ declare var dwoB: dWOB;
 
   (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
 
-  (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error // TODO: replace - with writeonly
-
+  (([woA]: Array<{writeonly p:A,...}>): Array<{p:A,...}>); // error 
   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
 
   (([roA]: Array<{readonly p:A,...}>): Array<{readonly p:A,...}>); // ok
 
-  (([woA]: Array<{-p:A,...}>): Array<{readonly p:A,...}>); // error // TODO: replace - with writeonly
-
-  (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
-
-  (([roA]: Array<{readonly p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
-
-  (([woA]: Array<{-p:A,...}>): Array<{-p:A,...}>); // ok // TODO: replace - with writeonly
-
+  (([woA]: Array<{writeonly p:A,...}>): Array<{readonly p:A,...}>); // error 
+  (([rwA]: Array<{p:A,...}>): Array<{writeonly p:A,...}>); // error 
+  (([roA]: Array<{readonly p:A,...}>): Array<{writeonly p:A,...}>); // error 
+  (([woA]: Array<{writeonly p:A,...}>): Array<{writeonly p:A,...}>); // ok 
 }
 
 // summarized [incompatible-variance] error

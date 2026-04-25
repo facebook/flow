@@ -1213,9 +1213,9 @@ References:
    test_keyword.js:6:16
     6| type RWA = {p: A}
                       ^ [1]
-   test_keyword.js:11:17
-   11| type WOB = {-p: B} // TODO: replace - with writeonly once implemented
-                       ^ [2]
+   test_keyword.js:11:26
+   11| type WOB = {writeonly p: B}
+                                ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- test_keyword.js:70:4
@@ -1248,9 +1248,9 @@ References:
    test_keyword.js:23:24
    23| type dRWA = {[string]: A};
                               ^ [1]
-   test_keyword.js:28:25
-   28| type dWOB = {-[string]: B}; // TODO: replace - with writeonly once implemented
-                               ^ [2]
+   test_keyword.js:28:34
+   28| type dWOB = {writeonly [string]: B};
+                                        ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- test_keyword.js:88:4
@@ -1370,9 +1370,9 @@ Cannot cast `rwB` to `WOA` because in property `p`: `A` [1] is incompatible with
            ^^^
 
 References:
-   test_keyword.js:8:17
-     8| type WOA = {-p: A} // TODO: replace - with writeonly once implemented
-                        ^ [1]
+   test_keyword.js:8:26
+     8| type WOA = {writeonly p: A}
+                                 ^ [1]
    test_keyword.js:9:16
      9| type RWB = {p: B}
                        ^ [2]
@@ -1387,9 +1387,9 @@ Cannot cast `drwB` to `dWOA` because in the indexer property: `A` [1] is incompa
            ^^^^
 
 References:
-   test_keyword.js:25:25
-    25| type dWOA = {-[string]: A}; // TODO: replace - with writeonly once implemented
-                                ^ [1]
+   test_keyword.js:25:34
+    25| type dWOA = {writeonly [string]: A};
+                                         ^ [1]
    test_keyword.js:26:24
     26| type dRWB = {[string]: B};
                                ^ [2]
@@ -1440,12 +1440,12 @@ Cannot cast `woB` to `WOA` because in property `p`: `A` [1] is incompatible with
            ^^^
 
 References:
-   test_keyword.js:8:17
-     8| type WOA = {-p: A} // TODO: replace - with writeonly once implemented
-                        ^ [1]
-   test_keyword.js:11:17
-    11| type WOB = {-p: B} // TODO: replace - with writeonly once implemented
-                        ^ [2]
+   test_keyword.js:8:26
+     8| type WOA = {writeonly p: A}
+                                 ^ [1]
+   test_keyword.js:11:26
+    11| type WOB = {writeonly p: B}
+                                 ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:140:4
@@ -1457,12 +1457,12 @@ Cannot cast `dwoB` to `dWOA` because in the indexer property: `A` [1] is incompa
            ^^^^
 
 References:
-   test_keyword.js:25:25
-    25| type dWOA = {-[string]: A}; // TODO: replace - with writeonly once implemented
-                                ^ [1]
-   test_keyword.js:28:25
-    28| type dWOB = {-[string]: B}; // TODO: replace - with writeonly once implemented
-                                ^ [2]
+   test_keyword.js:25:34
+    25| type dWOA = {writeonly [string]: A};
+                                         ^ [1]
+   test_keyword.js:28:34
+    28| type dWOB = {writeonly [string]: B};
+                                         ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:146:8
@@ -1867,22 +1867,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:209:18
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error // TODO: replace - with writeonly
-                         ^^^^^^^^^^ [1]
+   209|   (([woA]: Array<{writeonly p:A,...}>): Array<{p:A,...}>); // error 
+                         ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:209:38
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error // TODO: replace - with writeonly
-                                             ^^^^^^^^^ [2]
+   test_keyword.js:209:47
+   209|   (([woA]: Array<{writeonly p:A,...}>): Array<{p:A,...}>); // error 
+                                                      ^^^^^^^^^ [2]
    test_keyword.js:209:12
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error // TODO: replace - with writeonly
-                   ^^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:209:32
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error // TODO: replace - with writeonly
-                                       ^^^^^^^^^^^^^^^^ [4]
+   209|   (([woA]: Array<{writeonly p:A,...}>): Array<{p:A,...}>); // error 
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test_keyword.js:209:41
+   209|   (([woA]: Array<{writeonly p:A,...}>): Array<{p:A,...}>); // error 
+                                                ^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- test_keyword.js:211:18
+Error ------------------------------------------------------------------------------------------- test_keyword.js:210:18
 
 Cannot cast array literal to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
 `{+p: A, ...}` [2]. [incompatible-type]
@@ -1892,23 +1892,23 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   test_keyword.js:211:18
-   211|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
+   test_keyword.js:210:18
+   210|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
                          ^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:211:37
-   211|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
+   test_keyword.js:210:37
+   210|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
                                             ^^^^^^^^^^^^^^^^^^ [2]
-   test_keyword.js:211:12
-   211|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
+   test_keyword.js:210:12
+   210|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
                    ^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:211:31
-   211|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
+   test_keyword.js:210:31
+   210|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- test_keyword.js:215:18
+Error ------------------------------------------------------------------------------------------- test_keyword.js:214:18
 
 Cannot cast array literal to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
 `{+p: A, ...}` [2]. [incompatible-type]
@@ -1918,23 +1918,23 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   test_keyword.js:215:18
-   215|   (([woA]: Array<{-p:A,...}>): Array<{readonly p:A,...}>); // error // TODO: replace - with writeonly
-                         ^^^^^^^^^^ [1]
+   test_keyword.js:214:18
+   214|   (([woA]: Array<{writeonly p:A,...}>): Array<{readonly p:A,...}>); // error 
+                         ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:215:38
-   215|   (([woA]: Array<{-p:A,...}>): Array<{readonly p:A,...}>); // error // TODO: replace - with writeonly
-                                             ^^^^^^^^^^^^^^^^^^ [2]
-   test_keyword.js:215:12
-   215|   (([woA]: Array<{-p:A,...}>): Array<{readonly p:A,...}>); // error // TODO: replace - with writeonly
-                   ^^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:215:32
-   215|   (([woA]: Array<{-p:A,...}>): Array<{readonly p:A,...}>); // error // TODO: replace - with writeonly
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   test_keyword.js:214:47
+   214|   (([woA]: Array<{writeonly p:A,...}>): Array<{readonly p:A,...}>); // error 
+                                                      ^^^^^^^^^^^^^^^^^^ [2]
+   test_keyword.js:214:12
+   214|   (([woA]: Array<{writeonly p:A,...}>): Array<{readonly p:A,...}>); // error 
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test_keyword.js:214:41
+   214|   (([woA]: Array<{writeonly p:A,...}>): Array<{readonly p:A,...}>); // error 
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- test_keyword.js:217:18
+Error ------------------------------------------------------------------------------------------- test_keyword.js:215:18
 
 Cannot cast array literal to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
 `{-p: A, ...}` [2]. [incompatible-type]
@@ -1944,23 +1944,23 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   test_keyword.js:217:18
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
+   test_keyword.js:215:18
+   215|   (([rwA]: Array<{p:A,...}>): Array<{writeonly p:A,...}>); // error 
                          ^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:217:37
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
-                                            ^^^^^^^^^^ [2]
-   test_keyword.js:217:12
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
+   test_keyword.js:215:37
+   215|   (([rwA]: Array<{p:A,...}>): Array<{writeonly p:A,...}>); // error 
+                                            ^^^^^^^^^^^^^^^^^^^ [2]
+   test_keyword.js:215:12
+   215|   (([rwA]: Array<{p:A,...}>): Array<{writeonly p:A,...}>); // error 
                    ^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:217:31
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
-                                      ^^^^^^^^^^^^^^^^^ [4]
+   test_keyword.js:215:31
+   215|   (([rwA]: Array<{p:A,...}>): Array<{writeonly p:A,...}>); // error 
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- test_keyword.js:219:18
+Error ------------------------------------------------------------------------------------------- test_keyword.js:216:18
 
 Cannot cast array literal to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
 `{-p: A, ...}` [2]. [incompatible-type]
@@ -1970,59 +1970,59 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   test_keyword.js:219:18
-   219|   (([roA]: Array<{readonly p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
+   test_keyword.js:216:18
+   216|   (([roA]: Array<{readonly p:A,...}>): Array<{writeonly p:A,...}>); // error 
                          ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:219:46
-   219|   (([roA]: Array<{readonly p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
-                                                     ^^^^^^^^^^ [2]
-   test_keyword.js:219:12
-   219|   (([roA]: Array<{readonly p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
+   test_keyword.js:216:46
+   216|   (([roA]: Array<{readonly p:A,...}>): Array<{writeonly p:A,...}>); // error 
+                                                     ^^^^^^^^^^^^^^^^^^^ [2]
+   test_keyword.js:216:12
+   216|   (([roA]: Array<{readonly p:A,...}>): Array<{writeonly p:A,...}>); // error 
                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:219:40
-   219|   (([roA]: Array<{readonly p:A,...}>): Array<{-p:A,...}>); // error // TODO: replace - with writeonly
-                                               ^^^^^^^^^^^^^^^^^ [4]
+   test_keyword.js:216:40
+   216|   (([roA]: Array<{readonly p:A,...}>): Array<{writeonly p:A,...}>); // error 
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:230:3
+Error -------------------------------------------------------------------------------------------- test_keyword.js:225:3
 
 Cannot cast `x1` to `T1` because property `f1` is read-only in mapped type [1] but writable in mapped type [2], property
 `f2` is read-only in mapped type [1] but writable in mapped type [2], property `f3` is read-only in mapped type [1] but
 writable in mapped type [2], property `f4` is read-only in mapped type [1] but writable in mapped type [2], and property
 `f5` is read-only in mapped type [1] but writable in mapped type [2]. [incompatible-variance]
 
-   test_keyword.js:230:3
-   230|   x1 as T1; // error f1...f5 incompatible
+   test_keyword.js:225:3
+   225|   x1 as T1; // error f1...f5 incompatible
           ^^
 
 References:
-   test_keyword.js:229:29
-   229|   declare var x1: $ReadOnly<T1>;
+   test_keyword.js:224:29
+   224|   declare var x1: $ReadOnly<T1>;
                                     ^^ [1]
-   test_keyword.js:230:9
-   230|   x1 as T1; // error f1...f5 incompatible
+   test_keyword.js:225:9
+   225|   x1 as T1; // error f1...f5 incompatible
                 ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:235:3
+Error -------------------------------------------------------------------------------------------- test_keyword.js:230:3
 
 Cannot cast `x2` to `T2` because property `f1` is read-only in object type [1] but writable in object type [2], property
 `f2` is read-only in object type [1] but writable in object type [2], property `f3` is read-only in object type [1] but
 writable in object type [2], property `f4` is read-only in object type [1] but writable in object type [2], and 2 other
 properties are incompatible. [incompatible-variance]
 
-   test_keyword.js:235:3
-   235|   x2 as T2; // error f1...f4 and others incompatible
+   test_keyword.js:230:3
+   230|   x2 as T2; // error f1...f4 and others incompatible
           ^^
 
 References:
-   test_keyword.js:234:29
-   234|   declare var x2: $ReadOnly<T2>;
+   test_keyword.js:229:29
+   229|   declare var x2: $ReadOnly<T2>;
                                     ^^ [1]
-   test_keyword.js:235:9
-   235|   x2 as T2; // error f1...f4 and others incompatible
+   test_keyword.js:230:9
+   230|   x2 as T2; // error f1...f4 and others incompatible
                 ^^ [2]
 
 
