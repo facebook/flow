@@ -31,8 +31,26 @@ class MethodHost {
   coMethod<out T>(): T { throw 0; } // ERROR - in / out not allowed on method type parameters
 }
 
-// Method type parameters in interfaces — currently accepted (no error)
+// Method type parameters in interfaces
+// TODO: should ERROR like the class-method case above, but currently accepted
+// silently because mk_method_func_sig in type_annotation.ml does not call
+// error_on_unsupported_variance_annotation. Will be fixed in a follow-up diff.
 interface MethodInterface {
-  contraMethod<in T>(x: T): void; // OK
-  coMethod<out T>(): T; // OK
+  contraMethod<in T>(x: T): void; // OK (TODO: should ERROR)
+  coMethod<out T>(): T; // OK (TODO: should ERROR)
+}
+
+// Same restriction applies to the +/- variance spellings (no flag required)
+type FnPlus = <+T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
+type FnMinus = <-T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
+
+class MethodHostShortForm {
+  contraMethod<-T>(x: T): void {} // ERROR - variance modifiers not allowed on method type parameters
+  coMethod<+T>(): T { throw 0; } // ERROR - variance modifiers not allowed on method type parameters
+}
+
+// Same TODO: interface methods silently accept +/- variance markers too.
+interface MethodInterfaceShortForm {
+  contraMethod<-T>(x: T): void; // OK (TODO: should ERROR)
+  coMethod<+T>(): T; // OK (TODO: should ERROR)
 }

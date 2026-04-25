@@ -775,6 +775,38 @@ Variance modifiers cannot appear on a type parameter of a function. [unsupported
                   ^^^
 
 
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:44:16
+
+Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
+
+   44| type FnPlus = <+T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
+                      ^
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:45:17
+
+Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
+
+   45| type FnMinus = <-T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
+                       ^
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:48:16
+
+Variance modifiers cannot appear on a type parameter of a function. [unsupported-variance-annotation]
+
+   48|   contraMethod<-T>(x: T): void {} // ERROR - variance modifiers not allowed on method type parameters
+                      ^
+
+
+Error ----------------------------------------------------------------------------------------- in_out_variance.js:49:12
+
+Variance modifiers cannot appear on a type parameter of a function. [unsupported-variance-annotation]
+
+   49|   coMethod<+T>(): T { throw 0; } // ERROR - variance modifiers not allowed on method type parameters
+                  ^
+
+
 Error ---------------------------------------------------------------------------------------------------- never.js:1:10
 
 The closest equivalent of TypeScript's `never` type in Flow is `empty`. [unsupported-syntax]
@@ -1296,4 +1328,4 @@ types. [unsupported-syntax]
 
 
 
-Found 138 errors
+Found 142 errors

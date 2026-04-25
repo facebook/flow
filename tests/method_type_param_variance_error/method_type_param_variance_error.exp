@@ -1,0 +1,64 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:9:11
+
+Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
+
+   9| type F = <+T>(x: T) => void; // ERROR
+                ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:10:11
+
+Variance modifiers cannot appear on a type parameter of a function type. [unsupported-variance-annotation]
+
+   10| type G = <-T>() => T; // ERROR
+                 ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:14:7
+
+Variance modifiers cannot appear on a type parameter of a function. [unsupported-variance-annotation]
+
+   14|   foo<+T>(x: T): void {} // ERROR
+             ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:14
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test.js:14:14
+   14|   foo<+T>(x: T): void {} // ERROR
+                    ^
+
+References:
+   test.js:14:8
+   14|   foo<+T>(x: T): void {} // ERROR
+              ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:15:7
+
+Variance modifiers cannot appear on a type parameter of a function. [unsupported-variance-annotation]
+
+   15|   bar<-T>(): T {
+             ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:15:14
+
+Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test.js:15:14
+   15|   bar<-T>(): T {
+                    ^
+
+References:
+   test.js:15:8
+   15|   bar<-T>(): T {
+              ^ [1]
+
+
+
+Found 6 errors
