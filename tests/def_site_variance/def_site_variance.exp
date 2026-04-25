@@ -200,9 +200,9 @@ Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur
                ^^^
 
 References:
-   test_keyword.js:1:17
-   1| class Variance<+Out,-In> {
-                      ^^^ [1]
+   test_keyword.js:1:20
+   1| class Variance<out Out, in In> {
+                         ^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- test_keyword.js:3:15
@@ -215,9 +215,9 @@ Cannot use `In` [1] in an output position because `In` [1] is expected to occur 
                     ^^
 
 References:
-   test_keyword.js:1:22
-   1| class Variance<+Out,-In> {
-                           ^^ [1]
+   test_keyword.js:1:28
+   1| class Variance<out Out, in In> {
+                                 ^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- test_keyword.js:13:4
@@ -230,9 +230,9 @@ Cannot cast `v1` to `Variance` because in type argument `Out` [1]: `A` [2] is in
           ^^
 
 References:
-   test_keyword.js:1:17
-    1| class Variance<+Out,-In> {
-                       ^^^ [1]
+   test_keyword.js:1:20
+    1| class Variance<out Out, in In> {
+                          ^^^ [1]
    test_keyword.js:10:16
    10|   v1: Variance<A,B>,
                       ^ [2]
@@ -251,9 +251,9 @@ Cannot cast `v1` to `Variance` because in type argument `In` [1]: `B` [2] is inc
           ^^
 
 References:
-   test_keyword.js:1:22
-    1| class Variance<+Out,-In> {
-                            ^^ [1]
+   test_keyword.js:1:28
+    1| class Variance<out Out, in In> {
+                                  ^^ [1]
    test_keyword.js:10:18
    10|   v1: Variance<A,B>,
                         ^ [2]
@@ -272,9 +272,9 @@ Cannot use `Out` [1] in an input/output position because `Out` [1] is expected t
                ^^^
 
 References:
-   test_keyword.js:17:21
-   17| class PropVariance<+Out,-In> {
-                           ^^^ [1]
+   test_keyword.js:17:24
+   17| class PropVariance<out Out, in In> {
+                              ^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- test_keyword.js:19:9
@@ -287,39 +287,39 @@ Cannot use `In` [1] in an input/output position because `In` [1] is expected to 
                ^^
 
 References:
-   test_keyword.js:17:26
-   17| class PropVariance<+Out,-In> {
-                                ^^ [1]
+   test_keyword.js:17:32
+   17| class PropVariance<out Out, in In> {
+                                      ^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:20:9
+Error -------------------------------------------------------------------------------------------- test_keyword.js:20:18
 
 Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   test_keyword.js:20:9
-   20|   -co1: Out; // error
-               ^^^
+   test_keyword.js:20:18
+   20|   writeonly co1: Out; // error
+                        ^^^
 
 References:
-   test_keyword.js:17:21
-   17| class PropVariance<+Out,-In> {
-                           ^^^ [1]
+   test_keyword.js:17:24
+   17| class PropVariance<out Out, in In> {
+                              ^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:23:10
+Error -------------------------------------------------------------------------------------------- test_keyword.js:23:18
 
 Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
-   test_keyword.js:23:10
-   23|   +con2: In; // error
-                ^^
+   test_keyword.js:23:18
+   23|   readonly con2: In; // error
+                        ^^
 
 References:
-   test_keyword.js:17:26
-   17| class PropVariance<+Out,-In> {
-                                ^^ [1]
+   test_keyword.js:17:32
+   17| class PropVariance<out Out, in In> {
+                                      ^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:25:27
@@ -332,9 +332,9 @@ Cannot use `Out` [1] in an input/output position because `Out` [1] is expected t
                                  ^^^
 
 References:
-   test_keyword.js:17:21
-   17| class PropVariance<+Out,-In> {
-                           ^^^ [1]
+   test_keyword.js:17:24
+   17| class PropVariance<out Out, in In> {
+                              ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:26:27
@@ -347,39 +347,39 @@ Cannot use `In` [1] in an input/output position because `In` [1] is expected to 
                                  ^^
 
 References:
-   test_keyword.js:17:26
-   17| class PropVariance<+Out,-In> {
-                                ^^ [1]
+   test_keyword.js:17:32
+   17| class PropVariance<out Out, in In> {
+                                      ^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:28:28
+Error -------------------------------------------------------------------------------------------- test_keyword.js:28:44
 
 Cannot use `In` [1] in an output position because `In` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
-   test_keyword.js:28:28
-   28|   +co_dict2: {+[k:string]: In}; // error
-                                  ^^
+   test_keyword.js:28:44
+   28|   readonly co_dict2: {readonly [k:string]: In}; // error
+                                                  ^^
 
 References:
-   test_keyword.js:17:26
-   17| class PropVariance<+Out,-In> {
-                                ^^ [1]
+   test_keyword.js:17:32
+   17| class PropVariance<out Out, in In> {
+                                      ^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:29:29
+Error -------------------------------------------------------------------------------------------- test_keyword.js:29:46
 
 Cannot use `Out` [1] in an input position because `Out` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   test_keyword.js:29:29
-   29|   +con_dict1: {-[k:string]: Out}; // error
-                                   ^^^
+   test_keyword.js:29:46
+   29|   readonly con_dict1: {writeonly [k:string]: Out}; // error
+                                                    ^^^
 
 References:
-   test_keyword.js:17:21
-   17| class PropVariance<+Out,-In> {
-                           ^^^ [1]
+   test_keyword.js:17:24
+   17| class PropVariance<out Out, in In> {
+                              ^^^ [1]
 
 
 
