@@ -18,8 +18,6 @@
 // `RequestWithMetadata` / `MessageFromServer`. All bincode-framed.
 use std::sync::Arc;
 
-use tokio::sync::Notify;
-
 use crate::flow_server_monitor_server as Server;
 
 // Just forward requests to the server.
@@ -52,8 +50,16 @@ pub trait StatusWriter {
 }
 
 // A loop that sends the Server's busy status to a waiting connection every 0.5 seconds.
-fn status_loop_run<W: StatusWriter>(conn: &W::Connection) {
+// `cancel` is checked at the top of every iteration. The OCaml `LwtLoop.Make` body is
+// implicitly cancellable at every `let%lwt`; here we settle for cooperative cancellation
+// so the select! losers in `create_*_connection` can stop the loop without leaking the
+// blocking thread. Worst-case latency is one iteration (~0.5s — the timeout passed to
+// `wait_for_signficant_status`), the same suspension granularity OCaml has.
+fn status_loop_run<W: StatusWriter>(conn: &W::Connection, cancel: &std::sync::atomic::AtomicBool) {
     loop {
+        if cancel.load(std::sync::atomic::Ordering::SeqCst) {
+            return;
+        }
         // It is important that we not yield between wait_for_signficant_status and the
         // next iteration of this loop, where we wait again. If we are not waiting when
         // a status is sent, we'll miss it.
@@ -123,40 +129,39 @@ fn create_ephemeral_connection(
 
     // On exit, do our best to send all pending messages to the waiting client.
     let conn_for_close_on_exit = conn.clone();
-    let close_on_exit = move || {
-        crate::exit_signal::SIGNAL.wait();
-        conn_for_close_on_exit.try_flush_and_close();
+    let close_on_exit = async move {
+        crate::exit_signal::SIGNAL.notified().await;
+        tokio::task::spawn_blocking(move || {
+            conn_for_close_on_exit.try_flush_and_close();
+        })
+        .await
+        .expect("try_flush_and_close blocking task panicked");
     };
 
-    // Lwt.pick returns the first thread to finish and cancels the rest.
+    // Lwt.pick returns the first thread to finish and cancels the rest. We approximate
+    // that here: `close_on_exit` is an abortable async task (its `.await` on the exit
+    // signal is cancellable by dropping the future). `status_loop_run` is a blocking
+    // task that observes a cooperative cancel flag at the top of each iteration. After
+    // the select! resolves we abort the close_on_exit task and set the status loop's
+    // cancel flag, so the losers stop instead of running to completion.
     let conn_for_wait = conn.clone();
     let conn_for_loop = conn.clone();
-    std::thread::spawn(move || {
-        let done_notify = Arc::new(Notify::new());
-
-        let done_close = done_notify.clone();
-        std::thread::spawn(move || {
-            close_on_exit();
-            done_close.notify_one();
+    let wait_for_closed_notify = conn_for_wait.wait_for_closed_notify();
+    let status_cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let status_cancel_for_loop = status_cancel.clone();
+    crate::runtime::handle().spawn(async move {
+        let close_on_exit_handle = crate::runtime::handle().spawn(close_on_exit);
+        let close_on_exit_abort = close_on_exit_handle.abort_handle();
+        let status_loop_handle = tokio::task::spawn_blocking(move || {
+            status_loop_run::<EphemeralStatusWriter>(&conn_for_loop, &status_cancel_for_loop);
         });
-        let done_wait = done_notify.clone();
-        std::thread::spawn(move || {
-            conn_for_wait.wait_for_closed();
-            done_wait.notify_one();
-        });
-        let done_loop = done_notify.clone();
-        std::thread::spawn(move || {
-            status_loop_run::<EphemeralStatusWriter>(&conn_for_loop);
-            done_loop.notify_one();
-        });
-
-        let runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .expect("tokio runtime build failed");
-        runtime.block_on(async {
-            done_notify.notified().await;
-        });
+        tokio::select! {
+            _ = close_on_exit_handle => {}
+            _ = wait_for_closed_notify.notified() => {}
+            _ = status_loop_handle => {}
+        }
+        close_on_exit_abort.abort();
+        status_cancel.store(true, std::sync::atomic::Ordering::SeqCst);
     });
 
     // Start the ephemeral connection.
@@ -223,50 +228,49 @@ fn create_persistent_connection(
 
     // On exit, do our best to send all pending messages to the waiting client.
     let conn_for_close_on_exit = conn.clone();
-    let close_on_exit = move || {
-        let (exit_status, _) = crate::exit_signal::SIGNAL.wait();
-        // Notifies the client why the connection is closing. This can be useful to
-        // the persistent client to decide if it should autostart a new monitor.
-        conn_for_close_on_exit.write(
-            flow_server_env::lsp_prot::MessageFromServer::NotificationFromServer(
-                flow_server_env::lsp_prot::NotificationFromServer::ServerExit(exit_status),
-            ),
-        );
-        conn_for_close_on_exit.try_flush_and_close();
+    let close_on_exit = async move {
+        let (exit_status, _) = crate::exit_signal::SIGNAL.notified().await;
+        tokio::task::spawn_blocking(move || {
+            // Notifies the client why the connection is closing. This can be useful to
+            // the persistent client to decide if it should autostart a new monitor.
+            conn_for_close_on_exit.write(
+                flow_server_env::lsp_prot::MessageFromServer::NotificationFromServer(
+                    flow_server_env::lsp_prot::NotificationFromServer::ServerExit(exit_status),
+                ),
+            );
+            conn_for_close_on_exit.try_flush_and_close();
+        })
+        .await
+        .expect("try_flush_and_close blocking task panicked");
     };
 
     // Don't start the connection until we add it to the persistent connection map.
     crate::persistent_connection_map::add(client_id, conn.clone());
 
-    // Lwt.pick returns the first thread to finish and cancels the rest.
+    // Lwt.pick returns the first thread to finish and cancels the rest. We approximate
+    // that here: `close_on_exit` is an abortable async task (its `.await` on the exit
+    // signal is cancellable by dropping the future). `status_loop_run` is a blocking
+    // task that observes a cooperative cancel flag at the top of each iteration. After
+    // the select! resolves we abort the close_on_exit task and set the status loop's
+    // cancel flag, so the losers stop instead of running to completion.
     let conn_for_wait = conn.clone();
     let conn_for_loop = conn.clone();
-    std::thread::spawn(move || {
-        let done_notify = Arc::new(Notify::new());
-
-        let done_close = done_notify.clone();
-        std::thread::spawn(move || {
-            close_on_exit();
-            done_close.notify_one();
+    let wait_for_closed_notify = conn_for_wait.wait_for_closed_notify();
+    let status_cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let status_cancel_for_loop = status_cancel.clone();
+    crate::runtime::handle().spawn(async move {
+        let close_on_exit_handle = crate::runtime::handle().spawn(close_on_exit);
+        let close_on_exit_abort = close_on_exit_handle.abort_handle();
+        let status_loop_handle = tokio::task::spawn_blocking(move || {
+            status_loop_run::<PersistentStatusWriter>(&conn_for_loop, &status_cancel_for_loop);
         });
-        let done_wait = done_notify.clone();
-        std::thread::spawn(move || {
-            conn_for_wait.wait_for_closed();
-            done_wait.notify_one();
-        });
-        let done_loop = done_notify.clone();
-        std::thread::spawn(move || {
-            status_loop_run::<PersistentStatusWriter>(&conn_for_loop);
-            done_loop.notify_one();
-        });
-
-        let runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .expect("tokio runtime build failed");
-        runtime.block_on(async {
-            done_notify.notified().await;
-        });
+        tokio::select! {
+            _ = close_on_exit_handle => {}
+            _ = wait_for_closed_notify.notified() => {}
+            _ = status_loop_handle => {}
+        }
+        close_on_exit_abort.abort();
+        status_cancel.store(true, std::sync::atomic::Ordering::SeqCst);
     });
 
     start();

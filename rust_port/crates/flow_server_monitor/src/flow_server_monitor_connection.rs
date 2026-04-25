@@ -190,11 +190,10 @@ impl<P: ConnectionProcessor> Connection<P> {
         self.closed.load(std::sync::atomic::Ordering::SeqCst)
     }
 
-    pub fn wait_for_closed(&self) {
-        let notify = self.wait_for_closed_thread.clone();
-        runtime::handle().block_on(async move {
-            notify.notified().await;
-        });
+    // Returns the underlying Notify so an async caller can `await` connection-close
+    // directly inside the shared runtime.
+    pub fn wait_for_closed_notify(&self) -> Arc<Notify> {
+        self.wait_for_closed_thread.clone()
     }
 }
 

@@ -41,6 +41,26 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 static EXITING: AtomicBool = AtomicBool::new(false);
 
+// A broadcast notification for monitor exit. Loops that need to wake up
+// deterministically on exit (instead of polling the EXITING flag) clone
+// `EXIT_SIGNAL.1` and select on it. When `signal_exit_to_loops` drops the
+// sender, all cloned receivers see Disconnected on their next recv.
+static EXIT_SIGNAL: std::sync::LazyLock<(
+    std::sync::Mutex<Option<crossbeam::channel::Sender<()>>>,
+    crossbeam::channel::Receiver<()>,
+)> = std::sync::LazyLock::new(|| {
+    let (tx, rx) = crossbeam::channel::unbounded();
+    (std::sync::Mutex::new(Some(tx)), rx)
+});
+
+pub fn exit_signal_receiver() -> crossbeam::channel::Receiver<()> {
+    EXIT_SIGNAL.1.clone()
+}
+
+fn signal_exit_to_loops() {
+    *EXIT_SIGNAL.0.lock().unwrap() = None;
+}
+
 pub fn exit(
     _error: Option<(String, String)>,
     msg: &str,
@@ -57,6 +77,7 @@ pub fn exit(
 
     log::info!("Broadcasting to threads and waiting 1 second for them to exit");
     crate::exit_signal::SIGNAL.broadcast(exit_status, msg.to_string());
+    signal_exit_to_loops();
 
     // Protect this thread from getting canceled
     std::thread::sleep(std::time::Duration::from_secs(1));
@@ -161,7 +182,6 @@ fn push_to_command_stream(cmd: Command) {
 pub mod server_instance {
     use std::sync::Arc;
     use std::sync::Mutex;
-    use std::sync::atomic::AtomicBool;
     use std::sync::atomic::Ordering;
     use std::thread::JoinHandle;
 
@@ -180,7 +200,10 @@ pub mod server_instance {
         pub file_watcher_loop: Option<JoinHandle<()>>,
         pub on_exit_thread: Option<JoinHandle<()>>,
         pub file_watcher_exit_thread: Option<JoinHandle<()>>,
-        pub shutdown: Arc<AtomicBool>,
+        // Holding the sender side keeps cloned receivers alive. Dropping this
+        // (in `cleanup`) broadcasts Disconnected to every clone, letting waiters
+        // in the command and file-watcher loops wake immediately.
+        pub shutdown_tx: std::sync::Mutex<Option<crossbeam::channel::Sender<()>>>,
         pub daemon_handle: Arc<Mutex<Option<Handle<(), ()>>>>,
     }
 
@@ -325,12 +348,30 @@ pub mod server_instance {
         }
     }
 
-    fn command_loop_main(watcher: &Arc<crate::file_watcher::AnyWatcher>, conn: &ServerConnection) {
+    pub(super) enum CommandLoopOutcome {
+        Continue,
+        Stop,
+    }
+
+    pub(super) enum FileWatcherLoopOutcome {
+        Continue,
+        Stop,
+    }
+
+    fn command_loop_main(
+        watcher: &Arc<crate::file_watcher::AnyWatcher>,
+        conn: &ServerConnection,
+        instance_shutdown: &crossbeam::channel::Receiver<()>,
+        exit_signal: &crossbeam::channel::Receiver<()>,
+    ) -> CommandLoopOutcome {
         let receiver = super::COMMAND_STREAM.1.lock().unwrap();
-        let command = match receiver.recv_timeout(std::time::Duration::from_millis(100)) {
-            Ok(cmd) => cmd,
-            Err(crossbeam::channel::RecvTimeoutError::Timeout) => return,
-            Err(crossbeam::channel::RecvTimeoutError::Disconnected) => return,
+        let command = crossbeam::channel::select! {
+            recv(receiver) -> result => match result {
+                Ok(cmd) => cmd,
+                Err(crossbeam::channel::RecvError) => return CommandLoopOutcome::Stop,
+            },
+            recv(instance_shutdown) -> _ => return CommandLoopOutcome::Stop,
+            recv(exit_signal) -> _ => return CommandLoopOutcome::Stop,
         };
         drop(receiver);
         match command {
@@ -375,6 +416,7 @@ pub mod server_instance {
                 send_file_watcher_notification(watcher, conn);
             }
         }
+        CommandLoopOutcome::Continue
     }
 
     // The monitor is exiting. Let's try and shut down the server gracefully
@@ -468,7 +510,9 @@ pub mod server_instance {
     }
 
     pub fn cleanup(t: &mut ServerInstance) {
-        t.shutdown.store(true, Ordering::SeqCst);
+        // Drop the sender so every cloned receiver in the per-instance loops sees
+        // Disconnected on its next recv and wakes up immediately.
+        *t.shutdown_tx.lock().unwrap() = None;
         t.command_loop.take();
         t.file_watcher_loop.take();
         t.file_watcher_exit_thread.take();
@@ -697,7 +741,7 @@ pub mod server_instance {
 
         let any_watcher_arc = std::sync::Arc::new(any_watcher);
 
-        let shutdown = Arc::new(AtomicBool::new(false));
+        let (shutdown_tx, shutdown_rx) = crossbeam::channel::unbounded::<()>();
 
         let watcher_name_for_exit = watcher_name.clone();
         let watcher_for_exit = any_watcher_arc.clone();
@@ -733,17 +777,15 @@ pub mod server_instance {
 
         let command_loop_connection = connection.clone();
         let command_loop_watcher = any_watcher_arc.clone();
-        let command_loop_shutdown = shutdown.clone();
+        let command_loop_shutdown_rx = shutdown_rx.clone();
+        let command_loop_exit_rx = super::exit_signal_receiver();
         let command_loop = Some(std::thread::spawn(move || {
-            loop {
-                if super::EXITING.load(Ordering::SeqCst) {
-                    break;
-                }
-                if command_loop_shutdown.load(Ordering::SeqCst) {
-                    break;
-                }
-                command_loop_main(&command_loop_watcher, &command_loop_connection);
-            }
+            while let CommandLoopOutcome::Continue = command_loop_main(
+                &command_loop_watcher,
+                &command_loop_connection,
+                &command_loop_shutdown_rx,
+                &command_loop_exit_rx,
+            ) {}
         }));
 
         let file_watcher_loop: Option<JoinHandle<()>> = if matches!(
@@ -754,17 +796,39 @@ pub mod server_instance {
             None
         } else {
             let watcher_for_loop = any_watcher_arc.clone();
-            let file_watcher_loop_shutdown = shutdown.clone();
+            let file_watcher_loop_shutdown_rx = shutdown_rx.clone();
+            let file_watcher_loop_exit_rx = super::exit_signal_receiver();
             Some(std::thread::spawn(move || {
-                // Poll for file changes every second
-                while !super::EXITING.load(Ordering::SeqCst)
-                    && !file_watcher_loop_shutdown.load(Ordering::SeqCst)
-                {
+                // Race wait_for_changed_files (async, cancellable) against the two
+                // crossbeam shutdown channels (sync). We bridge the async side into
+                // a one-shot crossbeam channel and select! over all three. Aborting
+                // the spawned tokio task on shutdown is what makes wait_for_changed_files
+                // cancel cleanly; using spawn_blocking on the crossbeam recvs would leak
+                // blocking-pool slots on every iteration since spawn_blocking can't be
+                // aborted.
+                loop {
+                    let (changes_tx, changes_rx) = crossbeam::channel::bounded::<()>(1);
                     let watcher_for_iter = watcher_for_loop.clone();
-                    crate::runtime::handle().block_on(async move {
+                    let changes_handle = crate::runtime::handle().spawn(async move {
                         watcher_for_iter.wait_for_changed_files().await;
+                        // Receiver may already be dropped if select! resolved on a
+                        // shutdown branch; that's the expected race.
+                        if changes_tx.send(()).is_err() {}
                     });
-                    super::push_to_command_stream(super::Command::NotifyFileChanges);
+                    let outcome = crossbeam::channel::select! {
+                        recv(changes_rx) -> _ => FileWatcherLoopOutcome::Continue,
+                        recv(file_watcher_loop_shutdown_rx) -> _ => FileWatcherLoopOutcome::Stop,
+                        recv(file_watcher_loop_exit_rx) -> _ => FileWatcherLoopOutcome::Stop,
+                    };
+                    // Always abort the spawned wait task so a Stop outcome doesn't
+                    // leave it blocked inside the watcher forever.
+                    changes_handle.abort();
+                    match outcome {
+                        FileWatcherLoopOutcome::Continue => {
+                            super::push_to_command_stream(super::Command::NotifyFileChanges);
+                        }
+                        FileWatcherLoopOutcome::Stop => break,
+                    }
                 }
             }))
         };
@@ -781,7 +845,7 @@ pub mod server_instance {
             file_watcher_loop,
             on_exit_thread,
             file_watcher_exit_thread,
-            shutdown,
+            shutdown_tx: std::sync::Mutex::new(Some(shutdown_tx)),
             daemon_handle,
         }
     }
@@ -1253,11 +1317,14 @@ fn setup_signal_handlers() {
             }
         };
         if let Some(sig) = sigs.forever().next() {
+            // Set EXITING first (matching `exit()`), then broadcast so any reader
+            // observing the broadcast can also observe EXITING == true.
+            EXITING.store(true, Ordering::SeqCst);
             crate::exit_signal::SIGNAL.broadcast(
                 flow_common_exit_status::FlowExitStatus::Interrupted,
                 format!("Received signal {}", sig),
             );
-            EXITING.store(true, Ordering::SeqCst);
+            signal_exit_to_loops();
         }
     });
 }
