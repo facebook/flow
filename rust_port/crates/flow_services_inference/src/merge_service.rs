@@ -745,6 +745,7 @@ fn mk_check_file(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
     master_cx: &MasterContext,
+    skip_post_check_cleanup: bool,
 ) -> (
     Box<dyn FnMut(FileKey) -> Option<CheckFileResult>>,
     Rc<std::cell::RefCell<CheckCache<'static>>>,
@@ -814,16 +815,31 @@ fn mk_check_file(
         let aloc_tables: HashMap<FileKey, flow_aloc::LazyALocTable> = cx.aloc_tables().clone();
         let (errors, warnings) =
             suppressions.filter_lints(errors, &aloc_tables, include_suppressions, &severity_cover);
-        cx.post_inference_cleanup();
-        #[cfg(debug_assertions)]
-        {
-            let count = cx.strong_count();
-            if count > 2 {
-                eprintln!(
-                    "[LEAK-DEBUG] Context for {} has strong_count={} after cleanup (expected <=2)",
-                    file.as_str(),
-                    count
-                );
+        // Break Rc cycles eagerly to bound peak memory: without this, every
+        // checked file's full type graph stays alive in the cache until the
+        // cache itself is dropped (which only happens at the end of a long
+        // run). Codemod consumers must opt out via `skip_post_check_cleanup`,
+        // because `drop_lazy_forcing_states` forcibly resolves every unforced
+        // ForcingState in the shared sig_cx graph to `AnyT(RAnyImplicit)`,
+        // and the codemod runner's `post_check` normalizes the cx after this
+        // function returns and needs those still-lazy states to resolve to
+        // their real types (otherwise legitimate annotations like
+        // `$ArrayLike<mixed>` turn into `any`). For codemods, the full
+        // cleanup runs later when the CheckCache evicts the entry or is
+        // dropped (see `CheckCache::drop_least_recently_used` and its `Drop`
+        // impl).
+        if !skip_post_check_cleanup {
+            cx.post_inference_cleanup();
+            #[cfg(debug_assertions)]
+            {
+                let count = cx.strong_count();
+                if count > 2 {
+                    eprintln!(
+                        "[LEAK-DEBUG] Context for {} has strong_count={} after cleanup (expected <=2)",
+                        file.as_str(),
+                        count
+                    );
+                }
             }
         }
         let duration = start_time.elapsed().as_secs_f64();
@@ -1082,11 +1098,17 @@ pub fn mk_check(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
     master_cx: &MasterContext,
+    skip_post_check_cleanup: bool,
 ) -> (
     Box<dyn FnMut(FileKey) -> UnitResult<Option<CheckFileResult>>>,
     Rc<std::cell::RefCell<CheckCache<'static>>>,
 ) {
-    let (mut check_file, cache) = mk_check_file(shared_mem.dupe(), options.dupe(), master_cx);
+    let (mut check_file, cache) = mk_check_file(
+        shared_mem.dupe(),
+        options.dupe(),
+        master_cx,
+        skip_post_check_cleanup,
+    );
     let check_fn = Box::new(move |file: FileKey| {
         let result: Result<Option<CheckFileResult>, _> =
             std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| check_file(file.dupe())));

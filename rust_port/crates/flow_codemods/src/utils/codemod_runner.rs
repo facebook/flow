@@ -364,6 +364,11 @@ fn mk_check<'a, A>(
         reader.clone(),
         Arc::new(options.clone()),
         master_cx,
+        // The codemod's `post_check` normalizes the cx after `check`
+        // returns and needs lazy ForcingStates to resolve to their real
+        // types. Skip the eager cleanup; the cache's Drop impl will run
+        // the full cleanup once the codemod is done with the cx.
+        true,
     );
     move |file: FileKey| -> UnitResult<Option<((), A)>> {
         let result = check(file.clone());
@@ -809,6 +814,11 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                 reader.clone(),
                 Arc::new(options.clone()),
                 master_cx,
+                // Prepass passes the cx into `prepass_run`, which may force
+                // lazy ForcingStates on demand. Skip the eager cleanup; the
+                // cache's Drop impl runs the full cleanup once prepass is
+                // done with the cx.
+                true,
             );
             let mut acc: BTreeMap<FileKey, UnitResult<C::PrepassResult>> = BTreeMap::new();
             let files_to_check_list: Vec<FileKey> = files_to_check.iter().cloned().collect();

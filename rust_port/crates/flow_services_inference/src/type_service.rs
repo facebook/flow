@@ -713,7 +713,12 @@ mod check_files {
                 let shared_mem = shared_mem.dupe();
                 let options = options.dupe();
                 Arc::new(move || {
-                    merge_service::mk_check(shared_mem.dupe(), options.dupe(), master_cx.as_ref())
+                    merge_service::mk_check(
+                        shared_mem.dupe(),
+                        options.dupe(),
+                        master_cx.as_ref(),
+                        false,
+                    )
                 })
             };
             let num_workers = pool.num_workers();
