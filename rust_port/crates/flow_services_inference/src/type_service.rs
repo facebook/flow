@@ -952,8 +952,20 @@ fn init_libs(
             exports: lib_exports,
             master_cx,
         } = init::init(options, shared_mem, ordered_libs);
-        let local_errors = merge_error_maps(lib_errors, local_errors);
-        let warnings = merge_error_maps(lib_warnings, warnings);
+        let local_errors = {
+            let mut acc = lib_errors;
+            for (file, errset) in local_errors {
+                acc.entry(file).or_insert(errset);
+            }
+            acc
+        };
+        let warnings = {
+            let mut acc = lib_warnings;
+            for (file, errset) in warnings {
+                acc.entry(file).or_insert(errset);
+            }
+            acc
+        };
         let mut suppressions = suppressions;
         suppressions.update_suppressions(lib_suppressions);
         (
@@ -2431,7 +2443,7 @@ fn init_with_initial_state(
         options,
         shared_mem,
         ordered_libs.clone(),
-        merge_error_maps(local_errors, additional_local_errors),
+        local_errors,
         BTreeMap::new(),
         ErrorSuppressions::empty(),
     );
@@ -2450,6 +2462,7 @@ fn init_with_initial_state(
         .into_iter()
         .chain(additional_dirty_modules)
         .collect();
+    let local_errors = merge_error_maps(local_errors, additional_local_errors);
 
     monitor_rpc::status_update(server_status::Event::ResolvingDependenciesProgress);
     let (_changed_modules, duplicate_providers) = commit_modules(

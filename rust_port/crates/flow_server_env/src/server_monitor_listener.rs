@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::sync::Arc;
+
 use flow_utils_concurrency::worker_cancel;
 
 use crate::monitor_prot::MonitorToServerMessage;
@@ -16,14 +18,14 @@ use crate::server_monitor_listener_state;
 
 pub struct CommandHandlerCallbacks {
     pub enqueue_or_handle_ephemeral: fn(
-        &Genv,
+        &Arc<Genv>,
         (
             crate::monitor_prot::RequestId,
             crate::server_command_with_context::ServerCommandWithContext,
         ),
     ),
     pub enqueue_persistent:
-        fn(&Genv, crate::lsp_prot::ClientId, crate::lsp_prot::RequestWithMetadata),
+        fn(&Arc<Genv>, crate::lsp_prot::ClientId, crate::lsp_prot::RequestWithMetadata),
 }
 
 // TODO: find a way to gracefully kill the workers. At the moment, if the
@@ -37,7 +39,7 @@ fn kill_workers() {
 }
 
 fn handle_message(
-    genv: &Genv,
+    genv: &Arc<Genv>,
     callbacks: &CommandHandlerCallbacks,
     message: MonitorToServerMessage,
 ) {
@@ -105,7 +107,7 @@ fn handle_message(
 
 // This thread keeps reading messages from the monitor process and adding them
 // to a stream. It runs in parallel with the server loop that consumes it.
-pub fn listen_for_messages(genv: &Genv, callbacks: &CommandHandlerCallbacks) -> ! {
+pub fn listen_for_messages(genv: &Arc<Genv>, callbacks: &CommandHandlerCallbacks) -> ! {
     loop {
         // Read a message from the monitor.
         let message = match monitor_rpc::read() {

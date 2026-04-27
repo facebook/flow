@@ -73,6 +73,9 @@ type AutocompleteResponse = Result<
 
 pub const CHECKED_DEPENDENCIES_RETRY_SENTINEL: &str = "__flow_checked_dependencies_retry__";
 
+#[derive(Debug)]
+pub struct WorkloadCanceled;
+
 static DID_OPEN_PENDING_FILES: LazyLock<Mutex<std::collections::BTreeMap<String, String>>> =
     LazyLock::new(|| Mutex::new(std::collections::BTreeMap::new()));
 static URI_TO_LATEST_METADATA_MAP: LazyLock<
@@ -151,10 +154,15 @@ use flow_services_get_def::get_def_types::Purpose;
 
 const DOCBLOCK_MAX_TOKENS: usize = 10;
 
-pub type EphemeralParallelizableResult = (server_prot::response::Response, Option<lsp_prot::Json>);
+// Mirrors OCaml's `Lwt.t` returning `(response, json_data) option` or raising
+// `Lwt.Canceled`. The Err variant carries `WorkloadCanceled`, which the
+// `run_command_in_parallel`/`run_command_in_serial` functions translate into
+// either a workload deferral or an inline recheck-and-retry.
+pub type EphemeralParallelizableResult =
+    Result<(server_prot::response::Response, Option<lsp_prot::Json>), WorkloadCanceled>;
 
 pub type EphemeralNonparallelizableResult =
-    (server_prot::response::Response, Option<lsp_prot::Json>);
+    Result<(server_prot::response::Response, Option<lsp_prot::Json>), WorkloadCanceled>;
 
 pub type PersistentParallelizableResult = (lsp_prot::Response, lsp_prot::Metadata);
 
@@ -1354,6 +1362,11 @@ fn autocomplete(
     }
 }
 
+enum ErrorsOfFileError {
+    NotCovered,
+    Canceled,
+}
+
 fn errors_of_file(
     options: &Options,
     env: &server_env::Env,
@@ -1364,15 +1377,12 @@ fn errors_of_file(
         flow_data_structure_wrapper::smol_str::FlowSmolStr,
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
-) -> Result<
-    (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet),
-    server_prot::response::StatusResponse,
-> {
+) -> Result<(ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet), ErrorsOfFileError> {
     let mut options = options.clone();
     options.all = options.all || force;
     match of_file_input(&options, env, file_input) {
         Err(IdeFileError::Failed(_)) | Err(IdeFileError::Skipped(_)) => {
-            Err(server_prot::response::StatusResponse::NOT_COVERED)
+            Err(ErrorsOfFileError::NotCovered)
         }
         Ok((file_key, content)) => {
             let intermediate_result = parse_contents(&options, &content, &file_key);
@@ -1388,6 +1398,9 @@ fn errors_of_file(
                     node_modules_containers,
                 )
             };
+            if matches!(result, Err(TypeContentsError::CheckedDependenciesCanceled)) {
+                return Err(ErrorsOfFileError::Canceled);
+            }
             let (errors, warnings) = printable_errors_of_file_artifacts_result(
                 &options,
                 env,
@@ -1410,7 +1423,7 @@ fn check_file(
         flow_data_structure_wrapper::smol_str::FlowSmolStr,
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
-) -> server_prot::response::StatusResponse {
+) -> Result<server_prot::response::StatusResponse, WorkloadCanceled> {
     match errors_of_file(
         options,
         env,
@@ -1419,8 +1432,13 @@ fn check_file(
         file_input,
         node_modules_containers,
     ) {
-        Err(r) => r,
-        Ok((errors, warnings)) => convert_errors(
+        Err(ErrorsOfFileError::NotCovered) => {
+            Ok(server_prot::response::StatusResponse::NOT_COVERED)
+        }
+        // OCaml: `Lwt.Canceled` propagates out of `check_file`. The Rust port
+        // surfaces it via the typed Err so that the workload wrapper can defer.
+        Err(ErrorsOfFileError::Canceled) => Err(WorkloadCanceled),
+        Ok((errors, warnings)) => Ok(convert_errors(
             &shared_mem,
             options,
             errors,
@@ -1429,7 +1447,7 @@ fn check_file(
                 flow_typing_errors::intermediate_error_types::IntermediateError<flow_aloc::ALoc>,
                 std::collections::BTreeSet<flow_parser::loc::Loc>,
             )>::new(),
-        ),
+        )),
     }
 }
 
@@ -2752,10 +2770,10 @@ fn handle_apply_code_action(
                     file_input,
                 )
             });
-            (
+            Ok((
                 server_prot::response::Response::APPLY_CODE_ACTION(result),
                 None,
-            )
+            ))
         }
         server_prot::code_action::T::SourceAddMissingImports => {
             let result: Result<_, String> = try_with(|| {
@@ -2767,10 +2785,10 @@ fn handle_apply_code_action(
                     file_input,
                 )
             });
-            (
+            Ok((
                 server_prot::response::Response::APPLY_CODE_ACTION(result),
                 None,
-            )
+            ))
         }
         server_prot::code_action::T::SuggestImports => {
             let result = try_with(|| {
@@ -2782,10 +2800,10 @@ fn handle_apply_code_action(
                     file_input,
                 )
             });
-            (
+            Ok((
                 server_prot::response::Response::SUGGEST_IMPORTS(result),
                 None,
-            )
+            ))
         }
     }
 }
@@ -2819,10 +2837,10 @@ fn handle_autocomplete(
         show_ranking_info,
     );
     let result = result.map(|(_token, completions, _token_loc, ac_type)| (completions, ac_type));
-    (
+    Ok((
         server_prot::response::Response::AUTOCOMPLETE(result),
         json_data,
-    )
+    ))
 }
 
 fn handle_autofix_exports(
@@ -2837,10 +2855,10 @@ fn handle_autofix_exports(
 ) -> EphemeralParallelizableResult {
     let result: Result<_, String> =
         try_with(|| autofix_exports(options, env, shared_mem, node_modules_containers, input));
-    (
+    Ok((
         server_prot::response::Response::AUTOFIX_EXPORTS(result),
         None,
-    )
+    ))
 }
 
 fn handle_autofix_missing_local_annot(
@@ -2856,10 +2874,10 @@ fn handle_autofix_missing_local_annot(
     let result: Result<_, String> = try_with(|| {
         autofix_missing_local_annot(options, env, shared_mem, node_modules_containers, input)
     });
-    (
+    Ok((
         server_prot::response::Response::AUTOFIX_MISSING_LOCAL_ANNOT(result),
         None,
-    )
+    ))
 }
 
 fn handle_check_file(
@@ -2873,6 +2891,10 @@ fn handle_check_file(
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
 ) -> EphemeralParallelizableResult {
+    // OCaml: `let response = check_file ... in
+    //         Lwt.return (ServerProt.Response.CHECK_FILE response, None)`.
+    // The `?` propagates `WorkloadCanceled` (the typed equivalent of OCaml's
+    // `Lwt.Canceled`) up to the workload wrapper, which defers or retries.
     let response = check_file(
         options,
         env,
@@ -2880,8 +2902,8 @@ fn handle_check_file(
         force,
         input,
         node_modules_containers,
-    );
-    (server_prot::response::Response::CHECK_FILE(response), None)
+    )?;
+    Ok((server_prot::response::Response::CHECK_FILE(response), None))
 }
 
 fn handle_coverage(
@@ -2913,10 +2935,10 @@ fn handle_coverage(
             ),
         }
     });
-    (
+    Ok((
         server_prot::response::Response::COVERAGE(response),
         json_data,
-    )
+    ))
 }
 
 fn handle_batch_coverage(
@@ -2926,10 +2948,10 @@ fn handle_batch_coverage(
 ) -> EphemeralParallelizableResult {
     let response: server_prot::response::BatchCoverageResponse =
         batch_coverage(options, env, batch);
-    (
+    Ok((
         server_prot::response::Response::BATCH_COVERAGE(response),
         None,
-    )
+    ))
 }
 
 fn handle_cycle(
@@ -2938,7 +2960,7 @@ fn handle_cycle(
     types_only: bool,
 ) -> EphemeralNonparallelizableResult {
     let response = get_cycle(env, filename, types_only);
-    (server_prot::response::Response::CYCLE(response), None)
+    Ok((server_prot::response::Response::CYCLE(response), None))
 }
 
 fn handle_dump_types(
@@ -2964,7 +2986,7 @@ fn handle_dump_types(
             input,
         )
     });
-    (server_prot::response::Response::DUMP_TYPES(response), None)
+    Ok((server_prot::response::Response::DUMP_TYPES(response), None))
 }
 
 fn handle_find_module(
@@ -2984,7 +3006,7 @@ fn handle_find_module(
         moduleref,
         filename,
     );
-    (server_prot::response::Response::FIND_MODULE(response), None)
+    Ok((server_prot::response::Response::FIND_MODULE(response), None))
 }
 
 fn handle_force_recheck(
@@ -3030,7 +3052,7 @@ fn handle_get_def(
             col,
         )
     });
-    (server_prot::response::Response::GET_DEF(result), json_data)
+    Ok((server_prot::response::Response::GET_DEF(result), json_data))
 }
 
 fn handle_graph_dep_graph(
@@ -3041,10 +3063,10 @@ fn handle_graph_dep_graph(
     types_only: bool,
 ) -> EphemeralNonparallelizableResult {
     let response = output_dependencies(env, root, strip_root, types_only, outfile);
-    (
+    Ok((
         server_prot::response::Response::GRAPH_DEP_GRAPH(response),
         None,
-    )
+    ))
 }
 
 fn handle_infer_type(
@@ -3068,10 +3090,10 @@ fn handle_infer_type(
             true,
         )
     });
-    (
+    Ok((
         server_prot::response::Response::INFER_TYPE(result),
         json_data,
-    )
+    ))
 }
 
 fn handle_type_of_name(
@@ -3109,10 +3131,10 @@ fn handle_type_of_name(
             )
         }
     };
-    (
+    Ok((
         server_prot::response::Response::TYPE_OF_NAME(result),
         json_data,
-    )
+    ))
 }
 
 fn handle_inlay_hint(
@@ -3135,10 +3157,10 @@ fn handle_inlay_hint(
             input,
         )
     });
-    (
+    Ok((
         server_prot::response::Response::INLAY_HINT(result),
         json_data,
-    )
+    ))
 }
 
 fn handle_llm_context(
@@ -3230,7 +3252,7 @@ fn handle_llm_context(
         tokens_used,
         truncated,
     });
-    (server_prot::response::Response::LLM_CONTEXT(result), None)
+    Ok((server_prot::response::Response::LLM_CONTEXT(result), None))
 }
 
 fn handle_insert_type(
@@ -3258,7 +3280,7 @@ fn handle_insert_type(
             location_is_strict,
         )
     });
-    (server_prot::response::Response::INSERT_TYPE(result), None)
+    Ok((server_prot::response::Response::INSERT_TYPE(result), None))
 }
 
 fn handle_rage(
@@ -3268,7 +3290,7 @@ fn handle_rage(
     files: Option<&[String]>,
 ) -> EphemeralParallelizableResult {
     let items = collect_rage(options, env, shared_mem, files);
-    (server_prot::response::Response::RAGE(items), None)
+    Ok((server_prot::response::Response::RAGE(items), None))
 }
 
 fn handle_status(
@@ -3277,13 +3299,13 @@ fn handle_status(
     shared_mem: &flow_heap::parsing_heaps::SharedMem,
 ) -> EphemeralNonparallelizableResult {
     let (status_response, lazy_stats) = get_status(options, env, shared_mem);
-    (
+    Ok((
         server_prot::response::Response::STATUS {
             status_response,
             lazy_stats,
         },
         None,
-    )
+    ))
 }
 
 fn handle_save_state(
@@ -3292,7 +3314,7 @@ fn handle_save_state(
     saved_state_filename: &str,
 ) -> EphemeralNonparallelizableResult {
     let result = save_state(genv, env, saved_state_filename);
-    (server_prot::response::Response::SAVE_STATE(result), None)
+    Ok((server_prot::response::Response::SAVE_STATE(result), None))
 }
 
 pub fn handle_ephemeral_command_for_standalone(
@@ -3427,7 +3449,12 @@ pub fn handle_ephemeral_command_for_standalone(
             focus,
             missed_changes,
             changed_mergebase,
-        } => handle_force_recheck(files, focus, missed_changes, changed_mergebase),
+        } => Ok(handle_force_recheck(
+            files,
+            focus,
+            missed_changes,
+            changed_mergebase,
+        )),
         server_prot::request::Command::GET_DEF {
             input,
             line,
@@ -3490,12 +3517,12 @@ pub fn handle_ephemeral_command_for_standalone(
             };
             match filename {
                 Some(filename) => handle_save_state(genv, env, &filename),
-                None => (
+                None => Ok((
                     server_prot::response::Response::SAVE_STATE(Err(
                         "Failed to determine saved-state output filename".to_string(),
                     )),
                     None,
-                ),
+                )),
             }
         }
         server_prot::request::Command::STATUS { include_warnings } => {
@@ -3893,9 +3920,9 @@ fn wrap_ephemeral_handler(
     cmd_str: &str,
     handler: impl FnOnce() -> Result<
         ((), server_prot::response::Response, Option<lsp_prot::Json>),
-        (String, Option<lsp_prot::Json>),
+        EphemeralHandlerError,
     >,
-) -> Result<(), ()> {
+) -> Result<(), EphemeralWrapError> {
     eprintln!("{cmd_str}{}", format_client_context(client_context));
     flow_server_env::monitor_rpc::status_update(
         flow_server_env::server_status::Event::HandlingRequestStart,
@@ -3911,10 +3938,35 @@ fn wrap_ephemeral_handler(
                 "unknown panic".to_string()
             };
             handle_ephemeral_uncaught_exception(cmd_str, exn_str)
+                .map_err(EphemeralHandlerError::Failure)
         });
     send_command_summary(&(), cmd_str);
-    send_ephemeral_response(cmd_str, request_id, client_context, result)?;
+    let to_send: Result<
+        ((), server_prot::response::Response, Option<lsp_prot::Json>),
+        (String, Option<lsp_prot::Json>),
+    > = match result {
+        Ok(ok) => Ok(ok),
+        Err(EphemeralHandlerError::Failure(f)) => Err(f),
+        Err(EphemeralHandlerError::Canceled) => return Err(EphemeralWrapError::Canceled),
+    };
+    send_ephemeral_response(cmd_str, request_id, client_context, to_send)
+        .map_err(|()| EphemeralWrapError::SendFailed)?;
     Ok(())
+}
+
+// The error type the handler closure passed to `wrap_ephemeral_handler` may
+// return.
+enum EphemeralHandlerError {
+    Failure((String, Option<lsp_prot::Json>)),
+    Canceled,
+}
+
+// The error returned by `wrap_ephemeral_handler` to its caller. `SendFailed`
+// indicates `send_ephemeral_response` failed to deliver the result; `Canceled`
+// indicates the workload signaled cancellation and no response was sent.
+enum EphemeralWrapError {
+    SendFailed,
+    Canceled,
 }
 
 fn wrap_immediate_ephemeral_handler(
@@ -3964,26 +4016,102 @@ fn handle_ephemeral_immediately(
     })
 }
 
+fn run_command_in_parallel(
+    env: &server_env::Env,
+    name: &str,
+    workload: impl FnOnce(&server_env::Env) -> EphemeralParallelizableResult,
+    mk_workload: impl FnOnce() -> flow_server_env::workload_stream::ParallelizableWorkload,
+) -> EphemeralParallelizableResult {
+    match workload(env) {
+        Ok((response, json_data)) => Ok((response, json_data)),
+        Err(WorkloadCanceled) => {
+            eprintln!(
+                "Command successfully canceled. Requeuing the command for after the next recheck."
+            );
+            server_monitor_listener_state::defer_parallelizable_workload(name, mk_workload());
+            Err(WorkloadCanceled)
+        }
+    }
+}
+
+fn run_command_in_serial(
+    genv: &Arc<server_env::Genv>,
+    mut env: server_env::Env,
+    workload: &mut dyn FnMut(&server_env::Env) -> EphemeralNonparallelizableResult,
+) -> (server_env::Env, EphemeralNonparallelizableResult) {
+    loop {
+        match workload(&env) {
+            Ok((response, json_data)) => return (env, Ok((response, json_data))),
+            Err(WorkloadCanceled) => {
+                eprintln!(
+                    "Command successfully canceled. Running a recheck before restarting the command"
+                );
+                let node_modules_containers_arc = std::sync::Arc::new(std::sync::RwLock::new(
+                    (*genv.node_modules_containers).clone(),
+                ));
+                let (_recheck_profiling, new_env) = flow_server_rechecker::rechecker::recheck_loop(
+                    genv,
+                    env,
+                    &genv.shared_mem,
+                    &node_modules_containers_arc,
+                );
+                env = new_env;
+                eprintln!("Now restarting the command");
+                continue;
+            }
+        }
+    }
+}
+
+fn handle_parallelizable_ephemeral_unsafe(
+    env: &server_env::Env,
+    cmd_str: &str,
+    workload: impl FnOnce(&server_env::Env) -> EphemeralParallelizableResult,
+    mk_workload: impl FnOnce() -> flow_server_env::workload_stream::ParallelizableWorkload,
+) -> Result<((), server_prot::response::Response, Option<lsp_prot::Json>), EphemeralHandlerError> {
+    match run_command_in_parallel(env, cmd_str, workload, mk_workload) {
+        Ok((response, json_data)) => Ok(((), response, json_data)),
+        Err(WorkloadCanceled) => Err(EphemeralHandlerError::Canceled),
+    }
+}
+
 fn handle_parallelizable_ephemeral(
-    genv: server_env::Genv,
+    genv: Arc<server_env::Genv>,
     request_id: String,
     client_context: lsp_prot::LoggingContext,
     cmd_str: String,
-    workload: Box<
-        dyn FnOnce(&server_env::Env) -> (server_prot::response::Response, Option<lsp_prot::Json>)
-            + Send,
-    >,
+    command: server_prot::request::Command,
 ) -> flow_server_env::workload_stream::ParallelizableWorkload {
     let parallelizable_workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> =
         Box::new(|| false);
     let parallelizable_workload_handler: flow_server_env::workload_stream::ParallelizableWorkloadHandler = Box::new(
         move |env: &server_env::Env| {
+            let workload_command = command.clone();
+            let workload_genv = genv.clone();
+            let mk_workload = || {
+                handle_parallelizable_ephemeral(
+                    genv.clone(),
+                    request_id.clone(),
+                    client_context.clone(),
+                    cmd_str.clone(),
+                    command.clone(),
+                )
+            };
             let result = wrap_ephemeral_handler(&genv, &request_id, &client_context, &cmd_str, || {
-                let (response, json_data) = workload(env);
-                Ok(((), response, json_data))
+                handle_parallelizable_ephemeral_unsafe(
+                    env,
+                    &cmd_str,
+                    |env| handle_ephemeral_command_for_standalone(&workload_genv, env, workload_command),
+                    mk_workload,
+                )
             });
             match result {
-                Ok(()) | Err(()) => {}
+                Ok(()) => {}
+                Err(EphemeralWrapError::SendFailed) => {}
+                Err(EphemeralWrapError::Canceled) => {
+                    // It's fine for parallelizable commands to be canceled
+                    // they'll be run again later"
+                }
             }
         },
     );
@@ -3993,38 +4121,56 @@ fn handle_parallelizable_ephemeral(
     }
 }
 
+// Returns the post-recheck `env` alongside the result so that callers (which
+// must hand the env back to the WorkloadStream) can sequence env-flow
+// without relying on side effects.
+fn handle_nonparallelizable_ephemeral_unsafe(
+    genv: &Arc<server_env::Genv>,
+    env: server_env::Env,
+    workload: &mut dyn FnMut(&server_env::Env) -> EphemeralNonparallelizableResult,
+) -> (
+    server_env::Env,
+    Result<((), server_prot::response::Response, Option<lsp_prot::Json>), EphemeralHandlerError>,
+) {
+    let (env, result) = run_command_in_serial(genv, env, workload);
+    let mapped = match result {
+        Ok((response, json_data)) => Ok(((), response, json_data)),
+        Err(WorkloadCanceled) => Err(EphemeralHandlerError::Canceled),
+    };
+    (env, mapped)
+}
+
 fn handle_nonparallelizable_ephemeral(
-    genv: server_env::Genv,
+    genv: Arc<server_env::Genv>,
     request_id: String,
     client_context: lsp_prot::LoggingContext,
     cmd_str: String,
-    workload: Box<
-        dyn FnOnce(&server_env::Env) -> (server_prot::response::Response, Option<lsp_prot::Json>)
-            + Send,
-    >,
+    command: server_prot::request::Command,
 ) -> flow_server_env::workload_stream::Workload {
     let workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> = Box::new(|| false);
     let workload_handler: flow_server_env::workload_stream::WorkloadHandler =
         Box::new(move |env: server_env::Env| {
-            let _result =
-                wrap_ephemeral_handler(&genv, &request_id, &client_context, &cmd_str, || {
-                    let (response, json_data) = workload(&env);
-                    Ok(((), response, json_data))
-                });
+            let workload_genv = genv.clone();
+            let mut workload_fn =
+                |inner_env: &server_env::Env| -> EphemeralNonparallelizableResult {
+                    handle_ephemeral_command_for_standalone(
+                        &workload_genv,
+                        inner_env,
+                        command.clone(),
+                    )
+                };
+            let (env, mapped) =
+                handle_nonparallelizable_ephemeral_unsafe(&genv, env, &mut workload_fn);
+            match wrap_ephemeral_handler(&genv, &request_id, &client_context, &cmd_str, || mapped) {
+                Ok(()) => {}
+                Err(EphemeralWrapError::SendFailed) => {}
+                Err(EphemeralWrapError::Canceled) => {}
+            }
             env
         });
     flow_server_env::workload_stream::Workload {
         workload_should_be_cancelled,
         workload_handler,
-    }
-}
-
-fn clone_ephemeral_genv(genv: &server_env::Genv) -> server_env::Genv {
-    server_env::Genv {
-        options: genv.options.clone(),
-        workers: None,
-        shared_mem: genv.shared_mem.dupe(),
-        node_modules_containers: genv.node_modules_containers.clone(),
     }
 }
 
@@ -4046,7 +4192,7 @@ fn handle_ephemeral_immediate_command(
 }
 
 pub fn enqueue_or_handle_ephemeral(
-    genv: &server_env::Genv,
+    genv: &Arc<server_env::Genv>,
     (request_id, command_with_context): (monitor_prot::RequestId, ServerCommandWithContext),
 ) {
     let ServerCommandWithContext {
@@ -4072,32 +4218,24 @@ pub fn enqueue_or_handle_ephemeral(
             }
         }
         CommandHandler::HandleParallelizable => {
-            let queued_genv = clone_ephemeral_genv(genv);
             let queued_client_context = client_context.clone();
-            let workload = Box::new(move |env: &server_env::Env| {
-                handle_ephemeral_command_for_standalone(&queued_genv, env, command)
-            });
             let workload = handle_parallelizable_ephemeral(
-                clone_ephemeral_genv(genv),
+                genv.clone(),
                 request_id.clone(),
                 queued_client_context,
                 cmd_str.clone(),
-                workload,
+                command,
             );
             server_monitor_listener_state::push_new_parallelizable_workload(&cmd_str, workload);
         }
         CommandHandler::HandleNonparallelizable => {
-            let queued_genv = clone_ephemeral_genv(genv);
             let queued_client_context = client_context.clone();
-            let workload = Box::new(move |env: &server_env::Env| {
-                handle_ephemeral_command_for_standalone(&queued_genv, env, command)
-            });
             let workload = handle_nonparallelizable_ephemeral(
-                clone_ephemeral_genv(genv),
+                genv.clone(),
                 request_id,
                 queued_client_context,
                 cmd_str.clone(),
-                workload,
+                command,
             );
             server_monitor_listener_state::push_new_workload(&cmd_str, workload);
         }
@@ -7867,7 +8005,7 @@ fn handle_persistent_immediately(
 }
 
 pub fn enqueue_persistent(
-    genv: &server_env::Genv,
+    genv: &Arc<server_env::Genv>,
     client_id: lsp_prot::ClientId,
     request: lsp_prot::RequestWithMetadata,
 ) {

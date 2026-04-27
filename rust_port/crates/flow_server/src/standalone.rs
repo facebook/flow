@@ -843,12 +843,12 @@ fn handle_persistent_request(
                     true,
                 );
             }
-            let genv = flow_server_env::server_env::Genv {
+            let genv = Arc::new(flow_server_env::server_env::Genv {
                 options: Arc::new(options.clone()),
                 workers: None,
                 shared_mem: shared_mem.dupe(),
                 node_modules_containers: Arc::new(node_modules_containers.read().unwrap().clone()),
-            };
+            });
             command_handler::enqueue_persistent(&genv, client_id, request);
             (ServerResponse::PersistentAck, false)
         }
@@ -1033,12 +1033,28 @@ fn handle_connection(
                     .unwrap();
 
                 if let Some(ref env) = server_state.env {
-                    let (response, _json_data) =
-                        command_handler::handle_ephemeral_command_for_standalone_wrapped(
-                            &genv,
-                            env,
-                            command.clone(),
-                        );
+                    let result = command_handler::handle_ephemeral_command_for_standalone_wrapped(
+                        &genv,
+                        env,
+                        command.clone(),
+                    );
+                    let response = match result {
+                        Err(command_handler::WorkloadCanceled) => {
+                            let current_generation = server_state.env_generation;
+                            drop(server_state);
+                            request_dependency_recheck(state);
+                            let server_state = lock.lock().unwrap();
+                            let _server_state = cvar
+                                .wait_while(server_state, |s| {
+                                    !s.init_done
+                                        || s.env.is_none()
+                                        || s.env_generation == current_generation
+                                })
+                                .unwrap();
+                            continue;
+                        }
+                        Ok((response, _json_data)) => response,
+                    };
                     if command_handler::standalone_response_needs_checked_dependencies_retry(
                         &command, &response,
                     ) {
