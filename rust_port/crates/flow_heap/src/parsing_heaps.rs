@@ -726,16 +726,25 @@ impl SharedMem {
             );
             match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
                 None => self.calc_dirty_modules(&file, &file_entry),
-                Some(existing_entry) => match existing_entry.parse_latest() {
-                    None => {
-                        existing_entry.parse().set(Parse::Typed(typed_parse));
-                        if let Some(info) = haste_module_info {
-                            existing_entry.haste_info_entity().set(info);
+                Some(_rejected) => {
+                    let in_map_entry = self.file_heap.get(&file).expect(
+                        "LockedMap::insert returned Some(_) but get(&file) is None; \
+                         file_heap has no per-key removal so this should be unreachable",
+                    );
+                    match in_map_entry.parse_latest() {
+                        None => {
+                            in_map_entry.parse().set(Parse::Typed(typed_parse));
+                            if let Some(info) = haste_module_info {
+                                in_map_entry.haste_info_entity().set(info);
+                            }
+                            self.calc_dirty_modules(&file, in_map_entry)
                         }
-                        self.calc_dirty_modules(&file, &existing_entry)
+                        // Two threads raced to add this file and the other thread
+                        // won. We don't need to mark any files as dirty; the other
+                        // thread will have done that for us. *)
+                        Some(_) => BTreeSet::new(),
                     }
-                    Some(_) => BTreeSet::new(),
-                },
+                }
             }
         };
 
@@ -777,16 +786,22 @@ impl SharedMem {
             );
             match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
                 None => self.calc_dirty_modules(&file, &file_entry),
-                Some(existing_entry) => match existing_entry.parse_latest() {
-                    None => {
-                        existing_entry.parse().set(Parse::Untyped(untyped_parse));
-                        if let Some(info) = haste_module_info {
-                            existing_entry.haste_info_entity().set(info);
+                Some(_rejected) => {
+                    let in_map_entry = self.file_heap.get(&file).expect(
+                        "LockedMap::insert returned Some(_) but get(&file) is None; \
+                         file_heap has no per-key removal so this should be unreachable",
+                    );
+                    match in_map_entry.parse_latest() {
+                        None => {
+                            in_map_entry.parse().set(Parse::Untyped(untyped_parse));
+                            if let Some(info) = haste_module_info {
+                                in_map_entry.haste_info_entity().set(info);
+                            }
+                            self.calc_dirty_modules(&file, in_map_entry)
                         }
-                        self.calc_dirty_modules(&file, &existing_entry)
+                        Some(_) => BTreeSet::new(),
                     }
-                    Some(_) => BTreeSet::new(),
-                },
+                }
             }
         };
 
@@ -861,16 +876,22 @@ impl SharedMem {
             );
             match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
                 None => self.calc_dirty_modules(&file, &file_entry),
-                Some(existing_entry) => match existing_entry.parse_latest() {
-                    None => {
-                        existing_entry.parse().set(Parse::Package(package_parse));
-                        if let Some(info) = haste_module_info {
-                            existing_entry.haste_info_entity().set(info);
+                Some(_rejected) => {
+                    let in_map_entry = self.file_heap.get(&file).expect(
+                        "LockedMap::insert returned Some(_) but get(&file) is None; \
+                         file_heap has no per-key removal so this should be unreachable",
+                    );
+                    match in_map_entry.parse_latest() {
+                        None => {
+                            in_map_entry.parse().set(Parse::Package(package_parse));
+                            if let Some(info) = haste_module_info {
+                                in_map_entry.haste_info_entity().set(info);
+                            }
+                            self.calc_dirty_modules(&file, in_map_entry)
                         }
-                        self.calc_dirty_modules(&file, &existing_entry)
+                        Some(_) => BTreeSet::new(),
                     }
-                    Some(_) => BTreeSet::new(),
-                },
+                }
             }
         }
     }
@@ -933,11 +954,7 @@ impl SharedMem {
             }
             Dependency::HasteModule(Modulename::Filename(dep_file))
             | Dependency::File(dep_file) => {
-                let dep_entry = self.file_heap.get(dep_file).cloned().unwrap_or_else(|| {
-                    let phantom_entry = FileEntry::new_phantom();
-                    self.file_heap.insert(dep_file.dupe(), phantom_entry.dupe());
-                    phantom_entry
-                });
+                let dep_entry = self.file_heap.ensure(dep_file, FileEntry::new_phantom);
                 dep_entry.add_dependent(file.dupe());
             }
         }

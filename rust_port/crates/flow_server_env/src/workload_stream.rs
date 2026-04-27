@@ -18,6 +18,8 @@
 use std::collections::VecDeque;
 use std::sync::Condvar;
 use std::sync::Mutex;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::time::Instant;
 
 use crate::server_env::Env;
@@ -218,5 +220,25 @@ impl WorkloadStream {
         while inner.requeued_parallelizable.is_empty() && inner.parallelizable.is_empty() {
             inner = self.signal.wait(inner).unwrap();
         }
+    }
+
+    // Like `wait_for_parallelizable_workload`, but also returns when `stop` becomes true. Used to
+    // implement the cancellation half of the OCaml `Lwt.pick [wait_for_parallelizable_workload();
+    // wait_for_cancel]` in `Parallelizable_workload_loop`.
+    pub fn wait_for_parallelizable_workload_or_stop(&self, stop: &AtomicBool) {
+        let mut inner = self.inner.lock().unwrap();
+        while !stop.load(Ordering::Acquire)
+            && inner.requeued_parallelizable.is_empty()
+            && inner.parallelizable.is_empty()
+        {
+            inner = self.signal.wait(inner).unwrap();
+        }
+    }
+
+    // Wake up anyone blocked in `wait_for_parallelizable_workload` /
+    // `wait_for_parallelizable_workload_or_stop`. Callers that flip a stop flag should call this
+    // afterwards to ensure the waiter observes the change.
+    pub fn wake_waiters(&self) {
+        self.signal.notify_all();
     }
 }

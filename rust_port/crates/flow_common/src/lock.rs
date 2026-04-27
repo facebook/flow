@@ -6,6 +6,8 @@
  */
 
 use std::collections::HashMap;
+#[cfg(unix)]
+use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicI32;
@@ -14,6 +16,10 @@ use std::sync::atomic::Ordering;
 struct LockEntry {
     file: std::fs::File,
     raw_id: i32,
+    #[cfg(unix)]
+    stat_dev: u64,
+    #[cfg(unix)]
+    stat_ino: u64,
 }
 
 static LOCK_FDS: Mutex<Option<HashMap<String, LockEntry>>> = Mutex::new(None);
@@ -39,10 +45,29 @@ fn next_lock_id() -> i32 {
     NEXT_LOCK_ID.fetch_add(1, Ordering::Relaxed) + 1
 }
 
-fn make_lock_entry(file: std::fs::File) -> LockEntry {
-    LockEntry {
-        raw_id: next_lock_id(),
-        file,
+fn make_lock_entry(file: std::fs::File) -> std::io::Result<LockEntry> {
+    // We must capture `dev`/`ino` from the *open file descriptor*, not from a
+    // path lookup, so the values reflect the inode the lock is actually
+    // attached to. `File::metadata` calls `fstat(2)` under the hood, which
+    // does not affect the lock state of any fd.
+    #[cfg(unix)]
+    {
+        let metadata = file.metadata()?;
+        let stat_dev = metadata.dev();
+        let stat_ino = metadata.ino();
+        Ok(LockEntry {
+            raw_id: next_lock_id(),
+            file,
+            stat_dev,
+            stat_ino,
+        })
+    }
+    #[cfg(not(unix))]
+    {
+        Ok(LockEntry {
+            raw_id: next_lock_id(),
+            file,
+        })
     }
 }
 
@@ -66,7 +91,7 @@ fn register_lock(lock_file: &str) -> std::io::Result<()> {
         let _mkdir_result = std::fs::create_dir_all(parent);
     }
     let file = open_lock_file(lock_file)?;
-    let entry = make_lock_entry(file);
+    let entry = make_lock_entry(file)?;
     lock_fds_with(|map| {
         map.insert(lock_file.to_string(), entry);
     });
@@ -82,7 +107,23 @@ fn _operations(lock_file: &str, op: LockOp) -> bool {
         match (already_registered, Path::new(lock_file).exists()) {
             (false, _) => register_lock(lock_file).map_err(|_| ())?,
             (true, false) => return Err(()),
-            (true, true) => {}
+            (true, true) => {
+                #[cfg(unix)]
+                {
+                    let current = match std::fs::metadata(lock_file) {
+                        Ok(m) => m,
+                        Err(_) => return Err(()),
+                    };
+                    let identical_file = lock_fds_with(|map| -> Result<bool, ()> {
+                        let entry = map.get(lock_file).ok_or(())?;
+                        Ok(entry.stat_dev == current.dev() && entry.stat_ino == current.ino())
+                    })?;
+                    if !identical_file {
+                        // dead in the water
+                        return Err(());
+                    }
+                }
+            }
         }
         lock_fds_with(|map| -> Result<(), ()> {
             let entry = map.get(lock_file).ok_or(())?;

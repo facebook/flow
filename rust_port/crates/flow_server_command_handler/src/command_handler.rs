@@ -3356,16 +3356,20 @@ pub fn handle_ephemeral_command_for_standalone(
             input,
             verbose: _,
             force,
-            include_warnings: _,
+            include_warnings,
             wait_for_recheck: _,
-        } => handle_check_file(
-            options,
-            env,
-            shared_mem,
-            force,
-            &input,
-            node_modules_containers,
-        ),
+        } => {
+            let mut options = options.clone();
+            options.include_warnings = options.include_warnings || include_warnings;
+            handle_check_file(
+                &options,
+                env,
+                shared_mem,
+                force,
+                &input,
+                node_modules_containers,
+            )
+        }
         server_prot::request::Command::COVERAGE {
             input,
             force,
@@ -3494,9 +3498,11 @@ pub fn handle_ephemeral_command_for_standalone(
                 ),
             }
         }
-        server_prot::request::Command::STATUS {
-            include_warnings: _,
-        } => handle_status(options, env, &shared_mem),
+        server_prot::request::Command::STATUS { include_warnings } => {
+            let mut options = options.clone();
+            options.include_warnings = options.include_warnings || include_warnings;
+            handle_status(&options, env, &shared_mem)
+        }
         server_prot::request::Command::LLM_CONTEXT(input) => {
             handle_llm_context(options, env, shared_mem, node_modules_containers, &input)
         }

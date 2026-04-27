@@ -39,8 +39,7 @@ fn find_subcommand() -> command_spec::Command {
             &arg_spec::required(Some(".flowconfig".to_string()), arg_spec::string()),
         )
         .unwrap();
-        let json = command_spec::get(args, "--json", &arg_spec::truthy()).unwrap();
-        let pretty = command_spec::get(args, "--pretty", &arg_spec::truthy()).unwrap();
+        let command_utils::JsonFlags { json, pretty } = command_utils::get_json_flags(args);
         let root =
             command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap();
         let root = command_utils::guess_root(&flowconfig_name, root.as_deref())
@@ -129,8 +128,7 @@ fn check_subcommand() -> command_spec::Command {
             &arg_spec::required(Some(".flowconfig".to_string()), arg_spec::string()),
         )
         .unwrap();
-        let json = command_spec::get(args, "--json", &arg_spec::truthy()).unwrap();
-        let pretty = command_spec::get(args, "--pretty", &arg_spec::truthy()).unwrap();
+        let command_utils::JsonFlags { json, pretty } = command_utils::get_json_flags(args);
         let root =
             command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
         let ignore_version =

@@ -316,7 +316,7 @@ pub fn do_parse(
     }
 }
 
-fn hash_content(content: &str) -> u64 {
+fn hash_content(content: &[u8]) -> u64 {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::Hash;
     use std::hash::Hasher;
@@ -349,7 +349,7 @@ fn content_hash_matches_old_file_hash(
 }
 
 pub fn does_content_match_file_hash(shared_mem: &SharedMem, file: &FileKey, content: &str) -> bool {
-    let content_hash = hash_content(content);
+    let content_hash = hash_content(content.as_bytes());
     content_hash_matches_file_hash(shared_mem, file, content_hash)
 }
 
@@ -389,8 +389,8 @@ fn reducer(
 
     let filename_string = file_key.to_absolute();
 
-    let content = match std::fs::read_to_string(&filename_string) {
-        Ok(content) => content,
+    let bytes = match std::fs::read(&filename_string) {
+        Ok(bytes) => bytes,
         Err(_) => {
             let haste_module_info =
                 flow_services_module::exported_module(options, &file_key, &PackageInfo::none());
@@ -401,7 +401,7 @@ fn reducer(
         }
     };
 
-    let hash = hash_content(&content);
+    let hash = hash_content(&bytes);
 
     if skip_changed && !content_hash_matches_file_hash(shared_mem, &file_key, hash) {
         acc.changed.insert(file_key);
@@ -413,32 +413,44 @@ fn reducer(
         return;
     }
 
-    let (docblock_errors, mut docblock) = crate::docblock_parser::parse_docblock(
-        options.max_header_tokens as usize,
-        &options.file_options,
-        &file_key,
-        &content,
-    );
+    let content_str: Result<&str, ()> = std::str::from_utf8(&bytes).map_err(|_| ());
 
-    if !docblock_errors.is_empty() {
-        let haste_module_info =
-            flow_services_module::exported_module(options, &file_key, &PackageInfo::none());
-        fold_failed(
-            acc,
-            shared_mem,
-            file_key,
-            hash,
-            haste_module_info,
-            ParseFailure::DocblockErrors(docblock_errors),
+    // When the bytes aren't valid UTF-8 we cannot run `parse_docblock`
+    // here. We still want `do_parse` to produce the `MalformedUnicode`
+    // parse error (it does, via `init_env` with `Err(())`), so we fall back
+    // to a default `Docblock` and continue. The parse error path is the
+    // single source of truth for the "malformed unicode" diagnostic.
+    let mut docblock = if let Ok(content) = content_str {
+        let (docblock_errors, docblock) = crate::docblock_parser::parse_docblock(
+            options.max_header_tokens as usize,
+            &options.file_options,
+            &file_key,
+            content,
         );
-        return;
-    }
+
+        if !docblock_errors.is_empty() {
+            let haste_module_info =
+                flow_services_module::exported_module(options, &file_key, &PackageInfo::none());
+            fold_failed(
+                acc,
+                shared_mem,
+                file_key,
+                hash,
+                haste_module_info,
+                ParseFailure::DocblockErrors(docblock_errors),
+            );
+            return;
+        }
+        docblock
+    } else {
+        Docblock::default()
+    };
 
     if files::is_untyped(&options.file_options, &file_key.to_absolute()) {
         docblock.flow = Some(flow_common::docblock::FlowMode::OptOut);
     }
 
-    match do_parse(options, &docblock, locs_to_dirtify, Ok(&content), &file_key) {
+    match do_parse(options, &docblock, locs_to_dirtify, content_str, &file_key) {
         ParseResult::ParseOk {
             ast,
             requires: _,

@@ -9,6 +9,9 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::RwLock;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
+use std::thread;
 use std::time::Instant;
 
 use dupe::Dupe;
@@ -42,15 +45,66 @@ impl ProfilingFinished {
         self.duration
     }
 }
-// The wait_for_cancel thread itself is NOT cancelable
-// Allow this stop function to be called multiple times for the same loop
-// Tell the loop to cancel at its earliest convinience
-// Wait for the loop to finish
+mod parallelizable_workload_loop {
+    use std::sync::atomic::AtomicBool;
+    use std::sync::atomic::Ordering;
+
+    use flow_server_env::server_env;
+    use flow_server_env::server_monitor_listener_state;
+
+    pub(super) fn run(wait_for_cancel: &AtomicBool, env: &server_env::Env) {
+        loop {
+            if wait_for_cancel.load(Ordering::Acquire) {
+                return;
+            }
+            server_monitor_listener_state::wait_for_parallelizable_workload_or_stop(
+                wait_for_cancel,
+            );
+            if wait_for_cancel.load(Ordering::Acquire) {
+                return;
+            }
+            match server_monitor_listener_state::pop_next_parallelizable_workload() {
+                Some(workload) => {
+                    log::info!("Running a parallel workload");
+                    (workload.parallelizable_workload_handler)(env);
+                }
+                None => {}
+            }
+        }
+    }
+}
+
 fn start_parallelizable_workloads(
     _genv: &server_env::Genv,
-    _env: &server_env::Env,
+    env: &server_env::Env,
 ) -> Box<dyn FnOnce()> {
-    Box::new(|| {})
+    let wait_for_cancel = Arc::new(AtomicBool::new(false));
+    let env_for_loop = env.clone();
+    let wait_for_cancel_for_loop = wait_for_cancel.dupe();
+    let loop_thread = thread::Builder::new()
+        .name("parallelizable_workload_loop".to_string())
+        .spawn(move || {
+            parallelizable_workload_loop::run(&wait_for_cancel_for_loop, &env_for_loop);
+        })
+        .expect("failed to spawn parallelizable_workload_loop thread");
+    let mut already_woken = false;
+    let mut loop_thread = Some(loop_thread);
+    Box::new(move || {
+        if !already_woken {
+            wait_for_cancel.store(true, Ordering::Release);
+            server_monitor_listener_state::wake_workload_waiters();
+        }
+        #[allow(unused_assignments)]
+        {
+            already_woken = true;
+        }
+
+        if let Some(handle) = loop_thread.take() {
+            if let Err(panic_payload) = handle.join() {
+                std::panic::resume_unwind(panic_payload);
+            }
+        }
+    })
 }
 
 pub fn get_lazy_stats(

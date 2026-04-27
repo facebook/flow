@@ -481,11 +481,12 @@ pub fn is_flow_file(options: &FileOptions, path: &str) -> bool {
 
 pub fn make_path_absolute(root: &Path, path_str: &str) -> PathBuf {
     let path = Path::new(path_str);
-    if path.is_relative() {
+    let joined = if path.is_relative() {
         root.join(path)
     } else {
         PathBuf::from(path)
-    }
+    };
+    cached_canonicalize(&joined).unwrap_or(joined)
 }
 
 lazy_static! {
@@ -693,7 +694,10 @@ lazy_static! {
 pub fn watched_paths(options: &FileOptions) -> Vec<PathBuf> {
     let mut stems = options.includes.stems().to_vec();
     stems.sort();
-    stems.dedup_by(|b, a| a.starts_with(b));
+    // Drop a stem if a previously-kept stem is its ancestor. `dedup_by` calls
+    // the closure with `(later, earlier)`; returning true removes the later
+    // element.
+    stems.dedup_by(|b, a| b.starts_with(&*a));
     stems
 }
 
@@ -889,6 +893,7 @@ pub fn make_next_files(
             {
                 chunk.push(real_path);
                 if chunk.len() == MAX_FILES {
+                    chunk.reverse();
                     send_chunked(chunk);
                     chunk = Vec::new();
                 }
@@ -896,6 +901,7 @@ pub fn make_next_files(
         }
     }
     if !chunk.is_empty() {
+        chunk.reverse();
         send_chunked(chunk);
     }
 }

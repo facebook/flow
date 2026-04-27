@@ -197,10 +197,11 @@ fn internal_start(
         options.root.as_path(),
     );
     if !flow_common::lock::grab(&lock_path) {
-        return Err(format!(
-            "There is already a server running for {}",
-            options.root.display()
-        ));
+        let msg = "Error: another server is already running?\n";
+        flow_common_exit_status::exit_with_msg(
+            flow_common_exit_status::FlowExitStatus::LockStolen,
+            msg,
+        );
     }
     // We can't open the log until we have the lock.
     //

@@ -378,8 +378,16 @@ fn perform_handshake_and_get_client_handshake(
         let json = monitor_to_client_1_to_json(&server1);
         let server2_bytes = server2.map(|s| bincode::serialize(&s).expect("bincode serialize"));
         let wire: ServerHandshakeWire = (json.to_string(), server2_bytes);
-        if let Err(e) = bincode::serialize_into(&mut *stream, &wire) {
+        // Buffer the handshake-write so bincode's many small writes coalesce
+        // into one (or a few) syscall instead of N.
+        use std::io::Write;
+        let mut buffered = std::io::BufWriter::new(&mut *stream);
+        if let Err(e) = bincode::serialize_into(&mut buffered, &wire) {
             log::error!("Failed to write server handshake: {}", e);
+            return;
+        }
+        if let Err(e) = buffered.flush() {
+            log::error!("Failed to flush server handshake: {}", e);
         }
     };
 

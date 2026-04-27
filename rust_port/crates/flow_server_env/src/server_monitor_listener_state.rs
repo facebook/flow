@@ -600,6 +600,14 @@ pub fn wait_for_parallelizable_workload() {
     WORKLOAD_STREAM.wait_for_parallelizable_workload();
 }
 
+pub fn wait_for_parallelizable_workload_or_stop(stop: &std::sync::atomic::AtomicBool) {
+    WORKLOAD_STREAM.wait_for_parallelizable_workload_or_stop(stop);
+}
+
+pub fn wake_workload_waiters() {
+    WORKLOAD_STREAM.wake_waiters();
+}
+
 pub fn wait_for_updates_for_recheck(
     process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
     get_forced: &dyn Fn() -> CheckedSet,

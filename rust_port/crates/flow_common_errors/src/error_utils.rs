@@ -530,45 +530,79 @@ pub mod friendly {
     // for hiding implementation details in our JSON output.
     pub(super) fn flatten_message<L>(features: Message<L>) -> Message<L> {
         fn loop_inlines(inlines: Vec<MessageInline>) -> Vec<MessageInline> {
-            let mut result: Vec<MessageInline> = Vec::with_capacity(inlines.len());
-            for inline in inlines.into_iter() {
-                match (inline, result.last_mut()) {
-                    (MessageInline::Text(t1), Some(MessageInline::Text(t2))) => {
-                        let mut new_text = t1;
-                        new_text.push_str(t2);
-                        *t2 = new_text;
+            let mut iter = inlines.into_iter();
+            let Some(first) = iter.next() else {
+                return Vec::new();
+            };
+            match first {
+                MessageInline::Code(_) => {
+                    let mut result = vec![first];
+                    result.extend(loop_inlines(iter.collect()));
+                    result
+                }
+                MessageInline::Text(text) => {
+                    let mut rest = loop_inlines(iter.collect());
+                    match rest.first_mut() {
+                        None => vec![MessageInline::Text(text)],
+                        Some(MessageInline::Text(text2)) => {
+                            let mut new_text = text;
+                            new_text.push_str(text2);
+                            *text2 = new_text;
+                            rest
+                        }
+                        Some(_) => {
+                            let mut result = vec![MessageInline::Text(text)];
+                            result.append(&mut rest);
+                            result
+                        }
                     }
-                    (other, _) => result.push(other),
                 }
             }
-            result
         }
 
         fn loop_features<L>(features: Vec<MessageFeature<L>>) -> Vec<MessageFeature<L>> {
-            let mut result: Vec<MessageFeature<L>> = Vec::with_capacity(features.len());
-            for feature in features.into_iter() {
-                match feature {
-                    MessageFeature::Reference(inlines, loc) => {
-                        let flattened_inlines = loop_inlines(inlines);
-                        // Check if next (which was previous before reverse) is Inline to flatten it too
-                        if let Some(MessageFeature::Inline(next_inlines)) = result.last_mut() {
-                            *next_inlines = loop_inlines(std::mem::take(next_inlines));
+            let mut iter = features.into_iter();
+            let Some(first) = iter.next() else {
+                return Vec::new();
+            };
+            match first {
+                MessageFeature::Reference(inlines, loc) => {
+                    let inlines = loop_inlines(inlines);
+                    let mut features = loop_features(iter.collect());
+                    let feature = MessageFeature::Reference(inlines, loc);
+                    match features.first_mut() {
+                        None => vec![feature],
+                        Some(MessageFeature::Inline(inlines2)) => {
+                            *inlines2 = loop_inlines(std::mem::take(inlines2));
+                            let mut result = vec![feature];
+                            result.append(&mut features);
+                            result
                         }
-                        result.push(MessageFeature::Reference(flattened_inlines, loc));
+                        Some(_) => {
+                            let mut result = vec![feature];
+                            result.append(&mut features);
+                            result
+                        }
                     }
-                    MessageFeature::Inline(inlines) => {
-                        // Try to merge with the next Inline (previous before reverse)
-                        if let Some(MessageFeature::Inline(next_inlines)) = result.last_mut() {
+                }
+                MessageFeature::Inline(inlines) => {
+                    let mut features = loop_features(iter.collect());
+                    match features.first_mut() {
+                        None => vec![MessageFeature::Inline(inlines)],
+                        Some(MessageFeature::Inline(inlines2)) => {
                             let mut merged = inlines;
-                            merged.append(next_inlines);
-                            *next_inlines = merged;
-                        } else {
-                            result.push(MessageFeature::Inline(inlines));
+                            merged.append(inlines2);
+                            *inlines2 = merged;
+                            features
+                        }
+                        Some(_) => {
+                            let mut result = vec![MessageFeature::Inline(inlines)];
+                            result.append(&mut features);
+                            result
                         }
                     }
                 }
             }
-            result
         }
 
         let mut features = loop_features(features.0);
@@ -4504,139 +4538,11 @@ pub mod json_output {
 
     use super::*;
 
-    fn key_rank(value: &Value, key: &str) -> usize {
-        let is_top_level = matches!(value, Value::Object(props)
-            if props.contains_key("flowVersion")
-                && props.contains_key("jsonVersion")
-                && props.contains_key("errors")
-                && props.contains_key("passed"));
-        if is_top_level {
-            return match key {
-                "flowVersion" => 0,
-                "jsonVersion" => 1,
-                "errors" => 2,
-                "passed" => 3,
-                _ => 1000,
-            };
-        }
-
-        let is_error = matches!(value, Value::Object(props)
-            if props.contains_key("kind")
-                && props.contains_key("level")
-                && props.contains_key("suppressions"));
-        if is_error {
-            return match key {
-                "kind" => 0,
-                "level" => 1,
-                "suppressions" => 2,
-                "extra" => 3,
-                "message" => 4,
-                "error_codes" => 5,
-                "classic" => 3,
-                "primaryLoc" => 4,
-                "rootLoc" => 5,
-                "messageMarkup" => 6,
-                "referenceLocs" => 7,
-                _ => 1000,
-            };
-        }
-
-        let is_message = matches!(value, Value::Object(props)
-            if props.contains_key("descr") && props.contains_key("type"));
-        if is_message {
-            return match key {
-                "context" => 0,
-                "descr" => 1,
-                "type" => 2,
-                "loc" => 3,
-                "path" => 4,
-                "line" => 5,
-                "endline" => 6,
-                "start" => 7,
-                "end" => 8,
-                _ => 1000,
-            };
-        }
-
-        let is_loc = matches!(value, Value::Object(props)
-            if props.contains_key("source")
-                && props.contains_key("type")
-                && props.contains_key("start")
-                && props.contains_key("end"));
-        if is_loc {
-            return match key {
-                "source" => 0,
-                "type" => 1,
-                "start" => 2,
-                "end" => 3,
-                "context" => 4,
-                _ => 1000,
-            };
-        }
-
-        let is_position = matches!(value, Value::Object(props)
-            if props.contains_key("line") && props.contains_key("column"));
-        if is_position {
-            return match key {
-                "line" => 0,
-                "column" => 1,
-                "offset" => 2,
-                _ => 1000,
-            };
-        }
-
-        let is_info_tree = matches!(value, Value::Object(props) if props.contains_key("message"));
-        if is_info_tree {
-            return match key {
-                "message" => 0,
-                "children" => 1,
-                _ => 1000,
-            };
-        }
-
-        let is_unordered_list = matches!(value, Value::Object(props)
-            if props.get("kind") == Some(&json!("UnorderedList")));
-        if is_unordered_list {
-            return match key {
-                "kind" => 0,
-                "message" => 1,
-                "items" => 2,
-                "post_message" => 3,
-                _ => 1000,
-            };
-        }
-
-        let is_friendly_inline = matches!(value, Value::Object(props)
-            if props.contains_key("kind")
-                && (props.contains_key("text")
-                    || props.contains_key("referenceId")
-                    || props.contains_key("message")));
-        if is_friendly_inline {
-            return match key {
-                "kind" => 0,
-                "referenceId" => 1,
-                "message" => 2,
-                "text" => 1,
-                _ => 1000,
-            };
-        }
-
-        if key == "loc" {
-            return 0;
-        }
-
-        1000
-    }
-
     fn ordered_entries(value: &Value) -> Vec<(&String, &Value)> {
         match value {
             Value::Object(props) => {
                 let mut entries = props.iter().collect::<Vec<_>>();
-                entries.sort_by(|(left_key, _), (right_key, _)| {
-                    key_rank(value, left_key)
-                        .cmp(&key_rank(value, right_key))
-                        .then_with(|| left_key.cmp(right_key))
-                });
+                entries.sort_by(|(left_key, _), (right_key, _)| left_key.cmp(right_key));
                 entries
             }
             _ => Vec::new(),

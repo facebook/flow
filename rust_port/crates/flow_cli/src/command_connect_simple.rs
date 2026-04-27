@@ -148,8 +148,13 @@ fn open_connection(
     let client2_bytes = bincode::serde::encode_to_vec(client2, bincode::config::legacy())
         .map_err(|_| ConnectExn::Timeout)?;
     let wire: socket_handshake::ClientHandshakeWire = (client1_json, client2_bytes);
-    bincode::serde::encode_into_std_write(&wire, &mut conn, bincode::config::legacy())
-        .map_err(|_| ConnectExn::Timeout)?;
+    {
+        use std::io::Write;
+        let mut buffered = std::io::BufWriter::new(&mut conn);
+        bincode::serde::encode_into_std_write(&wire, &mut buffered, bincode::config::legacy())
+            .map_err(|_| ConnectExn::Timeout)?;
+        buffered.flush().map_err(|_| ConnectExn::Timeout)?;
+    }
     let conn_clone = conn.try_clone().map_err(|_| ConnectExn::Timeout)?;
     with_connections(|conns| {
         conns.insert(sockaddr, conn_clone);
