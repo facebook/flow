@@ -6,7 +6,7 @@
  */
 
 // Mirrors the OCaml split between `src/stubs/hardcoded_module_fixes.ml` (OSS,
-// empty list) and `src/facebook/komodo/codemods/hardcoded_module_fixes.ml`
+// empty list) and `src/facebook/codemods/annotate_exports_hardcoded/hardcoded_module_fixes.ml`
 // (internal, hard-coded RelayModern/etc. mappings). The internal arm is wired
 // in once that file has been ported into `crates/facebook/`.
 

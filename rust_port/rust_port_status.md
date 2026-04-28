@@ -969,25 +969,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
 - [ ] facebook/
   - [ ] http/
     - [ ] flow_http_client.ml
-  - [ ] komodo/
-    - [ ] binaries/
-      - [ ] komodo_cjs_to_import_export.ml
-      - [ ] komodo_stress_normalizer.ml
-      - [ ] komodo_utils.ml
-    - [ ] codemods/
-      - [ ] cjs_to_import_export_codemod/
-        - [ ] export_type_heaps.ml
-        - [ ] flow_ast_bindings_utils.ml
-        - [ ] flow_ast_mutator.ml
-        - [ ] import_export_analyze_exports.ml
-        - [ ] import_export_analyze_imports.ml
-        - [ ] import_export_builder.ml
-        - [ ] import_export_error.ml
-        - [ ] reserved_words.ml
+  - [ ] codemods/
+    - [ ] annotate_exports_hardcoded/
       - [ ] annotate_exports_hardcoded_expr_fixes.ml
-      - [ ] cjs_to_import_export.ml
       - [ ] hardcoded_module_fixes.ml
-      - [ ] stress_normalizer.ml
   - [ ] logging/
     - [ ] user/
       - [ ] fb_whoami.ml

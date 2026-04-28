@@ -406,7 +406,7 @@ module Fix_errors_command = struct
 
   let main codemod_flags error_codes () =
     let (CommandUtils.Codemod_params ({ anon; _ } as codemod_params)) = codemod_flags in
-    let komodo_flags =
+    let updated_flags =
       let anon =
         match anon with
         | None
@@ -419,7 +419,7 @@ module Fix_errors_command = struct
     let module Runner = Codemod_runner.MakeTypedRunnerWithPrepass (FixCodemod (struct
       let error_codes = error_codes
     end)) in
-    main (module Runner) komodo_flags ()
+    main (module Runner) updated_flags ()
 
   let command = CommandSpec.command spec main
 end
