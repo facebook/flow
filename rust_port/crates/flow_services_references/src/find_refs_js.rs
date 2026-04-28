@@ -55,13 +55,22 @@ pub fn local_refs_of_find_ref_request<'cx>(
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     file_key: &FileKey,
     request: &Request,
-) -> Result<FindRefsOk, String> {
+) -> Result<Result<FindRefsOk, String>, flow_utils_concurrency::job_error::JobError> {
     let def_info = &request.def_info;
-    let var_refs = |prop_refs: &[find_refs_types::SingleRef]| -> Vec<find_refs_types::SingleRef> {
+    let var_refs = |prop_refs: &[find_refs_types::SingleRef]| -> Result<
+        Vec<find_refs_types::SingleRef>,
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let def_locs = get_def_utils::all_locs_of_def_info(def_info);
         let (ast, file_sig, _) = ast_info;
-        let search_result =
-            local_import_ref_searcher::search(loc_of_aloc, cx, file_sig, ast, typed_ast, &def_locs);
+        let search_result = local_import_ref_searcher::search(
+            loc_of_aloc,
+            cx,
+            file_sig,
+            ast,
+            typed_ast,
+            &def_locs,
+        )?;
         let import_def_locs = search_result.local_locs;
         let remote_locs = search_result.remote_locs;
         let scope_info = scope_builder::program(cx.enable_enums(), true, ast);
@@ -80,26 +89,29 @@ pub fn local_refs_of_find_ref_request<'cx>(
             variable_find_refs::local_find_refs(&scope_info, &starting_locs).unwrap_or_default();
         let mut result = remote_refs;
         result.extend(local_refs);
-        result
+        Ok(result)
     };
     let merge_with_var_refs = |prop_refs_result: Result<
         Vec<find_refs_types::SingleRef>,
         String,
     >|
-     -> Result<FindRefsOk, String> {
+     -> Result<
+        Result<FindRefsOk, String>,
+        flow_utils_concurrency::job_error::JobError,
+    > {
         match prop_refs_result {
             Ok(prop_refs) => {
-                let vr = var_refs(&prop_refs);
+                let vr = var_refs(&prop_refs)?;
                 let mut all_refs = prop_refs;
                 all_refs.extend(vr);
-                Ok(FindRefsOk::FoundReferences(all_refs))
+                Ok(Ok(FindRefsOk::FoundReferences(all_refs)))
             }
             Err(e) => {
-                let vr = var_refs(&[]);
+                let vr = var_refs(&[])?;
                 if vr.is_empty() {
-                    Err(e)
+                    Ok(Err(e))
                 } else {
-                    Ok(FindRefsOk::FoundReferences(vr))
+                    Ok(Ok(FindRefsOk::FoundReferences(vr)))
                 }
             }
         }
@@ -128,7 +140,7 @@ pub fn local_refs_of_find_ref_request<'cx>(
                             props_info,
                             name: name.clone(),
                         },
-                    )
+                    )?
                 }
             };
             merge_with_var_refs(prop_refs)
@@ -142,10 +154,12 @@ pub fn local_refs_of_find_ref_request<'cx>(
                 obj_to_obj_map,
                 file_key,
                 props_info,
-            );
+            )?;
             merge_with_var_refs(prop_refs)
         }
-        DefInfo::NoDefinition(no_def_reason) => Ok(FindRefsOk::NoDefinition(no_def_reason.clone())),
+        DefInfo::NoDefinition(no_def_reason) => {
+            Ok(Ok(FindRefsOk::NoDefinition(no_def_reason.clone())))
+        }
     }
 }
 
@@ -159,9 +173,9 @@ pub fn find_local_refs<'cx>(
     kind: Kind,
     line: u32,
     col: u32,
-) -> Result<(DefInfo, FindRefsOk), String> {
+) -> Result<Result<(DefInfo, FindRefsOk), String>, flow_utils_concurrency::job_error::JobError> {
     let cursor_loc = Loc::cursor(Some(file_key.dupe()), line as i32, col as i32);
-    let def_info = get_def_utils::get_def_info(
+    let def_info = match get_def_utils::get_def_info(
         loc_of_aloc,
         &Purpose::FindReferences,
         ast_info,
@@ -169,12 +183,15 @@ pub fn find_local_refs<'cx>(
         typed_ast,
         obj_to_obj_map,
         &cursor_loc,
-    )?;
+    )? {
+        Ok(d) => d,
+        Err(e) => return Ok(Err(e)),
+    };
     let request = Request {
         def_info: def_info.clone(),
         kind,
     };
-    let result = local_refs_of_find_ref_request(
+    let result = match local_refs_of_find_ref_request(
         loc_of_aloc,
         ast_info,
         cx,
@@ -182,10 +199,13 @@ pub fn find_local_refs<'cx>(
         obj_to_obj_map,
         file_key,
         &request,
-    )?;
+    )? {
+        Ok(r) => r,
+        Err(e) => return Ok(Err(e)),
+    };
     let result = match result {
         FindRefsOk::FoundReferences(refs) => FindRefsOk::FoundReferences(sort_and_dedup(refs)),
         FindRefsOk::NoDefinition(no_def_reason) => FindRefsOk::NoDefinition(no_def_reason),
     };
-    Ok((def_info, result))
+    Ok(Ok((def_info, result)))
 }

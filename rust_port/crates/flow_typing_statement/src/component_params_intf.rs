@@ -9,7 +9,7 @@ use flow_aloc::ALoc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
 use flow_typing_type::type_::Type;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 
 /// This trait defines the interface for the module that converts from the parameter representation
 /// to types. This trait is used by the Params module to reconstruct the typed AST.
@@ -24,12 +24,12 @@ pub trait Config {
     fn eval_param<'a>(
         cx: &Context<'a>,
         param: &Self::Param,
-    ) -> Result<Self::ParamAst, AbnormalControlFlow>;
-    fn eval_rest<'a>(
-        cx: &Context<'a>,
-        rest: &Self::Rest,
-    ) -> Result<Self::RestAst, AbnormalControlFlow>;
+    ) -> Result<Self::ParamAst, CheckExprError>;
+    fn eval_rest<'a>(cx: &Context<'a>, rest: &Self::Rest) -> Result<Self::RestAst, CheckExprError>;
     fn param_type_with_name(param: &Self::Param) -> (ALoc, FlowSmolStr, Type);
     fn rest_type(rest: &Self::Rest) -> Type;
-    fn read_react<'a>(cx: &Context<'a>, loc: ALoc);
+    fn read_react<'a>(
+        cx: &Context<'a>,
+        loc: ALoc,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError>;
 }

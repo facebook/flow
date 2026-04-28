@@ -33,7 +33,7 @@ use flow_typing_loc_env::func_class_sig_types::class as class_types;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::*;
 use flow_typing_type::type_util;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 use flow_typing_utils::type_env;
 
 use crate::func_sig;
@@ -478,9 +478,9 @@ pub fn mem_constructor<C: ConfigTypes>(x: &class_types::Class<C>) -> bool {
 }
 
 fn iter_methods_with_name<C: ConfigTypes>(
-    f: &mut impl FnMut(&str, &class_types::FuncInfo<C>) -> Result<(), AbnormalControlFlow>,
+    f: &mut impl FnMut(&str, &class_types::FuncInfo<C>) -> Result<(), CheckExprError>,
     s: &class_types::Signature<C>,
-) -> Result<(), AbnormalControlFlow> {
+) -> Result<(), CheckExprError> {
     for (name, func_infos) in &s.methods {
         for func_info in func_infos {
             f(name, func_info)?;
@@ -499,9 +499,9 @@ fn iter_methods_with_name<C: ConfigTypes>(
 }
 
 fn iter_methods<C: ConfigTypes>(
-    f: &mut impl FnMut(&class_types::FuncInfo<C>) -> Result<(), AbnormalControlFlow>,
+    f: &mut impl FnMut(&class_types::FuncInfo<C>) -> Result<(), CheckExprError>,
     s: &class_types::Signature<C>,
-) -> Result<(), AbnormalControlFlow> {
+) -> Result<(), CheckExprError> {
     iter_methods_with_name(&mut |_, info| f(info), s)
 }
 
@@ -1503,7 +1503,7 @@ pub fn make_thises<'a, C: ConfigTypes>(
 pub fn toplevels<'a, C: crate::func_params_intf::Config>(
     cx: &Context<'a>,
     x: &class_types::Class<C>,
-) -> Result<(), AbnormalControlFlow> {
+) -> Result<(), CheckExprError> {
     type_env::in_class_scope(cx, x.class_loc.dupe(), || {
         let method_ = |set_asts: &class_types::SetAsts<C>,
                        f: &func_class_sig_types::func::Func<C>| {
@@ -1516,7 +1516,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             Ok(())
         };
         let field =
-            |_name: &str, entry: &class_types::FieldPrime<C>| -> Result<(), AbnormalControlFlow> {
+            |_name: &str, entry: &class_types::FieldPrime<C>| -> Result<(), CheckExprError> {
                 let (_, _, value) = entry;
                 match value {
                     class_types::Field::Annot(_) => {}
@@ -1528,7 +1528,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             };
         with_sig(
             true,
-            |s| {
+            |s| -> Result<(), CheckExprError> {
                 // process static methods and fields
                 iter_methods(
                     &mut |fi: &class_types::FuncInfo<C>| method_(&fi.set_asts, &fi.func_sig),
@@ -1546,7 +1546,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
         )?;
         with_sig(
             false,
-            |s| {
+            |s| -> Result<(), CheckExprError> {
                 // process constructor
                 for fi in &x.constructor {
                     method_(&fi.set_asts, &fi.func_sig)?;

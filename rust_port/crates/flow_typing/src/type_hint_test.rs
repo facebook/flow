@@ -230,7 +230,8 @@ mod tests {
                 cx,
                 flow_env_builder::name_def_types::ScopeKind::Global,
             );
-            let result = type_annotation::convert(cx, FlowOrdMap::new(), &t_ast);
+            let result = type_annotation::convert(cx, FlowOrdMap::new(), &t_ast)
+                .expect("convert should not be canceled in test");
             let (_, t) = result.loc();
             t.dupe()
         }
@@ -334,6 +335,7 @@ mod tests {
                 &ast.all_comments,
                 &aloc_ast,
             )
+            .expect("infer_ast should not be canceled in test")
         }
 
         pub fn get_type_of_last_expression(cx: &Context, content: &str) -> Type {
@@ -422,6 +424,7 @@ mod tests {
             Rc::new(move |_cx: &Context<'static>| {
                 std::mem::replace(&mut *builtins_ref_for_mk.borrow_mut(), Builtins::empty())
             }),
+            flow_utils_concurrency::check_budget::CheckBudget::new(None),
         );
         let master_cx = type_loader::get_master_cx();
         let mk_builtins_fn = merge::mk_builtins(&md, &master_cx);
@@ -460,7 +463,8 @@ mod tests {
         let cx = mk_cx(false);
         let actual = {
             let hint = mk_hint(type_parser::parse(&cx, base), ops);
-            let result = type_hint::evaluate_hint(&cx, false, None, &dummy_reason(), hint);
+            let result = type_hint::evaluate_hint(&cx, false, None, &dummy_reason(), hint)
+                .expect("evaluate_hint should not be canceled in test");
             string_of_hint_eval_result(&cx, &result)
         };
         // DEBUGGING TIP: set verbose:true above to print traces
@@ -546,7 +550,8 @@ mod tests {
                     FlowVector::unit(class_stack_loc),
                 )],
             );
-            let result = type_hint::evaluate_hint(&cx, false, None, &dummy_reason(), hint);
+            let result = type_hint::evaluate_hint(&cx, false, None, &dummy_reason(), hint)
+                .expect("evaluate_hint should not be canceled in test");
             string_of_hint_eval_result(&cx, &result)
         };
         assert_eq!(expected, actual);
@@ -561,7 +566,8 @@ mod tests {
         let base_t = type_loader::get_type_of_last_expression(&cx, type_setup_code);
         let actual = {
             let hint = mk_hint(base_t, ops);
-            let result = type_hint::evaluate_hint(&cx, false, None, &dummy_reason(), hint);
+            let result = type_hint::evaluate_hint(&cx, false, None, &dummy_reason(), hint)
+                .expect("evaluate_hint should not be canceled in test");
             string_of_hint_eval_result(&cx, &result)
         };
         // DEBUGGING TIP: set verbose:true above to print traces

@@ -66,21 +66,20 @@ pub(super) fn eval_selector<'cx>(
                 }));
                 // LookupT unifies with the default with tvar. To get around that, we can create some
                 // indirection with a fresh tvar in between to ensure that we only add a lower bound
-                let default_tout =
-                    flow_typing_tvar::mk_where_result(cx, reason.dupe(), |cx, tout| {
-                        flow_opt(
-                            cx,
-                            trace,
-                            (
-                                tout,
-                                &UseT::new(UseTInner::UseT(
-                                    use_op.dupe(),
-                                    Type::new(TypeInner::OpenT(tvar.dupe())),
-                                )),
-                            ),
-                        )?;
-                        Ok::<(), FlowJsException>(())
-                    })?;
+                let default_tout = flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tout| {
+                    flow_opt(
+                        cx,
+                        trace,
+                        (
+                            tout,
+                            &UseT::new(UseTInner::UseT(
+                                use_op.dupe(),
+                                Type::new(TypeInner::OpenT(tvar.dupe())),
+                            )),
+                        ),
+                    )?;
+                    Ok::<(), FlowJsException>(())
+                })?;
                 let void_reason = tvar.reason().dupe().replace_desc(VirtualReasonDesc::RVoid);
                 let lookup_kind = LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(
                     Some((
@@ -348,8 +347,8 @@ pub(super) fn mk_type_destructor<'cx>(
                     cx,
                     reason.dupe(),
                     t.dupe(),
-                    move |cx, t| {
-                        match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where_result(
+                    move |cx, t| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+                        match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                             cx,
                             reason_clone.dupe(),
                             |cx, tvar_reason, tvar_id| {
@@ -370,10 +369,10 @@ pub(super) fn mk_type_destructor<'cx>(
                                 result
                             },
                         ) {
-                            Ok(result) => result,
+                            Ok(result) => Ok(result),
                             Err(err) => {
                                 *evaluation_error_for_map.borrow_mut() = Some(err);
-                                eval_t_fallback.dupe()
+                                Ok(eval_t_fallback.dupe())
                             }
                         }
                     },
@@ -397,7 +396,7 @@ pub(super) fn mk_type_destructor<'cx>(
                 let t_clone = t.dupe();
                 let d_clone = d.clone();
                 let id_clone = id.dupe();
-                flow_typing_tvar::mk_no_wrap_where_result(
+                flow_typing_tvar::mk_no_wrap_where(
                     cx,
                     reason.dupe(),
                     move |cx, tvar_reason, tvar_id| {
@@ -1394,9 +1393,12 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
             let evaluation_error = Rc::new(RefCell::new(None));
             let evaluation_error_for_map = Rc::clone(&evaluation_error);
             let eval_t_fallback = eval_t.dupe();
-            let result =
-                flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t.dupe(), move |cx, t| {
-                    match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where_result(
+            let result = flow_js_utils::map_on_resolved_type(
+                cx,
+                reason.dupe(),
+                t.dupe(),
+                move |cx, t| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+                    match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                         cx,
                         reason_clone.dupe(),
                         |cx, tvar_reason, tvar_id| {
@@ -1412,19 +1414,33 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                             )
                         },
                     ) {
-                        Ok(result) => result,
+                        Ok(result) => Ok(result),
                         Err(err) => {
                             *evaluation_error_for_map.borrow_mut() = Some(err);
-                            eval_t_fallback.dupe()
+                            Ok(eval_t_fallback.dupe())
                         }
                     }
-                });
+                },
+            );
             if evaluation_error.borrow().is_none() {
                 let mut evaluated = cx.evaluated();
                 evaluated.insert(id, result);
                 cx.set_evaluated(evaluated);
             }
+            if matches!(
+                evaluation_error.borrow().as_ref(),
+                Some(FlowJsException::WorkerCanceled(_))
+                    | Some(FlowJsException::TimedOut(_))
+                    | Some(FlowJsException::DebugThrow { .. })
+            ) {
+                if let Some(err) = evaluation_error.borrow_mut().take() {
+                    return Err(err);
+                }
+            }
         } else {
+            // Hoisted out of try_evaluate so the post-loop check below can read it.
+            let evaluation_error: Rc<RefCell<Option<FlowJsException>>> =
+                Rc::new(RefCell::new(None));
             let try_evaluate = |stuck_eval_kind: nominal::StuckEvalKind,
                                 stuck_eval_targs: Vec<Type>,
                                 upper_t: Option<Type>| {
@@ -1435,21 +1451,23 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                 let stuck_eval_kind_for_map = stuck_eval_kind.clone();
                 let stuck_eval_targs_for_map = stuck_eval_targs.clone();
                 let upper_t_for_map = upper_t.clone();
-                let evaluation_error = Rc::new(RefCell::new(None));
                 let evaluation_error_for_map = Rc::clone(&evaluation_error);
                 let eval_t_fallback = eval_t.dupe();
                 let result = flow_js_utils::map_on_resolved_type(
                     cx,
                     reason.dupe(),
                     t.dupe(),
-                    move |cx, t_resolved| {
+                    move |cx, t_resolved| -> Result<
+                        Type,
+                        flow_utils_concurrency::job_error::JobError,
+                    > {
                         let use_op = use_op_for_map.dupe();
                         let reason = reason_for_map.dupe();
                         let d = d_for_map.clone();
                         let stuck_eval_kind = stuck_eval_kind_for_map.clone();
                         let stuck_eval_targs = stuck_eval_targs_for_map.clone();
                         let upper_t = upper_t_for_map.clone();
-                        match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where_result(
+                        match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                             cx,
                             reason.dupe(),
                             |cx, tvar_reason, tvar_id| {
@@ -1477,7 +1495,23 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                                     );
                                 match result {
                                     Ok(()) => Ok(()),
-                                    Err(_) => {
+                                    // WorkerCanceled, TimedOut, and DebugThrow
+                                    // must escape — re-raise so the outer fn
+                                    // surfaces them instead of building a
+                                    // stuck nominal fallback. See plan.md
+                                    // §"JobError".
+                                    Err(FlowJsException::WorkerCanceled(c)) => {
+                                        Err(FlowJsException::WorkerCanceled(c))
+                                    }
+                                    Err(FlowJsException::TimedOut(t)) => {
+                                        Err(FlowJsException::TimedOut(t))
+                                    }
+                                    Err(FlowJsException::DebugThrow { loc }) => {
+                                        Err(FlowJsException::DebugThrow { loc })
+                                    }
+                                    Err(FlowJsException::Speculative(_))
+                                    | Err(FlowJsException::SpeculationSingletonError)
+                                    | Err(FlowJsException::LimitExceeded) => {
                                         let nominal_type_args: Rc<
                                             [(SubstName, Reason, Type, Polarity)],
                                         > = stuck_eval_targs
@@ -1521,10 +1555,10 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                                 }
                             },
                         ) {
-                            Ok(result) => result,
+                            Ok(result) => Ok(result),
                             Err(err) => {
                                 *evaluation_error_for_map.borrow_mut() = Some(err);
-                                eval_t_fallback.dupe()
+                                Ok(eval_t_fallback.dupe())
                             }
                         }
                     },
@@ -1534,6 +1568,23 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                     evaluated.insert(id.dupe(), result);
                     cx.set_evaluated(evaluated);
                 }
+            };
+
+            // After try_evaluate runs, surface any latched WorkerCanceled,
+            // TimedOut, or DebugThrow. Other FlowJsException variants stay in
+            // evaluation_error and the existing fallback behavior is preserved.
+            let check_canceled_evaluation_error = || -> Result<(), FlowJsException> {
+                if matches!(
+                    evaluation_error.borrow().as_ref(),
+                    Some(FlowJsException::WorkerCanceled(_))
+                        | Some(FlowJsException::TimedOut(_))
+                        | Some(FlowJsException::DebugThrow { .. })
+                ) {
+                    if let Some(err) = evaluation_error.borrow_mut().take() {
+                        return Err(err);
+                    }
+                }
+                Ok(())
             };
 
             match d {
@@ -1650,6 +1701,7 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                 }
                 _ => {}
             }
+            check_canceled_evaluation_error()?;
         }
     }
     Ok(eval_t)

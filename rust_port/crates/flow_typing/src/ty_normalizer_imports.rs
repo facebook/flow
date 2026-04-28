@@ -61,29 +61,37 @@ fn add_bind_ident_from_imports<'a>(
     source: (&ALoc, &Userland, &Result<ModuleType, Type>),
     remote_name: &FlowSmolStr,
     mut acc: Vec<(FlowSmolStr, ALoc, ImportMode, Type)>,
-) -> Vec<(FlowSmolStr, ALoc, ImportMode, Type)> {
+) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, flow_utils_concurrency::job_error::JobError>
+{
     let (source_loc, module_name, source_module) = source;
     let import_reason = reason::mk_reason(
         reason::VirtualReasonDesc::RNamedImportedType(module_name.dupe(), local_name.dupe()),
         source_loc.dupe(),
     );
     let import_kind = import_mode_to_import_kind(import_mode);
-    let (_loc, t) = flow_js_utils::import_export_utils::import_named_specifier_type(
+    let (_loc, t) = match flow_js_utils::import_export_utils::import_named_specifier_type(
         cx,
         import_reason,
         &|cx, reason, t| {
             flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
-                .map_err(|e| e.into())
         },
         &import_kind,
         module_name.dupe(),
         source_module,
         remote_name,
         local_name,
-    )
-    .unwrap();
+    ) {
+        Ok(v) => v,
+        Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+            return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
+        }
+        Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => {
+            return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
+        }
+        Err(err) => panic!("Should not be under speculation: {:?}", err),
+    };
     acc.push((local_name.dupe(), local_loc, import_mode, t));
-    acc
+    Ok(acc)
 }
 
 fn add_imported_loc_map_bindings<'a>(
@@ -93,7 +101,8 @@ fn add_imported_loc_map_bindings<'a>(
     source: &(Loc, FlowSmolStr),
     map: &BTreeMap<FlowSmolStr, BTreeMap<FlowSmolStr, vec1::Vec1<file_sig::ImportedLocs>>>,
     mut acc: Vec<(FlowSmolStr, ALoc, ImportMode, Type)>,
-) -> Vec<(FlowSmolStr, ALoc, ImportMode, Type)> {
+) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, flow_utils_concurrency::job_error::JobError>
+{
     let (source_loc, module_name) = source;
     let source_loc = ALoc::of_loc(source_loc.dupe());
     let source_module: OnceCell<Result<ModuleType, Type>> = OnceCell::new();
@@ -124,7 +133,7 @@ fn add_imported_loc_map_bindings<'a>(
                             (&source_loc, &module_name_userland, source_module),
                             remote_name,
                             acc,
-                        );
+                        )?;
                     }
                     Some(typed_ast) => {
                         acc = add_bind_ident_from_typed_ast(
@@ -139,7 +148,7 @@ fn add_imported_loc_map_bindings<'a>(
             }
         }
     }
-    acc
+    Ok(acc)
 }
 
 fn add_require_bindings_from_exports_map<'a>(
@@ -270,7 +279,8 @@ fn add_import_bindings<'a>(
     typed_ast: &Option<&ast::Program<ALoc, (ALoc, Type)>>,
     mut acc: Vec<(FlowSmolStr, ALoc, ImportMode, Type)>,
     require: &Require,
-) -> Vec<(FlowSmolStr, ALoc, ImportMode, Type)> {
+) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, flow_utils_concurrency::job_error::JobError>
+{
     match require {
         Require::Require {
             source,
@@ -279,14 +289,14 @@ fn add_import_bindings<'a>(
             prefix: _,
         } => {
             let source_tuple = (source.0.dupe(), source.1.dupe());
-            add_require_bindings(
+            Ok(add_require_bindings(
                 cx,
                 typed_ast,
                 ImportMode::ValueMode,
                 &source_tuple,
                 bindings,
                 acc,
-            )
+            ))
         }
         Require::Import {
             import_loc: _,
@@ -307,7 +317,7 @@ fn add_import_bindings<'a>(
                 &source_tuple,
                 named,
                 acc,
-            );
+            )?;
             acc = add_imported_loc_map_bindings(
                 cx,
                 typed_ast,
@@ -315,7 +325,7 @@ fn add_import_bindings<'a>(
                 &source_tuple,
                 types,
                 acc,
-            );
+            )?;
             acc = add_imported_loc_map_bindings(
                 cx,
                 typed_ast,
@@ -323,14 +333,14 @@ fn add_import_bindings<'a>(
                 &source_tuple,
                 typesof,
                 acc,
-            );
-            acc
+            )?;
+            Ok(acc)
         }
         Require::ImportDynamic { .. }
         | Require::Import0 { .. }
         | Require::ImportSyntheticUserland { .. }
         | Require::ImportSyntheticHaste { .. }
-        | Require::ExportFrom { .. } => acc,
+        | Require::ExportFrom { .. } => Ok(acc),
     }
 }
 
@@ -338,11 +348,12 @@ pub fn extract_types<'a>(
     cx: &Context<'a>,
     file_sig: &FileSig,
     typed_ast: Option<&ast::Program<ALoc, (ALoc, Type)>>,
-) -> Vec<(FlowSmolStr, ALoc, ImportMode, Type)> {
+) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, flow_utils_concurrency::job_error::JobError>
+{
     let requires = file_sig.requires();
     let mut imports: Vec<(FlowSmolStr, ALoc, ImportMode, Type)> = Vec::new();
     for require in requires {
-        imports = add_import_bindings(cx, &typed_ast, imports, require);
+        imports = add_import_bindings(cx, &typed_ast, imports, require)?;
     }
-    imports.into_iter().rev().collect()
+    Ok(imports.into_iter().rev().collect())
 }

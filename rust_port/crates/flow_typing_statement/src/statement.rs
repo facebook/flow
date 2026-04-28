@@ -101,6 +101,7 @@ use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::*;
 use flow_typing_type::type_util::*;
 use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 use flow_typing_utils::speculation_flow;
 use flow_typing_utils::type_env;
 use flow_typing_utils::type_hint;
@@ -147,10 +148,31 @@ mod optional_chain {
 }
 
 struct ChainingConf<'a, 'b, A, B> {
-    refinement_action: Option<Box<dyn Fn(&Context<'a>, &A, &Type, Type) -> Type + 'b>>,
-    refine: Box<dyn Fn(&Context<'a>) -> Option<Type> + 'b>,
-    subexpressions: Box<dyn FnOnce(&Context<'a>) -> Result<(A, B), AbnormalControlFlow> + 'b>,
-    get_result: Box<dyn Fn(&Context<'a>, &A, Reason, &Type) -> Type + 'b>,
+    refinement_action: Option<
+        Box<
+            dyn Fn(
+                    &Context<'a>,
+                    &A,
+                    &Type,
+                    Type,
+                ) -> Result<Type, flow_utils_concurrency::job_error::JobError>
+                + 'b,
+        >,
+    >,
+    refine: Box<
+        dyn Fn(&Context<'a>) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError>
+            + 'b,
+    >,
+    subexpressions: Box<dyn FnOnce(&Context<'a>) -> Result<(A, B), CheckExprError> + 'b>,
+    get_result: Box<
+        dyn Fn(
+                &Context<'a>,
+                &A,
+                Reason,
+                &Type,
+            ) -> Result<Type, flow_utils_concurrency::job_error::JobError>
+            + 'b,
+    >,
     get_opt_use: Rc<dyn Fn(&Context<'a>, &A, Reason) -> type_::OptUseT<Context<'a>> + 'b>,
     get_reason: Box<dyn Fn(&Type) -> Reason + 'b>,
 }
@@ -276,12 +298,16 @@ pub mod object_expression_acc {
             }
         }
 
-        pub(super) fn add_computed<'a>(self, cx: &Context<'a>, computed: ComputedProp) -> Self {
+        pub(super) fn add_computed<'a>(
+            self,
+            cx: &Context<'a>,
+            computed: ComputedProp,
+        ) -> Result<Self, flow_utils_concurrency::job_error::JobError> {
             match computed {
-                ComputedProp::Named { name, prop } => self.add_prop(|pmap| {
+                ComputedProp::Named { name, prop } => Ok(self.add_prop(|pmap| {
                     pmap.insert(name, prop);
-                }),
-                ComputedProp::IgnoredInvalidNonLiteralKey => self,
+                })),
+                ComputedProp::IgnoredInvalidNonLiteralKey => Ok(self),
                 ComputedProp::NonLiteralKey {
                     key_loc,
                     key,
@@ -326,7 +352,7 @@ pub mod object_expression_acc {
                                     } else {
                                         let reason = reason_of_t(&key).dupe();
                                         if let HintEvalResult::HintAvailable(t, _) =
-                                            lazy_hint(cx, true, Some(true), reason)
+                                            lazy_hint(cx, true, Some(true), reason)?
                                             && speculation_flow::is_subtyping_successful(
                                                 cx,
                                                 value.dupe(),
@@ -343,7 +369,7 @@ pub mod object_expression_acc {
                                         }
                                     }
                                 };
-                                Self {
+                                Ok(Self {
                                     computed_props: Some(DictType {
                                         dict_name: None,
                                         key,
@@ -351,7 +377,7 @@ pub mod object_expression_acc {
                                         dict_polarity: Polarity::Neutral,
                                     }),
                                     ..self
-                                }
+                                })
                             }
                             Some(DictType {
                                 dict_name: _,
@@ -378,7 +404,7 @@ pub mod object_expression_acc {
                                                 existing_key.dupe(),
                                             )),
                                         ),
-                                    );
+                                    )?;
                                     flow_js::flow_non_speculating(
                                         cx,
                                         (
@@ -388,9 +414,9 @@ pub mod object_expression_acc {
                                                 existing_value.dupe(),
                                             )),
                                         ),
-                                    );
+                                    )?;
                                 }
-                                self
+                                Ok(self)
                             }
                         }
                     } else {
@@ -410,12 +436,12 @@ pub mod object_expression_acc {
                                 },
                             )),
                         );
-                        self
+                        Ok(self)
                     }
                 }
-                ComputedProp::SpreadEmpty(r) => {
+                ComputedProp::SpreadEmpty(r) => Ok(
                     self.add_spread(Type::new(TypeInner::DefT(r, DefT::new(DefTInner::EmptyT))))
-                }
+                ),
             }
         }
 
@@ -449,7 +475,7 @@ pub mod object_expression_acc {
             as_const: bool,
             frozen: bool,
             default_proto: Type,
-        ) -> Type {
+        ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
             use object::spread;
 
             let proto = self.proto.dupe();
@@ -482,24 +508,19 @@ pub mod object_expression_acc {
                         let obj_t_clone = obj_t.dupe();
                         let reason_clone = reason.dupe();
                         let get_autocomplete_t = move || {
-                            flow_typing_flow_js::tvar_resolver::mk_tvar_and_fully_resolve_where(
-                                cx,
-                                reason_clone,
-                                |cx, tvar| {
-                                    flow_js::flow_t_non_speculating(cx, (&obj_t_clone, tvar));
-                                },
-                            )
+                            flow_typing_flow_js::tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                                flow_utils_concurrency::job_error::JobError,
+                            >(cx, reason_clone, |cx, tvar| {
+                                flow_js::flow_t_non_speculating(cx, (&obj_t_clone, tvar))?;
+                                Ok(())
+                            })
                         };
                         let LazyHintT(_has_hint, lazy_hint) =
                             flow_typing_utils::type_env::get_hint(cx, reason.loc().dupe());
-                        let result = lazy_hint(cx, false, None, reason);
-                        flow_typing_utils::type_hint::with_hint_result(
-                            |t| t,
-                            get_autocomplete_t,
-                            result,
-                        )
+                        let result = lazy_hint(cx, false, None, reason)?;
+                        flow_typing_utils::type_hint::with_hint(Ok, get_autocomplete_t, result)
                     } else {
-                        obj_t
+                        Ok(obj_t)
                     }
                 }
                 os => {
@@ -593,36 +614,35 @@ pub mod object_expression_acc {
                         union_reason: None,
                         curr_resolve_idx: 0,
                     };
-                    let tout = flow_typing_flow_js::tvar_resolver::mk_tvar_and_fully_resolve_where(
-                        cx,
-                        reason.dupe(),
-                        |cx, tout| {
-                            let use_op =
-                                UseOp::Op(std::sync::Arc::new(type_::RootUseOp::ObjectSpread {
-                                    op: reason.dupe(),
-                                }));
-                            flow_js::flow_non_speculating(
-                                cx,
-                                (
-                                    &t,
-                                    &UseT::new(UseTInner::ObjKitT(
-                                        use_op,
-                                        reason.dupe(),
-                                        Box::new(tool),
-                                        Box::new(object::Tool::Spread(Box::new((target, state)))),
-                                        tout.dupe(),
-                                    )),
-                                ),
-                            );
-                        },
-                    );
+                    let tout = flow_typing_flow_js::tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                        flow_utils_concurrency::job_error::JobError,
+                    >(cx, reason.dupe(), |cx, tout| {
+                        let use_op =
+                            UseOp::Op(std::sync::Arc::new(type_::RootUseOp::ObjectSpread {
+                                op: reason.dupe(),
+                            }));
+                        flow_js::flow_non_speculating(
+                            cx,
+                            (
+                                &t,
+                                &UseT::new(UseTInner::ObjKitT(
+                                    use_op,
+                                    reason.dupe(),
+                                    Box::new(tool),
+                                    Box::new(object::Tool::Spread(Box::new((target, state)))),
+                                    tout.dupe(),
+                                )),
+                            ),
+                        )?;
+                        Ok(())
+                    })?;
                     if obj_key_autocomplete_flag {
                         let LazyHintT(_has_hint, lazy_hint) =
                             flow_typing_utils::type_env::get_hint(cx, reason.loc().dupe());
-                        let result = lazy_hint(cx, false, None, reason);
-                        flow_typing_utils::type_hint::with_hint_result(|t| t, || tout, result)
+                        let result = lazy_hint(cx, false, None, reason)?;
+                        flow_typing_utils::type_hint::with_hint(Ok, || Ok(tout), result)
                     } else {
-                        tout
+                        Ok(tout)
                     }
                 }
             }
@@ -700,7 +720,10 @@ fn convert_call_targs<'a>(
     cx: &Context<'a>,
     tparams_map: &FlowOrdMap<SubstName, Type>,
     call_targs: &expression::CallTypeArgs<ALoc, ALoc>,
-) -> (Vec<Targ>, expression::CallTypeArgs<ALoc, (ALoc, Type)>) {
+) -> Result<
+    (Vec<Targ>, expression::CallTypeArgs<ALoc, (ALoc, Type)>),
+    flow_utils_concurrency::job_error::JobError,
+> {
     use ast::expression::CallTypeArg::*;
     let arguments = &call_targs.arguments;
     let comments = &call_targs.comments;
@@ -709,7 +732,8 @@ fn convert_call_targs<'a>(
     for arg in arguments.iter() {
         match arg {
             Explicit(type_ast) => {
-                let tast = type_annotation::convert(cx, tparams_map.dupe(), type_ast);
+                let tast: ast::types::Type<ALoc, (ALoc, Type)> =
+                    type_annotation::convert(cx, tparams_map.dupe(), type_ast)?;
                 let (_, t) = tast.loc();
                 let t = t.dupe();
                 ts.push(Targ::ExplicitArg(t));
@@ -728,7 +752,7 @@ fn convert_call_targs<'a>(
             }
         }
     }
-    (
+    Ok((
         ts,
         expression::CallTypeArgs {
             loc: (
@@ -738,36 +762,39 @@ fn convert_call_targs<'a>(
             arguments: tasts.into(),
             comments: comments.dupe(),
         },
-    )
+    ))
 }
 
 fn convert_call_targs_opt<'a>(
     cx: &Context<'a>,
     targs: Option<&expression::CallTypeArgs<ALoc, ALoc>>,
-) -> (
-    Option<Vec<Targ>>,
-    Option<expression::CallTypeArgs<ALoc, (ALoc, Type)>>,
-) {
-    match targs {
+) -> Result<
+    (
+        Option<Vec<Targ>>,
+        Option<expression::CallTypeArgs<ALoc, (ALoc, Type)>>,
+    ),
+    flow_utils_concurrency::job_error::JobError,
+> {
+    Ok(match targs {
         None => (None, None),
         Some(args) => {
-            let (targts, targs_ast) = convert_call_targs(cx, &FlowOrdMap::new(), args);
+            let (targts, targs_ast) = convert_call_targs(cx, &FlowOrdMap::new(), args)?;
             (Some(targts), Some(targs_ast))
         }
-    }
+    })
 }
 
 pub fn convert_call_targs_opt_prime<'a>(
     cx: &Context<'a>,
     targs: Option<&expression::CallTypeArgs<ALoc, ALoc>>,
-) -> Option<Vec<Targ>> {
-    match targs {
+) -> Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError> {
+    Ok(match targs {
         None => None,
         Some(args) => {
-            let (targts, _) = convert_call_targs(cx, &FlowOrdMap::new(), args);
+            let (targts, _) = convert_call_targs(cx, &FlowOrdMap::new(), args)?;
             Some(targts)
         }
-    }
+    })
 }
 
 type ALocThisFinder = flow_parser_utils::this_finder::Finder<ALoc>;
@@ -1001,7 +1028,7 @@ fn new_call<'a>(
     class_: Type,
     targs: Option<Vec<Targ>>,
     args: Vec<CallArg>,
-) -> (Type, Type) {
+) -> Result<(Type, Type), flow_utils_concurrency::job_error::JobError> {
     let specialized_ctor = cx.new_specialized_callee();
     let t = tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason.dupe(), |cx, tout| {
         flow_js::flow_non_speculating(
@@ -1019,10 +1046,10 @@ fn new_call<'a>(
                 }))),
             ),
         )
-    });
+    })?;
     let ctor_t = flow_js_utils::callee_recorder::type_for_tast_opt(reason, &specialized_ctor)
         .unwrap_or_else(|| class_.dupe());
-    (t, ctor_t)
+    Ok((t, ctor_t))
 }
 
 // let func_call_opt_use
@@ -1075,7 +1102,7 @@ fn func_call<'a>(
     targts: Option<Vec<Targ>>,
     argts: Vec<CallArg>,
     t_callee: Option<type_::SpecializedCallee>,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let opt_use = func_call_opt_use(
         cx,
         loc,
@@ -1086,9 +1113,12 @@ fn func_call<'a>(
         argts,
         t_callee,
     );
-    tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(cx, reason, |cx, t_reason, t_id| {
+    tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+        flow_utils_concurrency::job_error::JobError,
+    >(cx, reason, |cx, t_reason, t_id| {
         let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
-        flow_js::flow_non_speculating(cx, (&func_t, &type_::apply_opt_use(opt_use, tvar)));
+        flow_js::flow_non_speculating(cx, (&func_t, &type_::apply_opt_use(opt_use, tvar)))?;
+        Ok(())
     })
 }
 
@@ -1181,10 +1211,10 @@ fn method_call<'a>(
     name: &FlowSmolStr,
     targts: Option<Vec<Targ>>,
     argts: Vec<CallArg>,
-) -> (Type, Type) {
+) -> Result<(Type, Type), flow_utils_concurrency::job_error::JobError> {
     let expr_loc = expr.loc().dupe();
     // match Refinement.get ~allow_optional:true cx expr (loc_of_reason reason) with
-    match refinement::get(true, cx, expr, reason.loc().dupe()) {
+    match refinement::get(true, cx, expr, reason.loc().dupe())? {
         // | Some f ->
         Some(f) => {
             // Note: the current state of affairs is that we understand
@@ -1211,10 +1241,10 @@ fn method_call<'a>(
                         call_action: Box::new(type_::CallAction::Funcalltype(Box::new(app))),
                         return_hint: type_::hint_unavailable(),
                     })));
-                    flow_js::flow_non_speculating(cx, (&f, &use_t));
+                    flow_js::flow_non_speculating(cx, (&f, &use_t))
                 },
-            );
-            (f, out)
+            )?;
+            Ok((f, out))
         }
         None => {
             let name = Name::new(name.dupe());
@@ -1250,12 +1280,12 @@ fn method_call<'a>(
                             },
                         ))),
                     })));
-                    flow_js::flow_non_speculating(cx, (&obj_t, &use_t));
+                    flow_js::flow_non_speculating(cx, (&obj_t, &use_t))
                 },
-            );
+            )?;
             let prop_t =
                 flow_js_utils::callee_recorder::type_for_tast(reason_prop, &specialized_callee);
-            (prop_t, out)
+            Ok((prop_t, out))
         }
     }
 }
@@ -1309,7 +1339,7 @@ fn identifier_<'a>(
     syntactic_flags: &SyntacticFlags<'a>,
     name: &FlowSmolStr,
     loc: ALoc,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let get_checking_mode_type = || {
         let t = type_env::var_ref(
             Some(type_env::LookupMode::ForValue),
@@ -1317,13 +1347,13 @@ fn identifier_<'a>(
             None,
             Name::new(name.dupe()),
             loc.dupe(),
-        );
+        )?;
         let t = natural_inference::try_generalize(cx, syntactic_flags, &loc, t);
         let desc = desc_of_t(&t);
         let ordinary_name = Name::new(name.dupe());
         // We want to make sure that the reason description for the type we return
         // is always `RIdentifier name`.
-        match desc {
+        Ok(match desc {
             VirtualReasonDesc::RIdentifier(name_prime) if ordinary_name == *name_prime => t,
             _ if matches!(t.deref(), TypeInner::OpenT(_)) => mod_reason_of_t(
                 &|r| r.replace_desc_new(VirtualReasonDesc::RIdentifier(Name::new(name.dupe()))),
@@ -1335,16 +1365,20 @@ fn identifier_<'a>(
                     loc.dupe(),
                 );
                 tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason, |cx, tout| {
-                    flow_js::unify_non_speculating(cx, None, &t, tout);
-                })
+                    flow_js::unify_non_speculating(cx, None, &t, tout)
+                })?
             }
-        }
+        })
     };
     if type_inference_hooks_js::dispatch_id_hook(cx, name, loc.dupe()) {
         let reason = mk_reason(VirtualReasonDesc::RAutocompleteToken, loc.dupe());
         let lazy_hint = type_env::get_hint(cx, loc.dupe());
-        let result = (lazy_hint.1)(cx, false, None, reason);
-        type_hint::with_hint_result(|t| t, || empty_t::at(loc.dupe()), result)
+        let result = (lazy_hint.1)(cx, false, None, reason)?;
+        Ok(type_hint::with_hint(
+            |t| t,
+            || empty_t::at(loc.dupe()),
+            result,
+        ))
     } else {
         get_checking_mode_type()
     }
@@ -1358,7 +1392,7 @@ fn identifier_inner<'a>(
     syntactic_flags: &SyntacticFlags<'a>,
     id: &ast::Identifier<ALoc, ALoc>,
     loc: ALoc,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     identifier_(cx, syntactic_flags, &id.name, loc)
 }
 
@@ -1367,49 +1401,51 @@ fn string_literal_value<'a>(
     syntactic_flags: &SyntacticFlags<'a>,
     loc: ALoc,
     value: &FlowSmolStr,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     // let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     let SyntacticFlags {
         as_const, frozen, ..
     } = syntactic_flags;
     let as_const = *as_const;
     let frozen = *frozen;
-    if type_inference_hooks_js::dispatch_literal_hook(cx, loc.dupe()) {
-        let lazy_hint = type_env::get_hint(cx, loc.dupe());
-        let reason = mk_reason(VirtualReasonDesc::RString, loc.dupe());
-        let hint = (lazy_hint.1)(cx, false, None, reason);
-        type_hint::with_hint_result(|t| t, || empty_t::at(loc.dupe()), hint)
-    } else if as_const || frozen == FrozenKind::FrozenProp {
-        let name = Name::new(value.dupe());
-        let reason = mk_annot_reason(VirtualReasonDesc::RStringLit(name.dupe()), loc);
-        Type::new(TypeInner::DefT(
-            reason,
-            DefT::new(DefTInner::SingletonStrT {
-                from_annot: true,
-                value: name,
-            }),
-        ))
-    } else {
-        let precise = || {
+    Ok(
+        if type_inference_hooks_js::dispatch_literal_hook(cx, loc.dupe()) {
+            let lazy_hint = type_env::get_hint(cx, loc.dupe());
+            let reason = mk_reason(VirtualReasonDesc::RString, loc.dupe());
+            let hint = (lazy_hint.1)(cx, false, None, reason)?;
+            type_hint::with_hint(|t| t, || empty_t::at(loc.dupe()), hint)
+        } else if as_const || frozen == FrozenKind::FrozenProp {
             let name = Name::new(value.dupe());
-            let reason = mk_reason(VirtualReasonDesc::RStringLit(name.dupe()), loc.dupe());
+            let reason = mk_annot_reason(VirtualReasonDesc::RStringLit(name.dupe()), loc);
             Type::new(TypeInner::DefT(
                 reason,
                 DefT::new(DefTInner::SingletonStrT {
-                    from_annot: false,
+                    from_annot: true,
                     value: name,
                 }),
             ))
-        };
-        let general = || {
-            let reason = mk_annot_reason(VirtualReasonDesc::RString, loc.dupe());
-            Type::new(TypeInner::DefT(
-                reason,
-                DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
-            ))
-        };
-        natural_inference::adjust_precision(cx, syntactic_flags, precise, general, &loc)
-    }
+        } else {
+            let precise = || {
+                let name = Name::new(value.dupe());
+                let reason = mk_reason(VirtualReasonDesc::RStringLit(name.dupe()), loc.dupe());
+                Type::new(TypeInner::DefT(
+                    reason,
+                    DefT::new(DefTInner::SingletonStrT {
+                        from_annot: false,
+                        value: name,
+                    }),
+                ))
+            };
+            let general = || {
+                let reason = mk_annot_reason(VirtualReasonDesc::RString, loc.dupe());
+                Type::new(TypeInner::DefT(
+                    reason,
+                    DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
+                ))
+            };
+            natural_inference::adjust_precision(cx, syntactic_flags, precise, general, &loc)
+        },
+    )
 }
 
 fn string_literal_inner<'a>(
@@ -1417,7 +1453,7 @@ fn string_literal_inner<'a>(
     syntactic_flags: &SyntacticFlags<'a>,
     loc: ALoc,
     lit: &ast::StringLiteral<ALoc>,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     string_literal_value(cx, syntactic_flags, loc, &lit.value)
 }
 
@@ -1562,7 +1598,10 @@ fn bigint_literal_inner<'a>(
     }
 }
 
-pub fn regexp_literal<'a>(cx: &Context<'a>, loc: ALoc) -> Type {
+pub fn regexp_literal<'a>(
+    cx: &Context<'a>,
+    loc: ALoc,
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let reason = mk_annot_reason(VirtualReasonDesc::RRegExp, loc);
     flow_js::get_builtin_type_non_speculating(cx, &reason, None, "RegExp")
 }
@@ -1571,41 +1610,57 @@ pub fn module_ref_literal<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     lit: &ast::ModuleRefLiteral<ALoc>,
-) -> (Type, ast::ModuleRefLiteral<ALoc>) {
+) -> Result<(Type, ast::ModuleRefLiteral<ALoc>), flow_utils_concurrency::job_error::JobError> {
     let ast::ModuleRefLiteral {
         value, prefix_len, ..
     } = lit;
     let mref_str = FlowSmolStr::new(&value.as_str()[*prefix_len..]);
     let mref = flow_import_specifier::Userland::from_smol_str(mref_str);
-    let module_type_or_any = flow_js_utils::import_export_utils::get_module_type_or_any(
+    let module_type_or_any = match flow_js_utils::import_export_utils::get_module_type_or_any(
         cx,
         false, // perform_platform_validation
         Some(type_::ImportKind::ImportValue),
         loc.dupe(),
         mref.dupe(),
-    );
-    let module_type_or_any = module_type_or_any.expect("Should not be under speculation");
+    ) {
+        Ok(t) => t,
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
+        }
+        Err(err) => panic!("Should not be under speculation: {:?}", err),
+    };
     let reason = mk_reason(VirtualReasonDesc::RModule(mref.dupe()), loc.dupe());
     let namespace_symbol =
         flow_common::flow_symbol::Symbol::mk_module_symbol(mref.dupe().into_inner(), loc.dupe());
-    let (def_loc_opt, require_t) = flow_js_utils::import_export_utils::cjs_require_type(
+    let (def_loc_opt, require_t) = match flow_js_utils::import_export_utils::cjs_require_type(
         cx,
         reason,
         flow_js::reposition_non_speculating,
         namespace_symbol,
         true,
         &module_type_or_any,
-    )
-    .expect("Should not be under speculation");
+    ) {
+        Ok(t) => t,
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
+        }
+        Err(err) => panic!("Should not be under speculation: {:?}", err),
+    };
     let reason = mk_reason(VirtualReasonDesc::RModuleReference, loc.dupe());
     let t = FlowJs::get_builtin_typeapp(cx, &reason, None, "$Flow$ModuleRef", vec![require_t]);
-    (
+    Ok((
         t,
         ast::ModuleRefLiteral {
             def_loc_opt,
             ..lit.clone()
         },
-    )
+    ))
 }
 
 fn check_const_assertion<'a>(cx: &Context<'a>, expr: &expression::Expression<ALoc, (ALoc, Type)>) {
@@ -1663,12 +1718,15 @@ pub fn opaque_type<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     otype: &statement::OpaqueType<ALoc, ALoc>,
-) -> (Type, statement::OpaqueType<ALoc, (ALoc, Type)>) {
+) -> Result<
+    (Type, statement::OpaqueType<ALoc, (ALoc, Type)>),
+    flow_utils_concurrency::job_error::JobError,
+> {
     let name_loc = otype.id.loc.dupe();
     let id = &otype.id;
     let name = &id.name;
     let cache = cx.node_cache();
-    match cache.get_opaque(&loc) {
+    Ok(match cache.get_opaque(&loc) {
         Some(info) => {
             flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
                 vec![format!(
@@ -1680,14 +1738,20 @@ pub fn opaque_type<'a>(
         }
         None => {
             let r = type_::desc_format::type_reason(Name::new(name.dupe()), name_loc.dupe());
-            let (tparams, tparams_map, tparams_ast) = type_annotation::mk_type_param_declarations(
+            let (tparams, tparams_map, tparams_ast): (
+                type_::TypeParams,
+                FlowOrdMap<SubstName, Type>,
+                Option<ast::types::TypeParams<ALoc, (ALoc, Type)>>,
+            ) = type_annotation::mk_type_param_declarations(
                 cx,
                 flow_parser::ast_visitor::TypeParamsContext::OpaqueType,
                 Some(FlowOrdMap::new()),
                 otype.tparams.as_ref(),
-            );
-            let (underlying_t, impl_type_ast) =
-                type_annotation::convert_opt(cx, &tparams_map, otype.impl_type.as_ref());
+            )?;
+            let (underlying_t, impl_type_ast): (
+                Option<Type>,
+                Option<ast::types::Type<ALoc, (ALoc, Type)>>,
+            ) = type_annotation::convert_opt(cx, &tparams_map, otype.impl_type.as_ref())?;
             if !cx.opaque_type_new_bound_syntax() {
                 if let Some(lb) = &otype.lower_bound {
                     flow_js::add_output_non_speculating(
@@ -1708,12 +1772,18 @@ pub fn opaque_type<'a>(
                     );
                 }
             }
-            let (lower_bound_t, lower_bound_ast) =
-                type_annotation::convert_opt(cx, &tparams_map, otype.lower_bound.as_ref());
-            let (upper_bound_t, upper_bound_ast) =
-                type_annotation::convert_opt(cx, &tparams_map, otype.upper_bound.as_ref());
-            let (legacy_upper_bound_t, legacy_upper_bound_ast) =
-                type_annotation::convert_opt(cx, &tparams_map, otype.legacy_upper_bound.as_ref());
+            let (lower_bound_t, lower_bound_ast): (
+                Option<Type>,
+                Option<ast::types::Type<ALoc, (ALoc, Type)>>,
+            ) = type_annotation::convert_opt(cx, &tparams_map, otype.lower_bound.as_ref())?;
+            let (upper_bound_t, upper_bound_ast): (
+                Option<Type>,
+                Option<ast::types::Type<ALoc, (ALoc, Type)>>,
+            ) = type_annotation::convert_opt(cx, &tparams_map, otype.upper_bound.as_ref())?;
+            let (legacy_upper_bound_t, legacy_upper_bound_ast): (
+                Option<Type>,
+                Option<ast::types::Type<ALoc, (ALoc, Type)>>,
+            ) = type_annotation::convert_opt(cx, &tparams_map, otype.legacy_upper_bound.as_ref())?;
             let upper_bound_t = upper_bound_t.or(legacy_upper_bound_t);
             if let Some((_tparams_loc, tps)) = &tparams {
                 let tparams_map_for_check: BTreeMap<SubstName, TypeParam> =
@@ -1800,7 +1870,7 @@ pub fn opaque_type<'a>(
             };
             (type_, opaque_type_ast)
         }
-    }
+    })
 }
 
 // *****************
@@ -1816,14 +1886,20 @@ fn export_specifiers<'a>(
     )>,
     export_kind: statement::ExportKind,
     specifier: &statement::export_named_declaration::Specifier<ALoc, ALoc>,
-) -> statement::export_named_declaration::Specifier<ALoc, (ALoc, Type)> {
+) -> Result<
+    statement::export_named_declaration::Specifier<ALoc, (ALoc, Type)>,
+    flow_utils_concurrency::job_error::JobError,
+> {
     let effective_kind = |specifier_export_kind: statement::ExportKind| -> statement::ExportKind {
         flow_parser::ast_utils::effective_export_kind(export_kind, specifier_export_kind)
     };
     // [declare] export [type] {[type] foo [as bar]};
     let export_ref =
-        |kind: statement::ExportKind, loc: ALoc, local_name: &Name| -> (Option<ALoc>, Type) {
-            match kind {
+        |kind: statement::ExportKind,
+         loc: ALoc,
+         local_name: &Name|
+         -> Result<(Option<ALoc>, Type), flow_utils_concurrency::job_error::JobError> {
+            Ok(match kind {
                 statement::ExportKind::ExportType => {
                     let t = type_env::var_ref(
                         Some(type_env::LookupMode::ForType),
@@ -1831,7 +1907,7 @@ fn export_specifiers<'a>(
                         None,
                         local_name.dupe(),
                         loc,
-                    );
+                    )?;
                     (
                         None,
                         type_operation_utils::type_assertions::assert_export_is_type(
@@ -1854,7 +1930,7 @@ fn export_specifiers<'a>(
                                 None,
                                 local_name.dupe(),
                                 loc,
-                            );
+                            )?;
                             (
                                 None,
                                 type_operation_utils::type_assertions::assert_export_is_type(
@@ -1875,7 +1951,7 @@ fn export_specifiers<'a>(
                                     None,
                                     local_name.dupe(),
                                     loc,
-                                );
+                                )?;
                                 (
                                     None,
                                     type_operation_utils::type_assertions::assert_export_is_type(
@@ -1889,7 +1965,7 @@ fn export_specifiers<'a>(
                                     None,
                                     local_name.dupe(),
                                     loc,
-                                );
+                                )?;
                                 (None, t)
                             }
                         }
@@ -1900,7 +1976,7 @@ fn export_specifiers<'a>(
                                 None,
                                 local_name.dupe(),
                                 loc,
-                            );
+                            )?;
                             (None, t)
                         }
                     }
@@ -1912,10 +1988,10 @@ fn export_specifiers<'a>(
                         None,
                         local_name.dupe(),
                         loc,
-                    );
+                    )?;
                     (None, t)
                 }
-            }
+            })
         };
     // [declare] export [type] {[type] foo [as bar]} from 'module'
     let export_from = |kind: statement::ExportKind,
@@ -1923,31 +1999,49 @@ fn export_specifiers<'a>(
                        source_module: &Result<type_::ModuleType, Type>,
                        loc: ALoc,
                        local_name: &Name|
-     -> (Option<ALoc>, Type) {
+     -> Result<
+        (Option<ALoc>, Type),
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let reason = mk_reason(VirtualReasonDesc::RIdentifier(local_name.dupe()), loc);
         let import_kind = match kind {
             statement::ExportKind::ExportType => statement::ImportKind::ImportType,
             statement::ExportKind::ExportValue => statement::ImportKind::ImportValue,
         };
-        flow_js_utils::import_export_utils::import_named_specifier_type(
+        match flow_js_utils::import_export_utils::import_named_specifier_type(
             cx,
             reason,
-            &|cx, reason, t| {
-                FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
-                    .map_err(Into::into)
-            },
+            &|cx, reason, t| FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t),
             &import_kind,
             module_name.dupe(),
             source_module,
             local_name.as_smol_str(),
             local_name.as_smol_str(),
-        )
-        .expect("Should not be under speculation")
+        ) {
+            Ok(v) => Ok(v),
+            Err(FlowJsException::WorkerCanceled(c)) => {
+                Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+            }
+            Err(FlowJsException::TimedOut(t)) => {
+                Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+            }
+            Err(err) => panic!("Should not be under speculation: {:?}", err),
+        }
     };
     let export_specifier =
-        |make_export: &dyn Fn(statement::ExportKind, ALoc, &Name) -> (Option<ALoc>, Type),
+        |make_export: &dyn Fn(
+            statement::ExportKind,
+            ALoc,
+            &Name,
+        ) -> Result<
+            (Option<ALoc>, Type),
+            flow_utils_concurrency::job_error::JobError,
+        >,
          spec: &statement::export_named_declaration::ExportSpecifier<ALoc, ALoc>|
-         -> statement::export_named_declaration::ExportSpecifier<ALoc, (ALoc, Type)> {
+         -> Result<
+            statement::export_named_declaration::ExportSpecifier<ALoc, (ALoc, Type)>,
+            flow_utils_concurrency::job_error::JobError,
+        > {
             let specifier_export_kind = spec.export_kind;
             let kind = effective_kind(specifier_export_kind);
             let local = &spec.local;
@@ -1962,8 +2056,8 @@ fn export_specifiers<'a>(
                     })
                 })
             };
-            let (imported_name_def_loc, t) = make_export(kind, local_loc.dupe(), &local_name);
-            statement::export_named_declaration::ExportSpecifier {
+            let (imported_name_def_loc, t) = make_export(kind, local_loc.dupe(), &local_name)?;
+            Ok(statement::export_named_declaration::ExportSpecifier {
                 loc: spec.loc.dupe(),
                 local: ast::Identifier::new(ast::IdentifierInner {
                     loc: (local_loc, t.dupe()),
@@ -1974,7 +2068,7 @@ fn export_specifiers<'a>(
                 export_kind: specifier_export_kind,
                 from_remote: spec.from_remote,
                 imported_name_def_loc,
-            }
+            })
         };
     // function
     match specifier {
@@ -2000,14 +2094,14 @@ fn export_specifiers<'a>(
                                 spec,
                             )
                         })
-                        .collect()
+                        .collect::<Result<Vec<_>, _>>()?
                 }
                 None => specifiers
                     .iter()
                     .map(|spec| export_specifier(&export_ref, spec))
-                    .collect(),
+                    .collect::<Result<Vec<_>, _>>()?,
             };
-            statement::export_named_declaration::Specifier::ExportSpecifiers(specifiers)
+            Ok(statement::export_named_declaration::Specifier::ExportSpecifiers(specifiers))
         }
         statement::export_named_declaration::Specifier::ExportBatchSpecifier(batch) => {
             match &batch.specifier {
@@ -2022,7 +2116,7 @@ fn export_specifiers<'a>(
                         VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
                         id_loc.dupe(),
                     );
-                    let ns_t = flow_js_utils::import_export_utils::get_module_namespace_type(
+                    let ns_t = match flow_js_utils::import_export_utils::get_module_namespace_type(
                         cx,
                         reason,
                         flow_common::flow_symbol::Symbol::mk_constant_symbol(
@@ -2030,25 +2124,37 @@ fn export_specifiers<'a>(
                             id_loc.dupe(),
                         ),
                         source_module,
-                    )
-                    .expect("Should not be under speculation");
-                    statement::export_named_declaration::Specifier::ExportBatchSpecifier(
-                        statement::export_named_declaration::ExportBatchSpecifier {
-                            loc: batch.loc.dupe(),
-                            specifier: Some(ast::Identifier::new(ast::IdentifierInner {
-                                loc: (id_loc, ns_t),
-                                name: name.dupe(),
-                                comments: id.comments.dupe(),
-                            })),
-                        },
+                    ) {
+                        Ok(v) => v,
+                        Err(FlowJsException::WorkerCanceled(c)) => {
+                            return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
+                        }
+                        Err(FlowJsException::TimedOut(t)) => {
+                            return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
+                        }
+                        Err(err) => panic!("Should not be under speculation: {:?}", err),
+                    };
+                    Ok(
+                        statement::export_named_declaration::Specifier::ExportBatchSpecifier(
+                            statement::export_named_declaration::ExportBatchSpecifier {
+                                loc: batch.loc.dupe(),
+                                specifier: Some(ast::Identifier::new(ast::IdentifierInner {
+                                    loc: (id_loc, ns_t),
+                                    name: name.dupe(),
+                                    comments: id.comments.dupe(),
+                                })),
+                            },
+                        ),
                     )
                 }
                 // [declare] export [type] * from "source";
-                None => statement::export_named_declaration::Specifier::ExportBatchSpecifier(
-                    statement::export_named_declaration::ExportBatchSpecifier {
-                        loc: batch.loc.dupe(),
-                        specifier: None,
-                    },
+                None => Ok(
+                    statement::export_named_declaration::Specifier::ExportBatchSpecifier(
+                        statement::export_named_declaration::ExportBatchSpecifier {
+                            loc: batch.loc.dupe(),
+                            specifier: None,
+                        },
+                    ),
                 ),
             }
         }
@@ -2077,7 +2183,7 @@ fn hook_check<'a>(
 pub fn statement<'a>(
     cx: &Context<'a>,
     stmt: &statement::Statement<ALoc, ALoc>,
-) -> Result<statement::Statement<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<statement::Statement<ALoc, (ALoc, Type)>, CheckExprError> {
     let node_cache = cx.node_cache();
     let loc = stmt.loc();
     match node_cache.get_statement(loc) {
@@ -2098,14 +2204,14 @@ pub fn statement<'a>(
 fn statement_<'a>(
     cx: &Context<'a>,
     stmt: &statement::Statement<ALoc, ALoc>,
-) -> Result<statement::Statement<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<statement::Statement<ALoc, (ALoc, Type)>, CheckExprError> {
     use ast::statement::StatementInner;
 
     let variables = |cx: &Context<'a>,
                      decls: &statement::VariableDeclaration<ALoc, ALoc>|
      -> Result<
         statement::VariableDeclaration<ALoc, (ALoc, Type)>,
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         let kind = decls.kind;
         let declarations: Vec<_> = decls
@@ -2130,7 +2236,7 @@ fn statement_<'a>(
                     init,
                 })
             })
-            .collect::<Result<Vec<_>, AbnormalControlFlow>>()?;
+            .collect::<Result<Vec<_>, CheckExprError>>()?;
         Ok(statement::VariableDeclaration {
             declarations: declarations.into(),
             kind,
@@ -2140,7 +2246,10 @@ fn statement_<'a>(
 
     let catch_clause = |cx: &Context<'a>,
                         cc: &statement::try_::CatchClause<ALoc, ALoc>|
-     -> statement::try_::CatchClause<ALoc, (ALoc, Type)> {
+     -> Result<
+        statement::try_::CatchClause<ALoc, (ALoc, Type)>,
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let statement::try_::CatchClause {
             loc: _cc_loc,
             param,
@@ -2190,7 +2299,7 @@ fn statement_<'a>(
                                             cx,
                                             tparams_map,
                                             annot,
-                                        );
+                                        )?;
                                     (t, ast::types::AnnotationOrHint::Available(ast_annot))
                                 } else {
                                     let annot_loc = annot.annotation.loc().dupe();
@@ -2217,8 +2326,8 @@ fn statement_<'a>(
                                 }
                             }
                         };
-                        let body = statement_list(cx, &b.body);
-                        statement::try_::CatchClause {
+                        let body = statement_list(cx, &b.body)?;
+                        Ok(statement::try_::CatchClause {
                             loc: cc.loc.dupe(),
                             param: Some(ast::pattern::Pattern::Identifier {
                                 loc: (loc.dupe(), t.dupe()),
@@ -2241,7 +2350,7 @@ fn statement_<'a>(
                                 },
                             ),
                             comments: cc_comments.clone(),
-                        }
+                        })
                     }
                     _ => {
                         let loc = p.loc();
@@ -2253,7 +2362,7 @@ fn statement_<'a>(
                             ))),
                         );
                         let mut mapper = typed_ast_utils::ErrorMapper;
-                        statement::try_::CatchClause {
+                        Ok(statement::try_::CatchClause {
                             loc: cc.loc.dupe(),
                             param: cc.param.as_ref().map(|p| {
                                 let Ok(v) =
@@ -2272,13 +2381,13 @@ fn statement_<'a>(
                                 );
                                 v
                             },
-                        }
+                        })
                     }
                 }
             }
             None => {
-                let body = statement_list(cx, &b.body);
-                statement::try_::CatchClause {
+                let body = statement_list(cx, &b.body)?;
+                Ok(statement::try_::CatchClause {
                     loc: cc.loc.dupe(),
                     param: None,
                     body: (
@@ -2289,7 +2398,7 @@ fn statement_<'a>(
                         },
                     ),
                     comments: cc_comments.clone(),
-                }
+                })
             }
         }
     };
@@ -2304,7 +2413,7 @@ fn statement_<'a>(
             ast::Identifier<ALoc, ALoc>,
             statement::Statement<ALoc, (ALoc, Type)>,
         ),
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         let id = func
             .id
@@ -2341,7 +2450,10 @@ fn statement_<'a>(
     let declare_function_inner = |cx: &Context<'a>,
                                   loc: ALoc,
                                   f: &statement::DeclareFunction<ALoc, ALoc>|
-     -> statement::DeclareFunction<ALoc, (ALoc, Type)> {
+     -> Result<
+        statement::DeclareFunction<ALoc, (ALoc, Type)>,
+        flow_utils_concurrency::job_error::JobError,
+    > {
         // let { id = (id_loc, id_name); annot; predicate; comments; implicit_declare } = f in
         let statement::DeclareFunction {
             id: id_name,
@@ -2355,7 +2467,7 @@ fn statement_<'a>(
             _ => ast::function::Effect::Arbitrary,
         };
         let (_, annot_ast) =
-            type_annotation::mk_type_available_annotation(cx, FlowOrdMap::new(), annot);
+            type_annotation::mk_type_available_annotation(cx, FlowOrdMap::new(), annot)?;
         let predicate = predicate.as_ref().map(|p| {
             flow_js::add_output_non_speculating(
                 cx,
@@ -2376,7 +2488,7 @@ fn statement_<'a>(
                 ))),
             );
         }
-        match id_name {
+        Ok(match id_name {
             Some(id_name) => {
                 hook_check(cx, effect_, id_name);
                 let t = type_env::get_var_declared_type(
@@ -2405,7 +2517,7 @@ fn statement_<'a>(
                 comments: _decl_comments.clone(),
                 implicit_declare: *implicit_declare,
             },
-        }
+        })
     };
 
     let loc = stmt.loc().dupe();
@@ -2417,7 +2529,7 @@ fn statement_<'a>(
             })
         }
         StatementInner::Block { inner, .. } => {
-            let body = statement_list(cx, &inner.body);
+            let body = statement_list(cx, &inner.body)?;
             statement::Statement::new(StatementInner::Block {
                 loc,
                 inner: (statement::Block {
@@ -2459,7 +2571,7 @@ fn statement_<'a>(
             let else_ast = inner
                 .alternate
                 .as_ref()
-                .map(|alt| {
+                .map(|alt| -> Result<_, CheckExprError> {
                     Ok(statement::if_::Alternate {
                         loc: alt.loc.dupe(),
                         body: statement(cx, &alt.body)?,
@@ -2508,28 +2620,28 @@ fn statement_<'a>(
             v
         }
         StatementInner::DeclareTypeAlias { inner, .. } => {
-            let (_, type_alias_ast) = type_alias(cx, loc.dupe(), inner);
+            let (_, type_alias_ast) = type_alias(cx, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::DeclareTypeAlias {
                 loc,
                 inner: type_alias_ast.into(),
             })
         }
         StatementInner::TypeAlias { inner, .. } => {
-            let (_, type_alias_ast) = type_alias(cx, loc.dupe(), inner);
+            let (_, type_alias_ast) = type_alias(cx, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::TypeAlias {
                 loc,
                 inner: type_alias_ast.into(),
             })
         }
         StatementInner::DeclareOpaqueType { inner, .. } => {
-            let (_, opaque_type_ast) = opaque_type(cx, loc.dupe(), inner);
+            let (_, opaque_type_ast) = opaque_type(cx, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::DeclareOpaqueType {
                 loc,
                 inner: opaque_type_ast.into(),
             })
         }
         StatementInner::OpaqueType { inner, .. } => {
-            let (_, opaque_type_ast) = opaque_type(cx, loc.dupe(), inner);
+            let (_, opaque_type_ast) = opaque_type(cx, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::OpaqueType {
                 loc,
                 inner: opaque_type_ast.into(),
@@ -2554,7 +2666,7 @@ fn statement_<'a>(
                 &type_::unknown_use(),
                 arg_t,
                 inner.match_keyword_loc.dupe(),
-            );
+            )?;
             let mut cases = Vec::new();
             let mut invalid_syntax_list = Vec::new();
             for case in inner.cases.iter() {
@@ -2600,7 +2712,7 @@ fn statement_<'a>(
                 None,
                 Name::new(flow_parser::ast_utils::MATCH_ROOT_NAME),
                 inner.match_keyword_loc.dupe(),
-            );
+            )?;
             statement::Statement::new(StatementInner::Match {
                 loc,
                 inner: (statement::MatchStatement {
@@ -2684,7 +2796,7 @@ fn statement_<'a>(
                         Some(expr_ast)
                     }
                 };
-                let consequent_ast = statement_list(cx, &case.consequent);
+                let consequent_ast = statement_list(cx, &case.consequent)?;
                 has_default = has_default || case.test.is_none();
                 cases_ast.push(statement::switch::Case {
                     loc: case.loc.dupe(),
@@ -2698,7 +2810,7 @@ fn statement_<'a>(
             let (_, discriminant_t) = discriminant_ast.loc();
             let discriminant_after_check = if !has_default {
                 let refinement_key = refinement::keys::key(true, &inner.discriminant);
-                type_env::discriminant_after_negated_cases(cx, loc.dupe(), refinement_key.as_ref())
+                type_env::discriminant_after_negated_cases(cx, loc.dupe(), refinement_key.as_ref())?
             } else {
                 None
             };
@@ -2781,17 +2893,21 @@ fn statement_<'a>(
         }),
         StatementInner::Try { inner, .. } => {
             let (b_loc, b) = &inner.block;
-            let try_block_ast = statement_list(cx, &b.body);
-            let catch_ast = inner.handler.as_ref().map(|h| catch_clause(cx, h));
-            let finally_ast = inner.finalizer.as_ref().map(|(f_loc, f)| {
-                (
+            let try_block_ast = statement_list(cx, &b.body)?;
+            let catch_ast = match inner.handler.as_ref() {
+                Some(h) => Some(catch_clause(cx, h)?),
+                None => None,
+            };
+            let finally_ast = match inner.finalizer.as_ref() {
+                Some((f_loc, f)) => Some((
                     f_loc.dupe(),
                     statement::Block {
-                        body: statement_list(cx, &f.body).into(),
+                        body: statement_list(cx, &f.body)?.into(),
                         comments: f.comments.dupe(),
                     },
-                )
-            });
+                )),
+                None => None,
+            };
             statement::Statement::new(StatementInner::Try {
                 loc,
                 inner: statement::Try {
@@ -2851,7 +2967,7 @@ fn statement_<'a>(
             let init_ast = inner
                 .init
                 .as_ref()
-                .map(|init| {
+                .map(|init| -> Result<_, CheckExprError> {
                     Ok(match init {
                         statement::for_::Init::InitDeclaration((decl_loc, decl)) => {
                             statement::for_::Init::InitDeclaration((
@@ -2942,7 +3058,7 @@ fn statement_<'a>(
                         )),
                         init: reason_of_t(&t).dupe(),
                     }));
-                    type_env::set_var(cx, &use_op, name_str, &t, pat_loc.dupe());
+                    type_env::set_var(cx, &use_op, name_str, &t, pat_loc.dupe())?;
                     (
                         statement::for_in::Left::LeftPattern(ast::pattern::Pattern::Identifier {
                             loc: (pat_loc, t.dupe()),
@@ -3030,12 +3146,12 @@ fn statement_<'a>(
                 }
             };
             let reason = mk_reason(reason_desc, loc.dupe());
-            let eval_right = || {
+            let eval_right = || -> Result<_, CheckExprError> {
                 let right_ast = expression(None, None, None, cx, &inner.right)?;
                 let (_, t) = right_ast.loc();
-                let elem_t = for_of_elemt(cx, t.dupe(), reason.dupe(), inner.await_);
+                let elem_t = for_of_elemt(cx, t.dupe(), reason.dupe(), inner.await_)?;
                 // null/undefined are NOT allowed
-                let elem_t = flow_js::reposition_non_speculating(cx, loc_of_t(t).dupe(), elem_t);
+                let elem_t = flow_js::reposition_non_speculating(cx, loc_of_t(t).dupe(), elem_t)?;
                 Ok((elem_t, right_ast))
             };
             let (left_ast, right_ast) = match &inner.left {
@@ -3088,7 +3204,7 @@ fn statement_<'a>(
                         )),
                         init: reason_of_t(&elem_t).dupe(),
                     }));
-                    type_env::set_var(cx, &use_op, name_str, &elem_t, pat_loc.dupe());
+                    type_env::set_var(cx, &use_op, name_str, &elem_t, pat_loc.dupe())?;
                     (
                         statement::for_of::Left::LeftPattern(ast::pattern::Pattern::Identifier {
                             loc: (pat_loc, elem_t.dupe()),
@@ -3215,7 +3331,7 @@ fn statement_<'a>(
                 }
                 let tparams_map = BTreeMap::new();
                 let (component_sig, reconstruct_component) =
-                    mk_component_sig(cx, &tparams_map, reason.dupe(), inner);
+                    mk_component_sig(cx, &tparams_map, reason.dupe(), inner)?;
                 let general = type_env::read_declared_type(cx, reason, name_loc);
                 let (params_ast, body_ast_opt) = match &inner.body {
                     None => {
@@ -3263,7 +3379,7 @@ fn statement_<'a>(
             }
         }
         StatementInner::EnumDeclaration { inner, .. } => {
-            let enum_ast = enum_declaration(cx, loc.dupe(), inner);
+            let enum_ast = enum_declaration(cx, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::EnumDeclaration {
                 loc,
                 inner: enum_ast.into(),
@@ -3280,7 +3396,7 @@ fn statement_<'a>(
             panic!("unexpected anonymous declare function")
         }
         StatementInner::DeclareFunction { inner, .. } => {
-            let decl_ast = declare_function_inner(cx, loc.dupe(), inner);
+            let decl_ast = declare_function_inner(cx, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::DeclareFunction {
                 loc,
                 inner: decl_ast.into(),
@@ -3316,7 +3432,7 @@ fn statement_<'a>(
                 )),
                 init: reason_of_t(&class_t).dupe(),
             }));
-            type_env::init_implicit_let(cx, &use_op, &class_t, name_loc);
+            type_env::init_implicit_let(cx, &use_op, &class_t, name_loc)?;
             statement::Statement::new(StatementInner::ClassDeclaration {
                 loc,
                 inner: c_ast.into(),
@@ -3325,7 +3441,7 @@ fn statement_<'a>(
         StatementInner::DeclareClass { inner, .. } => {
             let name = &inner.id.name;
             let name_loc = inner.id.loc.dupe();
-            let (t, decl_ast) = declare_class(cx, loc.dupe(), inner);
+            let (t, decl_ast) = declare_class(cx, loc.dupe(), inner)?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                 var: Some(mk_reason(
                     VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
@@ -3333,7 +3449,7 @@ fn statement_<'a>(
                 )),
                 init: reason_of_t(&t).dupe(),
             }));
-            type_env::init_var(cx, &use_op, &t, name_loc);
+            type_env::init_var(cx, &use_op, &t, name_loc)?;
             statement::Statement::new(StatementInner::DeclareClass {
                 loc,
                 inner: decl_ast.into(),
@@ -3410,7 +3526,7 @@ fn statement_<'a>(
                     )),
                     init: reason_of_t(&record_t).dupe(),
                 }));
-                type_env::init_implicit_const(cx, &use_op, &record_t, name_loc);
+                type_env::init_implicit_const(cx, &use_op, &record_t, name_loc)?;
                 statement::Statement::new(StatementInner::RecordDeclaration {
                     loc,
                     inner: ast.into(),
@@ -3430,7 +3546,7 @@ fn statement_<'a>(
                 }
             }
             validate_declare_component_params(cx, &inner.params);
-            let (t, decl_ast) = declare_component(cx, loc.dupe(), inner);
+            let (t, decl_ast) = declare_component(cx, loc.dupe(), inner)?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                 var: Some(mk_reason(
                     VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
@@ -3438,42 +3554,42 @@ fn statement_<'a>(
                 )),
                 init: reason_of_t(&t).dupe(),
             }));
-            type_env::init_var(cx, &use_op, &t, name_loc);
+            type_env::init_var(cx, &use_op, &t, name_loc)?;
             statement::Statement::new(StatementInner::DeclareComponent {
                 loc,
                 inner: decl_ast.into(),
             })
         }
         StatementInner::DeclareEnum { inner, .. } => {
-            let decl_ast = enum_declaration(cx, loc.dupe(), inner);
+            let decl_ast = enum_declaration(cx, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::DeclareEnum {
                 loc,
                 inner: decl_ast.into(),
             })
         }
         StatementInner::DeclareInterface { inner, .. } => {
-            let (_, decl_ast) = interface(cx, loc.dupe(), inner);
+            let (_, decl_ast) = interface(cx, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::DeclareInterface {
                 loc,
                 inner: decl_ast.into(),
             })
         }
         StatementInner::InterfaceDeclaration { inner, .. } => {
-            let (_, decl_ast) = interface(cx, loc.dupe(), inner);
+            let (_, decl_ast) = interface(cx, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::InterfaceDeclaration {
                 loc,
                 inner: decl_ast.into(),
             })
         }
         StatementInner::DeclareModule { inner, .. } => {
-            let decl_ast = declare_module(cx, inner);
+            let decl_ast = declare_module(cx, inner)?;
             statement::Statement::new(StatementInner::DeclareModule {
                 loc,
                 inner: decl_ast.into(),
             })
         }
         StatementInner::DeclareNamespace { inner, .. } => {
-            let (_, decl_ast) = declare_namespace(cx, loc.dupe(), inner);
+            let (_, decl_ast) = declare_namespace(cx, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::DeclareNamespace {
                 loc,
                 inner: decl_ast.into(),
@@ -3483,7 +3599,7 @@ fn statement_<'a>(
             let declaration = inner
                 .declaration
                 .as_ref()
-                .map(|decl| {
+                .map(|decl| -> Result<_, CheckExprError> {
                     use ast::statement::declare_export_declaration::Declaration as D;
                     Ok(match decl {
                         D::Variable {
@@ -3520,7 +3636,7 @@ fn statement_<'a>(
                             } else {
                                 D::Function {
                                     loc: d_loc.dupe(),
-                                    declaration: declare_function_inner(cx, d_loc.dupe(), f).into(),
+                                    declaration: declare_function_inner(cx, d_loc.dupe(), f)?.into(),
                                 }
                             }
                         }
@@ -3528,7 +3644,7 @@ fn statement_<'a>(
                             loc: d_loc,
                             declaration: c,
                         } => {
-                            let (_, c_ast) = declare_class(cx, d_loc.dupe(), c);
+                            let (_, c_ast) = declare_class(cx, d_loc.dupe(), c)?;
                             D::Class {
                                 loc: d_loc.dupe(),
                                 declaration: c_ast.into(),
@@ -3538,14 +3654,14 @@ fn statement_<'a>(
                             loc: d_loc,
                             declaration: c,
                         } => {
-                            let (_, c_ast) = declare_component(cx, d_loc.dupe(), c);
+                            let (_, c_ast) = declare_component(cx, d_loc.dupe(), c)?;
                             D::Component {
                                 loc: d_loc.dupe(),
                                 declaration: c_ast.into(),
                             }
                         }
                         D::DefaultType { type_ } => {
-                            let t_ast = type_annotation::convert(cx, Default::default(), type_);
+                            let t_ast = type_annotation::convert(cx, Default::default(), type_)?;
                             D::DefaultType {
                                 type_: t_ast.into(),
                             }
@@ -3554,7 +3670,7 @@ fn statement_<'a>(
                             loc: d_loc,
                             declaration: t,
                         } => {
-                            let (_, type_alias_ast) = type_alias(cx, d_loc.dupe(), t);
+                            let (_, type_alias_ast) = type_alias(cx, d_loc.dupe(), t)?;
                             if type_env::in_toplevel_scope(cx) {
                                 flow_js::add_output_non_speculating(
                                     cx,
@@ -3570,7 +3686,7 @@ fn statement_<'a>(
                             loc: d_loc,
                             declaration: t,
                         } => {
-                            let (_, opaque_type_ast) = opaque_type(cx, d_loc.dupe(), t);
+                            let (_, opaque_type_ast) = opaque_type(cx, d_loc.dupe(), t)?;
                             D::NamedOpaqueType {
                                 loc: d_loc.dupe(),
                                 declaration: opaque_type_ast.into(),
@@ -3580,7 +3696,7 @@ fn statement_<'a>(
                             loc: d_loc,
                             declaration: i,
                         } => {
-                            let (_, i_ast) = interface(cx, d_loc.dupe(), i);
+                            let (_, i_ast) = interface(cx, d_loc.dupe(), i)?;
                             if type_env::in_toplevel_scope(cx) {
                                 flow_js::add_output_non_speculating(
                                     cx,
@@ -3596,7 +3712,7 @@ fn statement_<'a>(
                             loc: d_loc,
                             declaration: e,
                         } => {
-                            let enum_ast = enum_declaration(cx, d_loc.dupe(), e);
+                            let enum_ast = enum_declaration(cx, d_loc.dupe(), e)?;
                             D::Enum {
                                 loc: d_loc.dupe(),
                                 declaration: enum_ast.into(),
@@ -3617,7 +3733,7 @@ fn statement_<'a>(
                                     ))),
                                 );
                             }
-                            let (_, ns_ast) = declare_namespace(cx, d_loc.dupe(), ns);
+                            let (_, ns_ast) = declare_namespace(cx, d_loc.dupe(), ns)?;
                             D::Namespace {
                                 loc: d_loc.dupe(),
                                 declaration: Box::new(ns_ast),
@@ -3626,26 +3742,43 @@ fn statement_<'a>(
                     })
                 })
                 .transpose()?;
-            let source = inner.source.as_ref().map(|(source_loc, source_literal)| {
-                let module_name = &source_literal.value;
-                let source_module_rc = flow_js_utils::import_export_utils::get_module_type_or_any(
-                    cx,
-                    false,
-                    Some(type_::ImportKind::ImportValue),
-                    source_loc.dupe(),
-                    flow_import_specifier::Userland::from_smol_str(module_name.dupe()),
-                )
-                .expect("Should not be under speculation");
-                let source_module: Result<type_::ModuleType, Type> = source_module_rc;
-                (source_module, source_loc.dupe(), source_literal)
-            });
-            let specifiers = inner.specifiers.as_ref().map(|spec| {
-                let export_kind = statement::ExportKind::ExportValue;
-                let source_ref = source
-                    .as_ref()
-                    .map(|(sm, sl, slit)| (sm, sl.dupe(), slit.clone()));
-                export_specifiers(cx, source_ref, export_kind, spec)
-            });
+            let source = inner
+                .source
+                .as_ref()
+                .map(|(source_loc, source_literal)| -> Result<_, CheckExprError> {
+                    let module_name = &source_literal.value;
+                    let source_module_rc =
+                        match flow_js_utils::import_export_utils::get_module_type_or_any(
+                            cx,
+                            false,
+                            Some(type_::ImportKind::ImportValue),
+                            source_loc.dupe(),
+                            flow_import_specifier::Userland::from_smol_str(module_name.dupe()),
+                        ) {
+                            Ok(v) => v,
+                            Err(
+                                FlowJsException::WorkerCanceled(c),
+                            ) => return Err(c.into()),
+                            Err(
+                                FlowJsException::TimedOut(t),
+                            ) => return Err(t.into()),
+                            Err(err) => panic!("Should not be under speculation: {:?}", err),
+                        };
+                    let source_module: Result<type_::ModuleType, Type> = source_module_rc;
+                    Ok((source_module, source_loc.dupe(), source_literal))
+                })
+                .transpose()?;
+            let specifiers = inner
+                .specifiers
+                .as_ref()
+                .map(|spec| {
+                    let export_kind = statement::ExportKind::ExportValue;
+                    let source_ref = source
+                        .as_ref()
+                        .map(|(sm, sl, slit)| (sm, sl.dupe(), slit.clone()));
+                    export_specifiers(cx, source_ref, export_kind, spec)
+                })
+                .transpose()?;
             let source = source.map(|(_, source_loc, source_literal)| {
                 (
                     (
@@ -3669,7 +3802,7 @@ fn statement_<'a>(
         }
         StatementInner::DeclareModuleExports { inner, .. } => {
             let t_loc = inner.annot.loc.dupe();
-            let t_ast = type_annotation::convert(cx, Default::default(), &inner.annot.annotation);
+            let t_ast = type_annotation::convert(cx, Default::default(), &inner.annot.annotation)?;
             let (_, t) = t_ast.loc();
             let reason = {
                 let filename = cx.file();
@@ -3683,7 +3816,7 @@ fn statement_<'a>(
                     }),
                 )
             };
-            flow_js::flow_t_non_speculating(cx, (t, &type_::unsoundness::exports_any(reason)));
+            flow_js::flow_t_non_speculating(cx, (t, &type_::unsoundness::exports_any(reason)))?;
             statement::Statement::new(StatementInner::DeclareModuleExports {
                 loc,
                 inner: (statement::DeclareModuleExports {
@@ -3719,7 +3852,7 @@ fn statement_<'a>(
                     }
                     statement::ExportAssignmentRhs::DeclareFunction(fn_loc, decl) => {
                         let (_, annot_ast) =
-                            type_annotation::mk_type_available_annotation(cx, FlowOrdMap::new(), &decl.annot);
+                            type_annotation::mk_type_available_annotation(cx, FlowOrdMap::new(), &decl.annot)?;
                         let (_, t) = annot_ast.annotation.loc();
                         let id = decl.id.as_ref().map(|id_name| {
                             ast::Identifier::new(ast::IdentifierInner {
@@ -3808,34 +3941,51 @@ fn statement_<'a>(
                 .as_ref()
                 .map(|decl_stmt| statement(cx, decl_stmt))
                 .transpose()?;
-            let source = inner.source.as_ref().map(|(source_loc, source_literal)| {
-                let (perform_platform_validation, import_kind_for_untyped_import_validation) =
-                    match inner.export_kind {
-                        statement::ExportKind::ExportType => {
-                            (false, Some(type_::ImportKind::ImportType))
-                        }
-                        statement::ExportKind::ExportValue => {
-                            (true, Some(type_::ImportKind::ImportValue))
-                        }
-                    };
-                let module_name = &source_literal.value;
-                let source_module = flow_js_utils::import_export_utils::get_module_type_or_any(
-                    cx,
-                    perform_platform_validation,
-                    import_kind_for_untyped_import_validation,
-                    source_loc.dupe(),
-                    flow_import_specifier::Userland::from_smol_str(module_name.dupe()),
-                )
-                .expect("Should not be under speculation");
-                let source_module_deref: Result<type_::ModuleType, Type> = source_module;
-                (source_module_deref, source_loc.dupe(), source_literal)
-            });
-            let specifiers = inner.specifiers.as_ref().map(|spec| {
-                let source_ref = source
-                    .as_ref()
-                    .map(|(sm, sl, slit)| (sm, sl.dupe(), slit.clone()));
-                export_specifiers(cx, source_ref, inner.export_kind, spec)
-            });
+            let source = inner
+                .source
+                .as_ref()
+                .map(|(source_loc, source_literal)| -> Result<_, CheckExprError> {
+                    let (perform_platform_validation, import_kind_for_untyped_import_validation) =
+                        match inner.export_kind {
+                            statement::ExportKind::ExportType => {
+                                (false, Some(type_::ImportKind::ImportType))
+                            }
+                            statement::ExportKind::ExportValue => {
+                                (true, Some(type_::ImportKind::ImportValue))
+                            }
+                        };
+                    let module_name = &source_literal.value;
+                    let source_module =
+                        match flow_js_utils::import_export_utils::get_module_type_or_any(
+                            cx,
+                            perform_platform_validation,
+                            import_kind_for_untyped_import_validation,
+                            source_loc.dupe(),
+                            flow_import_specifier::Userland::from_smol_str(module_name.dupe()),
+                        ) {
+                            Ok(v) => v,
+                            Err(
+                                FlowJsException::WorkerCanceled(c),
+                            ) => return Err(c.into()),
+                            Err(
+                                FlowJsException::TimedOut(t),
+                            ) => return Err(t.into()),
+                            Err(err) => panic!("Should not be under speculation: {:?}", err),
+                        };
+                    let source_module_deref: Result<type_::ModuleType, Type> = source_module;
+                    Ok((source_module_deref, source_loc.dupe(), source_literal))
+                })
+                .transpose()?;
+            let specifiers = inner
+                .specifiers
+                .as_ref()
+                .map(|spec| {
+                    let source_ref = source
+                        .as_ref()
+                        .map(|(sm, sl, slit)| (sm, sl.dupe(), slit.clone()));
+                    export_specifiers(cx, source_ref, inner.export_kind, spec)
+                })
+                .transpose()?;
             let source = source.map(|(_, source_loc, source_literal)| {
                 (
                     (
@@ -3968,14 +4118,22 @@ fn statement_<'a>(
                 };
             let module_name =
                 flow_import_specifier::Userland::from_smol_str(module_name_str.dupe());
-            let source_module_rc = flow_js_utils::import_export_utils::get_module_type_or_any(
+            let source_module_rc = match flow_js_utils::import_export_utils::get_module_type_or_any(
                 cx,
                 perform_platform_validation,
                 import_kind_for_untyped_import_validation,
                 source_loc.dupe(),
                 module_name.dupe(),
-            )
-            .expect("Should not be under speculation");
+            ) {
+                Ok(t) => t,
+                Err(FlowJsException::WorkerCanceled(c)) => {
+                    return Err(c.into());
+                }
+                Err(FlowJsException::TimedOut(t)) => {
+                    return Err(t.into());
+                }
+                Err(err) => panic!("Should not be under speculation: {:?}", err),
+            };
             let source_module: Result<type_::ModuleType, Type> = source_module_rc;
             let source_ast = (
                 (
@@ -3984,164 +4142,177 @@ fn statement_<'a>(
                 ),
                 source_literal.clone(),
             );
-            let specifiers_ast = inner.specifiers.as_ref().map(|specifiers| match specifiers {
-                statement::import_declaration::Specifier::ImportNamedSpecifiers(
-                    named_specifiers,
-                ) => {
-                    let named_specifiers_ast: Vec<_> = named_specifiers
-                        .iter()
-                        .map(|spec| {
-                            let remote = &spec.remote;
-                            let remote_name_loc = remote.loc.dupe();
-                            let remote_name = &remote.name;
-                            let local_name = match &spec.local {
-                                Some(local_id) => &local_id.name,
-                                None => remote_name,
-                            };
-                            let import_reason = mk_reason(
-                                
-                                    VirtualReasonDesc::RNamedImportedType(
+            let specifiers_ast = inner
+                .specifiers
+                .as_ref()
+                .map(|specifiers| -> Result<_, CheckExprError> {
+                    Ok(match specifiers {
+                        statement::import_declaration::Specifier::ImportNamedSpecifiers(
+                            named_specifiers,
+                        ) => {
+                            let named_specifiers_ast: Vec<_> = named_specifiers
+                                .iter()
+                                .map(|spec| -> Result<_, CheckExprError> {
+                                    let remote = &spec.remote;
+                                    let remote_name_loc = remote.loc.dupe();
+                                    let remote_name = &remote.name;
+                                    let local_name = match &spec.local {
+                                        Some(local_id) => &local_id.name,
+                                        None => remote_name,
+                                    };
+                                    let import_reason = mk_reason(
+                                        VirtualReasonDesc::RNamedImportedType(
+                                            module_name.dupe(),
+                                            local_name.dupe(),
+                                        ),
+                                        remote_name_loc.dupe(),
+                                    );
+                                    let spec_import_kind = spec.kind.unwrap_or(inner.import_kind);
+                                    let (remote_name_def_loc, imported_t) = match flow_js_utils::import_export_utils::import_named_specifier_type(
+                                        cx,
+                                        import_reason,
+                                        &|cx, reason, t| {
+                                            FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
+                                        },
+                                        &spec_import_kind,
                                         module_name.dupe(),
-                                        local_name.dupe(),
-                                    ),
-                                remote_name_loc.dupe(),
-                            );
-                            let spec_import_kind = spec.kind.unwrap_or(inner.import_kind);
-                            let (remote_name_def_loc, imported_t) =
-                                flow_js_utils::import_export_utils::import_named_specifier_type(
-                                    cx,
-                                    import_reason,
-                                    &|cx, reason, t| {
-                                        FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
-                                            .map_err(Into::into)
-                                    },
-                                    &spec_import_kind,
-                                    module_name.dupe(),
-                                    &source_module,
-                                    remote_name,
-                                    local_name,
-                                )
-                                .expect("Should not be under speculation");
-                            if flow_common::files::has_ts_ext(cx.file())
-                                && spec_import_kind == statement::ImportKind::ImportValue
-                            {
-                                let binding_def_loc = match &spec.local {
-                                    Some(local_id) => local_id.loc.dupe(),
-                                    None => remote_name_loc.dupe(),
-                                };
-                                cx.add_ts_import_provenance(
-                                    binding_def_loc,
-                                    flow_common::flow_import_specifier::FlowImportSpecifier::Userland(module_name.dupe()),
-                                    remote_name.dupe(),
-                                );
-                            }
-                            let remote_ast = ast::Identifier::new(ast::IdentifierInner {
-                                loc: (remote_name_loc, imported_t.dupe()),
-                                name: remote_name.dupe(),
-                                comments: remote.comments.dupe(),
-                            });
-                            let local_ast = spec.local.as_ref().map(|local_id| {
-                                ast::Identifier::new(ast::IdentifierInner {
-                                    loc: (local_id.loc.dupe(), imported_t.dupe()),
-                                    name: local_id.name.dupe(),
-                                    comments: local_id.comments.dupe(),
+                                        &source_module,
+                                        remote_name,
+                                        local_name,
+                                    ) {
+                                        Ok(t) => t,
+                                        Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                                        Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                                        Err(err) => panic!("Should not be under speculation: {:?}", err),
+                                    };
+                                    if flow_common::files::has_ts_ext(cx.file())
+                                        && spec_import_kind == statement::ImportKind::ImportValue
+                                    {
+                                        let binding_def_loc = match &spec.local {
+                                            Some(local_id) => local_id.loc.dupe(),
+                                            None => remote_name_loc.dupe(),
+                                        };
+                                        cx.add_ts_import_provenance(
+                                            binding_def_loc,
+                                            flow_common::flow_import_specifier::FlowImportSpecifier::Userland(module_name.dupe()),
+                                            remote_name.dupe(),
+                                        );
+                                    }
+                                    let remote_ast = ast::Identifier::new(ast::IdentifierInner {
+                                        loc: (remote_name_loc, imported_t.dupe()),
+                                        name: remote_name.dupe(),
+                                        comments: remote.comments.dupe(),
+                                    });
+                                    let local_ast = spec.local.as_ref().map(|local_id| {
+                                        ast::Identifier::new(ast::IdentifierInner {
+                                            loc: (local_id.loc.dupe(), imported_t.dupe()),
+                                            name: local_id.name.dupe(),
+                                            comments: local_id.comments.dupe(),
+                                        })
+                                    });
+                                    Ok(statement::import_declaration::NamedSpecifier {
+                                        local: local_ast,
+                                        remote: remote_ast,
+                                        remote_name_def_loc,
+                                        kind: spec.kind,
+                                    })
                                 })
+                                .collect::<Result<Vec<_>, CheckExprError>>()?;
+                            statement::import_declaration::Specifier::ImportNamedSpecifiers(
+                                named_specifiers_ast,
+                            )
+                        }
+                        statement::import_declaration::Specifier::ImportNamespaceSpecifier((
+                            loc_with_star,
+                            local_id,
+                        )) => {
+                            let local_loc = local_id.loc.dupe();
+                            let local_name = &local_id.name;
+                            let import_reason_desc = match inner.import_kind {
+                                statement::ImportKind::ImportType => {
+                                    VirtualReasonDesc::RImportStarType(local_name.dupe())
+                                }
+                                statement::ImportKind::ImportTypeof => {
+                                    VirtualReasonDesc::RImportStarTypeOf(local_name.dupe())
+                                }
+                                statement::ImportKind::ImportValue => {
+                                    VirtualReasonDesc::RImportStar(local_name.dupe())
+                                }
+                            };
+                            let import_reason = mk_reason(import_reason_desc, local_loc.dupe());
+                            let t = match flow_js_utils::import_export_utils::import_namespace_specifier_type(
+                                cx,
+                                import_reason,
+                                &inner.import_kind,
+                                module_name.dupe(),
+                                flow_common::flow_symbol::Symbol::mk_namespace_symbol(
+                                    local_name.dupe(),
+                                    local_loc.dupe(),
+                                ),
+                                &source_module,
+                                local_loc.dupe(),
+                            ) {
+                                Ok(t) => t,
+                                Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                                Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                                Err(err) => panic!("Should not be under speculation: {:?}", err),
+                            };
+                            let namespace_specifier_ast = ast::Identifier::new(ast::IdentifierInner {
+                                loc: (local_loc, t),
+                                name: local_name.dupe(),
+                                comments: local_id.comments.dupe(),
                             });
-                            statement::import_declaration::NamedSpecifier {
-                                local: local_ast,
-                                remote: remote_ast,
-                                remote_name_def_loc,
-                                kind: spec.kind,
-                            }
-                        })
-                        .collect();
-                    statement::import_declaration::Specifier::ImportNamedSpecifiers(
-                        named_specifiers_ast,
-                    )
-                }
-                statement::import_declaration::Specifier::ImportNamespaceSpecifier((
-                    loc_with_star,
-                    local_id,
-                )) => {
-                    let local_loc = local_id.loc.dupe();
-                    let local_name = &local_id.name;
-                    let import_reason_desc = match inner.import_kind {
-                        statement::ImportKind::ImportType => {
-                            VirtualReasonDesc::RImportStarType(
-                                local_name.dupe(),
-                            )
+                            statement::import_declaration::Specifier::ImportNamespaceSpecifier((
+                                loc_with_star.dupe(),
+                                namespace_specifier_ast,
+                            ))
                         }
-                        statement::ImportKind::ImportTypeof => {
-                            VirtualReasonDesc::RImportStarTypeOf(
-                                local_name.dupe(),
-                            )
-                        }
-                        statement::ImportKind::ImportValue => {
-                            VirtualReasonDesc::RImportStar(
-                                local_name.dupe(),
-                            )
-                        }
-                    };
+                    })
+                })
+                .transpose()?;
+            let default_ast = inner
+                .default
+                .as_ref()
+                .map(|default| -> Result<_, CheckExprError> {
+                    let id = &default.identifier;
+                    let id_loc = id.loc.dupe();
+                    let local_name = &id.name;
                     let import_reason = mk_reason(
-                        import_reason_desc,
-                        local_loc.dupe(),
-                    );
-                    let t = flow_js_utils::import_export_utils::import_namespace_specifier_type(
-                        cx,
-                        import_reason,
-                        &inner.import_kind,
-                        module_name.dupe(),
-                        flow_common::flow_symbol::Symbol::mk_namespace_symbol(
+                        VirtualReasonDesc::RDefaultImportedType(
                             local_name.dupe(),
-                            local_loc.dupe(),
+                            module_name.dupe(),
                         ),
-                        &source_module,
-                        local_loc.dupe(),
-                    ).expect("Should not be under speculation");
-                    let namespace_specifier_ast = ast::Identifier::new(ast::IdentifierInner {
-                        loc: (local_loc, t),
-                        name: local_name.dupe(),
-                        comments: local_id.comments.dupe(),
-                    });
-                    statement::import_declaration::Specifier::ImportNamespaceSpecifier(
-                        (loc_with_star.dupe(), namespace_specifier_ast),
-                    )
-                }
-            });
-            let default_ast = inner.default.as_ref().map(|default| {
-                let id = &default.identifier;
-                let id_loc = id.loc.dupe();
-                let local_name = &id.name;
-                let import_reason = mk_reason(
-                    VirtualReasonDesc::RDefaultImportedType(
-                        local_name.dupe(),
-                        module_name.dupe(),
-                    ),
-                    id_loc.dupe(),
-                );
-                let (remote_default_name_def_loc, imported_t) =
-                    flow_js_utils::import_export_utils::import_default_specifier_type(
-                        cx,
-                        import_reason,
-                        &|cx, reason, t| {
-                            FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
-                                .map_err(Into::into)
-                        },
-                        &inner.import_kind,
-                        module_name.dupe(),
-                        &source_module,
-                        local_name,
-                    )
-                    .expect("Should not be under speculation");
-                statement::import_declaration::DefaultIdentifier {
-                    identifier: ast::Identifier::new(ast::IdentifierInner {
-                        loc: (id_loc, imported_t),
-                        name: local_name.dupe(),
-                        comments: id.comments.dupe(),
-                    }),
-                    remote_default_name_def_loc,
-                }
-            });
+                        id_loc.dupe(),
+                    );
+                    let (remote_default_name_def_loc, imported_t) =
+                        match flow_js_utils::import_export_utils::import_default_specifier_type(
+                            cx,
+                            import_reason,
+                            &|cx, reason, t| {
+                                FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
+                            },
+                            &inner.import_kind,
+                            module_name.dupe(),
+                            &source_module,
+                            local_name,
+                        ) {
+                            Ok(t) => t,
+                            // Audit: both WorkerCanceled and TimedOut must propagate; the
+                            // panic catch-all below would otherwise mask TimedOut.
+                            Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                            Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                            Err(err) => panic!("Should not be under speculation: {:?}", err),
+                        };
+                    Ok(statement::import_declaration::DefaultIdentifier {
+                        identifier: ast::Identifier::new(ast::IdentifierInner {
+                            loc: (id_loc, imported_t),
+                            name: local_name.dupe(),
+                            comments: id.comments.dupe(),
+                        }),
+                        remote_default_name_def_loc,
+                    })
+                })
+                .transpose()?;
             statement::Statement::new(StatementInner::ImportDeclaration {
                 loc,
                 inner: (statement::ImportDeclaration {
@@ -4195,14 +4366,30 @@ fn statement_<'a>(
                                 module_name_str.dupe(),
                             );
                         let source_module =
-                            flow_js_utils::import_export_utils::get_module_type_or_any(
+                            match flow_js_utils::import_export_utils::get_module_type_or_any(
                                 cx,
                                 perform_platform_validation,
                                 import_kind_for_untyped_import_validation,
                                 source_loc.dupe(),
                                 module_name.dupe(),
-                            )
-                            .expect("Should not be under speculation");
+                            ) {
+                                Ok(t) => t,
+                                // Audit: both WorkerCanceled and TimedOut must propagate; the
+                                // panic catch-all below would otherwise mask TimedOut.
+                                Err(
+                                    FlowJsException::WorkerCanceled(
+                                        c,
+                                    ),
+                                ) => return Err(c.into()),
+                                Err(
+                                    FlowJsException::TimedOut(
+                                        t,
+                                    ),
+                                ) => return Err(t.into()),
+                                Err(err) => {
+                                    panic!("Should not be under speculation: {:?}", err)
+                                }
+                            };
                         let source_module: Result<type_::ModuleType, Type> =
                             source_module;
                         let local_name = &id_ident.name;
@@ -4215,19 +4402,24 @@ fn statement_<'a>(
                             id_loc.dupe(),
                         );
                         let (_remote_default_name_def_loc, imported_t) =
-                            flow_js_utils::import_export_utils::import_default_specifier_type(
+                            match flow_js_utils::import_export_utils::import_default_specifier_type(
                                 cx,
                                 import_reason,
                                 &|cx, reason, t| {
                                     FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
-                                        .map_err(Into::into)
                                 },
                                 &inner.import_kind,
                                 module_name,
                                 &source_module,
                                 local_name,
-                            )
-                            .expect("Should not be under speculation");
+                            ) {
+                                Ok(t) => t,
+                                // Audit: both WorkerCanceled and TimedOut must propagate; the
+                                // panic catch-all below would otherwise mask TimedOut.
+                                Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                                Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                                Err(err) => panic!("Should not be under speculation: {:?}", err),
+                            };
                         statement::Statement::new(StatementInner::ImportEqualsDeclaration {
                             loc,
                             inner: (statement::ImportEqualsDeclaration {
@@ -4277,20 +4469,28 @@ fn statement_<'a>(
 pub fn statement_list<'a>(
     cx: &Context<'a>,
     stmts: &[statement::Statement<ALoc, ALoc>],
-) -> Vec<statement::Statement<ALoc, (ALoc, Type)>> {
+) -> Result<
+    Vec<statement::Statement<ALoc, (ALoc, Type)>>,
+    flow_utils_concurrency::job_error::JobError,
+> {
     stmts
         .iter()
         .map(|stmt| {
             let (stmt, _abnormal) =
                 flow_typing_utils::abnormal::catch_stmt_control_flow_exception(|| {
                     statement(cx, stmt)
-                });
-            stmt
+                })?;
+            Ok(stmt)
         })
         .collect()
 }
 
-pub fn for_of_elemt<'a>(cx: &Context<'a>, right_t: Type, reason: Reason, await_: bool) -> Type {
+pub fn for_of_elemt<'a>(
+    cx: &Context<'a>,
+    right_t: Type,
+    reason: Reason,
+    await_: bool,
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason.dupe(), move |cx, elem_t| {
         let loc = reason.loc().dupe();
         // Second and third args here are never relevant to the loop, but they should be as
@@ -4308,6 +4508,7 @@ pub fn for_of_elemt<'a>(cx: &Context<'a>, right_t: Type, reason: Reason, await_:
             &right_t,
             &targs,
         );
+        Ok::<(), flow_utils_concurrency::job_error::JobError>(())
     })
 }
 
@@ -4315,7 +4516,10 @@ pub fn type_alias<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     alias: &statement::TypeAlias<ALoc, ALoc>,
-) -> (Type, statement::TypeAlias<ALoc, (ALoc, Type)>) {
+) -> Result<
+    (Type, statement::TypeAlias<ALoc, (ALoc, Type)>),
+    flow_utils_concurrency::job_error::JobError,
+> {
     let name_loc = alias.id.loc.dupe();
     let id = &alias.id;
     let name = &id.name;
@@ -4325,17 +4529,21 @@ pub fn type_alias<'a>(
         flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
             vec![format!("Alias cache hit at {}", loc.debug_to_string(false))]
         });
-        return info;
+        return Ok(info);
     }
     let r = type_::desc_format::type_reason(Name::new(name.dupe()), name_loc.dupe());
-    let (tparams, tparams_map, tparams_ast) = type_annotation::mk_type_param_declarations(
+    let (tparams, tparams_map, tparams_ast): (
+        type_::TypeParams,
+        FlowOrdMap<SubstName, Type>,
+        Option<ast::types::TypeParams<ALoc, (ALoc, Type)>>,
+    ) = type_annotation::mk_type_param_declarations(
         cx,
         flow_parser::ast_visitor::TypeParamsContext::TypeAlias,
         Some(FlowOrdMap::new()),
         alias.tparams.as_ref(),
-    );
+    )?;
     let tparams_map_for_custom_error = tparams_map.dupe();
-    let right_ast = type_annotation::convert(cx, tparams_map, &alias.right);
+    let right_ast = type_annotation::convert(cx, tparams_map, &alias.right)?;
     let t = right_ast.loc().1.dupe();
     let name_clone = name.dupe();
     let name_loc_clone = name_loc.dupe();
@@ -4446,14 +4654,17 @@ pub fn type_alias<'a>(
         right: right_ast,
         comments: alias.comments.dupe(),
     };
-    (type_, type_alias_ast)
+    Ok((type_, type_alias_ast))
 }
 
 pub fn interface<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     decl: &statement::Interface<ALoc, ALoc>,
-) -> (Type, statement::Interface<ALoc, (ALoc, Type)>) {
+) -> Result<
+    (Type, statement::Interface<ALoc, (ALoc, Type)>),
+    flow_utils_concurrency::job_error::JobError,
+> {
     let node_cache = cx.node_cache();
     if let Some(node) = node_cache.get_interface(&loc) {
         flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
@@ -4462,23 +4673,23 @@ pub fn interface<'a>(
                 loc.debug_to_string(false)
             )]
         });
-        return node;
+        return Ok(node);
     }
     let name_loc = decl.id.loc.dupe();
     let id = &decl.id;
     let name = &id.name;
     let desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
     let reason = mk_reason(desc.clone(), name_loc.dupe());
-    let (t, iface_sig, decl_ast) = type_annotation::mk_interface_sig(cx, loc.dupe(), reason, decl);
+    let (t, iface_sig, decl_ast) = type_annotation::mk_interface_sig(cx, loc.dupe(), reason, decl)?;
     class_sig::check_signature_compatibility(cx, mk_reason(desc, loc), &iface_sig);
-    (t, decl_ast)
+    Ok((t, decl_ast))
 }
 
 fn declare_variable<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     decl: &statement::DeclareVariable<ALoc, ALoc>,
-) -> Result<statement::DeclareVariable<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<statement::DeclareVariable<ALoc, (ALoc, Type)>, CheckExprError> {
     let statement::DeclareVariable {
         declarations,
         kind,
@@ -4516,7 +4727,7 @@ fn declare_variable<'a>(
     }
     let declarations: Vec<_> = declarations
         .iter()
-        .map(|d| -> Result<_, AbnormalControlFlow> {
+        .map(|d| -> Result<_, CheckExprError> {
             let decl_loc = d.loc.dupe();
             let id = &d.id;
             let init = &d.init;
@@ -4530,11 +4741,12 @@ fn declare_variable<'a>(
                     let annot = &pat_id.annot;
                     match (annot, init) {
                         (ast::types::AnnotationOrHint::Available(annot), None) => {
-                            let (t, annot_ast) = type_annotation::mk_type_available_annotation(
-                                cx,
-                                Default::default(),
-                                annot,
-                            );
+                            let (t, annot_ast): (Type, ast::types::Annotation<ALoc, (ALoc, Type)>) =
+                                type_annotation::mk_type_available_annotation(
+                                    cx,
+                                    Default::default(),
+                                    annot,
+                                )?;
                             let typed_id = ast::pattern::Pattern::Identifier {
                                 loc: (pat_loc.dupe(), t.dupe()),
                                 inner: ast::pattern::Identifier {
@@ -4663,7 +4875,10 @@ pub fn declare_class<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     decl: &statement::DeclareClass<ALoc, ALoc>,
-) -> (Type, statement::DeclareClass<ALoc, (ALoc, Type)>) {
+) -> Result<
+    (Type, statement::DeclareClass<ALoc, (ALoc, Type)>),
+    flow_utils_concurrency::job_error::JobError,
+> {
     let node_cache = cx.node_cache();
     if let Some(node) = node_cache.get_declared_class(&loc) {
         flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
@@ -4672,7 +4887,7 @@ pub fn declare_class<'a>(
                 loc.debug_to_string(false)
             )]
         });
-        return node;
+        return Ok(node);
     }
     let name_loc = decl.id.loc.dupe();
     let id = &decl.id;
@@ -4690,9 +4905,9 @@ pub fn declare_class<'a>(
     let desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
     let reason = mk_reason(desc.clone(), name_loc.dupe());
     let (t, class_sig, decl_ast) =
-        type_annotation::mk_declare_class_sig(cx, loc.dupe(), name, reason, decl);
+        type_annotation::mk_declare_class_sig(cx, loc.dupe(), name, reason, decl)?;
     class_sig::check_signature_compatibility(cx, mk_reason(desc, loc), &class_sig);
-    (t, decl_ast)
+    Ok((t, decl_ast))
 }
 
 fn validate_declare_component_params<'a>(
@@ -4778,7 +4993,10 @@ pub fn declare_component<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     decl: &statement::DeclareComponent<ALoc, ALoc>,
-) -> (Type, statement::DeclareComponent<ALoc, (ALoc, Type)>) {
+) -> Result<
+    (Type, statement::DeclareComponent<ALoc, (ALoc, Type)>),
+    flow_utils_concurrency::job_error::JobError,
+> {
     let node_cache = cx.node_cache();
     if let Some(node) = node_cache.get_declared_component(&loc) {
         flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
@@ -4787,16 +5005,17 @@ pub fn declare_component<'a>(
                 loc.debug_to_string(false)
             )]
         });
-        return node;
+        return Ok(node);
     }
-    let (t, decl_ast) = type_annotation::mk_declare_component_sig(cx, loc, decl);
-    (t, decl_ast)
+    let (t, decl_ast) = type_annotation::mk_declare_component_sig(cx, loc, decl)?;
+    Ok((t, decl_ast))
 }
 
 fn declare_module<'a>(
     cx: &Context<'a>,
     decl: &statement::DeclareModule<ALoc, ALoc>,
-) -> statement::DeclareModule<ALoc, (ALoc, Type)> {
+) -> Result<statement::DeclareModule<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError>
+{
     let id_loc = match &decl.id {
         statement::declare_module::Id::Identifier(id) => id.loc.dupe(),
         statement::declare_module::Id::Literal((loc, _)) => loc.dupe(),
@@ -4820,7 +5039,7 @@ fn declare_module<'a>(
         flow_env_builder::name_def_types::ScopeKind::DeclareModule,
     );
     //   let elements_ast = statement_list cx elements in
-    let elements_ast = statement_list(cx, elements);
+    let elements_ast = statement_list(cx, elements)?;
     for stmt in elements_ast.iter() {
         let loc = stmt.loc();
         match flow_parser::ast_utils::acceptable_statement_in_declaration_context(false, stmt) {
@@ -4868,14 +5087,17 @@ fn declare_module<'a>(
         comments: decl.comments.dupe(),
     };
     type_env::set_scope_kind(cx, prev_scope_kind);
-    ast
+    Ok(ast)
 }
 
 pub fn declare_namespace<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     decl: &statement::DeclareNamespace<ALoc, ALoc>,
-) -> (Type, statement::DeclareNamespace<ALoc, (ALoc, Type)>) {
+) -> Result<
+    (Type, statement::DeclareNamespace<ALoc, (ALoc, Type)>),
+    flow_utils_concurrency::job_error::JobError,
+> {
     let statement::DeclareNamespace {
         id,
         body,
@@ -4895,13 +5117,13 @@ pub fn declare_namespace<'a>(
     }
     let node_cache = cx.node_cache();
     if let Some(x) = node_cache.get_declared_namespace(&loc) {
-        return x;
+        return Ok(x);
     }
     let prev_scope_kind = type_env::set_scope_kind(
         cx,
         flow_env_builder::name_def_types::ScopeKind::DeclareModule,
     );
-    let body_statements = statement_list(cx, &body_block.body);
+    let body_statements = statement_list(cx, &body_block.body)?;
     let body_comments = &body_block.comments;
     type_env::set_scope_kind(cx, prev_scope_kind);
     let body = (
@@ -4969,7 +5191,7 @@ pub fn declare_namespace<'a>(
             )
         }
     };
-    (
+    Ok((
         t,
         statement::DeclareNamespace {
             id,
@@ -4978,7 +5200,7 @@ pub fn declare_namespace<'a>(
             implicit_declare: *implicit_declare,
             keyword: *keyword,
         },
-    )
+    ))
 }
 
 fn object_prop<'a>(
@@ -4993,7 +5215,7 @@ fn object_prop<'a>(
         ObjectExpressionAcc,
         expression::object::Property<ALoc, (ALoc, Type)>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     use ast::expression::object::Key;
     use ast::expression::object::NormalProperty;
@@ -5350,9 +5572,9 @@ fn prop_map_of_object<'a>(
         properties::PropertiesMap,
         Vec<expression::object::Property<ALoc, (ALoc, Type)>>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
-    let (acc, prop_asts) = props.iter().try_fold(
+    let (acc, prop_asts) = props.iter().try_fold::<_, _, Result<_, CheckExprError>>(
         (ObjectExpressionAcc::empty(), vec![]),
         |(map, mut prop_asts), prop| {
             let (map, typed_prop) = object_prop(
@@ -5576,7 +5798,7 @@ fn object_<'a>(
     has_hint: LazyBool<'a>,
     loc: ALoc,
     props: &[expression::object::Property<ALoc, ALoc>],
-) -> Result<(Type, Vec<expression::object::Property<ALoc, (ALoc, Type)>>), AbnormalControlFlow> {
+) -> Result<(Type, Vec<expression::object::Property<ALoc, (ALoc, Type)>>), CheckExprError> {
     use ast::expression::object::Key;
     use ast::expression::object::NormalProperty;
     use ast::expression::object::Property;
@@ -5594,31 +5816,41 @@ fn object_<'a>(
     // Use the same reason for proto and the ObjT so we can walk the proto chain
     // and use the root proto reason to build an error.
     let obj_proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
-    let mk_computed =
-        |k_expr: &expression::Expression<ALoc, (ALoc, Type)>, key: Type, value: (ALoc, Type)| {
-            let key_loc = k_expr.loc().0.dupe();
-            let concretized_keys =
-                FlowJs::possible_concrete_types_for_computed_object_keys(cx, &reason, &key)
-                    .expect("Should not be under speculation");
-            let key_reason = reason_of_t(&key).dupe();
-            let reason_key = mk_expression_reason(k_expr).map_locs(|loc| loc.0.dupe());
-            let reason_obj = key_reason.dupe();
-            create_computed_prop(
-                cx,
-                key_loc,
-                key,
-                concretized_keys,
-                key_reason,
-                reason_key,
-                reason_obj,
-                as_const,
-                frozen,
-                value,
-            )
-        };
+    let mk_computed = |k_expr: &expression::Expression<ALoc, (ALoc, Type)>,
+                       key: Type,
+                       value: (ALoc, Type)|
+     -> Result<_, CheckExprError> {
+        let key_loc = k_expr.loc().0.dupe();
+        let concretized_keys =
+            match FlowJs::possible_concrete_types_for_computed_object_keys(cx, &reason, &key) {
+                Ok(t) => t,
+                Err(FlowJsException::WorkerCanceled(c)) => {
+                    return Err(c.into());
+                }
+                Err(FlowJsException::TimedOut(t)) => {
+                    return Err(t.into());
+                }
+                Err(err) => panic!("Should not be under speculation: {:?}", err),
+            };
+        let key_reason = reason_of_t(&key).dupe();
+        let reason_key = mk_expression_reason(k_expr).map_locs(|loc| loc.0.dupe());
+        let reason_obj = key_reason.dupe();
+        Ok(create_computed_prop(
+            cx,
+            key_loc,
+            key,
+            concretized_keys,
+            key_reason,
+            reason_key,
+            reason_obj,
+            as_const,
+            frozen,
+            value,
+        ))
+    };
     let (acc, prop_asts) = props.iter().try_fold(
         (ObjectExpressionAcc::empty(), vec![]),
-        |(acc, mut prop_asts), prop| -> Result<_, AbnormalControlFlow> {
+        |(acc, mut prop_asts), prop| -> Result<_, CheckExprError> {
             match prop {
                 Property::SpreadProperty(SpreadProperty {
                     loc: prop_loc,
@@ -5665,8 +5897,8 @@ fn object_<'a>(
                         v,
                     )?;
                     let vt = v_typed.loc().clone();
-                    let computed = mk_computed(&k_typed, kt.dupe(), vt);
-                    let acc = acc.add_computed(cx, computed);
+                    let computed = mk_computed(&k_typed, kt.dupe(), vt)?;
+                    let acc = acc.add_computed(cx, computed)?;
                     prop_asts.push(Property::NormalProperty(NormalProperty::Init {
                         loc: prop_loc.dupe(),
                         key: Key::Computed(ast::ComputedKey {
@@ -5703,8 +5935,8 @@ fn object_<'a>(
                         expression::ExpressionInner::Function { inner, .. } => (**inner).clone(),
                         _ => panic!("Expected Function expression"),
                     };
-                    let computed = mk_computed(&k_typed, kt.dupe(), vt);
-                    let acc = acc.add_computed(cx, computed);
+                    let computed = mk_computed(&k_typed, kt.dupe(), vt)?;
+                    let acc = acc.add_computed(cx, computed)?;
                     prop_asts.push(Property::NormalProperty(NormalProperty::Method {
                         loc: prop_loc.dupe(),
                         key: Key::Computed(ast::ComputedKey {
@@ -5735,15 +5967,18 @@ fn object_<'a>(
                     let (_, vt) = v_typed.loc();
                     let vt_clone = vt.dupe();
                     let reason_clone = reason.dupe();
-                    let t = tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason, |cx, t| {
+                    let t = tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                        flow_utils_concurrency::job_error::JobError,
+                    >(cx, reason, |cx, t| {
                         flow_js::flow_non_speculating(
                             cx,
                             (
                                 &vt_clone,
                                 &UseT::new(UseTInner::ObjTestProtoT(reason_clone.dupe(), t.dupe())),
                             ),
-                        );
-                    });
+                        )?;
+                        Ok(())
+                    })?;
                     let acc = acc.add_proto(t);
                     prop_asts.push(Property::NormalProperty(NormalProperty::Init {
                         loc: prop_loc.dupe(),
@@ -5762,11 +5997,18 @@ fn object_<'a>(
             }
         },
     )?;
-    let t = acc.mk_object_from_spread_acc(cx, reason, as_const, frozen, obj_proto);
+    let t = acc.mk_object_from_spread_acc(cx, reason, as_const, frozen, obj_proto)?;
     Ok((t, prop_asts))
 }
 
-fn init_var(kind: ast::VariableKind) -> for<'cx> fn(&Context<'cx>, &UseOp, &Type, ALoc) {
+fn init_var(
+    kind: ast::VariableKind,
+) -> for<'cx> fn(
+    &Context<'cx>,
+    &UseOp,
+    &Type,
+    ALoc,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     match kind {
         ast::VariableKind::Const => type_env::init_const,
         ast::VariableKind::Let => type_env::init_let,
@@ -5785,7 +6027,7 @@ fn variable<'a>(
         ast::pattern::Pattern<ALoc, (ALoc, Type)>,
         Option<expression::Expression<ALoc, (ALoc, Type)>>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let init_var = init_var(kind);
     let annot = crate::destructuring::type_of_pattern(id);
@@ -5861,7 +6103,7 @@ fn variable<'a>(
                         cx,
                         Default::default(),
                         avail_annot,
-                    );
+                    )?;
                     (t, ast::types::AnnotationOrHint::Available(ast_annot))
                 }
             };
@@ -5870,7 +6112,7 @@ fn variable<'a>(
                     var: Some(id_reason.dupe()),
                     init: init_reason.dupe(),
                 }));
-                init_var(cx, &use_op, init_t, id_loc.dupe());
+                init_var(cx, &use_op, init_t, id_loc.dupe())?;
             }
             let ast_t = type_env::constraining_type(annot_t, cx, name, id_loc.dupe());
             ast::pattern::Pattern::Identifier {
@@ -5895,7 +6137,7 @@ fn variable<'a>(
                         cx,
                         Default::default(),
                         avail_annot,
-                    );
+                    )?;
                     if let Some((ref init_t, ref init_reason)) = init_opt {
                         let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                             var: Some(id_reason.dupe()),
@@ -5904,7 +6146,7 @@ fn variable<'a>(
                         flow_js::flow_non_speculating(
                             cx,
                             (init_t, &UseT::new(UseTInner::UseT(use_op, annot_t))),
-                        );
+                        )?;
                     }
                 }
             }
@@ -5930,7 +6172,7 @@ fn variable<'a>(
                     let id_node_type = if has_anno {
                         t.dupe()
                     } else {
-                        init_var(cx, use_op, &t, name_loc.dupe());
+                        init_var(cx, use_op, &t, name_loc.dupe())?;
                         type_env::constraining_type(
                             type_env::get_var_declared_type(
                                 None,
@@ -5945,13 +6187,13 @@ fn variable<'a>(
                         )
                     };
                     if let Some(d) = default {
-                        let default_t = flow_js::mk_default_non_speculating(cx, &reason, d);
+                        let default_t = flow_js::mk_default_non_speculating(cx, &reason, d)?;
                         flow_js::flow_non_speculating(
                             cx,
                             (&default_t, &UseT::new(UseTInner::UseT(use_op.dupe(), t))),
-                        );
+                        )?;
                     }
-                    id_node_type
+                    Ok(id_node_type)
                 },
                 &mut dest_init,
                 id,
@@ -5964,7 +6206,7 @@ fn variable<'a>(
 pub fn expression_or_spread<'a>(
     cx: &Context<'a>,
     expr: &expression::ExpressionOrSpread<ALoc, ALoc>,
-) -> Result<(CallArg, expression::ExpressionOrSpread<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(CallArg, expression::ExpressionOrSpread<ALoc, (ALoc, Type)>), CheckExprError> {
     use ast::expression::ExpressionOrSpread;
     Ok(match expr {
         ExpressionOrSpread::Expression(e) => {
@@ -6003,76 +6245,81 @@ fn array_elements<'a>(
         Vec<type_::UnresolvedParam>,
         Vec<expression::ArrayElement<ALoc, (ALoc, Type)>>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     use ast::expression::ArrayElement;
     let results: Vec<(type_::UnresolvedParam, ArrayElement<ALoc, (ALoc, Type)>)> = elements
         .iter()
-        .map(|e| match e {
-            ArrayElement::Expression(e) => {
-                let e_prime = expression_inner(
-                    None,
-                    None,
-                    Some(as_const),
-                    FrozenKind::NotFrozen,
-                    Some(has_hint.clone()),
-                    cx,
-                    e,
-                )?;
-                let (loc, t) = e_prime.loc();
-                let loc = loc.dupe();
-                let t = t.dupe();
-                let reason = mk_reason(VirtualReasonDesc::RArrayElement, loc);
-                let elem = mk_tuple_element(reason, t.dupe(), None, false, Polarity::Neutral);
-                Ok((
-                    type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
-                        elem, None,
-                    ))),
-                    ArrayElement::Expression(e_prime),
-                ))
-            }
-            ArrayElement::Hole(loc) => {
-                let t = type_::void::make(mk_reason(VirtualReasonDesc::RArrayHole, loc.dupe()));
-                let reason = mk_reason(VirtualReasonDesc::RArrayElement, loc.dupe());
-                let elem = mk_tuple_element(reason, t, None, false, Polarity::Neutral);
-                Ok((
-                    type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
-                        elem, None,
-                    ))),
-                    ArrayElement::Hole(loc.dupe()),
-                ))
-            }
-            ArrayElement::Spread(expression::SpreadElement {
-                loc: spread_loc,
-                argument: spread_argument,
-                comments,
-            }) => {
-                let argument = expression_inner(
-                    None,
-                    None,
-                    Some(as_const),
-                    FrozenKind::NotFrozen,
-                    Some(has_hint.clone()),
-                    cx,
-                    spread_argument,
-                )?;
-                let (_, t) = argument.loc();
-                let t = t.dupe();
-                Ok((
-                    type_::UnresolvedParam::UnresolvedSpreadArg(t),
-                    ArrayElement::Spread(expression::SpreadElement {
-                        loc: spread_loc.dupe(),
-                        argument,
-                        comments: comments.clone(),
-                    }),
-                ))
+        .map(|e| -> Result<_, CheckExprError> {
+            match e {
+                ArrayElement::Expression(e) => {
+                    let e_prime = expression_inner(
+                        None,
+                        None,
+                        Some(as_const),
+                        FrozenKind::NotFrozen,
+                        Some(has_hint.clone()),
+                        cx,
+                        e,
+                    )?;
+                    let (loc, t) = e_prime.loc();
+                    let loc = loc.dupe();
+                    let t = t.dupe();
+                    let reason = mk_reason(VirtualReasonDesc::RArrayElement, loc);
+                    let elem = mk_tuple_element(reason, t.dupe(), None, false, Polarity::Neutral);
+                    Ok((
+                        type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
+                            elem, None,
+                        ))),
+                        ArrayElement::Expression(e_prime),
+                    ))
+                }
+                ArrayElement::Hole(loc) => {
+                    let t = type_::void::make(mk_reason(VirtualReasonDesc::RArrayHole, loc.dupe()));
+                    let reason = mk_reason(VirtualReasonDesc::RArrayElement, loc.dupe());
+                    let elem = mk_tuple_element(reason, t, None, false, Polarity::Neutral);
+                    Ok((
+                        type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
+                            elem, None,
+                        ))),
+                        ArrayElement::Hole(loc.dupe()),
+                    ))
+                }
+                ArrayElement::Spread(expression::SpreadElement {
+                    loc: spread_loc,
+                    argument: spread_argument,
+                    comments,
+                }) => {
+                    let argument = expression_inner(
+                        None,
+                        None,
+                        Some(as_const),
+                        FrozenKind::NotFrozen,
+                        Some(has_hint.clone()),
+                        cx,
+                        spread_argument,
+                    )?;
+                    let (_, t) = argument.loc();
+                    let t = t.dupe();
+                    Ok((
+                        type_::UnresolvedParam::UnresolvedSpreadArg(t),
+                        ArrayElement::Spread(expression::SpreadElement {
+                            loc: spread_loc.dupe(),
+                            argument,
+                            comments: comments.clone(),
+                        }),
+                    ))
+                }
             }
         })
         .collect::<Result<Vec<_>, _>>()?;
     Ok(results.into_iter().unzip())
 }
 
-pub fn empty_array<'a>(cx: &Context<'a>, loc: ALoc) -> (Reason, Type) {
+pub fn empty_array<'a>(
+    cx: &Context<'a>,
+    loc: ALoc,
+) -> Result<(Reason, Type), flow_utils_concurrency::job_error::JobError> {
     let reason = mk_reason(VirtualReasonDesc::REmptyArrayLit, loc.dupe());
     let element_reason = mk_reason(VirtualReasonDesc::REmptyArrayElement, loc.dupe());
     let type_::LazyHintT(has_hint, lazy_hint) = type_env::get_hint(cx, loc.dupe());
@@ -6080,7 +6327,7 @@ pub fn empty_array<'a>(cx: &Context<'a>, loc: ALoc) -> (Reason, Type) {
     let elemt = if !has_hint {
         empty_t::make(mk_reason(VirtualReasonDesc::REmptyArrayElement, loc.dupe()))
     } else {
-        match lazy_hint(cx, false, None, element_reason) {
+        match lazy_hint(cx, false, None, element_reason)? {
             type_::HintEvalResult::HintAvailable(hint, _) => hint,
             type_::HintEvalResult::DecompositionError => {
                 // A hint is available, but cannot be used to provide a type for this
@@ -6101,7 +6348,7 @@ pub fn empty_array<'a>(cx: &Context<'a>, loc: ALoc) -> (Reason, Type) {
             }
         }
     };
-    (reason, elemt)
+    Ok((reason, elemt))
 }
 
 /// can raise Abnormal.(Exn (_, _))
@@ -6115,7 +6362,7 @@ fn expression_inner<'a>(
     has_hint: Option<LazyBool<'a>>,
     cx: &Context<'a>,
     expr: &expression::Expression<ALoc, ALoc>,
-) -> Result<expression::Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     let loc = expr.loc().dupe();
     let threshold = cx
         .slow_to_check_logging()
@@ -6186,18 +6433,25 @@ fn expression_inner<'a>(
     Ok(res)
 }
 
-fn this_<'a>(cx: &Context<'a>, loc: ALoc, this: &expression::This<ALoc>) -> Type {
+fn this_<'a>(
+    cx: &Context<'a>,
+    loc: ALoc,
+    this: &expression::This<ALoc>,
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let expr = expression::Expression::new(expression::ExpressionInner::This {
         loc: loc.dupe(),
         inner: std::sync::Arc::new(this.clone()),
     });
-    match refinement::get(true, cx, &expr, loc.dupe()) {
-        Some(t) => t,
+    match refinement::get(true, cx, &expr, loc.dupe())? {
+        Some(t) => Ok(t),
         None => type_env::var_ref(None, cx, None, Name::new("this"), loc),
     }
 }
 
-fn super_<'a>(cx: &Context<'a>, loc: ALoc) -> Type {
+fn super_<'a>(
+    cx: &Context<'a>,
+    loc: ALoc,
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     type_env::var_ref(None, cx, None, Name::new("super"), loc)
 }
 
@@ -6206,7 +6460,7 @@ fn expression_<'a>(
     syntactic_flags: SyntacticFlags<'a>,
     loc: ALoc,
     e: &expression::Expression<ALoc, ALoc>,
-) -> Result<expression::Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     let SyntacticFlags {
         encl_ctx,
         decl,
@@ -6219,7 +6473,7 @@ fn expression_<'a>(
     use ast::expression::ExpressionInner;
     Ok(match e.deref() {
         ExpressionInner::StringLiteral { inner, .. } => {
-            let t = string_literal_inner(cx, &syntactic_flags, loc.dupe(), inner);
+            let t = string_literal_inner(cx, &syntactic_flags, loc.dupe(), inner)?;
             expression::Expression::new(ExpressionInner::StringLiteral {
                 loc: (loc, t),
                 inner: inner.clone(),
@@ -6254,14 +6508,14 @@ fn expression_<'a>(
             })
         }
         ExpressionInner::RegExpLiteral { inner, .. } => {
-            let t = regexp_literal(cx, loc.dupe());
+            let t = regexp_literal(cx, loc.dupe())?;
             expression::Expression::new(ExpressionInner::RegExpLiteral {
                 loc: (loc, t),
                 inner: inner.clone(),
             })
         }
         ExpressionInner::ModuleRefLiteral { inner, .. } => {
-            let (t, lit) = module_ref_literal(cx, loc.dupe(), inner);
+            let (t, lit) = module_ref_literal(cx, loc.dupe(), inner)?;
             expression::Expression::new(ExpressionInner::ModuleRefLiteral {
                 loc: (loc, t),
                 inner: std::sync::Arc::new(lit),
@@ -6286,7 +6540,7 @@ fn expression_<'a>(
             })
         }
         ExpressionInner::Identifier { inner, .. } => {
-            let t = identifier_(cx, &syntactic_flags, &inner.name, loc.dupe());
+            let t = identifier_(cx, &syntactic_flags, &inner.name, loc.dupe())?;
             expression::Expression::new(ExpressionInner::Identifier {
                 loc: (loc, t.dupe()),
                 inner: ast::Identifier::new(ast::IdentifierInner {
@@ -6297,7 +6551,7 @@ fn expression_<'a>(
             })
         }
         ExpressionInner::This { inner, .. } => {
-            let t = this_(cx, loc.dupe(), inner);
+            let t = this_(cx, loc.dupe(), inner)?;
             expression::Expression::new(ExpressionInner::This {
                 loc: (loc, t),
                 inner: inner.clone(),
@@ -6309,7 +6563,7 @@ fn expression_<'a>(
                 &natural_inference::empty_syntactic_flags(),
                 &FlowSmolStr::new("super"),
                 loc.dupe(),
-            );
+            )?;
             expression::Expression::new(ExpressionInner::Super {
                 loc: (loc, t),
                 inner: inner.clone(),
@@ -6357,8 +6611,11 @@ fn expression_<'a>(
                     );
                 }
             }
-            let (t, annot_prime) =
-                type_annotation::mk_type_available_annotation(cx, Default::default(), &inner.annot);
+            let (t, annot_prime) = type_annotation::mk_type_available_annotation(
+                cx,
+                Default::default(),
+                &inner.annot,
+            )?;
             let e_prime = expression(None, None, None, cx, &inner.expression)?;
             let infer_t = e_prime.loc().1.dupe();
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
@@ -6378,8 +6635,11 @@ fn expression_<'a>(
             })
         }
         ExpressionInner::AsExpression { inner, .. } => {
-            let (t, annot_prime) =
-                type_annotation::mk_type_available_annotation(cx, Default::default(), &inner.annot);
+            let (t, annot_prime) = type_annotation::mk_type_available_annotation(
+                cx,
+                Default::default(),
+                &inner.annot,
+            )?;
             let e_prime = expression(None, None, None, cx, &inner.expression)?;
             let infer_t = e_prime.loc().1.dupe();
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
@@ -6457,7 +6717,7 @@ fn expression_<'a>(
                     &type_::unknown_use(),
                     &arg_t,
                     inner.match_keyword_loc.dupe(),
-                );
+                )?;
                 let mut cases = Vec::new();
                 let mut ts = Vec::new();
                 let mut all_throws = true;
@@ -6475,7 +6735,7 @@ fn expression_<'a>(
                             let (guard, throws) =
                                 flow_typing_utils::abnormal::catch_expr_control_flow_exception(
                                     || expression(None, None, None, cx, guard_expr),
-                                );
+                                )?;
                             (Some(guard), throws)
                         }
                         None => (None, false),
@@ -6491,7 +6751,7 @@ fn expression_<'a>(
                                 cx,
                                 &case.body,
                             )
-                        });
+                        })?;
                     let t = body.loc().1.dupe();
                     let case_ast = ast::match_::Case {
                         loc: case_loc.dupe(),
@@ -6521,7 +6781,7 @@ fn expression_<'a>(
                     None,
                     Name::new(flow_parser::ast_utils::MATCH_ROOT_NAME),
                     inner.match_keyword_loc.dupe(),
-                );
+                )?;
                 let match_t = union_of_ts(reason, ts, None);
                 let ast = expression::Expression::new(ExpressionInner::Match {
                     loc: (loc.dupe(), match_t),
@@ -6534,7 +6794,7 @@ fn expression_<'a>(
                     .into(),
                 });
                 if !inner.cases.is_empty() && all_throws {
-                    return Err(AbnormalControlFlow(loc, ast));
+                    return Err(AbnormalControlFlow(loc, ast).into());
                 }
                 ast
             }
@@ -6579,7 +6839,7 @@ fn expression_<'a>(
             } else {
                 let constructor_ast = expression(None, None, None, cx, &inner.constructor)?;
                 let constructor_t = constructor_ast.loc().1.dupe();
-                let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref());
+                let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
                 let (props_loc, props_obj) = &inner.properties;
                 let (props_t, props_ast) = object_(
                     cx,
@@ -6609,7 +6869,7 @@ fn expression_<'a>(
                     constructor_t,
                     targts,
                     vec![CallArg::arg(props_t)],
-                );
+                )?;
                 cx.set_ctor_callee(loc.dupe(), ctor_t);
                 expression::Expression::new(ExpressionInner::Record {
                     loc: (loc, t),
@@ -6684,7 +6944,7 @@ fn expression_<'a>(
                     })
                 }
                 [] => {
-                    let (reason, elem_t) = empty_array(cx, loc.dupe());
+                    let (reason, elem_t) = empty_array(cx, loc.dupe())?;
                     let arrtype = type_::ArrType::ArrayAT(Box::new(ArrayATData {
                         elem_t,
                         tuple_view: Some(type_::empty_tuple_view()),
@@ -6749,8 +7009,9 @@ fn expression_<'a>(
                                 resolve_to,
                             )
                             .expect("should not fail outside speculation");
+                            Ok::<(), flow_utils_concurrency::job_error::JobError>(())
                         },
-                    );
+                    )?;
                     expression::Expression::new(ExpressionInner::Array {
                         loc: (loc, t),
                         inner: (expression::Array {
@@ -6783,7 +7044,8 @@ fn expression_<'a>(
             let targts_opt = inner
                 .targs
                 .as_ref()
-                .map(|args| convert_call_targs(cx, &FlowOrdMap::new(), args));
+                .map(|args| convert_call_targs(cx, &FlowOrdMap::new(), args))
+                .transpose()?;
             let (argts, arges) = match &inner.arguments {
                 Some(arguments) => {
                     let (argts, arges) = arg_list(cx, arguments)?;
@@ -6796,7 +7058,7 @@ fn expression_<'a>(
                 &natural_inference::empty_syntactic_flags(),
                 name,
                 callee_loc.dupe(),
-            );
+            )?;
             let callee_annot = (callee_loc.dupe(), id_t.dupe());
             match targts_opt {
                 None => {
@@ -6804,7 +7066,7 @@ fn expression_<'a>(
                         let t = match argt.deref() {
                             CallArgInner::Arg(t) | CallArgInner::SpreadArg(t) => t,
                         };
-                        flow_js::flow_t_non_speculating(cx, (t, &str_module_t::at(loc.dupe())));
+                        flow_js::flow_t_non_speculating(cx, (t, &str_module_t::at(loc.dupe())))?;
                     }
                     let reason = mk_reason(VirtualReasonDesc::RNewFunction, loc.dupe());
                     let proto = obj_proto::make(reason.dupe());
@@ -6898,7 +7160,8 @@ fn expression_<'a>(
             let targts = inner
                 .targs
                 .as_ref()
-                .map(|args| convert_call_targs(cx, &FlowOrdMap::new(), args));
+                .map(|args| convert_call_targs(cx, &FlowOrdMap::new(), args))
+                .transpose()?;
             let (argts, args) = match &inner.arguments {
                 Some(arguments) => {
                     let (argts, args) = arg_list(cx, arguments)?;
@@ -6945,7 +7208,7 @@ fn expression_<'a>(
                                 DefT::new(DefTInner::NumGeneralT(Literal::AnyLiteral)),
                             )),
                         ),
-                    );
+                    )?;
                     let (targ_ts, targs_ast) = match targ_t {
                         Some((ast, Targ::ExplicitArg(t))) => {
                             (Some(vec![Targ::ExplicitArg(t)]), Some(ast))
@@ -6957,7 +7220,7 @@ fn expression_<'a>(
                         &natural_inference::empty_syntactic_flags(),
                         name,
                         callee_loc.dupe(),
-                    );
+                    )?;
                     let reason_call = mk_reason(
                         VirtualReasonDesc::RConstructorCall(Arc::new(desc_of_t(&id_t).clone())),
                         loc.dupe(),
@@ -6977,7 +7240,7 @@ fn expression_<'a>(
                         id_t.dupe(),
                         targ_ts,
                         vec![CallArg::arg(arg_t)],
-                    );
+                    )?;
                     cx.set_ctor_callee(loc.dupe(), ctor_t);
                     expression::Expression::new(ExpressionInner::New {
                         loc: (loc, t),
@@ -7012,7 +7275,7 @@ fn expression_<'a>(
         ExpressionInner::New { inner, .. } => {
             let callee_ast = expression(None, None, None, cx, &inner.callee)?;
             let class_ = callee_ast.loc().1.dupe();
-            let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref());
+            let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
             let (argts, args_reasons, arguments_ast) = match &inner.arguments {
                 Some(arguments) => {
                     let (argst, arguments_ast) = arg_list(cx, arguments)?;
@@ -7031,7 +7294,7 @@ fn expression_<'a>(
                 args: args_reasons.into(),
                 local: true,
             }))));
-            let (t, ctor_t) = new_call(cx, loc.dupe(), reason, use_op, class_, targts, argts);
+            let (t, ctor_t) = new_call(cx, loc.dupe(), reason, use_op, class_, targts, argts)?;
             cx.set_ctor_callee(loc.dupe(), ctor_t);
             // Check if using new Record({...}) and emit error suggesting record expression syntax
             if let Some(arguments) = &inner.arguments {
@@ -7074,6 +7337,8 @@ fn expression_<'a>(
                                 }
                                 _ => None,
                             },
+                            Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                            Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
                             Err(_) => None,
                         };
                         if let Some(record_name) = record_name_opt {
@@ -7132,7 +7397,7 @@ fn expression_<'a>(
                         cx,
                         &inner.consequent,
                     )
-                });
+                })?;
             let t1 = consequent.loc().1.dupe();
             let (alternate, else_throws) =
                 flow_typing_utils::abnormal::catch_expr_control_flow_exception(|| {
@@ -7145,7 +7410,7 @@ fn expression_<'a>(
                         cx,
                         &inner.alternate,
                     )
-                });
+                })?;
             let t2 = alternate.loc().1.dupe();
             let combined_type = match (then_throws, else_throws) {
                 (true, false) => t2,
@@ -7192,7 +7457,7 @@ fn expression_<'a>(
             });
             // handle control flow in cases where we've thrown from both sides
             if then_throws && else_throws {
-                return Err(AbnormalControlFlow(loc, ast));
+                return Err(AbnormalControlFlow(loc, ast).into());
             }
             ast
         }
@@ -7269,14 +7534,18 @@ fn expression_<'a>(
                     let module_name_userland =
                         flow_import_specifier::Userland::from_smol_str(module_name_smol.dupe());
                     let source_module_rc =
-                        flow_js_utils::import_export_utils::get_module_type_or_any(
+                        match flow_js_utils::import_export_utils::get_module_type_or_any(
                             cx,
                             false,
                             Some(type_::ImportKind::ImportValue),
                             loc.dupe(),
                             module_name_userland.dupe(),
-                        )
-                        .expect("Should not be under speculation");
+                        ) {
+                            Ok(v) => v,
+                            Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                            Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                            Err(err) => panic!("Should not be under speculation: {:?}", err),
+                        };
                     let source_module = source_module_rc;
                     if cx.relay_integration_esmodules() {
                         let import_reason = mk_reason(
@@ -7287,21 +7556,24 @@ fn expression_<'a>(
                             loc.dupe(),
                         );
                         let (_def_loc, t) =
-                            flow_js_utils::import_export_utils::import_default_specifier_type(
+                            match flow_js_utils::import_export_utils::import_default_specifier_type(
                                 cx,
                                 import_reason,
                                 &|cx, reason, t| {
                                     FlowJs::singleton_concretize_type_for_imports_exports(
                                         cx, &reason, &t,
                                     )
-                                    .map_err(Into::into)
                                 },
                                 &statement::ImportKind::ImportValue,
                                 module_name_userland.dupe(),
                                 &source_module,
                                 &module_name_smol,
-                            )
-                            .expect("Should not be under speculation");
+                            ) {
+                                Ok(v) => v,
+                                Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                                Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                                Err(err) => panic!("Should not be under speculation: {:?}", err),
+                            };
                         t
                     } else {
                         let reason = mk_reason(
@@ -7312,15 +7584,20 @@ fn expression_<'a>(
                             module_name_userland.dupe().into_inner(),
                             loc.dupe(),
                         );
-                        let (_def_loc, t) = flow_js_utils::import_export_utils::cjs_require_type(
-                            cx,
-                            reason,
-                            flow_js::reposition_non_speculating,
-                            namespace_symbol,
-                            false,
-                            &source_module,
-                        )
-                        .expect("Should not be under speculation");
+                        let (_def_loc, t) =
+                            match flow_js_utils::import_export_utils::cjs_require_type(
+                                cx,
+                                reason,
+                                flow_js::reposition_non_speculating,
+                                namespace_symbol,
+                                false,
+                                &source_module,
+                            ) {
+                                Ok(v) => v,
+                                Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                                Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                                Err(err) => panic!("Should not be under speculation: {:?}", err),
+                            };
                         t
                     }
                 }
@@ -7334,7 +7611,7 @@ fn expression_<'a>(
                 }
             };
             let tag_ast = expression(None, None, None, cx, &inner.tag)?;
-            let (_, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref());
+            let (_, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
             let (quasi_loc, quasi) = &inner.quasi;
             let expressions: Vec<_> = quasi
                 .expressions
@@ -7383,7 +7660,7 @@ fn expression_<'a>(
                 .map(|e| expression(None, None, None, cx, e))
                 .collect::<Result<_, _>>()?;
             let tag_ast = expression(None, None, None, cx, &inner.tag)?;
-            let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref());
+            let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
             let t = tag_ast.loc().1.dupe();
             let reason = mk_reason(VirtualReasonDesc::RCustom("encaps tag".into()), loc.dupe());
             let reason_array = mk_reason(VirtualReasonDesc::RArray, reason.loc().dupe());
@@ -7394,7 +7671,7 @@ fn expression_<'a>(
                 &reason_array,
                 None,
                 "TaggedTemplateLiteralArray",
-            );
+            )?;
             let mut args: Vec<CallArg> = vec![CallArg::arg(quasi_t)];
             for e in &expressions {
                 args.push(CallArg::arg(e.loc().1.dupe()));
@@ -7419,7 +7696,7 @@ fn expression_<'a>(
                 call_action: Box::new(type_::CallAction::Funcalltype(Box::new(ft))),
                 return_hint: type_env::get_hint(cx, loc.dupe()),
             })));
-            flow_js::flow_non_speculating(cx, (&t, &call_t));
+            flow_js::flow_non_speculating(cx, (&t, &call_t))?;
             let result_t = Type::new(TypeInner::OpenT(ret_tvar));
             expression::Expression::new(ExpressionInner::TaggedTemplate {
                 loc: (loc.dupe(), result_t),
@@ -7447,7 +7724,7 @@ fn expression_<'a>(
                         value: expression::template_literal::Value { cooked, .. },
                         ..
                     } = head;
-                    let t = string_literal_value(cx, &syntactic_flags, elem_loc.dupe(), cooked);
+                    let t = string_literal_value(cx, &syntactic_flags, elem_loc.dupe(), cooked)?;
                     (t, vec![])
                 }
                 _ => {
@@ -7497,12 +7774,12 @@ fn expression_<'a>(
                                     flow_js::flow_non_speculating(
                                         cx,
                                         (ct, &UseT::new(UseTInner::UseT(use_op, t_out.dupe()))),
-                                    );
+                                    )?;
                                 }
                             }
                             Ok(e)
                         })
-                        .collect::<Result<_, AbnormalControlFlow>>()?;
+                        .collect::<Result<_, CheckExprError>>()?;
                     (t_out, expressions)
                 }
             };
@@ -7578,7 +7855,7 @@ fn expression_<'a>(
                         )),
                         init: reason_of_t(&class_t).dupe(),
                     }));
-                    type_env::init_implicit_let(cx, &use_op, &class_t, name_loc);
+                    type_env::init_implicit_let(cx, &use_op, &class_t, name_loc)?;
                     expression::Expression::new(ExpressionInner::Class {
                         loc: (class_loc, class_t),
                         inner: c_typed.into(),
@@ -7603,7 +7880,7 @@ fn expression_<'a>(
                 }
                 None => (type_::void::at(loc.dupe()), None),
             };
-            let next_t = type_env::get_next(cx, loc.dupe());
+            let next_t = type_env::get_next(cx, loc.dupe())?;
             expression::Expression::new(ExpressionInner::Yield {
                 loc: (loc.dupe(), next_t),
                 inner: expression::Yield {
@@ -7620,7 +7897,7 @@ fn expression_<'a>(
                 VirtualReasonDesc::RCustom("yield* delegate".into()),
                 loc.dupe(),
             );
-            let next = type_env::get_next(cx, loc.dupe());
+            let next = type_env::get_next(cx, loc.dupe())?;
             let (t, argument_ast) = match &inner.argument {
                 Some(expr) => {
                     let expr_typed = expression(None, None, None, cx, expr)?;
@@ -7682,7 +7959,7 @@ fn expression_<'a>(
             if inner.meta.name.as_str() == "import" && inner.property.name.as_str() == "meta" =>
         {
             let reason = mk_reason(VirtualReasonDesc::RImportMeta, loc.dupe());
-            let t = flow_js::get_builtin_type_non_speculating(cx, &reason, None, "Import$Meta");
+            let t = flow_js::get_builtin_type_non_speculating(cx, &reason, None, "Import$Meta")?;
             expression::Expression::new(ExpressionInner::MetaProperty {
                 loc: (loc.dupe(), t.dupe()),
                 inner: expression::MetaProperty {
@@ -7710,34 +7987,51 @@ fn expression_<'a>(
         ExpressionInner::Import { inner, .. } => {
             let source_loc = inner.argument.loc().dupe();
             let argument = &*inner.argument;
-            let t = |module_name: flow_import_specifier::Userland| -> Type {
+            let t = |module_name: flow_import_specifier::Userland|
+             -> Result<Type, flow_utils_concurrency::job_error::JobError> {
                 let ns_t = {
                     let reason =
                         mk_reason(VirtualReasonDesc::RModule(module_name.dupe()), loc.dupe());
                     let source_module_rc =
-                        flow_js_utils::import_export_utils::get_module_type_or_any(
+                        match flow_js_utils::import_export_utils::get_module_type_or_any(
                             cx,
                             true,
                             Some(type_::ImportKind::ImportValue),
                             source_loc.dupe(),
                             module_name.dupe(),
-                        )
-                        .expect("Should not be under speculation");
+                        ) {
+                            Ok(v) => v,
+                            Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                            Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                            Err(err) => panic!("Should not be under speculation: {:?}", err),
+                        };
                     let source_module: Result<type_::ModuleType, Type> = source_module_rc;
                     let namespace_symbol = flow_common::flow_symbol::Symbol::mk_module_symbol(
                         module_name.into_inner(),
                         loc.dupe(),
                     );
-                    flow_js_utils::import_export_utils::get_module_namespace_type(
+                    match flow_js_utils::import_export_utils::get_module_namespace_type(
                         cx,
                         reason,
                         namespace_symbol,
                         &source_module,
-                    )
-                    .expect("Should not be under speculation")
+                    ) {
+                        Ok(v) => v,
+                        Err(
+                            FlowJsException::WorkerCanceled(
+                                c,
+                            ),
+                        ) => return Err(c.into()),
+                        Err(
+                            FlowJsException::TimedOut(
+                                t,
+                            ),
+                        ) => return Err(t.into()),
+                        Err(err) => panic!("Should not be under speculation: {:?}", err),
+                    }
                 };
                 let reason = mk_annot_reason(VirtualReasonDesc::RAsyncImport, loc.dupe());
-                FlowJs::get_builtin_typeapp(cx, &reason, None, "Promise", vec![ns_t])
+                Ok(FlowJs::get_builtin_typeapp(cx, &reason, None, "Promise", vec![ns_t]))
             };
             let opts_prime = inner
                 .options
@@ -7748,7 +8042,7 @@ fn expression_<'a>(
                 ExpressionInner::StringLiteral { inner: lit, .. } => {
                     let module_name =
                         flow_import_specifier::Userland::from_smol_str(lit.value.dupe());
-                    let t = t(module_name);
+                    let t = t(module_name)?;
                     expression::Expression::new(ExpressionInner::Import {
                         loc: (loc, t.dupe()),
                         inner: expression::Import {
@@ -7769,7 +8063,7 @@ fn expression_<'a>(
                     let module_name = &quasi.value.cooked;
                     let module_name_userland =
                         flow_import_specifier::Userland::from_smol_str(module_name.dupe());
-                    let t = t(module_name_userland);
+                    let t = t(module_name_userland)?;
                     expression::Expression::new(ExpressionInner::Import {
                         loc: (loc, t.dupe()),
                         inner: (expression::Import {
@@ -7834,7 +8128,7 @@ pub fn optional_chain<'a>(
     encl_ctx: EnclosingContext,
     cx: &Context<'a>,
     expr: &expression::Expression<ALoc, ALoc>,
-) -> Result<(Type, Vec<Type>, expression::Expression<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, Vec<Type>, expression::Expression<ALoc, (ALoc, Type)>), CheckExprError> {
     use ast::expression::ExpressionInner;
     let loc = expr.loc().dupe();
     let e: &ExpressionInner<ALoc, ALoc> = expr.deref();
@@ -8038,7 +8332,7 @@ pub fn optional_chain<'a>(
     ) -> ExpressionInner<ALoc, (ALoc, Type)>|
      -> Result<
         Option<((ALoc, Type), ExpressionInner<ALoc, (ALoc, Type)>)>,
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         // Special cases where optional chaining doesn't occur
         Ok(match e {
@@ -8051,10 +8345,14 @@ pub fn optional_chain<'a>(
                     && !type_env::local_scope_entry_exists(cx, id_loc.dupe()) =>
             {
                 let callee_loc = inner.callee.loc().dupe();
-                let targs = inner.targs.as_ref().map(|targs| {
-                    let (_, tast) = convert_call_targs(cx, &FlowOrdMap::default(), targs);
-                    tast
-                });
+                let targs = inner
+                    .targs
+                    .as_ref()
+                    .map(|targs| -> Result<_, CheckExprError> {
+                        let (_, tast) = convert_call_targs(cx, &FlowOrdMap::default(), targs)?;
+                        Ok(tast)
+                    })
+                    .transpose()?;
                 let (lhs_t, arguments) = match (targs.as_ref(), &inner.arguments) {
                     (None, args)
                         if args.arguments.len() == 1
@@ -8076,17 +8374,21 @@ pub fn optional_chain<'a>(
                         let module_name =
                             flow_import_specifier::Userland::from_smol_str(module_name_str);
                         let source_module_rc =
-                            flow_js_utils::import_export_utils::get_module_type_or_any(
+                            match flow_js_utils::import_export_utils::get_module_type_or_any(
                                 cx,
                                 true,
                                 Some(type_::ImportKind::ImportValue),
                                 source_loc.dupe(),
                                 module_name.dupe(),
-                            )
-                            .expect("Should not be under speculation");
+                            ) {
+                                Ok(v) => v,
+                                Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                                Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                                Err(err) => panic!("Should not be under speculation: {:?}", err),
+                            };
                         let source_module: Result<type_::ModuleType, Type> = source_module_rc;
                         let (def_loc_opt, require_t) =
-                            flow_js_utils::import_export_utils::cjs_require_type(
+                            match flow_js_utils::import_export_utils::cjs_require_type(
                                 cx,
                                 mk_reason(
                                     VirtualReasonDesc::RModule(module_name.dupe()),
@@ -8099,8 +8401,12 @@ pub fn optional_chain<'a>(
                                 ),
                                 false,
                                 &source_module,
-                            )
-                            .expect("Should not be under speculation");
+                            ) {
+                                Ok(v) => v,
+                                Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                                Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                                Err(err) => panic!("Should not be under speculation: {:?}", err),
+                            };
                         let lit_exp_ast = expression(None, None, None, cx, lit_exp)?;
                         let lit_exp_l = lit_exp_ast.loc().0.dupe();
                         let lit_exp_t = mod_reason_of_t(
@@ -8279,49 +8585,48 @@ pub fn optional_chain<'a>(
                 let name = Name::new(name.dupe());
                 let reason_lookup = mk_reason(RProperty(Some(name.dupe())), callee_loc.dupe());
                 let reason_prop = mk_reason(RProperty(Some(name.dupe())), ploc.dupe());
-                let super_t = super_(cx, super_loc.dupe());
+                let super_t = super_(cx, super_loc.dupe())?;
                 let meth_generic_this = flow_typing_tvar::mk(cx, reason.dupe());
-                let (targts, targs) = convert_call_targs_opt(cx, inner.targs.as_ref());
+                let (targts, targs) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
                 let (argts, arguments_ast) = arg_list(cx, &inner.arguments)?;
                 let specialized_callee = cx.new_specialized_callee();
-                let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                    cx,
-                    reason.dupe(),
-                    |cx, t_reason, t_id| {
-                        let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
-                        let methodcalltype = type_::mk_methodcalltype(
-                            targts.map(|v| v.into()),
-                            argts.into(),
-                            Some(meth_generic_this.dupe()),
-                            true,
-                            tvar,
-                        );
-                        let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(
-                            Box::new(FunCallMethodData {
-                                op: mk_expression_reason(ex),
-                                fn_: mk_expression_reason(&inner.callee),
-                                prop: reason_prop.dupe(),
-                                args: mk_initial_arguments_reason(&inner.arguments).into(),
-                                local: true,
-                            }),
-                        )));
-                        let propref = mk_named_prop(reason_prop.dupe(), false, name.dupe());
-                        let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
-                            use_op,
-                            reason: reason.dupe(),
-                            prop_reason: reason_lookup.dupe(),
-                            propref: Box::new(propref),
-                            method_action: Box::new(type_::MethodAction::CallM(Box::new(
-                                type_::CallMData {
-                                    methodcalltype,
-                                    return_hint: type_env::get_hint(cx, loc.dupe()),
-                                    specialized_callee: Some(specialized_callee.clone()),
-                                },
-                            ))),
-                        })));
-                        flow_js::flow_non_speculating(cx, (&super_t, &use_t));
-                    },
-                );
+                let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+                    flow_utils_concurrency::job_error::JobError,
+                >(cx, reason.dupe(), |cx, t_reason, t_id| {
+                    let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
+                    let methodcalltype = type_::mk_methodcalltype(
+                        targts.map(|v| v.into()),
+                        argts.into(),
+                        Some(meth_generic_this.dupe()),
+                        true,
+                        tvar,
+                    );
+                    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
+                        FunCallMethodData {
+                            op: mk_expression_reason(ex),
+                            fn_: mk_expression_reason(&inner.callee),
+                            prop: reason_prop.dupe(),
+                            args: mk_initial_arguments_reason(&inner.arguments).into(),
+                            local: true,
+                        },
+                    ))));
+                    let propref = mk_named_prop(reason_prop.dupe(), false, name.dupe());
+                    let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                        use_op,
+                        reason: reason.dupe(),
+                        prop_reason: reason_lookup.dupe(),
+                        propref: Box::new(propref),
+                        method_action: Box::new(type_::MethodAction::CallM(Box::new(
+                            type_::CallMData {
+                                methodcalltype,
+                                return_hint: type_env::get_hint(cx, loc.dupe()),
+                                specialized_callee: Some(specialized_callee.clone()),
+                            },
+                        ))),
+                    })));
+                    flow_js::flow_non_speculating(cx, (&super_t, &use_t))?;
+                    Ok(())
+                })?;
                 let prop_t = flow_js_utils::callee_recorder::type_for_tast(
                     reason_lookup.dupe(),
                     &specialized_callee,
@@ -8363,54 +8668,53 @@ pub fn optional_chain<'a>(
                     inner: super_inner,
                 } = inner.callee.deref() =>
             {
-                let (targts, targs) = convert_call_targs_opt(cx, inner.targs.as_ref());
+                let (targts, targs) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
                 let reason = mk_reason(
                     VirtualReasonDesc::RFunctionCall(VirtualReasonDesc::RSuper.into()),
                     loc.dupe(),
                 );
-                let super_t = super_(cx, super_loc.dupe());
+                let super_t = super_(cx, super_loc.dupe())?;
                 let (argts, arguments_ast) = arg_list(cx, &inner.arguments)?;
                 let super_reason = reason_of_t(&super_t).dupe();
-                let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                    cx,
-                    reason.dupe(),
-                    |cx, t_reason, t_id| {
-                        let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
-                        let methodcalltype = type_::mk_methodcalltype(
-                            targts.map(|v| v.into()),
-                            argts.into(),
-                            None,
-                            true,
-                            tvar,
-                        );
-                        let propref = mk_named_prop(
-                            super_reason.dupe(),
-                            false,
-                            Name::new(FlowSmolStr::new_inline("constructor")),
-                        );
-                        let use_op =
-                            UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
-                                op: mk_expression_reason(ex),
-                                fn_: mk_expression_reason(&inner.callee),
-                                args: mk_initial_arguments_reason(&inner.arguments).into(),
-                                local: true,
-                            }))));
-                        let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
-                            use_op,
-                            reason: reason.dupe(),
-                            prop_reason: super_reason.dupe(),
-                            propref: Box::new(propref),
-                            method_action: Box::new(type_::MethodAction::CallM(Box::new(
-                                type_::CallMData {
-                                    methodcalltype,
-                                    return_hint: type_::hint_unavailable(),
-                                    specialized_callee: None,
-                                },
-                            ))),
-                        })));
-                        flow_js::flow_non_speculating(cx, (&super_t, &use_t));
-                    },
-                );
+                let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+                    flow_utils_concurrency::job_error::JobError,
+                >(cx, reason.dupe(), |cx, t_reason, t_id| {
+                    let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
+                    let methodcalltype = type_::mk_methodcalltype(
+                        targts.map(|v| v.into()),
+                        argts.into(),
+                        None,
+                        true,
+                        tvar,
+                    );
+                    let propref = mk_named_prop(
+                        super_reason.dupe(),
+                        false,
+                        Name::new(FlowSmolStr::new_inline("constructor")),
+                    );
+                    let use_op =
+                        UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
+                            op: mk_expression_reason(ex),
+                            fn_: mk_expression_reason(&inner.callee),
+                            args: mk_initial_arguments_reason(&inner.arguments).into(),
+                            local: true,
+                        }))));
+                    let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                        use_op,
+                        reason: reason.dupe(),
+                        prop_reason: super_reason.dupe(),
+                        propref: Box::new(propref),
+                        method_action: Box::new(type_::MethodAction::CallM(Box::new(
+                            type_::CallMData {
+                                methodcalltype,
+                                return_hint: type_::hint_unavailable(),
+                                specialized_callee: None,
+                            },
+                        ))),
+                    })));
+                    flow_js::flow_non_speculating(cx, (&super_t, &use_t))?;
+                    Ok(())
+                })?;
                 Some((
                     (loc.dupe(), lhs_t.dupe()),
                     call_ast(
@@ -8455,12 +8759,9 @@ pub fn optional_chain<'a>(
                         any_t::untyped(mk_reason(VirtualReasonDesc::RAnyImplicit, l)),
                     )
                 }
-                let mut n = value;
-                while n > 0.0 {
-                    flow_utils_concurrency::worker_cancel::check_should_cancel();
-                    std::thread::sleep(std::time::Duration::from_secs_f64(n.min(1.0)));
-                    n -= 1.0;
-                }
+                flow_utils_concurrency::worker_cancel::interruptible_sleep(
+                    std::time::Duration::from_secs_f64(value),
+                )?;
                 Some((
                     any_t_with_loc(loc.dupe()),
                     ExpressionInner::Call {
@@ -8504,7 +8805,7 @@ pub fn optional_chain<'a>(
                     && inner.targs.is_none()
                     && !type_env::local_scope_entry_exists(cx, callee_id_loc.dupe()) =>
             {
-                panic!("EDebugThrow:{:?}", loc);
+                return Err(CheckExprError::DebugThrow { loc: loc.dupe() });
             }
             // See ~/www/static_upstream/core/
             ExpressionInner::Call { inner, .. }
@@ -8513,10 +8814,14 @@ pub fn optional_chain<'a>(
                 // TODO: require
                 let callee_ast = expression(None, None, None, cx, &inner.callee)?;
                 let callee_t = callee_ast.loc().1.dupe();
-                let targs = inner.targs.as_ref().map(|targs| {
-                    let (_, tast) = convert_call_targs(cx, &FlowOrdMap::default(), targs);
-                    tast
-                });
+                let targs = inner
+                    .targs
+                    .as_ref()
+                    .map(|targs| -> Result<_, CheckExprError> {
+                        let (_, tast) = convert_call_targs(cx, &FlowOrdMap::default(), targs)?;
+                        Ok(tast)
+                    })
+                    .transpose()?;
                 // NOTE: if an invariant expression throws abnormal control flow, the
                 // entire statement it was in is reconstructed in the typed AST as an
                 // expression statement containing just the invariant call. This should
@@ -8542,7 +8847,7 @@ pub fn optional_chain<'a>(
                             })
                             .into(),
                         });
-                        return Err(AbnormalControlFlow(loc.dupe(), ast_expr));
+                        return Err(AbnormalControlFlow(loc.dupe(), ast_expr).into());
                     }
                     (None, Some(expression::ExpressionOrSpread::Expression(lit_exp_src)))
                         if matches!(
@@ -8557,7 +8862,7 @@ pub fn optional_chain<'a>(
                             .iter()
                             .skip(1)
                             .map(|a| Ok(expression_or_spread(cx, a)?.1))
-                            .collect::<Result<_, AbnormalControlFlow>>()?;
+                            .collect::<Result<_, CheckExprError>>()?;
                         let lit_exp = expression(None, None, None, cx, lit_exp_src)?;
                         let t = empty_t::at(loc.dupe());
                         let mut all_arguments = Vec::with_capacity(1 + rest_arguments.len());
@@ -8577,7 +8882,7 @@ pub fn optional_chain<'a>(
                             })
                             .into(),
                         });
-                        return Err(AbnormalControlFlow(loc.dupe(), ast_expr));
+                        return Err(AbnormalControlFlow(loc.dupe(), ast_expr).into());
                     }
                     (None, Some(expression::ExpressionOrSpread::Expression(cond_src))) => {
                         let rest_arguments: Vec<_> = args
@@ -8585,7 +8890,7 @@ pub fn optional_chain<'a>(
                             .iter()
                             .skip(1)
                             .map(|a| Ok(expression_or_spread(cx, a)?.1))
-                            .collect::<Result<_, AbnormalControlFlow>>()?;
+                            .collect::<Result<_, CheckExprError>>()?;
                         let cond = condition(
                             cx,
                             EnclosingContext::OtherTestContext,
@@ -8594,12 +8899,17 @@ pub fn optional_chain<'a>(
                             cond_src,
                         )?;
                         let cond_t = cond.loc().1.dupe();
-                        let concretized_cond_t = FlowJs::singleton_concrete_type_for_inspection(
-                            cx,
-                            reason_of_t(&cond_t),
-                            &cond_t,
-                        )
-                        .expect("Should not be under speculation");
+                        let concretized_cond_t =
+                            match FlowJs::singleton_concrete_type_for_inspection(
+                                cx,
+                                reason_of_t(&cond_t),
+                                &cond_t,
+                            ) {
+                                Ok(v) => v,
+                                Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                                Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                                Err(err) => panic!("Should not be under speculation: {:?}", err),
+                            };
                         match concretized_cond_t.deref() {
                             // If condition is empty, it means that the branch is unreachable. The invariant is
                             // still useless, but it's not useless because it's always truthy, which is what the
@@ -8709,11 +9019,11 @@ pub fn optional_chain<'a>(
                 let ploc = &id.loc;
                 let name = &id.name;
                 let comments = &member.comments;
-                let super_t = super_(cx, super_loc.dupe());
+                let super_t = super_(cx, super_loc.dupe())?;
                 let prop_name = Name::new(name.dupe());
                 let expr_reason = mk_reason(RProperty(Some(prop_name.dupe())), loc.dupe());
                 let prop_reason = mk_reason(RProperty(Some(prop_name.dupe())), ploc.dupe());
-                let lhs_t = match refinement::get(true, cx, ex, loc.dupe()) {
+                let lhs_t = match refinement::get(true, cx, ex, loc.dupe())? {
                     Some(t) => t,
                     None => {
                         let use_op = UseOp::Op(Arc::new(type_::RootUseOp::GetProperty(
@@ -8728,7 +9038,7 @@ pub fn optional_chain<'a>(
                             super_t.dupe(),
                             prop_reason,
                             name,
-                        )
+                        )?
                     }
                 };
                 //     let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
@@ -8760,15 +9070,18 @@ pub fn optional_chain<'a>(
                     )
                 {
                     if !type_env::local_scope_entry_exists(cx, jest_loc.dupe()) {
-                        match flow_js_utils::import_export_utils::get_module_type_or_any(
+                        match match flow_js_utils::import_export_utils::get_module_type_or_any(
                             cx,
                             false,
                             None,
                             source_loc.dupe(),
                             flow_import_specifier::Userland::from_smol_str(module_name.dupe()),
-                        )
-                        .expect("Should not be under speculation")
-                        {
+                        ) {
+                            Ok(v) => v,
+                            Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+                            Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                            Err(err) => panic!("Should not be under speculation: {:?}", err),
+                        } {
                             Ok(_) | Err(_) => {}
                         }
                     }
@@ -8806,14 +9119,20 @@ pub fn optional_chain<'a>(
     //
     // Below are several helper functions for setting up this tuple in the
     // presence of chaining.
-    let join_optional_branches = |voided: &[Type], filtered: &Type| -> Type {
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_of_t(filtered).dupe(), |cx, t| {
-            flow_js::flow_t_non_speculating(cx, (filtered, t));
-            for void_t in voided {
-                flow_js::flow_t_non_speculating(cx, (void_t, t));
-            }
-        })
-    };
+    let join_optional_branches =
+        |voided: &[Type],
+         filtered: &Type|
+         -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+            tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                flow_utils_concurrency::job_error::JobError,
+            >(cx, reason_of_t(filtered).dupe(), |cx, t| {
+                flow_js::flow_t_non_speculating(cx, (filtered, t))?;
+                for void_t in voided {
+                    flow_js::flow_t_non_speculating(cx, (void_t, t))?;
+                }
+                Ok(())
+            })
+        };
 
     fn noop() -> Option<Type> {
         None
@@ -8837,7 +9156,7 @@ pub fn optional_chain<'a>(
             expression::Expression<ALoc, (ALoc, Type)>,
             B,
         ),
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         let ChainingConf {
             subexpressions,
@@ -8911,12 +9230,15 @@ pub fn optional_chain<'a>(
             }
             ts
         };
-        let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason.dupe(), |cx, t| {
-            flow_js::flow_t_non_speculating(cx, (&mem_t, t));
+        let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<
+            flow_utils_concurrency::job_error::JobError,
+        >(cx, reason.dupe(), |cx, t| {
+            flow_js::flow_t_non_speculating(cx, (&mem_t, t))?;
             for out in &voided_out {
-                flow_js::flow_t_non_speculating(cx, (out, t));
+                flow_js::flow_t_non_speculating(cx, (out, t))?;
             }
-        });
+            Ok(())
+        })?;
         tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &mem_t);
         Ok((
             mem_t,
@@ -8942,7 +9264,7 @@ pub fn optional_chain<'a>(
             expression::Expression<ALoc, (ALoc, Type)>,
             B,
         ),
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         let ChainingConf {
             refine,
@@ -8960,23 +9282,22 @@ pub fn optional_chain<'a>(
         // expression to account for that possibility.
         let (subexpression_types, subexpression_asts) = subexpressions(cx)?;
         let reason = get_reason(&chain_t);
-        let res_t = match refine(cx) {
+        let res_t = match refine(cx)? {
             Some(refi) => match &refinement_action {
-                Some(ra) => ra(cx, &subexpression_types, &chain_t, refi),
+                Some(ra) => ra(cx, &subexpression_types, &chain_t, refi)?,
                 None => refi,
             },
-            None => get_result(cx, &subexpression_types, reason, &chain_t),
+            None => get_result(cx, &subexpression_types, reason, &chain_t)?,
         };
-        let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where(
-            cx,
-            reason_of_t(&res_t).dupe(),
-            |cx, t| {
-                flow_js::flow_t_non_speculating(cx, (&res_t, t));
-                for void_t in &voided_t {
-                    flow_js::flow_t_non_speculating(cx, (void_t, t));
-                }
-            },
-        );
+        let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<
+            flow_utils_concurrency::job_error::JobError,
+        >(cx, reason_of_t(&res_t).dupe(), |cx, t| {
+            flow_js::flow_t_non_speculating(cx, (&res_t, t))?;
+            for void_t in &voided_t {
+                flow_js::flow_t_non_speculating(cx, (void_t, t))?;
+            }
+            Ok(())
+        })?;
         Ok((
             res_t,
             voided_t,
@@ -9002,7 +9323,7 @@ pub fn optional_chain<'a>(
             expression::Expression<ALoc, (ALoc, Type)>,
             B,
         ),
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         match opt {
             //   | NonOptional ->
@@ -9023,12 +9344,12 @@ pub fn optional_chain<'a>(
                 let obj_t = object_ast.loc().1.dupe();
                 let (subexpression_types, subexpression_asts) = subexpressions(cx)?;
                 let reason = get_reason(&obj_t);
-                let lhs_t = match refine(cx) {
+                let lhs_t = match refine(cx)? {
                     Some(refi) => match &refinement_action {
-                        Some(ra) => ra(cx, &subexpression_types, &obj_t, refi),
+                        Some(ra) => ra(cx, &subexpression_types, &obj_t, refi)?,
                         None => refi,
                     },
-                    None => get_result(cx, &subexpression_types, reason, &obj_t),
+                    None => get_result(cx, &subexpression_types, reason, &obj_t)?,
                 };
                 Ok((
                     lhs_t.dupe(),
@@ -9043,7 +9364,7 @@ pub fn optional_chain<'a>(
                 let lhs_reason = mk_expression_reason(obj_);
                 let (filtered_t, voided_t, object_ast) =
                     optional_chain(EnclosingContext::NoContext, cx, obj_)?;
-                match (conf.refine)(cx) {
+                match (conf.refine)(cx)? {
                     Some(t) => {
                         let ChainingConf {
                             refinement_action,
@@ -9053,19 +9374,22 @@ pub fn optional_chain<'a>(
                         cx.mark_optional_chain(loc.dupe(), lhs_reason, false);
                         let (subexpression_types, subexpression_asts) = subexpressions(cx)?;
                         let tout = match &refinement_action {
-                            Some(ra) => ra(cx, &subexpression_types, &filtered_t, t),
+                            Some(ra) => ra(cx, &subexpression_types, &filtered_t, t)?,
                             None => t,
                         };
-                        let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where(
+                        let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                            flow_utils_concurrency::job_error::JobError,
+                        >(
                             cx,
                             reason_of_t(&tout).dupe(),
                             |cx, t| {
-                                flow_js::flow_t_non_speculating(cx, (&tout, t));
+                                flow_js::flow_t_non_speculating(cx, (&tout, t))?;
                                 for void_t in &voided_t {
-                                    flow_js::flow_t_non_speculating(cx, (void_t, t));
+                                    flow_js::flow_t_non_speculating(cx, (void_t, t))?;
                                 }
+                                Ok(())
                             },
-                        );
+                        )?;
                         Ok((
                             tout,
                             voided_t,
@@ -9300,21 +9624,28 @@ pub fn optional_chain<'a>(
                     )
                 })
             };
-            let get_mem_t: Box<dyn Fn(&Context<'a>, &Type, Reason, &Type) -> Type> = {
+            let get_mem_t: Box<
+                dyn Fn(
+                    &Context<'a>,
+                    &Type,
+                    Reason,
+                    &Type,
+                )
+                    -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+            > = {
                 let get_opt_use = get_opt_use.dupe();
                 Box::new(
                     move |cx: &Context<'a>, tind: &Type, reason: Reason, obj_t: &Type| {
                         let opt_use = get_opt_use(cx, tind, reason.dupe());
                         let obj_t = obj_t.dupe();
-                        tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                            cx,
-                            reason,
-                            |cx, t_reason, t_id| {
-                                let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
-                                let use_t = apply_opt_use(opt_use.clone(), tvar);
-                                flow_js::flow_non_speculating(cx, (&obj_t, &use_t));
-                            },
-                        )
+                        tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+                            flow_utils_concurrency::job_error::JobError,
+                        >(cx, reason, |cx, t_reason, t_id| {
+                            let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
+                            let use_t = apply_opt_use(opt_use.clone(), tvar);
+                            flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
+                            Ok(())
+                        })
                     },
                 )
             };
@@ -9323,7 +9654,7 @@ pub fn optional_chain<'a>(
                     &Context<'a>,
                 ) -> Result<
                     (Type, expression::Expression<ALoc, (ALoc, Type)>),
-                    AbnormalControlFlow,
+                    CheckExprError,
                 >,
             > = {
                 Box::new(move |cx: &Context<'a>| {
@@ -9392,21 +9723,28 @@ pub fn optional_chain<'a>(
                 prop_reason,
                 name,
             );
-            let get_mem_t: Box<dyn Fn(&Context<'a>, &(), Reason, &Type) -> Type> = {
+            let get_mem_t: Box<
+                dyn Fn(
+                    &Context<'a>,
+                    &(),
+                    Reason,
+                    &Type,
+                )
+                    -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+            > = {
                 let expr_reason = expr_reason.dupe();
                 let opt_use = opt_use.clone();
                 Box::new(move |cx: &Context<'a>, _: &(), _: Reason, obj_t: &Type| {
                     let opt_use = opt_use.clone();
                     let obj_t = obj_t.dupe();
-                    tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                        cx,
-                        expr_reason.dupe(),
-                        |cx, t_reason, t_id| {
-                            let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
-                            let use_t = apply_opt_use(opt_use.clone(), tvar);
-                            flow_js::flow_non_speculating(cx, (&obj_t, &use_t));
-                        },
-                    )
+                    tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+                        flow_utils_concurrency::job_error::JobError,
+                    >(cx, expr_reason.dupe(), |cx, t_reason, t_id| {
+                        let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
+                        let use_t = apply_opt_use(opt_use.clone(), tvar);
+                        flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
+                        Ok(())
+                    })
                 })
             };
             let conf = ChainingConf {
@@ -9463,21 +9801,28 @@ pub fn optional_chain<'a>(
                 mk_expression_reason(ex),
             )));
             let opt_use = get_private_field_opt_use(cx, expr_reason.dupe(), use_op, name);
-            let get_mem_t: Box<dyn Fn(&Context<'a>, &(), Reason, &Type) -> Type> = {
+            let get_mem_t: Box<
+                dyn Fn(
+                    &Context<'a>,
+                    &(),
+                    Reason,
+                    &Type,
+                )
+                    -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+            > = {
                 let expr_reason = expr_reason.dupe();
                 let opt_use = opt_use.clone();
                 Box::new(move |cx: &Context<'a>, _: &(), _: Reason, obj_t: &Type| {
                     let opt_use = opt_use.clone();
                     let obj_t = obj_t.dupe();
-                    tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                        cx,
-                        expr_reason.dupe(),
-                        |cx, t_reason, t_id| {
-                            let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
-                            let use_t = apply_opt_use(opt_use.clone(), tvar);
-                            flow_js::flow_non_speculating(cx, (&obj_t, &use_t));
-                        },
-                    )
+                    tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+                        flow_utils_concurrency::job_error::JobError,
+                    >(cx, expr_reason.dupe(), |cx, t_reason, t_id| {
+                        let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
+                        let use_t = apply_opt_use(opt_use.clone(), tvar);
+                        flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
+                        Ok(())
+                    })
                 })
             };
             let conf = ChainingConf {
@@ -9533,7 +9878,7 @@ pub fn optional_chain<'a>(
             let orig_receiver = &mrs.orig_receiver;
             let lookup_loc = callee.loc().dupe();
 
-            let (targts, typed_targs) = convert_call_targs_opt(cx, targs.as_ref());
+            let (targts, typed_targs) = convert_call_targs_opt(cx, targs.as_ref())?;
             let expr_reason = mk_expression_reason(ex);
             let specialized_callee = cx.new_specialized_callee();
 
@@ -9625,7 +9970,9 @@ pub fn optional_chain<'a>(
                             let opt_state = opt_state.clone();
                             let obj_t = obj_t.dupe();
                             let argts = argts.clone();
-                            tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                            tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+                                flow_utils_concurrency::job_error::JobError,
+                            >(
                                 cx,
                                 reason_call.dupe(),
                                 |cx, t_reason, t_id| {
@@ -9638,7 +9985,7 @@ pub fn optional_chain<'a>(
                                         true,
                                         tvar.dupe(),
                                     );
-                                    flow_js::unify_non_speculating(cx, None, &f, &prop_t);
+                                    flow_js::unify_non_speculating(cx, None, &f, &prop_t)?;
                                     let call_use =
                                         UseT::new(UseTInner::CallT(Box::new(CallTData {
                                             use_op: use_op.dupe(),
@@ -9671,21 +10018,39 @@ pub fn optional_chain<'a>(
                                             .expect("should not fail outside speculation");
                                         }
                                         _ => {
-                                            flow_js::flow_non_speculating(cx, (&f, &call_use));
+                                            flow_js::flow_non_speculating(cx, (&f, &call_use))?;
                                         }
                                     }
                                     inner_voided_out_collector.iter(|void_t| {
                                         let open_t = Type::new(TypeInner::OpenT(tvar.dupe()));
-                                        flow_js::flow_t_non_speculating(cx, (void_t, &open_t));
-                                    });
+                                        flow_js::flow_t_non_speculating(cx, (void_t, &open_t))?;
+                                        Ok(())
+                                    })?;
+                                    Ok(())
                                 },
                             )
                         }
                     };
                     let refinement_action: Option<
-                        Box<dyn Fn(&Context<'a>, &Vec<CallArg>, &Type, Type) -> Type>,
+                        Box<
+                            dyn Fn(
+                                &Context<'a>,
+                                &Vec<CallArg>,
+                                &Type,
+                                Type,
+                            )
+                                -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+                        >,
                     > = Some(Box::new(handle_refined_callee));
-                    let get_mem_t: Box<dyn Fn(&Context<'a>, &Vec<CallArg>, Reason, &Type) -> Type> = {
+                    let get_mem_t: Box<
+                        dyn Fn(
+                            &Context<'a>,
+                            &Vec<CallArg>,
+                            Reason,
+                            &Type,
+                        )
+                            -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+                    > = {
                         let reason_call = reason_call.dupe();
                         let get_opt_use = get_opt_use.dupe();
                         Box::new(
@@ -9695,13 +10060,16 @@ pub fn optional_chain<'a>(
                                   obj_t: &Type| {
                                 let opt_use = get_opt_use(cx, argts, reason);
                                 let obj_t = obj_t.dupe();
-                                tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                                tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+                                    flow_utils_concurrency::job_error::JobError,
+                                >(
                                     cx,
                                     reason_call.dupe(),
                                     |cx, t_reason, t_id| {
                                         let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
                                         let use_t = apply_opt_use(opt_use.clone(), tvar);
-                                        flow_js::flow_non_speculating(cx, (&obj_t, &use_t));
+                                        flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
+                                        Ok(())
                                     },
                                 )
                             },
@@ -9712,7 +10080,7 @@ pub fn optional_chain<'a>(
                             &Context<'a>,
                         ) -> Result<
                             (Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>),
-                            AbnormalControlFlow,
+                            CheckExprError,
                         >,
                     > = { Box::new(move |cx: &Context<'a>| arg_list(cx, arguments)) };
                     let conf = ChainingConf {
@@ -9825,7 +10193,13 @@ pub fn optional_chain<'a>(
                         )
                     };
                     let get_mem_t: Box<
-                        dyn Fn(&Context<'a>, &(Vec<CallArg>, Type), Reason, &Type) -> Type,
+                        dyn Fn(
+                            &Context<'a>,
+                            &(Vec<CallArg>, Type),
+                            Reason,
+                            &Type,
+                        )
+                            -> Result<Type, flow_utils_concurrency::job_error::JobError>,
                     > = {
                         let reason_call = reason_call.dupe();
                         let get_opt_use = get_opt_use.dupe();
@@ -9836,13 +10210,16 @@ pub fn optional_chain<'a>(
                                   obj_t: &Type| {
                                 let opt_use = get_opt_use(cx, arg_and_elem, reason);
                                 let obj_t = obj_t.dupe();
-                                tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                                tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+                                    flow_utils_concurrency::job_error::JobError,
+                                >(
                                     cx,
                                     reason_call.dupe(),
                                     |cx, t_reason, t_id| {
                                         let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
                                         let use_t = apply_opt_use(opt_use.clone(), tvar);
-                                        flow_js::flow_non_speculating(cx, (&obj_t, &use_t));
+                                        flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
+                                        Ok(())
                                     },
                                 )
                             },
@@ -9859,7 +10236,7 @@ pub fn optional_chain<'a>(
                                         expression::Expression<ALoc, (ALoc, Type)>,
                                     ),
                                 ),
-                                AbnormalControlFlow,
+                                CheckExprError,
                             > + '_,
                     > = {
                         Box::new(move |cx: &Context<'a>| {
@@ -9882,7 +10259,7 @@ pub fn optional_chain<'a>(
                         subexpressions: eval_args_and_expr,
                         get_result: get_mem_t,
                         get_opt_use,
-                        refine: Box::new(|_cx: &Context<'a>| noop()),
+                        refine: Box::new(|_cx: &Context<'a>| Ok(noop())),
                         get_reason: {
                             let expr_reason = expr_reason.dupe();
                             Box::new(move |_: &Type| expr_reason.dupe())
@@ -9912,18 +10289,17 @@ pub fn optional_chain<'a>(
             };
             let call_voided_ts: Vec<Type> = call_voided_out_collector.collect_to_vec();
             let call_voided_union = union_of_ts(expr_reason.dupe(), call_voided_ts, None);
-            let joined = join_optional_branches(&lookup_voided_out, &call_voided_union);
+            let joined = join_optional_branches(&lookup_voided_out, &call_voided_union)?;
             let voided_out = normalize_voided_out(joined);
-            let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where(
-                cx,
-                reason_of_t(&member_lhs_t).dupe(),
-                |cx, t| {
-                    flow_js::flow_t_non_speculating(cx, (&member_lhs_t, t));
-                    for out in &voided_out {
-                        flow_js::flow_t_non_speculating(cx, (out, t));
-                    }
-                },
-            );
+            let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                flow_utils_concurrency::job_error::JobError,
+            >(cx, reason_of_t(&member_lhs_t).dupe(), |cx, t| {
+                flow_js::flow_t_non_speculating(cx, (&member_lhs_t, t))?;
+                for out in &voided_out {
+                    flow_js::flow_t_non_speculating(cx, (out, t))?;
+                }
+                Ok(())
+            })?;
             let member_for_callee = expression::Member {
                 object: object_ast,
                 property: property_ast,
@@ -9959,7 +10335,7 @@ pub fn optional_chain<'a>(
             let targs = &inner.targs;
             let arguments = &inner.arguments;
             let comments = &inner.comments;
-            let (targts, typed_targs) = convert_call_targs_opt(cx, targs.as_ref());
+            let (targts, typed_targs) = convert_call_targs_opt(cx, targs.as_ref())?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
                 op: mk_expression_reason(ex),
                 fn_: mk_expression_reason(callee),
@@ -9998,21 +10374,28 @@ pub fn optional_chain<'a>(
                     )
                 })
             };
-            let get_result: Box<dyn Fn(&Context<'a>, &Vec<CallArg>, Reason, &Type) -> Type> = {
+            let get_result: Box<
+                dyn Fn(
+                    &Context<'a>,
+                    &Vec<CallArg>,
+                    Reason,
+                    &Type,
+                )
+                    -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+            > = {
                 let get_opt_use = get_opt_use.dupe();
                 Box::new(
                     move |cx: &Context<'a>, argts: &Vec<CallArg>, reason: Reason, obj_t: &Type| {
                         let opt_use = get_opt_use(cx, argts, reason.dupe());
                         let obj_t = obj_t.dupe();
-                        tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                            cx,
-                            reason,
-                            |cx, t_reason, t_id| {
-                                let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
-                                let use_t = apply_opt_use(opt_use.clone(), tvar);
-                                flow_js::flow_non_speculating(cx, (&obj_t, &use_t));
-                            },
-                        )
+                        tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+                            flow_utils_concurrency::job_error::JobError,
+                        >(cx, reason, |cx, t_reason, t_id| {
+                            let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
+                            let use_t = apply_opt_use(opt_use.clone(), tvar);
+                            flow_js::flow_non_speculating(cx, (&obj_t, &use_t))?;
+                            Ok(())
+                        })
                     },
                 )
             };
@@ -10021,13 +10404,13 @@ pub fn optional_chain<'a>(
                     &Context<'a>,
                 ) -> Result<
                     (Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>),
-                    AbnormalControlFlow,
+                    CheckExprError,
                 >,
             > = { Box::new(move |cx: &Context<'a>| arg_list(cx, arguments)) };
             let conf = ChainingConf {
                 refinement_action: None,
                 subexpressions: eval_args,
-                refine: Box::new(|_cx: &Context<'a>| noop()),
+                refine: Box::new(|_cx: &Context<'a>| Ok(noop())),
                 get_result,
                 get_opt_use,
                 get_reason,
@@ -10078,7 +10461,7 @@ pub fn optional_chain<'a>(
 fn arg_list<'a>(
     cx: &Context<'a>,
     args: &expression::ArgList<ALoc, ALoc>,
-) -> Result<(Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>), CheckExprError> {
     let arg_list = args;
     let (argts, arg_asts): (
         Vec<CallArg>,
@@ -10104,7 +10487,7 @@ fn subscript<'a>(
     encl_ctx: EnclosingContext,
     cx: &Context<'a>,
     ex: &expression::Expression<ALoc, ALoc>,
-) -> Result<expression::Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     let (_, _, ast) = optional_chain(encl_ctx, cx, ex)?;
     Ok(ast)
 }
@@ -10114,7 +10497,7 @@ fn unary<'a>(
     syntactic_flags: &SyntacticFlags<'a>,
     loc: ALoc,
     expr: &expression::Unary<ALoc, ALoc>,
-) -> Result<(Type, expression::Unary<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, expression::Unary<ALoc, (ALoc, Type)>), CheckExprError> {
     use ast::expression::UnaryOperator;
 
     let SyntacticFlags {
@@ -10352,7 +10735,7 @@ fn update<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     expr: &expression::Update<ALoc, ALoc>,
-) -> Result<(Type, expression::Update<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, expression::Update<ALoc, (ALoc, Type)>), CheckExprError> {
     let reason = mk_reason(RUpdate, loc.dupe());
     let arg_ast = expression_inner(
         None,
@@ -10382,7 +10765,7 @@ fn update<'a>(
                 )),
                 init: reason_of_t(&result_t).dupe(),
             }));
-            type_env::set_var(cx, &use_op, name, &result_t, id_loc);
+            type_env::set_var(cx, &use_op, name, &result_t, id_loc)?;
             arg_ast
         }
         // Updating involves both reading and writing. We need to model both of these, and ensuring
@@ -10443,7 +10826,7 @@ fn visit_eq_test<'a>(
     dyn Fn(
         &Context<'a>,
         &expression::Expression<ALoc, ALoc>,
-    ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow>,
+    ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError>,
 > {
     if encl_ctx.is_conditional_test_context() {
         let mk = move |encl: EnclosingContext| -> Box<
@@ -10451,7 +10834,7 @@ fn visit_eq_test<'a>(
                 &Context<'a>,
                 &expression::Expression<ALoc, ALoc>,
             )
-                -> Result<expression::Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow>,
+                -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError>,
         > {
             Box::new(move |cx, e| {
                 expression_inner(
@@ -10505,7 +10888,7 @@ fn binary<'a>(
     loc: ALoc,
     encl_ctx: EnclosingContext,
     expr: &expression::Binary<ALoc, ALoc>,
-) -> Result<(Type, expression::Binary<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, expression::Binary<ALoc, (ALoc, Type)>), CheckExprError> {
     use ast::expression::BinaryOperator;
     Ok(match expr.operator {
         BinaryOperator::Equal | BinaryOperator::NotEqual => {
@@ -10704,7 +11087,7 @@ fn logical<'a>(
     syntactic_flags: &SyntacticFlags<'a>,
     loc: ALoc,
     expr: &expression::Logical<ALoc, ALoc>,
-) -> Result<(Type, expression::Logical<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, expression::Logical<ALoc, (ALoc, Type)>), CheckExprError> {
     use ast::expression::LogicalOperator;
 
     let SyntacticFlags {
@@ -10750,7 +11133,7 @@ fn logical<'a>(
                         cx,
                         &expr.right,
                     )
-                });
+                })?;
             let t2_raw = right.loc().1.dupe();
             let t2 = if right_throws {
                 empty_t::at(loc.dupe())
@@ -10796,7 +11179,7 @@ fn logical<'a>(
                         cx,
                         &expr.right,
                     )
-                });
+                })?;
             let t2_raw = right.loc().1.dupe();
             let t2 = if right_throws {
                 empty_t::at(loc.dupe())
@@ -10842,7 +11225,7 @@ fn logical<'a>(
                         cx,
                         &expr.right,
                     )
-                });
+                })?;
             let t2_raw = right.loc().1.dupe();
             let t2 = if right_throws {
                 empty_t::at(loc.dupe())
@@ -10877,7 +11260,7 @@ fn logical<'a>(
 pub fn assignment_lhs<'a>(
     cx: &Context<'a>,
     patt: &ast::pattern::Pattern<ALoc, ALoc>,
-) -> Result<ast::pattern::Pattern<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<ast::pattern::Pattern<ALoc, (ALoc, Type)>, CheckExprError> {
     match patt {
         ast::pattern::Pattern::Identifier {
             loc: pat_loc,
@@ -10894,7 +11277,7 @@ pub fn assignment_lhs<'a>(
                 &natural_inference::empty_syntactic_flags(),
                 name,
                 id_loc.dupe(),
-            );
+            )?;
             let typed_annot = match annot {
                 ast::types::AnnotationOrHint::Available(annot) => {
                     let Ok(v) = polymorphic_ast_mapper::type_annotation(
@@ -10950,7 +11333,7 @@ pub fn assignment_lhs<'a>(
                         &natural_inference::empty_syntactic_flags(),
                         name,
                         id_loc.dupe(),
-                    );
+                    )?;
                     let typed_expr = reconstruct_ast.call(
                         expression::Expression::new(expression::ExpressionInner::Identifier {
                             loc: (id_exp_loc.dupe(), t.dupe()),
@@ -11037,38 +11420,41 @@ fn assign_member<'a>(
         (ALoc, Type),
         expression::ExpressionInner<ALoc, (ALoc, Type)>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
-    let run_maybe_optional_chain =
-        |lhs_type: &Type, lhs_reason: &Reason, use_t: UseT<Context<'a>>| {
-            match (&optional, &mode) {
-                (OptState::NewChain | OptState::AssertChain, SetMode::Delete) => {
-                    let reason = if optional == OptState::NewChain {
-                        mk_reason(ROptionalChain, lhs_loc.dupe())
-                    } else {
-                        mk_reason(RNonnullAssert, lhs_loc.dupe())
-                    };
+    let run_maybe_optional_chain = |lhs_type: &Type,
+                                    lhs_reason: &Reason,
+                                    use_t: UseT<Context<'a>>|
+     -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        match (&optional, &mode) {
+            (OptState::NewChain | OptState::AssertChain, SetMode::Delete) => {
+                let reason = if optional == OptState::NewChain {
+                    mk_reason(ROptionalChain, lhs_loc.dupe())
+                } else {
+                    mk_reason(RNonnullAssert, lhs_loc.dupe())
+                };
 
-                    // When deleting an optional chain, we only really care about the case
-                    // where the object type is non-nullable. The specification is:
-                    //
-                    //   delete a?.b
-                    //   is equivalent to
-                    //   a == null ? true : delete a.b
-                    //
-                    // So if a is null, no work has to be done. Hence, we don't collect
-                    // the nullable output for the optional chain.
-                    optional_chain::run(cx, lhs_type, &reason, lhs_reason, &use_t, &None).unwrap();
-                }
-                //     | _ -> Flow.flow cx (lhs, use_t)
-                _ => {
-                    flow_js::flow_non_speculating(cx, (lhs_type, &use_t));
-                }
+                // When deleting an optional chain, we only really care about the case
+                // where the object type is non-nullable. The specification is:
+                //
+                //   delete a?.b
+                //   is equivalent to
+                //   a == null ? true : delete a.b
+                //
+                // So if a is null, no work has to be done. Hence, we don't collect
+                // the nullable output for the optional chain.
+                optional_chain::run(cx, lhs_type, &reason, lhs_reason, &use_t, &None).unwrap();
             }
-        };
+            //     | _ -> Flow.flow cx (lhs, use_t)
+            _ => {
+                flow_js::flow_non_speculating(cx, (lhs_type, &use_t))?;
+            }
+        }
+        Ok(())
+    };
     let typecheck_object = |obj: &expression::Expression<ALoc, ALoc>| -> Result<
         (Type, expression::Expression<ALoc, (ALoc, Type)>),
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         // If we're deleting a member expression, it's allowed to be an optional chain, and we
         // need to respect short-circuiting, which means the type that's flowed into the
@@ -11107,36 +11493,31 @@ fn assign_member<'a>(
             let reason = mk_reason(RPropertyAssignment(Some(name.dupe())), lhs_loc.dupe());
             let prop_name = Name::new(name.dupe());
             let prop_reason = mk_reason(RProperty(Some(prop_name.dupe())), prop_loc.dupe());
-            let super_t = super_(cx, super_loc.dupe());
-            let prop_t = tvar_resolver::mk_tvar_and_fully_resolve_where(
-                cx,
-                prop_reason.dupe(),
-                |cx, prop_t| {
-                    let use_op = make_op(
-                        reason.dupe(),
-                        mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
-                    );
-                    flow_js::flow_non_speculating(
-                        cx,
-                        (
-                            &super_t,
-                            &UseT::new(UseTInner::SetPropT(
-                                use_op,
-                                reason.dupe(),
-                                Box::new(mk_named_prop(
-                                    prop_reason.dupe(),
-                                    false,
-                                    prop_name.dupe(),
-                                )),
-                                mode,
-                                WriteCtx::Normal,
-                                t.dupe(),
-                                Some(prop_t.dupe()),
-                            )),
-                        ),
-                    );
-                },
-            );
+            let super_t = super_(cx, super_loc.dupe())?;
+            let prop_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                flow_utils_concurrency::job_error::JobError,
+            >(cx, prop_reason.dupe(), |cx, prop_t| {
+                let use_op = make_op(
+                    reason.dupe(),
+                    mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
+                );
+                flow_js::flow_non_speculating(
+                    cx,
+                    (
+                        &super_t,
+                        &UseT::new(UseTInner::SetPropT(
+                            use_op,
+                            reason.dupe(),
+                            Box::new(mk_named_prop(prop_reason.dupe(), false, prop_name.dupe())),
+                            mode,
+                            WriteCtx::Normal,
+                            t.dupe(),
+                            Some(prop_t.dupe()),
+                        )),
+                    ),
+                )?;
+                Ok(())
+            })?;
             let property = expression::member::Property::PropertyIdentifier(ast::Identifier::new(
                 ast::IdentifierInner {
                     loc: (prop_loc.dupe(), prop_t.dupe()),
@@ -11178,7 +11559,9 @@ fn assign_member<'a>(
                 // flow type to object property itself
                 let class_entries = type_env::get_class_entries(cx);
                 let prop_reason = mk_reason(RPrivateProperty(name.dupe()), prop_loc.dupe());
-                tvar_resolver::mk_tvar_and_fully_resolve_where(cx, prop_reason, |_cx, prop_t| {
+                tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                    flow_utils_concurrency::job_error::JobError,
+                >(cx, prop_reason, |_cx, prop_t| {
                     let use_op = make_op(
                         reason.dupe(),
                         mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
@@ -11197,8 +11580,9 @@ fn assign_member<'a>(
                             tin: t.dupe(),
                             tout: Some(prop_t.dupe()),
                         }))),
-                    );
-                })
+                    )?;
+                    Ok(())
+                })?
             };
             (
                 (lhs_loc, prop_t.dupe()),
@@ -11237,33 +11621,28 @@ fn assign_member<'a>(
                 let prop_name = Name::new(name.dupe());
                 let prop_reason = mk_reason(RProperty(Some(prop_name.dupe())), prop_loc.dupe());
                 // flow type to object property itself
-                tvar_resolver::mk_tvar_and_fully_resolve_where(
-                    cx,
-                    prop_reason.dupe(),
-                    |_cx, prop_t| {
-                        let use_op = make_op(
+                tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                    flow_utils_concurrency::job_error::JobError,
+                >(cx, prop_reason.dupe(), |_cx, prop_t| {
+                    let use_op = make_op(
+                        reason.dupe(),
+                        mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
+                    );
+                    run_maybe_optional_chain(
+                        &o,
+                        &lhs_reason,
+                        UseT::new(UseTInner::SetPropT(
+                            use_op,
                             reason.dupe(),
-                            mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
-                        );
-                        run_maybe_optional_chain(
-                            &o,
-                            &lhs_reason,
-                            UseT::new(UseTInner::SetPropT(
-                                use_op,
-                                reason.dupe(),
-                                Box::new(mk_named_prop(
-                                    prop_reason.dupe(),
-                                    false,
-                                    prop_name.dupe(),
-                                )),
-                                mode,
-                                wr_ctx,
-                                t.dupe(),
-                                Some(prop_t.dupe()),
-                            )),
-                        );
-                    },
-                )
+                            Box::new(mk_named_prop(prop_reason.dupe(), false, prop_name.dupe())),
+                            mode,
+                            wr_ctx,
+                            t.dupe(),
+                            Some(prop_t.dupe()),
+                        )),
+                    )?;
+                    Ok(())
+                })?
             };
             let lhs_t = match (_object.deref(), name.as_str()) {
                 (
@@ -11345,7 +11724,7 @@ fn assign_member<'a>(
                     tin: t.dupe(),
                     tout: None,
                 }))),
-            );
+            )?;
             // types involved in the assignment itself are computed
             // in pre-havoc environment. it's the assignment itself
             // which clears refis
@@ -11376,7 +11755,7 @@ fn simple_assignment<'a>(
         ast::pattern::Pattern<ALoc, (ALoc, Type)>,
         expression::Expression<ALoc, (ALoc, Type)>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let typed_rhs = expression_inner(None, None, None, FrozenKind::NotFrozen, None, cx, rhs)?;
     let t = typed_rhs.loc().1.dupe();
@@ -11511,14 +11890,14 @@ fn op_assignment<'a>(
         ast::pattern::Pattern<ALoc, (ALoc, Type)>,
         expression::Expression<ALoc, (ALoc, Type)>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let reason = mk_reason(
         VirtualReasonDesc::RCustom(FlowSmolStr::from(op.as_str())),
         loc.dupe(),
     );
     let rhs_reason = mk_expression_reason(rhs);
-    let update_env = |result_t: &Type| -> Result<(), AbnormalControlFlow> {
+    let update_env = |result_t: &Type| -> Result<(), CheckExprError> {
         let (lhs, _) = flow_parser::ast_utils::unwrap_nonnull_lhs(lhs);
         match lhs.as_ref() {
             ast::pattern::Pattern::Identifier { inner, .. } => {
@@ -11531,7 +11910,7 @@ fn op_assignment<'a>(
                     )),
                     init: rhs_reason.dupe(),
                 }));
-                type_env::set_var(cx, &use_op, &name.name, result_t, id_loc);
+                type_env::set_var(cx, &use_op, &name.name, result_t, id_loc)?;
             }
             ast::pattern::Pattern::Expression {
                 loc: lhs_loc,
@@ -11643,7 +12022,7 @@ fn op_assignment<'a>(
                     let (rhs_ast, _right_throws) =
                         flow_typing_utils::abnormal::catch_expr_control_flow_exception(|| {
                             expression_inner(None, None, None, FrozenKind::NotFrozen, None, cx, rhs)
-                        });
+                        })?;
                     (any_t::error(reason.dupe()), lhs_pattern_ast, rhs_ast)
                 }
                 Some(left_expr) => match op {
@@ -11659,7 +12038,7 @@ fn op_assignment<'a>(
                                     cx,
                                     rhs,
                                 )
-                            });
+                            })?;
                         let rhs_t = if right_throws {
                             empty_t::at(loc.dupe())
                         } else {
@@ -11691,7 +12070,7 @@ fn op_assignment<'a>(
                                     cx,
                                     rhs,
                                 )
-                            });
+                            })?;
                         let rhs_t = if right_throws {
                             empty_t::at(loc.dupe())
                         } else {
@@ -11724,7 +12103,7 @@ fn op_assignment<'a>(
                                     cx,
                                     rhs,
                                 )
-                            });
+                            })?;
                         let rhs_t = if right_throws {
                             empty_t::at(loc.dupe())
                         } else {
@@ -11757,7 +12136,7 @@ fn assignment<'a>(
         ast::pattern::Pattern<ALoc, (ALoc, Type)>,
         expression::Expression<ALoc, (ALoc, Type)>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     match op {
         None => simple_assignment(cx, loc, lhs, rhs),
@@ -11770,7 +12149,7 @@ fn delete<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     target: &expression::Expression<ALoc, ALoc>,
-) -> Result<expression::Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     let void = type_::void::at(loc.dupe());
     match target.deref() {
         expression::ExpressionInner::Member {
@@ -11865,7 +12244,7 @@ fn delete<'a>(
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::DeleteVar {
                 var: mk_expression_reason(target),
             }));
-            type_env::set_var(cx, &use_op, name, &void, id_loc.dupe());
+            type_env::set_var(cx, &use_op, name, &void, id_loc.dupe())?;
             Ok(expression_inner(
                 None,
                 None,
@@ -11897,7 +12276,7 @@ pub fn collapse_children<'a>(
         Vec<type_::UnresolvedParam>,
         (ALoc, Vec<ast::jsx::Child<ALoc, (ALoc, Type)>>),
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let (children_loc, children_list) = children;
     let cache = cx.node_cache();
@@ -11935,7 +12314,7 @@ fn jsx<'a>(
     should_generalize: LazyBool<'a>,
     expr_loc: ALoc,
     e: &ast::jsx::Element<ALoc, ALoc>,
-) -> Result<(Type, ast::jsx::Element<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, ast::jsx::Element<ALoc, (ALoc, Type)>), CheckExprError> {
     let children = &e.children;
     let closing_element = e.closing_element.as_ref();
     let comments = e.comments.dupe();
@@ -11970,7 +12349,7 @@ fn jsx_fragment<'a>(
     should_generalize: LazyBool<'a>,
     expr_loc: ALoc,
     fragment: &ast::jsx::Fragment<ALoc, ALoc>,
-) -> Result<(Type, ast::jsx::Fragment<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, ast::jsx::Fragment<ALoc, (ALoc, Type)>), CheckExprError> {
     let frag_opening_element = fragment.frag_opening_element.dupe();
     let frag_closing_element = fragment.frag_closing_element.dupe();
     let frag_comments = fragment.frag_comments.clone();
@@ -11979,16 +12358,23 @@ fn jsx_fragment<'a>(
     // See https://babeljs.io/docs/babel-plugin-transform-react-jsx#fragments
     let fragment_t = match cx.react_runtime() {
         flow_common::options::ReactRuntime::Automatic => {
-            flow_js_utils::import_export_utils::get_implicitly_imported_react_type(
+            match flow_js_utils::import_export_utils::get_implicitly_imported_react_type(
                 cx,
                 expr_loc.dupe(),
                 &|cx, reason, t| {
                     FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
-                        .map_err(Into::into)
                 },
                 intermediate_error_types::ExpectedModulePurpose::ReactModuleForJSXFragment,
-            )
-            .expect("Should not be under speculation")
+            ) {
+                Ok(v) => v,
+                Err(FlowJsException::WorkerCanceled(c)) => {
+                    return Err(c.into());
+                }
+                Err(FlowJsException::TimedOut(t)) => {
+                    return Err(t.into());
+                }
+                Err(err) => panic!("Should not be under speculation: {:?}", err),
+            }
         }
         flow_common::options::ReactRuntime::Classic => {
             let reason = mk_reason(
@@ -12001,7 +12387,7 @@ fn jsx_fragment<'a>(
                 None,
                 Name::new(FlowSmolStr::from("React")),
                 expr_loc.dupe(),
-            );
+            )?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::GetProperty(reason.dupe())));
             get_prop(
                 EnclosingContext::NoContext,
@@ -12012,7 +12398,7 @@ fn jsx_fragment<'a>(
                 react,
                 reason,
                 &FlowSmolStr::new("Fragment"),
-            )
+            )?
         }
     };
     let (unresolved_params, typed_frag_children) = collapse_children(cx, &fragment.frag_children)?;
@@ -12057,7 +12443,7 @@ fn jsx_fragment<'a>(
         None,
         props,
         unresolved_params,
-    );
+    )?;
     tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &t);
     Ok((
         t,
@@ -12084,7 +12470,7 @@ fn jsx_title<'a>(
         (ALoc, Vec<ast::jsx::Child<ALoc, (ALoc, Type)>>),
         Option<ast::jsx::Closing<ALoc, (ALoc, Type)>>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let (loc_element, loc_opening, loc_children) = locs;
     //   let (loc, { Opening.name; targs; attributes; self_closing }) = opening_element in
@@ -12098,10 +12484,13 @@ fn jsx_title<'a>(
     let loc = loc.dupe();
     let targs = targs.as_ref();
     let targs_with_tast_opt: Option<(Vec<Targ>, expression::CallTypeArgs<ALoc, (ALoc, Type)>)> =
-        targs.map(|targs_ast| {
-            let (targs_vec, targs_tast) = convert_call_targs(cx, &FlowOrdMap::new(), targs_ast);
-            (targs_vec, targs_tast)
-        });
+        targs
+            .map(|targs_ast| -> Result<_, CheckExprError> {
+                let (targs_vec, targs_tast) =
+                    convert_call_targs(cx, &FlowOrdMap::new(), targs_ast)?;
+                Ok((targs_vec, targs_tast))
+            })
+            .transpose()?;
     let targs_opt = targs_with_tast_opt.as_ref().map(|(t, _)| t.clone());
     let targs_tast_opt = targs_with_tast_opt.map(|(_, tast)| tast);
     let facebook_fbs = cx.facebook_fbs();
@@ -12128,7 +12517,7 @@ fn jsx_title<'a>(
             };
             let fbt_reason = mk_reason(VirtualReasonDesc::RFbt, loc_element.dupe());
             let t =
-                flow_js::get_builtin_type_non_speculating(cx, &fbt_reason, None, custom_jsx_type);
+                flow_js::get_builtin_type_non_speculating(cx, &fbt_reason, None, custom_jsx_type)?;
             // TODO check attribute types against an fbt API
             let (_, typed_attrs, _, typed_children) = jsx_mk_props(
                 cx,
@@ -12202,10 +12591,10 @@ fn jsx_title<'a>(
                         None,
                     );
                     let ident = mk_ident(id_loc.dupe(), None, id_name.dupe());
-                    identifier_inner(cx, &syntactic_flags, &ident, id_loc.dupe())
+                    identifier_inner(cx, &syntactic_flags, &ident, id_loc.dupe())?
                 } else {
                     if let Some((ref_t, def_loc)) =
-                        type_env::intrinsic_ref(cx, None, Name::new(id_name.dupe()), id_loc.dupe())
+                        type_env::intrinsic_ref(cx, None, Name::new(id_name.dupe()), id_loc.dupe())?
                     {
                         let ref_reason = mk_reason(
                             VirtualReasonDesc::RIdentifier(Name::new(id_name.dupe())),
@@ -12252,7 +12641,7 @@ fn jsx_title<'a>(
                         targs_opt,
                         o,
                         unresolved_params,
-                    ),
+                    )?,
                     flow_common::options::JsxMode::JsxPragma(raw_jsx_expr, jsx_expr) => {
                         non_react_jsx_desugar(
                             cx,
@@ -12321,7 +12710,7 @@ fn jsx_title<'a>(
                 targs_opt,
                 o,
                 unresolved_params,
-            );
+            )?;
             let typed_member = match expression_to_jsx_title_member(m_loc, &typed_m_expr) {
                 Some(m) => m,
                 None => {
@@ -12498,10 +12887,8 @@ pub fn jsx_mk_props<'a>(
         Option<LazyBool<'a>>,
         &Context<'a>,
         &expression::Expression<ALoc, ALoc>,
-    ) -> Result<
-        expression::Expression<ALoc, (ALoc, Type)>,
-        AbnormalControlFlow,
-    >,
+    )
+        -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError>,
     collapse_children: &dyn Fn(
         &Context<'a>,
         &(ALoc, Vec<ast::jsx::Child<ALoc, ALoc>>),
@@ -12510,7 +12897,7 @@ pub fn jsx_mk_props<'a>(
             Vec<type_::UnresolvedParam>,
             (ALoc, Vec<ast::jsx::Child<ALoc, (ALoc, Type)>>),
         ),
-        AbnormalControlFlow,
+        CheckExprError,
     >,
     name: &str,
     attributes: &[ast::jsx::OpeningAttribute<ALoc, ALoc>],
@@ -12522,7 +12909,7 @@ pub fn jsx_mk_props<'a>(
         Vec<type_::UnresolvedParam>,
         (ALoc, Vec<ast::jsx::Child<ALoc, (ALoc, Type)>>),
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let is_builtin_react = matches!(cx.jsx(), flow_common::options::JsxMode::JsxReact)
         && !cx.react_custom_jsx_typing();
@@ -12551,7 +12938,7 @@ pub fn jsx_mk_props<'a>(
                                value: &Option<ast::jsx::attribute::Value<ALoc, ALoc>>|
      -> Result<
         (Type, Option<ast::jsx::attribute::Value<ALoc, (ALoc, Type)>>),
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         match value {
             // <element name="literal" />
@@ -12563,7 +12950,7 @@ pub fn jsx_mk_props<'a>(
                     None,
                     None,
                 );
-                let t = string_literal_inner(cx, &syntactic_flags, loc.dupe(), lit);
+                let t = string_literal_inner(cx, &syntactic_flags, loc.dupe(), lit)?;
                 Ok((
                     t.dupe(),
                     Some(ast::jsx::attribute::Value::StringLiteral((
@@ -12638,7 +13025,7 @@ pub fn jsx_mk_props<'a>(
                                   value: &Option<ast::jsx::attribute::Value<ALoc, ALoc>>|
      -> Result<
         (Type, ast::jsx::OpeningAttribute<ALoc, (ALoc, Type)>),
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         let (atype, value) = jsx_attr_value_type(attr_loc.dupe(), value)?;
         // Look up stylex from the environment
@@ -12648,7 +13035,7 @@ pub fn jsx_mk_props<'a>(
             None,
             Name::new(FlowSmolStr::new("stylex")),
             id_loc.dupe(),
-        );
+        )?;
         // Get stylex.props
         let props_reason = mk_reason(
             VirtualReasonDesc::RProperty(Some(Name::new(FlowSmolStr::new("props")))),
@@ -12663,7 +13050,7 @@ pub fn jsx_mk_props<'a>(
             stylex_t,
             props_reason,
             &FlowSmolStr::new("props"),
-        );
+        )?;
         // Check that the prop value is an array and extract element type.
         // This produces errors like "Cannot create `div` element because ..."
         // instead of confusing messages about spread and $Iterable.
@@ -12683,25 +13070,24 @@ pub fn jsx_mk_props<'a>(
         let atype_clone = atype.dupe();
         let use_op_clone = use_op.dupe();
         let shorthand_arr_reason_clone = shorthand_arr_reason;
-        let elem_t = flow_typing_flow_js::tvar_resolver::mk_tvar_and_fully_resolve_where(
-            cx,
-            elem_reason,
-            |cx, elem_t| {
-                let arr_t = Type::new(TypeInner::DefT(
-                    shorthand_arr_reason_clone,
-                    DefT::new(DefTInner::ArrT(Rc::new(type_::ArrType::ROArrayAT(
-                        Box::new((elem_t.dupe(), None)),
-                    )))),
-                ));
-                flow_js::flow_non_speculating(
-                    cx,
-                    (
-                        &atype_clone,
-                        &UseT::new(UseTInner::UseT(use_op_clone, arr_t)),
-                    ),
-                );
-            },
-        );
+        let elem_t = flow_typing_flow_js::tvar_resolver::mk_tvar_and_fully_resolve_where::<
+            flow_utils_concurrency::job_error::JobError,
+        >(cx, elem_reason, |cx, elem_t| {
+            let arr_t = Type::new(TypeInner::DefT(
+                shorthand_arr_reason_clone,
+                DefT::new(DefTInner::ArrT(Rc::new(type_::ArrType::ROArrayAT(
+                    Box::new((elem_t.dupe(), None)),
+                )))),
+            ));
+            flow_js::flow_non_speculating(
+                cx,
+                (
+                    &atype_clone,
+                    &UseT::new(UseTInner::UseT(use_op_clone, arr_t)),
+                ),
+            )?;
+            Ok(())
+        })?;
         // Call stylex.props(elem) to check element types and get the return type
         let call_reason = mk_reason(
             VirtualReasonDesc::RProperty(Some(Name::new(FlowSmolStr::new("props")))),
@@ -12711,27 +13097,26 @@ pub fn jsx_mk_props<'a>(
         let use_op_clone2 = use_op;
         let call_reason_clone = call_reason.dupe();
         let elem_t_clone = elem_t;
-        let tout = flow_typing_flow_js::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-            cx,
-            call_reason.dupe(),
-            |cx, tout_reason, tout_id| {
-                let tout_tvar = Tvar::new(tout_reason.dupe(), tout_id as u32);
-                let app = type_::mk_functioncalltype(
-                    call_reason_clone.dupe(),
-                    None,
-                    vec![CallArg::arg(elem_t_clone.dupe())].into(),
-                    true,
-                    tout_tvar,
-                );
-                let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
-                    use_op: use_op_clone2.dupe(),
-                    reason: call_reason_clone.dupe(),
-                    call_action: Box::new(type_::CallAction::Funcalltype(Box::new(app))),
-                    return_hint: type_::hint_unavailable(),
-                })));
-                flow_js::flow_non_speculating(cx, (&stylex_props_t_clone, &use_t));
-            },
-        );
+        let tout = flow_typing_flow_js::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+            flow_utils_concurrency::job_error::JobError,
+        >(cx, call_reason.dupe(), |cx, tout_reason, tout_id| {
+            let tout_tvar = Tvar::new(tout_reason.dupe(), tout_id as u32);
+            let app = type_::mk_functioncalltype(
+                call_reason_clone.dupe(),
+                None,
+                vec![CallArg::arg(elem_t_clone.dupe())].into(),
+                true,
+                tout_tvar,
+            );
+            let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
+                use_op: use_op_clone2.dupe(),
+                reason: call_reason_clone.dupe(),
+                call_action: Box::new(type_::CallAction::Funcalltype(Box::new(app))),
+                return_hint: type_::hint_unavailable(),
+            })));
+            flow_js::flow_non_speculating(cx, (&stylex_props_t_clone, &use_t))?;
+            Ok(())
+        })?;
         let att = ast::jsx::OpeningAttribute::Attribute(ast::jsx::Attribute {
             loc: attr_loc,
             name: ast::jsx::attribute::Name::Identifier(ast::jsx::Identifier {
@@ -12745,7 +13130,7 @@ pub fn jsx_mk_props<'a>(
     };
     let (acc, atts) = attributes.iter().try_fold(
         (ObjectExpressionAcc::empty(), vec![]),
-        |(acc, mut atts), att| -> Result<_, AbnormalControlFlow> {
+        |(acc, mut atts), att| -> Result<_, CheckExprError> {
             match att {
                 // The configured prop (e.g. sx=) on lowercase (intrinsic) JSX elements
                 // desugars to {...stylex.props(styles.foo, styles.bar)}
@@ -12865,7 +13250,7 @@ pub fn jsx_mk_props<'a>(
         }
         _ => acc,
     };
-    let t = acc.mk_object_from_spread_acc(cx, reason_props, false, false, proto);
+    let t = acc.mk_object_from_spread_acc(cx, reason_props, false, false, proto)?;
     Ok((t, attributes, unresolved_params, children))
 }
 
@@ -12913,7 +13298,7 @@ fn react_jsx_desugar<'a>(
     targs_opt: Option<Vec<Targ>>,
     props: Type,
     children: Vec<type_::UnresolvedParam>,
-) -> (Type, Option<Type>) {
+) -> Result<(Type, Option<Type>), flow_utils_concurrency::job_error::JobError> {
     let return_hint = type_env::get_hint(cx, loc_element.dupe());
     let reason = mk_reason(
         VirtualReasonDesc::RReactElement {
@@ -12965,7 +13350,7 @@ fn react_jsx_desugar<'a>(
             true,
             tout_tvar,
         );
-        let custom_jsx_factory_type = get_custom_jsx_factory_type();
+        let custom_jsx_factory_type = get_custom_jsx_factory_type()?;
         flow_js::flow_non_speculating(
             cx,
             (
@@ -12977,7 +13362,7 @@ fn react_jsx_desugar<'a>(
                     return_hint: return_hint.clone(),
                 }))),
             ),
-        );
+        )?;
         (tout, None, use_op)
     } else {
         let tout_id = flow_typing_tvar::mk_no_wrap(cx, &reason);
@@ -13006,7 +13391,7 @@ fn react_jsx_desugar<'a>(
                     ))),
                 }))),
             ),
-        );
+        )?;
         let specialized_component_t =
             flow_js_utils::callee_recorder::type_for_tast_opt(reason_c, &specialized_component);
         (tout, specialized_component_t, use_op)
@@ -13029,7 +13414,7 @@ fn react_jsx_desugar<'a>(
                 None,
                 Name::new(FlowSmolStr::from("React")),
                 loc_element.dupe(),
-            );
+            )?;
             let create_element_t = get_prop(
                 EnclosingContext::NoContext,
                 cx,
@@ -13044,16 +13429,16 @@ fn react_jsx_desugar<'a>(
                     loc_element.dupe(),
                 ),
                 &FlowSmolStr::new("createElement"),
-            );
+            )?;
             let expected = if cx.react_custom_jsx_typing() {
-                get_custom_jsx_factory_type()
+                get_custom_jsx_factory_type()?
             } else {
                 flow_js::get_builtin_type_non_speculating(
                     cx,
                     &reason,
                     Some(false),
                     "React$CreateElement",
-                )
+                )?
             };
             if !flow_typing_utils::speculation_flow::is_flow_successful(
                 cx,
@@ -13074,7 +13459,7 @@ fn react_jsx_desugar<'a>(
             }
         }
     }
-    (tout, instantiated_component)
+    Ok((tout, instantiated_component))
 }
 
 fn non_react_jsx_desugar<'a>(
@@ -13088,7 +13473,7 @@ fn non_react_jsx_desugar<'a>(
     props: Type,
     attributes: &[ast::jsx::OpeningAttribute<ALoc, ALoc>],
     children: Vec<type_::UnresolvedParam>,
-) -> Result<(Type, Option<Type>), AbnormalControlFlow> {
+) -> Result<(Type, Option<Type>), CheckExprError> {
     let reason = mk_reason(
         VirtualReasonDesc::RJSXFunctionCall(FlowSmolStr::from(raw_jsx_expr)),
         loc_element.dupe(),
@@ -13123,7 +13508,7 @@ fn non_react_jsx_desugar<'a>(
             let ot = jsx_pragma_expression(cx, raw_jsx_expr, object.loc().dupe(), object)?;
             method_call(
                 cx, reason, use_op, false, prop_loc, jsx_expr, ot, &name, targs_opt, argts,
-            )
+            )?
             .1
         }
         _ => {
@@ -13138,7 +13523,7 @@ fn non_react_jsx_desugar<'a>(
                 targs_opt,
                 argts,
                 None,
-            )
+            )?
         }
     };
     Ok((t, None))
@@ -13163,7 +13548,7 @@ fn jsx_pragma_expression<'a>(
     raw_jsx_expr: &str,
     loc: ALoc,
     expr: &expression::Expression<ALoc, ALoc>,
-) -> Result<Type, AbnormalControlFlow> {
+) -> Result<Type, CheckExprError> {
     Ok(match expr.deref() {
         expression::ExpressionInner::Identifier { inner: id, .. } => {
             let name = &id.name;
@@ -13175,7 +13560,7 @@ fn jsx_pragma_expression<'a>(
                 Some(desc),
                 Name::new(name.dupe()),
                 loc,
-            )
+            )?
         }
         _ => {
             // Oh well, we tried
@@ -13193,7 +13578,7 @@ fn jsx_body<'a>(
         Option<type_::UnresolvedParam>,
         ast::jsx::Child<ALoc, (ALoc, Type)>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let loc = _child.loc().dupe();
     Ok(match _child {
@@ -13482,7 +13867,7 @@ fn condition<'a>(
     decl: Option<ast::VariableKind>,
     has_hint: Option<LazyBool<'a>>,
     e: &expression::Expression<ALoc, ALoc>,
-) -> Result<expression::Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     let result = expression_inner(
         Some(encl_ctx),
         decl,
@@ -13550,12 +13935,12 @@ pub fn get_prop<'a>(
     tobj: Type,
     prop_reason: Reason,
     name: &FlowSmolStr,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let opt_use = get_prop_opt_use(encl_ctx, reason.dupe(), use_op, hint, prop_reason, name);
     tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(cx, reason, |cx, t_reason, t_id| {
         let tvar = Tvar::new(t_reason.dupe(), t_id as u32);
         let get_prop_u = type_::apply_opt_use(opt_use.clone(), tvar);
-        flow_js::flow_non_speculating(cx, (&tobj, &get_prop_u));
+        flow_js::flow_non_speculating(cx, (&tobj, &get_prop_u))
     })
 }
 
@@ -13575,7 +13960,7 @@ fn static_method_call_object<'a>(
         Option<expression::CallTypeArgs<ALoc, (ALoc, Type)>>,
         expression::ArgList<ALoc, (ALoc, Type)>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     use ast::expression::ExpressionOrSpread;
     let reason = mk_reason(RCustom(format!("`Object.{}`", m).into()), loc.dupe());
@@ -13588,41 +13973,53 @@ fn static_method_call_object<'a>(
             local: true,
         },
     ))));
-    let get_keys = |arr_reason: Reason, obj_t: &Type| -> Type {
-        let reason_clone = reason.dupe();
-        let use_op_clone = use_op.dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, arr_reason, |cx, tvar| {
-            let keys_reason = reason_clone.dupe().update_desc_new(|desc| {
-                RCustom(format!("element of {}", string_of_desc(&desc)).into())
-            });
-            flow_js::flow_non_speculating(
-                cx,
-                (
-                    obj_t,
-                    &UseT::new(UseTInner::GetKeysT(
-                        keys_reason,
-                        Box::new(UseT::new(UseTInner::UseT(use_op_clone.dupe(), tvar.dupe()))),
-                    )),
-                ),
-            );
-        })
-    };
-    let get_values = |arr_reason: Reason, obj_t: &Type| -> Type {
-        let reason_clone = reason.dupe();
-        let use_op_clone = use_op.dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, arr_reason, |cx, tvar| {
-            flow_js::flow_non_speculating(
-                cx,
-                (
-                    obj_t,
-                    &UseT::new(UseTInner::GetDictValuesT(
-                        reason_clone.dupe(),
-                        Box::new(UseT::new(UseTInner::UseT(use_op_clone.dupe(), tvar.dupe()))),
-                    )),
-                ),
-            );
-        })
-    };
+    let get_keys =
+        |arr_reason: Reason,
+         obj_t: &Type|
+         -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+            let reason_clone = reason.dupe();
+            let use_op_clone = use_op.dupe();
+            tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                flow_utils_concurrency::job_error::JobError,
+            >(cx, arr_reason, |cx, tvar| {
+                let keys_reason = reason_clone.dupe().update_desc_new(|desc| {
+                    RCustom(format!("element of {}", string_of_desc(&desc)).into())
+                });
+                flow_js::flow_non_speculating(
+                    cx,
+                    (
+                        obj_t,
+                        &UseT::new(UseTInner::GetKeysT(
+                            keys_reason,
+                            Box::new(UseT::new(UseTInner::UseT(use_op_clone.dupe(), tvar.dupe()))),
+                        )),
+                    ),
+                )?;
+                Ok(())
+            })
+        };
+    let get_values =
+        |arr_reason: Reason,
+         obj_t: &Type|
+         -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+            let reason_clone = reason.dupe();
+            let use_op_clone = use_op.dupe();
+            tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                flow_utils_concurrency::job_error::JobError,
+            >(cx, arr_reason, |cx, tvar| {
+                flow_js::flow_non_speculating(
+                    cx,
+                    (
+                        obj_t,
+                        &UseT::new(UseTInner::GetDictValuesT(
+                            reason_clone.dupe(),
+                            Box::new(UseT::new(UseTInner::UseT(use_op_clone.dupe(), tvar.dupe()))),
+                        )),
+                    ),
+                )?;
+                Ok(())
+            })
+        };
     let args_arguments = &args.arguments;
     let args_comments = &args.comments;
     let args_loc = args.loc.dupe();
@@ -13702,20 +14099,19 @@ fn static_method_call_object<'a>(
             let e_ast = expression(None, None, None, cx, e)?;
             let e_t = e_ast.loc().1.dupe();
             let proto_reason = mk_reason(RPrototype, e.loc().dupe());
-            let t = tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                cx,
-                proto_reason.dupe(),
-                |cx, tout_reason, tout_id| {
-                    let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
-                    flow_js::flow_non_speculating(
-                        cx,
-                        (
-                            &e_t,
-                            &UseT::new(UseTInner::GetProtoT(proto_reason.dupe(), Box::new(tout))),
-                        ),
-                    );
-                },
-            );
+            let t = tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<
+                flow_utils_concurrency::job_error::JobError,
+            >(cx, proto_reason.dupe(), |cx, tout_reason, tout_id| {
+                let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
+                flow_js::flow_non_speculating(
+                    cx,
+                    (
+                        &e_t,
+                        &UseT::new(UseTInner::GetProtoT(proto_reason.dupe(), Box::new(tout))),
+                    ),
+                )?;
+                Ok(())
+            })?;
             (
                 t,
                 None,
@@ -13730,16 +14126,18 @@ fn static_method_call_object<'a>(
             let e_ast = expression(None, None, None, cx, e)?;
             let e_t = e_ast.loc().1.dupe();
             let proto_reason = mk_reason(RPrototype, e.loc().dupe());
-            let proto =
-                tvar_resolver::mk_tvar_and_fully_resolve_where(cx, proto_reason.dupe(), |cx, t| {
-                    flow_js::flow_non_speculating(
-                        cx,
-                        (
-                            &e_t,
-                            &UseT::new(UseTInner::ObjTestProtoT(proto_reason.dupe(), t.dupe())),
-                        ),
-                    );
-                });
+            let proto = tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                flow_utils_concurrency::job_error::JobError,
+            >(cx, proto_reason.dupe(), |cx, t| {
+                flow_js::flow_non_speculating(
+                    cx,
+                    (
+                        &e_t,
+                        &UseT::new(UseTInner::ObjTestProtoT(proto_reason.dupe(), t.dupe())),
+                    ),
+                )?;
+                Ok(())
+            })?;
             let t = obj_type::mk_with_proto(
                 cx,
                 reason.dupe(),
@@ -13774,16 +14172,18 @@ fn static_method_call_object<'a>(
             let e_ast = expression(None, None, None, cx, e)?;
             let e_t = e_ast.loc().1.dupe();
             let proto_reason = mk_reason(RPrototype, e.loc().dupe());
-            let proto =
-                tvar_resolver::mk_tvar_and_fully_resolve_where(cx, proto_reason.dupe(), |cx, t| {
-                    flow_js::flow_non_speculating(
-                        cx,
-                        (
-                            &e_t,
-                            &UseT::new(UseTInner::ObjTestProtoT(proto_reason.dupe(), t.dupe())),
-                        ),
-                    );
-                });
+            let proto = tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                flow_utils_concurrency::job_error::JobError,
+            >(cx, proto_reason.dupe(), |cx, t| {
+                flow_js::flow_non_speculating(
+                    cx,
+                    (
+                        &e_t,
+                        &UseT::new(UseTInner::ObjTestProtoT(proto_reason.dupe(), t.dupe())),
+                    ),
+                )?;
+                Ok(())
+            })?;
             let (pmap, properties_typed) = prop_map_of_object(cx, obj_properties)?;
             let propdesc_type =
                 flow_js_utils::lookup_builtin_type(cx, "PropertyDescriptor", reason.dupe());
@@ -13808,25 +14208,24 @@ fn static_method_call_object<'a>(
                         });
                         let propdesc_type_clone = propdesc_type.dupe();
                         let use_op_clone = use_op.dupe();
-                        let t = tvar_resolver::mk_tvar_and_fully_resolve_where(
-                            cx,
-                            prop_reason.dupe(),
-                            |cx, tvar| {
-                                let annot_loc = prop_reason.loc().dupe();
-                                let propdesc = implicit_typeapp(
-                                    propdesc_type_clone.dupe(),
-                                    vec![tvar.dupe()],
-                                    Some(annot_loc),
-                                );
-                                flow_js::flow_non_speculating(
-                                    cx,
-                                    (
-                                        &spec,
-                                        &UseT::new(UseTInner::UseT(use_op_clone.dupe(), propdesc)),
-                                    ),
-                                );
-                            },
-                        );
+                        let t = tvar_resolver::mk_tvar_and_fully_resolve_where::<
+                            flow_utils_concurrency::job_error::JobError,
+                        >(cx, prop_reason.dupe(), |cx, tvar| {
+                            let annot_loc = prop_reason.loc().dupe();
+                            let propdesc = implicit_typeapp(
+                                propdesc_type_clone.dupe(),
+                                vec![tvar.dupe()],
+                                Some(annot_loc),
+                            );
+                            flow_js::flow_non_speculating(
+                                cx,
+                                (
+                                    &spec,
+                                    &UseT::new(UseTInner::UseT(use_op_clone.dupe(), propdesc)),
+                                ),
+                            )?;
+                            Ok(())
+                        })?;
                         let prop = Property::new(PropertyInner::Field(Box::new(FieldData {
                             preferred_def_locs: None,
                             key_loc,
@@ -13876,7 +14275,7 @@ fn static_method_call_object<'a>(
             let arr_reason = mk_reason(RArrayType, loc.dupe());
             let e_ast = expression(None, None, None, cx, e)?;
             let o = e_ast.loc().1.dupe();
-            let keys_t = get_keys(arr_reason.dupe(), &o);
+            let keys_t = get_keys(arr_reason.dupe(), &o)?;
             let t = Type::new(TypeInner::DefT(
                 arr_reason,
                 DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
@@ -13901,7 +14300,7 @@ fn static_method_call_object<'a>(
             let arr_reason = mk_reason(RArrayType, loc.dupe());
             let e_ast = expression(None, None, None, cx, e)?;
             let o = e_ast.loc().1.dupe();
-            let values_t = get_values(arr_reason.dupe(), &o);
+            let values_t = get_values(arr_reason.dupe(), &o)?;
             let t = Type::new(TypeInner::DefT(
                 arr_reason,
                 DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
@@ -13926,8 +14325,8 @@ fn static_method_call_object<'a>(
             let arr_reason = mk_reason(RArrayType, loc.dupe());
             let e_ast = expression(None, None, None, cx, e)?;
             let o = e_ast.loc().1.dupe();
-            let keys_t = get_keys(arr_reason.dupe(), &o);
-            let values_t = get_values(arr_reason.dupe(), &o);
+            let keys_t = get_keys(arr_reason.dupe(), &o)?;
+            let values_t = get_values(arr_reason.dupe(), &o)?;
             let elem_reason = mk_reason(RTupleElement { name: None }, loc.dupe());
             let elem_t = Type::new(TypeInner::UnionT(
                 elem_reason.dupe(),
@@ -14014,7 +14413,7 @@ fn static_method_call_object<'a>(
                                 "unexpected type argument to Object.defineProperty, match guard failed"
                             )
                         };
-                        let targ_typed = type_annotation::convert(cx, FlowOrdMap::new(), targ);
+                        let targ_typed = type_annotation::convert(cx, FlowOrdMap::new(), targ)?;
                         let ty = targ_typed.loc().1.dupe();
                         (
                             ty.dupe(),
@@ -14041,7 +14440,7 @@ fn static_method_call_object<'a>(
             flow_js::flow_non_speculating(
                 cx,
                 (&spec, &UseT::new(UseTInner::UseT(use_op.dupe(), propdesc))),
-            );
+            )?;
             let prop_t = flow_typing_tvar::mk(cx, prop_reason.dupe());
             flow_js::flow_non_speculating(
                 cx,
@@ -14057,7 +14456,7 @@ fn static_method_call_object<'a>(
                         Some(prop_t),
                     )),
                 ),
-            );
+            )?;
             (
                 o,
                 typed_targs,
@@ -14116,7 +14515,7 @@ fn static_method_call_object<'a>(
                         flow_js::flow_non_speculating(
                             cx,
                             (&spec, &UseT::new(UseTInner::UseT(use_op.dupe(), propdesc))),
-                        );
+                        )?;
                         flow_js::flow_non_speculating(
                             cx,
                             (
@@ -14131,7 +14530,7 @@ fn static_method_call_object<'a>(
                                     None,
                                 )),
                             ),
-                        );
+                        )?;
                     }
                 }
             }
@@ -14168,11 +14567,13 @@ fn static_method_call_object<'a>(
             let arg_loc = arg_expr.loc().dupe();
             let o = inner;
             let typed_targs: Option<(Vec<Targ>, expression::CallTypeArgs<ALoc, (ALoc, Type)>)> =
-                targs_val.map(|call_targs| {
-                    let (targts, targs_ast) =
-                        convert_call_targs(cx, &FlowOrdMap::new(), call_targs);
-                    (targts, targs_ast)
-                });
+                targs_val
+                    .map(|call_targs| -> Result<_, CheckExprError> {
+                        let (targts, targs_ast) =
+                            convert_call_targs(cx, &FlowOrdMap::new(), call_targs)?;
+                        Ok((targts, targs_ast))
+                    })
+                    .transpose()?;
             let (obj_t_inner, properties_typed) = object_(
                 cx,
                 true,
@@ -14203,7 +14604,7 @@ fn static_method_call_object<'a>(
                 m,
                 method_targts,
                 vec![CallArg::arg(arg_t)],
-            );
+            )?;
             let result_targs = typed_targs.map(|(_, targs_ast)| targs_ast);
             (
                 result_t,
@@ -14227,7 +14628,7 @@ fn static_method_call_object<'a>(
             Some(call_targs),
             _,
         ) => {
-            let (_, targs_ast) = convert_call_targs(cx, &FlowOrdMap::new(), call_targs);
+            let (_, targs_ast) = convert_call_targs(cx, &FlowOrdMap::new(), call_targs)?;
             let (_argts, typed_args) = arg_list(cx, args)?;
             let arity = if m == "freeze" || m == "defineProperty" {
                 1
@@ -14251,7 +14652,7 @@ fn static_method_call_object<'a>(
         }
         // TODO
         _ => {
-            let (targts, targ_asts) = convert_call_targs_opt(cx, targs);
+            let (targts, targ_asts) = convert_call_targs_opt(cx, targs)?;
             let (argts, arg_asts) = arg_list(cx, args)?;
             let method_reason = mk_reason(RMethodCall(Some(m.dupe())), loc.dupe());
             let default_use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCallMethod(Box::new(
@@ -14274,7 +14675,7 @@ fn static_method_call_object<'a>(
                 m,
                 targts,
                 argts,
-            );
+            )?;
             (result_t, targ_asts, arg_asts)
         }
     })
@@ -14287,7 +14688,7 @@ fn mk_class<'a>(
     tast_class_type: Option<Type>,
     reason: Reason,
     c: &ast::class::Class<ALoc, ALoc>,
-) -> Result<(Type, ast::class::Class<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, ast::class::Class<ALoc, (ALoc, Type)>), CheckExprError> {
     let def_reason = reason.dupe().reposition(class_loc.dupe());
     let (class_t, _, class_sig, class_ast_f) =
         mk_class_sig(cx, name_loc, class_loc, InstanceKind::ClassKind, reason, c)?;
@@ -14306,7 +14707,7 @@ fn mk_class<'a>(
         errors: flow_analysis::property_assignment::eval_property_assignment(class_body),
     });
     let tast_class_type = tast_class_type.unwrap_or_else(|| class_t.dupe());
-    Ok((class_t, class_ast_f(cx, tast_class_type)))
+    Ok((class_t, class_ast_f(cx, tast_class_type)?))
 }
 
 fn check_duplicate_class_member<'a>(
@@ -14373,9 +14774,17 @@ pub fn mk_class_sig<'a>(
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Rc<dyn Fn(&Context<'a>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'a>,
+        Rc<
+            dyn Fn(
+                    &Context<'a>,
+                    Type,
+                ) -> Result<
+                    ast::class::Class<ALoc, (ALoc, Type)>,
+                    flow_utils_concurrency::job_error::JobError,
+                > + 'a,
+        >,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     use std::cell::RefCell;
     use std::rc::Rc;
@@ -14402,17 +14811,17 @@ pub fn mk_class_sig<'a>(
             ast::types::AnnotationOrHint<ALoc, (ALoc, Type)>,
             Box<dyn FnOnce() -> ast::class::property::Value<ALoc, (ALoc, Type)>>,
         ),
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         let unconditionally_required_annot = |cx: &Context<'a>,
                                               tparams_map: &FlowOrdMap<SubstName, Type>,
                                               reason: &Reason,
                                               annot: &ast::types::AnnotationOrHint<ALoc, ALoc>|
-         -> (
-            Type,
-            ast::types::AnnotationOrHint<ALoc, (ALoc, Type)>,
-        ) {
-            match annot {
+         -> Result<
+            (Type, ast::types::AnnotationOrHint<ALoc, (ALoc, Type)>),
+            flow_utils_concurrency::job_error::JobError,
+        > {
+            Ok(match annot {
                 ast::types::AnnotationOrHint::Missing(loc) => {
                     flow_js::add_output_non_speculating(
                         cx,
@@ -14439,15 +14848,15 @@ pub fn mk_class_sig<'a>(
                             .map(|(k, v)| (k.dupe(), v.dupe()))
                             .collect(),
                         annot,
-                    );
+                    )?;
                     (t, ast::types::AnnotationOrHint::Available(ast_annot))
                 }
-            }
+            })
         };
         match init {
             ast::class::property::Value::Declared => {
                 let (annot_t, ast_annot) =
-                    unconditionally_required_annot(cx, tparams_map, &reason, annot);
+                    unconditionally_required_annot(cx, tparams_map, &reason, annot)?;
                 Ok((
                     class_types::Field::Annot(annot_t.dupe()),
                     annot_t,
@@ -14457,7 +14866,7 @@ pub fn mk_class_sig<'a>(
             }
             ast::class::property::Value::Uninitialized => {
                 let (annot_t, ast_annot) =
-                    unconditionally_required_annot(cx, tparams_map, &reason, annot);
+                    unconditionally_required_annot(cx, tparams_map, &reason, annot)?;
                 Ok((
                     class_types::Field::Annot(annot_t.dupe()),
                     annot_t,
@@ -14477,7 +14886,7 @@ pub fn mk_class_sig<'a>(
                             &natural_inference::empty_syntactic_flags(),
                             loc.dupe(),
                             inner,
-                        );
+                        )?;
                         (
                             t.dupe(),
                             ast::types::AnnotationOrHint::Missing((annot_loc.dupe(), t)),
@@ -14532,7 +14941,7 @@ pub fn mk_class_sig<'a>(
                         expression::ExpressionInner::RegExpLiteral { loc, .. },
                         ast::types::AnnotationOrHint::Missing(annot_loc),
                     ) => {
-                        let t = regexp_literal(cx, loc.dupe());
+                        let t = regexp_literal(cx, loc.dupe())?;
                         (
                             t.dupe(),
                             ast::types::AnnotationOrHint::Missing((annot_loc.dupe(), t)),
@@ -14560,8 +14969,17 @@ pub fn mk_class_sig<'a>(
                                 (type_::dummy_this(r_loc), true, None)
                             }
                             _ => {
-                                let this_t = flow_js_utils::default_this_type(cx, true, function_)
-                                    .expect("Should not be under speculation");
+                                let this_t =
+                                    match flow_js_utils::default_this_type(cx, true, function_) {
+                                        Ok(v) => v,
+                                        Err(FlowJsException::WorkerCanceled(c)) => {
+                                            return Err(c.into());
+                                        }
+                                        Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+                                        Err(err) => {
+                                            panic!("Should not be under speculation: {:?}", err)
+                                        }
+                                    };
                                 (this_t, false, Some(loc.dupe()))
                             }
                         };
@@ -14625,7 +15043,7 @@ pub fn mk_class_sig<'a>(
                                 .map(|(k, v)| (k.dupe(), v.dupe()))
                                 .collect(),
                             annot,
-                        );
+                        )?;
                         (t, ast::types::AnnotationOrHint::Available(ast_annot))
                     }
                 };
@@ -14685,7 +15103,7 @@ pub fn mk_class_sig<'a>(
             func_class_sig_types::func::Reconstruct,
             DeferredTypeGuardCheck<'a>,
         ),
-        AbnormalControlFlow,
+        CheckExprError,
     > {
         mk_func_sig(
             cx,
@@ -14702,18 +15120,21 @@ pub fn mk_class_sig<'a>(
     let mk_extends = move |cx: &Context<'a>,
                            tparams_map: &FlowOrdMap<SubstName, Type>,
                            extends: &Option<ast::class::Extends<ALoc, ALoc>>|
-          -> (
-        class_types::Extends,
-        Box<
-            dyn FnOnce(
-                    &Context<'a>,
-                ) -> Result<
-                    Option<ast::class::Extends<ALoc, (ALoc, Type)>>,
-                    AbnormalControlFlow,
-                > + 'a,
-        >,
-    ) {
-        match extends {
+          -> Result<
+        (
+            class_types::Extends,
+            Box<
+                dyn FnOnce(
+                        &Context<'a>,
+                    ) -> Result<
+                        Option<ast::class::Extends<ALoc, (ALoc, Type)>>,
+                        CheckExprError,
+                    > + 'a,
+            >,
+        ),
+        flow_utils_concurrency::job_error::JobError,
+    > {
+        Ok(match extends {
             None => (
                 class_types::Extends::Implicit { null: false },
                 Box::new(|_cx| Ok(None)),
@@ -14728,19 +15149,22 @@ pub fn mk_class_sig<'a>(
                 fn super_expr<'a>(
                     cx: &Context<'a>,
                     expr: &expression::Expression<ALoc, ALoc>,
-                ) -> (
-                    Type,
-                    Box<
-                        dyn FnOnce(
-                                &Context<'a>,
-                            ) -> Result<
-                                expression::Expression<ALoc, (ALoc, Type)>,
-                                AbnormalControlFlow,
-                            > + 'a,
-                    >,
-                ) {
+                ) -> Result<
+                    (
+                        Type,
+                        Box<
+                            dyn FnOnce(
+                                    &Context<'a>,
+                                ) -> Result<
+                                    expression::Expression<ALoc, (ALoc, Type)>,
+                                    CheckExprError,
+                                > + 'a,
+                        >,
+                    ),
+                    flow_utils_concurrency::job_error::JobError,
+                > {
                     let loc = expr.loc().dupe();
-                    match expr.deref() {
+                    Ok(match expr.deref() {
                         ExpressionInner::Identifier { inner, .. } => {
                             let id_loc = inner.loc.dupe();
                             let id = inner.clone();
@@ -14750,7 +15174,7 @@ pub fn mk_class_sig<'a>(
                                 None,
                                 Name::new(inner.name.dupe()),
                                 id_loc.dupe(),
-                            );
+                            )?;
                             let t_c = t.dupe();
                             (
                                 t,
@@ -14774,7 +15198,7 @@ pub fn mk_class_sig<'a>(
                             let member_comments = member.comments.dupe();
                             let ploc = pid.loc.dupe();
                             let id = pid.clone();
-                            let (t, _object_f) = super_expr(cx, &member.object);
+                            let (t, _object_f) = super_expr(cx, &member.object)?;
                             let expr_reason = mk_expression_reason(expr);
                             let prop_name = Name::new(pid.name.dupe());
                             let prop_reason = mk_reason(
@@ -14826,7 +15250,7 @@ pub fn mk_class_sig<'a>(
                                             cx,
                                             FlowOrdMap::new(),
                                             &as_expr.annot,
-                                        );
+                                        )?;
                                     let t_c = t.dupe();
                                     let sub_expr_c = as_expr.expression.clone();
                                     (
@@ -14876,7 +15300,7 @@ pub fn mk_class_sig<'a>(
                                             cx,
                                             FlowOrdMap::new(),
                                             &cast.annot,
-                                        );
+                                        )?;
                                     let t_c = t.dupe();
                                     let sub_expr_c = cast.expression.clone();
                                     (
@@ -14955,9 +15379,9 @@ pub fn mk_class_sig<'a>(
                                 Box::new(move |cx| expression(None, None, None, cx, &expr_c)),
                             )
                         }
-                    }
+                    })
                 }
-                let (c, expr_f) = super_expr(cx, expr);
+                let (c, expr_f) = super_expr(cx, expr)?;
                 let (t, targs_ast) = type_annotation::mk_super(
                     cx,
                     tparams_map
@@ -14967,7 +15391,7 @@ pub fn mk_class_sig<'a>(
                     loc.dupe(),
                     c,
                     targs.as_ref(),
-                );
+                )?;
                 (
                     class_types::Extends::Explicit(t),
                     Box::new(move |cx| {
@@ -14980,7 +15404,7 @@ pub fn mk_class_sig<'a>(
                     }),
                 )
             }
-        }
+        })
     };
 
     let mk_class_sig_with_self = move |cx: &Context<'a>,
@@ -15036,7 +15460,7 @@ pub fn mk_class_sig<'a>(
                         flow_parser::ast_visitor::TypeParamsContext::Class,
                         None,
                         tparams.as_ref(),
-                    );
+                    )?;
                 let (this_tparam, this_t) = class_sig::mk_this(self_, cx, reason.dupe());
                 let mut tparams_map_with_this = tparams_map.dupe();
                 tparams_map_with_this
@@ -15044,7 +15468,7 @@ pub fn mk_class_sig<'a>(
                 let class_name: Option<FlowSmolStr> = id.as_ref().map(|ident| ident.name.dupe());
                 let (mut class_sig, extends_ast_f, implements_ast) = {
                     let id_val = cx.make_aloc_id(&name_loc);
-                    let (extends_val, extends_ast_f) = mk_extends(cx, &tparams_map, extends);
+                    let (extends_val, extends_ast_f) = mk_extends(cx, &tparams_map, extends)?;
                     let (implements_val, implements_ast) = match implements {
                         None => (vec![], None),
                         Some(impl_) => {
@@ -15053,7 +15477,7 @@ pub fn mk_class_sig<'a>(
                             let impl_comments = &impl_.comments;
                             let (implements_list, interfaces_ast): (Vec<_>, Vec<_>) = interfaces
                                 .iter()
-                                .map(|i| {
+                                .map(|i| -> Result<_, CheckExprError> {
                                     let loc = &i.loc;
                                     let id = &i.id;
                                     let targs = &i.targs;
@@ -15078,7 +15502,7 @@ pub fn mk_class_sig<'a>(
                                         cx,
                                         "implements",
                                         id,
-                                    );
+                                    )?;
                                     let (typeapp, targs_ast) = match targs {
                                         None => ((loc.dupe(), c.dupe(), None), None),
                                         Some(type_args) => {
@@ -15088,7 +15512,7 @@ pub fn mk_class_sig<'a>(
                                                     cx,
                                                     tparams_map.clone(),
                                                     &type_args.arguments,
-                                                );
+                                                )?;
                                             (
                                                 (loc.dupe(), c.dupe(), Some(ts)),
                                                 Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
@@ -15099,15 +15523,17 @@ pub fn mk_class_sig<'a>(
                                             )
                                         }
                                     };
-                                    (
+                                    Ok((
                                         typeapp,
                                         ast::class::implements::Interface {
                                             loc: loc.dupe(),
                                             id,
                                             targs: targs_ast,
                                         },
-                                    )
+                                    ))
                                 })
+                                .collect::<Result<Vec<_>, _>>()?
+                                .into_iter()
                                 .unzip();
                             (
                                 implements_list,
@@ -15153,27 +15579,32 @@ pub fn mk_class_sig<'a>(
                     >,
                      record_name: &FlowSmolStr,
                      name_loc: ALoc|
-                     -> func_class_sig_types::func::Func<
-                        func_class_sig_types::StmtConfigTypes,
+                     -> Result<
+                        func_class_sig_types::func::Func<func_class_sig_types::StmtConfigTypes>,
+                        flow_utils_concurrency::job_error::JobError,
                     > {
                         // Build an object type with properties for each instance field.
                         let props: properties::PropertiesMap = elements
                             .iter()
-                            .filter_map(|elem| {
-                                use ast::class::BodyElement;
-                                use ast::class::Property;
-                                match elem {
-                                    BodyElement::Property(Property {
-                                        key: expression::object::Key::Identifier(id_pair),
-                                        annot,
-                                        static_: false,
-                                        ..
-                                    }) => {
-                                        let id_loc = &id_pair.loc;
-                                        let name = &id_pair.name;
-                                        let field_t = match annot {
-                                            ast::types::AnnotationOrHint::Available(annot) => {
-                                                let (t, _) =
+                            .map(
+                                |elem| -> Result<
+                                    Option<_>,
+                                    flow_utils_concurrency::job_error::JobError,
+                                > {
+                                    use ast::class::BodyElement;
+                                    use ast::class::Property;
+                                    Ok(match elem {
+                                        BodyElement::Property(Property {
+                                            key: expression::object::Key::Identifier(id_pair),
+                                            annot,
+                                            static_: false,
+                                            ..
+                                        }) => {
+                                            let id_loc = &id_pair.loc;
+                                            let name = &id_pair.name;
+                                            let field_t = match annot {
+                                                ast::types::AnnotationOrHint::Available(annot) => {
+                                                    let (t, _) =
                                                     type_annotation::mk_type_available_annotation(
                                                         cx,
                                                         tparams_map_with_this
@@ -15181,57 +15612,59 @@ pub fn mk_class_sig<'a>(
                                                             .map(|(k, v)| (k.dupe(), v.dupe()))
                                                             .collect(),
                                                         annot,
-                                                    );
-                                                t
-                                            }
-                                            ast::types::AnnotationOrHint::Missing(loc) => {
-                                                any_t::at(
-                                                    type_::AnySource::AnyError(None),
-                                                    loc.dupe(),
-                                                )
-                                            }
-                                        };
-                                        // Create an optional property if it has an initializer (i.e. has a default value).
-                                        let prop_t = if defaulted_props.contains(name) {
-                                            let field_reason = mk_reason(
-                                                VirtualReasonDesc::RProperty(
-                                                    Some(Name::new(name.dupe())),
-                                                ),
-                                                id_loc.dupe(),
-                                            );
-                                            Type::new(TypeInner::OptionalT {
-                                                reason: mk_reason(
-                                                    VirtualReasonDesc::ROptional(
-                                                        Arc::new(
-                                                            field_reason.desc(true).clone(),
-                                                        ),
-                                                    ),
+                                                    )?;
+                                                    t
+                                                }
+                                                ast::types::AnnotationOrHint::Missing(loc) => {
+                                                    any_t::at(
+                                                        type_::AnySource::AnyError(None),
+                                                        loc.dupe(),
+                                                    )
+                                                }
+                                            };
+                                            // Create an optional property if it has an initializer (i.e. has a default value).
+                                            let prop_t = if defaulted_props.contains(name) {
+                                                let field_reason = mk_reason(
+                                                    VirtualReasonDesc::RProperty(Some(Name::new(
+                                                        name.dupe(),
+                                                    ))),
                                                     id_loc.dupe(),
-                                                ),
-                                                type_: field_t,
-                                                use_desc: false,
-                                            })
-                                        } else {
-                                            field_t
-                                        };
-                                        Some((
-                                            Name::new(name.dupe()),
-                                            type_::Property::new(type_::PropertyInner::Field(Box::new(FieldData {
-                                                preferred_def_locs: None,
-                                                key_loc: Some(id_loc.dupe()),
-                                                type_: prop_t,
-                                                polarity: Polarity::Positive,
-                                            }))),
-                                        ))
-                                    }
-                                    _ => None,
-                                }
-                            })
+                                                );
+                                                Type::new(TypeInner::OptionalT {
+                                                    reason: mk_reason(
+                                                        VirtualReasonDesc::ROptional(Arc::new(
+                                                            field_reason.desc(true).clone(),
+                                                        )),
+                                                        id_loc.dupe(),
+                                                    ),
+                                                    type_: field_t,
+                                                    use_desc: false,
+                                                })
+                                            } else {
+                                                field_t
+                                            };
+                                            Some((
+                                                Name::new(name.dupe()),
+                                                type_::Property::new(type_::PropertyInner::Field(
+                                                    Box::new(FieldData {
+                                                        preferred_def_locs: None,
+                                                        key_loc: Some(id_loc.dupe()),
+                                                        type_: prop_t,
+                                                        polarity: Polarity::Positive,
+                                                    }),
+                                                )),
+                                            ))
+                                        }
+                                        _ => None,
+                                    })
+                                },
+                            )
+                            .collect::<Result<Vec<Option<_>>, _>>()?
+                            .into_iter()
+                            .flatten()
                             .collect();
                         let record_reason = mk_reason(
-                            VirtualReasonDesc::RRecordType(
-                                record_name.dupe(),
-                            ),
+                            VirtualReasonDesc::RRecordType(record_name.dupe()),
                             name_loc.dupe(),
                         );
                         let null_proto = type_::null_proto::make(record_reason.dupe());
@@ -15261,11 +15694,8 @@ pub fn mk_class_sig<'a>(
                             default: None,
                             has_anno: false,
                         };
-                        func_class_sig_types::func::Func {
-                            reason: mk_reason(
-                                VirtualReasonDesc::RConstructor,
-                                name_loc.dupe(),
-                            ),
+                        Ok(func_class_sig_types::func::Func {
+                            reason: mk_reason(VirtualReasonDesc::RConstructor, name_loc.dupe()),
                             kind: func_class_sig_types::func::Kind::Ctor,
                             tparams: None,
                             fparams: func_class_sig_types::param::Param {
@@ -15281,7 +15711,7 @@ pub fn mk_class_sig<'a>(
                             effect_: type_::ReactEffectType::ArbitraryEffect,
                             ret_annot_loc: name_loc,
                             statics: None,
-                        }
+                        })
                     };
 
                 // In case there is no constructor, pick up a default one.
@@ -15298,7 +15728,7 @@ pub fn mk_class_sig<'a>(
                                 defaulted_props,
                                 record_name,
                                 name_loc.dupe(),
-                            );
+                            )?;
                             class_sig::add_constructor(None, func_sig, None, None, &mut class_sig);
                         }
                         _ => {
@@ -15389,8 +15819,12 @@ pub fn mk_class_sig<'a>(
                 let mut public_seen_names = empty_seen_names();
                 let mut rev_elements: Vec<
                     Box<
-                        dyn FnOnce(&Context<'a>) -> ast::class::BodyElement<ALoc, (ALoc, Type)>
-                            + 'a,
+                        dyn FnOnce(
+                                &Context<'a>,
+                            ) -> Result<
+                                ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                flow_utils_concurrency::job_error::JobError,
+                            > + 'a,
                     >,
                 > = Vec::new();
 
@@ -15401,8 +15835,12 @@ pub fn mk_class_sig<'a>(
                     c: &mut class_types::Class<StmtConfigTypes>,
                     rev_elements: &mut Vec<
                         Box<
-                            dyn FnOnce(&Context<'a>) -> ast::class::BodyElement<ALoc, (ALoc, Type)>
-                                + 'a,
+                            dyn FnOnce(
+                                    &Context<'a>,
+                                ) -> Result<
+                                    ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                    flow_utils_concurrency::job_error::JobError,
+                                > + 'a,
                         >,
                     >,
                     public_seen_names: &mut SeenNames,
@@ -15427,7 +15865,7 @@ pub fn mk_class_sig<'a>(
                                 -> ast::expression::object::Key<ALoc, (ALoc, Type)>
                             + 'a,
                     >,
-                ) -> Result<(), AbnormalControlFlow> {
+                ) -> Result<(), CheckExprError> {
                     use std::cell::RefCell;
                     use std::rc::Rc;
 
@@ -15500,7 +15938,7 @@ pub fn mk_class_sig<'a>(
                     let get_element = Box::new(move |cx: &Context<'a>| {
                         // Invoke deferred type guard check (must run after toplevels)
                         if let Some(check) = deferred_tg_check {
-                            check(cx);
+                            check(cx)?;
                         }
                         let params = params_ref_c2.borrow().clone().unwrap_or_else(|| {
                             let Ok(v) = polymorphic_ast_mapper::function_params(
@@ -15521,7 +15959,7 @@ pub fn mk_class_sig<'a>(
                             .clone()
                             .unwrap_or_else(|| empty_t::at(id_loc_c.dupe()));
                         let typed_func = reconstruct_func_c(params, body, func_t.dupe());
-                        ast::class::BodyElement::Method(ast::class::Method {
+                        Ok(ast::class::BodyElement::Method(ast::class::Method {
                             loc: (method_loc_c, func_t.dupe()),
                             key: get_typed_method_key(cx, func_t),
                             value: (func_loc_c, typed_func),
@@ -15531,7 +15969,7 @@ pub fn mk_class_sig<'a>(
                             ts_accessibility: ts_accessibility_c,
                             decorators: decorators_ast_c.into(),
                             comments: comments_c,
-                        })
+                        }))
                     });
                     match kind {
                         ast::class::MethodKind::Constructor => {
@@ -15763,7 +16201,7 @@ pub fn mk_class_sig<'a>(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &elem_c,
                                         );
-                                        v
+                                        Ok(v)
                                     }));
                                 }
                                 Key::Computed(computed_key) => {
@@ -15853,7 +16291,7 @@ pub fn mk_class_sig<'a>(
                                                 &mut typed_ast_utils::ErrorMapper,
                                                 &elem_c,
                                             );
-                                            v
+                                            Ok(v)
                                         }));
                                     }
                                 }
@@ -15935,35 +16373,32 @@ pub fn mk_class_sig<'a>(
                                     let variance_c = variance.clone();
                                     let ts_accessibility_c = ts_accessibility.clone();
                                     let prop_comments_c = prop_comments.clone();
-                                    let get_element =
-                                        Box::new(
-                                            move |_cx: &Context<'_>| -> ast::class::BodyElement<
-                                                ALoc,
-                                                (ALoc, Type),
-                                            > {
-                                                BodyElement::Property(Property {
-                                                    loc: (loc_c, annot_t_c.dupe()),
-                                                    key: expression::object::Key::Identifier(
-                                                        ast::Identifier::new(
-                                                            ast::IdentifierInner {
-                                                                loc: (id_loc_c, annot_t_c),
-                                                                name: id_pair_c.name.dupe(),
-                                                                comments: id_pair_c.comments.dupe(),
-                                                            },
-                                                        ),
-                                                    ),
-                                                    annot: annot_ast,
-                                                    value: get_value(),
-                                                    static_: static_c,
-                                                    override_: override_c,
-                                                    optional,
-                                                    variance: variance_c,
-                                                    ts_accessibility: ts_accessibility_c,
-                                                    decorators: decorators_ast.into(),
-                                                    comments: prop_comments_c,
-                                                })
-                                            },
-                                        );
+                                    let get_element = Box::new(
+                                        move |_cx: &Context<'_>| -> Result<
+                                            ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                            flow_utils_concurrency::job_error::JobError,
+                                        > {
+                                            Ok(BodyElement::Property(Property {
+                                                loc: (loc_c, annot_t_c.dupe()),
+                                                key: expression::object::Key::Identifier(
+                                                    ast::Identifier::new(ast::IdentifierInner {
+                                                        loc: (id_loc_c, annot_t_c),
+                                                        name: id_pair_c.name.dupe(),
+                                                        comments: id_pair_c.comments.dupe(),
+                                                    }),
+                                                ),
+                                                annot: annot_ast,
+                                                value: get_value(),
+                                                static_: static_c,
+                                                override_: override_c,
+                                                optional,
+                                                variance: variance_c,
+                                                ts_accessibility: ts_accessibility_c,
+                                                decorators: decorators_ast.into(),
+                                                comments: prop_comments_c,
+                                            }))
+                                        },
+                                    );
                                     check_duplicate_name(
                                         &mut public_seen_names,
                                         id_loc.dupe(),
@@ -15999,7 +16434,7 @@ pub fn mk_class_sig<'a>(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &elem_c,
                                         );
-                                        v
+                                        Ok(v)
                                     }));
                                 }
                                 Key::Computed(_) => {
@@ -16017,7 +16452,7 @@ pub fn mk_class_sig<'a>(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &elem_c,
                                         );
-                                        v
+                                        Ok(v)
                                     }));
                                 }
                             }
@@ -16086,28 +16521,31 @@ pub fn mk_class_sig<'a>(
                             let variance_c = variance.clone();
                             let ts_accessibility_c = ts_accessibility.clone();
                             let field_comments_c = field_comments.clone();
-                            let get_element_inner =
-                                move || -> ast::class::BodyElement<ALoc, (ALoc, Type)> {
-                                    BodyElement::PrivateField(PrivateField {
-                                        loc: (loc_c, annot_t_c),
-                                        key: key_c,
-                                        annot: annot_ast,
-                                        value: get_value(),
-                                        static_: static_c,
-                                        override_: override_c,
-                                        optional,
-                                        variance: variance_c,
-                                        ts_accessibility: ts_accessibility_c,
-                                        decorators: decorators_ast.into(),
-                                        comments: field_comments_c,
-                                    })
-                                };
+                            let get_element_inner = move || -> Result<
+                                ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                flow_utils_concurrency::job_error::JobError,
+                            > {
+                                Ok(BodyElement::PrivateField(PrivateField {
+                                    loc: (loc_c, annot_t_c),
+                                    key: key_c,
+                                    annot: annot_ast,
+                                    value: get_value(),
+                                    static_: static_c,
+                                    override_: override_c,
+                                    optional,
+                                    variance: variance_c,
+                                    ts_accessibility: ts_accessibility_c,
+                                    decorators: decorators_ast.into(),
+                                    comments: field_comments_c,
+                                }))
+                            };
                             let get_element: Box<
                                 dyn FnOnce(
                                         &Context<'a>,
-                                    )
-                                        -> ast::class::BodyElement<ALoc, (ALoc, Type)>
-                                    + 'a,
+                                    ) -> Result<
+                                        ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                        flow_utils_concurrency::job_error::JobError,
+                                    > + 'a,
                             > = Box::new(move |_cx| get_element_inner());
                             check_duplicate_name(
                                 &mut public_seen_names,
@@ -16142,7 +16580,7 @@ pub fn mk_class_sig<'a>(
                                     &mut typed_ast_utils::ErrorMapper,
                                     &elem_c,
                                 );
-                                v
+                                Ok(v)
                             }));
                         }
                         BodyElement::DeclareMethod(_dm) => {
@@ -16160,7 +16598,7 @@ pub fn mk_class_sig<'a>(
                                     &mut typed_ast_utils::ErrorMapper,
                                     &elem_c,
                                 );
-                                v
+                                Ok(v)
                             }));
                         }
                         BodyElement::AbstractMethod(_am) => {
@@ -16178,7 +16616,7 @@ pub fn mk_class_sig<'a>(
                                     &mut typed_ast_utils::ErrorMapper,
                                     &elem_c,
                                 );
-                                v
+                                Ok(v)
                             }));
                         }
                         BodyElement::AbstractProperty(_ap) => {
@@ -16196,7 +16634,7 @@ pub fn mk_class_sig<'a>(
                                     &mut typed_ast_utils::ErrorMapper,
                                     &elem_c,
                                 );
-                                v
+                                Ok(v)
                             }));
                         }
                         BodyElement::IndexSignature(indexer) => {
@@ -16215,7 +16653,7 @@ pub fn mk_class_sig<'a>(
                                         &mut typed_ast_utils::ErrorMapper,
                                         &elem_c,
                                     );
-                                    v
+                                    Ok(v)
                                 }));
                             } else {
                                 let static_ = indexer.static_;
@@ -16233,17 +16671,17 @@ pub fn mk_class_sig<'a>(
                                             &mut typed_ast_utils::ErrorMapper,
                                             &elem_c,
                                         );
-                                        v
+                                        Ok(v)
                                     }));
                                 } else {
                                     let (dict, indexer_ast) = type_annotation::convert_indexer(
                                         cx,
                                         &tparams_map_with_this,
                                         indexer,
-                                    );
+                                    )?;
                                     class_sig::add_indexer(static_, dict, &mut class_sig);
                                     rev_elements.push(Box::new(move |_cx| {
-                                        BodyElement::IndexSignature(indexer_ast)
+                                        Ok(BodyElement::IndexSignature(indexer_ast))
                                     }));
                                 }
                             }
@@ -16285,9 +16723,10 @@ pub fn mk_class_sig<'a>(
                                 Box<
                                     dyn FnOnce(
                                             &Context<'a>,
-                                        )
-                                            -> ast::class::BodyElement<ALoc, (ALoc, Type)>
-                                        + 'a,
+                                        ) -> Result<
+                                            ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                            flow_utils_concurrency::job_error::JobError,
+                                        > + 'a,
                                 >,
                             >,
                         >,
@@ -16301,7 +16740,7 @@ pub fn mk_class_sig<'a>(
                                         &Context<'a>,
                                     ) -> Result<
                                         Option<ast::class::Extends<ALoc, (ALoc, Type)>>,
-                                        AbnormalControlFlow,
+                                        CheckExprError,
                                     > + 'a,
                             >,
                         >,
@@ -16315,17 +16754,25 @@ pub fn mk_class_sig<'a>(
                 let cached_class_ast: Rc<RefCell<Option<ast::class::Class<ALoc, (ALoc, Type)>>>> =
                     Rc::new(RefCell::new(None));
                 let reconstruct: Rc<
-                    dyn Fn(&Context<'a>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'a,
+                    dyn Fn(
+                            &Context<'a>,
+                            Type,
+                        ) -> Result<
+                            ast::class::Class<ALoc, (ALoc, Type)>,
+                            flow_utils_concurrency::job_error::JobError,
+                        > + 'a,
                 > = Rc::new(move |cx, class_t: Type| {
                     if let Some(ref cached) = *cached_class_ast.borrow() {
-                        return cached.clone();
+                        return Ok(cached.clone());
                     }
                     let elements = elements_cell
                         .borrow_mut()
                         .take()
                         .expect("class reconstruct: elements missing on first call");
-                    let body: Vec<ast::class::BodyElement<ALoc, (ALoc, Type)>> =
-                        elements.into_iter().map(|f| f(cx)).collect();
+                    let body: Vec<ast::class::BodyElement<ALoc, (ALoc, Type)>> = elements
+                        .into_iter()
+                        .map(|f| f(cx))
+                        .collect::<Result<_, _>>()?;
                     //     extends = extends_ast_f ();
                     let extends_fn = extends_ast_f_cell
                         .borrow_mut()
@@ -16353,7 +16800,7 @@ pub fn mk_class_sig<'a>(
                         abstract_,
                     };
                     *cached_class_ast.borrow_mut() = Some(result.clone());
-                    result
+                    Ok(result)
                 });
 
                 Ok((class_t, class_t_internal, class_sig, reconstruct))
@@ -16368,10 +16815,18 @@ pub fn mk_class_sig<'a>(
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Rc<dyn Fn(&Context<'a>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'a>,
+        Rc<
+            dyn Fn(
+                    &Context<'a>,
+                    Type,
+                ) -> Result<
+                    ast::class::Class<ALoc, (ALoc, Type)>,
+                    flow_utils_concurrency::job_error::JobError,
+                > + 'a,
+        >,
     );
 
-    type SigResult<'a> = Result<SigTuple<'a>, AbnormalControlFlow>;
+    type SigResult<'a> = Result<SigTuple<'a>, CheckExprError>;
 
     let lazy_cell: Rc<
         RefCell<
@@ -16408,7 +16863,7 @@ pub fn mk_class_sig<'a>(
             true,
             Box::new(move |cx| {
                 let val = lazy_ref.get_forced(cx).as_ref().unwrap();
-                val.1.dupe()
+                Ok(val.1.dupe())
             }),
         );
 
@@ -16440,9 +16895,17 @@ type RecordSigTuple<'a> = (
     Type,
     Type,
     func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-    Rc<dyn Fn(&Context<'a>, Type) -> statement::RecordDeclaration<ALoc, (ALoc, Type)> + 'a>,
+    Rc<
+        dyn Fn(
+                &Context<'a>,
+                Type,
+            ) -> Result<
+                statement::RecordDeclaration<ALoc, (ALoc, Type)>,
+                flow_utils_concurrency::job_error::JobError,
+            > + 'a,
+    >,
 );
-type RecordSigResult<'a> = Result<RecordSigTuple<'a>, AbnormalControlFlow>;
+type RecordSigResult<'a> = Result<RecordSigTuple<'a>, CheckExprError>;
 
 pub fn mk_record_sig<'a>(
     cx: &Context<'a>,
@@ -16466,12 +16929,15 @@ pub fn mk_record_sig<'a>(
                            reason: Reason,
                            annot: &ast::types::Annotation<ALoc, ALoc>,
                            default_value: Option<&expression::Expression<ALoc, ALoc>>|
-     -> (
-        class_types::Field<StmtConfigTypes>,
-        Type,
-        ast::types::Annotation<ALoc, (ALoc, Type)>,
-        Box<dyn FnOnce() -> Option<expression::Expression<ALoc, (ALoc, Type)>>>,
-    ) {
+     -> Result<
+        (
+            class_types::Field<StmtConfigTypes>,
+            Type,
+            ast::types::Annotation<ALoc, (ALoc, Type)>,
+            Box<dyn FnOnce() -> Option<expression::Expression<ALoc, (ALoc, Type)>>>,
+        ),
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let (annot_t, annot_ast) = type_annotation::mk_type_available_annotation(
             cx,
             tparams_map
@@ -16479,8 +16945,8 @@ pub fn mk_record_sig<'a>(
                 .map(|(k, v)| (k.dupe(), v.dupe()))
                 .collect(),
             annot,
-        );
-        match default_value {
+        )?;
+        Ok(match default_value {
             None => (
                 class_types::Field::Annot(annot_t.dupe()),
                 annot_t,
@@ -16513,7 +16979,7 @@ pub fn mk_record_sig<'a>(
                     Box::new(move || value_ref_c2.borrow().clone()),
                 )
             }
-        }
+        })
     };
 
     let mk_record_static_field = |cx: &Context<'a>,
@@ -16521,12 +16987,15 @@ pub fn mk_record_sig<'a>(
                                   reason: Reason,
                                   annot: &ast::types::Annotation<ALoc, ALoc>,
                                   value_expr: &expression::Expression<ALoc, ALoc>|
-     -> (
-        class_types::Field<StmtConfigTypes>,
-        Type,
-        ast::types::Annotation<ALoc, (ALoc, Type)>,
-        Box<dyn FnOnce() -> expression::Expression<ALoc, (ALoc, Type)>>,
-    ) {
+     -> Result<
+        (
+            class_types::Field<StmtConfigTypes>,
+            Type,
+            ast::types::Annotation<ALoc, (ALoc, Type)>,
+            Box<dyn FnOnce() -> expression::Expression<ALoc, (ALoc, Type)>>,
+        ),
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let (annot_t, annot_ast) = type_annotation::mk_type_available_annotation(
             cx,
             tparams_map
@@ -16534,7 +17003,7 @@ pub fn mk_record_sig<'a>(
                 .map(|(k, v)| (k.dupe(), v.dupe()))
                 .collect(),
             annot,
-        );
+        )?;
         let value_ref: Rc<RefCell<Option<expression::Expression<ALoc, (ALoc, Type)>>>> =
             Rc::new(RefCell::new(None));
         let annot_loc = annot.loc.dupe();
@@ -16552,12 +17021,12 @@ pub fn mk_record_sig<'a>(
             set_asts,
         );
         let value_ref_c2 = value_ref.dupe();
-        (
+        Ok((
             field,
             annot_t,
             annot_ast,
             Box::new(move || value_ref_c2.borrow().clone().unwrap()),
-        )
+        ))
     };
 
     let mk_record_sig_with_self = move |cx: &Context<'a>,
@@ -16598,7 +17067,7 @@ pub fn mk_record_sig<'a>(
                         flow_parser::ast_visitor::TypeParamsContext::Class,
                         None,
                         record.tparams.as_ref(),
-                    );
+                    )?;
                 let (this_tparam, this_t) = class_sig::mk_this(self_, cx, reason.dupe());
                 let mut tparams_map_with_this = tparams_map.dupe();
                 tparams_map_with_this
@@ -16617,7 +17086,7 @@ pub fn mk_record_sig<'a>(
                                 let impl_comments = &impl_node.comments;
                                 let (implements, interfaces_ast): (Vec<_>, Vec<_>) = interfaces
                                     .iter()
-                                    .map(|i| {
+                                    .map(|i| -> Result<_, CheckExprError> {
                                         let loc = i.loc.dupe();
                                         let id = &i.id;
                                         match id {
@@ -16641,21 +17110,22 @@ pub fn mk_record_sig<'a>(
                                             cx,
                                             "implements",
                                             id,
-                                        );
+                                        )?;
                                         let (typeapp, targs_ast) = match &i.targs {
                                             None => ((loc.dupe(), c.dupe(), None), None),
                                             Some(targs_node) => {
                                                 let targs_loc = targs_node.loc.dupe();
                                                 let targs_arguments = &targs_node.arguments;
                                                 let targs_comments = &targs_node.comments;
-                                                let (ts, targs_ast) = type_annotation::convert_list(
-                                                    cx,
-                                                    tparams_map
-                                                        .iter()
-                                                        .map(|(k, v)| (k.dupe(), v.dupe()))
-                                                        .collect(),
-                                                    targs_arguments,
-                                                );
+                                                let (ts, targs_ast) =
+                                                    type_annotation::convert_list(
+                                                        cx,
+                                                        tparams_map
+                                                            .iter()
+                                                            .map(|(k, v)| (k.dupe(), v.dupe()))
+                                                            .collect(),
+                                                        targs_arguments,
+                                                    )?;
                                                 (
                                                     (loc.dupe(), c.dupe(), Some(ts)),
                                                     Some(ast::types::TypeArgs::<
@@ -16669,15 +17139,17 @@ pub fn mk_record_sig<'a>(
                                                 )
                                             }
                                         };
-                                        (
+                                        Ok((
                                             typeapp,
                                             ast::class::implements::Interface {
                                                 loc: loc.dupe(),
                                                 id,
                                                 targs: targs_ast,
                                             },
-                                        )
+                                        ))
                                     })
+                                    .collect::<Result<Vec<_>, _>>()?
+                                    .into_iter()
                                     .unzip();
                                 (
                                     implements,
@@ -16720,11 +17192,14 @@ pub fn mk_record_sig<'a>(
                      defaulted_props: &BTreeSet<FlowSmolStr>,
                      record_name_str: &FlowSmolStr,
                      name_loc: ALoc|
-                     -> func::Func<StmtConfigTypes> {
+                     -> Result<
+                        func::Func<StmtConfigTypes>,
+                        flow_utils_concurrency::job_error::JobError,
+                    > {
                         let props: properties::PropertiesMap = elements
                             .iter()
-                            .filter_map(|elem| {
-                                match elem {
+                            .map(|elem| -> Result<Option<_>, flow_utils_concurrency::job_error::JobError> {
+                                Ok(match elem {
                                     statement::record_declaration::BodyElement::Property(prop) => {
                                         let key = &prop.key;
                                         let annot = &prop.annot;
@@ -16736,7 +17211,7 @@ pub fn mk_record_sig<'a>(
                                                     .map(|(k, v)| (k.dupe(), v.dupe()))
                                                     .collect(),
                                                 annot,
-                                            );
+                                            )?;
                                         let (key_loc, name) =
                                             flow_parser_utils::record_utils::loc_and_string_of_property_key(key)
                                                 .expect("Record property must have a valid key");
@@ -16771,8 +17246,11 @@ pub fn mk_record_sig<'a>(
                                         ))
                                     }
                                     _ => None,
-                                }
+                                })
                             })
+                            .collect::<Result<Vec<Option<_>>, _>>()?
+                            .into_iter()
+                            .flatten()
                             .collect();
                         let record_reason = mk_reason(
                             VirtualReasonDesc::RRecordType(record_name_str.dupe()),
@@ -16805,7 +17283,7 @@ pub fn mk_record_sig<'a>(
                             default: None,
                             has_anno: false,
                         };
-                        func::Func {
+                        Ok(func::Func {
                             reason: mk_reason(VirtualReasonDesc::RConstructor, name_loc.dupe()),
                             kind: func::Kind::Ctor,
                             tparams: None,
@@ -16822,7 +17300,7 @@ pub fn mk_record_sig<'a>(
                             effect_: type_::ReactEffectType::ArbitraryEffect,
                             ret_annot_loc: name_loc,
                             statics: None,
-                        }
+                        })
                     };
 
                 let func_sig = mk_record_constructor(
@@ -16832,7 +17310,7 @@ pub fn mk_record_sig<'a>(
                     defaulted_props,
                     record_name_str,
                     name_loc.dupe(),
-                );
+                )?;
                 class_sig::add_constructor(None, func_sig, None, None, &mut class_sig);
 
                 class_sig::add_name_field(&mut class_sig);
@@ -16861,9 +17339,10 @@ pub fn mk_record_sig<'a>(
                     Box<
                         dyn FnOnce(
                                 &Context<'a>,
-                            )
-                                -> statement::record_declaration::BodyElement<ALoc, (ALoc, Type)>
-                            + 'a,
+                            ) -> Result<
+                                statement::record_declaration::BodyElement<ALoc, (ALoc, Type)>,
+                                flow_utils_concurrency::job_error::JobError,
+                            > + 'a,
                     >,
                 > = Vec::new();
 
@@ -16932,7 +17411,7 @@ pub fn mk_record_sig<'a>(
                                 let static_c = static_;
                                 let get_element = move |cx: &Context<'a>| {
                                     if let Some(check) = deferred_tg_check {
-                                        check(cx);
+                                        check(cx)?;
                                     }
                                     let params =
                                         params_ref_c2.borrow().clone().unwrap_or_else(|| {
@@ -16954,7 +17433,7 @@ pub fn mk_record_sig<'a>(
                                         .clone()
                                         .unwrap_or_else(|| empty_t::at(method_id_loc_c.dupe()));
                                     let typed_func = reconstruct_func(params, body, func_t.dupe());
-                                    statement::record_declaration::BodyElement::Method(
+                                    Ok(statement::record_declaration::BodyElement::Method(
                                         ast::class::Method {
                                             loc: (method_loc_c, func_t.dupe()),
                                             key: expression::object::Key::Identifier(
@@ -16972,7 +17451,7 @@ pub fn mk_record_sig<'a>(
                                             decorators: vec![].into(),
                                             comments: method_comments_c,
                                         },
-                                    )
+                                    ))
                                 };
 
                                 match kind {
@@ -17046,10 +17525,10 @@ pub fn mk_record_sig<'a>(
                                 reason,
                                 annot,
                                 default_value,
-                            );
+                            )?;
                             let key_clone = key.clone();
                             let get_element = move |_cx: &Context<'a>| {
-                                statement::record_declaration::BodyElement::Property(
+                                Ok(statement::record_declaration::BodyElement::Property(
                                     statement::record_declaration::Property {
                                         loc: (prop_loc, annot_t.dupe()),
                                         key: translate_identifier_or_literal_key(
@@ -17060,7 +17539,7 @@ pub fn mk_record_sig<'a>(
                                         comments: prop_comments,
                                         invalid_syntax: None,
                                     },
-                                )
+                                ))
                             };
                             check_duplicate_name(
                                 &mut public_seen_names,
@@ -17106,10 +17585,10 @@ pub fn mk_record_sig<'a>(
                                 reason,
                                 annot,
                                 value_expr,
-                            );
+                            )?;
                             let key_clone = key.clone();
                             let get_element = move |_cx: &Context<'a>| {
-                                statement::record_declaration::BodyElement::StaticProperty(
+                                Ok(statement::record_declaration::BodyElement::StaticProperty(
                                     statement::record_declaration::StaticProperty {
                                         loc: (prop_loc, annot_t.dupe()),
                                         key: translate_identifier_or_literal_key(
@@ -17120,7 +17599,7 @@ pub fn mk_record_sig<'a>(
                                         comments: prop_comments,
                                         invalid_syntax: None,
                                     },
-                                )
+                                ))
                             };
                             check_duplicate_name(
                                 &mut public_seen_names,
@@ -17174,7 +17653,7 @@ pub fn mk_record_sig<'a>(
                 let body_comments_c = body_comments.clone();
                 Ok((class_t, class_t_internal, class_sig, {
                     let inner = RefCell::new(Some(move |cx: &Context<'a>, record_t: Type| {
-                        statement::RecordDeclaration {
+                        Ok(statement::RecordDeclaration {
                             id: ast::Identifier::new(ast::IdentifierInner {
                                 loc: (id_loc_c, record_t),
                                 name: id_name_c.name.dupe(),
@@ -17182,14 +17661,17 @@ pub fn mk_record_sig<'a>(
                             }),
                             body: statement::record_declaration::Body {
                                 loc: body_loc,
-                                body: rev_elements.into_iter().map(|f| f(cx)).collect(),
+                                body: rev_elements
+                                    .into_iter()
+                                    .map(|f| f(cx))
+                                    .collect::<Result<_, _>>()?,
                                 comments: body_comments_c,
                             },
                             tparams: tparams_ast_c,
                             implements: implements_ast_c,
                             comments: record_comments,
                             invalid_syntax: record_invalid_syntax,
-                        }
+                        })
                     }));
                     Rc::new(move |cx, t: Type| {
                         inner
@@ -17239,7 +17721,7 @@ pub fn mk_record_sig<'a>(
             true,
             Box::new(move |cx| {
                 let val = lazy_ref.get_forced(cx).as_ref().unwrap();
-                val.1.dupe()
+                Ok(val.1.dupe())
             }),
         );
 
@@ -17273,7 +17755,7 @@ fn mk_record<'a>(
     tast_record_type: Option<Type>,
     reason: Reason,
     record: &statement::RecordDeclaration<ALoc, ALoc>,
-) -> Result<(Type, statement::RecordDeclaration<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, statement::RecordDeclaration<ALoc, (ALoc, Type)>), CheckExprError> {
     let def_reason = reason.dupe().reposition(record_loc.dupe());
     let defaulted_props = flow_parser_utils::record_utils::defaulted_props_of_record(record);
     let (t, _, class_sig, record_ast_f) = mk_record_sig(
@@ -17287,7 +17769,7 @@ fn mk_record<'a>(
     class_sig::check_signature_compatibility(cx, def_reason, &class_sig);
     class_sig::toplevels(cx, &class_sig)?;
     let tast_type = tast_record_type.unwrap_or_else(|| t.dupe());
-    Ok((t, record_ast_f(cx, tast_type)))
+    Ok((t, record_ast_f(cx, tast_type)?))
 }
 
 pub fn mk_component_sig<'a>(
@@ -17295,10 +17777,13 @@ pub fn mk_component_sig<'a>(
     tparams_map: &BTreeMap<SubstName, Type>,
     reason: Reason,
     component: &statement::ComponentDeclaration<ALoc, ALoc>,
-) -> (
-    flow_typing_loc_env::component_sig_types::component_sig::ComponentSig,
-    flow_typing_loc_env::component_sig_types::component_sig::ReconstructComponent,
-) {
+) -> Result<
+    (
+        flow_typing_loc_env::component_sig_types::component_sig::ComponentSig,
+        flow_typing_loc_env::component_sig_types::component_sig::ReconstructComponent,
+    ),
+    flow_utils_concurrency::job_error::JobError,
+> {
     use flow_typing_loc_env::component_sig_types::declaration_param_config;
     use flow_typing_loc_env::component_sig_types::param_types;
 
@@ -17307,8 +17792,11 @@ pub fn mk_component_sig<'a>(
         tparams_map: &FlowOrdMap<SubstName, Type>,
         reason: Reason,
         annot: &ast::types::AnnotationOrHint<ALoc, ALoc>,
-    ) -> (Type, ast::types::AnnotationOrHint<ALoc, (ALoc, Type)>) {
-        match annot {
+    ) -> Result<
+        (Type, ast::types::AnnotationOrHint<ALoc, (ALoc, Type)>),
+        flow_utils_concurrency::job_error::JobError,
+    > {
+        Ok(match annot {
             ast::types::AnnotationOrHint::Missing(loc)
                 if !matches!(
                     &*cx.typing_mode(),
@@ -17334,10 +17822,10 @@ pub fn mk_component_sig<'a>(
             }
             ast::types::AnnotationOrHint::Available(annot) => {
                 let (t, ast_annot) =
-                    type_annotation::mk_type_available_annotation(cx, tparams_map.dupe(), annot);
+                    type_annotation::mk_type_available_annotation(cx, tparams_map.dupe(), annot)?;
                 (t, ast::types::AnnotationOrHint::Available(ast_annot))
             }
-        }
+        })
     }
 
     fn id_param<'a>(
@@ -17345,7 +17833,10 @@ pub fn mk_component_sig<'a>(
         tparams_map: &FlowOrdMap<SubstName, Type>,
         id: &ast::pattern::Identifier<ALoc, ALoc>,
         mk_reason_fn: impl FnOnce(FlowSmolStr) -> Reason,
-    ) -> (Type, ast::pattern::Identifier<ALoc, (ALoc, Type)>) {
+    ) -> Result<
+        (Type, ast::pattern::Identifier<ALoc, (ALoc, Type)>),
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let ast::pattern::Identifier {
             name,
             annot,
@@ -17354,27 +17845,27 @@ pub fn mk_component_sig<'a>(
         let id_loc = name.loc.dupe();
         let name_str = name.name.dupe();
         let reason = mk_reason_fn(name_str);
-        let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, annot);
+        let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, annot)?;
         let typed_name = ast::Identifier::new(ast::IdentifierInner {
             loc: (id_loc, t.dupe()),
             name: name.name.dupe(),
             comments: name.comments.dupe(),
         });
-        (
+        Ok((
             t,
             ast::pattern::Identifier {
                 name: typed_name,
                 annot: typed_annot,
                 optional: *optional,
             },
-        )
+        ))
     }
 
     fn mk_param<'a>(
         cx: &Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         param: &statement::component_params::Param<ALoc, ALoc>,
-    ) -> declaration_param_config::Param {
+    ) -> Result<declaration_param_config::Param, flow_utils_concurrency::job_error::JobError> {
         let statement::component_params::Param {
             loc,
             local,
@@ -17393,12 +17884,12 @@ pub fn mk_component_sig<'a>(
                 let ploc_clone = ploc.dupe();
                 let (t, typed_id) = id_param(cx, tparams_map, id, move |name| {
                     mk_reason(VirtualReasonDesc::RParameter(Some(name)), ploc_clone)
-                });
+                })?;
                 (t, declaration_param_config::Pattern::Id(typed_id))
             }
             ast::pattern::Pattern::Object { inner, .. } => {
                 let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
-                let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot);
+                let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                 (
                     t,
                     declaration_param_config::Pattern::Object {
@@ -17411,7 +17902,7 @@ pub fn mk_component_sig<'a>(
             }
             ast::pattern::Pattern::Array { inner, .. } => {
                 let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
-                let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot);
+                let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                 (
                     t,
                     declaration_param_config::Pattern::Array {
@@ -17426,7 +17917,7 @@ pub fn mk_component_sig<'a>(
                 panic!("unexpected expression pattern in param")
             }
         };
-        declaration_param_config::Param {
+        Ok(declaration_param_config::Param {
             t,
             loc,
             ploc,
@@ -17435,14 +17926,17 @@ pub fn mk_component_sig<'a>(
             has_anno: has_param_anno,
             name: name.clone(),
             shorthand: *shorthand,
-        }
+        })
     }
 
     fn mk_rest<'a>(
         cx: &Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         rest: &statement::component_params::RestParam<ALoc, ALoc>,
-    ) -> Result<declaration_param_config::Rest, Box<ErrorMessage<ALoc>>> {
+    ) -> Result<
+        Result<declaration_param_config::Rest, Box<ErrorMessage<ALoc>>>,
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let statement::component_params::RestParam {
             loc,
             argument,
@@ -17454,12 +17948,12 @@ pub fn mk_component_sig<'a>(
             ast::types::AnnotationOrHint::Missing(_) => false,
             ast::types::AnnotationOrHint::Available(_) => true,
         };
-        match argument {
+        Ok(match argument {
             ast::pattern::Pattern::Identifier { inner: id, .. } => {
                 let ploc_clone = ploc.dupe();
                 let (t, typed_id) = id_param(cx, tparams_map, id, move |name| {
                     mk_reason(VirtualReasonDesc::RParameter(Some(name)), ploc_clone)
-                });
+                })?;
                 Ok(declaration_param_config::Rest {
                     t,
                     loc,
@@ -17471,7 +17965,7 @@ pub fn mk_component_sig<'a>(
             }
             ast::pattern::Pattern::Object { inner, .. } => {
                 let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
-                let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot);
+                let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                 let pattern = declaration_param_config::Pattern::Object {
                     annot: typed_annot,
                     properties: inner.properties.to_vec(),
@@ -17493,7 +17987,7 @@ pub fn mk_component_sig<'a>(
                     ErrorMessage::EInvalidComponentRestParam(ploc.dupe()),
                 );
                 let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
-                let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot);
+                let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                 let pattern = declaration_param_config::Pattern::Array {
                     annot: typed_annot,
                     elements: inner.elements.to_vec(),
@@ -17512,14 +18006,14 @@ pub fn mk_component_sig<'a>(
             ast::pattern::Pattern::Expression { .. } => {
                 Err(Box::new(ErrorMessage::EInvalidComponentRestParam(ploc)))
             }
-        }
+        })
     }
 
     fn mk_params<'a>(
         cx: &Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         params: &statement::component_params::Params<ALoc, ALoc>,
-    ) -> param_types::Params {
+    ) -> Result<param_types::Params, flow_utils_concurrency::job_error::JobError> {
         let statement::component_params::Params {
             loc: params_loc,
             params: param_list,
@@ -17542,11 +18036,11 @@ pub fn mk_component_sig<'a>(
                 }
             }));
         for param in param_list.iter() {
-            let p = mk_param(cx, tparams_map, param);
+            let p = mk_param(cx, tparams_map, param)?;
             crate::component_params::add_param(p, &mut cparams);
         }
         if let Some(rest) = rest {
-            match mk_rest(cx, tparams_map, rest) {
+            match mk_rest(cx, tparams_map, rest)? {
                 Ok(rest) => {
                     crate::component_params::add_rest(rest, &mut cparams);
                 }
@@ -17555,7 +18049,7 @@ pub fn mk_component_sig<'a>(
                 }
             }
         }
-        cparams
+        Ok(cparams)
     }
 
     let cache = cx.node_cache();
@@ -17571,7 +18065,7 @@ pub fn mk_component_sig<'a>(
     } = component;
     let sig_loc = sig_loc.dupe();
     if let Some(x) = cache.get_component_sig(&sig_loc) {
-        return x;
+        return Ok(x);
     }
     let (tparams, tparams_map, tparams_ast_typed) = type_annotation::mk_type_param_declarations(
         cx,
@@ -17583,12 +18077,12 @@ pub fn mk_component_sig<'a>(
                 .collect(),
         ),
         tparams_ast.as_ref(),
-    );
-    let cparams = mk_params(cx, &tparams_map, params);
+    )?;
+    let cparams = mk_params(cx, &tparams_map, params)?;
     let (ret_loc, renders_t, renders_ast) = match renders {
         ast::types::ComponentRendersAnnotation::AvailableRenders(loc, annot) => {
             let (t, renders_ast_typed) =
-                type_annotation::convert_render_type(cx, tparams_map.dupe(), loc.dupe(), annot);
+                type_annotation::convert_render_type(cx, tparams_map.dupe(), loc.dupe(), annot)?;
             (
                 loc.dupe(),
                 t,
@@ -17664,7 +18158,7 @@ pub fn mk_component_sig<'a>(
             },
         );
     cache.set_component_sig(sig_loc, (component_sig.clone(), reconstruct.dupe()));
-    (component_sig, reconstruct)
+    Ok((component_sig, reconstruct))
 }
 
 /// A deferred type guard check that must be invoked after `toplevels` has
@@ -17688,7 +18182,7 @@ pub fn mk_func_sig<'a>(
         func_class_sig_types::func::Reconstruct,
         DeferredTypeGuardCheck<'a>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     use flow_typing_loc_env::func_class_sig_types::func;
     use flow_typing_loc_env::func_stmt_config_types;
@@ -17717,8 +18211,11 @@ pub fn mk_func_sig<'a>(
         tparams_map: &FlowOrdMap<SubstName, Type>,
         reason: Reason,
         annot: &ast::types::AnnotationOrHint<ALoc, ALoc>,
-    ) -> (Type, ast::types::AnnotationOrHint<ALoc, (ALoc, Type)>) {
-        match annot {
+    ) -> Result<
+        (Type, ast::types::AnnotationOrHint<ALoc, (ALoc, Type)>),
+        flow_utils_concurrency::job_error::JobError,
+    > {
+        Ok(match annot {
             ast::types::AnnotationOrHint::Missing(loc)
                 if !matches!(
                     &*cx.typing_mode(),
@@ -17744,10 +18241,10 @@ pub fn mk_func_sig<'a>(
             }
             ast::types::AnnotationOrHint::Available(annot) => {
                 let (t, ast_annot) =
-                    type_annotation::mk_type_available_annotation(cx, tparams_map.dupe(), annot);
+                    type_annotation::mk_type_available_annotation(cx, tparams_map.dupe(), annot)?;
                 (t, ast::types::AnnotationOrHint::Available(ast_annot))
             }
-        }
+        })
     }
 
     fn id_param<'a>(
@@ -17755,7 +18252,10 @@ pub fn mk_func_sig<'a>(
         tparams_map: &FlowOrdMap<SubstName, Type>,
         id: &ast::pattern::Identifier<ALoc, ALoc>,
         mk_reason_fn: impl FnOnce(FlowSmolStr) -> Reason,
-    ) -> (Type, ast::pattern::Identifier<ALoc, (ALoc, Type)>) {
+    ) -> Result<
+        (Type, ast::pattern::Identifier<ALoc, (ALoc, Type)>),
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let ast::pattern::Identifier {
             name,
             annot,
@@ -17764,27 +18264,27 @@ pub fn mk_func_sig<'a>(
         let id_loc = name.loc.dupe();
         let name_str = name.name.dupe();
         let reason = mk_reason_fn(name_str);
-        let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, annot);
+        let (t, typed_annot) = mk_param_annot(cx, tparams_map, reason, annot)?;
         let typed_name = ast::Identifier::new(ast::IdentifierInner {
             loc: (id_loc, t.dupe()),
             name: name.name.dupe(),
             comments: name.comments.dupe(),
         });
-        (
+        Ok((
             t,
             ast::pattern::Identifier {
                 name: typed_name,
                 annot: typed_annot,
                 optional: *optional,
             },
-        )
+        ))
     }
 
     fn mk_param<'a>(
         cx: &Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         param: &ast::function::Param<ALoc, ALoc>,
-    ) -> func_stmt_config_types::Param {
+    ) -> Result<func_stmt_config_types::Param, flow_utils_concurrency::job_error::JobError> {
         match param {
             ast::function::Param::ParamProperty {
                 loc,
@@ -17798,7 +18298,7 @@ pub fn mk_func_sig<'a>(
                         loc: loc.dupe(),
                     })),
                 );
-                func_stmt_config_types::Param {
+                Ok(func_stmt_config_types::Param {
                     t: any_t::make(
                         type_::AnySource::AnyError(None),
                         mk_reason(VirtualReasonDesc::RParameter(None), loc.dupe()),
@@ -17814,7 +18314,7 @@ pub fn mk_func_sig<'a>(
                     }),
                     default: None,
                     has_anno: true,
-                }
+                })
             }
             ast::function::Param::RegularParam {
                 loc,
@@ -17832,13 +18332,13 @@ pub fn mk_func_sig<'a>(
                         let ploc_clone = ploc.dupe();
                         let (t, typed_id) = id_param(cx, tparams_map, id, move |name| {
                             mk_reason(VirtualReasonDesc::RParameter(Some(name)), ploc_clone)
-                        });
+                        })?;
                         (t, func_stmt_config_types::Pattern::Id(typed_id))
                     }
                     ast::pattern::Pattern::Object { inner, .. } => {
                         let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
                         let (t, typed_annot) =
-                            mk_param_annot(cx, tparams_map, reason, &inner.annot);
+                            mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                         (
                             t,
                             func_stmt_config_types::Pattern::Object {
@@ -17852,7 +18352,7 @@ pub fn mk_func_sig<'a>(
                     ast::pattern::Pattern::Array { inner, .. } => {
                         let reason = mk_reason(VirtualReasonDesc::RDestructuring, ploc.dupe());
                         let (t, typed_annot) =
-                            mk_param_annot(cx, tparams_map, reason, &inner.annot);
+                            mk_param_annot(cx, tparams_map, reason, &inner.annot)?;
                         (
                             t,
                             func_stmt_config_types::Pattern::Array {
@@ -17867,14 +18367,14 @@ pub fn mk_func_sig<'a>(
                         panic!("unexpected expression pattern in param")
                     }
                 };
-                func_stmt_config_types::Param {
+                Ok(func_stmt_config_types::Param {
                     t,
                     loc,
                     ploc,
                     pattern,
                     default: default.clone(),
                     has_anno: has_param_anno,
-                }
+                })
             }
         }
     }
@@ -17883,7 +18383,10 @@ pub fn mk_func_sig<'a>(
         cx: &Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         rest: &ast::function::RestParam<ALoc, ALoc>,
-    ) -> Result<func_stmt_config_types::Rest, Box<ErrorMessage<ALoc>>> {
+    ) -> Result<
+        Result<func_stmt_config_types::Rest, Box<ErrorMessage<ALoc>>>,
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let ast::function::RestParam {
             loc,
             argument,
@@ -17895,12 +18398,12 @@ pub fn mk_func_sig<'a>(
             ast::types::AnnotationOrHint::Missing(_) => false,
             ast::types::AnnotationOrHint::Available(_) => true,
         };
-        match argument {
+        Ok(match argument {
             ast::pattern::Pattern::Identifier { inner: id, .. } => {
                 let ploc_clone = ploc.dupe();
                 let (t, typed_id) = id_param(cx, tparams_map, id, move |name| {
                     mk_reason(VirtualReasonDesc::RRestParameter(Some(name)), ploc_clone)
-                });
+                })?;
                 Ok(func_stmt_config_types::Rest {
                     t,
                     loc,
@@ -17918,14 +18421,15 @@ pub fn mk_func_sig<'a>(
                     InternalError::RestParameterNotIdentifierPattern,
                 )))))
             }
-        }
+        })
     }
 
     fn mk_this<'a>(
         cx: &Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         this: &ast::function::ThisParam<ALoc, ALoc>,
-    ) -> func_stmt_config_types::ThisParam {
+    ) -> Result<func_stmt_config_types::ThisParam, flow_utils_concurrency::job_error::JobError>
+    {
         let ast::function::ThisParam {
             loc,
             annot,
@@ -17934,23 +18438,24 @@ pub fn mk_func_sig<'a>(
         let loc = loc.dupe();
         let annot_loc = annot.loc.dupe();
         let annot_type = &annot.annotation;
-        let typed_annot = type_annotation::convert(cx, tparams_map.dupe(), annot_type);
+        let typed_annot = type_annotation::convert(cx, tparams_map.dupe(), annot_type)?;
         let t = typed_annot.loc().1.dupe();
-        func_stmt_config_types::ThisParam {
+        Ok(func_stmt_config_types::ThisParam {
             t,
             loc,
             annot: ast::types::Annotation {
                 loc: annot_loc,
                 annotation: typed_annot,
             },
-        }
+        })
     }
 
     fn mk_params<'a>(
         cx: &Context<'a>,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         params: &ast::function::Params<ALoc, ALoc>,
-    ) -> func_class_sig_types::func::FuncParams {
+    ) -> Result<func_class_sig_types::func::FuncParams, flow_utils_concurrency::job_error::JobError>
+    {
         let ast::function::Params {
             loc,
             params: param_list,
@@ -17973,11 +18478,11 @@ pub fn mk_func_sig<'a>(
                 })
             }));
         for param in param_list.iter() {
-            let p = mk_param(cx, tparams_map, param);
+            let p = mk_param(cx, tparams_map, param)?;
             crate::func_params::add_param(p, &mut fparams);
         }
         if let Some(rest) = rest {
-            match mk_rest(cx, tparams_map, rest) {
+            match mk_rest(cx, tparams_map, rest)? {
                 Ok(rest) => crate::func_params::add_rest(rest, &mut fparams),
                 Err(err) => {
                     flow_js::add_output_non_speculating(cx, *err);
@@ -17985,10 +18490,10 @@ pub fn mk_func_sig<'a>(
             }
         }
         if let Some(this) = this_ {
-            let this_param = mk_this(cx, tparams_map, this);
+            let this_param = mk_this(cx, tparams_map, this)?;
             crate::func_params::add_this(this_param, &mut fparams);
         }
-        fparams
+        Ok(fparams)
     }
 
     let sig_loc = func.sig_loc.dupe();
@@ -18031,8 +18536,8 @@ pub fn mk_func_sig<'a>(
                 .collect(),
         ),
         func_tparams.as_ref(),
-    );
-    let fparams = mk_params(cx, &tparams_map, params);
+    )?;
+    let fparams = mk_params(cx, &tparams_map, params)?;
     let ret_reason = mk_reason(
         VirtualReasonDesc::RReturn,
         crate::func_sig::return_loc(func),
@@ -18152,7 +18657,7 @@ pub fn mk_func_sig<'a>(
         }
         (ast::function::ReturnAnnot::Available(annot), _) => {
             let (t, ast_annot) =
-                type_annotation::mk_type_available_annotation(cx, tparams_map.dupe(), annot);
+                type_annotation::mk_type_available_annotation(cx, tparams_map.dupe(), annot)?;
             (
                 AnnotatedOrInferred::Annotated(t),
                 ast::function::ReturnAnnot::Available(ast_annot),
@@ -18181,7 +18686,7 @@ pub fn mk_func_sig<'a>(
                         id_name,
                         t,
                         guard_comments,
-                    );
+                    )?;
                     (
                         AnnotatedOrInferred::Annotated(bool_t),
                         ast::function::ReturnAnnot::TypeGuard(ast::types::TypeGuardAnnotation {
@@ -18324,7 +18829,8 @@ pub fn mk_func_sig<'a>(
                 let params_clone = params.clone();
                 let tg_clone = tg.clone();
                 Some(Rc::new(move |cx: &Context<'a>| {
-                    flow_typing_utils::type_guard::check_type_guard(cx, &params_clone, &tg_clone);
+                    flow_typing_utils::type_guard::check_type_guard(cx, &params_clone, &tg_clone)?;
+                    Ok(())
                 }))
             }
             _ => None,
@@ -18373,7 +18879,7 @@ fn function_decl<'a>(
         Type,
         Box<dyn FnOnce(Type) -> ast::function::Function<ALoc, (ALoc, Type)>>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let (func_sig, reconstruct_func, deferred_tg_check) = mk_func_sig(
         cx,
@@ -18407,7 +18913,7 @@ fn function_decl<'a>(
         let (params_ast, body_ast, _) = crate::func_sig::toplevels(cx, &func_sig)?;
         // Invoke deferred type guard check after toplevels (same timing as OCaml)
         if let Some(check) = deferred_tg_check {
-            check(cx);
+            check(cx)?;
         }
         Ok((
             fun_type,
@@ -18429,7 +18935,7 @@ fn mk_function_declaration<'a>(
     reason: Reason,
     fun_loc: ALoc,
     func: &ast::function::Function<ALoc, ALoc>,
-) -> Result<(Type, ast::function::Function<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, ast::function::Function<ALoc, (ALoc, Type)>), CheckExprError> {
     mk_function(
         cx,
         true,
@@ -18448,7 +18954,7 @@ fn mk_function_expression<'a>(
     reason: Reason,
     fun_loc: ALoc,
     func: &ast::function::Function<ALoc, ALoc>,
-) -> Result<(Type, ast::function::Function<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, ast::function::Function<ALoc, (ALoc, Type)>), CheckExprError> {
     mk_function(
         cx,
         needs_this_param,
@@ -18469,7 +18975,7 @@ pub fn mk_function<'a>(
     reason: Reason,
     fun_loc: ALoc,
     func: &ast::function::Function<ALoc, ALoc>,
-) -> Result<(Type, ast::function::Function<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, ast::function::Function<ALoc, (ALoc, Type)>), CheckExprError> {
     let node_cache = cx.node_cache();
     let cache_loc = func
         .id
@@ -18487,8 +18993,16 @@ pub fn mk_function<'a>(
             Ok(cached)
         }
         None => {
-            let default_this = flow_js_utils::default_this_type(cx, needs_this_param, func)
-                .expect("Should not be under speculation");
+            let default_this = match flow_js_utils::default_this_type(cx, needs_this_param, func) {
+                Ok(v) => v,
+                Err(FlowJsException::WorkerCanceled(c)) => {
+                    return Err(c.into());
+                }
+                Err(FlowJsException::TimedOut(t)) => {
+                    return Err(t.into());
+                }
+                Err(err) => panic!("Should not be under speculation: {:?}", err),
+            };
             let fun_loc_arg = if needs_this_param {
                 Some(fun_loc)
             } else {
@@ -18520,7 +19034,7 @@ pub fn mk_arrow<'a>(
     statics: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
     reason: Reason,
     func: &ast::function::Function<ALoc, ALoc>,
-) -> Result<(Type, ast::function::Function<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(Type, ast::function::Function<ALoc, (ALoc, Type)>), CheckExprError> {
     // Do not expose the type of `this` in the function's type. This call to
     // function_decl has already done the necessary checking of `this` in
     // the body of the function. Now we want to avoid re-binding `this` to
@@ -19032,7 +19546,10 @@ fn enum_declaration<'a>(
     cx: &Context<'a>,
     loc: ALoc,
     enum_decl: &statement::EnumDeclaration<ALoc, ALoc>,
-) -> statement::EnumDeclaration<ALoc, (ALoc, Type)> {
+) -> Result<
+    statement::EnumDeclaration<ALoc, (ALoc, Type)>,
+    flow_utils_concurrency::job_error::JobError,
+> {
     let statement::EnumDeclaration {
         id: ref ident,
         ref body,
@@ -19066,7 +19583,7 @@ fn enum_declaration<'a>(
             )),
             init: reason.dupe(),
         }));
-        type_env::init_implicit_const(cx, &use_op, &t, name_loc.dupe());
+        type_env::init_implicit_const(cx, &use_op, &t, name_loc.dupe())?;
         t
     } else {
         flow_js_utils::add_output_non_speculating(
@@ -19075,7 +19592,7 @@ fn enum_declaration<'a>(
         );
         any_t::error(reason)
     };
-    statement::EnumDeclaration {
+    Ok(statement::EnumDeclaration {
         id: ast::Identifier::new(ast::IdentifierInner {
             loc: (name_loc.dupe(), t),
             name: ident.name.dupe(),
@@ -19084,7 +19601,7 @@ fn enum_declaration<'a>(
         body: body.clone(),
         const_,
         comments: comments.clone(),
-    }
+    })
 }
 
 pub fn mk_enum<'a>(
@@ -19283,7 +19800,7 @@ pub fn match_pattern<'a>(
     case_match_root_loc: ALoc,
     has_guard: bool,
     pattern: &ast::match_pattern::MatchPattern<ALoc, ALoc>,
-) -> Result<ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>, CheckExprError> {
     let node_cache = cx.node_cache();
     match node_cache.get_match_pattern(pattern.loc()) {
         Some((p, _)) => Ok(p),
@@ -19298,7 +19815,7 @@ pub fn match_pattern<'a>(
                 cx: &Context<'a>,
                 id: &ast::IdentifierInner<ALoc, ALoc>,
                 loc: ALoc,
-            ) -> Type {
+            ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
                 let mut flags = natural_inference::empty_syntactic_flags();
                 flags.encl_ctx = encl_ctx;
                 identifier_inner(cx, &flags, &ast::Identifier::new(id.clone()), loc)
@@ -19308,24 +19825,25 @@ pub fn match_pattern<'a>(
                                  expr: &expression::Expression<ALoc, ALoc>|
              -> Result<
                 expression::Expression<ALoc, (ALoc, Type)>,
-                AbnormalControlFlow,
+                CheckExprError,
             > { expression(None, None, None, cx, expr) };
-            let on_binding = |use_op: &UseOp,
-                              name_loc: ALoc,
-                              kind: ast::VariableKind,
-                              name: &FlowSmolStr,
-                              t: Type|
-             -> Type {
-                init_var(kind)(cx, use_op, &t, name_loc.dupe());
-                let default = type_env::get_var_declared_type(
-                    None,
-                    None,
-                    cx,
-                    Name::new(name.dupe()),
-                    name_loc.dupe(),
-                );
-                type_env::constraining_type(default, cx, name, name_loc)
-            };
+            let on_binding =
+                |use_op: &UseOp,
+                 name_loc: ALoc,
+                 kind: ast::VariableKind,
+                 name: &FlowSmolStr,
+                 t: Type|
+                 -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+                    init_var(kind)(cx, use_op, &t, name_loc.dupe())?;
+                    let default = type_env::get_var_declared_type(
+                        None,
+                        None,
+                        cx,
+                        Name::new(name.dupe()),
+                        name_loc.dupe(),
+                    );
+                    Ok(type_env::constraining_type(default, cx, name, name_loc))
+                };
             let p = crate::match_pattern::pattern(
                 cx,
                 &on_identifier,
@@ -19509,7 +20027,7 @@ pub fn expression<'a>(
     as_const: Option<bool>,
     cx: &Context<'a>,
     expr: &expression::Expression<ALoc, ALoc>,
-) -> Result<expression::Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     expression_inner(
         encl_ctx,
         decl,
@@ -19526,7 +20044,7 @@ pub fn identifier<'a>(
     cx: &Context<'a>,
     id: &ast::Identifier<ALoc, ALoc>,
     loc: ALoc,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let mut syntactic_flags = natural_inference::empty_syntactic_flags();
     syntactic_flags.encl_ctx = encl_ctx;
     identifier_inner(cx, &syntactic_flags, id, loc)
@@ -19537,7 +20055,7 @@ pub fn string_literal<'a>(
     encl_ctx: EnclosingContext,
     loc: ALoc,
     v: &ast::StringLiteral<ALoc>,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let mut syntactic_flags = natural_inference::empty_syntactic_flags();
     syntactic_flags.encl_ctx = encl_ctx;
     string_literal_inner(cx, &syntactic_flags, loc, v)

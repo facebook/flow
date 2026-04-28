@@ -448,7 +448,8 @@ pub fn unwrap_fully_resolved_open_t<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
 
 pub fn map_on_resolved_type<'cx, F>(cx: &Context<'cx>, reason_op: Reason, l: Type, f: F) -> Type
 where
-    F: FnOnce(&Context<'cx>, Type) -> Type + 'cx,
+    F: FnOnce(&Context<'cx>, Type) -> Result<Type, flow_utils_concurrency::job_error::JobError>
+        + 'cx,
 {
     flow_typing_tvar::mk_fully_resolved_lazy(
         cx,
@@ -456,8 +457,8 @@ where
         true,
         Box::new(move |cx: &Context<'cx>| {
             cx.run_in_signature_tvar_env(|| {
-                let result = f(cx, l);
-                unwrap_fully_resolved_open_t(cx, &result)
+                let result = f(cx, l)?;
+                Ok(unwrap_fully_resolved_open_t(cx, &result))
             })
         }),
     )
@@ -940,21 +941,48 @@ impl From<SpeculativeError> for FlowJsException {
     }
 }
 
+impl From<flow_utils_concurrency::worker_cancel::WorkerCanceled> for FlowJsException {
+    fn from(e: flow_utils_concurrency::worker_cancel::WorkerCanceled) -> Self {
+        FlowJsException::WorkerCanceled(e)
+    }
+}
+
+impl From<flow_utils_concurrency::job_error::CheckTimeout> for FlowJsException {
+    fn from(e: flow_utils_concurrency::job_error::CheckTimeout) -> Self {
+        FlowJsException::TimedOut(e)
+    }
+}
+
+impl From<flow_utils_concurrency::job_error::JobError> for FlowJsException {
+    fn from(e: flow_utils_concurrency::job_error::JobError) -> Self {
+        match e {
+            flow_utils_concurrency::job_error::JobError::Canceled(c) => {
+                FlowJsException::WorkerCanceled(c)
+            }
+            flow_utils_concurrency::job_error::JobError::TimedOut(t) => {
+                FlowJsException::TimedOut(t)
+            }
+            flow_utils_concurrency::job_error::JobError::DebugThrow { loc } => {
+                FlowJsException::DebugThrow { loc }
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum FlowJsException {
     Speculative(SpeculativeError),
     SpeculationSingletonError,
     LimitExceeded,
+    WorkerCanceled(flow_utils_concurrency::worker_cancel::WorkerCanceled),
+    TimedOut(flow_utils_concurrency::job_error::CheckTimeout),
+    DebugThrow { loc: ALoc },
 }
 
-// (* When emitting a single error for a representative union member, wrap the
-//    [use_op] with a [UnionRepresentative] frame so the error says "at least one
-//    member of …".  Skip the frame when [representative] itself resolves to a
-//    union, because the recursive flow will add its own frame. *)
-// let union_representative_use_op cx ~l ~representative use_op =
-//   match Context.find_resolved cx representative with
-//   | Some (UnionT _) -> use_op
-//   | _ -> Frame (UnionRepresentative { union = reason_of_t l }, use_op)
+// When emitting a single error for a representative union member, wrap the
+// [use_op] with a [UnionRepresentative] frame so the error says "at least one
+// member of …".  Skip the frame when [representative] itself resolves to a
+// union, because the recursive flow will add its own frame.
 pub fn union_representative_use_op(
     cx: &Context,
     l: &Type,
@@ -1290,43 +1318,18 @@ pub fn map_union<'cx, F>(
     trace: &DepthTrace,
     rep: &flow_typing_type::type_::union_rep::UnionRep,
     reason: Reason,
-) -> Type
-where
-    F: Fn(&Context<'cx>, &DepthTrace, &Type, Type),
-{
-    use flow_typing_tvar::mk_where;
-    use flow_typing_type::type_util::reason_of_t;
-    use flow_typing_type::type_util::union_of_ts;
-
-    let ts: Vec<_> = rep
-        .members_iter()
-        .map(|t| {
-            mk_where(cx, reason_of_t(t).dupe(), |cx, tout| {
-                f(cx, trace, t, tout.dupe())
-            })
-        })
-        .collect();
-    union_of_ts(reason, ts, None)
-}
-
-pub fn map_union_result<'cx, F>(
-    f: F,
-    cx: &Context<'cx>,
-    trace: &DepthTrace,
-    rep: &flow_typing_type::type_::union_rep::UnionRep,
-    reason: Reason,
 ) -> Result<Type, FlowJsException>
 where
     F: Fn(&Context<'cx>, &DepthTrace, &Type, Type) -> Result<(), FlowJsException>,
 {
-    use flow_typing_tvar::mk_where_result;
+    use flow_typing_tvar::mk_where;
     use flow_typing_type::type_util::reason_of_t;
     use flow_typing_type::type_util::union_of_ts;
 
     let ts: Result<Vec<_>, _> = rep
         .members_iter()
         .map(|t| {
-            mk_where_result(cx, reason_of_t(t).dupe(), |cx, tout| {
+            mk_where(cx, reason_of_t(t).dupe(), |cx, tout| {
                 f(cx, trace, t, tout.dupe())
             })
         })
@@ -1340,60 +1343,18 @@ pub fn map_inter<'cx, F>(
     trace: &DepthTrace,
     rep: &inter_rep::InterRep,
     reason: Reason,
-) -> Type
-where
-    F: Fn(&Context<'cx>, &DepthTrace, &Type, Type),
-{
-    use flow_typing_tvar::mk_where;
-    use flow_typing_type::type_::DefT;
-    use flow_typing_type::type_util::reason_of_t;
-
-    let ts: Vec<_> = rep
-        .members_iter()
-        .map(|t| {
-            mk_where(cx, reason_of_t(t).dupe(), |cx, tout| {
-                f(cx, trace, t, tout.dupe())
-            })
-        })
-        .collect();
-
-    match ts.len() {
-        // If we have no types then this is an error.
-        0 => Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::EmptyT))),
-        // If we only have one type then only that should be used.
-        1 => ts.into_iter().next().unwrap(),
-        // If we have more than one type then we make a union type.
-        _ => {
-            let mut iter = ts.into_iter();
-            let t0 = iter.next().unwrap();
-            let t1 = iter.next().unwrap();
-            let rest: Vec<Type> = iter.collect();
-            Type::new(TypeInner::IntersectionT(
-                reason,
-                inter_rep::make(t0, t1, rest.into()),
-            ))
-        }
-    }
-}
-
-pub fn map_inter_result<'cx, F>(
-    f: F,
-    cx: &Context<'cx>,
-    trace: &DepthTrace,
-    rep: &inter_rep::InterRep,
-    reason: Reason,
 ) -> Result<Type, FlowJsException>
 where
     F: Fn(&Context<'cx>, &DepthTrace, &Type, Type) -> Result<(), FlowJsException>,
 {
-    use flow_typing_tvar::mk_where_result;
+    use flow_typing_tvar::mk_where;
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_util::reason_of_t;
 
     let ts: Result<Vec<_>, _> = rep
         .members_iter()
         .map(|t| {
-            mk_where_result(cx, reason_of_t(t).dupe(), |cx, tout| {
+            mk_where(cx, reason_of_t(t).dupe(), |cx, tout| {
                 f(cx, trace, t, tout.dupe())
             })
         })
@@ -2288,7 +2249,7 @@ pub fn fix_this_instance<'cx>(
         cx,
         reason_i.dupe(),
         true,
-        Box::new(move |_cx: &Context<'cx>| result_cell_c.borrow().as_ref().unwrap().dupe()),
+        Box::new(move |_cx: &Context<'cx>| Ok(result_cell_c.borrow().as_ref().unwrap().dupe())),
     );
     let this_generic = if is_this {
         Type::new(TypeInner::GenericT(Box::new(GenericTData {
@@ -3343,7 +3304,11 @@ pub mod cjs_require_t_kit {
         module_: &ModuleType,
     ) -> Result<(Type, ALoc), FlowJsException>
     where
-        R: Fn(&Context<'cx>, ALoc, Type) -> Type,
+        R: Fn(
+            &Context<'cx>,
+            ALoc,
+            Type,
+        ) -> Result<Type, flow_utils_concurrency::job_error::JobError>,
     {
         let ModuleTypeInner {
             module_reason,
@@ -3360,7 +3325,7 @@ pub mod cjs_require_t_kit {
                     None => type_util::def_loc_of_t(t).dupe(),
                     Some(l) => l.dupe(),
                 };
-                (reposition(cx, reason.loc().dupe(), t.dupe()), def_loc)
+                (reposition(cx, reason.loc().dupe(), t.dupe())?, def_loc)
             }
             None => {
                 let value_exports_tmap = cx.find_exports(exports.value_exports_tmap);
@@ -4241,29 +4206,37 @@ pub mod copy_type_exports_t_kit {
         reason: Reason,
         target_module_type: &ModuleType,
         module_: &ModuleType,
-    ) where
-        F: Fn(&Context<'cx>, Reason, Type) -> Type,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError>
+    where
+        F: Fn(
+            &Context<'cx>,
+            Reason,
+            Type,
+        ) -> Result<Type, flow_utils_concurrency::job_error::JobError>,
     {
         let source_exports = &module_.module_export_types;
 
-        let export_all = |exports_tmap_id| {
-            let exports_tmap = cx.find_exports(exports_tmap_id);
-            for (export_name, ns) in exports_tmap.iter() {
-                let type_ = concretize_export_type(cx, reason.dupe(), ns.type_.dupe());
-                let concretized_ns =
-                    NamedSymbol::new(ns.name_loc.dupe(), ns.preferred_def_locs.clone(), type_);
-                export_type_t_kit::on_concrete_type(
-                    cx,
-                    reason.dupe(),
-                    &concretized_ns,
-                    export_name.dupe(),
-                    target_module_type,
-                );
-            }
-        };
+        let export_all =
+            |exports_tmap_id| -> Result<(), flow_utils_concurrency::job_error::JobError> {
+                let exports_tmap = cx.find_exports(exports_tmap_id);
+                for (export_name, ns) in exports_tmap.iter() {
+                    let type_ = concretize_export_type(cx, reason.dupe(), ns.type_.dupe())?;
+                    let concretized_ns =
+                        NamedSymbol::new(ns.name_loc.dupe(), ns.preferred_def_locs.clone(), type_);
+                    export_type_t_kit::on_concrete_type(
+                        cx,
+                        reason.dupe(),
+                        &concretized_ns,
+                        export_name.dupe(),
+                        target_module_type,
+                    );
+                }
+                Ok(())
+            };
 
-        export_all(source_exports.value_exports_tmap);
-        export_all(source_exports.type_exports_tmap);
+        export_all(source_exports.value_exports_tmap)?;
+        export_all(source_exports.type_exports_tmap)?;
+        Ok(())
     }
 }
 
@@ -4292,11 +4265,11 @@ pub mod cjs_extract_named_exports_t_kit {
         reason: Reason,
         local_module: ModuleType,
         t: Type,
-    ) -> ModuleType
+    ) -> Result<ModuleType, flow_utils_concurrency::job_error::JobError>
     where
-        F: Fn(Type) -> Type,
+        F: Fn(Type) -> Result<Type, flow_utils_concurrency::job_error::JobError>,
     {
-        let t = concretize(t);
+        let t = concretize(t)?;
         match t.deref() {
             TypeInner::NamespaceT(ns) => {
                 //   Copy props from the values part
@@ -4306,7 +4279,7 @@ pub mod cjs_extract_named_exports_t_kit {
                     reason.dupe(),
                     local_module,
                     ns.values_type.dupe(),
-                );
+                )?;
                 //   Copy type exports
                 let type_props = cx.find_props(ns.types_tmap.dupe());
                 let type_exports: exports::T =
@@ -4318,7 +4291,7 @@ pub mod cjs_extract_named_exports_t_kit {
                     ExportKind::DirectExport,
                     &module_type,
                 );
-                module_type
+                Ok(module_type)
             }
             // ObjT CommonJS export values have their properties turned into named exports.
             TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ObjT(_)) => {
@@ -4328,7 +4301,7 @@ pub mod cjs_extract_named_exports_t_kit {
                     let proto_t = &o.proto_t;
                     // Copy props from the prototype
                     let module_type =
-                        on_type(cx, concretize, reason.dupe(), local_module, proto_t.dupe());
+                        on_type(cx, concretize, reason.dupe(), local_module, proto_t.dupe())?;
                     // Copy own props
                     let own_props = cx.find_props(props_tmap);
                     let own_exports: exports::T =
@@ -4340,7 +4313,7 @@ pub mod cjs_extract_named_exports_t_kit {
                         ExportKind::DirectExport,
                         &module_type,
                     );
-                    module_type
+                    Ok(module_type)
                 } else {
                     unreachable!()
                 }
@@ -4380,7 +4353,7 @@ pub mod cjs_extract_named_exports_t_kit {
                         &local_module,
                     );
                     // local_module
-                    local_module
+                    Ok(local_module)
                 } else {
                     unreachable!()
                 }
@@ -4389,16 +4362,16 @@ pub mod cjs_extract_named_exports_t_kit {
             TypeInner::AnyT(_, _) => {
                 let mut module_export_types = local_module.module_export_types.clone();
                 module_export_types.has_every_named_export = true;
-                ModuleType::new(ModuleTypeInner {
+                Ok(ModuleType::new(ModuleTypeInner {
                     module_reason: local_module.module_reason.dupe(),
                     module_export_types,
                     module_is_strict: local_module.module_is_strict,
                     module_available_platforms: local_module.module_available_platforms.clone(),
-                })
+                }))
             }
             // All other CommonJS export value types do not get merged into the named
             // exports tmap in any special way.
-            _ => local_module,
+            _ => Ok(local_module),
         }
     }
 }
@@ -4782,7 +4755,11 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
     ) -> Result<(Option<ALoc>, Type), FlowJsException>
     where
-        R: Fn(&Context<'cx>, ALoc, Type) -> Type,
+        R: Fn(
+            &Context<'cx>,
+            ALoc,
+            Type,
+        ) -> Result<Type, flow_utils_concurrency::job_error::JobError>,
     {
         let is_strict = cx.is_strict();
         Ok(match source_module {
@@ -4989,7 +4966,7 @@ pub fn check_method_unbinding<'cx>(
     // match p with
     match p.deref() {
         PropertyInner::Method { key_loc, type_: t } if !method_accessible => {
-            let hint_result = (hint.1)(cx, false, None, reason_op.dupe());
+            let hint_result = (hint.1)(cx, false, None, reason_op.dupe())?;
 
             let valid_hint_t = match hint_result {
                 HintEvalResult::HintAvailable(hint_t, _) => {
@@ -5177,8 +5154,14 @@ pub trait GetPropHelper {
     // inference, so we allow this behavior to be disabled by passing None. Note that this will
     // likely introduce inconsistent semantics and is undesirable, but at the time of writing this
     // comment we had no alternative for annotation inference.
-    fn prop_overlaps_with_indexer()
-    -> Option<for<'b> fn(&Context<'b>, &flow_common::reason::Name, &Reason, &Type) -> bool>;
+    fn prop_overlaps_with_indexer() -> Option<
+        for<'b> fn(
+            &Context<'b>,
+            &flow_common::reason::Name,
+            &Reason,
+            &Type,
+        ) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+    >;
 }
 
 pub mod get_prop_t_kit {
@@ -5601,7 +5584,7 @@ pub mod get_prop_t_kit {
                     Some(prop_overlaps_with_indexer)
                         if !tvar_visitors::has_unresolved_tvars(cx, key) =>
                     {
-                        if prop_overlaps_with_indexer(cx, name, reason_op, key) {
+                        if prop_overlaps_with_indexer(cx, name, reason_op, key)? {
                             let type_ = union_void_if_instructed(value.dupe());
                             Ok(Some((
                                 PropertyType::OrdinaryField {
@@ -7008,8 +6991,8 @@ pub mod render_types {
 
     struct RenderTypeNormalizationContext<'a, 'cx, F, G>
     where
-        F: Fn(&Type) -> Vec<Type>,
-        G: Fn(&Type) -> bool,
+        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
+        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
     {
         cx: &'a Context<'cx>,
         type_collector: TypeCollector,
@@ -7025,8 +7008,8 @@ pub mod render_types {
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         new_error: (Reason, PotentialFixableErrorKind),
     ) where
-        F: Fn(&Type) -> Vec<Type>,
-        G: Fn(&Type) -> bool,
+        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
+        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
     {
         let mut error_acc = normalization_cx.error_acc_ref.borrow_mut();
         let (r, k2) = new_error;
@@ -7050,8 +7033,8 @@ pub mod render_types {
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         e: ErrorMessage<ALoc>,
     ) where
-        F: Fn(&Type) -> Vec<Type>,
-        G: Fn(&Type) -> bool,
+        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
+        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
     {
         let mut error_acc = normalization_cx.error_acc_ref.borrow_mut();
         error_acc.normal_errors.push(e);
@@ -7061,16 +7044,17 @@ pub mod render_types {
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         resolved_elem_reason: &Reason,
         t: Type,
-    ) where
-        F: Fn(&Type) -> Vec<Type>,
-        G: Fn(&Type) -> bool,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError>
+    where
+        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
+        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
     {
         match t.deref() {
             TypeInner::DefT(r, def_t) => match def_t.deref() {
                 DefTInner::RendersT(renders_form) => match renders_form.deref() {
                     CanonicalRendersForm::NominalRenders { .. } => {
                         normalization_cx.type_collector.add(t.dupe());
-                        return;
+                        return Ok(());
                     }
                     CanonicalRendersForm::StructuralRenders {
                         renders_variant: child_variant,
@@ -7078,13 +7062,13 @@ pub mod render_types {
                     } => {
                         if allow_child_renders(&normalization_cx.renders_variant, child_variant) {
                             for concretized in
-                                (normalization_cx.concretize)(renders_structural_type)
+                                (normalization_cx.concretize)(renders_structural_type)?
                             {
                                 on_concretized_renders_normalization(
                                     normalization_cx,
                                     resolved_elem_reason,
                                     concretized,
-                                );
+                                )?;
                             }
                         } else {
                             normalization_cx
@@ -7105,7 +7089,7 @@ pub mod render_types {
                                 )),
                             );
                         }
-                        return;
+                        return Ok(());
                     }
                     CanonicalRendersForm::DefaultRenders => {
                         normalization_cx
@@ -7125,7 +7109,7 @@ pub mod render_types {
                                 },
                             )),
                         );
-                        return;
+                        return Ok(());
                     }
                     _ => {}
                 },
@@ -7149,15 +7133,17 @@ pub mod render_types {
                 invalid_type_reasons: Vec1::new(resolved_elem_reason.dupe()),
             })),
         );
+        Ok(())
     }
 
     fn on_concretized_component_normalization<F, G>(
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         resolved_elem_reason: &Reason,
         t: Type,
-    ) where
-        F: Fn(&Type) -> Vec<Type>,
-        G: Fn(&Type) -> bool,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError>
+    where
+        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
+        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
     {
         match t.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
@@ -7189,7 +7175,7 @@ pub mod render_types {
                             &subst_map,
                             t_out.dupe(),
                         ),
-                    );
+                    )?;
                 }
                 DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                     component_kind: ComponentKind::Nominal(renders_id, renders_name, _),
@@ -7219,12 +7205,12 @@ pub mod render_types {
                     renders: render_type,
                     ..
                 }) => {
-                    for concretized in (normalization_cx.concretize)(render_type) {
+                    for concretized in (normalization_cx.concretize)(render_type)? {
                         on_concretized_renders_normalization(
                             normalization_cx,
                             resolved_elem_reason,
                             concretized,
-                        );
+                        )?;
                     }
                 }
                 _ => {
@@ -7271,14 +7257,16 @@ pub mod render_types {
                 );
             }
         }
+        Ok(())
     }
 
     fn on_concretized_bad_non_element_normalization<F, G>(
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         t: Type,
-    ) where
-        F: Fn(&Type) -> Vec<Type>,
-        G: Fn(&Type) -> bool,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError>
+    where
+        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
+        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
     {
         match &*t {
             TypeInner::DefT(invalid_type_reason, def_t)
@@ -7315,7 +7303,7 @@ pub mod render_types {
                 normalization_cx
                     .type_collector
                     .add(any_t::error(normalization_cx.result_reason.dupe()));
-                if (normalization_cx.is_iterable_for_better_error)(&t) {
+                if (normalization_cx.is_iterable_for_better_error)(&t)? {
                     merge_error_acc_with_potential_fixable_error(
                         normalization_cx,
                         (
@@ -7341,14 +7329,16 @@ pub mod render_types {
                 }
             }
         }
+        Ok(())
     }
 
     fn on_concretized_element_normalization<F, G>(
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         t: Type,
-    ) where
-        F: Fn(&Type) -> Vec<Type>,
-        G: Fn(&Type) -> bool,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError>
+    where
+        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
+        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
     {
         match &*t {
             TypeInner::GenericT(box GenericTData { reason, .. }) => {
@@ -7380,10 +7370,10 @@ pub mod render_types {
                                     CanonicalRendersForm::IntrinsicRenders("svg".into()),
                                 ))),
                             )));
-                        return;
+                        return Ok(());
                     }
                 }
-                on_concretized_bad_non_element_normalization(normalization_cx, t.dupe());
+                on_concretized_bad_non_element_normalization(normalization_cx, t.dupe())?;
             }
             TypeInner::NominalT {
                 reason: element_r,
@@ -7406,14 +7396,14 @@ pub mod render_types {
                                         Some(mono_component) => mono_component,
                                         None => component_t.dupe(),
                                     };
-                                    for concretized in (normalization_cx.concretize)(&c) {
+                                    for concretized in (normalization_cx.concretize)(&c)? {
                                         on_concretized_component_normalization(
                                             normalization_cx,
                                             element_r,
                                             concretized,
-                                        );
+                                        )?;
                                     }
-                                    return;
+                                    return Ok(());
                                 }
                             }
                         }
@@ -7423,22 +7413,23 @@ pub mod render_types {
                     == Some(nominal_id)
                 {
                     if let Some((_, _, component_t, _)) = nominal_type_args.first() {
-                        for concretized in (normalization_cx.concretize)(component_t) {
+                        for concretized in (normalization_cx.concretize)(component_t)? {
                             on_concretized_component_normalization(
                                 normalization_cx,
                                 element_r,
                                 concretized,
-                            );
+                            )?;
                         }
-                        return;
+                        return Ok(());
                     }
                 }
-                on_concretized_bad_non_element_normalization(normalization_cx, t.dupe());
+                on_concretized_bad_non_element_normalization(normalization_cx, t.dupe())?;
             }
             _ => {
-                on_concretized_bad_non_element_normalization(normalization_cx, t.dupe());
+                on_concretized_bad_non_element_normalization(normalization_cx, t.dupe())?;
             }
         }
+        Ok(())
     }
 
     fn normalize_render_type_argument<'cx, F, G>(
@@ -7449,10 +7440,10 @@ pub mod render_types {
         concretize: F,
         is_iterable_for_better_error: G,
         input: Type,
-    ) -> Type
+    ) -> Result<Type, flow_utils_concurrency::job_error::JobError>
     where
-        F: Fn(&Type) -> Vec<Type>,
-        G: Fn(&Type) -> bool,
+        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
+        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
     {
         let type_collector = TypeCollector::create();
         let error_acc_ref = RefCell::new(ErrorAcc {
@@ -7469,8 +7460,8 @@ pub mod render_types {
             concretize,
             is_iterable_for_better_error,
         };
-        for concretized in (normalization_cx.concretize)(&input) {
-            on_concretized_element_normalization(&normalization_cx, concretized);
+        for concretized in (normalization_cx.concretize)(&input)? {
+            on_concretized_element_normalization(&normalization_cx, concretized)?;
         }
         let error_acc = normalization_cx.error_acc_ref.into_inner();
         if let Some((mut invalid_type_reasons, kind)) = error_acc.potential_fixable_error_acc {
@@ -7502,7 +7493,7 @@ pub mod render_types {
         let collected = normalization_cx.type_collector.collect();
         let renders_structural_type =
             union_of_ts(reason.dupe(), collected.into_iter().collect(), None);
-        Type::new(TypeInner::DefT(
+        Ok(Type::new(TypeInner::DefT(
             reason,
             DefT::new(DefTInner::RendersT(Rc::new(
                 CanonicalRendersForm::StructuralRenders {
@@ -7510,7 +7501,7 @@ pub mod render_types {
                     renders_structural_type,
                 },
             ))),
-        ))
+        )))
     }
 
     pub fn mk_non_generic_render_type<'cx, F, G>(
@@ -7523,8 +7514,13 @@ pub mod render_types {
         t: Type,
     ) -> Type
     where
-        F: Fn(&Context<'cx>, &Type) -> Vec<Type> + 'cx,
-        G: Fn(&Context<'cx>, &Type) -> bool + 'cx,
+        F: Fn(
+                &Context<'cx>,
+                &Type,
+            ) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>
+            + 'cx,
+        G: Fn(&Context<'cx>, &Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>
+            + 'cx,
     {
         let reason_inner = reason.dupe();
         let renders_variant_inner = renders_variant.clone();
@@ -7535,9 +7531,14 @@ pub mod render_types {
             Box::new(move |cx: &Context<'cx>| {
                 cx.run_in_signature_tvar_env(|| {
                     let arg_loc = loc_of_t(&t).dupe();
-                    let concretize_partial = |t: &Type| -> Vec<Type> { concretize(cx, t) };
+                    let concretize_partial = |t: &Type| -> Result<
+                        Vec<Type>,
+                        flow_utils_concurrency::job_error::JobError,
+                    > { concretize(cx, t) };
                     let is_iterable_partial =
-                        |t: &Type| -> bool { is_iterable_for_better_error(cx, t) };
+                        |t: &Type| -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+                            is_iterable_for_better_error(cx, t)
+                        };
                     normalize_render_type_argument(
                         cx,
                         arg_loc,

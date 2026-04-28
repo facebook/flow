@@ -129,15 +129,15 @@ pub mod keys {
     }
 }
 
-/// get type refinement for expression, if it exists  
+/// get type refinement for expression, if it exists
 pub fn get<'a, M: Dupe, T: Dupe>(
     allow_optional: bool,
     cx: &Context<'a>,
     expr: &Expression<M, T>,
     loc: ALoc,
-) -> Option<Type> {
+) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
     match keys::key(allow_optional, expr) {
         Some(k) => type_env::get_refinement(cx, k.reason_desc(), loc),
-        None => None,
+        None => Ok(None),
     }
 }

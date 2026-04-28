@@ -108,6 +108,11 @@ fn load_lib_files(
                     },
                     Rc::new(move |_cx: &Context, _| ResolvedRequire::MissingModule),
                     Rc::new(move |_cx: &Context| Builtins::empty()),
+                    flow_utils_concurrency::check_budget::CheckBudget::new(
+                        options
+                            .merge_timeout
+                            .map(std::time::Duration::from_secs_f64),
+                    ),
                 );
                 let file_keys_with_comments: Vec<(FileKey, &[flow_parser::ast::Comment<Loc>])> =
                     ordered_asts

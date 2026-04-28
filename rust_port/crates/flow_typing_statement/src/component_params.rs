@@ -22,7 +22,7 @@ use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 use flow_typing_visitors::type_visitor;
 use flow_typing_visitors::type_visitor::TypeVisitor;
 
@@ -40,14 +40,11 @@ impl Config for DeclarationConfig {
     fn eval_param<'a>(
         cx: &Context<'a>,
         param: &Self::Param,
-    ) -> Result<Self::ParamAst, AbnormalControlFlow> {
+    ) -> Result<Self::ParamAst, CheckExprError> {
         component_declaration_config::eval_param(cx, param)
     }
 
-    fn eval_rest<'a>(
-        cx: &Context<'a>,
-        rest: &Self::Rest,
-    ) -> Result<Self::RestAst, AbnormalControlFlow> {
+    fn eval_rest<'a>(cx: &Context<'a>, rest: &Self::Rest) -> Result<Self::RestAst, CheckExprError> {
         component_declaration_config::eval_rest(cx, rest)
     }
 
@@ -59,8 +56,11 @@ impl Config for DeclarationConfig {
         component_declaration_config::rest_type(rest)
     }
 
-    fn read_react<'a>(cx: &Context<'a>, loc: ALoc) {
-        component_declaration_config::read_react(cx, loc);
+    fn read_react<'a>(
+        cx: &Context<'a>,
+        loc: ALoc,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        component_declaration_config::read_react(cx, loc)
     }
 }
 
@@ -122,7 +122,7 @@ pub fn config<'a, C: Config>(
     config_reason: &flow_common::reason::Reason,
     params: &[C::Param],
     rest: Option<&C::Rest>,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     use flow_common::polarity::Polarity;
     use flow_typing_type::type_::*;
 
@@ -187,7 +187,7 @@ pub fn config<'a, C: Config>(
     if let Some((key_loc, ref_prop_t)) = &ref_prop {
         match cx.react_ref_as_prop() {
             ReactRefAsProp::Legacy => {
-                C::read_react(cx, key_loc.dupe());
+                C::read_react(cx, key_loc.dupe())?;
             }
             ReactRefAsProp::FullSupport => {}
         }
@@ -196,14 +196,22 @@ pub fn config<'a, C: Config>(
                 flow_common::reason::VirtualReasonDesc::RReactRef,
                 key_loc.dupe(),
             );
-            let u = flow_typing_flow_js::flow_js::FlowJs::get_builtin_react_typeapp(
+            let u = match flow_typing_flow_js::flow_js::FlowJs::get_builtin_react_typeapp(
                 cx,
                 &reason_op,
                 None,
                 flow_typing_errors::intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactRefSetterType,
                 vec![any_t::error(reason_op.dupe())],
-            )
-            .expect("Should not be under speculation");
+            ) {
+                Ok(v) => v,
+                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+                    return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
+                }
+                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => {
+                    return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
+                }
+                Err(err) => panic!("Should not be under speculation: {:?}", err),
+            };
             cx.add_post_inference_subtyping_check(
                 ref_prop_t.dupe(),
                 UseOp::Op(std::sync::Arc::new(RootUseOp::DeclareComponentRef {
@@ -221,15 +229,23 @@ pub fn config<'a, C: Config>(
         props: pmap,
         allow_ref_in_spread,
     };
-    flow_typing_flow_js::flow_js::FlowJs::mk_possibly_evaluated_destructor_for_annotations(
+    match flow_typing_flow_js::flow_js::FlowJs::mk_possibly_evaluated_destructor_for_annotations(
         cx,
         unknown_use(),
         config_reason,
         &rest_t,
         &destructor,
         eval::Id::generate_id(),
-    )
-    .expect("Should not be under speculation")
+    ) {
+        Ok(v) => Ok(v),
+        Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => panic!("Should not be under speculation: {:?}", err),
+    }
 }
 
 pub fn eval<'a, C: Config, R>(
@@ -237,7 +253,7 @@ pub fn eval<'a, C: Config, R>(
     params: &[C::Param],
     rest: Option<&C::Rest>,
     reconstruct: impl Fn(Vec<C::ParamAst>, Option<C::RestAst>) -> R,
-) -> Result<R, AbnormalControlFlow> {
+) -> Result<R, CheckExprError> {
     let param_tasts: Vec<_> = params
         .iter()
         .map(|p| C::eval_param(cx, p))

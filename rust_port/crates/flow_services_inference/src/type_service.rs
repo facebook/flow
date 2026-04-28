@@ -632,16 +632,19 @@ mod check_files {
         sig_new_or_changed: FlowOrdSet<FileKey>,
         dependency_info: &DependencyInfo,
         master_cx: Arc<MasterContext>,
-    ) -> (
-        Errors,
-        BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
-        FindRefResults,
-        f64,
-        usize,
-        Option<String>,
-        i32,
-        Option<String>,
-    ) {
+    ) -> Result<
+        (
+            Errors,
+            BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
+            FindRefResults,
+            f64,
+            usize,
+            Option<String>,
+            i32,
+            Option<String>,
+        ),
+        RecheckError,
+    > {
         let options_ref = options.dupe();
         let quiet = options.quiet;
         with_memory_timer(&options_ref, "Check", || {
@@ -696,12 +699,7 @@ mod check_files {
                 num_workers,
                 files.iter().map(|f| f.dupe()).collect(),
             );
-            type CheckFn = Box<
-                dyn FnMut(
-                    FileKey,
-                )
-                    -> merge_service::UnitResult<Option<merge_service::CheckFileResult>>,
-            >;
+            type CheckFn = Box<dyn FnMut(FileKey) -> merge_service::CheckJobOutcome>;
             type WorkerState = (
                 CheckFn,
                 Rc<std::cell::RefCell<crate::check_cache::CheckCache<'static>>>,
@@ -744,10 +742,36 @@ mod check_files {
             let mk_check_for_steal = mk_check.dupe();
             let stealers_for_steal = stealers.dupe();
 
+            type StealItem = (
+                FileKey,
+                Result<
+                    Option<(
+                        ErrorSet,
+                        ErrorSet,
+                        ErrorSuppressions,
+                        flow_services_coverage::FileCoverage,
+                        f64,
+                    )>,
+                    (ALoc, InternalError),
+                >,
+            );
+            #[derive(Debug)]
+            struct StealAcc(
+                Result<Vec<StealItem>, flow_utils_concurrency::worker_cancel::WorkerCanceled>,
+            );
+            impl Default for StealAcc {
+                fn default() -> Self {
+                    StealAcc(Ok(Vec::new()))
+                }
+            }
+
             let ret = flow_utils_concurrency::map_reduce::call_with_stealing(
                 pool,
                 next,
-                move |acc: &mut Vec<_>, batch| {
+                move |acc: &mut StealAcc, batch| {
+                    if acc.0.is_err() {
+                        return;
+                    }
                     WORKER_CHECK.with(|cell: &RefCell<Option<WorkerState>>| {
                         let mut opt = cell.borrow_mut();
                         if opt.is_none() {
@@ -768,17 +792,38 @@ mod check_files {
                                 deque.push(file);
                             }
 
-                            let results = job_utils::mk_job_stealing(&mut **check, &options, deque);
-                            mk_next_merge(acc, results);
+                            match job_utils::mk_job_stealing(
+                                &mut **check,
+                                |(_, r)| r,
+                                &options,
+                                deque,
+                            ) {
+                                Ok(results) => {
+                                    let acc_vec = acc.0.as_mut().unwrap();
+                                    mk_next_merge(acc_vec, results);
+                                }
+                                Err(c) => {
+                                    acc.0 = Err(c);
+                                }
+                            }
                         });
 
                         cache.borrow_mut().clear();
                     });
                 },
-                |a: &mut Vec<_>, b: Vec<_>| {
-                    a.extend(b);
+                |a: &mut StealAcc, b: StealAcc| match (&mut a.0, b.0) {
+                    (Err(_), _) => {}
+                    (a_slot @ Ok(_), Err(c)) => {
+                        *a_slot = Err(c);
+                    }
+                    (Ok(a_vec), Ok(b_vec)) => {
+                        a_vec.extend(b_vec);
+                    }
                 },
-                move |acc: &mut Vec<_>| -> bool {
+                move |acc: &mut StealAcc| -> bool {
+                    if acc.0.is_err() {
+                        return false;
+                    }
                     for stealer in stealers_for_steal.iter() {
                         if let crossbeam::deque::Steal::Success(file) = stealer.steal() {
                             WORKER_CHECK.with(|cell: &RefCell<Option<WorkerState>>| {
@@ -787,13 +832,20 @@ mod check_files {
                                     *opt = Some(mk_check_for_steal());
                                 }
                                 let (check, _cache) = opt.as_mut().unwrap();
-                                let result = check(file.dupe());
-                                let mapped = match result {
-                                    Ok(Some((_, r))) => Ok(Some(r)),
-                                    Ok(None) => Ok(None),
-                                    Err(e) => Err(e),
-                                };
-                                acc.push((file, mapped));
+                                match check(file.dupe()) {
+                                    merge_service::CheckJobOutcome::Ok(Some((_, r))) => {
+                                        acc.0.as_mut().unwrap().push((file, Ok(Some(r))));
+                                    }
+                                    merge_service::CheckJobOutcome::Ok(None) => {
+                                        acc.0.as_mut().unwrap().push((file, Ok(None)));
+                                    }
+                                    merge_service::CheckJobOutcome::PerFileError(e) => {
+                                        acc.0.as_mut().unwrap().push((file, Err(e)));
+                                    }
+                                    merge_service::CheckJobOutcome::Canceled(c) => {
+                                        acc.0 = Err(c);
+                                    }
+                                }
                             });
                             files_completed.fetch_add(1, std::sync::atomic::Ordering::Release);
                             return true;
@@ -810,6 +862,10 @@ mod check_files {
                     *cell.borrow_mut() = None;
                 });
             });
+            let ret_vec = match ret.0 {
+                Ok(v) => v,
+                Err(_) => return Err(RecheckError::Canceled(Vec::new())),
+            };
             let Errors {
                 merge_errors,
                 warnings,
@@ -827,7 +883,7 @@ mod check_files {
                     first_internal_error,
                 ),
                 slow_files,
-            ) = ret.into_iter().fold(
+            ) = ret_vec.into_iter().fold(
                 (
                     (
                         merge_errors,
@@ -854,7 +910,7 @@ mod check_files {
                 warnings,
                 suppressions,
             };
-            (
+            Ok((
                 errors,
                 coverage,
                 find_ref_results,
@@ -863,7 +919,7 @@ mod check_files {
                 slowest_file.map(|file| file.as_str().to_owned()),
                 num_slow_files,
                 first_internal_error.map(|msg| format!("First check internal error:\n{}", msg)),
-            )
+            ))
         })
     }
 }
@@ -1559,7 +1615,7 @@ pub(crate) mod recheck {
             sig_new_or_changed,
             &env.dependency_info,
             env.master_cx.dupe(),
-        );
+        )?;
         if let Some(ref err) = check_internal_error {
             eprintln!("Error: {}", err);
         }
@@ -3510,7 +3566,7 @@ pub fn check_files_for_init(
             merge_result.sig_new_or_changed.dupe(),
             &dependency_info,
             master_cx.dupe(),
-        );
+        )?;
         // Deduplicate ETrivialRecursiveDefinition errors from cyclic
         // dependencies. In OCaml, the single-threaded check phase shares a
         // check cache so cycle errors are generated only once. In the Rust

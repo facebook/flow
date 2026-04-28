@@ -36,6 +36,7 @@ use flow_typing_statement::statement as typing_statement;
 use flow_typing_type::type_;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::Type;
+use flow_typing_utils::abnormal::CheckExprError;
 
 use crate::autocomplete_sigil;
 
@@ -189,6 +190,33 @@ fn extract_word(cursor_loc: &Loc, text: &str) -> (String, Loc) {
 enum Found {
     Found(ProcessLocationResult),
     InternalExn(String),
+    Canceled(flow_utils_concurrency::worker_cancel::WorkerCanceled),
+    TimedOut(flow_utils_concurrency::job_error::CheckTimeout),
+    DebugThrow { loc: ALoc },
+}
+
+impl From<flow_utils_concurrency::worker_cancel::WorkerCanceled> for Found {
+    fn from(e: flow_utils_concurrency::worker_cancel::WorkerCanceled) -> Self {
+        Found::Canceled(e)
+    }
+}
+
+impl From<flow_utils_concurrency::job_error::CheckTimeout> for Found {
+    fn from(e: flow_utils_concurrency::job_error::CheckTimeout) -> Self {
+        Found::TimedOut(e)
+    }
+}
+
+impl From<flow_utils_concurrency::job_error::JobError> for Found {
+    fn from(e: flow_utils_concurrency::job_error::JobError) -> Self {
+        match e {
+            flow_utils_concurrency::job_error::JobError::Canceled(c) => Found::Canceled(c),
+            flow_utils_concurrency::job_error::JobError::TimedOut(t) => Found::TimedOut(t),
+            flow_utils_concurrency::job_error::JobError::DebugThrow { loc } => {
+                Found::DebugThrow { loc }
+            }
+        }
+    }
 }
 
 struct Inference;
@@ -255,7 +283,11 @@ impl Inference {
         }
     }
 
-    fn type_of_identifier(cx: &Context, loc: &ALoc, id: &ast::Identifier<ALoc, ALoc>) -> Type {
+    fn type_of_identifier(
+        cx: &Context,
+        loc: &ALoc,
+        id: &ast::Identifier<ALoc, ALoc>,
+    ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
         typing_statement::identifier(EnclosingContext::NoContext, cx, id, loc.dupe())
     }
 
@@ -272,7 +304,12 @@ impl Inference {
             &|cx, expr| typing_statement::expression(None, None, None, cx, expr),
             mem,
         )
-        .map_err(|_| Found::InternalExn("typed AST structure mismatch".to_string()))
+        .map_err(|err| match err {
+            CheckExprError::Canceled(c) => Found::Canceled(c),
+            CheckExprError::TimedOut(t) => Found::TimedOut(t),
+            CheckExprError::DebugThrow { loc } => Found::DebugThrow { loc },
+            _ => Found::InternalExn("typed AST structure mismatch".to_string()),
+        })
     }
 }
 
@@ -350,7 +387,7 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
                 &ast,
                 &tast,
                 self.cx.metadata(),
-            );
+            )?;
         }
         Ok(())
     }
@@ -361,8 +398,16 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
             .last()
             .expect("enclosing_node_stack is empty")
             .clone();
-        let typed_node = typed_ast_finder::infer_node(self.cx, node)
-            .map_err(|_| Found::InternalExn("typed AST structure mismatch".to_string()))?;
+        let typed_node = typed_ast_finder::infer_node(self.cx, node).map_err(|e| match e {
+            flow_typing_utils::abnormal::CheckExprError::Canceled(c) => Found::Canceled(c),
+            flow_typing_utils::abnormal::CheckExprError::TimedOut(t) => Found::TimedOut(t),
+            flow_typing_utils::abnormal::CheckExprError::DebugThrow { loc } => {
+                Found::DebugThrow { loc }
+            }
+            flow_typing_utils::abnormal::CheckExprError::Abnormal(_) => {
+                Found::InternalExn("typed AST structure mismatch".to_string())
+            }
+        })?;
         match typed_ast_finder::find_type_annot_in_node(loc.dupe(), &typed_node) {
             Some(t) => Ok(t),
             None => Err(Found::InternalExn("enclosing loc missing".to_string())),
@@ -437,7 +482,7 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
         result
     }
 
-    fn member_result(
+    fn member_with_annot(
         &self,
         expr_loc: &ALoc,
         obj: &expression::Expression<ALoc, ALoc>,
@@ -573,7 +618,7 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
         }
     }
 
-    fn indexed_access_result(
+    fn indexed_access_type_with_annot(
         &self,
         expr_loc: &ALoc,
         obj: &types::Type<ALoc, ALoc>,
@@ -744,7 +789,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
         expr: &'ast expression::Member<ALoc, ALoc>,
     ) -> Result<(), Found> {
         if let Some((ac_loc, token, autocomplete_type)) =
-            self.member_result(loc, &expr.object, &expr.property, false)?
+            self.member_with_annot(loc, &expr.object, &expr.property, false)?
         {
             self.find(ac_loc, token, autocomplete_type)
         } else {
@@ -758,7 +803,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
         expr: &'ast expression::OptionalMember<ALoc, ALoc>,
     ) -> Result<(), Found> {
         if let Some((ac_loc, token, autocomplete_type)) =
-            self.member_result(loc, &expr.member.object, &expr.member.property, true)?
+            self.member_with_annot(loc, &expr.member.object, &expr.member.property, true)?
         {
             self.find(ac_loc, token, autocomplete_type)
         } else {
@@ -1294,7 +1339,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
                 ),
             types::TypeInner::IndexedAccess { loc, inner } => {
                 if let Some((ac_loc, token, autocomplete_type)) =
-                    self.indexed_access_result(loc, &inner.object, &inner.index, false)?
+                    self.indexed_access_type_with_annot(loc, &inner.object, &inner.index, false)?
                 {
                     self.find(ac_loc, token, autocomplete_type)
                 } else {
@@ -1302,12 +1347,14 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
                 }
             }
             types::TypeInner::OptionalIndexedAccess { loc, inner } => {
-                if let Some((ac_loc, token, autocomplete_type)) = self.indexed_access_result(
-                    loc,
-                    &inner.indexed_access.object,
-                    &inner.indexed_access.index,
-                    true,
-                )? {
+                if let Some((ac_loc, token, autocomplete_type)) = self
+                    .indexed_access_type_with_annot(
+                        loc,
+                        &inner.indexed_access.object,
+                        &inner.indexed_access.index,
+                        true,
+                    )?
+                {
                     self.find(ac_loc, token, autocomplete_type)
                 } else {
                     ast_visitor::type_default(self, t)
@@ -1372,7 +1419,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
             {
                 let obj_type = match &member_pattern.base {
                     ast::match_pattern::member_pattern::Base::BaseIdentifier(id) => {
-                        Inference::type_of_identifier(self.cx, &id.loc, id)
+                        Inference::type_of_identifier(self.cx, &id.loc, id)?
                     }
                     ast::match_pattern::member_pattern::Base::BaseMember(mem) => {
                         Inference::type_of_match_member_pattern(self.cx, mem)?
@@ -1396,7 +1443,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
             {
                 let obj_type = match &member_pattern.base {
                     ast::match_pattern::member_pattern::Base::BaseIdentifier(id) => {
-                        Inference::type_of_identifier(self.cx, &id.loc, id)
+                        Inference::type_of_identifier(self.cx, &id.loc, id)?
                     }
                     ast::match_pattern::member_pattern::Base::BaseMember(mem) => {
                         Inference::type_of_match_member_pattern(self.cx, mem)?
@@ -1625,13 +1672,21 @@ pub fn process_location(
     trigger_character: Option<&str>,
     cursor: &Loc,
     aloc_ast: &ast::Program<ALoc, ALoc>,
-) -> Result<Option<ProcessLocationResult>, String> {
+) -> Result<
+    Result<Option<ProcessLocationResult>, String>,
+    flow_utils_concurrency::job_error::JobError,
+> {
     let from_trigger_character = trigger_character.is_some();
     let mut searcher = ProcessRequestSearcher::new(cx, file_sig, from_trigger_character, cursor);
     match searcher.program(aloc_ast) {
-        Err(Found::Found(found)) => Ok(Some(found)),
-        Err(Found::InternalExn(err)) => Err(err),
-        Ok(()) => Ok(None),
+        Err(Found::Found(found)) => Ok(Ok(Some(found))),
+        Err(Found::InternalExn(err)) => Ok(Err(err)),
+        Err(Found::Canceled(c)) => Err(flow_utils_concurrency::job_error::JobError::Canceled(c)),
+        Err(Found::TimedOut(t)) => Err(flow_utils_concurrency::job_error::JobError::TimedOut(t)),
+        Err(Found::DebugThrow { loc }) => {
+            Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc })
+        }
+        Ok(()) => Ok(Ok(None)),
     }
 }
 

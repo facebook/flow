@@ -980,18 +980,23 @@ fn type_parse_artifacts_for_ac_with_cache(
                 tolerable_errors: _,
                 parse_errors: _,
             } = parse_artifacts;
-            let (cx, aloc_ast) = flow_services_inference::type_contents::compute_env_of_contents(
-                options,
-                shared_mem.clone(),
-                master_cx.clone(),
-                file_for_result.dupe(),
-                Arc::new(docblock.clone()),
-                Arc::new(ast.clone()),
-                requires,
-                file_sig.dupe(),
-                node_modules_containers,
-            )
-            .map_err(|_| TypeContentsError::CheckedDependenciesCanceled)?;
+            let (cx, aloc_ast) =
+                match flow_services_inference::type_contents::compute_env_of_contents(
+                    options,
+                    shared_mem.clone(),
+                    master_cx.clone(),
+                    file_for_result.dupe(),
+                    Arc::new(docblock.clone()),
+                    Arc::new(ast.clone()),
+                    requires,
+                    file_sig.dupe(),
+                    node_modules_containers,
+                ) {
+                    Ok(Ok(v)) => v,
+                    Ok(Err(_)) | Err(_) => {
+                        return Err(TypeContentsError::CheckedDependenciesCanceled);
+                    }
+                };
             Ok((contents.clone(), parse_artifacts, cx, aloc_ast))
         }
     };
@@ -1157,13 +1162,34 @@ fn autocomplete_on_parsed(
                 imports_ranked_usage_boost_exact_match_min_length,
                 show_ranking_info,
             };
+            // LSP boundary: convert any JobError (cancel/timeout) escaping the
+            // autocomplete pipeline into "no autocomplete suggestion" (an empty
+            // AcResult) exactly once. The cascade itself stays Result-typed.
             let (token_opt, ac_loc, ac_type_string, results_res) =
-                flow_services_autocomplete::autocomplete_service_js::autocomplete_get_results(
+                match flow_services_autocomplete::autocomplete_service_js::autocomplete_get_results(
                     &typing,
                     &ac_options,
                     trigger_character,
                     &cursor_loc,
-                );
+                ) {
+                    Ok(tuple) => tuple,
+                    Err(_job_err) => (
+                        None,
+                        None,
+                        "None".to_string(),
+                        flow_services_autocomplete::autocomplete_service_js::AutocompleteServiceResultGeneric::AcResult(
+                            flow_services_autocomplete::autocomplete_service_js::AcResult {
+                                result: ac_completion::T {
+                                    items: Vec::new(),
+                                    is_incomplete: false,
+                                },
+                                errors_to_log: vec![
+                                    "no autocomplete suggestion".to_string(),
+                                ],
+                            },
+                        ),
+                    ),
+                };
             let parse_errors = parse_errors
                 .into_iter()
                 .map(|(loc, err)| (loc, err.to_string()))
@@ -1465,7 +1491,7 @@ fn get_def_of_check_result(
 ) {
     let loc = flow_parser::loc::Loc::cursor(Some(file.clone()), line as i32, col as i32);
     let (ref parse_artifacts, ref typecheck_artifacts) = *check_result;
-    let result = get_def_js::get_def(
+    let result = match get_def_js::get_def(
         &|aloc: &flow_aloc::ALoc| shared_mem.loc_of_aloc(aloc),
         &typecheck_artifacts.cx,
         &parse_artifacts.file_sig,
@@ -1476,7 +1502,10 @@ fn get_def_of_check_result(
         ),
         purpose,
         &loc,
-    );
+    ) {
+        Ok(r) => r,
+        Err(_canceled) => GetDefResult::DefError("Worker canceled".to_string()),
+    };
     let json_props = fold_json_of_parse_errors(&parse_artifacts.parse_errors, vec![]);
     match result {
         GetDefResult::Def(locs, _) => (
@@ -1752,7 +1781,7 @@ fn infer_type(
                         shared_mem.loc_of_aloc(aloc)
                     };
                     let ((loc, tys, refining_locs, refinement_invalidated), type_at_pos_json_props) =
-                        flow_services_type_info::type_info_service::type_at_pos(
+                        match flow_services_type_info::type_info_service::type_at_pos(
                             &typecheck_artifacts.cx,
                             parse_artifacts.file_sig.clone(),
                             &typecheck_artifacts.typed_ast,
@@ -1769,7 +1798,19 @@ fn infer_type(
                             file_key.dupe(),
                             line,
                             column,
-                        );
+                        ) {
+                            Ok(v) => v,
+                            Err(e) => {
+                                let err_str = format!("infer_type: cancel/timeout: {:?}", e);
+                                let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
+                                return (
+                                    Err(err_str),
+                                    Some(serde_json::Value::Object(
+                                        json_props.into_iter().collect(),
+                                    )),
+                                );
+                            }
+                        };
                     let documentation = documentation_at_loc(
                         &shared_mem,
                         &file_key,
@@ -1952,8 +1993,11 @@ fn inlay_hint(
                     let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> flow_parser::loc::Loc {
                         shared_mem.loc_of_aloc(aloc)
                     };
+                    // LSP boundary: convert JobError (cancel/timeout) escaping
+                    // batched_type_at_pos_from_special_comments into an empty
+                    // inlay-hint response exactly once.
                     let (result, json_data) =
-                        flow_services_type_info::type_info_service::batched_type_at_pos_from_special_comments(
+                        match flow_services_type_info::type_info_service::batched_type_at_pos_from_special_comments(
                             &typecheck_artifacts.cx,
                             parse_artifacts.file_sig.clone(),
                             &typecheck_artifacts.typed_ast,
@@ -1963,7 +2007,12 @@ fn inlay_hint(
                             no_typed_ast_for_imports,
                             &loc_of_aloc,
                             file_key.dupe(),
-                        );
+                        ) {
+                            Ok(tuple) => tuple,
+                            Err(_job_err) => {
+                                return (Ok(vec![]), None);
+                            }
+                        };
                     let mut result_with_docs: Vec<server_prot::response::inlay_hint::Item> =
                         Vec::with_capacity(result.len());
                     for (cursor_loc, type_loc, tys, refining_locs, refinement_invalidated) in result
@@ -5276,15 +5325,26 @@ fn handle_persistent_signaturehelp_lsp(
                         shared_mem.get_ast(file_key).map(|arc| (*arc).clone())
                     };
                     let cursor_loc = flow_parser::loc::Loc::cursor(Some(path.dupe()), line, col);
-                    let func_details = flow_services_type_info::signature_help::find_signatures(
-                        &loc_of_aloc,
-                        &get_ast_from_shared_mem,
-                        &typecheck_artifacts.cx,
-                        parse_artifacts.file_sig.clone(),
-                        &parse_artifacts.ast,
-                        &typecheck_artifacts.typed_ast,
-                        cursor_loc,
-                    );
+                    let func_details =
+                        match flow_services_type_info::signature_help::find_signatures(
+                            &loc_of_aloc,
+                            &get_ast_from_shared_mem,
+                            &typecheck_artifacts.cx,
+                            parse_artifacts.file_sig.clone(),
+                            &parse_artifacts.ast,
+                            &typecheck_artifacts.typed_ast,
+                            cursor_loc,
+                        ) {
+                            Ok(inner) => inner,
+                            Err(_canceled) => {
+                                return mk_lsp_error_response(
+                                    Some(id),
+                                    "Worker canceled".to_string(),
+                                    None,
+                                    metadata,
+                                );
+                            }
+                        };
                     match func_details {
                         Ok(details) => {
                             let lsp_result = flow_signature_help_to_lsp(&details);
@@ -5487,7 +5547,7 @@ fn find_local_references<'cx>(
         parse_artifacts.file_sig.clone(),
         parse_artifacts.docblock.clone(),
     );
-    let refs_results = flow_services_references::find_refs_js::find_local_refs(
+    let refs_results = match flow_services_references::find_refs_js::find_local_refs(
         loc_of_aloc,
         file_key,
         &ast_info,
@@ -5497,7 +5557,10 @@ fn find_local_references<'cx>(
         kind,
         line,
         col,
-    );
+    ) {
+        Ok(r) => r,
+        Err(_canceled) => Err("Worker canceled".to_string()),
+    };
     let extra_data = match &refs_results {
         Ok((_, flow_services_references::find_refs_types::FindRefsOk::FoundReferences(_))) => {
             Some(serde_json::json!({"result": "SUCCESS"}))
@@ -5622,7 +5685,7 @@ fn handle_global_find_references_local_only(
                 file_artifacts.0.file_sig.clone(),
                 file_artifacts.0.docblock.clone(),
             );
-            match flow_services_references::find_refs_js::find_local_refs(
+            let inner = match flow_services_references::find_refs_js::find_local_refs(
                 &loc_of_aloc,
                 &file_key,
                 &ast_info,
@@ -5633,6 +5696,10 @@ fn handle_global_find_references_local_only(
                 line,
                 col,
             ) {
+                Ok(inner) => inner,
+                Err(_canceled) => Err("Worker canceled".to_string()),
+            };
+            match inner {
                 Err(reason) => {
                     let metadata = with_data(
                         Some(serde_json::json!({"result": "FAILURE", "error": &reason})),

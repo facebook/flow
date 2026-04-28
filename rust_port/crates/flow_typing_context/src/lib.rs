@@ -96,6 +96,8 @@ use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::aconstraint::AConstraint;
 use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::constraint::forcing_state::ForcingState;
+use flow_utils_concurrency::check_budget::CheckBudget;
+use flow_utils_concurrency::job_error::JobError;
 use flow_utils_union_find::TvarNotFound;
 use regex::Regex;
 use vec1::Vec1;
@@ -549,6 +551,7 @@ struct ContextInner<'cx> {
     file: FileKey,
     aloc_table: LazyALocTable,
     metadata: Metadata,
+    budget: CheckBudget,
     /// During cross-file merge (copy_into), annotation inference errors must be
     /// reported on the destination context, not the source. This field stores a
     /// weak reference to the destination context, set only during merge and None
@@ -830,6 +833,7 @@ impl<'cx> Context<'cx> {
         aloc_table: LazyALocTable,
         resolve_require: ResolveRequire<'cx>,
         mk_builtins: Rc<dyn Fn(&Context<'cx>) -> Builtins<'cx, Context<'cx>> + 'cx>,
+        budget: CheckBudget,
     ) -> Self {
         ccx.aloc_tables
             .borrow_mut()
@@ -839,6 +843,7 @@ impl<'cx> Context<'cx> {
             file,
             aloc_table,
             metadata,
+            budget,
             merge_dst_cx: RefCell::new(None),
             resolve_require: RefCell::new(Some(resolve_require)),
             builtins: flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| mk_builtins(cx))),
@@ -974,6 +979,17 @@ impl<'cx> Context<'cx> {
 
     pub fn file(&self) -> &FileKey {
         &self.0.file
+    }
+
+    pub fn check_budget(&self) -> Result<(), JobError> {
+        self.0.budget.check()
+    }
+
+    /// Returns the per-file budget so dependency contexts (e.g., those built
+    /// inside `dep_file`) can inherit the parent file's cancel + timeout
+    /// budget rather than starting a fresh one.
+    pub fn budget(&self) -> CheckBudget {
+        self.0.budget
     }
 
     pub fn is_lib_file(&self) -> bool {

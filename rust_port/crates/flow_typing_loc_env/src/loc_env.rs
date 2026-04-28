@@ -57,7 +57,20 @@ pub struct LocEnv<'a, CX = ()> {
     pub var_info: Rc<EnvInfo<ALoc>>,
     pub pred_func_map: FlowOrdMap<
         ALoc,
-        Rc<flow_lazy::Lazy<CX, PredFuncallInfo, Box<dyn FnOnce(&CX) -> PredFuncallInfo + 'a>>>,
+        Rc<
+            flow_lazy::Lazy<
+                CX,
+                Result<PredFuncallInfo, flow_utils_concurrency::job_error::JobError>,
+                Box<
+                    dyn FnOnce(
+                            &CX,
+                        ) -> Result<
+                            PredFuncallInfo,
+                            flow_utils_concurrency::job_error::JobError,
+                        > + 'a,
+                >,
+            >,
+        >,
     >,
     pub name_defs: EnvEntriesMap,
 }
@@ -153,7 +166,20 @@ impl<'a, CX> LocEnv<'a, CX> {
         var_info: Rc<EnvInfo<ALoc>>,
         pred_func_map: FlowOrdMap<
             ALoc,
-            Rc<flow_lazy::Lazy<CX, PredFuncallInfo, Box<dyn FnOnce(&CX) -> PredFuncallInfo + 'a>>>,
+            Rc<
+                flow_lazy::Lazy<
+                    CX,
+                    Result<PredFuncallInfo, flow_utils_concurrency::job_error::JobError>,
+                    Box<
+                        dyn FnOnce(
+                                &CX,
+                            ) -> Result<
+                                PredFuncallInfo,
+                                flow_utils_concurrency::job_error::JobError,
+                            > + 'a,
+                    >,
+                >,
+            >,
         >,
         name_defs: EnvEntriesMap,
     ) -> Self {

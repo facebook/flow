@@ -79,10 +79,18 @@ pub struct CheckFileAndCompEnv {
                 &Metadata,
                 &[flow_parser::ast::Comment<Loc>],
                 &ast::Program<ALoc, ALoc>,
-            ) -> ast::Program<ALoc, (ALoc, Type)>
+            ) -> Result<
+                ast::Program<ALoc, (ALoc, Type)>,
+                flow_utils_concurrency::job_error::JobError,
+            > + 'static,
+    >,
+    pub compute_env: Box<
+        dyn FnMut(
+                &Context<'static>,
+                &ast::Program<ALoc, ALoc>,
+            ) -> Result<(), flow_utils_concurrency::job_error::JobError>
             + 'static,
     >,
-    pub compute_env: Box<dyn FnMut(&Context<'static>, &ast::Program<ALoc, ALoc>) + 'static>,
 }
 
 fn typed_builtin_module_opt<'cx>(
@@ -244,6 +252,7 @@ pub fn mk_check_file(
         let leader: Lazy<FileKey, Box<dyn FnOnce() -> FileKey>> =
             Lazy::new(Box::new(move || parse_for_leader.leader_unsafe()));
         Rc::new(move |cx: &Context<'static>, _dst_cx: &Context<'static>| {
+            let budget = cx.budget();
             let create_file = |ccx: Rc<ComponentT<'static>>| {
                 dep_file(
                     &file_key_for_create,
@@ -253,6 +262,7 @@ pub fn mk_check_file(
                     &base_metadata_for_create,
                     &mk_builtins_for_create,
                     &cache_for_create,
+                    budget,
                 )
             };
             cx.add_reachable_dep(file_key_for_closure.dupe());
@@ -277,6 +287,7 @@ pub fn mk_check_file(
         base_metadata: &Metadata,
         mk_builtins_fn: &Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>>,
         cache: &Rc<RefCell<CheckCache<'static>>>,
+        budget: flow_utils_concurrency::check_budget::CheckBudget,
     ) -> (type_sig_merge::File<'static>, Context<'static>) {
         let source = Some(file_key.dupe());
 
@@ -349,6 +360,7 @@ pub fn mk_check_file(
                 aloc_table,
                 resolve_require,
                 mk_builtins_fn.dupe(),
+                budget,
             )
         };
 
@@ -809,6 +821,7 @@ pub fn mk_check_file(
         let base_metadata = base_metadata.clone();
         let mk_builtins_fn = mk_builtins_fn.dupe();
         let cache = cache.dupe();
+        let options = options.dupe();
         Box::new(
             move |file_key: FileKey,
                   resolved_modules: BTreeMap<FlowImportSpecifier, ResolvedModule>,
@@ -832,6 +845,11 @@ pub fn mk_check_file(
                         })
                         .dupe()
                 });
+                let budget = flow_utils_concurrency::check_budget::CheckBudget::new(
+                    options
+                        .merge_timeout
+                        .map(std::time::Duration::from_secs_f64),
+                );
                 let cx: Context<'static> = Context::make(
                     ccx,
                     metadata.clone(),
@@ -839,6 +857,7 @@ pub fn mk_check_file(
                     aloc_table,
                     resolve_require,
                     mk_builtins_fn.dupe(),
+                    budget,
                 );
                 {
                     let mut rr = resolved_requires.borrow_mut();
@@ -890,7 +909,7 @@ pub fn mk_check_file(
     let compute_env = Box::new(
         move |cx: &Context<'static>, aloc_ast: &ast::Program<ALoc, ALoc>| {
             cx.set_merge_dst_cx(cx);
-            type_inference::initialize_env(cx, None, aloc_ast);
+            type_inference::initialize_env(cx, None, aloc_ast)
         },
     );
 

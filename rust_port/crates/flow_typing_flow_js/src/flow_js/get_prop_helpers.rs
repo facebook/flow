@@ -138,8 +138,14 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         mk_react_dro(cx, use_op, dro.clone(), t)
     }
 
-    fn prop_overlaps_with_indexer()
-    -> Option<for<'b> fn(&Context<'b>, &flow_common::reason::Name, &Reason, &Type) -> bool> {
+    fn prop_overlaps_with_indexer() -> Option<
+        for<'b> fn(
+            &Context<'b>,
+            &flow_common::reason::Name,
+            &Reason,
+            &Type,
+        ) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+    > {
         Some(|cx, name, reason_name, key| {
             let name_t = flow_js_utils::type_of_key_name(cx, name.dupe(), reason_name);
             speculative_subtyping_succeeds(cx, &name_t, key)

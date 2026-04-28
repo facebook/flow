@@ -21,13 +21,13 @@ use flow_aloc::ALoc;
 use flow_common::reason::Reason;
 use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::ALocTy;
+use flow_lazy::Lazy;
 use flow_parser::ast;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::eval;
-use once_cell::unsync::Lazy;
 
 use crate::env::Env;
 use crate::env::Genv;
@@ -65,11 +65,11 @@ impl NormalizerInput for NoFlowInput {
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         _should_evaluate: bool,
-        _cont: impl FnOnce(&mut Env<'_, 'cx>, &mut State, Type) -> A,
-        default: impl FnOnce(&mut Env<'_, 'cx>, &mut State) -> A,
+        _cont: impl FnOnce(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
+        default: impl FnOnce(&mut Env<'_, 'cx>, &mut State) -> Result<A, Error>,
         _reason: Reason,
         _t: Type,
-    ) -> A {
+    ) -> Result<A, Error> {
         default(env, state)
     }
 
@@ -77,14 +77,14 @@ impl NormalizerInput for NoFlowInput {
         _cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        _cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> A,
-        type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> A,
-        app: impl FnOnce(A, Vec<A>) -> A,
+        _cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
+        type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
+        app: impl FnOnce(Result<A, Error>, Vec<Result<A, Error>>) -> Result<A, Error>,
         _from_value: bool,
         _reason: Reason,
         t: Type,
         targs: &[Type],
-    ) -> A {
+    ) -> Result<A, Error> {
         let c = type_(env, state, &t);
         let targs = targs.iter().map(|t| type_(env, state, t)).collect();
         app(c, targs)
@@ -94,12 +94,10 @@ impl NormalizerInput for NoFlowInput {
         cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
         reason: Reason,
         name: &str,
-    ) -> A {
-        // TODO the pattern matching on the result of lookup_builtin_strict_result might need
-        // some refinement. This is replacing what mk_instance would do.
+    ) -> Result<A, Error> {
         use flow_typing_type::type_::DefTInner;
         use flow_typing_type::type_::TypeInner;
         let t = flow_typing_flow_common::flow_js_utils::lookup_builtin_type(cx, name, reason);
@@ -117,13 +115,13 @@ impl NormalizerInput for NoFlowInput {
         cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
-        _type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
-        _app: impl FnOnce(A, Vec<A>) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
+        _type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
+        _app: impl FnOnce(Result<A, Error>, Vec<Result<A, Error>>) -> Result<A, Error>,
         reason: Reason,
         name: &str,
         targs: &[Type],
-    ) -> A {
+    ) -> Result<A, Error> {
         let t =
             flow_typing_flow_common::flow_js_utils::lookup_builtin_type(cx, name, reason.dupe());
         let t = flow_typing_type::type_util::typeapp(false, false, reason, t, targs.to_vec());
@@ -149,15 +147,16 @@ pub fn mk_genv<'a, 'cx: 'a>(
     let dummy_import_list = vec![];
     let file_sig_clone = file_sig.clone();
     let options_clone = options.dupe();
-    let imported_names = Rc::new(Lazy::new(Box::new(move || {
-        NoFlowNormalizer::normalize_imports(
+    let imported_names = Rc::new(Lazy::new(Box::new(move |cx: &Context<'cx>| {
+        Ok(NoFlowNormalizer::normalize_imports(
             cx,
             file_sig_clone,
             typed_ast_opt,
             &options_clone,
             dummy_import_list,
-        )
-    }) as Box<dyn FnOnce() -> _>));
+        ))
+    })
+        as Box<dyn FnOnce(&Context<'cx>) -> _ + 'a>));
     Genv {
         options,
         cx,

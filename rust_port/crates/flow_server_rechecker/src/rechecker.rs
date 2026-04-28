@@ -307,7 +307,8 @@ fn recheck(
     Ok((profiling, env))
 }
 
-// We don't want to start running f until we're in the try block
+// Runs a function which should be canceled if we are notified about any file changes. After the
+// thread is canceled, post_cancel is called and its result returned
 fn run_but_cancel_on_file_changes<T>(
     _options: &Options,
     _shared_mem: &SharedMem,
@@ -317,7 +318,71 @@ fn run_but_cancel_on_file_changes<T>(
     _pre_cancel: impl FnOnce(),
     _post_cancel: impl FnOnce() -> T,
 ) -> T {
-    f()
+    let cancel_monitor = spawn_recheck_cancel_monitor();
+    let ret = f();
+    cancel_monitor.stop();
+    ret
+}
+
+/// Stop handle for the recheck cancel monitor thread spawned by
+/// `spawn_recheck_cancel_monitor`. Calling `stop()` deregisters the monitor
+/// and joins its thread; safe to call after the monitor has already fired and
+/// exited.
+struct RecheckCancelMonitor {
+    stop_tx: crossbeam::channel::Sender<()>,
+    thread: Option<std::thread::JoinHandle<()>>,
+}
+
+impl RecheckCancelMonitor {
+    fn stop(mut self) {
+        // Either the monitor is still waiting on its select! (Ok(()) wakes it
+        // via the stop branch) or it already fired on a recheck-stream push
+        // and exited (Full/Disconnected — nothing to wake). All three cases
+        // mean the monitor will exit, so we can join unconditionally.
+        match self.stop_tx.try_send(()) {
+            Ok(()) => {}
+            Err(crossbeam::channel::TrySendError::Full(())) => {}
+            Err(crossbeam::channel::TrySendError::Disconnected(())) => {}
+        }
+        if let Some(handle) = self.thread.take() {
+            if let Err(panic_payload) = handle.join() {
+                std::panic::resume_unwind(panic_payload);
+            }
+        }
+    }
+}
+
+/// Spawn the recheck cancel monitor: subscribes to the recheck push channel
+/// and waits for either:
+///   1. A new force-recheck or file-watcher update (push to recheck stream)
+///      → call `worker_cancel::stop_workers()` so the in-progress recheck
+///      observes cancel and unwinds back to `recheck_single`.
+///   2. The recheck completing on its own (`RecheckCancelMonitor::stop`)
+///      → exit without signaling cancel.
+///
+/// This is the Rust port equivalent of OCaml's `cancel_thread` half of
+/// `Lwt.pick` inside `run_but_cancel_on_file_changes` (rechecker.ml:228).
+fn spawn_recheck_cancel_monitor() -> RecheckCancelMonitor {
+    let push_rx = server_monitor_listener_state::subscribe_recheck_pushes();
+    let (stop_tx, stop_rx) = crossbeam::channel::bounded::<()>(1);
+    let thread = std::thread::Builder::new()
+        .name("recheck_cancel_monitor".to_string())
+        .spawn(move || {
+            crossbeam::channel::select! {
+                recv(push_rx) -> _ => {
+                    eprintln!(
+                        "Canceling recheck because a new force-recheck or file-watcher update arrived"
+                    );
+                    worker_cancel::stop_workers();
+                }
+                recv(stop_rx) -> _ => {}
+            }
+        })
+        .expect("failed to spawn recheck_cancel_monitor thread");
+    RecheckCancelMonitor {
+        stop_tx,
+        thread: Some(thread),
+    }
 }
 
 pub(crate) enum RecheckOutcome {

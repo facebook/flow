@@ -167,6 +167,26 @@ impl<CX: ?Sized, T, F: FnOnce(&CX) -> T> Lazy<CX, T, F> {
     }
 }
 
+impl<CX: ?Sized, T, E, F: FnOnce(&CX) -> Result<T, E>> Lazy<CX, Result<T, E>, F>
+where
+    E: Clone,
+{
+    /// Get the forced value, computing it if necessary, and propagate any error
+    /// from the initializer closure to the caller.
+    ///
+    /// On the first force, the inner `Result<T, E>` is stored regardless of
+    /// success or failure. Subsequent calls re-yield the stored Result by clone.
+    /// This allows callers to `?`-propagate errors out of the lazy computation.
+    ///
+    /// # Panics
+    /// Panics if the closure is re-entrantly called.
+    #[inline(always)]
+    pub fn try_get_forced(&self, cx: &CX) -> Result<&T, E> {
+        let stored = self.get_forced_with(|f| f(cx));
+        stored.as_ref().map_err(|e| e.clone())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::cell::Cell;

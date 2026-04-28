@@ -747,7 +747,12 @@ fn mk_check_file(
     master_cx: &MasterContext,
     skip_post_check_cleanup: bool,
 ) -> (
-    Box<dyn FnMut(FileKey) -> Option<CheckFileResult>>,
+    Box<
+        dyn FnMut(
+            FileKey,
+        )
+            -> Result<Option<CheckFileResult>, flow_utils_concurrency::job_error::JobError>,
+    >,
     Rc<std::cell::RefCell<CheckCache<'static>>>,
 ) {
     let cache = Rc::new(std::cell::RefCell::new(CheckCache::create(10_000_000)));
@@ -760,7 +765,10 @@ fn mk_check_file(
 
     let check_file_fn = Box::new(move |file: FileKey| {
         let start_time = Instant::now();
-        let parse = shared_mem.get_typed_parse(&file)?;
+        let parse = match shared_mem.get_typed_parse(&file) {
+            Some(p) => p,
+            None => return Ok(None),
+        };
         let ast = parse.ast_unsafe(&file);
         let type_sig = parse.type_sig_unsafe(&file);
         let (file_sig, tolerable_errors) = parse.tolerable_file_sig_unsafe(&file);
@@ -801,7 +809,7 @@ fn mk_check_file(
         let mut mapper = flow_aloc::LocToALocMapper;
         let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast_ref);
         let metadata = cx.metadata().clone();
-        let typed_ast = check_file(&cx, &file, file_sig.dupe(), &metadata, comments, &aloc_ast);
+        let typed_ast = check_file(&cx, &file, file_sig.dupe(), &metadata, comments, &aloc_ast)?;
         drop(aloc_ast);
         drop(ast_ref);
         let coverage = file_coverage(&cx, &typed_ast);
@@ -846,10 +854,10 @@ fn mk_check_file(
         if duration > 5.0 {
             eprintln!("[SLOW-CHECK] {:>8.3}s  {}", duration, file.as_str());
         }
-        Some((
+        Ok(Some((
             (cx, type_sig, file_sig, typed_ast),
             (errors, warnings, suppressions, coverage, duration),
-        ))
+        )))
     });
     (check_file_fn, cache_ref)
 }
@@ -872,7 +880,10 @@ pub fn check_contents_context(
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> (Context<'static>, ast::Program<ALoc, (ALoc, Type)>) {
+) -> Result<
+    (Context<'static>, ast::Program<ALoc, (ALoc, Type)>),
+    flow_utils_concurrency::job_error::JobError,
+> {
     let aloc_table: flow_aloc::LazyALocTable = {
         let file_for_aloc = file.dupe();
         let shared_mem_for_aloc = shared_mem.dupe();
@@ -926,8 +937,8 @@ pub fn check_contents_context(
     let mut mapper = flow_aloc::LocToALocMapper;
     let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast_ref);
     let metadata = cx.metadata().clone();
-    let typed_ast = check_file(&cx, &file, file_sig, &metadata, comments, &aloc_ast);
-    (cx, typed_ast)
+    let typed_ast = check_file(&cx, &file, file_sig, &metadata, comments, &aloc_ast)?;
+    Ok((cx, typed_ast))
 }
 
 pub fn compute_env_of_contents(
@@ -939,7 +950,8 @@ pub fn compute_env_of_contents(
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> (Context<'static>, ast::Program<ALoc, ALoc>) {
+) -> Result<(Context<'static>, ast::Program<ALoc, ALoc>), flow_utils_concurrency::job_error::JobError>
+{
     let aloc_table: flow_aloc::LazyALocTable = {
         let file_for_aloc = file.dupe();
         let shared_mem_for_aloc = shared_mem.dupe();
@@ -987,8 +999,8 @@ pub fn compute_env_of_contents(
     );
     let mut mapper = flow_aloc::LocToALocMapper;
     let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast);
-    compute_env(&cx, &aloc_ast);
-    (cx, aloc_ast)
+    compute_env(&cx, &aloc_ast)?;
+    Ok((cx, aloc_ast))
 }
 
 fn merge_job<A, F>(
@@ -1094,13 +1106,25 @@ pub fn merge(
     )
 }
 
+/// Outcome of a single per-file check job. Replaces the prior
+/// `UnitResult<Option<CheckFileResult>>` shape so cancellation can travel as a
+/// distinct typed signal rather than a per-file `InternalError`. Per-file
+/// failures (timeout, `$Flow$DebugThrow`) ride `PerFileError`; worker-level
+/// cancellation rides `Canceled` so the worker-pool driver can stop pulling
+/// files and unwind back to the recheck loop.
+pub enum CheckJobOutcome {
+    Ok(Option<CheckFileResult>),
+    PerFileError((ALoc, InternalError)),
+    Canceled(flow_utils_concurrency::worker_cancel::WorkerCanceled),
+}
+
 pub fn mk_check(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
     master_cx: &MasterContext,
     skip_post_check_cleanup: bool,
 ) -> (
-    Box<dyn FnMut(FileKey) -> UnitResult<Option<CheckFileResult>>>,
+    Box<dyn FnMut(FileKey) -> CheckJobOutcome>,
     Rc<std::cell::RefCell<CheckCache<'static>>>,
 ) {
     let (mut check_file, cache) = mk_check_file(
@@ -1109,61 +1133,23 @@ pub fn mk_check(
         master_cx,
         skip_post_check_cleanup,
     );
-    let check_fn = Box::new(move |file: FileKey| {
-        let result: Result<Option<CheckFileResult>, _> =
-            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| check_file(file.dupe())));
-        match result {
-            Ok(ok) => Ok(ok),
-            Err(panic_payload) => {
-                let is_speculative_error = panic_payload
-                    .downcast_ref::<flow_typing_flow_common::flow_js_utils::SpeculativeError>()
-                    .is_some();
-
-                let is_critical = panic_payload
-                    .downcast_ref::<String>()
-                    .map(|s| s.as_str())
-                    .or_else(|| panic_payload.downcast_ref::<&str>().copied())
-                    .map(|s| {
-                        s.contains("Worker_should_cancel")
-                            || s.contains("out of shared memory")
-                            || s.contains("heap full")
-                            || s.contains("hash table full")
-                    })
-                    .unwrap_or(false);
-                if is_critical {
-                    std::panic::resume_unwind(panic_payload);
-                }
-
-                let exn_str: String = if is_speculative_error {
-                    format!("{}: <SpeculativeError>", file.as_str())
-                } else if let Some(s) = panic_payload.downcast_ref::<String>() {
-                    format!("{}: {}", file.as_str(), s)
-                } else if let Some(s) = panic_payload.downcast_ref::<&str>() {
-                    format!("{}: {}", file.as_str(), s)
-                } else {
-                    format!("{}: <unknown panic>", file.as_str())
-                };
-
-                eprintln!("({}) check_job THROWS: {}", std::process::id(), exn_str);
-
-                let file_loc = ALoc::of_loc(Loc {
-                    source: Some(file.dupe()),
-                    ..LOC_NONE
-                });
-                if let Some(s) = panic_payload.downcast_ref::<String>() {
-                    if s.starts_with("ECheckTimeout:") {
-                        let duration_str = s.trim_start_matches("ECheckTimeout:").trim();
-                        return Err((
-                            file_loc,
-                            InternalError::CheckTimeout(duration_str.to_owned()),
-                        ));
-                    }
-                    if s.starts_with("EDebugThrow") {
-                        return Err((file_loc, InternalError::DebugThrow));
-                    }
-                }
-                Err((file_loc, InternalError::CheckJobException(exn_str.into())))
-            }
+    let check_fn = Box::new(move |file: FileKey| match check_file(file.dupe()) {
+        Ok(opt) => CheckJobOutcome::Ok(opt),
+        Err(flow_utils_concurrency::job_error::JobError::Canceled(c)) => {
+            CheckJobOutcome::Canceled(c)
+        }
+        Err(flow_utils_concurrency::job_error::JobError::TimedOut(t)) => {
+            let file_loc = ALoc::of_loc(Loc {
+                source: Some(file),
+                ..LOC_NONE
+            });
+            CheckJobOutcome::PerFileError((
+                file_loc,
+                InternalError::CheckTimeout(format!("{:.3}", t.elapsed.as_secs_f64())),
+            ))
+        }
+        Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc }) => {
+            CheckJobOutcome::PerFileError((loc, InternalError::DebugThrow))
         }
     });
     (check_fn, cache)

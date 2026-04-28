@@ -2926,6 +2926,7 @@ pub enum InternalError {
     ForcedReadOfUnderResolutionTvar(DefLocType),
     EnvInvariant(EnvInvariantFailure<ALoc>),
     ImplicitInstantiationInvariant(FlowSmolStr),
+    WorkerCanceled,
 }
 
 #[derive(
@@ -6271,6 +6272,7 @@ pub fn string_of_internal_error(error: &InternalError) -> FlowSmolStr {
             s
         )
         .into(),
+        InternalError::WorkerCanceled => "check job was canceled".into(),
     }
 }
 

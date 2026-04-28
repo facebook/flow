@@ -15,7 +15,6 @@ use flow_typing_errors::error_message::EPropNotWritableData;
 use flow_typing_errors::error_message::ETooFewTypeArgsData;
 use flow_typing_errors::error_message::ETooManyTypeArgsData;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
-use flow_typing_flow_common::flow_js_utils::SpeculativeError;
 use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::ChainMData;
@@ -59,8 +58,14 @@ thread_local! {
     static CHECK_CANCELED_COUNT: Cell<i32> = const { Cell::new(0) };
 }
 
-pub(super) fn check_canceled() {
-    // TODO: unimplemented. We will revisit once the entire checker is ported.
+pub(super) fn check_canceled<'cx>(
+    cx: &Context<'cx>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    CHECK_CANCELED_COUNT.with(|count| {
+        let n = (count.get() + 1) % 128;
+        count.set(n);
+        if n == 0 { cx.check_budget() } else { Ok(()) }
+    })
 }
 
 pub(super) fn inherited_method(name: &Name) -> bool {
@@ -109,16 +114,29 @@ pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
     }
 }
 
-pub(super) fn speculative_subtyping_succeeds<'cx>(cx: &Context<'cx>, l: &Type, u: &Type) -> bool {
+pub(super) fn speculative_subtyping_succeeds<'cx>(
+    cx: &Context<'cx>,
+    l: &Type,
+    u: &Type,
+) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
     match speculation_kit::try_singleton_throw_on_failure(
         cx,
         DepthTrace::dummy_trace(),
         l.dupe(),
         UseT::new(UseTInner::UseT(unknown_use(), u.dupe())),
     ) {
-        Ok(()) => true,
-        Err(FlowJsException::SpeculationSingletonError) => false,
-        Err(_) => false,
+        Ok(()) => Ok(true),
+        Err(FlowJsException::SpeculationSingletonError) => Ok(false),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(FlowJsException::DebugThrow { loc }) => {
+            Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc })
+        }
+        Err(FlowJsException::Speculative(_)) | Err(FlowJsException::LimitExceeded) => Ok(false),
     }
 }
 
@@ -1339,12 +1357,12 @@ pub(super) fn get_builtin_react_typeapp<'cx>(
         cx,
         reason.loc().dupe(),
         &|cx, reason, t| {
-            Ok(singleton_concrete_type(
+            singleton_concrete_type(
                 ConcretizationKind::ConcretizeForImportsExports,
                 cx,
                 &reason,
                 &t,
-            )?)
+            )
         },
         purpose,
     )?;
@@ -1487,7 +1505,7 @@ pub(super) fn mk_instance_source<'cx>(
     reason_type: &Reason,
     c: &Type,
 ) -> Result<Type, FlowJsException> {
-    flow_typing_tvar::mk_where_result(cx, instance_reason.dupe(), |cx, t| {
+    flow_typing_tvar::mk_where(cx, instance_reason.dupe(), |cx, t| {
         // this part is similar to making a runtime value
         let tvar = match t.deref() {
             TypeInner::OpenT(tvar) => tvar.dupe(),
@@ -1554,7 +1572,7 @@ pub(super) fn instance_lookup_kind<'cx>(
             let reason_op = reason_op.dupe();
             let reason_instance = reason_instance.dupe();
             let lookup_default_second =
-                flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |cx, tvar| {
+                flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tvar| {
                     rec_flow(
                         cx,
                         trace,
@@ -1656,7 +1674,7 @@ pub(super) fn reposition<'cx>(
                 match constraints {
                     Constraints::Resolved(resolved_t) => match seen.get(&id) {
                         Some(t) => Ok(t.dupe()),
-                        None => flow_typing_tvar::mk_where_result(cx, reason.dupe(), |cx, tvar| {
+                        None => flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
                             seen.insert(id, tvar.dupe());
                             let t_prime = recurse(cx, trace, desc, mod_reason, seen, &resolved_t);
                             seen.remove(&id);
@@ -1672,57 +1690,58 @@ pub(super) fn reposition<'cx>(
                             Ok(())
                         }),
                     },
-                    Constraints::FullyResolved(s) => {
-                        match seen.get(&id) {
-                            Some(t) => Ok(t.dupe()),
-                            None => {
-                                let forced_t = cx.force_fully_resolved_tvar(&s);
-                                let t = {
-                                    let lazy_thunk_cell: Rc<std::cell::OnceCell<Type>> =
-                                        Rc::new(std::cell::OnceCell::new());
-                                    let lazy_t_val = flow_typing_tvar::mk_fully_resolved_lazy(
-                                        cx,
-                                        reason.dupe(),
-                                        true,
-                                        Box::new({
-                                            let cell = lazy_thunk_cell.dupe();
-                                            move |_cx| {
-                                                cell.get()
-                                                .expect("lazy_thunk must be initialized before access")
-                                                .dupe()
-                                            }
-                                        }),
+                    Constraints::FullyResolved(s) => match seen.get(&id) {
+                        Some(t) => Ok(t.dupe()),
+                        None => {
+                            let forced_t = cx.force_fully_resolved_tvar(&s);
+                            let t = {
+                                let lazy_thunk_cell: Rc<std::cell::OnceCell<Type>> =
+                                    Rc::new(std::cell::OnceCell::new());
+                                let lazy_t_val = flow_typing_tvar::mk_fully_resolved_lazy(
+                                    cx,
+                                    reason.dupe(),
+                                    true,
+                                    Box::new({
+                                        let cell = lazy_thunk_cell.dupe();
+                                        move |_cx| {
+                                            Ok(cell
+                                                .get()
+                                                .expect(
+                                                    "lazy_thunk must be initialized before access",
+                                                )
+                                                .dupe())
+                                        }
+                                    }),
+                                );
+                                seen.insert(id, lazy_t_val.dupe());
+                                let thunk_result = cx.run_in_signature_tvar_env(|| {
+                                    recurse(cx, trace, desc, mod_reason, seen, &forced_t)
+                                });
+                                seen.remove(&id);
+                                let thunk_result = thunk_result?;
+                                lazy_thunk_cell
+                                    .set(thunk_result)
+                                    .expect("lazy_thunk_cell already set");
+                                lazy_t_val
+                            };
+                            match t.deref() {
+                                TypeInner::OpenT(repositioned_tvar) => {
+                                    cx.report_array_or_object_literal_declaration_reposition(
+                                        repositioned_tvar.id() as i32,
+                                        id,
                                     );
-                                    seen.insert(id, lazy_t_val.dupe());
-                                    let thunk_result = cx.run_in_signature_tvar_env(|| {
-                                        recurse(cx, trace, desc, mod_reason, seen, &forced_t)
-                                    });
-                                    seen.remove(&id);
-                                    let thunk_result = thunk_result?;
-                                    lazy_thunk_cell
-                                        .set(thunk_result)
-                                        .expect("lazy_thunk_cell already set");
-                                    lazy_t_val
-                                };
-                                match t.deref() {
-                                    TypeInner::OpenT(repositioned_tvar) => {
-                                        cx.report_array_or_object_literal_declaration_reposition(
-                                            repositioned_tvar.id() as i32,
-                                            id,
-                                        );
-                                    }
-                                    _ => {}
-                                };
-                                Ok(t)
-                            }
+                                }
+                                _ => {}
+                            };
+                            Ok(t)
                         }
-                    }
+                    },
                     Constraints::Unresolved(_) => {
                         if is_instantiable_reason(r) && cx.in_implicit_instantiation() {
                             Ok(t_open.dupe())
                         } else {
                             let reason_for_repos = reason.dupe();
-                            flow_typing_tvar::mk_where_result(cx, reason, |cx, tvar| {
+                            flow_typing_tvar::mk_where(cx, reason, |cx, tvar| {
                                 flow_opt(
                                     cx,
                                     trace,
@@ -1774,7 +1793,7 @@ pub(super) fn reposition<'cx>(
                         }
                         _ => Ok(cached_tvar),
                     },
-                    None => flow_typing_tvar::mk_where_result(cx, reason.dupe(), |cx, tvar| {
+                    None => flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
                         flow_cache::eval::add_repos(
                             cx,
                             root.dupe(),
@@ -1939,12 +1958,12 @@ pub(super) fn get_builtin_react_type<'cx>(
         cx,
         reason.loc().dupe(),
         &|cx, reason, t| {
-            Ok(singleton_concrete_type(
+            singleton_concrete_type(
                 ConcretizationKind::ConcretizeForImportsExports,
                 cx,
                 &reason,
                 &t,
-            )?)
+            )
         },
         purpose,
     )?;
@@ -2082,7 +2101,7 @@ pub(super) fn flow_opt_t<'cx>(
 pub(super) fn flow<'cx>(
     cx: &Context<'cx>,
     (lower, upper): (&Type, &UseT<Context<'cx>>),
-) -> Result<(), SpeculativeError> {
+) -> Result<(), FlowJsException> {
     // try flow_opt cx (lower, upper) with
     match flow_opt(cx, None, (lower, upper)) {
         Ok(()) => Ok(()),
@@ -2093,35 +2112,19 @@ pub(super) fn flow<'cx>(
                 UseTInner::UseT(_, _) => (ru, rl),
                 _ => flow_error::ordered_reasons((rl, ru)),
             };
-            match flow_js_utils::add_output(
+            flow_js_utils::add_output(
                 cx,
                 ErrorMessage::ERecursionLimit(Box::new((reasons.0, reasons.1))),
-            ) {
-                Ok(()) => Ok(()),
-                Err(FlowJsException::Speculative(e)) => Err(e),
-                Err(FlowJsException::LimitExceeded) => {
-                    unreachable!("add_output cannot raise LimitExceeded")
-                }
-                Err(FlowJsException::SpeculationSingletonError) => {
-                    unreachable!("add_output cannot raise SpeculationSingletonError")
-                }
-            }
+            )
         }
-        Err(FlowJsException::Speculative(e)) => Err(e),
-        // SpeculationSingletonError propagates through as-is, but flow() returns
-        // Result<(), SpeculativeError> so we can only surface it as a panic.
-        // In practice this should not happen since flow() is not called from
-        // within singleton speculation contexts.
-        Err(FlowJsException::SpeculationSingletonError) => {
-            unreachable!("SpeculationSingletonError propagated through flow()")
-        }
+        Err(e) => Err(e),
     }
 }
 
 pub(super) fn flow_t<'cx>(
     cx: &Context<'cx>,
     (t1, t2): (&Type, &Type),
-) -> Result<(), SpeculativeError> {
+) -> Result<(), FlowJsException> {
     flow(
         cx,
         (t1, &UseT::new(UseTInner::UseT(unknown_use(), t2.dupe()))),
@@ -2189,31 +2192,19 @@ pub(super) fn unify<'cx>(
     unify_cause: UnifyCause,
     t1: &Type,
     t2: &Type,
-) -> Result<(), SpeculativeError> {
+) -> Result<(), FlowJsException> {
     let use_op = use_op.unwrap_or_else(unknown_use);
     match unify_opt(cx, None, use_op, unify_cause, Some(true), t1, t2) {
         Ok(()) => Ok(()),
         Err(FlowJsException::LimitExceeded) => {
             let reasons =
                 flow_error::ordered_reasons((reason_of_t(t1).dupe(), reason_of_t(t2).dupe()));
-            match flow_js_utils::add_output(
+            flow_js_utils::add_output(
                 cx,
                 ErrorMessage::ERecursionLimit(Box::new((reasons.0, reasons.1))),
-            ) {
-                Ok(()) => Ok(()),
-                Err(FlowJsException::Speculative(e)) => Err(e),
-                Err(FlowJsException::LimitExceeded) => {
-                    unreachable!("add_output cannot raise LimitExceeded")
-                }
-                Err(FlowJsException::SpeculationSingletonError) => {
-                    unreachable!("add_output cannot raise SpeculationSingletonError")
-                }
-            }
+            )
         }
-        Err(FlowJsException::Speculative(e)) => Err(e),
-        Err(FlowJsException::SpeculationSingletonError) => {
-            unreachable!("SpeculationSingletonError propagated through unify()")
-        }
+        Err(e) => Err(e),
     }
 }
 
@@ -2349,7 +2340,7 @@ pub(super) fn possible_concrete_types<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     let collector = type_collector::TypeCollector::create();
     flow(
         cx,
@@ -2371,7 +2362,7 @@ pub(super) fn singleton_concrete_type<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Type, SpeculativeError> {
+) -> Result<Type, FlowJsException> {
     let types = possible_concrete_types(kind, cx, reason, t)?;
     match types.len() {
         0 => Ok(empty_t::make(reason.dupe())),
@@ -2393,7 +2384,7 @@ pub(super) fn possible_concrete_types_for_optional_chain<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(
         ConcretizationKind::ConcretizeForOptionalChain,
         cx,
@@ -2406,7 +2397,7 @@ pub(super) fn possible_concrete_types_for_inspection<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(ConcretizationKind::ConcretizeForInspection, cx, reason, t)
 }
 
@@ -2414,7 +2405,7 @@ pub(super) fn possible_concrete_types_for_enum_exhaustive_check<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(
         ConcretizationKind::ConcretizeForEnumExhaustiveCheck,
         cx,
@@ -2427,7 +2418,7 @@ pub(super) fn singleton_concrete_type_for_cjs_extract_named_exports_and_type_exp
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Type, SpeculativeError> {
+) -> Result<Type, FlowJsException> {
     singleton_concrete_type(
         ConcretizationKind::ConcretizeForCJSExtractNamedExportsAndTypeExports,
         cx,
@@ -2440,7 +2431,7 @@ pub(super) fn singleton_concretize_type_for_imports_exports<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Type, SpeculativeError> {
+) -> Result<Type, FlowJsException> {
     singleton_concrete_type(
         ConcretizationKind::ConcretizeForImportsExports,
         cx,
@@ -2453,7 +2444,7 @@ pub(super) fn singleton_concrete_type_for_inspection<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Type, SpeculativeError> {
+) -> Result<Type, FlowJsException> {
     singleton_concrete_type(ConcretizationKind::ConcretizeForInspection, cx, reason, t)
 }
 
@@ -2461,7 +2452,7 @@ pub(super) fn singleton_concrete_type_for_type_cast<'cx>(
     cx: &Context<'cx>,
     _reason: &Reason,
     t: &Type,
-) -> Result<Type, SpeculativeError> {
+) -> Result<Type, FlowJsException> {
     use flow_typing_type::type_::constraint::Constraints;
     fn resolve<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
         match t.deref() {
@@ -2514,7 +2505,7 @@ pub(super) fn possible_concrete_types_for_imports_exports<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(
         ConcretizationKind::ConcretizeForImportsExports,
         cx,
@@ -2528,7 +2519,7 @@ pub(super) fn possible_concrete_types_for_predicate<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(
         ConcretizationKind::ConcretizeForPredicate(predicate_concretizer_variant),
         cx,
@@ -2541,7 +2532,7 @@ pub(super) fn possible_concrete_types_for_sentinel_prop_test<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(
         ConcretizationKind::ConcretizeForSentinelPropTest,
         cx,
@@ -2554,7 +2545,7 @@ pub(super) fn all_possible_concrete_types<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(ConcretizationKind::ConcretizeAll, cx, reason, t)
 }
 
@@ -2562,7 +2553,7 @@ pub(super) fn possible_concrete_types_for_operators_checking<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(
         ConcretizationKind::ConcretizeForOperatorsChecking,
         cx,
@@ -2575,7 +2566,7 @@ pub(super) fn possible_concrete_types_for_object_assign<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(ConcretizationKind::ConcretizeForObjectAssign, cx, reason, t)
 }
 
@@ -2583,7 +2574,7 @@ pub(super) fn possible_concrete_types_for_destructuring<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(
         ConcretizationKind::ConcretizeForDestructuring,
         cx,
@@ -2596,7 +2587,7 @@ pub(super) fn possible_concrete_types_for_computed_object_keys<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(
         ConcretizationKind::ConcretizeForComputedObjectKeys,
         cx,
@@ -2610,7 +2601,7 @@ pub(super) fn singleton_concrete_type_for_match_arg<'cx>(
     keep_unions: bool,
     reason: &Reason,
     t: &Type,
-) -> Result<Type, SpeculativeError> {
+) -> Result<Type, FlowJsException> {
     singleton_concrete_type(
         ConcretizationKind::ConcretizeForMatchArg { keep_unions },
         cx,
@@ -2624,7 +2615,7 @@ pub(super) fn possible_concrete_types_for_match_arg<'cx>(
     keep_unions: bool,
     reason: &Reason,
     t: &Type,
-) -> Result<Vec<Type>, SpeculativeError> {
+) -> Result<Vec<Type>, FlowJsException> {
     possible_concrete_types(
         ConcretizationKind::ConcretizeForMatchArg { keep_unions },
         cx,

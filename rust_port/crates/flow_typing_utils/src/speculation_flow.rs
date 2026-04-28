@@ -147,7 +147,7 @@ pub fn get_method_type_unsafe<'cx>(
 ) -> Result<Type, FlowJsException> {
     let t = t.dupe();
     let reason2 = reason.dupe();
-    flow_typing_tvar::mk_where_result(cx, reason, move |cx, prop_t| {
+    flow_typing_tvar::mk_where(cx, reason, move |cx, prop_t| {
         let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
             use_op: unknown_use(),
             reason: reason2.dupe(),

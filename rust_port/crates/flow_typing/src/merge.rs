@@ -973,18 +973,24 @@ fn check_strict_comparison<'cx>(
             ast::expression::Expression<ALoc, (ALoc, Type)>,
         ),
     )],
-) -> Vec<StrictComparisonResult> {
-    all_strict_comparisons
+) -> Result<Vec<StrictComparisonResult>, flow_utils_concurrency::job_error::JobError> {
+    Ok(all_strict_comparisons
         .iter()
-        .filter_map(|(loc, (left_ast, right_ast))| {
+        .map(|(loc, (left_ast, right_ast))| {
             let (_, left_t) = left_ast.loc();
             let (_, right_t) = right_ast.loc();
             let l_reason = reason_of_t(left_t);
             let r_reason = reason_of_t(right_t);
-            let left_conc_t =
-                FlowJs::singleton_concrete_type_for_inspection(cx, l_reason, left_t).ok()?;
-            let right_conc_t =
-                FlowJs::singleton_concrete_type_for_inspection(cx, r_reason, right_t).ok()?;
+            let Ok(left_conc_t) =
+                FlowJs::singleton_concrete_type_for_inspection(cx, l_reason, left_t)
+            else {
+                return Ok(None);
+            };
+            let Ok(right_conc_t) =
+                FlowJs::singleton_concrete_type_for_inspection(cx, r_reason, right_t)
+            else {
+                return Ok(None);
+            };
             // the reason after concretization will contain more information.
             let l_singleton_reason = reason_of_t(&left_conc_t);
             let r_singleton_reason = reason_of_t(&right_conc_t);
@@ -1002,13 +1008,17 @@ fn check_strict_comparison<'cx>(
                 cx: &Context<'cx>,
                 left: &Type,
                 right: &Type,
-            ) -> bool {
+            ) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
                 let left_filtered = type_filter::not_maybe(cx, left.dupe()).type_;
                 let right_filtered = type_filter::not_maybe(cx, right.dupe()).type_;
                 let left_expanded = drop_generic(left.dupe());
                 let right_expanded = drop_generic(right.dupe());
-                FlowJs::speculative_subtyping_succeeds(cx, &right_filtered, &left_expanded)
-                    || FlowJs::speculative_subtyping_succeeds(cx, &left_filtered, &right_expanded)
+                let succeeds_1 =
+                    FlowJs::speculative_subtyping_succeeds(cx, &right_filtered, &left_expanded)?;
+                if succeeds_1 {
+                    return Ok(true);
+                }
+                FlowJs::speculative_subtyping_succeeds(cx, &left_filtered, &right_expanded)
             }
             let banned = StrictComparisonResult {
                 l_reason: l_reason.dupe(),
@@ -1018,7 +1028,7 @@ fn check_strict_comparison<'cx>(
                 primary_loc: loc.dupe(),
                 kind: StrictComparisonKind::StrictComparisonGeneral,
             };
-            match (left_conc_t.deref(), right_conc_t.deref()) {
+            Ok(match (left_conc_t.deref(), right_conc_t.deref()) {
                 (TypeInner::AnyT(_, _), _) | (_, TypeInner::AnyT(_, _)) => None,
                 (TypeInner::DefT(_, d), _) if matches!(d.deref(), DefTInner::VoidT) => None,
                 (_, TypeInner::DefT(_, d)) if matches!(d.deref(), DefTInner::VoidT) => None,
@@ -1067,21 +1077,26 @@ fn check_strict_comparison<'cx>(
                     })
                 }
                 _ => {
-                    if filter_maybe_and_check_is_subtyping(cx, &left_conc_t, &right_conc_t) {
+                    if filter_maybe_and_check_is_subtyping(cx, &left_conc_t, &right_conc_t)? {
                         None
                     } else {
                         Some(banned)
                     }
                 }
-            }
+            })
         })
-        .collect()
+        .collect::<Result<Vec<_>, flow_utils_concurrency::job_error::JobError>>()?
+        .into_iter()
+        .flatten()
+        .collect())
 }
 
-fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) {
+fn detect_invalid_strict_comparison<'cx>(
+    cx: &Context<'cx>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let all_strict_comparisons = cx.get_all_strict_comparisons();
     let all_strict_comparisons: Vec<_> = all_strict_comparisons.iter().cloned().collect();
-    for result in check_strict_comparison(cx, &all_strict_comparisons) {
+    for result in check_strict_comparison(cx, &all_strict_comparisons)? {
         flow_js::add_output_non_speculating(
             cx,
             ErrorMessage::EComparison(Box::new(EComparisonData {
@@ -1096,6 +1111,7 @@ fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) {
             })),
         );
     }
+    Ok(())
 }
 
 fn detect_unnecessary_optional_chains<'cx>(cx: &Context<'cx>) {
@@ -1107,7 +1123,9 @@ fn detect_unnecessary_optional_chains<'cx>(cx: &Context<'cx>) {
     }
 }
 
-fn detect_unused_promises<'cx>(cx: &Context<'cx>) {
+fn detect_unused_promises<'cx>(
+    cx: &Context<'cx>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     for (loc, t, async_) in cx.maybe_unused_promises().iter() {
         let t = tvar_resolver::resolved_t(
             |r| any_t::make(AnySource::Untyped, r.dupe()),
@@ -1128,11 +1146,16 @@ fn detect_unused_promises<'cx>(cx: &Context<'cx>) {
                     async_: *async_,
                 }),
             ),
-        );
+        )?
     }
+    Ok(())
 }
 
-fn enforce_optimize<'cx>(cx: &Context<'cx>, loc: &ALoc, t: &Type) {
+fn enforce_optimize<'cx>(
+    cx: &Context<'cx>,
+    loc: &ALoc,
+    t: &Type,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let reason = flow_common::reason::mk_reason(
         VirtualReasonDesc::RTypeApp(Arc::new(VirtualReasonDesc::RType(Name::new(
             FlowSmolStr::new_inline("$Flow$EnforceOptimized"),
@@ -1154,11 +1177,19 @@ fn enforce_optimize<'cx>(cx: &Context<'cx>, loc: &ALoc, t: &Type) {
             )>::new()),
         })),
     });
-    flow_js::flow_t_non_speculating(cx, (&internal_t, t));
+    flow_js::flow_t_non_speculating(cx, (&internal_t, t))
 }
 
-fn check_union_opt<'cx>(cx: &Context<'cx>) {
-    cx.iter_union_opt(|loc, t| enforce_optimize(cx, loc, t));
+fn check_union_opt<'cx>(
+    cx: &Context<'cx>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    let mut result = Ok(());
+    cx.iter_union_opt(|loc, t| {
+        if result.is_ok() {
+            result = enforce_optimize(cx, loc, t);
+        }
+    });
+    result
 }
 
 fn detect_import_export_errors<'cx>(
@@ -1261,34 +1292,46 @@ fn check_polarity_fn<'cx>(cx: &Context<'cx>) {
     }
 }
 
-fn check_general_post_inference_validations<'cx>(cx: &Context<'cx>) {
+fn check_general_post_inference_validations<'cx>(
+    cx: &Context<'cx>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     for (t, use_t) in cx.post_inference_validation_flows().iter() {
-        flow_js::flow_non_speculating(cx, (t, use_t));
+        flow_js::flow_non_speculating(cx, (t, use_t))?
     }
+    Ok(())
 }
 
-fn check_interface_merge_prop_conflicts<'cx>(cx: &Context<'cx>) {
+fn check_interface_merge_prop_conflicts<'cx>(
+    cx: &Context<'cx>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     for (use_op, bad_t, good_t) in cx.interface_merge_unify_tasks().iter() {
-        flow_js::unify_non_speculating(cx, Some(use_op.dupe()), bad_t, good_t);
+        flow_js::unify_non_speculating(cx, Some(use_op.dupe()), bad_t, good_t)?;
     }
+    Ok(())
 }
 
-fn check_react_rules_fn<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {
-    react_rules::check_react_rules(cx, tast);
+fn check_react_rules_fn<'cx>(
+    cx: &Context<'cx>,
+    tast: &ast::Program<ALoc, (ALoc, Type)>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    react_rules::check_react_rules(cx, tast)
 }
 
-fn check_haste_provider_conflict<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {
+fn check_haste_provider_conflict<'cx>(
+    cx: &Context<'cx>,
+    tast: &ast::Program<ALoc, (ALoc, Type)>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let file_options = cx.file_options();
     let filename = cx.file();
     let Some(haste_name) = files::haste_name_opt(&file_options, filename) else {
-        return;
+        return Ok(());
     };
     let haste_name = FlowSmolStr::new(haste_name);
     let opts = cx.projects_options();
     let Some(projects) = FlowProjects::from_path(opts, filename.as_str())
         .and_then(|fp| opts.individual_projects_bitsets_from_common_project_bitset(fp))
     else {
-        return;
+        return Ok(());
     };
     let pos = flow_parser::loc::Position { line: 1, column: 0 };
     let loc_of_file = |f: &FileKey| -> ALoc {
@@ -1372,7 +1415,7 @@ fn check_haste_provider_conflict<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALo
                                 values_t
                             };
                         let (self_sig_loc, self_module_type) =
-                            module_info_analyzer::analyze_program(cx, tast);
+                            module_info_analyzer::analyze_program(cx, tast)?;
                         let prog_aloc = tast.loc.dupe();
                         let interface_t = {
                             let reason = flow_common::reason::mk_reason(
@@ -1412,7 +1455,7 @@ fn check_haste_provider_conflict<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALo
                                 &platform_specific_t,
                                 &UseT::new(UseTInner::UseT(use_op, interface_t)),
                             ),
-                        );
+                        )?
                     }
                 },
             }
@@ -1446,10 +1489,16 @@ fn check_haste_provider_conflict<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALo
             }
         }
     }
+    Ok(())
 }
 
-fn validate_strict_boundary_import_pattern_opt_outs<'cx>(cx: &Context<'cx>) {
-    let validate = |error_loc: &ALoc, import_specifier: &str, projects: &[FlowProjects]| {
+fn validate_strict_boundary_import_pattern_opt_outs<'cx>(
+    cx: &Context<'cx>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    let validate = |error_loc: &ALoc,
+                    import_specifier: &str,
+                    projects: &[FlowProjects]|
+     -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let get_exports_t = |specifier: &FlowImportSpecifier| -> Option<Type> {
             match cx.find_require(specifier) {
                 ResolvedRequire::MissingModule => None,
@@ -1486,7 +1535,7 @@ fn validate_strict_boundary_import_pattern_opt_outs<'cx>(cx: &Context<'cx>) {
                 let _projects_options = cx.projects_options();
                 let missing_platforms: Vec<BTreeSet<FlowSmolStr>> = projects
                     .iter()
-                    .filter_map(|project| {
+                    .map(|project| {
                         let specifier = FlowImportSpecifier::HasteImportWithSpecifiedNamespace {
                             namespace: FlowProjects::to_bitset(*project),
                             name: FlowSmolStr::new(import_specifier),
@@ -1507,7 +1556,7 @@ fn validate_strict_boundary_import_pattern_opt_outs<'cx>(cx: &Context<'cx>) {
                             // The above example will cause us unable to find `foo` from `native` namespace.
                             // We should error, because it will cause missing-module error in a flowconfig that
                             // includes all of common code + `native/`.
-                            None => platform_set::available_platforms(
+                            None => Ok(platform_set::available_platforms(
                                 &_file_options,
                                 _projects_options,
                                 cx.file().as_str(),
@@ -1515,7 +1564,7 @@ fn validate_strict_boundary_import_pattern_opt_outs<'cx>(cx: &Context<'cx>) {
                                     .multi_platform_ambient_supports_platform_for_project(*project)
                                     .as_deref(),
                             )
-                            .map(|ps| ps.to_platform_string_set(&_file_options)),
+                            .map(|ps| ps.to_platform_string_set(&_file_options))),
                             Some(alternative_module_t) => {
                                 tvar_resolver::resolve(
                                     cx,
@@ -1546,11 +1595,14 @@ fn validate_strict_boundary_import_pattern_opt_outs<'cx>(cx: &Context<'cx>) {
                                             acting_common_interface_module_t.dupe(),
                                         )),
                                     ),
-                                );
-                                None
+                                )?;
+                                Ok(None)
                             }
                         }
                     })
+                    .collect::<Result<Vec<_>, flow_utils_concurrency::job_error::JobError>>()?
+                    .into_iter()
+                    .flatten()
                     .collect();
                 let mut all_missing = BTreeSet::new();
                 for ps in &missing_platforms {
@@ -1569,20 +1621,22 @@ fn validate_strict_boundary_import_pattern_opt_outs<'cx>(cx: &Context<'cx>) {
                 }
             }
         }
+        Ok(())
     };
     for (error_loc, import_specifier, projects) in cx
         .post_inference_projects_strict_boundary_import_pattern_opt_outs_validations()
         .iter()
     {
-        validate(error_loc, import_specifier, projects);
+        validate(error_loc, import_specifier, projects)?;
     }
+    Ok(())
 }
 
 fn check_multiplatform_conformance<'cx>(
     cx: &Context<'cx>,
     ast: &ast::Program<ALoc, ALoc>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
-) {
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let prog_aloc = &ast.loc;
     let filename = cx.file();
     let file_options = cx.file_options();
@@ -1643,7 +1697,7 @@ fn check_multiplatform_conformance<'cx>(
                         get_exports_t(true, reason, m_result.ok().as_ref())
                     };
                     let (self_sig_loc, self_module_type) =
-                        module_info_analyzer::analyze_program(cx, tast);
+                        module_info_analyzer::analyze_program(cx, tast)?;
                     let self_t = get_exports_t(
                         false,
                         self_module_type.module_reason.dupe(),
@@ -1667,7 +1721,7 @@ fn check_multiplatform_conformance<'cx>(
                     flow_js::flow_non_speculating(
                         cx,
                         (&self_t, &UseT::new(UseTInner::UseT(use_op, interface_t))),
-                    );
+                    )?
                 }
             }
         }
@@ -1739,6 +1793,7 @@ fn check_multiplatform_conformance<'cx>(
             }
         }
     }
+    Ok(())
 }
 
 fn check_spread_prop_keys<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {
@@ -1815,15 +1870,24 @@ fn check_spread_prop_keys<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALo
     let Ok(()) = checker.program(tast);
 }
 
-fn check_match_exhaustiveness<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {
+fn check_match_exhaustiveness<'cx>(
+    cx: &Context<'cx>,
+    tast: &ast::Program<ALoc, (ALoc, Type)>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     if !cx.enable_pattern_matching() {
-        return;
+        return Ok(());
     }
     struct MatchExhaustivenessChecker<'a, 'cx> {
         cx: &'a Context<'cx>,
     }
-    impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
-        for MatchExhaustivenessChecker<'_, '_>
+    impl<'ast>
+        ast_visitor::AstVisitor<
+            'ast,
+            ALoc,
+            (ALoc, Type),
+            &'ast ALoc,
+            flow_utils_concurrency::job_error::JobError,
+        > for MatchExhaustivenessChecker<'_, '_>
     {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
@@ -1835,8 +1899,12 @@ fn check_match_exhaustiveness<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, 
             &mut self,
             loc: &'ast ALoc,
             m: &'ast ast::match_::Match<ALoc, (ALoc, Type), B>,
-            on_case_body: impl FnMut(&mut Self, &'ast B) -> Result<(), !>,
-        ) -> Result<(), !> {
+            on_case_body: impl FnMut(
+                &mut Self,
+                &'ast B,
+            )
+                -> Result<(), flow_utils_concurrency::job_error::JobError>,
+        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
             let match_loc = &m.match_keyword_loc;
             let (_, arg_t) = m.arg.loc();
             let patterns: Vec<_> = m
@@ -1844,12 +1912,12 @@ fn check_match_exhaustiveness<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, 
                 .iter()
                 .map(|case| (case.pattern.clone(), case.guard.is_some()))
                 .collect();
-            exhaustive::analyze(self.cx, match_loc.dupe(), &patterns, arg_t);
+            exhaustive::analyze(self.cx, match_loc.dupe(), &patterns, arg_t)?;
             ast_visitor::match_default(self, loc, m, on_case_body)
         }
     }
     let mut checker = MatchExhaustivenessChecker { cx };
-    let Ok(()) = checker.program(tast);
+    checker.program(tast)
 }
 
 fn emit_refinement_information_as_errors<'cx>(cx: &Context<'cx>) {
@@ -2113,31 +2181,32 @@ pub fn post_merge_checks<'cx>(
     ast: &ast::Program<ALoc, ALoc>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
     metadata: &Metadata,
-) {
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     force_lazy_tvars(cx);
-    check_react_rules_fn(cx, tast);
+    check_react_rules_fn(cx, tast)?;
     if !cx.is_lib_file() {
-        check_haste_provider_conflict(cx, tast);
-        check_multiplatform_conformance(cx, ast, tast);
-        validate_strict_boundary_import_pattern_opt_outs(cx);
+        check_haste_provider_conflict(cx, tast)?;
+        check_multiplatform_conformance(cx, ast, tast)?;
+        validate_strict_boundary_import_pattern_opt_outs(cx)?;
     }
     check_polarity_fn(cx);
-    check_general_post_inference_validations(cx);
-    check_interface_merge_prop_conflicts(cx);
+    check_general_post_inference_validations(cx)?;
+    check_interface_merge_prop_conflicts(cx)?;
     detect_sketchy_null_checks(cx, tast);
     detect_non_voidable_properties(cx);
     detect_test_prop_misses(cx);
     detect_unnecessary_optional_chains(cx);
     detect_constant_conditions(cx);
     detect_import_export_errors(cx, ast, metadata);
-    detect_invalid_strict_comparison(cx);
-    detect_unused_promises(cx);
-    check_union_opt(cx);
+    detect_invalid_strict_comparison(cx)?;
+    detect_unused_promises(cx)?;
+    check_union_opt(cx)?;
     check_spread_prop_keys(cx, tast);
-    check_match_exhaustiveness(cx, tast);
+    check_match_exhaustiveness(cx, tast)?;
     check_assert_operator(cx, tast);
     emit_refinement_information_as_errors(cx);
     convert_type_to_type_desc_in_errors(cx, file_sig, tast);
+    Ok(())
 }
 
 // Check will lazily create types for the checked file's dependencies. These
@@ -2475,6 +2544,7 @@ pub fn mk_builtins<'cx>(
                         Rc::new(move |_cx: &Context| -> Builtins<'_, Context<'_>> {
                             builtins_ref_clone.replace(Builtins::empty())
                         }),
+                        flow_utils_concurrency::check_budget::CheckBudget::new(None),
                     );
                     let (values, types, modules) = type_sig_merge::merge_builtins(
                         &cx,

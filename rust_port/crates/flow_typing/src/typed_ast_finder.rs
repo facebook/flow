@@ -26,12 +26,10 @@ pub enum EnclosingNode<M: Dupe, T: Dupe> {
     EnclosingExpression(ast::expression::Expression<M, T>),
 }
 
-use flow_typing_utils::abnormal::AbnormalControlFlow;
-
 pub fn infer_node<'a>(
     cx: &Context<'a>,
     node: EnclosingNode<ALoc, ALoc>,
-) -> Result<EnclosingNode<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<EnclosingNode<ALoc, (ALoc, Type)>, flow_typing_utils::abnormal::CheckExprError> {
     match node {
         EnclosingNode::EnclosingProgram(prog) => {
             let ast::Program {
@@ -41,7 +39,7 @@ pub fn infer_node<'a>(
                 comments,
                 all_comments,
             } = prog;
-            let statements = statement::statement_list(cx, &statements);
+            let statements = statement::statement_list(cx, &statements)?;
             Ok(EnclosingNode::EnclosingProgram(ast::Program {
                 loc: prog_aloc,
                 statements: statements.into(),
@@ -225,6 +223,13 @@ pub mod type_at_pos {
     enum FoundResult {
         FoundType(ALoc, bool, Type),
         FoundHardcodedModule(ALoc, FlowSmolStr),
+        Canceled(flow_utils_concurrency::job_error::JobError),
+    }
+
+    impl From<flow_utils_concurrency::job_error::JobError> for FoundResult {
+        fn from(e: flow_utils_concurrency::job_error::JobError) -> Self {
+            FoundResult::Canceled(e)
+        }
     }
 
     // Kinds of nodes that "type-at-pos" is interested in:
@@ -553,9 +558,9 @@ pub mod type_at_pos {
                     loc.dupe(),
                 );
                 let LazyHintT(_, lazy_hint) = type_env::get_hint(self.cx, loc.dupe());
-                let hint_result = lazy_hint(self.cx, false, None, reason);
-                // Split with_hint_result to avoid double &mut self borrow in closures
-                let hint_t = type_hint::with_hint_result(Some, || None, hint_result);
+                let hint_result = lazy_hint(self.cx, false, None, reason)?;
+                // Split with_hint to avoid double &mut self borrow in closures
+                let hint_t = type_hint::with_hint(Some, || None, hint_result);
                 match hint_t {
                     Some(t) => self.find_loc(loc, &t, false),
                     None => ast_visitor::jsx_attribute_name_identifier_default(self, ident),
@@ -627,20 +632,21 @@ pub mod type_at_pos {
         cx: &Context<'_>,
         typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
         loc: Loc,
-    ) -> TypeAtPosResult {
+    ) -> Result<TypeAtPosResult, flow_utils_concurrency::job_error::JobError> {
         let mut searcher = TypeAtPosSearcher {
             cx,
             target_loc: loc,
             rev_bound_tparams: Vec::new(),
         };
         match searcher.program(typed_ast) {
-            Ok(()) => TypeAtPosResult::NoResult,
-            Err(FoundResult::FoundType(loc, is_type_id, scheme)) => {
-                TypeAtPosResult::TypeResult(loc.to_loc_exn().dupe(), is_type_id, scheme)
-            }
-            Err(FoundResult::FoundHardcodedModule(loc, name)) => {
-                TypeAtPosResult::HardcodedModuleResult(loc.to_loc_exn().dupe(), name)
-            }
+            Ok(()) => Ok(TypeAtPosResult::NoResult),
+            Err(FoundResult::FoundType(loc, is_type_id, scheme)) => Ok(
+                TypeAtPosResult::TypeResult(loc.to_loc_exn().dupe(), is_type_id, scheme),
+            ),
+            Err(FoundResult::FoundHardcodedModule(loc, name)) => Ok(
+                TypeAtPosResult::HardcodedModuleResult(loc.to_loc_exn().dupe(), name),
+            ),
+            Err(FoundResult::Canceled(e)) => Err(e),
         }
     }
 }
@@ -649,6 +655,6 @@ pub fn find_type_at_pos_annotation(
     cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc: Loc,
-) -> type_at_pos::TypeAtPosResult {
+) -> Result<type_at_pos::TypeAtPosResult, flow_utils_concurrency::job_error::JobError> {
     type_at_pos::find(cx, typed_ast, loc)
 }

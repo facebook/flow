@@ -38,7 +38,7 @@ use flow_typing_type::type_::FunParam;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_util;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 use flow_typing_utils::type_env;
 use flow_typing_utils::type_operation_utils;
 
@@ -64,7 +64,10 @@ struct FuncScopeVisitor<'a, 'cx, 'b> {
     no_yield: bool,
 }
 
-impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisitor<'_, '_, '_> {
+impl<'ast>
+    AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, flow_utils_concurrency::job_error::JobError>
+    for FuncScopeVisitor<'_, '_, '_>
+{
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
     }
@@ -77,7 +80,7 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisi
         &mut self,
         _loc: &'ast ALoc,
         _expr: &'ast ast::function::Function<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         Ok(())
     }
 
@@ -85,7 +88,7 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisi
         &mut self,
         _loc: &'ast ALoc,
         _component: &'ast ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         Ok(())
     }
 
@@ -93,7 +96,7 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisi
         &mut self,
         loc: &'ast ALoc,
         switch: &'ast ast::statement::Switch<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let (ref exhaust_loc, ref t) = switch.exhaustive_out;
         if let Some((exhaustive_ts, exhaust_locs, _)) = self.exhaust {
             if exhaust_locs.contains(exhaust_loc) {
@@ -107,7 +110,7 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisi
         &mut self,
         loc: &'ast (ALoc, Type),
         yield_expr: &'ast ast::expression::Yield<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let (_, ref t) = yield_expr.result_out;
         let use_op = if yield_expr.delegate {
             type_::unknown_use()
@@ -130,7 +133,7 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisi
                 t,
                 &type_::UseT::new(type_::UseTInner::UseT(use_op, self.yield_t.dupe())),
             ),
-        );
+        )?;
         self.no_yield = false;
         ast_visitor::yield_default(self, loc, yield_expr)
     }
@@ -139,13 +142,13 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisi
     fn statement(
         &mut self,
         stmt: &'ast ast::statement::Statement<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         match &**stmt {
             ast::statement::StatementInner::Return {
                 inner: return_stmt, ..
             } => {
                 let loc = stmt.loc().dupe();
-                self.custom_return(loc, return_stmt);
+                self.custom_return(loc, return_stmt)?;
             }
             ast::statement::StatementInner::Throw { .. } => {
                 self.has_throw = true;
@@ -159,7 +162,7 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisi
         &mut self,
         loc: &'ast (ALoc, Type),
         expr: &'ast ast::expression::Call<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         if ast_utils::is_call_to_invariant(&expr.callee) {
             match expr.arguments.arguments.as_ref() {
                 [] => {
@@ -184,8 +187,11 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisi
 }
 
 impl FuncScopeVisitor<'_, '_, '_> {
-    fn visit(&mut self, statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>]) {
-        let Ok(()) = self.statement_list(statements);
+    fn visit(
+        &mut self,
+        statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>],
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.statement_list(statements)?;
         if !self.has_return_annot {
             if self.no_return && self.has_throw {
                 let reason =
@@ -200,7 +206,7 @@ impl FuncScopeVisitor<'_, '_, '_> {
                             self.return_t.dupe(),
                         )),
                     ),
-                );
+                )?;
             }
             if self.no_yield {
                 flow_js::flow_t_non_speculating(
@@ -212,16 +218,17 @@ impl FuncScopeVisitor<'_, '_, '_> {
                         )),
                         self.yield_t,
                     ),
-                );
+                )?;
             }
         }
+        Ok(())
     }
 
     fn custom_return(
         &mut self,
         loc: ALoc,
         return_stmt: &ast::statement::Return<ALoc, (ALoc, Type)>,
-    ) {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let (_, ref t) = return_stmt.return_out;
         let t = match self.kind {
             Kind::Async => {
@@ -239,7 +246,7 @@ impl FuncScopeVisitor<'_, '_, '_> {
                     "Promise",
                     vec![awaited],
                 );
-                flow_js::reposition_non_speculating(self.cx, loc.dupe(), t_prime)
+                flow_js::reposition_non_speculating(self.cx, loc.dupe(), t_prime)?
             }
             Kind::Generator { .. } => {
                 // Convert the return expression's type R to Generator<Y,R,N>, where
@@ -250,10 +257,8 @@ impl FuncScopeVisitor<'_, '_, '_> {
                         reason::VirtualReasonDesc::RCustom("generator return".into()),
                         loc.dupe(),
                     ),
-                    |cx, tvar| {
-                        flow_js::flow_t(cx, (t, tvar)).expect("Should not be under speculation");
-                    },
-                );
+                    |cx, tvar| flow_js::flow_t_non_speculating(cx, (t, tvar)),
+                )?;
                 let t_prime = flow_js::FlowJs::get_builtin_typeapp(
                     self.cx,
                     &reason::mk_reason(type_util::desc_of_t(t).clone(), loc.dupe()),
@@ -261,7 +266,7 @@ impl FuncScopeVisitor<'_, '_, '_> {
                     "Generator",
                     vec![self.yield_t.dupe(), return_tvar, self.next_t.dupe()],
                 );
-                flow_js::reposition_non_speculating(self.cx, loc.dupe(), t_prime)
+                flow_js::reposition_non_speculating(self.cx, loc.dupe(), t_prime)?
             }
             Kind::AsyncGenerator { .. } => {
                 let return_tvar = flow_typing_tvar::mk_where(
@@ -270,10 +275,8 @@ impl FuncScopeVisitor<'_, '_, '_> {
                         reason::VirtualReasonDesc::RCustom("async generator return".into()),
                         loc.dupe(),
                     ),
-                    |cx, tvar| {
-                        flow_js::flow_t_non_speculating(cx, (t, tvar));
-                    },
-                );
+                    |cx, tvar| flow_js::flow_t_non_speculating(cx, (t, tvar)),
+                )?;
                 let t_prime = flow_js::FlowJs::get_builtin_typeapp(
                     self.cx,
                     &reason::mk_reason(type_util::desc_of_t(t).clone(), loc.dupe()),
@@ -281,7 +284,7 @@ impl FuncScopeVisitor<'_, '_, '_> {
                     "AsyncGenerator",
                     vec![self.yield_t.dupe(), return_tvar, self.next_t.dupe()],
                 );
-                flow_js::reposition_non_speculating(self.cx, loc.dupe(), t_prime)
+                flow_js::reposition_non_speculating(self.cx, loc.dupe(), t_prime)?
             }
             _ => t.dupe(),
         };
@@ -305,8 +308,9 @@ impl FuncScopeVisitor<'_, '_, '_> {
                 &t,
                 &type_::UseT::new(type_::UseTInner::UseT(use_op, self.return_t.dupe())),
             ),
-        );
+        )?;
         self.no_return = false;
+        Ok(())
     }
 }
 
@@ -491,7 +495,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
         Option<FunctionBody<ALoc, (ALoc, Type)>>,
         Option<ast::expression::Expression<ALoc, (ALoc, Type)>>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let Func {
         reason: reason_fn,
@@ -573,11 +577,11 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                         .loc()
                         .dupe(),
                     t,
-                );
+                )?;
                 flow_js::flow_t_non_speculating(
                     cx,
                     (type_util::type_t_of_annotated_or_inferred(return_t), &t),
-                );
+                )?;
             }
             {
                 let t = flow_js::FlowJs::get_builtin_typeapp(
@@ -593,11 +597,11 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                         .loc()
                         .dupe(),
                     t,
-                );
+                )?;
                 flow_js::flow_t_non_speculating(
                     cx,
                     (&t, type_util::type_t_of_annotated_or_inferred(return_t)),
-                );
+                )?;
             }
             (yield_t, next_t)
         }
@@ -657,7 +661,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
     };
 
     // statement visit pass
-    let statements_ast = statement::statement_list(cx, &statements);
+    let statements_ast = statement::statement_list(cx, &statements)?;
 
     let body_ast = match reconstruct_body {
         ReconstructBody::None => None,
@@ -818,7 +822,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                         &void_t,
                         &type_::UseT::new(type_::UseTInner::UseT(use_op.dupe(), return_t.dupe())),
                     ),
-                );
+                )?;
                 None
             }
             Some(_) => {
@@ -873,13 +877,21 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
         has_throw: false,
         no_yield: true,
     }
-    .visit(&statements_ast);
+    .visit(&statements_ast)?;
 
     if let Some((maybe_exhaustively_checked_ts, _, flow_on_non_exhaustive)) = &exhaust {
         let ts = maybe_exhaustively_checked_ts.borrow();
         if type_operation_utils::type_assertions::non_exhaustive(cx, &ts) {
-            flow_js::flow(cx, (&flow_on_non_exhaustive.0, &flow_on_non_exhaustive.1))
-                .expect("Should not be under speculation");
+            match flow_js::flow(cx, (&flow_on_non_exhaustive.0, &flow_on_non_exhaustive.1)) {
+                Ok(()) => {}
+                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+                    return Err(c.into());
+                }
+                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(c)) => {
+                    return Err(c.into());
+                }
+                Err(err) => panic!("Should not be under speculation: {:?}", err),
+            }
         }
     }
 

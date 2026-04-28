@@ -1361,8 +1361,18 @@ pub mod graphql {
     ) -> Option<ALocTy> {
         let graphql_file = tgt_aloc.source()?;
         let graphql_ast = get_ast_from_shared_mem(graphql_file)?;
-        let import_types =
-            flow_typing::ty_normalizer_imports::extract_types(cx, file_sig, Some(typed_ast));
+        // The typed_ast branch (Some) only invokes add_bind_ident_from_typed_ast which
+        // does not call import_named_specifier_type — so cancel cannot surface here.
+        // Convert to None on the (unreachable) cancel branch; this matches the OCaml
+        // behavior where this caller never sees Worker_should_cancel.
+        let import_types = match flow_typing::ty_normalizer_imports::extract_types(
+            cx,
+            file_sig,
+            Some(typed_ast),
+        ) {
+            Ok(t) => t,
+            Err(_canceled) => return None,
+        };
         let defs: BTreeMap<Loc, (ALoc, String, flow_common_ty::ty_symbol::ImportMode)> =
             import_types
                 .into_iter()

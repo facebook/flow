@@ -285,44 +285,22 @@ where
     t
 }
 
-pub fn mk_tvar_and_fully_resolve_where<'cx, F>(cx: &Context<'cx>, reason: Reason, f: F) -> Type
-where
-    F: FnOnce(&Context<'cx>, &Type),
-{
-    let tvar = flow_typing_tvar::mk_where(cx, reason, f);
-    resolve(cx, default_no_lowers, true, &tvar);
-    tvar
-}
-
-pub fn mk_tvar_and_fully_resolve_where_result<'cx, E>(
+pub fn mk_tvar_and_fully_resolve_where<'cx, E>(
     cx: &Context<'cx>,
     reason: Reason,
     f: impl FnOnce(&Context<'cx>, &Type) -> Result<(), E>,
 ) -> Result<Type, E> {
-    let tvar = flow_typing_tvar::mk_where_result(cx, reason, f)?;
+    let tvar = flow_typing_tvar::mk_where(cx, reason, f)?;
     resolve(cx, default_no_lowers, true, &tvar);
     Ok(tvar)
 }
 
-pub fn mk_tvar_and_fully_resolve_no_wrap_where<'cx, F>(
-    cx: &Context<'cx>,
-    reason: Reason,
-    f: F,
-) -> Type
-where
-    F: FnOnce(&Context<'cx>, &Reason, i32),
-{
-    let tvar = flow_typing_tvar::mk_no_wrap_where(cx, reason, f);
-    resolve(cx, default_no_lowers, true, &tvar);
-    tvar
-}
-
-pub fn mk_tvar_and_fully_resolve_no_wrap_where_result<'cx, E>(
+pub fn mk_tvar_and_fully_resolve_no_wrap_where<'cx, E>(
     cx: &Context<'cx>,
     reason: Reason,
     f: impl FnOnce(&Context<'cx>, &Reason, i32) -> Result<(), E>,
 ) -> Result<Type, E> {
-    let tvar = flow_typing_tvar::mk_no_wrap_where_result(cx, reason, f)?;
+    let tvar = flow_typing_tvar::mk_no_wrap_where(cx, reason, f)?;
     resolve(cx, default_no_lowers, true, &tvar);
     Ok(tvar)
 }

@@ -68,14 +68,16 @@ pub fn dump_type_at_pos(
     cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc: Loc,
-) -> Option<(Loc, String)> {
-    match typed_ast_finder::find_type_at_pos_annotation(cx, typed_ast, loc) {
-        FinderResult::NoResult => None,
-        FinderResult::HardcodedModuleResult(loc, _) => Some((loc, "ModuleT".to_string())),
-        FinderResult::TypeResult(loc, _, t) => {
-            Some((loc, flow_typing_debug::dump_t(Some(10), cx, &t)))
-        }
-    }
+) -> Result<Option<(Loc, String)>, flow_utils_concurrency::job_error::JobError> {
+    Ok(
+        match typed_ast_finder::find_type_at_pos_annotation(cx, typed_ast, loc)? {
+            FinderResult::NoResult => None,
+            FinderResult::HardcodedModuleResult(loc, _) => Some((loc, "ModuleT".to_string())),
+            FinderResult::TypeResult(loc, _, t) => {
+                Some((loc, flow_typing_debug::dump_t(Some(10), cx, &t)))
+            }
+        },
+    )
 }
 
 pub fn type_at_pos_type<'a>(
@@ -88,116 +90,119 @@ pub fn type_at_pos_type<'a>(
     no_typed_ast_for_imports: bool,
     include_refs: Option<&dyn Fn(&ALoc) -> Loc>,
     loc: Loc,
-) -> QueryResult<TypeAtPosResult> {
-    match typed_ast_finder::find_type_at_pos_annotation(cx, typed_ast, loc) {
-        FinderResult::NoResult => QueryResult::FailureNoMatch,
-        FinderResult::HardcodedModuleResult(loc, name) => {
-            let module_symbol = Symbol {
-                sym_provenance: Provenance::Local,
-                sym_name: Name::new(name),
-                sym_anonymous: false,
-                sym_def_loc: ALoc::of_loc(loc.dupe()),
-            };
-            let unevaluated = Elt::Decl(Decl::ModuleDecl(Box::new(DeclModuleDeclData {
-                name: Some(module_symbol),
-                exports: Arc::from([]),
-                default: None,
-            })));
-            QueryResult::Success(
-                loc,
-                TypeAtPosResult {
-                    unevaluated,
-                    evaluated: None,
-                    refs: None,
-                },
-            )
-        }
-        FinderResult::TypeResult(loc, toplevel_is_type_identifier_reference, t) => {
-            let typed_ast_opt = if no_typed_ast_for_imports {
-                None
-            } else {
-                Some(typed_ast)
-            };
-            let options = |evaluate_type_destructors: EvaluateTypeDestructorsMode| Options {
-                expand_internal_types: false,
-                expand_enum_members: false,
-                evaluate_type_destructors,
-                optimize_types: true,
-                omit_targ_defaults_option: omit_targ_defaults,
-                merge_bot_and_any_kinds: true,
-                verbose_normalizer,
-                max_depth: Some(max_depth),
-                toplevel_is_type_identifier_reference,
-            };
-
-            let from_type = |evaluate_type_destructors: EvaluateTypeDestructorsMode| {
-                let options = options(evaluate_type_destructors);
-                let genv = ty_normalizer_flow::mk_genv(options, cx, typed_ast_opt, file_sig.dupe());
-                ty_normalizer_flow::from_type_with_found_computed_type(&genv, &t)
-            };
-            let (unevaluated, found_computed_type) =
-                from_type(EvaluateTypeDestructorsMode::EvaluateNone);
-            let evaluated = if found_computed_type {
-                // We need to roll back caches and errors, because server state persists
-                // through IDE requests. If evaluation results in new errors, future
-                // requests at the same location should also result in "new" errors.
-                cx.run_and_rolled_back_cache(|| {
-                    let errors = cx.errors();
-                    let (evaluated, _) = from_type(EvaluateTypeDestructorsMode::EvaluateAll);
-                    let errors_prime = cx.errors();
-                    cx.reset_errors(errors.dupe());
-                    if errors == errors_prime {
-                        Some(evaluated)
-                    } else {
-                        None
-                    }
-                })
-            } else {
-                None
-            };
-            let refs = |unevaluated: &ALocElt,
-                        evaluated: &Option<ALocElt>|
-             -> Option<BTreeSet<Symbol<Loc>>> {
-                match &include_refs {
-                    None => None,
-                    Some(loc_of_aloc) => {
-                        let syms = symbols_of_elt(*loc_of_aloc, unevaluated);
-                        Some(match evaluated {
-                            None => syms,
-                            Some(e) => {
-                                let other_syms = symbols_of_elt(*loc_of_aloc, e);
-                                &syms | &other_syms
-                            }
-                        })
-                    }
-                }
-            };
-            let tys = match (&unevaluated, &evaluated) {
-                (Ok(uneval), Some(Ok(eval))) => {
-                    match ty_utils::size_of_elt(Some(MAX_SIZE_OF_EVALUATED_TYPE), eval) {
-                        Some(_) => Ok((uneval.clone(), Some(eval.clone()))),
-                        None => Ok((uneval.clone(), None)),
-                    }
-                }
-                (Ok(uneval), _) => Ok((uneval.clone(), None)),
-                (Err(err), _) => Err(err.clone()),
-            };
-            match tys {
-                Ok((unevaluated, evaluated)) => {
-                    let refs = refs(&unevaluated, &evaluated);
-                    QueryResult::Success(
-                        loc,
-                        TypeAtPosResult {
-                            unevaluated,
-                            evaluated,
-                            refs,
-                        },
-                    )
-                }
-                Err(err) => result_of_normalizer_error(loc, t, err),
+) -> Result<QueryResult<TypeAtPosResult>, flow_utils_concurrency::job_error::JobError> {
+    Ok(
+        match typed_ast_finder::find_type_at_pos_annotation(cx, typed_ast, loc)? {
+            FinderResult::NoResult => QueryResult::FailureNoMatch,
+            FinderResult::HardcodedModuleResult(loc, name) => {
+                let module_symbol = Symbol {
+                    sym_provenance: Provenance::Local,
+                    sym_name: Name::new(name),
+                    sym_anonymous: false,
+                    sym_def_loc: ALoc::of_loc(loc.dupe()),
+                };
+                let unevaluated = Elt::Decl(Decl::ModuleDecl(Box::new(DeclModuleDeclData {
+                    name: Some(module_symbol),
+                    exports: Arc::from([]),
+                    default: None,
+                })));
+                QueryResult::Success(
+                    loc,
+                    TypeAtPosResult {
+                        unevaluated,
+                        evaluated: None,
+                        refs: None,
+                    },
+                )
             }
-        }
-    }
+            FinderResult::TypeResult(loc, toplevel_is_type_identifier_reference, t) => {
+                let typed_ast_opt = if no_typed_ast_for_imports {
+                    None
+                } else {
+                    Some(typed_ast)
+                };
+                let options = |evaluate_type_destructors: EvaluateTypeDestructorsMode| Options {
+                    expand_internal_types: false,
+                    expand_enum_members: false,
+                    evaluate_type_destructors,
+                    optimize_types: true,
+                    omit_targ_defaults_option: omit_targ_defaults,
+                    merge_bot_and_any_kinds: true,
+                    verbose_normalizer,
+                    max_depth: Some(max_depth),
+                    toplevel_is_type_identifier_reference,
+                };
+
+                let from_type = |evaluate_type_destructors: EvaluateTypeDestructorsMode| {
+                    let options = options(evaluate_type_destructors);
+                    let genv =
+                        ty_normalizer_flow::mk_genv(options, cx, typed_ast_opt, file_sig.dupe());
+                    ty_normalizer_flow::from_type_with_found_computed_type(&genv, &t)
+                };
+                let (unevaluated, found_computed_type) =
+                    from_type(EvaluateTypeDestructorsMode::EvaluateNone);
+                let evaluated = if found_computed_type {
+                    // We need to roll back caches and errors, because server state persists
+                    // through IDE requests. If evaluation results in new errors, future
+                    // requests at the same location should also result in "new" errors.
+                    cx.run_and_rolled_back_cache(|| {
+                        let errors = cx.errors();
+                        let (evaluated, _) = from_type(EvaluateTypeDestructorsMode::EvaluateAll);
+                        let errors_prime = cx.errors();
+                        cx.reset_errors(errors.dupe());
+                        if errors == errors_prime {
+                            Some(evaluated)
+                        } else {
+                            None
+                        }
+                    })
+                } else {
+                    None
+                };
+                let refs = |unevaluated: &ALocElt,
+                            evaluated: &Option<ALocElt>|
+                 -> Option<BTreeSet<Symbol<Loc>>> {
+                    match &include_refs {
+                        None => None,
+                        Some(loc_of_aloc) => {
+                            let syms = symbols_of_elt(*loc_of_aloc, unevaluated);
+                            Some(match evaluated {
+                                None => syms,
+                                Some(e) => {
+                                    let other_syms = symbols_of_elt(*loc_of_aloc, e);
+                                    &syms | &other_syms
+                                }
+                            })
+                        }
+                    }
+                };
+                let tys = match (&unevaluated, &evaluated) {
+                    (Ok(uneval), Some(Ok(eval))) => {
+                        match ty_utils::size_of_elt(Some(MAX_SIZE_OF_EVALUATED_TYPE), eval) {
+                            Some(_) => Ok((uneval.clone(), Some(eval.clone()))),
+                            None => Ok((uneval.clone(), None)),
+                        }
+                    }
+                    (Ok(uneval), _) => Ok((uneval.clone(), None)),
+                    (Err(err), _) => Err(err.clone()),
+                };
+                match tys {
+                    Ok((unevaluated, evaluated)) => {
+                        let refs = refs(&unevaluated, &evaluated);
+                        QueryResult::Success(
+                            loc,
+                            TypeAtPosResult {
+                                unevaluated,
+                                evaluated,
+                                refs,
+                            },
+                        )
+                    }
+                    Err(err) => result_of_normalizer_error(loc, t, err),
+                }
+            }
+        },
+    )
 }
 
 pub fn dump_types<'a>(

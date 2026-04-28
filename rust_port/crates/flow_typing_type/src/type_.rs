@@ -577,7 +577,7 @@ pub type LazyHintCompute<CX = ()> = Rc<
         /* expected_only */ bool,
         /* skip_optional */ Option<bool>,
         /* reason */ Reason,
-    ) -> HintEvalResult,
+    ) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError>,
 >;
 
 impl<CX> std::fmt::Debug for LazyHintT<CX> {
@@ -8573,13 +8573,14 @@ pub mod type_collector {
             self.types.borrow().iter().map(|t| t.dupe()).collect()
         }
 
-        pub fn iter<F>(&self, mut f: F)
+        pub fn iter<F>(&self, mut f: F) -> Result<(), flow_utils_concurrency::job_error::JobError>
         where
-            F: FnMut(&Type),
+            F: FnMut(&Type) -> Result<(), flow_utils_concurrency::job_error::JobError>,
         {
             for t in self.types.borrow().iter() {
-                f(t);
+                f(t)?;
             }
+            Ok(())
         }
     }
 }
@@ -8803,9 +8804,15 @@ pub mod constraint {
 
         enum ForcingStateInner<'cx, CX: ?Sized, A> {
             Lazy(Box<dyn FnOnce(&CX) -> A + 'cx>),
+            LazyResult(
+                Box<
+                    dyn FnOnce(&CX) -> Result<A, flow_utils_concurrency::job_error::JobError> + 'cx,
+                >,
+            ),
             Forcing,
             Forced(A),
             ForcedWithCyclicError(A),
+            ForcedWithJobError(A, flow_utils_concurrency::job_error::JobError),
         }
 
         pub struct State<'cx, CX: ?Sized, A, B> {
@@ -8821,9 +8828,11 @@ pub mod constraint {
                 // SAFETY: single-threaded, just reading for debug
                 let status_str = match unsafe { &*self.inner.get() } {
                     ForcingStateInner::Lazy(_) => "Lazy",
+                    ForcingStateInner::LazyResult(_) => "LazyResult",
                     ForcingStateInner::Forcing => "Forcing",
                     ForcingStateInner::Forced(_) => "Forced",
                     ForcingStateInner::ForcedWithCyclicError(_) => "ForcedWithCyclicError",
+                    ForcingStateInner::ForcedWithJobError(_, _) => "ForcedWithJobError",
                 };
                 f.debug_struct("State")
                     .field("status", &status_str)
@@ -8843,6 +8852,17 @@ pub mod constraint {
             {
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Lazy(Box::new(f)))),
+                    error_reason: Some(error_reason),
+                    _phantom: PhantomData,
+                }
+            }
+
+            pub fn try_of_lazy_t<F>(error_reason: B, f: F) -> Self
+            where
+                F: FnOnce(&CX) -> Result<A, flow_utils_concurrency::job_error::JobError> + 'cx,
+            {
+                State {
+                    inner: Rc::new(UnsafeCell::new(ForcingStateInner::LazyResult(Box::new(f)))),
                     error_reason: Some(error_reason),
                     _phantom: PhantomData,
                 }
@@ -8881,6 +8901,29 @@ pub mod constraint {
                             _ => panic!("Invalid state after forcing"),
                         }
                     }
+                    ForcingStateInner::LazyResult(_) => {
+                        let old = std::mem::replace(inner, ForcingStateInner::Forcing);
+                        let ForcingStateInner::LazyResult(f) = old else {
+                            unreachable!()
+                        };
+
+                        match f(cx) {
+                            Ok(t) => match inner {
+                                ForcingStateInner::Forcing => {
+                                    *inner = ForcingStateInner::Forced(t.dupe());
+                                    t
+                                }
+                                ForcingStateInner::ForcedWithCyclicError(err_val) => err_val.dupe(),
+                                _ => panic!("Invalid state after forcing"),
+                            },
+                            Err(e) => {
+                                let fallback =
+                                    on_error(self.error_reason.as_ref().expect("No error reason"));
+                                *inner = ForcingStateInner::ForcedWithJobError(fallback.dupe(), e);
+                                fallback
+                            }
+                        }
+                    }
                     ForcingStateInner::Forcing => {
                         let t = on_error(self.error_reason.as_ref().expect("No error reason"));
                         *inner = ForcingStateInner::ForcedWithCyclicError(t.dupe());
@@ -8888,6 +8931,72 @@ pub mod constraint {
                     }
                     ForcingStateInner::Forced(t) => t.dupe(),
                     ForcingStateInner::ForcedWithCyclicError(t) => t.dupe(),
+                    ForcingStateInner::ForcedWithJobError(t, _) => t.dupe(),
+                }
+            }
+
+            pub fn try_force<F>(
+                &self,
+                cx: &CX,
+                on_error: F,
+            ) -> Result<A, flow_utils_concurrency::job_error::JobError>
+            where
+                F: Fn(&B) -> A,
+            {
+                // SAFETY: single-threaded, no concurrent access to the same State
+                let inner = unsafe { &mut *self.inner.get() };
+
+                match inner {
+                    ForcingStateInner::Lazy(_) => {
+                        let old = std::mem::replace(inner, ForcingStateInner::Forcing);
+                        let ForcingStateInner::Lazy(f) = old else {
+                            unreachable!()
+                        };
+
+                        let t = f(cx);
+
+                        match inner {
+                            ForcingStateInner::Forcing => {
+                                *inner = ForcingStateInner::Forced(t.dupe());
+                                Ok(t)
+                            }
+                            ForcingStateInner::ForcedWithCyclicError(err_val) => Ok(err_val.dupe()),
+                            _ => panic!("Invalid state after forcing"),
+                        }
+                    }
+                    ForcingStateInner::LazyResult(_) => {
+                        let old = std::mem::replace(inner, ForcingStateInner::Forcing);
+                        let ForcingStateInner::LazyResult(f) = old else {
+                            unreachable!()
+                        };
+
+                        match f(cx) {
+                            Ok(t) => match inner {
+                                ForcingStateInner::Forcing => {
+                                    *inner = ForcingStateInner::Forced(t.dupe());
+                                    Ok(t)
+                                }
+                                ForcingStateInner::ForcedWithCyclicError(err_val) => {
+                                    Ok(err_val.dupe())
+                                }
+                                _ => panic!("Invalid state after forcing"),
+                            },
+                            Err(e) => {
+                                let fallback =
+                                    on_error(self.error_reason.as_ref().expect("No error reason"));
+                                *inner = ForcingStateInner::ForcedWithJobError(fallback, e.dupe());
+                                Err(e)
+                            }
+                        }
+                    }
+                    ForcingStateInner::Forcing => {
+                        let t = on_error(self.error_reason.as_ref().expect("No error reason"));
+                        *inner = ForcingStateInner::ForcedWithCyclicError(t.dupe());
+                        Ok(t)
+                    }
+                    ForcingStateInner::Forced(t) => Ok(t.dupe()),
+                    ForcingStateInner::ForcedWithCyclicError(t) => Ok(t.dupe()),
+                    ForcingStateInner::ForcedWithJobError(_, e) => Err(e.dupe()),
                 }
             }
 
@@ -8904,9 +9013,12 @@ pub mod constraint {
 
             pub fn get_forced_for_debugging(&self) -> Option<A> {
                 match unsafe { &*self.inner.get() } {
-                    ForcingStateInner::Lazy(_) | ForcingStateInner::Forcing => None,
+                    ForcingStateInner::Lazy(_)
+                    | ForcingStateInner::LazyResult(_)
+                    | ForcingStateInner::Forcing => None,
                     ForcingStateInner::Forced(t) => Some(t.dupe()),
                     ForcingStateInner::ForcedWithCyclicError(t) => Some(t.dupe()),
+                    ForcingStateInner::ForcedWithJobError(t, _) => Some(t.dupe()),
                 }
             }
 
@@ -8915,7 +9027,10 @@ pub mod constraint {
             pub fn drop_if_lazy(&self, default: A) {
                 // SAFETY: single-threaded, no concurrent access to the same State
                 let inner = unsafe { &mut *self.inner.get() };
-                if matches!(inner, ForcingStateInner::Lazy(_)) {
+                if matches!(
+                    inner,
+                    ForcingStateInner::Lazy(_) | ForcingStateInner::LazyResult(_)
+                ) {
                     *inner = ForcingStateInner::Forced(default);
                 }
             }
@@ -9100,6 +9215,54 @@ pub mod constraint {
                     |_src_cx, _dst_cx, _| {},
                 );
                 assert_forced_to_any(&state_copy);
+            }
+
+            #[test]
+            fn lazy_result_ok_caches_via_try_force() {
+                let state = ForcingState::try_of_lazy_t(
+                    locationless_reason(VirtualReasonDesc::RNull),
+                    move |_cx| Ok(any_t::error(locationless_reason(VirtualReasonDesc::RNull))),
+                );
+                let r1 = state.try_force(&(), |r| any_t::error(r.dupe()));
+                let r2 = state.try_force(&(), |r| any_t::error(r.dupe()));
+                assert!(r1.is_ok());
+                assert!(r2.is_ok());
+            }
+
+            #[test]
+            fn lazy_result_err_propagates_then_caches() {
+                use flow_utils_concurrency::job_error::JobError;
+                use flow_utils_concurrency::worker_cancel::WorkerCanceled;
+
+                let state = ForcingState::try_of_lazy_t(
+                    locationless_reason(VirtualReasonDesc::RNull),
+                    move |_cx| Err(JobError::Canceled(WorkerCanceled)),
+                );
+                let r1 = state.try_force(&(), |r| any_t::error(r.dupe()));
+                assert!(matches!(r1, Err(JobError::Canceled(_))));
+                // Second call returns the cached error.
+                let r2 = state.try_force(&(), |r| any_t::error(r.dupe()));
+                assert!(matches!(r2, Err(JobError::Canceled(_))));
+            }
+
+            #[test]
+            fn lazy_result_err_via_force_returns_fallback_then_try_force_returns_err() {
+                use flow_utils_concurrency::job_error::JobError;
+                use flow_utils_concurrency::worker_cancel::WorkerCanceled;
+
+                let state = ForcingState::try_of_lazy_t(
+                    locationless_reason(VirtualReasonDesc::RNull),
+                    move |_cx| Err(JobError::Canceled(WorkerCanceled)),
+                );
+                // Old API: caller observes only the fallback A.
+                let fallback = state.force(&(), |r| any_t::error(r.dupe()));
+                match &*fallback {
+                    TypeInner::AnyT(_, _) => {}
+                    _ => panic!("Invalid type"),
+                }
+                // New API on the same state still surfaces the JobError.
+                let r = state.try_force(&(), |r| any_t::error(r.dupe()));
+                assert!(matches!(r, Err(JobError::Canceled(_))));
             }
         }
     }
@@ -10278,7 +10441,7 @@ pub mod locationless {
 pub fn hint_unavailable<CX>() -> LazyHintT<CX> {
     LazyHintT(
         false,
-        Rc::new(|_cx, _expected_only, _skip_optional, _reason| HintEvalResult::NoHint),
+        Rc::new(|_cx, _expected_only, _skip_optional, _reason| Ok(HintEvalResult::NoHint)),
     )
 }
 

@@ -17,6 +17,7 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty_printer;
+use flow_lazy::Lazy;
 use flow_parser::ast;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
@@ -40,7 +41,6 @@ use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::eval;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
-use once_cell::unsync::Lazy;
 
 use crate::ty_normalizer_imports;
 
@@ -85,11 +85,11 @@ impl NormalizerInput for FlowInput {
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         should_evaluate: bool,
-        cont: impl FnOnce(&mut Env<'_, 'cx>, &mut State, Type) -> A,
-        default: impl FnOnce(&mut Env<'_, 'cx>, &mut State) -> A,
+        cont: impl FnOnce(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
+        default: impl FnOnce(&mut Env<'_, 'cx>, &mut State) -> Result<A, Error>,
         reason: Reason,
         t: Type,
-    ) -> A {
+    ) -> Result<A, Error> {
         if should_evaluate {
             let reason_clone = reason.dupe();
             let t_clone = t.dupe();
@@ -99,11 +99,9 @@ impl NormalizerInput for FlowInput {
                     Box::new(UseT::new(UseTInner::UseT(unknown_use(), tout.dupe()))),
                 ));
                 flow_js::flow_non_speculating(cx, (&t_clone, &use_t))
-            });
+            })?;
             match lookahead::peek(cx, &tout) {
                 lookahead::Lookahead::LowerBounds(ref bounds) if bounds.len() == 1 => {
-                    // We patch the reason here to avoid having a identifier reason description,
-                    // which will hide the underlying type.
                     let t = type_util::mod_reason_of_t(
                         &|r| r.replace_desc(VirtualReasonDesc::RKeySet),
                         &bounds[0],
@@ -121,14 +119,14 @@ impl NormalizerInput for FlowInput {
         cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> A,
-        _type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> A,
-        _app: impl FnOnce(A, Vec<A>) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
+        _type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
+        _app: impl FnOnce(Result<A, Error>, Vec<Result<A, Error>>) -> Result<A, Error>,
         from_value: bool,
         reason: Reason,
         t: Type,
         targs: &[Type],
-    ) -> A {
+    ) -> Result<A, Error> {
         let t = flow_js::mk_typeapp_instance_annot_non_speculating(
             cx,
             unknown_use(),
@@ -137,7 +135,7 @@ impl NormalizerInput for FlowInput {
             from_value,
             &t,
             Rc::from(targs),
-        );
+        )?;
         cont(env, state, &t)
     }
 
@@ -145,11 +143,11 @@ impl NormalizerInput for FlowInput {
         cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
         reason: Reason,
         name: &str,
-    ) -> A {
-        let t = flow_js::get_builtin_type_non_speculating(cx, &reason, None, name);
+    ) -> Result<A, Error> {
+        let t = flow_js::get_builtin_type_non_speculating(cx, &reason, None, name)?;
         cont(env, state, t)
     }
 
@@ -157,13 +155,13 @@ impl NormalizerInput for FlowInput {
         cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
-        _type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
-        _app: impl FnOnce(A, Vec<A>) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
+        _type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
+        _app: impl FnOnce(Result<A, Error>, Vec<Result<A, Error>>) -> Result<A, Error>,
         reason: Reason,
         name: &str,
         targs: &[Type],
-    ) -> A {
+    ) -> Result<A, Error> {
         let t = flow_js_utils::lookup_builtin_type(cx, name, reason.dupe());
         let t = type_util::typeapp(false, false, reason, t, targs.to_vec());
         cont(env, state, t)
@@ -255,21 +253,22 @@ pub fn mk_genv<'a, 'cx>(
 ) -> Genv<'a, 'cx> {
     let file_sig_for_lazy = file_sig.dupe();
     let options_for_lazy = options.dupe();
-    let imported_names = Rc::new(Lazy::new(Box::new(move || {
+    let imported_names = Rc::new(Lazy::new(Box::new(move |cx: &Context<'cx>| {
         let import_types =
-            ty_normalizer_imports::extract_types(cx, &file_sig_for_lazy, typed_ast_opt);
+            ty_normalizer_imports::extract_types(cx, &file_sig_for_lazy, typed_ast_opt)?;
         let import_types = import_types
             .into_iter()
             .map(|(name, loc, mode, t)| (name.to_string(), loc, mode, t))
             .collect();
-        FlowNormalizer::normalize_imports(
+        Ok(FlowNormalizer::normalize_imports(
             cx,
             file_sig_for_lazy,
             typed_ast_opt,
             &options_for_lazy,
             import_types,
-        )
-    }) as Box<dyn FnOnce() -> _>));
+        ))
+    })
+        as Box<dyn FnOnce(&Context<'cx>) -> _ + 'a>));
 
     Genv {
         options,

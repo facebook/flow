@@ -21,6 +21,7 @@ use flow_common_ty::ty_symbol::ALocImportedIdent;
 use flow_common_ty::ty_symbol::ALocSymbol;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
+use flow_lazy::Lazy;
 use flow_parser::ast;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
@@ -28,7 +29,7 @@ use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_::eval;
-use once_cell::unsync::Lazy;
+use flow_utils_concurrency::job_error::JobError;
 
 #[derive(Clone, Dupe, Default)]
 pub enum EvaluateTypeDestructorsMode {
@@ -131,7 +132,13 @@ pub struct Genv<'a, 'cx> {
     /// useful to keep a map of imported names and the corresponding
     /// location available. We can then make this decision by comparing the
     /// source file with the current context's file information.
-    pub imported_names: Rc<Lazy<ImportedNamesMap, Box<dyn FnOnce() -> ImportedNamesMap + 'a>>>,
+    pub imported_names: Rc<
+        Lazy<
+            Context<'cx>,
+            Result<ImportedNamesMap, JobError>,
+            Box<dyn FnOnce(&Context<'cx>) -> Result<ImportedNamesMap, JobError> + 'a>,
+        >,
+    >,
     /// Normalization parameters
     pub options: Options,
     /// When set, the normalizer collects the body Type.t for each type alias it encounters.
@@ -139,7 +146,7 @@ pub struct Genv<'a, 'cx> {
     pub ref_type_bodies: Option<Rc<RefCell<BTreeMap<String, Type>>>>,
 }
 
-type ImportedNamesMap = FlowOrdMap<ALoc, ALocImportedIdent>;
+pub type ImportedNamesMap = FlowOrdMap<ALoc, ALocImportedIdent>;
 
 pub type SymbolSet = BTreeSet<ALocSymbol>;
 
@@ -193,8 +200,8 @@ impl<'a, 'cx> Env<'a, 'cx> {
         self.genv.cx
     }
 
-    pub fn imported_names(&self) -> &ImportedNamesMap {
-        &self.genv.imported_names
+    pub fn imported_names(&self) -> Result<&ImportedNamesMap, JobError> {
+        self.genv.imported_names.try_get_forced(self.genv.cx)
     }
 
     pub fn expand_internal_types(&self) -> bool {

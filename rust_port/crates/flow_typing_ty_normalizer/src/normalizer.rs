@@ -42,6 +42,7 @@ use flow_common_ty::ty_symbol::Symbol;
 use flow_common_ty::ty_utils::simplify_elt;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_lazy::Lazy;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
@@ -69,7 +70,7 @@ use flow_typing_type::type_::UnresolvedArgData;
 use flow_typing_type::type_::eval as type_eval;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_util;
-use once_cell::unsync::Lazy;
+use flow_utils_concurrency::job_error::JobError;
 
 use crate::env::Env;
 use crate::env::EvaluateTypeDestructorsMode;
@@ -100,6 +101,16 @@ pub enum ErrorKind {
     UnsupportedTypeCtor,
     UnsupportedUseCtor,
     RecursionLimit,
+    /// Worker cancellation surfaced from a non-speculating flow_js call inside the
+    /// normalizer continuation. The continuation type A is generic, so we encode
+    /// the cancel as an Error variant that callers must propagate.
+    WorkerCanceled,
+    /// Per-file budget exceeded.
+    TimedOut,
+    /// `$Flow$DebugThrow` was hit inside a normalizer continuation; the cascade
+    /// surfaces it the same way as cancel/timeout so the per-file boundary in
+    /// `merge_service::mk_check` can map it to `InternalError::DebugThrow`.
+    DebugThrow,
 }
 
 impl fmt::Display for ErrorKind {
@@ -123,6 +134,9 @@ impl fmt::Display for ErrorKind {
             ErrorKind::UnsupportedTypeCtor => write!(f, "Unsupported type constructor"),
             ErrorKind::UnsupportedUseCtor => write!(f, "Unsupported use constructor"),
             ErrorKind::RecursionLimit => write!(f, "recursion limit"),
+            ErrorKind::WorkerCanceled => write!(f, "Worker canceled"),
+            ErrorKind::TimedOut => write!(f, "Per-file budget exceeded"),
+            ErrorKind::DebugThrow => write!(f, "$Flow$DebugThrow"),
         }
     }
 }
@@ -142,6 +156,23 @@ impl Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "[{}] {}", self.kind, self.msg)
+    }
+}
+
+impl From<JobError> for Error {
+    fn from(e: JobError) -> Self {
+        match e {
+            JobError::Canceled(_) => {
+                Error::new(ErrorKind::WorkerCanceled, String::from("Worker canceled"))
+            }
+            JobError::TimedOut(_) => Error::new(
+                ErrorKind::TimedOut,
+                String::from("Per-file budget exceeded"),
+            ),
+            JobError::DebugThrow { .. } => {
+                Error::new(ErrorKind::DebugThrow, String::from("$Flow$DebugThrow"))
+            }
+        }
     }
 }
 
@@ -242,45 +273,45 @@ pub trait NormalizerInput {
         env: &mut Env<'_, 'cx>,
         state: &mut State,
         should_evaluate: bool,
-        cont: impl FnOnce(&mut Env<'_, 'cx>, &mut State, Type) -> A,
-        default: impl FnOnce(&mut Env<'_, 'cx>, &mut State) -> A,
+        cont: impl FnOnce(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
+        default: impl FnOnce(&mut Env<'_, 'cx>, &mut State) -> Result<A, Error>,
         reason: Reason,
         t: Type,
-    ) -> A;
+    ) -> Result<A, Error>;
 
     fn typeapp<'cx, A>(
         cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> A,
-        type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> A,
-        app: impl FnOnce(A, Vec<A>) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
+        type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<A, Error>,
+        app: impl FnOnce(Result<A, Error>, Vec<Result<A, Error>>) -> Result<A, Error>,
         from_value: bool,
         reason: Reason,
         t: Type,
         targs: &[Type],
-    ) -> A;
+    ) -> Result<A, Error>;
 
     fn builtin_type<'cx, A>(
         cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
         reason: Reason,
         name: &str,
-    ) -> A;
+    ) -> Result<A, Error>;
 
     fn builtin_typeapp<'cx, A>(
         cx: &Context<'cx>,
         env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
-        type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
-        app: impl FnOnce(A, Vec<A>) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
+        type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> Result<A, Error>,
+        app: impl FnOnce(Result<A, Error>, Vec<Result<A, Error>>) -> Result<A, Error>,
         reason: Reason,
         name: &str,
         targs: &[Type],
-    ) -> A;
+    ) -> Result<A, Error>;
 }
 
 #[derive(Debug, Clone, Dupe, PartialEq, Eq, Hash)]
@@ -450,7 +481,11 @@ fn mk_fun(
     }
 }
 
-fn symbol_from_loc<'cx>(env: &mut Env<'_, 'cx>, sym_def_loc: ALoc, sym_name: Name) -> ALocSymbol {
+fn symbol_from_loc<'cx>(
+    env: &mut Env<'_, 'cx>,
+    sym_def_loc: ALoc,
+    sym_name: Name,
+) -> Result<ALocSymbol, Error> {
     let symbol_source = sym_def_loc.source();
     let current_source = env.genv.cx.file();
     let sym_provenance = match symbol_source {
@@ -460,7 +495,7 @@ fn symbol_from_loc<'cx>(env: &mut Env<'_, 'cx>, sym_def_loc: ALoc, sym_name: Nam
                     Provenance::Local
                 } else {
                     Provenance::Library(flow_common_ty::ty_symbol::RemoteInfo {
-                        imported_as: env.imported_names().get(&sym_def_loc).cloned(),
+                        imported_as: env.imported_names()?.get(&sym_def_loc).cloned(),
                     })
                 }
             }
@@ -469,7 +504,7 @@ fn symbol_from_loc<'cx>(env: &mut Env<'_, 'cx>, sym_def_loc: ALoc, sym_name: Nam
                     Provenance::Local
                 } else {
                     Provenance::Remote(flow_common_ty::ty_symbol::RemoteInfo {
-                        imported_as: env.imported_names().get(&sym_def_loc).cloned(),
+                        imported_as: env.imported_names()?.get(&sym_def_loc).cloned(),
                     })
                 }
             }
@@ -478,18 +513,18 @@ fn symbol_from_loc<'cx>(env: &mut Env<'_, 'cx>, sym_def_loc: ALoc, sym_name: Nam
         None => Provenance::Local,
     };
     let sym_anonymous = sym_name == Name::new("<<anonymous class>>");
-    Symbol {
+    Ok(Symbol {
         sym_provenance,
         sym_def_loc,
         sym_name,
         sym_anonymous,
-    }
+    })
 }
 
 fn ty_symbol_from_symbol<'cx>(
     env: &mut Env<'_, 'cx>,
     symbol: &flow_common::flow_symbol::Symbol,
-) -> ALocSymbol {
+) -> Result<ALocSymbol, Error> {
     symbol_from_loc(
         env,
         symbol.def_loc_of_symbol().dupe(),
@@ -499,7 +534,11 @@ fn ty_symbol_from_symbol<'cx>(
 
 // NOTE Due to repositioning, `reason_loc` may not point to the actual location
 // where `name` was defined. *)
-fn symbol_from_reason<'cx>(env: &mut Env<'_, 'cx>, reason: &Reason, name: Name) -> ALocSymbol {
+fn symbol_from_reason<'cx>(
+    env: &mut Env<'_, 'cx>,
+    reason: &Reason,
+    name: Name,
+) -> Result<ALocSymbol, Error> {
     let def_loc = reason.def_loc().dupe();
     symbol_from_loc(env, def_loc, name)
 }
@@ -971,12 +1010,12 @@ mod reason_utils {
         ) -> Result<ALocSymbol, Error> {
             match desc {
                 ReasonDesc::REnum { name: Some(name) } => {
-                    Ok(symbol_from_reason(env, reason, Name::new(name.dupe())))
+                    symbol_from_reason(env, reason, Name::new(name.dupe()))
                 }
                 ReasonDesc::RTypeAlias(box (name, Some(loc), _)) => {
-                    Ok(symbol_from_loc(env, loc.dupe(), Name::new(name.dupe())))
+                    symbol_from_loc(env, loc.dupe(), Name::new(name.dupe()))
                 }
-                ReasonDesc::RType(name) => Ok(symbol_from_reason(env, reason, name.dupe())),
+                ReasonDesc::RType(name) => symbol_from_reason(env, reason, name.dupe()),
                 ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
                 _ => Err(terr(
                     ErrorKind::BadTypeAlias,
@@ -1003,9 +1042,9 @@ mod reason_utils {
                 | ReasonDesc::RImportStarType(name)
                 | ReasonDesc::RImportStarTypeOf(name)
                 | ReasonDesc::RImportStar(name) => {
-                    Ok(symbol_from_reason(env, reason, Name::new(name.dupe())))
+                    symbol_from_reason(env, reason, Name::new(name.dupe()))
                 }
-                ReasonDesc::RType(name) => Ok(symbol_from_reason(env, reason, name.dupe())),
+                ReasonDesc::RType(name) => symbol_from_reason(env, reason, name.dupe()),
                 ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
                 _ => Err(terr(
                     ErrorKind::BadTypeAlias,
@@ -1028,9 +1067,9 @@ mod reason_utils {
         ) -> Result<ALocSymbol, Error> {
             match desc {
                 ReasonDesc::ROpaqueType(name) => {
-                    Ok(symbol_from_reason(env, reason, Name::new(name.dupe())))
+                    symbol_from_reason(env, reason, Name::new(name.dupe()))
                 }
-                ReasonDesc::RType(name) => Ok(symbol_from_reason(env, reason, name.dupe())),
+                ReasonDesc::RType(name) => symbol_from_reason(env, reason, name.dupe()),
                 ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
                 _ => Err(terr(
                     ErrorKind::BadTypeAlias,
@@ -1048,9 +1087,9 @@ mod reason_utils {
     ) -> Result<ALocSymbol, Error> {
         match reason.desc(true) {
             ReasonDesc::RType(name) | ReasonDesc::RIdentifier(name) => {
-                Ok(symbol_from_reason(env, reason, name.dupe()))
+                symbol_from_reason(env, reason, name.dupe())
             }
-            ReasonDesc::RThisType => Ok(symbol_from_reason(env, reason, Name::new("this"))),
+            ReasonDesc::RThisType => symbol_from_reason(env, reason, Name::new("this")),
             _ => Err(terr(
                 ErrorKind::BadInstanceT,
                 Some("could not extract instance name from reason"),
@@ -1063,7 +1102,7 @@ mod reason_utils {
         env: &mut Env<'_, 'cx>,
         name: &FlowSmolStr,
         reason: &Reason,
-    ) -> ALocSymbol {
+    ) -> Result<ALocSymbol, Error> {
         symbol_from_reason(env, reason, Name::new(name.dupe()))
     }
 
@@ -1076,7 +1115,7 @@ mod reason_utils {
                 env,
                 reason,
                 Name::new(name.display()),
-            ))),
+            )?)),
             ReasonDesc::RExports => Ok(None),
             _ => Err(terr(
                 ErrorKind::UnsupportedTypeCtor,
@@ -1155,7 +1194,7 @@ mod type_converter {
             TypeInner::NamespaceT(ns) if env.keep_only_namespace_name => {
                 let sym_def_loc = ns.namespace_symbol.def_loc_of_symbol().clone();
                 let sym_name = Name::new(ns.namespace_symbol.name().to_string());
-                let symbol = symbol_from_loc(env, sym_def_loc, sym_name);
+                let symbol = symbol_from_loc(env, sym_def_loc, sym_name)?;
                 Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                     ty::BuiltinOrSymbol::TSymbol(symbol),
                     None,
@@ -1175,7 +1214,7 @@ mod type_converter {
                         // field under_type_alias will be 'Some A'. If the type alias name in the reason
                         // is also A, then we are still at the top-level of the type-alias, so we
                         // proceed by expanding one level preserving the same environment.
-                        let symbol = symbol_from_loc(env, loc.clone(), Name::new(name.dupe()));
+                        let symbol = symbol_from_loc(env, loc.clone(), Name::new(name.dupe()))?;
                         // Optionally collect the body type for ref expansion
                         if let Some(tbl) = &env.genv.ref_type_bodies {
                             let mut tbl = tbl.borrow_mut();
@@ -1338,7 +1377,7 @@ mod type_converter {
                             Some(result)
                         }
                     };
-                    let symbol = reason_utils::component_symbol(env, name, reason);
+                    let symbol = reason_utils::component_symbol(env, name, reason)?;
                     Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                         ty::BuiltinOrSymbol::TSymbol(symbol),
                         targs.map(Into::into),
@@ -1373,7 +1412,7 @@ mod type_converter {
                                 renders_id.0.dupe(),
                             );
                             let symbol =
-                                reason_utils::component_symbol(env, renders_name, &renders_reason);
+                                reason_utils::component_symbol(env, renders_name, &renders_reason)?;
                             Ok(Arc::new(ty::Ty::Generic(Box::new((
                                 symbol,
                                 ty::GenKind::ComponentKind,
@@ -1398,7 +1437,7 @@ mod type_converter {
                                 env,
                                 &FlowSmolStr::new("React.Node"),
                                 reason,
-                            );
+                            )?;
                             let ty = ty::Ty::Generic(Box::new((
                                 symbol,
                                 ty::GenKind::ComponentKind,
@@ -2318,7 +2357,7 @@ mod type_converter {
                         component_kind: flow_typing_type::type_::ComponentKind::Nominal(_, name, _),
                         ..
                     }) => {
-                        let symbol = reason_utils::component_symbol(env, name, r);
+                        let symbol = reason_utils::component_symbol(env, name, r)?;
                         mk_generic::<I>(
                             env,
                             state,
@@ -2469,7 +2508,7 @@ mod type_converter {
                 _,
                 name,
             )) => {
-                let opaque_symbol = symbol_from_reason(env, reason, Name::new(name.dupe()));
+                let opaque_symbol = symbol_from_reason(env, reason, Name::new(name.dupe()))?;
                 let targs = if nominal.nominal_type_args.is_empty() {
                     None
                 } else {
@@ -2581,7 +2620,7 @@ mod type_converter {
                 let tp_name = tp.name.string_of_subst_name().to_string();
                 let tp_reason = tp.reason.clone();
                 let tp_bound = tp.bound.clone();
-                let symbol = symbol_from_reason(env, &tp_reason, Name::new(tp_name));
+                let symbol = symbol_from_reason(env, &tp_reason, Name::new(tp_name))?;
                 let bound = param_bound::<I>(env, state, &tp_bound)?;
                 Ok(Arc::new(ty::Ty::Infer(Box::new((symbol, bound)))))
             }
@@ -3213,7 +3252,7 @@ pub mod element_converter {
 
         let current_source = env.genv.cx.file();
         let opaque_source = reason.def_loc().source();
-        let name = symbol_from_reason(env, reason, Name::new(name_str.dupe()));
+        let name = symbol_from_reason(env, reason, Name::new(name_str.dupe()))?;
         let t_opt: Option<&Type> = match &nominal_type.underlying_t {
             // opaque type A = number;
             nominal::UnderlyingT::OpaqueWithLocal { t }
@@ -3471,7 +3510,7 @@ pub mod element_converter {
                 type_converter::convert_component::<I>(env, state, config, renders)?;
             Ok(ty::Elt::Decl(ty::Decl::NominalComponentDecl(Box::new(
                 ty::DeclNominalComponentDeclData {
-                    name: reason_utils::component_symbol(env, name, reason),
+                    name: reason_utils::component_symbol(env, name, reason)?,
                     tparams: tparams.map(Into::into),
                     targs: targs.map(Into::into),
                     props,
@@ -3656,7 +3695,7 @@ pub mod element_converter {
                                 SymbolKind::SymbolModule if !env.keep_only_namespace_name => {
                                     let (exports, default) =
                                         namespace_t::<I>(env, state, obj, ns.types_tmap.dupe())?;
-                                    let name = ty_symbol_from_symbol(env, &ns.namespace_symbol);
+                                    let name = ty_symbol_from_symbol(env, &ns.namespace_symbol)?;
                                     return Ok(ty::Elt::Decl(ty::Decl::ModuleDecl(Box::new(
                                         ty::DeclModuleDeclData {
                                             name: Some(name),
@@ -3668,7 +3707,7 @@ pub mod element_converter {
                                 SymbolKind::SymbolNamespace if !env.keep_only_namespace_name => {
                                     let (exports, _) =
                                         namespace_t::<I>(env, state, obj, ns.types_tmap.dupe())?;
-                                    let name = ty_symbol_from_symbol(env, &ns.namespace_symbol);
+                                    let name = ty_symbol_from_symbol(env, &ns.namespace_symbol)?;
                                     return Ok(ty::Elt::Decl(ty::Decl::NamespaceDecl(Box::new(
                                         ty::DeclNamespaceDeclData {
                                             name: Some(name),
@@ -5209,10 +5248,16 @@ impl<I: NormalizerInput> Normalizer<I> {
         // Note: Genv holds references, so we construct it directly
         let imported_names: std::rc::Rc<
             Lazy<
-                FlowOrdMap<ALoc, ALocImportedIdent>,
-                Box<dyn FnOnce() -> FlowOrdMap<ALoc, ALocImportedIdent>>,
+                Context<'cx>,
+                Result<FlowOrdMap<ALoc, ALocImportedIdent>, JobError>,
+                Box<
+                    dyn FnOnce(
+                        &Context<'cx>,
+                    )
+                        -> Result<FlowOrdMap<ALoc, ALocImportedIdent>, JobError>,
+                >,
             >,
-        > = std::rc::Rc::new(Lazy::new(Box::new(FlowOrdMap::new)));
+        > = std::rc::Rc::new(Lazy::new_forced(Ok(FlowOrdMap::new())));
         let genv = Genv {
             cx,
             typed_ast_opt,

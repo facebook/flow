@@ -48,7 +48,6 @@ use flow_typing_errors::intermediate_error_types::ExplanationWithLazyParts;
 use flow_typing_flow_common::flow_cache;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
-use flow_typing_flow_common::flow_js_utils::SpeculativeError;
 use flow_typing_flow_common::flow_js_utils::UnionOptimizationGuardResult;
 use flow_typing_flow_common::flow_js_utils::callee_recorder;
 use flow_typing_flow_common::flow_js_utils::enum_proto;
@@ -228,7 +227,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         t: &Type,
         use_t: &UseT<Context<'cx>>,
-    ) -> Result<(), SpeculativeError> {
+    ) -> Result<(), FlowJsException> {
         helpers::flow(cx, (t, use_t))
     }
 
@@ -253,7 +252,7 @@ impl FlowJs {
         helpers::flow_p(cx, use_op, reason1, reason2, propref, (prop1, prop2))
     }
 
-    pub fn flow_t<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<(), SpeculativeError> {
+    pub fn flow_t<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<(), FlowJsException> {
         helpers::flow_t(cx, (t1, t2))
     }
 
@@ -306,7 +305,7 @@ impl FlowJs {
         t1: &Type,
         t2: &Type,
     ) -> Result<(), FlowJsException> {
-        Ok(helpers::unify(cx, use_op, unify_cause, t1, t2)?)
+        helpers::unify(cx, use_op, unify_cause, t1, t2)
     }
 
     pub fn unify_opt<'cx>(
@@ -457,7 +456,11 @@ impl FlowJs {
     }
 
     // Subtyping methods
-    pub fn speculative_subtyping_succeeds<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
+    pub fn speculative_subtyping_succeeds<'cx>(
+        cx: &Context<'cx>,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
         helpers::speculative_subtyping_succeeds(cx, t1, t2)
     }
 
@@ -465,7 +468,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_optional_chain(cx, reason, t)
     }
 
@@ -473,7 +476,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_inspection(cx, reason, t)
     }
 
@@ -481,7 +484,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_enum_exhaustive_check(cx, reason, t)
     }
 
@@ -489,7 +492,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_imports_exports(cx, reason, t)
     }
 
@@ -497,7 +500,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_operators_checking(cx, reason, t)
     }
 
@@ -505,7 +508,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_object_assign(cx, reason, t)
     }
 
@@ -513,7 +516,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_destructuring(cx, reason, t)
     }
 
@@ -521,7 +524,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_computed_object_keys(cx, reason, t)
     }
 
@@ -823,7 +826,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_predicate(predicate_concretizer_variant, cx, reason, t)
     }
 
@@ -831,7 +834,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_sentinel_prop_test(cx, reason, t)
     }
 
@@ -839,7 +842,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Type, SpeculativeError> {
+    ) -> Result<Type, FlowJsException> {
         helpers::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
             cx, reason, t,
         )
@@ -849,7 +852,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Type, SpeculativeError> {
+    ) -> Result<Type, FlowJsException> {
         helpers::singleton_concretize_type_for_imports_exports(cx, reason, t)
     }
 
@@ -857,7 +860,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Type, SpeculativeError> {
+    ) -> Result<Type, FlowJsException> {
         helpers::singleton_concrete_type_for_inspection(cx, reason, t)
     }
 
@@ -865,7 +868,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Type, SpeculativeError> {
+    ) -> Result<Type, FlowJsException> {
         helpers::singleton_concrete_type_for_type_cast(cx, reason, t)
     }
 
@@ -873,7 +876,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::all_possible_concrete_types(cx, reason, t)
     }
 
@@ -882,7 +885,7 @@ impl FlowJs {
         keep_unions: bool,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Type, SpeculativeError> {
+    ) -> Result<Type, FlowJsException> {
         helpers::singleton_concrete_type_for_match_arg(cx, keep_unions, reason, t)
     }
 
@@ -891,7 +894,7 @@ impl FlowJs {
         keep_unions: bool,
         reason: &Reason,
         t: &Type,
-    ) -> Result<Vec<Type>, SpeculativeError> {
+    ) -> Result<Vec<Type>, FlowJsException> {
         helpers::possible_concrete_types_for_match_arg(cx, keep_unions, reason, t)
     }
 }
@@ -903,11 +906,11 @@ impl FlowJs {
 pub fn flow<'cx>(
     cx: &Context<'cx>,
     (l, u): (&Type, &UseT<Context<'cx>>),
-) -> Result<(), SpeculativeError> {
+) -> Result<(), FlowJsException> {
     FlowJs::flow(cx, l, u)
 }
 
-pub fn flow_t<'cx>(cx: &Context<'cx>, (t1, t2): (&Type, &Type)) -> Result<(), SpeculativeError> {
+pub fn flow_t<'cx>(cx: &Context<'cx>, (t1, t2): (&Type, &Type)) -> Result<(), FlowJsException> {
     FlowJs::flow_t(cx, t1, t2)
 }
 
@@ -946,7 +949,7 @@ pub fn mk_default<'cx>(
             // Tvar.mk_where cx reason (fun tvar ->
             //     flow_t cx (t1, tvar);
             //     flow_t cx (t2, tvar))
-            flow_typing_tvar::mk_where_result(cx, reason.dupe(), |cx, tvar| {
+            flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
                 flow_t(cx, (&t1, tvar))?;
                 flow_t(cx, (&t2, tvar))?;
                 Ok(())
@@ -957,7 +960,7 @@ pub fn mk_default<'cx>(
           sel: Selector|
          -> Result<Type, FlowJsException> {
             let t = t?;
-            flow_typing_tvar::mk_no_wrap_where_result(cx, r.dupe(), |cx, _reason, tvar_id| {
+            flow_typing_tvar::mk_no_wrap_where(cx, r.dupe(), |cx, _reason, tvar_id| {
                 let tvar = Tvar::new(r.dupe(), tvar_id as u32);
                 FlowJs::eval_selector(
                     cx,
@@ -1094,19 +1097,53 @@ pub fn add_output<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) -> Result<(),
 }
 
 // Non-speculating variants
+//
+// These wrappers are called from non-speculating contexts (statement.rs,
+// merge.rs, env_resolution.rs, etc.). For non-cancellation errors (Speculative,
+// LimitExceeded, SpeculationSingletonError), they preserve the original
+// "absorb when speculating, panic otherwise" semantics. For WorkerCanceled they
+// always propagate via Result<_, WorkerCanceled>, so the type system enforces
+// cancellation propagation up to the per-file boundary in mk_check.
+// See /tmp/flow-cancel-design.md Section 6.1.
 
-pub fn flow_non_speculating<'cx>(cx: &Context<'cx>, (l, u): (&Type, &UseT<Context<'cx>>)) {
-    if let Err(err) = flow(cx, (l, u)) {
-        if !flow_typing_flow_common::speculation::speculating(cx) {
-            panic!("Non speculating: {:?}", err);
+pub fn flow_non_speculating<'cx>(
+    cx: &Context<'cx>,
+    (l, u): (&Type, &UseT<Context<'cx>>),
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    match flow(cx, (l, u)) {
+        Ok(()) => Ok(()),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => {
+            if !flow_typing_flow_common::speculation::speculating(cx) {
+                panic!("Non speculating: {:?}", err);
+            }
+            Ok(())
         }
     }
 }
 
-pub fn flow_t_non_speculating<'cx>(cx: &Context<'cx>, (t1, t2): (&Type, &Type)) {
-    if let Err(err) = flow_t(cx, (t1, t2)) {
-        if !flow_typing_flow_common::speculation::speculating(cx) {
-            panic!("Non speculating: {:?}", err);
+pub fn flow_t_non_speculating<'cx>(
+    cx: &Context<'cx>,
+    (t1, t2): (&Type, &Type),
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    match flow_t(cx, (t1, t2)) {
+        Ok(()) => Ok(()),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => {
+            if !flow_typing_flow_common::speculation::speculating(cx) {
+                panic!("Non speculating: {:?}", err);
+            }
+            Ok(())
         }
     }
 }
@@ -1115,8 +1152,17 @@ pub fn mk_default_non_speculating<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     d: &flow_typing_default::Default<Type>,
-) -> Type {
-    mk_default(cx, reason, d).expect("Non speculating")
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    match mk_default(cx, reason, d) {
+        Ok(t) => Ok(t),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
 }
 
 pub fn mk_instance_non_speculating<'cx>(
@@ -1125,8 +1171,17 @@ pub fn mk_instance_non_speculating<'cx>(
     instance_reason: &Reason,
     use_desc: Option<bool>,
     c: &Type,
-) -> Type {
-    mk_instance(cx, type_t_kind, instance_reason, use_desc, c).expect("Non speculating")
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    match mk_instance(cx, type_t_kind, instance_reason, use_desc, c) {
+        Ok(t) => Ok(t),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
 }
 
 pub fn get_builtin_type_non_speculating<'cx>(
@@ -1134,8 +1189,17 @@ pub fn get_builtin_type_non_speculating<'cx>(
     reason: &Reason,
     use_desc: Option<bool>,
     x: &str,
-) -> Type {
-    get_builtin_type(cx, reason, use_desc, x).expect("Non speculating")
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    match get_builtin_type(cx, reason, use_desc, x) {
+        Ok(t) => Ok(t),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
 }
 
 pub fn get_builtin_react_type_non_speculating<'cx>(
@@ -1143,8 +1207,17 @@ pub fn get_builtin_react_type_non_speculating<'cx>(
     reason: &Reason,
     use_desc: Option<bool>,
     purpose: ExpectedModulePurpose,
-) -> Type {
-    get_builtin_react_type(cx, reason, use_desc, purpose).expect("Non speculating")
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    match get_builtin_react_type(cx, reason, use_desc, purpose) {
+        Ok(t) => Ok(t),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
 }
 
 pub fn reposition_reason_non_speculating<'cx>(
@@ -1152,28 +1225,74 @@ pub fn reposition_reason_non_speculating<'cx>(
     reason: &Reason,
     use_desc: Option<bool>,
     t: &Type,
-) -> Type {
-    reposition_reason(cx, reason, use_desc, t).expect("Non speculating")
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    match reposition_reason(cx, reason, use_desc, t) {
+        Ok(t) => Ok(t),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
 }
 
 pub fn filter_optional_non_speculating<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     opt_t: &Type,
-) -> u32 {
-    filter_optional(cx, reason, opt_t).expect("Non speculating")
+) -> Result<u32, flow_utils_concurrency::job_error::JobError> {
+    match filter_optional(cx, reason, opt_t) {
+        Ok(n) => Ok(n),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
 }
 
-pub fn unify_non_speculating<'cx>(cx: &Context<'cx>, use_op: Option<UseOp>, t1: &Type, t2: &Type) {
-    if let Err(err) = unify(cx, use_op, t1, t2) {
-        if !flow_typing_flow_common::speculation::speculating(cx) {
-            panic!("Non speculating: {:?}", err);
+pub fn unify_non_speculating<'cx>(
+    cx: &Context<'cx>,
+    use_op: Option<UseOp>,
+    t1: &Type,
+    t2: &Type,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    match unify(cx, use_op, t1, t2) {
+        Ok(()) => Ok(()),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => {
+            if !flow_typing_flow_common::speculation::speculating(cx) {
+                panic!("Non speculating: {:?}", err);
+            }
+            Ok(())
         }
     }
 }
 
-pub fn reposition_non_speculating<'cx>(cx: &Context<'cx>, loc: ALoc, t: Type) -> Type {
-    reposition(cx, loc, t).expect("Non speculating")
+pub fn reposition_non_speculating<'cx>(
+    cx: &Context<'cx>,
+    loc: ALoc,
+    t: Type,
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    match reposition(cx, loc, t) {
+        Ok(t) => Ok(t),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
 }
 
 pub fn mk_typeapp_instance_annot_non_speculating<'cx>(
@@ -1184,9 +1303,17 @@ pub fn mk_typeapp_instance_annot_non_speculating<'cx>(
     from_value: bool,
     c: &Type,
     ts: Rc<[Type]>,
-) -> Type {
-    mk_typeapp_instance_annot(cx, use_op, reason_op, reason_tapp, from_value, c, ts)
-        .expect("Non speculating")
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    match mk_typeapp_instance_annot(cx, use_op, reason_op, reason_tapp, from_value, c, ts) {
+        Ok(t) => Ok(t),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
 }
 
 pub fn mk_type_destructor_non_speculating<'cx>(
@@ -1196,8 +1323,17 @@ pub fn mk_type_destructor_non_speculating<'cx>(
     t: &Type,
     d: &Destructor,
     id: eval::Id,
-) -> Type {
-    mk_type_destructor(cx, use_op, reason, t, d, id).expect("Non speculating")
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    match mk_type_destructor(cx, use_op, reason, t, d, id) {
+        Ok(t) => Ok(t),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
 }
 
 pub fn add_output_non_speculating<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) {

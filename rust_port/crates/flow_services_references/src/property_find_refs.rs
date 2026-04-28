@@ -80,13 +80,33 @@ mod potential_ordinary_refs_search {
     #[derive(Debug)]
     struct FoundImport(ALoc);
 
+    #[derive(Debug)]
+    enum SearcherError {
+        Found(FoundImport),
+        Job(flow_utils_concurrency::job_error::JobError),
+    }
+
+    impl From<FoundImport> for SearcherError {
+        fn from(f: FoundImport) -> Self {
+            SearcherError::Found(f)
+        }
+    }
+
+    impl From<flow_utils_concurrency::job_error::JobError> for SearcherError {
+        fn from(e: flow_utils_concurrency::job_error::JobError) -> Self {
+            SearcherError::Job(e)
+        }
+    }
+
     struct Searcher<'ctx, 'cx, 'refs> {
         cx: &'ctx Context<'cx>,
         target_name: String,
         potential_refs: &'refs mut ALocMap<Type>,
     }
 
-    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundImport> for Searcher<'_, '_, '_> {
+    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, SearcherError>
+        for Searcher<'_, '_, '_>
+    {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
         }
@@ -99,14 +119,15 @@ mod potential_ordinary_refs_search {
             &mut self,
             loc: &'ast ALoc,
             decl: &'ast statement::ImportDeclaration<ALoc, (ALoc, Type)>,
-        ) -> Result<(), FoundImport> {
+        ) -> Result<(), SearcherError> {
             match ast_visitor::import_declaration_default(self, loc, decl) {
                 Ok(()) => Ok(()),
-                Err(FoundImport(name_loc)) => {
+                Err(SearcherError::Found(FoundImport(name_loc))) => {
                     let (_, module_t) = &decl.source.0;
                     self.potential_refs.insert(name_loc, module_t.dupe());
                     Ok(())
                 }
+                Err(e @ SearcherError::Job(_)) => Err(e),
             }
         }
 
@@ -114,12 +135,12 @@ mod potential_ordinary_refs_search {
             &mut self,
             _import_kind: ast::statement::ImportKind,
             specifier: &'ast statement::import_declaration::NamedSpecifier<ALoc, (ALoc, Type)>,
-        ) -> Result<(), FoundImport> {
+        ) -> Result<(), SearcherError> {
             let id = specifier.local.as_ref().unwrap_or(&specifier.remote);
             let (name_loc, _) = &id.loc;
             let name = &id.name;
             if *name == *self.target_name {
-                Err(FoundImport(name_loc.dupe()))
+                Err(SearcherError::Found(FoundImport(name_loc.dupe())))
             } else {
                 Ok(())
             }
@@ -129,7 +150,7 @@ mod potential_ordinary_refs_search {
             &mut self,
             loc: &'ast (ALoc, Type),
             expr: &'ast expression::Member<ALoc, (ALoc, Type)>,
-        ) -> Result<(), FoundImport> {
+        ) -> Result<(), SearcherError> {
             let (_, ty) = expr.object.loc();
             match &expr.property {
                 expression::member::Property::PropertyIdentifier(id) => {
@@ -147,7 +168,7 @@ mod potential_ordinary_refs_search {
         fn jsx_opening_element(
             &mut self,
             elt: &'ast ast::jsx::Opening<ALoc, (ALoc, Type)>,
-        ) -> Result<(), FoundImport> {
+        ) -> Result<(), SearcherError> {
             let component_name = &elt.name;
             let attributes = &elt.attributes;
             for attr in attributes.iter() {
@@ -182,7 +203,7 @@ mod potential_ordinary_refs_search {
                                         self.cx,
                                         (component_t, &use_t),
                                     )
-                                });
+                                })?;
                             self.potential_refs.insert(attr_loc.dupe(), props_object);
                         }
                     }
@@ -196,7 +217,7 @@ mod potential_ordinary_refs_search {
             &mut self,
             kind: Option<ast::VariableKind>,
             expr: &'ast pattern::Pattern<ALoc, (ALoc, Type)>,
-        ) -> Result<(), FoundImport> {
+        ) -> Result<(), SearcherError> {
             let (unwrapped, _) = ast_utils::unwrap_nonnull_lhs(expr);
             let (_, ty) = unwrapped.loc();
             match &*unwrapped {
@@ -243,13 +264,17 @@ mod potential_ordinary_refs_search {
         target_name: &str,
         potential_refs: &mut ALocMap<Type>,
         ast: &ast::Program<ALoc, (ALoc, Type)>,
-    ) {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let mut s = Searcher {
             cx,
             target_name: target_name.to_string(),
             potential_refs,
         };
-        s.program(ast).unwrap()
+        match s.program(ast) {
+            Ok(()) => Ok(()),
+            Err(SearcherError::Found(_)) => Ok(()),
+            Err(SearcherError::Job(e)) => Err(e),
+        }
     }
 }
 
@@ -364,7 +389,7 @@ fn ordinary_property_find_refs_in_file<'cx>(
     file_key: &flow_parser::file_key::FileKey,
     props_info: &Vec1<SinglePropertyDefInfo>,
     name: &str,
-) -> Result<Vec<SingleRef>, String> {
+) -> Result<Result<Vec<SingleRef>, String>, flow_utils_concurrency::job_error::JobError> {
     let mut potential_refs: ALocMap<Type> = ALocMap::new();
     let (ast, _file_sig, _info) = ast_info;
     let local_defs: Vec<SingleRef> = add_ref_kind(
@@ -374,7 +399,7 @@ fn ordinary_property_find_refs_in_file<'cx>(
             .filter(|loc| loc.source.as_ref() == Some(file_key))
             .collect(),
     );
-    potential_ordinary_refs_search::search(cx, name, &mut potential_refs, typed_ast);
+    potential_ordinary_refs_search::search(cx, name, &mut potential_refs, typed_ast)?;
     let prop_loc_map = once_cell::unsync::Lazy::new(|| literal_to_prop_loc::make(ast, name));
     let literal_prop_refs_result: Vec<SingleRef> = add_ref_kind(
         RefKind::PropertyDefinition,
@@ -383,14 +408,16 @@ fn ordinary_property_find_refs_in_file<'cx>(
             .filter_map(|obj_loc| prop_loc_map.get(&obj_loc).cloned())
             .collect(),
     );
-    process_prop_refs(loc_of_aloc, cx, &potential_refs, file_key, props_info, name).map(
-        |mut refs| {
-            let mut result = local_defs;
-            result.append(&mut refs);
-            let mut lit_refs = literal_prop_refs_result;
-            result.append(&mut lit_refs);
-            result
-        },
+    Ok(
+        process_prop_refs(loc_of_aloc, cx, &potential_refs, file_key, props_info, name).map(
+            |mut refs| {
+                let mut result = local_defs;
+                result.append(&mut refs);
+                let mut lit_refs = literal_prop_refs_result;
+                result.append(&mut lit_refs);
+                result
+            },
+        ),
     )
 }
 
@@ -402,7 +429,7 @@ pub fn property_find_refs_in_file<'cx>(
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     file_key: &flow_parser::file_key::FileKey,
     prop_def_info: &PropertyDefInfo,
-) -> Result<Vec<SingleRef>, String> {
+) -> Result<Result<Vec<SingleRef>, String>, flow_utils_concurrency::job_error::JobError> {
     match prop_def_info {
         PropertyDefInfo::OrdinaryProperty { props_info, name } => {
             ordinary_property_find_refs_in_file(
@@ -425,7 +452,7 @@ pub fn property_find_refs_in_file<'cx>(
             for l in references {
                 result.push((RefKind::PropertyAccess, l.dupe()));
             }
-            Ok(result)
+            Ok(Ok(result))
         }
     }
 }
@@ -438,10 +465,13 @@ pub fn find_local_refs<'cx>(
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     loc: &Loc,
-) -> Result<Option<Vec<SingleRef>>, String> {
-    match get_def_utils::get_property_def_info(loc_of_aloc, cx, typed_ast, obj_to_obj_map, loc)? {
-        None => Ok(None),
-        Some(props_info) => {
+) -> Result<Result<Option<Vec<SingleRef>>, String>, flow_utils_concurrency::job_error::JobError> {
+    let info_result =
+        get_def_utils::get_property_def_info(loc_of_aloc, cx, typed_ast, obj_to_obj_map, loc);
+    match info_result {
+        Err(e) => Ok(Err(e)),
+        Ok(None) => Ok(Ok(None)),
+        Ok(Some(props_info)) => {
             let refs = property_find_refs_in_file(
                 loc_of_aloc,
                 ast_info,
@@ -451,7 +481,10 @@ pub fn find_local_refs<'cx>(
                 file_key,
                 &props_info,
             )?;
-            Ok(Some(refs))
+            match refs {
+                Ok(refs) => Ok(Ok(Some(refs))),
+                Err(e) => Ok(Err(e)),
+            }
         }
     }
 }

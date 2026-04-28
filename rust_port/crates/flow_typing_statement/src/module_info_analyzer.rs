@@ -154,34 +154,34 @@ mod module_info {
     // function interleaves the two reverse-sorted lists.
     pub(super) fn fold_star2<A, X, Y>(
         f: &impl Fn(A, &(ALoc, X)) -> A,
-        g: &impl Fn(A, &(ALoc, Y)) -> A,
+        g: &impl Fn(A, &(ALoc, Y)) -> Result<A, flow_utils_concurrency::job_error::JobError>,
         mut acc: A,
         xs: &[(ALoc, X)],
         ys: &[(ALoc, Y)],
-    ) -> A {
+    ) -> Result<A, flow_utils_concurrency::job_error::JobError> {
         let mut xi = 0;
         let mut yi = 0;
         loop {
             match (xs.get(xi), ys.get(yi)) {
-                (None, None) => return acc,
+                (None, None) => return Ok(acc),
                 (Some(_), None) => {
                     for x in &xs[xi..] {
                         acc = f(acc, x);
                     }
-                    return acc;
+                    return Ok(acc);
                 }
                 (None, Some(_)) => {
                     for y in &ys[yi..] {
-                        acc = g(acc, y);
+                        acc = g(acc, y)?;
                     }
-                    return acc;
+                    return Ok(acc);
                 }
                 (Some(x), Some(y)) => {
                     if x.0.cmp(&y.0) == std::cmp::Ordering::Greater {
                         acc = f(acc, x);
                         xi += 1;
                     } else {
-                        acc = g(acc, y);
+                        acc = g(acc, y)?;
                         yi += 1;
                     }
                 }
@@ -1008,7 +1008,7 @@ fn mk_module_type<'a>(
     info: &module_info::ModuleInfo,
     self_reason: Reason,
     exports_reason: Reason,
-) -> ModuleType {
+) -> Result<ModuleType, flow_utils_concurrency::job_error::JobError> {
     fn mk_esm_module_type<'a>(cx: &Context<'a>, module_reason: Reason) -> ModuleType {
         ModuleType::new(ModuleTypeInner {
             module_reason,
@@ -1035,7 +1035,7 @@ fn mk_module_type<'a>(
         reason_exports_module: Reason,
         reason: Reason,
         cjs_exports_state: &module_info::CjsExportsState,
-    ) -> ModuleType {
+    ) -> Result<ModuleType, flow_utils_concurrency::job_error::JobError> {
         let (def_loc, export_t) = match cjs_exports_state {
             module_info::CjsExportsState::CJSModuleExports(def_loc, t) => {
                 (Some(def_loc.dupe()), t.dupe())
@@ -1084,11 +1084,19 @@ fn mk_module_type<'a>(
             module_available_platforms: cx.available_platforms().cloned(),
         });
         let reason2 = reason.dupe();
-        let concretize = |t: Type| {
-            flow_js::FlowJs::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
+        let concretize = |t: Type| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+            match flow_js::FlowJs::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
                 cx, &reason2, &t,
-            )
-            .expect("Should not be under speculation")
+            ) {
+                Ok(v) => Ok(v),
+                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+                    Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+                }
+                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => {
+                    Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+                }
+                Err(err) => panic!("Should not be under speculation: {:?}", err),
+            }
         };
         flow_js_utils::cjs_extract_named_exports_t_kit::on_type(
             cx,
@@ -1105,7 +1113,7 @@ fn mk_module_type<'a>(
         value_star: &[(ALoc, Option<ModuleType>)],
         type_star: &[(ALoc, Option<ModuleType>)],
         module_t: ModuleType,
-    ) -> ModuleType {
+    ) -> Result<ModuleType, flow_utils_concurrency::job_error::JobError> {
         let copy_named_exports =
             |target: ModuleType, (_, from_ns): &(ALoc, Option<ModuleType>)| -> ModuleType {
                 match from_ns {
@@ -1122,27 +1130,38 @@ fn mk_module_type<'a>(
             };
         let copy_type_exports = |target: ModuleType,
                                  (loc, from_ns): &(ALoc, Option<ModuleType>)|
-         -> ModuleType {
+         -> Result<
+            ModuleType,
+            flow_utils_concurrency::job_error::JobError,
+        > {
             let repos_reason = reason.dupe().reposition(loc.dupe());
             match from_ns {
                 Some(src_module_type) => {
                     flow_js_utils::copy_type_exports_t_kit::mod_module_t(
                         cx,
-                        |cx_inner, r: Reason, t: Type| -> Type {
-                            flow_js::FlowJs::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
+                        |cx_inner, r: Reason, t: Type| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+                            match flow_js::FlowJs::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
                                 cx_inner,
                                 &r,
                                 &t,
-                            )
-                            .expect("Should not be under speculation")
+                            ) {
+                                Ok(v) => Ok(v),
+                                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+                                    Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+                                }
+                                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => {
+                                    Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+                                }
+                                Err(err) => panic!("Should not be under speculation: {:?}", err),
+                            }
                         },
                         repos_reason,
                         &target,
                         src_module_type,
-                    );
-                    target
+                    )?;
+                    Ok(target)
                 }
-                None => target,
+                None => Ok(target),
             }
         };
         module_info::fold_star2(
@@ -1158,7 +1177,7 @@ fn mk_module_type<'a>(
         module_info::Kind::Unknown => {
             let cjs_state = module_info::CjsExportsState::CJSExportNames(BTreeMap::new());
             let module_type =
-                mk_commonjs_module_t(cx, self_reason.dupe(), exports_reason, &cjs_state);
+                mk_commonjs_module_t(cx, self_reason.dupe(), exports_reason, &cjs_state)?;
             flow_js_utils::export_named_t_kit::mod_module_t(
                 cx,
                 exports::T::new(),
@@ -1170,7 +1189,7 @@ fn mk_module_type<'a>(
         }
         module_info::Kind::Cjs(cjs_exports_state) => {
             let module_type =
-                mk_commonjs_module_t(cx, self_reason.dupe(), exports_reason, cjs_exports_state);
+                mk_commonjs_module_t(cx, self_reason.dupe(), exports_reason, cjs_exports_state)?;
             flow_js_utils::export_named_t_kit::mod_module_t(
                 cx,
                 exports::T::new(),
@@ -1232,7 +1251,7 @@ fn mk_namespace_t<'a>(
 pub fn analyze_program<'a>(
     cx: &Context<'a>,
     program: &ast::Program<ALoc, (ALoc, Type)>,
-) -> (ALoc, ModuleType) {
+) -> Result<(ALoc, ModuleType), flow_utils_concurrency::job_error::JobError> {
     let prog_aloc = &program.loc;
     let mut info = module_info::ModuleInfo {
         kind: module_info::Kind::Unknown,
@@ -1252,8 +1271,8 @@ pub fn analyze_program<'a>(
         ..Loc::default()
     });
     let exports_reason = mk_reason(VirtualReasonDesc::RExports, file_loc);
-    let module_t = mk_module_type(cx, &info, self_reason, exports_reason);
-    (module_sig_loc, module_t)
+    let module_t = mk_module_type(cx, &info, self_reason, exports_reason)?;
+    Ok((module_sig_loc, module_t))
 }
 
 pub fn analyze_declare_namespace<'a>(
@@ -1273,7 +1292,7 @@ pub fn analyze_declare_namespace<'a>(
                 visit_toplevel_statement(cx, &mut info, true, stmt);
             }
             Err(kind) => {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::EUnsupportedSyntax(Box::new((
                         stmt.loc().dupe(),
@@ -1283,8 +1302,7 @@ pub fn analyze_declare_namespace<'a>(
                             ),
                         ),
                     ))),
-                )
-                .expect("Should not be under speculation");
+                );
             }
         }
     }

@@ -107,26 +107,47 @@ pub type ConcrArgListFn = Rc<dyn for<'cx> Fn(&Context<'cx>, Option<ALoc>) -> Vec
 pub type ConcrJsxProps<'cx> =
     Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>;
 
-pub type ConcrHint<'cx> = Hint<'cx, Type, Option<Vec<Targ>>, ConcrArgListFn, ConcrJsxProps<'cx>>;
-
-pub type ConcrHintDecomposition<'cx> =
-    HintDecomposition<'cx, Type, Option<Vec<Targ>>, ConcrArgListFn, ConcrJsxProps<'cx>>;
-
-pub type ConcrHintDecompositionInner<'cx> =
-    HintDecompositionInner<'cx, Type, Option<Vec<Targ>>, ConcrArgListFn, ConcrJsxProps<'cx>>;
-
-pub type ConcrFunCallHints<'cx> = FunCallImplicitInstantiationHints<
+pub type ConcrHint<'cx> = Hint<
     'cx,
     Type,
-    Option<Vec<Targ>>,
+    Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
 >;
 
-pub type ConcrJsxHints<'cx> =
-    JsxImplicitInstantiationHints<'cx, Type, Option<Vec<Targ>>, ConcrArgListFn, ConcrJsxProps<'cx>>;
+pub type ConcrHintDecomposition<'cx> = HintDecomposition<
+    'cx,
+    Type,
+    Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+    ConcrArgListFn,
+    ConcrJsxProps<'cx>,
+>;
 
-pub fn with_hint_result<A>(
+pub type ConcrHintDecompositionInner<'cx> = HintDecompositionInner<
+    'cx,
+    Type,
+    Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+    ConcrArgListFn,
+    ConcrJsxProps<'cx>,
+>;
+
+pub type ConcrFunCallHints<'cx> = FunCallImplicitInstantiationHints<
+    'cx,
+    Type,
+    Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+    ConcrArgListFn,
+    ConcrJsxProps<'cx>,
+>;
+
+pub type ConcrJsxHints<'cx> = JsxImplicitInstantiationHints<
+    'cx,
+    Type,
+    Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+    ConcrArgListFn,
+    ConcrJsxProps<'cx>,
+>;
+
+pub fn with_hint<A>(
     ok: impl FnOnce(Type) -> A,
     error: impl FnOnce() -> A,
     result: HintEvalResult,
@@ -150,6 +171,35 @@ enum SandboxError {
     DecompFuncParamOutOfBounds(DecompFuncParamOutOfBoundsException),
     Speculative,
     LimitExceeded,
+    WorkerCanceled(flow_utils_concurrency::worker_cancel::WorkerCanceled),
+    TimedOut(flow_utils_concurrency::job_error::CheckTimeout),
+    DebugThrow { loc: flow_aloc::ALoc },
+}
+
+impl From<flow_utils_concurrency::worker_cancel::WorkerCanceled> for SandboxError {
+    fn from(e: flow_utils_concurrency::worker_cancel::WorkerCanceled) -> Self {
+        SandboxError::WorkerCanceled(e)
+    }
+}
+
+impl From<flow_utils_concurrency::job_error::CheckTimeout> for SandboxError {
+    fn from(e: flow_utils_concurrency::job_error::CheckTimeout) -> Self {
+        SandboxError::TimedOut(e)
+    }
+}
+
+impl From<flow_utils_concurrency::job_error::JobError> for SandboxError {
+    fn from(e: flow_utils_concurrency::job_error::JobError) -> Self {
+        match e {
+            flow_utils_concurrency::job_error::JobError::Canceled(c) => {
+                SandboxError::WorkerCanceled(c)
+            }
+            flow_utils_concurrency::job_error::JobError::TimedOut(t) => SandboxError::TimedOut(t),
+            flow_utils_concurrency::job_error::JobError::DebugThrow { loc } => {
+                SandboxError::DebugThrow { loc }
+            }
+        }
+    }
 }
 
 impl From<UnconstrainedTvarException> for SandboxError {
@@ -176,6 +226,9 @@ impl From<FlowJsException> for SandboxError {
             FlowJsException::Speculative(_) => SandboxError::Speculative,
             FlowJsException::SpeculationSingletonError => SandboxError::SpeculationSingleton,
             FlowJsException::LimitExceeded => SandboxError::LimitExceeded,
+            FlowJsException::WorkerCanceled(c) => SandboxError::WorkerCanceled(c),
+            FlowJsException::TimedOut(t) => SandboxError::TimedOut(t),
+            FlowJsException::DebugThrow { loc } => SandboxError::DebugThrow { loc },
         }
     }
 }
@@ -189,7 +242,7 @@ fn in_sandbox_cx<'cx>(
     cx: &Context<'cx>,
     t: &Type,
     f: impl FnOnce(Type) -> Result<Type, SandboxError>,
-) -> Option<Type> {
+) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
     cx.run_and_rolled_back_cache(|| {
         let original_errors = cx.errors();
         // OCaml: let no_lowers r =
@@ -211,7 +264,7 @@ fn in_sandbox_cx<'cx>(
             )
         }) {
             cx.reset_errors(original_errors);
-            return None;
+            return Ok(None);
         }
         // OCaml: match f (Tvar_resolver.resolved_t cx ~no_lowers ~filter_empty:false t) with
         cx.reset_errors(ErrorSet::empty());
@@ -221,26 +274,36 @@ fn in_sandbox_cx<'cx>(
             // OCaml: | (exception Flow_js_utils.SpeculationSingletonError)
             // OCaml: | (exception UnconstrainedTvarException)
             // OCaml: | (exception DecompFuncParamOutOfBoundsException) ->
-            Err(ref e) => match e {
-                SandboxError::SpeculationSingleton
-                | SandboxError::UnconstrainedTvar(_)
-                | SandboxError::DecompFuncParamOutOfBounds(_) => {
-                    cx.reset_errors(original_errors);
-                    None
-                }
-                SandboxError::Speculative | SandboxError::LimitExceeded => {
-                    cx.reset_errors(original_errors);
-                    None
-                }
-            },
+            Err(SandboxError::SpeculationSingleton)
+            | Err(SandboxError::UnconstrainedTvar(_))
+            | Err(SandboxError::DecompFuncParamOutOfBounds(_))
+            | Err(SandboxError::Speculative)
+            | Err(SandboxError::LimitExceeded) => {
+                cx.reset_errors(original_errors);
+                Ok(None)
+            }
+            // WorkerCanceled and TimedOut propagate out, matching OCaml's
+            // `| exn -> raise exn`.
+            Err(SandboxError::WorkerCanceled(c)) => {
+                cx.reset_errors(original_errors);
+                Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+            }
+            Err(SandboxError::TimedOut(t)) => {
+                cx.reset_errors(original_errors);
+                Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+            }
+            Err(SandboxError::DebugThrow { loc }) => {
+                cx.reset_errors(original_errors);
+                Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc })
+            }
             // OCaml: | t ->
             Ok(t) => {
                 let new_errors = cx.errors();
                 cx.reset_errors(original_errors);
                 if new_errors.is_lint_only_errorset() {
-                    Some(t)
+                    Ok(Some(t))
                 } else {
-                    None
+                    Ok(None)
                 }
             }
         }
@@ -252,7 +315,7 @@ fn synthesis_speculation_call<'cx>(
     call_reason: &Reason,
     reason: &Reason,
     rep: &inter_rep::InterRep,
-    targs: Option<Vec<Targ>>,
+    targs: Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
     argts: Vec<CallArg>,
 ) -> Result<Type, SandboxError> {
     let intersection = Type::new(TypeInner::IntersectionT(reason.dupe(), rep.dupe()));
@@ -263,7 +326,7 @@ fn synthesis_speculation_call<'cx>(
         Rc::new(RefCell::new(SpeculationHintState::SpeculationHintUnset));
     let call_action = Box::new(CallAction::Funcalltype(Box::new(FuncallType {
         call_this_t: unsoundness::bound_fn_this_any(reason.dupe()),
-        call_targs: targs.map(|v| v.into()),
+        call_targs: targs?.map(|v| v.into()),
         call_args_tlist: argts.into(),
         call_tout: tout,
         call_strict_arity: true,
@@ -304,7 +367,7 @@ fn simplify_callee<'cx>(
     let func_t = func_t.dupe();
     let use_op = use_op.dupe();
     let reason2 = reason.dupe();
-    Ok(flow_typing_tvar::mk_no_wrap_where_result(
+    Ok(flow_typing_tvar::mk_no_wrap_where(
         cx,
         reason.dupe(),
         move |cx, r, id| {
@@ -317,7 +380,7 @@ fn simplify_callee<'cx>(
                 return_hint: hint_unavailable(),
             })));
             flow_js::flow(cx, (&func_t, &use_t))?;
-            Ok::<(), SpeculativeError>(())
+            Ok::<(), FlowJsException>(())
         },
     )?)
 }
@@ -399,7 +462,16 @@ fn instantiate_callee<'cx>(
         opts: &HintOptions,
         target_reason: &Reason,
         reason: &Reason,
-        targs: &Rc<LazyCell<Option<Vec<Targ>>, Box<dyn Fn() -> Option<Vec<Targ>> + 'cx>>>,
+        targs: &Rc<
+            LazyCell<
+                Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+                Box<
+                    dyn Fn()
+                            -> Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>
+                        + 'cx,
+                >,
+            >,
+        >,
         arg_list: &Rc<LazyCell<ConcrArgListFn, Box<dyn Fn() -> ConcrArgListFn + 'cx>>>,
         return_hints: &Rc<
             LazyCell<Vec<ConcrHint<'cx>>, Box<dyn Fn() -> Vec<ConcrHint<'cx>> + 'cx>>,
@@ -521,7 +593,8 @@ fn instantiate_callee<'cx>(
                             &resolved,
                         )
                     } else {
-                        let call_targs: &Option<Vec<Targ>> = targs.deref();
+                        let call_targs: Option<Vec<Targ>> =
+                            LazyCell::force(targs.as_ref()).clone()?;
                         match type_util::all_explicit_targ_ts(call_targs.as_deref()) {
                             Some(targ_ts) => Ok(synthesis_instantiate_callee(
                                 cx, reason, tparams, t_out, targ_ts,
@@ -564,7 +637,7 @@ fn instantiate_callee<'cx>(
                                         opts,
                                         reason,
                                         return_hints_val.clone(),
-                                    ) {
+                                    )? {
                                         HintEvalResult::HintAvailable(t, k) => Some((t, k)),
                                         _ => None,
                                     }
@@ -623,7 +696,10 @@ fn instantiate_callee<'cx>(
     let resolve_overload_and_targs = |fn_t: &Type| -> Result<Type, SandboxError> {
         let t = match fn_t.deref() {
             TypeInner::IntersectionT(r, rep) => {
-                let targs_val: &Option<Vec<Targ>> = targs.deref();
+                let targs_val: &Result<
+                    Option<Vec<Targ>>,
+                    flow_utils_concurrency::job_error::JobError,
+                > = targs.deref();
                 let arg_list_fn: &ConcrArgListFn = arg_list.deref();
                 let target_loc = Some(target_reason.loc().dupe());
                 let args_val = arg_list_fn(cx, target_loc);
@@ -680,13 +756,14 @@ fn instantiate_component<'cx>(
 
                 let return_hint = {
                     let hints_val: &Vec<ConcrHint<'cx>> = jsx_hints;
-                    match evaluate_hints_inner(cx, opts, reason, hints_val.clone()) {
+                    match evaluate_hints_inner(cx, opts, reason, hints_val.clone())? {
                         HintEvalResult::HintAvailable(t, k) => Some((t, k)),
                         _ => None,
                     }
                 };
                 let check = {
-                    let jsx_targs_val: &Option<Vec<Targ>> = jsx_targs.deref();
+                    let jsx_targs_val: Option<Vec<Targ>> =
+                        LazyCell::force(jsx_targs.as_ref()).clone()?;
                     ImplicitInstantiationCheck::of_react_jsx(
                         component.dupe(),
                         (
@@ -764,7 +841,7 @@ fn type_of_hint_decomposition<'cx>(
     op: &ConcrHintDecompositionInner<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Option<Type> {
+) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
     let make_fun_t = |reason: &Reason,
                       cx: &Context<'cx>,
                       params: Vec<FunParam>,
@@ -932,7 +1009,7 @@ fn type_of_hint_decomposition<'cx>(
                 let t = t.dupe();
                 let reason2 = reason.dupe();
                 let skip_optional = opts.skip_optional;
-                Ok(flow_typing_tvar::mk_no_wrap_where_result(
+                Ok(flow_typing_tvar::mk_no_wrap_where(
                     cx,
                     reason.dupe(),
                     move |cx, r, id| {
@@ -959,7 +1036,7 @@ fn type_of_hint_decomposition<'cx>(
                 let t = t.dupe();
                 let reason2 = reason.dupe();
                 let i = *i;
-                Ok(flow_typing_tvar::mk_no_wrap_where_result(
+                Ok(flow_typing_tvar::mk_no_wrap_where(
                     cx,
                     reason.dupe(),
                     move |cx, r, id| {
@@ -1010,7 +1087,7 @@ fn type_of_hint_decomposition<'cx>(
             ConcrHintDecompositionInner::DecompAwait => {
                 let t = t.dupe();
                 let reason2 = reason.dupe();
-                Ok(flow_typing_tvar::mk_where_result(
+                Ok(flow_typing_tvar::mk_where(
                     cx,
                     reason.dupe(),
                     move |cx, tout| -> Result<(), SandboxError> {
@@ -1053,7 +1130,7 @@ fn type_of_hint_decomposition<'cx>(
                         let get_this_t = |t: &Type| -> Result<Type, SandboxError> {
                             let t = t.dupe();
                             let reason2 = reason.dupe();
-                            let tvar_result = flow_typing_tvar::mk_where_result(
+                            let tvar_result = flow_typing_tvar::mk_where(
                                 cx,
                                 reason.dupe(),
                                 move |cx, t_prime| {
@@ -1109,7 +1186,7 @@ fn type_of_hint_decomposition<'cx>(
                 let t = t.dupe();
                 let reason2 = reason.dupe();
                 let type_guard = type_guard.clone();
-                Ok(flow_typing_tvar::mk_where_result(
+                Ok(flow_typing_tvar::mk_where(
                     cx,
                     reason.dupe(),
                     move |cx, param_t| {
@@ -1149,7 +1226,7 @@ fn type_of_hint_decomposition<'cx>(
                 let reason2 = reason.dupe();
                 let type_guard = type_guard.clone();
                 let xs = xs.clone();
-                Ok(flow_typing_tvar::mk_where_result(
+                Ok(flow_typing_tvar::mk_where(
                     cx,
                     reason.dupe(),
                     move |cx, rest_t| {
@@ -1197,7 +1274,7 @@ fn type_of_hint_decomposition<'cx>(
                 };
                 let t = t.dupe();
                 let reason2 = reason.dupe();
-                Ok(flow_typing_tvar::mk_where_result(
+                Ok(flow_typing_tvar::mk_where(
                     cx,
                     reason.dupe(),
                     move |cx, return_t| {
@@ -1221,7 +1298,7 @@ fn type_of_hint_decomposition<'cx>(
             ConcrHintDecompositionInner::DecompJsxProps => {
                 let t = t.dupe();
                 let reason2 = reason.dupe();
-                Ok(flow_typing_tvar::mk_no_wrap_where_result(
+                Ok(flow_typing_tvar::mk_no_wrap_where(
                     cx,
                     reason.dupe(),
                     move |cx, r, id| {
@@ -1266,23 +1343,20 @@ fn type_of_hint_decomposition<'cx>(
                 let t2 = t.dupe();
                 let reason2 = reason.dupe();
                 let name2 = name.dupe();
-                let result =
-                    flow_typing_tvar::mk_where_result(cx, reason.dupe(), move |cx, prop_t| {
-                        let use_t =
-                            UseT::new(UseTInner::PrivateMethodT(Box::new(PrivateMethodTData {
-                                use_op: unknown_use(),
-                                reason: reason2.dupe(),
-                                prop_reason: reason2.dupe(),
-                                name: name2,
-                                class_bindings: class_entries.into(),
-                                static_: false,
-                                method_action: Box::new(MethodAction::NoMethodAction(
-                                    prop_t.dupe(),
-                                )),
-                            })));
-                        speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t2, &use_t))?;
-                        Ok::<(), FlowJsException>(())
-                    });
+                let result = flow_typing_tvar::mk_where(cx, reason.dupe(), move |cx, prop_t| {
+                    let use_t =
+                        UseT::new(UseTInner::PrivateMethodT(Box::new(PrivateMethodTData {
+                            use_op: unknown_use(),
+                            reason: reason2.dupe(),
+                            prop_reason: reason2.dupe(),
+                            name: name2,
+                            class_bindings: class_entries.into(),
+                            static_: false,
+                            method_action: Box::new(MethodAction::NoMethodAction(prop_t.dupe())),
+                        })));
+                    speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t2, &use_t))?;
+                    Ok::<(), FlowJsException>(())
+                });
                 let mut env = cx.environment_mut();
                 env.class_stack = old_stack;
                 Ok(result?)
@@ -1292,7 +1366,7 @@ fn type_of_hint_decomposition<'cx>(
                 let reason2 = reason.dupe();
                 let name = name.dupe();
                 let skip_optional = opts.skip_optional;
-                Ok(flow_typing_tvar::mk_no_wrap_where_result(
+                Ok(flow_typing_tvar::mk_no_wrap_where(
                     cx,
                     reason.dupe(),
                     move |cx, r, id| {
@@ -1321,7 +1395,7 @@ fn type_of_hint_decomposition<'cx>(
                 let t = t.dupe();
                 let comp_reason2 = comp_reason.dupe();
                 let skip_optional = opts.skip_optional;
-                Ok(flow_typing_tvar::mk_no_wrap_where_result(
+                Ok(flow_typing_tvar::mk_no_wrap_where(
                     cx,
                     comp_reason.dupe(),
                     move |cx, r, id| {
@@ -1348,7 +1422,7 @@ fn type_of_hint_decomposition<'cx>(
             ConcrHintDecompositionInner::DecompObjSpread => {
                 let t = t.dupe();
                 let reason2 = reason.dupe();
-                Ok(flow_typing_tvar::mk_no_wrap_where_result(
+                Ok(flow_typing_tvar::mk_no_wrap_where(
                     cx,
                     reason.dupe(),
                     move |cx, r, id| {
@@ -1373,10 +1447,8 @@ fn type_of_hint_decomposition<'cx>(
                 let t2 = t.dupe();
                 let reason2 = reason.dupe();
                 let name2 = name.dupe();
-                let result = flow_typing_tvar::mk_no_wrap_where_result(
-                    cx,
-                    reason.dupe(),
-                    move |cx, r, id| {
+                let result =
+                    flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), move |cx, r, id| {
                         let prop_t = Tvar::new(r.dupe(), id as u32);
                         let use_t =
                             UseT::new(UseTInner::GetPrivatePropT(Box::new(GetPrivatePropTData {
@@ -1389,8 +1461,7 @@ fn type_of_hint_decomposition<'cx>(
                             })));
                         speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t2, &use_t))?;
                         Ok::<(), FlowJsException>(())
-                    },
-                );
+                    });
                 let mut env = cx.environment_mut();
                 env.class_stack = old_stack;
                 Ok(result?)
@@ -1476,7 +1547,7 @@ fn type_of_hint_decomposition<'cx>(
                                 }
                                 let predicate = Predicate::new(pred);
                                 let t = t.dupe();
-                                Ok(tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                                tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                                     cx,
                                     reason.dupe(),
                                     move |cx, r, id| {
@@ -1484,8 +1555,9 @@ fn type_of_hint_decomposition<'cx>(
                                         crate::predicate_kit::run_predicate_for_filtering(
                                             cx, &t, &predicate, &tout,
                                         );
+                                        Ok::<(), SandboxError>(())
                                     },
-                                ))
+                                )
                             }
                         }
                     }
@@ -1518,7 +1590,7 @@ fn type_of_hint_decomposition<'cx>(
             ConcrHintDecompositionInner::DecompPromise => {
                 let t = t.dupe();
                 let reason2 = reason.dupe();
-                Ok(flow_typing_tvar::mk_where_result(
+                Ok(flow_typing_tvar::mk_where(
                     cx,
                     reason.dupe(),
                     move |cx, inner_t| {
@@ -1577,39 +1649,39 @@ fn evaluate_hint_ops<'cx>(
     t: Type,
     kind: HintKind,
     ops: Vec<(usize, ConcrHintDecomposition<'cx>)>,
-) -> HintEvalResult {
+) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError> {
     fn loop_ops<'cx>(
         cx: &Context<'cx>,
         opts: &HintOptions,
         reason: &Reason,
         mut t: Type,
         ops: &[(usize, ConcrHintDecomposition<'cx>)],
-    ) -> Option<Type> {
+    ) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
         for (id, op) in ops {
             let result = match cx.hint_eval_cache_find_opt(*id as i32) {
                 Some(result) => result,
                 None => {
-                    let result = type_of_hint_decomposition(cx, opts, op.inner(), reason, &t);
+                    let result = type_of_hint_decomposition(cx, opts, op.inner(), reason, &t)?;
                     cx.add_hint_eval_cache_entry(*id as i32, result.clone());
                     result
                 }
             };
             match result {
                 Some(t1) => t = t1,
-                None => return None,
+                None => return Ok(None),
             }
         }
-        Some(t)
+        Ok(Some(t))
     }
 
     // We evaluate the decompositions in synthesis mode, but fully resolve the final result in
     // checking mode, so that any unresolved tvars in the midddle won't fail the evaluation, but
     // unsolved tvars in the final result will fail the evaluation.
-    let result = cx.run_in_hint_eval_mode(|| loop_ops(cx, opts, reason, t, &ops));
-    match result {
+    let result = cx.run_in_hint_eval_mode(|| loop_ops(cx, opts, reason, t, &ops))?;
+    Ok(match result {
         None => HintEvalResult::DecompositionError,
         Some(t) => fully_resolve_final_result(cx, t, kind),
-    }
+    })
 }
 
 fn evaluate_hint_inner<'cx>(
@@ -1617,18 +1689,18 @@ fn evaluate_hint_inner<'cx>(
     opts: &HintOptions,
     reason: &Reason,
     hint: ConcrHint<'cx>,
-) -> HintEvalResult {
+) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError> {
     if opts.expected_only {
         match &hint {
             Hint::HintPlaceholder
             | Hint::HintT(_, HintKind::BestEffortHint)
             | Hint::HintDecomp(_, _, HintKind::BestEffortHint) => {
-                return HintEvalResult::DecompositionError;
+                return Ok(HintEvalResult::DecompositionError);
             }
             _ => {}
         }
     }
-    match hint {
+    Ok(match hint {
         Hint::HintPlaceholder => HintEvalResult::HintAvailable(
             any_t::annot(flow_common::reason::mk_reason(
                 VirtualReasonDesc::RAnyImplicit,
@@ -1639,9 +1711,9 @@ fn evaluate_hint_inner<'cx>(
         Hint::HintT(t, kind) => fully_resolve_final_result(cx, t, kind),
         Hint::HintDecomp(ops, t, kind) => {
             let ops_vec = ops.into_vec();
-            evaluate_hint_ops(cx, opts, reason, t, kind, ops_vec)
+            evaluate_hint_ops(cx, opts, reason, t, kind, ops_vec)?
         }
-    }
+    })
 }
 
 fn evaluate_hints_inner<'cx>(
@@ -1649,10 +1721,10 @@ fn evaluate_hints_inner<'cx>(
     opts: &HintOptions,
     reason: &Reason,
     hints: Vec<ConcrHint<'cx>>,
-) -> HintEvalResult {
+) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError> {
     let mut result = HintEvalResult::NoHint;
     for hint in hints {
-        match evaluate_hint_inner(cx, opts, reason, hint) {
+        match evaluate_hint_inner(cx, opts, reason, hint)? {
             HintEvalResult::HintAvailable(t, kind) => {
                 result = HintEvalResult::HintAvailable(t, kind);
                 break;
@@ -1662,7 +1734,7 @@ fn evaluate_hints_inner<'cx>(
             }
         }
     }
-    result
+    Ok(result)
 }
 
 pub fn evaluate_hint<'cx>(
@@ -1671,7 +1743,7 @@ pub fn evaluate_hint<'cx>(
     skip_optional: Option<bool>,
     reason: &Reason,
     hint: ConcrHint<'cx>,
-) -> HintEvalResult {
+) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError> {
     let opts = HintOptions {
         expected_only,
         skip_optional: skip_optional.unwrap_or(false),
@@ -1685,7 +1757,7 @@ pub fn evaluate_hints<'cx>(
     skip_optional: Option<bool>,
     reason: &Reason,
     hints: Vec<ConcrHint<'cx>>,
-) -> HintEvalResult {
+) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError> {
     let opts = HintOptions {
         expected_only,
         skip_optional: skip_optional.unwrap_or(false),

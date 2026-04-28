@@ -41,7 +41,7 @@ use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::any_t;
 use flow_typing_type::type_util;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 use flow_typing_utils::type_env;
 use flow_typing_utils::typed_ast_utils;
 use flow_typing_utils::typed_ast_utils::ErrorMapper;
@@ -59,7 +59,7 @@ pub type Callback<'a> = dyn Fn(
         /*name:*/ &FlowSmolStr,
         /*default:*/ Option<&default::Default<Type>>,
         /*current:*/ Type,
-    ) -> Type
+    ) -> Result<Type, flow_utils_concurrency::job_error::JobError>
     + 'a;
 
 pub fn empty(
@@ -77,7 +77,7 @@ fn pattern_default<'a>(
     cx: &Context<'a>,
     acc: &mut State,
     default_expr: Option<&expression::Expression<ALoc, ALoc>>,
-) -> Result<Option<expression::Expression<ALoc, (ALoc, Type)>>, AbnormalControlFlow> {
+) -> Result<Option<expression::Expression<ALoc, (ALoc, Type)>>, CheckExprError> {
     match default_expr {
         None => Ok(None),
         Some(e) => {
@@ -91,7 +91,12 @@ fn pattern_default<'a>(
     }
 }
 
-fn array_element<'a>(cx: &Context<'a>, acc: &State, i: i32, loc: ALoc) -> State {
+fn array_element<'a>(
+    cx: &Context<'a>,
+    acc: &State,
+    i: i32,
+    loc: ALoc,
+) -> Result<State, flow_utils_concurrency::job_error::JobError> {
     let init = &acc.init;
     let default_val = &acc.default;
     let key = Type::new(TypeInner::DefT(
@@ -121,18 +126,19 @@ fn array_element<'a>(cx: &Context<'a>, acc: &State, i: i32, loc: ALoc) -> State 
             }),
         })
     });
-    let refinement = new_init
-        .as_ref()
-        .and_then(|init| crate::refinement::get(true, cx, init, loc.dupe()));
+    let refinement = match new_init.as_ref() {
+        Some(init) => crate::refinement::get(true, cx, init, loc.dupe())?,
+        None => None,
+    };
     let has_parent = refinement.is_none();
     let new_default = default_val
         .as_ref()
         .map(|d| default::elem(key, reason, d.clone()));
-    State {
+    Ok(State {
         has_parent,
         init: new_init,
         default: new_default,
-    }
+    })
 }
 
 fn array_rest_element(acc: &State, i: i32, loc: ALoc) -> State {
@@ -156,7 +162,7 @@ fn object_named_property<'a>(
     loc: ALoc,
     x: &FlowSmolStr,
     comments: Option<ast::Syntax<ALoc, ()>>,
-) -> State {
+) -> Result<State, flow_utils_concurrency::job_error::JobError> {
     let init = &acc.init;
     let default_val = &acc.default;
     let reason = mk_reason(
@@ -179,9 +185,10 @@ fn object_named_property<'a>(
             }),
         })
     });
-    let refinement = new_init
-        .as_ref()
-        .and_then(|init| crate::refinement::get(true, cx, init, loc.dupe()));
+    let refinement = match new_init.as_ref() {
+        Some(init) => crate::refinement::get(true, cx, init, loc.dupe())?,
+        None => None,
+    };
     let new_default = default_val.as_ref().map(|d| {
         let prop_d = default::prop(x.dupe(), reason.dupe(), has_default, d.clone());
         if has_default {
@@ -195,18 +202,18 @@ fn object_named_property<'a>(
         None => Some(_parent_loc),
     };
     let has_parent = parent_loc_opt.is_some();
-    State {
+    Ok(State {
         has_parent,
         init: new_init,
         default: new_default,
-    }
+    })
 }
 
 fn object_computed_property<'a>(
     cx: &Context<'a>,
     acc: &State,
     e: &expression::Expression<ALoc, ALoc>,
-) -> Result<(State, expression::Expression<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(State, expression::Expression<ALoc, (ALoc, Type)>), CheckExprError> {
     let init = &acc.init;
     let default_val = &acc.default;
     let e_typed = statement::expression(None, None, None, cx, e)?;
@@ -256,7 +263,7 @@ fn object_property<'a>(
     acc: &State,
     xs: &mut Vec<FlowSmolStr>,
     key: &pattern::object::Key<ALoc, ALoc>,
-) -> Result<(State, pattern::object::Key<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
+) -> Result<(State, pattern::object::Key<ALoc, (ALoc, Type)>), CheckExprError> {
     match key {
         pattern::object::Key::Identifier(id) => {
             let loc = id.loc.dupe();
@@ -270,7 +277,7 @@ fn object_property<'a>(
                 loc.dupe(),
                 &x,
                 comments.dupe(),
-            );
+            )?;
             xs.push(x.dupe());
             Ok((
                 new_acc,
@@ -284,7 +291,7 @@ fn object_property<'a>(
         pattern::object::Key::StringLiteral((loc, lit)) => {
             let x = &lit.value;
             let new_acc =
-                object_named_property(has_default, parent_loc, cx, acc, loc.dupe(), x, None);
+                object_named_property(has_default, parent_loc, cx, acc, loc.dupe(), x, None)?;
             xs.push(x.dupe());
             Ok((
                 new_acc,
@@ -316,7 +323,7 @@ fn object_property<'a>(
                 loc.dupe(),
                 &name_smol,
                 lit.comments.dupe(),
-            );
+            )?;
             xs.push(name_smol);
             Ok((
                 new_acc,
@@ -372,7 +379,7 @@ fn identifier<'a>(
     acc: &State,
     name_loc: ALoc,
     name: &FlowSmolStr,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let default_val = &acc.default;
     let reason = mk_reason(
         VirtualReasonDesc::RIdentifier(Name::new(FlowSmolStr::new(name))),
@@ -445,7 +452,7 @@ pub fn pattern<'a>(
     f: &Callback<'_>,
     acc: &mut State,
     p: &pattern::Pattern<ALoc, ALoc>,
-) -> Result<pattern::Pattern<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<pattern::Pattern<ALoc, (ALoc, Type)>, CheckExprError> {
     let check_for_invalid_annot =
         |has_parent: bool, annot: &ast::types::AnnotationOrHint<ALoc, ALoc>| {
             if let (true, ast::types::AnnotationOrHint::Available(ann)) = (has_parent, annot) {
@@ -502,7 +509,7 @@ pub fn pattern<'a>(
             check_for_invalid_annot(acc.has_parent, &inner.annot);
             let mut mapper = typed_ast_utils::UnimplementedMapper;
             let Ok(annot) = polymorphic_ast_mapper::type_annotation_hint(&mut mapper, &inner.annot);
-            let id_ty = identifier(cx, f, acc, id_loc.dupe(), name);
+            let id_ty = identifier(cx, f, acc, id_loc.dupe(), name)?;
             let id = ast::Identifier::new(ast::IdentifierInner {
                 loc: (id_loc, id_ty),
                 name: name.dupe(),
@@ -541,18 +548,18 @@ pub fn array_elements<'a>(
     f: &Callback<'_>,
     acc: &mut State,
     elements: &[pattern::array::Element<ALoc, ALoc>],
-) -> Result<Vec<pattern::array::Element<ALoc, (ALoc, Type)>>, AbnormalControlFlow> {
+) -> Result<Vec<pattern::array::Element<ALoc, (ALoc, Type)>>, CheckExprError> {
     elements
         .iter()
         .enumerate()
-        .map(|(i, elem)| -> Result<_, AbnormalControlFlow> {
+        .map(|(i, elem)| -> Result<_, CheckExprError> {
             match elem {
                 pattern::array::Element::Hole(loc) => Ok(pattern::array::Element::Hole(loc.dupe())),
                 pattern::array::Element::NormalElement(ne) => {
                     let loc = ne.loc.dupe();
                     let p = &ne.argument;
                     let d = &ne.default;
-                    let mut elem_acc = array_element(cx, acc, i as i32, loc.dupe());
+                    let mut elem_acc = array_element(cx, acc, i as i32, loc.dupe())?;
                     let typed_d = pattern_default(cx, &mut elem_acc, d.as_ref())?;
                     let typed_p = pattern(cx, f, &mut elem_acc, p)?;
                     Ok(pattern::array::Element::NormalElement(
@@ -586,7 +593,7 @@ pub fn object_properties<'a>(
     parent_loc: ALoc,
     acc: &mut State,
     properties: &[pattern::object::Property<ALoc, ALoc>],
-) -> Result<Vec<pattern::object::Property<ALoc, (ALoc, Type)>>, AbnormalControlFlow> {
+) -> Result<Vec<pattern::object::Property<ALoc, (ALoc, Type)>>, CheckExprError> {
     let mut xs = Vec::new();
     let mut result = Vec::new();
 
@@ -657,14 +664,14 @@ pub fn assignment<'a>(
     cx: &Context<'a>,
     init: expression::Expression<ALoc, ALoc>,
     p: &pattern::Pattern<ALoc, ALoc>,
-) -> Result<pattern::Pattern<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<pattern::Pattern<ALoc, (ALoc, Type)>, CheckExprError> {
     let mut acc = empty(Some(init), None);
     pattern(
         cx,
         &|use_op, name_loc, name, _default, t| {
             // TODO destructuring+defaults unsupported in assignment expressions
-            type_env::set_var(cx, use_op, name, &t, name_loc.dupe());
-            type_env::constraining_type(t, cx, name, name_loc)
+            type_env::set_var(cx, use_op, name, &t, name_loc.dupe())?;
+            Ok(type_env::constraining_type(t, cx, name, name_loc))
         },
         &mut acc,
         p,

@@ -229,7 +229,7 @@ pub(super) fn instantiate_this_class<'cx>(
 ) -> Result<(), FlowJsException> {
     let tc = match ts {
         None => c.dupe(),
-        Some(ts) => flow_typing_tvar::mk_where_result(cx, reason_tapp.dupe(), |cx, tout| {
+        Some(ts) => flow_typing_tvar::mk_where(cx, reason_tapp.dupe(), |cx, tout| {
             rec_flow(
                 cx,
                 trace,

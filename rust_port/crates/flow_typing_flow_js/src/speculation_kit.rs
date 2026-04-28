@@ -228,6 +228,9 @@ enum SpecMatchError {
     Singleton,
     LimitExceeded,
     PropagatedSingleton,
+    Cancel(flow_utils_concurrency::worker_cancel::WorkerCanceled),
+    TimedOut(flow_utils_concurrency::job_error::CheckTimeout),
+    DebugThrow { loc: ALoc },
 }
 
 impl From<SpeculativeError> for SpecMatchError {
@@ -242,6 +245,9 @@ impl From<FlowJsException> for SpecMatchError {
             FlowJsException::Speculative(e) => SpecMatchError::Speculative(e),
             FlowJsException::LimitExceeded => SpecMatchError::LimitExceeded,
             FlowJsException::SpeculationSingletonError => SpecMatchError::PropagatedSingleton,
+            FlowJsException::WorkerCanceled(c) => SpecMatchError::Cancel(c),
+            FlowJsException::TimedOut(t) => SpecMatchError::TimedOut(t),
+            FlowJsException::DebugThrow { loc } => SpecMatchError::DebugThrow { loc },
         }
     }
 }
@@ -252,6 +258,9 @@ impl SpecMatchError {
             SpecMatchError::Speculative(e) => FlowJsException::Speculative(e),
             SpecMatchError::LimitExceeded => FlowJsException::LimitExceeded,
             SpecMatchError::PropagatedSingleton => FlowJsException::SpeculationSingletonError,
+            SpecMatchError::Cancel(c) => FlowJsException::WorkerCanceled(c),
+            SpecMatchError::TimedOut(t) => FlowJsException::TimedOut(t),
+            SpecMatchError::DebugThrow { loc } => FlowJsException::DebugThrow { loc },
             SpecMatchError::Singleton => {
                 unreachable!("non-singleton spec produced singleton error")
             }
@@ -262,6 +271,9 @@ impl SpecMatchError {
         match self {
             SpecMatchError::Speculative(e) => FlowJsException::Speculative(e),
             SpecMatchError::LimitExceeded => FlowJsException::LimitExceeded,
+            SpecMatchError::Cancel(c) => FlowJsException::WorkerCanceled(c),
+            SpecMatchError::TimedOut(t) => FlowJsException::TimedOut(t),
+            SpecMatchError::DebugThrow { loc } => FlowJsException::DebugThrow { loc },
             SpecMatchError::Singleton | SpecMatchError::PropagatedSingleton => {
                 FlowJsException::SpeculationSingletonError
             }

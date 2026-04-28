@@ -170,7 +170,7 @@ fn get_intrinsic<'cx>(
     }
 
     // Get the intrinsic from the map.
-    let intrinsic = tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where_result(
+    let intrinsic = tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
         cx,
         reason.dupe(),
         |cx, tout_reason, tout_id| {
@@ -500,7 +500,7 @@ fn props_to_tout<'cx>(
                     Polarity::Positive,
                     &props,
                 )?;
-                let i = tvar_resolver::mk_tvar_and_fully_resolve_where_result(
+                let i = tvar_resolver::mk_tvar_and_fully_resolve_where(
                     cx,
                     reason_op.dupe(),
                     |cx, tout_t| {
@@ -521,7 +521,7 @@ fn props_to_tout<'cx>(
             }
             DefTInner::StrGeneralT(gen_lit) => {
                 let props = flow_typing_tvar::mk(cx, reason_op.dupe());
-                let i = tvar_resolver::mk_tvar_and_fully_resolve_where_result(
+                let i = tvar_resolver::mk_tvar_and_fully_resolve_where(
                     cx,
                     reason_op.dupe(),
                     |cx, tout_t| {
@@ -666,7 +666,7 @@ pub fn get_config<'cx>(
             .dupe()
             .update_desc(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)));
         let use_op_clone = use_op.dupe();
-        flow_typing_tvar::mk_where_result(cx, reason.dupe(), |cx, tout_t| {
+        flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tout_t| {
             props_to_tout(cx, trace, component, &use_op_clone, &reason, tout_t.dupe())
         })?
     };
@@ -905,7 +905,7 @@ pub fn run<'cx>(
             (config.dupe(), None)
         } else {
             let use_op_clone = use_op.dupe();
-            let props = flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |cx, tout_t| {
+            let props = flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tout_t| {
                 tin_to_props(cx, trace, &use_op_clone, reason_op, l, tout_t)
             })?;
             // For class components and function components we want to lookup the
@@ -1001,7 +1001,7 @@ pub fn run<'cx>(
         // and ref.
         let normalized_jsx_props = {
             let use_op_clone = use_op.dupe();
-            flow_typing_tvar::mk_where_result(
+            flow_typing_tvar::mk_where(
                 cx,
                 type_util::reason_of_t(jsx_props).dupe(),
                 |cx, normalized_config| {
@@ -1094,7 +1094,7 @@ pub fn run<'cx>(
                 "ExactReactElement_DEPRECATED",
                 vec![
                     component.dupe(),
-                    flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |cx, tout_t| {
+                    flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tout_t| {
                         get_config(
                             cx,
                             trace,

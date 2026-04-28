@@ -133,12 +133,47 @@ enum RecheckFiles {
 
 static RECHECK_STREAM: Mutex<Vec<RecheckMsg>> = Mutex::new(Vec::new());
 
+/// Senders for the in-progress recheck-cancel monitors. Each in-progress
+/// recheck registers a sender here so a new force-recheck or file-watcher
+/// update arriving DURING the recheck can preempt it. This is the Rust port
+/// equivalent of OCaml's `Lwt.pick` between the recheck thread and the
+/// file-watcher listener inside `run_but_cancel_on_file_changes`. Each push to
+/// the recheck stream notifies every registered sender so the corresponding
+/// monitor thread can call `worker_cancel::stop_workers()`.
+static RECHECK_PUSH_SUBSCRIBERS: Mutex<Vec<Sender<()>>> = Mutex::new(Vec::new());
+
 fn push_recheck_msg_with_metadata(metadata: Option<FileWatcherMetadata>, files: RecheckFiles) {
     RECHECK_STREAM.lock().unwrap().push(RecheckMsg {
         file_watcher_metadata: metadata,
         files,
     });
     RECHECK_NOTIFY.0.send(()).unwrap();
+    notify_recheck_push_subscribers();
+}
+
+/// Notify every registered recheck-push subscriber that new work arrived. Uses
+/// a non-blocking send so a slow or dead subscriber cannot stall the pusher.
+/// Disconnected subscribers (whose receiver was dropped without unsubscribing)
+/// are removed in the same pass, keeping the subscriber list bounded.
+fn notify_recheck_push_subscribers() {
+    let mut subscribers = RECHECK_PUSH_SUBSCRIBERS.lock().unwrap();
+    subscribers.retain(|sender| match sender.try_send(()) {
+        Ok(()) => true,
+        Err(crossbeam::channel::TrySendError::Full(())) => true,
+        Err(crossbeam::channel::TrySendError::Disconnected(())) => false,
+    });
+}
+
+/// Subscribe to recheck pushes. The returned receiver fires once per push to
+/// the recheck stream (extra pushes while the receiver is full are silently
+/// dropped — the receiver only needs to learn that *some* push happened, not
+/// how many). When the receiver is dropped the subscriber is removed lazily
+/// the next time a push happens, so callers do not need an explicit
+/// unsubscribe step.
+pub fn subscribe_recheck_pushes() -> Receiver<()> {
+    let (tx, rx) = crossbeam::channel::bounded(1);
+    RECHECK_PUSH_SUBSCRIBERS.lock().unwrap().push(tx);
+    rx
 }
 
 fn push_recheck_msg(files: RecheckFiles) {

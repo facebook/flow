@@ -3132,7 +3132,6 @@ pub(crate) fn connect_and_make_request(
     root: &std::path::Path,
     request: &server_prot::request::Command,
 ) -> server_prot::response::Response {
-    // If --timeout is set, wrap connect_and_make_request in a timeout
     // Set File_key root paths for this client process. Server responses
     // contain File_key.t values with relative suffixes; to_string needs
     // the roots to reconstruct absolute paths.
@@ -3146,7 +3145,42 @@ pub(crate) fn connect_and_make_request(
             flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
         }
     }
-    connect_and_make_request_inner(flowconfig_name, connect_flags, root, request)
+    match connect_flags.timeout {
+        None => connect_and_make_request_inner(flowconfig_name, connect_flags, root, request),
+        Some(timeout) => {
+            let (tx, rx) = std::sync::mpsc::channel::<server_prot::response::Response>();
+            let flowconfig_name_owned = flowconfig_name.to_string();
+            let connect_flags_clone = connect_flags.clone();
+            let root_owned = root.to_path_buf();
+            let request_clone = request.clone();
+            std::thread::Builder::new()
+                .name("connect_and_make_request_timed".to_string())
+                .spawn(move || {
+                    let response = connect_and_make_request_inner(
+                        &flowconfig_name_owned,
+                        &connect_flags_clone,
+                        &root_owned,
+                        &request_clone,
+                    );
+                    match tx.send(response) {
+                        Ok(()) => {}
+                        Err(_) => {}
+                    }
+                })
+                .expect("failed to spawn connect_and_make_request_timed thread");
+            match rx.recv_timeout(std::time::Duration::from_secs(timeout as u64)) {
+                Ok(response) => response,
+                Err(std::sync::mpsc::RecvTimeoutError::Timeout) => flow_common_exit::exit(
+                    flow_common_exit::FlowExitStatus::OutOfTime,
+                    Some("Timeout exceeded, exiting"),
+                ),
+                Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => flow_common_exit::exit(
+                    flow_common_exit::FlowExitStatus::UnknownError,
+                    Some("Inner connect thread panicked, exiting"),
+                ),
+            }
+        }
+    }
 }
 
 pub(crate) fn failwith_bad_response(

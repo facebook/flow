@@ -508,7 +508,14 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
         )
     }
 
-    fn prop_overlaps_with_indexer() -> Option<fn(&Context, &Name, &Reason, &Type) -> bool> {
+    fn prop_overlaps_with_indexer() -> Option<
+        fn(
+            &Context,
+            &Name,
+            &Reason,
+            &Type,
+        ) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+    > {
         None
     }
 }
@@ -2989,7 +2996,7 @@ pub fn cjs_require<'cx>(
             Ok(module_type) => {
                 let (t, _) = flow_js_utils::cjs_require_t_kit::on_module_t(
                     cx,
-                    |_cx, _loc, t| t,
+                    |_cx, _loc, t| Ok(t),
                     reason2.dupe(),
                     namespace_symbol2.clone(),
                     is_strict,
@@ -3025,7 +3032,7 @@ pub fn lazy_cjs_extract_named_exports<'cx>(
     let reason2 = reason.dupe();
     Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
         let reason3 = reason2.dupe();
-        let concretize = |t: Type| -> Type {
+        let concretize = |t: Type| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
             let result = elab_t(
                 cx,
                 &effective_dst_cx(cx),
@@ -3037,19 +3044,27 @@ pub fn lazy_cjs_extract_named_exports<'cx>(
             );
             // | OpenT (_, id) -> get_fully_resolved_type cx id
             // | t -> t
-            match result.deref() {
+            Ok(match result.deref() {
                 TypeInner::OpenT(tvar) => {
                     get_fully_resolved_type(cx, &effective_dst_cx(cx), tvar.id() as i32)
                 }
                 _ => result,
-            }
+            })
         };
+        // The concretize closure has no `?` call sites in its body, so
+        // on_type cannot return Err here. .expect documents the
+        // invariant — see annotation_inference::copy_type_exports for
+        // the same pattern. Annotation inference is on the type-sig
+        // pipeline, not the cancel-aware check pipeline.
         flow_js_utils::cjs_extract_named_exports_t_kit::on_type(
             cx,
             &concretize,
             reason2.dupe(),
             local_module.clone(),
             t.dupe(),
+        )
+        .expect(
+            "annotation_inference::lazy_cjs_extract_named_exports concretize closure is infallible",
         )
     })))
 }
@@ -3206,32 +3221,42 @@ pub fn copy_type_exports<'cx>(
     match source_module {
         Ok(m) => {
             let reason2 = reason.dupe();
-            let concretize_export_type = |cx: &Context<'cx>, _r: Reason, t: Type| -> Type {
-                let result = elab_t(
-                    cx,
-                    &effective_dst_cx(cx),
-                    None,
-                    t,
-                    Op::new(
-                        OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(
-                            reason2.dupe(),
+            let concretize_export_type =
+                |cx: &Context<'cx>,
+                 _r: Reason,
+                 t: Type|
+                 -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+                    let result = elab_t(
+                        cx,
+                        &effective_dst_cx(cx),
+                        None,
+                        t,
+                        Op::new(
+                            OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(
+                                reason2.dupe(),
+                            ),
                         ),
-                    ),
-                );
-                match result.deref() {
-                    TypeInner::OpenT(tvar) => {
-                        get_fully_resolved_type(cx, &effective_dst_cx(cx), tvar.id() as i32)
-                    }
-                    _ => result,
-                }
-            };
+                    );
+                    Ok(match result.deref() {
+                        TypeInner::OpenT(tvar) => {
+                            get_fully_resolved_type(cx, &effective_dst_cx(cx), tvar.id() as i32)
+                        }
+                        _ => result,
+                    })
+                };
+            // The closure above never propagates a JobError (no `?`-failing
+            // call sites in its body), so mod_module_t cannot fail here.
+            // .expect documents the invariant; this site does not need a
+            // cancel/timeout boundary because annotation inference runs on
+            // the type-sig pipeline, not the cancel-aware check pipeline.
             flow_js_utils::copy_type_exports_t_kit::mod_module_t(
                 cx,
                 concretize_export_type,
                 reason,
                 target_module_type,
                 &m,
-            );
+            )
+            .expect("annotation_inference::copy_type_exports concretize closure is infallible");
         }
         Err(_) => (),
     }
@@ -3243,7 +3268,9 @@ pub fn mk_non_generic_render_type<'cx>(
     renders_variant: type_::RendersVariant,
     t: Type,
 ) -> Type {
-    let concretize = |cx: &Context<'cx>, t: &Type| -> Vec<Type> {
+    let concretize = |cx: &Context<'cx>,
+                      t: &Type|
+     -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError> {
         let c = TypeCollector::create();
         elab_t(
             cx,
@@ -3255,9 +3282,12 @@ pub fn mk_non_generic_render_type<'cx>(
                 collector: c.clone(),
             }),
         );
-        c.collect().into_iter().collect()
+        Ok(c.collect().into_iter().collect())
     };
-    let is_iterable_for_better_error = |_cx: &Context<'cx>, _t: &Type| -> bool { false };
+    let is_iterable_for_better_error =
+        |_cx: &Context<'cx>,
+         _t: &Type|
+         -> Result<bool, flow_utils_concurrency::job_error::JobError> { Ok(false) };
     flow_js_utils::render_types::mk_non_generic_render_type(
         cx,
         reason,

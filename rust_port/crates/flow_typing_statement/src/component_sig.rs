@@ -24,7 +24,7 @@ use flow_typing_type::type_;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_util;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 
 use crate::component_params;
 use crate::statement;
@@ -48,8 +48,14 @@ pub mod component_declaration_body {
         exhaust: &'b Option<(RefCell<Vec<Type>>, Vec<ALoc>)>,
     }
 
-    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
-        for ComponentScopeVisitor<'_, '_, '_>
+    impl<'ast>
+        AstVisitor<
+            'ast,
+            ALoc,
+            (ALoc, Type),
+            &'ast ALoc,
+            flow_utils_concurrency::job_error::JobError,
+        > for ComponentScopeVisitor<'_, '_, '_>
     {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
@@ -63,7 +69,7 @@ pub mod component_declaration_body {
             &mut self,
             _loc: &'ast ALoc,
             _expr: &'ast ast::function::Function<ALoc, (ALoc, Type)>,
-        ) -> Result<(), !> {
+        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
             Ok(())
         }
 
@@ -71,7 +77,7 @@ pub mod component_declaration_body {
             &mut self,
             _loc: &'ast ALoc,
             _component: &'ast ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
-        ) -> Result<(), !> {
+        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
             Ok(())
         }
 
@@ -79,7 +85,7 @@ pub mod component_declaration_body {
             &mut self,
             loc: &'ast ALoc,
             switch: &'ast ast::statement::Switch<ALoc, (ALoc, Type)>,
-        ) -> Result<(), !> {
+        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
             let (ref exhaust_loc, ref t) = switch.exhaustive_out;
             if let Some((exhaustive_ts, exhaust_locs)) = self.exhaust {
                 if exhaust_locs.contains(exhaust_loc) {
@@ -93,12 +99,12 @@ pub mod component_declaration_body {
         fn statement(
             &mut self,
             stmt: &'ast ast::statement::Statement<ALoc, (ALoc, Type)>,
-        ) -> Result<(), !> {
+        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
             match &**stmt {
                 ast::statement::StatementInner::Return {
                     inner: return_stmt, ..
                 } => {
-                    self.custom_return(return_stmt);
+                    self.custom_return(return_stmt)?;
                 }
                 _ => {}
             }
@@ -107,11 +113,17 @@ pub mod component_declaration_body {
     }
 
     impl ComponentScopeVisitor<'_, '_, '_> {
-        fn visit(&mut self, statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>]) {
-            let Ok(()) = self.statement_list(statements);
+        fn visit(
+            &mut self,
+            statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>],
+        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+            self.statement_list(statements)
         }
 
-        fn custom_return(&self, return_stmt: &ast::statement::Return<ALoc, (ALoc, Type)>) {
+        fn custom_return(
+            &self,
+            return_stmt: &ast::statement::Return<ALoc, (ALoc, Type)>,
+        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
             let (_, ref t) = return_stmt.return_out;
             let use_op = UseOp::Op(std::sync::Arc::new(type_::RootUseOp::FunReturnStatement {
                 value: match &return_stmt.argument {
@@ -132,7 +144,8 @@ pub mod component_declaration_body {
                     t,
                     &type_::UseT::new(type_::UseTInner::UseT(use_op, self.renders_t.dupe())),
                 ),
-            );
+            )?;
+            Ok(())
         }
     }
 
@@ -141,12 +154,15 @@ pub mod component_declaration_body {
         reason_cmp: Reason,
         renders_t: Type,
         body: declaration_body_config::Body<ALoc>,
-    ) -> declaration_body_config::Body<(ALoc, Type)> {
+    ) -> Result<
+        declaration_body_config::Body<(ALoc, Type)>,
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let (body_loc, body_block) = body;
         let statements = &body_block.body;
 
         // statement visit pass
-        let statements_ast = statement::statement_list(cx, statements);
+        let statements_ast = statement::statement_list(cx, statements)?;
 
         let exhaust = {
             let (exhaustive, undeclared) = {
@@ -184,7 +200,7 @@ pub mod component_declaration_body {
             renders_t: &renders_t,
             exhaust: &exhaust,
         }
-        .visit(&body_ast.body);
+        .visit(&body_ast.body)?;
         if let Some((maybe_exhaustively_checked_ts, _)) = &exhaust {
             let ts = maybe_exhaustively_checked_ts.borrow();
             if type_operation_utils::type_assertions::non_exhaustive(cx, &ts) {
@@ -194,7 +210,7 @@ pub mod component_declaration_body {
                 );
             }
         }
-        (body_loc, body_ast)
+        Ok((body_loc, body_ast))
     }
 }
 
@@ -206,7 +222,7 @@ pub fn toplevels<'a>(
         ComponentParamsTast,
         declaration_body_config::Body<(ALoc, Type)>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let ComponentSig {
         reason: reason_cmp,
@@ -225,7 +241,7 @@ pub fn toplevels<'a>(
         cparams.rest.as_ref(),
         &*cparams.reconstruct,
     )?;
-    let body_ast = component_declaration_body::eval(cx, reason_cmp, renders_t, body.clone());
+    let body_ast = component_declaration_body::eval(cx, reason_cmp, renders_t, body.clone())?;
     Ok((params_ast, body_ast))
 }
 
@@ -238,11 +254,11 @@ pub fn component_type<'a, C: crate::component_params_intf::Config>(
     rest: Option<&C::Rest>,
     renders_t: Type,
     id_opt: Option<(&ALoc, &FlowSmolStr)>,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let config_reason = reason
         .dupe()
         .update_desc(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)));
-    let config = component_params::config::<C>(cx, in_annotation, &config_reason, params, rest);
+    let config = component_params::config::<C>(cx, in_annotation, &config_reason, params, rest)?;
     let component_kind = match id_opt {
         None => type_::ComponentKind::Structural,
         Some((id_loc, name)) => {
@@ -260,5 +276,9 @@ pub fn component_type<'a, C: crate::component_params_intf::Config>(
             },
         ))),
     ));
-    type_util::poly_type_of_tparams(type_::poly::Id::generate_id(), tparams, t)
+    Ok(type_util::poly_type_of_tparams(
+        type_::poly::Id::generate_id(),
+        tparams,
+        t,
+    ))
 }

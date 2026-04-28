@@ -115,15 +115,18 @@ pub fn type_at_pos<'a>(
     file: FileKey,
     line: i32,
     col: i32,
-) -> (
+) -> Result<
     (
-        Loc,
-        Option<TypeAtPosResult>,
-        Vec<Loc>,
-        Vec<(Loc, refinement_invalidation::Reason)>,
+        (
+            Loc,
+            Option<TypeAtPosResult>,
+            Vec<Loc>,
+            Vec<(Loc, refinement_invalidation::Reason)>,
+        ),
+        Vec<(String, serde_json::Value)>,
     ),
-    Vec<(String, serde_json::Value)>,
-) {
+    flow_utils_concurrency::job_error::JobError,
+> {
     let loc = Loc::cursor(Some(file), line, col);
     let (refining_locs, refinement_invalidated) = match include_refinement_info {
         None => (vec![], vec![]),
@@ -165,7 +168,7 @@ pub fn type_at_pos<'a>(
         no_typed_ast_for_imports,
         include_refs,
         loc,
-    );
+    )?;
     let (json_data, loc, ty) = match result {
         QueryResult::FailureNoMatch => (
             json_data_of_result("FAILURE_NO_MATCH", vec![]),
@@ -211,7 +214,7 @@ pub fn type_at_pos<'a>(
             (json_data, loc, Some(tys))
         }
     };
-    ((loc, ty, refining_locs, refinement_invalidated), json_data)
+    Ok(((loc, ty, refining_locs, refinement_invalidated), json_data))
 }
 
 static BATCHED_TYPE_AT_POS_SPECIAL_COMMENT_REGEX: LazyLock<Regex> =
@@ -227,27 +230,33 @@ pub fn batched_type_at_pos_from_special_comments<'a>(
     no_typed_ast_for_imports: bool,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     file: FileKey,
-) -> (
-    Vec<(
-        Loc,
-        Loc,
-        Option<TypeAtPosResult>,
-        Vec<Loc>,
-        Vec<(Loc, refinement_invalidation::Reason)>,
-    )>,
-    serde_json::Value,
-) {
-    let all_comments = &typed_ast.all_comments;
-    let handle_comment = |comment: &ast::Comment<ALoc>| -> Option<(
-        (
+) -> Result<
+    (
+        Vec<(
             Loc,
             Loc,
             Option<TypeAtPosResult>,
             Vec<Loc>,
             Vec<(Loc, refinement_invalidation::Reason)>,
-        ),
+        )>,
         serde_json::Value,
-    )> {
+    ),
+    flow_utils_concurrency::job_error::JobError,
+> {
+    let all_comments = &typed_ast.all_comments;
+    let handle_comment = |comment: &ast::Comment<ALoc>| -> Result<
+        Option<(
+            (
+                Loc,
+                Loc,
+                Option<TypeAtPosResult>,
+                Vec<Loc>,
+                Vec<(Loc, refinement_invalidation::Reason)>,
+            ),
+            serde_json::Value,
+        )>,
+        flow_utils_concurrency::job_error::JobError,
+    > {
         let ast::Comment {
             loc: comment_loc,
             kind,
@@ -275,19 +284,24 @@ pub fn batched_type_at_pos_from_special_comments<'a>(
                 file.dupe(),
                 line,
                 column,
-            );
+            )?;
             let cursor_loc = Loc::cursor(Some(file.dupe()), line, column);
-            Some((
+            Ok(Some((
                 (cursor_loc, ty_loc, tys, refining_locs, invalidation_info),
                 serde_json::Value::Object(json_data.into_iter().collect()),
-            ))
+            )))
         } else {
-            None
+            Ok(None)
         }
     };
-    let results: Vec<_> = all_comments.iter().filter_map(handle_comment).collect();
+    let mut results: Vec<_> = Vec::new();
+    for comment in all_comments.iter() {
+        if let Some(res) = handle_comment(comment)? {
+            results.push(res);
+        }
+    }
     let (friendly_results, json_data_list): (Vec<_>, Vec<_>) = results.into_iter().unzip();
-    (friendly_results, serde_json::Value::Array(json_data_list))
+    Ok((friendly_results, serde_json::Value::Array(json_data_list)))
 }
 
 pub fn dump_types<'a>(

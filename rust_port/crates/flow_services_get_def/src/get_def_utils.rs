@@ -1116,9 +1116,13 @@ pub fn get_def_info<'cx>(
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     loc: &Loc,
-) -> Result<DefInfo, String> {
-    match get_property_def_info(loc_of_aloc, cx, typed_ast, obj_to_obj_map, loc)? {
-        Some(props_info) => Ok(DefInfo::PropertyDefinition(props_info)),
+) -> Result<Result<DefInfo, String>, flow_utils_concurrency::job_error::JobError> {
+    let prop_info = match get_property_def_info(loc_of_aloc, cx, typed_ast, obj_to_obj_map, loc) {
+        Ok(p) => p,
+        Err(e) => return Ok(Err(e)),
+    };
+    match prop_info {
+        Some(props_info) => Ok(Ok(DefInfo::PropertyDefinition(props_info))),
         None => {
             let (ast, file_sig, _) = ast_info;
             let available_ast =
@@ -1132,8 +1136,8 @@ pub fn get_def_info<'cx>(
                 available_ast,
                 purpose,
                 loc,
-            );
-            match result {
+            )?;
+            Ok(match result {
                 crate::get_def_js::GetDefResult::Def(locs, name) => Ok(
                     DefInfo::VariableDefinition(locs.into_iter().collect(), name),
                 ),
@@ -1144,7 +1148,7 @@ pub fn get_def_info<'cx>(
                     Ok(DefInfo::NoDefinition(Some(error)))
                 }
                 crate::get_def_js::GetDefResult::DefError(error) => Err(error),
-            }
+            })
         }
     }
 }

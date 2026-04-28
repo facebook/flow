@@ -273,7 +273,10 @@ pub mod callee_finder {
         )
     }
 
-    pub fn simplify_fun_t(cx: &Context, func_t: &Type) -> Type {
+    pub fn simplify_fun_t(
+        cx: &Context,
+        func_t: &Type,
+    ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
         let reason = type_util::reason_of_t(func_t).dupe();
         flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |_cx, _reason, t| {
             let u = UseT::new(UseTInner::CallT(Box::new(CallTData {
@@ -285,40 +288,49 @@ pub mod callee_finder {
                 ))),
                 return_hint: hint_unavailable(),
             })));
-            flow_js::flow_non_speculating(cx, (func_t, &u));
+            flow_js::flow_non_speculating(cx, (func_t, &u))
         })
     }
 
-    pub fn get_func(cx: &Context, reason: &Reason, t: &Type) -> Vec<Type> {
-        let t = simplify_fun_t(cx, t);
+    pub fn get_func(
+        cx: &Context,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError> {
+        let t = simplify_fun_t(cx, t)?;
         match FlowJs::possible_concrete_types_for_inspection(cx, reason, &t) {
             Ok(ts) => match ts.as_slice() {
-                [] => vec![],
+                [] => Ok(vec![]),
                 // NOTE since we're not merging unions of signatures to a single one,
                 // keep the first member. This shouldn't be common.
                 [t, ..] => get_func_no_union(cx, type_util::reason_of_t(t), t),
             },
-            Err(_) => vec![],
+            Err(_) => Ok(vec![]),
         }
     }
 
-    pub fn get_func_no_union(cx: &Context, reason: &Reason, t: &Type) -> Vec<Type> {
+    pub fn get_func_no_union(
+        cx: &Context,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError> {
         match t.deref() {
             TypeInner::GenericT(box GenericTData { bound, .. }) => get_func(cx, reason, bound),
             TypeInner::DefT(_, def) if matches!(&**def, DefTInner::FunT(..)) => {
-                vec![fix_reason_of_t(t)]
+                Ok(vec![fix_reason_of_t(t)])
             }
             TypeInner::DefT(_, def)
                 if let DefTInner::PolyT(box PolyTData { t_out, .. }) = &**def
                     && matches!(t_out.deref(), TypeInner::DefT(_, d) if matches!(&**d, DefTInner::FunT(..))) =>
             {
-                vec![fix_reason_of_t(t)]
+                Ok(vec![fix_reason_of_t(t)])
             }
             TypeInner::IntersectionT(_, rep) => rep
                 .members_iter()
-                .flat_map(|t| get_func(cx, reason, t))
-                .collect(),
-            _ => vec![],
+                .map(|t| get_func(cx, reason, t))
+                .collect::<Result<Vec<Vec<Type>>, _>>()
+                .map(|vs| vs.into_iter().flatten().collect()),
+            _ => Ok(vec![]),
         }
     }
 
@@ -473,7 +485,13 @@ pub mod callee_finder {
         }
     }
 
-    struct Found(Option<T>);
+    enum Found {
+        Done(Option<T>),
+        // Cancellation/timeout escaping out of an inline `flow_*_non_speculating`
+        // call inside `get_callee_type`. Surfaced via the visitor's short-circuit
+        // mechanism so it can be reported at the LSP boundary.
+        Job(flow_utils_concurrency::job_error::JobError),
+    }
 
     struct Finder<'a, 'cx> {
         loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
@@ -503,7 +521,7 @@ pub mod callee_finder {
         fn find(
             &mut self,
             recurse: impl FnOnce(&mut Self) -> Result<(), Found>,
-            get_callee_type: impl FnOnce() -> Type,
+            get_callee_type: impl FnOnce() -> Result<Type, flow_utils_concurrency::job_error::JobError>,
             args_loc: &ALoc,
             args: &[ast::expression::ExpressionOrSpread<ALoc, (ALoc, Type)>],
             callee_loc: &ALoc,
@@ -523,8 +541,8 @@ pub mod callee_finder {
                 // so after this line we know we found the right call.
                 recurse(self)?;
                 let active_parameter = find_argument(self.loc_of_aloc, &self.cursor, args, 0);
-                let type_ = get_callee_type();
-                Err(Found(Some(T::FunCallData {
+                let type_ = get_callee_type().map_err(Found::Job)?;
+                Err(Found::Done(Some(T::FunCallData {
                     type_,
                     active_parameter,
                     loc: callee_loc.dupe(),
@@ -586,7 +604,7 @@ pub mod callee_finder {
             let arguments = &expr.arguments;
             self.find(
                 |this| ast_visitor::call_default(this, loc, expr),
-                || t,
+                || Ok(t),
                 &arguments.loc,
                 &arguments.arguments,
                 callee_loc,
@@ -605,42 +623,54 @@ pub mod callee_finder {
                     let cx = self.cx;
                     let class_t = class_t.dupe();
                     let callee_loc_owned = callee_loc.dupe();
-                    let get_callee_type = move || {
-                        let desc = type_util::desc_of_t(&class_t).clone();
-                        let ctor_reason = reason::mk_reason(desc, callee_loc_owned);
-                        flow_typing_tvar::mk_where(cx, ctor_reason.dupe(), |_cx, t_out| {
-                            let instance = flow_typing_tvar::mk_where(
+                    let get_callee_type =
+                        move || -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+                            let desc = type_util::desc_of_t(&class_t).clone();
+                            let ctor_reason = reason::mk_reason(desc, callee_loc_owned);
+                            flow_typing_tvar::mk_where::<flow_utils_concurrency::job_error::JobError>(
                                 cx,
                                 ctor_reason.dupe(),
-                                |_cx, instance| {
-                                    let class_def = Type::new(TypeInner::DefT(
+                                |_cx, t_out| {
+                                    let instance = flow_typing_tvar::mk_where::<
+                                        flow_utils_concurrency::job_error::JobError,
+                                    >(
+                                        cx,
                                         ctor_reason.dupe(),
-                                        flow_typing_type::type_::DefT::new(DefTInner::ClassT(
-                                            instance.dupe(),
-                                        )),
-                                    ));
-                                    flow_js::flow_t_non_speculating(cx, (&class_t, &class_def));
-                                },
-                            );
-                            let propref = type_util::mk_named_prop(
-                                ctor_reason.dupe(),
-                                false,
-                                Name::new("constructor"),
-                            );
-                            let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
-                                use_op: unknown_use(),
-                                reason: ctor_reason.dupe(),
-                                prop_reason: ctor_reason.dupe(),
-                                propref: Box::new(propref),
-                                method_action: Box::new(
-                                    flow_typing_type::type_::MethodAction::NoMethodAction(
-                                        t_out.dupe(),
+                                        |_cx, instance| {
+                                            let class_def = Type::new(TypeInner::DefT(
+                                                ctor_reason.dupe(),
+                                                flow_typing_type::type_::DefT::new(
+                                                    DefTInner::ClassT(instance.dupe()),
+                                                ),
+                                            ));
+                                            flow_js::flow_t_non_speculating(
+                                                cx,
+                                                (&class_t, &class_def),
+                                            )?;
+                                            Ok(())
+                                        },
+                                    )?;
+                                    let propref = type_util::mk_named_prop(
+                                        ctor_reason.dupe(),
+                                        false,
+                                        Name::new("constructor"),
+                                    );
+                                    let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                                    use_op: unknown_use(),
+                                    reason: ctor_reason.dupe(),
+                                    prop_reason: ctor_reason.dupe(),
+                                    propref: Box::new(propref),
+                                    method_action: Box::new(
+                                        flow_typing_type::type_::MethodAction::NoMethodAction(
+                                            t_out.dupe(),
+                                        ),
                                     ),
-                                ),
-                            })));
-                            flow_js::flow_non_speculating(cx, (&instance, &use_t));
-                        })
-                    };
+                                })));
+                                    flow_js::flow_non_speculating(cx, (&instance, &use_t))?;
+                                    Ok(())
+                                },
+                            )
+                        };
                     self.find(
                         |this| ast_visitor::new_default(this, loc, expr),
                         get_callee_type,
@@ -659,7 +689,7 @@ pub mod callee_finder {
         ) -> Result<(), Found> {
             ast_visitor::class_body_default(self, cls_body)?;
             if self.covers_target(&cls_body.loc) {
-                return Err(Found(None));
+                return Err(Found::Done(None));
             }
             Ok(())
         }
@@ -671,7 +701,7 @@ pub mod callee_finder {
             ast_visitor::function_body_any_default(self, body)?;
             match body {
                 ast::function::Body::BodyBlock(block) if self.covers_target(&block.0) => {
-                    Err(Found(None))
+                    Err(Found::Done(None))
                 }
                 _ => Ok(()),
             }
@@ -707,14 +737,14 @@ pub mod callee_finder {
                                             let t = &jsx_id.loc.1;
                                             let key_loc = &attr_id.loc.0;
                                             let name = attr_id.name.to_string();
-                                            return Err(Found(Some(T::JsxAttrData {
+                                            return Err(Found::Done(Some(T::JsxAttrData {
                                                 type_: t.dupe(),
                                                 name,
                                                 loc: loc.0.dupe(),
                                                 key_loc: key_loc.dupe(),
                                             })));
                                         }
-                                        _ => return Err(Found(None)),
+                                        _ => return Err(Found::Done(None)),
                                     }
                                 }
                             }
@@ -731,16 +761,17 @@ pub mod callee_finder {
         cx: &Context,
         typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
         loc: Loc,
-    ) -> Option<T> {
+    ) -> Result<Option<T>, flow_utils_concurrency::job_error::JobError> {
         let mut finder = Finder {
             loc_of_aloc,
             cx,
             cursor: loc,
         };
         match finder.program(typed_ast) {
-            Err(Found(Some(data))) => Some(data),
-            Err(Found(None)) => None,
-            Ok(()) => None,
+            Err(Found::Done(Some(data))) => Ok(Some(data)),
+            Err(Found::Done(None)) => Ok(None),
+            Err(Found::Job(err)) => Err(err),
+            Ok(()) => Ok(None),
         }
     }
 }
@@ -755,14 +786,17 @@ pub fn find_signatures<'a>(
     ast: &ast::Program<Loc, Loc>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc: Loc,
-) -> Result<Option<(Vec<FuncDetailsResult>, i32)>, flow_typing_ty_normalizer::normalizer::Error> {
-    match callee_finder::find_opt(loc_of_aloc, cx, typed_ast, loc) {
+) -> Result<
+    Result<Option<(Vec<FuncDetailsResult>, i32)>, flow_typing_ty_normalizer::normalizer::Error>,
+    flow_utils_concurrency::job_error::JobError,
+> {
+    match callee_finder::find_opt(loc_of_aloc, cx, typed_ast, loc)? {
         Some(callee_finder::T::FunCallData {
             type_: t,
             active_parameter,
             loc: callee_loc,
         }) => {
-            let ts = callee_finder::get_func(cx, type_util::reason_of_t(&t), &t);
+            let ts = callee_finder::get_func(cx, type_util::reason_of_t(&t), &t)?;
             let norm_options = flow_typing_ty_normalizer::env::Options::default();
             let genv = flow_typing_ty_normalizer::no_flow::mk_genv(
                 norm_options,
@@ -807,7 +841,7 @@ pub fn find_signatures<'a>(
                         ),
                         &flow_services_get_def::get_def_types::Purpose::JSDoc,
                         &loc_of_aloc(&callee_loc),
-                    ) {
+                    )? {
                         GetDefResult::Def(locs, _) | GetDefResult::Partial(locs, _, _)
                             if locs.len() == 1 =>
                         {
@@ -840,7 +874,7 @@ pub fn find_signatures<'a>(
                         .collect()
                 }
             };
-            Ok(Some((funs, active_parameter)))
+            Ok(Ok(Some((funs, active_parameter))))
         }
         Some(callee_finder::T::JsxAttrData {
             type_: t,
@@ -851,12 +885,9 @@ pub fn find_signatures<'a>(
             let ts = if name == "key" {
                 // 'key' is special-cased
                 let reason_key = reason::mk_reason(reason::VirtualReasonDesc::RReactKey, key_loc);
-                let t = type_util::maybe(flow_js::get_builtin_type_non_speculating(
-                    cx,
-                    &reason_key,
-                    None,
-                    "React$Key",
-                ));
+                let key_t =
+                    flow_js::get_builtin_type_non_speculating(cx, &reason_key, None, "React$Key")?;
+                let t = type_util::maybe(key_t);
                 vec![(t, true)]
             } else {
                 callee_finder::get_attribute_type(cx, loc, &t, &Name::new(&name))
@@ -895,8 +926,8 @@ pub fn find_signatures<'a>(
                     }
                 })
                 .collect();
-            Ok(Some((tys, 0)))
+            Ok(Ok(Some((tys, 0))))
         }
-        None => Ok(None),
+        None => Ok(Ok(None)),
     }
 }

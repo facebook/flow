@@ -2128,17 +2128,17 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] (Rust-only) `flow_server_env/src/lsp_connect_params.rs` — shared connect params and persistent client handshake builder for LSP
   - [ ] rechecker/
     - [x] recheck_updates.ml → `flow_server_rechecker/src/recheck_updates.rs`
-    - [ ] rechecker.ml → `flow_server_rechecker/src/rechecker.rs` (async cancellation and parallelizable-workload machinery are still stubbed/simplified)
+    - [ ] rechecker.ml → `flow_server_rechecker/src/rechecker.rs` (parallelizable-workload machinery still simplified)
       - [ ] `Parallelizable_workload_loop` module (Lwt `pick`/cancellation loop is comment-only; no Rust async runtime equivalent is wired up yet)
       - [ ] `start_parallelizable_workloads` (returns a no-op stopper because the parallelizable workload loop is unported)
       - [x] `get_lazy_stats`
       - [x] `process_updates`
       - [x] `send_start_recheck`
       - [x] `send_end_recheck`
-      - [ ] `recheck` (`find_ref_command` is kept as an opaque closure instead of destructuring request/client/transformer like OCaml, and canceled-path semantics are still simplified)
-      - [ ] `run_but_cancel_on_file_changes` (no race against file-watcher updates; it just runs `f()` synchronously)
+      - [ ] `recheck` (`find_ref_command` is kept as an opaque closure instead of destructuring request/client/transformer like OCaml)
+      - [x] `run_but_cancel_on_file_changes`
       - [x] `recheck_outcome` type → `RecheckOutcome`
-      - [ ] `recheck_single` (restart-after-cancel path is still partial because cancellation/requeue/`SharedMem.collect_slice` behavior depends on the unported async cancellation machinery)
+      - [x] `recheck_single`
       - [x] `recheck_loop`
   - [x] server_files/
     - [x] server_files_js.ml → `flow_server_files/src/server_files_js.rs` (14/14 functions, 100% complete)

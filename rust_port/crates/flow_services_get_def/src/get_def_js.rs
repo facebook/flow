@@ -81,7 +81,10 @@ fn process_request<'cx>(
     file_sig: &std::sync::Arc<FileSig>,
     scope_info: &scope_api::ScopeInfo<Loc>,
     request: &GetDefRequest<ALoc, (ALoc, Type)>,
-) -> Result<(Vec1<Loc>, Option<FlowSmolStr>), String> {
+) -> Result<
+    Result<(Vec1<Loc>, Option<FlowSmolStr>), String>,
+    flow_utils_concurrency::job_error::JobError,
+> {
     match request {
         GetDefRequest::Identifier { name, loc: aloc } => {
             let loc = loc_of_aloc(aloc);
@@ -95,18 +98,22 @@ fn process_request<'cx>(
                         .def_of_use_opt(use_loc)
                         .expect("use should have a def");
                     let def_locs = def.locs.clone();
-                    Ok((def_locs, Some(name.dupe())))
+                    Ok(Ok((def_locs, Some(name.dupe()))))
                 }
                 0 => match cx.builtin_value_opt(name) {
-                    Some((def_loc, _)) => Ok((Vec1::new(loc_of_aloc(&def_loc)), Some(name.dupe()))),
+                    Some((def_loc, _)) => {
+                        Ok(Ok((Vec1::new(loc_of_aloc(&def_loc)), Some(name.dupe()))))
+                    }
                     None => match cx.builtin_type_opt(name) {
                         Some((def_loc, _)) => {
-                            Ok((Vec1::new(loc_of_aloc(&def_loc)), Some(name.dupe())))
+                            Ok(Ok((Vec1::new(loc_of_aloc(&def_loc)), Some(name.dupe()))))
                         }
-                        None => Ok((Vec1::new(loc), Some(name.dupe()))),
+                        None => Ok(Ok((Vec1::new(loc), Some(name.dupe())))),
                     },
                 },
-                _ => Err("Scope builder found multiple matching identifiers".to_string()),
+                _ => Ok(Err(
+                    "Scope builder found multiple matching identifiers".to_string()
+                )),
             }
         }
 
@@ -114,7 +121,7 @@ fn process_request<'cx>(
             let name = &member_info.prop_name;
             let (_, t) = &member_info.object_type;
             let force_instance = member_info.force_instance;
-            extract_member_def(
+            Ok(extract_member_def(
                 loc_of_aloc,
                 cx,
                 file_sig,
@@ -122,7 +129,7 @@ fn process_request<'cx>(
                 force_instance,
                 t,
                 name,
-            )
+            ))
         }
 
         GetDefRequest::JsxAttribute {
@@ -141,8 +148,8 @@ fn process_request<'cx>(
                     reason: reason.dupe(),
                     tool: Box::new(react::Tool::GetConfig { tout: tvar.dupe() }),
                 })));
-                flow_typing_flow_js::flow_js::flow_non_speculating(cx, (component_t, &use_t));
-            });
+                flow_typing_flow_js::flow_js::flow_non_speculating(cx, (component_t, &use_t))
+            })?;
             let req = GetDefRequest::Member(MemberInfo {
                 prop_name: name.dupe(),
                 object_type: (loc.dupe(), props_object),
@@ -220,7 +227,9 @@ pub fn get_def<'cx>(
     available_ast: AvailableAst,
     purpose: &Purpose,
     requested_loc: &Loc,
-) -> GetDefResult {
+) -> Result<GetDefResult, flow_utils_concurrency::job_error::JobError> {
+    // Note: The Result here propagates Worker_should_cancel/timeout via JobError.
+    // Both inner errors (from process_request) propagate via the Result chain.
     let require_loc_map = file_sig.require_loc_map();
     let scope_info = scope_builder::program(cx.enable_enums(), true, ast);
     let is_local_use = |aloc: &ALoc| -> bool {
@@ -254,7 +263,7 @@ pub fn get_def<'cx>(
         depth_state: &mut depth::Depth,
         req_loc: &Loc,
         loop_name: Option<FlowSmolStr>,
-    ) -> GetDefResult {
+    ) -> Result<GetDefResult, flow_utils_concurrency::job_error::JobError> {
         match depth_state.add(req_loc) {
             Err(error) => {
                 let trace_of_locs = |locs: &Vec<Loc>| -> String {
@@ -276,9 +285,9 @@ pub fn get_def<'cx>(
                 };
                 let mut locs = BTreeSet::new();
                 locs.insert(req_loc.dupe());
-                GetDefResult::Partial(locs, loop_name, log_message)
+                Ok(GetDefResult::Partial(locs, loop_name, log_message))
             }
-            Ok(depth::DepthOk::CachedResult(result)) => result,
+            Ok(depth::DepthOk::CachedResult(result)) => Ok(result),
             Ok(depth::DepthOk::NoResult) => {
                 let process_result = get_def_process_location::process_location(
                     cx,
@@ -315,57 +324,57 @@ pub fn get_def<'cx>(
                         }
                     }
                     get_def_process_location::ProcessLocationResult::Request(request) => {
-                        match process_request(
+                        let inner = process_request(
                             loc_of_aloc,
                             cx,
                             typed_ast_opt,
                             file_sig,
                             scope_info,
                             &request,
-                        ) {
+                        )?;
+                        match inner {
                             Ok((res_locs, name)) => {
-                                let results: Vec<GetDefResult> = res_locs
-                                    .iter()
-                                    .map(|res_loc| {
-                                        if *res_loc == *req_loc
-                                            || res_loc.source != requested_loc.source
-                                        {
-                                            let mut locs = BTreeSet::new();
-                                            locs.insert(res_loc.clone());
-                                            GetDefResult::Def(locs, name.dupe())
-                                        } else {
-                                            match loop_fn(
-                                                loc_of_aloc,
-                                                cx,
-                                                is_legit_require,
-                                                typed_ast_opt,
-                                                file_sig,
-                                                scope_info,
-                                                available_ast,
-                                                file_content,
-                                                is_local_use,
-                                                purpose,
-                                                requested_loc,
-                                                depth_state,
-                                                res_loc,
-                                                name.dupe(),
-                                            ) {
-                                                GetDefResult::BadLoc(_) => {
-                                                    let mut locs = BTreeSet::new();
-                                                    locs.insert(res_loc.clone());
-                                                    GetDefResult::Def(locs, name.dupe())
-                                                }
-                                                GetDefResult::DefError(msg) => {
-                                                    let mut locs = BTreeSet::new();
-                                                    locs.insert(res_loc.clone());
-                                                    GetDefResult::Partial(locs, name.dupe(), msg)
-                                                }
-                                                res @ (GetDefResult::Def(..)
-                                                | GetDefResult::Partial(..)) => res,
+                                let mut results: Vec<GetDefResult> = Vec::new();
+                                for res_loc in res_locs.iter() {
+                                    let r = if *res_loc == *req_loc
+                                        || res_loc.source != requested_loc.source
+                                    {
+                                        let mut locs = BTreeSet::new();
+                                        locs.insert(res_loc.clone());
+                                        GetDefResult::Def(locs, name.dupe())
+                                    } else {
+                                        match loop_fn(
+                                            loc_of_aloc,
+                                            cx,
+                                            is_legit_require,
+                                            typed_ast_opt,
+                                            file_sig,
+                                            scope_info,
+                                            available_ast,
+                                            file_content,
+                                            is_local_use,
+                                            purpose,
+                                            requested_loc,
+                                            depth_state,
+                                            res_loc,
+                                            name.dupe(),
+                                        )? {
+                                            GetDefResult::BadLoc(_) => {
+                                                let mut locs = BTreeSet::new();
+                                                locs.insert(res_loc.clone());
+                                                GetDefResult::Def(locs, name.dupe())
                                             }
+                                            GetDefResult::DefError(msg) => {
+                                                let mut locs = BTreeSet::new();
+                                                locs.insert(res_loc.clone());
+                                                GetDefResult::Partial(locs, name.dupe(), msg)
+                                            }
+                                            res @ (GetDefResult::Def(..)
+                                            | GetDefResult::Partial(..)) => res,
                                         }
-                                    })
-                                    .collect();
+                                    };
+                                    results.push(r);
+                                }
                                 results
                                     .into_iter()
                                     .reduce(|res1, res2| match (res1, res2) {
@@ -447,7 +456,7 @@ pub fn get_def<'cx>(
                     }
                 };
                 depth_state.cache_result(req_loc.clone(), result.clone());
-                result
+                Ok(result)
             }
         }
     }

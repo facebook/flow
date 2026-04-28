@@ -22,7 +22,7 @@ use flow_typing_loc_env::func_class_sig_types::param;
 use flow_typing_type::type_::FunParam;
 use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::Type;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 
 use crate::func_params_intf::*;
 use crate::func_stmt_config;
@@ -77,7 +77,7 @@ impl Config for FuncStmtConfig {
     fn eval_param<'a>(
         cx: &Context<'a>,
         param: &Self::Param,
-    ) -> Result<Self::ParamAst, AbnormalControlFlow> {
+    ) -> Result<Self::ParamAst, CheckExprError> {
         func_stmt_config::eval_param(cx, param)
     }
 
@@ -133,7 +133,7 @@ pub fn eval<'a, C: Config, R>(
     rest: Option<&C::Rest>,
     this: Option<&C::ThisParam>,
     reconstruct: impl Fn(Vec<C::ParamAst>, Option<C::RestAst>, Option<C::ThisAst>) -> R,
-) -> Result<R, AbnormalControlFlow> {
+) -> Result<R, CheckExprError> {
     let param_tasts: Vec<_> = params
         .iter()
         .map(|p| C::eval_param(cx, p))

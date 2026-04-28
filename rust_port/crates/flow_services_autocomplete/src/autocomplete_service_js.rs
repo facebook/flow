@@ -522,8 +522,11 @@ fn jsdoc_of_member(
     }
 }
 
-fn jsdoc_of_loc(typing: &Typing<'_, '_>, loc: &Loc) -> Option<flow_parser::jsdoc::Jsdoc> {
-    match get_def_js::get_def(
+fn jsdoc_of_loc(
+    typing: &Typing<'_, '_>,
+    loc: &Loc,
+) -> Result<Option<flow_parser::jsdoc::Jsdoc>, flow_utils_concurrency::job_error::JobError> {
+    let res = get_def_js::get_def(
         &*typing.loc_of_aloc,
         typing.cx,
         &typing.file_sig,
@@ -532,7 +535,8 @@ fn jsdoc_of_loc(typing: &Typing<'_, '_>, loc: &Loc) -> Option<flow_parser::jsdoc
         AvailableAst::ALocAst(typing.aloc_ast.clone()),
         &get_def_types::Purpose::JSDoc,
         loc,
-    ) {
+    )?;
+    Ok(match res {
         GetDefResult::Def(locs, _) | GetDefResult::Partial(locs, _, _) if locs.len() == 1 => {
             let getdef_loc = locs.into_iter().next().unwrap();
             find_documentation::jsdoc_of_getdef_loc(
@@ -542,7 +546,7 @@ fn jsdoc_of_loc(typing: &Typing<'_, '_>, loc: &Loc) -> Option<flow_parser::jsdoc
             )
         }
         _ => None,
-    }
+    })
 }
 
 fn documentation_and_tags_of_jsdoc(jsdoc: &flow_parser::jsdoc::Jsdoc) -> DocumentationAndTags {
@@ -563,11 +567,14 @@ fn documentation_and_tags_of_member(
         .unwrap_or_else(ac_completion::empty_documentation_and_tags)
 }
 
-fn documentation_and_tags_of_loc(typing: &Typing<'_, '_>, loc: &Loc) -> DocumentationAndTags {
-    jsdoc_of_loc(typing, loc)
+fn documentation_and_tags_of_loc(
+    typing: &Typing<'_, '_>,
+    loc: &Loc,
+) -> Result<DocumentationAndTags, flow_utils_concurrency::job_error::JobError> {
+    Ok(jsdoc_of_loc(typing, loc)?
         .as_ref()
         .map(documentation_and_tags_of_jsdoc)
-        .unwrap_or_else(ac_completion::empty_documentation_and_tags)
+        .unwrap_or_else(ac_completion::empty_documentation_and_tags))
 }
 
 fn documentation_and_tags_of_def_loc(
@@ -703,10 +710,13 @@ fn autocomplete_record(
 fn local_value_identifiers(
     typing: &Typing<'_, '_>,
     ac_loc: &Loc,
-) -> Vec<(
-    (String, DocumentationAndTags, AcIdType),
-    Result<Elt<ALoc>, flow_typing_ty_normalizer::normalizer::Error>,
-)> {
+) -> Result<
+    Vec<(
+        (String, DocumentationAndTags, AcIdType),
+        Result<Elt<ALoc>, flow_typing_ty_normalizer::normalizer::Error>,
+    )>,
+    flow_utils_concurrency::job_error::JobError,
+> {
     let scope_info = scope_builder::program(typing.cx.enable_enums(), false, &typing.ast);
     let ac_scope_id = scope_info.closest_enclosing_scope(ac_loc, flow_common::reason::in_range);
     let names_and_locs = scope_info.fold_scope_chain(
@@ -763,26 +773,31 @@ fn local_value_identifiers(
         }
     }
 
-    let identifiers: Vec<((String, DocumentationAndTags, AcIdType), Type)> = names_and_locs
-        .into_iter()
-        .filter_map(|(name, loc)| {
-            let type_ = type_env::checked_find_loc_env_write_opt(
-                typing.cx,
-                DefLocType::OrdinaryNameLoc,
-                ALoc::of_loc(loc.clone()),
-            )?;
-            let documentation_and_tags = documentation_and_tags_of_loc(typing, &loc);
-            let ac_id_type = match is_record_type(typing.cx, &type_) {
-                Some(defaulted_props) => AcIdType::AcIdTypeRecord {
-                    record_type: type_.dupe(),
-                    defaulted_props,
-                },
-                None => AcIdType::AcIdTypeNormal,
-            };
-            Some(((name, documentation_and_tags, ac_id_type), type_))
-        })
-        .collect();
-    ty_normalizer_flow::from_types(None, &typing.norm_genv(), identifiers)
+    let mut identifiers: Vec<((String, DocumentationAndTags, AcIdType), Type)> = Vec::new();
+    for (name, loc) in names_and_locs {
+        let type_ = match type_env::checked_find_loc_env_write_opt(
+            typing.cx,
+            DefLocType::OrdinaryNameLoc,
+            ALoc::of_loc(loc.clone()),
+        ) {
+            Some(t) => t,
+            None => continue,
+        };
+        let documentation_and_tags = documentation_and_tags_of_loc(typing, &loc)?;
+        let ac_id_type = match is_record_type(typing.cx, &type_) {
+            Some(defaulted_props) => AcIdType::AcIdTypeRecord {
+                record_type: type_.dupe(),
+                defaulted_props,
+            },
+            None => AcIdType::AcIdTypeNormal,
+        };
+        identifiers.push(((name, documentation_and_tags, ac_id_type), type_));
+    }
+    Ok(ty_normalizer_flow::from_types(
+        None,
+        &typing.norm_genv(),
+        identifiers,
+    ))
 }
 
 fn expected_concrete_type_of_t(cx: &Context, lb_type: &Type) -> Type {
@@ -1255,7 +1270,7 @@ fn autocomplete_id(
     edit_locs: &(Loc, Loc),
     token: &str,
     type_: &Type,
-) -> AcResult<ac_completion::T> {
+) -> Result<AcResult<ac_completion::T>, flow_utils_concurrency::job_error::JobError> {
     let exact_by_default = typing.cx.exact_by_default();
     let expected_type = expected_concrete_type_of_t(typing.cx, type_);
     let prefer_single_quotes = typing.layout_options.single_quotes;
@@ -1268,7 +1283,7 @@ fn autocomplete_id(
         token,
     );
     let rank = if results.is_empty() { 0 } else { 1 };
-    let identifiers = local_value_identifiers(typing, ac_loc);
+    let identifiers = local_value_identifiers(typing, ac_loc)?;
     let locals = set_of_locals(|((name, _, _), _)| name.as_str(), &identifiers);
     let (mut items_rev, errors_to_log): (VecDeque<ac_completion::CompletionItem>, Vec<String>) = {
         let init: VecDeque<_> = results.into_iter().collect();
@@ -1397,13 +1412,13 @@ fn autocomplete_id(
     if !sorted {
         items_rev = filter_by_token_and_sort_rev(token, items_rev, false);
     }
-    AcResult {
+    Ok(AcResult {
         result: ac_completion::T {
             items: items_rev.into_iter().rev().collect(),
             is_incomplete,
         },
         errors_to_log,
-    }
+    })
 }
 
 enum ModuleExportKind {
@@ -1610,7 +1625,9 @@ impl<'a, 'cx> LocalTypeIdentifiersAstSearcher<'a, 'cx> {
     }
 }
 
-impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LocalTypeIdentifiersAstSearcher<'_, '_> {
+impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, flow_utils_concurrency::job_error::JobError>
+    for LocalTypeIdentifiersAstSearcher<'_, '_>
+{
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
     }
@@ -1623,9 +1640,9 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LocalTypeIdentifiersA
         &mut self,
         loc: &'ast ALoc,
         alias: &'ast ast::statement::TypeAlias<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let (_, typed_alias) =
-            flow_typing_statement::statement::type_alias(self.cx, loc.dupe(), alias);
+            flow_typing_statement::statement::type_alias(self.cx, loc.dupe(), alias)?;
         self.add_id(typed_alias.id);
         Ok(())
     }
@@ -1634,9 +1651,9 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LocalTypeIdentifiersA
         &mut self,
         loc: &'ast ALoc,
         otype: &'ast ast::statement::OpaqueType<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let (_, typed_otype) =
-            flow_typing_statement::statement::opaque_type(self.cx, loc.dupe(), otype);
+            flow_typing_statement::statement::opaque_type(self.cx, loc.dupe(), otype)?;
         self.add_id(typed_otype.id);
         Ok(())
     }
@@ -1645,9 +1662,9 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LocalTypeIdentifiersA
         &mut self,
         loc: &'ast ALoc,
         decl: &'ast ast::statement::Interface<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let (_, typed_decl) =
-            flow_typing_statement::statement::interface(self.cx, loc.dupe(), decl);
+            flow_typing_statement::statement::interface(self.cx, loc.dupe(), decl)?;
         self.add_id(typed_decl.id);
         Ok(())
     }
@@ -1656,15 +1673,28 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LocalTypeIdentifiersA
         &mut self,
         loc: &'ast ALoc,
         decl: &'ast ast::statement::ImportDeclaration<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        let typed_stmt = flow_typing_statement::statement::statement(
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        let typed_stmt = match flow_typing_statement::statement::statement(
             self.cx,
             &ast::statement::Statement::new(ast::statement::StatementInner::ImportDeclaration {
                 loc: loc.dupe(),
                 inner: decl.clone().into(),
             }),
-        )
-        .expect("typed import declaration");
+        ) {
+            Ok(s) => s,
+            Err(flow_typing_utils::abnormal::CheckExprError::Canceled(c)) => {
+                return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
+            }
+            Err(flow_typing_utils::abnormal::CheckExprError::TimedOut(t)) => {
+                return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
+            }
+            Err(flow_typing_utils::abnormal::CheckExprError::DebugThrow { loc }) => {
+                return Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc });
+            }
+            Err(flow_typing_utils::abnormal::CheckExprError::Abnormal(_)) => {
+                panic!("typed import declaration");
+            }
+        };
         let ast::statement::StatementInner::ImportDeclaration { inner, .. } = &*typed_stmt else {
             unreachable!()
         };
@@ -1861,19 +1891,26 @@ fn make_type_param(edit_locs: &(Loc, Loc), name: &str) -> ac_completion::Complet
 
 fn local_type_identifiers(
     typing: &Typing<'_, '_>,
-) -> Vec<(
-    (String, ALoc),
-    Result<Elt<ALoc>, flow_typing_ty_normalizer::normalizer::Error>,
-)> {
+) -> Result<
+    Vec<(
+        (String, ALoc),
+        Result<Elt<ALoc>, flow_typing_ty_normalizer::normalizer::Error>,
+    )>,
+    flow_utils_concurrency::job_error::JobError,
+> {
     let mut search = LocalTypeIdentifiersAstSearcher::new(typing.cx);
-    let Ok(()) = search.program(&typing.aloc_ast);
+    search.program(&typing.aloc_ast)?;
     let ids = search
         .rev_ids
         .into_iter()
         .rev()
         .map(|id| ((id.name.to_string(), id.loc.0.dupe()), id.loc.1.dupe()))
         .collect();
-    ty_normalizer_flow::from_types(None, &typing.norm_genv(), ids)
+    Ok(ty_normalizer_flow::from_types(
+        None,
+        &typing.norm_genv(),
+        ids,
+    ))
 }
 
 fn autocomplete_unqualified_type(
@@ -1883,7 +1920,7 @@ fn autocomplete_unqualified_type(
     ac_loc: &Loc,
     edit_locs: &(Loc, Loc),
     token: &str,
-) -> AcResult<ac_completion::T> {
+) -> Result<AcResult<ac_completion::T>, flow_utils_concurrency::job_error::JobError> {
     let exact_by_default = typing.cx.exact_by_default();
     let mut items_rev: VecDeque<ac_completion::CompletionItem> = VecDeque::new();
     for name in BUILTIN_TYPES {
@@ -1898,11 +1935,11 @@ fn autocomplete_unqualified_type(
     for name in tparams_rev {
         items_rev.push_front(make_type_param(edit_locs, name));
     }
-    let type_identifiers = local_type_identifiers(typing);
+    let type_identifiers = local_type_identifiers(typing)?;
     let mut errors_to_log: Vec<String> = Vec::new();
     for ((name, aloc), ty_result) in type_identifiers {
         let documentation_and_tags =
-            documentation_and_tags_of_loc(typing, &(typing.loc_of_aloc)(&aloc));
+            documentation_and_tags_of_loc(typing, &(typing.loc_of_aloc)(&aloc))?;
         match ty_result {
             Ok(elt) => items_rev.push_front(autocomplete_create_result_elt(
                 None,
@@ -1919,11 +1956,11 @@ fn autocomplete_unqualified_type(
             Err(err) => errors_to_log.push(err.to_string()),
         }
     }
-    let value_identifiers = local_value_identifiers(typing, ac_loc);
+    let value_identifiers = local_value_identifiers(typing, ac_loc)?;
     let value_locals = set_of_locals(|((name, _, _), _)| name.as_str(), &value_identifiers);
     let type_locals = set_of_locals(
         |((name, _), _)| name.as_str(),
-        &local_type_identifiers(typing),
+        &local_type_identifiers(typing)?,
     );
     for ((name, documentation_and_tags, _), ty_res) in value_identifiers {
         match ty_res {
@@ -2016,7 +2053,7 @@ fn autocomplete_unqualified_type(
             let mut locals = type_locals;
             add_locals(
                 |((name, _, _), _)| name.as_str(),
-                &local_value_identifiers(typing, ac_loc),
+                &local_value_identifiers(typing, ac_loc)?,
                 &mut locals,
             );
             let auto_imports = (typing.search_exported_types)(ac_options, before);
@@ -2044,13 +2081,13 @@ fn autocomplete_unqualified_type(
     if !sorted {
         items_rev = filter_by_token_and_sort_rev(token, items_rev, false);
     }
-    AcResult {
+    Ok(AcResult {
         result: ac_completion::T {
             items: items_rev.into_iter().rev().collect(),
             is_incomplete,
         },
         errors_to_log,
-    }
+    })
 }
 
 fn fix_loc_of_string_token(token: &str, loc: &Loc) -> Loc {
@@ -2189,11 +2226,11 @@ fn autocomplete_member(
     member_loc: Option<Loc>,
     is_type_annotation: bool,
     force_instance: bool,
-) -> AutocompleteServiceResult {
+) -> Result<AutocompleteServiceResult, flow_utils_concurrency::job_error::JobError> {
     let edit_locs = fix_locs_of_string_token(token, edit_locs);
     let exact_by_default = typing.cx.exact_by_default();
     match members_of_type(typing, false, force_instance, false, &BTreeSet::new(), this) {
-        Err(err) => AutocompleteServiceResultGeneric::AcFatalError(err),
+        Err(err) => Ok(AutocompleteServiceResultGeneric::AcFatalError(err)),
         Ok((mems, errors_to_log)) => {
             let items = mems
                 .into_iter()
@@ -2326,13 +2363,13 @@ fn autocomplete_member(
             match bracket_syntax {
                 None => {
                     let items = filter_by_token_and_sort(token, items);
-                    AutocompleteServiceResultGeneric::AcResult(AcResult {
+                    Ok(AutocompleteServiceResultGeneric::AcResult(AcResult {
                         result: ac_completion::T {
                             items,
                             is_incomplete: false,
                         },
                         errors_to_log,
-                    })
+                    }))
                 }
                 Some(bracket_syntax) => {
                     let id_result = if is_type_annotation {
@@ -2343,7 +2380,7 @@ fn autocomplete_member(
                             ac_loc,
                             &edit_locs,
                             token,
-                        )
+                        )?
                     } else {
                         autocomplete_id(
                             typing,
@@ -2355,7 +2392,7 @@ fn autocomplete_member(
                             &edit_locs,
                             token,
                             &bracket_syntax.type_,
-                        )
+                        )?
                     };
                     let ac_completion::T {
                         items: id_items,
@@ -2367,13 +2404,13 @@ fn autocomplete_member(
                         .into_iter()
                         .rev()
                         .collect();
-                    AutocompleteServiceResultGeneric::AcResult(AcResult {
+                    Ok(AutocompleteServiceResultGeneric::AcResult(AcResult {
                         result: ac_completion::T {
                             items,
                             is_incomplete,
                         },
                         errors_to_log: [errors_to_log, id_result.errors_to_log].concat(),
-                    })
+                    }))
                 }
             }
         }
@@ -2418,7 +2455,7 @@ fn autocomplete_jsx_intrinsic(
     typing: &Typing<'_, '_>,
     ac_loc: &Loc,
     edit_locs: &(Loc, Loc),
-) -> AcResult<ac_completion::T> {
+) -> Result<AcResult<ac_completion::T>, flow_utils_concurrency::job_error::JobError> {
     let reason = flow_common::reason::mk_reason(
         VirtualReasonDesc::RType(Name::new("$JSXIntrinsics")),
         ALoc::of_loc(ac_loc.clone()),
@@ -2428,7 +2465,7 @@ fn autocomplete_jsx_intrinsic(
         &reason,
         None,
         "$JSXIntrinsics",
-    );
+    )?;
     let (items, errors_to_log) =
         match members_of_type(typing, true, false, false, &BTreeSet::new(), &intrinsics_t) {
             Err(err) => (Vec::new(), vec![err]),
@@ -2454,13 +2491,13 @@ fn autocomplete_jsx_intrinsic(
                 errors_to_log,
             ),
         };
-    AcResult {
+    Ok(AcResult {
         result: ac_completion::T {
             items,
             is_incomplete: false,
         },
         errors_to_log,
-    }
+    })
 }
 
 fn autocomplete_jsx_element(
@@ -2470,11 +2507,11 @@ fn autocomplete_jsx_element(
     edit_locs: &(Loc, Loc),
     token: &str,
     type_: &Type,
-) -> AutocompleteServiceResult {
+) -> Result<AutocompleteServiceResult, flow_utils_concurrency::job_error::JobError> {
     let results_id = autocomplete_id(
         typing, ac_loc, false, false, false, ac_options, edit_locs, token, type_,
-    );
-    let results_jsx = autocomplete_jsx_intrinsic(typing, ac_loc, edit_locs);
+    )?;
+    let results_jsx = autocomplete_jsx_intrinsic(typing, ac_loc, edit_locs)?;
     let mut errors_to_log = results_id.errors_to_log.clone();
     errors_to_log.extend(results_jsx.errors_to_log.clone());
     let mut items = results_id.result.items.clone();
@@ -2494,10 +2531,10 @@ fn autocomplete_jsx_element(
             &export_index::Source::Builtin(Userland::from_smol_str("react".into())),
         );
         match import_edit {
-            None => AutocompleteServiceResultGeneric::AcResult(AcResult {
+            None => Ok(AutocompleteServiceResultGeneric::AcResult(AcResult {
                 result,
                 errors_to_log,
-            }),
+            })),
             Some(import_edit) => {
                 let edits = import_edit
                     .edits
@@ -2512,20 +2549,20 @@ fn autocomplete_jsx_element(
                         item
                     })
                     .collect();
-                AutocompleteServiceResultGeneric::AcResult(AcResult {
+                Ok(AutocompleteServiceResultGeneric::AcResult(AcResult {
                     result: ac_completion::T {
                         items,
                         is_incomplete: result.is_incomplete,
                     },
                     errors_to_log,
-                })
+                }))
             }
         }
     } else {
-        AutocompleteServiceResultGeneric::AcResult(AcResult {
+        Ok(AutocompleteServiceResultGeneric::AcResult(AcResult {
             result,
             errors_to_log,
-        })
+        }))
     }
 }
 
@@ -2578,25 +2615,32 @@ fn autocomplete_jsx_attribute(
     token: &str,
     cls: &Type,
     attribute: &(Loc, String),
-) -> AutocompleteServiceResult {
+) -> Result<AutocompleteServiceResult, flow_utils_concurrency::job_error::JobError> {
     let reason = flow_common::reason::mk_reason(
         VirtualReasonDesc::RProperty(Some(Name::new(attribute.1.clone()))),
         ALoc::of_loc(attribute.0.clone()),
     );
-    let props_object = flow_typing_tvar::mk_where(typing.cx, reason.dupe(), |_cx, tvar| {
-        let use_op = UseOp::Op(std::sync::Arc::new(VirtualRootUseOp::UnknownUse));
-        let use_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
-            use_op,
-            reason: reason.dupe(),
-            tool: Box::new(flow_typing_type::type_::react::Tool::GetConfig { tout: tvar.dupe() }),
-        })));
-        flow_typing_flow_js::flow_js::flow_non_speculating(typing.cx, (cls, &use_t));
-    });
+    let props_object = flow_typing_tvar::mk_where::<flow_utils_concurrency::job_error::JobError>(
+        typing.cx,
+        reason.dupe(),
+        |_cx, tvar| {
+            let use_op = UseOp::Op(std::sync::Arc::new(VirtualRootUseOp::UnknownUse));
+            let use_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
+                use_op,
+                reason: reason.dupe(),
+                tool: Box::new(flow_typing_type::type_::react::Tool::GetConfig {
+                    tout: tvar.dupe(),
+                }),
+            })));
+            flow_typing_flow_js::flow_js::flow_non_speculating(typing.cx, (cls, &use_t))?;
+            Ok(())
+        },
+    )?;
     let mut exclude_keys = used_attr_names.clone();
     exclude_keys.insert("children".to_string());
     let exact_by_default = typing.cx.exact_by_default();
     match members_of_type(typing, true, false, false, &exclude_keys, &props_object) {
-        Err(err) => AutocompleteServiceResultGeneric::AcFatalError(err),
+        Err(err) => Ok(AutocompleteServiceResultGeneric::AcFatalError(err)),
         Ok((mems, errors_to_log)) => {
             let items = mems
                 .into_iter()
@@ -2622,13 +2666,13 @@ fn autocomplete_jsx_attribute(
                     )
                 })
                 .collect();
-            AutocompleteServiceResultGeneric::AcResult(AcResult {
+            Ok(AutocompleteServiceResultGeneric::AcResult(AcResult {
                 result: ac_completion::T {
                     items: filter_by_token_and_sort(token, items),
                     is_incomplete: false,
                 },
                 errors_to_log,
-            })
+            }))
         }
     }
 }
@@ -3045,12 +3089,15 @@ pub fn autocomplete_get_results(
     ac_options: &AcOptions,
     trigger_character: Option<&str>,
     cursor: &Loc,
-) -> (
-    Option<String>,
-    Option<Loc>,
-    String,
-    AutocompleteServiceResult,
-) {
+) -> Result<
+    (
+        Option<String>,
+        Option<Loc>,
+        String,
+        AutocompleteServiceResult,
+    ),
+    flow_utils_concurrency::job_error::JobError,
+> {
     let canon_cursor = typing.canonical.map_or_else(
         || cursor.clone(),
         |canon| autocomplete_sigil::canonical::cursor(canon).clone(),
@@ -3061,14 +3108,14 @@ pub fn autocomplete_get_results(
         trigger_character,
         &canon_cursor,
         &typing.aloc_ast,
-    ) {
-        Err(err) => (
+    )? {
+        Err(err) => Ok((
             None,
             None,
             "None".to_string(),
             AutocompleteServiceResultGeneric::AcFatalError(err),
-        ),
-        Ok(None) => (
+        )),
+        Ok(None) => Ok((
             None,
             None,
             "None".to_string(),
@@ -3079,7 +3126,7 @@ pub fn autocomplete_get_results(
                 },
                 errors_to_log: vec!["Autocomplete token not found in AST".to_string()],
             }),
-        ),
+        )),
         Ok(Some(processed)) => {
             let token = autocomplete_sigil::canonical::to_relative_token(
                 typing.canonical,
@@ -3188,7 +3235,7 @@ pub fn autocomplete_get_results(
                         &edit_locs,
                         &token,
                         &type_,
-                    );
+                    )?;
                     match enclosing_class_t {
                         Some(t) => match autocomplete_member(
                             typing,
@@ -3203,7 +3250,7 @@ pub fn autocomplete_get_results(
                             None,
                             false,
                             true,
-                        ) {
+                        )? {
                             AutocompleteServiceResultGeneric::AcFatalError(err) => {
                                 AutocompleteServiceResultGeneric::AcFatalError(err)
                             }
@@ -3269,11 +3316,11 @@ pub fn autocomplete_get_results(
                     member_loc,
                     is_type_annotation,
                     is_super,
-                ),
+                )?,
                 autocomplete_js::AutocompleteType::AcJsxElement { type_ } => {
                     autocomplete_jsx_element(
                         typing, &ac_loc, ac_options, &edit_locs, &token, &type_,
-                    )
+                    )?
                 }
                 autocomplete_js::AutocompleteType::AcJsxAttribute {
                     attribute_name,
@@ -3288,7 +3335,7 @@ pub fn autocomplete_get_results(
                     &token,
                     &component_t,
                     &(ac_loc.clone(), attribute_name),
-                ),
+                )?,
                 autocomplete_js::AutocompleteType::AcRecordField {
                     field_name: _,
                     used_field_names,
@@ -3309,7 +3356,7 @@ pub fn autocomplete_get_results(
                         &ac_loc,
                         &edit_locs,
                         &token,
-                    ))
+                    )?)
                 }
                 autocomplete_js::AutocompleteType::AcQualifiedType(qtype) => {
                     autocomplete_module_exports(
@@ -3322,7 +3369,7 @@ pub fn autocomplete_get_results(
                     )
                 }
             };
-            (Some(token), Some(ac_loc), autocomplete_type_string, result)
+            Ok((Some(token), Some(ac_loc), autocomplete_type_string, result))
         }
     }
 }

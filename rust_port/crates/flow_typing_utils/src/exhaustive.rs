@@ -1187,13 +1187,19 @@ mod value_union_builder {
         cx: &Context<'cx>,
         key: &(ALoc, FlowSmolStr),
         obj: &Type,
-    ) -> Option<value_object::Property<'cx, Context<'cx>>> {
+    ) -> Result<
+        Option<value_object::Property<'cx, Context<'cx>>>,
+        flow_utils_concurrency::job_error::JobError,
+    > {
         fn get_prop_from_dict<'cx>(
             cx: &Context<'cx>,
             key_loc: &ALoc,
             key_name: &FlowSmolStr,
             dict: Option<&flow_typing_type::type_::DictType>,
-        ) -> Option<value_object::Property<'cx, Context<'cx>>> {
+        ) -> Result<
+            Option<value_object::Property<'cx, Context<'cx>>>,
+            flow_utils_concurrency::job_error::JobError,
+        > {
             match dict {
                 Some(dict) => {
                     let reason_key = flow_common::reason::mk_reason(
@@ -1210,7 +1216,7 @@ mod value_union_builder {
                     if flow_common::polarity::Polarity::compat(
                         dict.dict_polarity,
                         flow_common::polarity::Polarity::Positive,
-                    ) && flow_js::FlowJs::speculative_subtyping_succeeds(cx, &key_t, &dict.key)
+                    ) && flow_js::FlowJs::speculative_subtyping_succeeds(cx, &key_t, &dict.key)?
                     {
                         let loc = reason_of_t(&dict.key).loc();
                         let dict_value = dict.value.dupe();
@@ -1218,16 +1224,16 @@ mod value_union_builder {
                             std::rc::Rc::new(flow_lazy::Lazy::new(Box::new(
                                 move |cx: &Context<'cx>| of_type(cx, &dict_value),
                             )));
-                        Some(value_object::Property {
+                        Ok(Some(value_object::Property {
                             loc: loc.dupe(),
                             value: lazy_value,
                             optional: true,
-                        })
+                        }))
                     } else {
-                        None
+                        Ok(None)
                     }
                 }
-                None => None,
+                None => Ok(None),
             }
         }
 
@@ -1237,7 +1243,10 @@ mod value_union_builder {
             props_list: &[flow_typing_type::type_::properties::Id],
             dict: Option<&flow_typing_type::type_::DictType>,
             key: &(ALoc, FlowSmolStr),
-        ) -> Option<value_object::Property<'cx, Context<'cx>>> {
+        ) -> Result<
+            Option<value_object::Property<'cx, Context<'cx>>>,
+            flow_utils_concurrency::job_error::JobError,
+        > {
             let (_, key_name) = key;
             let current_prop = props_list.iter().find_map(|id| {
                 let name = flow_common::reason::Name::new(key_name.dupe());
@@ -1245,11 +1254,11 @@ mod value_union_builder {
                     .and_then(|p| value_object_property_builder::of_type_prop(key_name, &p))
             });
             if current_prop.is_some() {
-                return current_prop;
+                return Ok(current_prop);
             }
-            let super_prop = get_prop(cx, key, super_t);
+            let super_prop = get_prop(cx, key, super_t)?;
             if super_prop.is_some() {
-                return super_prop;
+                return Ok(super_prop);
             }
             let (key_loc, key_name) = key;
             get_prop_from_dict(cx, key_loc, key_name, dict)
@@ -1282,23 +1291,43 @@ mod value_union_builder {
                         FlowJs::get_builtin_typeapp(cx, reason, None, "Array", vec![elem_t]);
                     get_prop(cx, key, &arr_t)
                 }
-                _ => None,
+                _ => Ok(None),
             },
-            TypeInner::NullProtoT(_) => None,
+            TypeInner::NullProtoT(_) => Ok(None),
             TypeInner::ObjProtoT(reason) => {
                 let name = flow_common::reason::Name::new(key_name.dupe());
                 if flow_typing_flow_common::flow_js_utils::is_object_prototype_method(&name) {
                     let builtin_t = flow_js::get_builtin_type(cx, reason, None, "Object");
-                    let builtin_t = builtin_t.ok()?;
+                    // Propagate WorkerCanceled and TimedOut; other
+                    // FlowJsException variants are dropped here matching the
+                    // original `.ok()?` behavior. See plan.md §"JobError".
+                    let builtin_t = match builtin_t {
+                        Ok(t) => t,
+                        Err(
+                            flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(
+                                c,
+                            ),
+                        ) => return Err(flow_utils_concurrency::job_error::JobError::Canceled(c)),
+                        Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(
+                            t,
+                        )) => return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t)),
+                        Err(_) => return Ok(None),
+                    };
                     get_prop(cx, key, &builtin_t)
                 } else {
-                    None
+                    Ok(None)
                 }
             }
-            TypeInner::IntersectionT(_, rep) => rep
-                .members_iter()
-                .find_map(|member_t| get_prop(cx, key, member_t)),
-            _ => None,
+            TypeInner::IntersectionT(_, rep) => {
+                for member_t in rep.members_iter() {
+                    let p = get_prop(cx, key, member_t)?;
+                    if p.is_some() {
+                        return Ok(p);
+                    }
+                }
+                Ok(None)
+            }
+            _ => Ok(None),
         }
     }
 
@@ -1326,11 +1355,14 @@ fn is_leaf_subtype_of_inexhaustible<'cx>(
     cx: &Context<'cx>,
     leaf_val: &leaf::Leaf,
     inexhaustible: &FlowVector<Type>,
-) -> bool {
+) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
     let leaf_type = leaf_val.to_type();
-    inexhaustible
-        .iter()
-        .any(|t| FlowJs::speculative_subtyping_succeeds(cx, &leaf_type, t))
+    for t in inexhaustible.iter() {
+        if FlowJs::speculative_subtyping_succeeds(cx, &leaf_type, t)? {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 fn is_object_subtype_of_inexhaustible(inexhaustible: &FlowVector<Type>) -> Option<Reason> {
@@ -1373,7 +1405,7 @@ fn filter_values_by_patterns<'cx>(
     raise_errors: bool,
     value_union: &value_union::ValueUnion<'cx, Context<'cx>>,
     pattern_union: &pattern_union::PatternUnion,
-) -> FilterUnionResult<'cx> {
+) -> Result<FilterUnionResult<'cx>, flow_utils_concurrency::job_error::JobError> {
     let value_union::ValueUnion {
         leafs: value_leafs,
         tuples: value_tuples,
@@ -1410,7 +1442,7 @@ fn filter_values_by_patterns<'cx>(
             inexhaustible,
             leaf_pattern,
             &mut used_pattern_locs,
-        );
+        )?;
     }
     for leaf_val in guarded_leafs.iter() {
         mark_leaf_pattern_used(
@@ -1419,7 +1451,7 @@ fn filter_values_by_patterns<'cx>(
             inexhaustible,
             leaf_val,
             &mut used_pattern_locs,
-        );
+        )?;
     }
 
     // The `undefined` pattern is always marked as used, so that we do not tell users
@@ -1493,7 +1525,7 @@ fn filter_values_by_patterns<'cx>(
                 raise_errors,
                 &[tuple_value.dupe()],
                 &pattern_tuples,
-            );
+            )?;
             used_pattern_locs.extend(upl);
             tuples_left.extend(tl);
             tuples_matched.extend(tm);
@@ -1506,7 +1538,7 @@ fn filter_values_by_patterns<'cx>(
         (Vec::new(), Vec::new(), ALocSet::new())
     } else {
         let all_tuples_and_objects = pattern_union.all_tuples_and_objects();
-        filter_objects_by_patterns(cx, raise_errors, &arrays_vec, &all_tuples_and_objects)
+        filter_objects_by_patterns(cx, raise_errors, &arrays_vec, &all_tuples_and_objects)?
     };
     arrays_left.reverse();
     arrays_matched.reverse();
@@ -1514,7 +1546,7 @@ fn filter_values_by_patterns<'cx>(
     // Objects
     let objects_vec: Vec<_> = value_objects.iter().duped().collect();
     let (mut objects_left, mut objects_matched, obj_used_pattern_locs) =
-        filter_objects_by_patterns(cx, raise_errors, &objects_vec, pattern_objects);
+        filter_objects_by_patterns(cx, raise_errors, &objects_vec, pattern_objects)?;
     objects_left.reverse();
     objects_matched.reverse();
     used_pattern_locs.extend(obj_used_pattern_locs);
@@ -1529,7 +1561,7 @@ fn filter_values_by_patterns<'cx>(
     // Mixed/any
     let mixed_used_pattern_locs = match is_object_subtype_of_inexhaustible(inexhaustible) {
         None => ALocSet::new(),
-        Some(reason) => visit_mixed(cx, raise_errors, &reason, pattern_union),
+        Some(reason) => visit_mixed(cx, raise_errors, &reason, pattern_union)?,
     };
     used_pattern_locs.extend(mixed_used_pattern_locs);
     // Wildcard
@@ -1539,11 +1571,11 @@ fn filter_values_by_patterns<'cx>(
                 let loc = wildcard_reason.loc();
                 used_pattern_locs.insert(loc.dupe());
             }
-            FilterUnionResult {
+            Ok(FilterUnionResult {
                 value_left: value_union::ValueUnion::empty(),
                 value_matched: value_union.dupe(),
                 used_pattern_locs,
-            }
+            })
         }
         None => {
             let value_matched = value_union::ValueUnion {
@@ -1554,11 +1586,11 @@ fn filter_values_by_patterns<'cx>(
                 enum_unknown_members: FlowVector::default(),
                 inexhaustible: FlowVector::default(),
             };
-            FilterUnionResult {
+            Ok(FilterUnionResult {
                 value_left,
                 value_matched,
                 used_pattern_locs,
-            }
+            })
         }
     }
 }
@@ -1571,11 +1603,14 @@ fn filter_objects_by_patterns<'cx>(
     raise_errors: bool,
     value_objects: &[value_object::ValueObject<'cx, Context<'cx>>],
     pattern_objects: &[pattern_object::WithIndex],
-) -> (
-    Vec<value_object::ValueObject<'cx, Context<'cx>>>,
-    Vec<value_object::ValueObject<'cx, Context<'cx>>>,
-    ALocSet,
-) {
+) -> Result<
+    (
+        Vec<value_object::ValueObject<'cx, Context<'cx>>>,
+        Vec<value_object::ValueObject<'cx, Context<'cx>>>,
+        ALocSet,
+    ),
+    flow_utils_concurrency::job_error::JobError,
+> {
     let mut acc_left: Vec<value_object::ValueObject<'cx, Context<'cx>>> = Vec::new();
     let mut acc_matched: Vec<value_object::ValueObject<'cx, Context<'cx>>> = Vec::new();
     let mut acc_used_pattern_locs: ALocSet = ALocSet::new();
@@ -1596,7 +1631,7 @@ fn filter_objects_by_patterns<'cx>(
                 } => {
                     additional_used_pattern_locs.extend(used_pattern_locs.iter().map(|l| l.dupe()));
                     result =
-                        filter_object_by_pattern(cx, raise_errors, &value_object, pattern_object);
+                        filter_object_by_pattern(cx, raise_errors, &value_object, pattern_object)?;
                 }
             }
         }
@@ -1625,7 +1660,7 @@ fn filter_objects_by_patterns<'cx>(
         }
         acc_used_pattern_locs.extend(additional_used_pattern_locs);
     }
-    (acc_left, acc_matched, acc_used_pattern_locs)
+    Ok((acc_left, acc_matched, acc_used_pattern_locs))
 }
 
 /// Filter an object value by an object pattern.
@@ -1634,7 +1669,7 @@ fn filter_object_by_pattern<'cx>(
     raise_errors: bool,
     value_object: &value_object::ValueObject<'cx, Context<'cx>>,
     pattern_object: &pattern_object::PatternObject,
-) -> FilterObjectResult<'cx> {
+) -> Result<FilterObjectResult<'cx>, flow_utils_concurrency::job_error::JobError> {
     let value_object::ValueObject(reason_value, value_inner) = value_object;
     let value_object::ValueObjectInner {
         props: value_props_orig,
@@ -1663,10 +1698,10 @@ fn filter_object_by_pattern<'cx>(
         }
     };
     if !possibly_matches {
-        return FilterObjectResult::NoMatch {
+        return Ok(FilterObjectResult::NoMatch {
             used_pattern_locs: ALocSet::new(),
             left: value_object.dupe(),
-        };
+        });
     }
 
     // Sort the keys that are sentinel props for the value first.
@@ -1698,7 +1733,7 @@ fn filter_object_by_pattern<'cx>(
             None => {
                 let pattern_prop = pattern_props.get(key).unwrap();
                 let key_loc = &pattern_prop.loc;
-                let prop = value_union_builder::get_prop(cx, &(key_loc.dupe(), key.dupe()), t);
+                let prop = value_union_builder::get_prop(cx, &(key_loc.dupe(), key.dupe()), t)?;
                 if prop.is_none() {
                     value_props_early_break = true;
                     break;
@@ -1708,10 +1743,10 @@ fn filter_object_by_pattern<'cx>(
         }
     }
     if value_props_early_break {
-        return FilterObjectResult::NoMatch {
+        return Ok(FilterObjectResult::NoMatch {
             used_pattern_locs: ALocSet::new(),
             left: value_object.dupe(),
-        };
+        });
     }
 
     // If this pattern is gaurded, then it can't filter out values
@@ -1749,7 +1784,7 @@ fn filter_object_by_pattern<'cx>(
                         value_left,
                         value_matched,
                         used_pattern_locs: new_used_pattern_locs,
-                    } = filter_values_by_patterns(cx, raise_errors, forced_value, pattern);
+                    } = filter_values_by_patterns(cx, raise_errors, forced_value, pattern)?;
                     let is_empty = value_matched.is_empty();
                     let matched_lazy: value_object::LazyValueUnion<'cx, Context<'cx>> =
                         // We need to create an already forced value to match ocaml behavior
@@ -1832,7 +1867,7 @@ fn filter_object_by_pattern<'cx>(
     }
 
     if let Some(result) = early_stop {
-        return result;
+        return Ok(result);
     }
 
     let pattern_loc = reason_pattern.loc();
@@ -1873,10 +1908,10 @@ fn filter_object_by_pattern<'cx>(
         *pattern_kind != ObjKind::Obj && value_rest.is_some() && pattern_rest.is_none();
 
     if no_match || non_matching_rest {
-        FilterObjectResult::NoMatch {
+        Ok(FilterObjectResult::NoMatch {
             used_pattern_locs,
             left: value_object.dupe(),
-        }
+        })
     } else {
         let matched = value_object::ValueObject(
             reason_value.dupe(),
@@ -1889,11 +1924,11 @@ fn filter_object_by_pattern<'cx>(
                 sentinel_props: sentinel_props.dupe(),
             }),
         );
-        FilterObjectResult::Match {
+        Ok(FilterObjectResult::Match {
             used_pattern_locs,
             queue_additions,
             matched,
-        }
+        })
     }
 }
 
@@ -1903,7 +1938,7 @@ fn visit_mixed<'cx>(
     raise_errors: bool,
     reason: &Reason,
     pattern_union: &pattern_union::PatternUnion,
-) -> ALocSet {
+) -> Result<ALocSet, flow_utils_concurrency::job_error::JobError> {
     let pattern_tuples_exact = &pattern_union.tuples_exact;
     let pattern_tuples_inexact = &pattern_union.tuples_inexact;
     let pattern_objects = &pattern_union.objects;
@@ -1938,7 +1973,7 @@ fn visit_mixed<'cx>(
         );
         let all_pattern_objects = pattern_union.all_tuples_and_objects();
         let (_, _, used_pattern_locs) =
-            filter_objects_by_patterns(cx, raise_errors, &[mixed_array], &all_pattern_objects);
+            filter_objects_by_patterns(cx, raise_errors, &[mixed_array], &all_pattern_objects)?;
         used_pattern_locs
     };
 
@@ -1983,13 +2018,13 @@ fn visit_mixed<'cx>(
             }),
         );
         let (_, _, used_pattern_locs) =
-            filter_objects_by_patterns(cx, raise_errors, &[mixed_object], pattern_objects);
+            filter_objects_by_patterns(cx, raise_errors, &[mixed_object], pattern_objects)?;
         used_pattern_locs
     };
 
     let mut result = array_used_pattern_locs;
     result.extend(object_used_pattern_locs);
-    result
+    Ok(result)
 }
 
 // and mark_leaf_pattern_used ... =
@@ -1999,14 +2034,15 @@ fn mark_leaf_pattern_used<'cx>(
     inexhaustible: &FlowVector<Type>,
     leaf_pattern: &leaf::Leaf,
     used_pattern_locs: &mut ALocSet,
-) {
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let reason = &leaf_pattern.0;
     let loc = reason.loc();
     if value_leafs_matched.contains(leaf_pattern)
-        || is_leaf_subtype_of_inexhaustible(cx, leaf_pattern, inexhaustible)
+        || is_leaf_subtype_of_inexhaustible(cx, leaf_pattern, inexhaustible)?
     {
         used_pattern_locs.insert(loc.dupe());
     }
+    Ok(())
 }
 
 // ***************************
@@ -2090,14 +2126,14 @@ pub fn analyze<'cx>(
     match_loc: ALoc,
     patterns: &match_pattern_ir::PatternAstList,
     arg_t: &Type,
-) {
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let pattern_union = pattern_union_builder::of_patterns_ast(cx, true, patterns);
     let value_union = value_union_builder::of_type(cx, arg_t);
     let FilterUnionResult {
         value_left,
         value_matched,
         used_pattern_locs,
-    } = filter_values_by_patterns(cx, true, &value_union, &pattern_union);
+    } = filter_values_by_patterns(cx, true, &value_union, &pattern_union)?;
     if value_left.is_empty() {
         let enum_unknown_members = &value_matched.enum_unknown_members;
         let pattern_leafs = &pattern_union.leafs;
@@ -2265,6 +2301,7 @@ pub fn analyze<'cx>(
         );
     }
     check_for_unused_patterns(cx, &pattern_union, &used_pattern_locs);
+    Ok(())
 }
 
 /// Filter a type by a finalized PatternUnion
@@ -2272,12 +2309,13 @@ pub fn filter_by_pattern_union<'cx>(
     cx: &Context<'cx>,
     root_t: &Type,
     pattern_union: &pattern_union::PatternUnion,
-) -> value_union::ValueUnion<'cx, Context<'cx>> {
+) -> Result<value_union::ValueUnion<'cx, Context<'cx>>, flow_utils_concurrency::job_error::JobError>
+{
     let value_union = value_union_builder::of_type(cx, root_t);
     let FilterUnionResult {
         value_left,
         value_matched: _,
         used_pattern_locs: _,
-    } = filter_values_by_patterns(cx, false, &value_union, pattern_union);
-    value_left
+    } = filter_values_by_patterns(cx, false, &value_union, pattern_union)?;
+    Ok(value_left)
 }

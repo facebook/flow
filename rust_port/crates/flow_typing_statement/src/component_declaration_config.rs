@@ -22,20 +22,24 @@ use flow_typing_loc_env::component_sig_types::declaration_param_config::RestAst;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_util;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 use flow_typing_utils::type_env;
 
 use crate::destructuring;
 use crate::statement;
 
-pub fn read_react<'a>(cx: &Context<'a>, loc: ALoc) {
+pub fn read_react<'a>(
+    cx: &Context<'a>,
+    loc: ALoc,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     type_env::query_var(
         Some(type_env::LookupMode::ForValue),
         cx,
         Name::new(FlowSmolStr::new_inline("React")),
         None,
         loc,
-    );
+    )?;
+    Ok(())
 }
 
 pub fn param_type_with_name(param: &Param) -> (ALoc, FlowSmolStr, Type) {
@@ -81,13 +85,13 @@ fn destruct<'a>(
     name: &str,
     default: Option<&flow_typing_default::Default<Type>>,
     t: Type,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     if let Some(d) = default {
         let reason = flow_common::reason::mk_reason(
             VirtualReasonDesc::RIdentifier(Name::new(FlowSmolStr::new(name))),
             name_loc,
         );
-        let default_t = flow_js::mk_default_non_speculating(cx, &reason, d);
+        let default_t = flow_js::mk_default_non_speculating(cx, &reason, d)?;
         flow_js::flow_non_speculating(
             cx,
             (
@@ -97,12 +101,16 @@ fn destruct<'a>(
                     t.dupe(),
                 )),
             ),
-        );
+        )?;
     }
-    t
+    Ok(t)
 }
 
-fn flow_default<'a>(cx: &Context<'a>, annot_t: &Type, default_t: &Type) {
+fn flow_default<'a>(
+    cx: &Context<'a>,
+    annot_t: &Type,
+    default_t: &Type,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let use_op = UseOp::Op(std::sync::Arc::new(
         flow_typing_type::type_::RootUseOp::AssignVar {
             var: Some(type_util::reason_of_t(annot_t).dupe()),
@@ -118,7 +126,8 @@ fn flow_default<'a>(cx: &Context<'a>, annot_t: &Type, default_t: &Type) {
                 annot_t.dupe(),
             )),
         ),
-    );
+    )?;
+    Ok(())
 }
 
 fn eval_default<'a>(
@@ -127,19 +136,19 @@ fn eval_default<'a>(
     annot_t: &Type,
     has_anno: bool,
     default: Option<ast::expression::Expression<ALoc, ALoc>>,
-) -> Result<Option<ast::expression::Expression<ALoc, (ALoc, Type)>>, AbnormalControlFlow> {
+) -> Result<Option<ast::expression::Expression<ALoc, (ALoc, Type)>>, CheckExprError> {
     default
         .map(|e| {
             let typed_e = statement::expression(None, None, None, cx, &e)?;
             let (loc, default_t) = typed_e.loc().dupe();
             if has_anno {
-                flow_default(cx, annot_t, &default_t);
+                flow_default(cx, annot_t, &default_t)?;
                 let mut inner = (*typed_e.0).clone();
                 *inner.loc_mut() = (loc, annot_t.dupe());
                 Ok(ast::expression::Expression(inner.into()))
             } else {
                 if always_flow_default {
-                    flow_default(cx, annot_t, &default_t);
+                    flow_default(cx, annot_t, &default_t)?;
                 }
                 Ok(typed_e)
             }
@@ -150,7 +159,7 @@ fn eval_default<'a>(
 pub fn eval_param<'a>(
     cx: &Context<'a>,
     param: &Param,
-) -> Result<ParamAst<(ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<ParamAst<(ALoc, Type)>, CheckExprError> {
     let Param {
         ref t,
         ref loc,
@@ -275,7 +284,7 @@ pub fn eval_param<'a>(
 pub fn eval_rest<'a>(
     cx: &Context<'a>,
     rest: &Rest,
-) -> Result<RestAst<(ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<RestAst<(ALoc, Type)>, CheckExprError> {
     let Rest {
         ref t,
         ref loc,

@@ -706,7 +706,7 @@ pub fn initialize_env<'cx>(
     cx: &Context<'cx>,
     exclude_syms: Option<BTreeSet<FlowSmolStr>>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
-) {
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let lib = cx.file().is_lib_file();
     let toplevel_scope_kind = if lib {
         ScopeKind::Global
@@ -714,7 +714,10 @@ pub fn initialize_env<'cx>(
         ScopeKind::Module
     };
     let exclude_syms = exclude_syms.unwrap_or_default();
-    let result: Result<(), env_api::EnvInvariant<ALoc>> = (|| {
+    let result: Result<
+        Result<(), env_api::EnvInvariant<ALoc>>,
+        flow_utils_concurrency::job_error::JobError,
+    > = (|| {
         let dep_cx = DepSigsContext(cx);
         let (_abrupt_completion, info) =
             name_resolver::program_with_scope::<DepSigsContext<'_, '_>, FlowJsUtilsFlow<'_, '_>>(
@@ -771,16 +774,22 @@ pub fn initialize_env<'cx>(
         );
         *cx.environment_mut() = env;
         cx.init_interface_merge_field_index();
-        let components = name_def_ordering::build_ordering::<
+        let components = match name_def_ordering::build_ordering::<
             _,
             _,
             DepSigsContext<'_, '_>,
             FlowJsUtilsFlow<'_, '_>,
         >(&dep_cx, &autocomplete_hooks, &info, &name_def_graph)
-        .map_err(|msg| {
-            flow_js_utils::add_output_non_speculating(cx, *msg);
-            env_api::EnvInvariant::new(None, env_api::EnvInvariantFailure::NameDefGraphMismatch)
-        })?;
+        {
+            Ok(c) => c,
+            Err(msg) => {
+                flow_js_utils::add_output_non_speculating(cx, *msg);
+                return Ok(Err(env_api::EnvInvariant::new(
+                    None,
+                    env_api::EnvInvariantFailure::NameDefGraphMismatch,
+                )));
+            }
+        };
         for component in components.iter() {
             crate::cycles::handle_component(cx, &name_def_graph, component);
         }
@@ -790,7 +799,7 @@ pub fn initialize_env<'cx>(
             (env.scope_kind, env.class_stack.dupe())
         };
         for component in components.iter() {
-            crate::env_resolution::resolve_component(cx, &name_def_graph, component);
+            crate::env_resolution::resolve_component(cx, &name_def_graph, component)?;
         }
         verbose::print_if_verbose_lazy(cx, None, None, None, || {
             vec!["Finished all components".to_string()]
@@ -800,8 +809,9 @@ pub fn initialize_env<'cx>(
             env.scope_kind = scope_kind;
             env.class_stack = class_stack;
         }
-        Ok(())
+        Ok(Ok(()))
     })();
+    let result = result?;
     if let Err(env_api::EnvInvariant { loc, failure }) = result {
         let loc = loc.unwrap_or_else(|| aloc_ast.loc.dupe());
         flow_js_utils::add_output_non_speculating(
@@ -809,6 +819,7 @@ pub fn initialize_env<'cx>(
             ErrorMessage::EInternal(Box::new((loc, InternalError::EnvInvariant(failure)))),
         );
     }
+    Ok(())
 }
 
 /// Lint suppressions are handled iff lint_severities is Some.
@@ -820,7 +831,7 @@ pub fn infer_ast<'a>(
     metadata: &Metadata,
     loc_comments: &[Comment<Loc>],
     aloc_ast: &ast::Program<ALoc, ALoc>,
-) -> ast::Program<ALoc, (ALoc, Type)> {
+) -> Result<ast::Program<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
     assert!(cx.is_checked());
     // Check if the file is in declarations mode and we're not in IDE mode.
     // IDE services should still get full type checking even for declaration files.
@@ -829,7 +840,7 @@ pub fn infer_ast<'a>(
     {
         {
             let Ok(v) = polymorphic_ast_mapper::program(&mut ErrorMapper, aloc_ast);
-            v
+            Ok(v)
         }
     } else {
         let ast::Program {
@@ -839,8 +850,8 @@ pub fn infer_ast<'a>(
             ref comments,
             ref all_comments,
         } = *aloc_ast;
-        initialize_env(cx, None, aloc_ast);
-        let typed_statements = statement_mod::statement_list(cx, statements);
+        initialize_env(cx, None, aloc_ast)?;
+        let typed_statements = statement_mod::statement_list(cx, statements)?;
         let tast = ast::Program {
             loc: prog_aloc.dupe(),
             statements: typed_statements.into(),
@@ -848,7 +859,7 @@ pub fn infer_ast<'a>(
             comments: comments.dupe(),
             all_comments: all_comments.dupe(),
         };
-        crate::merge::post_merge_checks(cx, file_sig, aloc_ast, &tast, metadata);
+        crate::merge::post_merge_checks(cx, file_sig, aloc_ast, &tast, metadata)?;
         let (severity_cover, suppressions, suppression_errors) = scan_for_suppressions(
             false,
             lint_severities,
@@ -860,7 +871,7 @@ pub fn infer_ast<'a>(
             flow_js_utils::add_output_non_speculating(cx, err);
         }
         cx.reset_errors(intermediate_error::post_process_errors(cx.errors()));
-        tast
+        Ok(tast)
     }
 }
 
@@ -1078,7 +1089,7 @@ fn infer_lib_file<'a>(
     metadata: &Metadata,
     loc_comments: &[Comment<Loc>],
     aloc_ast: &ast::Program<ALoc, ALoc>,
-) -> ast::Program<ALoc, (ALoc, Type)> {
+) -> Result<ast::Program<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
     let filtered_aloc_ast = lib_def_loc_mapper_and_validator(cx, aloc_ast);
     let ast::Program {
         loc: ref prog_aloc,
@@ -1088,10 +1099,10 @@ fn infer_lib_file<'a>(
         ref all_comments,
     } = *aloc_ast;
     let exclude_syms = cx.builtins().builtin_ordinary_name_set();
-    initialize_env(cx, Some(exclude_syms), &filtered_aloc_ast);
+    initialize_env(cx, Some(exclude_syms), &filtered_aloc_ast)?;
     let (severity_cover, suppressions, suppression_errors) =
         scan_for_suppressions(true, lint_severities, vec![(file_key.dupe(), loc_comments)]);
-    let typed_statements = statement_mod::statement_list(cx, statements);
+    let typed_statements = statement_mod::statement_list(cx, statements)?;
     let tast = ast::Program {
         loc: prog_aloc.dupe(),
         statements: typed_statements.into(),
@@ -1099,7 +1110,7 @@ fn infer_lib_file<'a>(
         comments: comments.dupe(),
         all_comments: all_comments.dupe(),
     };
-    crate::merge::post_merge_checks(cx, file_sig, aloc_ast, &tast, metadata);
+    crate::merge::post_merge_checks(cx, file_sig, aloc_ast, &tast, metadata)?;
 
     cx.add_severity_covers(severity_cover);
     cx.add_error_suppressions(suppressions);
@@ -1107,7 +1118,7 @@ fn infer_lib_file<'a>(
         flow_js_utils::add_output_non_speculating(cx, err);
     }
     cx.reset_errors(intermediate_error::post_process_errors(cx.errors()));
-    tast
+    Ok(tast)
 }
 
 pub fn infer_file<'a>(
@@ -1118,7 +1129,7 @@ pub fn infer_file<'a>(
     metadata: &Metadata,
     all_comments: &[Comment<Loc>],
     aloc_ast: &ast::Program<ALoc, ALoc>,
-) -> ast::Program<ALoc, (ALoc, Type)> {
+) -> Result<ast::Program<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
     if file_key.is_lib_file() {
         infer_lib_file(
             lint_severities,

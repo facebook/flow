@@ -620,6 +620,7 @@ mod collect_function_method_inserting_points_tests {
                     FlowOrdMap::new(),
                 )
             }),
+            flow_utils_concurrency::check_budget::CheckBudget::new(None),
         )
     }
 
@@ -640,6 +641,7 @@ mod collect_function_method_inserting_points_tests {
             comments,
             &aloc_ast,
         )
+        .expect("infer_ast should not be canceled in test")
     }
 
     #[test]
@@ -875,6 +877,7 @@ mod find_closest_enclosing_class_tests {
                     FlowOrdMap::new(),
                 )
             }),
+            flow_utils_concurrency::check_budget::CheckBudget::new(None),
         )
     }
 
@@ -893,6 +896,7 @@ mod find_closest_enclosing_class_tests {
             comments,
             &aloc_ast,
         )
+        .expect("infer_ast should not be canceled in test")
     }
 
     fn assert_closest_enclosing_class_scope(
@@ -1495,6 +1499,7 @@ mod type_synthesizer_tests {
                     FlowOrdMap::new(),
                 )
             }),
+            flow_utils_concurrency::check_budget::CheckBudget::new(None),
         )
     }
 
@@ -1513,6 +1518,7 @@ mod type_synthesizer_tests {
             comments,
             &aloc_ast,
         )
+        .expect("infer_ast should not be canceled in test")
     }
 
     fn file_sig_of_ast(ast: &ast::Program<Loc, Loc>) -> FileSig {

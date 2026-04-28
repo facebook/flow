@@ -17,7 +17,6 @@ use flow_aloc::ALocSet;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
-use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api;
 use flow_env_builder::env_api::RefinementKind;
 use flow_env_builder::name_def_types;
@@ -643,9 +642,9 @@ fn downstream_effects<'ev, 'b, 'cx>(
     ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
     seen: &mut ALocSet,
     loc: ALoc,
-) -> Vec<ErrorMessage<ALoc>> {
+) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
     if seen.contains(&loc) {
-        return vec![];
+        return Ok(vec![]);
     }
 
     let env_values = &ev_cx.var_info.env_values;
@@ -657,9 +656,9 @@ fn downstream_effects<'ev, 'b, 'cx>(
         seen: &mut ALocSet,
         loc: &ALoc,
         func: &ast::function::Function<ALoc, ALoc>,
-    ) -> Vec<ErrorMessage<ALoc>> {
+    ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
         if func.effect_ == ast::function::Effect::Hook {
-            return vec![];
+            return Ok(vec![]);
         }
         let inserted = seen.insert(loc.dupe());
         let result = {
@@ -677,7 +676,7 @@ fn downstream_effects<'ev, 'b, 'cx>(
         seen: &mut ALocSet,
         loc: &ALoc,
         cls: &ast::class::Class<ALoc, ALoc>,
-    ) -> Vec<ErrorMessage<ALoc>> {
+    ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
         let inserted = seen.insert(loc.dupe());
         let result = {
             let mut visitor = EffectVisitor::new(ev_cx, false, seen);
@@ -724,10 +723,10 @@ fn downstream_effects<'ev, 'b, 'cx>(
                         match stripped.deref() {
                             ExpressionInner::ArrowFunction { inner: func, .. }
                             | ExpressionInner::Function { inner: func, .. } => {
-                                acc.extend(visit_func(ev_cx, seen, &loc, func));
+                                acc.extend(visit_func(ev_cx, seen, &loc, func)?);
                             }
                             ExpressionInner::Class { inner: cls, .. } => {
-                                acc.extend(visit_class(ev_cx, seen, &loc, cls));
+                                acc.extend(visit_class(ev_cx, seen, &loc, cls)?);
                             }
                             _ => {}
                         }
@@ -735,11 +734,11 @@ fn downstream_effects<'ev, 'b, 'cx>(
                     Def::Function(box FunctionDefData {
                         function_: func, ..
                     }) => {
-                        acc.extend(visit_func(ev_cx, seen, &loc, func));
+                        acc.extend(visit_func(ev_cx, seen, &loc, func)?);
                     }
                     Def::Component(_) => {}
                     Def::Class(box ClassDefData { class_: cls, .. }) => {
-                        acc.extend(visit_class(ev_cx, seen, &loc, cls));
+                        acc.extend(visit_class(ev_cx, seen, &loc, cls)?);
                     }
                     // Records don't contain React hooks/rules violation
                     Def::Record(_) => {}
@@ -750,7 +749,10 @@ fn downstream_effects<'ev, 'b, 'cx>(
                             ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
                             seen: &mut ALocSet,
                             loc: &ALoc,
-                        ) -> Vec<ErrorMessage<ALoc>> {
+                        ) -> Result<
+                            Vec<ErrorMessage<ALoc>>,
+                            flow_utils_concurrency::job_error::JobError,
+                        > {
                             match bind {
                                 Binding::Select {
                                     parent: (_, bind), ..
@@ -776,7 +778,7 @@ fn downstream_effects<'ev, 'b, 'cx>(
                                         ExpressionInner::Class { inner: cls, .. } => {
                                             visit_class(ev_cx, seen, loc, cls)
                                         }
-                                        _ => vec![],
+                                        _ => Ok(vec![]),
                                     }
                                 }
                                 Binding::Root(Root::Contextual(box ContextualData {
@@ -792,24 +794,24 @@ fn downstream_effects<'ev, 'b, 'cx>(
                                         ExpressionInner::Class { inner: cls, .. } => {
                                             visit_class(ev_cx, seen, loc, cls)
                                         }
-                                        _ => vec![],
+                                        _ => Ok(vec![]),
                                     }
                                 }
                                 Binding::Root(Root::FunctionValue(box FunctionValueData {
                                     function_: func,
                                     ..
                                 })) => visit_func(ev_cx, seen, loc, func),
-                                _ => vec![],
+                                _ => Ok(vec![]),
                             }
                         }
-                        acc.extend(handle_binding(bind, ev_cx, seen, &loc));
+                        acc.extend(handle_binding(bind, ev_cx, seen, &loc)?);
                     }
                     _ => {}
                 }
             }
-            acc
+            Ok(acc)
         }
-        None => vec![],
+        None => Ok(vec![]),
     }
 }
 
@@ -916,22 +918,25 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
     fn function_entry(
         &mut self,
         body: &ast::function::Body<ALoc, ALoc>,
-    ) -> Vec<ErrorMessage<ALoc>> {
-        let Ok(()) = ast_visitor::function_body_any_default(self, body);
-        std::mem::take(&mut self.effects)
+    ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
+        ast_visitor::function_body_any_default(self, body)?;
+        Ok(std::mem::take(&mut self.effects))
     }
 
     fn component_entry(
         &mut self,
         body: &(ALoc, ast::statement::Block<ALoc, ALoc>),
-    ) -> Vec<ErrorMessage<ALoc>> {
-        let Ok(()) = ast_visitor::component_body_default(self, body);
-        std::mem::take(&mut self.effects)
+    ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
+        ast_visitor::component_body_default(self, body)?;
+        Ok(std::mem::take(&mut self.effects))
     }
 
-    fn class_entry(&mut self, body: &ast::class::Body<ALoc, ALoc>) -> Vec<ErrorMessage<ALoc>> {
-        let Ok(()) = ast_visitor::class_body_default(self, body);
-        std::mem::take(&mut self.effects)
+    fn class_entry(
+        &mut self,
+        body: &ast::class::Body<ALoc, ALoc>,
+    ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
+        ast_visitor::class_body_default(self, body)?;
+        Ok(std::mem::take(&mut self.effects))
     }
 
     fn in_target_scope<R>(&mut self, t: bool, f: impl FnOnce(&mut Self) -> R) -> R {
@@ -942,11 +947,14 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
         res
     }
 
-    fn base_expression(&mut self, e: &ast::expression::Expression<ALoc, ALoc>) {
+    fn base_expression(
+        &mut self,
+        e: &ast::expression::Expression<ALoc, ALoc>,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         if self.in_target {
             match e.deref() {
                 ExpressionInner::Identifier { loc, .. } => {
-                    let new_effects = downstream_effects(self.ev_cx, &mut *self.seen, loc.dupe());
+                    let new_effects = downstream_effects(self.ev_cx, &mut *self.seen, loc.dupe())?;
                     self.effects.extend(new_effects);
                 }
                 ExpressionInner::ArrowFunction { loc, inner: func }
@@ -956,7 +964,7 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
                         let new_effects = {
                             let mut visitor =
                                 EffectVisitor::new(self.ev_cx, false, &mut *self.seen);
-                            visitor.function_entry(&func.body)
+                            visitor.function_entry(&func.body)?
                         };
                         self.effects.extend(new_effects);
                         self.seen.remove(loc);
@@ -965,21 +973,24 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
                 _ => {}
             }
         }
-        let Ok(()) = ast_visitor::expression_default(self, e);
+        ast_visitor::expression_default(self, e)
     }
 
-    fn permissive_expression(&mut self, expr: &ast::expression::Expression<ALoc, ALoc>) {
+    fn permissive_expression(
+        &mut self,
+        expr: &ast::expression::Expression<ALoc, ALoc>,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         match expr.deref() {
             ExpressionInner::Member { inner: mem, .. } => {
-                self.visit_member(Permissiveness::Permissive, mem);
+                self.visit_member(Permissiveness::Permissive, mem)?;
             }
             ExpressionInner::OptionalMember { inner: mem, .. } => {
-                self.visit_optional_member(Permissiveness::Permissive, mem);
+                self.visit_optional_member(Permissiveness::Permissive, mem)?;
             }
             ExpressionInner::Unary { inner, .. }
                 if inner.operator == ast::expression::UnaryOperator::Not =>
             {
-                self.permissive_expression(&inner.argument);
+                self.permissive_expression(&inner.argument)?;
             }
             ExpressionInner::Binary { inner, .. }
                 if matches!(
@@ -990,24 +1001,25 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
                         | ast::expression::BinaryOperator::StrictNotEqual
                 ) =>
             {
-                self.permissive_expression(&inner.left);
-                self.permissive_expression(&inner.right);
+                self.permissive_expression(&inner.left)?;
+                self.permissive_expression(&inner.right)?;
             }
             ExpressionInner::Logical { inner, .. } => {
-                self.permissive_expression(&inner.left);
-                self.permissive_expression(&inner.right);
+                self.permissive_expression(&inner.left)?;
+                self.permissive_expression(&inner.right)?;
             }
             _ => {
-                let Ok(()) = self.expression(expr);
+                self.expression(expr)?;
             }
         }
+        Ok(())
     }
 
     fn target_expression(
         &mut self,
         expr: &ast::expression::Expression<ALoc, ALoc>,
         err_kind: RefInRenderKind,
-    ) {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let loc = expr.loc().dupe();
         let reason = match expr.deref() {
             ExpressionInner::Identifier { loc, inner } => flow_common::reason::mk_reason(
@@ -1033,64 +1045,59 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
                 self.effects.extend(new_effects);
             }
         }
-        let Ok(()) = self.expression(expr);
+        self.expression(expr)
     }
 
     fn visit_arg_list(
         &mut self,
         hook_call: Option<HookCallKind>,
         arg_list: &ast::expression::ArgList<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         for (i, arg) in arg_list.arguments.iter().enumerate() {
             match arg {
                 ExpressionOrSpread::Expression(exp) => match hook_call {
                     Some(HookCallKind::UseMemo) if i == 0 => {
-                        self.in_target_scope(true, |this| {
-                            let Ok(()) = this.expression(exp);
-                        });
+                        self.in_target_scope(true, |this| this.expression(exp))?;
                     }
                     Some(_) => {
-                        self.in_target_scope(false, |this| {
-                            let Ok(()) = this.expression(exp);
-                        });
+                        self.in_target_scope(false, |this| this.expression(exp))?;
                     }
                     None => {
                         self.in_target_scope(false, |this| {
-                            this.target_expression(exp, RefInRenderKind::Argument);
-                        });
+                            this.target_expression(exp, RefInRenderKind::Argument)
+                        })?;
                     }
                 },
                 ExpressionOrSpread::Spread(spread) if hook_call.is_some() => {
                     self.in_target_scope(false, |this| {
-                        this.target_expression(&spread.argument, RefInRenderKind::Argument);
-                    });
+                        this.target_expression(&spread.argument, RefInRenderKind::Argument)
+                    })?;
                 }
                 ExpressionOrSpread::Spread(spread) => {
-                    self.in_target_scope(false, |this| {
-                        let Ok(()) = this.spread_element(spread);
-                    });
+                    self.in_target_scope(false, |this| this.spread_element(spread))?;
                 }
             }
         }
+        Ok(())
     }
 
     fn visit_optional_member(
         &mut self,
         permissive: Permissiveness,
         expr: &ast::expression::OptionalMember<ALoc, ALoc>,
-    ) {
-        self.visit_member(permissive, &expr.member);
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.visit_member(permissive, &expr.member)
     }
 
     fn visit_member(
         &mut self,
         permissive: Permissiveness,
         expr: &ast::expression::Member<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let _object = &expr.object;
         let loc = _object.loc().dupe();
         let property = &expr.property;
-        let Ok(()) = self.member_property(property);
+        self.member_property(property)?;
         match property {
             Property::PropertyIdentifier(prop_ident)
                 if prop_ident.name.as_str() == "current"
@@ -1098,21 +1105,28 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
                         || (permissive == Permissiveness::Pattern
                             && !is_initializing(self.ev_cx, &loc))) =>
             {
-                self.target_expression(_object, RefInRenderKind::Access);
+                self.target_expression(_object, RefInRenderKind::Access)?;
             }
             _ => {
-                let Ok(()) = self.expression(_object);
+                self.expression(_object)?;
             }
         }
         if self.in_target {
-            let new_effects = downstream_effects(self.ev_cx, &mut *self.seen, loc);
+            let new_effects = downstream_effects(self.ev_cx, &mut *self.seen, loc)?;
             self.effects.extend(new_effects);
         }
+        Ok(())
     }
 }
 
-impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !>
-    for EffectVisitor<'_, '_, '_, '_>
+impl<'ast>
+    ast_visitor::AstVisitor<
+        'ast,
+        ALoc,
+        ALoc,
+        &'ast ALoc,
+        flow_utils_concurrency::job_error::JobError,
+    > for EffectVisitor<'_, '_, '_, '_>
 {
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
@@ -1126,7 +1140,7 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !>
         &mut self,
         _loc: &'ast ALoc,
         _expr: &'ast ast::expression::Member<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         panic!("Call visit_member")
     }
 
@@ -1134,20 +1148,23 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !>
         &mut self,
         _loc: &'ast ALoc,
         _expr: &'ast ast::expression::OptionalMember<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         panic!("Call visit_optional_member")
     }
 
-    fn expression(&mut self, expr: &'ast ast::expression::Expression<ALoc, ALoc>) -> Result<(), !> {
+    fn expression(
+        &mut self,
+        expr: &'ast ast::expression::Expression<ALoc, ALoc>,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         match expr.deref() {
             ExpressionInner::Member { inner: mem, .. } => {
-                self.visit_member(Permissiveness::Strict, mem);
+                self.visit_member(Permissiveness::Strict, mem)?;
             }
             ExpressionInner::OptionalMember { inner: mem, .. } => {
-                self.visit_optional_member(Permissiveness::Strict, mem);
+                self.visit_optional_member(Permissiveness::Strict, mem)?;
             }
             _ => {
-                self.base_expression(expr);
+                self.base_expression(expr)?;
             }
         }
         Ok(())
@@ -1156,16 +1173,16 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !>
     fn pattern_expression(
         &mut self,
         expr: &'ast ast::expression::Expression<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         match expr.deref() {
             ExpressionInner::Member { inner: mem, .. } => {
-                self.visit_member(Permissiveness::Pattern, mem);
+                self.visit_member(Permissiveness::Pattern, mem)?;
             }
             ExpressionInner::OptionalMember { inner: mem, .. } => {
-                self.visit_optional_member(Permissiveness::Pattern, mem);
+                self.visit_optional_member(Permissiveness::Pattern, mem)?;
             }
             _ => {
-                self.base_expression(expr);
+                self.base_expression(expr)?;
             }
         }
         Ok(())
@@ -1174,13 +1191,15 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !>
     fn predicate_expression(
         &mut self,
         expr: &'ast ast::expression::Expression<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        self.permissive_expression(expr);
-        Ok(())
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.permissive_expression(expr)
     }
 
-    fn arg_list(&mut self, arg_list: &'ast ast::expression::ArgList<ALoc, ALoc>) -> Result<(), !> {
-        self.visit_arg_list(None, arg_list);
+    fn arg_list(
+        &mut self,
+        arg_list: &'ast ast::expression::ArgList<ALoc, ALoc>,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.visit_arg_list(None, arg_list)?;
         Ok(())
     }
 
@@ -1188,13 +1207,13 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !>
         &mut self,
         _loc: &'ast ALoc,
         expr: &'ast ast::expression::Call<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let callee = &expr.callee;
         let callee_loc = callee.loc().dupe();
         let targs = &expr.targs;
         let arguments = &expr.arguments;
 
-        let callee_ty = || -> Type {
+        let callee_ty = || -> Result<Type, flow_utils_concurrency::job_error::JobError> {
             match callee.deref() {
                 ExpressionInner::Identifier { inner: ident, .. }
                     if self.ev_cx.cx.hook_compatibility() && ident.name.as_str() != "require" =>
@@ -1211,17 +1230,17 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !>
                         callee_loc.dupe(),
                     )
                 }
-                _ => self
+                _ => Ok(self
                     .ev_cx
                     .type_map
                     .get(&callee_loc)
                     .cloned()
-                    .expect("callee_loc not found in type_map"),
+                    .expect("callee_loc not found in type_map")),
             }
         };
         let callee_is_nonhook = {
             !self.toplevel || {
-                match hook_callee(self.ev_cx.cx, callee_ty()) {
+                match hook_callee(self.ev_cx.cx, callee_ty()?) {
                     HookResult::HookCallee(_) => false,
                     HookResult::MaybeHookCallee { .. } => true,
                     HookResult::NotHookCallee(_) => true,
@@ -1252,28 +1271,32 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !>
                 None => Some(HookCallKind::Other),
             }
         };
-        self.in_target_scope(true, |this| {
-            let Ok(()) = this.expression(callee);
-        });
+        self.in_target_scope(true, |this| this.expression(callee))?;
         if let Some(targs) = targs {
-            let Ok(()) = self.call_type_args(targs);
+            self.call_type_args(targs)?;
         }
-        self.visit_arg_list(hook_call, arguments);
+        self.visit_arg_list(hook_call, arguments)?;
         Ok(())
     }
 
-    fn function_body_any(&mut self, _body: &'ast ast::function::Body<ALoc, ALoc>) -> Result<(), !> {
+    fn function_body_any(
+        &mut self,
+        _body: &'ast ast::function::Body<ALoc, ALoc>,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         Ok(())
     }
 
-    fn class_body(&mut self, _cls_body: &'ast ast::class::Body<ALoc, ALoc>) -> Result<(), !> {
+    fn class_body(
+        &mut self,
+        _cls_body: &'ast ast::class::Body<ALoc, ALoc>,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         Ok(())
     }
 
     fn component_body(
         &mut self,
         _body: &'ast (ALoc, ast::statement::Block<ALoc, ALoc>),
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         Ok(())
     }
 }
@@ -1312,7 +1335,7 @@ impl<'b, 'cx> EffectVisitorFactory<'b, 'cx> {
     fn run_function_entry(
         &self,
         body: &ast::function::Body<ALoc, ALoc>,
-    ) -> Vec<ErrorMessage<ALoc>> {
+    ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
         let mut seen = ALocSet::new();
         let mut visitor = EffectVisitor::new(&self.ev_cx, true, &mut seen);
         visitor.function_entry(body)
@@ -1321,7 +1344,7 @@ impl<'b, 'cx> EffectVisitorFactory<'b, 'cx> {
     fn run_component_entry(
         &self,
         body: &(ALoc, ast::statement::Block<ALoc, ALoc>),
-    ) -> Vec<ErrorMessage<ALoc>> {
+    ) -> Result<Vec<ErrorMessage<ALoc>>, flow_utils_concurrency::job_error::JobError> {
         let mut seen = ALocSet::new();
         let mut visitor = EffectVisitor::new(&self.ev_cx, true, &mut seen);
         visitor.component_entry(body)
@@ -1360,8 +1383,14 @@ struct WholeAstVisitor<'b, 'cx, 't> {
     hook_call_context: Rc<
         flow_lazy::Lazy<
             Context<'cx>,
-            HookCallContext,
-            Box<dyn FnOnce(&Context<'cx>) -> HookCallContext + 'cx>,
+            Result<HookCallContext, flow_utils_concurrency::job_error::JobError>,
+            Box<
+                dyn FnOnce(
+                        &Context<'cx>,
+                    )
+                        -> Result<HookCallContext, flow_utils_concurrency::job_error::JobError>
+                    + 'cx,
+            >,
         >,
     >,
     in_context_possibly_expecting_fn_component_or_hook: bool,
@@ -1380,7 +1409,7 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
             under_function_or_class_body,
             cx,
             rrid,
-            hook_call_context: Rc::new(flow_lazy::Lazy::new_forced(initial_hook_call_context)),
+            hook_call_context: Rc::new(flow_lazy::Lazy::new_forced(Ok(initial_hook_call_context))),
             in_context_possibly_expecting_fn_component_or_hook: false,
         }
     }
@@ -1389,8 +1418,8 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
         &mut self,
         loc_for_hint: Option<ALoc>,
         fn_: &'t ast::function::Function<ALoc, (ALoc, Type)>,
-    ) {
-        self.visit_function_with_id(loc_for_hint, fn_, None);
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.visit_function_with_id(loc_for_hint, fn_, None)
     }
 
     /// Visit a function with an optional effective id override.
@@ -1401,7 +1430,7 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
         loc_for_hint: Option<ALoc>,
         fn_: &'t ast::function::Function<ALoc, (ALoc, Type)>,
         effective_id: Option<&ast::Identifier<ALoc, (ALoc, Type)>>,
-    ) {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let id = effective_id.or(fn_.id.as_ref());
         let params = &fn_.params;
         let params_list = &params.params;
@@ -1418,27 +1447,27 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
                 );
                 let factory =
                     EffectVisitorFactory::new(self.cx, true, self.rrid.clone(), self.tast);
-                factory.run_function_entry(&untyped_body)
+                factory.run_function_entry(&untyped_body)?
             };
             emit_effect_errors(self.cx, effects);
             if let Some(ident) = &fn_.id {
-                let Ok(()) = self.function_identifier(ident);
+                self.function_identifier(ident)?;
             }
             if let Some(tparams) = &fn_.tparams {
-                let Ok(()) = self.type_params(&ast_visitor::TypeParamsContext::Function, tparams);
+                self.type_params(&ast_visitor::TypeParamsContext::Function, tparams)?;
             }
             {
                 let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid.clone());
-                let Ok(()) = cav.function_params(params);
+                cav.function_params(params)?;
             }
-            let Ok(()) = self.function_return_annotation(return_);
+            self.function_return_annotation(return_)?;
             {
                 let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid.clone());
-                let Ok(()) = cav.function_component_body(body);
+                cav.function_component_body(body)?;
             }
             if let Some(predicate) = &fn_.predicate {
                 let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid.clone());
-                let Ok(()) = cav.predicate(predicate);
+                cav.predicate(predicate)?;
             }
         } else {
             let cur_hook_call_context = self.hook_call_context.dupe();
@@ -1484,102 +1513,125 @@ impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
             };
 
             self.hook_call_context = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
-                let is_definitely_non_component_due_to_typing = || -> bool {
-                    // Not returning `React.Node`
-                    let ret_check = match &return_t {
-                        Some(t) => {
-                            let reason = flow_typing_type::type_util::reason_of_t(t);
-                            let react_node_t = flow_js::get_builtin_react_type_non_speculating(
-                                cx,
-                                reason,
-                                None,
-                                intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactNodeType,
-                            );
-                            !flow_js::FlowJs::speculative_subtyping_succeeds(cx, t, &react_node_t)
-                        }
-                        None => true, // TypeGuard
-                    };
-                    ret_check
-                        || params_definitely_not_component
-                        || match &props_data {
-                            // function Component(props: {...})
-                            // forwardRef(props: {...}, ref: ...)
-                            Some((props_loc, props_t)) => {
-                                let empty_iface =
-                                    type_annotation::mk_empty_interface_type(cx, props_loc.dupe());
+                let is_definitely_non_component_due_to_typing =
+                    || -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+                        // Not returning `React.Node`
+                        let ret_check = match &return_t {
+                            Some(t) => {
+                                let reason = flow_typing_type::type_util::reason_of_t(t);
+                                let react_node_t = flow_js::get_builtin_react_type_non_speculating(
+                                    cx,
+                                    reason,
+                                    None,
+                                    intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactNodeType,
+                                )?;
                                 !flow_js::FlowJs::speculative_subtyping_succeeds(
                                     cx,
-                                    props_t,
-                                    &empty_iface,
-                                )
+                                    t,
+                                    &react_node_t,
+                                )?
                             }
-                            None => false,
-                        }
-                };
+                            None => true, // TypeGuard
+                        };
+                        Ok(ret_check
+                            || params_definitely_not_component
+                            || match &props_data {
+                                // function Component(props: {...})
+                                // forwardRef(props: {...}, ref: ...)
+                                Some((props_loc, props_t)) => {
+                                    let empty_iface = type_annotation::mk_empty_interface_type(
+                                        cx,
+                                        props_loc.dupe(),
+                                    )?;
+                                    !flow_js::FlowJs::speculative_subtyping_succeeds(
+                                        cx,
+                                        props_t,
+                                        &empty_iface,
+                                    )?
+                                }
+                                None => false,
+                            })
+                    };
 
-                let is_definitely_component_due_to_hint = || -> bool {
-                    match &loc_for_hint {
-                        None => false,
-                        Some(hint_loc) => {
-                            let lazy_hint = type_env::get_hint(cx, hint_loc.dupe());
-                            let reason = flow_common::reason::mk_reason(
-                                VirtualReasonDesc::RFunctionType,
-                                hint_loc.dupe(),
-                            );
-                            match (lazy_hint.1)(cx, true, Some(true), reason.dupe()) {
-                                type_::HintEvalResult::NoHint
-                                | type_::HintEvalResult::EncounteredPlaceholder
-                                | type_::HintEvalResult::DecompositionError => false,
-                                type_::HintEvalResult::HintAvailable(hint_t, _) => {
-                                    match flow_js::FlowJs::singleton_concrete_type_for_inspection(
-                                        cx, &reason, &hint_t,
-                                    ) {
-                                        Ok(t) => matches!(
-                                            t.deref(),
-                                            TypeInner::DefT(_, def_t) if matches!(
-                                                def_t.deref(),
-                                                flow_typing_type::type_::DefTInner::ReactAbstractComponentT(_)
-                                            )
-                                        ),
-                                        Err(_) => false,
+                let is_definitely_component_due_to_hint =
+                    || -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+                        Ok(match &loc_for_hint {
+                            None => false,
+                            Some(hint_loc) => {
+                                let lazy_hint = type_env::get_hint(cx, hint_loc.dupe());
+                                let reason = flow_common::reason::mk_reason(
+                                    VirtualReasonDesc::RFunctionType,
+                                    hint_loc.dupe(),
+                                );
+                                match (lazy_hint.1)(cx, true, Some(true), reason.dupe())? {
+                                    type_::HintEvalResult::NoHint
+                                    | type_::HintEvalResult::EncounteredPlaceholder
+                                    | type_::HintEvalResult::DecompositionError => false,
+                                    type_::HintEvalResult::HintAvailable(hint_t, _) => {
+                                        match flow_js::FlowJs::singleton_concrete_type_for_inspection(
+                                            cx, &reason, &hint_t,
+                                        ) {
+                                            Ok(t) => matches!(
+                                                t.deref(),
+                                                TypeInner::DefT(_, def_t) if matches!(
+                                                    def_t.deref(),
+                                                    flow_typing_type::type_::DefTInner::ReactAbstractComponentT(_)
+                                                )
+                                            ),
+                                            Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => return Err(flow_utils_concurrency::job_error::JobError::Canceled(c)),
+                                            Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t)),
+                                            Err(_) => false,
+                                        }
                                     }
                                 }
                             }
-                        }
-                    }
-                };
+                        })
+                    };
 
-                if possibly_in_context_allow_hook_call {
-                    if cx.hook_compatibility() || is_definitely_component_due_to_hint() {
+                Ok(if possibly_in_context_allow_hook_call {
+                    if cx.hook_compatibility() || is_definitely_component_due_to_hint()? {
                         HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode
-                    } else if id_name.as_ref().is_some_and(|name: &FlowSmolStr| {
-                        !is_hook_function
-                            && componentlike_name(name.as_str())
-                            && is_definitely_non_component_due_to_typing()
-                    }) {
+                    } else if match id_name.as_ref() {
+                        Some(name) => {
+                            !is_hook_function
+                                && componentlike_name(name.as_str())
+                                && is_definitely_non_component_due_to_typing()?
+                        }
+                        None => false,
+                    } {
                         HookCallContext::HookCallDefinitelyNotAllowed
                     } else {
                         HookCallContext::HookCallStrictlyDisallowedWithoutCompatibilityMode
                     }
-                } else if id_name.as_ref().is_some_and(|name: &FlowSmolStr| {
-                    !saved_in_context
-                        && !is_hook_function
-                        && (!componentlike_name(name.as_str())
-                            || is_definitely_non_component_due_to_typing())
-                }) {
+                } else if match id_name.as_ref() {
+                    Some(name) => {
+                        !saved_in_context
+                            && !is_hook_function
+                            && (!componentlike_name(name.as_str())
+                                || is_definitely_non_component_due_to_typing()?)
+                    }
+                    None => false,
+                } {
                     HookCallContext::HookCallDefinitelyNotAllowed
                 } else {
                     HookCallContext::HookCallNotAllowedUnderUnknownContext
-                }
+                })
             })));
-            let Ok(()) = ast_visitor::function_default(self, &fn_.sig_loc, fn_);
+            ast_visitor::function_default(self, &fn_.sig_loc, fn_)?;
             self.hook_call_context = cur_hook_call_context;
         }
+        Ok(())
     }
 }
 
-impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
-    for WholeAstVisitor<'b, 'cx, 't>
+impl<'b, 'cx, 't>
+    ast_visitor::AstVisitor<
+        't,
+        ALoc,
+        (ALoc, Type),
+        &'t ALoc,
+        flow_utils_concurrency::job_error::JobError,
+    > for WholeAstVisitor<'b, 'cx, 't>
 {
     fn normalize_loc(loc: &'t ALoc) -> &'t ALoc {
         loc
@@ -1593,7 +1645,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t ALoc,
         cmp: &'t ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let effects = match &cmp.body {
             None => vec![],
             Some(body) => {
@@ -1603,30 +1655,30 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
                 );
                 let factory =
                     EffectVisitorFactory::new(self.cx, false, self.rrid.clone(), self.tast);
-                factory.run_component_entry(&untyped_body)
+                factory.run_component_entry(&untyped_body)?
             }
         };
         emit_effect_errors(self.cx, effects);
         let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid.clone());
-        cav.visit_toplevel_component(cmp);
+        cav.visit_toplevel_component(cmp)?;
         Ok(())
     }
 
     fn expression(
         &mut self,
         expr: &'t ast::expression::Expression<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         match expr.deref() {
             ExpressionInner::ArrowFunction { loc, inner: fn_ } => {
                 let hint_loc = loc.0.dupe();
-                self.visit_function(Some(hint_loc), fn_);
+                self.visit_function(Some(hint_loc), fn_)?;
             }
             ExpressionInner::Function { loc, inner: fn_ } => {
                 let hint_loc = loc.0.dupe();
-                self.visit_function(Some(hint_loc), fn_);
+                self.visit_function(Some(hint_loc), fn_)?;
             }
             _ => {
-                let Ok(()) = ast_visitor::expression_default(self, expr);
+                ast_visitor::expression_default(self, expr)?;
             }
         }
         Ok(())
@@ -1636,8 +1688,8 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t ALoc,
         fn_: &'t ast::function::Function<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
-        self.visit_function(None, fn_);
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.visit_function(None, fn_)?;
         Ok(())
     }
 
@@ -1645,7 +1697,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         annot: &'t (ALoc, Type),
         expr: &'t ast::expression::Call<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let call_loc = &annot.0;
         let callee = &expr.callee;
         let callee_loc = &callee.loc().0;
@@ -1665,7 +1717,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
                     None,
                     Name::new(ident.name.dupe()),
                     callee_loc.dupe(),
-                )
+                )?
             }
             _ => callee_ty.dupe(),
         };
@@ -1677,7 +1729,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
                     && self.under_function_or_class_body)
                 {
                     match self.hook_call_context.get_forced(self.cx) {
-                        HookCallContext::HookCallDefinitelyNotAllowed => {
+                        Ok(HookCallContext::HookCallDefinitelyNotAllowed) => {
                             hook_error(
                                 self.cx,
                                 call_loc.dupe(),
@@ -1685,7 +1737,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
                                 error_message::HookRule::HookDefinitelyNotInComponentOrHook,
                             );
                         }
-                        HookCallContext::HookCallNotAllowedUnderUnknownContext => {
+                        Ok(HookCallContext::HookCallNotAllowedUnderUnknownContext) => {
                             hook_error(
                                 self.cx,
                                 call_loc.dupe(),
@@ -1693,7 +1745,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
                                 error_message::HookRule::HookInUnknownContext,
                             );
                         }
-                        HookCallContext::HookCallNotAllowedUnderNormalFunctionInComponentOrHooks => {
+                        Ok(HookCallContext::HookCallNotAllowedUnderNormalFunctionInComponentOrHooks) => {
                             hook_error(
                                 self.cx,
                                 call_loc.dupe(),
@@ -1701,7 +1753,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
                                 error_message::HookRule::ConditionalHook,
                             );
                         }
-                        HookCallContext::HookCallStrictlyDisallowedWithoutCompatibilityMode => {
+                        Ok(HookCallContext::HookCallStrictlyDisallowedWithoutCompatibilityMode) => {
                             hook_error(
                                 self.cx,
                                 call_loc.dupe(),
@@ -1709,7 +1761,8 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
                                 error_message::HookRule::HookNotInComponentSyntaxComponentOrHookSyntaxHook,
                             );
                         }
-                        HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode => {}
+                        Ok(HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode) => {}
+                        Err(c) => return Err(c.dupe()),
                     }
                 }
             }
@@ -1720,7 +1773,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         // Within call like `React.memo`, we can pass fn components.
         self.in_context_possibly_expecting_fn_component_or_hook =
             compatibility_call(expr) || cur_in_context;
-        let Ok(()) = ast_visitor::call_default(self, annot, expr);
+        ast_visitor::call_default(self, annot, expr)?;
         self.in_context_possibly_expecting_fn_component_or_hook = cur_in_context;
         Ok(())
     }
@@ -1728,7 +1781,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
     fn export_default_declaration_decl(
         &mut self,
         decl: &'t ast::statement::export_default_declaration::Declaration<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let cur_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
         let file_key = self.cx.file();
         let filename_str = file_key.as_str();
@@ -1760,7 +1813,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
             false
         };
         self.in_context_possibly_expecting_fn_component_or_hook = next_in_context || cur_in_context;
-        let Ok(()) = ast_visitor::export_default_declaration_decl_default(self, decl);
+        ast_visitor::export_default_declaration_decl_default(self, decl)?;
         self.in_context_possibly_expecting_fn_component_or_hook = cur_in_context;
         Ok(())
     }
@@ -1768,7 +1821,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
     fn object_property(
         &mut self,
         prop: &'t ast::expression::object::NormalProperty<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let cur_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
         let next_in_context = match prop {
             NormalProperty::Method {
@@ -1790,7 +1843,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         };
         // We permissively assume that it's a hook stored in object property.
         self.in_context_possibly_expecting_fn_component_or_hook = next_in_context;
-        let Ok(()) = ast_visitor::object_property_default(self, prop);
+        ast_visitor::object_property_default(self, prop)?;
         self.in_context_possibly_expecting_fn_component_or_hook = cur_in_context;
         Ok(())
     }
@@ -1799,7 +1852,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         loc: &'t ALoc,
         ret: &'t ast::statement::Return<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let cur_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
         let next_in_context = match &ret.argument {
             Some(expr)
@@ -1814,7 +1867,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         };
         // We permissively assume that we are returning a fn component or hook.
         self.in_context_possibly_expecting_fn_component_or_hook = next_in_context;
-        let Ok(()) = ast_visitor::return_default(self, loc, ret);
+        ast_visitor::return_default(self, loc, ret)?;
         self.in_context_possibly_expecting_fn_component_or_hook = cur_in_context;
         Ok(())
     }
@@ -1822,7 +1875,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
     fn body_expression(
         &mut self,
         expr: &'t ast::expression::Expression<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let cur_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
         let next_in_context = match expr.deref() {
             ExpressionInner::ArrowFunction { .. } | ExpressionInner::Function { .. } => {
@@ -1832,7 +1885,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         };
         // We permissively assume that the anonymous function can be a fn component or hook.
         self.in_context_possibly_expecting_fn_component_or_hook = next_in_context;
-        let Ok(()) = ast_visitor::body_expression_default(self, expr);
+        ast_visitor::body_expression_default(self, expr)?;
         self.in_context_possibly_expecting_fn_component_or_hook = cur_in_context;
         Ok(())
     }
@@ -1841,10 +1894,10 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         kind: ast::VariableKind,
         decl: &'t ast::statement::variable::Declarator<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let id_pat = &decl.id;
         let init = &decl.init;
-        let Ok(()) = self.variable_declarator_pattern(kind, id_pat);
+        self.variable_declarator_pattern(kind, id_pat)?;
         let cur_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
         let (next_in_context, effective_id) = match (id_pat, init) {
             (
@@ -1886,14 +1939,14 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
                     ExpressionInner::ArrowFunction { loc, inner: f }
                     | ExpressionInner::Function { loc, inner: f } => {
                         let hint_loc = loc.0.dupe();
-                        self.visit_function_with_id(Some(hint_loc), f, effective_id.as_ref());
+                        self.visit_function_with_id(Some(hint_loc), f, effective_id.as_ref())?;
                     }
                     _ => unreachable!(),
                 }
             }
             _ => {
                 if let Some(init_expr) = &decl.init {
-                    let Ok(()) = self.expression(init_expr);
+                    self.expression(init_expr)?;
                 }
             }
         }
@@ -1926,8 +1979,8 @@ impl<'b, 'cx, 't> ComponentAstVisitor<'b, 'cx, 't> {
     fn visit_toplevel_component(
         &mut self,
         cmp: &'t ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
-    ) {
-        let Ok(()) = ast_visitor::component_declaration_default(self, &cmp.sig_loc, cmp);
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        ast_visitor::component_declaration_default(self, &cmp.sig_loc, cmp)
     }
 
     fn in_conditional<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
@@ -1941,32 +1994,41 @@ impl<'b, 'cx, 't> ComponentAstVisitor<'b, 'cx, 't> {
         &mut self,
         is_last: bool,
         case: &'t ast::statement::switch::Case<ALoc, (ALoc, Type)>,
-    ) {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         if case.test.is_some() || !is_last {
-            self.in_conditional(|this| {
-                let Ok(()) = this.switch_case(case);
-            });
+            self.in_conditional(|this| this.switch_case(case))?;
         } else {
-            let Ok(()) = self.switch_case(case);
+            self.switch_case(case)?;
         }
+        Ok(())
     }
 
-    fn try_block(&mut self, block: &'t ast::statement::Block<ALoc, (ALoc, Type)>) {
+    fn try_block(
+        &mut self,
+        block: &'t ast::statement::Block<ALoc, (ALoc, Type)>,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let (cur, cur_try) = self.conditional_state.enter_try();
-        let Ok(()) = self.statement_list(&block.body);
+        self.statement_list(&block.body)?;
         self.conditional_state.reset_try(cur, cur_try);
+        Ok(())
     }
 
     fn function_component_body(
         &mut self,
         body: &'t ast::function::Body<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         ast_visitor::function_body_any_default(self, body)
     }
 }
 
-impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
-    for ComponentAstVisitor<'b, 'cx, 't>
+impl<'b, 'cx, 't>
+    ast_visitor::AstVisitor<
+        't,
+        ALoc,
+        (ALoc, Type),
+        &'t ALoc,
+        flow_utils_concurrency::job_error::JobError,
+    > for ComponentAstVisitor<'b, 'cx, 't>
 {
     fn normalize_loc(loc: &'t ALoc) -> &'t ALoc {
         loc
@@ -1983,9 +2045,9 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t ALoc,
         cmp: &'t ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid.clone());
-        cav.visit_toplevel_component(cmp);
+        cav.visit_toplevel_component(cmp)?;
         Ok(())
     }
 
@@ -1994,7 +2056,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         annot: &'t (ALoc, Type),
         expr: &'t ast::expression::Call<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let call_loc = &annot.0;
         let callee = &expr.callee;
         let callee_loc = &callee.loc().0;
@@ -2014,7 +2076,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
                     None,
                     Name::new(ident.name.dupe()),
                     callee_loc.dupe(),
-                )
+                )?
             }
             _ => callee_ty.dupe(),
         };
@@ -2047,7 +2109,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
             HookResult::AnyCallee => {}
         }
 
-        let Ok(()) = ast_visitor::call_default(self, annot, expr);
+        ast_visitor::call_default(self, annot, expr)?;
         self.conditional_state.throwable();
         Ok(())
     }
@@ -2056,8 +2118,8 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         loc: &'t (ALoc, Type),
         expr: &'t ast::expression::New<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
-        let Ok(()) = ast_visitor::new_default(self, loc, expr);
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        ast_visitor::new_default(self, loc, expr)?;
         self.conditional_state.throwable();
         Ok(())
     }
@@ -2066,8 +2128,8 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         loc: &'t ALoc,
         throw: &'t ast::statement::Throw<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
-        let Ok(()) = ast_visitor::throw_default(self, loc, throw);
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        ast_visitor::throw_default(self, loc, throw)?;
         self.conditional_state.throwable();
         Ok(())
     }
@@ -2076,8 +2138,8 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         loc: &'t ALoc,
         ret: &'t ast::statement::Return<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
-        let Ok(()) = ast_visitor::return_default(self, loc, ret);
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        ast_visitor::return_default(self, loc, ret)?;
         self.conditional_state.do_return();
         Ok(())
     }
@@ -2086,10 +2148,10 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         loc: &'t ALoc,
         stmt: &'t ast::statement::Labeled<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let name = stmt.label.name.dupe();
         let cur = self.conditional_state.enter_label(name.dupe());
-        let Ok(()) = ast_visitor::labeled_statement_default(self, loc, stmt);
+        ast_visitor::labeled_statement_default(self, loc, stmt)?;
         self.conditional_state.reset_label(&name, cur);
         Ok(())
     }
@@ -2098,12 +2160,12 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t ALoc,
         stmt: &'t ast::statement::Switch<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let (cur, cur_switch) = self.conditional_state.enter_switch_or_loop();
-        let Ok(()) = self.expression(&stmt.discriminant);
+        self.expression(&stmt.discriminant)?;
         let cases_len = stmt.cases.len();
         for (i, case) in stmt.cases.iter().enumerate() {
-            self.visit_switch_case(i == cases_len - 1, case);
+            self.visit_switch_case(i == cases_len - 1, case)?;
         }
         self.conditional_state.reset_switch_or_loop(cur, cur_switch);
         Ok(())
@@ -2113,7 +2175,7 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         loc: &'t ALoc,
         break_stmt: &'t ast::statement::Break<ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let s = break_stmt.label.as_ref().map(|ident| ident.name.dupe());
         self.conditional_state.do_break(s);
         ast_visitor::break_default(self, loc, break_stmt)
@@ -2123,19 +2185,17 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t ALoc,
         stmt: &'t ast::statement::Try<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let block = &stmt.block.1;
         let pre_cond = self.conditional_state.dupe();
-        self.try_block(block);
+        self.try_block(block)?;
         if let Some(handler) = &stmt.handler {
-            self.in_conditional(|this| {
-                let Ok(()) = this.catch_clause(handler);
-            });
+            self.in_conditional(|this| this.catch_clause(handler))?;
         }
         let post_cond = self.conditional_state.dupe();
         self.conditional_state = pre_cond;
         if let Some(finalizer) = &stmt.finalizer {
-            let Ok(()) = self.block(&finalizer.0, &finalizer.1);
+            self.block(&finalizer.0, &finalizer.1)?;
         }
         self.conditional_state =
             conditional_state::ConditionalState::merge(&post_cond, &self.conditional_state);
@@ -2146,20 +2206,18 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         has_else: bool,
         stmt: &'t ast::statement::Statement<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         self.in_conditional(|this| {
-            let Ok(()) = ast_visitor::if_consequent_statement_default(this, has_else, stmt);
-        });
+            ast_visitor::if_consequent_statement_default(this, has_else, stmt)
+        })?;
         Ok(())
     }
 
     fn if_alternate_statement(
         &mut self,
         altern: &'t ast::statement::if_::Alternate<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
-        self.in_conditional(|this| {
-            let Ok(()) = ast_visitor::if_alternate_statement_default(this, altern);
-        });
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.in_conditional(|this| ast_visitor::if_alternate_statement_default(this, altern))?;
         Ok(())
     }
 
@@ -2167,14 +2225,10 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t (ALoc, Type),
         expr: &'t ast::expression::Conditional<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
-        let Ok(()) = self.predicate_expression(&expr.test);
-        self.in_conditional(|this| {
-            let Ok(()) = this.expression(&expr.consequent);
-        });
-        self.in_conditional(|this| {
-            let Ok(()) = this.expression(&expr.alternate);
-        });
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.predicate_expression(&expr.test)?;
+        self.in_conditional(|this| this.expression(&expr.consequent))?;
+        self.in_conditional(|this| this.expression(&expr.alternate))?;
         Ok(())
     }
 
@@ -2182,11 +2236,9 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t (ALoc, Type),
         expr: &'t ast::expression::Logical<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
-        let Ok(()) = self.expression(&expr.left);
-        self.in_conditional(|this| {
-            let Ok(()) = this.expression(&expr.right);
-        });
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.expression(&expr.left)?;
+        self.in_conditional(|this| this.expression(&expr.right))?;
         Ok(())
     }
 
@@ -2194,13 +2246,11 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t ALoc,
         stmt: &'t ast::statement::ForIn<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
-        let Ok(()) = self.for_in_statement_lhs(&stmt.left);
-        let Ok(()) = self.expression(&stmt.right);
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.for_in_statement_lhs(&stmt.left)?;
+        self.expression(&stmt.right)?;
         let (cur, cur_loop) = self.conditional_state.enter_switch_or_loop();
-        self.in_conditional(|this| {
-            let Ok(()) = this.statement(&stmt.body);
-        });
+        self.in_conditional(|this| this.statement(&stmt.body))?;
         self.conditional_state.reset_switch_or_loop(cur, cur_loop);
         Ok(())
     }
@@ -2209,13 +2259,11 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t ALoc,
         stmt: &'t ast::statement::ForOf<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
-        let Ok(()) = self.for_of_statement_lhs(&stmt.left);
-        let Ok(()) = self.expression(&stmt.right);
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        self.for_of_statement_lhs(&stmt.left)?;
+        self.expression(&stmt.right)?;
         let (cur, cur_loop) = self.conditional_state.enter_switch_or_loop();
-        self.in_conditional(|this| {
-            let Ok(()) = this.statement(&stmt.body);
-        });
+        self.in_conditional(|this| this.statement(&stmt.body))?;
         self.conditional_state.reset_switch_or_loop(cur, cur_loop);
         Ok(())
     }
@@ -2224,22 +2272,18 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t ALoc,
         stmt: &'t ast::statement::For<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         if let Some(init) = &stmt.init {
-            let Ok(()) = self.for_statement_init(init);
+            self.for_statement_init(init)?;
         }
         let (cur, cur_loop) = self.conditional_state.enter_switch_or_loop();
         if let Some(test) = &stmt.test {
-            let Ok(()) = self.predicate_expression(test);
+            self.predicate_expression(test)?;
         }
         if let Some(update) = &stmt.update {
-            self.in_conditional(|this| {
-                let Ok(()) = this.expression(update);
-            });
+            self.in_conditional(|this| this.expression(update))?;
         }
-        self.in_conditional(|this| {
-            let Ok(()) = this.statement(&stmt.body);
-        });
+        self.in_conditional(|this| this.statement(&stmt.body))?;
         self.conditional_state.reset_switch_or_loop(cur, cur_loop);
         Ok(())
     }
@@ -2248,12 +2292,10 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t ALoc,
         stmt: &'t ast::statement::While<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let (cur, cur_loop) = self.conditional_state.enter_switch_or_loop();
-        let Ok(()) = self.predicate_expression(&stmt.test);
-        self.in_conditional(|this| {
-            let Ok(()) = this.statement(&stmt.body);
-        });
+        self.predicate_expression(&stmt.test)?;
+        self.in_conditional(|this| this.statement(&stmt.body))?;
         self.conditional_state.reset_switch_or_loop(cur, cur_loop);
         Ok(())
     }
@@ -2262,15 +2304,15 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
         &mut self,
         _loc: &'t ALoc,
         expr: &'t ast::function::Function<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         if let Some(ident) = &expr.id {
-            let Ok(()) = self.function_identifier(ident);
+            self.function_identifier(ident)?;
         }
         if let Some(tparams) = &expr.tparams {
-            let Ok(()) = self.type_params(&ast_visitor::TypeParamsContext::Function, tparams);
+            self.type_params(&ast_visitor::TypeParamsContext::Function, tparams)?;
         }
-        let Ok(()) = self.function_params(&expr.params);
-        let Ok(()) = self.function_return_annotation(&expr.return_);
+        self.function_params(&expr.params)?;
+        self.function_return_annotation(&expr.return_)?;
         {
             let initial_ctx = if expr.effect_ == ast::function::Effect::Hook {
                 HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode
@@ -2279,15 +2321,18 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
             };
             let mut wav =
                 WholeAstVisitor::new(self.tast, true, initial_ctx, self.cx, self.rrid.clone());
-            let Ok(()) = wav.function_body_any(&expr.body);
+            wav.function_body_any(&expr.body)?;
         }
         if let Some(predicate) = &expr.predicate {
-            let Ok(()) = self.predicate(predicate);
+            self.predicate(predicate)?;
         }
         Ok(())
     }
 
-    fn class_body(&mut self, cls_body: &'t ast::class::Body<ALoc, (ALoc, Type)>) -> Result<(), !> {
+    fn class_body(
+        &mut self,
+        cls_body: &'t ast::class::Body<ALoc, (ALoc, Type)>,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let mut wav = WholeAstVisitor::new(
             self.tast,
             true,
@@ -2301,13 +2346,20 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
     fn match_case<B>(
         &mut self,
         case: &'t ast::match_::Case<ALoc, (ALoc, Type), B>,
-        on_case_body: &mut impl FnMut(&mut Self, &'t B) -> Result<(), !>,
-    ) -> Result<(), !> {
+        on_case_body: &mut impl FnMut(
+            &mut Self,
+            &'t B,
+        )
+            -> Result<(), flow_utils_concurrency::job_error::JobError>,
+    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         self.in_conditional(|this| ast_visitor::match_case_default(this, case, on_case_body))
     }
 }
 
-pub fn check_react_rules<'cx>(cx: &Context<'cx>, ast: &ast::Program<ALoc, (ALoc, Type)>) {
+pub fn check_react_rules<'cx>(
+    cx: &Context<'cx>,
+    ast: &ast::Program<ALoc, (ALoc, Type)>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let rrid = {
         let get_t = |cx, pair: &(ALoc, Type)| -> Type {
             let (_, t) = pair;
@@ -2347,5 +2399,5 @@ pub fn check_react_rules<'cx>(cx: &Context<'cx>, ast: &ast::Program<ALoc, (ALoc,
         cx,
         rrid,
     );
-    let Ok(()) = visitor.program(ast);
+    visitor.program(ast)
 }

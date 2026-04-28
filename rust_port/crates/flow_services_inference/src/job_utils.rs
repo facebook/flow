@@ -23,14 +23,24 @@ fn out_of_time(options: &Options, start_time: Instant) -> bool {
 
 // Check as many files as it can before it hits the timeout. The timeout is soft,
 // so the file which exceeds the timeout won't be canceled. We expect most buckets
-// to not hit the timeout
+// to not hit the timeout. The check closure may also return `Err(WorkerCanceled)`
+// to abort the entire batch; in that case the partial accumulator is discarded and
+// the remaining files are returned to the caller for re-queueing.
 fn job_helper<A, B, C>(
-    check: &mut dyn FnMut(FileKey) -> Result<Option<(A, B)>, C>,
+    check: &mut dyn FnMut(
+        FileKey,
+    ) -> Result<
+        Result<Option<(A, B)>, C>,
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    >,
     options: &Options,
     start_time: Instant,
     mut acc: Vec<(FileKey, Result<Option<B>, C>)>,
     files: &[FileKey],
-) -> (Vec<(FileKey, Result<Option<B>, C>)>, Vec<FileKey>) {
+) -> Result<
+    (Vec<(FileKey, Result<Option<B>, C>)>, Vec<FileKey>),
+    flow_utils_concurrency::worker_cancel::WorkerCanceled,
+> {
     let mut iter = files.iter();
     loop {
         if out_of_time(options, start_time) {
@@ -39,12 +49,12 @@ fn job_helper<A, B, C>(
                 acc.len(),
                 iter.len()
             );
-            return (acc, iter.map(|f| f.dupe()).collect());
+            return Ok((acc, iter.map(|f| f.dupe()).collect()));
         }
         let Some(file) = iter.next() else {
-            return (acc, vec![]);
+            return Ok((acc, vec![]));
         };
-        let result = match check(file.dupe()) {
+        let result = match check(file.dupe())? {
             Ok(Some((_, acc))) => Ok(Some(acc)),
             Ok(None) => Ok(None),
             Err(e) => Err(e),
@@ -54,58 +64,79 @@ fn job_helper<A, B, C>(
 }
 
 pub fn mk_job<A, B, C>(
-    check: &mut dyn FnMut(FileKey) -> Result<Option<(A, B)>, C>,
+    check: &mut dyn FnMut(
+        FileKey,
+    ) -> Result<
+        Result<Option<(A, B)>, C>,
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    >,
     options: &Options,
     files: Vec<FileKey>,
-) -> (Vec<(FileKey, Result<Option<B>, C>)>, Vec<FileKey>) {
+) -> Result<
+    (Vec<(FileKey, Result<Option<B>, C>)>, Vec<FileKey>),
+    flow_utils_concurrency::worker_cancel::WorkerCanceled,
+> {
     let start_time = Instant::now();
     job_helper(check, options, start_time, vec![], &files)
 }
 
-/// Like `job_helper`, but pops from a work-stealing deque instead of
-/// iterating a slice. On timeout, remaining files are left on the deque
-/// so idle workers can steal them immediately rather than re-queuing
-/// through the producer.
-fn job_helper_stealing<A, B, C>(
-    check: &mut dyn FnMut(FileKey) -> Result<Option<(A, B)>, C>,
-    options: &Options,
-    start_time: Instant,
-    mut acc: Vec<(FileKey, Result<Option<B>, C>)>,
-    deque: &crossbeam::deque::Worker<FileKey>,
-) -> Vec<(FileKey, Result<Option<B>, C>)> {
-    loop {
-        if out_of_time(options, start_time) {
-            // Leave remaining files on the deque for idle workers to steal.
-            // Files already stolen by others are gone — not double-counted.
-            return acc;
-        }
-        let Some(file) = deque.pop() else {
-            // Deque empty — either all processed locally or some were stolen
-            return acc;
-        };
-        let result = match check(file.dupe()) {
-            Ok(Some((_, acc))) => Ok(Some(acc)),
-            Ok(None) => Ok(None),
-            Err(e) => Err(e),
-        };
-        acc.push((file.dupe(), result));
-    }
-}
-
-/// Like `mk_job`, but uses a work-stealing deque. The caller pushes
-/// files onto the deque before calling this. Other workers can steal
-/// from the deque via its Stealer handle while this worker processes.
+/// Like `mk_job`, but uses a work-stealing deque and a `CheckJobOutcome`-shaped
+/// check closure. The caller pushes files onto the deque before calling this.
+/// Other workers can steal from the deque via its Stealer handle while this
+/// worker processes.
 ///
 /// On timeout, remaining files stay on the deque rather than being
 /// drained and returned. This allows idle workers to steal them
 /// immediately via the work-stealing mechanism.
-pub fn mk_job_stealing<A, B, C>(
-    check: &mut dyn FnMut(FileKey) -> Result<Option<(A, B)>, C>,
+///
+/// On `CheckJobOutcome::Canceled`, returns `Err(WorkerCanceled)` and discards
+/// the partial accumulator. The recheck driver above is responsible for
+/// observing the cancel via the global flag and rolling back the in-progress
+/// recheck.
+pub fn mk_job_stealing<B>(
+    check: &mut dyn FnMut(FileKey) -> crate::merge_service::CheckJobOutcome,
+    extract_acc: impl Fn(crate::merge_service::CheckFileResult) -> B,
     options: &Options,
     deque: &crossbeam::deque::Worker<FileKey>,
-) -> Vec<(FileKey, Result<Option<B>, C>)> {
+) -> Result<
+    Vec<(
+        FileKey,
+        Result<
+            Option<B>,
+            (
+                flow_aloc::ALoc,
+                flow_typing_errors::error_message::InternalError,
+            ),
+        >,
+    )>,
+    flow_utils_concurrency::worker_cancel::WorkerCanceled,
+> {
+    use crate::merge_service::CheckJobOutcome;
+
     let start_time = Instant::now();
-    job_helper_stealing(check, options, start_time, vec![], deque)
+    let mut acc = Vec::new();
+    loop {
+        if out_of_time(options, start_time) {
+            return Ok(acc);
+        }
+        let Some(file) = deque.pop() else {
+            return Ok(acc);
+        };
+        match check(file.dupe()) {
+            CheckJobOutcome::Ok(Some(r)) => {
+                acc.push((file, Ok(Some(extract_acc(r)))));
+            }
+            CheckJobOutcome::Ok(None) => {
+                acc.push((file, Ok(None)));
+            }
+            CheckJobOutcome::PerFileError(e) => {
+                acc.push((file, Err(e)));
+            }
+            CheckJobOutcome::Canceled(c) => {
+                return Err(c);
+            }
+        }
+    }
 }
 
 /// A stateful (next, merge) pair plus a shared files-completed counter.
@@ -162,6 +193,18 @@ where
     let todo_for_next = todo.dupe();
     let files_completed_for_next = files_completed.dupe();
     let next = move || {
+        // Bail out early if the recheck has been canceled. Without this,
+        // a worker that returns `Err(WorkerCanceled)` from `mk_job_stealing`
+        // discards its partial accumulator without incrementing
+        // `files_completed`, so the count never reaches `total_count` and
+        // the producer would loop forever returning `Bucket::Wait`. In the
+        // OCaml original this could not happen because cancellation was
+        // implemented via `Lwt.cancel`, which unwound the entire
+        // computation; in our flag-based port the producer also has to
+        // honor the cancel flag.
+        if flow_utils_concurrency::worker_cancel::should_cancel() {
+            return Bucket::Done;
+        }
         let mut todo_guard = todo_for_next.lock();
         let (ref mut remaining_files, ref mut remaining_count) = *todo_guard;
         // When we get near the end of the file list, start using smaller buckets in order

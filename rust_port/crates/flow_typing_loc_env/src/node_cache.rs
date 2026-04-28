@@ -21,7 +21,8 @@ use crate::component_sig_types;
 use crate::func_class_sig_types;
 use crate::match_pattern_ir;
 
-pub type DeferredTypeGuardCheck<'cx, CX> = Option<Rc<dyn Fn(&CX) + 'cx>>;
+pub type DeferredTypeGuardCheck<'cx, CX> =
+    Option<Rc<dyn Fn(&CX) -> Result<(), flow_utils_concurrency::job_error::JobError> + 'cx>>;
 
 struct Cache<'cx, CX: Clone> {
     annotations: ALocMap<ast::types::Annotation<ALoc, (ALoc, Type)>>,
@@ -47,13 +48,29 @@ struct Cache<'cx, CX: Clone> {
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Rc<dyn Fn(&CX, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'cx>,
+        Rc<
+            dyn Fn(
+                    &CX,
+                    Type,
+                ) -> Result<
+                    ast::class::Class<ALoc, (ALoc, Type)>,
+                    flow_utils_concurrency::job_error::JobError,
+                > + 'cx,
+        >,
     )>,
     record_sigs: ALocMap<(
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Rc<dyn Fn(&CX, Type) -> ast::statement::RecordDeclaration<ALoc, (ALoc, Type)> + 'cx>,
+        Rc<
+            dyn Fn(
+                    &CX,
+                    Type,
+                ) -> Result<
+                    ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>,
+                    flow_utils_concurrency::job_error::JobError,
+                > + 'cx,
+        >,
     )>,
     tparams: ALocMap<(AstTypeParam<ALoc, (ALoc, Type)>, TypeParam, Type)>,
     component_sigs: ALocMap<(
@@ -224,7 +241,15 @@ impl<'cx, CX: Clone> NodeCache<'cx, CX> {
             Type,
             Type,
             func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-            Rc<dyn Fn(&CX, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'cx>,
+            Rc<
+                dyn Fn(
+                        &CX,
+                        Type,
+                    ) -> Result<
+                        ast::class::Class<ALoc, (ALoc, Type)>,
+                        flow_utils_concurrency::job_error::JobError,
+                    > + 'cx,
+            >,
         ),
     ) {
         self.0.borrow_mut().class_sigs.insert(loc, class_);
@@ -237,7 +262,15 @@ impl<'cx, CX: Clone> NodeCache<'cx, CX> {
             Type,
             Type,
             func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-            Rc<dyn Fn(&CX, Type) -> ast::statement::RecordDeclaration<ALoc, (ALoc, Type)> + 'cx>,
+            Rc<
+                dyn Fn(
+                        &CX,
+                        Type,
+                    ) -> Result<
+                        ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>,
+                        flow_utils_concurrency::job_error::JobError,
+                    > + 'cx,
+            >,
         ),
     ) {
         self.0.borrow_mut().record_sigs.insert(loc, record);
@@ -382,7 +415,15 @@ impl<'cx, CX: Clone> NodeCache<'cx, CX> {
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Rc<dyn Fn(&CX, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'cx>,
+        Rc<
+            dyn Fn(
+                    &CX,
+                    Type,
+                ) -> Result<
+                    ast::class::Class<ALoc, (ALoc, Type)>,
+                    flow_utils_concurrency::job_error::JobError,
+                > + 'cx,
+        >,
     )> {
         self.0.borrow().class_sigs.get(loc).cloned()
     }
@@ -394,7 +435,15 @@ impl<'cx, CX: Clone> NodeCache<'cx, CX> {
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Rc<dyn Fn(&CX, Type) -> ast::statement::RecordDeclaration<ALoc, (ALoc, Type)> + 'cx>,
+        Rc<
+            dyn Fn(
+                    &CX,
+                    Type,
+                ) -> Result<
+                    ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>,
+                    flow_utils_concurrency::job_error::JobError,
+                > + 'cx,
+        >,
     )> {
         self.0.borrow().record_sigs.get(loc).cloned()
     }

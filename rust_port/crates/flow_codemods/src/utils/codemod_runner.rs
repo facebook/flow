@@ -222,13 +222,23 @@ pub trait StepRunner {
     fn init_run(
         genv: &Genv,
         roots: BTreeSet<FileKey>,
-    ) -> impl std::future::Future<Output = ((), (Self::Env, ResultList<Self::Accumulator>))>;
+    ) -> impl std::future::Future<
+        Output = Result<
+            ((), (Self::Env, ResultList<Self::Accumulator>)),
+            flow_utils_concurrency::worker_cancel::WorkerCanceled,
+        >,
+    >;
     fn recheck_run(
         genv: &Genv,
         env: Self::Env,
         iteration: i32,
         roots: BTreeSet<FileKey>,
-    ) -> impl std::future::Future<Output = ((), (Self::Env, ResultList<Self::Accumulator>))>;
+    ) -> impl std::future::Future<
+        Output = Result<
+            ((), (Self::Env, ResultList<Self::Accumulator>)),
+            flow_utils_concurrency::worker_cancel::WorkerCanceled,
+        >,
+    >;
     fn digest(results: ResultList<Self::Accumulator>) -> (Vec<FileKey>, Self::Accumulator);
 }
 
@@ -359,7 +369,12 @@ fn mk_check<'a, A>(
     options: &'a Options,
     _metadata: &'a Metadata,
     master_cx: &'a flow_typing_context::MasterContext,
-) -> impl FnMut(FileKey) -> UnitResult<Option<((), A)>> + 'a {
+) -> impl FnMut(
+    FileKey,
+) -> Result<
+    UnitResult<Option<((), A)>>,
+    flow_utils_concurrency::worker_cancel::WorkerCanceled,
+> + 'a {
     let (mut check, _cache) = flow_services_inference::merge_service::mk_check(
         reader.clone(),
         Arc::new(options.clone()),
@@ -370,11 +385,15 @@ fn mk_check<'a, A>(
         // the full cleanup once the codemod is done with the cx.
         true,
     );
-    move |file: FileKey| -> UnitResult<Option<((), A)>> {
-        let result = check(file.clone());
-        post_check(
+    move |file: FileKey| {
+        let result = match check(file.clone()) {
+            flow_services_inference::merge_service::CheckJobOutcome::Ok(opt) => Ok(opt),
+            flow_services_inference::merge_service::CheckJobOutcome::PerFileError(e) => Err(e),
+            flow_services_inference::merge_service::CheckJobOutcome::Canceled(c) => return Err(c),
+        };
+        Ok(post_check(
             _visit, _iteration, reader, options, _metadata, &file, result,
-        )
+        ))
     }
 }
 
@@ -442,7 +461,12 @@ pub trait TypedRunnerConfig {
         roots: BTreeSet<FileKey>,
         iteration: i32,
         shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
-    ) -> impl std::future::Future<Output = ResultList<Self::Accumulator>>;
+    ) -> impl std::future::Future<
+        Output = Result<
+            ResultList<Self::Accumulator>,
+            flow_utils_concurrency::worker_cancel::WorkerCanceled,
+        >,
+    >;
 }
 
 // Checks the codebase and applies C, providing it with the inference context.
@@ -470,7 +494,8 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
         _roots: BTreeSet<FileKey>,
         _iteration: i32,
         _shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
-    ) -> ResultList<Self::Accumulator> {
+    ) -> Result<ResultList<Self::Accumulator>, flow_utils_concurrency::worker_cancel::WorkerCanceled>
+    {
         let _should_print = _options.profile;
         let reader = _shared_mem.clone();
         let get_dependent_files = |_: &flow_common_utils::graph::Graph<FileKey>,
@@ -532,10 +557,10 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
         )>(&options, _workers, &_roots);
         let files: Vec<FileKey> = _roots.iter().cloned().collect();
         let (job_results, _remaining) =
-            flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files);
+            flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files)?;
         let result: ResultList<Self::Accumulator> = job_results;
         tracing::info!("Done");
-        result
+        Ok(result)
     }
 }
 
@@ -593,7 +618,8 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         _roots: BTreeSet<FileKey>,
         _iteration: i32,
         _shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
-    ) -> ResultList<Self::Accumulator> {
+    ) -> Result<ResultList<Self::Accumulator>, flow_utils_concurrency::worker_cancel::WorkerCanceled>
+    {
         let _should_print = _options.profile;
         let reader = _shared_mem.clone();
         let get_dependent_files = |_: &flow_common_utils::graph::Graph<FileKey>,
@@ -654,7 +680,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         );
         let files: Vec<FileKey> = _roots.iter().cloned().collect();
         let (job_results, _remaining) =
-            flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files);
+            flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files)?;
         let initial_run_result: ResultList<Self::Accumulator> = job_results;
         tracing::info!("Initial run done");
         let second_run_roots: BTreeSet<FileKey> = initial_run_result.iter().fold(
@@ -719,11 +745,11 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         );
         let files2: Vec<FileKey> = second_run_roots.iter().cloned().collect();
         let (job_results2, _remaining2) =
-            flow_services_inference::job_utils::mk_job(&mut check_fn2, &options, files2);
+            flow_services_inference::job_utils::mk_job(&mut check_fn2, &options, files2)?;
         let mut result: ResultList<Self::Accumulator> = initial_run_result;
         result.extend(job_results2);
         tracing::info!("Pruned-deps run done");
-        result
+        Ok(result)
     }
 }
 
@@ -751,7 +777,8 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
         _roots: BTreeSet<FileKey>,
         _iteration: i32,
         _shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
-    ) -> ResultList<Self::Accumulator> {
+    ) -> Result<ResultList<Self::Accumulator>, flow_utils_concurrency::worker_cancel::WorkerCanceled>
+    {
         let _should_print = _options.profile;
         let reader = _shared_mem.clone();
         let get_dependent_files = |sig_dep: &flow_common_utils::graph::Graph<FileKey>,
@@ -824,8 +851,11 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
             let files_to_check_list: Vec<FileKey> = files_to_check.iter().cloned().collect();
             for file in files_to_check_list {
                 match check(file.clone()) {
-                    Ok(None) => {}
-                    Ok(Some(((cx, _type_sig, file_sig, typed_ast), _))) => {
+                    flow_services_inference::merge_service::CheckJobOutcome::Ok(None) => {}
+                    flow_services_inference::merge_service::CheckJobOutcome::Ok(Some((
+                        (cx, _type_sig, file_sig, typed_ast),
+                        _,
+                    ))) => {
                         let result = C::prepass_run(
                             cx,
                             &state,
@@ -837,8 +867,11 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                         );
                         acc.insert(file, Ok(result));
                     }
-                    Err(e) => {
+                    flow_services_inference::merge_service::CheckJobOutcome::PerFileError(e) => {
                         acc.insert(file, Err(e));
+                    }
+                    flow_services_inference::merge_service::CheckJobOutcome::Canceled(c) => {
+                        return Err(c);
                     }
                 }
             }
@@ -866,10 +899,10 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
         );
         let files: Vec<FileKey> = _roots.iter().cloned().collect();
         let (job_results, _remaining) =
-            flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files);
+            flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files)?;
         let result: ResultList<Self::Accumulator> = job_results;
         tracing::info!("Checking+Codemodding Done");
-        result
+        Ok(result)
     }
 }
 
@@ -892,7 +925,10 @@ where
     async fn init_run(
         _genv: &Genv,
         _roots: BTreeSet<FileKey>,
-    ) -> ((), (Self::Env, ResultList<Self::Accumulator>)) {
+    ) -> Result<
+        ((), (Self::Env, ResultList<Self::Accumulator>)),
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    > {
         let options = &*_genv.options;
         let workers = &_genv.workers;
         let should_print_summary = options.profile;
@@ -922,8 +958,8 @@ where
         let roots: BTreeSet<FileKey> = roots.intersection(&env_files).cloned().collect();
         log_input_files(&roots);
         let results =
-            TRC::merge_and_check(&env, workers, options, &profiling, roots, 0, shared_mem).await;
-        ((), (env, results))
+            TRC::merge_and_check(&env, workers, options, &profiling, roots, 0, shared_mem).await?;
+        Ok(((), (env, results)))
     }
 
     #[allow(unreachable_code)]
@@ -932,7 +968,10 @@ where
         _env: Self::Env,
         _iteration: i32,
         _roots: BTreeSet<FileKey>,
-    ) -> ((), (Self::Env, ResultList<Self::Accumulator>)) {
+    ) -> Result<
+        ((), (Self::Env, ResultList<Self::Accumulator>)),
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    > {
         let options = &*_genv.options;
         let workers = &_genv.workers;
         let should_print_summary = options.profile;
@@ -968,8 +1007,8 @@ where
         let results = TRC::merge_and_check(
             &env, workers, options, &profiling, _roots, _iteration, shared_mem,
         )
-        .await;
-        ((), (env, results))
+        .await?;
+        Ok(((), (env, results)))
     }
 
     #[allow(unreachable_code)]
@@ -1090,9 +1129,12 @@ where
     async fn init_run(
         genv: &Genv,
         roots: BTreeSet<FileKey>,
-    ) -> ((), (Self::Env, ResultList<Self::Accumulator>)) {
+    ) -> Result<
+        ((), (Self::Env, ResultList<Self::Accumulator>)),
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    > {
         let ((), results) = Self::run(genv, roots).await;
-        ((), ((), results))
+        Ok(((), ((), results)))
     }
 
     async fn recheck_run(
@@ -1100,9 +1142,12 @@ where
         _env: Self::Env,
         _iteration: i32,
         roots: BTreeSet<FileKey>,
-    ) -> ((), (Self::Env, ResultList<Self::Accumulator>)) {
+    ) -> Result<
+        ((), (Self::Env, ResultList<Self::Accumulator>)),
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    > {
         let ((), results) = Self::run(genv, roots).await;
-        ((), ((), results))
+        Ok(((), ((), results)))
     }
 
     fn digest(results: ResultList<Self::Accumulator>) -> (Vec<FileKey>, Self::Accumulator) {
@@ -1187,9 +1232,12 @@ where
     async fn init_run(
         genv: &Genv,
         roots: BTreeSet<FileKey>,
-    ) -> ((), (Self::Env, ResultList<Self::Accumulator>)) {
+    ) -> Result<
+        ((), (Self::Env, ResultList<Self::Accumulator>)),
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    > {
         let ((), results) = Self::run(genv, roots).await;
-        ((), ((), results))
+        Ok(((), ((), results)))
     }
 
     async fn recheck_run(
@@ -1197,9 +1245,12 @@ where
         _env: Self::Env,
         _iteration: i32,
         roots: BTreeSet<FileKey>,
-    ) -> ((), (Self::Env, ResultList<Self::Accumulator>)) {
+    ) -> Result<
+        ((), (Self::Env, ResultList<Self::Accumulator>)),
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    > {
         let ((), results) = Self::run(genv, roots).await;
-        ((), ((), results))
+        Ok(((), ((), results)))
     }
 
     fn digest(results: ResultList<Self::Accumulator>) -> (Vec<FileKey>, Self::Accumulator) {
@@ -1257,19 +1308,19 @@ where
         options: &Options,
         write: bool,
         mut changed_files: Option<BTreeSet<FileKey>>,
-    ) {
+    ) -> Result<(), flow_utils_concurrency::worker_cancel::WorkerCanceled> {
         loop {
             if iteration > MAX_NUMBER_OF_ITERATIONS {
                 eprintln!(">>> Reached maximum number of iterations (10). Exiting...");
-                return;
+                return Ok(());
             }
             match changed_files {
-                None => return,
-                Some(ref set) if set.is_empty() => return,
+                None => return Ok(()),
+                Some(ref set) if set.is_empty() => return Ok(()),
                 Some(roots) => {
                     header(iteration, &roots);
                     let (_, (new_env, results)) =
-                        SR::recheck_run(genv, env, iteration, roots).await;
+                        SR::recheck_run(genv, env, iteration, roots).await?;
                     env = new_env;
                     changed_files = Self::post_run(options, write, results).await;
                     iteration += 1;
@@ -1287,11 +1338,21 @@ where
         if repeat {
             header(0, &roots);
         }
-        let (_prof, (env, results)) = SR::init_run(genv, roots).await;
+        let (_prof, (env, results)) = match SR::init_run(genv, roots).await {
+            Ok(v) => v,
+            Err(_) => {
+                eprintln!(">>> Codemod canceled.");
+                return;
+            }
+        };
         let options = &*genv.options;
         let changed_files = Self::post_run(options, write, results).await;
-        if repeat {
-            Self::loop_run(genv, env, 1, options, write, changed_files).await;
+        if repeat
+            && Self::loop_run(genv, env, 1, options, write, changed_files)
+                .await
+                .is_err()
+        {
+            eprintln!(">>> Codemod canceled.");
         }
     }
 }

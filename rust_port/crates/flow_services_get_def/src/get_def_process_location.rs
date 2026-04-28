@@ -40,6 +40,12 @@ use crate::get_def_types::Purpose;
 pub enum InternalError {
     EnclosingNodeError,
     OnDemandTastError,
+    /// Worker received cancel signal during typed AST inference
+    Canceled,
+    /// Per-file `merge_timeout` exceeded during typed AST inference
+    TimedOut,
+    /// `$Flow$DebugThrow` was hit during typed AST inference
+    DebugThrow,
 }
 
 /// This type is distinct from the one raised by the searcher because
@@ -1493,8 +1499,21 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
         enclosing_node: &EnclosingNode<ALoc, ALoc>,
     ) -> Result<Option<ALoc>, Found> {
         let remote_loc = decl.remote.loc.dupe();
-        let typed_node = typed_ast_finder::infer_node(self.cx, enclosing_node.clone())
-            .map_err(|_| Found::InternalError(InternalError::OnDemandTastError))?;
+        let typed_node =
+            typed_ast_finder::infer_node(self.cx, enclosing_node.clone()).map_err(|e| match e {
+                flow_typing_utils::abnormal::CheckExprError::Canceled(_) => {
+                    Found::InternalError(InternalError::Canceled)
+                }
+                flow_typing_utils::abnormal::CheckExprError::TimedOut(_) => {
+                    Found::InternalError(InternalError::TimedOut)
+                }
+                flow_typing_utils::abnormal::CheckExprError::DebugThrow { .. } => {
+                    Found::InternalError(InternalError::DebugThrow)
+                }
+                flow_typing_utils::abnormal::CheckExprError::Abnormal(_) => {
+                    Found::InternalError(InternalError::OnDemandTastError)
+                }
+            })?;
         match find_remote_name_def_loc_in_node(remote_loc, &typed_node) {
             None => Err(Found::InternalError(InternalError::EnclosingNodeError)),
             Some(t) => Ok(t),
@@ -1535,8 +1554,21 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
         enclosing_node: &EnclosingNode<ALoc, ALoc>,
     ) -> Result<Option<ALoc>, Found> {
         let local_loc = spec.local.loc.dupe();
-        let typed_node = typed_ast_finder::infer_node(self.cx, enclosing_node.clone())
-            .map_err(|_| Found::InternalError(InternalError::OnDemandTastError))?;
+        let typed_node =
+            typed_ast_finder::infer_node(self.cx, enclosing_node.clone()).map_err(|e| match e {
+                flow_typing_utils::abnormal::CheckExprError::Canceled(_) => {
+                    Found::InternalError(InternalError::Canceled)
+                }
+                flow_typing_utils::abnormal::CheckExprError::TimedOut(_) => {
+                    Found::InternalError(InternalError::TimedOut)
+                }
+                flow_typing_utils::abnormal::CheckExprError::DebugThrow { .. } => {
+                    Found::InternalError(InternalError::DebugThrow)
+                }
+                flow_typing_utils::abnormal::CheckExprError::Abnormal(_) => {
+                    Found::InternalError(InternalError::OnDemandTastError)
+                }
+            })?;
         match find_imported_name_def_loc_in_node(local_loc, &typed_node) {
             None => Err(Found::InternalError(InternalError::EnclosingNodeError)),
             Some(t) => Ok(t),
@@ -1583,8 +1615,21 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
         annot: &ALoc,
         enclosing_node: &EnclosingNode<ALoc, ALoc>,
     ) -> Result<Type, Found> {
-        let typed_node = typed_ast_finder::infer_node(self.cx, enclosing_node.clone())
-            .map_err(|_| Found::InternalError(InternalError::OnDemandTastError))?;
+        let typed_node =
+            typed_ast_finder::infer_node(self.cx, enclosing_node.clone()).map_err(|e| match e {
+                flow_typing_utils::abnormal::CheckExprError::Canceled(_) => {
+                    Found::InternalError(InternalError::Canceled)
+                }
+                flow_typing_utils::abnormal::CheckExprError::TimedOut(_) => {
+                    Found::InternalError(InternalError::TimedOut)
+                }
+                flow_typing_utils::abnormal::CheckExprError::DebugThrow { .. } => {
+                    Found::InternalError(InternalError::DebugThrow)
+                }
+                flow_typing_utils::abnormal::CheckExprError::Abnormal(_) => {
+                    Found::InternalError(InternalError::OnDemandTastError)
+                }
+            })?;
         match typed_ast_finder::find_type_annot_in_node(annot.dupe(), &typed_node) {
             None => Err(Found::InternalError(InternalError::EnclosingNodeError)),
             Some(t) => Ok(t),

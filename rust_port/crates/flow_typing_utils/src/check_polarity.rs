@@ -153,9 +153,9 @@ fn check_polarity_impl<'cx>(
                 cx,
                 None,
                 &|cx, reason, t| {
-                    Ok(flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection(
+                    flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection(
                         cx, reason, t,
-                    )?)
+                    )
                 },
                 &|reason| reason.loc().dupe(),
                 &|cx, l| {
@@ -212,7 +212,7 @@ fn check_polarity_impl<'cx>(
             if !seen.contains(id) {
                 let type_::TypeDestructorTInner(use_op, r, _d) = defer_use_t.deref();
                 let trace_val = trace.unwrap_or_else(DepthTrace::dummy_trace);
-                let out = flow_typing_tvar::mk_no_wrap_where_result(
+                let out = flow_typing_tvar::mk_no_wrap_where(
                     cx,
                     r.dupe(),
                     |cx, tvar_reason, tvar_id| {

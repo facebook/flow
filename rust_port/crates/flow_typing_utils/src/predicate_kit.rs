@@ -238,7 +238,8 @@ fn concretize_and_run_predicate<'cx>(
                         },
                         result_collector,
                     );
-                });
+                    Ok(())
+                })?;
             }
             _ => {
                 predicate_no_concretization(cx, trace, result_collector, t)?;
@@ -972,7 +973,7 @@ fn call_latent_pred<'cx>(
                                     None,
                                     type_guard,
                                 )?;
-                                let type_ = intersect(cx, tin.dupe(), repositioned);
+                                let type_ = intersect(cx, tin.dupe(), repositioned)?;
                                 let changed = !Type::ptr_eq(&type_, tin);
                                 FilterResult { type_, changed }
                             } else if !one_sided {
@@ -983,7 +984,7 @@ fn call_latent_pred<'cx>(
                                     None,
                                     type_guard,
                                 )?;
-                                type_guard_diff(cx, tin, &repositioned)
+                                type_guard_diff(cx, tin, &repositioned)?
                             } else {
                                 // Do not refine else branch on one-sided type-guard
                                 FilterResult {
@@ -1142,12 +1143,25 @@ fn call_latent_this_pred<'cx>(
     )
 }
 
-fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Type {
-    fn is_any<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
+fn intersect<'cx>(
+    cx: &Context<'cx>,
+    t1: Type,
+    t2: Type,
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    fn is_any<'cx>(
+        cx: &Context<'cx>,
+        t: &Type,
+    ) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
         let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t);
         match ts {
-            Ok(ts) => ts.iter().any(|t| matches!(t.deref(), TypeInner::AnyT(..))),
-            Err(_) => false,
+            Ok(ts) => Ok(ts.iter().any(|t| matches!(t.deref(), TypeInner::AnyT(..)))),
+            Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+                Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+            }
+            Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => {
+                Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+            }
+            Err(_) => Ok(false),
         }
     }
 
@@ -1282,30 +1296,36 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Type {
         reason1: &Reason,
         t1_conc: &ConcretizedType,
         t2: &Type,
-    ) -> Option<Type> {
+    ) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
         let t1 = t1_conc.unwrap();
         if types_differ(cx, 0, t1_conc, t2) {
             let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
-            Some(Type::new(TypeInner::DefT(r, DefT::new(DefTInner::EmptyT))))
-        } else if is_any(cx, t1) {
-            Some(t2.dupe())
-        } else if is_any(cx, t2) {
+            Ok(Some(Type::new(TypeInner::DefT(
+                r,
+                DefT::new(DefTInner::EmptyT),
+            ))))
+        } else if is_any(cx, t1)? {
+            Ok(Some(t2.dupe()))
+        } else if is_any(cx, t2)? {
             // Filter out null and void types from the input if comparing with any
             let t1_wrapped = ConcretizedType::wrap_unsafe(t1.dupe());
             if is_null(&t1_wrapped) || is_void(&t1_wrapped) {
                 let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
-                Some(Type::new(TypeInner::DefT(r, DefT::new(DefTInner::EmptyT))))
+                Ok(Some(Type::new(TypeInner::DefT(
+                    r,
+                    DefT::new(DefTInner::EmptyT),
+                ))))
             } else {
-                Some(t1.dupe())
+                Ok(Some(t1.dupe()))
             }
         } else if type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
-            || FlowJs::speculative_subtyping_succeeds(cx, t1, t2)
+            || FlowJs::speculative_subtyping_succeeds(cx, t1, t2)?
         {
-            Some(t1.dupe())
+            Ok(Some(t1.dupe()))
         } else if type_util::quick_subtype(None::<&fn(&Type)>, t2, t1)
-            || FlowJs::speculative_subtyping_succeeds(cx, t2, t1)
+            || FlowJs::speculative_subtyping_succeeds(cx, t2, t1)?
         {
-            Some(t2.dupe())
+            Ok(Some(t2.dupe()))
         } else {
             match t1.deref() {
                 TypeInner::NominalT {
@@ -1315,7 +1335,7 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Type {
                     // Apply the refinement on super and underlying type of opaque type.
                     // Preserve nominal_id to retain compatibility with original type.
                     let upper_t = Some(match &nominal_type.upper_t {
-                        Some(upper) => intersect(cx, upper.dupe(), t2.dupe()),
+                        Some(upper) => intersect(cx, upper.dupe(), t2.dupe())?,
                         None => t2.dupe(),
                     });
                     let underlying_t = match &nominal_type.underlying_t {
@@ -1326,16 +1346,16 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Type {
                         }) => {
                             nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
                                 custom_error_loc: custom_error_loc.dupe(),
-                                t: intersect(cx, inner_t.dupe(), t2.dupe()),
+                                t: intersect(cx, inner_t.dupe(), t2.dupe())?,
                             }))
                         }
                         nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } => {
                             nominal::UnderlyingT::OpaqueWithLocal {
-                                t: intersect(cx, inner_t.dupe(), t2.dupe()),
+                                t: intersect(cx, inner_t.dupe(), t2.dupe())?,
                             }
                         }
                     };
-                    Some(Type::new(TypeInner::NominalT {
+                    Ok(Some(Type::new(TypeInner::NominalT {
                         reason: r.dupe(),
                         nominal_type: Rc::new(NominalType::new(NominalTypeInner {
                             nominal_id: nominal_type.nominal_id.clone(),
@@ -1344,44 +1364,43 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Type {
                             upper_t,
                             nominal_type_args: nominal_type.nominal_type_args.dupe(),
                         })),
-                    }))
+                    })))
                 }
-                _ => None,
+                _ => Ok(None),
             }
         }
     }
 
     let reason1 = reason_of_t(&t1);
-    match try_intersect(cx, reason1, &ConcretizedType::wrap_unsafe(t1.dupe()), &t2) {
-        Some(t) => t,
+    match try_intersect(cx, reason1, &ConcretizedType::wrap_unsafe(t1.dupe()), &t2)? {
+        Some(t) => Ok(t),
         None => {
             // No definitive refinement found. We fall back to more expensive
             //  concretization that breaks up all unions (including optimized ones)
             let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason1, &t1)
                 .unwrap_or_default();
-            let mapped: Vec<Type> = ts
-                .into_iter()
-                .map(|t1_inner| {
-                    // t1 was just concretized
-                    match try_intersect(
-                        cx,
-                        reason1,
-                        &ConcretizedType::wrap_unsafe(t1_inner.dupe()),
-                        &t2,
-                    ) {
-                        Some(t) => t,
-                        None => {
-                            let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
-                            Type::new(TypeInner::IntersectionT(
-                                r,
-                                inter_rep::make(t2.dupe(), t1_inner, Rc::from([])),
-                            ))
-                        }
+            let mut mapped: Vec<Type> = Vec::new();
+            for t1_inner in ts {
+                // t1 was just concretized
+                let item = match try_intersect(
+                    cx,
+                    reason1,
+                    &ConcretizedType::wrap_unsafe(t1_inner.dupe()),
+                    &t2,
+                )? {
+                    Some(t) => t,
+                    None => {
+                        let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
+                        Type::new(TypeInner::IntersectionT(
+                            r,
+                            inter_rep::make(t2.dupe(), t1_inner, Rc::from([])),
+                        ))
                     }
-                })
-                .collect();
+                };
+                mapped.push(item);
+            }
             let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
-            type_util::union_of_ts(r, mapped, None)
+            Ok(type_util::union_of_ts(r, mapped, None))
         }
     }
 }
@@ -1390,37 +1409,39 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Type {
 /// with a type guard `x is t2`. The only case considered here is that of t1 <: t2.
 /// This means that the positive branch will always be taken, and so we are left with
 /// `empty` in the negated case.
-fn type_guard_diff<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> FilterResult {
+fn type_guard_diff<'cx>(
+    cx: &Context<'cx>,
+    t1: &Type,
+    t2: &Type,
+) -> Result<FilterResult, flow_utils_concurrency::job_error::JobError> {
     let reason1 = reason_of_t(t1);
     if type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
-        || FlowJs::speculative_subtyping_succeeds(cx, t1, t2)
+        || FlowJs::speculative_subtyping_succeeds(cx, t1, t2)?
     {
         let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
-        FilterResult {
+        Ok(FilterResult {
             type_: Type::new(TypeInner::DefT(r, DefT::new(DefTInner::EmptyT))),
             changed: true,
-        }
+        })
     } else {
         let t1s_conc =
             FlowJs::possible_concrete_types_for_inspection(cx, reason1, t1).unwrap_or_default();
-        let (ts, changed) =
-            t1s_conc
-                .into_iter()
-                .fold((Vec::new(), false), |(mut acc, changed), t1_inner| {
-                    if type_util::quick_subtype(None::<&fn(&Type)>, &t1_inner, t2)
-                        || FlowJs::speculative_subtyping_succeeds(cx, &t1_inner, t2)
-                    {
-                        (acc, changed)
-                    } else {
-                        acc.push(t1_inner);
-                        (acc, true)
-                    }
-                });
+        let mut ts: Vec<Type> = Vec::new();
+        let mut changed = false;
+        for t1_inner in t1s_conc {
+            if type_util::quick_subtype(None::<&fn(&Type)>, &t1_inner, t2)
+                || FlowJs::speculative_subtyping_succeeds(cx, &t1_inner, t2)?
+            {
+                continue;
+            }
+            ts.push(t1_inner);
+            changed = true;
+        }
         let r1 = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
-        FilterResult {
+        Ok(FilterResult {
             type_: type_util::union_of_ts(r1, ts, None),
             changed,
-        }
+        })
     }
 }
 

@@ -3724,7 +3724,7 @@ fn merge_class<'cx>(
             cx,
             this_reason_for_lazy,
             false,
-            Box::new(move |_cx: &Context| result_cell_c.borrow().as_ref().unwrap().dupe()),
+            Box::new(move |_cx: &Context| Ok(result_cell_c.borrow().as_ref().unwrap().dupe())),
         );
         let class_t = this_class_t(&env_clone, targs, rec_type);
         *result_cell.borrow_mut() = Some(class_t.dupe());
@@ -3773,7 +3773,7 @@ fn merge_record<'cx>(
             cx,
             this_reason_for_lazy,
             false,
-            Box::new(move |_cx: &Context| result_cell_c.borrow().as_ref().unwrap().dupe()),
+            Box::new(move |_cx: &Context| Ok(result_cell_c.borrow().as_ref().unwrap().dupe())),
         );
         let class_t = this_class_t(&env_clone, targs, rec_type);
         *result_cell.borrow_mut() = Some(class_t.dupe());
@@ -4434,7 +4434,7 @@ fn merge_declare_class<'cx>(
             _cx,
             this_reason_for_lazy,
             false,
-            Box::new(move |_cx: &Context| result_cell_c.borrow().as_ref().unwrap().dupe()),
+            Box::new(move |_cx: &Context| Ok(result_cell_c.borrow().as_ref().unwrap().dupe())),
         );
         let class_t = this_class_t(&env_clone, targs, rec_type);
         *result_cell.borrow_mut() = Some(class_t.dupe());

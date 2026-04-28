@@ -240,18 +240,30 @@ fn speculative_subtyping_succeeds<'cx>(
     use_op: UseOp,
     l: &Type,
     u: &Type,
-) -> bool {
+) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
     match speculation_kit::try_singleton_throw_on_failure(
         cx,
         trace,
         l.dupe(),
         UseT::new(UseTInner::UseT(use_op, u.dupe())),
     ) {
-        Ok(()) => true,
-        Err(FlowJsException::SpeculationSingletonError) => false,
-        // Other exceptions (LimitExceeded) propagate in OCaml;
+        Ok(()) => Ok(true),
+        Err(FlowJsException::SpeculationSingletonError) => Ok(false),
+        // WorkerCanceled, TimedOut, and DebugThrow must propagate past
+        // speculation; see plan.md §"JobError — unified error type for cancel +
+        // timeout".
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(FlowJsException::DebugThrow { loc }) => {
+            Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc })
+        }
+        // Other exceptions (LimitExceeded, Speculative) propagate in OCaml;
         // here we treat them as false since the return type is bool
-        Err(_) => false,
+        Err(FlowJsException::Speculative(_)) | Err(FlowJsException::LimitExceeded) => Ok(false),
     }
 }
 
@@ -438,7 +450,7 @@ fn t_of_use_t<'cx>(
                 box Destructor::EnumType => {
                     let result = merge_lower_or_upper_bounds(cx, seen, &tout_t)?;
                     bind_use_t_result(result, &|tout_val: Type| {
-                        let result_t = flow_typing_tvar::mk_no_wrap_where_result(
+                        let result_t = flow_typing_tvar::mk_no_wrap_where(
                             cx,
                             r.dupe(),
                             |cx, _reason, t_prime_id| {
@@ -551,7 +563,7 @@ fn t_of_use_t<'cx>(
                             let result = merge_lower_or_upper_bounds(cx, seen, &tout_t)?;
                             let reason_spread = reason_spread.dupe();
                             bind_use_t_result(result, &|t: Type| {
-                                let arr_rest_result = flow_typing_tvar::mk_where_result(
+                                let arr_rest_result = flow_typing_tvar::mk_where(
                                     cx,
                                     reason_spread.dupe(),
                                     |cx, t_prime| {
@@ -881,7 +893,7 @@ fn reverse_obj_spread<'cx>(
     };
 
     let rest_type = |l: Type, rest: Type| -> Result<Type, FlowJsException> {
-        flow_typing_tvar::mk_where_result(cx, r.dupe(), |cx, tout| {
+        flow_typing_tvar::mk_where(cx, r.dupe(), |cx, tout| {
             let u_inner = UseTInner::ObjKitT(
                 unknown_use(),
                 r.dupe(),
@@ -897,7 +909,7 @@ fn reverse_obj_spread<'cx>(
         })
     };
 
-    let mut tout_val = flow_typing_tvar::mk_where_result(cx, r.dupe(), |cx, t_prime| {
+    let mut tout_val = flow_typing_tvar::mk_where(cx, r.dupe(), |cx, t_prime| {
         FlowJs::flow_t(cx, tout, t_prime)?;
         Ok::<(), FlowJsException>(())
     })?;
@@ -921,7 +933,7 @@ fn reverse_component_check_config<'cx>(
     if pmap.is_empty() {
         return Ok(tout.dupe());
     }
-    flow_typing_tvar::mk_where_result(cx, reason.dupe(), |cx, t_prime| {
+    flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, t_prime| {
         let rest = obj_type::mk_with_proto(
             cx,
             reason.dupe(),
@@ -953,7 +965,7 @@ fn reverse_obj_kit_rest<'cx>(
     t_rest: &Type,
     tout: &Type,
 ) -> Result<Type, FlowJsException> {
-    flow_typing_tvar::mk_no_wrap_where_result(cx, reason.dupe(), |cx, _r, t_prime_id| {
+    flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |cx, _r, t_prime_id| {
         let tool = object::ResolveTool::Resolve(object::Resolve::Next);
         let options = object::spread::Target::Value {
             make_seal: obj_type::mk_seal(false, false),
@@ -1036,7 +1048,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
         Some(rest_param_val) => {
             let rest_param_t = &rest_param_val.2;
             let rest_elem_t =
-                flow_typing_tvar::mk_no_wrap_where_result(cx, reason.dupe(), |cx, _r, tout_id| {
+                flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |cx, _r, tout_id| {
                     let tout_tvar = Tvar::new(reason.dupe(), tout_id as u32);
                     let u_inner = UseTInner::GetElemT(Box::new(GetElemTData {
                         use_op: unknown_use(),
@@ -1181,7 +1193,7 @@ fn merge_upper_bounds<'cx>(
                                         unknown_use(),
                                         &t,
                                         &t_prime,
-                                    )
+                                    )?
                                 {
                                     UseTResult::UpperT(t)
                                 } else {
@@ -2284,11 +2296,16 @@ pub mod instantiation_solver {
                         has_new_errors,
                     ),
                     (Some((hint, kind)), Some(tout)) => {
-                        // Protect the effect of return hint constraining against speculative exns
                         let speculative_exn: Option<FlowJsException> =
                             match FlowJs::flow_t(cx, tout, hint) {
                                 Ok(()) => None,
-                                Err(e) => Some(FlowJsException::Speculative(e)),
+                                Err(FlowJsException::WorkerCanceled(c)) => {
+                                    return Err(FlowJsException::WorkerCanceled(c));
+                                }
+                                Err(FlowJsException::TimedOut(t)) => {
+                                    return Err(FlowJsException::TimedOut(t));
+                                }
+                                Err(e) => Some(e),
                             };
 
                         let errors_after_using_return_hint = cx.errors();
@@ -2405,7 +2422,7 @@ pub mod instantiation_solver {
             &subst_map,
             extends_t.dupe(),
         );
-        if speculative_subtyping_succeeds(cx, trace, use_op.dupe(), check_t, &extends_subst) {
+        if speculative_subtyping_succeeds(cx, trace, use_op.dupe(), check_t, &extends_subst)? {
             let (tparams_map, tparams_set) = tparams.iter().fold(
                 (BTreeMap::new(), FlowOrdSet::new()),
                 |(mut map, mut set), tp| {
@@ -2438,7 +2455,7 @@ pub mod instantiation_solver {
                     reason,
                     targ,
                 )?;
-                if speculative_subtyping_succeeds(cx, trace, unknown_use(), &inferred, bound) {
+                if speculative_subtyping_succeeds(cx, trace, unknown_use(), &inferred, bound)? {
                     result_map.insert(name.dupe(), inferred);
                 } else {
                     return Ok(None);
@@ -2586,7 +2603,7 @@ pub mod kit {
         reason_op: &Reason,
         reason_tapp: &Reason,
     ) -> Result<(Type, Vec<(Type, subst_name::SubstName)>), FlowJsException> {
-        let (allow_underconstrained, rh) = match (return_hint.1)(cx, false, None, reason_op.dupe())
+        let (allow_underconstrained, rh) = match (return_hint.1)(cx, false, None, reason_op.dupe())?
         {
             HintEvalResult::HintAvailable(t, kind) => (true, Some((t, kind))),
             HintEvalResult::DecompositionError => (true, None),

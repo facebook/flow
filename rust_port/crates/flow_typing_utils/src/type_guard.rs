@@ -48,7 +48,7 @@ use flow_typing_type::type_util::reason_of_t;
 use flow_typing_visitors::type_visitor::TypeVisitor;
 use flow_typing_visitors::type_visitor::predicate_default;
 
-use crate::abnormal::AbnormalControlFlow;
+use crate::abnormal::CheckExprError;
 use crate::predicate_kit;
 use crate::type_env;
 
@@ -62,7 +62,7 @@ fn check_type_guard_consistency<'cx>(
     tg_param: &(ALoc, flow_data_structure_wrapper::smol_str::FlowSmolStr),
     tg_reason: &Reason,
     type_guard: &Type,
-) {
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let type_guard_consistency_maps = {
         let env = cx.environment();
         env.var_info.type_guard_consistency_maps.dupe()
@@ -106,7 +106,7 @@ fn check_type_guard_consistency<'cx>(
                     return_loc,
                     pos_write_locs,
                     neg_refi,
-                ) {
+                )? {
                     Ok((t, neg_pred)) => {
                         // Positive
                         if !is_return_false_statement {
@@ -125,7 +125,7 @@ fn check_type_guard_consistency<'cx>(
                             flow_js::flow_non_speculating(
                                 cx,
                                 (&t, &UseT::new(UseTInner::UseT(use_op, type_guard.dupe()))),
-                            );
+                            )?;
                         }
                         // Negative
                         if !one_sided && !is_return_true_statement {
@@ -142,9 +142,10 @@ fn check_type_guard_consistency<'cx>(
                                             );
                                             predicate_kit::run_predicate_for_filtering(
                                                 cx, type_guard, &neg_pred, &tvar,
-                                            )
+                                            );
+                                            Ok::<(), flow_utils_concurrency::job_error::JobError>(())
                                         },
-                                    )
+                                    )?
                                 }
                             };
                             let empty_t = flow_typing_type::type_::empty_t::at(ALoc::default());
@@ -152,7 +153,7 @@ fn check_type_guard_consistency<'cx>(
                                 cx,
                                 &type_guard_with_neg_pred,
                                 &empty_t,
-                            ) {
+                            )? {
                                 flow_js::add_output_non_speculating(
                                     cx,
                                     ErrorMessage::ENegativeTypeGuardConsistency(Box::new(
@@ -182,13 +183,14 @@ fn check_type_guard_consistency<'cx>(
             }
         }
     }
+    Ok(())
 }
 
 pub fn check_type_guard<'cx>(
     cx: &Context<'cx>,
     params: &function::Params<ALoc, ALoc>,
     type_guard_val: &TypeGuard,
-) {
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let TypeGuardInner {
         reason,
         inferred,
@@ -205,7 +207,7 @@ pub fn check_type_guard<'cx>(
                 type_guard_reason: type_guard_reason.dupe(),
                 binding_reason,
             })),
-        );
+        )
     };
 
     let error_on_non_root_binding =
@@ -234,12 +236,12 @@ pub fn check_type_guard<'cx>(
                     flow_js::add_output_non_speculating(
                         cx,
                         ErrorMessage::ETypeGuardThisParam(mk_reason(RThis, name_loc.dupe())),
-                    )
+                    );
                 } else {
                     flow_js::add_output_non_speculating(
                         cx,
                         ErrorMessage::ETypeGuardParamUnbound(tg_reason),
-                    )
+                    );
                 }
             }
             Some((p_loc, binding_kind))
@@ -247,13 +249,14 @@ pub fn check_type_guard<'cx>(
             {
                 check_type_guard_consistency(
                     cx, reason, *one_sided, p_loc, param_name, &tg_reason, type_guard,
-                );
+                )?;
             }
             Some(binding) => {
                 error_on_non_root_binding(name, &tg_reason, binding);
             }
         }
     }
+    Ok(())
 }
 
 // Given an function of the form `(x: T) => e`, we will infer a type guard iff
@@ -289,11 +292,11 @@ fn is_inferable_type_guard_predicate<'cx>(cx: &Context<'cx>, p: &Predicate) -> b
 fn is_inferable_type_guard_read<'cx>(
     cx: &Context<'cx>,
     read: &flow_env_builder::env_api::Read<ALoc>,
-) -> bool {
-    match type_env::read_to_predicate(cx, read) {
+) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+    Ok(match type_env::read_to_predicate(cx, read)? {
         Some(p) => is_inferable_type_guard_predicate(cx, &p),
         None => false,
-    }
+    })
 }
 
 fn infer_type_guard_from_read<'cx, F>(
@@ -303,12 +306,12 @@ fn infer_type_guard_from_read<'cx, F>(
     return_expr: &Expression<ALoc, ALoc>,
     return_reason: &Reason,
     read: &flow_env_builder::env_api::Read<ALoc>,
-) -> Result<Option<TypeGuard>, AbnormalControlFlow>
+) -> Result<Option<TypeGuard>, CheckExprError>
 where
     F: Fn(
         &Context<'cx>,
         &Expression<ALoc, ALoc>,
-    ) -> Result<Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow>,
+    ) -> Result<Expression<ALoc, (ALoc, Type)>, CheckExprError>,
 {
     let write_locs = &read.write_locs;
     let param_loc = &name.loc;
@@ -324,7 +327,7 @@ where
             one_sided: true,
         })
     };
-    let returns_bool = || -> Result<bool, AbnormalControlFlow> {
+    let returns_bool = || -> Result<bool, CheckExprError> {
         let result = infer_expr(cx, return_expr)?;
         let (_aloc, body_t) = result.loc();
         let bool_general = Type::new(TypeInner::DefT(
@@ -335,12 +338,12 @@ where
             cx,
             body_t,
             &bool_general,
-        ))
+        )?)
     };
 
     Ok(if !matches!(&*cx.typing_mode(), TypingMode::CheckingMode) {
         None
-    } else if is_inferable_type_guard_read(cx, read) {
+    } else if is_inferable_type_guard_read(cx, read)? {
         let return_loc = return_reason.loc().dupe();
         let param_t = type_env::find_write(
             cx,
@@ -352,10 +355,10 @@ where
             param_reason.dupe(),
             return_loc,
             write_locs,
-        );
+        )?;
         // Only keep the type guard if the function is actually refining the input
         // and is returning a boolean expression.
-        if FlowJs::speculative_subtyping_succeeds(cx, &param_t, &guard_t) || !returns_bool()? {
+        if FlowJs::speculative_subtyping_succeeds(cx, &param_t, &guard_t)? || !returns_bool()? {
             None
         } else {
             Some(mk_guard(guard_t))
@@ -369,12 +372,12 @@ pub fn infer_type_guard<'cx, F>(
     cx: &Context<'cx>,
     infer_expr: &F,
     params: &function::Params<ALoc, ALoc>,
-) -> Result<Option<TypeGuard>, AbnormalControlFlow>
+) -> Result<Option<TypeGuard>, CheckExprError>
 where
     F: Fn(
         &Context<'cx>,
         &Expression<ALoc, ALoc>,
-    ) -> Result<Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow>,
+    ) -> Result<Expression<ALoc, (ALoc, Type)>, CheckExprError>,
 {
     let type_guard_consistency_maps = {
         let env = cx.environment();

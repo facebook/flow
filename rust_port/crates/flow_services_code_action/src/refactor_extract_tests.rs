@@ -181,6 +181,7 @@ fn dummy_context() -> Context<'static> {
                 FlowOrdMap::new(),
             )
         }),
+        flow_utils_concurrency::check_budget::CheckBudget::new(None),
     )
 }
 
@@ -199,6 +200,7 @@ fn typed_ast_of_ast(
         comments,
         &aloc_ast,
     )
+    .expect("infer_ast should not be canceled in test")
 }
 
 fn remove_blank_lines(s: &str) -> String {

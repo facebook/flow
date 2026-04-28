@@ -637,12 +637,13 @@ pub fn convert_implicit_instantiation_literal_type<'cx>(
 }
 
 fn aloc_contains(outer: &ALoc, inner: &ALoc) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let outer = outer.to_loc_exn();
-        let inner = inner.to_loc_exn();
-        outer.contains(inner)
-    }))
-    .unwrap_or(false)
+    use flow_aloc::aloc_representation_do_not_use::is_keyed;
+    if is_keyed(outer) || is_keyed(inner) {
+        return false;
+    }
+    let outer = outer.to_loc_exn();
+    let inner = inner.to_loc_exn();
+    outer.contains(inner)
 }
 
 struct ConvertLiteralTypeToConstMapper {

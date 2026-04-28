@@ -28,7 +28,7 @@ use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_util;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 use flow_typing_utils::type_env;
 
 use crate::destructuring;
@@ -129,22 +129,26 @@ fn destruct<'a>(
     name: &str,
     default: Option<&flow_typing_default::Default<Type>>,
     t: Type,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     if let Some(d) = default {
         let reason = reason::mk_reason(VirtualReasonDesc::RIdentifier(Name::new(name)), name_loc);
-        let default_t = flow_js::mk_default_non_speculating(cx, &reason, d);
+        let default_t = flow_js::mk_default_non_speculating(cx, &reason, d)?;
         flow_js::flow_non_speculating(
             cx,
             (
                 &default_t,
                 &type_::UseT::new(type_::UseTInner::UseT(use_op.dupe(), t.dupe())),
             ),
-        );
+        )?;
     }
-    t
+    Ok(t)
 }
 
-fn flow_default<'a>(cx: &Context<'a>, annot_t: &Type, default_t: &Type) {
+fn flow_default<'a>(
+    cx: &Context<'a>,
+    annot_t: &Type,
+    default_t: &Type,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let use_op = UseOp::Op(std::sync::Arc::new(type_::RootUseOp::AssignVar {
         var: Some(type_util::reason_of_t(annot_t).dupe()),
         init: type_util::reason_of_t(default_t).dupe(),
@@ -155,7 +159,8 @@ fn flow_default<'a>(cx: &Context<'a>, annot_t: &Type, default_t: &Type) {
             default_t,
             &type_::UseT::new(type_::UseTInner::UseT(use_op, annot_t.dupe())),
         ),
-    );
+    )?;
+    Ok(())
 }
 
 fn eval_default<'a>(
@@ -164,19 +169,19 @@ fn eval_default<'a>(
     annot_t: &Type,
     has_anno: bool,
     default: Option<ast::expression::Expression<ALoc, ALoc>>,
-) -> Result<Option<ast::expression::Expression<ALoc, (ALoc, Type)>>, AbnormalControlFlow> {
+) -> Result<Option<ast::expression::Expression<ALoc, (ALoc, Type)>>, CheckExprError> {
     default
         .map(|e| {
             let e = statement::expression(None, None, None, cx, &e)?;
             let (loc, default_t) = e.loc().dupe();
             if has_anno {
-                flow_default(cx, annot_t, &default_t);
+                flow_default(cx, annot_t, &default_t)?;
                 let mut inner = (*e.0).clone();
                 *inner.loc_mut() = (loc, annot_t.dupe());
                 Ok(ast::expression::Expression(inner.into()))
             } else {
                 if always_flow_default {
-                    flow_default(cx, annot_t, &default_t);
+                    flow_default(cx, annot_t, &default_t)?;
                 }
                 Ok(e)
             }
@@ -187,8 +192,7 @@ fn eval_default<'a>(
 pub fn eval_param<'a>(
     cx: &Context<'a>,
     param: &Param,
-) -> Result<flow_typing_loc_env::func_stmt_config_types::ParamAst<(ALoc, Type)>, AbnormalControlFlow>
-{
+) -> Result<flow_typing_loc_env::func_stmt_config_types::ParamAst<(ALoc, Type)>, CheckExprError> {
     let Param {
         t,
         loc,

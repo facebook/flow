@@ -38,7 +38,7 @@ pub fn search<'cx>(
     ast: &ast::Program<Loc, Loc>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     def_locs: &[Loc],
-) -> SearchResult {
+) -> Result<SearchResult, flow_utils_concurrency::job_error::JobError> {
     let mut require_name_locs: Vec<(Loc, Loc)> = Vec::new();
     for require in file_sig.requires() {
         match require {
@@ -121,7 +121,7 @@ pub fn search<'cx>(
             AvailableAst::TypedAst(typed_ast.clone()),
             &Purpose::FindReferences,
             remote_loc,
-        );
+        )?;
         match result {
             GetDefResult::Def(locs, _) | GetDefResult::Partial(locs, _, _) => {
                 if locs.iter().any(|l| def_locs.contains(l)) {
@@ -135,8 +135,8 @@ pub fn search<'cx>(
             GetDefResult::BadLoc(_) | GetDefResult::DefError(_) => {}
         }
     }
-    SearchResult {
+    Ok(SearchResult {
         local_locs: local_locs.into_iter().collect(),
         remote_locs: remote_locs.into_iter().collect(),
-    }
+    })
 }

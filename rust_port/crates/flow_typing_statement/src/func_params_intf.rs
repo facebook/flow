@@ -12,7 +12,7 @@ use flow_typing_loc_env::func_class_sig_types::ConfigTypes;
 use flow_typing_type::type_::FunParam;
 use flow_typing_type::type_::FunRestParam;
 use flow_typing_type::type_::Type;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 
 pub trait Config: ConfigTypes {
     fn param_type(param: &Self::Param) -> FunParam;
@@ -38,7 +38,7 @@ pub trait Config: ConfigTypes {
     fn eval_param<'a>(
         cx: &Context<'a>,
         param: &Self::Param,
-    ) -> Result<Self::ParamAst, AbnormalControlFlow>;
+    ) -> Result<Self::ParamAst, CheckExprError>;
     fn eval_rest<'a>(cx: &Context<'a>, rest: &Self::Rest) -> Self::RestAst;
     fn eval_this<'a>(cx: &Context<'a>, this: &Self::ThisParam) -> Self::ThisAst;
 }

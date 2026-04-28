@@ -43,16 +43,7 @@ pub fn mk<'cx>(cx: &Context<'cx>, reason: Reason) -> Type {
     Type::new(TypeInner::OpenT(Tvar::new(reason, id as u32)))
 }
 
-pub fn mk_where<'cx, F>(cx: &Context<'cx>, reason: Reason, f: F) -> Type
-where
-    F: FnOnce(&Context<'cx>, &Type),
-{
-    let tvar = mk(cx, reason);
-    f(cx, &tvar);
-    tvar
-}
-
-pub fn mk_where_result<'cx, E>(
+pub fn mk_where<'cx, E>(
     cx: &Context<'cx>,
     reason: Reason,
     f: impl FnOnce(&Context<'cx>, &Type) -> Result<(), E>,
@@ -72,16 +63,7 @@ where
     tvar
 }
 
-pub fn mk_no_wrap_where<'cx, F>(cx: &Context<'cx>, reason: Reason, f: F) -> Type
-where
-    F: FnOnce(&Context<'cx>, &Reason, i32),
-{
-    let tvar = mk_no_wrap(cx, &reason);
-    f(cx, &reason, tvar);
-    Type::new(TypeInner::OpenT(Tvar::new(reason, tvar as u32)))
-}
-
-pub fn mk_no_wrap_where_result<'cx, E>(
+pub fn mk_no_wrap_where<'cx, E>(
     cx: &Context<'cx>,
     reason: Reason,
     f: impl FnOnce(&Context<'cx>, &Reason, i32) -> Result<(), E>,
@@ -102,9 +84,12 @@ pub fn mk_fully_resolved_lazy<'cx>(
     cx: &Context<'cx>,
     reason: Reason,
     force_post_component: bool,
-    f: Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
+    f: Box<
+        dyn FnOnce(&Context<'cx>) -> Result<Type, flow_utils_concurrency::job_error::JobError>
+            + 'cx,
+    >,
 ) -> Type {
-    let state = ForcingState::of_lazy_t(reason.dupe(), f);
+    let state = ForcingState::try_of_lazy_t(reason.dupe(), f);
     let id = mk_fully_resolved_helper(cx, state.clone());
     if force_post_component {
         cx.add_post_component_tvar_forcing_state(id, state);

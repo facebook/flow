@@ -92,7 +92,7 @@ pub fn rec_renders_to_renders<'cx>(
                 renders_structural_type: t,
             },
         ) => {
-            if !FlowJs::speculative_subtyping_succeeds(cx, &reconstruct_render_type(reasonl, l), t)
+            if !FlowJs::speculative_subtyping_succeeds(cx, &reconstruct_render_type(reasonl, l), t)?
             {
                 flow_js_utils::add_output(
                     cx,
@@ -169,7 +169,7 @@ pub fn rec_renders_to_renders<'cx>(
                 renders_structural_type: t,
             },
         ) => {
-            if !FlowJs::speculative_subtyping_succeeds(cx, &reconstruct_render_type(reasonl, l), t)
+            if !FlowJs::speculative_subtyping_succeeds(cx, &reconstruct_render_type(reasonl, l), t)?
             {
                 let u_type = reconstruct_render_type(reasonu, u);
                 let repositioned_super =
@@ -407,7 +407,7 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
                         ))),
                     ))
                 };
-                if FlowJs::speculative_subtyping_succeeds(cx, component_t, &top_abstract_component)
+                if FlowJs::speculative_subtyping_succeeds(cx, component_t, &top_abstract_component)?
                 {
                     concretize_component_renders_and_check(component_t)
                 } else if FlowJs::speculative_subtyping_succeeds(
@@ -420,7 +420,7 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
                             value: Name::new("svg"),
                         }),
                     )),
-                ) {
+                )? {
                     Ok((
                         vec![Type::new(TypeInner::DefT(
                             elem_reason.dupe(),
@@ -567,7 +567,7 @@ pub fn non_renders_to_renders<'cx>(
         ) if Some(&opq.nominal_id)
             == flow_js_utils::builtin_react_element_nominal_id(cx).as_ref() =>
         {
-            if !FlowJs::speculative_subtyping_succeeds(cx, l, t) {
+            if !FlowJs::speculative_subtyping_succeeds(cx, l, t)? {
                 try_promote_render_type_from_react_element_type(
                     cx,
                     trace,

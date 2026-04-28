@@ -134,6 +134,7 @@ fn before_and_after_stmts(
         aloc_table,
         resolve_require,
         mk_builtins,
+        flow_utils_concurrency::check_budget::CheckBudget::new(None),
     );
     let Ok(aloc_stmts) =
         polymorphic_ast_mapper::toplevel_statement_list(&mut flow_aloc::LocToALocMapper, stmts);
@@ -146,7 +147,8 @@ fn before_and_after_stmts(
         &md,
         &[],
         &aloc_ast,
-    );
+    )
+    .expect("infer_ast should not be canceled in test");
     let t_stmts: Vec<_> = typed_ast.statements.to_vec();
     (aloc_stmts, t_stmts)
 }

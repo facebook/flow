@@ -719,10 +719,8 @@ pub fn run<'cx>(
                                 // Use CondT to replace void with t1.
                                 let t1_clone = t1.dupe();
                                 let t2_clone = t2.dupe();
-                                let t = flow_typing_tvar::mk_where_result(
-                                    cx,
-                                    reason.dupe(),
-                                    |cx, tvar| {
+                                let t =
+                                    flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
                                         let filter_id = FlowJs::filter_optional(
                                             cx,
                                             Some(trace),
@@ -745,8 +743,7 @@ pub fn run<'cx>(
                                             }))),
                                         )?;
                                         Ok::<(), FlowJsException>(())
-                                    },
-                                )?;
+                                    })?;
                                 Some(make_property(l.dupe(), t, *m1 || *m2))
                             }
                         };
@@ -1105,7 +1102,7 @@ pub fn run<'cx>(
         Ok(())
     };
     let statics = |cx: &Context<'cx>, r: &Reason, i: &Type| -> Result<Type, FlowJsException> {
-        flow_typing_tvar::mk_no_wrap_where_result(cx, r.dupe(), |cx, reason, tvar_id| {
+        flow_typing_tvar::mk_no_wrap_where(cx, r.dupe(), |cx, reason, tvar_id| {
             let tvar = Tvar::new(reason.dupe(), tvar_id as u32);
             FlowJs::rec_flow(
                 cx,

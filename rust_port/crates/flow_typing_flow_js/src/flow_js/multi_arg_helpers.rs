@@ -279,7 +279,7 @@ pub(super) fn multiflow_partial<'cx>(
                     let i = elems.len() as i32;
                     let rest_param_t = rest_param_t.dupe();
                     let use_op = use_op.dupe();
-                    flow_typing_tvar::mk_where_result(cx, rest_reason.dupe(), |cx, tout| {
+                    flow_typing_tvar::mk_where(cx, rest_reason.dupe(), |cx, tout| {
                         rec_flow(
                             cx,
                             trace,
@@ -325,7 +325,7 @@ pub(super) fn multiflow_partial<'cx>(
             let arg_array = {
                 let arg_array_reason2 = arg_array_reason.dupe();
                 let use_op = use_op.dupe();
-                flow_typing_tvar::mk_where_result(cx, arg_array_reason.dupe(), |cx, tout| {
+                flow_typing_tvar::mk_where(cx, arg_array_reason.dupe(), |cx, tout| {
                     let reason_op = &arg_array_reason2;
                     let instantiable = flow_common::reason::is_instantiable_reason(rest_reason);
                     let element_reason =
@@ -1101,7 +1101,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             let arrtype = match last_inexact_tuple {
                 Some(arrtype) => arrtype,
                 None => {
-                    let elem_t = flow_typing_tvar::mk_where_result(cx, r.dupe(), |cx, tvar| {
+                    let elem_t = flow_typing_tvar::mk_where(cx, r.dupe(), |cx, tvar| {
                         for type_ex in tset.iter() {
                             helpers::flow(
                                 cx,

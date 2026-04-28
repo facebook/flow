@@ -36,7 +36,7 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UnsoundnessKind;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::unsoundness;
-use flow_typing_utils::abnormal::AbnormalControlFlow;
+use flow_typing_utils::abnormal::CheckExprError;
 use flow_typing_utils::type_env;
 use flow_typing_utils::typed_ast_utils::ErrorMapper;
 
@@ -46,13 +46,13 @@ pub type OnIdentifier<'a> = dyn Fn(
         /*cx:*/ &Context<'a>,
         /*id:*/ &ast::IdentifierInner<ALoc, ALoc>,
         /*loc:*/ ALoc,
-    ) -> Type
+    ) -> Result<Type, flow_utils_concurrency::job_error::JobError>
     + 'a;
 
 pub type OnExpression<'a> = dyn Fn(
         /*cx:*/ &Context<'a>,
         /*expr:*/ &expression::Expression<ALoc, ALoc>,
-    ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow>
+    ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, CheckExprError>
     + 'a;
 
 pub type OnBinding<'a> = dyn Fn(
@@ -61,7 +61,7 @@ pub type OnBinding<'a> = dyn Fn(
         /*kind:*/ VariableKind,
         /*name:*/ &FlowSmolStr,
         /*t:*/ Type,
-    ) -> Type
+    ) -> Result<Type, flow_utils_concurrency::job_error::JobError>
     + 'a;
 
 fn array_element(
@@ -197,7 +197,7 @@ fn binding<'a>(
     acc: &expression::Expression<ALoc, ALoc>,
     name_loc: ALoc,
     name: &FlowSmolStr,
-) -> Type {
+) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let reason = mk_reason(
         VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
         name_loc.dupe(),
@@ -219,7 +219,7 @@ fn binding_identifier<'a>(
     kind: VariableKind,
     acc: &expression::Expression<ALoc, ALoc>,
     id: &ast::Identifier<ALoc, ALoc>,
-) -> ast::Identifier<ALoc, (ALoc, Type)> {
+) -> Result<ast::Identifier<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
     let loc = id.loc.dupe();
     let name = &id.name;
     let comments = &id.comments;
@@ -229,20 +229,20 @@ fn binding_identifier<'a>(
             ErrorMessage::EMatchError(MatchErrorKind::MatchBindingInOrPattern { loc: loc.dupe() }),
         );
         let mut mapper = ErrorMapper;
-        {
+        Ok({
             let Ok(v) = polymorphic_ast_mapper::t_identifier(&mut mapper, id);
             v
-        }
+        })
     } else {
-        let t = binding(cx, on_binding, kind, acc, loc.dupe(), name);
-        ast::Identifier(
+        let t = binding(cx, on_binding, kind, acc, loc.dupe(), name)?;
+        Ok(ast::Identifier(
             ast::IdentifierInner {
                 loc: (loc, t),
                 name: name.dupe(),
                 comments: comments.clone(),
             }
             .into(),
-        )
+        ))
     }
 }
 
@@ -253,7 +253,10 @@ fn binding_pattern<'a>(
     loc: ALoc,
     acc: &expression::Expression<ALoc, ALoc>,
     bp: &match_pattern::BindingPattern<ALoc, ALoc>,
-) -> match_pattern::BindingPattern<ALoc, (ALoc, Type)> {
+) -> Result<
+    match_pattern::BindingPattern<ALoc, (ALoc, Type)>,
+    flow_utils_concurrency::job_error::JobError,
+> {
     let kind = bp.kind;
     let id = &bp.id;
     let comments = &bp.comments;
@@ -269,13 +272,13 @@ fn binding_pattern<'a>(
                 v
             }
         }
-        VariableKind::Const => binding_identifier(cx, on_binding, in_or_pattern, kind, acc, id),
+        VariableKind::Const => binding_identifier(cx, on_binding, in_or_pattern, kind, acc, id)?,
     };
-    match_pattern::BindingPattern {
+    Ok(match_pattern::BindingPattern {
         kind,
         id: typed_id,
         comments: comments.clone(),
-    }
+    })
 }
 
 fn member<'a>(
@@ -288,7 +291,7 @@ fn member<'a>(
         expression::Expression<ALoc, ALoc>,
         MemberPattern<ALoc, (ALoc, Type)>,
     ),
-    AbnormalControlFlow,
+    CheckExprError,
 > {
     let loc = mem.loc.dupe();
     let base = &mem.base;
@@ -301,7 +304,7 @@ fn member<'a>(
                 loc: id_loc.dupe(),
                 inner: id.dupe(),
             });
-            let t = on_identifier(EnclosingContext::OtherTestContext, cx, id, id_loc.dupe());
+            let t = on_identifier(EnclosingContext::OtherTestContext, cx, id, id_loc.dupe())?;
             let typed_id = ast::Identifier(
                 ast::IdentifierInner {
                     loc: (id_loc, t),
@@ -429,20 +432,30 @@ fn rest_pattern<'a>(
     in_or_pattern: bool,
     acc: &expression::Expression<ALoc, ALoc>,
     rest: &Option<match_pattern::RestPattern<ALoc, ALoc>>,
-) -> Option<match_pattern::RestPattern<ALoc, (ALoc, Type)>> {
-    rest.as_ref().map(|rp| {
-        let rest_loc = rp.loc.dupe();
-        let argument = &rp.argument;
-        let comments = &rp.comments;
-        let typed_argument = argument.as_ref().map(|(arg_loc, arg)| {
-            let typed_bp = binding_pattern(cx, on_binding, in_or_pattern, arg_loc.dupe(), acc, arg);
-            (arg_loc.dupe(), typed_bp)
-        });
-        match_pattern::RestPattern {
-            loc: rest_loc,
-            argument: typed_argument,
-            comments: comments.clone(),
+) -> Result<
+    Option<match_pattern::RestPattern<ALoc, (ALoc, Type)>>,
+    flow_utils_concurrency::job_error::JobError,
+> {
+    Ok(match rest.as_ref() {
+        Some(rp) => {
+            let rest_loc = rp.loc.dupe();
+            let argument = &rp.argument;
+            let comments = &rp.comments;
+            let typed_argument = match argument.as_ref() {
+                Some((arg_loc, arg)) => {
+                    let typed_bp =
+                        binding_pattern(cx, on_binding, in_or_pattern, arg_loc.dupe(), acc, arg)?;
+                    Some((arg_loc.dupe(), typed_bp))
+                }
+                None => None,
+            };
+            Some(match_pattern::RestPattern {
+                loc: rest_loc,
+                argument: typed_argument,
+                comments: comments.clone(),
+            })
         }
+        None => None,
     })
 }
 
@@ -454,7 +467,7 @@ fn pattern_<'a>(
     in_or_pattern: bool,
     acc: &expression::Expression<ALoc, ALoc>,
     p: &match_pattern::MatchPattern<ALoc, ALoc>,
-) -> Result<match_pattern::MatchPattern<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<match_pattern::MatchPattern<ALoc, (ALoc, Type)>, CheckExprError> {
     let _loc = p.loc().dupe();
     Ok(match p {
         match_pattern::MatchPattern::NumberPattern { loc, inner } => {
@@ -569,7 +582,7 @@ fn pattern_<'a>(
                     pattern: bp,
                 } => {
                     let typed_bp =
-                        binding_pattern(cx, on_binding, in_or_pattern, target_loc.dupe(), acc, bp);
+                        binding_pattern(cx, on_binding, in_or_pattern, target_loc.dupe(), acc, bp)?;
                     match_pattern::as_pattern::Target::Binding {
                         loc: target_loc.dupe(),
                         pattern: typed_bp,
@@ -583,7 +596,7 @@ fn pattern_<'a>(
                         VariableKind::Const,
                         acc,
                         id,
-                    );
+                    )?;
                     match_pattern::as_pattern::Target::Identifier(typed_id)
                 }
             };
@@ -598,7 +611,7 @@ fn pattern_<'a>(
             }
         }
         match_pattern::MatchPattern::IdentifierPattern { loc, inner } => {
-            let t = on_identifier(EnclosingContext::OtherTestContext, cx, inner, loc.dupe());
+            let t = on_identifier(EnclosingContext::OtherTestContext, cx, inner, loc.dupe())?;
             match_pattern::MatchPattern::IdentifierPattern {
                 loc: loc.dupe(),
                 inner: Box::new(ast::Identifier(
@@ -612,7 +625,7 @@ fn pattern_<'a>(
             }
         }
         match_pattern::MatchPattern::BindingPattern { loc, inner } => {
-            let typed_bp = binding_pattern(cx, on_binding, in_or_pattern, loc.dupe(), acc, inner);
+            let typed_bp = binding_pattern(cx, on_binding, in_or_pattern, loc.dupe(), acc, inner)?;
             match_pattern::MatchPattern::BindingPattern {
                 loc: loc.dupe(),
                 inner: typed_bp.into(),
@@ -685,7 +698,7 @@ fn pattern_<'a>(
                 match_pattern::InstancePatternConstructor::IdentifierConstructor(id) => {
                     let id_loc = id.loc.dupe();
                     let t =
-                        on_identifier(EnclosingContext::OtherTestContext, cx, id, id_loc.dupe());
+                        on_identifier(EnclosingContext::OtherTestContext, cx, id, id_loc.dupe())?;
                     match_pattern::InstancePatternConstructor::IdentifierConstructor(
                         ast::Identifier(
                             ast::IdentifierInner {
@@ -734,8 +747,8 @@ fn array_pattern<'a>(
     in_or_pattern: bool,
     acc: &expression::Expression<ALoc, ALoc>,
     ap: &match_pattern::ArrayPattern<ALoc, ALoc>,
-) -> Result<match_pattern::ArrayPattern<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
-    let typed_rest = rest_pattern(cx, on_binding, in_or_pattern, acc, &ap.rest);
+) -> Result<match_pattern::ArrayPattern<ALoc, (ALoc, Type)>, CheckExprError> {
+    let typed_rest = rest_pattern(cx, on_binding, in_or_pattern, acc, &ap.rest)?;
     let typed_elements = array_elements(
         cx,
         on_identifier,
@@ -760,7 +773,7 @@ fn array_elements<'a>(
     in_or_pattern: bool,
     acc: &expression::Expression<ALoc, ALoc>,
     elements: &[match_pattern::array_pattern::Element<ALoc, ALoc>],
-) -> Result<Vec<match_pattern::array_pattern::Element<ALoc, (ALoc, Type)>>, AbnormalControlFlow> {
+) -> Result<Vec<match_pattern::array_pattern::Element<ALoc, (ALoc, Type)>>, CheckExprError> {
     elements
         .iter()
         .enumerate()
@@ -793,8 +806,8 @@ fn object_pattern<'a>(
     pattern_kind: MatchObjPatternKind,
     acc: &expression::Expression<ALoc, ALoc>,
     op: &match_pattern::ObjectPattern<ALoc, ALoc>,
-) -> Result<match_pattern::ObjectPattern<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
-    let typed_rest = rest_pattern(cx, on_binding, in_or_pattern, acc, &op.rest);
+) -> Result<match_pattern::ObjectPattern<ALoc, (ALoc, Type)>, CheckExprError> {
+    let typed_rest = rest_pattern(cx, on_binding, in_or_pattern, acc, &op.rest)?;
     let typed_properties = object_properties(
         cx,
         on_identifier,
@@ -821,7 +834,7 @@ fn object_properties<'a>(
     pattern_kind: MatchObjPatternKind,
     acc: &expression::Expression<ALoc, ALoc>,
     props: &[match_pattern::object_pattern::Property<ALoc, ALoc>],
-) -> Result<Vec<match_pattern::object_pattern::Property<ALoc, (ALoc, Type)>>, AbnormalControlFlow> {
+) -> Result<Vec<match_pattern::object_pattern::Property<ALoc, (ALoc, Type)>>, CheckExprError> {
     let mut seen: BTreeSet<FlowSmolStr> = BTreeSet::new();
     let mut result: Vec<match_pattern::object_pattern::Property<ALoc, (ALoc, Type)>> = Vec::new();
 
@@ -919,7 +932,7 @@ pub fn pattern<'a>(
     on_binding: &OnBinding<'_>,
     acc: &expression::Expression<ALoc, ALoc>,
     p: &match_pattern::MatchPattern<ALoc, ALoc>,
-) -> Result<match_pattern::MatchPattern<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
+) -> Result<match_pattern::MatchPattern<ALoc, (ALoc, Type)>, CheckExprError> {
     pattern_(cx, on_identifier, on_expression, on_binding, false, acc, p)
 }
 
@@ -928,7 +941,7 @@ pub fn type_of_member_pattern<'a>(
     on_identifier: &OnIdentifier<'a>,
     on_expression: &OnExpression<'a>,
     mem: &MemberPattern<ALoc, ALoc>,
-) -> Result<Type, AbnormalControlFlow> {
+) -> Result<Type, CheckExprError> {
     let (_, typed_mem) = member(cx, on_identifier, on_expression, mem)?;
     Ok(typed_mem.loc.1.dupe())
 }

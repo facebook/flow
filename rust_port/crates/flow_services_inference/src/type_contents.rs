@@ -334,16 +334,21 @@ pub fn check_contents(
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> Result<(Context<'static>, ast::Program<ALoc, (ALoc, Type)>), CheckedDependenciesCanceled> {
+) -> Result<
+    Result<(Context<'static>, ast::Program<ALoc, (ALoc, Type)>), CheckedDependenciesCanceled>,
+    flow_utils_concurrency::job_error::JobError,
+> {
     with_timer(options, "MergeContents", || {
-        ensure_checked_dependencies(
+        if let Err(e) = ensure_checked_dependencies(
             options,
             &shared_mem,
             &filename,
             requires,
             node_modules_containers,
-        )?;
-        Ok(merge_service::check_contents_context(
+        ) {
+            return Ok(Err(e));
+        }
+        Ok(Ok(merge_service::check_contents_context(
             shared_mem,
             Arc::new(options.clone()),
             master_cx,
@@ -352,7 +357,7 @@ pub fn check_contents(
             docblock,
             file_sig,
             node_modules_containers,
-        ))
+        )?))
     })
 }
 
@@ -367,17 +372,22 @@ pub fn compute_env_of_contents(
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> Result<(Context<'static>, ast::Program<ALoc, ALoc>), CheckedDependenciesCanceled> {
+) -> Result<
+    Result<(Context<'static>, ast::Program<ALoc, ALoc>), CheckedDependenciesCanceled>,
+    flow_utils_concurrency::job_error::JobError,
+> {
     type_inference_hooks_js::with_for_ide(true, || {
         with_timer(options, "MergeContents", || {
-            ensure_checked_dependencies(
+            if let Err(e) = ensure_checked_dependencies(
                 options,
                 &shared_mem,
                 &filename,
                 requires,
                 node_modules_containers,
-            )?;
-            Ok(merge_service::compute_env_of_contents(
+            ) {
+                return Ok(Err(e));
+            }
+            Ok(Ok(merge_service::compute_env_of_contents(
                 shared_mem,
                 Arc::new(options.clone()),
                 master_cx,
@@ -386,7 +396,7 @@ pub fn compute_env_of_contents(
                 docblock,
                 file_sig,
                 node_modules_containers,
-            ))
+            )?))
         })
     })
 }
@@ -429,9 +439,15 @@ pub fn type_parse_artifacts(
                     })
                 })
             };
-            let (cx, typed_ast) = result.map_err(|CheckedDependenciesCanceled| {
-                TypeContentsError::CheckedDependenciesCanceled
-            })?;
+            let (cx, typed_ast) = match result {
+                Ok(Ok(v)) => v,
+                Ok(Err(CheckedDependenciesCanceled)) => {
+                    return Err(TypeContentsError::CheckedDependenciesCanceled);
+                }
+                Err(_canceled) => {
+                    return Err(TypeContentsError::CheckedDependenciesCanceled);
+                }
+            };
             Ok((
                 ParseArtifacts {
                     docblock,
