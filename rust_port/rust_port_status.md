@@ -68,8 +68,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `program_with_scope_and_jsx_pragma`
     - [x] `AbruptCompletion` type
     - [x] `SsaBuilder` struct with full AstVisitor implementation
-- [ ] codemods/
-  - [ ] utils/
+- [x] codemods/
+  - [x] utils/
     - [x] codemod_annotator.ml → `flow_codemods/src/utils/codemod_annotator.rs`
       - [x] `Queries` module → `queries`
       - [x] `ty_or_type_ast` type → `TyOrTypeAst`
@@ -113,7 +113,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `t` type → `CodemodReport`
       - [x] `unit_reporter`
       - [x] `S` module type → `CodemodReportS`
-    - [ ] codemod_runner.ml → `flow_codemods/src/utils/codemod_runner.rs`
+    - [x] codemod_runner.ml → `flow_codemods/src/utils/codemod_runner.rs`
       - [x] `log_input_files`
       - [x] `get_target_filename_set`
       - [x] `extract_flowlibs_or_exit`
@@ -132,54 +132,54 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `mk_next_for_check`
       - [x] `TYPED_RUNNER_WITH_PREPASS_CONFIG` → `TypedRunnerWithPrepassConfig`
       - [x] `TYPED_RUNNER_CONFIG` → `TypedRunnerConfig`
-      - [ ] `SimpleTypedRunner`
-      - [ ] `SimpleTypedTwoPassRunner`
-      - [ ] `TypedRunnerWithPrepass`
-      - [ ] `TypedRunner`
+      - [x] `SimpleTypedRunner`
+      - [x] `SimpleTypedTwoPassRunner`
+      - [x] `TypedRunnerWithPrepass`
+      - [x] `TypedRunner`
       - [x] `untyped_runner_job`
       - [x] `untyped_digest`
-      - [ ] `UntypedRunner`
-      - [ ] `UntypedFlowInitRunner`
-      - [ ] `RepeatRunner`
-      - [ ] `MakeSimpleTypedRunner`
-      - [ ] `MakeSimpleTypedTwoPassRunner`
-      - [ ] `MakeTypedRunnerWithPrepass`
-      - [ ] `MakeUntypedFlowInitRunner`
-      - [ ] `MakeUntypedRunner`
-    - [ ] codemod_utils.ml → `flow_codemods/src/utils/codemod_utils.rs`
+      - [x] `UntypedRunner`
+      - [x] `UntypedFlowInitRunner`
+      - [x] `RepeatRunner`
+      - [x] `MakeSimpleTypedRunner`
+      - [x] `MakeSimpleTypedTwoPassRunner`
+      - [x] `MakeTypedRunnerWithPrepass`
+      - [x] `MakeUntypedFlowInitRunner`
+      - [x] `MakeUntypedRunner`
+    - [x] codemod_utils.ml → `flow_codemods/src/utils/codemod_utils.rs`
       - [x] `abstract_codemod_runner` type → `AbstractCodemodRunner`
       - [x] `codemod_runner` type → `CodemodRunner`
       - [x] `job_config` type → `JobConfig`
       - [x] `save_ast_diff`
       - [x] `make_visitor`
       - [x] `initialize_logs`
-      - [ ] `MakeMain.main` → `MakeMain::main`
-  - [ ] annotate_exports.ml → `flow_codemods/src/annotate_exports.rs`
+      - [x] `MakeMain.main` → `MakeMain::main`
+  - [x] annotate_exports.ml → `flow_codemods/src/annotate_exports.rs`
     - [x] `SignatureVerification` module → `signature_verification`
     - [x] `SignatureVerificationErrorStats` module/type → `signature_verification_error_stats::SignatureVerificationErrorStats`
-    - [ ] `Codemod_exports_annotator`
-    - [ ] `Acc`
-    - [ ] `mapper`
-  - [ ] annotate_literal_declarations.ml → `flow_codemods/src/annotate_literal_declarations.rs`
+    - [x] `Codemod_exports_annotator` — functor instantiation; in Rust used inline as `codemod_annotator::Mapper<'_, '_, SignatureVerificationErrorStats>`
+    - [x] `Acc` — functor instantiation; in Rust used inline as `flow_services_code_action::insert_type_utils::Acc<SignatureVerificationErrorStats>`
+    - [x] `mapper` → `AnnotateExportsMapper`
+  - [x] annotate_literal_declarations.ml → `flow_codemods/src/annotate_literal_declarations.rs`
     - [x] `Stats` module/type → `stats::Stats`
-    - [ ] `Codemod_exports_annotator`
-    - [ ] `Acc`
-    - [ ] `mapper`
-  - [ ] annotate_optional_properties.ml → `flow_codemods/src/annotate_optional_properties.rs`
+    - [x] `Codemod_exports_annotator` — functor instantiation; in Rust used inline as `codemod_annotator::Mapper<'_, '_, Stats>`
+    - [x] `Acc` — functor instantiation; in Rust used inline as `flow_services_code_action::insert_type_utils::Acc<Stats>`
+    - [x] `mapper` → `AnnotateLiteralDeclarationsMapper`
+  - [x] annotate_optional_properties.ml → `flow_codemods/src/annotate_optional_properties.rs`
     - [x] `prop_data` type → `PropData`
     - [x] `PropDataSet`
     - [x] `prop_accesses`
     - [x] `data_of_prop_missing_error`
     - [x] `ErrorStats` module/type → `error_stats::ErrorStats`
-    - [ ] `Codemod_lti_annotator`
-    - [ ] `Acc`
-    - [ ] `mapper`
-  - [ ] remove_react_import.ml → `flow_codemods/src/remove_react_import.rs`
+    - [x] `Codemod_lti_annotator` — functor instantiation; in Rust used inline as `codemod_annotator::Mapper<'_, '_, ErrorStats>`
+    - [x] `Acc` — functor instantiation; in Rust used inline as `flow_services_code_action::insert_type_utils::Acc<ErrorStats>`
+    - [x] `mapper` → `AnnotateOptionalPropertiesMapper`
+  - [x] remove_react_import.ml → `flow_codemods/src/remove_react_import.rs`
     - [x] `RemoveReactImportStats` module/type → `remove_react_import_stats::RemoveReactImportStats`
     - [x] `Acc`
     - [x] `react_import_def_loc_opt_of_stmt`
-    - [ ] `has_unaccounted_react_value_usage_visitor` → `HasUnaccountedReactValueUsageVisitor`
-    - [ ] `mapper`
+    - [x] `has_unaccounted_react_value_usage_visitor` → `HasUnaccountedReactValueUsageVisitor`
+    - [x] `mapper` → `RemoveReactImportMapper`
 - [ ] commands/
   - [x] config/
     - [x] flowConfig.ml → `flow_config/src/flowconfig.rs`
