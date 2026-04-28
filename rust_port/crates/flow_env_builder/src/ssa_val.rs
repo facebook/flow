@@ -26,7 +26,7 @@ use crate::env_api::WriteLoc;
 
 static CURR_ID: AtomicUsize = AtomicUsize::new(0);
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum WriteStateInner<L: LocSig> {
     Uninitialized(L),
     Undeclared(FlowSmolStr, L),
@@ -57,6 +57,65 @@ pub enum WriteStateInner<L: LocSig> {
     DeclaredFunction(L),
 }
 
+// Mirrors OCaml's `Hashtbl.hash`: bounded depth/breadth so hashing huge PHI
+// trees built up by env_builder (e.g. switches with hundreds of cases, or
+// large generated code stays O(1) instead of blowing up to O(tree_size).
+// Equality is still structural, so cache correctness is preserved.
+const HASH_BOUND: usize = 8;
+
+impl<L: LocSig + std::hash::Hash> std::hash::Hash for WriteStateInner<L> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            WriteStateInner::Uninitialized(l)
+            | WriteStateInner::Projection(l)
+            | WriteStateInner::DeclaredFunction(l) => l.hash(state),
+            WriteStateInner::Undeclared(s, l) | WriteStateInner::DeclaredButSkipped(s, l) => {
+                s.hash(state);
+                l.hash(state);
+            }
+            WriteStateInner::FunctionThis(r)
+            | WriteStateInner::GlobalThis(r)
+            | WriteStateInner::IllegalThis(r)
+            | WriteStateInner::ClassInstanceThis(r)
+            | WriteStateInner::ClassStaticThis(r)
+            | WriteStateInner::ClassInstanceSuper(r)
+            | WriteStateInner::ClassStaticSuper(r)
+            | WriteStateInner::Loc(r)
+            | WriteStateInner::IllegalWrite(r)
+            | WriteStateInner::Undefined(r)
+            | WriteStateInner::Number(r) => r.hash(state),
+            WriteStateInner::ModuleScoped(s) | WriteStateInner::Global(s) => s.hash(state),
+            WriteStateInner::EmptyArray {
+                reason,
+                arr_providers,
+            } => {
+                reason.hash(state);
+                arr_providers.len().hash(state);
+                for p in arr_providers.iter().take(HASH_BOUND) {
+                    p.hash(state);
+                }
+            }
+            WriteStateInner::PHI(ts) => {
+                ts.len().hash(state);
+                for t in ts.iter().take(HASH_BOUND) {
+                    t.hash(state);
+                }
+            }
+            WriteStateInner::Refinement {
+                refinement_id,
+                val_t,
+            } => {
+                refinement_id.hash(state);
+                // Each Val has a unique id assigned by ValCache, so the id alone
+                // distinguishes Vals; skipping val_t.write_state avoids a deep
+                // recursive walk through nested Refinement/PHI chains.
+                val_t.id.hash(state);
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Dupe, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct WriteState<L: LocSig>(pub Rc<WriteStateInner<L>>);
 
@@ -78,10 +137,18 @@ impl<L: LocSig> WriteState<L> {
 /// single write, or a "join" of writes (in compiler terminology, a PHI node), or
 /// a reference to something that is unknown at a particular point in the AST
 /// during traversal, but will be known by the time traversal is complete.
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Val<L: LocSig> {
     pub id: usize,
     pub write_state: WriteState<L>,
+}
+
+impl<L: LocSig> std::hash::Hash for Val<L> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        // ValCache enforces id <-> write_state bijection, so id alone is enough
+        // for hashing. Avoids walking `write_state`'s recursive structure.
+        self.id.hash(state);
+    }
 }
 
 // Ensure we only produce one unique val for the same Loc
