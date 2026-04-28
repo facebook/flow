@@ -1526,7 +1526,8 @@ impl<Loc: Dupe + Eq + Ord + Hash + Default> ScopeBuilder<Loc> {
         }
     }
 
-    pub fn into_info(self) -> ScopeInfo<Loc> {
+    pub fn into_info(mut self) -> ScopeInfo<Loc> {
+        self.info.finalize();
         self.info
     }
 

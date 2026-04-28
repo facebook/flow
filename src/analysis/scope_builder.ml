@@ -789,7 +789,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
   module Acc = struct
     type t = info
 
-    let init = { max_distinct = 0; scopes = IMap.empty }
+    let init = Api.empty_info
   end
 
   module Env : sig
@@ -1329,9 +1329,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       let hoist = new hoister ~enable_enums ~with_types in
       hoist#eval hoist#program program
     in
-    walk#eval
-      (fun program -> walk#with_bindings loc bindings (fun () -> walk#program program))
-      program
+    let info =
+      walk#eval
+        (fun program -> walk#with_bindings loc bindings (fun () -> walk#program program))
+        program
+    in
+    Api.finalize info
 end
 
 module With_Loc = Make (Loc_sig.LocS) (Scope_api.With_Loc)

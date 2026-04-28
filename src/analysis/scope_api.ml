@@ -62,8 +62,44 @@ module Make (L : Loc_sig.S) = struct
     max_distinct: int;
     (* map of scope ids to local scopes *)
     scopes: Scope.t IMap.t;
+    flat_use_def: Def.t L.LMap.t; [@opaque]
+    flat_def_uses: L.LSet.t DefMap.t; [@opaque]
+    use_scope: (int * Scope.t) L.LMap.t; [@opaque]
   }
   [@@deriving show]
+
+  let empty_info =
+    {
+      max_distinct = 0;
+      scopes = IMap.empty;
+      flat_use_def = L.LMap.empty;
+      flat_def_uses = DefMap.empty;
+      use_scope = L.LMap.empty;
+    }
+
+  let finalize info =
+    let flat_use_def =
+      IMap.fold (fun _ scope acc -> L.LMap.union scope.Scope.locals acc) info.scopes L.LMap.empty
+    in
+    let flat_def_uses =
+      L.LMap.fold
+        (fun use def def_uses_map ->
+          match DefMap.find_opt def def_uses_map with
+          | None -> DefMap.add def (L.LSet.singleton use) def_uses_map
+          | Some uses -> DefMap.add def (L.LSet.add use uses) def_uses_map)
+        flat_use_def
+        DefMap.empty
+    in
+    let use_scope =
+      IMap.fold
+        (fun scope_id scope acc ->
+          L.LMap.fold (fun use _ acc -> L.LMap.add use (scope_id, scope) acc) scope.Scope.locals acc)
+        info.scopes
+        L.LMap.empty
+    in
+    { info with flat_use_def; flat_def_uses; use_scope }
+
+  let scope_of_use info use = L.LMap.find_opt use info.use_scope
 
   let all_uses { scopes; _ } =
     IMap.fold
@@ -72,29 +108,13 @@ module Make (L : Loc_sig.S) = struct
       scopes
       L.LSet.empty
 
-  let defs_of_all_uses { scopes; _ } =
-    IMap.fold (fun _ scope acc -> L.LMap.union scope.Scope.locals acc) scopes L.LMap.empty
+  let defs_of_all_uses info = info.flat_use_def
 
-  let uses_of_all_defs info =
-    let use_def_map = defs_of_all_uses info in
-    L.LMap.fold
-      (fun use def def_uses_map ->
-        match DefMap.find_opt def def_uses_map with
-        | None -> DefMap.add def (L.LSet.singleton use) def_uses_map
-        | Some uses -> DefMap.add def (L.LSet.add use uses) def_uses_map)
-      use_def_map
-      DefMap.empty
+  let uses_of_all_defs info = info.flat_def_uses
 
   exception Missing_def of info * use
 
-  let def_of_use_opt { scopes; _ } use =
-    IMap.fold
-      (fun _ scope acc ->
-        match acc with
-        | Some _ -> acc
-        | None -> L.LMap.find_opt use scope.Scope.locals)
-      scopes
-      None
+  let def_of_use_opt info use = L.LMap.find_opt use info.flat_use_def
 
   let def_of_use info use =
     match def_of_use_opt info use with
@@ -105,34 +125,25 @@ module Make (L : Loc_sig.S) = struct
     let def = def_of_use info use in
     Def.is use def
 
-  let uses_of_def { scopes; _ } ?(exclude_def = false) def =
-    IMap.fold
-      (fun _ scope acc ->
-        L.LMap.fold
-          (fun use def' uses ->
-            if exclude_def && Def.is use def' then
-              uses
-            else if Def.compare def def' = 0 then
-              L.LSet.add use uses
-            else
-              uses)
-          scope.Scope.locals
-          acc)
-      scopes
-      L.LSet.empty
+  let uses_of_def info ?(exclude_def = false) def =
+    match DefMap.find_opt def info.flat_def_uses with
+    | None -> L.LSet.empty
+    | Some uses ->
+      if exclude_def then
+        L.LSet.filter (fun use -> not (Def.is use def)) uses
+      else
+        uses
 
   let scopes_of_uses_of_def { scopes; _ } def =
     IMap.fold
       (fun scope_id scope acc ->
-        L.LMap.fold
-          (fun use def' scopes ->
-            if Def.is use def' then
-              scopes
-            else if Def.compare def def' = 0 then
-              ISet.add scope_id scopes
-            else
-              scopes)
-          scope.Scope.locals
+        if
+          L.LMap.exists
+            (fun use def' -> (not (Def.is use def')) && Def.compare def def' = 0)
+            scope.Scope.locals
+        then
+          ISet.add scope_id acc
+        else
           acc)
       scopes
       ISet.empty
@@ -188,8 +199,7 @@ module Make (L : Loc_sig.S) = struct
     in
     scope_id
 
-  let is_local_use { scopes; _ } use =
-    IMap.exists (fun _ scope -> L.LMap.mem use scope.Scope.locals) scopes
+  let is_local_use info use = L.LMap.mem use info.flat_use_def
 
   let rec fold_scope_chain info f scope_id acc =
     let s = scope info scope_id in

@@ -95,14 +95,12 @@ struct
           lookup (in_current_var_scope && scope.Scope_api.Scope.lexical) info scope' def
     in
     fun info use ->
-      let scopes = info.Scope_api.scopes in
-      IMap.fold
-        (fun _scope_id scope acc ->
-          match L.LMap.find_opt use scope.Scope_api.Scope.locals with
-          | Some def -> acc && lookup true info scope def
-          | None -> acc)
-        scopes
-        true
+      match Scope_api.scope_of_use info use with
+      | Some (_scope_id, scope) ->
+        (match L.LMap.find_opt use scope.Scope_api.Scope.locals with
+        | Some def -> lookup true info scope def
+        | None -> true)
+      | None -> true
 
   let written_by_closure info values loc =
     let uses = Scope_api.uses_of_use info loc in

@@ -156,13 +156,13 @@ where
         }
     }
 
-    let mut result = true;
-    for scope in info.scopes.values() {
-        if let Some(def) = scope.locals.get(use_loc) {
-            result = result && lookup(true, info, scope, def);
-        }
+    match info.scope_of_use(use_loc) {
+        Some((_scope_id, scope)) => match scope.locals.get(use_loc) {
+            Some(def) => lookup(true, info, scope, def),
+            None => true,
+        },
+        None => true,
     }
-    result
 }
 
 pub fn written_by_closure<L>(info: &ScopeInfo<L>, values: &Values<L>, loc: &L) -> BTreeSet<L>

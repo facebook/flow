@@ -72,6 +72,9 @@ pub struct Scope<Loc> {
 pub struct ScopeInfo<Loc> {
     pub(super) max_distinct: u32,
     pub scopes: BTreeMap<ScopeId, Scope<Loc>>,
+    flat_use_def: BTreeMap<Loc, Def<Loc>>,
+    flat_def_uses: BTreeMap<Def<Loc>, BTreeSet<Loc>>,
+    use_scope: BTreeMap<Loc, ScopeId>,
 }
 
 impl<Loc: Dupe + PartialEq + Eq + Ord + Hash> ScopeInfo<Loc> {
@@ -79,7 +82,46 @@ impl<Loc: Dupe + PartialEq + Eq + Ord + Hash> ScopeInfo<Loc> {
         Self {
             max_distinct: 0,
             scopes: BTreeMap::new(),
+            flat_use_def: BTreeMap::new(),
+            flat_def_uses: BTreeMap::new(),
+            use_scope: BTreeMap::new(),
         }
+    }
+
+    pub fn finalize(&mut self) {
+        self.flat_use_def = {
+            let mut result = BTreeMap::new();
+            for scope in self.scopes.values() {
+                for (use_loc, def) in &scope.locals {
+                    result.insert(use_loc.dupe(), def.clone());
+                }
+            }
+            result
+        };
+        self.flat_def_uses = {
+            let mut def_uses_map: BTreeMap<Def<Loc>, BTreeSet<Loc>> = BTreeMap::new();
+            for (use_loc, def) in &self.flat_use_def {
+                def_uses_map
+                    .entry(def.clone())
+                    .or_default()
+                    .insert(use_loc.dupe());
+            }
+            def_uses_map
+        };
+        self.use_scope = {
+            let mut result = BTreeMap::new();
+            for (scope_id, scope) in &self.scopes {
+                for use_loc in scope.locals.keys() {
+                    result.insert(use_loc.dupe(), *scope_id);
+                }
+            }
+            result
+        };
+    }
+
+    pub fn scope_of_use(&self, use_loc: &Loc) -> Option<(ScopeId, &Scope<Loc>)> {
+        let scope_id = self.use_scope.get(use_loc)?;
+        Some((*scope_id, self.scope(*scope_id)))
     }
 
     pub fn all_uses(&self) -> BTreeSet<&Loc> {
@@ -93,34 +135,15 @@ impl<Loc: Dupe + PartialEq + Eq + Ord + Hash> ScopeInfo<Loc> {
     }
 
     pub fn defs_of_all_uses(&self) -> BTreeMap<Loc, Def<Loc>> {
-        let mut result = BTreeMap::new();
-        for scope in self.scopes.values() {
-            for (use_loc, def) in &scope.locals {
-                result.insert(use_loc.dupe(), def.clone());
-            }
-        }
-        result
+        self.flat_use_def.clone()
     }
 
     pub fn uses_of_all_defs(&self) -> BTreeMap<Def<Loc>, BTreeSet<Loc>> {
-        let use_def_map = self.defs_of_all_uses();
-        let mut def_uses_map: BTreeMap<Def<Loc>, BTreeSet<Loc>> = BTreeMap::new();
-        for (use_loc, def) in use_def_map {
-            def_uses_map
-                .entry(def)
-                .or_insert_with(BTreeSet::new)
-                .insert(use_loc);
-        }
-        def_uses_map
+        self.flat_def_uses.clone()
     }
 
     pub fn def_of_use_opt(&self, use_loc: &Loc) -> Option<&Def<Loc>> {
-        for scope in self.scopes.values() {
-            if let Some(def) = scope.locals.get(use_loc) {
-                return Some(def);
-            }
-        }
-        None
+        self.flat_use_def.get(use_loc)
     }
 
     pub fn use_is_def(&self, use_loc: &Loc) -> bool {
@@ -129,30 +152,30 @@ impl<Loc: Dupe + PartialEq + Eq + Ord + Hash> ScopeInfo<Loc> {
     }
 
     pub fn uses_of_def(&self, def: &Def<Loc>, exclude_def: bool) -> BTreeSet<Loc> {
-        let mut uses = BTreeSet::new();
-        for scope in self.scopes.values() {
-            for (use_loc, def_prime) in &scope.locals {
-                if exclude_def && def_prime.is(use_loc) {
-                    continue;
-                }
-                if def == def_prime {
-                    uses.insert(use_loc.dupe());
+        match self.flat_def_uses.get(def) {
+            None => BTreeSet::new(),
+            Some(uses) => {
+                if exclude_def {
+                    uses.iter()
+                        .filter(|use_loc| !def.is(use_loc))
+                        .cloned()
+                        .collect()
+                } else {
+                    uses.clone()
                 }
             }
         }
-        uses
     }
 
     pub fn scopes_of_uses_of_def(&self, def: &Def<Loc>) -> BTreeSet<ScopeId> {
         let mut scopes = BTreeSet::new();
         for (scope_id, scope) in &self.scopes {
-            for (use_loc, def_prime) in &scope.locals {
-                if def_prime.is(use_loc) {
-                    continue;
-                }
-                if def == def_prime {
-                    scopes.insert(*scope_id);
-                }
+            if scope
+                .locals
+                .iter()
+                .any(|(use_loc, def_prime)| !def_prime.is(use_loc) && def == def_prime)
+            {
+                scopes.insert(*scope_id);
             }
         }
         scopes
@@ -217,9 +240,7 @@ impl<Loc: Dupe + PartialEq + Eq + Ord + Hash> ScopeInfo<Loc> {
     }
 
     pub fn is_local_use(&self, use_loc: &Loc) -> bool {
-        self.scopes
-            .values()
-            .any(|scope| scope.locals.contains_key(use_loc))
+        self.flat_use_def.contains_key(use_loc)
     }
 
     pub fn fold_scope_chain<A>(

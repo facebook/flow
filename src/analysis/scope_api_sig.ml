@@ -45,8 +45,17 @@ module type S = sig
   type info = {
     max_distinct: int;
     scopes: Scope.t IMap.t;
+    flat_use_def: Def.t L.LMap.t; [@opaque]
+    flat_def_uses: L.LSet.t DefMap.t; [@opaque]
+    use_scope: (int * Scope.t) L.LMap.t; [@opaque]
   }
   [@@deriving show]
+
+  val empty_info : info
+
+  val finalize : info -> info
+
+  val scope_of_use : info -> use -> (int * Scope.t) option
 
   exception Missing_def of info * use
 
