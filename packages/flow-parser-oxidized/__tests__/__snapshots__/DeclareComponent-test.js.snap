@@ -167,17 +167,25 @@ exports[`DeclareComponent Params and renders ESTree 1`] = `
       },
       "params": [
         {
+          "local": {
+            "name": "bar",
+            "optional": false,
+            "type": "Identifier",
+            "typeAnnotation": {
+              "type": "TypeAnnotation",
+              "typeAnnotation": {
+                "type": "StringTypeAnnotation",
+              },
+            },
+          },
           "name": {
             "name": "bar",
             "optional": false,
             "type": "Identifier",
             "typeAnnotation": null,
           },
-          "optional": false,
-          "type": "ComponentTypeParameter",
-          "typeAnnotation": {
-            "type": "StringTypeAnnotation",
-          },
+          "shorthand": true,
+          "type": "ComponentParameter",
         },
       ],
       "rendersType": {
@@ -234,46 +242,49 @@ exports[`DeclareComponent Rest param ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
-      "params": [],
-      "rendersType": null,
-      "rest": {
-        "name": {
-          "name": "rest",
-          "optional": false,
-          "type": "Identifier",
-          "typeAnnotation": null,
-        },
-        "optional": false,
-        "type": "ComponentTypeParameter",
-        "typeAnnotation": {
-          "callProperties": [],
-          "exact": false,
-          "indexers": [],
-          "inexact": false,
-          "internalSlots": [],
-          "properties": [
-            {
-              "key": {
-                "name": "bar",
-                "optional": false,
-                "type": "Identifier",
-                "typeAnnotation": null,
+      "params": [
+        {
+          "argument": {
+            "name": "rest",
+            "optional": false,
+            "type": "Identifier",
+            "typeAnnotation": {
+              "type": "TypeAnnotation",
+              "typeAnnotation": {
+                "callProperties": [],
+                "exact": false,
+                "indexers": [],
+                "inexact": false,
+                "internalSlots": [],
+                "properties": [
+                  {
+                    "key": {
+                      "name": "bar",
+                      "optional": false,
+                      "type": "Identifier",
+                      "typeAnnotation": null,
+                    },
+                    "kind": "init",
+                    "method": false,
+                    "optional": false,
+                    "proto": false,
+                    "static": false,
+                    "type": "ObjectTypeProperty",
+                    "value": {
+                      "type": "StringTypeAnnotation",
+                    },
+                    "variance": null,
+                  },
+                ],
+                "type": "ObjectTypeAnnotation",
               },
-              "kind": "init",
-              "method": false,
-              "optional": false,
-              "proto": false,
-              "static": false,
-              "type": "ObjectTypeProperty",
-              "value": {
-                "type": "StringTypeAnnotation",
-              },
-              "variance": null,
             },
-          ],
-          "type": "ObjectTypeAnnotation",
+          },
+          "type": "RestElement",
         },
-      },
+      ],
+      "rendersType": null,
+      "rest": null,
       "type": "DeclareComponent",
       "typeParameters": null,
     },

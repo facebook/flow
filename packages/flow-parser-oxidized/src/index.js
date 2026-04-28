@@ -839,6 +839,15 @@ function applyPerNodeFixups(node, code) {
       delete node.keyword;
       delete node.global;
       break;
+    case 'DeclareHook':
+      // Adapter fixup (#54 over-emit): upstream hermes-parser's DeclareHook
+      // carries only `type/loc/id` (verified in
+      // xplat/static_h/tools/hermes-parser/js/hermes-parser/src/HermesParserNodeDeserializers.js).
+      // The Rust serializer inherits extra declaration slots; strip them for
+      // hermes-parser parity.
+      delete node.implicitDeclare;
+      delete node.typeAnnotation;
+      break;
     case 'ComponentDeclaration':
       // Adapter fixup (#11 over-emit): `implicitDeclare` is a
       // DeclareNamespace-only field. Upstream hermes-parser's
@@ -960,6 +969,27 @@ function applyPerNodeFixups(node, code) {
         node.type = 'ThisTypeAnnotation';
         delete node.id;
         delete node.typeParameters;
+      }
+      break;
+    case 'ObjectTypeMappedTypeProperty':
+      // Adapter fixup (#55 over-emit): upstream hermes-parser does not emit
+      // `nameType` or `varianceOp` on ObjectTypeMappedTypeProperty. The Rust
+      // serializer carries those newer wire slots, but when they are absent in
+      // source they should not surface as explicit `null`s in the public AST.
+      if (node.nameType == null) {
+        delete node.nameType;
+      }
+      if (node.varianceOp == null) {
+        delete node.varianceOp;
+      }
+      break;
+    case 'TypeParameter':
+      // Adapter fixup (#56): upstream hermes-parser stores `bound` directly as
+      // the annotation node (for example NumberTypeAnnotation), while the Rust
+      // serializer currently wraps some bounds in a TypeAnnotation node.
+      // Unwrap the extra shell for parity.
+      if (node.bound?.type === 'TypeAnnotation') {
+        node.bound = node.bound.typeAnnotation;
       }
       break;
   }

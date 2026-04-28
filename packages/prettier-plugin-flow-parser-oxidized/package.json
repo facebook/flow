@@ -36,6 +36,7 @@
   },
   "files": [
     "index.mjs",
+    "index.bundle.mjs",
     "LICENSE",
     "PRETTIER_LICENCE",
     "README.md"

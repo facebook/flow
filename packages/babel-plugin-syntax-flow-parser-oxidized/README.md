@@ -1,6 +1,6 @@
 # babel-plugin-syntax-flow-parser-oxidized
 
-Fork of upstream [`babel-plugin-syntax-hermes-parser`](https://github.com/facebook/hermes/tree/main/tools/hermes-parser/js/babel-plugin-syntax-hermes-parser) rewired to use `flow-parser-oxidized` (the Flow Rust parser compiled to WASM) instead of `hermes-parser`. This plugin switches Babel to use `flow-parser-oxidized` instead of the `@babel/parser`, providing full syntax support for Flow.
+Hermes parser plugin for [Babel](https://babeljs.io/). This plugin switches Babel to use `flow-parser-oxidized` instead of the `@babel/parser`. Since Hermes parser uses C++ compiled to WASM it is significantly faster and provides full syntax support for Flow.
 
 ## Install
 

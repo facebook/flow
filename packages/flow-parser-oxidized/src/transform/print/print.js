@@ -14,7 +14,7 @@ import type {MaybeDetachedNode} from './detachedNodeTypes';
 import type {Program} from 'flow-estree-oxidized';
 
 import mutateESTreeASTForPrettier from '../../utils/mutateESTreeASTForPrettier';
-import * as prettier from 'prettier';
+import * as prettier from 'prettier/standalone';
 import {mutateESTreeASTCommentsForPrettier} from './comments/comments';
 import type {VisitorKeysType} from '../../traverse/getVisitorKeys';
 
@@ -68,8 +68,8 @@ export async function print(
   // contract suite all pass; the (small) printer-output differences for
   // newer Flow syntax are tracked separately.
   const prettierFlowPlugin = require('prettier/plugins/flow');
+  const prettierESTreePlugin = require('prettier/plugins/estree');
   const pluginParser = prettierFlowPlugin.parsers.flow;
-  const pluginPrinter = undefined;
   const pluginParserName = 'flow';
 
   return prettier.format(
@@ -80,6 +80,7 @@ export async function print(
       parser: pluginParserName,
       requirePragma: false,
       plugins: [
+        prettierESTreePlugin,
         {
           parsers: {
             [pluginParserName]: {
@@ -89,7 +90,6 @@ export async function print(
               },
             },
           },
-          printers: pluginPrinter,
         },
       ],
     },

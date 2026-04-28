@@ -1,0 +1,69 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @format
+ */
+
+'use strict';
+
+const path = require('path');
+
+module.exports = {
+  automock: false,
+  clearMocks: true,
+  collectCoverage: false,
+  resetModules: true,
+  testMatch: ['**/__tests__/**/*-test.js'],
+  snapshotFormat: {
+    escapeString: false,
+    printBasicPrototype: false,
+  },
+  testPathIgnorePatterns: ['/node_modules/'],
+  transformIgnorePatterns: ['/node_modules/', '/dist/'],
+
+  // Sibling package resolution: these packages are all part of the same
+  // workspace tree, so point jest at local sources instead of expecting built
+  // package artifacts under dist/.
+  moduleNameMapper: {
+    '^flow-estree-oxidized$': path.resolve(
+      __dirname,
+      '..',
+      'flow-estree-oxidized',
+      'src',
+      'index.js',
+    ),
+    '^flow-eslint-oxidized$': path.resolve(
+      __dirname,
+      '..',
+      'flow-eslint-oxidized',
+      'src',
+      'index.js',
+    ),
+    '^flow-parser-oxidized$': path.resolve(
+      __dirname,
+      '..',
+      'flow-parser-oxidized',
+      'dist',
+      'index.js',
+    ),
+    '^prettier-plugin-flow-parser-oxidized$': path.resolve(
+      __dirname,
+      'jest.prettier-plugin-flow-parser-oxidized.js',
+    ),
+
+    // Tests import `../../../.prettierrc.json` which would resolve to
+    // `flow/packages/.prettierrc.json` — that shared config file does not
+    // exist in this workspace mirror. Reuse the local copy already maintained
+    // in the prettier-plugin package.
+    '^\\.\\./\\.\\./\\.\\./\\.prettierrc\\.json$': path.resolve(
+      __dirname,
+      '..',
+      'prettier-plugin-flow-parser-oxidized',
+      '.prettierrc.json',
+    ),
+  },
+};

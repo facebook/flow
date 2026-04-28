@@ -46,7 +46,6 @@ exports[`MappedType Basic ESTree 1`] = `
               "usesExtendsBound": false,
               "variance": null,
             },
-            "nameType": null,
             "optional": null,
             "propType": {
               "indexType": {
@@ -86,7 +85,6 @@ exports[`MappedType Basic ESTree 1`] = `
             },
             "type": "ObjectTypeMappedTypeProperty",
             "variance": null,
-            "varianceOp": null,
           },
         ],
         "type": "ObjectTypeAnnotation",
@@ -145,7 +143,6 @@ exports[`MappedType Union ESTree 1`] = `
               "usesExtendsBound": false,
               "variance": null,
             },
-            "nameType": null,
             "optional": null,
             "propType": {
               "indexType": {
@@ -200,7 +197,6 @@ exports[`MappedType Union ESTree 1`] = `
             },
             "type": "ObjectTypeMappedTypeProperty",
             "variance": null,
-            "varianceOp": null,
           },
         ],
         "type": "ObjectTypeAnnotation",

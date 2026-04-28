@@ -2,8 +2,6 @@
 
 `flow-eslint-oxidized` is a custom parser for [ESLint](https://eslint.org/). It is the recommended parser for use for linting with Flow code.
 
-This package is a fork of [`hermes-eslint`](https://github.com/facebook/hermes/tree/main/tools/hermes-parser/js/hermes-eslint) — see `xplat/static_h/tools/hermes-parser/js/hermes-eslint`. It rewires the upstream `hermes-parser` and `hermes-estree` dependencies onto the in-tree `flow-parser-oxidized` and `flow-estree-oxidized` workspaces; no behavioral changes were made. The upstream TypeScript-ESLint scope-manager license (`TYPESCRIPT_ESLINT_SCOPE_MANAGER_LICENSE`) is preserved verbatim.
-
 ## Usage
 
 To use `flow-eslint-oxidized` as the parser for ESLint in your project you must specify `"flow-eslint-oxidized"` as the `"parser"` in your `.eslintrc` configuration file:

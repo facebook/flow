@@ -14,7 +14,7 @@ import type {MaybeDetachedNode} from '../detachedNode';
 import type {Program} from 'flow-estree-oxidized';
 
 import {mutateESTreeASTForPrettier} from 'flow-parser-oxidized';
-import * as prettier from 'prettier';
+import * as prettier from 'prettier/standalone';
 import {mutateESTreeASTCommentsForPrettier} from './comments/comments';
 import type {VisitorKeysType} from 'flow-parser-oxidized';
 
@@ -50,6 +50,7 @@ export async function print(
   let pluginParserName = 'flow';
   let pluginParser;
   let pluginPrinter;
+  let additionalPlugins = [];
   try {
     // Use prettier-plugin-flow-parser-oxidized if we can. It has latest Flow syntax support.
     // $FlowExpectedError[untyped-import]
@@ -57,11 +58,18 @@ export async function print(
       'prettier-plugin-flow-parser-oxidized'
     );
     pluginParser = prettierHermesPlugin.parsers.hermes;
-    pluginPrinter = prettierHermesPlugin.printers;
-    pluginParserName = 'hermes';
+    if (prettierHermesPlugin.__flowTransformUseFlowParserName === true) {
+      const prettierESTreePlugin = require('prettier/plugins/estree');
+      additionalPlugins = [prettierESTreePlugin];
+    } else {
+      pluginPrinter = prettierHermesPlugin.printers;
+      pluginParserName = 'hermes';
+    }
   } catch {
     const prettierFlowPlugin = require('prettier/plugins/flow');
+    const prettierESTreePlugin = require('prettier/plugins/estree');
     pluginParser = prettierFlowPlugin.parsers.flow;
+    additionalPlugins = [prettierESTreePlugin];
   }
 
   return prettier.format(
@@ -72,6 +80,7 @@ export async function print(
       parser: pluginParserName,
       requirePragma: false,
       plugins: [
+        ...additionalPlugins,
         {
           parsers: {
             [pluginParserName]: {

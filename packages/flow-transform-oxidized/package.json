@@ -8,6 +8,9 @@
     "type": "git",
     "url": "https://github.com/facebook/flow.git"
   },
+  "scripts": {
+    "test": "jest"
+  },
   "main": "dist/index.js",
   "dependencies": {
     "@babel/code-frame": "^7.16.0",

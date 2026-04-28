@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`ConditionalTypeAnnotation Basic Babel 1`] = `
 {
@@ -179,10 +179,7 @@ exports[`ConditionalTypeAnnotation InferType ESTree 1`] = `
                   "type": "InferTypeAnnotation",
                   "typeParameter": {
                     "bound": {
-                      "type": "TypeAnnotation",
-                      "typeAnnotation": {
-                        "type": "NumberTypeAnnotation",
-                      },
+                      "type": "NumberTypeAnnotation",
                     },
                     "const": false,
                     "default": null,

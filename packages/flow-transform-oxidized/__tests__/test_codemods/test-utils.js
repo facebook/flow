@@ -10,7 +10,6 @@
 
 import type {TransformVisitor} from '../../src/transform/transform';
 
-import {transform as transformOriginal} from '../../src/transform/transform';
 // $FlowExpectedError[cannot-resolve-module]
 import prettierConfig from '../../../.prettierrc.json';
 
@@ -18,6 +17,12 @@ export async function transform(
   code: string,
   visitors: TransformVisitor,
 ): Promise<string> {
+  // Re-require after jest resets the module registry so each test gets a fresh
+  // prettier/print module state.
+  // $FlowExpectedError[untyped-import]
+  const {
+    transform: transformOriginal,
+  } = require('../../src/transform/transform');
   return transformOriginal(code, visitors, prettierConfig);
 }
 
