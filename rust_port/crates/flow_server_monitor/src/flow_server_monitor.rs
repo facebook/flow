@@ -84,16 +84,6 @@ fn prepare_log_file(log_file: &str) -> Result<(), String> {
     flow_server::server_daemon::try_open_log_file(log_file).map(|_| ())
 }
 
-fn remove_artifact_if_present(path: &str) {
-    match std::fs::remove_file(path) {
-        Ok(()) => {}
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-        Err(e) => {
-            eprintln!("monitor: failed to remove {}: {}", path, e);
-        }
-    }
-}
-
 // `spawn_monitor_child` and `daemonize_with_pipe` (~150 lines of
 // CLI-flag re-encoding + `Stdio::piped` plumbing for the WaitMsg) were
 // removed in the daemon rewire (Step 3 of the daemon plan): the child is
@@ -383,9 +373,6 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
             root.display()
         ));
     }
-
-    let socket_path = server_files_js::socket_file(&args.flowconfig_name, &args.temp_dir, &root);
-    remove_artifact_if_present(&socket_path);
 
     let wait = args.wait;
     let monitor_log_file = args.monitor_log_file.clone();

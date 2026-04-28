@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::path::Path;
 use std::sync::Arc;
 
 use flow_config::LazyMode;
@@ -47,28 +46,6 @@ fn spec() -> command_spec::Spec {
     let spec = command_utils::add_file_watcher_flag(spec);
     let spec = command_utils::add_no_cgroup_flag(spec);
     spec.anon("root", &arg_spec::optional(arg_spec::string()))
-}
-
-fn read_main_pid(pids_path: &str) -> Option<u32> {
-    std::fs::read_to_string(pids_path)
-        .ok()?
-        .lines()
-        .find_map(|row| {
-            let (pid, _reason) = row.split_once('\t')?;
-            pid.parse::<u32>().ok()
-        })
-}
-
-fn pid_is_running(pid: u32) -> bool {
-    #[cfg(unix)]
-    {
-        Path::new(&format!("/proc/{pid}")).exists()
-    }
-    #[cfg(not(unix))]
-    {
-        let _ = pid;
-        true
-    }
 }
 
 fn main(
@@ -198,31 +175,6 @@ fn main(
     let file_watcher_timeout =
         command_utils::choose_file_watcher_timeout(&flowconfig, file_watcher_timeout)
             .map(|file_watcher_timeout| file_watcher_timeout as u32);
-    let canonical_root = root.canonicalize().unwrap_or_else(|_| root.clone());
-    let lock_path = server_files_js::lock_file(
-        &flowconfig_name,
-        server_options.temp_dir.as_str(),
-        &canonical_root,
-    );
-    let socket_path = server_files_js::socket_file(
-        &flowconfig_name,
-        server_options.temp_dir.as_str(),
-        &canonical_root,
-    );
-    let pids_path = server_files_js::pids_file(
-        &flowconfig_name,
-        server_options.temp_dir.as_str(),
-        &canonical_root,
-    );
-    if Path::new(&lock_path).exists() {
-        let has_live_pid = read_main_pid(&pids_path)
-            .map(pid_is_running)
-            .unwrap_or_else(|| Path::new(&socket_path).exists());
-        if !has_live_pid {
-            let _ = std::fs::remove_file(&lock_path);
-            let _ = std::fs::remove_file(&socket_path);
-        }
-    }
     match monitor::daemonize(monitor::DaemonizeArgs {
         flowconfig_name,
         no_flowlib: options_flags.no_flowlib,
@@ -261,7 +213,7 @@ fn main(
         no_restart,
         autostop,
         no_cgroup,
-        root: canonical_root,
+        root,
         temp_dir: server_options.temp_dir.to_string(),
     }) {
         Ok(pid) => on_spawn(pid),
