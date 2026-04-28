@@ -741,9 +741,19 @@ pub fn ensure_parsed(
     };
 
     let results = parse(pool, shared_mem, options, true, false, false, &[], next);
-    results
-        .changed
-        .into_inner()
-        .union(results.not_found.into_inner())
-        .into()
+    // On Windows, OCaml's C runtime can't access paths >= 260 chars (MAX_PATH).
+    // These files will never be readable, so retrying them is pointless and
+    // causes an infinite cancel/retry loop. Filter them out — they were already
+    // skipped during file discovery (see kind_of_path in files.ml).
+    let not_found = if cfg!(windows) {
+        results
+            .not_found
+            .into_inner()
+            .into_iter()
+            .filter(|f| f.to_absolute().len() < 248)
+            .collect()
+    } else {
+        results.not_found.into_inner()
+    };
+    results.changed.into_inner().union(not_found).into()
 }

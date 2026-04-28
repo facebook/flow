@@ -581,4 +581,14 @@ let ensure_parsed ~reader options workers files =
       workers
       next
   in
+  (* On Windows, OCaml's C runtime can't access paths >= 260 chars (MAX_PATH).
+     These files will never be readable, so retrying them is pointless and
+     causes an infinite cancel/retry loop. Filter them out — they were already
+     skipped during file discovery (see kind_of_path in files.ml). *)
+  let not_found =
+    if Sys.win32 then
+      FilenameSet.filter (fun f -> String.length (File_key.to_string f) < 248) not_found
+    else
+      not_found
+  in
   Lwt.return (FilenameSet.union changed not_found)
