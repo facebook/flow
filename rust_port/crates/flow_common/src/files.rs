@@ -192,6 +192,21 @@ pub fn is_prefix(prefix: &str, path: &str) -> bool {
     false
 }
 
+/// Like `is_prefix` but always uses '/' as the separator. Use this when
+/// comparing against File_key suffixes, which are always '/'-based for saved
+/// state portability, even on Windows.
+pub fn is_file_key_prefix(prefix: &str, suffix: &str) -> bool {
+    if suffix == prefix {
+        return true;
+    }
+    let prefix_with_sep = if prefix.ends_with('/') {
+        prefix.to_string()
+    } else {
+        format!("{}/", prefix)
+    };
+    suffix.starts_with(&prefix_with_sep)
+}
+
 pub fn haste_name_opt(options: &FileOptions, file: &FileKey) -> Option<String> {
     fn is_valid_haste_char(c: char) -> bool {
         c.is_ascii_alphanumeric() || c == '$' || c == '_' || c == '.' || c == '-'
@@ -914,11 +929,12 @@ pub fn expand_project_root_token(root: &Path, s: &str) -> String {
 
 pub fn expand_project_root_token_as_relative(s: &str) -> String {
     let s = s.replace(PROJECT_ROOT_TOKEN, "");
-    if s.starts_with('/') || s.starts_with('\\') {
+    let s = if s.starts_with('/') || s.starts_with('\\') {
         s[1..].to_string()
     } else {
         s
-    }
+    };
+    normalize_filename_dir_sep(&s).into_owned()
 }
 
 pub fn expand_builtin_root_token(flowlib_dir: &Path, s: &str) -> String {

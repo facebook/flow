@@ -581,7 +581,7 @@ module Node = struct
         let applicable =
           Base.Option.value_map
             applicable_dirname_opt
-            ~f:(fun prefix -> Files.is_prefix prefix (File_key.suffix importing_file))
+            ~f:(fun prefix -> Files.is_file_key_prefix prefix (File_key.suffix importing_file))
             ~default:true
         in
         if applicable then

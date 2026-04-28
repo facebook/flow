@@ -301,8 +301,8 @@ fn node_path(
                 let prefix_matches = match src_prefix_opt {
                     None => true,
                     Some(prefix) => {
-                        let relative_src_dir = flow_parser::file_key::strip_project_root(src_dir);
-                        files::is_prefix(prefix, &relative_src_dir)
+                        let suffix = flow_parser::file_key::strip_project_root(src_dir);
+                        files::is_file_key_prefix(prefix, &suffix)
                     }
                 };
                 if prefix_matches {

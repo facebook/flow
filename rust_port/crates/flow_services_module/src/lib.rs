@@ -930,7 +930,7 @@ mod node {
 
             let applicable = applicable_dirname_opt
                 .as_ref()
-                .map(|prefix| files::is_prefix(prefix, importing_file.as_str()))
+                .map(|prefix| files::is_file_key_prefix(prefix, importing_file.suffix()))
                 .unwrap_or(true);
 
             if applicable {

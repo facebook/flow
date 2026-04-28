@@ -170,7 +170,9 @@ val absolute_path : string -> string -> string
 (* TODO: this doesn't match the signatures of the related functions above *)
 val make_path_absolute : File_path.t -> string -> File_path.t
 
-val is_prefix : string -> string -> bool
+(* val is_prefix : string -> string -> bool *)
+
+val is_file_key_prefix : string -> string -> bool
 
 val get_flowtyped_path : File_path.t -> File_path.t
 

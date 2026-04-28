@@ -169,7 +169,7 @@ let node_path
         if
           match src_prefix_opt with
           | None -> true
-          | Some prefix -> Files.is_prefix prefix (File_key.strip_project_root src_dir)
+          | Some prefix -> Files.is_file_key_prefix prefix (File_key.strip_project_root src_dir)
         then
           let root_relative_dirname_parts = Files.split_path root_relative_dirname in
           Base.Option.map

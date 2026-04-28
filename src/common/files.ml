@@ -178,6 +178,18 @@ let is_prefix prefix =
   in
   (fun path -> path = prefix || String.starts_with ~prefix:prefix_with_sep path)
 
+(* Like is_prefix but always uses '/' as the separator. Use this when comparing
+   against File_key suffixes, which are always '/'-based for saved state
+   portability, even on Windows. *)
+let is_file_key_prefix prefix suffix =
+  let prefix_with_sep =
+    if String.ends_with ~suffix:"/" prefix then
+      prefix
+    else
+      prefix ^ "/"
+  in
+  suffix = prefix || String.starts_with ~prefix:prefix_with_sep suffix
+
 let haste_name_opt ~options =
   let matches_includes name =
     List.exists (fun r -> Str.string_match r name 0) options.haste_paths_includes
@@ -1031,10 +1043,13 @@ let expand_project_root_token_as_absolute ~root =
 
 let expand_project_root_token_as_relative str =
   let s = str |> Str.split_delim project_root_token |> String.concat "" in
-  if String.length s > 0 && (s.[0] = '/' || s.[0] = '\\') then
-    String.sub s 1 (String.length s - 1)
-  else
-    s
+  let s =
+    if String.length s > 0 && (s.[0] = '/' || s.[0] = '\\') then
+      String.sub s 1 (String.length s - 1)
+    else
+      s
+  in
+  Sys_utils.normalize_filename_dir_sep s
 
 let expand_builtin_root_token ~flowlib_dir =
   let flowlib_dir_str = File_path.to_string flowlib_dir |> Sys_utils.normalize_filename_dir_sep in

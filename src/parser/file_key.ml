@@ -272,12 +272,15 @@ let relative_path_from ?(dir_sep = Filename.dir_sep) root path =
    compute a relative path from the root — this ensures all suffixes are
    portable relative paths, which is critical for saved state portability
    across machines with different root paths.
-   If the root has not been set yet, returns the path unchanged. *)
+   If the root has not been set yet, returns the path unchanged.
+   The result always uses '/' separators for cross-platform consistency
+   (saved state generated on Linux must work on Windows and vice versa). *)
 let strip_project_root path =
   match !project_root with
   | Some root ->
     if String.starts_with ~prefix:root path then
-      String.sub path (String.length root) (String.length path - String.length root)
+      normalize_dir_sep
+        (String.sub path (String.length root) (String.length path - String.length root))
     else if not (Filename.is_relative path) then
       relative_path_from root path
     else
@@ -296,7 +299,7 @@ let resource_file_of_absolute path = ResourceFile (strip_project_root path)
 let lib_file_of_absolute path =
   match !flowlib_root with
   | Some fl when String.length fl > 0 && String.starts_with ~prefix:fl path ->
-    LibFile (flowlib_marker ^ strip_prefix fl path)
+    LibFile (flowlib_marker ^ normalize_dir_sep (strip_prefix fl path))
   | _ -> LibFile (strip_project_root path)
 
 module For_tests = struct

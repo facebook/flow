@@ -317,12 +317,14 @@ fn relative_path_from(root: &str, path: &str) -> String {
     result.join("/")
 }
 
+// The result always uses '/' separators for cross-platform consistency
+// (saved state generated on Linux must work on Windows and vice versa).
 pub fn strip_project_root(path: &str) -> String {
     let guard = PROJECT_ROOT.read().unwrap();
     match guard.as_deref() {
         Some(root) => {
             if let Some(stripped) = path.strip_prefix(root) {
-                stripped.to_string()
+                normalize_dir_sep_with(std::path::MAIN_SEPARATOR, stripped)
             } else if !is_relative(path) {
                 relative_path_from(root, path)
             } else {
@@ -437,7 +439,9 @@ impl FileKey {
         let guard = FLOWLIB_ROOT.read().unwrap();
         let suffix = match guard.as_deref() {
             Some(fl) if !fl.is_empty() && path.starts_with(fl) => {
-                format!("{}{}", FLOWLIB_MARKER, strip_prefix(fl, path))
+                let stripped =
+                    normalize_dir_sep_with(std::path::MAIN_SEPARATOR, strip_prefix(fl, path));
+                format!("{}{}", FLOWLIB_MARKER, stripped)
             }
             _ => {
                 drop(guard);
