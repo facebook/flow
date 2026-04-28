@@ -7941,7 +7941,7 @@ pub fn mk_declare_class_sig<'a>(
         let (updated_sig, properties_typed) = add_interface_properties(
             cx,
             &mut env_with_this,
-            None,
+            Some(id_loc.dupe()),
             intermediate_error_types::ObjKind::DeclareClass,
             this_type,
             &body.properties,
@@ -7959,8 +7959,9 @@ pub fn mk_declare_class_sig<'a>(
             class_sig::add_default_constructor(ctor_reason, &mut iface_sig);
         }
 
-        let (t_internal, t, _) =
+        let (t_internal, t, (own_props, proto_props)) =
             class_sig::classtype(cx, true, type_::InstanceKind::ClassKind, &iface_sig);
+        cx.add_interface_prop_ids(id_loc.dupe(), own_props, proto_props);
 
         let tast = ast::statement::DeclareClass {
             id: ast::Identifier::new(ast::IdentifierInner {

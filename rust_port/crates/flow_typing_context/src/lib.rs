@@ -1500,14 +1500,26 @@ impl<'cx> Context<'cx> {
     /// whatever env_builder reported in `interface_merge_conflicts`; we don't
     /// compute it ourselves.
     pub fn init_interface_merge_field_index(&self) {
-        let merge_conflicts = self.environment().var_info.interface_merge_conflicts.dupe();
         let mut table = self.0.ccx.merging_interface_field_types.borrow_mut();
         table.clear();
-        for (good_loc, bad_locs) in merge_conflicts.iter() {
+        let mut install = |good_loc: &ALoc, bad_locs: &Vec<ALoc>| {
             table.entry(good_loc.dupe()).or_insert_with(HashMap::new);
             for bad_loc in bad_locs {
                 table.entry(bad_loc.dupe()).or_insert_with(HashMap::new);
             }
+        };
+        let interface_merge_conflicts =
+            self.environment().var_info.interface_merge_conflicts.dupe();
+        for (good_loc, bad_locs) in interface_merge_conflicts.iter() {
+            install(good_loc, bad_locs);
+        }
+        let declare_class_interface_merge_conflicts = self
+            .environment()
+            .var_info
+            .declare_class_interface_merge_conflicts
+            .dupe();
+        for (good_loc, bad_locs) in declare_class_interface_merge_conflicts.iter() {
+            install(good_loc, bad_locs);
         }
     }
 
@@ -1531,32 +1543,58 @@ impl<'cx> Context<'cx> {
     /// will `unify` them, and anyone who wrote disagreeing types gets a
     /// `MergedDeclaration` error pointing at both decls.
     pub fn interface_merge_unify_tasks(&self) -> Vec<(UseOp, Type, Type)> {
-        let merge_conflicts = self.environment().var_info.interface_merge_conflicts.dupe();
+        let interface_conflicts = self.environment().var_info.interface_merge_conflicts.dupe();
+        let dc_conflicts = self
+            .environment()
+            .var_info
+            .declare_class_interface_merge_conflicts
+            .dupe();
         let fields = self.0.ccx.merging_interface_field_types.borrow();
-        let mut tasks = Vec::new();
-        for (good_loc, bad_locs) in merge_conflicts.iter() {
-            let Some(good_fields) = fields.get(good_loc) else {
-                continue;
-            };
-            let first_decl = VirtualReason::new(VirtualReasonDesc::RInterfaceType, good_loc.dupe());
-            for bad_loc in bad_locs {
-                let Some(bad_fields) = fields.get(bad_loc) else {
+        let walk = |good_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
+                    bad_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
+                    conflicts: &FlowOrdMap<ALoc, Vec<ALoc>>,
+                    acc: &mut Vec<(UseOp, Type, Type)>| {
+            for (good_loc, bad_locs) in conflicts.iter() {
+                let Some(good_fields) = fields.get(good_loc) else {
                     continue;
                 };
-                let current_decl =
-                    VirtualReason::new(VirtualReasonDesc::RInterfaceType, bad_loc.dupe());
-                let use_op = UseOp::Op(Arc::new(RootUseOp::MergedDeclaration {
-                    first_decl: first_decl.dupe(),
-                    current_decl,
-                }));
-                for (name, bad_t) in bad_fields.iter() {
-                    if let Some(good_t) = good_fields.get(name) {
-                        tasks.push((use_op.dupe(), bad_t.dupe(), good_t.dupe()));
+                let first_decl = good_reason(good_loc.dupe());
+                for bad_loc in bad_locs {
+                    let Some(bad_fields) = fields.get(bad_loc) else {
+                        continue;
+                    };
+                    let current_decl = bad_reason(bad_loc.dupe());
+                    let use_op = UseOp::Op(Arc::new(RootUseOp::MergedDeclaration {
+                        first_decl: first_decl.dupe(),
+                        current_decl,
+                    }));
+                    for (name, bad_t) in bad_fields.iter() {
+                        if let Some(good_t) = good_fields.get(name) {
+                            acc.push((use_op.dupe(), bad_t.dupe(), good_t.dupe()));
+                        }
                     }
                 }
             }
-        }
-        tasks
+        };
+        let mut acc = Vec::new();
+        walk(
+            &|loc| VirtualReason::new(VirtualReasonDesc::RInterfaceType, loc),
+            &|loc| VirtualReason::new(VirtualReasonDesc::RInterfaceType, loc),
+            &interface_conflicts,
+            &mut acc,
+        );
+        walk(
+            &|loc| {
+                VirtualReason::new(
+                    VirtualReasonDesc::RClass(Arc::new(VirtualReasonDesc::RInterfaceType)),
+                    loc,
+                )
+            },
+            &|loc| VirtualReason::new(VirtualReasonDesc::RInterfaceType, loc),
+            &dc_conflicts,
+            &mut acc,
+        );
+        acc
     }
 
     pub fn interface_prop_ids(

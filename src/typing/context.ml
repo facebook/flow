@@ -821,11 +821,14 @@ let post_inference_projects_strict_boundary_import_pattern_opt_outs_validations 
 let init_interface_merge_field_index cx =
   let table = cx.ccx.merging_interface_field_types in
   Hashtbl.reset table;
+  let install good_loc bad_locs =
+    Hashtbl.replace table good_loc (Hashtbl.create 4);
+    List.iter (fun bad -> Hashtbl.replace table bad (Hashtbl.create 4)) bad_locs
+  in
+  ALocMap.iter install cx.environment.Loc_env.var_info.Env_api.interface_merge_conflicts;
   ALocMap.iter
-    (fun good_loc bad_locs ->
-      Hashtbl.replace table good_loc (Hashtbl.create 4);
-      List.iter (fun bad -> Hashtbl.replace table bad (Hashtbl.create 4)) bad_locs)
-    cx.environment.Loc_env.var_info.Env_api.interface_merge_conflicts
+    install
+    cx.environment.Loc_env.var_info.Env_api.declare_class_interface_merge_conflicts
 
 (* Remember that interface [id_loc] declared a Field named [name] of type [t].
    Only matters for interfaces that participate in declaration merging — for
@@ -844,32 +847,49 @@ let record_interface_field cx id_loc name t =
    anyone who wrote disagreeing types gets a [MergedDeclaration] error
    pointing at both decls. *)
 let interface_merge_unify_tasks cx =
-  let conflicts = cx.environment.Loc_env.var_info.Env_api.interface_merge_conflicts in
+  let interface_conflicts = cx.environment.Loc_env.var_info.Env_api.interface_merge_conflicts in
+  let dc_conflicts =
+    cx.environment.Loc_env.var_info.Env_api.declare_class_interface_merge_conflicts
+  in
   let fields = cx.ccx.merging_interface_field_types in
-  ALocMap.fold
-    (fun good_loc bad_locs acc ->
-      match Hashtbl.find_opt fields good_loc with
-      | None -> acc
-      | Some good_fields ->
-        let first_decl = Reason.mk_reason Reason.RInterfaceType good_loc in
-        List.fold_left
-          (fun acc bad_loc ->
-            match Hashtbl.find_opt fields bad_loc with
-            | None -> acc
-            | Some bad_fields ->
-              let current_decl = Reason.mk_reason Reason.RInterfaceType bad_loc in
-              let use_op = Type.Op (Type.MergedDeclaration { first_decl; current_decl }) in
-              Hashtbl.fold
-                (fun name bad_t acc ->
-                  match Hashtbl.find_opt good_fields name with
-                  | Some good_t -> (use_op, bad_t, good_t) :: acc
-                  | None -> acc)
-                bad_fields
-                acc)
-          acc
-          bad_locs)
-    conflicts
-    []
+  let walk ~good_reason ~bad_reason conflicts acc =
+    ALocMap.fold
+      (fun good_loc bad_locs acc ->
+        match Hashtbl.find_opt fields good_loc with
+        | None -> acc
+        | Some good_fields ->
+          let first_decl = good_reason good_loc in
+          List.fold_left
+            (fun acc bad_loc ->
+              match Hashtbl.find_opt fields bad_loc with
+              | None -> acc
+              | Some bad_fields ->
+                let current_decl = bad_reason bad_loc in
+                let use_op = Type.Op (Type.MergedDeclaration { first_decl; current_decl }) in
+                Hashtbl.fold
+                  (fun name bad_t acc ->
+                    match Hashtbl.find_opt good_fields name with
+                    | Some good_t -> (use_op, bad_t, good_t) :: acc
+                    | None -> acc)
+                  bad_fields
+                  acc)
+            acc
+            bad_locs)
+      conflicts
+      acc
+  in
+  let acc =
+    walk
+      ~good_reason:(Reason.mk_reason Reason.RInterfaceType)
+      ~bad_reason:(Reason.mk_reason Reason.RInterfaceType)
+      interface_conflicts
+      []
+  in
+  walk
+    ~good_reason:(Reason.mk_reason (Reason.RClass Reason.RInterfaceType))
+    ~bad_reason:(Reason.mk_reason Reason.RInterfaceType)
+    dc_conflicts
+    acc
 
 let interface_prop_ids cx = cx.ccx.interface_prop_ids
 

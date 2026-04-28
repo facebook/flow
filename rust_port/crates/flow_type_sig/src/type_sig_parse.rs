@@ -1515,6 +1515,92 @@ pub(super) mod scope {
         }
     }
 
+    fn merge_interface_props_combine<'arena, 'ast>(
+        _prop_name: &FlowSmolStr,
+        existing_prop: &InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        new_prop: &InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+    ) -> Option<InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>> {
+        match (existing_prop, new_prop) {
+            (
+                InterfaceProp::InterfaceMethod(old_sigs),
+                InterfaceProp::InterfaceMethod(new_sigs),
+            ) => {
+                let mut merged: Vec<_> = old_sigs.iter().cloned().collect();
+                merged.extend(new_sigs.iter().cloned());
+                let merged = Vec1::try_from_vec(merged).unwrap();
+                Some(InterfaceProp::InterfaceMethod(Box::new(merged)))
+            }
+            _ => Some(existing_prop.clone()),
+        }
+    }
+
+    // Fold an [interface_sig] into an existing [declare_class_sig], producing a
+    // new [declare_class_sig] whose own/proto props absorb the interface's props
+    // and whose implements list gains the interface's extends. The class wins on
+    // overlapping fields; overlapping methods build an overload chain. Type
+    // mismatches between merged-in fields and class fields are caught later by
+    // post-inference unification (see Context.interface_merge_unify_tasks).
+    fn merge_interface_into_declare_class_sig<'arena, 'ast>(
+        existing_id_loc: LocNode<'arena>,
+        current_id_loc: LocNode<'arena>,
+        tbls: &mut Tables<'arena, 'ast>,
+        dc_sig: &DeclareClassSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        iface_sig: &InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+    ) -> DeclareClassSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+        let mut proto_props = dc_sig.proto_props.clone();
+        for (prop_name, new_prop) in &iface_sig.props {
+            use std::collections::btree_map::Entry;
+            match proto_props.entry(prop_name.clone()) {
+                Entry::Occupied(mut e) => {
+                    if let Some(combined) =
+                        merge_interface_props_combine(prop_name, e.get(), new_prop)
+                    {
+                        *e.get_mut() = combined;
+                    }
+                }
+                Entry::Vacant(e) => {
+                    e.insert(new_prop.clone());
+                }
+            }
+        }
+        let mut computed_proto_props = dc_sig.computed_proto_props.clone();
+        computed_proto_props.extend(iface_sig.computed_props.iter().cloned());
+        let mut calls = dc_sig.calls.clone();
+        calls.extend(iface_sig.calls.iter().cloned());
+        let mut implements = dc_sig.implements.clone();
+        implements.extend(iface_sig.extends.iter().cloned());
+        let dict = match (&dc_sig.dict, &iface_sig.dict) {
+            (Some(existing_dict), Some(_)) => {
+                tbls.additional_errors.push(
+                    signature_error::BindingValidation::InterfaceMergePropertyConflict {
+                        name: FlowSmolStr::new_inline("[indexer]"),
+                        current_binding_loc: current_id_loc,
+                        existing_binding_loc: existing_id_loc,
+                    },
+                );
+                Some(existing_dict.clone())
+            }
+            (Some(_), None) => dc_sig.dict.clone(),
+            (None, _) => iface_sig.dict.clone(),
+        };
+        DeclareClassSig {
+            tparams: dc_sig.tparams.clone(),
+            extends: dc_sig.extends.clone(),
+            mixins: dc_sig.mixins.clone(),
+            implements,
+            static_props: dc_sig.static_props.clone(),
+            own_props: dc_sig.own_props.clone(),
+            proto_props,
+            computed_own_props: dc_sig.computed_own_props.clone(),
+            computed_proto_props,
+            computed_static_props: dc_sig.computed_static_props.clone(),
+            static_calls: dc_sig.static_calls.clone(),
+            calls,
+            dict,
+            static_dict: dc_sig.static_dict.clone(),
+        }
+    }
+
     fn merge_interface_sigs<'arena, 'ast>(
         existing_id_loc: LocNode<'arena>,
         current_id_loc: LocNode<'arena>,
@@ -1606,6 +1692,104 @@ pub(super) mod scope {
             true,
             IncomingBindingKind::Interface,
         );
+        // Declaration merging: if a `declare class` of the same name already exists
+        // in the value namespace, fold the interface's members into it. The class
+        // remains the canonical entity and is reachable from both value and type
+        // positions (type lookups fall back to values when the type namespace has
+        // no entry).
+        let merged_class_node: Option<LocalDefNode<'arena, 'ast>> =
+            match lookup_value(scopes, id, &name) {
+                Some((BindingNode::LocalBinding(class_node), _)) => {
+                    let is_dc = matches!(
+                        &*class_node.0.data(),
+                        LocalBinding::DeclareClassBinding { .. }
+                    );
+                    if is_dc { Some(class_node) } else { None }
+                }
+                _ => None,
+            };
+        if let Some(class_node) = merged_class_node {
+            let (dc_id_loc, dc_nominal_id_loc, dc_name, dc_namespace_types) = {
+                let data = class_node.0.data();
+                match &*data {
+                    LocalBinding::DeclareClassBinding {
+                        id_loc,
+                        nominal_id_loc,
+                        name,
+                        namespace_types,
+                        ..
+                    } => (
+                        id_loc.dupe(),
+                        nominal_id_loc.dupe(),
+                        name.dupe(),
+                        namespace_types.clone(),
+                    ),
+                    _ => unreachable!(),
+                }
+            };
+            let dc_def = {
+                let mut data = class_node.0.data_mut();
+                let old = std::mem::replace(
+                    &mut *data,
+                    LocalBinding::DeclareClassBinding {
+                        id_loc: dc_id_loc.dupe(),
+                        nominal_id_loc: dc_nominal_id_loc.dupe(),
+                        name: dc_name.dupe(),
+                        def: Lazy::new(Box::new(|_, _, _| {
+                            unreachable!("placeholder during interface merge")
+                        })),
+                        namespace_types: dc_namespace_types.clone(),
+                    },
+                );
+                match old {
+                    LocalBinding::DeclareClassBinding { def, .. } => def,
+                    _ => unreachable!(),
+                }
+            };
+            let merge_dc_id_loc = dc_id_loc.dupe();
+            let merge_name = name.dupe();
+            let merged_def = Lazy::new(Box::new(
+                move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
+                    let forced_dc = dc_def.get_forced(opts, scopes, tbls).clone();
+                    match new_def.get_forced(opts, scopes, tbls) {
+                        Def::Interface(iface) => {
+                            if tparams_arity(&forced_dc.tparams) == tparams_arity(&iface.tparams) {
+                                let iface_id_loc_local = iface.id_loc.dupe();
+                                let iface_def_local = iface.def.clone();
+                                merge_interface_into_declare_class_sig(
+                                    merge_dc_id_loc.dupe(),
+                                    iface_id_loc_local,
+                                    tbls,
+                                    &forced_dc,
+                                    &iface_def_local,
+                                )
+                            } else {
+                                tbls.additional_errors.push(
+                                    signature_error::BindingValidation::InterfaceMergeTparamMismatch {
+                                        name: merge_name,
+                                        current_binding_loc: iface.id_loc.dupe(),
+                                        existing_binding_loc: merge_dc_id_loc,
+                                    },
+                                );
+                                forced_dc
+                            }
+                        }
+                        _ => forced_dc,
+                    }
+                },
+            ));
+            {
+                let mut data = class_node.0.data_mut();
+                *data = LocalBinding::DeclareClassBinding {
+                    id_loc: dc_id_loc,
+                    nominal_id_loc: dc_nominal_id_loc,
+                    name: dc_name,
+                    def: merged_def,
+                    namespace_types: dc_namespace_types,
+                };
+            }
+            return;
+        }
         bind(
             true,
             id,
@@ -1755,7 +1939,7 @@ pub(super) mod scope {
         );
     }
 
-    pub(super) fn bind_declare_class<'arena, 'ast>(
+    pub(super) fn bind_declare_class<'arena: 'ast, 'ast>(
         opts: &TypeSigOptions,
         id: ScopeId,
         scopes: &mut Scopes<'arena, 'ast>,
@@ -1775,24 +1959,134 @@ pub(super) mod scope {
             false,
             IncomingBindingKind::DeclareClass,
         );
+        // Declaration merging: if a same-name `interface` was declared first, fold
+        // its members into this declare class. We mutate the existing type-side
+        // node to BECOME a DeclareClassBinding (so type lookups find the merged
+        // class), and then re-use the same node when binding in values.
+        let prior_interface_node: Option<(
+            LocalDefNode<'arena, 'ast>,
+            LocNode<'arena>,
+            TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+            InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        )> = {
+            let candidate_type_node: Option<LocalDefNode<'arena, 'ast>> =
+                match lookup_type(scopes, id, &name) {
+                    Some((BindingNode::LocalBinding(node), _)) => {
+                        let is_tb = matches!(&*node.0.data(), LocalBinding::TypeBinding { .. });
+                        if is_tb { Some(node) } else { None }
+                    }
+                    _ => None,
+                };
+            if let Some(type_node) = candidate_type_node {
+                let tb_id_loc = {
+                    let data = type_node.0.data();
+                    match &*data {
+                        LocalBinding::TypeBinding { id_loc, .. } => id_loc.dupe(),
+                        _ => unreachable!(),
+                    }
+                };
+                let lazy_taken = {
+                    let mut data = type_node.0.data_mut();
+                    let old = std::mem::replace(
+                        &mut *data,
+                        LocalBinding::TypeBinding {
+                            id_loc: tb_id_loc.dupe(),
+                            def: Lazy::new(Box::new(|_, _, _| {
+                                unreachable!("placeholder during declare-class peek")
+                            })),
+                        },
+                    );
+                    match old {
+                        LocalBinding::TypeBinding { def, .. } => def,
+                        _ => unreachable!(),
+                    }
+                };
+                let captured = match lazy_taken.get_forced(opts, scopes, tbls) {
+                    Def::Interface(iface) => Some((
+                        iface.id_loc.dupe(),
+                        iface.tparams.clone(),
+                        iface.def.clone(),
+                    )),
+                    _ => None,
+                };
+                {
+                    let mut data = type_node.0.data_mut();
+                    *data = LocalBinding::TypeBinding {
+                        id_loc: tb_id_loc,
+                        def: lazy_taken,
+                    };
+                }
+                captured.map(|(iface_id_loc, iface_tp, iface_sig)| {
+                    (type_node, iface_id_loc, iface_tp, iface_sig)
+                })
+            } else {
+                None
+            }
+        };
         let is_global_scope = matches!(scopes.get(id), Scope::Global { .. });
+        let bind_name = name.clone();
         bind(
             false,
             id,
             scopes,
             tbls,
-            &name,
+            &bind_name,
             id_loc.dupe(),
-            |scopes, tbls, binding_opt| match binding_opt {
+            move |scopes, tbls, binding_opt| match binding_opt {
                 None => {
-                    let def = LocalBinding::DeclareClassBinding {
+                    let merged_def = match prior_interface_node.as_ref() {
+                        None => def,
+                        Some((_type_node, iface_id_loc, iface_tp, iface_sig)) => {
+                            let iface_id_loc = iface_id_loc.dupe();
+                            let iface_tp = iface_tp.clone();
+                            let iface_sig = iface_sig.clone();
+                            let merge_id_loc = id_loc.dupe();
+                            let merge_name = name.dupe();
+                            Lazy::new(Box::new(
+                                move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
+                                    let forced_dc = def.get_forced(opts, scopes, tbls).clone();
+                                    if tparams_arity(&forced_dc.tparams) == tparams_arity(&iface_tp)
+                                    {
+                                        merge_interface_into_declare_class_sig(
+                                            merge_id_loc.dupe(),
+                                            iface_id_loc.dupe(),
+                                            tbls,
+                                            &forced_dc,
+                                            &iface_sig,
+                                        )
+                                    } else {
+                                        tbls.additional_errors.push(
+                                            signature_error::BindingValidation::InterfaceMergeTparamMismatch {
+                                                name: merge_name,
+                                                current_binding_loc: iface_id_loc,
+                                                existing_binding_loc: merge_id_loc,
+                                            },
+                                        );
+                                        forced_dc
+                                    }
+                                },
+                            ))
+                        }
+                    };
+                    let dc_local = LocalBinding::DeclareClassBinding {
                         id_loc: id_loc.dupe(),
                         nominal_id_loc: id_loc,
                         name: name.clone(),
-                        def,
+                        def: merged_def,
                         namespace_types: BTreeMap::new(),
                     };
-                    let node = tbls.push_local_def(def);
+                    let node = match prior_interface_node {
+                        Some((type_node, _, _, _)) => {
+                            // Re-use the existing type-side node so that both type- and
+                            // value-side lookups resolve to the same merged class.
+                            {
+                                let mut data = type_node.0.data_mut();
+                                *data = dc_local;
+                            }
+                            type_node
+                        }
+                        None => tbls.push_local_def(dc_local),
+                    };
                     k(scopes, &name, node.dupe());
                     (BindingNode::LocalBinding(node), true)
                 }

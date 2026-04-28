@@ -4176,6 +4176,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         in
         add_interface_properties
           { env with tparams_map = tparams_map_with_this }
+          ~record_for_interface:id_loc
           ~obj_kind:`DeclareClass
           properties
           ~this:(implicit_mixed_this (reason_of_t this_t))
@@ -4189,9 +4190,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           let reason = replace_desc_reason RDefaultConstructor reason in
           Class_type_sig.add_default_constructor reason iface_sig
       in
-      let (t_internal, t, _) =
+      let (t_internal, t, (own_props, proto_props)) =
         Class_type_sig.classtype ~check_polarity:true ~inst_kind:ClassKind cx iface_sig
       in
+      Context.add_interface_prop_ids cx id_loc ~own_props ~proto_props;
       ( t_internal,
         t,
         iface_sig,

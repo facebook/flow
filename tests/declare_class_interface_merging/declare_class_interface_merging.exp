@@ -1,0 +1,300 @@
+Error ----------------------------------------------------------------------------------------------------- basic.js:7:1
+
+Cannot cast `c.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   basic.js:7:1
+   7| c.x as string; // ERROR
+      ^^^
+
+References:
+   basic.js:1:22
+   1| declare class C { x: number; }
+                           ^^^^^^ [1]
+   basic.js:7:8
+   7| c.x as string; // ERROR
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- basic.js:8:1
+
+Cannot cast `c.y` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   basic.js:8:1
+   8| c.y as number; // ERROR
+      ^^^
+
+References:
+   basic.js:2:18
+   2| interface C { y: string; }
+                       ^^^^^^ [1]
+   basic.js:8:8
+   8| c.y as number; // ERROR
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ cross_file_reverse_use.js:6:1
+
+Cannot cast `f.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   cross_file_reverse_use.js:6:1
+   6| f.x as string; // ERROR
+      ^^^
+
+References:
+   cross_file_reverse_def.js:2:22
+   2| declare class F { x: number; }
+                           ^^^^^^ [1]
+   cross_file_reverse_use.js:6:8
+   6| f.x as string; // ERROR
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ cross_file_reverse_use.js:7:1
+
+Cannot cast `f.y` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   cross_file_reverse_use.js:7:1
+   7| f.y as number; // ERROR
+      ^^^
+
+References:
+   cross_file_reverse_def.js:1:18
+   1| interface F { y: string; }
+                       ^^^^^^ [1]
+   cross_file_reverse_use.js:7:8
+   7| f.y as number; // ERROR
+             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- cross_file_use.js:6:1
+
+Cannot cast `d.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   cross_file_use.js:6:1
+   6| d.x as string; // ERROR
+      ^^^
+
+References:
+   cross_file_def.js:1:22
+   1| declare class D { x: number; }
+                           ^^^^^^ [1]
+   cross_file_use.js:6:8
+   6| d.x as string; // ERROR
+             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- cross_file_use.js:7:1
+
+Cannot cast `d.y` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   cross_file_use.js:7:1
+   7| d.y as number; // ERROR
+      ^^^
+
+References:
+   cross_file_def.js:2:18
+   2| interface D { y: string; }
+                       ^^^^^^ [1]
+   cross_file_use.js:7:8
+   7| d.y as number; // ERROR
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- cross_file_use.js:12:1
+
+Cannot cast `e.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   cross_file_use.js:12:1
+   12| e.x as string; // ERROR
+       ^^^
+
+References:
+   cross_file_def.js:4:22
+    4| declare class E { x: number; }
+                            ^^^^^^ [1]
+   cross_file_use.js:12:8
+   12| e.x as string; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- cross_file_use.js:13:1
+
+Cannot cast `e.y` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   cross_file_use.js:13:1
+   13| e.y as number; // ERROR
+       ^^^
+
+References:
+   cross_file_def.js:5:18
+    5| interface E { y: string; }
+                        ^^^^^^ [1]
+   cross_file_use.js:13:8
+   13| e.y as number; // ERROR
+              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- field_type_conflict.js:5:11
+
+Cannot merge this interface declaration with previous declaration class interface type [1] because of conflicting
+property types because string [2] is incompatible with number [3]. [incompatible-type]
+
+   field_type_conflict.js:5:11
+   5| interface C { x: string; } // ERROR
+                ^
+
+References:
+   field_type_conflict.js:4:15
+   4| declare class C { x: number; }
+                    ^ [1]
+   field_type_conflict.js:5:18
+   5| interface C { x: string; } // ERROR
+                       ^^^^^^ [2]
+   field_type_conflict.js:4:22
+   4| declare class C { x: number; }
+                           ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- field_type_conflict.js:9:1
+
+Cannot cast `c.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   field_type_conflict.js:9:1
+   9| c.x as string; // ERROR
+      ^^^
+
+References:
+   field_type_conflict.js:4:22
+   4| declare class C { x: number; }
+                           ^^^^^^ [1]
+   field_type_conflict.js:9:8
+   9| c.x as string; // ERROR
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- interface_first.js:7:1
+
+Cannot cast `c.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   interface_first.js:7:1
+   7| c.x as string; // ERROR
+      ^^^
+
+References:
+   interface_first.js:2:22
+   2| declare class C { x: number; }
+                           ^^^^^^ [1]
+   interface_first.js:7:8
+   7| c.x as string; // ERROR
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- interface_first.js:8:1
+
+Cannot cast `c.y` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   interface_first.js:8:1
+   8| c.y as number; // ERROR
+      ^^^
+
+References:
+   interface_first.js:1:18
+   1| interface C { y: string; }
+                       ^^^^^^ [1]
+   interface_first.js:8:8
+   8| c.y as number; // ERROR
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- method_overload.js:7:3
+
+Cannot call `c.m` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   method_overload.js:7:3
+   7| c.m(true);  // ERROR
+        ^
+
+References:
+   method_overload.js:7:5
+   7| c.m(true);  // ERROR
+          ^^^^ [1]
+   method_overload.js:1:24
+   1| declare class C { m(x: number): void; }
+                             ^^^^^^ [2]
+   method_overload.js:2:20
+   2| interface C { m(x: string): void; }
+                         ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- multiple_interfaces.js:9:1
+
+Cannot cast `c.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   multiple_interfaces.js:9:1
+   9| c.x as string; // ERROR
+      ^^^
+
+References:
+   multiple_interfaces.js:1:22
+   1| declare class C { x: number; }
+                           ^^^^^^ [1]
+   multiple_interfaces.js:9:8
+   9| c.x as string; // ERROR
+             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- multiple_interfaces.js:10:1
+
+Cannot cast `c.y` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
+
+   multiple_interfaces.js:10:1
+   10| c.y as boolean; // ERROR
+       ^^^
+
+References:
+   multiple_interfaces.js:2:18
+    2| interface C { y: string; }
+                        ^^^^^^ [1]
+   multiple_interfaces.js:10:8
+   10| c.y as boolean; // ERROR
+              ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- multiple_interfaces.js:11:1
+
+Cannot cast `c.z` to number because boolean [1] is incompatible with number [2]. [incompatible-type]
+
+   multiple_interfaces.js:11:1
+   11| c.z as number; // ERROR
+       ^^^
+
+References:
+   multiple_interfaces.js:3:18
+    3| interface C { z: boolean; }
+                        ^^^^^^^ [1]
+   multiple_interfaces.js:11:8
+   11| c.z as number; // ERROR
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- multiple_interfaces_conflict.js:11:1
+
+Cannot cast `c.y` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   multiple_interfaces_conflict.js:11:1
+   11| c.y as number; // ERROR (first interface wins; c.y is string not number, proving merge isn't 'any')
+       ^^^
+
+References:
+   multiple_interfaces_conflict.js:6:18
+    6| interface C { y: string; }
+                        ^^^^^^ [1]
+   multiple_interfaces_conflict.js:11:8
+   11| c.y as number; // ERROR (first interface wins; c.y is string not number, proving merge isn't 'any')
+              ^^^^^^ [2]
+
+
+
+Found 17 errors

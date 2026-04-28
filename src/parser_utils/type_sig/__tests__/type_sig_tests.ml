@@ -8001,3 +8001,76 @@ let%expect_test "d_ts_computed_property_unsupported_expression" =
 
     Errors:
     (SigError (Signature_error.UnexpectedObjectKey ([3:31-38], [3:31-38]))) |}]
+
+let%expect_test "declare_class_interface_merging_basic" =
+  print_builtins [{|
+    declare class C { x: number; }
+    interface C { y: string; }
+  |}];
+  [%expect{|
+    Local defs:
+    0. DeclareClassBinding {id_loc = [1:14-15];
+         nominal_id_loc = [1:14-15];
+         name = "C";
+         def =
+         DeclareClassSig {tparams = Mono;
+           extends = ClassImplicitExtends;
+           mixins = []; implements = [];
+           static_props = {};
+           own_props =
+           { "x" ->
+             (InterfaceField ((Some [1:18-19]), (Annot (Number [1:21-27])), Polarity.Neutral)) };
+           proto_props =
+           { "y" ->
+             (InterfaceField ((Some [2:14-15]), (Annot (String [2:17-23])), Polarity.Neutral)) };
+           computed_own_props = []; computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None};
+         namespace_types = {}}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values =
+         { "C" -> ([1:14-15], (Ref LocalRef {ref_loc = [1:14-15]; index = 0}));
+           "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = {}}
+
+    Builtin global value C
+    Builtin global value globalThis |}]
+
+let%expect_test "declare_class_interface_merging_reverse" =
+  print_builtins [{|
+    interface C { y: string; }
+    declare class C { x: number; }
+  |}];
+  [%expect{|
+    Local defs:
+    0. DeclareClassBinding {id_loc = [2:14-15];
+         nominal_id_loc = [2:14-15];
+         name = "C";
+         def =
+         DeclareClassSig {tparams = Mono;
+           extends = ClassImplicitExtends;
+           mixins = []; implements = [];
+           static_props = {};
+           own_props =
+           { "x" ->
+             (InterfaceField ((Some [2:18-19]), (Annot (Number [2:21-27])), Polarity.Neutral)) };
+           proto_props =
+           { "y" ->
+             (InterfaceField ((Some [1:14-15]), (Annot (String [1:17-23])), Polarity.Neutral)) };
+           computed_own_props = []; computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None};
+         namespace_types = {}}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values =
+         { "C" -> ([2:14-15], (Ref LocalRef {ref_loc = [2:14-15]; index = 0}));
+           "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = {}}
+
+    Builtin global value C
+    Builtin global value globalThis
+    Builtin global type C |}]

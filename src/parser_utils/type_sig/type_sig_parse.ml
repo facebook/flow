@@ -939,6 +939,47 @@ module Scope = struct
     | Mono -> 0
     | Poly (_, _, rest) -> 1 + List.length rest
 
+  let merge_interface_props_combine prop_name existing_prop new_prop =
+    match (existing_prop, new_prop) with
+    | (InterfaceMethod old_sigs, InterfaceMethod new_sigs) ->
+      Some (InterfaceMethod (Nel.append old_sigs new_sigs))
+    | _ ->
+      ignore (prop_name, new_prop);
+      Some existing_prop
+
+  (* Fold an [interface_sig] into an existing [declare_class_sig], producing a
+     new [declare_class_sig] whose own/proto props absorb the interface's props
+     and whose implements list gains the interface's extends. The class wins on
+     overlapping fields; overlapping methods build an overload chain. Type
+     mismatches between merged-in fields and class fields are caught later by
+     post-inference unification (see Context.interface_merge_unify_tasks). *)
+  let merge_interface_into_declare_class_sig ~existing_id_loc ~current_id_loc tbls dc_sig iface_sig
+      =
+    let (DeclareClassSig dc) = dc_sig in
+    let (InterfaceSig iface) = iface_sig in
+    let proto_props =
+      SMap.union ~combine:merge_interface_props_combine dc.proto_props iface.props
+    in
+    let computed_proto_props = dc.computed_proto_props @ iface.computed_props in
+    let calls = dc.calls @ iface.calls in
+    let implements = dc.implements @ iface.extends in
+    let dict =
+      match (dc.dict, iface.dict) with
+      | (Some existing_dict, Some _) ->
+        tbls.additional_errors <-
+          Signature_error.InterfaceMergePropertyConflict
+            {
+              name = "[indexer]";
+              current_binding_loc = current_id_loc;
+              existing_binding_loc = existing_id_loc;
+            }
+          :: tbls.additional_errors;
+        Some existing_dict
+      | (Some _, None) -> dc.dict
+      | (None, _) -> iface.dict
+    in
+    DeclareClassSig { dc with proto_props; computed_proto_props; calls; implements; dict }
+
   let merge_interface_sigs ~existing_id_loc ~current_id_loc tbls old_sig new_sig =
     let (InterfaceSig old_s) = old_sig in
     let (InterfaceSig new_s) = new_sig in
@@ -978,61 +1019,112 @@ module Scope = struct
 
   let bind_interface scope tbls id_loc name new_def k =
     report_cross_namespace_conflict scope tbls ~name ~id_loc ~type_only:true ~incoming:IbkInterface;
-    bind ~type_only:true scope tbls name id_loc (fun binding_opt ->
-        match binding_opt with
-        | Some (LocalBinding existing_node) ->
-          (match Local_defs.value existing_node with
-          | TypeBinding { id_loc = existing_id_loc; def = old_def } ->
-            let merged_def =
-              lazy
-                (match (Lazy.force old_def, Lazy.force new_def) with
-                | ( Interface { id_loc; name; tparams = old_tp; def = old_sig },
-                    Interface { id_loc = new_id_loc; tparams = new_tp; def = new_sig; _ }
-                  ) ->
-                  if tparams_arity old_tp = tparams_arity new_tp then
-                    Interface
-                      {
-                        id_loc;
-                        name;
-                        tparams = old_tp;
-                        def =
-                          merge_interface_sigs
-                            ~existing_id_loc:id_loc
-                            ~current_id_loc:new_id_loc
-                            tbls
-                            old_sig
-                            new_sig;
-                      }
-                  else begin
+    (* Declaration merging: if a `declare class` of the same name already exists
+       in the value namespace, fold the interface's members into it. The class
+       remains the canonical entity and is reachable from both value and type
+       positions (type lookups fall back to values when the type namespace has
+       no entry). *)
+    let merged_into_declare_class =
+      match lookup_value scope name with
+      | Some (LocalBinding class_node, _) ->
+        (match Local_defs.value class_node with
+        | DeclareClassBinding _ ->
+          Local_defs.modify class_node (function
+              | DeclareClassBinding
+                  { id_loc = dc_id_loc; nominal_id_loc; name; def = dc_def; namespace_types } ->
+                let merged_def =
+                  lazy
+                    (let (DeclareClassSig dc as forced_dc) = Lazy.force dc_def in
+                     match Lazy.force new_def with
+                     | Interface { id_loc = iface_id_loc; tparams = iface_tp; def = iface_sig; _ }
+                       ->
+                       if tparams_arity dc.tparams = tparams_arity iface_tp then
+                         merge_interface_into_declare_class_sig
+                           ~existing_id_loc:dc_id_loc
+                           ~current_id_loc:iface_id_loc
+                           tbls
+                           forced_dc
+                           iface_sig
+                       else begin
+                         tbls.additional_errors <-
+                           Signature_error.InterfaceMergeTparamMismatch
+                             {
+                               name;
+                               current_binding_loc = iface_id_loc;
+                               existing_binding_loc = dc_id_loc;
+                             }
+                           :: tbls.additional_errors;
+                         forced_dc
+                       end
+                     | _ -> forced_dc
+                    )
+                in
+                DeclareClassBinding
+                  { id_loc = dc_id_loc; nominal_id_loc; name; def = merged_def; namespace_types }
+              | other -> other
+              );
+          true
+        | _ -> false)
+      | _ -> false
+    in
+    if merged_into_declare_class then
+      ()
+    else
+      bind ~type_only:true scope tbls name id_loc (fun binding_opt ->
+          match binding_opt with
+          | Some (LocalBinding existing_node) ->
+            (match Local_defs.value existing_node with
+            | TypeBinding { id_loc = existing_id_loc; def = old_def } ->
+              let merged_def =
+                lazy
+                  (match (Lazy.force old_def, Lazy.force new_def) with
+                  | ( Interface { id_loc; name; tparams = old_tp; def = old_sig },
+                      Interface { id_loc = new_id_loc; tparams = new_tp; def = new_sig; _ }
+                    ) ->
+                    if tparams_arity old_tp = tparams_arity new_tp then
+                      Interface
+                        {
+                          id_loc;
+                          name;
+                          tparams = old_tp;
+                          def =
+                            merge_interface_sigs
+                              ~existing_id_loc:id_loc
+                              ~current_id_loc:new_id_loc
+                              tbls
+                              old_sig
+                              new_sig;
+                        }
+                    else begin
+                      tbls.additional_errors <-
+                        Signature_error.InterfaceMergeTparamMismatch
+                          { name; current_binding_loc = new_id_loc; existing_binding_loc = id_loc }
+                        :: tbls.additional_errors;
+                      Lazy.force old_def
+                    end
+                  | _ ->
+                    (* Existing binding is not an interface — emit NameOverride *)
                     tbls.additional_errors <-
-                      Signature_error.InterfaceMergeTparamMismatch
-                        { name; current_binding_loc = new_id_loc; existing_binding_loc = id_loc }
+                      Signature_error.NameOverride
+                        {
+                          name;
+                          override_binding_loc = existing_id_loc;
+                          existing_binding_loc = id_loc;
+                        }
                       :: tbls.additional_errors;
-                    Lazy.force old_def
-                  end
-                | _ ->
-                  (* Existing binding is not an interface — emit NameOverride *)
-                  tbls.additional_errors <-
-                    Signature_error.NameOverride
-                      {
-                        name;
-                        override_binding_loc = existing_id_loc;
-                        existing_binding_loc = id_loc;
-                      }
-                    :: tbls.additional_errors;
-                  Lazy.force old_def)
-            in
-            Local_defs.modify existing_node (fun _ ->
-                TypeBinding { id_loc = existing_id_loc; def = merged_def }
-            );
-            (binding_opt, true)
-          | _ -> (binding_opt, false))
-        | None ->
-          let node = push_local_def tbls (TypeBinding { id_loc; def = new_def }) in
-          k name node;
-          (Some (LocalBinding node), true)
-        | _ -> (binding_opt, false)
-    )
+                    Lazy.force old_def)
+              in
+              Local_defs.modify existing_node (fun _ ->
+                  TypeBinding { id_loc = existing_id_loc; def = merged_def }
+              );
+              (binding_opt, true)
+            | _ -> (binding_opt, false))
+          | None ->
+            let node = push_local_def tbls (TypeBinding { id_loc; def = new_def }) in
+            k name node;
+            (Some (LocalBinding node), true)
+          | _ -> (binding_opt, false)
+      )
 
   let bind_class scope tbls id_loc name def =
     report_cross_namespace_conflict scope tbls ~name ~id_loc ~type_only:false ~incoming:IbkClass;
@@ -1052,14 +1144,66 @@ module Scope = struct
       ~id_loc
       ~type_only:false
       ~incoming:IbkDeclareClass;
+    (* Declaration merging: if a same-name `interface` was declared first, fold
+       its members into this declare class. We mutate the existing type-side
+       node to BECOME a DeclareClassBinding (so type lookups find the merged
+       class), and then re-use the same node when binding in values. *)
+    let prior_interface_node =
+      match lookup_type scope name with
+      | Some (LocalBinding type_node, _) ->
+        (match Local_defs.value type_node with
+        | TypeBinding { def = type_def; _ } ->
+          (match Lazy.force type_def with
+          | Interface { id_loc = iface_id_loc; tparams = iface_tp; def = iface_sig; _ } ->
+            Some (type_node, iface_id_loc, iface_tp, iface_sig)
+          | _ -> None)
+        | _ -> None)
+      | _ -> None
+    in
     bind ~type_only:false scope tbls name id_loc (fun binding_opt ->
         match binding_opt with
         | None ->
-          let def : _ local_binding =
-            DeclareClassBinding
-              { id_loc; nominal_id_loc = id_loc; name; def; namespace_types = SMap.empty }
+          let merged_def =
+            match prior_interface_node with
+            | None -> def
+            | Some (_type_node, iface_id_loc, iface_tp, iface_sig) ->
+              lazy
+                (let (DeclareClassSig dc as forced_dc) = Lazy.force def in
+                 if tparams_arity dc.tparams = tparams_arity iface_tp then
+                   merge_interface_into_declare_class_sig
+                     ~existing_id_loc:id_loc
+                     ~current_id_loc:iface_id_loc
+                     tbls
+                     forced_dc
+                     iface_sig
+                 else begin
+                   tbls.additional_errors <-
+                     Signature_error.InterfaceMergeTparamMismatch
+                       { name; current_binding_loc = iface_id_loc; existing_binding_loc = id_loc }
+                     :: tbls.additional_errors;
+                   forced_dc
+                 end
+                )
           in
-          let node = push_local_def tbls def in
+          let dc_local : _ local_binding =
+            DeclareClassBinding
+              {
+                id_loc;
+                nominal_id_loc = id_loc;
+                name;
+                def = merged_def;
+                namespace_types = SMap.empty;
+              }
+          in
+          let node =
+            match prior_interface_node with
+            | Some (type_node, _, _, _) ->
+              (* Re-use the existing type-side node so that both type- and
+                 value-side lookups resolve to the same merged class. *)
+              Local_defs.modify type_node (fun _ -> dc_local);
+              type_node
+            | None -> push_local_def tbls dc_local
+          in
           k name node;
           (Some (LocalBinding node), true)
         | Some (RemoteBinding _) -> (binding_opt, false)

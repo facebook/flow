@@ -111,6 +111,57 @@ References:
             ^^ [1]
 
 
+Error ------------------------------------------------------------------------------ declare_class_then_interface.js:9:1
+
+Cannot cast `d.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   declare_class_then_interface.js:9:1
+   9| d.x as string; // ERROR
+      ^^^
+
+References:
+   declare_class_then_interface.js:3:22
+   3| declare class D { x: number; }
+                           ^^^^^^ [1]
+   declare_class_then_interface.js:9:8
+   9| d.x as string; // ERROR
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- declare_class_then_interface.js:10:1
+
+Cannot cast `d.y` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   declare_class_then_interface.js:10:1
+   10| d.y as string; // ERROR
+       ^^^
+
+References:
+   declare_class_then_interface.js:4:19
+    4| interface D { y?: number; }
+                         ^^^^^^ [1]
+   declare_class_then_interface.js:10:8
+   10| d.y as string; // ERROR
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- declare_class_then_interface.js:10:1
+
+Cannot cast `d.y` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
+
+   declare_class_then_interface.js:10:1
+   10| d.y as string; // ERROR
+       ^^^
+
+References:
+   declare_class_then_interface.js:4:19
+    4| interface D { y?: number; }
+                         ^^^^^^ [1]
+   declare_class_then_interface.js:10:8
+   10| d.y as string; // ERROR
+              ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------- namespace_then_class.js:8:1
 
 Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -182,4 +233,4 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors

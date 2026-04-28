@@ -116,11 +116,8 @@ declare class NsWithDeclMerge {
 }
 declare namespace NsWithDeclMerge {
   declare class Inner { y: string }
-  // TODO: TS allows class+interface declaration merging, so this
-  // name-already-bound error is a false positive. DeclaredFunction
-  // doesn't trigger this error (see fnWithDeclMerge below), so
-  // DeclaredClass should be made consistent.
-  interface Inner { z: boolean } // error: name-already-bound
+  // TS-style declaration merging: interface members fold into the declare class.
+  interface Inner { z: boolean }
   type T = string;
 }
 (new NsWithDeclMerge().x) as empty; // error: number ~> empty
@@ -132,7 +129,7 @@ declare namespace NsWithDeclMerge {
 declare function fnWithDeclMerge(): void;
 declare namespace fnWithDeclMerge {
   declare function Router(): void;
-  interface Router { route: string } // no error (DeclaredFunction allows this)
+  interface Router { route: string } // error: name-already-bound
   type T = string;
 }
 '' as fnWithDeclMerge.T; // ok

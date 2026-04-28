@@ -1274,17 +1274,7 @@ let merge_props_by_id cx ~target_own ~target_proto ~source_own ~source_proto =
        source_proto_map
     )
 
-let resolve_interface cx loc inter =
-  let cache = Context.node_cache cx in
-  let { Ast.Statement.Interface.id = (name_loc, _); _ } = inter in
-  let (t, ast) = Statement.interface cx loc inter in
-  Node_cache.set_interface cache loc (t, ast);
-  (* Interface declaration merging. The conflict map (good_name_loc -> [bad_name_locs])
-     built in env_builder drives everything. Prop IDs are registered in mk_interface_sig
-     (type_annotation.ml) when the InstanceT is created. Here we just look them up and merge. *)
-  let env = Context.environment cx in
-  let merge_conflicts = env.Loc_env.var_info.Env_api.interface_merge_conflicts in
-  let prop_ids = Context.interface_prop_ids cx in
+let merge_with_conflicts cx ~name_loc ~merge_conflicts ~prop_ids =
   let is_good = ALocMap.mem name_loc merge_conflicts in
   let is_bad =
     (not is_good)
@@ -1292,11 +1282,12 @@ let resolve_interface cx loc inter =
          (fun _good bad_locs -> List.exists (fun bad -> ALoc.equal bad name_loc) bad_locs)
          merge_conflicts
   in
-  if is_good || is_bad then begin
-    if is_good then
-      match ALocMap.find_opt name_loc merge_conflicts with
-      | Some bad_locs ->
-        let (good_own, good_proto) = ALocMap.find name_loc prop_ids in
+  if is_good then
+    match ALocMap.find_opt name_loc merge_conflicts with
+    | Some bad_locs ->
+      (match ALocMap.find_opt name_loc prop_ids with
+      | None -> ()
+      | Some (good_own, good_proto) ->
         List.iter
           (fun bad_name_loc ->
             match ALocMap.find_opt bad_name_loc prop_ids with
@@ -1308,30 +1299,73 @@ let resolve_interface cx loc inter =
                 ~source_own:bad_own
                 ~source_proto:bad_proto
             | None -> ())
-          bad_locs
-      | None -> ()
-    else
-      ALocMap.iter
-        (fun good_name_loc bad_locs ->
-          if List.exists (fun bad -> ALoc.equal bad name_loc) bad_locs then
-            match ALocMap.find_opt good_name_loc prop_ids with
-            | Some (good_own, good_proto) ->
-              let (bad_own, bad_proto) = ALocMap.find name_loc prop_ids in
+          bad_locs)
+    | None -> ()
+  else if is_bad then
+    ALocMap.iter
+      (fun good_name_loc bad_locs ->
+        if List.exists (fun bad -> ALoc.equal bad name_loc) bad_locs then
+          match ALocMap.find_opt good_name_loc prop_ids with
+          | Some (good_own, good_proto) ->
+            (match ALocMap.find_opt name_loc prop_ids with
+            | None -> ()
+            | Some (bad_own, bad_proto) ->
               merge_props_by_id
                 cx
                 ~target_own:good_own
                 ~target_proto:good_proto
                 ~source_own:bad_own
-                ~source_proto:bad_proto
-            | None -> ())
-        merge_conflicts
-  end;
+                ~source_proto:bad_proto)
+          | None -> ())
+      merge_conflicts
+
+let resolve_interface cx loc inter =
+  let cache = Context.node_cache cx in
+  let { Ast.Statement.Interface.id = (name_loc, _); _ } = inter in
+  let (t, ast) = Statement.interface cx loc inter in
+  Node_cache.set_interface cache loc (t, ast);
+  (* Interface declaration merging. The conflict map (good_name_loc -> [bad_name_locs])
+     built in env_builder drives everything. Prop IDs are registered in mk_interface_sig
+     (type_annotation.ml) when the InstanceT is created. Here we just look them up and merge.
+     If this interface is being absorbed by a `declare class`, route through the
+     declare-class conflict map so the class's InstanceT becomes the merge target. *)
+  let env = Context.environment cx in
+  let dc_conflicts = env.Loc_env.var_info.Env_api.declare_class_interface_merge_conflicts in
+  let absorbed_by_declare_class =
+    ALocMap.exists
+      (fun _good bad_locs -> List.exists (fun bad -> ALoc.equal bad name_loc) bad_locs)
+      dc_conflicts
+  in
+  if absorbed_by_declare_class then
+    merge_with_conflicts
+      cx
+      ~name_loc
+      ~merge_conflicts:dc_conflicts
+      ~prop_ids:(Context.interface_prop_ids cx)
+  else
+    merge_with_conflicts
+      cx
+      ~name_loc
+      ~merge_conflicts:env.Loc_env.var_info.Env_api.interface_merge_conflicts
+      ~prop_ids:(Context.interface_prop_ids cx);
   t
 
 let resolve_declare_class cx loc class_ =
   let cache = Context.node_cache cx in
+  let { Ast.Statement.DeclareClass.id = (name_loc, _); _ } = class_ in
   let (t, ast) = Statement.declare_class cx loc class_ in
   Node_cache.set_declared_class cache loc (t, ast);
+  (* Declaration merging: a `declare class` and same-name `interface`(s) fold the
+     interface members into the class type. The conflict map built in env_builder
+     keys the canonical class loc to the bad interface locs. Both class and
+     interface prop_ids land in the shared registry from mk_declare_class_sig /
+     mk_interface_sig. *)
+  let env = Context.environment cx in
+  merge_with_conflicts
+    cx
+    ~name_loc
+    ~merge_conflicts:env.Loc_env.var_info.Env_api.declare_class_interface_merge_conflicts
+    ~prop_ids:(Context.interface_prop_ids cx);
   t
 
 let resolve_declare_component cx loc component =

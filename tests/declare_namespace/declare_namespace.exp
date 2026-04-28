@@ -1209,126 +1209,112 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- typing_test.js:123:13
-
-Cannot declare the name in the namespace because the name `Inner` [1] is already bound. [signature-verification-failure]
-
-   typing_test.js:123:13
-   123|   interface Inner { z: boolean } // error: name-already-bound
-                    ^^^^^
-
-References:
-   typing_test.js:118:17
-   118|   declare class Inner { y: string }
-                        ^^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------------------- typing_test.js:126:2
+Error --------------------------------------------------------------------------------------------- typing_test.js:123:2
 
 Cannot cast `(new NsWithDeclMerge()).x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   typing_test.js:126:2
-   126| (new NsWithDeclMerge().x) as empty; // error: number ~> empty
+   typing_test.js:123:2
+   123| (new NsWithDeclMerge().x) as empty; // error: number ~> empty
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    typing_test.js:115:6
    115|   x: number;
              ^^^^^^ [1]
-   typing_test.js:126:30
-   126| (new NsWithDeclMerge().x) as empty; // error: number ~> empty
+   typing_test.js:123:30
+   123| (new NsWithDeclMerge().x) as empty; // error: number ~> empty
                                      ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- typing_test.js:127:1
+Error --------------------------------------------------------------------------------------------- typing_test.js:124:1
 
 Cannot cast `1` to `Inner` because number [1] is incompatible with `Inner` [2]. [incompatible-type]
 
-   typing_test.js:127:1
-   127| 1 as NsWithDeclMerge.Inner; // error: number ~> Inner (type is accessible)
+   typing_test.js:124:1
+   124| 1 as NsWithDeclMerge.Inner; // error: number ~> Inner (type is accessible)
         ^ [1]
 
 References:
-   typing_test.js:127:6
-   127| 1 as NsWithDeclMerge.Inner; // error: number ~> Inner (type is accessible)
+   typing_test.js:124:6
+   124| 1 as NsWithDeclMerge.Inner; // error: number ~> Inner (type is accessible)
              ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- typing_test.js:129:1
+Error --------------------------------------------------------------------------------------------- typing_test.js:126:1
 
 Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   typing_test.js:129:1
-   129| 1 as NsWithDeclMerge.T; // error: number ~> string
+   typing_test.js:126:1
+   126| 1 as NsWithDeclMerge.T; // error: number ~> string
         ^ [1]
 
 References:
-   typing_test.js:129:6
-   129| 1 as NsWithDeclMerge.T; // error: number ~> string
+   typing_test.js:126:6
+   126| 1 as NsWithDeclMerge.T; // error: number ~> string
              ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- typing_test.js:135:13
+Error -------------------------------------------------------------------------------------------- typing_test.js:132:13
 
 Cannot declare the name in the namespace because the name `Router` [1] is already bound.
 [signature-verification-failure]
 
-   typing_test.js:135:13
-   135|   interface Router { route: string } // no error (DeclaredFunction allows this)
+   typing_test.js:132:13
+   132|   interface Router { route: string } // error: name-already-bound
                     ^^^^^^
 
 References:
-   typing_test.js:134:20
-   134|   declare function Router(): void;
+   typing_test.js:131:20
+   131|   declare function Router(): void;
                            ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- typing_test.js:139:1
+Error --------------------------------------------------------------------------------------------- typing_test.js:136:1
 
 Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   typing_test.js:139:1
-   139| 1 as fnWithDeclMerge.T; // error: number ~> string
+   typing_test.js:136:1
+   136| 1 as fnWithDeclMerge.T; // error: number ~> string
         ^ [1]
 
 References:
-   typing_test.js:139:6
-   139| 1 as fnWithDeclMerge.T; // error: number ~> string
+   typing_test.js:136:6
+   136| 1 as fnWithDeclMerge.T; // error: number ~> string
              ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- typing_test.js:153:1
+Error --------------------------------------------------------------------------------------------- typing_test.js:150:1
 
 Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   typing_test.js:153:1
-   153| 1 as fnWithTypeOnlyNs.T; // error: number ~> string
+   typing_test.js:150:1
+   150| 1 as fnWithTypeOnlyNs.T; // error: number ~> string
         ^ [1]
 
 References:
-   typing_test.js:153:6
-   153| 1 as fnWithTypeOnlyNs.T; // error: number ~> string
+   typing_test.js:150:6
+   150| 1 as fnWithTypeOnlyNs.T; // error: number ~> string
              ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- typing_test.js:155:1
+Error --------------------------------------------------------------------------------------------- typing_test.js:152:1
 
 Cannot cast `1` to `I` because number literal `1` [1], a primitive, cannot be used as a subtype of `I` [2]. You can wrap
 it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 [incompatible-type]
 
-   typing_test.js:155:1
-   155| 1 as fnWithTypeOnlyNs.I; // error: number ~> I
+   typing_test.js:152:1
+   152| 1 as fnWithTypeOnlyNs.I; // error: number ~> I
         ^ [1]
 
 References:
-   typing_test.js:155:6
-   155| 1 as fnWithTypeOnlyNs.I; // error: number ~> I
+   typing_test.js:152:6
+   152| 1 as fnWithTypeOnlyNs.I; // error: number ~> I
              ^^^^^^^^^^^^^^^^^^ [2]
 
 
 
-Found 93 errors
+Found 92 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -20160,6 +20160,228 @@ BindingValidationError(NameOverride { name: "Foo", override_binding_loc: 0, exis
 }
 
 #[test]
+fn builtin_declare_class_interface_merging_basic() {
+    let input = r#"
+        declare class C { x: number; }
+        interface C { y: string; }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:14-15]
+1. [1:18-19]
+2. [1:21-27]
+3. [2:14-15]
+4. [2:17-23]
+5. [0:0]
+
+Local defs:
+0. DeclareClassBinding(
+    DefDeclareClassBinding {
+        id_loc: 0,
+        nominal_id_loc: 0,
+        name: "C",
+        def: DeclareClassSig {
+            tparams: Mono,
+            extends: ClassImplicitExtends,
+            mixins: [],
+            implements: [],
+            static_props: {},
+            own_props: {
+                "x": InterfaceField(
+                    (
+                        Some(
+                            1,
+                        ),
+                        Annot(
+                            Number(
+                                2,
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            proto_props: {
+                "y": InterfaceField(
+                    (
+                        Some(
+                            3,
+                        ),
+                        Annot(
+                            String(
+                                4,
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            computed_own_props: [],
+            computed_proto_props: [],
+            computed_static_props: [],
+            static_calls: [],
+            calls: [],
+            dict: None,
+            static_dict: None,
+        },
+        namespace_types: {},
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 5,
+        name: "globalThis",
+        values: {
+            "C": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+            "globalThis": (
+                5,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 5,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+
+Builtin global value C
+
+Builtin global value globalThis
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_declare_class_interface_merging_reverse() {
+    let input = r#"
+        interface C { y: string; }
+        declare class C { x: number; }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:14-15]
+1. [1:17-23]
+2. [2:14-15]
+3. [2:18-19]
+4. [2:21-27]
+5. [0:0]
+
+Local defs:
+0. DeclareClassBinding(
+    DefDeclareClassBinding {
+        id_loc: 2,
+        nominal_id_loc: 2,
+        name: "C",
+        def: DeclareClassSig {
+            tparams: Mono,
+            extends: ClassImplicitExtends,
+            mixins: [],
+            implements: [],
+            static_props: {},
+            own_props: {
+                "x": InterfaceField(
+                    (
+                        Some(
+                            3,
+                        ),
+                        Annot(
+                            Number(
+                                4,
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            proto_props: {
+                "y": InterfaceField(
+                    (
+                        Some(
+                            0,
+                        ),
+                        Annot(
+                            String(
+                                1,
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            computed_own_props: [],
+            computed_proto_props: [],
+            computed_static_props: [],
+            static_calls: [],
+            calls: [],
+            dict: None,
+            static_dict: None,
+        },
+        namespace_types: {},
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 5,
+        name: "globalThis",
+        values: {
+            "C": (
+                2,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 2,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+            "globalThis": (
+                5,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 5,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+
+Builtin global value C
+
+Builtin global value globalThis
+
+Builtin global type C
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
 fn builtin_toplevel_import() {
     let input = r#"
         declare module foo {

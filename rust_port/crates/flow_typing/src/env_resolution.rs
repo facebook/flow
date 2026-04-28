@@ -2389,6 +2389,46 @@ fn merge_props_by_id<'cx>(
     cx.add_property_map(target_proto.dupe(), merged_proto);
 }
 
+fn merge_with_conflicts<'cx>(
+    cx: &Context<'cx>,
+    name_loc: &ALoc,
+    merge_conflicts: &flow_data_structure_wrapper::ord_map::FlowOrdMap<ALoc, Vec<ALoc>>,
+    prop_ids: &std::collections::BTreeMap<
+        ALoc,
+        (
+            flow_typing_type::type_::properties::Id,
+            flow_typing_type::type_::properties::Id,
+        ),
+    >,
+) {
+    let is_good = merge_conflicts.contains_key(name_loc);
+    let is_bad = !is_good
+        && merge_conflicts
+            .iter()
+            .any(|(_good, bad_locs)| bad_locs.contains(name_loc));
+    if is_good {
+        if let Some(bad_locs) = merge_conflicts.get(name_loc) {
+            if let Some((good_own, good_proto)) = prop_ids.get(name_loc).cloned() {
+                for bad_name_loc in bad_locs {
+                    if let Some((bad_own, bad_proto)) = prop_ids.get(bad_name_loc).cloned() {
+                        merge_props_by_id(cx, &good_own, &good_proto, &bad_own, &bad_proto);
+                    }
+                }
+            }
+        }
+    } else if is_bad {
+        for (good_name_loc, bad_locs) in merge_conflicts.iter() {
+            if bad_locs.contains(name_loc) {
+                if let Some((good_own, good_proto)) = prop_ids.get(good_name_loc).cloned() {
+                    if let Some((bad_own, bad_proto)) = prop_ids.get(name_loc).cloned() {
+                        merge_props_by_id(cx, &good_own, &good_proto, &bad_own, &bad_proto);
+                    }
+                }
+            }
+        }
+    }
+}
+
 fn resolve_interface<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
@@ -2401,36 +2441,22 @@ fn resolve_interface<'cx>(
     // Interface declaration merging. The conflict map (good_name_loc -> [bad_name_locs])
     // built in env_builder drives everything. Prop IDs are registered in mk_interface_sig
     // (type_annotation.rs) when the InstanceT is created. Here we just look them up and merge.
+    // If this interface is being absorbed by a `declare class`, route through the
+    // declare-class conflict map so the class's InstanceT becomes the merge target.
     let env = cx.environment();
-    let merge_conflicts = &env.var_info.interface_merge_conflicts;
-    let prop_ids = cx.interface_prop_ids();
-    let is_good = merge_conflicts.contains_key(&name_loc);
-    let is_bad = !is_good
-        && merge_conflicts
-            .iter()
-            .any(|(_good, bad_locs)| bad_locs.contains(&name_loc));
-    if is_good || is_bad {
-        if is_good {
-            if let Some(bad_locs) = merge_conflicts.get(&name_loc) {
-                if let Some((good_own, good_proto)) = prop_ids.get(&name_loc).cloned() {
-                    for bad_name_loc in bad_locs {
-                        if let Some((bad_own, bad_proto)) = prop_ids.get(bad_name_loc).cloned() {
-                            merge_props_by_id(cx, &good_own, &good_proto, &bad_own, &bad_proto);
-                        }
-                    }
-                }
-            }
-        } else {
-            for (good_name_loc, bad_locs) in merge_conflicts.iter() {
-                if bad_locs.contains(&name_loc) {
-                    if let Some((good_own, good_proto)) = prop_ids.get(good_name_loc).cloned() {
-                        if let Some((bad_own, bad_proto)) = prop_ids.get(&name_loc).cloned() {
-                            merge_props_by_id(cx, &good_own, &good_proto, &bad_own, &bad_proto);
-                        }
-                    }
-                }
-            }
-        }
+    let dc_conflicts = &env.var_info.declare_class_interface_merge_conflicts;
+    let absorbed_by_declare_class = dc_conflicts
+        .iter()
+        .any(|(_good, bad_locs)| bad_locs.contains(&name_loc));
+    if absorbed_by_declare_class {
+        merge_with_conflicts(cx, &name_loc, dc_conflicts, &cx.interface_prop_ids());
+    } else {
+        merge_with_conflicts(
+            cx,
+            &name_loc,
+            &env.var_info.interface_merge_conflicts,
+            &cx.interface_prop_ids(),
+        );
     }
     t
 }
@@ -2441,8 +2467,21 @@ fn resolve_declare_class<'cx>(
     class_: &ast::statement::DeclareClass<ALoc, ALoc>,
 ) -> Type {
     let cache = cx.node_cache();
+    let name_loc = class_.id.loc.dupe();
     let (t, ast) = statement::declare_class(cx, loc.dupe(), class_);
     cache.set_declared_class(loc, (t.dupe(), ast));
+    // Declaration merging: a `declare class` and same-name `interface`(s) fold the
+    // interface members into the class type. The conflict map built in env_builder
+    // keys the canonical class loc to the bad interface locs. Both class and
+    // interface prop_ids land in the shared registry from mk_declare_class_sig /
+    // mk_interface_sig.
+    let env = cx.environment();
+    merge_with_conflicts(
+        cx,
+        &name_loc,
+        &env.var_info.declare_class_interface_merge_conflicts,
+        &cx.interface_prop_ids(),
+    );
     t
 }
 

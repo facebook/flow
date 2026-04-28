@@ -955,6 +955,7 @@ struct NameResolverState {
     visiting_hoisted_type: bool,
     in_conditional_type_extends: bool,
     interface_merge_conflicts: BTreeMap<ALoc, Vec<ALoc>>,
+    declare_class_interface_merge_conflicts: BTreeMap<ALoc, Vec<ALoc>>,
     jsx_base_name: Option<FlowSmolStr>,
     pred_func_map: FlowOrdMap<ALoc, env_api::PredFuncInfo<ALoc>>,
     /// Track parameter binding def_locs currently being processed, so that we can
@@ -991,6 +992,7 @@ impl NameResolverState {
             visiting_hoisted_type: false,
             in_conditional_type_extends: false,
             interface_merge_conflicts: BTreeMap::new(),
+            declare_class_interface_merge_conflicts: BTreeMap::new(),
             jsx_base_name: None,
             pred_func_map: CACHED_PRED.with(|c| c.clone()),
             current_bindings: CACHED_BINDINGS.with(|c| c.clone()),
@@ -1666,6 +1668,14 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     fn interface_merge_conflicts(&self) -> FlowOrdMap<ALoc, Vec<ALoc>> {
         self.env_state
             .interface_merge_conflicts
+            .iter()
+            .map(|(k, v)| (k.dupe(), v.clone()))
+            .collect()
+    }
+
+    fn declare_class_interface_merge_conflicts(&self) -> FlowOrdMap<ALoc, Vec<ALoc>> {
+        self.env_state
+            .declare_class_interface_merge_conflicts
             .iter()
             .map(|(k, v)| (k.dupe(), v.clone()))
             .collect()
@@ -8179,6 +8189,32 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                         );
                         None
                     }
+                    BindingsKind::DeclaredClass
+                        if loc != *def_loc_val
+                            && matches!(current_kind, Some(BindingsKind::Interface { .. })) =>
+                    {
+                        // TS-style declaration merging: a `declare class` and a same-named
+                        // `interface` merge into a single class type. Record the conflict so
+                        // the typing layer can fold interface members into the class's
+                        // InstanceT prop maps, and add an AssigningWrite so name_def
+                        // actually resolves the interface body (its prop ids must land in
+                        // the registry).
+                        let entry = self
+                            .env_state
+                            .declare_class_interface_merge_conflicts
+                            .entry(def_loc_val.dupe())
+                            .or_insert_with(Vec::new);
+                        entry.push(loc.dupe());
+                        let reason = VirtualReason::new(
+                            VirtualReasonDesc::RType(flow_common::reason::Name::new(name.dupe())),
+                            loc.dupe(),
+                        );
+                        self.env_state.write_entries.insert(
+                            env_api::EnvKey::new(env_api::DefLocType::OrdinaryNameLoc, loc.dupe()),
+                            env_api::EnvEntry::AssigningWrite(reason),
+                        );
+                        None
+                    }
                     BindingsKind::Class | BindingsKind::DeclaredClass
                         if loc != *def_loc_val
                             && matches!(
@@ -11718,6 +11754,7 @@ pub struct NameResolverResult {
     pub refinement_of_id: RefinementOfId,
     pub pred_func_map: FlowOrdMap<ALoc, env_api::PredFuncInfo<ALoc>>,
     pub interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
+    pub declare_class_interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
 }
 
 impl NameResolverResult {
@@ -11733,6 +11770,7 @@ impl NameResolverResult {
             refinement_of_id: Box::new(move |id| refinement_of_id.get(id)),
             pred_func_map: self.pred_func_map,
             interface_merge_conflicts: self.interface_merge_conflicts,
+            declare_class_interface_merge_conflicts: self.declare_class_interface_merge_conflicts,
         }
     }
 }
@@ -11778,6 +11816,8 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
     let refinement_of_id = RefinementOfId::new(refinement_heap);
     let pred_func_map = env_walk.pred_func_map();
     let interface_merge_conflicts = env_walk.interface_merge_conflicts();
+    let declare_class_interface_merge_conflicts =
+        env_walk.declare_class_interface_merge_conflicts();
     (
         completion_state,
         NameResolverResult {
@@ -11790,6 +11830,7 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
             refinement_of_id,
             pred_func_map,
             interface_merge_conflicts,
+            declare_class_interface_merge_conflicts,
         },
     )
 }

@@ -259,6 +259,7 @@ module type S = sig
     refinement_of_id: int -> Refi.refinement;
     pred_func_map: pred_func_info L.LMap.t;
     interface_merge_conflicts: L.t list L.LMap.t;
+    declare_class_interface_merge_conflicts: L.t list L.LMap.t;
   }
 
   type 'l annot_loc =
@@ -591,6 +592,7 @@ module Make
     refinement_of_id: int -> Refi.refinement;
     pred_func_map: pred_func_info L.LMap.t;
     interface_merge_conflicts: L.t list L.LMap.t;
+    declare_class_interface_merge_conflicts: L.t list L.LMap.t;
   }
 
   type 'l annot_loc =
@@ -611,6 +613,7 @@ module Make
       refinement_of_id = (fun _ -> raise (Env_invariant (None, Impossible "Empty env info")));
       pred_func_map = L.LMap.empty;
       interface_merge_conflicts = L.LMap.empty;
+      declare_class_interface_merge_conflicts = L.LMap.empty;
     }
 
   let map_result ~f res =

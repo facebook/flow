@@ -700,6 +700,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
     visiting_hoisted_type: bool;
     in_conditional_type_extends: bool;
     interface_merge_conflicts: ALoc.t list L.LMap.t;
+    declare_class_interface_merge_conflicts: ALoc.t list L.LMap.t;
     jsx_base_name: string option;
     pred_func_map: Env_api.pred_func_info L.LMap.t;
     (* Track parameter binding def_locs currently being processed, so that we can
@@ -1126,6 +1127,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           visiting_hoisted_type = false;
           in_conditional_type_extends = false;
           interface_merge_conflicts = L.LMap.empty;
+          declare_class_interface_merge_conflicts = L.LMap.empty;
           jsx_base_name;
           pred_func_map = L.LMap.empty;
           current_bindings = L.LMap.empty;
@@ -1149,6 +1151,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method pred_func_map = env_state.pred_func_map
 
       method interface_merge_conflicts = env_state.interface_merge_conflicts
+
+      method declare_class_interface_merge_conflicts =
+        env_state.declare_class_interface_merge_conflicts
 
       method private is_assigning_write key =
         match EnvMap.find_opt key env_state.write_entries with
@@ -2289,6 +2294,37 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
                 in
                 env_state <- { env_state with write_entries };
+                None
+              | Bindings.DeclaredClass
+                when (not (ALoc.equal loc def_loc))
+                     &&
+                     match current_kind with
+                     | Some (Bindings.Interface _) -> true
+                     | _ -> false ->
+                (* TS-style declaration merging: a `declare class` and a same-named
+                   `interface` merge into a single class type. Record the conflict so
+                   the typing layer can fold interface members into the class's
+                   InstanceT prop maps, and add an AssigningWrite so name_def
+                   actually resolves the interface body (its prop ids must land in
+                   the registry). *)
+                let existing =
+                  L.LMap.find_opt def_loc env_state.declare_class_interface_merge_conflicts
+                  |> Base.Option.value ~default:[]
+                in
+                let reason = mk_reason (RType (OrdinaryName name)) loc in
+                let write_entries =
+                  EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
+                in
+                env_state <-
+                  {
+                    env_state with
+                    declare_class_interface_merge_conflicts =
+                      L.LMap.add
+                        def_loc
+                        (loc :: existing)
+                        env_state.declare_class_interface_merge_conflicts;
+                    write_entries;
+                  };
                 None
               | Bindings.Class
               | Bindings.DeclaredClass
@@ -7817,6 +7853,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         refinement_of_id = env_walk#refinement_of_id;
         pred_func_map = env_walk#pred_func_map;
         interface_merge_conflicts = env_walk#interface_merge_conflicts;
+        declare_class_interface_merge_conflicts = env_walk#declare_class_interface_merge_conflicts;
       }
     )
 
