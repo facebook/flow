@@ -164,9 +164,11 @@ pub type EphemeralParallelizableResult =
 pub type EphemeralNonparallelizableResult =
     Result<(server_prot::response::Response, Option<lsp_prot::Json>), WorkloadCanceled>;
 
-pub type PersistentParallelizableResult = (lsp_prot::Response, lsp_prot::Metadata);
+pub type PersistentParallelizableResult =
+    Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled>;
 
-pub type PersistentNonparallelizableResult = (lsp_prot::Response, lsp_prot::Metadata);
+pub type PersistentNonparallelizableResult =
+    Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled>;
 
 pub enum IdeFileError {
     Skipped(String),
@@ -181,10 +183,18 @@ pub enum CommandHandler {
 
 type PersistentImmediateWorkload =
     Box<dyn FnOnce() -> (lsp_prot::Response, lsp_prot::Metadata) + Send>;
-type PersistentParallelizableWorkload =
-    Box<dyn FnOnce(&server_env::Env) -> (lsp_prot::Response, lsp_prot::Metadata) + Send>;
-type PersistentNonparallelizableWorkload =
-    Box<dyn FnOnce(&server_env::Env) -> (lsp_prot::Response, lsp_prot::Metadata) + Send>;
+type PersistentParallelizableWorkload = Box<
+    dyn FnOnce(
+            &server_env::Env,
+        ) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled>
+        + Send,
+>;
+type PersistentNonparallelizableWorkload = Box<
+    dyn FnOnce(
+            &server_env::Env,
+        ) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled>
+        + Send,
+>;
 pub enum PersistentCommandHandler {
     HandlePersistentImmediately(PersistentImmediateWorkload),
     HandleParallelizablePersistent(PersistentParallelizableWorkload),
@@ -266,12 +276,13 @@ fn try_with_json<T, J, F: FnOnce() -> (Result<T, String>, Option<J>)>(
     f()
 }
 
-fn type_contents_error_to_string(error: &TypeContentsError, fallback: &str) -> String {
+fn type_contents_error_to_string(
+    error: &TypeContentsError,
+    fallback: &str,
+) -> Result<String, WorkloadCanceled> {
     match error {
-        TypeContentsError::CheckedDependenciesCanceled => {
-            CHECKED_DEPENDENCIES_RETRY_SENTINEL.to_string()
-        }
-        TypeContentsError::Errors(_) => fallback.to_string(),
+        TypeContentsError::CheckedDependenciesCanceled => Err(WorkloadCanceled),
+        TypeContentsError::Errors(_) => Ok(fallback.to_string()),
     }
 }
 
@@ -1031,7 +1042,7 @@ fn autocomplete_on_parsed(
     imports_ranked_usage: bool,
     imports_ranked_usage_boost_exact_match_min_length: usize,
     show_ranking_info: bool,
-) -> (Vec<(String, lsp_prot::Json)>, AcResult, bool) {
+) -> Result<(Vec<(String, lsp_prot::Json)>, AcResult), WorkloadCanceled> {
     let (line, column) = cursor;
     let cursor_loc = flow_parser::loc::Loc::cursor(Some(filename.dupe()), line, column);
     let (contents, broader_context, canon_token) =
@@ -1205,7 +1216,10 @@ fn autocomplete_on_parsed(
         }
     };
     autocomplete_js::autocomplete_unset_hooks();
-    (initial_json_props, ac_result, checked_dependencies_canceled)
+    if checked_dependencies_canceled {
+        return Err(WorkloadCanceled);
+    }
+    Ok((initial_json_props, ac_result))
 }
 
 fn autofix_errors_cli(
@@ -1337,9 +1351,9 @@ fn autocomplete(
     imports: bool,
     imports_ranked_usage: bool,
     show_ranking_info: bool,
-) -> (AutocompleteResponse, Option<lsp_prot::Json>) {
+) -> Result<(AutocompleteResponse, Option<lsp_prot::Json>), WorkloadCanceled> {
     match of_file_input(options, env, input) {
-        Err(IdeFileError::Failed(e)) => (Err(e), None),
+        Err(IdeFileError::Failed(e)) => Ok((Err(e), None)),
         Err(IdeFileError::Skipped(reason)) => {
             let response = (
                 None,
@@ -1351,39 +1365,29 @@ fn autocomplete(
                 "Skipped".to_string(),
             );
             let extra_data = json_of_skipped(&reason);
-            (Ok(response), extra_data)
+            Ok((Ok(response), extra_data))
         }
         Ok((filename, contents)) => {
             let imports_min_characters = options.autoimports_min_characters;
             let imports_ranked_usage_boost_exact_match_min_length =
                 options.autoimports_ranked_by_usage_boost_exact_match_min_length as usize;
-            let (initial_json_props, ac_result, checked_dependencies_canceled) =
-                autocomplete_on_parsed(
-                    options,
-                    env,
-                    shared_mem,
-                    node_modules_containers,
-                    client_id,
-                    &filename,
-                    &contents,
-                    trigger_character,
-                    cursor,
-                    imports,
-                    imports_min_characters,
-                    imports_ranked_usage,
-                    imports_ranked_usage_boost_exact_match_min_length,
-                    show_ranking_info,
-                );
-            if checked_dependencies_canceled {
-                (
-                    Err(CHECKED_DEPENDENCIES_RETRY_SENTINEL.to_string()),
-                    Some(lsp_prot::Json::Object(
-                        initial_json_props.into_iter().collect(),
-                    )),
-                )
-            } else {
-                json_of_autocomplete_result(initial_json_props, ac_result)
-            }
+            let (initial_json_props, ac_result) = autocomplete_on_parsed(
+                options,
+                env,
+                shared_mem,
+                node_modules_containers,
+                client_id,
+                &filename,
+                &contents,
+                trigger_character,
+                cursor,
+                imports,
+                imports_min_characters,
+                imports_ranked_usage,
+                imports_ranked_usage_boost_exact_match_min_length,
+                show_ranking_info,
+            )?;
+            Ok(json_of_autocomplete_result(initial_json_props, ac_result))
         }
     }
 }
@@ -1716,10 +1720,13 @@ fn infer_type(
     >,
     input: &server_prot::infer_type_options::T,
     include_refinement_info: bool,
-) -> (
-    server_prot::response::InferTypeResponse,
-    Option<lsp_prot::Json>,
-) {
+) -> Result<
+    (
+        server_prot::response::InferTypeResponse,
+        Option<lsp_prot::Json>,
+    ),
+    WorkloadCanceled,
+> {
     let server_prot::infer_type_options::T {
         input: ref file_input,
         line,
@@ -1738,7 +1745,7 @@ fn infer_type(
     let mut options = options.clone();
     options.verbose = verbose.as_ref().map(|v| std::sync::Arc::new(v.clone()));
     match of_file_input(&options, env, file_input) {
-        Err(IdeFileError::Failed(msg)) => (Err(msg), None),
+        Err(IdeFileError::Failed(msg)) => Ok((Err(msg), None)),
         Err(IdeFileError::Skipped(reason)) => {
             let tys = if json {
                 server_prot::response::infer_type::Payload::Json("null".to_string())
@@ -1753,7 +1760,7 @@ fn infer_type(
                 documentation: None,
             };
             let extra_data = json_of_skipped(&reason);
-            (Ok(response), extra_data)
+            Ok((Ok(response), extra_data))
         }
         Ok((file_key, content)) => {
             let parse_result = parse_contents(&options, &content, &file_key);
@@ -1767,13 +1774,16 @@ fn infer_type(
                 node_modules_containers,
             );
             match file_artifacts_result {
-                Err(_parse_errors) => {
-                    let err_str = "Couldn't parse file in parse_artifacts".to_string();
+                Err(parse_errors) => {
+                    let err_str = type_contents_error_to_string(
+                        &parse_errors,
+                        "Couldn't parse file in parse_artifacts",
+                    )?;
                     let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
-                    (
+                    Ok((
                         Err(err_str),
                         Some(serde_json::Value::Object(json_props.into_iter().collect())),
-                    )
+                    ))
                 }
                 Ok(ref check_result) => {
                     let (ref parse_artifacts, ref typecheck_artifacts) = *check_result;
@@ -1803,12 +1813,12 @@ fn infer_type(
                             Err(e) => {
                                 let err_str = format!("infer_type: cancel/timeout: {:?}", e);
                                 let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
-                                return (
+                                return Ok((
                                     Err(err_str),
                                     Some(serde_json::Value::Object(
                                         json_props.into_iter().collect(),
                                     )),
-                                );
+                                ));
                             }
                         };
                     let documentation = documentation_at_loc(
@@ -1843,10 +1853,10 @@ fn infer_type(
                         tys,
                         &loc_of_aloc,
                     );
-                    (
+                    Ok((
                         Ok(response),
                         Some(serde_json::Value::Object(json_props.into_iter().collect())),
-                    )
+                    ))
                 }
             }
         }
@@ -1863,7 +1873,7 @@ fn type_of_name(
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
     input: &server_prot::type_of_name_options::T,
-) -> Vec<server_prot::response::InferTypeOfNameResponse> {
+) -> Result<Vec<server_prot::response::InferTypeOfNameResponse>, WorkloadCanceled> {
     let server_prot::type_of_name_options::T {
         input: ref file_input,
         ref names,
@@ -1871,11 +1881,11 @@ fn type_of_name(
         ..
     } = *input;
     match of_file_input(options, env, file_input) {
-        Err(IdeFileError::Failed(e)) => names.iter().map(|_| Err(e.clone())).collect(),
-        Err(IdeFileError::Skipped(reason)) => names
+        Err(IdeFileError::Failed(e)) => Ok(names.iter().map(|_| Err(e.clone())).collect()),
+        Err(IdeFileError::Skipped(reason)) => Ok(names
             .iter()
             .map(|_| Err(format!("file skipped: {}", reason)))
-            .collect(),
+            .collect()),
         Ok((file_key, content)) => {
             let mut options = options.clone();
             options.verbose = verbose.as_ref().map(|v| std::sync::Arc::new(v.clone()));
@@ -1890,10 +1900,10 @@ fn type_of_name(
                 node_modules_containers,
             );
             match file_artifacts_result {
-                Err(parse_errors) => names
-                    .iter()
-                    .map(|_| Err(type_contents_error_to_string(&parse_errors, "Cannot parse")))
-                    .collect(),
+                Err(parse_errors) => {
+                    let err_str = type_contents_error_to_string(&parse_errors, "Cannot parse")?;
+                    Ok(names.iter().map(|_| Err(err_str.clone())).collect())
+                }
                 Ok(check_result) => {
                     let doc_at_loc = |reader: &flow_heap::parsing_heaps::SharedMem,
                                       check_result: &CheckResult<'_>,
@@ -1914,7 +1924,7 @@ fn type_of_name(
                             ast,
                         )
                     };
-                    flow_services_type_of_name::type_of_name::type_of_name(
+                    Ok(flow_services_type_of_name::type_of_name::type_of_name(
                         &options,
                         shared_mem,
                         env,
@@ -1922,7 +1932,7 @@ fn type_of_name(
                         file_key,
                         input,
                         &check_result,
-                    )
+                    ))
                 }
             }
         }
@@ -1939,10 +1949,13 @@ fn inlay_hint(
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
     input: &server_prot::inlay_hint_options::T,
-) -> (
-    server_prot::response::inlay_hint::Response,
-    Option<lsp_prot::Json>,
-) {
+) -> Result<
+    (
+        server_prot::response::inlay_hint::Response,
+        Option<lsp_prot::Json>,
+    ),
+    WorkloadCanceled,
+> {
     let server_prot::inlay_hint_options::T {
         input: ref file_input,
         ref verbose,
@@ -1955,10 +1968,10 @@ fn inlay_hint(
     let mut options = options.clone();
     options.verbose = verbose.as_ref().map(|v| std::sync::Arc::new(v.clone()));
     match of_file_input(&options, env, file_input) {
-        Err(IdeFileError::Failed(e)) => (Err(e), None),
+        Err(IdeFileError::Failed(e)) => Ok((Err(e), None)),
         Err(IdeFileError::Skipped(reason)) => {
             let extra_data = json_of_skipped(&reason);
-            (Ok(vec![]), extra_data)
+            Ok((Ok(vec![]), extra_data))
         }
         Ok((file_key, content)) => {
             let parse_result = parse_contents(&options, &content, &file_key);
@@ -1976,17 +1989,17 @@ fn inlay_hint(
                     Err(type_contents_error_to_string(
                         &parse_errors,
                         "Couldn't parse file in parse_contents",
-                    )),
+                    )?),
                     did_hit_cache,
                 ),
             };
             match &file_artifacts_result {
                 Err(msg) => {
                     let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
-                    (
+                    Ok((
                         Err(msg.clone()),
                         Some(serde_json::Value::Object(json_props.into_iter().collect())),
-                    )
+                    ))
                 }
                 Ok(check_result) => {
                     let (parse_artifacts, typecheck_artifacts) = check_result;
@@ -2010,7 +2023,7 @@ fn inlay_hint(
                         ) {
                             Ok(tuple) => tuple,
                             Err(_job_err) => {
-                                return (Ok(vec![]), None);
+                                return Ok((Ok(vec![]), None));
                             }
                         };
                     let mut result_with_docs: Vec<server_prot::response::inlay_hint::Item> =
@@ -2050,7 +2063,7 @@ fn inlay_hint(
                             documentation,
                         });
                     }
-                    (Ok(result_with_docs), Some(json_data))
+                    Ok((Ok(result_with_docs), Some(json_data)))
                 }
             }
         }
@@ -2069,9 +2082,12 @@ fn insert_type(
     target: &flow_parser::loc::Loc,
     omit_targ_defaults: bool,
     location_is_strict: bool,
-) -> server_prot::response::InsertTypeResponse {
+) -> Result<server_prot::response::InsertTypeResponse, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, file_input);
-    let file_content = file_input.content_of_file_input()?;
+    let file_content = match file_input.content_of_file_input() {
+        Ok(c) => c,
+        Err(s) => return Ok(Err(s)),
+    };
     let shared_mem_loa = shared_mem.clone();
     let loc_of_aloc = move |aloc: &flow_aloc::ALoc| shared_mem_loa.loc_of_aloc(aloc);
     let shared_mem_ast = shared_mem.clone();
@@ -2105,7 +2121,7 @@ fn insert_type(
     );
     match &file_artifacts_result {
         Ok((parse_artifacts, typecheck_artifacts)) => {
-            let edits = flow_services_code_action::code_action_service::insert_type_fn(
+            let edits = match flow_services_code_action::code_action_service::insert_type_fn(
                 options,
                 &loc_of_aloc,
                 &get_ast_from_shared_mem,
@@ -2117,18 +2133,21 @@ fn insert_type(
                 location_is_strict,
                 parse_artifacts,
                 typecheck_artifacts,
-            )?;
-            Ok(
+            ) {
+                Ok(e) => e,
+                Err(s) => return Ok(Err(s)),
+            };
+            Ok(Ok(
                 flow_parser_utils_output::replacement_printer::loc_patch_to_patch(
                     &file_content,
                     &edits,
                 ),
-            )
+            ))
         }
-        Err(error) => Err(type_contents_error_to_string(
+        Err(error) => Ok(Err(type_contents_error_to_string(
             error,
             "Failed to type-check file",
-        )),
+        )?)),
     }
 }
 
@@ -2141,9 +2160,12 @@ fn autofix_exports(
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
     input: &FileInput,
-) -> server_prot::response::AutofixExportsResponse {
+) -> Result<server_prot::response::AutofixExportsResponse, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, input);
-    let file_content = input.content_of_file_input()?;
+    let file_content = match input.content_of_file_input() {
+        Ok(c) => c,
+        Err(s) => return Ok(Err(s)),
+    };
     let shared_mem_loa = shared_mem.clone();
     let loc_of_aloc: Arc<dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc> =
         Arc::new(move |aloc| shared_mem_loa.loc_of_aloc(aloc));
@@ -2197,22 +2219,22 @@ fn autofix_exports(
                 );
             if errors
                 .iter()
-                .any(|error| error == CHECKED_DEPENDENCIES_RETRY_SENTINEL)
+                .any(|error| is_checked_dependencies_retry_error(error))
             {
-                return Err(CHECKED_DEPENDENCIES_RETRY_SENTINEL.to_string());
+                return Err(WorkloadCanceled);
             }
-            Ok((
+            Ok(Ok((
                 flow_parser_utils_output::replacement_printer::loc_patch_to_patch(
                     &file_content,
                     &edits,
                 ),
                 errors,
-            ))
+            )))
         }
-        Err(error) => Err(type_contents_error_to_string(
+        Err(error) => Ok(Err(type_contents_error_to_string(
             error,
             "Failed to type-check file",
-        )),
+        )?)),
     }
 }
 
@@ -2225,9 +2247,12 @@ fn autofix_missing_local_annot(
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
     input: &FileInput,
-) -> server_prot::response::AutofixMissingLocalAnnotResponse {
+) -> Result<server_prot::response::AutofixMissingLocalAnnotResponse, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, input);
-    let file_content = input.content_of_file_input()?;
+    let file_content = match input.content_of_file_input() {
+        Ok(c) => c,
+        Err(s) => return Ok(Err(s)),
+    };
     let shared_mem_loa = shared_mem.clone();
     let loc_of_aloc = move |aloc: &flow_aloc::ALoc| shared_mem_loa.loc_of_aloc(aloc);
     let shared_mem_ast = shared_mem.clone();
@@ -2259,10 +2284,17 @@ fn autofix_missing_local_annot(
         intermediate_result,
         node_modules_containers,
     );
-    let file_artifacts = file_artifacts_result
-        .map_err(|error| type_contents_error_to_string(&error, "Failed to type-check file"))?;
+    let file_artifacts = match file_artifacts_result {
+        Ok(x) => x,
+        Err(e) => {
+            return Ok(Err(type_contents_error_to_string(
+                &e,
+                "Failed to type-check file",
+            )?));
+        }
+    };
     let (ref parse_artifacts, ref typecheck_artifacts) = file_artifacts;
-    let edits = flow_services_code_action::code_action_service::autofix_missing_local_annot_fn(
+    let edits = match flow_services_code_action::code_action_service::autofix_missing_local_annot_fn(
         options,
         &loc_of_aloc,
         &get_ast_from_shared_mem,
@@ -2271,8 +2303,13 @@ fn autofix_missing_local_annot(
         &file_content,
         parse_artifacts,
         typecheck_artifacts,
-    )?;
-    Ok(flow_parser_utils_output::replacement_printer::loc_patch_to_patch(&file_content, &edits))
+    ) {
+        Ok(e) => e,
+        Err(s) => return Ok(Err(s)),
+    };
+    Ok(Ok(
+        flow_parser_utils_output::replacement_printer::loc_patch_to_patch(&file_content, &edits),
+    ))
 }
 
 fn collect_rage(
@@ -2368,9 +2405,12 @@ fn dump_types(
     evaluate_type_destructors: flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode,
     for_tool: Option<i32>,
     file_input: &FileInput,
-) -> Result<Vec<(flow_parser::loc::Loc, String)>, String> {
+) -> Result<Result<Vec<(flow_parser::loc::Loc, String)>, String>, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, file_input);
-    let content = file_input.content_of_file_input()?;
+    let content = match file_input.content_of_file_input() {
+        Ok(c) => c,
+        Err(s) => return Ok(Err(s)),
+    };
     let intermediate_result = parse_contents(options, &content, &file_key);
     let file_artifacts_result = type_parse_artifacts(
         options,
@@ -2380,16 +2420,22 @@ fn dump_types(
         intermediate_result,
         node_modules_containers,
     );
-    let (parse_artifacts, typecheck_artifacts) = file_artifacts_result.map_err(|parse_errors| {
-        type_contents_error_to_string(&parse_errors, "Couldn't parse file in parse_contents")
-    })?;
-    Ok(flow_services_type_info::type_info_service::dump_types(
+    let (parse_artifacts, typecheck_artifacts) = match file_artifacts_result {
+        Ok(x) => x,
+        Err(parse_errors) => {
+            return Ok(Err(type_contents_error_to_string(
+                &parse_errors,
+                "Couldn't parse file in parse_contents",
+            )?));
+        }
+    };
+    Ok(Ok(flow_services_type_info::type_info_service::dump_types(
         evaluate_type_destructors,
         for_tool,
         &typecheck_artifacts.cx,
         parse_artifacts.file_sig.clone(),
         &typecheck_artifacts.typed_ast,
-    ))
+    )))
 }
 
 fn coverage(
@@ -2404,10 +2450,13 @@ fn coverage(
     file_key: &flow_parser::file_key::FileKey,
     content: &str,
     force: bool,
-) -> (
-    server_prot::response::CoverageResponse,
-    Option<lsp_prot::Json>,
-) {
+) -> Result<
+    (
+        server_prot::response::CoverageResponse,
+        Option<lsp_prot::Json>,
+    ),
+    WorkloadCanceled,
+> {
     let mut options = options.clone();
     options.all = options.all || force;
     let intermediate_result = parse_contents(&options, content, file_key);
@@ -2431,15 +2480,15 @@ fn coverage(
                 file_key,
                 content,
             );
-            (Ok(coverage), Some(extra_data))
+            Ok((Ok(coverage), Some(extra_data)))
         }
-        Err(parse_errors) => (
+        Err(parse_errors) => Ok((
             Err(type_contents_error_to_string(
                 &parse_errors,
                 "Couldn't parse file in parse_contents",
-            )),
+            )?),
             Some(extra_data),
-        ),
+        )),
     }
 }
 
@@ -2613,12 +2662,15 @@ fn get_def(
     file_input: &FileInput,
     line: u32,
     col: u32,
-) -> (
-    server_prot::response::GetDefResponse,
-    Option<lsp_prot::Json>,
-) {
+) -> Result<
+    (
+        server_prot::response::GetDefResponse,
+        Option<lsp_prot::Json>,
+    ),
+    WorkloadCanceled,
+> {
     match of_file_input(options, env, file_input) {
-        Err(IdeFileError::Failed(msg)) => (Err(msg), None),
+        Err(IdeFileError::Failed(msg)) => Ok((Err(msg), None)),
         Err(IdeFileError::Skipped(reason)) => {
             let mut json_props = json_props_of_skipped(&reason);
             json_props.insert(
@@ -2628,10 +2680,10 @@ fn get_def(
                     lsp_prot::Json::String("SKIPPED".to_string()),
                 ),
             );
-            (
+            Ok((
                 Ok(vec![]),
                 Some(lsp_prot::Json::Object(json_props.into_iter().collect())),
-            )
+            ))
         }
         Ok((file_key, content)) => {
             let intermediate_result = parse_contents(options, &content, &file_key);
@@ -2649,7 +2701,7 @@ fn get_def(
                     Err(type_contents_error_to_string(
                         &parse_errors,
                         "Couldn't parse file in parse_contents",
-                    )),
+                    )?),
                     did_hit_cache,
                 ),
             };
@@ -2658,10 +2710,10 @@ fn get_def(
                     let mut json_props =
                         vec![("error".to_string(), lsp_prot::Json::String(msg.clone()))];
                     json_props = add_cache_hit_data_to_json(json_props, did_hit_cache);
-                    (
+                    Ok((
                         Err(msg),
                         Some(lsp_prot::Json::Object(json_props.into_iter().collect())),
-                    )
+                    ))
                 }
                 Ok(ref check_result) => {
                     let (result, json_props) = get_def_of_check_result(
@@ -2703,10 +2755,10 @@ fn get_def(
                         _ => {}
                     }
                     json_props = add_cache_hit_data_to_json(json_props, did_hit_cache);
-                    (
+                    Ok((
                         result,
                         Some(lsp_prot::Json::Object(json_props.into_iter().collect())),
-                    )
+                    ))
                 }
             }
         }
@@ -2884,7 +2936,7 @@ fn handle_autocomplete(
         imports,
         imports_ranked_usage,
         show_ranking_info,
-    );
+    )?;
     let result = result.map(|(_token, completions, _token_loc, ac_type)| (completions, ac_type));
     Ok((
         server_prot::response::Response::AUTOCOMPLETE(result),
@@ -2902,8 +2954,7 @@ fn handle_autofix_exports(
     >,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let result: Result<_, String> =
-        try_with(|| autofix_exports(options, env, shared_mem, node_modules_containers, input));
+    let result = autofix_exports(options, env, shared_mem, node_modules_containers, input)?;
     Ok((
         server_prot::response::Response::AUTOFIX_EXPORTS(result),
         None,
@@ -2920,9 +2971,8 @@ fn handle_autofix_missing_local_annot(
     >,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let result: Result<_, String> = try_with(|| {
-        autofix_missing_local_annot(options, env, shared_mem, node_modules_containers, input)
-    });
+    let result =
+        autofix_missing_local_annot(options, env, shared_mem, node_modules_containers, input)?;
     Ok((
         server_prot::response::Response::AUTOFIX_MISSING_LOCAL_ANNOT(result),
         None,
@@ -2940,10 +2990,6 @@ fn handle_check_file(
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
 ) -> EphemeralParallelizableResult {
-    // OCaml: `let response = check_file ... in
-    //         Lwt.return (ServerProt.Response.CHECK_FILE response, None)`.
-    // The `?` propagates `WorkloadCanceled` (the typed equivalent of OCaml's
-    // `Lwt.Canceled`) up to the workload wrapper, which defers or retries.
     let response = check_file(
         options,
         env,
@@ -2966,24 +3012,22 @@ fn handle_coverage(
     input: &FileInput,
     force: bool,
 ) -> EphemeralParallelizableResult {
-    let (response, json_data) = try_with_json(|| {
-        let mut options = options.clone();
-        options.all = options.all || force;
-        match of_file_input(&options, env, input) {
-            Err(IdeFileError::Failed(msg)) => (Err(msg), None),
-            Err(IdeFileError::Skipped(reason)) => (Err(reason.clone()), json_of_skipped(&reason)),
-            Ok((file_key, file_contents)) => coverage(
-                &options,
-                env,
-                None,
-                shared_mem.clone(),
-                node_modules_containers,
-                &file_key,
-                &file_contents,
-                force,
-            ),
-        }
-    });
+    let mut options = options.clone();
+    options.all = options.all || force;
+    let (response, json_data) = match of_file_input(&options, env, input) {
+        Err(IdeFileError::Failed(msg)) => (Err(msg), None),
+        Err(IdeFileError::Skipped(reason)) => (Err(reason.clone()), json_of_skipped(&reason)),
+        Ok((file_key, file_contents)) => coverage(
+            &options,
+            env,
+            None,
+            shared_mem.clone(),
+            node_modules_containers,
+            &file_key,
+            &file_contents,
+            force,
+        )?,
+    };
     Ok((
         server_prot::response::Response::COVERAGE(response),
         json_data,
@@ -3024,17 +3068,15 @@ fn handle_dump_types(
     for_tool: Option<i32>,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let response: Result<_, String> = try_with(|| {
-        dump_types(
-            options,
-            env,
-            shared_mem,
-            node_modules_containers,
-            evaluate_type_destructors,
-            for_tool,
-            input,
-        )
-    });
+    let response = dump_types(
+        options,
+        env,
+        shared_mem,
+        node_modules_containers,
+        evaluate_type_destructors,
+        for_tool,
+        input,
+    )?;
     Ok((server_prot::response::Response::DUMP_TYPES(response), None))
 }
 
@@ -3089,18 +3131,16 @@ fn handle_get_def(
     line: u32,
     col: u32,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = try_with_json(|| {
-        get_def(
-            options,
-            env,
-            None,
-            shared_mem,
-            node_modules_containers,
-            input,
-            line,
-            col,
-        )
-    });
+    let (result, json_data) = get_def(
+        options,
+        env,
+        None,
+        shared_mem,
+        node_modules_containers,
+        input,
+        line,
+        col,
+    )?;
     Ok((server_prot::response::Response::GET_DEF(result), json_data))
 }
 
@@ -3128,17 +3168,15 @@ fn handle_infer_type(
     >,
     input: &server_prot::infer_type_options::T,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = try_with_json(|| {
-        infer_type(
-            options,
-            env,
-            None,
-            shared_mem.clone(),
-            node_modules_containers,
-            input,
-            true,
-        )
-    });
+    let (result, json_data) = infer_type(
+        options,
+        env,
+        None,
+        shared_mem.clone(),
+        node_modules_containers,
+        input,
+        true,
+    )?;
     Ok((
         server_prot::response::Response::INFER_TYPE(result),
         json_data,
@@ -3168,7 +3206,7 @@ fn handle_type_of_name(
             input,
         )
     })) {
-        Ok(result) => (result, None),
+        Ok(result) => (result?, None),
         Err(_exn) => {
             let names = &input.names;
             (
@@ -3196,16 +3234,14 @@ fn handle_inlay_hint(
     >,
     input: &server_prot::inlay_hint_options::T,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = try_with_json(|| {
-        inlay_hint(
-            options,
-            env,
-            None,
-            shared_mem.clone(),
-            node_modules_containers,
-            input,
-        )
-    });
+    let (result, json_data) = inlay_hint(
+        options,
+        env,
+        None,
+        shared_mem.clone(),
+        node_modules_containers,
+        input,
+    )?;
     Ok((
         server_prot::response::Response::INLAY_HINT(result),
         json_data,
@@ -3317,18 +3353,16 @@ fn handle_insert_type(
     omit_targ_defaults: bool,
     location_is_strict: bool,
 ) -> EphemeralParallelizableResult {
-    let result: Result<_, String> = try_with(|| {
-        insert_type(
-            options,
-            env,
-            shared_mem,
-            node_modules_containers,
-            file_input,
-            target,
-            omit_targ_defaults,
-            location_is_strict,
-        )
-    });
+    let result = insert_type(
+        options,
+        env,
+        shared_mem,
+        node_modules_containers,
+        file_input,
+        target,
+        omit_targ_defaults,
+        location_is_strict,
+    )?;
     Ok((server_prot::response::Response::INSERT_TYPE(result), None))
 }
 
@@ -4406,15 +4440,15 @@ fn wrap_persistent_handler<T: Default>(
     client_id: lsp_prot::ClientId,
     request: lsp_prot::RequestWithMetadata,
     default_ret: T,
-    handler: impl FnOnce() -> (T, lsp_prot::Response, lsp_prot::Metadata),
-) -> T {
+    handler: impl FnOnce() -> Result<(T, lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled>,
+) -> Result<T, WorkloadCanceled> {
     let (request, metadata) = request;
     if persistent_connection::get_client(client_id).is_none() {
         eprintln!(
             "Unknown persistent client {}. Maybe connection went away?",
             client_id
         );
-        return default_ret;
+        return Ok(default_ret);
     }
     eprintln!(
         "Persistent request: {}",
@@ -4427,8 +4461,10 @@ fn wrap_persistent_handler<T: Default>(
     let _should_print_summary = options.profile;
     let result = match check_if_cancelled(&request, metadata.clone()) {
         Some((response, json_data)) => (default_ret, response, json_data),
-        None => {
-            std::panic::catch_unwind(std::panic::AssertUnwindSafe(handler)).unwrap_or_else(|e| {
+        None => match std::panic::catch_unwind(std::panic::AssertUnwindSafe(handler)) {
+            Ok(Ok(triple)) => triple,
+            Ok(Err(WorkloadCanceled)) => return Err(WorkloadCanceled),
+            Err(e) => {
                 let exn_str = if let Some(s) = e.downcast_ref::<String>() {
                     s.clone()
                 } else if let Some(s) = e.downcast_ref::<&str>() {
@@ -4439,13 +4475,13 @@ fn wrap_persistent_handler<T: Default>(
                 let response =
                     handle_persistent_uncaught_exception(request.clone(), exn_str.clone(), exn_str);
                 (T::default(), response, metadata)
-            })
-        }
+            }
+        },
     };
     let profiling = persistent_profiling_json(start.elapsed().as_secs_f64());
     let ret = send_persistent_response(client_id, profiling.clone(), result);
     send_command_summary(&(), &lsp_prot::string_of_request(&request));
-    ret
+    Ok(ret)
 }
 
 fn handle_parallelizable_persistent_unsafe(
@@ -4469,10 +4505,10 @@ fn handle_parallelizable_persistent(
         Box::new(move || cancelled_request_id_opt(&request_for_cancel).is_some());
     let parallelizable_workload_handler: flow_server_env::workload_stream::ParallelizableWorkloadHandler = Box::new(
         move |env: &server_env::Env| {
-            let _result: () =
+            let _result: Result<(), WorkloadCanceled> =
                 wrap_persistent_handler(&genv.options, client_id, request, (), || {
-                    let (response, metadata) = workload(env);
-                    ((), response, metadata)
+                    let (response, metadata) = workload(env)?;
+                    Ok(((), response, metadata))
                 });
         },
     );
@@ -4500,10 +4536,11 @@ fn handle_nonparallelizable_persistent(
         Box::new(move || cancelled_request_id_opt(&request_for_cancel).is_some());
     let workload_handler: flow_server_env::workload_stream::WorkloadHandler =
         Box::new(move |env: server_env::Env| {
-            let _: () = wrap_persistent_handler(&genv.options, client_id, request, (), || {
-                let (response, metadata) = workload(&env);
-                ((), response, metadata)
-            });
+            let _: Result<(), WorkloadCanceled> =
+                wrap_persistent_handler(&genv.options, client_id, request, (), || {
+                    let (response, metadata) = workload(&env)?;
+                    Ok(((), response, metadata))
+                });
             env
         });
     flow_server_env::workload_stream::Workload {
@@ -4754,7 +4791,7 @@ fn handle_persistent_get_def(
     params: &lsp_types::GotoDefinitionParams,
     file_input: Option<&FileInput>,
     metadata: lsp_prot::Metadata,
-) -> (lsp_prot::Response, lsp_prot::Metadata) {
+) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled> {
     let file_input = match file_input {
         Some(file_input) => file_input.clone(),
         None => {
@@ -4774,7 +4811,7 @@ fn handle_persistent_get_def(
         &file_input,
         line,
         col,
-    );
+    )?;
     let metadata = with_data(extra_data, metadata);
     match result {
         Ok(locs) => {
@@ -4794,9 +4831,9 @@ fn handle_persistent_get_def(
                 })
                 .collect();
             let response = LspMessage::ResponseMessage(id, LspResult::DefinitionResult(locations));
-            (lsp_prot::Response::LspFromServer(Some(response)), metadata)
+            Ok((lsp_prot::Response::LspFromServer(Some(response)), metadata))
         }
-        Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
+        Err(reason) => Ok(mk_lsp_error_response(Some(id), reason, None, metadata)),
     }
 }
 
@@ -4845,7 +4882,7 @@ fn handle_persistent_infer_type(
     params: &lsp_types::HoverParams,
     file_input: Option<&FileInput>,
     metadata: lsp_prot::Metadata,
-) -> (lsp_prot::Response, lsp_prot::Metadata) {
+) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled> {
     let file_input = match file_input {
         Some(file_input) => file_input.clone(),
         None => {
@@ -4880,7 +4917,7 @@ fn handle_persistent_infer_type(
         node_modules_containers,
         &input,
         include_refinement_info,
-    );
+    )?;
     let metadata = with_data(extra_data, metadata);
     match result {
         Ok(infer_result) => {
@@ -5001,9 +5038,9 @@ fn handle_persistent_infer_type(
                 }),
             };
             let response = LspMessage::ResponseMessage(id, LspResult::HoverResult(r));
-            (lsp_prot::Response::LspFromServer(Some(response)), metadata)
+            Ok((lsp_prot::Response::LspFromServer(Some(response)), metadata))
         }
-        Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
+        Err(reason) => Ok(mk_lsp_error_response(Some(id), reason, None, metadata)),
     }
 }
 
@@ -5052,7 +5089,7 @@ fn handle_persistent_autocomplete_lsp(
     params: &lsp_types::CompletionParams,
     file_input: Option<&FileInput>,
     metadata: lsp_prot::Metadata,
-) -> (lsp_prot::Response, lsp_prot::Metadata) {
+) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled> {
     let client = persistent_connection::get_client(client_id);
     let client_config = client.as_ref().map(persistent_connection::client_config);
     let lsp_init_params = client
@@ -5107,7 +5144,7 @@ fn handle_persistent_autocomplete_lsp(
         imports,
         imports_ranked_usage,
         show_ranking_info,
-    );
+    )?;
     let metadata = with_data(extra_data, metadata);
     match result {
         Ok((token, completions, token_loc, ac_type)) => {
@@ -5166,9 +5203,9 @@ fn handle_persistent_autocomplete_lsp(
                 id,
                 LspResult::CompletionResult(result),
             )));
-            (response, metadata)
+            Ok((response, metadata))
         }
-        Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
+        Err(reason) => Ok(mk_lsp_error_response(Some(id), reason, None, metadata)),
     }
 }
 
@@ -6012,7 +6049,7 @@ fn handle_persistent_coverage(
     params: &lsp_mapper::type_coverage::Params,
     file_input: Option<&FileInput>,
     metadata: lsp_prot::Metadata,
-) -> (lsp_prot::Response, lsp_prot::Metadata) {
+) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled> {
     let text_document = &params.text_document;
     let file_input = match file_input {
         Some(file_input) => file_input.clone(),
@@ -6020,7 +6057,7 @@ fn handle_persistent_coverage(
     };
     match of_file_input(options, env, &file_input) {
         Err(IdeFileError::Failed(reason)) => {
-            mk_lsp_error_response(Some(id), reason, None, metadata)
+            Ok(mk_lsp_error_response(Some(id), reason, None, metadata))
         }
         Err(IdeFileError::Skipped(reason)) => {
             let range = lsp_types::Range {
@@ -6043,7 +6080,7 @@ fn handle_persistent_coverage(
             });
             let response = LspMessage::ResponseMessage(id, r);
             let metadata = with_data(json_of_skipped(&reason), metadata);
-            (lsp_prot::Response::LspFromServer(Some(response)), metadata)
+            Ok((lsp_prot::Response::LspFromServer(Some(response)), metadata))
         }
         Ok((file_key, file_contents)) => {
             let force = options.all;
@@ -6058,7 +6095,7 @@ fn handle_persistent_coverage(
                 &file_key,
                 &file_contents,
                 force,
-            );
+            )?;
             let metadata = with_data(extra_data, metadata);
             match result {
                 Ok(all_locs) => {
@@ -6120,9 +6157,9 @@ fn handle_persistent_coverage(
                             .to_string(),
                     });
                     let response = LspMessage::ResponseMessage(id, r);
-                    (lsp_prot::Response::LspFromServer(Some(response)), metadata)
+                    Ok((lsp_prot::Response::LspFromServer(Some(response)), metadata))
                 }
-                Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
+                Err(reason) => Ok(mk_lsp_error_response(Some(id), reason, None, metadata)),
             }
         }
     }
@@ -7270,7 +7307,7 @@ fn get_persistent_handler(
         lsp_prot::Request::Subscribe => {
             let metadata = metadata.clone();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                handle_persistent_subscribe(client_id, metadata, env)
+                Ok(handle_persistent_subscribe(client_id, metadata, env))
             }))
         }
 
@@ -7289,7 +7326,9 @@ fn get_persistent_handler(
                 enqueue_did_open_files(&files);
                 // This mutates env, so it can't run in parallel
                 PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                    handle_persistent_did_open_notification(client_id, metadata, env)
+                    Ok(handle_persistent_did_open_notification(
+                        client_id, metadata, env,
+                    ))
                 }))
             } else {
                 PersistentCommandHandler::HandlePersistentImmediately(Box::new(move || {
@@ -7331,7 +7370,9 @@ fn get_persistent_handler(
             // This mutates env, so it can't run in parallel
             if did_anything_change {
                 PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                    handle_persistent_did_close_notification(client_id, metadata, env)
+                    Ok(handle_persistent_did_close_notification(
+                        client_id, metadata, env,
+                    ))
                 }))
             } else {
                 PersistentCommandHandler::HandlePersistentImmediately(Box::new(move || {
@@ -7356,7 +7397,7 @@ fn get_persistent_handler(
             }
             let metadata = metadata.clone();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |_env| {
-                handle_persistent_cancel_notification(id, metadata)
+                Ok(handle_persistent_cancel_notification(id, metadata))
             }))
         }
 
@@ -7447,7 +7488,7 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_code_action_request(
+                    Ok(handle_persistent_code_action_request(
                         &options_arc,
                         env,
                         shared_mem,
@@ -7456,7 +7497,7 @@ fn get_persistent_handler(
                         id,
                         &params,
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -7508,7 +7549,7 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_signaturehelp_lsp(
+                    Ok(handle_persistent_signaturehelp_lsp(
                         &options_arc,
                         env,
                         shared_mem,
@@ -7518,7 +7559,7 @@ fn get_persistent_handler(
                         &params,
                         file_input.as_ref(),
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -7536,7 +7577,7 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_text_document_diagnostics_lsp(
+                    Ok(handle_persistent_text_document_diagnostics_lsp(
                         &options_arc,
                         env,
                         shared_mem,
@@ -7545,7 +7586,7 @@ fn get_persistent_handler(
                         id,
                         &params,
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -7567,7 +7608,7 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_document_highlight(
+                    Ok(handle_persistent_document_highlight(
                         &options_arc,
                         env,
                         shared_mem,
@@ -7577,7 +7618,7 @@ fn get_persistent_handler(
                         &params,
                         file_input.as_ref(),
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -7593,7 +7634,7 @@ fn get_persistent_handler(
             let shared_mem = genv.shared_mem.clone();
             let node_modules_containers = genv.node_modules_containers.clone();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                handle_persistent_find_references(
+                Ok(handle_persistent_find_references(
                     &options_arc,
                     env,
                     shared_mem,
@@ -7602,7 +7643,7 @@ fn get_persistent_handler(
                     id,
                     &params,
                     metadata,
-                )
+                ))
             }))
         }
 
@@ -7620,7 +7661,7 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_prepare_rename(
+                    Ok(handle_persistent_prepare_rename(
                         &options_arc,
                         env,
                         shared_mem,
@@ -7630,7 +7671,7 @@ fn get_persistent_handler(
                         &params,
                         file_input.as_ref(),
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -7646,7 +7687,7 @@ fn get_persistent_handler(
             let shared_mem = genv.shared_mem.clone();
             let node_modules_containers = genv.node_modules_containers.clone();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                handle_persistent_rename(
+                Ok(handle_persistent_rename(
                     &options_arc,
                     env,
                     shared_mem,
@@ -7655,7 +7696,7 @@ fn get_persistent_handler(
                     id,
                     &params,
                     metadata,
-                )
+                ))
             }))
         }
 
@@ -7670,7 +7711,13 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_workspace_symbol(&options_arc, env, id, params, metadata)
+                    Ok(handle_persistent_workspace_symbol(
+                        &options_arc,
+                        env,
+                        id,
+                        params,
+                        metadata,
+                    ))
                 }),
             )
         }
@@ -7722,7 +7769,7 @@ fn get_persistent_handler(
                         })
                         .collect();
                     let response = LspMessage::ResponseMessage(id, LspResult::RageResult(items));
-                    (lsp_prot::Response::LspFromServer(Some(response)), metadata)
+                    Ok((lsp_prot::Response::LspFromServer(Some(response)), metadata))
                 }),
             )
         }
@@ -7732,7 +7779,7 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |_env| handle_persistent_ping(id, metadata)),
+                Box::new(move |_env| Ok(handle_persistent_ping(id, metadata))),
             )
         }
 
@@ -7766,7 +7813,7 @@ fn get_persistent_handler(
                             mk_parallelizable_persistent(
                                 options,
                                 Box::new(move |env| {
-                                    handle_persistent_add_missing_imports_command(
+                                    Ok(handle_persistent_add_missing_imports_command(
                                         &options_arc,
                                         env,
                                         shared_mem,
@@ -7775,7 +7822,7 @@ fn get_persistent_handler(
                                         id,
                                         &text_document,
                                         metadata,
-                                    )
+                                    ))
                                 }),
                             )
                         }
@@ -7831,14 +7878,14 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_auto_close_jsx(
+                    Ok(handle_persistent_auto_close_jsx(
                         &options_arc,
                         env,
                         client_id,
                         id,
                         params,
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -7856,7 +7903,7 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_prepare_document_paste(
+                    Ok(handle_persistent_prepare_document_paste(
                         &options_arc,
                         env,
                         shared_mem,
@@ -7865,7 +7912,7 @@ fn get_persistent_handler(
                         id,
                         &params,
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -7901,14 +7948,14 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_linked_editing_range(
+                    Ok(handle_persistent_linked_editing_range(
                         &options_arc,
                         env,
                         client_id,
                         id,
                         params,
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -7925,7 +7972,7 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_rename_file_imports(
+                    Ok(handle_persistent_rename_file_imports(
                         &options_for_closure,
                         env,
                         shared_mem.clone(),
@@ -7933,7 +7980,7 @@ fn get_persistent_handler(
                         id,
                         &params,
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -7951,7 +7998,7 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_persistent_llm_context(
+                    Ok(handle_persistent_llm_context(
                         &options_for_closure,
                         env,
                         shared_mem,
@@ -7960,7 +8007,7 @@ fn get_persistent_handler(
                         id,
                         &params,
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -7996,7 +8043,7 @@ fn get_persistent_handler(
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
-                    handle_live_errors_request(
+                    Ok(handle_live_errors_request(
                         &options_arc,
                         env,
                         shared_mem,
@@ -8004,7 +8051,7 @@ fn get_persistent_handler(
                         client_id,
                         &uri,
                         metadata,
-                    )
+                    ))
                 }),
             )
         }
@@ -8076,45 +8123,145 @@ pub fn enqueue_persistent(
     client_id: lsp_prot::ClientId,
     request: lsp_prot::RequestWithMetadata,
 ) {
-    let _name = lsp_prot::string_of_request(&request.0);
+    let name = lsp_prot::string_of_request(&request.0);
     match get_persistent_handler(genv, client_id, &request) {
         PersistentCommandHandler::HandlePersistentImmediately(workload) => {
             handle_persistent_immediately(genv, client_id, request, workload);
         }
         PersistentCommandHandler::HandleParallelizablePersistent(workload) => {
-            let name = _name.clone();
-            let request_for_cancel = request.0.clone();
-            let options = genv.options.clone();
-            let pw = flow_server_env::workload_stream::ParallelizableWorkload {
-                parallelizable_workload_should_be_cancelled: Box::new(move || {
-                    cancelled_request_id_opt(&request_for_cancel).is_some()
-                }),
-                parallelizable_workload_handler: Box::new(move |env: &server_env::Env| {
-                    let _: () = wrap_persistent_handler(&options, client_id, request, (), || {
-                        let (response, metadata) = workload(env);
-                        ((), response, metadata)
-                    });
-                }),
-            };
+            let pw = mk_parallelizable_persistent_workload(
+                genv.clone(),
+                client_id,
+                request,
+                name.clone(),
+                workload,
+            );
             server_monitor_listener_state::push_new_parallelizable_workload(&name, pw);
         }
         PersistentCommandHandler::HandleNonparallelizablePersistent(workload) => {
-            let name = _name.clone();
-            let request_for_cancel = request.0.clone();
-            let options = genv.options.clone();
-            let w = flow_server_env::workload_stream::Workload {
-                workload_should_be_cancelled: Box::new(move || {
-                    cancelled_request_id_opt(&request_for_cancel).is_some()
-                }),
-                workload_handler: Box::new(move |env: server_env::Env| {
-                    let _: () = wrap_persistent_handler(&options, client_id, request, (), || {
-                        let (response, metadata) = workload(&env);
-                        ((), response, metadata)
-                    });
-                    env
-                }),
-            };
+            let w = mk_nonparallelizable_persistent_workload(
+                genv.clone(),
+                client_id,
+                request,
+                workload,
+            );
             server_monitor_listener_state::push_new_workload(&name, w);
         }
+    }
+}
+
+fn mk_parallelizable_persistent_workload(
+    genv: Arc<server_env::Genv>,
+    client_id: lsp_prot::ClientId,
+    request: lsp_prot::RequestWithMetadata,
+    name: String,
+    workload: PersistentParallelizableWorkload,
+) -> flow_server_env::workload_stream::ParallelizableWorkload {
+    let request_for_cancel = request.0.clone();
+    let options = genv.options.clone();
+    let request_for_handler = request.clone();
+    let genv_for_handler = genv.clone();
+    let name_for_handler = name.clone();
+    flow_server_env::workload_stream::ParallelizableWorkload {
+        parallelizable_workload_should_be_cancelled: Box::new(move || {
+            cancelled_request_id_opt(&request_for_cancel).is_some()
+        }),
+        parallelizable_workload_handler: Box::new(move |env: &server_env::Env| {
+            let result: Result<(), WorkloadCanceled> = wrap_persistent_handler(
+                &options,
+                client_id,
+                request_for_handler.clone(),
+                (),
+                || {
+                    let (response, metadata) = workload(env)?;
+                    Ok(((), response, metadata))
+                },
+            );
+            if let Err(WorkloadCanceled) = result {
+                eprintln!(
+                    "Command successfully canceled. Requeuing the command for after the next recheck."
+                );
+                if let PersistentCommandHandler::HandleParallelizablePersistent(new_workload) =
+                    get_persistent_handler(&genv_for_handler, client_id, &request_for_handler)
+                {
+                    let recreated = mk_parallelizable_persistent_workload(
+                        genv_for_handler.clone(),
+                        client_id,
+                        request_for_handler.clone(),
+                        name_for_handler.clone(),
+                        new_workload,
+                    );
+                    server_monitor_listener_state::defer_parallelizable_workload(
+                        &name_for_handler,
+                        recreated,
+                    );
+                }
+            }
+        }),
+    }
+}
+
+fn mk_nonparallelizable_persistent_workload(
+    genv: Arc<server_env::Genv>,
+    client_id: lsp_prot::ClientId,
+    request: lsp_prot::RequestWithMetadata,
+    workload: PersistentNonparallelizableWorkload,
+) -> flow_server_env::workload_stream::Workload {
+    let request_for_cancel = request.0.clone();
+    let options = genv.options.clone();
+    let request_for_handler = request.clone();
+    let genv_for_handler = genv.clone();
+    flow_server_env::workload_stream::Workload {
+        workload_should_be_cancelled: Box::new(move || {
+            cancelled_request_id_opt(&request_for_cancel).is_some()
+        }),
+        workload_handler: Box::new(move |env: server_env::Env| {
+            let mut env = env;
+            let mut current_workload = Some(workload);
+            loop {
+                let workload = current_workload.take().expect("loop invariant");
+                let result: Result<(), WorkloadCanceled> = wrap_persistent_handler(
+                    &options,
+                    client_id,
+                    request_for_handler.clone(),
+                    (),
+                    || {
+                        let (response, metadata) = workload(&env)?;
+                        Ok(((), response, metadata))
+                    },
+                );
+                match result {
+                    Ok(()) => return env,
+                    Err(WorkloadCanceled) => {
+                        eprintln!(
+                            "Command successfully canceled. Running a recheck before restarting the command"
+                        );
+                        let node_modules_containers_arc =
+                            std::sync::Arc::new(std::sync::RwLock::new(
+                                (*genv_for_handler.node_modules_containers).clone(),
+                            ));
+                        let (_recheck_profiling, new_env) =
+                            flow_server_rechecker::rechecker::recheck_loop(
+                                &genv_for_handler,
+                                env,
+                                &genv_for_handler.shared_mem,
+                                &node_modules_containers_arc,
+                            );
+                        env = new_env;
+                        eprintln!("Now restarting the command");
+                        match get_persistent_handler(
+                            &genv_for_handler,
+                            client_id,
+                            &request_for_handler,
+                        ) {
+                            PersistentCommandHandler::HandleNonparallelizablePersistent(w) => {
+                                current_workload = Some(w);
+                            }
+                            _ => return env,
+                        }
+                    }
+                }
+            }
+        }),
     }
 }
