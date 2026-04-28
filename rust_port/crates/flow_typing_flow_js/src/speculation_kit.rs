@@ -742,24 +742,23 @@ fn trials_of_spec<'cx, 'a>(spec: &mut CasesSpec<'cx, 'a>) -> Vec<(i32, CaseSpec<
         // NB: Even though we know the use_op for the original constraint, don't
         // embed it in the nested constraints to avoid unnecessary verbosity. We
         // will unwrap the original use_op once in EUnionSpeculationFailed. *)
-        CasesSpec::UnionCases { use_op, l, us, .. } => us
-            .iter()
-            .enumerate()
-            .map(|(i, u)| {
-                (
-                    i as i32,
-                    CaseSpec::FlowCase(
-                        l.dupe(),
-                        UseT::new(UseTInner::UseT(
-                            VirtualUseOp::Op(Arc::new(VirtualRootUseOp::Speculation(Arc::new(
-                                use_op.dupe(),
-                            )))),
-                            u.dupe(),
-                        )),
-                    ),
-                )
-            })
-            .collect(),
+        CasesSpec::UnionCases { use_op, l, us, .. } => {
+            let spec_use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::Speculation(Arc::new(
+                use_op.dupe(),
+            ))));
+            us.iter()
+                .enumerate()
+                .map(|(i, u)| {
+                    (
+                        i as i32,
+                        CaseSpec::FlowCase(
+                            l.dupe(),
+                            UseT::new(UseTInner::UseT(spec_use_op.dupe(), u.dupe())),
+                        ),
+                    )
+                })
+                .collect()
+        }
         CasesSpec::IntersectionCases { ls, use_t: u, .. } => ls
             .iter()
             .enumerate()
