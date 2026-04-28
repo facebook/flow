@@ -1500,7 +1500,7 @@ struct NameResolver<'a, Cx: Context, Fl: Flow<Cx = Cx>> {
     class_stack: FlowVector<ALoc>,
     env_state: NameResolverState,
     cache: Rc<RefCell<ValCache<ALoc>>>,
-    simplify_cache: RefCell<HashMap<usize, Vec<env_api::WriteLoc<ALoc>>>>,
+    simplify_cache: RefCell<HashMap<usize, Rc<Vec<env_api::WriteLoc<ALoc>>>>>,
     enable_enums: bool,
     is_ts: bool,
     enable_const_params: bool,
@@ -5487,7 +5487,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                 );
                                 let mut locs: Vec<ALoc> = Vec::new();
                                 let mut undeclared = false;
-                                for write_loc in &simplified.write_locs {
+                                for write_loc in simplified.write_locs.iter() {
                                     match write_loc {
                                         env_api::WriteLoc::Undeclared { .. } => undeclared = true,
                                         env_api::WriteLoc::Write(r) => locs.push(r.loc().dupe()),
@@ -5658,7 +5658,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                 let simplified = ssa_val::simplify(&mut cache, None, ssa_val::ValBindingKind::InternalBinding, None, &val);
                                 let mut locs: Vec<ALoc> = Vec::new();
                                 let mut undeclared = false;
-                                for write_loc in &simplified.write_locs {
+                                for write_loc in simplified.write_locs.iter() {
                                     match write_loc {
                                         env_api::WriteLoc::Undeclared { .. } => undeclared = true,
                                         env_api::WriteLoc::Write(r) => locs.push(r.loc().dupe()),
@@ -10969,7 +10969,7 @@ impl<'a, Cx: Context> DeadCodeMarker<'a, Cx> {
 
         self.values.entry(loc.dupe()).or_insert_with(|| Read {
             def_loc: None,
-            write_locs: vec![WriteLoc::Unreachable(loc)],
+            write_locs: Rc::new(vec![WriteLoc::Unreachable(loc)]),
             val_kind: env_api::ValKind::Value,
             name: Some(name),
             id: None,

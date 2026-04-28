@@ -486,11 +486,15 @@ pub fn providers<L: LocSig>(
 }
 
 fn simplify_val<L: LocSig>(
-    cache: &mut HashMap<usize, Vec<WriteLoc<L>>>,
+    cache: &mut HashMap<usize, Rc<Vec<WriteLoc<L>>>>,
     t: &Val<L>,
-) -> Vec<WriteLoc<L>> {
+) -> Rc<Vec<WriteLoc<L>>> {
+    // Mirrors OCaml's `IMap.find_opt t.id !cache |> Some v -> v`: cache hits
+    // share the underlying list by reference (Rc::dupe is O(1)) instead of
+    // deep-cloning a `Vec<WriteLoc<L>>`, which was a major hot spot for files
+    // building up large refinement chains.
     if let Some(v) = cache.get(&t.id) {
-        return v.clone();
+        return v.dupe();
     }
 
     let vals = normalize(t.write_state.inner());
@@ -502,57 +506,58 @@ fn simplify_val<L: LocSig>(
         )
     });
 
-    let result: Vec<WriteLoc<L>> = vals
-        .iter()
-        .map(|write_state| match write_state {
-            WriteStateInner::Uninitialized(l) if all_uninitialized_or_illegal => {
-                WriteLoc::Uninitialized(mk_reason(VirtualReasonDesc::RUninitialized, l.dupe()))
-            }
-            WriteStateInner::Undefined(r) => WriteLoc::Undefined(r.dupe()),
-            WriteStateInner::Number(r) => WriteLoc::Number(r.dupe()),
-            WriteStateInner::DeclaredFunction(l) => WriteLoc::DeclaredFunction(l.dupe()),
-            WriteStateInner::Undeclared(name, loc)
-            | WriteStateInner::DeclaredButSkipped(name, loc) => {
-                WriteLoc::Undeclared(name.dupe(), loc.dupe())
-            }
-            WriteStateInner::Uninitialized(l) => WriteLoc::Uninitialized(mk_reason(
-                VirtualReasonDesc::RPossiblyUninitialized,
-                l.dupe(),
-            )),
-            WriteStateInner::Projection(loc) => WriteLoc::Projection(loc.dupe()),
-            WriteStateInner::FunctionThis(r) => WriteLoc::FunctionThis(r.dupe()),
-            WriteStateInner::GlobalThis(r) => WriteLoc::GlobalThis(r.dupe()),
-            WriteStateInner::IllegalThis(r) => WriteLoc::IllegalThis(r.dupe()),
-            WriteStateInner::ClassInstanceThis(r) => WriteLoc::ClassInstanceThis(r.dupe()),
-            WriteStateInner::ClassStaticThis(r) => WriteLoc::ClassStaticThis(r.dupe()),
-            WriteStateInner::ClassInstanceSuper(r) => WriteLoc::ClassInstanceSuper(r.dupe()),
-            WriteStateInner::ClassStaticSuper(r) => WriteLoc::ClassStaticSuper(r.dupe()),
-            WriteStateInner::Loc(r) => WriteLoc::Write(r.dupe()),
-            WriteStateInner::EmptyArray {
-                reason,
-                arr_providers,
-            } => WriteLoc::EmptyArray {
-                reason: reason.dupe(),
-                arr_providers: arr_providers.dupe(),
-            },
-            WriteStateInner::IllegalWrite(r) => WriteLoc::IllegalWrite(r.dupe()),
-            WriteStateInner::Refinement {
-                refinement_id,
-                val_t,
-            } => WriteLoc::Refinement {
-                writes: simplify_val(cache, val_t),
-                refinement_id: *refinement_id as i32,
-                write_id: Some(val_t.id as i32),
-            },
-            WriteStateInner::ModuleScoped(name) => WriteLoc::ModuleScoped(name.dupe()),
-            WriteStateInner::Global(name) => WriteLoc::Global(name.dupe()),
-            WriteStateInner::PHI(_) => {
-                panic!("A normalized value cannot be a PHI")
-            }
-        })
-        .collect();
+    let result: Rc<Vec<WriteLoc<L>>> = Rc::new(
+        vals.iter()
+            .map(|write_state| match write_state {
+                WriteStateInner::Uninitialized(l) if all_uninitialized_or_illegal => {
+                    WriteLoc::Uninitialized(mk_reason(VirtualReasonDesc::RUninitialized, l.dupe()))
+                }
+                WriteStateInner::Undefined(r) => WriteLoc::Undefined(r.dupe()),
+                WriteStateInner::Number(r) => WriteLoc::Number(r.dupe()),
+                WriteStateInner::DeclaredFunction(l) => WriteLoc::DeclaredFunction(l.dupe()),
+                WriteStateInner::Undeclared(name, loc)
+                | WriteStateInner::DeclaredButSkipped(name, loc) => {
+                    WriteLoc::Undeclared(name.dupe(), loc.dupe())
+                }
+                WriteStateInner::Uninitialized(l) => WriteLoc::Uninitialized(mk_reason(
+                    VirtualReasonDesc::RPossiblyUninitialized,
+                    l.dupe(),
+                )),
+                WriteStateInner::Projection(loc) => WriteLoc::Projection(loc.dupe()),
+                WriteStateInner::FunctionThis(r) => WriteLoc::FunctionThis(r.dupe()),
+                WriteStateInner::GlobalThis(r) => WriteLoc::GlobalThis(r.dupe()),
+                WriteStateInner::IllegalThis(r) => WriteLoc::IllegalThis(r.dupe()),
+                WriteStateInner::ClassInstanceThis(r) => WriteLoc::ClassInstanceThis(r.dupe()),
+                WriteStateInner::ClassStaticThis(r) => WriteLoc::ClassStaticThis(r.dupe()),
+                WriteStateInner::ClassInstanceSuper(r) => WriteLoc::ClassInstanceSuper(r.dupe()),
+                WriteStateInner::ClassStaticSuper(r) => WriteLoc::ClassStaticSuper(r.dupe()),
+                WriteStateInner::Loc(r) => WriteLoc::Write(r.dupe()),
+                WriteStateInner::EmptyArray {
+                    reason,
+                    arr_providers,
+                } => WriteLoc::EmptyArray {
+                    reason: reason.dupe(),
+                    arr_providers: arr_providers.dupe(),
+                },
+                WriteStateInner::IllegalWrite(r) => WriteLoc::IllegalWrite(r.dupe()),
+                WriteStateInner::Refinement {
+                    refinement_id,
+                    val_t,
+                } => WriteLoc::Refinement {
+                    writes: simplify_val(cache, val_t),
+                    refinement_id: *refinement_id as i32,
+                    write_id: Some(val_t.id as i32),
+                },
+                WriteStateInner::ModuleScoped(name) => WriteLoc::ModuleScoped(name.dupe()),
+                WriteStateInner::Global(name) => WriteLoc::Global(name.dupe()),
+                WriteStateInner::PHI(_) => {
+                    panic!("A normalized value cannot be a PHI")
+                }
+            })
+            .collect(),
+    );
 
-    cache.insert(t.id, result.clone());
+    cache.insert(t.id, result.dupe());
     result
 }
 
@@ -568,7 +573,7 @@ pub enum ValBindingKind {
 
 // Simplification converts a Val.t to a list of locations.
 pub fn simplify<L: LocSig>(
-    cache: &mut HashMap<usize, Vec<WriteLoc<L>>>,
+    cache: &mut HashMap<usize, Rc<Vec<WriteLoc<L>>>>,
     def_loc: Option<L>,
     val_binding_kind: ValBindingKind,
     name: Option<FlowSmolStr>,

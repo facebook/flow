@@ -251,7 +251,7 @@ pub enum WriteLoc<L: Dupe + Eq + Ord + Hash> {
     Undeclared(FlowSmolStr, L),
     Refinement {
         refinement_id: i32,
-        writes: Vec<WriteLoc<L>>,
+        writes: Rc<Vec<WriteLoc<L>>>,
         write_id: Option<i32>,
     },
     FunctionThis(VirtualReason<L>),
@@ -399,7 +399,7 @@ pub enum ValKind {
 #[derive(Debug, Clone)]
 pub struct Read<L: Dupe + Eq + Ord + Hash> {
     pub def_loc: Option<L>,
-    pub write_locs: Vec<WriteLoc<L>>,
+    pub write_locs: Rc<Vec<WriteLoc<L>>>,
     pub val_kind: ValKind,
     pub name: Option<FlowSmolStr>,
     pub id: Option<i32>,
@@ -601,7 +601,7 @@ where
     {
         states.iter().all(|state| match state {
             WriteLoc::Global(_) => true,
-            WriteLoc::Refinement { writes, .. } => no_local_defs(writes),
+            WriteLoc::Refinement { writes, .. } => no_local_defs(writes.as_slice()),
             WriteLoc::Undefined(_)
             | WriteLoc::Number(_)
             | WriteLoc::DeclaredFunction(_)
@@ -632,7 +632,7 @@ where
     let read = values
         .get(read_loc)
         .expect("write_locs_of_read_loc: read_loc not found in values");
-    &read.write_locs
+    read.write_locs.as_slice()
 }
 
 pub fn writes_of_write_loc<L: LocSig>(
@@ -648,7 +648,7 @@ pub fn writes_of_write_loc<L: LocSig>(
     ) {
         match write_loc {
             WriteLoc::Refinement { writes, .. } => {
-                for w in writes {
+                for w in writes.iter() {
                     collect(for_type, providers, w, acc);
                 }
             }
@@ -744,7 +744,7 @@ where
             } => {
                 let refinement = refinement_of_id(*refinement_id);
                 acc.push(refinement.kind);
-                for w in writes {
+                for w in writes.iter() {
                     collect(refinement_of_id, w, acc);
                 }
             }
