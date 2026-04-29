@@ -1,0 +1,257 @@
+Error -------------------------------------------------------------------------------------------------------- a.js:13:1
+
+Cannot compute a type for function because its definition includes references to itself [1]. Please add an annotation to
+this definition [2] [recursive-definition]
+
+   a.js:13:1
+   13| function f_na() {
+       ^^^^^^^^^^^^^^^
+
+References:
+   a.js:17:10
+   17|   return f_na();
+                ^^^^ [1]
+   a.js:13:16
+   13| function f_na() {
+                       [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:26:1
+
+Cannot compute a type for `x` because its definition includes references to itself [1]. Please add an annotation to this
+definition [2] [recursive-definition]
+
+   a.js:26:1
+   26| x = x;
+       ^
+
+References:
+   a.js:26:5
+   26| x = x;
+           ^ [1]
+   a.js:24:5
+   24| var x;
+           ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:28:1
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - function [1] depends on other definition [2]
+ - function [3] depends on other definition [4]
+Please add type annotations to these definitions [5] [6] [definition-cycle]
+
+   a.js:28:1
+   28| function odd(x: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   a.js:32:10
+   32|   return even(x - 1);
+                ^^^^ [2]
+   a.js:35:1
+   35| function even(x: number) {
+       ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   a.js:39:10
+   39|   return odd(x - 1);
+                ^^^ [4]
+   a.js:28:24
+   28| function odd(x: number) {
+                               [5]
+   a.js:35:25
+   35| function even(x: number) {
+                                [6]
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:46:18
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   46| function missing(x): number {
+                        ^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:72:7
+
+Cannot compute a type for `math2` because its definition includes references to itself [1],  [2]. Please add an
+annotation to these definitions [3] [4] [5] [recursive-definition]
+
+   a.js:72:7
+   72| const math2 = {
+             ^^^^^
+
+References:
+   a.js:84:12
+   84|     return math2.even(x - 1);
+                  ^^^^^ [1]
+   a.js:90:12
+   90|     return math2.odd(x - 1);
+                  ^^^^^ [2]
+   a.js:76:20
+   76|     meth(x: number) {
+                           [3]
+   a.js:80:17
+   80|   odd(x: number) {
+                        [4]
+   a.js:86:20
+   86|   even: (x: number) => {
+                           [5]
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:94:7
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - `odd_obj` [1] depends on other definition [2]
+ - `even_obj` [3] depends on other definition [4]
+Please add type annotations to these definitions [5] [6] [7] [definition-cycle]
+
+   a.js:94:7
+    94| const odd_obj = {
+              ^^^^^^^ [1]
+
+References:
+   a.js:102:12
+   102|     return even_obj.even(x - 1);
+                   ^^^^^^^^ [2]
+   a.js:106:7
+   106| const even_obj = {
+              ^^^^^^^^ [3]
+   a.js:111:12
+   111|     return odd_obj.odd(x - 1);
+                   ^^^^^^^ [4]
+   a.js:95:14
+    95|   unrelated() {
+                      [5]
+   a.js:98:17
+    98|   odd(x: number) {
+                         [6]
+   a.js:107:20
+   107|   even: (x: number) => {
+                            [7]
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:115:7
+
+Cannot compute a type for `recursiveArrow` because its definition includes references to itself [1]. Please add an
+annotation to this definition [2] [recursive-definition]
+
+   a.js:115:7
+   115| const recursiveArrow = () => (true ? 1 : recursiveArrow());
+              ^^^^^^^^^^^^^^
+
+References:
+   a.js:115:42
+   115| const recursiveArrow = () => (true ? 1 : recursiveArrow());
+                                                 ^^^^^^^^^^^^^^ [1]
+   a.js:115:26
+   115| const recursiveArrow = () => (true ? 1 : recursiveArrow());
+                                  [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ a.js:169:14
+
+Cannot return `Utils.foo` because array literal [1] is incompatible with empty [2]. [incompatible-type]
+
+   a.js:169:14
+   169|       return Utils.foo;
+                     ^^^^^^^^^
+
+References:
+   a.js:154:10
+                 v
+   154|     foo: [
+   155|       {
+   156|         x: function (): number {
+   157|           return 42;
+   158|         },
+   159|       },
+   160|       42,
+   161|     ],
+            ^ [1]
+   a.js:168:10
+   168|     h(): empty {
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:177:9
+
+Cannot compute a type for `Utils` because its definition includes references to itself [1]. Please add an annotation to
+these definitions [2] [3] [recursive-definition]
+
+   a.js:177:9
+   177|   const Utils = {
+                ^^^^^
+
+References:
+   a.js:187:14
+   187|       return Utils.foo;
+                     ^^^^^ [1]
+   a.js:180:23
+   180|         x: function () {
+                               [2]
+   a.js:186:8
+   186|     f() {
+                [3]
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:193:9
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - `m` [1] depends on other definition [2], [3], [4], [5], [6]
+ - function [6] depends on other definition [4], [5]
+ - `x` [5] depends on other definition [4]
+ - `H` [7] depends on other definition [8]
+ - `x` [2] depends on other definition [3]
+Please add type annotations to these definitions [9] [5] [definition-cycle]
+
+   a.js:193:9
+   193|   const m = {
+                ^ [1]
+
+References:
+   a.js:194:7
+   194|     f(x: H) {
+              ^ [2]
+   a.js:194:10
+   194|     f(x: H) {
+                 ^ [3]
+   a.js:195:14
+   195|       return x(x => 42);
+                     ^ [4]
+   a.js:195:16
+   195|       return x(x => 42);
+                       ^ [5]
+   a.js:195:16
+   195|       return x(x => 42);
+                       ^^^^^^^ [6]
+   a.js:201:8
+   201|   type H = {((number) => number): void, m: typeof m, s: S};
+               ^ [7]
+   a.js:201:51
+   201|   type H = {((number) => number): void, m: typeof m, s: S};
+                                                          ^ [8]
+   a.js:194:12
+   194|     f(x: H) {
+                    [9]
+
+
+Error ------------------------------------------------------------------------------------------------------- a.js:213:7
+
+Cannot compute a type for `x` because its definition includes references to itself [1]. Please add an annotation to this
+definition [2] [recursive-definition]
+
+   a.js:213:7
+   213|   let x = function () {
+              ^
+
+References:
+   a.js:214:12
+   214|     return x;
+                   ^ [1]
+   a.js:213:22
+   213|   let x = function () {
+                              [2]
+
+
+
+Found 11 errors

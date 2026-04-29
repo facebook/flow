@@ -278,7 +278,7 @@ where
                 .entry(t)
                 .and_modify(|locs| {
                     if !locs.contains(&why) {
-                        locs.insert(0, why.dupe());
+                        locs.push(why.dupe());
                     }
                 })
                 .or_insert_with(|| Vec1::new(why));
