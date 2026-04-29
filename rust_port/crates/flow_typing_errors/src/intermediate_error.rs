@@ -1524,7 +1524,7 @@ where
                                 },
                             ) => {
                                 let (all_frames, mut explanations) = frames;
-                                explanations.insert(0, Explanation::ExplanationMultiplatform);
+                                explanations.push(Explanation::ExplanationMultiplatform);
                                 let frames = (all_frames, explanations);
 
                                 let root_loc = loc_of_aloc(self_module_loc);
@@ -1897,8 +1897,7 @@ where
                                 },
                             ) => {
                                 let (all_frames, mut explanations) = frames;
-                                explanations.insert(
-                                    0,
+                                explanations.push(
                                     Explanation::ExplanationTypeGuardPositiveConsistency {
                                         return_: return_reason.dupe(),
                                         param: param_reason.dupe(),
@@ -2071,8 +2070,7 @@ where
                                     VirtualFrameUseOp::ArrayElementCompatibility { .. }
                                 ) {
                                     let (all_frames, mut explanations) = frames;
-                                    explanations
-                                        .insert(0, Explanation::ExplanationArrayInvariantTyping);
+                                    explanations.push(Explanation::ExplanationArrayInvariantTyping);
                                     loop_impl(
                                         loc,
                                         (all_frames, explanations),
@@ -2170,12 +2168,9 @@ where
                                 inner.as_ref(),
                                 &(lower.dupe(), upper.dupe()),
                             );
-                            all_frames.insert(
-                                0,
-                                ErrorFrame::FrameReturnValue {
-                                    incompatibility_pair,
-                                },
-                            );
+                            all_frames.push(ErrorFrame::FrameReturnValue {
+                                incompatibility_pair,
+                            });
                             loop_impl(
                                 loc,
                                 (all_frames, explanations),
@@ -2191,12 +2186,9 @@ where
 
                         VirtualFrameUseOp::TypeParamBound { name } => {
                             let (mut all_frames, explanations) = frames;
-                            all_frames.insert(
-                                0,
-                                ErrorFrame::FrameTypeParameterBound(
-                                    name.string_of_subst_name().dupe(),
-                                ),
-                            );
+                            all_frames.push(ErrorFrame::FrameTypeParameterBound(
+                                name.string_of_subst_name().dupe(),
+                            ));
                             loop_impl(
                                 loc,
                                 (all_frames, explanations),
@@ -2212,7 +2204,7 @@ where
 
                         VirtualFrameUseOp::TypeGuardCompatibility => {
                             let (mut all_frames, explanations) = frames;
-                            all_frames.insert(0, ErrorFrame::FrameTypePredicate);
+                            all_frames.push(ErrorFrame::FrameTypePredicate);
                             loop_impl(
                                 loc,
                                 (all_frames, explanations),
@@ -2234,8 +2226,7 @@ where
                                 frame_loc
                             };
                             let (mut all_frames, explanations) = frames;
-                            all_frames
-                                .insert(0, ErrorFrame::FrameUnionRepresentative(union.dupe()));
+                            all_frames.push(ErrorFrame::FrameUnionRepresentative(union.dupe()));
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -2251,8 +2242,7 @@ where
 
                         VirtualFrameUseOp::ReactDeepReadOnly(box (props_loc, DroType::Props)) => {
                             let (all_frames, mut explanations) = frames;
-                            explanations.insert(
-                                0,
+                            explanations.push(
                                 Explanation::ExplanationReactComponentPropsDeepReadOnly(
                                     props_loc.dupe(),
                                 ),
@@ -2272,10 +2262,9 @@ where
 
                         VirtualFrameUseOp::ReactDeepReadOnly(box (props_loc, DroType::HookArg)) => {
                             let (all_frames, mut explanations) = frames;
-                            explanations.insert(
-                                0,
-                                Explanation::ExplanationReactHookArgsDeepReadOnly(props_loc.dupe()),
-                            );
+                            explanations.push(Explanation::ExplanationReactHookArgsDeepReadOnly(
+                                props_loc.dupe(),
+                            ));
                             loop_impl(
                                 loc,
                                 (all_frames, explanations),
@@ -2294,12 +2283,9 @@ where
                             DroType::HookReturn,
                         )) => {
                             let (all_frames, mut explanations) = frames;
-                            explanations.insert(
-                                0,
-                                Explanation::ExplanationReactHookReturnDeepReadOnly(
-                                    hook_loc.dupe(),
-                                ),
-                            );
+                            explanations.push(Explanation::ExplanationReactHookReturnDeepReadOnly(
+                                hook_loc.dupe(),
+                            ));
                             loop_impl(
                                 loc,
                                 (all_frames, explanations),
@@ -2321,16 +2307,13 @@ where
                             },
                         ) => {
                             let (all_frames, mut explanations) = frames;
-                            explanations.insert(
-                                0,
-                                Explanation::ExplanationConstrainedAssign(Box::new(
-                                    ExplanationConstrainedAssignData {
-                                        name: name.clone(),
-                                        declaration: declaration.dupe(),
-                                        providers: providers.clone(),
-                                    },
-                                )),
-                            );
+                            explanations.push(Explanation::ExplanationConstrainedAssign(Box::new(
+                                ExplanationConstrainedAssignData {
+                                    name: name.clone(),
+                                    declaration: declaration.dupe(),
+                                    providers: providers.clone(),
+                                },
+                            )));
                             loop_impl(
                                 loc,
                                 (all_frames, explanations),
@@ -2377,12 +2360,9 @@ where
                                 inner.as_ref(),
                                 &(lower.dupe(), upper.dupe()),
                             );
-                            all_frames.insert(
-                                0,
-                                ErrorFrame::FrameArrayElement {
-                                    incompatibility_pair,
-                                },
-                            );
+                            all_frames.push(ErrorFrame::FrameArrayElement {
+                                incompatibility_pair,
+                            });
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -2409,12 +2389,9 @@ where
                                 inner.as_ref(),
                                 &(lower.dupe(), upper.dupe()),
                             );
-                            all_frames.insert(
-                                0,
-                                ErrorFrame::FrameIndexerPropertyKey {
-                                    incompatibility_pair,
-                                },
-                            );
+                            all_frames.push(ErrorFrame::FrameIndexerPropertyKey {
+                                incompatibility_pair,
+                            });
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -2441,7 +2418,7 @@ where
                             };
 
                             let (mut all_frames, explanations) = frames;
-                            all_frames.insert(0, ErrorFrame::FrameTypeArgument(targ.dupe()));
+                            all_frames.push(ErrorFrame::FrameTypeArgument(targ.dupe()));
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -2466,7 +2443,7 @@ where
                             };
 
                             let (mut all_frames, explanations) = frames;
-                            all_frames.insert(0, ErrorFrame::FrameEnumRepresentationType);
+                            all_frames.push(ErrorFrame::FrameEnumRepresentationType);
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -2517,7 +2494,7 @@ where
                                 }
                             };
 
-                            all_frames.insert(0, frame);
+                            all_frames.push(frame);
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -2561,7 +2538,7 @@ where
                                 }
                             };
 
-                            all_frames.insert(0, frame);
+                            all_frames.push(frame);
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -2595,12 +2572,9 @@ where
                                 &(lower.dupe(), upper.dupe()),
                             );
 
-                            all_frames.insert(
-                                0,
-                                ErrorFrame::FrameIndexerProperty {
-                                    incompatibility_pair,
-                                },
-                            );
+                            all_frames.push(ErrorFrame::FrameIndexerProperty {
+                                incompatibility_pair,
+                            });
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -2634,12 +2608,9 @@ where
                                 &(lower.dupe(), upper.dupe()),
                             );
 
-                            all_frames.insert(
-                                0,
-                                ErrorFrame::FrameCallableSignature {
-                                    incompatibility_pair,
-                                },
-                            );
+                            all_frames.push(ErrorFrame::FrameCallableSignature {
+                                incompatibility_pair,
+                            });
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -2663,7 +2634,7 @@ where
                             };
 
                             let (mut all_frames, explanations) = frames;
-                            all_frames.insert(0, ErrorFrame::FrameAnonymous);
+                            all_frames.push(ErrorFrame::FrameAnonymous);
                             loop_impl(
                                 final_loc,
                                 (all_frames, explanations),
@@ -2770,13 +2741,10 @@ where
                             let chain =
                                 Vec1::try_from_vec(chain_vec).expect("chain must be non-empty");
 
-                            all_frames.insert(
-                                0,
-                                ErrorFrame::FrameAccessChain {
-                                    chain,
-                                    incompatibility_pair,
-                                },
-                            );
+                            all_frames.push(ErrorFrame::FrameAccessChain {
+                                chain,
+                                incompatibility_pair,
+                            });
 
                             loop_impl(
                                 final_loc,
@@ -2817,13 +2785,10 @@ where
                             let chain =
                                 Vec1::try_from_vec(chain_vec).expect("chain must be non-empty");
 
-                            all_frames.insert(
-                                0,
-                                ErrorFrame::FrameAccessChain {
-                                    chain,
-                                    incompatibility_pair,
-                                },
-                            );
+                            all_frames.push(ErrorFrame::FrameAccessChain {
+                                chain,
+                                incompatibility_pair,
+                            });
 
                             loop_impl(
                                 final_loc,
@@ -2841,7 +2806,7 @@ where
                 }
             }
 
-            loop_impl(
+            let (root, msg, loc, mut frames, mut explanations) = loop_impl(
                 initial_loc,
                 (vec![], vec![]),
                 initial_use_op,
@@ -2851,7 +2816,10 @@ where
                 &loop_to_form_access_chain,
                 &opt_incompatibility_pair,
                 speculation,
-            )
+            );
+            frames.reverse();
+            explanations.reverse();
+            (root, msg, loc, frames, explanations)
         }
     }
 
@@ -2869,13 +2837,13 @@ where
         let (root, custom_error_msg, loc, frames, explanations) = unwrapper(loc, use_op);
 
         let code = error.code_of_error();
-        let explanations = match explanation {
-            Some(exp) => {
-                let mut exps = explanations;
-                exps.insert(0, exp);
-                Some(exps)
+        let explanations = {
+            let mut v = Vec::with_capacity(explanations.len() + explanation.is_some() as usize);
+            if let Some(exp) = explanation {
+                v.push(exp);
             }
-            None => Some(explanations),
+            v.extend(explanations);
+            Some(v)
         };
         let message = match custom_error_msg {
             Some(ref custom) => custom.clone(),
