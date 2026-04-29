@@ -430,7 +430,7 @@ pub fn add_client_to_clients(
         .into_iter()
         .filter(|id| *id != client_id)
         .collect::<Vec<_>>();
-    clients.insert(0, client_id);
+    clients.push(client_id);
     PersistentConnection(clients)
 }
 

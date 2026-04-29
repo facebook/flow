@@ -110,7 +110,7 @@ mod module_info {
                 };
             }
             Kind::ES { named: _, star } => {
-                star.insert(0, (loc, module_type_opt));
+                star.push((loc, module_type_opt));
             }
             Kind::Cjs(_) => {
                 // Indeterminate module. We already errored in module_exports_checker.
@@ -128,7 +128,7 @@ mod module_info {
         loc: ALoc,
         module_type_opt: Option<ModuleType>,
     ) {
-        info.type_star.insert(0, (loc, module_type_opt));
+        info.type_star.push((loc, module_type_opt));
     }
 
     pub(super) fn cjs_mod_export(
