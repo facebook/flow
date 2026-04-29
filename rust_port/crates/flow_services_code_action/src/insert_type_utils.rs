@@ -1048,22 +1048,22 @@ impl StylizeTyMapper {
                 }
                 (ty::Ty::BoolLit(_), _) => {
                     let mut bools = a.bools;
-                    bools.insert(0, t.dupe());
+                    bools.push(t.dupe());
                     PartitionAcc { bools, ..a }
                 }
                 (ty::Ty::NumLit(_), _) => {
                     let mut nums = a.nums;
-                    nums.insert(0, t.dupe());
+                    nums.push(t.dupe());
                     PartitionAcc { nums, ..a }
                 }
                 (ty::Ty::StrLit(_), _) => {
                     let mut strings = a.strings;
-                    strings.insert(0, t.dupe());
+                    strings.push(t.dupe());
                     PartitionAcc { strings, ..a }
                 }
                 _ => {
                     let mut others = a.others;
-                    others.insert(0, t.dupe());
+                    others.push(t.dupe());
                     PartitionAcc { others, ..a }
                 }
             }
@@ -1081,7 +1081,12 @@ impl StylizeTyMapper {
             strings,
             others,
         } = members.iter().fold(empty, filter_union);
-        let all = reverse_append_all(vec![others, strings, nums, bools]);
+        let all: Vec<_> = bools
+            .into_iter()
+            .chain(nums)
+            .chain(strings)
+            .chain(others)
+            .collect();
         match all.as_slice() {
             [] => panic!("Impossible! this only removes elements when others are added/present"),
             // Since StylizeTyMapper's on_t already includes that logic, and t is not a Union here,
