@@ -984,31 +984,31 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] rageCommand.ml
   - [ ] saved_state/
     - [ ] saved_state_fb_fetcher.ml
-  - [ ] server_callable/
-    - [ ] lib/
-      - [ ] ast_visitor.ml
-      - [ ] comments.ml
-      - [ ] extract_flow_types.ml
-      - [ ] extract_generate_mock.ml
-      - [ ] extract_server_callable_component_base.ml
-      - [ ] extract_server_callable_entrypoint.ml
-      - [ ] extract_server_callable_instance.ml
-      - [ ] extract_server_callables.ml
-      - [ ] extract_typed_module_helpers.ml
-      - [ ] fb_strings.ml
-      - [ ] filesystem.ml
-      - [ ] json_generator.ml
-      - [ ] json_processer.ml
-      - [ ] server_callable_errors.ml
-      - [ ] server_callable_extraction_types.ml
-      - [ ] server_callable_modifiers.ml
-      - [ ] server_callable_scope.ml
-      - [ ] visit_module_exports.ml
-    - [ ] tests/
-      - [ ] sc_snapshot_tests.ml
-      - [ ] test.ml
-    - [ ] server_callable_extract_metadata.ml
-    - [ ] server_callable_extract_metadata_lib.ml
+  - [x] server_callable/
+    - [x] lib/
+      - [x] ast_visitor.ml → `flow_facebook_server_callable_lib/src/ast_visitor.rs`
+      - [x] comments.ml → `flow_facebook_server_callable_lib/src/comments.rs`
+      - [x] extract_flow_types.ml → `flow_facebook_server_callable_lib/src/extract_flow_types.rs`
+      - [x] extract_generate_mock.ml → `flow_facebook_server_callable_lib/src/extract_generate_mock.rs`
+      - [x] extract_server_callable_component_base.ml → `flow_facebook_server_callable_lib/src/extract_server_callable_component_base.rs`
+      - [x] extract_server_callable_entrypoint.ml → `flow_facebook_server_callable_lib/src/extract_server_callable_entrypoint.rs`
+      - [x] extract_server_callable_instance.ml → `flow_facebook_server_callable_lib/src/extract_server_callable_instance.rs`
+      - [x] extract_server_callables.ml → `flow_facebook_server_callable_lib/src/extract_server_callables.rs`
+      - [x] extract_typed_module_helpers.ml → `flow_facebook_server_callable_lib/src/extract_typed_module_helpers.rs`
+      - [x] fb_strings.ml → `flow_facebook_server_callable_lib/src/fb_strings.rs`
+      - [x] filesystem.ml → `flow_facebook_server_callable_lib/src/filesystem.rs`
+      - [x] json_generator.ml → `flow_facebook_server_callable_lib/src/json_generator.rs`
+      - [x] json_processer.ml → `flow_facebook_server_callable_lib/src/json_processer.rs`
+      - [x] server_callable_errors.ml → `flow_facebook_server_callable_lib/src/server_callable_errors.rs`
+      - [x] server_callable_extraction_types.ml → `flow_facebook_server_callable_lib/src/server_callable_extraction_types.rs`
+      - [x] server_callable_modifiers.ml → `flow_facebook_server_callable_lib/src/server_callable_modifiers.rs`
+      - [x] server_callable_scope.ml → `flow_facebook_server_callable_lib/src/server_callable_scope.rs`
+      - [x] visit_module_exports.ml → `flow_facebook_server_callable_lib/src/visit_module_exports.rs`
+    - [x] tests/
+      - [x] sc_snapshot_tests.ml → `flow_facebook_server_callable_lib/src/sc_snapshot_tests.rs` + `flow_facebook_server_callable_extract_metadata/tests/subprocess_test.rs`
+      - [x] test.ml → `irrelevant` since it's just a runner for sc_snapshot_tests
+    - [x] server_callable_extract_metadata.ml → `flow_facebook_server_callable_extract_metadata/src/main.rs`
+    - [x] server_callable_extract_metadata_lib.ml → `flow_facebook_server_callable_lib/src/server_callable_extract_metadata_lib.rs`
   - [ ] tools_infra/
     - [ ] runners/
       - [ ] command_runner.ml
