@@ -1,3 +1,12 @@
+### 0.312.0
+
+Likely to cause new Flow errors:
+* Flow will now error on variance modifiers (`+T`, `-T`, `in T`, `out T`) on interface method type parameters, matching the existing rejection on class methods and function types
+
+New Features:
+* Declaration merging between `declare class` and `interface` of the same name in the same scope.
+* Flow now separates value namespace and type namespace, so code like `const A = 1; interface A {}` is now accepted.
+
 ### 0.311.0
 
 New Features:
