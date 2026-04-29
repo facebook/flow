@@ -63,6 +63,7 @@ type saved_state_data = {
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;
   dependency_graph: saved_state_dependency_graph;
+  export_index: Export_index.t option;
 }
 
 (* Direct serialization saved state data: the shared memory heap is dumped
@@ -424,6 +425,12 @@ end = struct
         @@ Server_files_js.config_file (Options.flowconfig_name options)
         @@ Options.root options
       in
+      let export_index =
+        if Options.saved_state_persist_export_index options then
+          Option.map Export_search.get_index env.ServerEnv.exports
+        else
+          None
+      in
       Lwt.return
         {
           flowconfig_hash;
@@ -434,6 +441,7 @@ end = struct
           local_errors;
           node_modules_containers;
           dependency_graph;
+          export_index;
         }
 
     let save ~saved_state_filename ~genv ~env ~profiling =
@@ -738,6 +746,7 @@ end = struct
         local_errors;
         node_modules_containers;
         dependency_graph;
+        export_index;
       } =
         data
       in
@@ -774,6 +783,7 @@ end = struct
           local_errors;
           node_modules_containers;
           dependency_graph;
+          export_index;
         }
 
     let load ~workers ~options ~profiling fd =

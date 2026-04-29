@@ -1839,7 +1839,7 @@ let init_with_initial_state
     ~options
     ~restore_dependency_info
     ?(saved_duplicate_providers = SMap.empty)
-    ?saved_export_index
+    ~saved_export_index
     env
     (parsed, unparsed, packages, dirty_modules, local_errors) =
   let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -1998,6 +1998,7 @@ let init_from_legacy_saved_state ~profiling ~workers ~saved_state ~updates ?env 
     local_errors;
     node_modules_containers;
     dependency_graph;
+    export_index;
   } =
     saved_state
   in
@@ -2197,6 +2198,12 @@ let init_from_legacy_saved_state ~profiling ~workers ~saved_state ~updates ?env 
         with_memory_timer_lwt ~options "RestoreDependencyInfo" profiling (fun () ->
             Lwt.return (Saved_state.restore_dependency_info dependency_graph)
         ))
+      ~saved_export_index:
+        ( if Options.saved_state_persist_export_index options then
+          export_index
+        else
+          None
+        )
       env
       (parsed, unparsed, packages, dirty_modules, local_errors)
   in
@@ -2304,7 +2311,7 @@ let init_from_direct_saved_state ~profiling ~workers ~saved_state ~updates ?env 
             Lwt.return dependency_info
         ))
       ~saved_duplicate_providers:duplicate_providers
-      ?saved_export_index:
+      ~saved_export_index:
         ( if Options.saved_state_persist_export_index options then
           export_index
         else
@@ -2666,6 +2673,7 @@ let reinit_full_check
         ~reader
         ~options
         ~restore_dependency_info:(fun () -> Lwt.return env.ServerEnv.dependency_info)
+        ~saved_export_index:None
         (Some env)
         ( env.ServerEnv.files,
           env.ServerEnv.unparsed,

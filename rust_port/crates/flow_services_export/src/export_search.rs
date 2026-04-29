@@ -388,6 +388,11 @@ pub fn search_both_values_and_types(
     }
 }
 
+// let get_index t = t.index
+pub fn get_index(t: &ExportSearch) -> &ExportIndex {
+    &t.index
+}
+
 pub fn get(name: &str, t: &ExportSearch) -> ExportMap<i32> {
     export_index::find(name, &t.index)
 }
