@@ -11,23 +11,20 @@ use std::net::TcpStream;
 use std::path::Path;
 use std::sync::Mutex;
 
-use flow_monitor_rpc::monitor_prot::MonitorToClientMessage;
-use flow_monitor_rpc::server_command_with_context::ServerCommandWithContext;
-use flow_monitor_rpc::server_prot;
 use flow_server_env::file_watcher_status;
 use flow_server_env::server_status;
 use flow_server_env::socket_handshake;
 use flow_server_files::server_files_js;
 
 #[derive(Debug)]
-pub(crate) enum BusyReason {
+pub enum BusyReason {
     TooManyClients,
     NotResponding,
     FailOnInit(server_status::Status, file_watcher_status::Status),
 }
 
 #[derive(Debug)]
-pub(crate) enum MismatchBehavior {
+pub enum MismatchBehavior {
     // The server exited due to the build id mismatch
     ServerExited,
     // The server is still alive but the client should error
@@ -38,28 +35,11 @@ pub(crate) enum MismatchBehavior {
 }
 
 #[derive(Debug)]
-pub(crate) enum CCSError {
+pub enum CCSError {
     BuildIdMismatch(MismatchBehavior),
     ServerBusy(BusyReason),
     ServerMissing,
     ServerSocketMissing,
-}
-
-// Logical request the client sends to the monitor. `Shutdown` is encoded
-// purely as a handshake `is_stop_request: true` (no body); `Command` is
-// encoded as a bincode `ServerCommandWithContext` after the handshake.
-pub(crate) enum ConnectRequest {
-    Command(ServerCommandWithContext),
-    Shutdown,
-}
-
-// Logical response from the monitor. `ShutdownAck` is synthesized by the
-// client when the handshake for a stop request succeeds; the rest mirror
-// `MonitorProt.monitor_to_client_message` (minus the `PleaseHold` skip).
-pub(crate) enum ConnectResponse {
-    Data(server_prot::response::Response),
-    ShutdownAck,
-    ServerException(String),
 }
 
 // pre-server-monitor versions used a different socket
@@ -69,7 +49,7 @@ enum ConnectExn {
     MissingSocket,
 }
 
-pub(crate) fn server_exists(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool {
+pub fn server_exists(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool {
     let lock_file = server_files_js::lock_file(flowconfig_name, tmp_dir, root);
     let lock_path = std::path::Path::new(&lock_file);
     if !lock_path.exists() {
@@ -162,7 +142,7 @@ fn open_connection(
     Ok(conn)
 }
 
-fn close_connection(sockaddr: SocketAddr) {
+pub(crate) fn close_connection(sockaddr: SocketAddr) {
     with_connections(|conns| {
         if let Some(stream) = conns.remove(&sockaddr) {
             let _ = stream.shutdown(std::net::Shutdown::Both);
@@ -172,11 +152,11 @@ fn close_connection(sockaddr: SocketAddr) {
 
 fn establish_connection(
     flowconfig_name: &str,
+    timeout: u64,
+    client_handshake: &socket_handshake::ClientHandshake,
     tmp_dir: &str,
     root: &Path,
-    request: &ConnectRequest,
-    timeout_secs: Option<u64>,
-) -> Result<(SocketAddr, TcpStream, socket_handshake::ClientHandshake), ConnectExn> {
+) -> Result<(SocketAddr, TcpStream), ConnectExn> {
     let socket_path = flow_common_socket::socket::get_path(&server_files_js::socket_file(
         flowconfig_name,
         tmp_dir,
@@ -190,35 +170,16 @@ fn establish_connection(
         .map_err(|_| ConnectExn::MissingSocket)?;
 
     let sockaddr = SocketAddr::from(([127, 0, 0, 1], port));
-    let is_stop = matches!(request, ConnectRequest::Shutdown);
-    let client_handshake = (
-        socket_handshake::ClientToMonitor1 {
-            client_build_id: socket_handshake::build_revision(),
-            client_version: flow_common::flow_version::VERSION.to_string(),
-            is_stop_request: is_stop,
-            server_should_hangup_if_still_initializing: false,
-            version_mismatch_strategy: if is_stop {
-                socket_handshake::VersionMismatchStrategy::AlwaysStopServer
-            } else {
-                socket_handshake::VersionMismatchStrategy::ErrorClient
-            },
-        },
-        socket_handshake::ClientToMonitor2 {
-            client_type: socket_handshake::ClientType::Ephemeral,
-        },
-    );
-    let connect_timeout = timeout_secs.unwrap_or(1);
-    let stream = open_connection(connect_timeout, &client_handshake, sockaddr)?;
+    let stream = open_connection(timeout, client_handshake, sockaddr)?;
 
-    let read_timeout = timeout_secs.unwrap_or(1);
     stream
-        .set_read_timeout(Some(std::time::Duration::from_secs(read_timeout)))
+        .set_read_timeout(Some(std::time::Duration::from_secs(timeout)))
         .map_err(|_| ConnectExn::Timeout)?;
     stream
         .set_write_timeout(Some(std::time::Duration::from_secs(10)))
         .map_err(|_| ConnectExn::Timeout)?;
 
-    Ok((sockaddr, stream, client_handshake))
+    Ok((sockaddr, stream))
 }
 
 fn get_handshake(
@@ -332,14 +293,24 @@ fn verify_handshake(
 }
 
 // Connects to the monitor via a socket.
-pub(crate) fn connect_once(
+pub fn connect_once(
     flowconfig_name: &str,
+    client_handshake: &socket_handshake::ClientHandshake,
     tmp_dir: &str,
     root: &Path,
-    request: &ConnectRequest,
-    timeout_secs: Option<u64>,
-) -> Result<ConnectResponse, CCSError> {
-    match establish_connection(flowconfig_name, tmp_dir, root, request, timeout_secs) {
+) -> Result<(SocketAddr, TcpStream), CCSError> {
+    let inner =
+        || -> Result<(SocketAddr, TcpStream, socket_handshake::ServerHandshake), ConnectExn> {
+            let (sockaddr, mut stream) =
+                establish_connection(flowconfig_name, 1, client_handshake, tmp_dir, root)?;
+            let (_, server_handshake) = get_handshake(1, sockaddr, &mut stream)?;
+            Ok((sockaddr, stream, server_handshake))
+        };
+    match inner() {
+        Ok((sockaddr, mut stream, server_handshake)) => {
+            verify_handshake(client_handshake, &server_handshake, sockaddr, &mut stream)?;
+            Ok((sockaddr, stream))
+        }
         Err(ConnectExn::MissingSocket) => {
             if server_exists(flowconfig_name, tmp_dir, root) {
                 Err(CCSError::ServerSocketMissing)
@@ -352,73 +323,6 @@ pub(crate) fn connect_once(
                 Err(CCSError::ServerBusy(BusyReason::NotResponding))
             } else {
                 Err(CCSError::ServerMissing)
-            }
-        }
-        Ok((sockaddr, mut stream, client_handshake)) => {
-            let (_, server_handshake) =
-                get_handshake(timeout_secs.unwrap_or(1), sockaddr, &mut stream).map_err(
-                    |e| match e {
-                        ConnectExn::MissingSocket => {
-                            if server_exists(flowconfig_name, tmp_dir, root) {
-                                CCSError::ServerSocketMissing
-                            } else {
-                                CCSError::ServerMissing
-                            }
-                        }
-                        ConnectExn::Timeout => {
-                            if server_exists(flowconfig_name, tmp_dir, root) {
-                                CCSError::ServerBusy(BusyReason::NotResponding)
-                            } else {
-                                CCSError::ServerMissing
-                            }
-                        }
-                    },
-                )?;
-            verify_handshake(&client_handshake, &server_handshake, sockaddr, &mut stream)?;
-
-            let command = match request {
-                ConnectRequest::Shutdown => return Ok(ConnectResponse::ShutdownAck),
-                ConnectRequest::Command(command) => command,
-            };
-
-            let send_result = flow_parser::loc::with_full_source_serde(|| {
-                bincode::serde::encode_into_std_write(
-                    command,
-                    &mut stream,
-                    bincode::config::legacy(),
-                )
-            });
-            if let Err(_e) = send_result {
-                close_connection(sockaddr);
-                return if server_exists(flowconfig_name, tmp_dir, root) {
-                    Err(CCSError::ServerBusy(BusyReason::NotResponding))
-                } else {
-                    Err(CCSError::ServerMissing)
-                };
-            }
-
-            loop {
-                let recv: Result<MonitorToClientMessage, _> =
-                    flow_parser::loc::with_full_source_serde(|| {
-                        bincode::serde::decode_from_std_read(&mut stream, bincode::config::legacy())
-                    });
-                match recv {
-                    Ok(MonitorToClientMessage::PleaseHold(..)) => continue,
-                    Ok(MonitorToClientMessage::Data(response)) => {
-                        return Ok(ConnectResponse::Data(response));
-                    }
-                    Ok(MonitorToClientMessage::ServerException(message)) => {
-                        return Ok(ConnectResponse::ServerException(message));
-                    }
-                    Err(_e) => {
-                        close_connection(sockaddr);
-                        return if server_exists(flowconfig_name, tmp_dir, root) {
-                            Err(CCSError::ServerBusy(BusyReason::NotResponding))
-                        } else {
-                            Err(CCSError::ServerMissing)
-                        };
-                    }
-                }
             }
         }
     }

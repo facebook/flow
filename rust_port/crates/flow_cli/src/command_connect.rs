@@ -5,17 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::net::SocketAddr;
+use std::net::TcpStream;
 use std::path::Path;
 use std::time::Duration;
 use std::time::Instant;
 
 use flow_common::flow_version;
+use flow_server_env::socket_handshake;
 
 use crate::command_connect_simple as CCS;
 use crate::command_connect_simple::BusyReason;
 use crate::command_connect_simple::CCSError;
-use crate::command_connect_simple::ConnectRequest;
-use crate::command_connect_simple::ConnectResponse;
 use crate::command_connect_simple::MismatchBehavior;
 
 pub(crate) struct Env<'a> {
@@ -139,7 +140,10 @@ struct RetryInfo {
     last_connect_time: Instant,
 }
 
-fn reset_retries_if_necessary(retries: &mut RetryInfo, conn: &Result<ConnectResponse, CCSError>) {
+fn reset_retries_if_necessary(
+    retries: &mut RetryInfo,
+    conn: &Result<(SocketAddr, TcpStream), CCSError>,
+) {
     match conn {
         Err(CCSError::ServerBusy(BusyReason::FailOnInit(..))) => {
             retries.retries_remaining = 0;
@@ -169,7 +173,11 @@ fn consume_retry(retries: &mut RetryInfo) {
 // A featureful wrapper around CommandConnectSimple.connect_once. This
 // function handles retries, timeouts, displaying messages during
 // initialization, etc
-fn connect_rec(env: &Env, request: &ConnectRequest, retries: &mut RetryInfo) -> ConnectResponse {
+fn connect_rec(
+    env: &Env,
+    client_handshake: &socket_handshake::ClientHandshake,
+    retries: &mut RetryInfo,
+) -> (SocketAddr, TcpStream) {
     if retries.retries_remaining < 0 {
         eprintln!("\nOut of retries, exiting!");
         flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::OutOfRetries);
@@ -186,14 +194,14 @@ fn connect_rec(env: &Env, request: &ConnectRequest, retries: &mut RetryInfo) -> 
 
     retries.last_connect_time = Instant::now();
 
-    let conn = CCS::connect_once(env.flowconfig_name, env.tmp_dir, env.root, request, Some(1));
+    let conn = CCS::connect_once(env.flowconfig_name, client_handshake, env.tmp_dir, env.root);
 
     reset_retries_if_necessary(retries, &conn);
 
     match conn {
-        Ok(response) => response,
+        Ok(conn) => conn,
 
-        Err(CCSError::ServerMissing) => handle_missing_server(env, request, retries),
+        Err(CCSError::ServerMissing) => handle_missing_server(env, client_handshake, retries),
 
         Err(CCSError::ServerBusy(busy_reason)) => {
             let busy_reason_str = match &busy_reason {
@@ -217,7 +225,7 @@ fn connect_rec(env: &Env, request: &ConnectRequest, retries: &mut RetryInfo) -> 
                 );
             }
             consume_retry(retries);
-            connect_rec(env, request, retries)
+            connect_rec(env, client_handshake, retries)
         }
 
         Err(CCSError::BuildIdMismatch(MismatchBehavior::ServerExited)) => {
@@ -230,7 +238,7 @@ fn connect_rec(env: &Env, request: &ConnectRequest, retries: &mut RetryInfo) -> 
                 // so the next time round will hit Server_missing above, *but*
                 // before that will actually start the server -- we need to make
                 // sure that happens.
-                connect_rec(env, request, retries)
+                connect_rec(env, client_handshake, retries)
             } else {
                 let msg = format!("\n{}", msg);
                 eprintln!("{}", msg);
@@ -287,7 +295,7 @@ fn connect_rec(env: &Env, request: &ConnectRequest, retries: &mut RetryInfo) -> 
                     if !env.quiet {
                         eprintln!("Successfully killed server for `{}`", env.root.display());
                     }
-                    handle_missing_server(env, request, retries)
+                    handle_missing_server(env, client_handshake, retries)
                 }
                 Err(crate::command_mean_kill::FailedToKill::Message(err)) => {
                     if !env.quiet {
@@ -309,9 +317,9 @@ fn connect_rec(env: &Env, request: &ConnectRequest, retries: &mut RetryInfo) -> 
 
 fn handle_missing_server(
     env: &Env,
-    request: &ConnectRequest,
+    client_handshake: &socket_handshake::ClientHandshake,
     retries: &mut RetryInfo,
-) -> ConnectResponse {
+) -> (SocketAddr, TcpStream) {
     if env.autostart {
         if !env.quiet {
             eprintln!("Launching Flow server for {}", env.root.display());
@@ -341,7 +349,7 @@ fn handle_missing_server(
                 flow_common_exit_status::exit(code);
             }
         }
-        connect_rec(env, request, retries)
+        connect_rec(env, client_handshake, retries)
     } else {
         let msg = format!(
             "\nError: There is no Flow server running in '{}'.",
@@ -352,11 +360,14 @@ fn handle_missing_server(
     }
 }
 
-pub(crate) fn connect(env: &Env, request: &ConnectRequest) -> ConnectResponse {
+pub(crate) fn connect(
+    env: &Env,
+    client_handshake: &socket_handshake::ClientHandshake,
+) -> (SocketAddr, TcpStream) {
     let mut retries = RetryInfo {
         retries_remaining: env.retries,
         original_retries: env.retries,
         last_connect_time: Instant::now(),
     };
-    connect_rec(env, request, &mut retries)
+    connect_rec(env, client_handshake, &mut retries)
 }

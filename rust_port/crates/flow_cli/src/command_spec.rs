@@ -10,16 +10,16 @@ use std::fmt::Write as _;
 use std::sync::Arc;
 
 #[derive(Debug)]
-pub(crate) struct ShowHelp;
+pub struct ShowHelp;
 
 #[derive(Clone, Debug)]
-pub(crate) struct FailedToParse {
+pub struct FailedToParse {
     pub msg: String,
     pub arg: String,
     pub details: Option<String>,
 }
 
-pub(crate) mod arg_spec {
+pub mod arg_spec {
     use super::*;
 
     pub type Values = BTreeMap<String, Vec<String>>;
@@ -349,7 +349,7 @@ pub(crate) mod arg_spec {
     }
 }
 
-pub(crate) struct Spec {
+pub struct Spec {
     pub name: String,
     pub doc: String,
     pub usage: String,
@@ -358,7 +358,7 @@ pub(crate) struct Spec {
 }
 
 impl Spec {
-    pub(crate) fn new(name: &str, doc: &str, usage: String) -> Self {
+    pub fn new(name: &str, doc: &str, usage: String) -> Self {
         let mut flags = BTreeMap::new();
         flags.insert(
             "--help".to_string(),
@@ -377,7 +377,7 @@ impl Spec {
         }
     }
 
-    pub(crate) fn flag<T>(
+    pub fn flag<T>(
         mut self,
         name: &str,
         arg_type: &arg_spec::FlagType<T>,
@@ -395,13 +395,13 @@ impl Spec {
         self
     }
 
-    pub(crate) fn anon<T>(mut self, name: &str, arg_type: &arg_spec::FlagType<T>) -> Self {
+    pub fn anon<T>(mut self, name: &str, arg_type: &arg_spec::FlagType<T>) -> Self {
         self.anons.push((name.to_string(), arg_type.arg_count()));
         self
     }
 }
 
-pub(crate) struct Command {
+pub struct Command {
     cmdname: String,
     cmddoc: String,
     flags: BTreeMap<String, arg_spec::FlagMetadata>,
@@ -702,10 +702,7 @@ pub(crate) fn usage(spec: &Spec) {
     println!("{}", usage_string(spec));
 }
 
-pub(crate) fn command(
-    spec: Spec,
-    main: impl Fn(&arg_spec::Values) + Send + Sync + 'static,
-) -> Command {
+pub fn command(spec: Spec, main: impl Fn(&arg_spec::Values) + Send + Sync + 'static) -> Command {
     let cmdname = spec.name.clone();
     let cmddoc = spec.doc.clone();
     let flags = spec.flags.clone();
@@ -722,16 +719,16 @@ pub(crate) fn command(
 }
 
 impl Command {
-    pub(crate) fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.cmdname
     }
 
-    pub(crate) fn doc(&self) -> &str {
+    pub fn doc(&self) -> &str {
         &self.cmddoc
     }
 
     #[allow(dead_code)]
-    pub(crate) fn flags(&self) -> &BTreeMap<String, arg_spec::FlagMetadata> {
+    pub fn flags(&self) -> &BTreeMap<String, arg_spec::FlagMetadata> {
         &self.flags
     }
 
@@ -755,7 +752,7 @@ impl Command {
     }
 }
 
-pub(crate) fn get<T>(
+pub fn get<T>(
     values: &arg_spec::Values,
     name: &str,
     arg_type: &arg_spec::FlagType<T>,

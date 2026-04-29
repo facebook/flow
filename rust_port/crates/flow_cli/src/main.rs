@@ -11,5 +11,7 @@
 static malloc_conf: &str = "metadata_thp:always\0";
 
 fn main() {
+    #[cfg(fbcode_build)]
+    flow_cli_support::register_extra_commands(|| vec![flow_facebook_rage::rage_command::command()]);
     flow_cli_support::main();
 }

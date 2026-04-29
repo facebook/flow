@@ -5,18 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::sync::OnceLock;
+
 use crate::command_spec;
 
-// Mirrors the OCaml split between `src/stubs/extra_commands.ml` (OSS) and
-// `src/facebook/extra/extra_commands.ml` (internal). The internal arm is wired
-// in once the OCaml `flow_extra_commands_fb` library has been ported into
-// `crates/facebook/flow_facebook_extra`.
-#[cfg(fbcode_build)]
-pub(crate) fn extra_commands() -> Vec<command_spec::Command> {
-    vec![]
+static EXTRA_COMMANDS: OnceLock<fn() -> Vec<command_spec::Command>> = OnceLock::new();
+
+pub fn register_extra_commands(f: fn() -> Vec<command_spec::Command>) {
+    EXTRA_COMMANDS.set(f).unwrap();
 }
 
-#[cfg(not(fbcode_build))]
 pub(crate) fn extra_commands() -> Vec<command_spec::Command> {
-    vec![]
+    match EXTRA_COMMANDS.get() {
+        Some(f) => f(),
+        None => vec![],
+    }
 }

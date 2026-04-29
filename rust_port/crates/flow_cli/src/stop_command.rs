@@ -5,10 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_server_env::socket_handshake;
+
 use crate::command_connect_simple as CCS;
 use crate::command_connect_simple::CCSError;
-use crate::command_connect_simple::ConnectRequest;
-use crate::command_connect_simple::ConnectResponse;
+use crate::command_connect_simple::MismatchBehavior;
 use crate::command_mean_kill;
 use crate::command_spec;
 use crate::command_spec::arg_spec;
@@ -55,25 +56,26 @@ fn main(args: &arg_spec::Values) {
         eprintln!("Trying to connect to server for `{}`", root.display());
     }
 
+    let client_handshake = (
+        socket_handshake::ClientToMonitor1 {
+            client_build_id: socket_handshake::build_revision(),
+            client_version: flow_common::flow_version::VERSION.to_string(),
+            is_stop_request: true,
+            server_should_hangup_if_still_initializing: false,
+            version_mismatch_strategy: socket_handshake::VersionMismatchStrategy::AlwaysStopServer,
+        },
+        socket_handshake::ClientToMonitor2 {
+            client_type: socket_handshake::ClientType::Ephemeral,
+        },
+    );
+
     let attempt_mean_kill = || match command_mean_kill::mean_kill(&flowconfig_name, &tmp_dir, &root)
     {
-        // CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
-        // if not quiet then
-        //   prerr_endlinef "Successfully killed server for `%s`" (File_path.to_string root)
         Ok(()) => {
             if !quiet {
                 eprintln!("Successfully killed server for `{}`", root.display());
             }
         }
-        // | CommandMeanKill.FailedToKill err ->
-        //   if not quiet then (
-        //     match err with
-        //     | Some err -> prerr_endline err
-        //     | None ->
-        //       ();
-        //       let msg = spf "Failed to kill server meanly for `%s`" root_s in
-        //       Exit.(exit ~msg Kill_error)
-        //   )
         Err(command_mean_kill::FailedToKill::Message(err)) => {
             if !quiet {
                 match err {
@@ -89,14 +91,8 @@ fn main(args: &arg_spec::Values) {
         }
     };
 
-    match CCS::connect_once(
-        &flowconfig_name,
-        &tmp_dir,
-        &root,
-        &ConnectRequest::Shutdown,
-        Some(1),
-    ) {
-        Ok(ConnectResponse::ShutdownAck) => {
+    match CCS::connect_once(&flowconfig_name, &client_handshake, &tmp_dir, &root) {
+        Ok(_) => {
             if !quiet {
                 eprintln!(
                     "Told server for `{}` to die. Waiting for confirmation...",
@@ -119,34 +115,21 @@ fn main(args: &arg_spec::Values) {
                 eprintln!("Successfully killed server for `{}`", root.display());
             }
         }
-        Ok(ConnectResponse::ServerException(message)) => {
-            if !quiet {
-                eprintln!("Error: {}", message);
-                eprintln!("Attempting to meanly kill server for `{}`", root.display());
-            }
-            attempt_mean_kill();
-        }
-        Ok(ConnectResponse::Data(_)) => {
-            if !quiet {
-                eprintln!("Unexpected response from server (expected ShutdownAck)");
-                eprintln!("Attempting to meanly kill server for `{}`", root.display());
-            }
-            attempt_mean_kill();
-        }
         Err(CCSError::ServerMissing) => {
             if !quiet {
                 eprintln!("Warning: no server to kill for `{}`", root.display());
             }
         }
-        Err(error @ CCSError::ServerSocketMissing)
-        | Err(error @ CCSError::ServerBusy(_))
-        | Err(error @ CCSError::BuildIdMismatch(_)) => {
+        Err(CCSError::BuildIdMismatch(MismatchBehavior::ServerExited)) => {
             if !quiet {
-                eprintln!(
-                    "Attempting to meanly kill server for `{}` ({})",
-                    root.display(),
-                    CCS::error_to_string(&error)
-                );
+                eprintln!("Successfully killed server for `{}`", root.display());
+            }
+        }
+        Err(CCSError::BuildIdMismatch(MismatchBehavior::ClientShouldError { .. }))
+        | Err(CCSError::ServerBusy(_))
+        | Err(CCSError::ServerSocketMissing) => {
+            if !quiet {
+                eprintln!("Attempting to meanly kill server for `{}`", root.display());
             }
             attempt_mean_kill();
         }

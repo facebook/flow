@@ -31,6 +31,7 @@ use flow_config::FlowConfig;
 use flow_config::LazyMode;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_flowlib::LibDir as FlowlibDir;
+use flow_monitor_rpc::monitor_prot::MonitorToClientMessage;
 use flow_server_env::server_prot;
 use flow_server_monitor::FlowServerMonitorOptions;
 use flow_server_utils::file_input::FileInput;
@@ -161,7 +162,7 @@ pub(super) fn print_version() {
     );
 }
 
-pub(crate) fn expand_path(path: &str) -> String {
+pub fn expand_path(path: &str) -> String {
     let path = Path::new(path);
     if path.exists() {
         path.canonicalize()
@@ -413,7 +414,7 @@ pub(crate) fn get_json_flags(args: &arg_spec::Values) -> JsonFlags {
     JsonFlags { json, pretty }
 }
 
-pub(crate) fn add_temp_dir_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_temp_dir_flag(spec: command_spec::Spec) -> command_spec::Spec {
     spec.flag(
         "--temp-dir",
         &arg_spec::optional(arg_spec::string()),
@@ -562,7 +563,7 @@ pub(crate) fn shm_config(shm_flags: &SharedMemParams, flowconfig: &FlowConfig) -
     }
 }
 
-pub(crate) fn add_from_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_from_flag(spec: command_spec::Spec) -> command_spec::Spec {
     spec.flag(
         "--from",
         &arg_spec::optional(arg_spec::string()),
@@ -774,7 +775,7 @@ fn add_on_mismatch_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn add_root_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_root_flag(spec: command_spec::Spec) -> command_spec::Spec {
     spec.flag(
         "--root",
         &arg_spec::optional(arg_spec::string()),
@@ -1389,19 +1390,11 @@ pub(crate) fn get_connect_and_json_flags(args: &arg_spec::Values) -> (ConnectPar
     )
 }
 
-pub(crate) fn server_log_file(
-    flowconfig_name: &str,
-    tmp_dir: &str,
-    root: &std::path::Path,
-) -> String {
+pub fn server_log_file(flowconfig_name: &str, tmp_dir: &str, root: &std::path::Path) -> String {
     flow_server_files::server_files_js::log_file(flowconfig_name, tmp_dir, root)
 }
 
-pub(crate) fn monitor_log_file(
-    flowconfig_name: &str,
-    tmp_dir: &str,
-    root: &std::path::Path,
-) -> String {
+pub fn monitor_log_file(flowconfig_name: &str, tmp_dir: &str, root: &std::path::Path) -> String {
     flow_server_files::server_files_js::monitor_log_file(flowconfig_name, tmp_dir, root)
 }
 
@@ -1441,8 +1434,8 @@ pub(crate) struct SavedStateFlags {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct BaseFlags {
-    pub(crate) flowconfig_name: String,
+pub struct BaseFlags {
+    pub flowconfig_name: String,
 }
 
 pub(crate) fn parse_lints_flag(
@@ -1758,11 +1751,11 @@ pub(crate) fn add_flowconfig_name_flag(spec: command_spec::Spec) -> command_spec
     )
 }
 
-pub(crate) fn add_base_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_base_flags(spec: command_spec::Spec) -> command_spec::Spec {
     add_flowconfig_name_flag(spec)
 }
 
-pub(crate) fn get_base_flags(args: &arg_spec::Values) -> BaseFlags {
+pub fn get_base_flags(args: &arg_spec::Values) -> BaseFlags {
     BaseFlags {
         flowconfig_name: command_spec::get(
             args,
@@ -1978,7 +1971,7 @@ fn exec_in_cgroup_if_systemd_available() {
     eprintln!("Failed to re-exec under systemd-run: {}", err);
 }
 
-pub(crate) fn get_temp_dir(cli_value: &Option<String>) -> String {
+pub fn get_temp_dir(cli_value: &Option<String>) -> String {
     match cli_value {
         Some(v) => v.clone(),
         None => flow_server_files::server_files_js::default_temp_dir()
@@ -2876,7 +2869,7 @@ fn search_for_root(
     }
 }
 
-pub(super) fn guess_root(flowconfig_name: &str, dir_or_file: Option<&str>) -> std::path::PathBuf {
+pub fn guess_root(flowconfig_name: &str, dir_or_file: Option<&str>) -> std::path::PathBuf {
     // Given a valid file or directory, find a valid Flow root directory
     // NOTE: exits on invalid file or .flowconfig not found!
     let dir_or_file = dir_or_file.unwrap_or(".");
@@ -3055,7 +3048,7 @@ pub(crate) fn parse_location_with_optional_filename(
     (file, line, column)
 }
 
-pub(crate) fn exe_name() -> String {
+pub fn exe_name() -> String {
     std::env::args()
         .next()
         .and_then(|arg| {
@@ -3066,15 +3059,115 @@ pub(crate) fn exe_name() -> String {
         .unwrap_or_else(|| "flow".to_string())
 }
 
+// What should we do when we connect to the flow server monitor, but it dies before responding to
+// us? Well, we should consume a retry and try to connect again, potentially even starting a new
+// server
 fn connect_and_make_request_inner(
     flowconfig_name: &str,
     connect_flags: &ConnectParams,
     root: &std::path::Path,
     request: &server_prot::request::Command,
+    retries: i32,
 ) -> server_prot::response::Response {
-    // What should we do when we connect to the flow server monitor, but it dies before responding to
-    // us? Well, we should consume a retry and try to connect again, potentially even starting a new
-    // server
+    // Sends the command over the socket
+    fn send_command(
+        stream: &mut std::net::TcpStream,
+        cmd: &server_prot::request::Command,
+    ) -> Result<(), bincode::error::EncodeError> {
+        let logging_context = flow_event_logger::get_context();
+        let client_logging_context = flow_monitor_rpc::lsp_prot::LoggingContext {
+            from: logging_context.from,
+            agent_id: logging_context.agent_id,
+        };
+        let command = flow_monitor_rpc::server_command_with_context::ServerCommandWithContext {
+            client_logging_context,
+            command: cmd.clone(),
+        };
+        flow_parser::loc::with_full_source_serde(|| {
+            bincode::serde::encode_into_std_write(&command, stream, bincode::config::legacy())
+        })?;
+        Ok(())
+    }
+
+    // Waits for a response over the socket. If the connection dies, this will throw an exception
+    fn wait_for_response(
+        stream: &mut std::net::TcpStream,
+        _quiet: bool,
+        _root: &std::path::Path,
+    ) -> Result<server_prot::response::Response, ()> {
+        stream.set_read_timeout(None).map_err(|_| ())?;
+        loop {
+            let response: Result<MonitorToClientMessage, _> =
+                flow_parser::loc::with_full_source_serde(|| {
+                    bincode::serde::decode_from_std_read(&mut *stream, bincode::config::legacy())
+                });
+            let response = match response {
+                Ok(r) => r,
+                Err(bincode::error::DecodeError::Io { inner, .. })
+                    if matches!(
+                        inner.kind(),
+                        std::io::ErrorKind::BrokenPipe
+                            | std::io::ErrorKind::ConnectionReset
+                            | std::io::ErrorKind::UnexpectedEof
+                    ) =>
+                {
+                    return Err(());
+                }
+                Err(e) => panic!("Unknown exception reading from the server: {}", e),
+            };
+            match response {
+                MonitorToClientMessage::PleaseHold(..) => {
+                    continue;
+                }
+                MonitorToClientMessage::Data(response) => {
+                    return Ok(response);
+                }
+                MonitorToClientMessage::ServerException(exn_str) => {
+                    let msg = format!("Server threw an exception: {}", exn_str);
+                    flow_common_exit_status::exit_with_msg(
+                        flow_common_exit_status::FlowExitStatus::UnknownError,
+                        &msg,
+                    )
+                }
+            }
+        }
+    }
+
+    if retries < 0 {
+        flow_common_exit_status::exit_with_msg(
+            flow_common_exit_status::FlowExitStatus::OutOfRetries,
+            "Out of retries, exiting!",
+        );
+    }
+
+    let version_mismatch_strategy = match connect_flags.on_mismatch {
+        OnMismatchBehavior::ChooseNewest => {
+            flow_server_env::socket_handshake::VersionMismatchStrategy::StopServerIfOlder
+        }
+        OnMismatchBehavior::StopServer => {
+            flow_server_env::socket_handshake::VersionMismatchStrategy::AlwaysStopServer
+        }
+        OnMismatchBehavior::RestartClient => {
+            flow_server_env::socket_handshake::VersionMismatchStrategy::ErrorClient
+        }
+        OnMismatchBehavior::ErrorClient => {
+            flow_server_env::socket_handshake::VersionMismatchStrategy::ErrorClient
+        }
+    };
+    let quiet = connect_flags.quiet;
+    let client_handshake = (
+        flow_server_env::socket_handshake::ClientToMonitor1 {
+            client_build_id: flow_server_env::socket_handshake::build_revision(),
+            client_version: flow_common::flow_version::VERSION.to_string(),
+            is_stop_request: false,
+            server_should_hangup_if_still_initializing: false,
+            version_mismatch_strategy,
+        },
+        flow_server_env::socket_handshake::ClientToMonitor2 {
+            client_type: flow_server_env::socket_handshake::ClientType::Ephemeral,
+        },
+    );
+
     let path = flow_server_files::server_files_js::config_file(flowconfig_name, root);
     // let the server enforce flowconfig warnings; we only care about the flowconfig
     // as far as it pertains to connecting to the server.
@@ -3095,32 +3188,29 @@ fn connect_and_make_request_inner(
         &tmp_dir_str,
     );
 
-    let logging_context = flow_event_logger::get_context();
-    let client_logging_context = flow_monitor_rpc::lsp_prot::LoggingContext {
-        from: logging_context.from,
-        agent_id: logging_context.agent_id,
-    };
-    let command = flow_monitor_rpc::server_command_with_context::ServerCommandWithContext {
-        client_logging_context,
-        command: request.clone(),
-    };
-    let server_response = crate::command_connect::connect(
-        &env,
-        &crate::command_connect_simple::ConnectRequest::Command(command),
-    );
-    match server_response {
-        crate::command_connect_simple::ConnectResponse::Data(response) => response,
-        crate::command_connect_simple::ConnectResponse::ServerException(message) => {
-            let msg = format!("Server threw an exception: {}", message);
-            flow_common_exit_status::exit_with_msg(
-                flow_common_exit_status::FlowExitStatus::UnknownError,
-                &msg,
-            )
-        }
-        crate::command_connect_simple::ConnectResponse::ShutdownAck => {
-            flow_common_exit_status::exit_with_msg(
-                flow_common_exit_status::FlowExitStatus::UnknownError,
-                "Unexpected ShutdownAck response for non-shutdown request",
+    let (sockaddr, mut stream) = crate::command_connect::connect(&env, &client_handshake);
+
+    if let Err(e) = send_command(&mut stream, request) {
+        panic!("Error sending command to server: {}", e);
+    }
+
+    match wait_for_response(&mut stream, quiet, root) {
+        Ok(response) => response,
+        Err(()) => {
+            crate::command_connect_simple::close_connection(sockaddr);
+            if !quiet {
+                eprintln!(
+                    "Lost connection to the flow server ({} {} remaining)",
+                    retries,
+                    if retries == 1 { "retry" } else { "retries" },
+                );
+            }
+            connect_and_make_request_inner(
+                flowconfig_name,
+                connect_flags,
+                root,
+                request,
+                retries - 1,
             )
         }
     }
@@ -3146,13 +3236,20 @@ pub(crate) fn connect_and_make_request(
         }
     }
     match connect_flags.timeout {
-        None => connect_and_make_request_inner(flowconfig_name, connect_flags, root, request),
+        None => connect_and_make_request_inner(
+            flowconfig_name,
+            connect_flags,
+            root,
+            request,
+            connect_flags.retries,
+        ),
         Some(timeout) => {
             let (tx, rx) = std::sync::mpsc::channel::<server_prot::response::Response>();
             let flowconfig_name_owned = flowconfig_name.to_string();
             let connect_flags_clone = connect_flags.clone();
             let root_owned = root.to_path_buf();
             let request_clone = request.clone();
+            let initial_retries = connect_flags.retries;
             std::thread::Builder::new()
                 .name("connect_and_make_request_timed".to_string())
                 .spawn(move || {
@@ -3161,6 +3258,7 @@ pub(crate) fn connect_and_make_request(
                         &connect_flags_clone,
                         &root_owned,
                         &request_clone,
+                        initial_retries,
                     );
                     match tx.send(response) {
                         Ok(()) => {}

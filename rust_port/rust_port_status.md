@@ -975,13 +975,13 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] hardcoded_module_fixes.ml
   - [ ] logging/
     - [ ] user/
-      - [ ] fb_whoami.ml
+      - [x] fb_whoami.ml → `crates/facebook/flow_facebook_logging/src/fb_whoami.rs`
     - [ ] flowEventLogger.ml
     - [ ] flowInteractionLogger.ml
     - [ ] log_saving.ml
-  - [ ] rage/
-    - [ ] flytrap.ml
-    - [ ] rageCommand.ml
+  - [x] rage/ → `crates/facebook/flow_facebook_rage/`
+    - [x] flytrap.ml → `crates/facebook/flow_facebook_rage/src/flytrap.rs`
+    - [x] rageCommand.ml → `crates/facebook/flow_facebook_rage/src/rage_command.rs` + `crates/flow_cli/src/extra_commands.rs` (CLI/spec wiring)
   - [ ] saved_state/
     - [ ] saved_state_fb_fetcher.ml
   - [x] server_callable/
