@@ -48,6 +48,7 @@ type saved_state_data = {
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;
   dependency_graph: saved_state_dependency_graph;
+  export_index: Export_index.t option;
 }
 
 (* Direct serialization saved state data: env metadata alongside a heap dump *)

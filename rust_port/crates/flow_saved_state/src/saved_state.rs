@@ -109,6 +109,7 @@ pub struct SavedStateData {
     pub local_errors: BTreeMap<FileKey, ErrorSet>,
     pub node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     pub dependency_graph: SavedStateDependencyGraph,
+    pub export_index: Option<ExportIndex>,
 }
 
 // Direct serialization saved state data: the shared memory heap is dumped
@@ -488,6 +489,13 @@ fn collect_saved_state_data(
             )
         })
         .collect();
+    let export_index = if options.saved_state_persist_export_index {
+        env.exports
+            .as_ref()
+            .map(|exports| flow_services_export::export_search::get_index(exports).clone())
+    } else {
+        None
+    };
     SavedStateData {
         flowconfig_hash: options.flowconfig_hash.dupe(),
         parsed_heaps,
@@ -499,6 +507,7 @@ fn collect_saved_state_data(
         local_errors: env.errors.local_errors.clone(),
         node_modules_containers: collect_node_modules_containers(node_modules_containers, options),
         dependency_graph: collect_dependency_graph(&env.dependency_info),
+        export_index,
     }
 }
 

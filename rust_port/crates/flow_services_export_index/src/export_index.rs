@@ -132,7 +132,7 @@ impl Ord for Source {
 // 6. Same for types
 // 7. Namespaces of declared modules
 // 8. Namespaces of user modules
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Export(pub Source, pub Kind);
 
 impl PartialOrd for Export {
