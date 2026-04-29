@@ -9,22 +9,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    api.js:14:4
-    14| na(Children.map(a, (x: string) => x as string)); // Error
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     14| na(Children.map(a, (x: string) => x as string)); // Error
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:862:16
-   862|       ): Array<$NonMaybeType<U>>,
-                       ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1091:16
+   1091|       ): Array<$NonMaybeType<U>>,
+                        ^^^^^^^^^^^^^^^^ [1]
    api.js:33:22
-    33| function na(x: Array<number>) {}
-                             ^^^^^^ [2]
-   <BUILTINS>/react.js:862:10
-   862|       ): Array<$NonMaybeType<U>>,
-                 ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+     33| function na(x: Array<number>) {}
+                              ^^^^^^ [2]
+   <BUILTINS>/react.js:1091:10
+   1091|       ): Array<$NonMaybeType<U>>,
+                  ^^^^^^^^^^^^^^^^^^^^^^^ [3]
    api.js:33:16
-    33| function na(x: Array<number>) {}
-                       ^^^^^^^^^^^^^ [4]
+     33| function na(x: Array<number>) {}
+                        ^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- api.js:14:24
@@ -68,22 +68,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    api.js:15:4
-    15| sa(Children.map(a, (x: number) => x as number)); // Error
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     15| sa(Children.map(a, (x: number) => x as number)); // Error
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:862:16
-   862|       ): Array<$NonMaybeType<U>>,
-                       ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1091:16
+   1091|       ): Array<$NonMaybeType<U>>,
+                        ^^^^^^^^^^^^^^^^ [1]
    api.js:34:22
-    34| function sa(x: Array<string>) {}
-                             ^^^^^^ [2]
-   <BUILTINS>/react.js:862:10
-   862|       ): Array<$NonMaybeType<U>>,
-                 ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+     34| function sa(x: Array<string>) {}
+                              ^^^^^^ [2]
+   <BUILTINS>/react.js:1091:10
+   1091|       ): Array<$NonMaybeType<U>>,
+                  ^^^^^^^^^^^^^^^^^^^^^^^ [3]
    api.js:34:16
-    34| function sa(x: Array<string>) {}
-                       ^^^^^^^^^^^^^ [4]
+     34| function sa(x: Array<string>) {}
+                        ^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- api.js:17:25
@@ -182,16 +182,16 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
 [incompatible-type]
 
    api.js:22:3
-    22| s(Children.count(a)); // Error
-          ^^^^^^^^^^^^^^^^^
+     22| s(Children.count(a)); // Error
+           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:868:44
-   868|       count(children: ChildrenArray<any>): number,
-                                                   ^^^^^^ [1]
+   <BUILTINS>/react.js:1097:44
+   1097|       count(children: ChildrenArray<any>): number,
+                                                    ^^^^^^ [1]
    api.js:32:15
-    32| function s(x: string) {}
-                      ^^^^^^ [2]
+     32| function s(x: string) {}
+                       ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ api.js:25:3
@@ -241,22 +241,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    api.js:28:4
-    28| sa(Children.toArray(a)); // Error
-           ^^^^^^^^^^^^^^^^^^^
+     28| sa(Children.toArray(a)); // Error
+            ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:870:53
-   870|       toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
-                                                            ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1099:53
+   1099|       toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
+                                                             ^^^^^^^^^^^^^^^^ [1]
    api.js:34:22
-    34| function sa(x: Array<string>) {}
-                             ^^^^^^ [2]
-   <BUILTINS>/react.js:870:47
-   870|       toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+     34| function sa(x: Array<string>) {}
+                              ^^^^^^ [2]
+   <BUILTINS>/react.js:1099:47
+   1099|       toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
    api.js:34:16
-    34| function sa(x: Array<string>) {}
-                       ^^^^^^^^^^^^^ [4]
+     34| function sa(x: Array<string>) {}
+                        ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------- builtin_intrinsic.js:25:4

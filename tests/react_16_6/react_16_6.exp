@@ -37,14 +37,14 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:673:24
+   <BUILTINS>/react.js:902:24
                                v-------
-   673|       component: () => Promise<
-   674|         $ReadOnly<{
-   675|           default: component(...Config) renders Renders,
-   676|           ...
-   677|         }>,
-   678|       >,
+   902|       component: () => Promise<
+   903|         $ReadOnly<{
+   904|           default: component(...Config) renders Renders,
+   905|           ...
+   906|         }>,
+   907|       >,
               ^ [2]
 
 
@@ -61,14 +61,14 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:673:24
+   <BUILTINS>/react.js:902:24
                                v-------
-   673|       component: () => Promise<
-   674|         $ReadOnly<{
-   675|           default: component(...Config) renders Renders,
-   676|           ...
-   677|         }>,
-   678|       >,
+   902|       component: () => Promise<
+   903|         $ReadOnly<{
+   904|           default: component(...Config) renders Renders,
+   905|           ...
+   906|         }>,
+   907|       >,
               ^ [2]
 
 
@@ -90,12 +90,12 @@ References:
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:674:19
+   <BUILTINS>/react.js:903:19
                            v
-    674|         $ReadOnly<{
-    675|           default: component(...Config) renders Renders,
-    676|           ...
-    677|         }>,
+    903|         $ReadOnly<{
+    904|           default: component(...Config) renders Renders,
+    905|           ...
+    906|         }>,
                  ^ [3]
 
 
@@ -115,12 +115,12 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:674:19
+   <BUILTINS>/react.js:903:19
                            v
-    674|         $ReadOnly<{
-    675|           default: component(...Config) renders Renders,
-    676|           ...
-    677|         }>,
+    903|         $ReadOnly<{
+    904|           default: component(...Config) renders Renders,
+    905|           ...
+    906|         }>,
                  ^ [3]
 
 
@@ -349,19 +349,19 @@ Cannot call `React.forwardRef` with `Demo` bound to `render` because in the seco
  - Or object type [1] is incompatible with function type [3].
 
    memo_ref.js:14:42
-    14| const Memo = React.memo(React.forwardRef(Demo));
-                                                 ^^^^
+     14| const Memo = React.memo(React.forwardRef(Demo));
+                                                  ^^^^
 
 References:
-   <BUILTINS>/react.js:835:36
-   835|       render: (props: Config, ref: React.RefSetter<Instance>) => Renders,
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1064:36
+   1064|       render: (props: Config, ref: React.RefSetter<Instance>) => Renders,
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    memo_ref.js:7:33
-     7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    memo_ref.js:7:63
-     7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {
-                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {
+                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ memo_ref.js:18:43
