@@ -362,7 +362,6 @@ pub mod request {
 }
 
 pub mod response {
-    use std::collections::BTreeMap;
     use std::collections::BTreeSet;
 
     use flow_parser::file_key::FileKey;
@@ -550,7 +549,7 @@ pub mod response {
 
     pub type RageResponse = Vec<(String, String)>;
 
-    pub type SuggestImportsResponse = Result<BTreeMap<String, Vec<CodeActionOrCommand>>, String>;
+    pub type SuggestImportsResponse = Result<String, String>;
 
     pub type GraphResponse = Result<GraphResponseSubgraph, String>;
 

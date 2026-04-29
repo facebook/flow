@@ -1016,7 +1016,6 @@ fn suggest_imports(
             }
         }
     }
-    acc.reverse();
     acc
 }
 

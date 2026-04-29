@@ -20,7 +20,6 @@ use flow_parser_utils_output::replacement_printer::Patch;
 use flow_services_coverage::FileCoverage as ServerFileCoverage;
 use flow_services_coverage::Kind as ServerCoverageKind;
 use flow_services_export::export_index;
-use lsp_types::CodeActionOrCommand;
 use lsp_types::CompletionItemKind;
 use lsp_types::CompletionItemTag;
 use lsp_types::InsertTextFormat;
@@ -1449,8 +1448,7 @@ pub type InferTypeOfNameResponse = Result<infer_type_of_name::T, String>;
 pub type InsertTypeResponse = Result<Patch, String>;
 pub type CheckFileResponse = server_prot::response::CheckFileResponse;
 pub type LlmContextResponse = Result<llm_context::T, String>;
-pub type SuggestImportsResponse =
-    Result<std::collections::BTreeMap<String, Vec<CodeActionOrCommand>>, String>;
+pub type SuggestImportsResponse = Result<String, String>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(non_camel_case_types)]

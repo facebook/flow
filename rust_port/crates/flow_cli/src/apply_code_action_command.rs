@@ -333,7 +333,12 @@ mod suggest_imports {
             &request,
         );
         match response {
-            server_prot::response::Response::SUGGEST_IMPORTS(Ok(result)) => {
+            server_prot::response::Response::SUGGEST_IMPORTS(Ok(result_json)) => {
+                let result: std::collections::BTreeMap<
+                    String,
+                    Vec<server_prot::response::CodeActionOrCommand>,
+                > = serde_json::from_str(&result_json)
+                    .unwrap_or_else(|e| handle_error(None, &format!("Flow: parse error: {}", e)));
                 handle_ok(pretty, result)
             }
             _ => handle_error(None, "Flow: invalid server response"),

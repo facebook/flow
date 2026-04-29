@@ -1333,7 +1333,9 @@ fn suggest_imports_cli(
         &file_key,
         &file_content,
     )?;
-    Ok(result.into_iter().collect())
+    let map: std::collections::BTreeMap<String, Vec<lsp_types::CodeActionOrCommand>> =
+        result.into_iter().collect();
+    Ok(serde_json::to_string(&map).expect("suggest_imports_cli: serialize"))
 }
 
 fn autocomplete(
