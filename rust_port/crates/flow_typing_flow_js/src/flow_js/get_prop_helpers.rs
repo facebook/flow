@@ -249,7 +249,9 @@ pub(super) fn get_private_prop<'cx>(
                         let method_props = cx.find_props(method_maps);
                         match method_props.get(&name) {
                             Some(p) => {
-                                if !allow_method_access {
+                                if !allow_method_access
+                                    && !flow_common::files::has_ts_ext(cx.file())
+                                {
                                     if let PropertyInner::Method { type_: t, .. } = p.deref() {
                                         flow_js_utils::add_output(
                                             cx,

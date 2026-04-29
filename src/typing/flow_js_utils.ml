@@ -2501,11 +2501,14 @@ let check_method_unbinding cx ~use_op ~method_accessible ~reason_op ~propref ~(h
     (match valid_hint_t with
     | Some t -> Method { key_loc; type_ = t }
     | None ->
-      let reason_op = reason_of_propref propref in
-      add_output
-        cx
-        (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t });
-      Method { key_loc; type_ = Type.Properties.unbind_this_method t })
+      if Files.has_ts_ext (Context.file cx) then
+        Method { key_loc; type_ = Type.Properties.unbind_this_method t }
+      else
+        let reason_op = reason_of_propref propref in
+        add_output
+          cx
+          (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t });
+        Method { key_loc; type_ = Type.Properties.unbind_this_method t })
   | _ -> p
 
 (* e.g. `0`, `-123, `234234` *)

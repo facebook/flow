@@ -1,0 +1,87 @@
+Error ----------------------------------------------------------------------------------------------------- test.ts:17:1
+
+Cannot cast `a.m` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
+
+   test.ts:17:1
+   17| a.m as empty; // ERROR: proves type is not any
+       ^^^
+
+References:
+   test.ts:2:3
+    2|   m(): void {}
+         ^^^^^^^^^^^^ [1]
+   test.ts:17:8
+   17| a.m as empty; // ERROR: proves type is not any
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.ts:21:1
+
+Cannot cast `m` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
+
+   test.ts:21:1
+   21| m as empty; // ERROR: proves type is not any
+       ^
+
+References:
+   test.ts:2:3
+    2|   m(): void {}
+         ^^^^^^^^^^^^ [1]
+   test.ts:21:6
+   21| m as empty; // ERROR: proves type is not any
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.ts:28:1
+
+Cannot cast `i.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
+
+   test.ts:28:1
+   28| i.m as empty; // ERROR: proves type is not any
+       ^^^
+
+References:
+   test.ts:7:3
+    7|   m(): void;
+         ^^^^^^^^^ [1]
+   test.ts:28:8
+   28| i.m as empty; // ERROR: proves type is not any
+              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.ts:32:1
+
+Cannot cast `im` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
+
+   test.ts:32:1
+   32| im as empty; // ERROR: proves type is not any
+       ^^
+
+References:
+   test.ts:7:3
+    7|   m(): void;
+         ^^^^^^^^^ [1]
+   test.ts:32:7
+   32| im as empty; // ERROR: proves type is not any
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.ts:41:1
+
+Cannot cast `self` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
+
+   test.ts:41:1
+   41| self as empty; // ERROR: function type is not empty
+       ^^^^
+
+References:
+   test.ts:36:3
+   36|   self(): this { return this; }
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.ts:41:9
+   41| self as empty; // ERROR: function type is not empty
+               ^^^^^ [2]
+
+
+
+Found 5 errors

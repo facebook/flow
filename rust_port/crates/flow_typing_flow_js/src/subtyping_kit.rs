@@ -3950,7 +3950,7 @@ pub fn rec_sub_t<'cx>(
                     // lower bound method, upper bound function
                     // This is always banned, as it would allow methods to be unbound through casting
                     (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) => {
-                        if !unbound {
+                        if !unbound && !flow_common::files::has_ts_ext(cx.file()) {
                             flow_js_utils::add_output(
                                 cx,
                                 ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {

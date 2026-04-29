@@ -7175,7 +7175,7 @@ struct
           in
           (match NameUtils.Map.find_opt name (Context.find_props cx method_maps) with
           | Some p ->
-            ( if not allow_method_access then
+            ( if (not allow_method_access) && not (Files.has_ts_ext (Context.file cx)) then
               match p with
               | Method { type_ = t; _ } ->
                 add_output

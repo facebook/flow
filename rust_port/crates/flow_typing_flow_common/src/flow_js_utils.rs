@@ -4963,7 +4963,6 @@ pub fn check_method_unbinding<'cx>(
     use flow_typing_type::type_util::reason_of_propref;
     use flow_typing_type::type_util::reason_of_t;
 
-    // match p with
     match p.deref() {
         PropertyInner::Method { key_loc, type_: t } if !method_accessible => {
             let hint_result = (hint.1)(cx, false, None, reason_op.dupe())?;
@@ -5004,15 +5003,17 @@ pub fn check_method_unbinding<'cx>(
                     },
                 )),
                 None => {
-                    let reason_op_from_propref = reason_of_propref(propref);
-                    add_output(
-                        cx,
-                        ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
-                            use_op: use_op.dupe(),
-                            reason_op: reason_op_from_propref.dupe(),
-                            reason_prop: reason_of_t(t).dupe(),
-                        })),
-                    )?;
+                    if !flow_common::files::has_ts_ext(cx.file()) {
+                        let reason_op_from_propref = reason_of_propref(propref);
+                        add_output(
+                            cx,
+                            ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
+                                use_op: use_op.dupe(),
+                                reason_op: reason_op_from_propref.dupe(),
+                                reason_prop: reason_of_t(t).dupe(),
+                            })),
+                        )?;
+                    }
                     Ok(flow_typing_type::type_::Property::new(
                         PropertyInner::Method {
                             key_loc: key_loc.dupe(),
