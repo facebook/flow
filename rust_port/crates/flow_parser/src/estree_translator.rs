@@ -668,18 +668,17 @@ fn statement(
                 ast::statement::declare_namespace::Keyword::Namespace => "namespace",
                 ast::statement::declare_namespace::Keyword::Module => "module",
             };
-            let mut props = vec![
-                ("id", id),
-                (
-                    "body",
-                    block(offset_table, config, &namespace.body.0, &namespace.body.1),
-                ),
-                ("implicitDeclare", Value::Bool(namespace.implicit_declare)),
-                ("keyword", string(keyword_str)),
-            ];
+            let mut props = Vec::with_capacity(5);
             if global {
-                props.insert(0, ("global", bool_value(global)));
+                props.push(("global", bool_value(global)));
             }
+            props.push(("id", id));
+            props.push((
+                "body",
+                block(offset_table, config, &namespace.body.0, &namespace.body.1),
+            ));
+            props.push(("implicitDeclare", Value::Bool(namespace.implicit_declare)));
+            props.push(("keyword", string(keyword_str)));
             node(
                 offset_table,
                 config,
@@ -1083,22 +1082,23 @@ fn statement(
             )
         }
         StatementInner::ImportDeclaration { loc, inner } => {
-            let mut specifiers = match &inner.specifiers {
+            let mut specifiers: Vec<Value> = Vec::new();
+            if let Some(default) = &inner.default {
+                specifiers.push(import_default_specifier(offset_table, config, default));
+            }
+            match &inner.specifiers {
                 Some(ast::statement::import_declaration::Specifier::ImportNamedSpecifiers(
                     named_specs,
-                )) => named_specs
-                    .iter()
-                    .map(|spec| import_named_specifier(offset_table, config, spec))
-                    .collect::<Vec<Value>>(),
+                )) => specifiers.extend(
+                    named_specs
+                        .iter()
+                        .map(|spec| import_named_specifier(offset_table, config, spec)),
+                ),
                 Some(ast::statement::import_declaration::Specifier::ImportNamespaceSpecifier(
                     ns,
-                )) => vec![import_namespace_specifier(offset_table, config, ns)],
-                None => vec![],
+                )) => specifiers.push(import_namespace_specifier(offset_table, config, ns)),
+                None => {}
             };
-
-            if let Some(default) = &inner.default {
-                specifiers.insert(0, import_default_specifier(offset_table, config, default));
-            }
 
             let import_kind_str = match inner.import_kind {
                 ast::statement::ImportKind::ImportType => "type",
@@ -2818,13 +2818,12 @@ fn declare_enum(
     loc: &Loc,
     enum_decl: &ast::statement::EnumDeclaration<Loc, Loc>,
 ) -> Value {
-    let mut props = vec![
-        ("id", identifier(offset_table, config, &enum_decl.id)),
-        ("body", enum_body(offset_table, config, &enum_decl.body)),
-    ];
+    let mut props = Vec::with_capacity(3);
     if enum_decl.const_ {
-        props.insert(0, ("const", bool_value(true)));
+        props.push(("const", bool_value(true)));
     }
+    props.push(("id", identifier(offset_table, config, &enum_decl.id)));
+    props.push(("body", enum_body(offset_table, config, &enum_decl.body)));
     node(
         offset_table,
         config,
@@ -2853,18 +2852,17 @@ fn declare_namespace(
         ast::statement::declare_namespace::Keyword::Namespace => "namespace",
         ast::statement::declare_namespace::Keyword::Module => "module",
     };
-    let mut props = vec![
-        ("id", id),
-        (
-            "body",
-            block(offset_table, config, &namespace.body.0, &namespace.body.1),
-        ),
-        ("implicitDeclare", bool_value(namespace.implicit_declare)),
-        ("keyword", string(keyword_str)),
-    ];
+    let mut props = Vec::with_capacity(5);
     if global {
-        props.insert(0, ("global", bool_value(global)));
+        props.push(("global", bool_value(global)));
     }
+    props.push(("id", id));
+    props.push((
+        "body",
+        block(offset_table, config, &namespace.body.0, &namespace.body.1),
+    ));
+    props.push(("implicitDeclare", bool_value(namespace.implicit_declare)));
+    props.push(("keyword", string(keyword_str)));
     node(
         offset_table,
         config,
@@ -3892,13 +3890,12 @@ fn enum_declaration(
     loc: &Loc,
     enum_decl: &ast::statement::EnumDeclaration<Loc, Loc>,
 ) -> Value {
-    let mut props = vec![
-        ("id", identifier(offset_table, config, &enum_decl.id)),
-        ("body", enum_body(offset_table, config, &enum_decl.body)),
-    ];
+    let mut props = Vec::with_capacity(3);
     if enum_decl.const_ {
-        props.insert(0, ("const", bool_value(true)));
+        props.push(("const", bool_value(true)));
     }
+    props.push(("id", identifier(offset_table, config, &enum_decl.id)));
+    props.push(("body", enum_body(offset_table, config, &enum_decl.body)));
     node(
         offset_table,
         config,
@@ -5265,17 +5262,15 @@ fn object_type(
         }
     }
 
-    let mut fields = vec![
-        ("exact", bool_value(object.exact)),
-        ("properties", Value::Array(props)),
-        ("indexers", Value::Array(ixs)),
-        ("callProperties", Value::Array(calls)),
-        ("internalSlots", Value::Array(slots)),
-    ];
-
+    let mut fields = Vec::with_capacity(6);
     if include_inexact {
-        fields.insert(0, ("inexact", bool_value(object.inexact)));
+        fields.push(("inexact", bool_value(object.inexact)));
     }
+    fields.push(("exact", bool_value(object.exact)));
+    fields.push(("properties", Value::Array(props)));
+    fields.push(("indexers", Value::Array(ixs)));
+    fields.push(("callProperties", Value::Array(calls)));
+    fields.push(("internalSlots", Value::Array(slots)));
 
     node(
         offset_table,

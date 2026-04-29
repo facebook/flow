@@ -4767,13 +4767,15 @@ pub mod json_output {
         message: &Message<Loc>,
     ) -> Value {
         let (_, loc) = unwrap_message(message);
-        let context = (
+        let mut props: serde_json::Map<String, Value> =
+            json_of_message_props(stdin_file, strip_root, offset_kind, message)
+                .into_iter()
+                .collect();
+        props.insert(
             "context".to_string(),
             json_of_loc_context(stdin_file, loc.as_ref()),
         );
-        let mut props = json_of_message_props(stdin_file, strip_root, offset_kind, message);
-        props.insert(0, context);
-        Value::Object(props.into_iter().collect())
+        Value::Object(props)
     }
 
     fn json_of_infos<F: Fn(&Message<Loc>) -> Value>(

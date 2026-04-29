@@ -250,16 +250,14 @@ fn type_parse_artifacts_with_cache(
 }
 
 fn add_cache_hit_data_to_json(
-    mut json_props: Vec<(String, lsp_prot::Json)>,
+    json_props: Vec<(String, lsp_prot::Json)>,
     did_hit: Option<bool>,
 ) -> Vec<(String, lsp_prot::Json)> {
-    match did_hit {
-        None => json_props,
-        Some(did_hit) => {
-            json_props.insert(0, ("cached".to_string(), lsp_prot::Json::Bool(did_hit)));
-            json_props
-        }
+    let mut json_props = json_props;
+    if let Some(did_hit) = did_hit {
+        json_props.push(("cached".to_string(), lsp_prot::Json::Bool(did_hit)));
     }
+    json_props
 }
 
 fn try_with<T, F: FnOnce() -> Result<T, String>>(f: F) -> Result<T, String> {
@@ -2728,8 +2726,8 @@ fn get_def(
                         Some(&content),
                         &Purpose::GoToDefinition,
                     );
-                    let mut json_props = json_props.unwrap_or_default();
-                    match &result {
+                    let json_props = json_props.unwrap_or_default();
+                    let json_props = match &result {
                         Ok(locs) if locs.is_empty() => {
                             let broader_context = match std::panic::catch_unwind(|| {
                                 let offset = flow_server_utils::file_content::get_offset(
@@ -2753,11 +2751,15 @@ fn get_def(
                                 Ok(broader_context) => broader_context,
                                 Err(_) => lsp_prot::Json::Null,
                             };
-                            json_props.insert(0, ("broader_context".to_string(), broader_context));
+                            // OCaml prepends, but the result becomes a serde_json::Map (BTreeMap),
+                            // so insertion order is irrelevant. Push for O(1) append.
+                            let mut json_props = json_props;
+                            json_props.push(("broader_context".to_string(), broader_context));
+                            json_props
                         }
-                        _ => {}
-                    }
-                    json_props = add_cache_hit_data_to_json(json_props, did_hit_cache);
+                        _ => json_props,
+                    };
+                    let json_props = add_cache_hit_data_to_json(json_props, did_hit_cache);
                     Ok((
                         result,
                         Some(lsp_prot::Json::Object(json_props.into_iter().collect())),
