@@ -7,8 +7,11 @@ Library Definitions:
 * Change the `Record<K, T>` utility type's key bound from `K: string` to `K: PropertyKey`, allowing `number` and `symbol` keys in addition to `string`
 * Added some TS built-in types that were missing from Flow's core lib
 
+Parser:
+* Added support for `writeonly` property variance keyword
+
 Misc:
-* When `experimental.allow_variance_keywords` is set to `true`, we support the keywords `in` / `out` / `readonly` along with `+`/`-` for variance
+* When `experimental.allow_variance_keywords` is set to `true`, we support the keywords `in` / `out` / `readonly` / `writeonly` along with `+`/`-` for variance
 
 ### 0.310.0
 
