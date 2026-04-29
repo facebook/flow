@@ -828,33 +828,30 @@ fn expected_concrete_type_of_t(cx: &Context, lb_type: &Type) -> Type {
     }
 }
 
-// let rec literals_of_ty acc ty =
-//   match ty with
-//   | Ty.Union (_, t1, t2, ts) -> Base.List.fold_left (t1 :: t2 :: ts) ~f:literals_of_ty ~init:acc
-//   | Ty.StrLit _
-//   | Ty.NumLit _
-//   | Ty.BoolLit _
-//   | Ty.Null ->
-//     ty :: acc
-//   | Ty.Bool -> Ty.BoolLit true :: Ty.BoolLit false :: acc
-//   | _ -> acc
-fn literals_of_ty(acc: &mut Vec<Arc<Ty<ALoc>>>, ty_: &Arc<Ty<ALoc>>) {
-    match ty_.as_ref() {
-        Ty::Union(_, t1, t2, ts) => {
-            literals_of_ty(acc, t1);
-            literals_of_ty(acc, t2);
-            for t in ts.iter() {
-                literals_of_ty(acc, t);
+fn literals_of_ty(ty_: &Arc<Ty<ALoc>>) -> Vec<Arc<Ty<ALoc>>> {
+    fn rec(acc: &mut Vec<Arc<Ty<ALoc>>>, ty_: &Arc<Ty<ALoc>>) {
+        match ty_.as_ref() {
+            Ty::Union(_, t1, t2, ts) => {
+                rec(acc, t1);
+                rec(acc, t2);
+                for t in ts.iter() {
+                    rec(acc, t);
+                }
             }
+            Ty::StrLit(_) | Ty::NumLit(_) | Ty::BoolLit(_) | Ty::Null => {
+                acc.push(ty_.dupe());
+            }
+            Ty::Bool => {
+                acc.push(Arc::new(Ty::BoolLit(false)));
+                acc.push(Arc::new(Ty::BoolLit(true)));
+            }
+            _ => {}
         }
-        Ty::StrLit(_) | Ty::NumLit(_) | Ty::BoolLit(_) | Ty::Null => acc.insert(0, ty_.dupe()),
-        Ty::Bool => {
-            // OCaml prepends BoolLit true, then prepends BoolLit false (so acc is [true, false, ...])
-            acc.insert(0, Arc::new(Ty::BoolLit(true)));
-            acc.insert(0, Arc::new(Ty::BoolLit(false)));
-        }
-        _ => {}
     }
+    let mut acc = Vec::new();
+    rec(&mut acc, ty_);
+    acc.reverse();
+    acc
 }
 
 enum QuoteKind {
@@ -902,8 +899,7 @@ fn autocomplete_literals(
     let expected_type_ty = ty_normalizer_flow::expand_literal_union(genv, expected_type)
         .unwrap_or_else(|_| Arc::new(Ty::Top));
     let exact_by_default = cx.exact_by_default();
-    let mut literals = Vec::new();
-    literals_of_ty(&mut literals, &expected_type_ty);
+    let literals = literals_of_ty(&expected_type_ty);
     let (prefer_single_quotes, edit_locs) =
         autocomplete_create_string_literal_edit_controls(prefer_single_quotes, edit_locs, token);
     literals
@@ -3264,16 +3260,22 @@ pub fn autocomplete_get_results(
                                 // The :: prepend means each transformed member item ends up
                                 // at the FRONT of the accumulator (so items appear in reverse
                                 // of their original order in result_member.result.items).
-                                let mut rev_items: Vec<_> =
-                                    result_id.result.items.iter().rev().cloned().collect();
-                                for item in result_member.result.items.into_iter() {
-                                    let name = format!("this.{}", item.name);
-                                    let mut item = item;
-                                    item.name = name.clone();
-                                    item.text_edit =
-                                        Some(text_edit(Some(&name), &name, &edit_locs));
-                                    rev_items.insert(0, item);
-                                }
+                                let init_rev_items = result_id.result.items.iter().rev().cloned();
+                                let rev_items: Vec<_> = result_member
+                                    .result
+                                    .items
+                                    .into_iter()
+                                    .rev()
+                                    .map(|item| {
+                                        let name = format!("this.{}", item.name);
+                                        let mut item = item;
+                                        item.name = name.clone();
+                                        item.text_edit =
+                                            Some(text_edit(Some(&name), &name, &edit_locs));
+                                        item
+                                    })
+                                    .chain(init_rev_items)
+                                    .collect();
                                 AutocompleteServiceResultGeneric::AcResult(AcResult {
                                     result: ac_completion::T {
                                         items: filter_by_token_and_sort_rev(
