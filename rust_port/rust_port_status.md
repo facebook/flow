@@ -1130,7 +1130,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] wrappedMap.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
       - [x] wrappedMap_sig.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
     - [ ] core/
-      - [ ] build_id.ml
+      - [x] build_id.ml → `crates/facebook/flow_facebook_logging/src/build_id.rs`
       - [ ] exception.ml
       - [ ] hh_logger.ml
       - [ ] measure.ml
