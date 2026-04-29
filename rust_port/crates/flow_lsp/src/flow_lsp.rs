@@ -2436,7 +2436,7 @@ fn update_ienv(state: &mut ServerState, f: impl FnOnce(&mut InitializedEnv)) {
 
 fn update_recent_summaries(cenv: &mut ConnectedEnv, summary: lsp_prot::TelemetryFromServer) {
     let new_time = now();
-    cenv.c_recent_summaries.insert(0, (new_time, summary));
+    cenv.c_recent_summaries.push((new_time, summary));
     cenv.c_recent_summaries
         .retain(|(t, _)| *t >= new_time - 120.0);
 }
@@ -3105,21 +3105,19 @@ fn do_initialize(params: &lsp_types::InitializeParams) -> lsp_types::InitializeR
     let supports_refactor_extract = supported_kinds.iter().any(|k| k == "refactor.extract");
     let supports_source_actions = supported_kinds.iter().any(|k| k == "source");
     let mut supported_code_action_kinds = vec![];
-    if supports_quickfixes {
-        supported_code_action_kinds.push(lsp_types::CodeActionKind::QUICKFIX);
+    if supports_source_actions {
+        supported_code_action_kinds.push(lsp_types::CodeActionKind::new(
+            "source.addMissingImports.flow",
+        ));
+        supported_code_action_kinds.push(lsp_types::CodeActionKind::new(
+            "source.organizeImports.flow",
+        ));
     }
     if supports_refactor_extract {
-        supported_code_action_kinds.insert(0, lsp_types::CodeActionKind::REFACTOR_EXTRACT);
+        supported_code_action_kinds.push(lsp_types::CodeActionKind::REFACTOR_EXTRACT);
     }
-    if supports_source_actions {
-        supported_code_action_kinds.insert(
-            0,
-            lsp_types::CodeActionKind::new("source.organizeImports.flow"),
-        );
-        supported_code_action_kinds.insert(
-            0,
-            lsp_types::CodeActionKind::new("source.addMissingImports.flow"),
-        );
+    if supports_quickfixes {
+        supported_code_action_kinds.push(lsp_types::CodeActionKind::QUICKFIX);
     }
     let code_action_provider = if !supported_code_action_kinds.is_empty() {
         Some(lsp_types::CodeActionProviderCapability::Options(
