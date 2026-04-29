@@ -59,7 +59,14 @@ pub mod server_worker_state {
         file_key::set_project_root(project_root);
         file_key::set_flowlib_root(flowlib_root);
 
-        let _init_id = format!("{}.{}", init_id, super::random_id_short_string());
+        // let init_id = init_id ^ "." ^ Random_id.short_string () in
+        let init_id = format!("{}.{}", init_id, super::random_id_short_string());
+        // FlowEventLogger.init_worker ~init_id (Unix.gettimeofday ());
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs_f64();
+        flow_event_logger::init_worker(&init_id, &serde_json::json!(now));
 
         match log_filename {
             None => {}

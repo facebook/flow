@@ -93,6 +93,28 @@ pub fn mkdir_no_fail(dir: &Path) -> io::Result<()> {
     })
 }
 
+pub fn is_rosetta() -> bool {
+    static CACHED: OnceLock<bool> = OnceLock::new();
+    *CACHED.get_or_init(|| {
+        #[cfg(target_os = "macos")]
+        {
+            match std::process::Command::new("sysctl")
+                .args(["-n", "sysctl.proc_translated"])
+                .output()
+            {
+                Ok(out) if out.status.success() => std::str::from_utf8(&out.stdout)
+                    .map(|s| s.trim() == "1")
+                    .unwrap_or(false),
+                _ => false,
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            false
+        }
+    })
+}
+
 pub fn pid_of_handle(pid: u32) -> u32 {
     pid
 }

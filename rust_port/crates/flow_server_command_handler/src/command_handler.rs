@@ -736,6 +736,7 @@ fn get_status(
             ConcreteLocPrintableErrorSet::new()
         };
         status_log(&errors);
+        flow_event_logger::status_response(errors.cardinal() as i32);
         convert_errors(shared_mem, options, errors, warnings, suppressed_errors)
     };
     (status_response, lazy_stats)

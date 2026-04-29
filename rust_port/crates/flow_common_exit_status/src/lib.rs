@@ -149,6 +149,29 @@ pub fn error_code(status: FlowExitStatus) -> i32 {
     }
 }
 
+#[cfg(unix)]
+pub fn unpack_process_status(status: std::process::ExitStatus) -> (&'static str, i32) {
+    use std::os::unix::process::ExitStatusExt;
+    if let Some(n) = status.code() {
+        ("exit", n)
+    } else if let Some(n) = status.signal() {
+        ("signaled", n)
+    } else if let Some(n) = status.stopped_signal() {
+        ("stopped", n)
+    } else {
+        unreachable!("ExitStatus must be one of WEXITED, WSIGNALED, or WSTOPPED on unix")
+    }
+}
+
+#[cfg(not(unix))]
+pub fn unpack_process_status(status: std::process::ExitStatus) -> (&'static str, i32) {
+    // Windows has no signal or stopped concept; ExitStatus::code() is always Some.
+    let n = status
+        .code()
+        .expect("Windows ExitStatus must have an exit code");
+    ("exit", n)
+}
+
 pub fn to_string(status: FlowExitStatus) -> &'static str {
     use FlowExitStatus::*;
     match status {

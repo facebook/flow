@@ -145,7 +145,7 @@ fn server_entry_handler(param: ServerEntryParam, pair: ChannelPair<(), ()>) {
     });
     let options = build(&daemon_args);
 
-    set_hh_logger_min_level(&options);
+    flow_logging_utils::set_hh_logger_min_level(None, &options);
     log::info!("argv={}", argv.join(" "));
     dump_server_options(&options);
 
@@ -162,38 +162,15 @@ fn server_entry_handler(param: ServerEntryParam, pair: ChannelPair<(), ()>) {
         flow_daemon::pid_log::log(Some("file_watcher"), false, pid);
     }
     flow_daemon::pid_log::log(Some("main"), false, std::process::id());
+    if let Some(pid) = flow_event_logger_common::event_logger::logger_pid() {
+        flow_daemon::pid_log::log(Some("main_logger"), false, pid as u32);
+    }
 
     let in_stream = flow_daemon::into_in_stream(in_chan);
     let out_stream = flow_daemon::into_out_stream(out_chan);
     let channels: flow_server_env::monitor_rpc::Channels = (in_stream, out_stream);
 
     crate::server::run_from_daemonize(&init_id, options, Some(channels));
-}
-
-fn hh_logger_level_of_env(env: &str) -> Option<log::LevelFilter> {
-    match std::env::var(env).ok().as_deref() {
-        Some("off") => Some(log::LevelFilter::Off),
-        Some("fatal") => Some(log::LevelFilter::Error),
-        Some("error") => Some(log::LevelFilter::Error),
-        Some("warn") => Some(log::LevelFilter::Warn),
-        Some("info") => Some(log::LevelFilter::Info),
-        Some("debug") => Some(log::LevelFilter::Debug),
-        Some(_) | None => None,
-    }
-}
-
-pub fn set_hh_logger_min_level(options: &Options) {
-    let level = if options.quiet {
-        log::LevelFilter::Off
-    } else if options.verbose.is_some() || options.debug {
-        log::LevelFilter::Debug
-    } else {
-        match hh_logger_level_of_env("FLOW_LOG_LEVEL") {
-            Some(level) => level,
-            None => log::LevelFilter::Info,
-        }
-    };
-    log::set_max_level(level);
 }
 
 pub fn dump_server_options(options: &Options) {
@@ -246,7 +223,6 @@ pub fn try_open_log_file(file: &str) -> Result<fs::File, String> {
 pub fn open_log_file(file: &str) -> fs::File {
     try_open_log_file(file).unwrap_or_else(|e| panic!("{}", e))
 }
-
 pub fn daemonize(
     init_id: &str,
     log_file: &str,

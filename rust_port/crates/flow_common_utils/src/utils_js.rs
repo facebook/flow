@@ -120,3 +120,10 @@ pub fn typo_suggestion(possible_names: &[&FlowSmolStr], name: &str) -> Option<Fl
     let suggestions = typo_suggestions(possible_names, name);
     suggestions.into_iter().next()
 }
+
+pub fn in_flow_test() -> bool {
+    match std::env::var("IN_FLOW_TEST").ok().as_deref() {
+        Some("1") | Some("true") => true,
+        Some(_) | None => false,
+    }
+}

@@ -181,6 +181,19 @@ fn internal_start(
     if matches!(args.file_watcher, FileWatcher::EdenFS(_)) {
         crate::startup_initializer::init();
     }
+    let root = options.root.as_path();
+    {
+        let file_watcher =
+            crate::flow_server_monitor_options::string_of_file_watcher(&args.file_watcher);
+        let vcs = match flow_common_vcs::vcs::find(None, root) {
+            None => "none",
+            Some(flow_common_vcs::vcs::Vcs::Hg) => "hg",
+            Some(flow_common_vcs::vcs::Vcs::Git) => "git",
+        };
+        flow_event_logger::set_monitor_options(file_watcher.to_string(), vcs.to_string());
+        flow_event_logger::set_eden(Some(flow_common_vcs::eden::is_eden(root)));
+        flow_logging_utils::set_server_options(&options);
+    }
     let lock_path = server_files_js::lock_file(
         &args.flowconfig_name,
         options.temp_dir.as_str(),

@@ -1221,6 +1221,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `mkdir_no_fail`
         - [x] `pid_of_handle`
         - [x] `normalize_filename_dir_sep`
+        - [x] `is_rosetta`
         - [ ] Other functions not ported
       - [ ] timeout.ml
       - [ ] timer.ml

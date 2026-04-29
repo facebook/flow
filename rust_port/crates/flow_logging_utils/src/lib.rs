@@ -108,5 +108,7 @@ pub fn dump_server_options(server_options: &Options, log: &mut dyn FnMut(&str)) 
 }
 
 pub fn disable_logging() {
+    flow_event_logger_common::event_logger::disable_logging();
     flow_event_logger::disable_logging();
+    flow_interaction_logger::disable_logging();
 }

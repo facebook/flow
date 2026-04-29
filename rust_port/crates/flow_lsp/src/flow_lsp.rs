@@ -4796,6 +4796,13 @@ fn main_handle_unsafe(
                 i_file_options: file_options_of_flowconfig(&i_root, &flowconfig),
             };
 
+            flow_interaction_logger::set_server_config(
+                flowconfig.options.log_saving.get("timeout").copied(),
+                flowconfig_name,
+                i_root.clone(),
+                flowconfig.options.root_name.as_deref(),
+            );
+
             let required_version = flowconfig.version.clone();
             if let Err(msg) = command_utils_check_version(&required_version) {
                 return Err((

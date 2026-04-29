@@ -196,6 +196,7 @@ fn register_daemon_entry_points() {
             build_monitor_options_and_start_args,
         );
         flow_server::server_daemon::register(build_server_daemon_options);
+        flow_event_logger::register_scuba_entry();
     });
 }
 
@@ -337,6 +338,10 @@ pub fn main() {
     #[cfg(unix)]
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_IGN);
+    }
+
+    if flow_common_utils::utils_js::in_flow_test() {
+        flow_logging_utils::disable_logging();
     }
 
     check_entry_point();

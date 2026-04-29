@@ -32,35 +32,6 @@ use crate::server_env_build;
 
 type NodeModulesContainers = Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>;
 
-mod flow_event_logger {
-    fn emit(event_name: &str, fields: &str) {
-        log::info!("{} {}", event_name, fields);
-    }
-
-    pub fn idle_heartbeat(idle_time: f64) {
-        emit("IDLE_HEARTBEAT", &format!("idle_time={idle_time:.3}"));
-    }
-
-    pub fn init_done(saved_state_fetcher: &str, first_internal_error: Option<&str>, duration: f64) {
-        let first_internal_error = first_internal_error.unwrap_or("");
-        emit(
-            "INIT_DONE",
-            &format!(
-                "saved_state_fetcher={saved_state_fetcher} first_internal_error={first_internal_error:?} duration={duration:.3}"
-            ),
-        );
-    }
-
-    pub fn sharedmem_gc_ran(old_size: i32, new_size: i32, time_taken: f64) {
-        emit(
-            "SHAREDMEM_GC_RAN",
-            &format!(
-                "kind=aggressive old_size={old_size} new_size={new_size} time_taken={time_taken:.6}"
-            ),
-        );
-    }
-}
-
 struct ProfilingRunning {
     start: std::time::Instant,
 }
@@ -215,7 +186,7 @@ fn idle_logging_loop(
             .as_secs_f64()
             - _start_time;
         log::info!("Idle heartbeat after {:.3}s", idle_time);
-        flow_event_logger::idle_heartbeat(idle_time);
+        flow_event_logger::idle_heartbeat(idle_time, &serde_json::Value::Null);
     }
 }
 
@@ -294,6 +265,7 @@ fn serve(
             log::info!("Running a serial workload");
             _env = workload(_env);
         }
+        // Flush the logs asynchronously
         log::logger().flush();
     }
 }
@@ -317,7 +289,12 @@ pub(crate) fn on_compact(shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>) -
                 new_size,
                 time_taken
             );
-            flow_event_logger::sharedmem_gc_ran(old_size, new_size, time_taken);
+            flow_event_logger::sharedmem_gc_ran(
+                "aggressive",
+                old_size as f64,
+                new_size as f64,
+                time_taken,
+            );
         }
     }
 }
@@ -455,6 +432,9 @@ fn run(_init_id: &str, _options: Arc<Options>, monitor_channels: Option<monitor_
                     &genv_arc.shared_mem,
                 );
             sample_init_memory(profiling, &genv_arc.shared_mem);
+
+            flow_event_logger::sharedmem_init_done(genv_arc.shared_mem.heap_size() as u64);
+
             (env, node_modules_containers, first_internal_error)
         });
     let init_duration = profiling.get_profiling_duration();
@@ -467,10 +447,11 @@ fn run(_init_id: &str, _options: Arc<Options>, monitor_channels: Option<monitor_
     monitor_rpc::status_update(server_status::Event::FinishingUp);
 
     let saved_state_fetcher = string_of_saved_state_fetcher(&_options);
+
     flow_event_logger::init_done(
-        saved_state_fetcher,
         first_internal_error.as_deref(),
-        init_duration,
+        saved_state_fetcher,
+        &serde_json::json!({ "duration": init_duration }),
     );
 
     log::info!("Server is READY");
@@ -583,6 +564,8 @@ pub fn check_once(_init_id: &str, _options: Arc<Options>) {
                 );
             sample_init_memory(profiling, &_genv.shared_mem);
 
+            flow_event_logger::sharedmem_init_done(_genv.shared_mem.heap_size() as u64);
+
             let (errors, warnings, suppressed_errors) = error_collator::get(&env);
 
             let shared_mem = &_genv.shared_mem;
@@ -619,7 +602,13 @@ pub fn check_once(_init_id: &str, _options: Arc<Options>) {
     );
     monitor_rpc::status_update(server_status::Event::FinishingUp);
 
-    let _saved_state_fetcher = string_of_saved_state_fetcher(&_options);
+    let saved_state_fetcher = string_of_saved_state_fetcher(&_options);
+
+    flow_event_logger::init_done(
+        _first_internal_error.as_deref(),
+        saved_state_fetcher,
+        &serde_json::json!({ "duration": profiling.get_profiling_duration() }),
+    );
 }
 
 pub fn daemonize(

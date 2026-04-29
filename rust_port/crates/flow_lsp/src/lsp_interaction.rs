@@ -97,7 +97,6 @@ pub struct State {
     pub buffer_status: BufferStatus,
 }
 
-#[allow(dead_code)]
 fn string_of_trigger(trigger: &Trigger) -> &'static str {
     match trigger {
         Trigger::CodeAction(_) => "codeAction",
@@ -172,7 +171,6 @@ fn lsp_id_of_trigger(trigger: &Trigger) -> Option<&LspId> {
     }
 }
 
-#[allow(dead_code)]
 fn string_of_ux(ux: &Ux) -> &'static str {
     match ux {
         Ux::Canceled => "Canceled",
@@ -189,7 +187,6 @@ fn string_of_ux(ux: &Ux) -> &'static str {
     }
 }
 
-#[allow(dead_code)]
 fn uri_of_ux(ux: &Ux) -> Option<&DocumentUri> {
     match ux {
         Ux::PushedLiveNonParseErrors(uri) | Ux::PushedLiveParseErrors(uri) => Some(uri),
@@ -205,7 +202,6 @@ fn uri_of_ux(ux: &Ux) -> Option<&DocumentUri> {
     }
 }
 
-#[allow(dead_code)]
 fn string_of_server_status(status: ServerStatus) -> &'static str {
     match status {
         ServerStatus::Stopped => "Stopped",
@@ -215,7 +211,6 @@ fn string_of_server_status(status: ServerStatus) -> &'static str {
     }
 }
 
-#[allow(dead_code)]
 fn string_of_buffer_status(status: BufferStatus) -> &'static str {
     match status {
         BufferStatus::NoOpenBuffers => "NoOpenBuffers",
@@ -224,7 +219,6 @@ fn string_of_buffer_status(status: BufferStatus) -> &'static str {
     }
 }
 
-#[allow(dead_code)]
 fn source_of_trigger(trigger: &Trigger) -> Source {
     match trigger {
         Trigger::CodeAction(_)
@@ -262,7 +256,6 @@ fn source_of_trigger(trigger: &Trigger) -> Source {
     }
 }
 
-#[allow(dead_code)]
 fn string_of_source(source: &Source) -> &'static str {
     match source {
         Source::Client => "Client",
@@ -314,9 +307,24 @@ pub fn recheck_start(start_state: State) {
     })
 }
 
-fn log_inner(ux: &Ux, trigger: &Trigger, _start_state: &State, _end_state: &State) {
-    let _is_timeout_ux = matches!(ux, Ux::Timeout);
-    let _lsp_id = lsp_id_of_trigger(trigger).map(|id| format!("{:?}", id));
+fn log_inner(ux: &Ux, trigger: &Trigger, start_state: &State, end_state: &State) {
+    let is_timeout_ux = matches!(ux, Ux::Timeout);
+    let lsp_id = lsp_id_of_trigger(trigger).map(crate::flow_lsp::lsp_fmt_id_to_string);
+    let uri = uri_of_ux(ux).map(|u| u.as_str().to_string());
+    flow_interaction_logger::interaction(
+        lsp_id.as_deref(),
+        is_timeout_ux,
+        string_of_source(&source_of_trigger(trigger)),
+        uri.as_deref(),
+        string_of_trigger(trigger),
+        string_of_ux(ux),
+        (start_state.time * 1000.0) as i64,
+        (end_state.time * 1000.0) as i64,
+        string_of_server_status(start_state.server_status),
+        string_of_server_status(end_state.server_status),
+        string_of_buffer_status(start_state.buffer_status),
+        string_of_buffer_status(end_state.buffer_status),
+    );
 }
 
 pub fn log_pushed_errors(end_state: State, errors_reason: &lsp_prot::ErrorsReason) {
@@ -432,9 +440,13 @@ pub fn dismiss_tracks(end_state: State) {
     })
 }
 
-pub fn init() {}
+pub fn init() {
+    flow_interaction_logger::init();
+}
 
-pub fn flush() {}
+pub async fn flush() {
+    flow_interaction_logger::flush().await;
+}
 
 pub fn trigger_of_lsp_msg(msg: &LspMessage) -> Option<Trigger> {
     match msg {
