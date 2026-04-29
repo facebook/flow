@@ -56,9 +56,9 @@ impl SelectionRangeFinder {
     }
 
     fn add_loc(&mut self, loc: Loc) {
-        match self.acc.first() {
+        match self.acc.last() {
             Some(hd) if *hd == loc => {}
-            _ => self.acc.insert(0, loc),
+            _ => self.acc.push(loc),
         }
     }
 
@@ -105,7 +105,7 @@ impl<'ast> AstVisitor<'ast, Loc> for SelectionRangeFinder {
         });
 
         // add the whole file.
-        let should_add = match self.acc.first() {
+        let should_add = match self.acc.last() {
             None => true,
             Some(hd) if hd.start.line > 1 || hd.start.column > 0 => true,
             _ => false,
@@ -916,9 +916,9 @@ fn selection_range_tree(
 ) -> Option<SelectionRange> {
     let mut finder = SelectionRangeFinder::new(position);
     finder.program(program).into_ok();
-    let rev_locs = finder.acc;
+    let acc = finder.acc;
     let mut parent: Option<SelectionRange> = None;
-    for loc in rev_locs {
+    for loc in acc.into_iter().rev() {
         let range = loc_to_lsp_range(&loc);
         parent = Some(SelectionRange {
             range,
