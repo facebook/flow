@@ -478,6 +478,24 @@ fn synth_arg_list<'cx>(
         .collect()
 }
 
+fn flow_js_exception_to_job_error<T>(
+    r: Result<T, FlowJsException>,
+) -> Result<T, flow_utils_concurrency::job_error::JobError> {
+    match r {
+        Ok(v) => Ok(v),
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+        }
+        Err(FlowJsException::DebugThrow { loc }) => {
+            Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc })
+        }
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
+}
+
 fn resolve_hint<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
@@ -488,24 +506,24 @@ fn resolve_hint<'cx>(
     use flow_env_builder::name_def_types::ObjectPropPatternHint;
     use flow_typing_type::type_::TypeInner;
 
-    fn resolve_hint_node<'cx>(cx: &Context<'cx>, loc: ALoc, hint_node: HintNode) -> Type {
-        match hint_node {
+    fn resolve_hint_node<'cx>(
+        cx: &Context<'cx>,
+        loc: ALoc,
+        hint_node: HintNode,
+    ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+        Ok(match hint_node {
             HintNode::AnnotationHint(tparams_map, anno) => {
-                let anno_reason = reason::mk_reason(
-                    reason::VirtualReasonDesc::RCustom("annotation hint".into()),
-                    anno.loc.dupe(),
-                );
-                flow_typing_tvar::mk_fully_resolved_lazy(
-                    cx,
-                    anno_reason,
-                    false,
-                    Box::new(move |cx: &Context<'cx>| {
-                        resolve_annotation(cx, &tparams_map, None, &anno)
-                    }),
-                )
+                resolve_annotation(cx, &tparams_map, None, &anno)?
             }
-            HintNode::ValueHint(encl_ctx, exp) => expression(cx, Some(encl_ctx), None, None, &exp)
-                .expect("unexpected abnormal control flow in resolve_hint_node"),
+            HintNode::ValueHint(encl_ctx, exp) => {
+                flow_typing_utils::abnormal::try_with_abnormal_exn(
+                    || expression(cx, Some(encl_ctx), None, None, &exp),
+                    |flow_typing_utils::abnormal::AbnormalControlFlow(_, expr)| {
+                        let (_, t) = expr.loc().dupe();
+                        t
+                    },
+                )?
+            }
             HintNode::ProvidersHint(locs) => {
                 if locs.len() == 1 {
                     let loc = locs.first().dupe();
@@ -564,7 +582,7 @@ fn resolve_hint<'cx>(
                     value: reason::Name::new(name),
                 }),
             )),
-            HintNode::ReactFragmentType => {
+            HintNode::ReactFragmentType => flow_js_exception_to_job_error(
                 flow_js_utils::import_export_utils::get_implicitly_imported_react_type(
                     cx,
                     loc.dupe(),
@@ -574,9 +592,8 @@ fn resolve_hint<'cx>(
                         )
                     },
                     ExpectedModulePurpose::ReactModuleForJSXFragment,
-                )
-                .expect("get_implicitly_imported_react_type failed outside speculation")
-            }
+                ),
+            )?,
             HintNode::ReactNodeType => {
                 let react_node_reason = reason::mk_reason(
                     reason::VirtualReasonDesc::RType(reason::Name::new(FlowSmolStr::new(
@@ -607,12 +624,12 @@ fn resolve_hint<'cx>(
                     .into_iter()
                     .map(|el| match el {
                         ArrayElementPatternHint::ArrayElementPatternHint(h) => {
-                            let t = resolve_hint_node(cx, loc.dupe(), h);
+                            let t = resolve_hint_node(cx, loc.dupe(), h)?;
                             let elem_reason = reason::mk_reason(
                                 reason::VirtualReasonDesc::RArrayElement,
                                 hint_loc.dupe(),
                             );
-                            type_::UnresolvedParam::UnresolvedArg(Box::new(
+                            Ok(type_::UnresolvedParam::UnresolvedArg(Box::new(
                                 type_::UnresolvedArgData(
                                     type_util::mk_tuple_element(
                                         elem_reason,
@@ -623,17 +640,15 @@ fn resolve_hint<'cx>(
                                     ),
                                     None,
                                 ),
-                            ))
+                            )))
                         }
                         ArrayElementPatternHint::ArrayRestElementPatternHint(h) => {
-                            type_::UnresolvedParam::UnresolvedSpreadArg(resolve_hint_node(
-                                cx,
-                                loc.dupe(),
-                                h,
+                            Ok(type_::UnresolvedParam::UnresolvedSpreadArg(
+                                resolve_hint_node(cx, loc.dupe(), h)?,
                             ))
                         }
                     })
-                    .collect();
+                    .collect::<Result<Vec<_>, flow_utils_concurrency::job_error::JobError>>()?;
                 flow_typing_tvar::mk_where(cx, array_reason.dupe(), |cx, tout| {
                     let reason_op = array_reason.dupe();
                     let element_reason = reason_op.dupe().replace_desc(
@@ -643,7 +658,7 @@ fn resolve_hint<'cx>(
                         },
                     );
                     let elem_t = flow_typing_tvar::mk(cx, element_reason);
-                    flow_js::FlowJs::resolve_spread_list(
+                    flow_js_exception_to_job_error(flow_js::FlowJs::resolve_spread_list(
                         cx,
                         type_::unknown_use(),
                         &reason_op,
@@ -654,38 +669,38 @@ fn resolve_hint<'cx>(
                             elem_t,
                             tout: tout.dupe(),
                         },
-                    )
-                    .expect("Non speculating");
+                    ))?;
                     Ok::<(), flow_utils_concurrency::job_error::JobError>(())
-                })
-                .expect("Non speculating")
+                })?
             }
             HintNode::ComposedObjectPatternHint(hint_loc, properties) => {
-                let acc = properties.into_iter().fold(
+                let acc = properties.into_iter().try_fold(
                     statement::object_expression_acc::ObjectExpressionAcc::empty(),
-                    |acc, prop| match prop {
-                        ObjectPropPatternHint::ObjectPropPatternHint(n, l, h) => {
-                            let t = resolve_hint_node(cx, loc.dupe(), h);
-                            acc.add_prop(move |props_map| {
-                                props_map.insert(
-                                    reason::Name::new(n),
-                                    type_::Property::new(type_::PropertyInner::Field(Box::new(
-                                        type_::FieldData {
-                                            preferred_def_locs: None,
-                                            key_loc: Some(l),
-                                            type_: t,
-                                            polarity: flow_common::polarity::Polarity::Neutral,
-                                        },
-                                    ))),
-                                );
-                            })
-                        }
-                        ObjectPropPatternHint::ObjectSpreadPropPatternHint(h) => {
-                            let t = resolve_hint_node(cx, loc.dupe(), h);
-                            acc.add_spread(t)
-                        }
+                    |acc, prop| -> Result<_, flow_utils_concurrency::job_error::JobError> {
+                        Ok(match prop {
+                            ObjectPropPatternHint::ObjectPropPatternHint(n, l, h) => {
+                                let t = resolve_hint_node(cx, loc.dupe(), h)?;
+                                acc.add_prop(move |props_map| {
+                                    props_map.insert(
+                                        reason::Name::new(n),
+                                        type_::Property::new(type_::PropertyInner::Field(
+                                            Box::new(type_::FieldData {
+                                                preferred_def_locs: None,
+                                                key_loc: Some(l),
+                                                type_: t,
+                                                polarity: flow_common::polarity::Polarity::Neutral,
+                                            }),
+                                        )),
+                                    );
+                                })
+                            }
+                            ObjectPropPatternHint::ObjectSpreadPropPatternHint(h) => {
+                                let t = resolve_hint_node(cx, loc.dupe(), h)?;
+                                acc.add_spread(t)
+                            }
+                        })
                     },
-                );
+                )?;
                 let obj_reason =
                     reason::mk_reason(reason::VirtualReasonDesc::RDestructuring, hint_loc.dupe());
                 let default_proto = Type::new(TypeInner::ObjProtoT(obj_reason.dupe()));
@@ -698,7 +713,7 @@ fn resolve_hint<'cx>(
                     }),
                 )
             }
-        }
+        })
     }
 
     let loc_clone = loc.dupe();

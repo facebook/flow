@@ -107,9 +107,11 @@ pub type ConcrArgListFn = Rc<dyn for<'cx> Fn(&Context<'cx>, Option<ALoc>) -> Vec
 pub type ConcrJsxProps<'cx> =
     Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>;
 
+pub type ConcrBaseHintT = Result<Type, flow_utils_concurrency::job_error::JobError>;
+
 pub type ConcrHint<'cx> = Hint<
     'cx,
-    Type,
+    ConcrBaseHintT,
     Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
@@ -117,7 +119,7 @@ pub type ConcrHint<'cx> = Hint<
 
 pub type ConcrHintDecomposition<'cx> = HintDecomposition<
     'cx,
-    Type,
+    ConcrBaseHintT,
     Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
@@ -125,7 +127,7 @@ pub type ConcrHintDecomposition<'cx> = HintDecomposition<
 
 pub type ConcrHintDecompositionInner<'cx> = HintDecompositionInner<
     'cx,
-    Type,
+    ConcrBaseHintT,
     Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
@@ -133,7 +135,7 @@ pub type ConcrHintDecompositionInner<'cx> = HintDecompositionInner<
 
 pub type ConcrFunCallHints<'cx> = FunCallImplicitInstantiationHints<
     'cx,
-    Type,
+    ConcrBaseHintT,
     Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
@@ -141,7 +143,7 @@ pub type ConcrFunCallHints<'cx> = FunCallImplicitInstantiationHints<
 
 pub type ConcrJsxHints<'cx> = JsxImplicitInstantiationHints<
     'cx,
-    Type,
+    ConcrBaseHintT,
     Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
@@ -1708,10 +1710,10 @@ fn evaluate_hint_inner<'cx>(
             )),
             HintKind::ExpectedTypeHint,
         ),
-        Hint::HintT(t, kind) => fully_resolve_final_result(cx, t, kind),
+        Hint::HintT(t, kind) => fully_resolve_final_result(cx, t?, kind),
         Hint::HintDecomp(ops, t, kind) => {
             let ops_vec = ops.into_vec();
-            evaluate_hint_ops(cx, opts, reason, t, kind, ops_vec)?
+            evaluate_hint_ops(cx, opts, reason, t?, kind, ops_vec)?
         }
     })
 }

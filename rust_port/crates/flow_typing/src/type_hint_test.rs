@@ -441,8 +441,8 @@ mod tests {
             .map(|(i, op)| (i, HintDecomposition::new(op)))
             .collect();
         match Vec1::try_from_vec(indexed_ops) {
-            Err(_) => Hint::HintT(base_t, ExpectedTypeHint),
-            Ok(l) => Hint::HintDecomp(l, base_t, ExpectedTypeHint),
+            Err(_) => Hint::HintT(Ok(base_t), ExpectedTypeHint),
+            Ok(l) => Hint::HintDecomp(l, Ok(base_t), ExpectedTypeHint),
         }
     }
 
