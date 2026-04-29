@@ -11,16 +11,8 @@ pub mod compression {
     pub mod saved_state_compression;
 }
 
-pub mod fetcher {
-    pub mod saved_state_dummy_fetcher;
-    pub mod saved_state_fb_fetcher;
-    pub mod saved_state_fetcher;
-    pub mod saved_state_local_fetcher;
-    pub mod saved_state_scm_fetcher;
-}
-
-pub use fetcher::saved_state_fetcher::FetchResult;
-pub use fetcher::saved_state_scm_fetcher::output_filename;
+pub use flow_saved_state_fetcher::saved_state_fetcher::FetchResult;
+pub use flow_saved_state_fetcher::saved_state_scm_fetcher::output_filename;
 pub use saved_state::DenormalizedFileData;
 pub use saved_state::InvalidReason;
 pub use saved_state::InvalidSavedState;

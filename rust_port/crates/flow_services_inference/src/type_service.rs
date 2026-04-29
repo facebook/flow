@@ -3122,16 +3122,23 @@ pub fn load_saved_state(
     // Does a best-effort job to load a saved state. If it fails, returns None
     let fetch_result = match options.saved_state_fetcher {
         SavedStateFetcher::DummyFetcher => {
-            flow_saved_state::fetcher::saved_state_dummy_fetcher::fetch(options)
+            flow_saved_state_fetcher::saved_state_dummy_fetcher::fetch(options)
         }
         SavedStateFetcher::LocalFetcher => {
-            flow_saved_state::fetcher::saved_state_local_fetcher::fetch(options)
+            flow_saved_state_fetcher::saved_state_local_fetcher::fetch(options)
         }
         SavedStateFetcher::ScmFetcher => {
-            flow_saved_state::fetcher::saved_state_scm_fetcher::fetch(options)
+            flow_saved_state_fetcher::saved_state_scm_fetcher::fetch(options)
         }
         SavedStateFetcher::FbFetcher => {
-            flow_saved_state::fetcher::saved_state_fb_fetcher::fetch(options)
+            #[cfg(fbcode_build)]
+            {
+                flow_facebook_saved_state::saved_state_fb_fetcher::fetch(options)
+            }
+            #[cfg(not(fbcode_build))]
+            {
+                flow_saved_state_fetcher::saved_state_dummy_fetcher::fetch(options)
+            }
         }
     };
     match fetch_result {

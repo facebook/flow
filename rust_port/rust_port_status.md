@@ -982,8 +982,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] rage/ → `crates/facebook/flow_facebook_rage/`
     - [x] flytrap.ml → `crates/facebook/flow_facebook_rage/src/flytrap.rs`
     - [x] rageCommand.ml → `crates/facebook/flow_facebook_rage/src/rage_command.rs` + `crates/flow_cli/src/extra_commands.rs` (CLI/spec wiring)
-  - [ ] saved_state/
-    - [ ] saved_state_fb_fetcher.ml
+  - [x] saved_state/ → `crates/facebook/flow_facebook_saved_state/`
+    - [x] saved_state_fb_fetcher.ml → `crates/facebook/flow_facebook_saved_state/src/saved_state_fb_fetcher.rs`
   - [x] server_callable/
     - [x] lib/
       - [x] ast_visitor.ml → `flow_facebook_server_callable_lib/src/ast_visitor.rs`
@@ -2514,12 +2514,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] saved_state/ → `flow_saved_state`
     - [x] compression/
       - [x] saved_state_compression.ml → `flow_saved_state/src/compression/saved_state_compression.rs`
-    - [x] fetcher/
-      - [x] saved_state_dummy_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_dummy_fetcher.rs`
-      - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fb_fetcher.rs`
-      - [x] saved_state_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fetcher.rs`
-      - [x] saved_state_local_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_local_fetcher.rs`
-      - [x] saved_state_scm_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_scm_fetcher.rs`
+    - [x] fetcher/ → `flow_saved_state_fetcher/`
+      - [x] saved_state_dummy_fetcher.ml → `flow_saved_state_fetcher/src/saved_state_dummy_fetcher.rs`
+      - [x] saved_state_fetcher.ml → `flow_saved_state_fetcher/src/saved_state_fetcher.rs`
+      - [x] saved_state_local_fetcher.ml → `flow_saved_state_fetcher/src/saved_state_local_fetcher.rs`
+      - [x] saved_state_scm_fetcher.ml → `flow_saved_state_fetcher/src/saved_state_scm_fetcher.rs`
     - [x] saved_state.ml → `flow_saved_state/src/saved_state.rs`
       - [x] `save`
       - [x] `load`
@@ -2633,7 +2632,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] flowEventLogger.ml → `flow_event_logger/src/lib.rs`
   - [ ] flowInteractionLogger.ml
   - [x] hardcoded_module_fixes.ml → `flow_services_code_action/src/hardcoded_module_fixes.rs` (oss stub)
-  - [x] saved_state_fb_fetcher.ml → `flow_saved_state/src/fetcher/saved_state_fb_fetcher.rs` (oss stub)
+  - [x] saved_state_fb_fetcher.ml → `flow_services_inference/src/type_service.rs` `cfg(not(fbcode_build))` arm of `load_saved_state`'s `SavedStateFetcher::FbFetcher` match (delegates to `flow_saved_state_fetcher::saved_state_dummy_fetcher::fetch`, mirroring OCaml `include Saved_state_dummy_fetcher`)
   - [x] startup_initializer.ml → `flow_server_monitor/src/startup_initializer.rs` (oss stub)
 - [ ] third-party/
   - [x] core/

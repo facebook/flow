@@ -20,3 +20,15 @@ pub fn filename_escape(path: &str) -> String {
     }
     buf
 }
+
+pub fn truncate(len: usize, s: &str) -> &str {
+    if s.len() <= len {
+        s
+    } else {
+        let mut end = len;
+        while end > 0 && !s.is_char_boundary(end) {
+            end -= 1;
+        }
+        &s[..end]
+    }
+}

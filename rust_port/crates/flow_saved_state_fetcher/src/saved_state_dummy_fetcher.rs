@@ -7,7 +7,7 @@
 
 use flow_common::options::Options;
 
-use super::saved_state_fetcher::FetchResult;
+use crate::saved_state_fetcher::FetchResult;
 
 // This saved state fetcher is used by servers which don't intend to use saved state
 pub fn fetch(_options: &Options) -> FetchResult {

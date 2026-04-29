@@ -10,7 +10,7 @@ use std::path::Path;
 
 use flow_common::options::Options;
 
-use super::saved_state_fetcher::FetchResult;
+use crate::saved_state_fetcher::FetchResult;
 
 /* This saved state fetcher is intended to be used mainly by tests. It assumes that there are 2
  * files next to /path/to/root/.flowconfig:

@@ -13,7 +13,7 @@ use flow_common::options::Options;
 use flow_common_vcs::vcs;
 use regex::Regex;
 
-use super::saved_state_fetcher::FetchResult;
+use crate::saved_state_fetcher::FetchResult;
 
 fn string_of_vcs_error(vcs_kind: vcs::Vcs, msg: impl ToString) -> String {
     format!("{}: {}", vcs::name(vcs_kind), msg.to_string())
