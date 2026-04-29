@@ -162,10 +162,11 @@ impl Visitor {
     {
         let prev = std::mem::take(&mut self.acc);
         let result = visit_fn(self);
-        let children = std::mem::take(&mut self.acc);
+        let mut children = std::mem::take(&mut self.acc);
+        children.reverse();
         let sym = f(children);
         self.acc = prev;
-        self.acc.insert(0, sym);
+        self.acc.push(sym);
         result
     }
 
@@ -197,7 +198,7 @@ impl Visitor {
         kind: SymbolKind,
     ) {
         let sym = mk(loc, selection, name, detail, kind, None);
-        self.acc.insert(0, sym);
+        self.acc.push(sym);
     }
 
     fn visit_special_initializer(
@@ -661,9 +662,7 @@ impl<'ast> AstVisitor<'ast, Loc> for Visitor {
 pub fn provide_document_symbols(program: &ast::Program<Loc, Loc>) -> Vec<DocumentSymbol> {
     let mut finder = Visitor::new();
     finder.program(program).into_ok();
-    let mut symbols = finder.acc;
-    symbols.reverse();
-    symbols
+    finder.acc
 }
 
 pub fn provide_symbol_information(
