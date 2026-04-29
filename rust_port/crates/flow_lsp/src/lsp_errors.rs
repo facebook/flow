@@ -776,9 +776,9 @@ mod tests {
     // Given an error list, group it by uri and convert to diagnostics
     fn map_of_error_list(error_list: &[Error]) -> BTreeMap<Url, Errors> {
         let mut map: BTreeMap<Url, Errors> = BTreeMap::new();
-        for error in error_list.iter().rev() {
+        for error in error_list.iter() {
             let entry = map.entry(error.uri.clone()).or_default();
-            entry.insert(0, mk_diagnostic(error));
+            entry.push(mk_diagnostic(error));
         }
         map
     }
