@@ -44,6 +44,18 @@ pub mod flow_constraint {
         }
     }
 
+    /// Returns `true` iff `toplevel_use_op` would return the same UseOp
+    /// unchanged (i.e. it is already an `Op(non-Speculation root)`). The
+    /// common case for non-speculation callers — checking this lets the
+    /// outer cache lookup skip the `mod_use_op_of_use_t` allocation that
+    /// would otherwise produce a structurally-identical `UseT`.
+    fn is_toplevel_use_op(use_op: &UseOp) -> bool {
+        match use_op {
+            VirtualUseOp::Frame(_, _) => false,
+            VirtualUseOp::Op(root) => !matches!(&**root, VirtualRootUseOp::Speculation(_)),
+        }
+    }
+
     // attempt to read LB/UB pair from cache, add if absent
     pub fn get<'cx>(cx: &Context<'cx>, l: &Type, u: &UseT<Context<'cx>>) -> bool {
         match (l.deref(), u.deref()) {
@@ -87,9 +99,24 @@ pub mod flow_constraint {
                 // effect on type checking. However, recursively nested use ops can pose
                 // non-termination problems. To ensure proper caching, we hash use ops
                 // to just their toplevel structure.
-                let u = mod_use_op_of_use_t(toplevel_use_op, u);
+                //
+                // Fast path: if every use_op the `UseT` carries is already
+                // top-level, `mod_use_op_of_use_t` would allocate a fresh
+                // `Rc<UseTInner>` whose contents are bit-for-bit identical
+                // to the input. Skip the allocation in that case and reuse
+                // `u.dupe()` (cheap Rc clone) for both the cache key and
+                // the verbose-log path.
+                let already_toplevel = match u.deref() {
+                    UseTInner::UseT(use_op, _) => is_toplevel_use_op(use_op),
+                    _ => false,
+                };
+                let u_owned = if already_toplevel {
+                    u.dupe()
+                } else {
+                    mod_use_op_of_use_t(toplevel_use_op, u)
+                };
                 let mut cache = cx.constraint_cache_mut();
-                let found = !cache.add(l.dupe(), u.dupe());
+                let found = !cache.add(l.dupe(), u_owned.dupe());
                 if !found {
                     // New entry
                 } else if cx.is_verbose() {
@@ -97,7 +124,7 @@ pub mod flow_constraint {
                         "{}FlowConstraint cache hit on ({}, {})",
                         cx.pid_prefix(),
                         string_of_ctor(l),
-                        string_of_use_ctor(&u)
+                        string_of_use_ctor(&u_owned)
                     );
                 }
                 found

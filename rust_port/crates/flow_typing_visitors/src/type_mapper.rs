@@ -89,63 +89,72 @@ use flow_typing_type::type_::void;
 /// NOTE: While union flattening could be performed at any time, it is most effective when we know
 /// that all tvars have been resolved.
 pub fn union_flatten<'cx>(cx: &Context<'cx>, ts: impl IntoIterator<Item = Type>) -> Vec<Type> {
-    fn union_flatten_inner<'cx>(
+    // Push results into a single accumulator instead of returning a fresh
+    // `Vec<Type>` per call. The OCaml original returns lists (cons-cell
+    // allocation is cheap); the Rust port was returning `Vec` per call,
+    // which meant ~N small `Vec` allocations per N-member union — costly
+    // under jemalloc + Rc traffic. Collecting into one shared `Vec` keeps
+    // the shape identical but avoids the per-member alloc.
+    //
+    // Use a `HashSet` for the seen-tvar set instead of `BTreeSet`: each
+    // `OpenT` lookup becomes O(1) instead of O(log N), and for unions
+    // dominated by simple `DefT` members (the common shape) the set is
+    // never touched at all so the constant factor matters more than
+    // memory layout.
+    #[inline]
+    fn flatten_into<'cx>(
         cx: &Context<'cx>,
-        seen: &mut std::collections::BTreeSet<u32>,
-        ts: impl IntoIterator<Item = Type>,
-    ) -> Vec<Type> {
-        ts.into_iter().flat_map(|t| flatten(cx, seen, t)).collect()
-    }
-
-    fn flatten<'cx>(
-        cx: &Context<'cx>,
-        seen: &mut std::collections::BTreeSet<u32>,
+        seen: &mut std::collections::HashSet<u32>,
         t: Type,
-    ) -> Vec<Type> {
+        out: &mut Vec<Type>,
+    ) {
         match &*t {
             TypeInner::OpenT(tvar) => {
                 let id = tvar.id();
                 if seen.contains(&id) {
-                    Vec::new()
-                } else {
-                    seen.insert(id);
-                    match cx.find_graph(id as i32) {
-                        constraint::Constraints::Resolved(inner) => flatten(cx, seen, inner),
-                        constraint::Constraints::FullyResolved(s) => {
-                            let forced = cx.force_fully_resolved_tvar(&s);
-                            flatten(cx, seen, forced)
-                        }
-                        constraint::Constraints::Unresolved(_) => vec![t],
+                    return;
+                }
+                seen.insert(id);
+                match cx.find_graph(id as i32) {
+                    constraint::Constraints::Resolved(inner) => flatten_into(cx, seen, inner, out),
+                    constraint::Constraints::FullyResolved(s) => {
+                        let forced = cx.force_fully_resolved_tvar(&s);
+                        flatten_into(cx, seen, forced, out)
                     }
+                    constraint::Constraints::Unresolved(_) => out.push(t),
                 }
             }
-            TypeInner::AnnotT(_, inner_t, _) => flatten(cx, seen, inner_t.dupe()),
+            TypeInner::AnnotT(_, inner_t, _) => flatten_into(cx, seen, inner_t.dupe(), out),
             TypeInner::UnionT(_, rep) => {
-                union_flatten_inner(cx, seen, rep.members_iter().map(|t| t.dupe()))
+                for inner in rep.members_iter() {
+                    flatten_into(cx, seen, inner.dupe(), out);
+                }
             }
             TypeInner::MaybeT(r, inner_t) => {
-                let null_t = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::NullT)));
-                let void_t = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::VoidT)));
-                let mut result = vec![null_t, void_t];
-                result.extend(flatten(cx, seen, inner_t.dupe()));
-                result
+                out.push(Type::new(TypeInner::DefT(
+                    r.dupe(),
+                    DefT::new(DefTInner::NullT),
+                )));
+                out.push(Type::new(TypeInner::DefT(
+                    r.dupe(),
+                    DefT::new(DefTInner::VoidT),
+                )));
+                flatten_into(cx, seen, inner_t.dupe(), out);
             }
             TypeInner::OptionalT {
                 reason,
                 type_,
                 use_desc,
             } => {
-                let void_t = void::why_with_use_desc(*use_desc, reason.dupe());
-                let mut result = vec![void_t];
-                result.extend(flatten(cx, seen, type_.dupe()));
-                result
+                out.push(void::why_with_use_desc(*use_desc, reason.dupe()));
+                flatten_into(cx, seen, type_.dupe(), out);
             }
-            TypeInner::DefT(_, def_t) if matches!(&**def_t, DefTInner::EmptyT) => Vec::new(),
+            TypeInner::DefT(_, def_t) if matches!(&**def_t, DefTInner::EmptyT) => {}
             TypeInner::NominalT { nominal_type, .. } => match &nominal_type.underlying_t {
                 nominal::UnderlyingT::CustomError(box nominal::CustomErrorData { t, .. }) => {
-                    flatten(cx, seen, t.dupe())
+                    flatten_into(cx, seen, t.dupe(), out)
                 }
-                _ => vec![t],
+                _ => out.push(t),
             },
             TypeInner::EvalT {
                 defer_use_t, id, ..
@@ -153,19 +162,23 @@ pub fn union_flatten<'cx>(cx: &Context<'cx>, ts: impl IntoIterator<Item = Type>)
                 let destructor = &defer_use_t.2;
                 if matches!(&**destructor, Destructor::ValuesType) {
                     match cx.evaluated().get(id) {
-                        Some(cached_t) => flatten(cx, seen, cached_t.dupe()),
-                        None => vec![t],
+                        Some(cached_t) => flatten_into(cx, seen, cached_t.dupe(), out),
+                        None => out.push(t),
                     }
                 } else {
-                    vec![t]
+                    out.push(t);
                 }
             }
-            _ => vec![t],
+            _ => out.push(t),
         }
     }
 
-    let mut seen = std::collections::BTreeSet::new();
-    union_flatten_inner(cx, &mut seen, ts)
+    let mut seen = std::collections::HashSet::new();
+    let mut out = Vec::new();
+    for t in ts {
+        flatten_into(cx, &mut seen, t, &mut out);
+    }
+    out
 }
 
 /// This trait should be used when trying to perform some mapping function on

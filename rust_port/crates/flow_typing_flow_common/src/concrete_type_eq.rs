@@ -19,6 +19,7 @@ use flow_typing_type::type_::constraint::Constraints;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_util::mod_reason_of_t;
 use flow_typing_type::type_util::reason_of_t;
+use flow_typing_type::type_util::reasonless_cmp_inner_fast;
 
 pub fn swap_reason(t2: &Type, t1: &Type) -> Type {
     match (t2.deref(), t1.deref()) {
@@ -106,6 +107,85 @@ pub fn swap_reason(t2: &Type, t1: &Type) -> Type {
     }
 }
 
+/// Equivalent of `t1 == &swap_reason(t2, t1)` but without allocating the
+/// swapped temporary. Shares the same fast-path strategy as
+/// `type_util::reasonless_compare` via the common
+/// `type_util::reasonless_cmp_inner_fast` helper: discriminants drive the
+/// cross-variant answer; same-variant pairs whose `swap_reason` only
+/// differs in the top-level reason fall through to that helper. Variants
+/// whose nested data also carries reasons that `swap_reason` recursively
+/// swaps (`MaybeT`, `OptionalT`, `NominalT`) recurse here.
+fn eq_swap_reason(t1: &Type, t2: &Type) -> bool {
+    if t1.ptr_eq(t2) {
+        return true;
+    }
+    let inner1 = t1.deref();
+    let inner2 = t2.deref();
+    if std::mem::discriminant(inner1) != std::mem::discriminant(inner2) {
+        return false;
+    }
+    if let Some(ord) = reasonless_cmp_inner_fast(inner1, inner2) {
+        return ord == std::cmp::Ordering::Equal;
+    }
+    match (inner1, inner2) {
+        (TypeInner::MaybeT(_, i1), TypeInner::MaybeT(_, i2)) => eq_swap_reason(i1, i2),
+        (TypeInner::OptionalT { type_: i1, .. }, TypeInner::OptionalT { type_: i2, .. }) => {
+            eq_swap_reason(i1, i2)
+        }
+        (
+            TypeInner::NominalT {
+                nominal_type: nt1, ..
+            },
+            TypeInner::NominalT {
+                nominal_type: nt2, ..
+            },
+        ) => {
+            // Mirror the swap_reason recursion: compare lower_t/upper_t/
+            // CustomError/OpaqueWithLocal nested types via eq_swap_reason,
+            // and the rest of the NominalType data via derived Eq.
+            if nt1.nominal_id != nt2.nominal_id || nt1.nominal_type_args != nt2.nominal_type_args {
+                return false;
+            }
+            let lower_eq = match (&nt1.lower_t, &nt2.lower_t) {
+                (Some(l1), Some(l2)) => eq_swap_reason(l1, l2),
+                (None, None) => true,
+                _ => false,
+            };
+            if !lower_eq {
+                return false;
+            }
+            let upper_eq = match (&nt1.upper_t, &nt2.upper_t) {
+                (Some(u1), Some(u2)) => eq_swap_reason(u1, u2),
+                (None, None) => true,
+                _ => false,
+            };
+            if !upper_eq {
+                return false;
+            }
+            match (&nt1.underlying_t, &nt2.underlying_t) {
+                (
+                    nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
+                        t: t1_inner,
+                        ..
+                    }),
+                    nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
+                        t: t2_inner,
+                        ..
+                    }),
+                ) => eq_swap_reason(t1_inner, t2_inner),
+                (
+                    nominal::UnderlyingT::OpaqueWithLocal { t: t1_inner },
+                    nominal::UnderlyingT::OpaqueWithLocal { t: t2_inner },
+                ) => eq_swap_reason(t1_inner, t2_inner),
+                (a, b) => a == b,
+            }
+        }
+        // Fallback: build the swapped Type and compare. Hit only by variants
+        // not specially handled above (none in the hot path).
+        _ => t1 == &swap_reason(t2, t1),
+    }
+}
+
 /// This predicate attempts to flatten out OpenTs and AnnotTs before performing a
 /// structural reasonless equality check of two types.
 pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
@@ -122,14 +202,14 @@ pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
             if root_id1 == root_id2 {
                 return true;
             }
-            t1 == &swap_reason(t2, t1)
+            eq_swap_reason(t1, t2)
         }
         (TypeInner::OpenT(tvar), _) => {
             let id1 = tvar.id() as i32;
             match cx.find_graph(id1) {
                 Constraints::Resolved(resolved_t1) => eq(cx, &resolved_t1, t2),
                 Constraints::FullyResolved(s1) => eq(cx, &cx.force_fully_resolved_tvar(&s1), t2),
-                Constraints::Unresolved(_) => t1 == &swap_reason(t2, t1),
+                Constraints::Unresolved(_) => eq_swap_reason(t1, t2),
             }
         }
         (_, TypeInner::OpenT(tvar)) => {
@@ -137,7 +217,7 @@ pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
             match cx.find_graph(id2) {
                 Constraints::Resolved(resolved_t2) => eq(cx, t1, &resolved_t2),
                 Constraints::FullyResolved(s2) => eq(cx, t1, &cx.force_fully_resolved_tvar(&s2)),
-                Constraints::Unresolved(_) => t1 == &swap_reason(t2, t1),
+                Constraints::Unresolved(_) => eq_swap_reason(t1, t2),
             }
         }
         (TypeInner::AnnotT(_, inner_t1, _), _) => eq(cx, inner_t1, t2),
@@ -157,14 +237,14 @@ pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
             let evaluated = cx.evaluated();
             match evaluated.get(id) {
                 Some(t) => eq(cx, t, t2),
-                None => t1 == &swap_reason(t2, t1),
+                None => eq_swap_reason(t1, t2),
             }
         }
         (_, TypeInner::EvalT { id, .. }) => {
             let evaluated = cx.evaluated();
             match evaluated.get(id) {
                 Some(t) => eq(cx, t1, t),
-                None => t1 == &swap_reason(t2, t1),
+                None => eq_swap_reason(t1, t2),
             }
         }
         (
@@ -181,7 +261,7 @@ pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
                 ..
             }),
         ) => eq(cx, inner_t1, inner_t2) && fv1 == fv2 && eq_targs(cx, targs1, targs2),
-        _ => t1 == &swap_reason(t2, t1),
+        _ => eq_swap_reason(t1, t2),
     }
 }
 

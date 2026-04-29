@@ -1460,12 +1460,111 @@ where
     }
 }
 
+/// Fast-path comparison for `TypeInner` pairs whose `swap_reason` would
+/// only differ from `t2` in the top-level `Reason` field. For such
+/// variants, comparing the non-reason fields directly via derived `Ord`
+/// gives the same answer without allocating a temporary `Type`.
+///
+/// Returns `None` for variants whose nested data also carries reasons
+/// that some `swap_reason` implementations recursively swap (`MaybeT`,
+/// `OptionalT`, `NominalT`); callers handle those with their own
+/// `swap_reason`-specific recursion.
+///
+/// Caller must have already verified that `inner1` and `inner2` have the
+/// same discriminant.
+///
+/// Both `reasonless_compare` (here) and
+/// `flow_typing_flow_common::concrete_type_eq::eq_swap_reason` share this
+/// fast path so the same set of variants benefits in either call site.
+/// Profile on heavy `keyof T`/`T[K]` workloads showed ~25% of CPU spent
+/// in `mod_reason_of_t` + `Rc::drop_slow` from the OCaml-style
+/// `swap_reason` allocation; the OCaml original tolerates the alloc
+/// because of bump-GC, but Rc heap traffic is far more expensive.
+pub fn reasonless_cmp_inner_fast(
+    inner1: &TypeInner,
+    inner2: &TypeInner,
+) -> Option<std::cmp::Ordering> {
+    use crate::type_::TypeInner::AnnotT;
+    use crate::type_::TypeInner::AnyT;
+    use crate::type_::TypeInner::DefT;
+    use crate::type_::TypeInner::FunProtoBindT;
+    use crate::type_::TypeInner::FunProtoT;
+    use crate::type_::TypeInner::IntersectionT;
+    use crate::type_::TypeInner::KeysT;
+    use crate::type_::TypeInner::NullProtoT;
+    use crate::type_::TypeInner::ObjProtoT;
+    use crate::type_::TypeInner::OpenT;
+    use crate::type_::TypeInner::StrUtilT;
+    use crate::type_::TypeInner::UnionT;
+    match (inner1, inner2) {
+        (DefT(_, d1), DefT(_, d2)) => Some(d1.cmp(d2)),
+        (UnionT(_, r1), UnionT(_, r2)) => Some(r1.cmp(r2)),
+        (IntersectionT(_, r1), IntersectionT(_, r2)) => Some(r1.cmp(r2)),
+        (OpenT(tv1), OpenT(tv2)) => Some(tv1.id().cmp(&tv2.id())),
+        (AnyT(_, s1), AnyT(_, s2)) => Some(s1.cmp(s2)),
+        (KeysT(_, ity1), KeysT(_, ity2)) => Some(ity1.cmp(ity2)),
+        (AnnotT(_, ity1, b1), AnnotT(_, ity2, b2)) => Some(ity1.cmp(ity2).then_with(|| b1.cmp(b2))),
+        (
+            StrUtilT {
+                op: o1,
+                remainder: rem1,
+                ..
+            },
+            StrUtilT {
+                op: o2,
+                remainder: rem2,
+                ..
+            },
+        ) => Some(o1.cmp(o2).then_with(|| rem1.cmp(rem2))),
+        (FunProtoT(_), FunProtoT(_))
+        | (FunProtoBindT(_), FunProtoBindT(_))
+        | (NullProtoT(_), NullProtoT(_))
+        | (ObjProtoT(_), ObjProtoT(_)) => Some(std::cmp::Ordering::Equal),
+        _ => None,
+    }
+}
+
 // type comparison mod reason
 fn reasonless_compare(t1: &Type, t2: &Type) -> std::cmp::Ordering {
     if std::ptr::eq(t1.deref(), t2.deref()) {
         return std::cmp::Ordering::Equal;
     }
 
+    // Different discriminants? Reasons are irrelevant; the discriminant order
+    // (per the derived `Ord` on `TypeInner`) determines the result, with no
+    // allocation needed.
+    let inner1 = t1.deref();
+    let inner2 = t2.deref();
+    if std::mem::discriminant(inner1) != std::mem::discriminant(inner2) {
+        return inner1.cmp(inner2);
+    }
+
+    // Same discriminant: shared fast paths via `reasonless_cmp_inner_fast`
+    // for variants where ignoring the top-level reason gives the same
+    // `Ordering` without allocating a temporary `Type`.
+    if let Some(ord) = reasonless_cmp_inner_fast(inner1, inner2) {
+        return ord;
+    }
+
+    // The local `swap_reason` below recurses through `MaybeT`/`OptionalT`
+    // but treats `NominalT` as opaque (top-level reason swap), so derived
+    // `Ord` on `NominalType` gives the right answer for that case without
+    // allocating either.
+    if let (
+        TypeInner::NominalT {
+            nominal_type: n1, ..
+        },
+        TypeInner::NominalT {
+            nominal_type: n2, ..
+        },
+    ) = (inner1, inner2)
+    {
+        return n1.cmp(n2);
+    }
+
+    // Fallback (rare): mirrors the OCaml local `swap_reason` for `MaybeT`/
+    // `OptionalT` (which need a recursive swap) and for variants whose
+    // nested data carries reasons we'd otherwise have to walk by hand.
     fn swap_reason(t2: &Type, t1: &Type) -> Type {
         match (t2.deref(), t1.deref()) {
             // In reposition we also recurse and reposition some nested types. We need

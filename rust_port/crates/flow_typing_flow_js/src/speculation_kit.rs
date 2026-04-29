@@ -489,11 +489,14 @@ fn speculative_match<'cx>(
 // Because this process is common to checking union and intersection types, we
 // abstract the latter into a so-called "spec." The spec is used to customize
 // error messages.
-fn speculative_matches<'cx>(
+fn speculative_matches<'cx, 'a>(
     cx: &Context<'cx>,
     trace: DepthTrace,
-    mut spec: CasesSpec<'cx, '_>,
-) -> Result<(), SpecMatchError> {
+    mut spec: CasesSpec<'cx, 'a>,
+) -> Result<(), SpecMatchError>
+where
+    'cx: 'a,
+{
     // explore optimization opportunities
     if optimize_spec_try_shortcut(cx, trace, &mut spec)? {
         Ok(())
@@ -502,11 +505,14 @@ fn speculative_matches<'cx>(
     }
 }
 
-fn long_path_speculative_matches<'cx>(
+fn long_path_speculative_matches<'cx, 'a>(
     cx: &Context<'cx>,
     trace: DepthTrace,
-    spec: &mut CasesSpec<'cx, '_>,
-) -> Result<(), SpecMatchError> {
+    spec: &mut CasesSpec<'cx, 'a>,
+) -> Result<(), SpecMatchError>
+where
+    'cx: 'a,
+{
     let speculation_id = flow_common::reason::mk_id() as i32;
     // extract stuff to ignore while considering actions
     // split spec into a list of pairs of types to try speculative matching on
@@ -749,7 +755,24 @@ fn long_path_speculative_matches<'cx>(
 }
 
 // and trials_of_spec = function
-fn trials_of_spec<'cx, 'a>(spec: &mut CasesSpec<'cx, 'a>) -> Vec<(i32, CaseSpec<'cx, 'a>)> {
+//
+// Returns a lazy iterator instead of materializing all cases up front so that
+// when speculation succeeds early the unused tail cases are never constructed.
+// For our hot `keyof T`/`T[K]` workload the LHS is usually a singleton string
+// and the first matching RHS member wins, so ~3 of every 5 per-case
+// `UseT::new` allocations + drops are skipped.
+//
+// To avoid borrowing `*spec` for the iterator's lifetime (which would conflict
+// with the surrounding `fire_actions(cx, trace, spec, ...)` call inside the
+// consuming for-loop), we pull every value the iterator needs out of `spec`
+// via `dupe`/`clone` for read-only fields and `mem::take`/`Option::take` for
+// the variants that mutate (`SingletonCustomCase`, `CustomCases`).
+fn trials_of_spec<'cx, 'a>(
+    spec: &mut CasesSpec<'cx, 'a>,
+) -> Box<dyn Iterator<Item = (i32, CaseSpec<'cx, 'a>)> + 'a>
+where
+    'cx: 'a,
+{
     match spec {
         // NB: Even though we know the use_op for the original constraint, don't
         // embed it in the nested constraints to avoid unnecessary verbosity. We
@@ -758,34 +781,30 @@ fn trials_of_spec<'cx, 'a>(spec: &mut CasesSpec<'cx, 'a>) -> Vec<(i32, CaseSpec<
             let spec_use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::Speculation(Arc::new(
                 use_op.dupe(),
             ))));
-            us.iter()
-                .enumerate()
-                .map(|(i, u)| {
-                    (
-                        i as i32,
-                        CaseSpec::FlowCase(
-                            l.dupe(),
-                            UseT::new(UseTInner::UseT(spec_use_op.dupe(), u.dupe())),
-                        ),
-                    )
-                })
-                .collect()
+            let l = l.dupe();
+            let us = us.clone();
+            Box::new(us.into_iter().enumerate().map(move |(i, u)| {
+                (
+                    i as i32,
+                    CaseSpec::FlowCase(l.dupe(), UseT::new(UseTInner::UseT(spec_use_op.dupe(), u))),
+                )
+            }))
         }
-        CasesSpec::IntersectionCases { ls, use_t: u, .. } => ls
-            .iter()
-            .enumerate()
-            .map(|(i, l)| {
+        CasesSpec::IntersectionCases { ls, use_t: u, .. } => {
+            let u = u.clone();
+            let ls = ls.clone();
+            Box::new(ls.into_iter().enumerate().map(move |(i, l)| {
                 let u_mod = mod_use_op_of_use_t(
                     |use_op| {
                         VirtualUseOp::Op(Arc::new(VirtualRootUseOp::Speculation(Arc::new(
                             use_op.dupe(),
                         ))))
                     },
-                    u,
+                    &u,
                 );
-                (i as i32, CaseSpec::FlowCase(l.dupe(), u_mod))
-            })
-            .collect(),
+                (i as i32, CaseSpec::FlowCase(l, u_mod))
+            }))
+        }
         CasesSpec::SingletonCase(l, u) => {
             let u_mod = mod_use_op_of_use_t(
                 |use_op| {
@@ -795,22 +814,27 @@ fn trials_of_spec<'cx, 'a>(spec: &mut CasesSpec<'cx, 'a>) -> Vec<(i32, CaseSpec<
                 },
                 u,
             );
-            vec![(0, CaseSpec::FlowCase(l.dupe(), u_mod))]
+            Box::new(std::iter::once((0, CaseSpec::FlowCase(l.dupe(), u_mod))))
         }
-        CasesSpec::SingletonCustomCase(f) => {
-            vec![(0, CaseSpec::CustomCase(f.take().unwrap()))]
-        }
+        CasesSpec::SingletonCustomCase(f) => Box::new(std::iter::once((
+            0,
+            CaseSpec::CustomCase(f.take().unwrap()),
+        ))),
         CasesSpec::SingletonUnifyCase(t1, use_op, t2) => {
             let spec_use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::Speculation(Arc::new(
                 use_op.dupe(),
             ))));
-            vec![(0, CaseSpec::UnifyCase(t1.dupe(), spec_use_op, t2.dupe()))]
+            Box::new(std::iter::once((
+                0,
+                CaseSpec::UnifyCase(t1.dupe(), spec_use_op, t2.dupe()),
+            )))
         }
-        CasesSpec::CustomCases { cases, .. } => std::mem::take(cases)
-            .into_iter()
-            .enumerate()
-            .map(|(i, f)| (i as i32, CaseSpec::CustomCase(f)))
-            .collect(),
+        CasesSpec::CustomCases { cases, .. } => Box::new(
+            std::mem::take(cases)
+                .into_iter()
+                .enumerate()
+                .map(|(i, f)| (i as i32, CaseSpec::CustomCase(f))),
+        ),
     }
 }
 

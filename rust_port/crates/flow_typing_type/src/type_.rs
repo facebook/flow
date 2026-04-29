@@ -7080,7 +7080,7 @@ pub mod union_rep {
         }
     }
 
-    #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
     pub struct UnionRepInner {
         t0: Type,
         t1: Type,
@@ -7095,6 +7095,28 @@ pub mod union_rep {
         /// e.g. when it emerges as the collection of lower bounds during implicit
         /// instantiation.
         kind: UnionKind,
+    }
+
+    // Mirror OCaml's bounded `Hashtbl.hash`: cap the recursion through
+    // `ts` to keep `UnionRepInner` hashing O(1) instead of O(union
+    // membership). Equality is unchanged so HashMap correctness is
+    // preserved; we just trade hash uniqueness on huge unions for
+    // bounded hash cost. Length is hashed so unions of different sizes
+    // still differ.
+    const UNION_HASH_BOUND: usize = 8;
+
+    impl std::hash::Hash for UnionRepInner {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            self.t0.hash(state);
+            self.t1.hash(state);
+            self.ts.len().hash(state);
+            for t in self.ts.iter().take(UNION_HASH_BOUND) {
+                t.hash(state);
+            }
+            self.source_aloc.hash(state);
+            self.specialization.hash(state);
+            self.kind.hash(state);
+        }
     }
 
     #[derive(Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -7852,11 +7874,26 @@ pub mod inter_rep {
 
     /// intersection rep is:
     /// - member list in declaration order
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
     struct InterRepInner {
         t0: Type,
         t1: Type,
         ts: Rc<[Type]>,
+    }
+
+    // Mirror OCaml's bounded `Hashtbl.hash`: cap recursion through `ts`.
+    // Same rationale as `UnionRepInner`'s manual Hash above.
+    const INTER_HASH_BOUND: usize = 8;
+
+    impl std::hash::Hash for InterRepInner {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            self.t0.hash(state);
+            self.t1.hash(state);
+            self.ts.len().hash(state);
+            for t in self.ts.iter().take(INTER_HASH_BOUND) {
+                t.hash(state);
+            }
+        }
     }
 
     #[derive(Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -9746,16 +9783,33 @@ impl<'a, CX: 'a> TypeContext<'a, CX> {
 
 #[derive(Clone)]
 pub struct FlowSet<CX = ()> {
-    // Stack of BTreeMap layers. Bottom = oldest, top = newest.
-    // add() checks all layers, inserts into top.
-    // Snapshot = push empty layer. Restore = pop top layer.
-    levels: Vec<BTreeMap<Type, BTreeSet<UseT<CX>>>>,
+    // Single canonical map for membership lookup. `add` is O(log N) instead
+    // of O(L * log N) — no walking of separate BTreeMap layers per call.
+    //
+    // The original Rust port stacked one `BTreeMap<Type, BTreeSet<UseT>>`
+    // per speculation level; every `add` had to walk all layers checking
+    // for duplicates. Profiling showed this dominated `__flow_impl` for
+    // workloads with deep speculation nesting and was unique to the Rust
+    // port — OCaml uses a single immutable `UseTypeSet.t TypeMap.t` with
+    // ref-eq snapshot/restore, paying only one lookup per `add`.
+    //
+    // Snapshot/restore for speculation rollback now uses a per-level log
+    // of inserted (l, u) pairs: `pop_level` undoes its log entries from
+    // the canonical map, restoring the pre-snapshot state. The vast
+    // majority of inserts succeed (entries kept) and never pay the
+    // rollback cost.
+    map: BTreeMap<Type, BTreeSet<UseT<CX>>>,
+    // Per-level rollback logs. Each entry is the (l, u) pair inserted at
+    // that level. There is always one base level whose log is unused
+    // (entries at the base never need to be rolled back).
+    logs: Vec<Vec<(Type, UseT<CX>)>>,
 }
 
 impl<CX> std::fmt::Debug for FlowSet<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("FlowSet")
-            .field("levels", &self.levels)
+            .field("map", &self.map)
+            .field("levels", &self.logs.len())
             .finish()
     }
 }
@@ -9763,7 +9817,8 @@ impl<CX> std::fmt::Debug for FlowSet<CX> {
 impl<CX> Default for FlowSet<CX> {
     fn default() -> Self {
         Self {
-            levels: vec![BTreeMap::new()],
+            map: BTreeMap::new(),
+            logs: vec![Vec::new()],
         }
     }
 }
@@ -9771,35 +9826,39 @@ impl<CX> Default for FlowSet<CX> {
 impl<CX> FlowSet<CX> {
     /// Returns whether the pair is inserted into the set.
     pub fn add(&mut self, l: Type, u: UseT<CX>) -> bool {
-        let (top, rest) = self.levels.split_last_mut().expect("FlowSet has no levels");
-        match top.entry(l) {
+        // Capture the rollback-log info up front, but only `dupe`/`clone`
+        // when we're inside an active speculation level (`logs.len() > 1`).
+        // For the non-speculation common case those dupes would be pure
+        // waste — pre-refactor `add` did neither dupe nor a log push.
+        let in_speculation = self.logs.len() > 1;
+        match self.map.entry(l) {
             std::collections::btree_map::Entry::Occupied(mut entry) => {
                 if entry.get().contains(&u) {
                     return false;
                 }
-                let key = entry.key();
-                for level in rest.iter().rev() {
-                    if let Some(set) = level.get(key) {
-                        if set.contains(&u) {
-                            return false;
-                        }
-                    }
-                }
+                let log_entry = if in_speculation {
+                    Some((entry.key().dupe(), u.clone()))
+                } else {
+                    None
+                };
                 entry.get_mut().insert(u);
+                if let Some(e) = log_entry {
+                    self.logs.last_mut().unwrap().push(e);
+                }
                 true
             }
             std::collections::btree_map::Entry::Vacant(entry) => {
-                let key = entry.key();
-                for level in rest.iter().rev() {
-                    if let Some(set) = level.get(key) {
-                        if set.contains(&u) {
-                            return false;
-                        }
-                    }
-                }
+                let log_entry = if in_speculation {
+                    Some((entry.key().dupe(), u.clone()))
+                } else {
+                    None
+                };
                 let mut set = BTreeSet::new();
                 set.insert(u);
                 entry.insert(set);
+                if let Some(e) = log_entry {
+                    self.logs.last_mut().unwrap().push(e);
+                }
                 true
             }
         }
@@ -9809,67 +9868,89 @@ impl<CX> FlowSet<CX> {
     where
         F: FnMut(R, (&Type, &UseT<CX>)) -> R,
     {
-        self.levels.iter().fold(init, |acc, level| {
-            level.iter().fold(acc, |acc, (l, us)| {
-                us.iter().fold(acc, |acc, u| f(acc, (l, u)))
-            })
+        self.map.iter().fold(init, |acc, (l, us)| {
+            us.iter().fold(acc, |acc, u| f(acc, (l, u)))
         })
     }
 
     pub fn level_count(&self) -> usize {
-        self.levels.len()
+        self.logs.len()
     }
 
     pub fn push_level(&mut self) {
-        self.levels.push(BTreeMap::new());
+        self.logs.push(Vec::new());
     }
 
+    /// Pop the top level, undoing entries that were inserted since the level
+    /// was pushed. The base level (logs[0]) is never popped.
     pub fn pop_level(&mut self) {
-        self.levels.pop();
-        if self.levels.is_empty() {
-            self.levels.push(BTreeMap::new());
+        if self.logs.len() <= 1 {
+            return;
         }
+        let log = self.logs.pop().unwrap();
+        self.rollback_log(log);
     }
 
-    /// Truncate to the given number of levels, discarding all above.
+    /// Truncate to the given number of levels, undoing entries inserted at
+    /// each popped level.
     pub fn truncate_to(&mut self, n: usize) {
-        self.levels.truncate(n);
-        if self.levels.is_empty() {
-            self.levels.push(BTreeMap::new());
+        let n = n.max(1);
+        while self.logs.len() > n {
+            let log = self.logs.pop().unwrap();
+            self.rollback_log(log);
         }
     }
 
-    /// Move entries from the top level into a specific target level (zero clone).
-    /// The top level is left empty but remains on the stack.
+    /// Move entries from the top level's rollback log into a specific
+    /// target level. The top level remains on the stack with an empty log.
+    /// Any subsequent `pop_level`/`truncate_to` past the target will undo
+    /// these entries instead.
     pub fn move_top_entries_to_level(&mut self, target: usize) {
-        let top_idx = self.levels.len() - 1;
+        let top_idx = self.logs.len() - 1;
         if top_idx == target {
             return;
         }
-        if target >= self.levels.len() {
+        if target >= self.logs.len() {
             // The cache was externally reset (e.g., via clear()) during
             // speculation, destroying levels that callers still reference.
-            // The target level no longer exists; discard the top entries.
-            self.levels[top_idx].clear();
+            // The target level no longer exists; the entries that were in
+            // the top level's log refer to entries that may not be safe to
+            // roll back, so just drop the log (entries stay in the map).
+            self.logs[top_idx].clear();
             return;
         }
-        let entries = std::mem::take(&mut self.levels[top_idx]);
-        let dest = &mut self.levels[target];
-        for (l, us) in entries {
-            dest.entry(l).or_default().extend(us);
-        }
+        let entries = std::mem::take(&mut self.logs[top_idx]);
+        self.logs[target].extend(entries);
     }
 
     /// Clear a specific level's entries without removing it from the stack.
+    /// Undoes all entries logged at that level from the canonical map.
     pub fn clear_level(&mut self, index: usize) {
-        if index < self.levels.len() {
-            self.levels[index].clear();
+        if index >= self.logs.len() {
+            return;
         }
+        let log = std::mem::take(&mut self.logs[index]);
+        self.rollback_log(log);
     }
 
     pub fn clear(&mut self) {
-        for level in &mut self.levels {
-            level.clear();
+        self.map.clear();
+        for log in &mut self.logs {
+            log.clear();
+        }
+    }
+
+    fn rollback_log(&mut self, log: Vec<(Type, UseT<CX>)>) {
+        // Process in reverse so nested adds undo in LIFO order. Sets that
+        // become empty are pruned from the map.
+        for (l, u) in log.into_iter().rev() {
+            if let std::collections::btree_map::Entry::Occupied(mut entry) = self.map.entry(l) {
+                let set = entry.get_mut();
+                set.remove(&u);
+                if set.is_empty() {
+                    entry.remove();
+                }
+            }
         }
     }
 }
