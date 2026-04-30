@@ -315,7 +315,10 @@ fn perform_handshake_and_get_client_handshake(
         .expect("server executable path is not valid UTF-8");
 
     // Handshake step 1: client sends handshake (bincode-framed, OCaml-faithful).
-    let wire: ClientHandshakeWire = match bincode::deserialize_from(&mut *client_stream) {
+    let wire: ClientHandshakeWire = match bincode::serde::decode_from_std_read(
+        &mut *client_stream,
+        bincode::config::legacy(),
+    ) {
         Ok(w) => w,
         Err(e) => {
             log::error!("Malformed handshake preamble: {}", e);
@@ -343,15 +346,15 @@ fn perform_handshake_and_get_client_handshake(
 
     // Decode the bincode tail of the handshake to recover ClientToMonitor2 (which carries the
     // ClientType). If the tail is empty or malformed, fall back to Ephemeral.
-    let client = if client_build_id != server_build_id {
+    let client: Option<ClientToMonitor2> = if client_build_id != server_build_id {
         None
     } else if wire.1.is_empty() {
         Some(ClientToMonitor2 {
             client_type: ClientType::Ephemeral,
         })
     } else {
-        match bincode::deserialize::<ClientToMonitor2>(&wire.1) {
-            Ok(c) => Some(c),
+        match bincode::serde::decode_from_slice(&wire.1, bincode::config::legacy()) {
+            Ok((c, _)) => Some(c),
             Err(e) => {
                 log::error!("Failed to decode bincode tail of client handshake: {}", e);
                 Some(ClientToMonitor2 {
@@ -376,13 +379,17 @@ fn perform_handshake_and_get_client_handshake(
             server_version,
         };
         let json = monitor_to_client_1_to_json(&server1);
-        let server2_bytes = server2.map(|s| bincode::serialize(&s).expect("bincode serialize"));
+        let server2_bytes = server2.map(|s| {
+            bincode::serde::encode_to_vec(&s, bincode::config::legacy()).expect("bincode serialize")
+        });
         let wire: ServerHandshakeWire = (json.to_string(), server2_bytes);
         // Buffer the handshake-write so bincode's many small writes coalesce
         // into one (or a few) syscall instead of N.
         use std::io::Write;
         let mut buffered = std::io::BufWriter::new(&mut *stream);
-        if let Err(e) = bincode::serialize_into(&mut buffered, &wire) {
+        if let Err(e) =
+            bincode::serde::encode_into_std_write(&wire, &mut buffered, bincode::config::legacy())
+        {
             log::error!("Failed to write server handshake: {}", e);
             return;
         }

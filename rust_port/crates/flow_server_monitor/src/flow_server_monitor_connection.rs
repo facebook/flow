@@ -26,6 +26,7 @@ use std::io;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use bincode::error::DecodeError;
 use tokio::sync::Notify;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
@@ -421,10 +422,13 @@ where
 
     fn read(reader: &mut Self::Reader) -> io::Result<ReadOutcome<I, O>> {
         flow_parser::loc::with_full_source_serde(|| {
-            bincode::deserialize_from::<_, I>(reader)
+            bincode::serde::decode_from_std_read(reader, bincode::config::legacy())
                 .map(ReadOutcome::Message)
-                .map_err(|e| match *e {
-                    bincode::ErrorKind::Io(io_err) => io_err,
+                .map_err(|e| match e {
+                    DecodeError::Io {
+                        inner: io_err,
+                        additional: _,
+                    } => io_err,
                     other => io::Error::other(other.to_string()),
                 })
         })
@@ -432,7 +436,10 @@ where
 
     fn write(writer: &mut Self::Writer, msg: &O) -> io::Result<()> {
         flow_parser::loc::with_full_source_serde(|| {
-            bincode::serialize_into(writer, msg).map_err(|e| io::Error::other(e.to_string()))
+            match bincode::serde::encode_into_std_write(msg, writer, bincode::config::legacy()) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(io::Error::other(e.to_string())),
+            }
         })
     }
 }
@@ -453,10 +460,13 @@ where
 
     fn read(reader: &mut Self::Reader) -> io::Result<ReadOutcome<I, O>> {
         flow_parser::loc::with_full_source_serde(|| {
-            bincode::deserialize_from::<_, I>(reader)
+            bincode::serde::decode_from_std_read(reader, bincode::config::legacy())
                 .map(ReadOutcome::Message)
-                .map_err(|e| match *e {
-                    bincode::ErrorKind::Io(io_err) => io_err,
+                .map_err(|e| match e {
+                    DecodeError::Io {
+                        inner: io_err,
+                        additional: _,
+                    } => io_err,
                     other => io::Error::other(other.to_string()),
                 })
         })
@@ -464,7 +474,10 @@ where
 
     fn write(writer: &mut Self::Writer, msg: &O) -> io::Result<()> {
         flow_parser::loc::with_full_source_serde(|| {
-            bincode::serialize_into(writer, msg).map_err(|e| io::Error::other(e.to_string()))
+            match bincode::serde::encode_into_std_write(msg, writer, bincode::config::legacy()) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(io::Error::other(e.to_string())),
+            }
         })
     }
 }
@@ -488,10 +501,13 @@ impl Channel for PersistentBincodeChannel {
         reader: &mut Self::Reader,
     ) -> io::Result<ReadOutcome<Self::InMessage, Self::OutMessage>> {
         flow_parser::loc::with_full_source_serde(|| {
-            bincode::deserialize_from::<_, Self::InMessage>(&mut reader.stream)
+            bincode::serde::decode_from_std_read(&mut reader.stream, bincode::config::legacy())
                 .map(ReadOutcome::Message)
-                .map_err(|e| match *e {
-                    bincode::ErrorKind::Io(io_err) => io_err,
+                .map_err(|e| match e {
+                    DecodeError::Io {
+                        inner: io_err,
+                        additional: _,
+                    } => io_err,
                     other => io::Error::other(other.to_string()),
                 })
         })
@@ -499,8 +515,14 @@ impl Channel for PersistentBincodeChannel {
 
     fn write(writer: &mut Self::Writer, msg: &Self::OutMessage) -> io::Result<()> {
         flow_parser::loc::with_full_source_serde(|| {
-            bincode::serialize_into(&mut writer.stream, msg)
-                .map_err(|e| io::Error::other(e.to_string()))
+            match bincode::serde::encode_into_std_write(
+                msg,
+                &mut writer.stream,
+                bincode::config::legacy(),
+            ) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(io::Error::other(e.to_string())),
+            }
         })
     }
 }

@@ -10,6 +10,8 @@ use std::net::TcpStream;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use bincode::error::EncodeError;
+
 use crate::lsp_prot;
 use crate::monitor_prot;
 use crate::server_prot::response;
@@ -109,7 +111,8 @@ pub fn read() -> Result<monitor_prot::MonitorToServerMessage, MonitorError> {
         || Err(MonitorError::Disabled),
         |infd| {
             flow_parser::loc::with_full_source_serde(|| {
-                bincode::deserialize_from(infd).map_err(|_| MonitorError::MonitorDied)
+                bincode::serde::decode_from_std_read(infd, bincode::config::legacy())
+                    .map_err(|_| MonitorError::MonitorDied)
             })
         },
     )
@@ -125,18 +128,22 @@ pub fn read() -> Result<monitor_prot::MonitorToServerMessage, MonitorError> {
 fn send(msg: monitor_prot::ServerToMonitorMessage) {
     with_outfd(
         || {},
-        |outfd| match flow_parser::loc::with_full_source_serde(|| {
-            bincode::serialize_into(outfd, &msg)
-        }) {
-            Ok(()) => {}
-            Err(e) => match *e {
-                bincode::ErrorKind::Io(io_err) if io_err.kind() == io::ErrorKind::BrokenPipe => {
-                    panic!("Monitor_died (EPIPE)");
+        |outfd| {
+            if let Err(e) = flow_parser::loc::with_full_source_serde(|| {
+                bincode::serde::encode_into_std_write(&msg, outfd, bincode::config::legacy())
+            }) {
+                match e {
+                    EncodeError::Io {
+                        inner: io_err,
+                        index: _,
+                    } if io_err.kind() == io::ErrorKind::BrokenPipe => {
+                        panic!("Monitor_died (EPIPE)");
+                    }
+                    _ => {
+                        log::error!("MonitorRPC.send: write failed: {}", e);
+                    }
                 }
-                _ => {
-                    log::error!("MonitorRPC.send: write failed: {}", e);
-                }
-            },
+            }
         },
     );
 }

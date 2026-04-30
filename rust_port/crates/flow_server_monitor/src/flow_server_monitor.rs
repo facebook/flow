@@ -10,6 +10,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use bincode::error::EncodeError;
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
 use flow_common::verbose::Verbose;
@@ -114,13 +115,21 @@ pub fn handle_waiting_start_command(waiting_fd: Box<dyn Write + Send>) {
             let mut guard = shared.lock().unwrap();
             if let Some(file) = guard.as_mut() {
                 let write_err: Option<(std::io::ErrorKind, String)> =
-                    match bincode::serialize_into(&mut *file, msg) {
-                        Ok(()) => match file.flush() {
+                    match bincode::serde::encode_into_std_write(
+                        msg,
+                        &mut *file,
+                        bincode::config::legacy(),
+                    ) {
+                        Ok(_) => match file.flush() {
                             Ok(()) => None,
                             Err(e) => Some((e.kind(), e.to_string())),
                         },
                         Err(e) => {
-                            let kind = if let bincode::ErrorKind::Io(io_err) = e.as_ref() {
+                            let kind = if let EncodeError::Io {
+                                inner: io_err,
+                                index: _,
+                            } = &e
+                            {
                                 io_err.kind()
                             } else {
                                 std::io::ErrorKind::Other
