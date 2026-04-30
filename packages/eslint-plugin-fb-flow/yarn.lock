@@ -1623,26 +1623,26 @@ hasown@^2.0.2:
   dependencies:
     function-bind "^1.1.2"
 
-hermes-eslint@0.35.0:
-  version "0.35.0"
-  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.35.0.tgz#b9b0d414d6a00a409319d07fe66d7b8617746357"
-  integrity sha512-JzoEjvCCBxjicUSwzqJK0JBQU6+31qKIh2xvBQXLKmFtX9YUj0wqNVEHrIU0sAds1deUL5kA62REDSmcuSVNxA==
+hermes-eslint@0.36.0:
+  version "0.36.0"
+  resolved "https://registry.facebook.net/hermes-eslint/-/hermes-eslint-0.36.0.tgz#d8148b7425e7c5ce02e6aa4e092fc1edb0419fa7"
+  integrity sha512-oEmTrP/Onp8kA5N23/yF4kGgSKB+9KH0CsrY+zGsgq6nK4CqY0y7Atv51X+F4deBHxWngLOvYBLt32HtOps78Q==
   dependencies:
     esrecurse "^4.3.0"
-    hermes-estree "0.35.0"
-    hermes-parser "0.35.0"
+    hermes-estree "0.36.0"
+    hermes-parser "0.36.0"
 
-hermes-estree@0.35.0:
-  version "0.35.0"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.35.0.tgz#767cce0b14a68b4bc06cd5db7efe889f6188c565"
-  integrity sha512-xVx5Opwy8Oo1I5yGpVRhCvWL/iV3M+ylksSKVNlxxD90cpDpR/AR1jLYqK8HWihm065a6UI3HeyAmYzwS8NOOg==
+hermes-estree@0.36.0:
+  version "0.36.0"
+  resolved "https://registry.facebook.net/hermes-estree/-/hermes-estree-0.36.0.tgz#5b8c162e986159baf86bc4d01612cff9845ab0f7"
+  integrity sha512-A1+8zn5oss2CFP7pKsOaxorQG6FNIz1WU1VDqruLPPZl3LVgeE2C5xfFg8Ow6/Ow4mSslLLtYP1J3n38eKyW9w==
 
-hermes-parser@0.35.0:
-  version "0.35.0"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.35.0.tgz#7625ec2f34ab897c2a17a7bea9788d136d5fd8c9"
-  integrity sha512-9JLjeHxBx8T4CAsydZR49PNZUaix+WpQJwu9p2010lu+7Kwl6D/7wYFFJxoz+aXkaaClp9Zfg6W6/zVlSJORaA==
+hermes-parser@0.36.0:
+  version "0.36.0"
+  resolved "https://registry.facebook.net/hermes-parser/-/hermes-parser-0.36.0.tgz#756d6b07301789c5ff0ac3ac7ff6bffa8be7098c"
+  integrity sha512-GdpwMmH5x6IpC1cijvcvYnlPB60Mh6kTSF/NFdYV/j56gYdi+0RIakYs+eqOV+bbO0SW7mgVVGSsTJxyPQfo3w==
   dependencies:
-    hermes-estree "0.35.0"
+    hermes-estree "0.36.0"
 
 html-encoding-sniffer@^2.0.1:
   version "2.0.1"

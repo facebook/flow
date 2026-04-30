@@ -41,8 +41,8 @@
     "@babel/generator": "7.7.4",
     "@babel/types": "7.7.4",
     "espree": "9.3.2",
-    "hermes-parser": "0.35.0",
-    "hermes-estree": "0.35.0",
+    "hermes-parser": "0.36.0",
+    "hermes-estree": "0.36.0",
     "prettier": "3.8.1",
     "prettier-plugin-hermes-parser": "0.35.0",
     "string-width": "4.2.3"
