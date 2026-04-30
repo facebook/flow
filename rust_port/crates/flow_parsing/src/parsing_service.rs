@@ -616,6 +616,7 @@ fn parse(
     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
 
     let mut results = ParseResults::default();
+    let t = std::time::Instant::now();
 
     while let Some(batch) = next() {
         let batch_results = map_reduce::fold(
@@ -641,6 +642,29 @@ fn parse(
             merge,
         );
         merge(&mut results, batch_results);
+    }
+
+    if options.profile {
+        let elapsed = t.elapsed().as_secs_f64();
+        let num_parsed = results.parsed.len();
+        let num_unparsed = results.unparsed.len();
+        let num_changed = results.changed.len();
+        let num_failed = results.failed.0.len();
+        let num_unchanged = results.unchanged.len();
+        let num_not_found = results.not_found.len();
+        let total =
+            num_parsed + num_unparsed + num_changed + num_failed + num_unchanged + num_not_found;
+        flow_hh_logger::info!(
+            "parsed {} files ({} ok, {} skipped, {} not found, {} bad hashes, {} failed, {} unchanged) in {}",
+            total,
+            num_parsed,
+            num_unparsed,
+            num_not_found,
+            num_changed,
+            num_failed,
+            num_unchanged,
+            elapsed
+        );
     }
 
     results

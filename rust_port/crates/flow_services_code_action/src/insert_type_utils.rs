@@ -461,12 +461,20 @@ impl<Extra: BaseStats> UntypedAcc<Extra> {
         }
     }
 
-    pub fn debug(_loc: &Loc, _x: &debug::T) {
-        // TODO(port): Hh_logger not yet ported — silently dropping log message
+    pub fn debug(loc: &Loc, x: &debug::T) {
+        flow_hh_logger::debug!(
+            "{} {}",
+            debug::serialize(x),
+            flow_common::reason::string_of_loc(None, loc)
+        );
     }
 
-    pub fn info(_loc: &Loc, _x: &info::T) {
-        // TODO(port): Hh_logger not yet ported — silently dropping log message
+    pub fn info(loc: &Loc, x: &info::T) {
+        flow_hh_logger::info!(
+            "{} {}",
+            info::serialize(x),
+            flow_common::reason::string_of_loc(None, loc)
+        );
     }
 
     pub fn report(&self) -> String {
@@ -509,19 +517,37 @@ impl<Extra: BaseStats> Acc<Extra> {
         }
     }
 
-    pub fn debug(_loc: &Loc, _x: &debug::T) {
-        // TODO(port): Hh_logger not yet ported — silently dropping log message
+    pub fn debug(loc: &Loc, x: &debug::T) {
+        flow_hh_logger::debug!(
+            "{} {}",
+            debug::serialize(x),
+            flow_common::reason::string_of_loc(None, loc)
+        );
     }
 
-    pub fn info(_loc: &Loc, _x: &info::T) {
-        // TODO(port): Hh_logger not yet ported — silently dropping log message
+    pub fn info(loc: &Loc, x: &info::T) {
+        flow_hh_logger::info!(
+            "{} {}",
+            info::serialize(x),
+            flow_common::reason::string_of_loc(None, loc)
+        );
     }
 
-    pub fn warn(&mut self, _loc: &Loc, x: &warning::Kind) {
+    pub fn warn(&mut self, loc: &Loc, x: &warning::Kind) {
+        flow_hh_logger::warn!(
+            "{} {}",
+            warning::serialize(x),
+            flow_common::reason::string_of_loc(None, loc)
+        );
         warning::add(&mut self.warnings, x);
     }
 
-    pub fn error(&mut self, _loc: &Loc, x: &error::Kind) {
+    pub fn error(&mut self, loc: &Loc, x: &error::Kind) {
+        flow_hh_logger::error!(
+            "{} {}",
+            error::serialize(x),
+            flow_common::reason::string_of_loc(None, loc)
+        );
         error::add(&mut self.errors, x);
     }
 
@@ -1384,43 +1410,29 @@ pub mod graphql {
                 .map(|item| get_imported_ident(cx, loc_of_aloc, item))
                 .collect();
         let tgt_loc = loc_of_aloc(&tgt_aloc);
-        visit_program(&defs, &tgt_loc, &graphql_ast)
+        let r = visit_program(&defs, &tgt_loc, &graphql_ast);
+        if r.is_none() {
+            flow_hh_logger::info!(
+                "Failed to extract GraphQL type fragment {}",
+                flow_common::reason::string_of_loc(None, &tgt_loc)
+            );
+        }
+        r
     }
 }
 
-//   ~cx
-//   ~loc_of_aloc
-//   ~get_ast_from_shared_mem
-//   ~file_sig
-//   ~typed_ast
-//   ~lint_severities
-//   ~allow_dollar_flowfixme
-//   ~generalize_maybe
-//   ~generalize_react_mixed_element
-//
-//
 pub struct TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
-    // ~cx
     pub cx: &'a flow_typing_context::Context<'cx>,
-    // ~loc_of_aloc
     pub loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
-    // ~get_ast_from_shared_mem
     pub get_ast_from_shared_mem:
         &'a dyn Fn(&flow_parser::file_key::FileKey) -> Option<flow_parser::ast::Program<Loc, Loc>>,
-    // ~file_sig
     pub file_sig: &'a flow_parser_utils::file_sig::FileSig,
-    // ~typed_ast
     pub typed_ast: &'a flow_parser::ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
-    // ~lint_severities
     pub lint_severities:
         &'a flow_lint_settings::lint_settings::LintSettings<flow_lint_settings::severity::Severity>,
-    // ~allow_dollar_flowfixme
     pub allow_dollar_flowfixme: bool,
-    // ~generalize_maybe
     pub generalize_maybe: bool,
-    // ~generalize_react_mixed_element
     pub generalize_react_mixed_element: bool,
-    // ~add_warning
     pub add_warning: &'a dyn Fn(Loc, warning::Kind),
     sanitized_any: ALocTy,
 }

@@ -78,7 +78,7 @@ impl WorkloadStream {
     // Add a non-parallelizable workload to the stream and wake up anyone waiting
     pub fn push(&self, name: &str, workload: Workload) {
         let mut inner = self.inner.lock().unwrap();
-        eprintln!(
+        flow_hh_logger::info!(
             "Enqueueing nonparallelizable {} behind {}",
             name,
             Self::summarize_length(&inner)
@@ -95,7 +95,7 @@ impl WorkloadStream {
     // Add a parallelizable workload to the stream and wake up anyone waiting
     pub fn push_parallelizable(&self, name: &str, workload: ParallelizableWorkload) {
         let mut inner = self.inner.lock().unwrap();
-        eprintln!(
+        flow_hh_logger::info!(
             "Enqueueing parallelizable {} behind {}",
             name,
             Self::summarize_length(&inner)
@@ -112,7 +112,7 @@ impl WorkloadStream {
     // Add a parallelizable workload to the front of the stream and wake up anyone waiting
     pub fn requeue_parallelizable(&self, name: &str, workload: ParallelizableWorkload) {
         let mut inner = self.inner.lock().unwrap();
-        eprintln!(
+        flow_hh_logger::info!(
             "Requeueing {} behind {}",
             name,
             Self::summarize_length(&inner)
@@ -143,7 +143,7 @@ impl WorkloadStream {
         let mut inner = self.inner.lock().unwrap();
         // Always prefer requeued parallelizable jobs
         if let Some(item) = inner.requeued_parallelizable.pop() {
-            eprintln!(
+            flow_hh_logger::info!(
                 "Dequeueing requeued {} after {:.3} seconds",
                 item.name,
                 item.enqueue_time.elapsed().as_secs_f64()
@@ -161,7 +161,7 @@ impl WorkloadStream {
         };
         if use_parallelizable {
             inner.parallelizable.pop_front().map(|item| {
-                eprintln!(
+                flow_hh_logger::info!(
                     "Dequeueing parallelizable {} after {:.3} seconds",
                     item.name,
                     item.enqueue_time.elapsed().as_secs_f64()
@@ -171,7 +171,8 @@ impl WorkloadStream {
             })
         } else {
             inner.nonparallelizable.pop_front().map(|item| {
-                eprintln!(
+                // Hh_logger.info "Dequeueing nonparallelizable %s after %3f seconds" name (Unix.gettimeofday () -. enqueue_time)
+                flow_hh_logger::info!(
                     "Dequeueing nonparallelizable {} after {:.3} seconds",
                     item.name,
                     item.enqueue_time.elapsed().as_secs_f64()
@@ -186,7 +187,7 @@ impl WorkloadStream {
         let mut inner = self.inner.lock().unwrap();
         // Always prefer requeued parallelizable jobs
         if let Some(item) = inner.requeued_parallelizable.pop() {
-            eprintln!(
+            flow_hh_logger::info!(
                 "Dequeueing requeued {} after {:.3} seconds",
                 item.name,
                 item.enqueue_time.elapsed().as_secs_f64()
@@ -194,7 +195,7 @@ impl WorkloadStream {
             return Some(item.workload);
         }
         inner.parallelizable.pop_front().map(|item| {
-            eprintln!(
+            flow_hh_logger::info!(
                 "Dequeueing parallelizable {} after {:.3} seconds",
                 item.name,
                 item.enqueue_time.elapsed().as_secs_f64()

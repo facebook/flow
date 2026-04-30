@@ -34,7 +34,7 @@ fn handle_persistent_message(
     msg: flow_server_env::lsp_prot::RequestWithMetadata,
     _connection: Arc<crate::flow_server_monitor_connection::MonitorPersistentConnection>,
 ) {
-    log::debug!("Persistent connection #{} received a message!", client_id);
+    flow_hh_logger::debug!("Persistent connection #{} received a message!", client_id);
     Server::send_persistent_request(client_id, msg);
 }
 
@@ -109,7 +109,7 @@ fn create_ephemeral_connection(
     client_stream: std::net::TcpStream,
     close: Arc<dyn Fn() + Send + Sync>,
 ) -> Arc<crate::flow_server_monitor_connection::EphemeralConnection> {
-    log::debug!("Creating a new ephemeral connection");
+    flow_hh_logger::debug!("Creating a new ephemeral connection");
 
     let read_stream = client_stream
         .try_clone()
@@ -189,7 +189,7 @@ fn create_persistent_connection(
     lsp_init_params: lsp_types::InitializeParams,
 ) {
     let client_id = create_persistent_id();
-    log::debug!("Creating a persistent connection #{}", client_id);
+    flow_hh_logger::debug!("Creating a persistent connection #{}", client_id);
 
     Server::notify_new_persistent_connection(client_id, lsp_init_params);
 
@@ -288,13 +288,13 @@ fn create_persistent_connection(
 // shutdown is useful to shutdown one direction of the socket, but if you're about to close
 // it, does shutting down first actually make any difference?
 fn close(client_stream: std::net::TcpStream) {
-    log::debug!("Shutting down and closing a socket client stream");
+    flow_hh_logger::debug!("Shutting down and closing a socket client stream");
 
     match client_stream.shutdown(std::net::Shutdown::Both) {
         Ok(()) => {}
         Err(err) => match err.kind() {
             std::io::ErrorKind::NotConnected | std::io::ErrorKind::ConnectionReset => {}
-            _ => log::error!("Failed to shutdown socket client: {}", err),
+            _ => flow_hh_logger::error!("Failed to shutdown socket client: {}", err),
         },
     }
     drop(client_stream);
@@ -321,7 +321,7 @@ fn perform_handshake_and_get_client_handshake(
     ) {
         Ok(w) => w,
         Err(e) => {
-            log::error!("Malformed handshake preamble: {}", e);
+            flow_hh_logger::error!("Malformed handshake preamble: {}", e);
             return None;
         }
     };
@@ -335,7 +335,7 @@ fn perform_handshake_and_get_client_handshake(
     } = match serde_json::from_str::<serde_json::Value>(&wire.0) {
         Ok(json) => json_to_client_to_monitor_1(&json),
         Err(e) => {
-            log::error!(
+            flow_hh_logger::error!(
                 "Failed to parse JSON section of handshake: {}: {}",
                 wire.0,
                 e
@@ -356,7 +356,7 @@ fn perform_handshake_and_get_client_handshake(
         match bincode::serde::decode_from_slice(&wire.1, bincode::config::legacy()) {
             Ok((c, _)) => Some(c),
             Err(e) => {
-                log::error!("Failed to decode bincode tail of client handshake: {}", e);
+                flow_hh_logger::error!("Failed to decode bincode tail of client handshake: {}", e);
                 Some(ClientToMonitor2 {
                     client_type: ClientType::Ephemeral,
                 })
@@ -390,11 +390,11 @@ fn perform_handshake_and_get_client_handshake(
         if let Err(e) =
             bincode::serde::encode_into_std_write(&wire, &mut buffered, bincode::config::legacy())
         {
-            log::error!("Failed to write server handshake: {}", e);
+            flow_hh_logger::error!("Failed to write server handshake: {}", e);
             return;
         }
         if let Err(e) = buffered.flush() {
-            log::error!("Failed to flush server handshake: {}", e);
+            flow_hh_logger::error!("Failed to flush server handshake: {}", e);
         }
     };
 
@@ -409,7 +409,7 @@ fn perform_handshake_and_get_client_handshake(
                 respond(client_stream, ServerIntent::ServerWillExit, None);
                 let msg =
                     "Client and server are different builds. Flow server is out of date. Exiting";
-                log::error!("{}", msg);
+                flow_hh_logger::error!("{}", msg);
                 Server::exit(
                     None,
                     msg,
@@ -427,7 +427,7 @@ fn perform_handshake_and_get_client_handshake(
                 if cmp < std::cmp::Ordering::Equal {
                     respond(client_stream, ServerIntent::ServerWillExit, None);
                     let msg = "Client and server are different builds. Flow server is out of date. Exiting";
-                    log::error!("{}", msg);
+                    flow_hh_logger::error!("{}", msg);
                     Server::exit(
                         None,
                         msg,
@@ -435,13 +435,13 @@ fn perform_handshake_and_get_client_handshake(
                     );
                 } else {
                     respond(client_stream, ServerIntent::ServerWillHangup, None);
-                    log::error!("Build mismatch, so rejecting attempted connection");
+                    flow_hh_logger::error!("Build mismatch, so rejecting attempted connection");
                     None
                 }
             }
             VersionMismatchStrategy::ErrorClient => {
                 respond(client_stream, ServerIntent::ServerWillHangup, None);
-                log::error!("Build mismatch, so rejecting attempted connection");
+                flow_hh_logger::error!("Build mismatch, so rejecting attempted connection");
                 None
             }
         }
@@ -461,7 +461,7 @@ fn perform_handshake_and_get_client_handshake(
             // In the case of Persistent, lspCommand will retry a second later.
             // The message we log here solely goes to the logs, not the user.
             let (server_status, watchman_status) = status;
-            log::info!(
+            flow_hh_logger::info!(
                 "Server still initializing -> hangup. server_status={} watchman_status={}",
                 flow_server_env::server_status::string_of_status(false, false, &server_status),
                 flow_server_env::file_watcher_status::string_of_status(&watchman_status)
@@ -496,11 +496,11 @@ pub trait Handler {
 
 fn socket_acceptor_loop<H: Handler>(autostop: bool, listener: std::net::TcpListener) {
     loop {
-        log::debug!("Waiting for a new {}", H::name());
+        flow_hh_logger::debug!("Waiting for a new {}", H::name());
         let (client_stream, _addr) = match listener.accept() {
             Ok(c) => c,
             Err(e) => {
-                log::error!("Uncaught exception in the socket acceptor: {}", e);
+                flow_hh_logger::error!("Uncaught exception in the socket acceptor: {}", e);
                 return;
             }
         };
@@ -606,7 +606,7 @@ impl Handler for LegacySocketHandler {
     fn create_socket_connection(_autostop: bool, client_stream: std::net::TcpStream) {
         close(client_stream);
         let msg = "Client and server are different builds. Flow server is out of date. Exiting";
-        log::error!("{}", msg);
+        flow_hh_logger::error!("{}", msg);
         Server::stop(Server::StopReason::LegacyClient);
     }
 }

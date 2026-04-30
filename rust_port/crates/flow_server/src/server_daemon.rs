@@ -146,7 +146,7 @@ fn server_entry_handler(param: ServerEntryParam, pair: ChannelPair<(), ()>) {
     let options = build(&daemon_args);
 
     flow_logging_utils::set_hh_logger_min_level(None, &options);
-    log::info!("argv={}", argv.join(" "));
+    flow_hh_logger::info!("argv={}", argv.join(" "));
     dump_server_options(&options);
 
     let pids_file = flow_server_files::server_files_js::pids_file(
@@ -155,7 +155,7 @@ fn server_entry_handler(param: ServerEntryParam, pair: ChannelPair<(), ()>) {
         options.root.as_path(),
     );
     if let Err(e) = flow_daemon::pid_log::init(std::path::Path::new(&pids_file)) {
-        log::warn!("server: pid_log init failed: {}", e);
+        flow_hh_logger::warn!("server: pid_log init failed: {}", e);
     }
     flow_daemon::pid_log::log(Some("monitor"), false, parent_pid);
     if let Some(pid) = file_watcher_pid {
@@ -175,16 +175,16 @@ fn server_entry_handler(param: ServerEntryParam, pair: ChannelPair<(), ()>) {
 
 pub fn dump_server_options(options: &Options) {
     let lazy_mode = if options.lazy_mode { "on" } else { "off" };
-    log::info!("lazy_mode={}", lazy_mode);
-    log::info!("max_workers={}", options.max_workers);
-    log::info!("long_lived_workers={}", options.long_lived_workers);
-    log::info!("debug={}", options.debug);
+    flow_hh_logger::info!("lazy_mode={}", lazy_mode);
+    flow_hh_logger::info!("max_workers={}", options.max_workers);
+    flow_hh_logger::info!("long_lived_workers={}", options.long_lived_workers);
+    flow_hh_logger::info!("debug={}", options.debug);
     for (method_name, log_saving) in options.log_saving.iter() {
         let limit_str = match log_saving.limit {
             None => "null".to_string(),
             Some(limit) => format!("{}", limit),
         };
-        log::info!(
+        flow_hh_logger::info!(
             "{} threshold_time_ms={} limit={} rate={}",
             method_name,
             log_saving.threshold_time_ms,
@@ -193,7 +193,7 @@ pub fn dump_server_options(options: &Options) {
         );
     }
     for (r, g) in options.enabled_rollouts.iter() {
-        log::info!("Rollout {:?} set to {:?}", r, g);
+        flow_hh_logger::info!("Rollout {:?} set to {:?}", r, g);
     }
 }
 
@@ -244,8 +244,7 @@ pub fn daemonize(
             "Error: There is already a server running for {}",
             root.display()
         );
-        eprintln!("{}", msg);
-        flow_common_exit_status::exit(FlowExitStatus::LockStolen);
+        flow_common_exit_status::exit_with_msg(FlowExitStatus::LockStolen, &msg);
     }
 
     let name = format!("server master process watching {}", root.display());

@@ -117,9 +117,10 @@ fn assert_compatible_flowconfig_change(options: &Options, config_path: &str) -> 
     if old_hash.as_str() == new_hash.as_str() {
         Ok(())
     } else {
-        eprintln!(
+        flow_hh_logger::error!(
             "Flowconfig hash changed from {:?} to {:?}",
-            old_hash, new_hash
+            old_hash,
+            new_hash
         );
         assert_compatible_flowconfig_version(&new_config)?;
         Err(Error::Unrecoverable {

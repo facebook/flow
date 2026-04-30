@@ -22,8 +22,8 @@ use std::fs::File;
 use std::io::Write;
 use std::sync::Mutex;
 use std::sync::OnceLock;
-use std::sync::atomic::AtomicU8;
-use std::sync::atomic::Ordering;
+
+pub use flow_hh_logger::Level;
 
 use crate::runtime;
 
@@ -31,58 +31,6 @@ use crate::runtime;
 struct Dest {
     file: bool,
     stderr: bool,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
-#[repr(u8)]
-pub enum Level {
-    Off = 0,
-    Fatal = 1,
-    Error = 2,
-    Warn = 3,
-    Info = 4,
-    Debug = 5,
-}
-
-impl Level {
-    fn from_u8(v: u8) -> Self {
-        match v {
-            0 => Level::Off,
-            1 => Level::Fatal,
-            2 => Level::Error,
-            3 => Level::Warn,
-            4 => Level::Info,
-            _ => Level::Debug,
-        }
-    }
-}
-
-static MIN_LEVEL: AtomicU8 = AtomicU8::new(Level::Info as u8);
-static MIN_LEVEL_FILE: AtomicU8 = AtomicU8::new(Level::Info as u8);
-static MIN_LEVEL_STDERR: AtomicU8 = AtomicU8::new(Level::Info as u8);
-
-pub fn set_min_level(level: Level) {
-    MIN_LEVEL.store(level as u8, Ordering::Release);
-}
-
-pub fn set_min_level_file(level: Level) {
-    MIN_LEVEL_FILE.store(level as u8, Ordering::Release);
-}
-
-pub fn set_min_level_stderr(level: Level) {
-    MIN_LEVEL_STDERR.store(level as u8, Ordering::Release);
-}
-
-pub fn min_level() -> Level {
-    Level::from_u8(MIN_LEVEL.load(Ordering::Acquire))
-}
-
-pub fn min_level_file() -> Level {
-    Level::from_u8(MIN_LEVEL_FILE.load(Ordering::Acquire))
-}
-
-pub fn min_level_stderr() -> Level {
-    Level::from_u8(MIN_LEVEL_STDERR.load(Ordering::Acquire))
 }
 
 type MsgPayload = (Dest, Vec<String>);
@@ -173,13 +121,6 @@ mod write_loop {
 
 static INITIALIZED: OnceLock<()> = OnceLock::new();
 
-struct MonitorLogger;
-
-fn timestamp_string() -> String {
-    let now = chrono::Local::now();
-    now.format("[%Y-%m-%d %H:%M:%S%.3f]").to_string()
-}
-
 fn string_of_level(level: Level) -> &'static str {
     match level {
         Level::Off => "off",
@@ -191,22 +132,11 @@ fn string_of_level(level: Level) -> &'static str {
     }
 }
 
-// We're using lwt's logger instead of Hh_logger, so let's map Hh_logger levels to lwt levels
-fn level_of_log_level(l: log::Level) -> Level {
-    match l {
-        log::Level::Error => Level::Error,
-        log::Level::Warn => Level::Warn,
-        log::Level::Info => Level::Info,
-        log::Level::Debug => Level::Debug,
-        log::Level::Trace => Level::Debug,
-    }
-}
-
 // Format the messages and write the to the log and stderr
 fn output(level: Level, messages: Vec<String>) {
     let dest = Dest {
-        file: level <= min_level_file(),
-        stderr: level <= min_level_stderr(),
+        file: level <= flow_hh_logger::level::min_level_file(),
+        stderr: level <= flow_hh_logger::level::min_level_stderr(),
     };
     let level_str = string_of_level(level);
     let formatted_messages: Vec<String> = messages
@@ -214,38 +144,13 @@ fn output(level: Level, messages: Vec<String>) {
         .map(|message| {
             format!(
                 "{} [monitor][{}] {}\n",
-                timestamp_string(),
+                flow_hh_logger::timestamp_string(),
                 level_str,
                 message,
             )
         })
         .collect();
     push_to_msg_stream((dest, formatted_messages));
-}
-
-impl log::Log for MonitorLogger {
-    fn enabled(&self, metadata: &log::Metadata) -> bool {
-        let level = level_of_log_level(metadata.level());
-        level <= min_level()
-    }
-
-    fn log(&self, record: &log::Record) {
-        if !self.enabled(record.metadata()) {
-            return;
-        }
-        let level = level_of_log_level(record.level());
-        output(level, vec![format!("{}", record.args())]);
-    }
-
-    fn flush(&self) {
-        if let Err(io_err) = std::io::stderr().flush() {
-            let diag = format!(
-                "flow_server_monitor_logger: stderr flush failed: {}\n",
-                io_err
-            );
-            if let Ok(()) = std::io::Write::write_all(&mut std::io::stderr(), diag.as_bytes()) {}
-        }
-    }
 }
 
 // Creates a default logger and sets the minimum logger level. The logger will log every message
@@ -255,8 +160,6 @@ pub fn init_logger(log_file: Option<File>) {
     if INITIALIZED.set(()).is_err() {
         panic!("Cannot initialized FlowServerMonitorLogger more than once");
     }
-
-    let min_level = min_level();
 
     let file = log_file.map(Mutex::new);
 
@@ -276,25 +179,6 @@ pub fn init_logger(log_file: Option<File>) {
             };
             write_loop::report_panic(&msg);
         }
-    });
-
-    // Set the default logger
-    static LOGGER: MonitorLogger = MonitorLogger;
-    if let Err(set_err) = log::set_logger(&LOGGER) {
-        eprintln!(
-            "flow_server_monitor_logger: log::set_logger failed (process logger already installed): {}",
-            set_err
-        );
-    }
-
-    // Set the min level
-    log::set_max_level(match min_level {
-        Level::Off => log::LevelFilter::Off,
-        Level::Fatal => log::LevelFilter::Error,
-        Level::Error => log::LevelFilter::Error,
-        Level::Warn => log::LevelFilter::Warn,
-        Level::Info => log::LevelFilter::Info,
-        Level::Debug => log::LevelFilter::Debug,
     });
 }
 
@@ -321,7 +205,7 @@ pub fn debug(exn: Option<&str>, msg: &str) {
 }
 
 fn output_with_exn(level: Level, exn: Option<&str>, msg: &str) {
-    if level > min_level() {
+    if !flow_hh_logger::level::passes_min_level(level) {
         return;
     }
     let formatted = match exn {
@@ -334,21 +218,21 @@ fn output_with_exn(level: Level, exn: Option<&str>, msg: &str) {
 // Synchronous versions just delegate to Hh_logger. These are mainly used for debugging, when you
 // want a logging call to write to the log RIGHT NOW.
 pub fn fatal_s(msg: &str) {
-    log::error!("{}", msg);
+    flow_hh_logger::fatal!("{}", msg);
 }
 
 pub fn error_s(msg: &str) {
-    log::error!("{}", msg);
+    flow_hh_logger::error!("{}", msg);
 }
 
 pub fn warn_s(msg: &str) {
-    log::warn!("{}", msg);
+    flow_hh_logger::warn!("{}", msg);
 }
 
 pub fn info_s(msg: &str) {
-    log::info!("{}", msg);
+    flow_hh_logger::info!("{}", msg);
 }
 
 pub fn debug_s(msg: &str) {
-    log::debug!("{}", msg);
+    flow_hh_logger::debug!("{}", msg);
 }

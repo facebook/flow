@@ -216,6 +216,8 @@ fn check_main(
     Arc::make_mut(&mut options).autoimports = false;
     let _init_id = crate::random_id_short_string();
     let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
+    // initialize loggers before doing too much, especially anything that might exit
+    flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
 
     if !ignore_version {
         command_utils::assert_version(&flowconfig_for_assert);
@@ -449,11 +451,13 @@ mod focus_check_command {
         }
         let _init_id = crate::random_id_short_string();
         let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
+        // initialize loggers before doing too much, especially anything that might exit
+        flow_logging_utils::init_loggers(&options, None);
 
         // do this after loggers are initialized, so we can complain properly
         let expanded_filenames =
             command_utils::expand_file_list(&filenames, Some(&options.file_options));
-        tracing::info!("Checking {} files", expanded_filenames.len());
+        flow_hh_logger::info!("Checking {} files", expanded_filenames.len());
 
         if !ignore_version {
             command_utils::assert_version(&flowconfig_for_assert);

@@ -43,7 +43,6 @@ use flow_services_autocomplete::module_system_info::LspModuleSystemInfo;
 use flow_services_code_action::code_action_service;
 use flow_typing_context::Context;
 use flow_typing_type::type_::Type;
-use tracing::level_filters::LevelFilter;
 
 use crate::command_spec;
 use crate::command_spec::arg_spec;
@@ -66,7 +65,7 @@ struct AnnotateRuntimeConfig {
 
 #[derive(Clone)]
 pub(crate) struct PreparedCodemod {
-    pub(crate) log_level: Option<LevelFilter>,
+    pub(crate) log_level: Option<flow_hh_logger::Level>,
     pub(crate) options: Options,
     pub(crate) repeat: bool,
     pub(crate) roots: BTreeSet<FileKey>,

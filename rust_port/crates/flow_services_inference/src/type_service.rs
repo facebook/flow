@@ -8,7 +8,6 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -572,7 +571,8 @@ fn merge(
     suppressions: ErrorSuppressions,
 ) -> MergeResult {
     if !options.quiet {
-        eprintln!("Calculating dependencies");
+        flow_hh_logger::info!("to_merge: {}", to_merge.debug_counts_to_string());
+        flow_hh_logger::info!("Calculating dependencies");
     }
     monitor_rpc::status_update(server_status::Event::CalculatingDependenciesProgress);
     let files_to_merge = to_merge.dupe().all();
@@ -581,7 +581,7 @@ fn merge(
     let calc_deps_time = calc_deps_start.elapsed();
 
     if !options.quiet {
-        eprintln!("Merging");
+        flow_hh_logger::info!("Merging");
     }
     let merge_start = Instant::now();
 
@@ -603,7 +603,7 @@ fn merge(
     );
 
     if !options.quiet {
-        eprintln!("Merging Done");
+        flow_hh_logger::info!("Merging Done");
     }
     let time_to_merge = merge_start.elapsed();
 
@@ -649,8 +649,8 @@ mod check_files {
         let quiet = options.quiet;
         with_memory_timer(&options_ref, "Check", || {
             if !quiet {
-                eprintln!("Check prep");
-                eprintln!("new or changed signatures: {}", sig_new_or_changed.len());
+                flow_hh_logger::info!("Check prep");
+                flow_hh_logger::info!("new or changed signatures: {}", sig_new_or_changed.len());
             }
             let focused_to_check = to_check.focused();
             let merged_dependents = to_check.dependents();
@@ -678,15 +678,14 @@ mod check_files {
                 skipped_count,
                 focused_to_check.len() + merged_dependents.len()
             );
-            log::info!("{}", message);
-            append_to_server_log(&options, &message);
+            flow_hh_logger::info!("{}", message);
             let mut files = focused_to_check.dupe();
             for file in dependents_to_check {
                 files.insert(file);
             }
             let intermediate_result_callback: Arc<dyn Fn(&[_]) + Send + Sync> = Arc::new(|_| {});
             if !quiet {
-                eprintln!("Checking files");
+                flow_hh_logger::info!("Checking files");
             }
 
             let check_start_time = Instant::now();
@@ -901,7 +900,7 @@ mod check_files {
             let time_to_check_merged = check_start_time.elapsed().as_secs_f64();
 
             if !quiet {
-                eprintln!("Checking Done");
+                flow_hh_logger::info!("Checking Done");
             }
             let errors = Errors {
                 local_errors,
@@ -930,7 +929,7 @@ pub(crate) struct UnexpectedFileChanges(Vec<FileKey>);
 fn handle_unexpected_file_changes(changed_files: Vec<FileKey>) -> RecheckError {
     let filename_set: BTreeSet<String> = changed_files.iter().map(FileKey::to_absolute).collect();
     let file_count = filename_set.len();
-    eprintln!(
+    flow_hh_logger::info!(
         "Canceling recheck due to {} unexpected file changes",
         file_count
     );
@@ -1113,9 +1112,10 @@ pub(crate) fn restart_if_faster_than_recheck(
 ) -> Result<(), RecheckError> {
     let files_already_checked = env.checked_files.cardinal();
     let files_about_to_recheck = to_merge.cardinal();
-    eprintln!(
+    flow_hh_logger::info!(
         "We've already checked {} files. We're about to recheck {} files",
-        files_already_checked, files_about_to_recheck
+        files_already_checked,
+        files_about_to_recheck
     );
     let init_time = recheck_stats::get_init_time();
     let per_file_time = recheck_stats::get_per_file_time();
@@ -1129,22 +1129,30 @@ pub(crate) fn restart_if_faster_than_recheck(
         estimated_files_to_recheck: files_about_to_recheck as i64,
         estimated_files_to_init: files_already_checked as i64,
     };
-    eprintln!(
+    flow_hh_logger::debug!(
         "Estimated restart time: {}s to init + ({}s * {} files) = {}s",
-        init_time, per_file_time, files_already_checked, time_to_restart
+        init_time,
+        per_file_time,
+        files_already_checked,
+        time_to_restart
     );
-    eprintln!(
+    flow_hh_logger::debug!(
         "Estimated recheck time: {}s * {} files = {}s",
-        per_file_time, files_about_to_recheck, time_to_recheck
+        per_file_time,
+        files_about_to_recheck,
+        time_to_recheck
     );
-    eprintln!(
+    flow_hh_logger::info!(
         "Estimating a recheck would take {:.2}s and a restart would take {:.2}s",
-        time_to_recheck, time_to_restart
+        time_to_recheck,
+        time_to_restart
     );
     if time_to_restart < time_to_recheck {
+        flow_hh_logger::info!("Recheck too slow: choosing to REINIT from saved state");
         recheck_stats::record_last_estimates(options, &estimates);
         Err(RecheckError::TooSlow)
     } else {
+        flow_hh_logger::info!("Recheck fast enough: choosing to RECHECK incrementally");
         Ok(())
     }
 }
@@ -1215,7 +1223,7 @@ pub(crate) mod recheck {
         let mut files_to_force = files_to_force;
         files_to_force.diff(&env.checked_files);
 
-        eprintln!("Parsing");
+        flow_hh_logger::info!("Parsing");
         monitor_rpc::status_update(server_status::Event::ParsingProgress(
             server_status::Progress {
                 total: None,
@@ -1297,19 +1305,23 @@ pub(crate) mod recheck {
         let deleted_count = deleted.len();
         let modified_count = new_or_changed.len();
         if deleted_count + modified_count > 0 {
-            eprintln!(
+            flow_hh_logger::info!(
                 "recheck {} modified, {} deleted files",
-                modified_count, deleted_count
+                modified_count,
+                deleted_count
             );
             let log_files = |files: &FlowOrdSet<FileKey>, msg: &str, n: usize| {
-                eprintln!("{} files:", msg);
+                flow_hh_logger::info!("{} files:", msg);
                 for (i, f) in files.iter().enumerate() {
+                    let i = i + 1;
                     let cap = 500;
-                    if i < cap {
-                        eprintln!("  {}/{}: {}", i + 1, n, f.as_str());
-                    } else if i == cap {
-                        eprintln!("  ...");
-                        break;
+                    if i <= cap {
+                        flow_hh_logger::info!("{}/{}: {}", i, n, f.as_str());
+                    } else if flow_hh_logger::level::passes_min_level(flow_hh_logger::Level::Debug)
+                    {
+                        flow_hh_logger::debug!("{}/{}: {}", i, n, f.as_str());
+                    } else if i == cap + 1 {
+                        flow_hh_logger::info!("...");
                     }
                 }
             };
@@ -1321,13 +1333,17 @@ pub(crate) mod recheck {
             }
         }
 
-        eprintln!(
-            "recheck: old = {}, del = {}, fresh = {}, unmod = {}",
-            old_parsed_count,
-            deleted.len(),
-            freshparsed.cardinal(),
-            unchanged.len(),
-        );
+        // old_parsed and unchanged sets are large and `cardinal` is O(n), so avoid
+        // this call unless we are in debug mode.
+        if flow_hh_logger::level::passes_min_level(flow_hh_logger::Level::Debug) {
+            flow_hh_logger::debug!(
+                "recheck: old = {}, del = {}, fresh = {}, unmod = {}",
+                old_parsed_count,
+                deleted.len(),
+                freshparsed.cardinal(),
+                unchanged.len(),
+            );
+        }
 
         let unchanged_files_to_upgrade = updates.filter(|file, kind| {
             !CheckedSet::is_dependency(kind)
@@ -1373,7 +1389,7 @@ pub(crate) mod recheck {
                 dirty_direct_dependents_btree.into_iter().collect()
             });
 
-        eprintln!("Re-resolving parsed and directly dependent files");
+        flow_hh_logger::info!("Re-resolving parsed and directly dependent files");
         let dirty_direct_dependents_set: FlowOrdSet<FileKey> = dirty_direct_dependents.dupe();
         ensure_parsed(pool, shared_mem, options, dirty_direct_dependents_set)?;
         let parsed_set_for_resolve = parsed_set.dupe().union(dirty_direct_dependents.dupe());
@@ -1385,7 +1401,7 @@ pub(crate) mod recheck {
             &parsed_set_for_resolve,
         );
 
-        eprintln!("Recalculating dependency graph");
+        flow_hh_logger::info!("Recalculating dependency graph");
         monitor_rpc::status_update(server_status::Event::CalculatingDependenciesProgress);
         let parsed = parsed_set.dupe().union(unchanged.dupe());
         let dependency_info = with_memory_timer(options, "CalcDepsTypecheck", || {
@@ -1528,7 +1544,7 @@ pub(crate) mod recheck {
         let dependency_info = &env.dependency_info;
         let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
         let sig_dependency_graph = dependency_info.sig_dependency_graph();
-        eprintln!("Determining what to recheck...");
+        flow_hh_logger::info!("Determining what to recheck...");
         monitor_rpc::status_update(server_status::Event::CalculatingDependentsStart);
         let mut unchanged_files_to_force = unchanged_files_to_force;
         unchanged_files_to_force.union(unchanged_files_to_upgrade.dupe());
@@ -1558,7 +1574,7 @@ pub(crate) mod recheck {
         }
         ensure_parsed_or_trigger_recheck(pool, shared_mem, options, to_merge.dupe().all())?;
         if dependent_file_count > 0 {
-            eprintln!("recheck {} dependent files:", dependent_file_count);
+            flow_hh_logger::info!("recheck {} dependent files:", dependent_file_count);
         }
         let MergeResult {
             suppressions: updated_suppressions,
@@ -1582,13 +1598,13 @@ pub(crate) mod recheck {
         let exports = match &env.exports {
             None => None,
             Some(exports) => {
-                eprintln!("Updating index");
+                flow_hh_logger::info!("Updating index");
                 let updated_exports = with_memory_timer(options, "Indexing", || {
                     let dirty_files: BTreeSet<FileKey> =
                         sig_new_or_changed.iter().duped().collect();
                     flow_services_export::export_service::update(shared_mem, &dirty_files, exports)
                 });
-                eprintln!("Done updating index");
+                flow_hh_logger::info!("Done updating index");
                 Some(updated_exports)
             }
         };
@@ -1617,7 +1633,7 @@ pub(crate) mod recheck {
             env.master_cx.dupe(),
         )?;
         if let Some(ref err) = check_internal_error {
-            eprintln!("Error: {}", err);
+            flow_hh_logger::error!("{}", err);
         }
 
         // Deduplicate ETrivialRecursiveDefinition errors from cyclic
@@ -1680,7 +1696,7 @@ pub(crate) mod recheck {
         });
         let mut checked_files = unchanged_checked;
         checked_files.union(to_merge.dupe());
-        eprintln!("Checked set: {}", checked_files.debug_counts_to_string());
+        flow_hh_logger::info!("Checked set: {}", checked_files.debug_counts_to_string());
 
         Ok((
             Env {
@@ -2058,7 +2074,7 @@ fn assert_valid_hashes(updates: &CheckedSet, invalid_hashes: Vec<FileKey>) {
         .filter(|file| !updates.mem(file))
         .collect();
     if invalid_hashes.is_empty() {
-        log::info!("Saved state verification succeeded");
+        flow_hh_logger::info!("Saved state verification succeeded");
     } else {
         let files_str: String = invalid_hashes
             .iter()
@@ -2069,7 +2085,7 @@ fn assert_valid_hashes(updates: &CheckedSet, invalid_hashes: Vec<FileKey>) {
             "The following files do not match their hashes in saved state:\n{}",
             files_str
         );
-        log::error!("Saved state verification failed");
+        flow_hh_logger::error!("Saved state verification failed");
         flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::InvalidSavedState);
     }
 }
@@ -2191,9 +2207,10 @@ fn assert_compatible_flowconfig_change(options: &Options, config_path: &str) -> 
     if old_hash.as_str() == new_hash.as_str() {
         Ok(())
     } else {
-        eprintln!(
+        flow_hh_logger::error!(
             "Flowconfig hash changed from {:?} to {:?}",
-            old_hash, new_hash
+            old_hash,
+            new_hash
         );
         assert_compatible_flowconfig_version(&new_config)?;
         Err("Config changed in an incompatible way".to_string())
@@ -2207,23 +2224,6 @@ fn did_content_change(shared_mem: &SharedMem, filename: &str) -> bool {
         Some(content) => {
             !parsing_service::does_content_match_file_hash(shared_mem, &file, &content)
         }
-    }
-}
-
-fn append_to_server_log(options: &Options, message: &str) {
-    let log_file = std::env::var("FLOW_LOG_FILE").unwrap_or_else(|_| {
-        server_files_js::log_file(
-            &options.flowconfig_name,
-            options.temp_dir.as_str(),
-            options.root.as_path(),
-        )
-    });
-    if let Ok(mut file) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(log_file)
-    {
-        let _ = writeln!(file, "{}", message);
     }
 }
 
@@ -2473,6 +2473,7 @@ fn init_with_initial_state(
     //
     // 1. The builtin libraries are merged first
     // 2. The non-builtin libraries are merged in the same order as before
+    flow_hh_logger::info!("Loading libraries");
     monitor_rpc::status_update(server_status::Event::LoadLibrariesStart);
     let (ordered_libs, all_unordered_libs) =
         files::ordered_and_unordered_lib_paths(&options.file_options);
@@ -2525,6 +2526,7 @@ fn init_with_initial_state(
         .collect();
     let local_errors = merge_error_maps(local_errors, additional_local_errors);
 
+    flow_hh_logger::info!("Resolving dependencies");
     monitor_rpc::status_update(server_status::Event::ResolvingDependenciesProgress);
     let (_changed_modules, duplicate_providers) = commit_modules(
         pool,
@@ -2658,6 +2660,7 @@ pub fn init_from_legacy_saved_state(
     bool,
     Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) {
+    flow_hh_logger::info!("Restoring heaps");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
     let node_modules_containers =
         Arc::new(RwLock::new(saved_state.node_modules_containers.clone()));
@@ -2732,6 +2735,7 @@ pub fn init_from_direct_saved_state(
     bool,
     Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) {
+    flow_hh_logger::info!("Processing saved state file sets");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
     // Direct serialization saved state: the heap was already bulk-loaded by
     // SharedMem.load_heap during the load step, so all file data is already in
@@ -2941,6 +2945,7 @@ pub fn init_from_scratch(
             );
             drop(sender);
         });
+        flow_hh_logger::info!("Parsing");
         let receiver_for_next = receiver.dupe();
         let mut total = 0;
         let next: parsing_service::Next = Box::new(move || {
@@ -3001,6 +3006,7 @@ pub fn init_from_scratch(
             .collect::<FlowOrdSet<_>>();
         let local_errors = merge_error_maps(package_errors, local_errors);
 
+        flow_hh_logger::info!("Loading libraries");
         let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
             options,
             shared_mem,
@@ -3010,6 +3016,7 @@ pub fn init_from_scratch(
             ErrorSuppressions::empty(),
         );
 
+        flow_hh_logger::info!("Resolving dependencies");
         monitor_rpc::status_update(server_status::Event::ResolvingDependenciesProgress);
         let (_changed_modules, duplicate_providers) = commit_modules(
             pool,
@@ -3063,7 +3070,8 @@ pub fn init_from_scratch(
             suppressions,
         };
         let exports = if options.autoimports {
-            Some(with_memory_timer(options, "Indexing", || {
+            flow_hh_logger::info!("Indexing files");
+            let exports = with_memory_timer(options, "Indexing", || {
                 let parsed: BTreeSet<FileKey> = parsed_set.iter().duped().collect();
                 let (lib_exports, scoped_lib_exports) = &lib_exports;
                 let scoped_lib_exports: Vec<(String, flow_imports_exports::exports::Exports)> =
@@ -3073,7 +3081,9 @@ pub fn init_from_scratch(
                         .collect();
                 let lib_exports = (lib_exports.clone(), scoped_lib_exports);
                 flow_services_export::export_service::init(shared_mem, &lib_exports, &parsed)
-            }))
+            });
+            flow_hh_logger::info!("Indexing files Done");
+            Some(exports)
         } else {
             None
         };
@@ -3172,11 +3182,15 @@ pub fn load_saved_state(
                 Err(msg) => {
                     shared_mem.rollback_entities();
                     shared_mem.clear_reader_cache();
+                    flow_hh_logger::error!(
+                        "The saved state is no longer valid due to file changes: {}",
+                        msg
+                    );
                     exit_if_no_fallback(Some(&msg), options);
                     return Err(msg);
                 }
             };
-            log::info!(
+            flow_hh_logger::info!(
                 "Saved state script reports {} files changed & we care about {} of them",
                 changed_files.len(),
                 updates.len()
@@ -3217,7 +3231,7 @@ pub fn init(
         }
         Err(msg) => {
             // Either there is no saved state or we failed to load it for some reason
-            log::info!("Failed to load saved state: {}", msg);
+            flow_hh_logger::info!("Failed to load saved state: {}", msg);
             init_from_scratch(options, pool, shared_mem, options.root.as_path())
         }
     };
@@ -3255,7 +3269,7 @@ pub fn reinit(
         Ok(result) => result,
         Err(msg) => {
             // Either there is no saved state or we failed to load it for some reason
-            log::info!("Failed to load saved state: {}", msg);
+            flow_hh_logger::info!("Failed to load saved state: {}", msg);
             if allow_fallback {
                 return None;
             } else {
@@ -3271,9 +3285,7 @@ pub fn reinit(
         }
     };
     // We loaded a saved state successfully! We are awesome!
-    eprintln!("Reinitializing from saved state");
-    log::info!("Reinitializing from saved state");
-    append_to_server_log(options, "Reinitializing from saved state");
+    flow_hh_logger::info!("Reinitializing from saved state");
     let (env, _libs_ok, _node_modules_containers) = init_from_saved_state(
         pool,
         shared_mem,
@@ -3327,8 +3339,7 @@ pub fn reinit_full_check(
     env: Env,
 ) -> Result<(Box<dyn FnOnce()>, RecheckStats, FindRefResults, Env), RecheckError> {
     shared_mem.clear_reader_cache();
-    eprintln!("Reiniting with a full check.");
-    log::info!("Reiniting with a full check.");
+    flow_hh_logger::info!("Reiniting with a full check.");
     let env = {
         let (env, _libs_ok) = with_transaction_result("partial-reinit", |_transaction| {
             Ok::<_, std::convert::Infallible>(init_with_initial_state(
@@ -3396,11 +3407,8 @@ pub fn recheck(
             // if the saved state was built after the libdef change, we only need to recheck
             // the delta files instead of all files. If saved state loading fails (e.g.
             // because the libdef also changed locally), fall back to reinit_full_check.
-            eprintln!("Libdef changed with mergebase change; trying saved-state reinit first");
-            log::info!("Libdef changed with mergebase change; trying saved-state reinit first");
-            append_to_server_log(
-                options,
-                "Libdef changed with mergebase change; trying saved-state reinit first",
+            flow_hh_logger::info!(
+                "Libdef changed with mergebase change; trying saved-state reinit first"
             );
             match reinit(
                 pool,
@@ -3415,11 +3423,8 @@ pub fn recheck(
             ) {
                 Some(result) => Ok(result),
                 None => {
-                    eprintln!("Saved-state reinit failed; falling back to reinit_full_check");
-                    log::info!("Saved-state reinit failed; falling back to reinit_full_check");
-                    append_to_server_log(
-                        options,
-                        "Saved-state reinit failed; falling back to reinit_full_check",
+                    flow_hh_logger::info!(
+                        "Saved-state reinit failed; falling back to reinit_full_check"
                     );
                     reinit_full_check(
                         pool,
@@ -3447,7 +3452,7 @@ pub fn recheck(
         }
     } else if missed_changes && did_change_mergebase {
         if did_change_mergebase && options.saved_state_restart_on_reinit {
-            log::info!("Reinit (missed_changes): exiting for a clean restart");
+            flow_hh_logger::info!("Reinit (missed_changes): exiting for a clean restart");
             flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::Restart);
         }
         Ok(reinit(
@@ -3480,7 +3485,7 @@ pub fn recheck(
             Ok(result) => Ok(result),
             Err(RecheckError::TooSlow) => {
                 if did_change_mergebase && options.saved_state_restart_on_reinit {
-                    log::info!("Reinit (recheck_too_slow): exiting for a clean restart");
+                    flow_hh_logger::info!("Reinit (recheck_too_slow): exiting for a clean restart");
                     flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::Restart);
                 }
                 Ok(reinit(
@@ -3574,6 +3579,9 @@ pub fn check_files_for_init(
             &dependency_info,
             master_cx.dupe(),
         )?;
+        if let Some(ref err) = check_internal_error {
+            flow_hh_logger::error!("{}", err);
+        }
         // Deduplicate ETrivialRecursiveDefinition errors from cyclic
         // dependencies. In OCaml, the single-threaded check phase shares a
         // check cache so cycle errors are generated only once. In the Rust
@@ -3666,6 +3674,11 @@ pub fn check_files_for_init(
         };
 
         shared_mem.commit_entities();
+
+        flow_hh_logger::info!(
+            "Checked set: {}",
+            env.checked_files.debug_counts_to_string()
+        );
 
         Ok((env, check_internal_error))
     })

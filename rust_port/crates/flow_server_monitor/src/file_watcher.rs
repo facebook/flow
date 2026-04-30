@@ -134,14 +134,14 @@ pub async fn changes_since_mergebase(
         let vcs_name = vcs::name(vcs);
         match files_changed_since_mergebase_with(vcs, root, mergebase_with).await {
             Err(_) => {
-                log::error!(
+                flow_hh_logger::error!(
                     "Not checking changes since mergebase! {} failed to determine the initial mergebase.",
                     vcs_name
                 );
                 acc
             }
             Ok((mergebase, changes)) => {
-                log::info!(
+                flow_hh_logger::info!(
                     "{} reports the initial mergebase as {:?}, and {} changes",
                     vcs_name,
                     mergebase,
@@ -287,7 +287,7 @@ pub mod watchman_file_watcher {
                 Err(flow_watchman::Failure::Dead) => return Err(flow_watchman::Failure::Dead),
                 Err(flow_watchman::Failure::Restarted) => {
                     status_stream::file_watcher_deferred("Watchman restart".to_string());
-                    log::error!(
+                    flow_hh_logger::error!(
                         "Watchman get_changes returned Restarted but env was consumed; treating as Dead"
                     );
                     return Err(flow_watchman::Failure::Dead);
@@ -340,15 +340,17 @@ pub mod watchman_file_watcher {
                     // mergebase commits (`hg` can, but it's not worth implementing this).
                     let changed_mergebase = prev_mergebase != mergebase;
                     if changed_mergebase {
-                        log::info!(
+                        flow_hh_logger::info!(
                             "Watchman missed changes, and the mergebase changed from {:?} to {:?}.",
                             prev_mergebase,
                             mergebase
                         );
                     } else {
-                        log::info!("Watchman missed changes, but the mergebase didn't change.");
+                        flow_hh_logger::info!(
+                            "Watchman missed changes, but the mergebase didn't change."
+                        );
                     }
-                    log::info!(
+                    flow_hh_logger::info!(
                         "Watchman reports {} files have changed since the mergebase",
                         changes_since_mergebase.len()
                     );
@@ -372,14 +374,14 @@ pub mod watchman_file_watcher {
                     if name == "hg.update" {
                         let (distance, rev) = extract_hg_update_metadata(metadata.as_ref());
                         log_state_enter(&name, metadata.as_ref());
-                        log::info!(
+                        flow_hh_logger::info!(
                             "Watchman reports an hg.update just started. Moving {} revs from {}",
                             distance,
                             rev
                         );
                     } else if env.init_settings.defer_states.iter().any(|s| s == &name) {
                         log_state_enter(&name, metadata.as_ref());
-                        log::info!(
+                        flow_hh_logger::info!(
                             "Watchman reports {} just started. Filesystem notifications are paused.",
                             name
                         );
@@ -391,14 +393,14 @@ pub mod watchman_file_watcher {
                     if name == "hg.update" {
                         let (distance, rev) = extract_hg_update_metadata(metadata.as_ref());
                         log_state_leave(&name, metadata.as_ref());
-                        log::info!(
+                        flow_hh_logger::info!(
                             "Watchman reports an hg.update just finished. Moved {} revs to {}",
                             distance,
                             rev
                         );
                     } else if env.init_settings.defer_states.iter().any(|s| s == &name) {
                         log_state_leave(&name, metadata.as_ref());
-                        log::info!(
+                        flow_hh_logger::info!(
                             "Watchman reports {} ended. Filesystem notifications resumed.",
                             name
                         );
@@ -412,7 +414,7 @@ pub mod watchman_file_watcher {
         pub fn catch(failure: &flow_watchman::Failure) -> flow_watchman::Failure {
             match failure {
                 flow_watchman::Failure::Dead | flow_watchman::Failure::Restarted => {
-                    log::error!("Watchman unavailable. Exiting...");
+                    flow_hh_logger::error!("Watchman unavailable. Exiting...");
                     failure.clone()
                 }
             }
@@ -485,7 +487,7 @@ pub mod watchman_file_watcher {
                 flow_server_file_watcher_spec::file_watcher_spec::get_include_dirs_absolute(
                     &self.server_options,
                 );
-            log::info!(
+            flow_hh_logger::info!(
                 "Watchman connection established with watch_spec: extensions=[{}], file_names=[{}], include_dirs=[{}], exclude_dirs=[{}]",
                 extensions.join(", "),
                 file_names.join(", "),
@@ -630,7 +632,7 @@ pub mod watchman_file_watcher {
             // Flow doesn't own the watchman process, so it's not Flow's job to stop the watchman
             // process. What we can do, though, is stop listening to the messages
             let env = self.get_env();
-            log::info!("Canceling Watchman listening thread & closing connection");
+            flow_hh_logger::info!("Canceling Watchman listening thread & closing connection");
             if let Some(handle) = env.listening_thread.lock().await.take() {
                 handle.abort();
             }
@@ -700,7 +702,7 @@ pub mod edenfs_file_watcher {
     async fn check_mergebase(env: &Env) -> Option<bool> {
         match query_mergebase(&env.root, &env.mergebase_with).await {
             Err(_) => {
-                log::warn!("EdenFS: failed to query mergebase");
+                flow_hh_logger::warn!("EdenFS: failed to query mergebase");
                 None
             }
             Ok(new_mergebase) => {
@@ -713,14 +715,17 @@ pub mod edenfs_file_watcher {
                     Some(old_mergebase) => {
                         let changed = new_mergebase != old_mergebase;
                         if changed {
-                            log::info!(
+                            flow_hh_logger::info!(
                                 "EdenFS: mergebase changed from {:?} to {:?}",
                                 old_mergebase,
                                 new_mergebase
                             );
                             shared.mergebase = Some(new_mergebase);
                         } else {
-                            log::debug!("EdenFS: mergebase unchanged at {:?}", new_mergebase);
+                            flow_hh_logger::debug!(
+                                "EdenFS: mergebase unchanged at {:?}",
+                                new_mergebase
+                            );
                         }
                         Some(changed)
                     }
@@ -755,7 +760,7 @@ pub mod edenfs_file_watcher {
                     to_commit,
                     file_changes,
                 } => {
-                    log::info!(
+                    flow_hh_logger::info!(
                         "EdenFS watcher reports commit transition from {} to {} with {} changed files",
                         from_commit,
                         to_commit,
@@ -776,7 +781,7 @@ pub mod edenfs_file_watcher {
                     from_commit,
                     to_commit,
                 } => {
-                    log::info!(
+                    flow_hh_logger::info!(
                         "EdenFS watcher reports commit distance exceeded from {} to {}",
                         from_commit,
                         to_commit
@@ -824,7 +829,7 @@ pub mod edenfs_file_watcher {
                 match change {
                     flow_edenfs_watcher::Changes::StateEnter(name) => {
                         log_state_enter(name);
-                        log::info!(
+                        flow_hh_logger::info!(
                             "EdenFS reports {} just started. Filesystem notifications are paused.",
                             name
                         );
@@ -832,7 +837,7 @@ pub mod edenfs_file_watcher {
                     }
                     flow_edenfs_watcher::Changes::StateLeave(name) => {
                         log_state_leave(name);
-                        log::info!(
+                        flow_hh_logger::info!(
                             "EdenFS reports {} ended. Filesystem notifications resumed.",
                             name
                         );
@@ -903,7 +908,7 @@ pub mod edenfs_file_watcher {
         pub async fn main(env: &Env) -> Result<(), flow_edenfs_watcher::EdenfsWatcherError> {
             match get_changes_async_lwt(env).await {
                 Err(flow_edenfs_watcher::EdenfsWatcherError::LostChanges(msg)) => {
-                    log::error!("EdenFS watcher lost changes: {}", msg);
+                    flow_hh_logger::error!("EdenFS watcher lost changes: {}", msg);
                     flow_event_logger::edenfs_watcher_lost_changes(&msg, &msg);
                     {
                         let mut shared = env.shared.lock().unwrap();
@@ -922,7 +927,9 @@ pub mod edenfs_file_watcher {
                 Err(_) if flow_edenfs_watcher::is_instance_destroyed() => {
                     // The instance was destroyed by the exit hook during shutdown.
                     // This is expected and not an error — treat it as a clean stop.
-                    log::info!("EdenFS watcher instance was destroyed (shutdown in progress)");
+                    flow_hh_logger::info!(
+                        "EdenFS watcher instance was destroyed (shutdown in progress)"
+                    );
                     Err(flow_edenfs_watcher::EdenfsWatcherError::EdenfsWatcherError(
                         "Canceled".to_string(),
                     ))
@@ -937,14 +944,14 @@ pub mod edenfs_file_watcher {
                     let (new_files, mut new_metadata) = convert_changes(&changes_list);
                     // If a commit transition occurred, check if mergebase actually changed
                     if let Some(true) = new_metadata.changed_mergebase {
-                        log::debug!(
+                        flow_hh_logger::debug!(
                             "EdenFS: CommitTransition reported changed_mergebase=true; verifying with VCS"
                         );
                         let actual_changed = check_mergebase(env).await;
                         let changed_mergebase = match actual_changed {
                             Some(changed) => {
                                 if !changed {
-                                    log::info!(
+                                    flow_hh_logger::info!(
                                         "EdenFS: overriding changed_mergebase from true to false (mergebase did not actually change)"
                                     );
                                 }
@@ -972,7 +979,7 @@ pub mod edenfs_file_watcher {
         pub fn catch(
             err: &flow_edenfs_watcher::EdenfsWatcherError,
         ) -> flow_edenfs_watcher::EdenfsWatcherError {
-            log::error!("EdenFS watcher unavailable. Exiting...");
+            flow_hh_logger::error!("EdenFS watcher unavailable. Exiting...");
             err.clone()
         }
     }
@@ -1062,7 +1069,7 @@ pub mod edenfs_file_watcher {
                 flow_server_file_watcher_spec::file_watcher_spec::get_include_dirs_absolute(
                     &self.server_options,
                 );
-            log::info!(
+            flow_hh_logger::info!(
                 "EdenFS connection established with watch_spec: extensions=[{}], file_names=[{}], include_dirs=[{}], exclude_dirs=[{}]",
                 extensions.join(", "),
                 file_names.join(", "),
@@ -1153,11 +1160,13 @@ pub mod edenfs_file_watcher {
                     let initial_mergebase =
                         match query_mergebase(&self.root_path, &self.mergebase_with).await {
                             Ok(hash) => {
-                                log::info!("EdenFS: initial mergebase is {:?}", hash);
+                                flow_hh_logger::info!("EdenFS: initial mergebase is {:?}", hash);
                                 Some(hash)
                             }
                             Err(_) => {
-                                log::warn!("EdenFS: failed to determine initial mergebase");
+                                flow_hh_logger::warn!(
+                                    "EdenFS: failed to determine initial mergebase"
+                                );
                                 None
                             }
                         };
@@ -1229,7 +1238,7 @@ pub mod edenfs_file_watcher {
 
         async fn stop(&self) {
             let env = self.get_env();
-            log::info!("Canceling EdenFS listening thread");
+            flow_hh_logger::info!("Canceling EdenFS listening thread");
             if let Some(handle) = env.listening_thread.lock().await.take() {
                 handle.abort();
             }
@@ -1312,10 +1321,10 @@ pub mod dfind_file_watcher {
                 }
                 // ignore the dfind server dying. use waitpid to detect this instead
                 Err(flow_dfind::Error::Stopped) => {
-                    log::debug!("Connection to dfind broke");
+                    flow_hh_logger::debug!("Connection to dfind broke");
                 }
                 Err(err) => {
-                    log::debug!("dfind get_changes failed: {}", err);
+                    flow_hh_logger::debug!("dfind get_changes failed: {}", err);
                 }
             }
         }
@@ -1353,7 +1362,7 @@ pub mod dfind_file_watcher {
                     fields.instance = Some(Arc::new(d));
                 }
                 Err(err) => {
-                    log::error!("Failed to initialize dfind: {}", err);
+                    flow_hh_logger::error!("Failed to initialize dfind: {}", err);
                 }
             }
         }

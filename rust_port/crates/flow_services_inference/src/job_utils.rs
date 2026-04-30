@@ -44,7 +44,7 @@ fn job_helper<A, B, C>(
     let mut iter = files.iter();
     loop {
         if out_of_time(options, start_time) {
-            eprintln!(
+            flow_hh_logger::debug!(
                 "Bucket timed out! {} files finished, {} files unfinished",
                 acc.len(),
                 iter.len()

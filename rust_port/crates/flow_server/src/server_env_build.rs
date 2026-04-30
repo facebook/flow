@@ -67,7 +67,7 @@ fn worker_gc_control(options: &Options) -> StdlibGcControl {
         gc_control.custom_minor_max_size = v;
     }
     if options.profile {
-        log::info!(
+        flow_hh_logger::info!(
             "Worker GC params: minor_heap_size = {}; major_heap_increment = {}; space_overhead = {}; window_size = {}; custom_major_ratio = {}%; custom_minor_ratio = {}%; custom_minor_max_size = {}",
             gc_control.minor_heap_size,
             gc_control.major_heap_increment,

@@ -6422,7 +6422,7 @@ fn expression_inner<'a>(
     if let (Some(threshold), Some(start_time)) = (threshold, start_time) {
         let run_time = start_time.elapsed().as_secs_f64();
         if run_time > threshold {
-            eprintln!(
+            flow_hh_logger::info!(
                 "[{}] Slow CHECK expression at {} ({} seconds)",
                 std::process::id(),
                 loc.debug_to_string(true),

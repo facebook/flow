@@ -71,7 +71,7 @@ fn load_lib_files(
                 ordered_asts.push((scoped_dir_opt.clone(), ast));
             }
             None => {
-                eprintln!("Failed to find {:?} in parsing heap.", lib_file);
+                flow_hh_logger::info!("Failed to find {:?} in parsing heap.", lib_file);
                 ok = false;
             }
         }

@@ -314,6 +314,11 @@ fn verify_version(options: &Options, file: &mut impl Read) -> Result<(), Invalid
     if actual == expected {
         Ok(())
     } else {
+        flow_hh_logger::error!(
+            "Saved-state file failed version check. Expected version {:?} but got {:?}",
+            expected,
+            actual
+        );
         Err(InvalidReason::Build_mismatch { expected, actual })
     }
 }
@@ -323,6 +328,9 @@ fn verify_flowconfig_hash(
     flowconfig_hash: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
 ) -> Result<(), InvalidReason> {
     if !options.saved_state_skip_version_check && options.flowconfig_hash != *flowconfig_hash {
+        flow_hh_logger::error!(
+            "Invalid saved state: .flowconfig has changed since this saved state was generated."
+        );
         Err(InvalidReason::Flowconfig_mismatch)
     } else {
         Ok(())
@@ -452,6 +460,7 @@ fn collect_saved_state_data(
     options: &Options,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> SavedStateData {
+    flow_hh_logger::info!("Collecting data for saved state");
     let parsed_heaps = env
         .files
         .iter()
@@ -516,6 +525,7 @@ fn collect_saved_state_env_data(
     options: &Options,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> SavedStateEnvData {
+    flow_hh_logger::info!("Collecting env data for saved state");
     let duplicate_providers = env
         .errors
         .duplicate_providers
@@ -583,6 +593,7 @@ fn write_loaded_state(
     path: &Path,
     loaded: &SerializedLoadedSavedState,
 ) -> Result<(), InvalidReason> {
+    flow_hh_logger::info!("Writing saved-state file at {:?}", path);
     let compressed = saved_state_compression::marshal_and_compress(loaded)?;
     let mut file =
         File::create(path).map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
@@ -610,6 +621,7 @@ pub fn save(
     options: &Options,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> Result<(), InvalidReason> {
+    flow_hh_logger::info!("Saving heap to saved-state file");
     let loaded = if options.saved_state_direct_serialization {
         SerializedLoadedSavedState::Direct_saved_state(collect_direct_data(
             shared_mem,
@@ -625,7 +637,9 @@ pub fn save(
             node_modules_containers,
         ))
     };
-    write_loaded_state(path, &loaded)
+    let result = write_loaded_state(path, &loaded);
+    flow_hh_logger::info!("Finished writing saved-state file at {:?}", path);
+    result
 }
 
 fn denormalize_paths(
@@ -743,6 +757,7 @@ pub fn load(
     path: &Path,
     options: &Options,
 ) -> Result<LoadedSavedState, InvalidReason> {
+    flow_hh_logger::info!("Reading saved-state file at {:?}", path);
     flow_server_env::monitor_rpc::status_update(
         flow_server_env::server_status::Event::ReadSavedState,
     );
@@ -755,8 +770,10 @@ pub fn load(
         bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
             .map(|(v, _)| v)
             .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
+    flow_hh_logger::info!("Decompressing saved-state data");
     let mut loaded: SerializedLoadedSavedState =
         saved_state_compression::decompress_and_unmarshal(&compressed)?;
+    flow_hh_logger::info!("Denormalizing saved-state data");
     match &mut loaded {
         SerializedLoadedSavedState::Legacy_saved_state(data) => {
             // Signal progress so the status state machine transitions to Loading_saved_state,
@@ -775,6 +792,7 @@ pub fn load(
                 &mut data.non_flowlib_libs,
                 &mut data.node_modules_containers,
             );
+            flow_hh_logger::info!("Finished loading saved-state");
             Ok(LoadedSavedState::Legacy_saved_state(data.clone()))
         }
         SerializedLoadedSavedState::Direct_saved_state(data) => {
@@ -792,6 +810,7 @@ pub fn load(
                 &mut data.non_flowlib_libs,
                 &mut data.node_modules_containers,
             );
+            flow_hh_logger::info!("Loading heap from saved-state file");
             for (file, parsed_file_data) in &data.parsed_heaps {
                 restore_parsed(shared_mem, file, parsed_file_data);
             }
@@ -801,6 +820,7 @@ pub fn load(
             for (file, package_data) in &data.package_heaps {
                 restore_package(shared_mem, file, package_data);
             }
+            flow_hh_logger::info!("Finished loading saved-state");
             Ok(LoadedSavedState::Direct_saved_state(SavedStateEnvData {
                 flowconfig_hash: data.flowconfig_hash.dupe(),
                 parsed_files: data.parsed_files.clone(),

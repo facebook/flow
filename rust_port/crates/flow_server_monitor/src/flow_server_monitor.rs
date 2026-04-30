@@ -144,7 +144,7 @@ pub fn handle_waiting_start_command(waiting_fd: Box<dyn Write + Send>) {
                             close();
                         }
                         _ => {
-                            log::error!(
+                            flow_hh_logger::error!(
                                 "Unexpected exception when talking to waiting start command: {}",
                                 msg
                             );
@@ -175,8 +175,7 @@ fn fallback_error_handler(msg: &str, payload: Box<dyn std::any::Any + Send>) -> 
         "unknown panic payload".to_string()
     };
     let msg = format!("{}: {}", msg, exn_str);
-    log::error!("{}. Exiting", msg);
-    eprintln!("{}. Exiting", msg);
+    flow_hh_logger::error!("{}. Exiting", msg);
     flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::UnknownError);
 }
 
@@ -221,7 +220,15 @@ fn internal_start(
     // `flow server` wants to output to both stderr and the log, so we initialize Logger with this fd
     let log_fd = {
         let fd = flow_server::server_daemon::try_open_log_file(&args.monitor_log_file)?;
-        if is_daemon { None } else { Some(fd) }
+        if is_daemon {
+            None
+        } else {
+            let fd_clone = fd
+                .try_clone()
+                .map_err(|e| format!("Failed to clone log file fd for Hh_logger.set_log: {}", e))?;
+            flow_hh_logger::set_log(args.monitor_log_file.clone(), fd_clone);
+            Some(fd)
+        }
     };
     // Open up the socket immediately. When a client tries to connect to an
     // open socket, it will block. When a client tries to connect to a not-yet-open
@@ -429,7 +436,7 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
     // We never write to the child process so we can close this channel
     // (mirrors OCaml `Daemon.close_out oc`).
     if let Err(e) = flow_daemon::shutdown_out_write(&mut handle.channels.1) {
-        log::debug!("failed to shutdown monitor parent_out: {}", e);
+        flow_hh_logger::debug!("failed to shutdown monitor parent_out: {}", e);
     }
 
     // If wait is true, wait for the "Ready" message.

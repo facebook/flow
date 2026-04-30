@@ -623,7 +623,7 @@ fn instantiate_poly_t<'cx>(cx: &Context<'cx>, t: Type, args: Option<&[Type]>) ->
                 let args = args.map(|s| s.to_vec()).unwrap_or_default();
                 let maximum_arity = type_params.len();
                 if args.len() > maximum_arity {
-                    eprintln!("Instantiating poly type failed");
+                    flow_hh_logger::error!("Instantiating poly type failed");
                     t
                 } else {
                     let mut map: FlowOrdMap<SubstName, Type> = FlowOrdMap::new();
@@ -651,7 +651,7 @@ fn instantiate_poly_t<'cx>(cx: &Context<'cx>, t: Type, args: Option<&[Type]>) ->
                         }
                     }
                     if too_few_args {
-                        eprintln!("Instantiating poly type failed");
+                        flow_hh_logger::error!("Instantiating poly type failed");
                         t
                     } else {
                         flow_js::subst(cx, None, None, None, &map, t_out.dupe())

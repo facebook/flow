@@ -34,7 +34,7 @@ pub struct CommandHandlerCallbacks {
 // kill the fork and exit gracefully. Might also want to use the
 // SharedMem_js.cancel thingy.
 fn kill_workers() {
-    log::info!("Killing the worker processes");
+    flow_hh_logger::info!("Killing the worker processes");
     worker_cancel::stop_workers();
 }
 
@@ -99,7 +99,7 @@ fn handle_message(
                     )
                 }
             };
-            log::info!("{}", msg);
+            flow_hh_logger::info!("{}", msg);
             flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::KilledByMonitor);
         }
     }
@@ -115,7 +115,7 @@ pub fn listen_for_messages(genv: &Arc<Genv>, callbacks: &CommandHandlerCallbacks
             Err(_) => {
                 kill_workers();
                 let msg = "Connection to monitor closed unexpectedly";
-                log::info!("{}", msg);
+                flow_hh_logger::info!("{}", msg);
                 flow_common_exit_status::exit(
                     flow_common_exit_status::FlowExitStatus::KilledByMonitor,
                 );

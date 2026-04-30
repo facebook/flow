@@ -8,7 +8,6 @@
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc::Loc;
-use tracing::info;
 
 pub type Name = FlowSmolStr;
 
@@ -23,7 +22,7 @@ impl<Acc> CodemodAstMapper<Acc> {
     }
 
     pub fn log(&self, s: &str) {
-        info!("{{{}}}: {}", self.name, s);
+        flow_hh_logger::info!("{{{}}}: {}", self.name, s);
     }
 }
 

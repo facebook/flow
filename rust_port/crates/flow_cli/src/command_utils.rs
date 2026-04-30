@@ -36,7 +36,6 @@ use flow_server_env::server_prot;
 use flow_server_monitor::FlowServerMonitorOptions;
 use flow_server_utils::file_input::FileInput;
 use regex::Regex;
-use tracing::level_filters::LevelFilter;
 
 use crate::command_spec;
 use crate::command_spec::Command;
@@ -3410,7 +3409,7 @@ pub(crate) struct CodemodParams {
     pub(crate) ignore_version: bool,
     pub(crate) write: bool,
     pub(crate) repeat: bool,
-    pub(crate) log_level: Option<LevelFilter>,
+    pub(crate) log_level: Option<flow_hh_logger::Level>,
     pub(crate) root: Option<String>,
     pub(crate) input_file: Option<String>,
     pub(crate) base_flag: BaseFlags,
@@ -3457,14 +3456,14 @@ pub(crate) fn get_codemod_flags(args: &arg_spec::Values) -> CodemodParams {
     }
 }
 
-fn log_level_flag() -> arg_spec::FlagType<Option<LevelFilter>> {
+fn log_level_flag() -> arg_spec::FlagType<Option<flow_hh_logger::Level>> {
     arg_spec::enum_flag(vec![
-        ("off", LevelFilter::OFF),
-        ("fatal", LevelFilter::ERROR),
-        ("error", LevelFilter::ERROR),
-        ("warn", LevelFilter::WARN),
-        ("info", LevelFilter::INFO),
-        ("debug", LevelFilter::DEBUG),
+        ("off", flow_hh_logger::Level::Off),
+        ("fatal", flow_hh_logger::Level::Fatal),
+        ("error", flow_hh_logger::Level::Error),
+        ("warn", flow_hh_logger::Level::Warn),
+        ("info", flow_hh_logger::Level::Info),
+        ("debug", flow_hh_logger::Level::Debug),
     ])
 }
 

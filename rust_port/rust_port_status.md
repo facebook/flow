@@ -1132,7 +1132,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] core/
       - [x] build_id.ml → `crates/facebook/flow_facebook_logging/src/build_id.rs`
       - [ ] exception.ml
-      - [ ] hh_logger.ml
+      - [x] hh_logger.ml → `flow_hh_logger/src/lib.rs`
       - [ ] measure.ml
       - [ ] random_id.ml
       - [ ] utils.ml
@@ -1201,6 +1201,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] string/
       - [ ] string_utils.ml (partial → `flow_common/src/string_utils.rs`)
         - [x] `filename_escape`
+        - [x] `split_into_lines`
+        - [x] `indent`
     - [ ] sys/
       - [ ] __tests__/
         - [ ] sys_utils_tests.ml

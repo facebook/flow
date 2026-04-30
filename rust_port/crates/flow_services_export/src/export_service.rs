@@ -487,6 +487,7 @@ pub fn index(
     let mut imports_to_add = export_index::empty();
     let mut imports_to_remove = export_index::empty();
 
+    flow_hh_logger::info!("Indexing files: creating index...");
     monitor_rpc::status_update(server_status::Event::IndexingProgress(
         server_status::Progress {
             finished: 0,
@@ -512,6 +513,7 @@ pub fn index(
         ));
     }
 
+    flow_hh_logger::info!("Indexing files: indexing post-process...");
     monitor_rpc::status_update(server_status::Event::IndexingPostProcess);
 
     (
@@ -531,10 +533,13 @@ pub fn init(
 ) -> ExportSearch {
     let (new_available_exports, _old_available_exports, imports_to_add, _imports_to_remove) =
         index(shared_mem, parsed);
+    flow_hh_logger::info!("Indexing files: adding exports of builtins...");
     let mut exports_to_add = new_available_exports;
     let (lib_exports, scoped_lib_exports) = libs;
     add_exports_of_builtins(lib_exports, scoped_lib_exports, &mut exports_to_add);
+    flow_hh_logger::info!("Indexing files: merging exports-imports...");
     let final_export_index = export_index::merge_export_import(&imports_to_add, &exports_to_add);
+    flow_hh_logger::info!("Indexing files: initing...");
     let search = export_search::init(final_export_index);
     monitor_rpc::status_update(server_status::Event::IndexingEnd);
     search

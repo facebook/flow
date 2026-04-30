@@ -544,7 +544,7 @@ pub fn recheck_fetch(
 }
 
 pub fn requeue_workload(workload: RecheckWorkload) {
-    eprintln!(
+    flow_hh_logger::info!(
         "Re-queueing force-check of {} files and recheck of {} files ({} dependencies)",
         workload.files_to_force.cardinal(),
         workload
@@ -565,9 +565,10 @@ pub fn requeue_workload(workload: RecheckWorkload) {
         prev.find_ref_command = workload.find_ref_command.or(prev.find_ref_command.take());
         prev.metadata = merge_file_watcher_metadata(&prev.metadata, &workload.metadata);
         if prev.incompatible_lib_change || workload.incompatible_lib_change {
-            eprintln!(
+            flow_hh_logger::info!(
                 "Previous recheck requires restart: {}; new workload requires restart: {}",
-                prev.incompatible_lib_change, workload.incompatible_lib_change,
+                prev.incompatible_lib_change,
+                workload.incompatible_lib_change,
             );
         }
         prev.incompatible_lib_change =

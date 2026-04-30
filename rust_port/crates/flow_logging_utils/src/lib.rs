@@ -7,36 +7,36 @@
 
 use flow_common::options::Options;
 
-pub fn hh_logger_level_of_env(env: &str) -> Option<log::LevelFilter> {
+pub fn hh_logger_level_of_env(env: &str) -> Option<flow_hh_logger::Level> {
     match std::env::var(env).ok().as_deref() {
-        Some("off") => Some(log::LevelFilter::Off),
-        Some("fatal") => Some(log::LevelFilter::Error),
-        Some("error") => Some(log::LevelFilter::Error),
-        Some("warn") => Some(log::LevelFilter::Warn),
-        Some("info") => Some(log::LevelFilter::Info),
-        Some("debug") => Some(log::LevelFilter::Debug),
+        Some("off") => Some(flow_hh_logger::Level::Off),
+        Some("fatal") => Some(flow_hh_logger::Level::Fatal),
+        Some("error") => Some(flow_hh_logger::Level::Error),
+        Some("warn") => Some(flow_hh_logger::Level::Warn),
+        Some("info") => Some(flow_hh_logger::Level::Info),
+        Some("debug") => Some(flow_hh_logger::Level::Debug),
         // ignore invalid values
         Some(_) | None => None,
     }
 }
 
 // TODO: min_level should probably default to warn, but was historically info
-pub fn set_hh_logger_min_level(min_level: Option<log::LevelFilter>, options: &Options) {
-    let min_level = min_level.unwrap_or(log::LevelFilter::Info);
+pub fn set_hh_logger_min_level(min_level: Option<flow_hh_logger::Level>, options: &Options) {
+    let min_level = min_level.unwrap_or(flow_hh_logger::Level::Info);
     let level = if options.quiet {
-        log::LevelFilter::Off
+        flow_hh_logger::Level::Off
     } else if options.verbose.is_some() || options.debug {
-        log::LevelFilter::Debug
+        flow_hh_logger::Level::Debug
     } else {
         match hh_logger_level_of_env("FLOW_LOG_LEVEL") {
             Some(level) => level,
             None => min_level,
         }
     };
-    log::set_max_level(level);
+    flow_hh_logger::level::set_min_level(level);
 }
 
-pub fn init_loggers(options: &Options, min_level: Option<log::LevelFilter>) {
+pub fn init_loggers(options: &Options, min_level: Option<flow_hh_logger::Level>) {
     set_hh_logger_min_level(min_level, options)
 }
 

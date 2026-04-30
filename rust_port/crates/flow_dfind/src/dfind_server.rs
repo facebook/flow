@@ -63,6 +63,10 @@ fn run_daemon(param: Param, pair: ChannelPair<(), Msg>) {
         roots,
         log_file,
     } = param;
+    let t = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs_f64();
 
     // Open a log file inside the daemon for diagnostics. OCaml routes its
     // output to the inherited stdout/stderr which the parent has redirected
@@ -115,6 +119,7 @@ fn run_daemon(param: Param, pair: ChannelPair<(), Msg>) {
     write_log(&log, format_args!("dfind: ready"));
 
     to_channel(&mut out_chan, &Msg::Ready, true);
+    flow_hh_logger::log_duration("Initialization", t);
 
     loop {
         let _: () = from_channel(&mut in_chan, None);
@@ -125,6 +130,7 @@ fn run_daemon(param: Param, pair: ChannelPair<(), Msg>) {
         let count = updates.len();
         if count > 0 {
             write_log(&log, format_args!("dfind: sending {} file updates", count));
+            flow_hh_logger::log!("Sending {} file updates", count);
         }
         to_channel(&mut out_chan, &Msg::Updates(updates), true);
     }

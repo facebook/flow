@@ -633,7 +633,7 @@ impl<'a, 'cx, Extra: BaseStats> Mapper<'a, 'cx, Extra> {
             total_size_of_annotations: total_size as i64,
             extra,
         };
-        tracing::info!("{} file stats: {}", file.as_str(), stats.serialize());
+        flow_hh_logger::info!("{} file stats: {}", file.as_str(), stats.serialize());
         self.acc.stats = stats;
         let hardcoded_imports = self.hardcoded_imports.to_import_stmts();
         let inferred_imports = self.get_remote_converter().to_import_stmts();

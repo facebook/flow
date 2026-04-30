@@ -65,7 +65,7 @@ mod parallelizable_workload_loop {
             }
             match server_monitor_listener_state::pop_next_parallelizable_workload() {
                 Some(workload) => {
-                    log::info!("Running a parallel workload");
+                    flow_hh_logger::info!("Running a parallel workload");
                     (workload.parallelizable_workload_handler)(env);
                 }
                 None => {}
@@ -159,12 +159,12 @@ pub fn process_updates(
     ) {
         Ok(updates) => Updates::NormalUpdates(updates),
         Err(recheck_updates::Error::RecoverableShouldReinitNonLazily { msg, updates }) => {
-            eprintln!("{}", msg);
+            flow_hh_logger::info!("Libdef change detected: {}", msg);
+            flow_hh_logger::info!("Will require full check reinit ({} updates)", updates.len());
             Updates::RequiredFullCheckReinit(updates)
         }
         Err(recheck_updates::Error::Unrecoverable { msg, exit_status }) => {
-            eprintln!("{}", msg);
-            flow_common_exit_status::exit(exit_status);
+            flow_common_exit_status::exit_with_msg(exit_status, &msg);
         }
     }
 }
@@ -370,7 +370,7 @@ fn spawn_recheck_cancel_monitor() -> RecheckCancelMonitor {
         .spawn(move || {
             crossbeam::channel::select! {
                 recv(push_rx) -> _ => {
-                    eprintln!(
+                    flow_hh_logger::info!(
                         "Canceling recheck because a new force-recheck or file-watcher update arrived"
                     );
                     worker_cancel::stop_workers();
@@ -484,7 +484,7 @@ pub(crate) fn recheck_single(
         }
         Err(type_service::RecheckError::Canceled(_changed_files)) => {
             stop_parallelizable_workloads();
-            log::info!(
+            flow_hh_logger::info!(
                 "Recheck successfully canceled. Restarting the recheck to include new file changes"
             );
             let _done: bool = shared_mem.collect_slice(256000);

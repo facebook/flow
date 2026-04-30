@@ -80,7 +80,7 @@ mod update_loop {
 
     pub(super) fn process_update(t: &mut StatusInfo, new_status: server_status::Status) {
         let new_status = server_status::change_init_to_restart(t.restart_reason, new_status);
-        log::debug!(
+        flow_hh_logger::debug!(
             "Server status: {}",
             server_status::string_of_status(false, false, &new_status)
         );
@@ -266,6 +266,6 @@ pub fn update(status: server_status::Status) {
     let current = CURRENT_STATUS.lock().unwrap();
     let info = current.lock().unwrap();
     if let Err(e) = info.push_to_stream.send(status) {
-        log::debug!("StatusStream.update: stream closed, dropping update: {}", e);
+        flow_hh_logger::debug!("StatusStream.update: stream closed, dropping update: {}", e);
     }
 }

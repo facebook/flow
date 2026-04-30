@@ -14,7 +14,6 @@ use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
-use tracing::info;
 
 use crate::utils::codemod_ast_mapper::CodemodAstMapper;
 
@@ -199,7 +198,10 @@ impl<'ast> AstVisitor<'ast, Loc> for HasUnaccountedReactValueUsageVisitor {
             };
             name.as_str() == "ref"
         }) {
-            info!("Skipping component with ref {:?}", loc);
+            flow_hh_logger::info!(
+                "Skipping component with ref {}",
+                flow_common::reason::string_of_loc(None, loc)
+            );
             self.acc = true;
         }
         ast_visitor::component_declaration_default(self, loc, component)
@@ -207,7 +209,10 @@ impl<'ast> AstVisitor<'ast, Loc> for HasUnaccountedReactValueUsageVisitor {
 
     fn identifier(&mut self, id: &'ast ast::Identifier<Loc, Loc>) -> Result<(), !> {
         if self.in_typeof_type && id.name.as_str() == "React" {
-            info!("Skipping React in typeof {:?}", id.loc);
+            flow_hh_logger::info!(
+                "Skipping React in typeof {}",
+                flow_common::reason::string_of_loc(None, &id.loc)
+            );
             self.acc = true;
         }
         ast_visitor::identifier_default(self, id)
@@ -251,8 +256,11 @@ impl RemoveReactImportMapper {
                 let mut visitor = HasUnaccountedReactValueUsageVisitor::new();
                 !visitor.eval(&prog)
             } else {
-                let uses_str: Vec<String> = uses.iter().map(|loc| format!("{:?}", loc)).collect();
-                info!("Skipping due to value uses {}", uses_str.join(", "));
+                let uses_str: Vec<String> = uses
+                    .iter()
+                    .map(|loc| flow_common::reason::string_of_loc(None, loc))
+                    .collect();
+                flow_hh_logger::info!("Skipping due to value uses {}", uses_str.join(", "));
                 false
             }
         };

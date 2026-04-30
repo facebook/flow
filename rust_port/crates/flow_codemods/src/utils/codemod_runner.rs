@@ -108,7 +108,7 @@ fn next_of_filename_set(
 
 fn log_input_files(fileset: &BTreeSet<FileKey>) {
     let files_str: Vec<String> = fileset.iter().map(|f| f.to_absolute()).collect();
-    tracing::debug!(
+    flow_hh_logger::debug!(
         "Running codemod on {} files:\n{}",
         fileset.len(),
         files_str.join("\n")
@@ -272,7 +272,7 @@ async fn merge_targets<'a>(
     let dependency_info = &env.dependency_info;
     let sig_dependency_graph = dependency_info.sig_dependency_graph();
     let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
-    tracing::info!("Calculating dependencies");
+    flow_hh_logger::info!("Calculating dependencies");
     let all_dependent_files: BTreeSet<FileKey> =
         _get_dependent_files(sig_dependency_graph, implementation_dependency_graph, roots).await;
     let (to_merge, to_check, _components, _recheck_set) = include_dependencies_and_dependents(
@@ -516,7 +516,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
             .expect("ensure_parsed_or_trigger_recheck failed");
         }
         let mutator = ();
-        tracing::info!("Merging {} files", files_to_merge.len());
+        flow_hh_logger::info!("Merging {} files", files_to_merge.len());
         if let Some(pool) = _workers {
             let _merge_results = flow_services_inference::merge_service::merge_runner(
                 pool,
@@ -534,8 +534,8 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
                 },
             );
         }
-        tracing::info!("Merging done.");
-        tracing::info!("Checking {} files", _roots.len());
+        flow_hh_logger::info!("Merging done.");
+        flow_hh_logger::info!("Checking {} files", _roots.len());
         let options = C::check_options(_options.clone());
         let metadata = flow_typing_context::metadata_of_options(&options);
         let visit_fn: &dyn Fn(
@@ -559,7 +559,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
         let (job_results, _remaining) =
             flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files)?;
         let result: ResultList<Self::Accumulator> = job_results;
-        tracing::info!("Done");
+        flow_hh_logger::info!("Done");
         Ok(result)
     }
 }
@@ -640,7 +640,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
             .expect("ensure_parsed_or_trigger_recheck failed");
         }
         let mutator = ();
-        tracing::info!("Merging {} files", files_to_merge.len());
+        flow_hh_logger::info!("Merging {} files", files_to_merge.len());
         if let Some(pool) = _workers {
             let _merge_results = flow_services_inference::merge_service::merge_runner(
                 pool,
@@ -658,8 +658,8 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 },
             );
         }
-        tracing::info!("Merging done.");
-        tracing::info!("Checking {} files", _roots.len());
+        flow_hh_logger::info!("Merging done.");
+        flow_hh_logger::info!("Checking {} files", _roots.len());
         let options = C::check_options(_options.clone());
         let metadata = flow_typing_context::metadata_of_options(&options);
         let visit = |options: &Options,
@@ -682,7 +682,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         let (job_results, _remaining) =
             flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files)?;
         let initial_run_result: ResultList<Self::Accumulator> = job_results;
-        tracing::info!("Initial run done");
+        flow_hh_logger::info!("Initial run done");
         let second_run_roots: BTreeSet<FileKey> = initial_run_result.iter().fold(
             BTreeSet::<FileKey>::new(),
             |mut acc: BTreeSet<FileKey>, item| {
@@ -716,7 +716,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
             .expect("ensure_parsed_or_trigger_recheck failed");
         }
         let mutator2 = ();
-        tracing::info!("Merging {} files", files_to_merge2.len());
+        flow_hh_logger::info!("Merging {} files", files_to_merge2.len());
         if let Some(pool) = _workers {
             let _merge_results = flow_services_inference::merge_service::merge_runner(
                 pool,
@@ -734,7 +734,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 },
             );
         }
-        tracing::info!("Merging done.");
+        flow_hh_logger::info!("Merging done.");
         let mut check_fn2 = mk_check(
             &visit,
             _iteration,
@@ -748,7 +748,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
             flow_services_inference::job_utils::mk_job(&mut check_fn2, &options, files2)?;
         let mut result: ResultList<Self::Accumulator> = initial_run_result;
         result.extend(job_results2);
-        tracing::info!("Pruned-deps run done");
+        flow_hh_logger::info!("Pruned-deps run done");
         Ok(result)
     }
 }
@@ -812,7 +812,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
             .expect("ensure_parsed_or_trigger_recheck failed");
         }
         let mutator = ();
-        tracing::info!("Merging {} files", files_to_merge.len());
+        flow_hh_logger::info!("Merging {} files", files_to_merge.len());
         if let Some(pool) = _workers {
             let _merge_results = flow_services_inference::merge_service::merge_runner(
                 pool,
@@ -830,9 +830,9 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                 },
             );
         }
-        tracing::info!("Merging done.");
+        flow_hh_logger::info!("Merging done.");
         let files_to_check = checked_set_all(_files_to_check);
-        tracing::info!("Pre-Checking {} files", files_to_check.len());
+        flow_hh_logger::info!("Pre-Checking {} files", files_to_check.len());
         let precheck_result: BTreeMap<FileKey, UnitResult<C::PrepassResult>> = {
             let state = C::prepass_init();
             let options = C::mod_prepass_options(_options.clone());
@@ -877,11 +877,11 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
             }
             acc
         };
-        tracing::info!("Pre-checking Done");
-        tracing::info!("Storing pre-checking results");
+        flow_hh_logger::info!("Pre-checking Done");
+        flow_hh_logger::info!("Storing pre-checking results");
         C::store_precheck_result(precheck_result);
-        tracing::info!("Storing pre-checking results Done");
-        tracing::info!("Checking+Codemodding {} files", _roots.len());
+        flow_hh_logger::info!("Storing pre-checking results Done");
+        flow_hh_logger::info!("Checking+Codemodding {} files", _roots.len());
         let options = C::check_options(_options.clone());
         let metadata = flow_typing_context::metadata_of_options(&options);
         let visit_fn: &dyn Fn(
@@ -901,7 +901,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
         let (job_results, _remaining) =
             flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files)?;
         let result: ResultList<Self::Accumulator> = job_results;
-        tracing::info!("Checking+Codemodding Done");
+        flow_hh_logger::info!("Checking+Codemodding Done");
         Ok(result)
     }
 }

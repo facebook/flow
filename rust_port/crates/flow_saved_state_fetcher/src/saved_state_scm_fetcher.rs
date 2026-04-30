@@ -222,7 +222,7 @@ pub fn fetch(options: &Options) -> FetchResult {
             ));
         }
     };
-    eprintln!("Saved state merge base hash is {:?}", merge_base);
+    flow_hh_logger::info!("Saved state merge base hash is {:?}", merge_base);
     let Some((saved_state_merge_base, saved_state_file)) =
         pick_saved_state(options, root, &merge_base, timestamp)
     else {
@@ -230,8 +230,8 @@ pub fn fetch(options: &Options) -> FetchResult {
     };
     match get_changes_since(vcs_kind, &vcs_root, &saved_state_merge_base) {
         Ok(changed_files) => {
-            eprintln!("Saved state path is {}", saved_state_file.display());
-            eprintln!(
+            flow_hh_logger::info!("Saved state path is {}", saved_state_file.display());
+            flow_hh_logger::info!(
                 "{} files changed since saved state was created",
                 changed_files.len()
             );

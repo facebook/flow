@@ -28,7 +28,7 @@ pub fn add(
 }
 
 pub fn commit(transaction: &mut Transaction) {
-    log::info!("Committing transaction: {}", transaction.name);
+    flow_hh_logger::info!("Committing transaction: {}", transaction.name);
     for mutator in std::mem::take(&mut transaction.mutators).into_iter().rev() {
         (mutator.commit)();
     }
@@ -36,7 +36,7 @@ pub fn commit(transaction: &mut Transaction) {
 }
 
 pub fn rollback(transaction: &mut Transaction) {
-    log::info!("Rolling back transaction: {}", transaction.name);
+    flow_hh_logger::info!("Rolling back transaction: {}", transaction.name);
     for mutator in std::mem::take(&mut transaction.mutators).into_iter().rev() {
         (mutator.rollback)();
     }

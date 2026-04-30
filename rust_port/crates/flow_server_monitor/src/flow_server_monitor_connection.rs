@@ -178,7 +178,7 @@ impl<P: ConnectionProcessor> Connection<P> {
                     }
                     Err(e) => {
                         (self.close)();
-                        log::error!("Connection '{}' failed to flush: {}", self.name, e);
+                        flow_hh_logger::error!("Connection '{}' failed to flush: {}", self.name, e);
                         return;
                     }
                 }
@@ -225,7 +225,7 @@ mod command_loop {
         match exn {
             LoopExn::StreamEmpty => {}
             LoopExn::Other(e) => {
-                log::error!(
+                flow_hh_logger::error!(
                     "Closing connection '{}' due to uncaught exception in command loop: {}",
                     conn.name,
                     e
@@ -299,13 +299,13 @@ mod read_loop {
     fn catch<P: ConnectionProcessor>(connection: &Arc<Connection<P>>, exn: LoopExn) {
         match exn {
             LoopExn::EndOfFile | LoopExn::ConnReset => {
-                log::error!(
+                flow_hh_logger::error!(
                     "Connection '{}' was closed from the other side",
                     connection.name
                 );
             }
             LoopExn::Other(e) => {
-                log::error!(
+                flow_hh_logger::error!(
                     "Closing connection '{}' due to uncaught exception in read loop: {}",
                     connection.name,
                     e
@@ -390,10 +390,10 @@ impl<P: ConnectionProcessor> Connection<P> {
         let conn_for_start = conn.clone();
         let start: Box<dyn FnOnce() + Send> = Box::new(move || {
             if start_tx_command.send(conn_for_start.clone()).is_err() {
-                log::debug!("CommandLoop task exited before start()");
+                flow_hh_logger::debug!("CommandLoop task exited before start()");
             }
             if start_tx_read.send(conn_for_start).is_err() {
-                log::debug!("ReadLoop task exited before start()");
+                flow_hh_logger::debug!("ReadLoop task exited before start()");
             }
         });
 

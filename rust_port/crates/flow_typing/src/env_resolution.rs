@@ -3402,7 +3402,7 @@ pub fn resolve_component<'cx>(
                 f()?;
                 let run_time = start_time.elapsed().as_secs_f64();
                 if run_time > threshold {
-                    eprintln!(
+                    flow_hh_logger::info!(
                         "[{}] Slow CHECK component {} ({} seconds)",
                         std::process::id(),
                         name_def_ordering::string_of_component(graph, component),

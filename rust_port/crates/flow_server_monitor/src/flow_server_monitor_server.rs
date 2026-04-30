@@ -73,9 +73,9 @@ pub fn exit(
             std::thread::park();
         }
     }
-    log::info!("Monitor is exiting code {:?} ({})", exit_status, msg);
+    flow_hh_logger::info!("Monitor is exiting code {:?} ({})", exit_status, msg);
 
-    log::info!("Broadcasting to threads and waiting 1 second for them to exit");
+    flow_hh_logger::info!("Broadcasting to threads and waiting 1 second for them to exit");
     crate::exit_signal::SIGNAL.broadcast(exit_status, msg.to_string());
     signal_exit_to_loops();
 
@@ -173,7 +173,7 @@ static COMMAND_STREAM: std::sync::LazyLock<(
 
 fn push_to_command_stream(cmd: Command) {
     if let Err(e) = COMMAND_STREAM.0.send(cmd) {
-        log::warn!("Failed to push to command stream: {}", e);
+        flow_hh_logger::warn!("Failed to push to command stream: {}", e);
     }
 }
 
@@ -213,19 +213,19 @@ pub mod server_instance {
     ) {
         match msg {
             monitor_prot::ServerToMonitorMessage::Response(request_id, response) => {
-                log::debug!(
+                flow_hh_logger::debug!(
                     "Read a response to request '{}' from the server!",
                     request_id
                 );
                 let request = crate::request_map::remove(&request_id);
                 match request {
                     None => {
-                        log::error!("Failed to look up request '{}'", request_id);
+                        flow_hh_logger::error!("Failed to look up request '{}'", request_id);
                     }
                     Some((_req, client)) => {
                         let msg = monitor_prot::MonitorToClientMessage::Data(response);
                         if !client.write_and_close(msg) {
-                            log::debug!(
+                            flow_hh_logger::debug!(
                                 "Client for request '{}' is dead. Throwing away response",
                                 request_id
                             );
@@ -234,7 +234,7 @@ pub mod server_instance {
                 }
             }
             monitor_prot::ServerToMonitorMessage::RequestFailed(request_id, exn_str) => {
-                log::error!(
+                flow_hh_logger::error!(
                     "Server threw exception when processing '{}': {}",
                     request_id,
                     exn_str
@@ -242,12 +242,12 @@ pub mod server_instance {
                 let request = crate::request_map::remove(&request_id);
                 match request {
                     None => {
-                        log::error!("Failed to look up request '{}'", request_id);
+                        flow_hh_logger::error!("Failed to look up request '{}'", request_id);
                     }
                     Some((_req, client)) => {
                         let msg = monitor_prot::MonitorToClientMessage::ServerException(exn_str);
                         if !client.write_and_close(msg) {
-                            log::debug!(
+                            flow_hh_logger::debug!(
                                 "Client for request '{}' is dead. Throwing away response",
                                 request_id
                             );
@@ -272,11 +272,11 @@ pub mod server_instance {
                 response,
             ) => match crate::persistent_connection_map::get(client_id) {
                 None => {
-                    log::error!("Failed to look up persistent client #{}", client_id);
+                    flow_hh_logger::error!("Failed to look up persistent client #{}", client_id);
                 }
                 Some(connection) => {
                     if !connection.write(response) {
-                        log::debug!(
+                        flow_hh_logger::debug!(
                             "Persistent client #{} is dead. Throwing away response",
                             client_id
                         );
@@ -293,7 +293,7 @@ pub mod server_instance {
             // Another Lwt thread has already closed ServerConnection. We trust
             // that it will properly handle the server dying, so we can just drop
             // it here.
-            log::debug!("Server connection is closed. Throwing away request");
+            flow_hh_logger::debug!("Server connection is closed. Throwing away request");
         }
     }
 
@@ -329,7 +329,7 @@ pub mod server_instance {
             } else {
                 String::new()
             };
-            log::info!(
+            flow_hh_logger::info!(
                 "File watcher reported {} file{} changed{}",
                 count,
                 if count == 1 { "" } else { "s" },
@@ -344,7 +344,7 @@ pub mod server_instance {
                 conn,
             );
         } else {
-            log::debug!("Ignoring irrelevant file watcher notification");
+            flow_hh_logger::debug!("Ignoring irrelevant file watcher notification");
         }
     }
 
@@ -380,13 +380,13 @@ pub mod server_instance {
                 if !client.is_closed() {
                     send_file_watcher_notification(watcher, conn);
                     let request_id = crate::request_map::add(request.clone(), client);
-                    log::debug!("Writing '{}' to the server connection", request_id);
+                    flow_hh_logger::debug!("Writing '{}' to the server connection", request_id);
                     send_request(
                         monitor_prot::MonitorToServerMessage::Request(request_id, request),
                         conn,
                     );
                 } else {
-                    log::debug!("Skipping request from a dead ephemeral connection");
+                    flow_hh_logger::debug!("Skipping request from a dead ephemeral connection");
                 }
             }
             super::Command::WritePersistentRequest { client_id, request } => {
@@ -442,12 +442,12 @@ pub mod server_instance {
             Some(WaitStatus::Exited(exit_code)) => {
                 let exit_type = error_type_of_code(exit_code);
                 if exit_type == Some(FlowExitStatus::KilledByMonitor) {
-                    log::info!("Successfully killed the server process");
+                    flow_hh_logger::info!("Successfully killed the server process");
                 } else {
                     let exit_status_string = exit_type
                         .map(flow_common_exit_status::to_string)
                         .unwrap_or("Invalid_exit_code");
-                    log::error!(
+                    flow_hh_logger::error!(
                         "Tried to kill the server process ({}), which exited with the wrong exit code: {}",
                         pretty_pid,
                         exit_status_string
@@ -456,7 +456,7 @@ pub mod server_instance {
                 false
             }
             Some(WaitStatus::Signaled(signal)) => {
-                log::error!(
+                flow_hh_logger::error!(
                     "Tried to kill the server process ({}), but for some reason it was killed with signal {}",
                     pretty_pid,
                     signal
@@ -464,7 +464,7 @@ pub mod server_instance {
                 false
             }
             Some(WaitStatus::Stopped(signal)) => {
-                log::error!(
+                flow_hh_logger::error!(
                     "Tried to kill the server process ({}), but for some reason it was stopped with signal {}",
                     pretty_pid,
                     signal
@@ -472,7 +472,7 @@ pub mod server_instance {
                 true
             }
             None => {
-                log::error!(
+                flow_hh_logger::error!(
                     "Tried to kill the server process ({}), but it didn't die",
                     pretty_pid
                 );
@@ -488,10 +488,10 @@ pub mod server_instance {
                 ) {
                     Ok(()) => {}
                     Err(nix::errno::Errno::ESRCH) => {
-                        log::info!("Server process ({}) no longer exists", pretty_pid);
+                        flow_hh_logger::info!("Server process ({}) no longer exists", pretty_pid);
                     }
                     Err(err) => {
-                        log::error!(
+                        flow_hh_logger::error!(
                             "Failed to send SIGKILL to server process ({}): {}",
                             pretty_pid,
                             err
@@ -501,7 +501,7 @@ pub mod server_instance {
             }
             #[cfg(not(unix))]
             {
-                log::error!(
+                flow_hh_logger::error!(
                     "Forced kill of server process ({}) is not supported on this platform",
                     pretty_pid
                 );
@@ -566,7 +566,7 @@ pub mod server_instance {
         monitor_options: &crate::flow_server_monitor_options::MonitorOptions,
         restart_reason: Option<flow_server_env::server_status::RestartReason>,
     ) -> ServerInstance {
-        log::info!("Creating a new Flow server");
+        flow_hh_logger::info!("Creating a new Flow server");
         let crate::flow_server_monitor_options::MonitorOptions {
             shared_mem_config: _shared_mem_config,
             server_options: _server_options,
@@ -617,11 +617,11 @@ pub mod server_instance {
                     .block_on(edenfs_watcher.wait_for_init(*_file_watcher_timeout));
                 match init_result {
                     Ok(()) => {
-                        log::info!("EdenFS watcher initialized successfully");
+                        flow_hh_logger::info!("EdenFS watcher initialized successfully");
                         crate::file_watcher::AnyWatcher::EdenFS(edenfs_watcher)
                     }
                     Err(msg) => {
-                        log::info!(
+                        flow_hh_logger::info!(
                             "EdenFS watcher init failed: {}. Falling back to Watchman.",
                             msg
                         );
@@ -646,17 +646,17 @@ pub mod server_instance {
         );
 
         let watcher_name = any_watcher.name().to_string();
-        log::info!("File watcher type: {}", watcher_name);
+        flow_hh_logger::info!("File watcher type: {}", watcher_name);
 
         // For watchers that haven't been initialized yet (non-EdenFS or EdenFS fallback), initialize now
         if !already_initialized {
-            log::debug!("Initializing file watcher ({})", watcher_name);
+            flow_hh_logger::debug!("Initializing file watcher ({})", watcher_name);
             any_watcher.start_init();
         }
 
         let file_watcher_pid = any_watcher.getpid();
         if let Some(pid) = file_watcher_pid {
-            log::info!("Spawned file watcher (pid={})", pid);
+            flow_hh_logger::info!("Spawned file watcher (pid={})", pid);
         }
 
         let init_id = format!(
@@ -709,7 +709,7 @@ pub mod server_instance {
             ServerConnection::create(name.clone(), in_stream, out_stream, close, handle_response);
         start_fn();
 
-        log::info!("Spawned {} (pid={})", name, pid);
+        flow_hh_logger::info!("Spawned {} (pid={})", name, pid);
 
         // Close the connection to the server when we're about to exit
         let on_exit_connection = connection.clone();
@@ -726,7 +726,7 @@ pub mod server_instance {
             match init_result {
                 Ok(()) => {}
                 Err(msg) => {
-                    log::error!("{}", msg);
+                    flow_hh_logger::error!("{}", msg);
                     handle_file_watcher_exit(
                         None,
                         Some(&msg),
@@ -737,7 +737,7 @@ pub mod server_instance {
             }
         }
 
-        log::debug!("File watcher ({}) ready!", watcher_name);
+        flow_hh_logger::debug!("File watcher ({}) ready!", watcher_name);
 
         let any_watcher_arc = std::sync::Arc::new(any_watcher);
 
@@ -874,33 +874,33 @@ pub mod server_instance {
             match wait::waitpid(nix::unistd::Pid::from_raw(pid), None) {
                 Ok(wait::WaitStatus::Exited(_, code)) => {
                     if let Err(e) = tx.send(Some(WaitStatus::Exited(code))) {
-                        log::warn!("Failed to send wait status: {}", e);
+                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
                     }
                 }
                 Ok(wait::WaitStatus::Signaled(_, sig, _)) => {
                     if let Err(e) = tx.send(Some(WaitStatus::Signaled(sig as i32))) {
-                        log::warn!("Failed to send wait status: {}", e);
+                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
                     }
                 }
                 Ok(wait::WaitStatus::Stopped(_, sig)) => {
                     if let Err(e) = tx.send(Some(WaitStatus::Stopped(sig as i32))) {
-                        log::warn!("Failed to send wait status: {}", e);
+                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
                     }
                 }
                 Ok(_) => {
                     if let Err(e) = tx.send(None) {
-                        log::warn!("Failed to send wait status: {}", e);
+                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
                     }
                 }
                 Err(nix::errno::Errno::ECHILD) => {
-                    log::info!("Server process has already exited. No need to kill it");
+                    flow_hh_logger::info!("Server process has already exited. No need to kill it");
                     if let Err(e) = tx.send(None) {
-                        log::warn!("Failed to send wait status: {}", e);
+                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
                     }
                 }
                 Err(_) => {
                     if let Err(e) = tx.send(None) {
-                        log::warn!("Failed to send wait status: {}", e);
+                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
                     }
                 }
             }
@@ -1145,7 +1145,7 @@ mod keep_alive_loop {
                             } else if let Some(signal) = status.stopped_signal() {
                                 server_instance::WaitStatus::Stopped(signal)
                             } else {
-                                log::error!(
+                                flow_hh_logger::error!(
                                     "wait_for_server_to_die: unknown wait status for pid {}",
                                     pid
                                 );
@@ -1155,7 +1155,7 @@ mod keep_alive_loop {
                     }
                 }
                 Err(e) => {
-                    log::error!(
+                    flow_hh_logger::error!(
                         "wait_for_server_to_die: failed to wait on server pid {}: {}",
                         pid,
                         e
@@ -1164,7 +1164,7 @@ mod keep_alive_loop {
                 }
             },
             None => {
-                log::error!(
+                flow_hh_logger::error!(
                     "wait_for_server_to_die: daemon_handle was None for pid {}",
                     pid
                 );
@@ -1179,7 +1179,7 @@ mod keep_alive_loop {
                 let exit_status_string = exit_type
                     .map(flow_common_exit_status::to_string)
                     .unwrap_or("Invalid_exit_code");
-                log::error!(
+                flow_hh_logger::error!(
                     "Flow server (pid {}) exited with code {} ({})",
                     pid,
                     exit_status_string,
@@ -1202,7 +1202,7 @@ mod keep_alive_loop {
                         if is_edenfs_watcher_failure {
                             // EdenFS watcher failed - check retry count
                             if monitor_state.edenfs_watcher_retries < MAX_EDENFS_WATCHER_RETRIES {
-                                log::info!(
+                                flow_hh_logger::info!(
                                     "EdenFS watcher died. Restarting Flow server (attempt: {})",
                                     monitor_state.edenfs_watcher_retries + 1
                                 );
@@ -1214,7 +1214,7 @@ mod keep_alive_loop {
                                 };
                                 (new_state, None)
                             } else {
-                                log::error!(
+                                flow_hh_logger::error!(
                                     "EdenFS watcher died {} times. Giving up.",
                                     MAX_EDENFS_WATCHER_RETRIES
                                 );
@@ -1234,7 +1234,7 @@ mod keep_alive_loop {
                 }
             }
             server_instance::WaitStatus::Signaled(signal) => {
-                log::error!(
+                flow_hh_logger::error!(
                     "Flow server (pid {}) was killed with signal {}",
                     pid,
                     signal
@@ -1253,7 +1253,7 @@ mod keep_alive_loop {
                 // If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
                 // could try to signal it to resume. Or we could wait for it to start up again. But killing
                 // it and starting a new server seems easier
-                log::error!(
+                flow_hh_logger::error!(
                     "Flow server (pid {}) was stopped with signal {}. Sending sigkill",
                     pid,
                     signal
@@ -1264,7 +1264,11 @@ mod keep_alive_loop {
                     nix::unistd::Pid::from_raw(pid),
                     nix::sys::signal::Signal::SIGKILL,
                 ) {
-                    log::warn!("Failed to send SIGKILL to server process ({}): {}", pid, e);
+                    flow_hh_logger::warn!(
+                        "Failed to send SIGKILL to server process ({}): {}",
+                        pid,
+                        e
+                    );
                 }
                 (monitor_state, None)
             }
@@ -1312,7 +1316,7 @@ fn setup_signal_handlers() {
         let mut sigs = match signal_hook::iterator::Signals::new(&signals_vec) {
             Ok(s) => s,
             Err(err) => {
-                log::error!("Failed to create signal iterator: {}", err);
+                flow_hh_logger::error!("Failed to create signal iterator: {}", err);
                 return;
             }
         };
@@ -1359,7 +1363,7 @@ pub fn send_request(
     client: std::sync::Arc<crate::flow_server_monitor_connection::EphemeralConnection>,
     request: flow_server_env::server_command_with_context::ServerCommandWithContext,
 ) {
-    log::debug!("Adding request to the command stream");
+    flow_hh_logger::debug!("Adding request to the command stream");
     push_to_command_stream(Command::WriteEphemeralRequest { request, client });
 }
 
@@ -1367,7 +1371,7 @@ pub fn send_persistent_request(
     client_id: flow_server_env::lsp_prot::ClientId,
     request: flow_server_env::lsp_prot::RequestWithMetadata,
 ) {
-    log::debug!("Adding request to the command stream");
+    flow_hh_logger::debug!("Adding request to the command stream");
     push_to_command_stream(Command::WritePersistentRequest { client_id, request });
 }
 
@@ -1375,7 +1379,7 @@ pub fn notify_new_persistent_connection(
     client_id: flow_server_env::lsp_prot::ClientId,
     lsp_init_params: lsp_types::InitializeParams,
 ) {
-    log::debug!(
+    flow_hh_logger::debug!(
         "Adding notification that there's a new persistent client #{}",
         client_id
     );
@@ -1386,7 +1390,7 @@ pub fn notify_new_persistent_connection(
 }
 
 pub fn notify_dead_persistent_connection(client_id: flow_server_env::lsp_prot::ClientId) {
-    log::debug!(
+    flow_hh_logger::debug!(
         "Adding notification that persistent client #{} died",
         client_id
     );

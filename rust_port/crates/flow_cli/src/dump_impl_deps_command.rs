@@ -90,6 +90,7 @@ fn main(args: &arg_spec::Values) {
             ..Default::default()
         },
     ));
+    flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
     // Disable logging to keep stdout clean for JSON output
     monitor_rpc::disable();
     let shared_mem = Arc::new(SharedMem::new());

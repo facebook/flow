@@ -62,7 +62,7 @@ fn log_msg(request: Option<&str>, response: Option<&str>, msg: &str) {
         }
     });
     FlowEventLogger::watchman_error(request, truncated.as_deref(), msg);
-    log::error!("{}", msg);
+    flow_hh_logger::error!("{}", msg);
 }
 
 fn log_error(err: &ErrorKind) {
@@ -242,7 +242,7 @@ fn parse_response(debug_logging: bool, output: &str) -> Result<serde_json::Value
             None => (),
             Some(warning) => {
                 FlowEventLogger::watchman_warning(&warning);
-                log::info!("Watchman warning: {}\n", warning);
+                flow_hh_logger::info!("Watchman warning: {}\n", warning);
             }
         }
     }
@@ -253,7 +253,7 @@ fn parse_response(debug_logging: bool, output: &str) -> Result<serde_json::Value
         }
     }
     if debug_logging {
-        log::info!("Watchman response: {}", output);
+        flow_hh_logger::info!("Watchman response: {}", output);
     }
     let json = json_of_string(output)?;
     log_warnings(&json);
@@ -464,7 +464,7 @@ async fn send_request(
 ) -> Result<(), ErrorKind> {
     let json_str = Hh_json::json_string_of_value(json);
     if debug_logging {
-        log::info!("Watchman request: {}", json_str);
+        flow_hh_logger::info!("Watchman request: {}", json_str);
     }
     let mut writer = conn.writer.lock().await;
     let mut buf = json_str.into_bytes();
@@ -971,7 +971,7 @@ where
                     | ErrorKind::SocketUnavailable { .. }
                     | ErrorKind::SubscriptionCanceled => {
                         if attempt >= max_attempts {
-                            log::error!(
+                            flow_hh_logger::error!(
                                 "Watchman has failed {} times in a row. Giving up.",
                                 attempt
                             );
@@ -1071,7 +1071,7 @@ async fn re_init_dead_env_once(
     match tokio::time::timeout(dur, async move {
         match can_re_init(allow_fresh_instance, &dead_env).await {
             Ok(true) => {
-                log::info!("Attempting to reestablish watchman subscription");
+                flow_hh_logger::info!("Attempting to reestablish watchman subscription");
                 let prior_clockspec = if allow_fresh_instance {
                     None
                 } else {
@@ -1080,7 +1080,7 @@ async fn re_init_dead_env_once(
                 re_init(prior_clockspec, dead_env.prior_settings.clone()).await
             }
             Ok(false) => {
-                log::info!("Unable to resubscribe to a fresh watchman instance");
+                flow_hh_logger::info!("Unable to resubscribe to a fresh watchman instance");
                 Err(ErrorKind::FreshInstance)
             }
             Err(err) => Err(err),
@@ -1098,7 +1098,7 @@ async fn re_init_dead_env_once(
 async fn re_init_dead_env(allow_fresh_instance: bool, dead_env: DeadEnv) -> Result<Env, Failure> {
     let on_retry = |attempt: u32, dead_env: DeadEnv| async move {
         let backoff = backoff_delay(attempt);
-        log::info!(
+        flow_hh_logger::info!(
             "Waiting {}s before reestablishing watchman subscription",
             backoff
         );
@@ -1115,7 +1115,7 @@ async fn re_init_dead_env(allow_fresh_instance: bool, dead_env: DeadEnv) -> Resu
     .await
     {
         Ok(env) => {
-            log::info!("Watchman connection reestablished.");
+            flow_hh_logger::info!("Watchman connection reestablished.");
             let now = SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .map(|d| d.as_secs_f64())
@@ -1236,7 +1236,9 @@ async fn get_mergebase_and_changes(
 async fn check_for_changed_mergebase(env: &mut Env) -> Option<bool> {
     match env.mergebase.clone() {
         None => {
-            log::debug!("Unable to check for changed mergebase: unknown previous mergebase");
+            flow_hh_logger::debug!(
+                "Unable to check for changed mergebase: unknown previous mergebase"
+            );
             None
         }
         Some(old_mergebase) => {
@@ -1253,19 +1255,22 @@ async fn check_for_changed_mergebase(env: &mut Env) -> Option<bool> {
                 Some(mergebase) => {
                     let changed_mergebase = mergebase != old_mergebase;
                     if changed_mergebase {
-                        log::info!(
+                        flow_hh_logger::info!(
                             "Watchman reports mergebase changed from {:?} to {:?}",
                             old_mergebase,
                             mergebase
                         );
                         env.mergebase = Some(mergebase);
                     } else {
-                        log::debug!("Watchman reports mergebase is unchanged at {:?}", mergebase);
+                        flow_hh_logger::debug!(
+                            "Watchman reports mergebase is unchanged at {:?}",
+                            mergebase
+                        );
                     }
                     Some(changed_mergebase)
                 }
                 None => {
-                    log::warn!("Unable to fetch current mergebase");
+                    flow_hh_logger::warn!("Unable to fetch current mergebase");
                     None
                 }
             }
@@ -1357,7 +1362,7 @@ pub async fn get_changes(mut env: Env) -> Result<(Env, PushedChanges), Failure> 
                     | ErrorKind::SocketUnavailable { .. }
                     | ErrorKind::SubscriptionCanceled => {
                         if attempt >= MAX_RETRY_ATTEMPTS {
-                            log::error!(
+                            flow_hh_logger::error!(
                                 "Watchman has failed {} times in a row. Giving up.",
                                 attempt
                             );
@@ -1395,7 +1400,7 @@ pub async fn init(settings: InitSettings) -> Result<(Env, BTreeSet<String>), Str
             Ok(mergebase_and_changes) => {
                 let (mergebase, files) = match mergebase_and_changes {
                     Some((mergebase, changes)) => {
-                        log::info!(
+                        flow_hh_logger::info!(
                             "Watchman reports the initial mergebase as {:?}, and {} changes",
                             mergebase,
                             changes.len()
@@ -1404,7 +1409,7 @@ pub async fn init(settings: InitSettings) -> Result<(Env, BTreeSet<String>), Str
                     }
                     None => {
                         if env.should_track_mergebase {
-                            log::warn!(
+                            flow_hh_logger::warn!(
                                 "Not checking changes since mergebase! SCM-aware queries are not supported for your VCS by your version of Watchman."
                             );
                         }

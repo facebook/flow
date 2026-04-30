@@ -226,7 +226,7 @@ fn send_message_to_client(response: Prot::MessageFromServer, client: &SingleClie
         }
     };
     if should_disconnect {
-        log::warn!(
+        flow_hh_logger::warn!(
             "Persistent client #{} exceeded the pending message limit ({}). Disconnecting it.",
             client_id,
             MAX_PENDING_MESSAGES
@@ -409,12 +409,12 @@ pub fn add_client(client_id: Prot::ClientId, lsp_initialize_params: InitializePa
             pending_messages: VecDeque::new(),
         },
     );
-    log::info!("Adding new persistent connection #{}", client_id);
+    flow_hh_logger::info!("Adding new persistent connection #{}", client_id);
     true
 }
 
 pub fn remove_client(client_id: Prot::ClientId) {
-    log::info!("Removing persistent connection client #{}", client_id);
+    flow_hh_logger::info!("Removing persistent connection client #{}", client_id);
     ACTIVE_CLIENTS.lock().unwrap().remove(&client_id);
     LOCAL_CLIENTS.with(|clients| {
         clients.borrow_mut().remove(&client_id);
@@ -481,7 +481,7 @@ pub fn update_clients(
         let (errors, warnings) = calc_errors_and_warnings();
         let error_count = errors.cardinal();
         let warning_file_count = warnings.len();
-        log::info!(
+        flow_hh_logger::info!(
             "sending ({} errors) and (warnings from {} files) to {} subscribed clients (of {} total)",
             error_count,
             warning_file_count,
@@ -548,7 +548,7 @@ pub fn subscribe_client(
         flow_common_errors::error_utils::ConcreteLocPrintableErrorSet,
     >,
 ) {
-    log::info!("Subscribing client #{} to push diagnostics", get_id(client));
+    flow_hh_logger::info!("Subscribing client #{} to push diagnostics", get_id(client));
     let subscribed = with_registry(get_id(client), |entry| entry.subscribed).unwrap_or(false);
     if subscribed {
     } else {
@@ -565,8 +565,8 @@ pub fn client_did_open(client: &SingleClientRef, files: &[(String, String)]) -> 
     {
         let mut client = client.borrow_mut();
         match files.len() {
-            1 => log::info!("Client #{} opened {}", client.client_id, files[0].0),
-            len => log::info!("Client #{} opened {} files", client.client_id, len),
+            1 => flow_hh_logger::info!("Client #{} opened {}", client.client_id, files[0].0),
+            len => flow_hh_logger::info!("Client #{} opened {} files", client.client_id, len),
         }
         for (filename, _content) in files {
             remove_cache_entry(true, &mut client, filename);
@@ -622,8 +622,8 @@ pub fn client_did_close(client: &SingleClientRef, filenames: &[String]) -> bool 
     {
         let mut client = client.borrow_mut();
         match filenames.len() {
-            1 => log::info!("Client #{} closed {}", client.client_id, filenames[0]),
-            len => log::info!("Client #{} closed {} files", client.client_id, len),
+            1 => flow_hh_logger::info!("Client #{} closed {}", client.client_id, filenames[0]),
+            len => flow_hh_logger::info!("Client #{} closed {} files", client.client_id, len),
         }
         for filename in filenames {
             remove_cache_entry(true, &mut client, filename);
@@ -646,7 +646,7 @@ pub fn client_did_change_configuration(client: &SingleClientRef, new_config: cli
     else {
         return;
     };
-    log::info!("Client #{} changed configuration", logged_client_id);
+    flow_hh_logger::info!("Client #{} changed configuration", logged_client_id);
 
     let client_toggle_to_string = |client_toggle: &client_config::ClientToggle| -> &'static str {
         match client_toggle {
@@ -659,7 +659,7 @@ pub fn client_did_change_configuration(client: &SingleClientRef, new_config: cli
     let old_suggest_autoimports = client_config::suggest_autoimports(&old_config);
     let new_suggest_autoimports = client_config::suggest_autoimports(&new_config);
     if new_suggest_autoimports != old_suggest_autoimports {
-        log::info!(
+        flow_hh_logger::info!(
             "  suggest_autoimports: {} -> {}",
             old_suggest_autoimports,
             new_suggest_autoimports
@@ -669,7 +669,7 @@ pub fn client_did_change_configuration(client: &SingleClientRef, new_config: cli
     let old_rank_autoimports_by_usage = client_config::rank_autoimports_by_usage(&old_config);
     let new_rank_autoimports_by_usage = client_config::rank_autoimports_by_usage(&new_config);
     if new_rank_autoimports_by_usage != old_rank_autoimports_by_usage {
-        log::info!(
+        flow_hh_logger::info!(
             "  rank_autoimports_by_usage: {} -> {}",
             client_toggle_to_string(old_rank_autoimports_by_usage),
             client_toggle_to_string(new_rank_autoimports_by_usage)
@@ -679,7 +679,7 @@ pub fn client_did_change_configuration(client: &SingleClientRef, new_config: cli
     let old_show_suggest_ranking_info = client_config::show_suggest_ranking_info(&old_config);
     let new_show_suggest_ranking_info = client_config::show_suggest_ranking_info(&new_config);
     if new_show_suggest_ranking_info != old_show_suggest_ranking_info {
-        log::info!(
+        flow_hh_logger::info!(
             "  show_suggest_ranking_info: {} -> {}",
             old_show_suggest_ranking_info,
             new_show_suggest_ranking_info

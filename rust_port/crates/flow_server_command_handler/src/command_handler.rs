@@ -350,9 +350,9 @@ pub fn standalone_response_needs_checked_dependencies_retry(
 
 fn status_log(errors: &ConcreteLocPrintableErrorSet) {
     if errors.is_empty() {
-        log::info!("Status: OK");
+        flow_hh_logger::info!("Status: OK");
     } else {
-        log::info!("Status: Error");
+        flow_hh_logger::info!("Status: Error");
     }
 }
 
@@ -2556,7 +2556,7 @@ fn output_dependencies(
         env.dependency_info.implementation_dependency_graph()
     };
     let graph = serialize_graph(&dep_graph.to_map());
-    eprintln!("printing dependency graph to {}", outfile);
+    flow_hh_logger::info!("printing dependency graph to {}\n", outfile);
     let mut out =
         std::fs::File::create(outfile).map_err(|e| format!("Failed to open {}: {}", outfile, e))?;
     use std::io::Write;
@@ -3640,7 +3640,7 @@ pub fn handle_ephemeral_command_for_standalone_wrapped(
     }
 
     let cmd_str = server_prot::request::to_string(&command);
-    eprintln!("{}", cmd_str);
+    flow_hh_logger::info!("{}", cmd_str);
     flow_server_env::monitor_rpc::status_update(
         flow_server_env::server_status::Event::HandlingRequestStart,
     );
@@ -3964,7 +3964,7 @@ fn send_ephemeral_response<T>(
     match result {
         Ok((ret, response, _json_data)) => {
             flow_server_env::monitor_rpc::respond_to_request(request_id.to_string(), response);
-            eprintln!("Finished {}", cmd_str);
+            flow_hh_logger::info!("Finished {}", cmd_str);
             Ok(ret)
         }
         Err((exn_str, _json_data)) => {
@@ -3994,10 +3994,7 @@ fn handle_ephemeral_uncaught_exception<T>(
     exn_str: String,
 ) -> Result<T, (String, Option<lsp_prot::Json>)> {
     let json_data = Some(serde_json::json!({ "exn": &exn_str }));
-    eprintln!(
-        "Uncaught exception while handling a request ({}): {}",
-        cmd_str, &exn_str
-    );
+    flow_hh_logger::error!("Uncaught exception while handling a request ({})", cmd_str);
     Err((exn_str, json_data))
 }
 
@@ -4011,7 +4008,7 @@ fn wrap_ephemeral_handler(
         EphemeralHandlerError,
     >,
 ) -> Result<(), EphemeralWrapError> {
-    eprintln!("{cmd_str}{}", format_client_context(client_context));
+    flow_hh_logger::info!("{}{}", cmd_str, format_client_context(client_context));
     flow_server_env::monitor_rpc::status_update(
         flow_server_env::server_status::Event::HandlingRequestStart,
     );
@@ -4067,7 +4064,7 @@ fn wrap_immediate_ephemeral_handler(
         (String, Option<lsp_prot::Json>),
     >,
 ) -> Result<(), ()> {
-    eprintln!("{cmd_str}{}", format_client_context(client_context));
+    flow_hh_logger::info!("{}{}", cmd_str, format_client_context(client_context));
     let _should_print_summary = genv.options.profile;
     let result =
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(handler)).unwrap_or_else(|e| {
@@ -4113,7 +4110,7 @@ fn run_command_in_parallel(
     match workload(env) {
         Ok((response, json_data)) => Ok((response, json_data)),
         Err(WorkloadCanceled) => {
-            eprintln!(
+            flow_hh_logger::info!(
                 "Command successfully canceled. Requeuing the command for after the next recheck."
             );
             server_monitor_listener_state::defer_parallelizable_workload(name, mk_workload());
@@ -4131,7 +4128,7 @@ fn run_command_in_serial(
         match workload(&env) {
             Ok((response, json_data)) => return (env, Ok((response, json_data))),
             Err(WorkloadCanceled) => {
-                eprintln!(
+                flow_hh_logger::info!(
                     "Command successfully canceled. Running a recheck before restarting the command"
                 );
                 let node_modules_containers_arc = std::sync::Arc::new(std::sync::RwLock::new(
@@ -4144,7 +4141,7 @@ fn run_command_in_serial(
                     &node_modules_containers_arc,
                 );
                 env = new_env;
-                eprintln!("Now restarting the command");
+                flow_hh_logger::info!("Now restarting the command");
                 continue;
             }
         }
@@ -4382,7 +4379,7 @@ fn check_if_cancelled(
     metadata: lsp_prot::Metadata,
 ) -> Option<(lsp_prot::Response, lsp_prot::Metadata)> {
     cancelled_request_id_opt(request).map(|id| {
-        eprintln!(
+        flow_hh_logger::info!(
             "Skipping canceled persistent request: {}",
             lsp_prot::string_of_request(request)
         );
@@ -4433,7 +4430,7 @@ fn send_persistent_response<T>(
     if let Some(client) = persistent_connection::get_client(client_id) {
         persistent_connection::send_response(response, &client);
     }
-    eprintln!(
+    flow_hh_logger::info!(
         "Persistent response: {}",
         lsp_prot::string_of_response(&lsp_response)
     );
@@ -4449,13 +4446,13 @@ fn wrap_persistent_handler<T: Default>(
 ) -> Result<T, WorkloadCanceled> {
     let (request, metadata) = request;
     if persistent_connection::get_client(client_id).is_none() {
-        eprintln!(
+        flow_hh_logger::error!(
             "Unknown persistent client {}. Maybe connection went away?",
             client_id
         );
         return Ok(default_ret);
     }
-    eprintln!(
+    flow_hh_logger::info!(
         "Persistent request: {}",
         lsp_prot::string_of_request(&request)
     );
@@ -4608,7 +4605,7 @@ fn mk_lsp_error_response(
     let (_, reason, stack) = metadata.error_info.as_ref().unwrap();
     let message = match id {
         Some(id) => {
-            eprintln!("Error: {}\n{}", reason, stack);
+            flow_hh_logger::error!("Error: {}\n{}", reason, stack);
             let friendly_message = "Flow encountered an unexpected error while handling this request. See the Flow logs for more details.";
             let e = lsp_error::T {
                 code: lsp_error::Code::UnknownErrorCode,
@@ -7078,9 +7075,10 @@ fn live_diagnostics_of_uri(
                         )
                     }
                     Err(reason) => {
-                        eprintln!(
+                        flow_hh_logger::info!(
                             "Not reporting live errors for file {:?}: {}",
-                            file_path, reason
+                            file_path,
+                            reason
                         );
                         let extra_data = json_of_skipped(reason);
                         let metadata = with_data(extra_data, metadata);
@@ -8072,13 +8070,13 @@ fn wrap_immediate_persistent_handler<T: Default>(
 ) -> T {
     let (request, metadata) = request;
     if persistent_connection::get_client(client_id).is_none() {
-        eprintln!(
+        flow_hh_logger::error!(
             "Unknown persistent client {}. Maybe connection went away?",
             client_id
         );
         return default_ret;
     }
-    eprintln!(
+    flow_hh_logger::info!(
         "Persistent request: {}",
         lsp_prot::string_of_request(&request)
     );
@@ -8183,7 +8181,7 @@ fn mk_parallelizable_persistent_workload(
                 },
             );
             if let Err(WorkloadCanceled) = result {
-                eprintln!(
+                flow_hh_logger::info!(
                     "Command successfully canceled. Requeuing the command for after the next recheck."
                 );
                 if let PersistentCommandHandler::HandleParallelizablePersistent(new_workload) =
@@ -8238,7 +8236,7 @@ fn mk_nonparallelizable_persistent_workload(
                 match result {
                     Ok(()) => return env,
                     Err(WorkloadCanceled) => {
-                        eprintln!(
+                        flow_hh_logger::info!(
                             "Command successfully canceled. Running a recheck before restarting the command"
                         );
                         let node_modules_containers_arc =
@@ -8253,7 +8251,7 @@ fn mk_nonparallelizable_persistent_workload(
                                 &node_modules_containers_arc,
                             );
                         env = new_env;
-                        eprintln!("Now restarting the command");
+                        flow_hh_logger::info!("Now restarting the command");
                         match get_persistent_handler(
                             &genv_for_handler,
                             client_id,

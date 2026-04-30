@@ -97,7 +97,7 @@ fn load_per_file_time(options: &Options) -> f64 {
     match result {
         Ok(per_file_time) => per_file_time,
         Err(reason) => {
-            eprintln!(
+            flow_hh_logger::info!(
                 "Failed to load recheck stats from {:?}. Reason: {:?}",
                 file.display(),
                 reason
@@ -177,7 +177,7 @@ fn save_averages(options: &Options, estimates: Option<&Estimates>, new_averages:
     match result {
         Ok(()) => {}
         Err(msg) => {
-            eprintln!(
+            flow_hh_logger::error!(
                 "Failed to save per_file_time to {:?}. {}",
                 file.display(),
                 msg

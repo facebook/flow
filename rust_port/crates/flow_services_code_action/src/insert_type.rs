@@ -786,7 +786,10 @@ pub fn synth_type<'a, 'cx>(
             Ok(ty) => {
                 let import_fixed_ty = match remote_converter.type_(ty.dupe()) {
                     Ok(ty) => ty,
-                    Err(_e) => ty,
+                    Err(e) => {
+                        flow_hh_logger::error!("Insert type: {}", error::serialize(&e));
+                        ty
+                    }
                 };
                 let ast = serialize(
                     cx,
@@ -1139,7 +1142,10 @@ pub fn insert_type_ty<'a>(
      -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected> {
         let import_fixed_ty = match rc.type_(ty.dupe()) {
             Ok(ty) => ty,
-            Err(_e) => ty.dupe(),
+            Err(e) => {
+                flow_hh_logger::error!("Insert type: {}", error::serialize(&e));
+                ty.dupe()
+            }
         };
         let exact_by_default = cx.exact_by_default();
         let ast = serialize(

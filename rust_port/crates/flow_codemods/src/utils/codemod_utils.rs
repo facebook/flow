@@ -43,22 +43,7 @@ fn mapper_program<A>(
 }
 
 fn init_loggers(options: &Options) {
-    let level = if options.quiet {
-        tracing::level_filters::LevelFilter::OFF
-    } else if options.verbose.is_some() || options.debug {
-        tracing::level_filters::LevelFilter::DEBUG
-    } else {
-        match std::env::var("FLOW_LOG_LEVEL").ok().as_deref() {
-            Some("off") => tracing::level_filters::LevelFilter::OFF,
-            Some("fatal") => tracing::level_filters::LevelFilter::ERROR,
-            Some("error") => tracing::level_filters::LevelFilter::ERROR,
-            Some("warn") => tracing::level_filters::LevelFilter::WARN,
-            Some("info") => tracing::level_filters::LevelFilter::INFO,
-            Some("debug") => tracing::level_filters::LevelFilter::DEBUG,
-            _ => tracing::level_filters::LevelFilter::INFO,
-        }
-    };
-    tracing::info!("init_loggers: computed level {:?}", level);
+    flow_logging_utils::init_loggers(options, None);
 }
 
 fn shared_mem_init(
@@ -183,16 +168,16 @@ impl<Runner: super::codemod_runner::Runnable> MakeMain<Runner> {
         options: &Options,
         write: bool,
         repeat: bool,
-        log_level: Option<tracing::level_filters::LevelFilter>,
+        log_level: Option<flow_hh_logger::Level>,
         roots: BTreeSet<FileKey>,
     ) {
         let init_id = random_id_short_string();
         initialize_logs(options);
         let log_level = match log_level {
             Some(level) => level,
-            None => tracing::level_filters::LevelFilter::OFF,
+            None => flow_hh_logger::Level::Off,
         };
-        tracing::info!("Setting log level to {:?}", log_level);
+        flow_hh_logger::level::set_min_level(log_level);
         let num_workers = options.max_workers as usize;
         let handle = match shared_mem_init(num_workers, &()) {
             Ok(handle) => handle,

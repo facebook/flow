@@ -1779,6 +1779,9 @@ pub fn commit_modules(
     use flow_common_modulename::ModulenameSet;
 
     let debug = options.debug;
+    if debug {
+        flow_hh_logger::info!("Committing modules");
+    }
 
     fn commit_haste(
         options: &Options,
@@ -1928,7 +1931,7 @@ pub fn commit_modules(
         .collect();
 
     if debug {
-        eprintln!("*** done committing modules ***");
+        flow_hh_logger::info!("Committing modules Done");
     }
 
     (changed_modules, errmap)

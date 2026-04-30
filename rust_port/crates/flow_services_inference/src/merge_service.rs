@@ -11,7 +11,6 @@ use std::cell::OnceCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
-use std::io::Write;
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -42,7 +41,6 @@ use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
-use flow_server_files::server_files_js;
 use flow_services_coverage::FileCoverage;
 use flow_services_coverage::file_coverage;
 use flow_type_sig::compact_table::Index;
@@ -81,23 +79,6 @@ pub struct SigOptsData {
 }
 
 pub type MergeResults<A> = (Vec<A>, SigOptsData);
-
-fn append_to_server_log(options: &Options, message: &str) {
-    let log_file = std::env::var("FLOW_LOG_FILE").unwrap_or_else(|_| {
-        server_files_js::log_file(
-            &options.flowconfig_name,
-            options.temp_dir.as_str(),
-            options.root.as_path(),
-        )
-    });
-    if let Ok(mut file) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(log_file)
-    {
-        let _ = writeln!(file, "{}", message);
-    }
-}
 
 pub fn sig_hash(
     check_dirty_set: bool,
@@ -1040,6 +1021,7 @@ where
     F: Fn(&SharedMem, &Options, bool, Vec1<FileKey>) -> (bool, A) + Send + Sync + 'static,
 {
     let num_workers = pool.num_workers();
+    let start_time = Instant::now();
     let stream = Arc::new(MergeStream::<A>::new(
         num_workers,
         sig_dependency_graph,
@@ -1071,8 +1053,11 @@ where
     let sig_new_or_changed = stream.sig_new_or_changed();
     let message = format!("Merge skipped {} of {} modules", skipped_count, total_files);
 
-    log::info!("{}", message);
-    append_to_server_log(options, &message);
+    flow_hh_logger::info!("{}", message);
+    let elapsed = start_time.elapsed().as_secs_f64();
+    if options.profile {
+        flow_hh_logger::info!("merged in {}", elapsed);
+    }
 
     (
         results,

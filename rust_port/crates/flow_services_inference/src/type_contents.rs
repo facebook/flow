@@ -315,7 +315,18 @@ fn ensure_checked_dependencies(
         unchecked_dependencies(options, shared_mem, file, requires, node_modules_containers);
     if !unchecked_deps.is_empty() {
         let n = unchecked_deps.len();
-        eprintln!("Canceling command due to {} unchecked dependencies", n);
+        flow_hh_logger::info!("Canceling command due to {} unchecked dependencies", n);
+        let cap = 10;
+        for (i, f) in unchecked_deps.iter().enumerate() {
+            let i = i + 1;
+            if i <= cap {
+                flow_hh_logger::info!("{}/{}: {}", i, n, f.as_str());
+            } else if flow_hh_logger::level::passes_min_level(flow_hh_logger::Level::Debug) {
+                flow_hh_logger::debug!("{}/{}: {}", i, n, f.as_str());
+            } else if i == cap + 1 {
+                flow_hh_logger::info!("...");
+            }
+        }
         server_monitor_listener_state::push_dependencies_to_prioritize(unchecked_deps);
         Err(CheckedDependenciesCanceled)
     } else {

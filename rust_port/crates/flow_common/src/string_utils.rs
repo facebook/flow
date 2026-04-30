@@ -32,3 +32,57 @@ pub fn truncate(len: usize, s: &str) -> &str {
         &s[..end]
     }
 }
+
+/// Splits a string into a list of strings using "\n", "\r" or "\r\n" as
+/// delimiters. If the string starts or ends with a delimiter, there WILL be an
+/// empty string at the beginning or end of the list, like [Str.split_delim] does.
+pub fn split_into_lines(str: &str) -> Vec<String> {
+    // To avoid unnecessary string allocations, we're going to keep a list of
+    // the start index of each line and how long it is. Then, at the end, we can
+    // use String.sub to create the actual strings.
+    let bytes = str.as_bytes();
+    let mut idx: usize = 0;
+    let mut start: usize = 0;
+    let mut lines: Vec<(usize, usize)> = Vec::new();
+    for &c in bytes {
+        if c == b'\n' && idx > 0 && bytes[idx - 1] == b'\r' {
+            idx += 1;
+            start = idx;
+        } else if c == b'\n' || c == b'\r' {
+            lines.push((start, idx - start));
+            idx += 1;
+            start = idx;
+        } else {
+            idx += 1;
+        }
+    }
+    let last_start = start;
+    // Reverses the list of start,len and turns them into strings
+    let mut entries: Vec<(usize, usize)> = Vec::with_capacity(lines.len() + 1);
+    entries.push((last_start, str.len() - last_start));
+    for entry in lines.iter().rev() {
+        entries.push(*entry);
+    }
+    let mut acc: Vec<String> = Vec::with_capacity(entries.len());
+    for (start, len) in entries {
+        acc.push(str[start..start + len].to_string());
+    }
+    acc
+}
+
+/// Splits a string into lines, indents each non-empty line, and concats with newlines
+pub fn indent(indent_size: usize, str: &str) -> String {
+    let padding: String = " ".repeat(indent_size);
+    let lines = split_into_lines(str);
+    let mapped: Vec<String> = lines
+        .into_iter()
+        .map(|s| {
+            if s.is_empty() {
+                String::new()
+            } else {
+                format!("{}{}", padding, s)
+            }
+        })
+        .collect();
+    mapped.join("\n")
+}

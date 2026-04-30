@@ -72,7 +72,7 @@ where
     let ret = f(&running);
     let finished = running.finish();
     if should_print_summary {
-        log::info!(
+        flow_hh_logger::info!(
             "{}: wall duration {:.3}s",
             label,
             finished.get_profiling_duration()
@@ -117,8 +117,10 @@ fn extract_flowlibs_or_exit(options: &Options) {
                         "Could not extract flowlib files into {}: extract failed",
                         libdir_str
                     );
-                    eprintln!("{}", msg);
-                    flow_common_exit_status::exit(FlowExitStatus::CouldNotExtractFlowlibs);
+                    flow_common_exit_status::exit_with_msg(
+                        FlowExitStatus::CouldNotExtractFlowlibs,
+                        &msg,
+                    );
                 }
             }
         }
@@ -185,7 +187,7 @@ fn idle_logging_loop(
             .unwrap_or_default()
             .as_secs_f64()
             - _start_time;
-        log::info!("Idle heartbeat after {:.3}s", idle_time);
+        flow_hh_logger::info!("Idle heartbeat after {:.3}s", idle_time);
         flow_event_logger::idle_heartbeat(idle_time, &serde_json::Value::Null);
     }
 }
@@ -262,7 +264,7 @@ fn serve(
 
         let next_workload = server_monitor_listener_state::pop_next_workload();
         if let Some(workload) = next_workload {
-            log::info!("Running a serial workload");
+            flow_hh_logger::info!("Running a serial workload");
             _env = workload(_env);
         }
         // Flush the logs asynchronously
@@ -283,7 +285,7 @@ pub(crate) fn on_compact(shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>) -
         let new_size = shared_mem.heap_size();
         let time_taken = start_t.elapsed().as_secs_f64();
         if old_size != new_size {
-            log::info!(
+            flow_hh_logger::info!(
                 "Sharedmem GC: {} bytes before; {} bytes after; in {} seconds",
                 old_size,
                 new_size,
@@ -358,7 +360,7 @@ pub fn check_supported_operating_system(options: &Options) {
             "This operating system ({}) is not supported by this Flow configuration.",
             current_os
         );
-        log::info!("{}", msg);
+        flow_hh_logger::info!("{}", msg);
         flow_common_exit_status::exit(FlowExitStatus::InvalidFlowconfig);
     }
 }
@@ -394,18 +396,18 @@ fn run(_init_id: &str, _options: Arc<Options>, monitor_channels: Option<monitor_
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs_f64();
-    log::info!("Initializing Server (This might take some time)");
+    flow_hh_logger::info!("Initializing Server (This might take some time)");
 
-    log::info!(
+    flow_hh_logger::info!(
         "executable={}",
         std::env::current_exe()
             .map(|p| p.display().to_string())
             .unwrap_or_default()
     );
-    log::info!("version={}", flow_common::flow_version::VERSION);
+    flow_hh_logger::info!("version={}", flow_common::flow_version::VERSION);
 
     crate::multi_worker::set_report_canceled_callback(|total, finished| {
-        log::info!("Canceling progress {}/{}", finished, total);
+        flow_hh_logger::info!("Canceling progress {}/{}", finished, total);
         monitor_rpc::status_update(server_status::Event::CancelingProgress(
             server_status::Progress {
                 total: Some(total),
@@ -454,13 +456,13 @@ fn run(_init_id: &str, _options: Arc<Options>, monitor_channels: Option<monitor_
         &serde_json::json!({ "duration": init_duration }),
     );
 
-    log::info!("Server is READY");
+    flow_hh_logger::info!("Server is READY");
 
     let t_prime = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs_f64();
-    log::info!("Took {} seconds to initialize.", t_prime - t);
+    flow_hh_logger::info!("Took {} seconds to initialize.", t_prime - t);
 
     serve(
         &genv_arc,
@@ -501,23 +503,23 @@ pub fn run_from_daemonize(
             if err_msg.contains("Out_of_shared_memory") || err_msg.contains("Out of shared memory")
             {
                 let msg = exit_msg_of_exception(err_display, "Out of shared memory");
-                log::info!("{}", msg);
+                flow_hh_logger::info!("{}", msg);
                 flow_common_exit_status::exit(FlowExitStatus::OutOfSharedMemory);
             } else if err_msg.contains("Hash_table_full") || err_msg.contains("Hash table is full")
             {
                 let msg = exit_msg_of_exception(err_display, "Hash table is full");
-                log::info!("{}", msg);
+                flow_hh_logger::info!("{}", msg);
                 flow_common_exit_status::exit(FlowExitStatus::HashTableFull);
             } else if err_msg.contains("Heap_full") || err_msg.contains("Heap is full") {
                 let msg = exit_msg_of_exception(err_display, "Heap is full");
-                log::info!("{}", msg);
+                flow_hh_logger::info!("{}", msg);
                 flow_common_exit_status::exit(FlowExitStatus::HeapFull);
             } else if err_msg.contains("Monitor_died") || err_msg.contains("Monitor died") {
-                log::info!("Monitor died unexpectedly");
+                flow_hh_logger::info!("Monitor died unexpectedly");
                 flow_common_exit_status::exit(FlowExitStatus::KilledByMonitor);
             } else {
                 let msg = format!("Unhandled exception: {}", err_msg);
-                log::info!("{}", msg);
+                flow_hh_logger::info!("{}", msg);
                 flow_common_exit_status::exit(FlowExitStatus::UnknownError);
             }
         }
@@ -529,16 +531,16 @@ pub fn check_once(_init_id: &str, _options: Arc<Options>) {
 
     let _genv = create_program_init(_init_id, _options.clone());
 
-    log::info!(
+    flow_hh_logger::info!(
         "executable={}",
         std::env::current_exe()
             .map(|p| p.display().to_string())
             .unwrap_or_default()
     );
-    log::info!("version={}", flow_common::flow_version::VERSION);
+    flow_hh_logger::info!("version={}", flow_common::flow_version::VERSION);
 
     crate::multi_worker::set_report_canceled_callback(|total, finished| {
-        log::info!("Canceling progress {}/{}", finished, total);
+        flow_hh_logger::info!("Canceling progress {}/{}", finished, total);
         monitor_rpc::status_update(server_status::Event::CancelingProgress(
             server_status::Progress {
                 total: Some(total),

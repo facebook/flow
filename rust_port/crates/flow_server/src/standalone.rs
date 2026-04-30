@@ -235,7 +235,7 @@ impl FlowServer {
 
         let canceled_state = state.clone();
         crate::multi_worker::set_report_canceled_callback(move |total, finished| {
-            log::info!("Canceling progress {}/{}", finished, total);
+            flow_hh_logger::info!("Canceling progress {}/{}", finished, total);
             let progress = server_status::Progress {
                 total: Some(total),
                 finished,

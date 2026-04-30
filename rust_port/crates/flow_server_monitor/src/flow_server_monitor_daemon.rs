@@ -84,7 +84,7 @@ fn monitor_entry_handler(param: MonitorEntryParam, pair: ChannelPair<(), WaitMsg
             Ok(_pid) => {}
             Err(nix::errno::Errno::EPERM) => {}
             Err(e) => {
-                log::debug!("setsid failed: {}", e);
+                flow_hh_logger::debug!("setsid failed: {}", e);
             }
         }
     }
@@ -323,7 +323,7 @@ pub fn daemonize(
     on_spawn(pid);
 
     if let Err(e) = shutdown_out_write(&mut handle.channels.1) {
-        log::debug!("failed to shutdown monitor parent_out: {}", e);
+        flow_hh_logger::debug!("failed to shutdown monitor parent_out: {}", e);
     }
 
     // If wait is true, wait for the "Ready" message.
