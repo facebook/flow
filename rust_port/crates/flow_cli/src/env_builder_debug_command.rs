@@ -41,7 +41,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "env-builder-debug",
         "Print the env-builder result as a dependency graph for debugging purposes",
-        command_spec::Visibility::Public,
+        command_spec::Visibility::Internal,
         format!(
             "Usage: {exe_name} env-builder-debug [OPTION]... [FILE]\n\ne.g. {exe_name} env-builder-debug foo.js\nor   {exe_name} env-builder-debug < foo.js\n"
         ),

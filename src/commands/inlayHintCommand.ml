@@ -17,7 +17,7 @@ let spec =
   {
     CommandSpec.name = cmd_name;
     doc = "Compute all inlay hints available in a file (testing only, no stability guarantee)";
-    visibility = CommandSpec.Public;
+    visibility = CommandSpec.Experimental;
     usage =
       Printf.sprintf
         "Usage: %s %s [OPTION]... [FILE]\n\ne.g. %s %s foo.js\nor   %s %s < foo.js\n"

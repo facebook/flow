@@ -18,7 +18,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "type-of-name-experimental",
         "Shows the type of a variable or export by name",
-        command_spec::Visibility::Internal,
+        command_spec::Visibility::Experimental,
         format!(
             "Usage: {} type-of-name-experimental [OPTION]... FILE NAME [NAME...]\n\ne.g. {} type-of-name foo.js myVariable\ne.g. {} type-of-name foo.js UserCard DataDisplay ProductItem\ne.g. {} type-of-name foo.js UserCard.name UserCard.email\n",
             exe_name, exe_name, exe_name, exe_name,

@@ -15,7 +15,7 @@ let spec =
   {
     CommandSpec.name = "llm-context-experimental";
     doc = "Outputs LLM context information for given files";
-    visibility = CommandSpec.Internal;
+    visibility = CommandSpec.Experimental;
     usage =
       Printf.sprintf
         "Usage: %s llm-context [OPTION]... [FILE]...\n\ne.g. %s llm-context foo.js bar.js\n"
