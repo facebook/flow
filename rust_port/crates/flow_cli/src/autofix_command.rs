@@ -29,6 +29,7 @@ mod insert_type {
         let spec = command_spec::Spec::new(
             "insert type",
             "[EXPERIMENTAL] Insert type information at file and position",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {exe_name} autofix insert-type [OPTION]... [FILE] LINE COLUMN [END_LINE] [END_COLUMN]\n\ne.g. {exe_name} autofix insert-type foo.js 12 3\nor   {exe_name} autofix insert-type 12 3 < foo.js\n"
             ),
@@ -266,6 +267,7 @@ mod missing_local_annot {
         let spec = command_spec::Spec::new(
             "missing-local-annot",
             "[EXPERIMENTAL] automatically fix missing-local-annot errors",
+            command_spec::Visibility::Public,
             format!("Usage: {exe_name} autofix missing-local-annot [OPTION]... [FILE]\n"),
         );
         let spec = command_utils::add_base_flags(spec);
@@ -406,6 +408,7 @@ mod exports {
         let spec = command_spec::Spec::new(
             "exports",
             "[EXPERIMENTAL] automatically fix signature verification errors",
+            command_spec::Visibility::Public,
             format!("Usage: {exe_name} autofix exports [OPTION]... [FILE]\n"),
         );
         let spec = command_utils::add_base_flags(spec);
@@ -595,7 +598,8 @@ pub(crate) fn command() -> command_spec::Command {
     };
     let spec = command_utils::subcommand_spec(
         "autofix",
-        "",
+        "Automatically insert type annotations",
+        command_spec::Visibility::Internal,
         vec![
             (
                 "insert-type",

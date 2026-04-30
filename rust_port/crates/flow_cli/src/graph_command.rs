@@ -22,6 +22,7 @@ fn dep_graph_spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "dep-graph",
         "Output .dot file for the dependency graph of a repository",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {} graph dep-graph [OPTION]...\n\ne.g. {} graph dep-graph --out path/to/output --root path/to/root\ne.g. {} graph dep-graph --out path/to/output \nor   {} graph dep-graph --strip-root --out path/to/output --root path/to/root\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\nIf --strip-root is specified, the file paths in the output graph\nwill be relative to ROOT.\nThe graph will be output in FILE.\n\n",
             command_utils::exe_name(),
@@ -105,6 +106,7 @@ fn spec() -> command_spec::Spec {
     command_spec::Spec::new(
         "graph",
         "Outputs dependency graphs of flow repositories",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {} graph SUBCOMMAND [OPTIONS]...\nOutputs dependency graphs of flow repositories\n\nSUBCOMMANDS:\ncycle: Produces a graph of the dependency cycle containing the input file\ndep-graph: Produces the dependency graph of a repository\n",
             command_utils::exe_name()

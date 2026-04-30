@@ -16,6 +16,7 @@ module Quickfix = struct
     {
       name = "Apply available quickfixes";
       doc = "Runs all safe quickfixes. If requested, run one additional best effort quickfix";
+      visibility = CommandSpec.Public;
       usage =
         Printf.sprintf
           "Usage: %s apply-code-action 'experimental.quickfix'  [OPTION]... FILE"
@@ -87,6 +88,7 @@ module SourceAddMissingImports = struct
     {
       name = "Add mising imports";
       doc = "Runs the 'source.addMissingImports' code action";
+      visibility = CommandSpec.Public;
       usage =
         Printf.sprintf
           "Usage: %s apply-code-action 'source.addMissingImports'  [OPTION]... FILE"
@@ -141,6 +143,7 @@ module SuggestImports = struct
     {
       name = "Show import suggestions";
       doc = "Shows import suggestions for all unbound names in the file ranked by usage";
+      visibility = CommandSpec.Public;
       usage =
         Printf.sprintf "Usage: %s apply-code-action 'suggestImports'  [OPTION]... FILE" exe_name;
       args =
@@ -187,7 +190,8 @@ let command =
   let spec =
     CommandUtils.subcommand_spec
       ~name:"apply-code-action"
-      ~doc:""
+      ~doc:"Apply code actions (quickfixes, imports)"
+      ~visibility:CommandSpec.Internal
       [
         ("experimental.quickfix", Quickfix.command);
         ("source.addMissingImports", SourceAddMissingImports.command);

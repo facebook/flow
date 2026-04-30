@@ -21,7 +21,8 @@ fn spec() -> command_spec::Spec {
     // Outputs list of all types in the file
     let spec = command_spec::Spec::new(
         "dump-types",
-        "",
+        "Outputs types for every expression in the file",
+        command_spec::Visibility::Internal,
         format!(
             "Usage: {exe_name} dump-types [OPTION]... [FILE]\n\ne.g. {exe_name} dump-types foo.js\nor   {exe_name} dump-types < foo.js\n"
         ),

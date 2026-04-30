@@ -24,6 +24,7 @@ fn spec() -> command_spec::Spec {
         command_spec::Spec::new(
             "unstable-dump-impl-deps",
             "Outputs the implementation dependency graph as JSON",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} dump-impl-deps [OPTION]... [ROOT]\n\nOutputs the implementation dependency graph as JSON to stdout.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n",
                 command_utils::exe_name(),

@@ -20,6 +20,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "batch-coverage",
         "Shows aggregate coverage information for a group of files or directories ",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} batch-coverage [OPTION]... [FILE...] \n\ne.g. {exe_name} batch-coverage foo.js bar.js baz.js dirname1 dirname2 --show-all \nor   {exe_name} batch-coverage --input-file filenames.txt\n"
         ),

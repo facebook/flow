@@ -15,7 +15,8 @@ use crate::glean_runner;
 fn spec() -> command_spec::Spec {
     codemod_command::codemod_common_spec(
         "glean",
-        "",
+        "Outputs Glean indexer facts as JSON",
+        command_spec::Visibility::Internal,
         format!(
             "Usage: {} glean <path> --output-dir <dirname> --write-root <name>",
             command_utils::exe_name()

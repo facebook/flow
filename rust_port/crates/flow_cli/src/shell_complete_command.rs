@@ -12,7 +12,8 @@ use crate::command_utils;
 fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "shell-complete",
-        "",
+        "Shell completion helper",
+        command_spec::Visibility::Internal,
         format!(
             "Usage: {} shell-complete --current N -- ARGV\n",
             command_utils::exe_name()

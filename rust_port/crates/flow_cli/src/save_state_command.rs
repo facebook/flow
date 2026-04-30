@@ -21,6 +21,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "save-state",
         "Tell the server to create a saved-state file",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {} save-state [OPTION]...\n\ne.g. {} save-state --root path/to/root --out path/to/my_saved_state\n",
             command_utils::exe_name(),

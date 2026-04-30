@@ -15,6 +15,7 @@ let spec =
   {
     CommandSpec.name = "force-recheck";
     doc = "Forces the server to recheck a given list of files";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s force-recheck [OPTION]... [FILES]\nForces the Flow server to recheck a given list of files.\n\nFILES may be omitted if and only if --input-file is used.\n"

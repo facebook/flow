@@ -2166,7 +2166,7 @@ let choose_file_watcher_timeout ~flowconfig cli_timeout =
   | Some x -> Some (float x)
   | None -> Some (float default_file_watcher_timeout)
 
-let subcommand_spec ~name ~doc cmd_list =
+let subcommand_spec ~name ~doc ?(visibility = CommandSpec.Public) cmd_list =
   let command_info =
     cmd_list
     |> Base.List.map ~f:(fun (name, command) -> (name, CommandSpec.doc command))
@@ -2177,6 +2177,7 @@ let subcommand_spec ~name ~doc cmd_list =
   {
     CommandSpec.name;
     doc;
+    visibility;
     usage =
       Printf.sprintf
         "Usage: %s %s SUBCOMMAND [OPTIONS]...\n\nValid values for SUBCOMMAND:\n%s\n"

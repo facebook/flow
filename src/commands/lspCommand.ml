@@ -15,6 +15,7 @@ let spec =
   {
     CommandSpec.name = "lsp";
     doc = "Acts as a server for the Language Server Protocol over stdin/stdout [experimental]";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s lsp\n\nRuns a server for the Language Server Protocol\n"

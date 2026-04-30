@@ -414,11 +414,17 @@ module ArgSpec = struct
     }
 end
 
+type visibility =
+  | Public
+  | Internal
+  | Experimental
+
 type ('a, 'b) builder_t = {
   name: string;
   doc: string;
   usage: string;
   args: ('a, 'b) ArgSpec.t;
+  visibility: visibility;
 }
 
 type flags = ArgSpec.flag_metadata SMap.t
@@ -426,6 +432,7 @@ type flags = ArgSpec.flag_metadata SMap.t
 type t = {
   cmdname: string;
   cmddoc: string;
+  cmdvisibility: visibility;
   flags: flags;
   args_of_argv: string list -> string list SMap.t;
   string_of_usage: unit -> string;
@@ -623,6 +630,7 @@ let command spec main =
   {
     cmdname = spec.name;
     cmddoc = spec.doc;
+    cmdvisibility = spec.visibility;
     flags = spec.args.ArgSpec.flags;
     string_of_usage = (fun () -> usage_string spec);
     args_of_argv = parse (init_from_env spec.args) spec.args;
@@ -643,3 +651,5 @@ let flags command = command.flags
 let args_of_argv command = command.args_of_argv
 
 let string_of_usage command = command.string_of_usage ()
+
+let visibility command = command.cmdvisibility

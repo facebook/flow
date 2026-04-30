@@ -15,6 +15,7 @@ let spec =
   {
     CommandSpec.name = "save-state";
     doc = "Tell the server to create a saved-state file";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s save-state [OPTION]...\n\ne.g. %s save-state --root path/to/root --out path/to/my_saved_state\n"

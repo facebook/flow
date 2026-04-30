@@ -16,6 +16,7 @@ let spec =
   {
     CommandSpec.name = "coverage";
     doc = "Shows coverage information for a given file";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s coverage [OPTION]... [FILE]\n\ne.g. %s coverage foo.js\nor   %s coverage < foo.js\n"

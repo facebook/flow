@@ -66,11 +66,19 @@ module ArgSpec : sig
   val optional_value_with_default : default:'a -> 'a option flag_t -> 'a option flag_t
 end
 
+type visibility =
+  | Public  (** Shown in [--help]. Part of the public CLI API. *)
+  | Internal  (** Hidden from [--help]. Infrastructure/debugging tools not meant for end users. *)
+  | Experimental
+      (** Hidden from [--help]. User-facing features being tested that may graduate to
+          [Public] or be removed. *)
+
 type ('a, 'b) builder_t = {
   name: string;
   doc: string;
   usage: string;
   args: ('a, 'b) ArgSpec.t;
+  visibility: visibility;
 }
 
 type t
@@ -109,3 +117,5 @@ val find_flag : string -> flags -> string * ArgSpec.flag_metadata
 val args_of_argv : t -> string list -> string list SMap.t
 
 val string_of_usage : t -> string
+
+val visibility : t -> visibility

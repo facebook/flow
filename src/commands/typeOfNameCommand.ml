@@ -15,7 +15,8 @@ open Utils_js
 let spec =
   {
     CommandSpec.name = "type-of-name-experimental";
-    doc = "";
+    doc = "Shows the type of a variable or export by name";
+    visibility = CommandSpec.Internal;
     usage =
       Printf.sprintf
         "Usage: %s type-of-name-experimental [OPTION]... FILE NAME [NAME...]\n\ne.g. %s type-of-name foo.js myVariable\ne.g. %s type-of-name foo.js UserCard DataDisplay ProductItem\ne.g. %s type-of-name foo.js UserCard.name UserCard.email\n"

@@ -28,6 +28,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "check-contents",
         "Run typechecker on contents from stdin",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} check-contents [OPTION]... [FILE]\n\nRuns a flow check on the contents of stdin. If FILE is provided, then\ncheck-contents pretends that the contents of stdin come from FILE\n\ne.g. {exe_name} check-contents < foo.js\nor   {exe_name} check-contents foo.js < foo.js\n"
         ),

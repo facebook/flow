@@ -41,6 +41,7 @@ mod quickfix {
         let spec = command_spec::Spec::new(
             "Apply available quickfixes",
             "Runs all safe quickfixes. If requested, run one additional best effort quickfix",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {exe_name} apply-code-action 'experimental.quickfix'  [OPTION]... FILE"
             ),
@@ -151,6 +152,7 @@ mod source_add_missing_imports {
         let spec = command_spec::Spec::new(
             "Add mising imports",
             "Runs the 'source.addMissingImports' code action",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {exe_name} apply-code-action 'source.addMissingImports'  [OPTION]... FILE"
             ),
@@ -251,6 +253,7 @@ mod suggest_imports {
         let spec = command_spec::Spec::new(
             "Show import suggestions",
             "Shows import suggestions for all unbound names in the file ranked by usage",
+            command_spec::Visibility::Public,
             format!("Usage: {exe_name} apply-code-action 'suggestImports'  [OPTION]... FILE"),
         );
         let spec = command_utils::add_base_flags(spec);
@@ -356,7 +359,8 @@ fn spec() -> command_spec::Spec {
     let suggest_imports_command = suggest_imports::command();
     command_utils::subcommand_spec(
         "apply-code-action",
-        "",
+        "Apply code actions (quickfixes, imports)",
+        command_spec::Visibility::Internal,
         vec![
             (
                 "experimental.quickfix",

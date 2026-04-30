@@ -21,7 +21,8 @@ fn spec() -> command_spec::Spec {
     let exe_name = command_utils::exe_name();
     let spec = command_spec::Spec::new(
         CMD_NAME,
-        "",
+        "Outputs LLM context information for given files",
+        command_spec::Visibility::Internal,
         format!(
             "Usage: {exe_name} llm-context [OPTION]... [FILE]...\n\ne.g. {exe_name} llm-context foo.js bar.js\n"
         ),

@@ -20,6 +20,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "version",
         "Print version information",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {} version [OPTION]... [ROOT]\n\ne.g. {} version\nor   {} version --json\nor   {} version /path/to/root\n",
             exe_name, exe_name, exe_name, exe_name

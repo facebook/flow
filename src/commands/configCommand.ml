@@ -16,6 +16,7 @@ let find_subcommand =
     {
       CommandSpec.name = "config find";
       doc = "Return path to .flowconfig";
+      visibility = CommandSpec.Public;
       usage =
         Printf.sprintf
           "Usage: %s config find [ROOT]\nReturn the path to the .flowconfig file\n\ne.g. %s config find /path/to/root"
@@ -45,6 +46,7 @@ let check_subcommand =
     {
       CommandSpec.name = "config check";
       doc = "Validates the .flowconfig file";
+      visibility = CommandSpec.Public;
       usage =
         Printf.sprintf
           "Usage: %s config check [FILE]\nValidates the .flowconfig file\n\ne.g. %s config check /path/to/.flowconfig"
@@ -143,6 +145,7 @@ let command =
     {
       CommandSpec.name = "config";
       doc = "Read or write the .flowconfig file";
+      visibility = CommandSpec.Public;
       usage =
         Printf.sprintf
           "Usage: %s config SUBCOMMAND [ROOT]\nRead or write the .flowconfig file\n\nSUBCOMMANDS:\nfind: Return the path to the .flowconfig\n"

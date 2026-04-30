@@ -3500,6 +3500,7 @@ pub(crate) fn add_codemod_flags(spec: command_spec::Spec) -> command_spec::Spec 
 pub(crate) fn subcommand_spec<T: Clone + Send + Sync + 'static>(
     name: &str,
     doc: &str,
+    visibility: command_spec::Visibility,
     cmd_list: Vec<(&'static str, T, String)>,
 ) -> command_spec::Spec {
     let mut command_info = cmd_list
@@ -3512,6 +3513,7 @@ pub(crate) fn subcommand_spec<T: Clone + Send + Sync + 'static>(
     command_spec::Spec::new(
         name,
         doc,
+        visibility,
         format!(
             "Usage: {} {} SUBCOMMAND [OPTIONS]...\n\nValid values for SUBCOMMAND:\n{}\n",
             exe_name(),

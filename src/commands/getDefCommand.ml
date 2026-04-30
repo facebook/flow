@@ -15,6 +15,7 @@ let spec =
   {
     CommandSpec.name = "get-def";
     doc = "Gets the definition location of a variable or property";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s get-def [OPTION]... [FILE] LINE COLUMN\n\ne.g. %s get-def foo.js 12 3\nor   %s get-def 12 3 < foo.js\n"

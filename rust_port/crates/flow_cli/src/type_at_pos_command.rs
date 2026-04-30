@@ -23,6 +23,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "type-at-pos",
         "Shows the type at a given file and position",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} type-at-pos [OPTION]... [FILE] LINE COLUMN\n\ne.g. {exe_name} type-at-pos foo.js 12 3\nor   {exe_name} type-at-pos 12 3 < foo.js\n"
         ),

@@ -160,6 +160,7 @@ module FullCheckCommand = struct
     {
       CommandSpec.name = "full-check";
       doc = "Type-checks all files in the foreground (no server, can be slow on large codebases)";
+      visibility = CommandSpec.Public;
       args =
         CommandSpec.ArgSpec.(
           empty
@@ -188,6 +189,7 @@ module FocusCheckCommand = struct
     {
       CommandSpec.name = "focus-check";
       doc = "Type-checks specific files and their dependents in the foreground (no server)";
+      visibility = CommandSpec.Public;
       args =
         CommandSpec.ArgSpec.(
           empty

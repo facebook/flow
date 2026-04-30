@@ -127,6 +127,7 @@ module Annotate_exports_command = struct
   let spec =
     {
       CommandSpec.name = "annotate-exports";
+      visibility = CommandSpec.Public;
       doc;
       usage =
         Printf.sprintf
@@ -163,6 +164,7 @@ module Annotate_literal_declaration_command = struct
   let spec =
     {
       CommandSpec.name = "annotate-literal-declaration";
+      visibility = CommandSpec.Public;
       doc;
       usage =
         Printf.sprintf
@@ -209,6 +211,7 @@ module RemoveReactImportCommand = struct
   let spec =
     {
       CommandSpec.name = "remove-unnecessary-react-import";
+      visibility = CommandSpec.Public;
       doc;
       usage =
         Printf.sprintf
@@ -241,6 +244,7 @@ module Annotate_optional_properties_command = struct
     {
       CommandSpec.name;
       doc;
+      visibility = CommandSpec.Public;
       usage =
         Printf.sprintf "Usage: %s codemod %s [OPTION]... [FILE]\n\n%s\n" name Utils_js.exe_name doc;
       args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags |> common_annotate_flags);
@@ -387,6 +391,7 @@ module Fix_errors_command = struct
   let spec =
     {
       CommandSpec.name = "fix-errors";
+      visibility = CommandSpec.Public;
       doc;
       usage =
         Printf.sprintf

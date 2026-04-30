@@ -24,6 +24,7 @@ let spec =
   {
     CommandSpec.name = "ast";
     doc = "Print the AST";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s ast [OPTION]... [FILE]\n\ne.g. %s ast foo.js\nor   %s ast < foo.js\n"

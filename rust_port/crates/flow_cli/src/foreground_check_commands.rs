@@ -271,6 +271,7 @@ mod full_check_command {
         let spec = command_spec::Spec::new(
             "full-check",
             "Type-checks all files in the foreground (no server, can be slow on large codebases)",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {exe_name} full-check [OPTION]... [ROOT]\n\nDoes a full Flow check in the foreground and prints the results.\n\nThis command runs the type checker directly in the foreground without connecting to a Flow server.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n"
             ),
@@ -321,6 +322,7 @@ mod focus_check_command {
         let spec = command_spec::Spec::new(
             "focus-check",
             "Type-checks specific files and their dependents in the foreground (no server)",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {exe_name} focus-check [OPTION]... [FILES/DIRS]\n\nType-checks the input files/directories and their dependents in the foreground (no server).\n\nIf --root is not specified, Flow will search upward for a .flowconfig file from the first file or dir in FILES/DIR.\nIf --root is not specified and FILES/DIR is omitted, a focus check is ran on the current directory.\n"
             ),

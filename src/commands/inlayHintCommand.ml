@@ -16,8 +16,8 @@ let cmd_name = "inlay-hint_unstable_exposed_for_testing"
 let spec =
   {
     CommandSpec.name = cmd_name;
-    doc =
-      "Compute all inlay hints available in a file. This command is only exposed for the purpose of testing Flow. There is no stability guarantee.";
+    doc = "Compute all inlay hints available in a file (testing only, no stability guarantee)";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s %s [OPTION]... [FILE]\n\ne.g. %s %s foo.js\nor   %s %s < foo.js\n"

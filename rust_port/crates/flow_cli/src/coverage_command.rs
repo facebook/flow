@@ -25,6 +25,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "coverage",
         "Shows coverage information for a given file",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} coverage [OPTION]... [FILE]\n\ne.g. {exe_name} coverage foo.js\nor   {exe_name} coverage < foo.js\n"
         ),

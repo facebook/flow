@@ -11,6 +11,7 @@ let spec =
   {
     CommandSpec.name = "env-builder-debug";
     doc = "Print the env-builder result as a dependency graph for debugging purposes";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s env-builder-debug [OPTION]... [FILE]\n\ne.g. %s env-builder-debug foo.js\nor   %s env-builder-debug < foo.js\n"

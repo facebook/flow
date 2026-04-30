@@ -23,6 +23,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "stop",
         "Stops a Flow server",
+        command_spec::Visibility::Public,
         "Usage: flow stop [OPTION]... [ROOT]\nStops a flow server\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be current directory if unspecified\n".to_string(),
     );
     let spec = command_utils::add_base_flags(spec);

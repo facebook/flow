@@ -15,7 +15,8 @@ module Command (CommandList : COMMAND_LIST) = struct
   let spec =
     {
       CommandSpec.name = "shell-complete";
-      doc = "";
+      doc = "Shell completion helper";
+      visibility = CommandSpec.Internal;
       usage = Printf.sprintf "Usage: %s shell-complete --current N -- ARGV\n" CommandUtils.exe_name;
       args =
         CommandSpec.ArgSpec.(

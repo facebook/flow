@@ -12,6 +12,7 @@ let spec =
   {
     CommandSpec.name = "unstable-dump-impl-deps";
     doc = "Outputs the implementation dependency graph as JSON";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s dump-impl-deps [OPTION]... [ROOT]\n\nOutputs the implementation dependency graph as JSON to stdout.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n"

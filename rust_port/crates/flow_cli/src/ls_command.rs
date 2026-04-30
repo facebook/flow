@@ -28,6 +28,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "ls",
         "Lists files visible to Flow",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {} ls [OPTION]... [FILE]...\n\nLists files visible to Flow\n",
             command_utils::exe_name()

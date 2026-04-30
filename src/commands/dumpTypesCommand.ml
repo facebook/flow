@@ -15,8 +15,8 @@ open Utils_js
 let spec =
   {
     CommandSpec.name = "dump-types";
-    doc = "";
-    (* Outputs list of all types in the file *)
+    doc = "Outputs types for every expression in the file";
+    visibility = CommandSpec.Internal;
     usage =
       Printf.sprintf
         "Usage: %s dump-types [OPTION]... [FILE]\n\ne.g. %s dump-types foo.js\nor   %s dump-types < foo.js\n"

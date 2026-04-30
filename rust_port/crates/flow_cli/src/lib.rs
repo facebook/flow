@@ -386,7 +386,7 @@ fn default_command_docs() -> Vec<(String, String)> {
         .filter_map(|command| {
             let name = command.name().to_string();
             let doc = command.doc().to_string();
-            if name.is_empty() || doc.is_empty() {
+            if name.is_empty() || command.visibility() != command_spec::Visibility::Public {
                 None
             } else {
                 Some((name, doc))

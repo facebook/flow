@@ -15,6 +15,7 @@ let spec =
   {
     CommandSpec.name = "server";
     doc = "Runs a Flow server in the foreground";
+    visibility = CommandSpec.Public;
     args =
       CommandSpec.ArgSpec.(
         empty

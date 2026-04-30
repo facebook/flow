@@ -16,6 +16,7 @@ let spec =
   {
     CommandSpec.name = "ls";
     doc = "Lists files visible to Flow";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s ls [OPTION]... [FILE]...\n\nLists files visible to Flow\n"

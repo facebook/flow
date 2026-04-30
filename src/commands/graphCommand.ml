@@ -16,6 +16,7 @@ let depgraph_subcommand =
     {
       CommandSpec.name = "dep-graph";
       doc = "Output .dot file for the dependency graph of a repository";
+      visibility = CommandSpec.Public;
       usage =
         Printf.sprintf
           "Usage: %s graph dep-graph [OPTION]...\n\ne.g. %s graph dep-graph --out path/to/output --root path/to/root\ne.g. %s graph dep-graph --out path/to/output \nor   %s graph dep-graph --strip-root --out path/to/output --root path/to/root\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\nIf --strip-root is specified, the file paths in the output graph
@@ -71,6 +72,7 @@ let command =
     {
       CommandSpec.name = "graph";
       doc = "Outputs dependency graphs of flow repositories";
+      visibility = CommandSpec.Public;
       usage =
         Printf.sprintf
           "Usage: %s graph SUBCOMMAND [OPTIONS]...\nOutputs dependency graphs of flow repositories\n\nSUBCOMMANDS:\ncycle: Produces a graph of the dependency cycle containing the input file\ndep-graph: Produces the dependency graph of a repository\n"

@@ -11,7 +11,8 @@ let spec =
   let open CommandSpec in
   {
     name = "glean";
-    doc = "";
+    doc = "Outputs Glean indexer facts as JSON";
+    visibility = CommandSpec.Internal;
     usage =
       Printf.sprintf "Usage: %s glean <path> --output-dir <dirname> --write-root <name>" exe_name;
     args =

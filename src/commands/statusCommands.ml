@@ -132,6 +132,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       {
         CommandSpec.name = "status";
         doc = "(default) Shows current Flow errors by asking the Flow server";
+        visibility = CommandSpec.Public;
         usage =
           Printf.sprintf
             "Usage: %s status [OPTION]... [ROOT]\nShows current Flow errors by asking the Flow server.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\nA server will be started if none is running over ROOT.\n\nStatus command options:"
@@ -153,14 +154,17 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     else
       let command_info =
         CommandList.commands
+        |> Base.List.filter ~f:(fun command ->
+               CommandSpec.name command <> "" && CommandSpec.visibility command = CommandSpec.Public
+           )
         |> Base.List.map ~f:(fun command -> (CommandSpec.name command, CommandSpec.doc command))
-        |> List.filter (fun (cmd, doc) -> cmd <> "" && doc <> "")
         |> List.sort (fun (a, _) (b, _) -> String.compare a b)
       in
       let cmd_usage = CommandSpec.format_two_columns ~col_pad:1 command_info in
       {
         CommandSpec.name = "default";
         doc = "";
+        visibility = CommandSpec.Internal;
         usage =
           Printf.sprintf
             "Usage: %s [COMMAND] \n\nValid values for COMMAND:\n%s\n\nDefault values if unspecified:\n\ \ COMMAND\tstatus\n\nStatus command options:"

@@ -18,6 +18,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_utils::add_base_flags(command_spec::Spec::new(
         "get-def",
         "Gets the definition location of a variable or property",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} get-def [OPTION]... [FILE] LINE COLUMN\n\ne.g. {exe_name} get-def foo.js 12 3\nor   {exe_name} get-def 12 3 < foo.js\n"
         ),

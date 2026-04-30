@@ -20,6 +20,7 @@ let spec =
   {
     CommandSpec.name = "autocomplete";
     doc = "Queries autocompletion information";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s autocomplete [OPTION] [FILE] [LINE COLUMN]...\n\nQueries autocompletion information.\n\nIf line and column is specified, then the magic autocomplete token is\nautomatically inserted at the specified position.\n\nExample usage:\n\t%s autocomplete < foo.js\n\t%s autocomplete path/to/foo.js < foo.js

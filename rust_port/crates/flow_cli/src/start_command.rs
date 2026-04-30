@@ -22,6 +22,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "start",
         "Starts a Flow server",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {} start [OPTION]... [ROOT]\n\nStarts a Flow server.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\nA server will be started if none is running over ROOT.\n",
             command_utils::exe_name(),

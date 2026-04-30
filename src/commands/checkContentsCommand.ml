@@ -15,6 +15,7 @@ let spec =
   {
     CommandSpec.name = "check-contents";
     doc = "Run typechecker on contents from stdin";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s check-contents [OPTION]... [FILE]\n\nRuns a flow check on the contents of stdin. If FILE is provided, then\ncheck-contents pretends that the contents of stdin come from FILE\n\ne.g. %s check-contents < foo.js\nor   %s check-contents foo.js < foo.js\n"

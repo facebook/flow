@@ -32,8 +32,14 @@ struct StatusArgs {
     strip_root: bool,
 }
 
-fn spec(name: &str, doc: &str, usage: String, explicit: bool) -> command_spec::Spec {
-    let spec = command_spec::Spec::new(name, doc, usage);
+fn spec(
+    name: &str,
+    doc: &str,
+    visibility: command_spec::Visibility,
+    usage: String,
+    explicit: bool,
+) -> command_spec::Spec {
+    let spec = command_spec::Spec::new(name, doc, visibility, usage);
     let spec = command_utils::add_base_flags(spec);
     let spec = command_utils::add_connect_and_json_flags(spec);
     let spec = command_utils::add_json_version_flag(spec);
@@ -236,6 +242,7 @@ pub(crate) fn status_command() -> command_spec::Command {
         spec(
             "status",
             "(default) Shows current Flow errors by asking the Flow server",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} status [OPTION]... [ROOT]\nShows current Flow errors by asking the Flow server.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\nA server will be started if none is running over ROOT.\n\nStatus command options:",
                 command_utils::exe_name()
@@ -251,6 +258,7 @@ pub(crate) fn check_command() -> command_spec::Command {
         spec(
             "check",
             "(default) Shows current Flow errors by asking the Flow server",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} check [OPTION]... [ROOT]\nShows current Flow errors by asking the Flow server.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\nA server will be started if none is running over ROOT.\n\nCheck command options:",
                 command_utils::exe_name()
@@ -269,6 +277,7 @@ pub(crate) fn default_command(command_info: Vec<(String, String)>) -> command_sp
         spec(
             "default",
             "",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} [COMMAND] \n\nValid values for COMMAND:\n{}\n\nDefault values if unspecified:\n COMMAND\tstatus\n\nStatus command options:",
                 command_utils::exe_name(),

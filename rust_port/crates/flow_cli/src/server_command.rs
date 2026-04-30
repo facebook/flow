@@ -18,6 +18,7 @@ fn spec() -> command_spec::Spec {
         command_spec::Spec::new(
             "server",
             "Runs a Flow server in the foreground",
+            command_spec::Visibility::Public,
             "Usage: flow server [OPTION]... [ROOT]\n\nRuns a Flow server in the foreground.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n".to_string(),
         ),
     ));

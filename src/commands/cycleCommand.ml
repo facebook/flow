@@ -11,6 +11,7 @@ let spec =
   {
     CommandSpec.name = "cycle";
     doc = "Output .dot file for cycle containing the given file";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s cycle [OPTION]...\n\ne.g. %s cycle path/to/file.js \n"

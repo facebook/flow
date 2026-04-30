@@ -15,6 +15,7 @@ module InsertType = struct
     {
       name = "insert type";
       doc = "[EXPERIMENTAL] Insert type information at file and position";
+      visibility = CommandSpec.Public;
       usage =
         Printf.sprintf
           "Usage: %s autofix insert-type [OPTION]... [FILE] LINE COLUMN [END_LINE] [END_COLUMN]\n\ne.g. %s autofix insert-type foo.js 12 3\nor   %s autofix insert-type 12 3 < foo.js\n"
@@ -150,6 +151,7 @@ module MissingLocalAnnot = struct
     {
       name = "missing-local-annot";
       doc = "[EXPERIMENTAL] automatically fix missing-local-annot errors";
+      visibility = CommandSpec.Public;
       usage = Printf.sprintf "Usage: %s autofix missing-local-annot [OPTION]... [FILE]\n" exe_name;
       args =
         ArgSpec.(
@@ -232,6 +234,7 @@ module Exports = struct
     {
       name = "exports";
       doc = "[EXPERIMENTAL] automatically fix signature verification errors";
+      visibility = CommandSpec.Public;
       usage = Printf.sprintf "Usage: %s autofix exports [OPTION]... [FILE]\n" exe_name;
       args =
         ArgSpec.(
@@ -325,7 +328,8 @@ let command =
   let spec =
     CommandUtils.subcommand_spec
       ~name:"autofix"
-      ~doc:""
+      ~doc:"Automatically insert type annotations"
+      ~visibility:CommandSpec.Internal
       [
         ("insert-type", InsertType.command);
         ("missing-local-annot", MissingLocalAnnot.command);

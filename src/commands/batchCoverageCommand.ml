@@ -12,6 +12,7 @@ let spec =
   {
     CommandSpec.name = "batch-coverage";
     doc = "Shows aggregate coverage information for a group of files or directories ";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s batch-coverage [OPTION]... [FILE...] \n\ne.g. %s batch-coverage foo.js bar.js baz.js dirname1 dirname2 --show-all \nor   %s batch-coverage --input-file filenames.txt\n"

@@ -13,6 +13,7 @@ let spec =
   {
     CommandSpec.name = "version";
     doc = "Print version information";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s version [OPTION]... [ROOT]\n\ne.g. %s version\nor   %s version --json\nor   %s version /path/to/root\n"

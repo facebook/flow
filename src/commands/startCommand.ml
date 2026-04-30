@@ -15,6 +15,7 @@ let spec =
   {
     CommandSpec.name = "start";
     doc = "Starts a Flow server";
+    visibility = CommandSpec.Public;
     args =
       CommandSpec.ArgSpec.(
         empty

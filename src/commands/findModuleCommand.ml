@@ -15,6 +15,7 @@ let spec =
   {
     CommandSpec.name = "find-module";
     doc = "Resolves a module reference to a file";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s find-module [OPTION]... [FILE]...\n\nResolves a module reference to a file\n\nExample usage:\n\t%s find-module moduleref filename\n"

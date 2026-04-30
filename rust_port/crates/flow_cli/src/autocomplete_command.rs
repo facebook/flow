@@ -32,6 +32,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_utils::add_base_flags(command_spec::Spec::new(
         "autocomplete",
         "Queries autocompletion information",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} autocomplete [OPTION] [FILE] [LINE COLUMN]...\n\nQueries autocompletion information.\n\nIf line and column is specified, then the magic autocomplete token is\nautomatically inserted at the specified position.\n\nExample usage:\n\t{exe_name} autocomplete < foo.js\n\t{exe_name} autocomplete path/to/foo.js < foo.js\n\t{exe_name} autocomplete 12 35 < foo.js\n"
         ),

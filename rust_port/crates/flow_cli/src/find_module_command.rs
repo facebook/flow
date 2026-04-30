@@ -19,6 +19,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "find-module",
         "Resolves a module reference to a file",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {} find-module [OPTION]... [FILE]...\n\nResolves a module reference to a file\n\nExample usage:\n\t{} find-module moduleref filename\n",
             command_utils::exe_name(),

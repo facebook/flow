@@ -43,6 +43,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "ast",
         "Print the AST",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} ast [OPTION]... [FILE]\n\ne.g. {exe_name} ast foo.js\nor   {exe_name} ast < foo.js\n"
         ),

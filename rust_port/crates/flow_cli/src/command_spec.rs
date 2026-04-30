@@ -349,16 +349,24 @@ pub mod arg_spec {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Visibility {
+    Public,
+    Internal,
+    Experimental,
+}
+
 pub struct Spec {
     pub name: String,
     pub doc: String,
+    pub visibility: Visibility,
     pub usage: String,
     pub flags: BTreeMap<String, arg_spec::FlagMetadata>,
     pub anons: Vec<(String, arg_spec::FlagArgCount)>,
 }
 
 impl Spec {
-    pub fn new(name: &str, doc: &str, usage: String) -> Self {
+    pub fn new(name: &str, doc: &str, visibility: Visibility, usage: String) -> Self {
         let mut flags = BTreeMap::new();
         flags.insert(
             "--help".to_string(),
@@ -371,6 +379,7 @@ impl Spec {
         Self {
             name: name.to_string(),
             doc: doc.to_string(),
+            visibility,
             usage,
             flags,
             anons: vec![],
@@ -404,6 +413,7 @@ impl Spec {
 pub struct Command {
     cmdname: String,
     cmddoc: String,
+    cmdvisibility: Visibility,
     flags: BTreeMap<String, arg_spec::FlagMetadata>,
     anons: Vec<(String, arg_spec::FlagArgCount)>,
     string_of_usage: Box<dyn Fn() -> String + Send + Sync>,
@@ -705,12 +715,14 @@ pub(crate) fn usage(spec: &Spec) {
 pub fn command(spec: Spec, main: impl Fn(&arg_spec::Values) + Send + Sync + 'static) -> Command {
     let cmdname = spec.name.clone();
     let cmddoc = spec.doc.clone();
+    let cmdvisibility = spec.visibility;
     let flags = spec.flags.clone();
     let anons = spec.anons.clone();
     let usage = usage_string(&spec);
     Command {
         cmdname,
         cmddoc,
+        cmdvisibility,
         flags,
         anons,
         string_of_usage: Box::new(move || usage.clone()),
@@ -727,6 +739,10 @@ impl Command {
         &self.cmddoc
     }
 
+    pub fn visibility(&self) -> Visibility {
+        self.cmdvisibility
+    }
+
     #[allow(dead_code)]
     pub fn flags(&self) -> &BTreeMap<String, arg_spec::FlagMetadata> {
         &self.flags
@@ -740,6 +756,7 @@ impl Command {
         let spec = Spec {
             name: self.cmdname.clone(),
             doc: self.cmddoc.clone(),
+            visibility: self.visibility(),
             usage: (self.string_of_usage)(),
             flags: self.flags.clone(),
             anons: self.anons.clone(),

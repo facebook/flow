@@ -133,8 +133,13 @@ fn split_csv_flag(value: Option<String>) -> Vec<String> {
         .unwrap_or_default()
 }
 
-pub(crate) fn codemod_common_spec(name: &str, doc: &str, usage: String) -> command_spec::Spec {
-    command_utils::add_codemod_flags(command_spec::Spec::new(name, doc, usage))
+pub(crate) fn codemod_common_spec(
+    name: &str,
+    doc: &str,
+    visibility: command_spec::Visibility,
+    usage: String,
+) -> command_spec::Spec {
+    command_utils::add_codemod_flags(command_spec::Spec::new(name, doc, visibility, usage))
 }
 
 fn prepare_root(flowconfig_name: &str, root_arg: Option<String>, filenames: &[String]) -> PathBuf {
@@ -398,6 +403,7 @@ mod annotate_exports_command {
         codemod_common_spec(
             "annotate-exports",
             doc,
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} codemod annotate-exports [OPTION]... [FILE]\n\nAnnotates parts of input that are visible from the exports as required by Flow types-first mode.\n",
                 command_utils::exe_name()
@@ -508,6 +514,7 @@ mod annotate_literal_declaration_command {
         codemod_common_spec(
             "annotate-literal-declaration",
             doc,
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} codemod annotate-literal-declaration [OPTION]... [FILE]\n\nAnnotates literal declaration to fix natural inference errors.\n",
                 command_utils::exe_name()
@@ -606,6 +613,7 @@ mod remove_react_import_command {
         codemod_common_spec(
             "remove-unnecessary-react-import",
             doc,
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} codemod remove-unnecessary-react-import [OPTION]... [FILE]\n\nRemove unnecessary imports of React under react.runtime=automatic.\n",
                 command_utils::exe_name()
@@ -660,6 +668,7 @@ mod annotate_optional_properties_command {
         codemod_common_spec(
             "annotate-optional-properties",
             doc,
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} codemod annotate-optional-properties [OPTION]... [FILE]\n\nInserts optional properties on object definitions where properties are missing.\n",
                 command_utils::exe_name()
@@ -1001,6 +1010,7 @@ mod fix_errors_command {
         codemod_common_spec(
             "fix-errors",
             doc,
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} codemod fix-errors [OPTION]... [FILE]\n\nAutomatically fixes transformable Flow errors.\n",
                 command_utils::exe_name()
@@ -1052,6 +1062,7 @@ fn root_spec() -> command_spec::Spec {
     command_spec::Spec::new(
         "codemod",
         "Runs large-scale codebase refactors",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {} codemod SUBCOMMAND [OPTION]...",
             command_utils::exe_name()

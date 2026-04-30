@@ -19,6 +19,7 @@ fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "force-recheck",
         "Forces the server to recheck a given list of files",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {} force-recheck [OPTION]... [FILES]\nForces the Flow server to recheck a given list of files.\n\nFILES may be omitted if and only if --input-file is used.\n",
             command_utils::exe_name()

@@ -13,6 +13,7 @@ let spec =
   {
     CommandSpec.name = "init";
     doc = "Initializes a directory to be used as a flow root directory";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s init [ROOT]\nInitializes a directory to be used as a flow root directory\n\ne.g. %s init /path/to/root\nor %s init\nor %s init --options \"optionA=123;optionB=456\"\nor %s init --lints \"lintA=on,lintB=off\"\n\nIf the root is not specified it is assumed to be the current working directory\n\nThis command will create and initialize /path/to/root/.flowconfig\n"

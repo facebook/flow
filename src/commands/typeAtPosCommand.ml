@@ -16,6 +16,7 @@ let spec =
   {
     CommandSpec.name = "type-at-pos";
     doc = "Shows the type at a given file and position";
+    visibility = CommandSpec.Public;
     usage =
       Printf.sprintf
         "Usage: %s type-at-pos [OPTION]... [FILE] LINE COLUMN\n\ne.g. %s type-at-pos foo.js 12 3\nor   %s type-at-pos 12 3 < foo.js\n"

@@ -23,6 +23,7 @@ fn find_subcommand() -> command_spec::Command {
         let spec = command_spec::Spec::new(
             "config find",
             "Return path to .flowconfig",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} config find [ROOT]\nReturn the path to the .flowconfig file\n\ne.g. {} config find /path/to/root",
                 exe_name, exe_name,
@@ -62,6 +63,7 @@ fn check_subcommand() -> command_spec::Command {
         let spec = command_spec::Spec::new(
             "config check",
             "Validates the .flowconfig file",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} config check [FILE]\nValidates the .flowconfig file\n\ne.g. {} config check /path/to/.flowconfig",
                 exe_name, exe_name,
@@ -189,6 +191,7 @@ pub(crate) fn command() -> command_spec::Command {
         let spec = command_spec::Spec::new(
             "config",
             "Read or write the .flowconfig file",
+            command_spec::Visibility::Public,
             format!(
                 "Usage: {} config SUBCOMMAND [ROOT]\nRead or write the .flowconfig file\n\nSUBCOMMANDS:\nfind: Return the path to the .flowconfig\n",
                 exe_name,

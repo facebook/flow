@@ -15,6 +15,7 @@ pub(crate) fn spec() -> command_spec::Spec {
     let spec = command_spec::Spec::new(
         "cycle",
         "Output .dot file for cycle containing the given file",
+        command_spec::Visibility::Public,
         format!(
             "Usage: {} cycle [OPTION]...\n\ne.g. {} cycle path/to/file.js \n",
             command_utils::exe_name(),
