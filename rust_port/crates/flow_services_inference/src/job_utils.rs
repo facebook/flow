@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
@@ -173,7 +174,7 @@ where
     R: 'static,
 {
     let total_count = files.len();
-    let todo = Arc::new(Mutex::new((files, total_count)));
+    let todo = Arc::new(Mutex::new((VecDeque::from(files), total_count)));
     let files_completed = Arc::new(AtomicUsize::new(0));
     let num_workers = num_workers.max(1);
 
