@@ -51,8 +51,12 @@ end = struct
     @ Extra_commands.extra_commands ()
 
   (* status commands, which need a list of other commands *)
+  let docs_url = Extra_commands.docs_url
+
   module StatusCommand = StatusCommands.Status (struct
     let commands = commands
+
+    let docs_url = docs_url
   end)
 
   let commands = StatusCommand.command :: commands
@@ -60,18 +64,24 @@ end = struct
   (* check is an alias for status *)
   module CheckCommand = StatusCommands.Check (struct
     let commands = commands
+
+    let docs_url = docs_url
   end)
 
   let commands = CheckCommand.command :: commands
 
   module DefaultCommand = StatusCommands.Default (struct
     let commands = commands
+
+    let docs_url = docs_url
   end)
 
   let commands = DefaultCommand.command :: commands
 
   module ShellCommand = ShellCompleteCommand.Command (struct
     let commands = commands
+
+    let docs_url = docs_url
   end)
 
   let commands = ShellCommand.command :: commands

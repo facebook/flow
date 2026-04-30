@@ -6,3 +6,5 @@
  *)
 
 let extra_commands () = []
+
+let docs_url = "https://flow.org/en/docs/"

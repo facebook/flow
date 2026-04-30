@@ -7,4 +7,6 @@
 
 module type COMMAND_LIST = sig
   val commands : CommandSpec.t list
+
+  val docs_url : string
 end

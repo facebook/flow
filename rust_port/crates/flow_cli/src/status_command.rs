@@ -279,7 +279,8 @@ pub(crate) fn default_command(command_info: Vec<(String, String)>) -> command_sp
             "",
             command_spec::Visibility::Public,
             format!(
-                "Usage: {} [COMMAND] \n\nValid values for COMMAND:\n{}\n\nDefault values if unspecified:\n COMMAND\tstatus\n\nStatus command options:",
+                "Documentation: {}\n\nUsage: {} [COMMAND] \n\nValid values for COMMAND:\n{}\n\nDefault values if unspecified:\n COMMAND\tstatus\n\nStatus command options:",
+                crate::extra_commands::docs_url(),
                 command_utils::exe_name(),
                 cmd_usage
             ),

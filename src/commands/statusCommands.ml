@@ -167,10 +167,21 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         doc = "";
         visibility = CommandSpec.Internal;
         usage =
-          Printf.sprintf
-            "Usage: %s [COMMAND] \n\nValid values for COMMAND:\n%s\n\nDefault values if unspecified:\n\ \ COMMAND\tstatus\n\nStatus command options:"
-            exe_name
-            cmd_usage;
+          String.concat
+            "\n"
+            [
+              Printf.sprintf "Documentation: %s" CommandList.docs_url;
+              "";
+              Printf.sprintf "Usage: %s [COMMAND] " exe_name;
+              "";
+              "Valid values for COMMAND:";
+              cmd_usage;
+              "";
+              "Default values if unspecified:";
+              "  COMMAND\tstatus";
+              "";
+              "Status command options:";
+            ];
         args =
           CommandSpec.ArgSpec.(
             empty
@@ -229,10 +240,11 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             (public @ experimental @ internal)
       in
       let fmt = CommandSpec.format_two_columns ~col_pad:1 ~col_width in
-      let buf = Buffer.create 1024 in
+      let buf = Buffer.create 1025 in
       Printf.bprintf
         buf
-        "Documentation: https://flow.org/en/docs/cli/\n\nUsage: %s [COMMAND] \n\nValid values for COMMAND:\n%s\n"
+        "Documentation: %s\n\nUsage: %s [COMMAND] \n\nValid values for COMMAND:\n%s\n"
+        CommandList.docs_url
         exe_name
         (fmt public);
       if experimental <> [] then

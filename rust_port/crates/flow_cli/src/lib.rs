@@ -35,6 +35,7 @@ mod dump_impl_deps_command;
 mod dump_types_command;
 mod env_builder_debug_command;
 mod extra_commands;
+pub use extra_commands::register_docs_url;
 pub use extra_commands::register_extra_commands;
 mod find_module_command;
 mod force_recheck_command;

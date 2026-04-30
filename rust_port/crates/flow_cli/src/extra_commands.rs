@@ -21,3 +21,16 @@ pub(crate) fn extra_commands() -> Vec<command_spec::Command> {
         None => vec![],
     }
 }
+
+static DOCS_URL: OnceLock<&'static str> = OnceLock::new();
+
+pub fn register_docs_url(url: &'static str) {
+    DOCS_URL.set(url).unwrap();
+}
+
+pub(crate) fn docs_url() -> &'static str {
+    DOCS_URL
+        .get()
+        .copied()
+        .unwrap_or("https://flow.org/en/docs/")
+}
