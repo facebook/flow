@@ -92,9 +92,9 @@ pub(super) fn flows_across<'cx>(
 }
 
 /// bounds.upper += u
-pub(super) fn add_upper<'cx>(
+fn add_upper_to_bounds<'cx>(
     cx: &Context<'cx>,
-    id: i32,
+    bounds: &constraint::BoundsRef<Context<'cx>>,
     u: &UseT<Context<'cx>>,
     trace: DepthTrace,
 ) {
@@ -102,40 +102,31 @@ pub(super) fn add_upper<'cx>(
         use_t: u.dupe(),
         assoc: cx.speculation_id().map(|s| (s.speculation_id, s.case_id)),
     };
-    cx.modify_constraints(id, |_root_id, constraints| {
-        if let constraint::Constraints::Unresolved(bounds) = constraints {
-            let mut bounds = bounds.borrow_mut();
-            if bounds
-                .upper
-                .get(&key)
-                .is_some_and(|existing_trace| *existing_trace == trace)
-            {
-                return;
-            }
-            bounds.upper.insert(key, trace);
-        }
-    });
+    let mut bounds = bounds.borrow_mut();
+    if bounds
+        .upper
+        .get(&key)
+        .is_some_and(|existing_trace| *existing_trace == trace)
+    {
+        return;
+    }
+    bounds.upper.insert(key, trace);
 }
 
 /// bounds.lower += l
-pub(super) fn add_lower<'cx>(
-    id: i32,
+fn add_lower_to_bounds<'cx>(
+    bounds: &constraint::BoundsRef<Context<'cx>>,
     l: &Type,
     trace: DepthTrace,
     use_op: UseOp,
-    cx: &Context<'cx>,
 ) {
-    cx.modify_constraints(id, |_root_id, constraints| {
-        if let constraint::Constraints::Unresolved(bounds) = constraints {
-            let mut bounds = bounds.borrow_mut();
-            if let Some((existing_trace, existing_use_op)) = bounds.lower.get(l) {
-                if *existing_trace == trace && existing_use_op == &use_op {
-                    return;
-                }
-            }
-            bounds.lower.insert(l.dupe(), (trace, use_op));
+    let mut bounds = bounds.borrow_mut();
+    if let Some((existing_trace, existing_use_op)) = bounds.lower.get(l) {
+        if *existing_trace == trace && existing_use_op == &use_op {
+            return;
         }
-    });
+    }
+    bounds.lower.insert(l.dupe(), (trace, use_op));
 }
 
 /// Given a map of bindings from tvars to traces, a tvar to skip, and an `each`
@@ -151,13 +142,13 @@ pub(super) fn iter_with_filter<'cx, F, S: std::hash::BuildHasher>(
     skip_id: i32,
     each: F,
 ) where
-    F: Fn(i32, &DepthTrace, &UseOp),
+    F: Fn(i32, constraint::BoundsRef<Context<'cx>>, &DepthTrace, &UseOp),
 {
     for (id, (trace, use_op)) in bindings.iter() {
         let (root_id, constraints) = cx.find_constraints(*id);
         match constraints {
-            constraint::Constraints::Unresolved(_) if root_id != skip_id => {
-                each(root_id, trace, use_op);
+            constraint::Constraints::Unresolved(bounds) if root_id != skip_id => {
+                each(root_id, bounds, trace, use_op);
             }
             _ => {}
         }
@@ -177,18 +168,23 @@ pub(super) fn edges_to_t<'cx>(
     t2: &UseT<Context<'cx>>,
 ) {
     if !opt {
-        add_upper(cx, id1, t2, trace);
+        add_upper_to_bounds(cx, bounds1, t2, trace);
     }
-    let lowertvars = bounds1.borrow().lowertvars.clone();
-    iter_with_filter(cx, &lowertvars, id1, |root_id, trace_l, use_op| {
-        let t2 = flow_use_op(cx, use_op.dupe(), t2.dupe());
-        add_upper(
-            cx,
-            root_id,
-            &t2,
-            DepthTrace::concat_trace(&[*trace_l, trace]),
-        );
-    });
+    let bounds1 = bounds1.borrow();
+    iter_with_filter(
+        cx,
+        &bounds1.lowertvars,
+        id1,
+        |_root_id, bounds, trace_l, use_op| {
+            let t2 = flow_use_op(cx, use_op.dupe(), t2.dupe());
+            add_upper_to_bounds(
+                cx,
+                &bounds,
+                &t2,
+                DepthTrace::concat_trace(&[*trace_l, trace]),
+            );
+        },
+    );
 }
 
 /// Given [edges_from_t t1 (id2, bounds2)], for each [id] in [id2] + [bounds2.uppertvars],
@@ -205,19 +201,23 @@ pub(super) fn edges_from_t<'cx>(
     (id2, bounds2): (i32, &constraint::BoundsRef<Context<'cx>>),
 ) {
     if !opt {
-        add_lower(id2, t1, trace, new_use_op.dupe(), cx);
+        add_lower_to_bounds(bounds2, t1, trace, new_use_op.dupe());
     }
-    let uppertvars = bounds2.borrow().uppertvars.clone();
-    iter_with_filter(cx, &uppertvars, id2, |root_id, trace_u, use_op| {
-        let use_op = pick_use_op(cx, new_use_op, use_op);
-        add_lower(
-            root_id,
-            t1,
-            DepthTrace::concat_trace(&[trace, *trace_u]),
-            use_op,
-            cx,
-        );
-    });
+    let bounds2 = bounds2.borrow();
+    iter_with_filter(
+        cx,
+        &bounds2.uppertvars,
+        id2,
+        |_root_id, bounds, trace_u, use_op| {
+            let use_op = pick_use_op(cx, new_use_op, use_op);
+            add_lower_to_bounds(
+                &bounds,
+                t1,
+                DepthTrace::concat_trace(&[trace, *trace_u]),
+                use_op,
+            );
+        },
+    );
 }
 
 /// for each [id'] in [id] + [bounds.lowertvars], [id'.bounds.upper += us]
@@ -278,17 +278,15 @@ pub(super) fn edges_and_flows_to_t<'cx>(
 ) -> Result<(), FlowJsException> {
     // Skip iff edge exists as part of the speculation path to the current branch
     let skip = {
+        let bounds1 = bounds1.borrow();
         let state = cx.speculation_state();
         state.0.iter().any(|branch| {
             let speculation_id = branch.speculation_id;
             let case_id = branch.case.case_id;
-            bounds1
-                .borrow()
-                .upper
-                .contains_key(&constraint::UseTypeKey {
-                    use_t: t2.dupe(),
-                    assoc: Some((speculation_id, case_id)),
-                })
+            bounds1.upper.contains_key(&constraint::UseTypeKey {
+                use_t: t2.dupe(),
+                assoc: Some((speculation_id, case_id)),
+            })
         })
     } || bounds1
         .borrow()
@@ -328,53 +326,43 @@ pub(super) fn edges_and_flows_from_t<'cx>(
 }
 
 /// bounds.uppertvars += id
-pub(super) fn add_uppertvar<'cx>(
-    cx: &Context<'cx>,
-    bounds_id: i32,
+fn add_uppertvar_to_bounds<'cx>(
+    bounds: &constraint::BoundsRef<Context<'cx>>,
     id: i32,
     trace: DepthTrace,
     use_op: UseOp,
 ) {
-    cx.modify_constraints(bounds_id, |_root_id, constraints| {
-        if let constraint::Constraints::Unresolved(bounds) = constraints {
-            let mut bounds = bounds.borrow_mut();
-            if bounds
-                .uppertvars
-                .get(&id)
-                .is_some_and(|(existing_trace, existing_use_op)| {
-                    *existing_trace == trace && existing_use_op == &use_op
-                })
-            {
-                return;
-            }
-            bounds.uppertvars.insert(id, (trace, use_op));
-        }
-    });
+    let mut bounds = bounds.borrow_mut();
+    if bounds
+        .uppertvars
+        .get(&id)
+        .is_some_and(|(existing_trace, existing_use_op)| {
+            *existing_trace == trace && existing_use_op == &use_op
+        })
+    {
+        return;
+    }
+    bounds.uppertvars.insert(id, (trace, use_op));
 }
 
 /// bounds.lowertvars += id
-pub(super) fn add_lowertvar<'cx>(
-    cx: &Context<'cx>,
-    bounds_id: i32,
+fn add_lowertvar_to_bounds<'cx>(
+    bounds: &constraint::BoundsRef<Context<'cx>>,
     id: i32,
     trace: DepthTrace,
     use_op: UseOp,
 ) {
-    cx.modify_constraints(bounds_id, |_root_id, constraints| {
-        if let constraint::Constraints::Unresolved(bounds) = constraints {
-            let mut bounds = bounds.borrow_mut();
-            if bounds
-                .lowertvars
-                .get(&id)
-                .is_some_and(|(existing_trace, existing_use_op)| {
-                    *existing_trace == trace && existing_use_op == &use_op
-                })
-            {
-                return;
-            }
-            bounds.lowertvars.insert(id, (trace, use_op));
-        }
-    });
+    let mut bounds = bounds.borrow_mut();
+    if bounds
+        .lowertvars
+        .get(&id)
+        .is_some_and(|(existing_trace, existing_use_op)| {
+            *existing_trace == trace && existing_use_op == &use_op
+        })
+    {
+        return;
+    }
+    bounds.lowertvars.insert(id, (trace, use_op));
 }
 
 /// for each [id] in [id1] + [bounds1.lowertvars]:
@@ -393,19 +381,23 @@ pub(super) fn edges_to_tvar<'cx>(
     id2: i32,
 ) {
     if !opt {
-        add_uppertvar(cx, id1, id2, trace, new_use_op.dupe());
+        add_uppertvar_to_bounds(bounds1, id2, trace, new_use_op.dupe());
     }
-    let lowertvars = bounds1.borrow().lowertvars.clone();
-    iter_with_filter(cx, &lowertvars, id1, |root_id, trace_l, use_op| {
-        let use_op = pick_use_op(cx, use_op, new_use_op);
-        add_uppertvar(
-            cx,
-            root_id,
-            id2,
-            DepthTrace::concat_trace(&[*trace_l, trace]),
-            use_op,
-        );
-    });
+    let bounds1 = bounds1.borrow();
+    iter_with_filter(
+        cx,
+        &bounds1.lowertvars,
+        id1,
+        |_root_id, bounds, trace_l, use_op| {
+            let use_op = pick_use_op(cx, use_op, new_use_op);
+            add_uppertvar_to_bounds(
+                &bounds,
+                id2,
+                DepthTrace::concat_trace(&[*trace_l, trace]),
+                use_op,
+            );
+        },
+    );
 }
 
 /// for each id in id2 + bounds2.uppertvars:
@@ -424,19 +416,23 @@ pub(super) fn edges_from_tvar<'cx>(
     (id2, bounds2): (i32, &constraint::BoundsRef<Context<'cx>>),
 ) {
     if !opt {
-        add_lowertvar(cx, id2, id1, trace, new_use_op.dupe());
+        add_lowertvar_to_bounds(bounds2, id1, trace, new_use_op.dupe());
     }
-    let uppertvars = bounds2.borrow().uppertvars.clone();
-    iter_with_filter(cx, &uppertvars, id2, |root_id, trace_u, use_op| {
-        let use_op = pick_use_op(cx, new_use_op, use_op);
-        add_lowertvar(
-            cx,
-            root_id,
-            id1,
-            DepthTrace::concat_trace(&[trace, *trace_u]),
-            use_op,
-        );
-    });
+    let bounds2 = bounds2.borrow();
+    iter_with_filter(
+        cx,
+        &bounds2.uppertvars,
+        id2,
+        |_root_id, bounds, trace_u, use_op| {
+            let use_op = pick_use_op(cx, new_use_op, use_op);
+            add_lowertvar_to_bounds(
+                &bounds,
+                id1,
+                DepthTrace::concat_trace(&[trace, *trace_u]),
+                use_op,
+            );
+        },
+    );
 }
 
 /// for each id in id1 + bounds1.lowertvars:
@@ -455,7 +451,7 @@ pub(super) fn add_upper_edges<'cx>(
     edges_to_ts(cx, trace, &new_use_op, opt, (id1, bounds1), &upper);
     edges_to_tvar(cx, trace, &new_use_op, opt, (id1, bounds1), id2);
     let uppertvars = bounds2.borrow().uppertvars.clone();
-    iter_with_filter(cx, &uppertvars, id2, |tvar, trace_u, use_op| {
+    iter_with_filter(cx, &uppertvars, id2, |tvar, _bounds, trace_u, use_op| {
         let new_use_op = pick_use_op(cx, &new_use_op, use_op);
         let trace = DepthTrace::concat_trace(&[trace, *trace_u]);
         edges_to_tvar(cx, trace, &new_use_op, opt, (id1, bounds1), tvar);
@@ -478,7 +474,7 @@ pub(super) fn add_lower_edges<'cx>(
     edges_from_ts(cx, trace, &new_use_op, opt, &lower, (id2, bounds2));
     edges_from_tvar(cx, trace, &new_use_op, opt, id1, (id2, bounds2));
     let lowertvars = bounds1.borrow().lowertvars.clone();
-    iter_with_filter(cx, &lowertvars, id1, |tvar, trace_l, use_op| {
+    iter_with_filter(cx, &lowertvars, id1, |tvar, _bounds, trace_l, use_op| {
         let use_op = pick_use_op(cx, use_op, &new_use_op);
         let trace = DepthTrace::concat_trace(&[*trace_l, trace]);
         edges_from_tvar(cx, trace, &use_op, opt, tvar, (id2, bounds2));
