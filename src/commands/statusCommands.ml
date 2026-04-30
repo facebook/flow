@@ -148,6 +148,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             |> strip_root_flag
             |> from_flag
             |> dummy false (* match --version below *)
+            |> dummy false (* match --help-all below *)
             |> anon "root" (optional string)
           );
       }
@@ -181,6 +182,10 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             |> strip_root_flag
             |> from_flag
             |> flag "--version" truthy ~doc:"Print version number and exit"
+            |> flag
+                 "--help-all"
+                 truthy
+                 ~doc:"Show all commands including internal and experimental ones"
             |> anon "root" (optional string)
           );
       }
@@ -195,10 +200,49 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       error_flags
       strip_root
       version
+      help_all
       root
       () =
     if version then (
       print_version ();
+      Exit.(exit No_error)
+    );
+
+    if help_all then (
+      let all_commands =
+        CommandList.commands |> Base.List.filter ~f:(fun command -> CommandSpec.name command <> "")
+      in
+      let by_visibility v =
+        all_commands
+        |> Base.List.filter ~f:(fun command -> CommandSpec.visibility command = v)
+        |> Base.List.map ~f:(fun command -> (CommandSpec.name command, CommandSpec.doc command))
+        |> List.sort (fun (a, _) (b, _) -> String.compare a b)
+      in
+      let public = by_visibility CommandSpec.Public in
+      let experimental = by_visibility CommandSpec.Experimental in
+      let internal = by_visibility CommandSpec.Internal in
+      let col_width =
+        1
+        + Base.List.fold_left
+            ~f:(fun acc (a, _) -> max acc (String.length a))
+            ~init:0
+            (public @ experimental @ internal)
+      in
+      let fmt = CommandSpec.format_two_columns ~col_pad:1 ~col_width in
+      let buf = Buffer.create 1024 in
+      Printf.bprintf
+        buf
+        "Documentation: https://flow.org/en/docs/cli/\n\nUsage: %s [COMMAND] \n\nValid values for COMMAND:\n%s\n"
+        exe_name
+        (fmt public);
+      if experimental <> [] then
+        Printf.bprintf
+          buf
+          "\nExperimental commands (may change or be removed):\n%s\n"
+          (fmt experimental);
+      if internal <> [] then
+        Printf.bprintf buf "\nInternal commands (not part of the public API):\n%s\n" (fmt internal);
+      print_string (Buffer.contents buf);
       Exit.(exit No_error)
     );
 
