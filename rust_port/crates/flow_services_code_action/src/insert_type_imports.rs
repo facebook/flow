@@ -155,6 +155,7 @@ pub mod ast_helper {
                 None,
                 Some(ast::statement::import_declaration::NamedSpecifier {
                     kind: None,
+                    kind_loc: None,
                     local,
                     remote: remote_id,
                     remote_name_def_loc: None,

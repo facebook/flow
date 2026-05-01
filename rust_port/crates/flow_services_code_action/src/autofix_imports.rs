@@ -165,8 +165,11 @@ fn mk_named_import(
                  }| {
                     let remote = ast_builder::identifiers::identifier(None, remote_name);
                     match local_name {
-                        None => ast_builder::statements::named_import_specifier(None, None, remote),
+                        None => ast_builder::statements::named_import_specifier(
+                            None, None, None, remote,
+                        ),
                         Some(name) => ast_builder::statements::named_import_specifier(
+                            None,
                             None,
                             Some(ast_builder::identifiers::identifier(None, name)),
                             remote,
@@ -403,6 +406,7 @@ fn update_import(
                                  }| {
                                     import_declaration::NamedSpecifier {
                                         kind,
+                                        kind_loc: None,
                                         local: local_name.as_ref().map(|name| {
                                             ast_builder::identifiers::identifier(None, name)
                                         }),

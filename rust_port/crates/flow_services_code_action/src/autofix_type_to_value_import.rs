@@ -153,6 +153,7 @@ impl Mapper {
                                     .filter(
                                         |import_declaration::NamedSpecifier {
                                              kind,
+                                             kind_loc: _,
                                              local,
                                              remote,
                                              remote_name_def_loc: _,
@@ -209,6 +210,7 @@ impl Mapper {
                                             import_declaration::Specifier::ImportNamedSpecifiers(
                                                 vec![import_declaration::NamedSpecifier {
                                                     kind: None,
+                                                    kind_loc: None,
                                                     local,
                                                     remote,
                                                     remote_name_def_loc: None,
@@ -265,6 +267,7 @@ impl Mapper {
                                             import_declaration::Specifier::ImportNamedSpecifiers(
                                                 vec![import_declaration::NamedSpecifier {
                                                     kind: None,
+                                                    kind_loc: None,
                                                     local,
                                                     remote,
                                                     remote_name_def_loc: None,
@@ -346,6 +349,7 @@ impl Mapper {
                                     .map(|named_specifier| {
                                         let import_declaration::NamedSpecifier {
                                             kind,
+                                            kind_loc: _,
                                             local,
                                             remote,
                                             remote_name_def_loc: _,

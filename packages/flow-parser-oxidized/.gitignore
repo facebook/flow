@@ -6,3 +6,9 @@ node_modules/
 # the buck-built emcc artifact and would bloat the repo.
 src/FlowParserWASM.js
 src/FlowParserWASM.js.lock.d/
+
+# Lock file used by __tests__/runContractTests.sh and
+# scripts/facebook/runOxidizedJestTests.sh to serialize concurrent
+# `yarn build` rebuilds of dist/ when buck schedules
+# wasm_parser_contract_test and oxidized_jest_test in parallel.
+.dist.flock

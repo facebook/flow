@@ -2251,6 +2251,7 @@ module Make
                        remote;
                        remote_name_def_loc = _;
                        kind;
+                       kind_loc;
                      }
                    ->
                    let ( remote_name_loc,
@@ -2305,6 +2306,7 @@ module Make
                      remote = remote_ast;
                      remote_name_def_loc;
                      kind;
+                     kind_loc;
                    }
                    )
           in

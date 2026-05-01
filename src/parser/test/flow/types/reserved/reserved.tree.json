@@ -1,419 +1,427 @@
 {
-  "errors":[
-    {
-      "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":14}},
-      "message":"Unexpected reserved type"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":13},"end":{"line":3,"column":22}},
-      "message":"Unexpected reserved type"
-    },
-    {
-      "loc":{"source":null,"start":{"line":4,"column":13},"end":{"line":4,"column":20}},
-      "message":"Unexpected reserved type"
-    },
-    {
-      "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":22}},
-      "message":"Unexpected reserved type"
-    },
-    {
-      "loc":{"source":null,"start":{"line":6,"column":13},"end":{"line":6,"column":20}},
-      "message":"Unexpected reserved type"
-    }
-  ],
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":11,"column":38}},
-  "range":[0,471],
   "body":[
     {
-      "type":"VariableDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":21}},
-      "range":[0,21],
       "declarations":[
         {
-          "type":"VariableDeclarator",
-          "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":1,"column":20}},
-          "range":[4,20],
           "id":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":1,"column":14}},
-            "range":[4,14],
+            "loc":{"end":{"column":14,"line":1},"source":null,"start":{"column":4,"line":1}},
             "name":"y",
+            "optional":false,
+            "range":[4,14],
+            "type":"Identifier",
             "typeAnnotation":{
-              "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":14}},
+              "loc":{"end":{"column":14,"line":1},"source":null,"start":{"column":5,"line":1}},
               "range":[5,14],
+              "type":"TypeAnnotation",
               "typeAnnotation":{
+                "id":{
+                  "loc":{"end":{"column":14,"line":1},"source":null,"start":{"column":7,"line":1}},
+                  "name":"extends",
+                  "optional":false,
+                  "range":[7,14],
+                  "type":"Identifier",
+                  "typeAnnotation":null
+                },
+                "loc":{"end":{"column":14,"line":1},"source":null,"start":{"column":7,"line":1}},
+                "range":[7,14],
                 "type":"GenericTypeAnnotation",
-                "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":14}},
-                "id": {"type": "Identifier","name": "extends"},
-                "range":[7,14]
+                "typeParameters":null
               }
-            },
-            "optional":false
+            }
           },
           "init":{
-            "type":"Literal",
-            "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":20}},
+            "loc":{"end":{"column":20,"line":1},"source":null,"start":{"column":17,"line":1}},
             "range":[17,20],
-            "value":123,
-            "raw":"123"
-          }
+            "raw":"123",
+            "type":"Literal",
+            "value":123
+          },
+          "loc":{"end":{"column":20,"line":1},"source":null,"start":{"column":4,"line":1}},
+          "range":[4,20],
+          "type":"VariableDeclarator"
         }
       ],
-      "kind":"let"
+      "kind":"let",
+      "loc":{"end":{"column":21,"line":1},"source":null,"start":{"column":0,"line":1}},
+      "range":[0,21],
+      "type":"VariableDeclaration"
     },
     {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":35}},
+      "importKind":"value",
+      "loc":{"end":{"column":35,"line":3},"source":null,"start":{"column":0,"line":3}},
       "range":[43,78],
-      "specifiers":[
-        {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":3,"column":13},"end":{"line":3,"column":22}},
-          "range":[56,65],
-          "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":3,"column":13},"end":{"line":3,"column":22}},
-            "range":[56,65],
-            "name":"interface",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":3,"column":13},"end":{"line":3,"column":22}},
-            "range":[56,65],
-            "name":"interface",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "importKind":"type"
-        }
-      ],
       "source":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":3,"column":29},"end":{"line":3,"column":34}},
+        "loc":{"end":{"column":34,"line":3},"source":null,"start":{"column":29,"line":3}},
         "range":[72,77],
-        "value":"foo",
-        "raw":"'foo'"
+        "raw":"'foo'",
+        "type":"Literal",
+        "value":"foo"
       },
-      "importKind":"value"
+      "specifiers":[
+        {
+          "importKind":"type",
+          "imported":{
+            "loc":{"end":{"column":22,"line":3},"source":null,"start":{"column":13,"line":3}},
+            "name":"interface",
+            "optional":false,
+            "range":[56,65],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":22,"line":3},"source":null,"start":{"column":8,"line":3}},
+          "local":{
+            "loc":{"end":{"column":22,"line":3},"source":null,"start":{"column":13,"line":3}},
+            "name":"interface",
+            "optional":false,
+            "range":[56,65],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[51,65],
+          "type":"ImportSpecifier"
+        }
+      ],
+      "type":"ImportDeclaration"
     },
     {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":33}},
+      "importKind":"value",
+      "loc":{"end":{"column":33,"line":4},"source":null,"start":{"column":0,"line":4}},
       "range":[99,132],
-      "specifiers":[
-        {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":4,"column":13},"end":{"line":4,"column":20}},
-          "range":[112,119],
-          "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":4,"column":13},"end":{"line":4,"column":20}},
-            "range":[112,119],
-            "name":"extends",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":4,"column":13},"end":{"line":4,"column":20}},
-            "range":[112,119],
-            "name":"extends",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "importKind":"type"
-        }
-      ],
       "source":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":4,"column":27},"end":{"line":4,"column":32}},
+        "loc":{"end":{"column":32,"line":4},"source":null,"start":{"column":27,"line":4}},
         "range":[126,131],
-        "value":"foo",
-        "raw":"'foo'"
+        "raw":"'foo'",
+        "type":"Literal",
+        "value":"foo"
       },
-      "importKind":"value"
+      "specifiers":[
+        {
+          "importKind":"type",
+          "imported":{
+            "loc":{"end":{"column":20,"line":4},"source":null,"start":{"column":13,"line":4}},
+            "name":"extends",
+            "optional":false,
+            "range":[112,119],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":20,"line":4},"source":null,"start":{"column":8,"line":4}},
+          "local":{
+            "loc":{"end":{"column":20,"line":4},"source":null,"start":{"column":13,"line":4}},
+            "name":"extends",
+            "optional":false,
+            "range":[112,119],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[107,119],
+          "type":"ImportSpecifier"
+        }
+      ],
+      "type":"ImportDeclaration"
     },
     {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":35}},
+      "importKind":"type",
+      "loc":{"end":{"column":35,"line":5},"source":null,"start":{"column":0,"line":5}},
       "range":[153,188],
-      "specifiers":[
-        {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":22}},
-          "range":[166,175],
-          "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":22}},
-            "range":[166,175],
-            "name":"interface",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":22}},
-            "range":[166,175],
-            "name":"interface",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "importKind":null
-        }
-      ],
       "source":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":5,"column":29},"end":{"line":5,"column":34}},
+        "loc":{"end":{"column":34,"line":5},"source":null,"start":{"column":29,"line":5}},
         "range":[182,187],
-        "value":"foo",
-        "raw":"'foo'"
+        "raw":"'foo'",
+        "type":"Literal",
+        "value":"foo"
       },
-      "importKind":"type"
+      "specifiers":[
+        {
+          "importKind":null,
+          "imported":{
+            "loc":{"end":{"column":22,"line":5},"source":null,"start":{"column":13,"line":5}},
+            "name":"interface",
+            "optional":false,
+            "range":[166,175],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":22,"line":5},"source":null,"start":{"column":13,"line":5}},
+          "local":{
+            "loc":{"end":{"column":22,"line":5},"source":null,"start":{"column":13,"line":5}},
+            "name":"interface",
+            "optional":false,
+            "range":[166,175],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[166,175],
+          "type":"ImportSpecifier"
+        }
+      ],
+      "type":"ImportDeclaration"
     },
     {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":6,"column":0},"end":{"line":6,"column":33}},
+      "importKind":"type",
+      "loc":{"end":{"column":33,"line":6},"source":null,"start":{"column":0,"line":6}},
       "range":[209,242],
-      "specifiers":[
-        {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":6,"column":13},"end":{"line":6,"column":20}},
-          "range":[222,229],
-          "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":6,"column":13},"end":{"line":6,"column":20}},
-            "range":[222,229],
-            "name":"extends",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":6,"column":13},"end":{"line":6,"column":20}},
-            "range":[222,229],
-            "name":"extends",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "importKind":null
-        }
-      ],
       "source":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":6,"column":27},"end":{"line":6,"column":32}},
+        "loc":{"end":{"column":32,"line":6},"source":null,"start":{"column":27,"line":6}},
         "range":[236,241],
-        "value":"foo",
-        "raw":"'foo'"
+        "raw":"'foo'",
+        "type":"Literal",
+        "value":"foo"
       },
-      "importKind":"type"
+      "specifiers":[
+        {
+          "importKind":null,
+          "imported":{
+            "loc":{"end":{"column":20,"line":6},"source":null,"start":{"column":13,"line":6}},
+            "name":"extends",
+            "optional":false,
+            "range":[222,229],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":20,"line":6},"source":null,"start":{"column":13,"line":6}},
+          "local":{
+            "loc":{"end":{"column":20,"line":6},"source":null,"start":{"column":13,"line":6}},
+            "name":"extends",
+            "optional":false,
+            "range":[222,229],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[222,229],
+          "type":"ImportSpecifier"
+        }
+      ],
+      "type":"ImportDeclaration"
     },
     {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":8,"column":40}},
+      "importKind":"value",
+      "loc":{"end":{"column":40,"line":8},"source":null,"start":{"column":0,"line":8}},
       "range":[264,304],
-      "specifiers":[
-        {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":8,"column":13},"end":{"line":8,"column":27}},
-          "range":[277,291],
-          "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":8,"column":13},"end":{"line":8,"column":22}},
-            "range":[277,286],
-            "name":"interface",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":8,"column":26},"end":{"line":8,"column":27}},
-            "range":[290,291],
-            "name":"a",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "importKind":"type"
-        }
-      ],
       "source":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":8,"column":34},"end":{"line":8,"column":39}},
+        "loc":{"end":{"column":39,"line":8},"source":null,"start":{"column":34,"line":8}},
         "range":[298,303],
-        "value":"foo",
-        "raw":"'foo'"
-      },
-      "importKind":"value"
-    },
-    {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":38}},
-      "range":[321,359],
-      "specifiers":[
-        {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":9,"column":13},"end":{"line":9,"column":25}},
-          "range":[334,346],
-          "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":9,"column":13},"end":{"line":9,"column":20}},
-            "range":[334,341],
-            "name":"extends",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":9,"column":24},"end":{"line":9,"column":25}},
-            "range":[345,346],
-            "name":"b",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "importKind":"type"
-        }
-      ],
-      "source":{
+        "raw":"'foo'",
         "type":"Literal",
-        "loc":{"source":null,"start":{"line":9,"column":32},"end":{"line":9,"column":37}},
-        "range":[353,358],
-        "value":"foo",
-        "raw":"'foo'"
+        "value":"foo"
       },
-      "importKind":"value"
-    },
-    {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":10,"column":0},"end":{"line":10,"column":40}},
-      "range":[376,416],
       "specifiers":[
         {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":10,"column":13},"end":{"line":10,"column":27}},
-          "range":[389,403],
+          "importKind":"type",
           "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":10,"column":13},"end":{"line":10,"column":22}},
-            "range":[389,398],
+            "loc":{"end":{"column":22,"line":8},"source":null,"start":{"column":13,"line":8}},
             "name":"interface",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
+            "optional":false,
+            "range":[277,286],
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":10,"column":26},"end":{"line":10,"column":27}},
-            "range":[402,403],
-            "name":"a",
-            "typeAnnotation":null,
-            "optional":false
+            "typeAnnotation":null
           },
-          "importKind":null
+          "loc":{"end":{"column":27,"line":8},"source":null,"start":{"column":8,"line":8}},
+          "local":{
+            "loc":{"end":{"column":27,"line":8},"source":null,"start":{"column":26,"line":8}},
+            "name":"a",
+            "optional":false,
+            "range":[290,291],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[272,291],
+          "type":"ImportSpecifier"
         }
       ],
-      "source":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":10,"column":34},"end":{"line":10,"column":39}},
-        "range":[410,415],
-        "value":"foo",
-        "raw":"'foo'"
-      },
-      "importKind":"type"
+      "type":"ImportDeclaration"
     },
     {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":38}},
-      "range":[433,471],
+      "importKind":"value",
+      "loc":{"end":{"column":38,"line":9},"source":null,"start":{"column":0,"line":9}},
+      "range":[321,359],
+      "source":{
+        "loc":{"end":{"column":37,"line":9},"source":null,"start":{"column":32,"line":9}},
+        "range":[353,358],
+        "raw":"'foo'",
+        "type":"Literal",
+        "value":"foo"
+      },
       "specifiers":[
         {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":11,"column":13},"end":{"line":11,"column":25}},
-          "range":[446,458],
+          "importKind":"type",
           "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":11,"column":13},"end":{"line":11,"column":20}},
-            "range":[446,453],
+            "loc":{"end":{"column":20,"line":9},"source":null,"start":{"column":13,"line":9}},
             "name":"extends",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
+            "optional":false,
+            "range":[334,341],
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":11,"column":24},"end":{"line":11,"column":25}},
-            "range":[457,458],
-            "name":"b",
-            "typeAnnotation":null,
-            "optional":false
+            "typeAnnotation":null
           },
-          "importKind":null
+          "loc":{"end":{"column":25,"line":9},"source":null,"start":{"column":8,"line":9}},
+          "local":{
+            "loc":{"end":{"column":25,"line":9},"source":null,"start":{"column":24,"line":9}},
+            "name":"b",
+            "optional":false,
+            "range":[345,346],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[329,346],
+          "type":"ImportSpecifier"
         }
       ],
+      "type":"ImportDeclaration"
+    },
+    {
+      "importKind":"type",
+      "loc":{"end":{"column":40,"line":10},"source":null,"start":{"column":0,"line":10}},
+      "range":[376,416],
       "source":{
+        "loc":{"end":{"column":39,"line":10},"source":null,"start":{"column":34,"line":10}},
+        "range":[410,415],
+        "raw":"'foo'",
         "type":"Literal",
-        "loc":{"source":null,"start":{"line":11,"column":32},"end":{"line":11,"column":37}},
-        "range":[465,470],
-        "value":"foo",
-        "raw":"'foo'"
+        "value":"foo"
       },
-      "importKind":"type"
+      "specifiers":[
+        {
+          "importKind":null,
+          "imported":{
+            "loc":{"end":{"column":22,"line":10},"source":null,"start":{"column":13,"line":10}},
+            "name":"interface",
+            "optional":false,
+            "range":[389,398],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":27,"line":10},"source":null,"start":{"column":13,"line":10}},
+          "local":{
+            "loc":{"end":{"column":27,"line":10},"source":null,"start":{"column":26,"line":10}},
+            "name":"a",
+            "optional":false,
+            "range":[402,403],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[389,403],
+          "type":"ImportSpecifier"
+        }
+      ],
+      "type":"ImportDeclaration"
+    },
+    {
+      "importKind":"type",
+      "loc":{"end":{"column":38,"line":11},"source":null,"start":{"column":0,"line":11}},
+      "range":[433,471],
+      "source":{
+        "loc":{"end":{"column":37,"line":11},"source":null,"start":{"column":32,"line":11}},
+        "range":[465,470],
+        "raw":"'foo'",
+        "type":"Literal",
+        "value":"foo"
+      },
+      "specifiers":[
+        {
+          "importKind":null,
+          "imported":{
+            "loc":{"end":{"column":20,"line":11},"source":null,"start":{"column":13,"line":11}},
+            "name":"extends",
+            "optional":false,
+            "range":[446,453],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":25,"line":11},"source":null,"start":{"column":13,"line":11}},
+          "local":{
+            "loc":{"end":{"column":25,"line":11},"source":null,"start":{"column":24,"line":11}},
+            "name":"b",
+            "optional":false,
+            "range":[457,458],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[446,458],
+          "type":"ImportSpecifier"
+        }
+      ],
+      "type":"ImportDeclaration"
     }
   ],
   "comments":[
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":41}},
+      "loc":{"end":{"column":41,"line":1},"source":null,"start":{"column":22,"line":1}},
       "range":[22,41],
+      "type":"Line",
       "value":" Should not parse"
     },
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":3,"column":36},"end":{"line":3,"column":55}},
+      "loc":{"end":{"column":55,"line":3},"source":null,"start":{"column":36,"line":3}},
       "range":[79,98],
+      "type":"Line",
       "value":" Should not parse"
     },
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":4,"column":34},"end":{"line":4,"column":53}},
+      "loc":{"end":{"column":53,"line":4},"source":null,"start":{"column":34,"line":4}},
       "range":[133,152],
+      "type":"Line",
       "value":" Should not parse"
     },
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":5,"column":36},"end":{"line":5,"column":55}},
+      "loc":{"end":{"column":55,"line":5},"source":null,"start":{"column":36,"line":5}},
       "range":[189,208],
+      "type":"Line",
       "value":" Should not parse"
     },
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":6,"column":34},"end":{"line":6,"column":53}},
+      "loc":{"end":{"column":53,"line":6},"source":null,"start":{"column":34,"line":6}},
       "range":[243,262],
+      "type":"Line",
       "value":" Should not parse"
     },
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":8,"column":41},"end":{"line":8,"column":56}},
+      "loc":{"end":{"column":56,"line":8},"source":null,"start":{"column":41,"line":8}},
       "range":[305,320],
+      "type":"Line",
       "value":" Should parse"
     },
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":9,"column":39},"end":{"line":9,"column":54}},
+      "loc":{"end":{"column":54,"line":9},"source":null,"start":{"column":39,"line":9}},
       "range":[360,375],
+      "type":"Line",
       "value":" Should parse"
     },
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":10,"column":41},"end":{"line":10,"column":56}},
+      "loc":{"end":{"column":56,"line":10},"source":null,"start":{"column":41,"line":10}},
       "range":[417,432],
+      "type":"Line",
       "value":" Should parse"
     },
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":11,"column":39},"end":{"line":11,"column":54}},
+      "loc":{"end":{"column":54,"line":11},"source":null,"start":{"column":39,"line":11}},
       "range":[472,487],
+      "type":"Line",
       "value":" Should parse"
     }
-  ]
+  ],
+  "errors":[
+    {
+      "loc":{"end":{"column":14,"line":1},"source":null,"start":{"column":7,"line":1}},
+      "message":"Unexpected reserved type"
+    },
+    {
+      "loc":{"end":{"column":22,"line":3},"source":null,"start":{"column":13,"line":3}},
+      "message":"Unexpected reserved type"
+    },
+    {
+      "loc":{"end":{"column":20,"line":4},"source":null,"start":{"column":13,"line":4}},
+      "message":"Unexpected reserved type"
+    },
+    {
+      "loc":{"end":{"column":22,"line":5},"source":null,"start":{"column":13,"line":5}},
+      "message":"Unexpected reserved type"
+    },
+    {
+      "loc":{"end":{"column":20,"line":6},"source":null,"start":{"column":13,"line":6}},
+      "message":"Unexpected reserved type"
+    }
+  ],
+  "loc":{"end":{"column":38,"line":11},"source":null,"start":{"column":0,"line":1}},
+  "range":[0,471],
+  "type":"Program"
 }

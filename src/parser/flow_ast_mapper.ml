@@ -2669,7 +2669,7 @@ class ['loc] mapper =
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind)
         (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
       let open Ast.Statement.ImportDeclaration in
-      let { kind; local; remote; remote_name_def_loc } = specifier in
+      let { kind; kind_loc; local; remote; remote_name_def_loc } = specifier in
       let (is_type_remote, is_type_local) =
         match (import_kind, kind) with
         | (ImportType, _)
@@ -2704,7 +2704,7 @@ class ['loc] mapper =
       if local == local' && remote == remote' then
         specifier
       else
-        { kind; local = local'; remote = remote'; remote_name_def_loc }
+        { kind; kind_loc; local = local'; remote = remote'; remote_name_def_loc }
 
     method import_default_specifier ~import_kind (id : ('loc, 'loc) Ast.Identifier.t) =
       let open Ast.Statement.ImportDeclaration in

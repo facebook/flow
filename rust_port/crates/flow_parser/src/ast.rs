@@ -3106,6 +3106,11 @@ pub mod statement {
         )]
         pub struct NamedSpecifier<M: Dupe, T: Dupe> {
             pub kind: Option<ImportKind>,
+            // Location of the per-specifier `type`/`typeof` keyword when [kind]
+            // is [Some]; [None] when [kind] is [None]. Preserved so downstream
+            // consumers (ESTree/Babel adapters, codemods) can span the full
+            // specifier syntax including the keyword without rescanning source.
+            pub kind_loc: Option<M>,
             pub local: Option<Identifier<M, T>>,
             pub remote: Identifier<M, T>,
             pub remote_name_def_loc: Option<M>,

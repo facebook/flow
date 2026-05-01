@@ -446,7 +446,7 @@ class requires_calculator ~file_key ~ast ~opts =
               | ImportNamedSpecifiers named_specifiers ->
                 List.iter
                   (function
-                    | { local; remote; remote_name_def_loc = _; kind } ->
+                    | { local; remote; remote_name_def_loc = _; kind; kind_loc = _ } ->
                       let import_kind =
                         match kind with
                         | Some k -> k

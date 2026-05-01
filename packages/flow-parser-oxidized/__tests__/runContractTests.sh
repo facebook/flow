@@ -70,6 +70,26 @@ trap '
 } > "$WASM_OUT"
 
 cd "$PKG_DIR"
+
+# Serialize dist/ rebuilds + reads against runOxidizedJestTests.sh, which
+# also does `rm -rf dist; cp -r src dist; babel dist` and then `require()`s
+# `flow-parser-oxidized` (whose `main` resolves to `dist/index.js`). Buck
+# schedules `wasm_parser_contract_test` and `oxidized_jest_test` in
+# parallel; without this flock, target A's jest can read a torn
+# `dist/index.js` (un-stripped Flow `import type` lines from the cp -r
+# step) while target B's `yarn build` is mid-flight, surfacing as
+#   `SyntaxError: Cannot use import statement outside a module` or
+#   `TypeError: FlowParserWASMModule is not a function`.
+# Hold the lock through both `yarn build` AND the jest run so a concurrent
+# target can't clobber `dist/` while we're reading from it. Path is
+# relative because we just `cd`'d into $PKG_DIR; runOxidizedJestTests.sh
+# uses the same `.dist.flock` filename in the same package directory.
+DIST_FLOCK="$(pwd -P)/.dist.flock"
+exec 9> "$DIST_FLOCK"
+echo "==> waiting for exclusive lock on $DIST_FLOCK"
+flock -x 9
+echo "==> acquired lock on $DIST_FLOCK"
+
 # yarn.lock is regenerated on first install (devDependencies were added in
 # Phase C6). Subsequent runs reuse the locked tree. We rely on the global
 # fbcode yarn offline mirror so --offline is the right mode here.

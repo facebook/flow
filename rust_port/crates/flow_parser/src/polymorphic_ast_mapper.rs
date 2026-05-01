@@ -5148,6 +5148,7 @@ fn import_named_specifier<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
 ) -> Result<ast::statement::import_declaration::NamedSpecifier<N, U>, E> {
     let ast::statement::import_declaration::NamedSpecifier {
         kind,
+        kind_loc,
         local,
         remote,
         remote_name_def_loc,
@@ -5179,12 +5180,17 @@ fn import_named_specifier<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
             }
         }
     };
+    let kind_loc_ = kind_loc
+        .as_ref()
+        .map(|loc| mapper.on_loc_annot(loc))
+        .transpose()?;
     let remote_name_def_loc_ = remote_name_def_loc
         .as_ref()
         .map(|loc| mapper.on_loc_annot(loc))
         .transpose()?;
     Ok(ast::statement::import_declaration::NamedSpecifier {
         kind: *kind,
+        kind_loc: kind_loc_,
         local: local_,
         remote: remote_,
         remote_name_def_loc: remote_name_def_loc_,

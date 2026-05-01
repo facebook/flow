@@ -3162,6 +3162,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             ~f:
               (fun {
                      kind;
+                     kind_loc = _;
                      local;
                      remote = (rem_id_loc, { Ast.Identifier.name = remote; _ });
                      remote_name_def_loc = _;

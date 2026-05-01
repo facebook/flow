@@ -1809,11 +1809,17 @@ impl<'a> Serializer<'a> {
             Some(ast::statement::import_declaration::Specifier::ImportNamedSpecifiers(specs)) => {
                 for spec in specs.iter() {
                     // 32: ImportSpecifier — imported(Node) local(Node) importKind(String)
-                    // When a local alias is present, the span covers
-                    // `remote_id` through `local_id`.
+                    // The span starts at the per-specifier `type`/`typeof`
+                    // keyword loc when present, otherwise at the remote id;
+                    // and ends at the local id when an alias is present,
+                    // otherwise at the remote id.
+                    let start_loc = match &spec.kind_loc {
+                        Some(kl) => kl,
+                        None => &spec.remote.loc,
+                    };
                     let span_loc = match &spec.local {
-                        Some(local) => Loc::between(&spec.remote.loc, &local.loc),
-                        None => spec.remote.loc.clone(),
+                        Some(local) => Loc::between(start_loc, &local.loc),
+                        None => Loc::between(start_loc, &spec.remote.loc),
                     };
                     self.write_node_header(NodeKind::ImportSpecifier, &span_loc);
                     self.serialize_identifier_node(&spec.remote);
@@ -2592,76 +2598,6 @@ impl<'a> Serializer<'a> {
             }
         }
         self.write_bool(param.shorthand);
-    }
-
-    /// Emit a `declare component` parameter as ESTree `ComponentTypeParameter`
-    /// (NodeKind 164 — `name typeAnnotation optional`) to match hermes-parser's
-    /// AST shape for declare component params. The OCaml AST stores these in
-    /// the same value-position `component_params::Param` shape used by
-    /// `component`, so we extract the type annotation from `local` and emit
-    /// the type-position shape that scope-manager / type tooling expect.
-    fn serialize_declare_component_param(
-        &mut self,
-        param: &ast::statement::component_params::Param<Loc, Loc>,
-    ) {
-        // 164: ComponentTypeParameter — name typeAnnotation optional
-        self.write_node_header(NodeKind::ComponentTypeParameter, &param.loc);
-        self.serialize_component_param_name(&param.name);
-        // local for `declare component` is always a Pattern::Identifier; its
-        // `annot` carries the type annotation (only the inner Type, not the
-        // outer TypeAnnotation wrapper, per hermes ComponentTypeParameter
-        // shape). For unusual shapes (AssignmentPattern from a default value,
-        // Object/Array pattern) — which are hermes parse errors but the OCaml
-        // flow parser accepts — fall back to a null annotation.
-        match &param.local {
-            ast::pattern::Pattern::Identifier { inner, .. } => {
-                match &inner.annot {
-                    ast::types::AnnotationOrHint::Available(annot) => {
-                        self.serialize_type(&annot.annotation);
-                    }
-                    ast::types::AnnotationOrHint::Missing(_) => {
-                        self.write_null_node();
-                    }
-                }
-                self.write_bool(inner.optional);
-            }
-            _ => {
-                self.write_null_node();
-                self.write_bool(false);
-            }
-        }
-    }
-
-    /// Emit a `declare component` rest parameter as ESTree
-    /// `ComponentTypeParameter` to match hermes-parser. The OCaml AST stores
-    /// the rest pattern as a single `Pattern` whose inner Identifier carries
-    /// both the rest binding name and the type annotation; we split them out
-    /// into the type-position `name`/`typeAnnotation` fields.
-    fn serialize_declare_component_rest(
-        &mut self,
-        rest: &ast::statement::component_params::RestParam<Loc, Loc>,
-    ) {
-        // 164: ComponentTypeParameter — name typeAnnotation optional
-        self.write_node_header(NodeKind::ComponentTypeParameter, &rest.loc);
-        match &rest.argument {
-            ast::pattern::Pattern::Identifier { inner, .. } => {
-                self.serialize_identifier_node(&inner.name);
-                match &inner.annot {
-                    ast::types::AnnotationOrHint::Available(annot) => {
-                        self.serialize_type(&annot.annotation);
-                    }
-                    ast::types::AnnotationOrHint::Missing(_) => {
-                        self.write_null_node();
-                    }
-                }
-                self.write_bool(inner.optional);
-            }
-            _ => {
-                self.write_null_node();
-                self.write_null_node();
-                self.write_bool(false);
-            }
-        }
     }
 
     fn serialize_enum_declaration(

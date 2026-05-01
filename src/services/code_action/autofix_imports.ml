@@ -259,6 +259,7 @@ let update_import ~bindings stmt =
             (fun { remote_name; local_name } ->
               {
                 kind;
+                kind_loc = None;
                 local = Base.Option.map ~f:Ast_builder.Identifiers.identifier local_name;
                 remote = Ast_builder.Identifiers.identifier remote_name;
                 remote_name_def_loc = None;

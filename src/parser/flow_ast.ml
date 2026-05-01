@@ -1403,6 +1403,11 @@ and Statement : sig
 
     and ('M, 'T) named_specifier = {
       kind: import_kind option;
+      (* Location of the per-specifier `type`/`typeof` keyword when [kind] is
+         [Some]; [None] when [kind] is [None]. Preserved so downstream
+         consumers (ESTree/Babel adapters, codemods) can span the full
+         specifier syntax including the keyword without rescanning source. *)
+      kind_loc: 'M option;
       local: ('M, 'T) Identifier.t option;
       remote: ('M, 'T) Identifier.t;
       (* Remote name's definition location. It will be populated only in typed AST. *)

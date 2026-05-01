@@ -6494,9 +6494,13 @@ fn import_named_specifier(
 ) -> Value {
     use ast::statement::ImportKind;
 
+    let start_loc = match &specifier.kind_loc {
+        Some(kl) => kl,
+        None => &specifier.remote.loc,
+    };
     let span_loc = match &specifier.local {
-        Some(local_id) => Loc::between(&specifier.remote.loc, &local_id.loc),
-        None => specifier.remote.loc.dupe(),
+        Some(local_id) => Loc::between(start_loc, &local_id.loc),
+        None => Loc::between(start_loc, &specifier.remote.loc),
     };
 
     let local_id = match &specifier.local {

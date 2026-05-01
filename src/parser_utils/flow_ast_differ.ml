@@ -833,8 +833,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (nm_spec2 : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier) :
       node change list option =
     let open Ast.Statement.ImportDeclaration in
-    let { kind = kind1; local = local1; remote = remote1; remote_name_def_loc = _ } = nm_spec1 in
-    let { kind = kind2; local = local2; remote = remote2; remote_name_def_loc = _ } = nm_spec2 in
+    let { kind = kind1; kind_loc = _; local = local1; remote = remote1; remote_name_def_loc = _ } =
+      nm_spec1
+    in
+    let { kind = kind2; kind_loc = _; local = local2; remote = remote2; remote_name_def_loc = _ } =
+      nm_spec2
+    in
     if kind1 != kind2 then
       None
     else

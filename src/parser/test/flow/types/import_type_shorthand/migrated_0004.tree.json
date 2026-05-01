@@ -1,45 +1,45 @@
 {
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":29}},
-  "range":[0,29],
   "body":[
     {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":29}},
+      "importKind":"value",
+      "loc":{"end":{"column":29,"line":1},"source":null,"start":{"column":0,"line":1}},
       "range":[0,29],
+      "source":{
+        "loc":{"end":{"column":28,"line":1},"source":null,"start":{"column":23,"line":1}},
+        "range":[23,28],
+        "raw":"\"foo\"",
+        "type":"Literal",
+        "value":"foo"
+      },
       "specifiers":[
         {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":16}},
-          "range":[15,16],
+          "importKind":"typeof",
           "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":16}},
-            "range":[15,16],
+            "loc":{"end":{"column":16,"line":1},"source":null,"start":{"column":15,"line":1}},
             "name":"t",
-            "typeAnnotation":null,
-            "optional":false
+            "optional":false,
+            "range":[15,16],
+            "type":"Identifier",
+            "typeAnnotation":null
           },
+          "loc":{"end":{"column":16,"line":1},"source":null,"start":{"column":8,"line":1}},
           "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":16}},
-            "range":[15,16],
+            "loc":{"end":{"column":16,"line":1},"source":null,"start":{"column":15,"line":1}},
             "name":"t",
-            "typeAnnotation":null,
-            "optional":false
+            "optional":false,
+            "range":[15,16],
+            "type":"Identifier",
+            "typeAnnotation":null
           },
-          "importKind":"typeof"
+          "range":[8,16],
+          "type":"ImportSpecifier"
         }
       ],
-      "source":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":28}},
-        "range":[23,28],
-        "value":"foo",
-        "raw":"\"foo\""
-      },
-      "importKind":"value"
+      "type":"ImportDeclaration"
     }
   ],
-  "comments":[]
+  "comments":[],
+  "loc":{"end":{"column":29,"line":1},"source":null,"start":{"column":0,"line":1}},
+  "range":[0,29],
+  "type":"Program"
 }

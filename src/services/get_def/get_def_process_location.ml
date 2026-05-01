@@ -202,6 +202,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
         remote = (remote_annot, { Ast.Identifier.name; _ });
         remote_name_def_loc = _;
         kind = _;
+        kind_loc = _;
       } =
         decl
       in

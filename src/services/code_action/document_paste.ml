@@ -98,7 +98,9 @@ class import_information_extractor ~cx ~loc_of_aloc ~relevant_imported_defs =
       in
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers specifiers ->
-            Base.List.iter specifiers ~f:(fun { kind; local; remote; remote_name_def_loc = _ } ->
+            Base.List.iter
+              specifiers
+              ~f:(fun { kind; kind_loc = _; local; remote; remote_name_def_loc = _ } ->
                 let import_type =
                   match Base.Option.value ~default:import_kind kind with
                   | ImportType -> Lsp.DocumentPaste.ImportNamedType

@@ -30,14 +30,14 @@ class rename_mapper
 
     method! import_named_specifier ~import_kind specifier =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { local; remote = (loc, _) as remote; remote_name_def_loc; kind } = specifier in
+      let { local; remote = (loc, _) as remote; remote_name_def_loc; kind; kind_loc } = specifier in
       if global then
         match local with
         | Some _ -> super#import_named_specifier ~import_kind specifier
         | None ->
           let new_remote = Ast_builder.Identifiers.identifier new_name in
           if LocMap.mem loc targets then
-            { local = None; remote = new_remote; remote_name_def_loc; kind }
+            { local = None; remote = new_remote; remote_name_def_loc; kind; kind_loc }
           else
             specifier
       else
@@ -46,7 +46,7 @@ class rename_mapper
         | None ->
           if LocMap.mem loc targets then
             let localName = Ast_builder.Identifiers.identifier new_name in
-            { local = Some localName; remote; remote_name_def_loc; kind }
+            { local = Some localName; remote; remote_name_def_loc; kind; kind_loc }
           else
             specifier
 

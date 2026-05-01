@@ -14035,6 +14035,7 @@ pub fn import_named_specifier_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
 ) -> Result<(), E> {
     let ast::statement::import_declaration::NamedSpecifier {
         kind,
+        kind_loc: _,
         local,
         remote,
         remote_name_def_loc: _,
@@ -14072,6 +14073,7 @@ pub fn map_import_named_specifier_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
 ) -> ast::statement::import_declaration::NamedSpecifier<Loc, Loc> {
     let ast::statement::import_declaration::NamedSpecifier {
         kind,
+        kind_loc,
         local,
         remote,
         remote_name_def_loc,
@@ -14093,6 +14095,7 @@ pub fn map_import_named_specifier_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     };
     ast::statement::import_declaration::NamedSpecifier {
         kind: *kind,
+        kind_loc: kind_loc.dupe(),
         local: local_,
         remote: remote_,
         remote_name_def_loc: remote_name_def_loc.dupe(),

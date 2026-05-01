@@ -514,12 +514,14 @@ pub fn import_named_specifier<Loc: Dupe, E, V: for<'a> AstVisitor<'a, Loc, Loc, 
             remote: _,
             remote_name_def_loc: _,
             kind,
+            kind_loc: _,
         }
         | ast::statement::import_declaration::NamedSpecifier {
             local: None,
             remote: ident,
             remote_name_def_loc: _,
             kind,
+            kind_loc: _,
         } => {
             use ast::statement::ImportKind;
             // when `with_types` is false, only visit values, not types. `import_declaration`

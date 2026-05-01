@@ -450,8 +450,8 @@ with type t = Impl.t = struct
           match specifiers with
           | Some (ImportDeclaration.ImportNamedSpecifiers specifiers) ->
             List.map
-              (fun { ImportDeclaration.local; remote; remote_name_def_loc = _; kind } ->
-                import_named_specifier local remote kind)
+              (fun { ImportDeclaration.local; remote; remote_name_def_loc = _; kind; kind_loc } ->
+                import_named_specifier local remote kind kind_loc)
               specifiers
           | Some (ImportDeclaration.ImportNamespaceSpecifier id) -> [import_namespace_specifier id]
           | None -> []
@@ -2936,11 +2936,16 @@ with type t = Impl.t = struct
       node "ImportDefaultSpecifier" (fst id) [("local", identifier id)]
     and import_namespace_specifier (loc, id) =
       node "ImportNamespaceSpecifier" loc [("local", identifier id)]
-    and import_named_specifier local_id remote_id kind =
+    and import_named_specifier local_id remote_id kind kind_loc =
+      let start_loc =
+        match kind_loc with
+        | Some kl -> kl
+        | None -> fst remote_id
+      in
       let span_loc =
         match local_id with
-        | Some local_id -> Loc.btwn (fst remote_id) (fst local_id)
-        | None -> fst remote_id
+        | Some local_id -> Loc.btwn start_loc (fst local_id)
+        | None -> Loc.btwn start_loc (fst remote_id)
       in
       let local_id =
         match local_id with

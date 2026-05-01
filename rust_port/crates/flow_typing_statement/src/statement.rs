@@ -4215,6 +4215,7 @@ fn statement_<'a>(
                                         remote: remote_ast,
                                         remote_name_def_loc,
                                         kind: spec.kind,
+                                        kind_loc: spec.kind_loc.dupe(),
                                     })
                                 })
                                 .collect::<Result<Vec<_>, CheckExprError>>()?;

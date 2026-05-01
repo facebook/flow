@@ -5682,6 +5682,7 @@ let import_decl _opts scope tbls decl =
       (fun specifier ->
         let {
           I.kind = kind_opt;
+          kind_loc = _;
           local = local_opt;
           remote = (remote_id_loc, { Ast.Identifier.name = remote; comments = _ });
           remote_name_def_loc = _;

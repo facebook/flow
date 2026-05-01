@@ -42,7 +42,7 @@ class mapper ~target_loc =
                 let named_specifiers' =
                   Base.List.filter
                     named_specifiers
-                    ~f:(fun { kind; local; remote; remote_name_def_loc = _ } ->
+                    ~f:(fun { kind; kind_loc = _; local; remote; remote_name_def_loc = _ } ->
                       match kind with
                       | Some ImportValue
                       | Some ImportTypeof ->
@@ -77,7 +77,15 @@ class mapper ~target_loc =
                     specifiers =
                       Some
                         (ImportNamedSpecifiers
-                           [{ kind = None; local; remote; remote_name_def_loc = None }]
+                           [
+                             {
+                               kind = None;
+                               kind_loc = None;
+                               local;
+                               remote;
+                               remote_name_def_loc = None;
+                             };
+                           ]
                         );
                     attributes = None;
                     comments = None;
@@ -103,7 +111,15 @@ class mapper ~target_loc =
                     specifiers =
                       Some
                         (ImportNamedSpecifiers
-                           [{ kind = None; local; remote; remote_name_def_loc = None }]
+                           [
+                             {
+                               kind = None;
+                               kind_loc = None;
+                               local;
+                               remote;
+                               remote_name_def_loc = None;
+                             };
+                           ]
                         );
                     attributes = None;
                     comments = None;
@@ -138,7 +154,9 @@ class mapper ~target_loc =
                 Some
                   (ImportNamedSpecifiers
                      (Base.List.map named_specifiers ~f:(fun named_specifier ->
-                          let { kind; local; remote; remote_name_def_loc = _ } = named_specifier in
+                          let { kind; kind_loc = _; local; remote; remote_name_def_loc = _ } =
+                            named_specifier
+                          in
                           match kind with
                           | Some ImportValue
                           | Some ImportTypeof ->

@@ -3658,7 +3658,7 @@ and import_namespace_specifier (loc, id) =
   source_location_with_comments (loc, fuse [Atom "*"; pretty_space; Atom "as"; space; identifier id])
 
 and import_named_specifier
-    { Ast.Statement.ImportDeclaration.kind; local; remote; remote_name_def_loc = _ } =
+    { Ast.Statement.ImportDeclaration.kind; kind_loc = _; local; remote; remote_name_def_loc = _ } =
   fuse
     [
       (let open Ast.Statement.ImportDeclaration in

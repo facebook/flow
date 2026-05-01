@@ -41,6 +41,7 @@ mod tests {
         let specifiers = vec![
             import_declaration::NamedSpecifier {
                 kind: None,
+                kind_loc: None,
                 local: None,
                 remote: ast::Identifier::new(ast::IdentifierInner {
                     loc: (),
@@ -51,6 +52,7 @@ mod tests {
             },
             import_declaration::NamedSpecifier {
                 kind: None,
+                kind_loc: None,
                 local: Some(ast::Identifier::new(ast::IdentifierInner {
                     loc: (),
                     name: FlowSmolStr::from("baz"),

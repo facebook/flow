@@ -187,7 +187,7 @@ module Def_kind_search = struct
 
       method! import_named_specifier ~import_kind:_ specifier =
         let open Flow_ast.Statement.ImportDeclaration in
-        let { kind = _; local; remote; remote_name_def_loc = _ } = specifier in
+        let { kind = _; kind_loc = _; local; remote; remote_name_def_loc = _ } = specifier in
         let ((loc, _), { Flow_ast.Identifier.name; _ }) = Base.Option.value ~default:remote local in
         if covers_target loc then raise (Found_import { name });
         specifier

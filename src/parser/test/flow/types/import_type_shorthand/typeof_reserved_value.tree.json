@@ -1,52 +1,52 @@
 {
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":36}},
-  "range":[63,99],
   "body":[
     {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":36}},
+      "importKind":"value",
+      "loc":{"end":{"column":36,"line":2},"source":null,"start":{"column":0,"line":2}},
       "range":[63,99],
+      "source":{
+        "loc":{"end":{"column":35,"line":2},"source":null,"start":{"column":30,"line":2}},
+        "range":[93,98],
+        "raw":"\"foo\"",
+        "type":"Literal",
+        "value":"foo"
+      },
       "specifiers":[
         {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":22}},
-          "range":[79,85],
+          "importKind":"typeof",
           "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":22}},
-            "range":[79,85],
+            "loc":{"end":{"column":22,"line":2},"source":null,"start":{"column":16,"line":2}},
             "name":"switch",
-            "typeAnnotation":null,
-            "optional":false
+            "optional":false,
+            "range":[79,85],
+            "type":"Identifier",
+            "typeAnnotation":null
           },
+          "loc":{"end":{"column":22,"line":2},"source":null,"start":{"column":9,"line":2}},
           "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":22}},
-            "range":[79,85],
+            "loc":{"end":{"column":22,"line":2},"source":null,"start":{"column":16,"line":2}},
             "name":"switch",
-            "typeAnnotation":null,
-            "optional":false
+            "optional":false,
+            "range":[79,85],
+            "type":"Identifier",
+            "typeAnnotation":null
           },
-          "importKind":"typeof"
+          "range":[72,85],
+          "type":"ImportSpecifier"
         }
       ],
-      "source":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":2,"column":30},"end":{"line":2,"column":35}},
-        "range":[93,98],
-        "value":"foo",
-        "raw":"\"foo\""
-      },
-      "importKind":"value"
+      "type":"ImportDeclaration"
     }
   ],
   "comments":[
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":62}},
+      "loc":{"end":{"column":62,"line":1},"source":null,"start":{"column":0,"line":1}},
       "range":[0,62],
+      "type":"Line",
       "value":" ok, `switch` is a reserved value but not reserved type name"
     }
-  ]
+  ],
+  "loc":{"end":{"column":36,"line":2},"source":null,"start":{"column":0,"line":2}},
+  "range":[63,99],
+  "type":"Program"
 }

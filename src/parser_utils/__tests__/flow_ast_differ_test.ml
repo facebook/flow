@@ -442,6 +442,7 @@ class insert_import_mapper =
                        [
                          {
                            kind = None;
+                           kind_loc = None;
                            local = None;
                            remote = Flow_ast_utils.ident_of_source (loc, "baz");
                            remote_name_def_loc = None;
@@ -480,6 +481,7 @@ class insert_second_import_mapper =
                        [
                          {
                            kind = None;
+                           kind_loc = None;
                            local = None;
                            remote = Flow_ast_utils.ident_of_source (loc, "baz");
                            remote_name_def_loc = None;
@@ -811,6 +813,7 @@ class insert_import_and_annot_mapper =
                       [
                         {
                           kind = None;
+                          kind_loc = None;
                           local = Some (Flow_ast_utils.ident_of_source (Loc.none, "here"));
                           remote = Flow_ast_utils.ident_of_source (Loc.none, "there");
                           remote_name_def_loc = None;

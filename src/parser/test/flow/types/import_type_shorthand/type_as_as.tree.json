@@ -1,52 +1,52 @@
 {
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":42}},
-  "range":[41,83],
   "body":[
     {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":42}},
+      "importKind":"value",
+      "loc":{"end":{"column":42,"line":2},"source":null,"start":{"column":0,"line":2}},
       "range":[41,83],
+      "source":{
+        "loc":{"end":{"column":41,"line":2},"source":null,"start":{"column":29,"line":2}},
+        "range":[70,82],
+        "raw":"\"ModuleName\"",
+        "type":"Literal",
+        "value":"ModuleName"
+      },
       "specifiers":[
         {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":2,"column":14},"end":{"line":2,"column":21}},
-          "range":[55,62],
+          "importKind":"type",
           "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":2,"column":14},"end":{"line":2,"column":16}},
-            "range":[55,57],
+            "loc":{"end":{"column":16,"line":2},"source":null,"start":{"column":14,"line":2}},
             "name":"as",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
+            "optional":false,
+            "range":[55,57],
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":21}},
-            "range":[61,62],
-            "name":"x",
-            "typeAnnotation":null,
-            "optional":false
+            "typeAnnotation":null
           },
-          "importKind":"type"
+          "loc":{"end":{"column":21,"line":2},"source":null,"start":{"column":9,"line":2}},
+          "local":{
+            "loc":{"end":{"column":21,"line":2},"source":null,"start":{"column":20,"line":2}},
+            "name":"x",
+            "optional":false,
+            "range":[61,62],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[50,62],
+          "type":"ImportSpecifier"
         }
       ],
-      "source":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":41}},
-        "range":[70,82],
-        "value":"ModuleName",
-        "raw":"\"ModuleName\""
-      },
-      "importKind":"value"
+      "type":"ImportDeclaration"
     }
   ],
   "comments":[
     {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":40}},
+      "loc":{"end":{"column":40,"line":1},"source":null,"start":{"column":0,"line":1}},
       "range":[0,40],
+      "type":"Line",
       "value":" ok, a type named `as`, renamed to `x`"
     }
-  ]
+  ],
+  "loc":{"end":{"column":42,"line":2},"source":null,"start":{"column":0,"line":2}},
+  "range":[41,83],
+  "type":"Program"
 }

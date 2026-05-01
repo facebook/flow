@@ -435,8 +435,8 @@ class ['loc] hoister ~(enable_enums : bool) ~(with_types : bool) =
           (with_types, this#add_type_binding ~imported:true)
       in
       (match specifier with
-      | { local = Some binding; remote = _; remote_name_def_loc = _; kind }
-      | { local = None; remote = binding; remote_name_def_loc = _; kind } ->
+      | { local = Some binding; remote = _; remote_name_def_loc = _; kind; kind_loc = _ }
+      | { local = None; remote = binding; remote_name_def_loc = _; kind; kind_loc = _ } ->
         let (allowed, add_binding) = allowed_kind kind in
         if allowed then add_binding binding);
       specifier

@@ -84,6 +84,7 @@ module AstHelper = struct
           Some
             {
               Ast.Statement.ImportDeclaration.kind = None;
+              kind_loc = None;
               local;
               remote = remote_id;
               remote_name_def_loc = None;

@@ -70,6 +70,7 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, !> for RenameMapper {
             remote,
             remote_name_def_loc,
             kind,
+            kind_loc,
         } = spec;
         let loc = &remote.loc;
         if self.global {
@@ -83,6 +84,7 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, !> for RenameMapper {
                             remote: new_remote,
                             remote_name_def_loc: remote_name_def_loc.clone(),
                             kind: *kind,
+                            kind_loc: kind_loc.clone(),
                         }
                     } else {
                         spec.clone()
@@ -100,6 +102,7 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, !> for RenameMapper {
                             remote: remote.clone(),
                             remote_name_def_loc: remote_name_def_loc.clone(),
                             kind: *kind,
+                            kind_loc: kind_loc.clone(),
                         }
                     } else {
                         spec.clone()

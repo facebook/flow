@@ -858,6 +858,7 @@ impl<'a> flow_parser::ast_visitor::AstVisitor<'_, Loc> for RequiresCalculator<'a
                                 remote,
                                 remote_name_def_loc: _,
                                 kind,
+                                kind_loc: _,
                             } in named_specifiers
                             {
                                 let import_kind = kind.unwrap_or(decl.import_kind);

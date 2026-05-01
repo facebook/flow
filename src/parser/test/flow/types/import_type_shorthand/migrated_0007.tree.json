@@ -1,145 +1,145 @@
 {
+  "body":[
+    {
+      "importKind":"value",
+      "loc":{"end":{"column":0,"line":2},"source":null,"start":{"column":0,"line":1}},
+      "range":[0,31],
+      "source":{
+        "loc":{"end":{"column":0,"line":2},"source":null,"start":{"column":0,"line":2}},
+        "range":[31,31],
+        "raw":"",
+        "type":"Literal",
+        "value":""
+      },
+      "specifiers":[
+        {
+          "importKind":"type",
+          "imported":{
+            "loc":{"end":{"column":14,"line":1},"source":null,"start":{"column":13,"line":1}},
+            "name":"t",
+            "optional":false,
+            "range":[13,14],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":18,"line":1},"source":null,"start":{"column":8,"line":1}},
+          "local":{
+            "loc":{"end":{"column":18,"line":1},"source":null,"start":{"column":17,"line":1}},
+            "name":"",
+            "optional":false,
+            "range":[17,18],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[8,18],
+          "type":"ImportSpecifier"
+        },
+        {
+          "importKind":null,
+          "imported":{
+            "loc":{"end":{"column":23,"line":1},"source":null,"start":{"column":19,"line":1}},
+            "name":"from",
+            "optional":false,
+            "range":[19,23],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":23,"line":1},"source":null,"start":{"column":19,"line":1}},
+          "local":{
+            "loc":{"end":{"column":23,"line":1},"source":null,"start":{"column":19,"line":1}},
+            "name":"from",
+            "optional":false,
+            "range":[19,23],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[19,23],
+          "type":"ImportSpecifier"
+        },
+        {
+          "importKind":null,
+          "imported":{
+            "loc":{"end":{"column":29,"line":1},"source":null,"start":{"column":24,"line":1}},
+            "name":"",
+            "optional":false,
+            "range":[24,29],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":29,"line":1},"source":null,"start":{"column":24,"line":1}},
+          "local":{
+            "loc":{"end":{"column":29,"line":1},"source":null,"start":{"column":24,"line":1}},
+            "name":"",
+            "optional":false,
+            "range":[24,29],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[24,29],
+          "type":"ImportSpecifier"
+        },
+        {
+          "importKind":null,
+          "imported":{
+            "loc":{"end":{"column":30,"line":1},"source":null,"start":{"column":29,"line":1}},
+            "name":"",
+            "optional":false,
+            "range":[29,30],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "loc":{"end":{"column":30,"line":1},"source":null,"start":{"column":29,"line":1}},
+          "local":{
+            "loc":{"end":{"column":30,"line":1},"source":null,"start":{"column":29,"line":1}},
+            "name":"",
+            "optional":false,
+            "range":[29,30],
+            "type":"Identifier",
+            "typeAnnotation":null
+          },
+          "range":[29,30],
+          "type":"ImportSpecifier"
+        }
+      ],
+      "type":"ImportDeclaration"
+    }
+  ],
+  "comments":[],
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":18}},
+      "loc":{"end":{"column":18,"line":1},"source":null,"start":{"column":17,"line":1}},
       "message":"Unexpected token `}`, expected an identifier"
     },
     {
-      "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":23}},
+      "loc":{"end":{"column":23,"line":1},"source":null,"start":{"column":19,"line":1}},
       "message":"Missing comma between import specifiers"
     },
     {
-      "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":29}},
+      "loc":{"end":{"column":29,"line":1},"source":null,"start":{"column":24,"line":1}},
       "message":"Missing comma between import specifiers"
     },
     {
-      "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":29}},
+      "loc":{"end":{"column":29,"line":1},"source":null,"start":{"column":24,"line":1}},
       "message":"Unexpected string, expected an identifier"
     },
     {
-      "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
+      "loc":{"end":{"column":30,"line":1},"source":null,"start":{"column":29,"line":1}},
       "message":"Missing comma between import specifiers"
     },
     {
-      "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
+      "loc":{"end":{"column":30,"line":1},"source":null,"start":{"column":29,"line":1}},
       "message":"Unexpected token `;`, expected an identifier"
     },
     {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "loc":{"end":{"column":0,"line":2},"source":null,"start":{"column":0,"line":2}},
       "message":"Unexpected end of input, expected the token `}`"
     },
     {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "loc":{"end":{"column":0,"line":2},"source":null,"start":{"column":0,"line":2}},
       "message":"Unexpected end of input, expected the keyword `from`"
     }
   ],
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
+  "loc":{"end":{"column":0,"line":2},"source":null,"start":{"column":0,"line":1}},
   "range":[0,31],
-  "body":[
-    {
-      "type":"ImportDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-      "range":[0,31],
-      "specifiers":[
-        {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":18}},
-          "range":[13,18],
-          "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":14}},
-            "range":[13,14],
-            "name":"t",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":18}},
-            "range":[17,18],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "importKind":"type"
-        },
-        {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":23}},
-          "range":[19,23],
-          "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":23}},
-            "range":[19,23],
-            "name":"from",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":23}},
-            "range":[19,23],
-            "name":"from",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "importKind":null
-        },
-        {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":29}},
-          "range":[24,29],
-          "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":29}},
-            "range":[24,29],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":29}},
-            "range":[24,29],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "importKind":null
-        },
-        {
-          "type":"ImportSpecifier",
-          "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
-          "range":[29,30],
-          "imported":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
-            "range":[29,30],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "local":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
-            "range":[29,30],
-            "name":"",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "importKind":null
-        }
-      ],
-      "source":{
-        "type":"Literal",
-        "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-        "range":[31,31],
-        "value":"",
-        "raw":""
-      },
-      "importKind":"value"
-    }
-  ],
-  "comments":[]
+  "type":"Program"
 }

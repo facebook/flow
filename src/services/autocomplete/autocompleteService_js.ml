@@ -1306,7 +1306,7 @@ class local_type_identifiers_ast_searcher cx =
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers specifiers ->
             List.iter
-              (fun { kind; local; remote; remote_name_def_loc = _ } ->
+              (fun { kind; kind_loc = _; local; remote; remote_name_def_loc = _ } ->
                 let specifier_binds_type =
                   match kind with
                   | None -> declaration_binds_type

@@ -1369,11 +1369,13 @@ pub mod statements {
 
     pub fn named_import_specifier(
         kind: Option<statement::ImportKind>,
+        kind_loc: Option<Loc>,
         local: Option<ast::Identifier<Loc, Loc>>,
         remote: ast::Identifier<Loc, Loc>,
     ) -> statement::import_declaration::NamedSpecifier<Loc, Loc> {
         statement::import_declaration::NamedSpecifier {
             kind,
+            kind_loc,
             local,
             remote,
             remote_name_def_loc: None,

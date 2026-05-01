@@ -2152,7 +2152,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.named_specifier)
         : ('N, 'U) Ast.Statement.ImportDeclaration.named_specifier =
       let open Ast.Statement.ImportDeclaration in
-      let { kind; local; remote; remote_name_def_loc } = specifier in
+      let { kind; kind_loc; local; remote; remote_name_def_loc } = specifier in
       let (is_type_remote, is_type_local) =
         match (import_kind, kind) with
         | (ImportType, _)
@@ -2184,8 +2184,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           in
           Some (local_visitor ident)
       in
+      let kind_loc' = Option.map ~f:this#on_loc_annot kind_loc in
       let remote_name_def_loc' = Option.map ~f:this#on_loc_annot remote_name_def_loc in
-      { kind; local = local'; remote = remote'; remote_name_def_loc = remote_name_def_loc' }
+      {
+        kind;
+        kind_loc = kind_loc';
+        local = local';
+        remote = remote';
+        remote_name_def_loc = remote_name_def_loc';
+      }
 
     method import_default_specifier
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind) (id : ('M, 'T) Ast.Identifier.t)

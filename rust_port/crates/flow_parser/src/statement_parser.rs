@@ -4412,6 +4412,9 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
             // consume `type`, but we don't know yet whether this is `type foo` or
             // `type as foo`.
             let type_keyword_or_remote = identifier_name(env)?;
+            // If [kind] survives in a given branch, [type_keyword_or_remote]
+            // was the per-specifier keyword and its loc is the keyword loc.
+            let kind_loc = Some(type_keyword_or_remote.loc.clone());
             match peek::token(env) {
                 TokenKind::TEof | TokenKind::TRcurly | TokenKind::TComma => {
                     // `type` (a value)
@@ -4423,6 +4426,7 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                         local: None,
                         remote_name_def_loc: None,
                         kind: None,
+                        kind_loc: None,
                     })
                 }
                 // `type as foo` (value named `type`) or `type as,` (type named `as`)
@@ -4435,6 +4439,7 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                                 remote_name_def_loc: None,
                                 local: None,
                                 kind,
+                                kind_loc,
                             })
                         }
                         TokenKind::TIdentifier { raw: as_raw, .. } if as_raw == "as" => {
@@ -4450,6 +4455,7 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                                 remote_name_def_loc: None,
                                 local,
                                 kind,
+                                kind_loc,
                             })
                         }
                         _ => {
@@ -4465,6 +4471,7 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                                 remote_name_def_loc: None,
                                 local,
                                 kind: None,
+                                kind_loc: None,
                             })
                         }
                     }
@@ -4477,6 +4484,7 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                         remote_name_def_loc: None,
                         local,
                         kind,
+                        kind_loc,
                     })
                 }
             }
@@ -4488,6 +4496,7 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                 remote_name_def_loc: None,
                 local,
                 kind: None,
+                kind_loc: None,
             })
         }
     }
@@ -4506,6 +4515,7 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
             remote_name_def_loc: None,
             local,
             kind: None,
+            kind_loc: None,
         })
     }
 
@@ -4523,6 +4533,7 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
             remote_name_def_loc: None,
             local,
             kind: None,
+            kind_loc: None,
         })
     }
 

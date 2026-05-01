@@ -922,78 +922,7 @@ function mapLiteral(node: Literal): BabelLiteral {
   }
 }
 
-// Adjust an ImportSpecifier node's `start`/`loc.start` to point at the leading
-// `type`/`typeof` keyword instead of the imported identifier. The Rust parser
-// (mirroring OCaml flow_parser's estree_translator.ml::import_named_specifier)
-// spans the ImportSpecifier from the remote id through the local id, omitting
-// the keyword. Babel's parser positions the keyword as part of the specifier
-// loc (verified against @babel/parser output for `import {type Foo} from 'm'`),
-// so the Babel adapter must walk back from `imported.range[0]` past the
-// whitespace and the keyword. Scanning the source (rather than subtracting a
-// constant) tolerates arbitrary inter-token whitespace and newlines.
-function fixImportSpecifierKeywordLoc(node: $FlowFixMe, code: ?string): void {
-  if (code == null) {
-    return;
-  }
-  const kind = node.importKind;
-  if (kind !== 'type' && kind !== 'typeof') {
-    return;
-  }
-  const imported = node.imported;
-  if (
-    imported == null ||
-    !Array.isArray(imported.range) ||
-    imported.loc == null
-  ) {
-    return;
-  }
-  const keyword = kind;
-  const importedStart = imported.range[0];
-  // Scan back past whitespace between the keyword and the imported id.
-  let cursor = importedStart - 1;
-  while (cursor >= 0 && /\s/.test(code[cursor])) {
-    cursor -= 1;
-  }
-  // The character at `cursor` should be the last char of the keyword.
-  const keywordEnd = cursor + 1;
-  const keywordStart = keywordEnd - keyword.length;
-  if (keywordStart < 0) {
-    return;
-  }
-  if (code.slice(keywordStart, keywordEnd) !== keyword) {
-    return;
-  }
-  // Recompute line/column for the keyword start. The imported id's loc gives
-  // the column at `importedStart`; walk the source between `keywordStart` and
-  // `importedStart` to derive the keyword's line/column.
-  let line = imported.loc.start.line;
-  let column = imported.loc.start.column;
-  for (let i = importedStart - 1; i >= keywordStart; i -= 1) {
-    if (code[i] === '\n') {
-      line -= 1;
-      // Compute the column on the previous line.
-      let lineStart = i;
-      while (lineStart > 0 && code[lineStart - 1] !== '\n') {
-        lineStart -= 1;
-      }
-      column = i - lineStart;
-    } else {
-      column -= 1;
-    }
-  }
-  // $FlowExpectedError[cannot-write]
-  node.range = [keywordStart, node.range[1]];
-  // $FlowExpectedError[cannot-write]
-  node.loc = {
-    ...node.loc,
-    start: {line, column},
-  };
-}
-
-function transformNode(
-  node: ESNodeOrBabelNode,
-  code: ?string,
-): ESNodeOrBabelNode | null {
+function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
   switch (node.type) {
     case 'Program': {
       // Check if we have already processed this node.
@@ -1355,10 +1284,6 @@ function transformNode(
       }
       return node;
     }
-    case 'ImportSpecifier': {
-      fixImportSpecifierKeywordLoc(node, code);
-      return node;
-    }
     case 'ArrayExpression': {
       // $FlowExpectedError[cannot-write]
       delete node.trailingComma;
@@ -1392,12 +1317,11 @@ function transformNode(
 export function transformProgram(
   program: Program,
   options: ParserOptions,
-  code?: string,
 ): BabelFile {
   const resultNode = SimpleTransform.transform(program, {
     transform(node) {
       // $FlowExpectedError[incompatible-type] We override the type to support the additional Babel types
-      return transformNode(node, code);
+      return transformNode(node);
     },
     visitorKeys: FlowESTreeAndBabelVisitorKeys,
   });

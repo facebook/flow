@@ -593,12 +593,14 @@ impl<Loc: Dupe> AstVisitor<'_, Loc> for HoisterBase<Loc> {
         match spec {
             ast::statement::import_declaration::NamedSpecifier {
                 kind,
+                kind_loc: _,
                 local: Some(binding),
                 remote: _,
                 remote_name_def_loc: _,
             }
             | ast::statement::import_declaration::NamedSpecifier {
                 kind,
+                kind_loc: _,
                 local: None,
                 remote: binding,
                 remote_name_def_loc: _,

@@ -471,8 +471,8 @@ let import_named_specifier
     | _ -> Some (fun id -> visitor#pattern_identifier ~kind:Ast.Variable.Const id)
   in
   (match specifier with
-  | { local = Some ident; remote = _; remote_name_def_loc = _; kind }
-  | { local = None; remote = ident; remote_name_def_loc = _; kind } ->
+  | { local = Some ident; remote = _; remote_name_def_loc = _; kind; kind_loc = _ }
+  | { local = None; remote = ident; remote_name_def_loc = _; kind; kind_loc = _ } ->
     let visit = visit_ident kind in
     ignore (Base.Option.map ~f:(fun visit -> visit ident) visit));
   specifier

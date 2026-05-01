@@ -485,11 +485,7 @@ export function parse(
     StripFlowTypesForBabel.transformProgram,
   ].reduce((ast, transform) => transform?.(ast, options) ?? ast, estreeAST);
 
-  return TransformESTreeToBabel.transformProgram(
-    loweredESTreeAST,
-    options,
-    code,
-  );
+  return TransformESTreeToBabel.transformProgram(loweredESTreeAST, options);
 }
 
 // Module-vs-script detection mirroring HermesASTAdapter.setModuleSourceType

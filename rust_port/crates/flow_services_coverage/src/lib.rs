@@ -464,6 +464,7 @@ where
     ) -> Result<(), !> {
         let ast::statement::import_declaration::NamedSpecifier {
             kind: _,
+            kind_loc: _,
             local,
             remote,
             remote_name_def_loc: _,
