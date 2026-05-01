@@ -50,7 +50,7 @@ function rest_intersection(...xs: { x: number } & [1,2]): number { // OK
 }
 
 function empty_rest<T:Array<mixed>>(...xs: T): T { return xs; }
-(empty_rest(): empty); // Error Array ~> empty
+empty_rest() as empty; // Error Array ~> empty
 
 function return_rest_param<Args:Array<mixed>>(
   f: (...args: Args) => void,

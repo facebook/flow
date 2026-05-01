@@ -7,7 +7,7 @@
 // point to 42 and true but appear together before the error on 'foo'!
 ({
   a: 42,
-  b: ('foo': empty),
+  b: 'foo' as empty,
   c: true,
 }) as {
   a: boolean,

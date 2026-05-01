@@ -1,3 +1,3 @@
 const f = function() {};
-(f: empty); // err
+f as empty; // err
 module.exports = f;

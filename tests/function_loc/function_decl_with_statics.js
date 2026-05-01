@@ -1,5 +1,5 @@
 function f() {};
 f.x = 1;
-(f: empty); // err
-(f.x: empty); // err
+f as empty; // err
+f.x as empty; // err
 module.exports = f;

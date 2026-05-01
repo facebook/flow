@@ -6,12 +6,12 @@ function *stmt_yield(): Generator<number, void, void> {
 function *stmt_next(): Generator<void, void, number> {
   var a = yield;
   if (a) {
-    (a : number); // ok
+    a as number; // ok
   }
 
   var b = yield;
   if (b) {
-    (b : string); // error: number ~> string
+    b as string; // error: number ~> string
   }
 }
 
@@ -27,12 +27,12 @@ function *infer_stmt() {
   var x: boolean = yield 0; // nope
   return "";
 }
-for (var x of infer_stmt()) { (x : string) } // error: number ~> string
+for (var x of infer_stmt()) { x as string } // error: number ~> string
 var infer_stmt_next = infer_stmt().next(0).value; // error: number ~> void
 if (typeof infer_stmt_next === "undefined") {
 } else if (typeof infer_stmt_next === "number") {
 } else {
-  (infer_stmt_next : boolean) // error: string ~> boolean
+  infer_stmt_next as boolean // error: string ~> boolean
 }
 
 function *widen_next() : Generator<number, void, number | boolean | string> {
@@ -40,7 +40,7 @@ function *widen_next() : Generator<number, void, number | boolean | string> {
   if (typeof x === "number") {
   } else if (typeof x === "boolean") {
   } else {
-    (x : string) // ok, sherlock
+    x as string // ok, sherlock
   }
 }
 widen_next().next(0)
@@ -56,7 +56,7 @@ for (var x1 of widen_yield()) {
   if (typeof x1 === "number") {
   } else if (typeof x1 === "boolean") {
   } else {
-    (x1 : string) // ok, sherlock
+    x1 as string // ok, sherlock
   }
 }
 
@@ -76,7 +76,7 @@ function *delegate_yield_generator() {
   yield *inner();
 }
 for (var x2 of delegate_yield_generator()) {
-  (x2 : number) // error: string ~> number
+  x2 as number // error: string ~> number
 }
 
 function *delegate_return_generator() {
@@ -97,7 +97,7 @@ function *delegate_yield_iterable(xs: Array<number>) {
   yield *xs;
 }
 for (const x of delegate_yield_iterable([])) {
-  (x : string) // error: number ~> string
+  x as string // error: number ~> string
 }
 
 function *delegate_return_iterable(xs: Array<number>) {
@@ -125,5 +125,5 @@ function *multiple_return(b?: boolean) {
 }
 let multiple_return_result = multiple_return().next();
 if (multiple_return_result.done) {
-  (multiple_return_result.value: void); // error: number|string ~> void
+  multiple_return_result.value as void; // error: number|string ~> void
 }

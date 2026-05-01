@@ -8,7 +8,7 @@ function *catch_return() {
 
 var catch_return_value = catch_return().throw("").value;
 if (catch_return_value !== undefined) {
-  (catch_return_value : string); // error: number ~> string
+  catch_return_value as string; // error: number ~> string
 }
 
 function *yield_return() {
@@ -21,5 +21,5 @@ function *yield_return() {
 }
 var yield_return_value = yield_return().throw("").value;
 if (yield_return_value !== undefined) {
-  (yield_return_value: string); // error: number ~> string
+  yield_return_value as string; // error: number ~> string
 }

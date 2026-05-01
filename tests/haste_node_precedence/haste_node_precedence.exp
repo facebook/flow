@@ -1,18 +1,18 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:2:2
+Error ------------------------------------------------------------------------------------------------------ test.js:2:1
 
 Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:2:2
-   2| (foo: string);
-       ^^^
+   test.js:2:1
+   2| foo as string;
+      ^^^
 
 References:
    foo.js:1:18
    1| module.exports = 0;
                        ^ [1]
-   test.js:2:7
-   2| (foo: string);
-            ^^^^^^ [2]
+   test.js:2:8
+   2| foo as string;
+             ^^^^^^ [2]
 
 
 

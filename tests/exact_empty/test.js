@@ -1,1 +1,1 @@
-({p:0}:$Exact<empty>)
+({p:0}) as $Exact<empty>

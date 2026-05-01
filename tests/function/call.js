@@ -25,12 +25,12 @@ f([0, 0]); // OK
 // - lookup length on Number (0 used as `this`)
 // - number !~> string (param a)
 // - string !~> number (param b)
-(test.apply.call(test, 0, [0, 'foo']): number);
+test.apply.call(test, 0, [0, 'foo']) as number;
 
 // args are optional
 function test2(): number { return 0; }
-(test2.call(): number);
-(test2.call(""): number);
+test2.call() as number;
+test2.call("") as number;
 
 // callable objects
 function test3(x: { (a: string, b: string): void }) {

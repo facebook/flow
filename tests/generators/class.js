@@ -7,12 +7,12 @@ class GeneratorExamples {
   *stmt_next(): Generator<void, void, number> {
     var a = yield;
     if (a) {
-      (a : number); // ok
+      a as number; // ok
     }
 
     var b = yield;
     if (b) {
-      (b : string); // error: number ~> string
+      b as string; // error: number ~> string
     }
   }
 
@@ -34,7 +34,7 @@ class GeneratorExamples {
     if (typeof x === "number") {
     } else if (typeof x === "boolean") {
     } else {
-      (x : string) // nope
+      x as string // nope
     }
   }
 
@@ -95,13 +95,13 @@ class GeneratorExamples {
 
 var examples = new GeneratorExamples();
 
-for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
+for (var x of examples.infer_stmt()) { x as string } // error: number ~> string
 
 var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
 if (typeof infer_stmt_next === "undefined") {
 } else if (typeof infer_stmt_next === "number") {
 } else {
-  (infer_stmt_next : boolean) // error: string ~> boolean
+  infer_stmt_next as boolean // error: string ~> boolean
 }
 
 examples.widen_next().next(0) // err number -> void
@@ -112,18 +112,18 @@ for (var x0 of examples.widen_yield()) {
   if (typeof x0 === "number") {
   } else if (typeof x0 === "boolean") {
   } else {
-    (x0 : string) // ok, sherlock
+    x0 as string // ok, sherlock
   }
 }
 
 examples.delegate_next_generator().next("");
 
 for (var x1 of examples.delegate_yield_generator()) {
-  (x1 : number) // error: string ~> number
+  x1 as number // error: string ~> number
 }
 
 examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
 
 for (var x2 of examples.delegate_yield_iterable([])) {
-  (x2 : string) // error: number ~> string
+  x2 as string // error: number ~> string
 }

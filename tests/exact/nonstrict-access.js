@@ -13,20 +13,20 @@ type T = {|
   declare const x: T;
 
   // Prop access
-  (x.all: string); // OK
-  (x['all']: string); // OK
-  (x.some: string); // ERROR
-  (x['some']: string); // ERROR
-  (x.some: string | void); // OK
-  (x['some']: string | void); // OK
+  x.all as string; // OK
+  x['all'] as string; // OK
+  x.some as string; // ERROR
+  x['some'] as string; // ERROR
+  x.some as string | void; // OK
+  x['some'] as string | void; // OK
   (x.NONE); // ERROR
   (x['NONE']); // ERROR
 
   // Destructuring
   const {all, some} = x;
-  (all: string); // OK
-  (some: string); // ERROR
-  (some: string | void); // OK
+  all as string; // OK
+  some as string; // ERROR
+  some as string | void; // OK
 
   const {NONE} = x; // ERROR
 }
@@ -41,17 +41,17 @@ type T = {|
   };
 
   // Prop access
-  (obj.all: string); // OK
-  (obj.baz: number); // OK
-  (obj.some: string | void); // OK
-  (obj.some: string); // ERROR
+  obj.all as string; // OK
+  obj.baz as number; // OK
+  obj.some as string | void; // OK
+  obj.some as string; // ERROR
 
   // Destructuring
   const {all, some, baz} = obj;
-  (all: string); // OK
-  (baz: number); // OK
-  (some: string | void); // OK
-  (some: string); // ERROR
+  all as string; // OK
+  baz as number; // OK
+  some as string | void; // OK
+  some as string; // ERROR
 }
 
 // Intersection
@@ -62,12 +62,12 @@ type T = {|
   declare const o: {|a: number|} & {|b: string|};
 
   // Prop access
-  (o.a: number); // OK
-  (o.b: string); // OK
+  o.a as number; // OK
+  o.b as string; // OK
 
   const {a, b} = o;
-  (a: number); // OK
-  (b: string); // OK
+  a as number; // OK
+  b as string; // OK
 }
 
 // Computed with union

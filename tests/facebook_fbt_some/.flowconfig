@@ -1,3 +1,4 @@
 [options]
+casting_syntax=as
 all=true
 facebook.fbt=Fbt

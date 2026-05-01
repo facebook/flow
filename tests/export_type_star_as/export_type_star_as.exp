@@ -1,15 +1,15 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:3:2
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
 Cannot cast `42` to `aType0` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:3:2
-   3| (42: aType0); // error
-       ^^ [1]
+   test.js:3:1
+   3| 42 as aType0; // error
+      ^^ [1]
 
 References:
-   test.js:3:6
-   3| (42: aType0); // error
-           ^^^^^^ [2]
+   test.js:3:7
+   3| 42 as aType0; // error
+            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:5:14
@@ -37,32 +37,32 @@ Cannot import `aNum` because there is no `aNum` export in `./forward_with_export
                ^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:18:2
+Error ----------------------------------------------------------------------------------------------------- test.js:18:1
 
 Cannot cast `"asdf"` to `aType1` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:18:2
-   18| ("asdf": aType1); // error
-        ^^^^^^ [1]
+   test.js:18:1
+   18| "asdf" as aType1; // error
+       ^^^^^^ [1]
 
 References:
-   test.js:18:10
-   18| ("asdf": aType1); // error
-                ^^^^^^ [2]
+   test.js:18:11
+   18| "asdf" as aType1; // error
+                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:23:2
+Error ----------------------------------------------------------------------------------------------------- test.js:23:1
 
 Cannot cast `"asdf"` to `aType2` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:23:2
-   23| ("asdf": aType2); // error
-        ^^^^^^ [1]
+   test.js:23:1
+   23| "asdf" as aType2; // error
+       ^^^^^^ [1]
 
 References:
-   test.js:23:10
-   23| ("asdf": aType2); // error
-                ^^^^^^ [2]
+   test.js:23:11
+   23| "asdf" as aType2; // error
+                 ^^^^^^ [2]
 
 
 

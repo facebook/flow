@@ -1,5 +1,5 @@
 // @flow
 var x = require('./req');
-(x: string);
+x as string;
 
 import y from './req';

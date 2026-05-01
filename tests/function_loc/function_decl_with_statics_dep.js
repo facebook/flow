@@ -1,4 +1,4 @@
 const f = require('./function_decl_with_statics');
-(f: empty); // err
-(f.x: empty); // err
+f as empty; // err
+f.x as empty; // err
 f.missing; // err

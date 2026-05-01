@@ -361,21 +361,21 @@ Unexpected end of input [ParseError]
 Found 5 errors
 
 Focused check guessing root by looking at first file:
-Error --------------------------------------------------------------------------- other_root/other_root_dependent.js:5:2
+Error --------------------------------------------------------------------------- other_root/other_root_dependent.js:5:1
 
 Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   other_root/other_root_dependent.js:5:2
-   5| (foo: string); // Error
-       ^^^
+   other_root/other_root_dependent.js:5:1
+   5| foo as string; // Error
+      ^^^
 
 References:
    other_root/other_root_file.js:5:16
    5| export default 123;
                      ^^^ [1]
-   other_root/other_root_dependent.js:5:7
-   5| (foo: string); // Error
-            ^^^^^^ [2]
+   other_root/other_root_dependent.js:5:8
+   5| foo as string; // Error
+             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- other_root/other_root_file.js:3:17

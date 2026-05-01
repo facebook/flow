@@ -1,2 +1,2 @@
 const f = require('./function_decl');
-(f: empty); // err
+f as empty; // err

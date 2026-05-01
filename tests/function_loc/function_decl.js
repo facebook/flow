@@ -1,3 +1,3 @@
 function f() {}
-(f: empty); // err
+f as empty; // err
 module.exports = f;

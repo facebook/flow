@@ -5,4 +5,4 @@
 
 import {y} from './a';
 
-(y: void); // error
+y as void; // error

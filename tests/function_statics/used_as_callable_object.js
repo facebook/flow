@@ -30,12 +30,12 @@ interface I {
 };
 
 
-(add: InexactCallableObj); // error prop 'bar' missing
-(add: ExactCallableObj); // error inexact obj
-(add: C); // error object incompatible with class instance
-(add: I); // error prop 'bar' missing
+add as InexactCallableObj; // error prop 'bar' missing
+add as ExactCallableObj; // error inexact obj
+add as C; // error object incompatible with class instance
+add as I; // error prop 'bar' missing
 
-(addWithBar: InexactCallableObj); // okay
-(addWithBar: ExactCallableObj); // error inexact obj
-(addWithBar: C); // error object incompatible with class instance
-(addWithBar: I); // okay
+addWithBar as InexactCallableObj; // okay
+addWithBar as ExactCallableObj; // error inexact obj
+addWithBar as C; // error object incompatible with class instance
+addWithBar as I; // okay

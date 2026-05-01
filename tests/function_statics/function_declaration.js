@@ -1,28 +1,28 @@
 function f(this: number) {
-  (this: number); // OK
+  this as number; // OK
 }
 
 f.a = 1;
 f.b = () => 1;
 
-(f.a: number); // OK
-(f.b(): number); // OK
+f.a as number; // OK
+f.b() as number; // OK
 
-(f.a: empty); // ERROR
-(f.b(): empty); // ERROR
+f.a as empty; // ERROR
+f.b() as empty; // ERROR
 
 g.v = true;
 
 function g() {}
 
-(g.v: boolean); // OK
+g.v as boolean; // OK
 
 f.c = ""; // OK
-(f.c: string); // OK
+f.c as string; // OK
 f.c = 1; // ERROR
 
 g.w = 1; // OK
-(g.w: number); // OK
+g.w as number; // OK
 
 declare var b: boolean;
 if (b) {
@@ -36,5 +36,5 @@ export function m() {}
 
 n.displayName = 'a';
 m.a = 1;
-(n.displayName: string);
-(m.a: number);
+n.displayName as string;
+m.a as number;

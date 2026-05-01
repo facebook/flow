@@ -1,2 +1,2 @@
 const foo = require("foo");
-(foo: string);
+foo as string;

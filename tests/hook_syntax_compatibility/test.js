@@ -48,7 +48,7 @@ function myHOC2() {
 
 declare const useXA: ((() => void) & () => number)
 
-const [useXB, {w: useXC}] = ((42: any): [() => void, { w: () => void }])
+const [useXB, {w: useXC}] = 42 as any as [() => void, { w: () => void }]
 
 
 {

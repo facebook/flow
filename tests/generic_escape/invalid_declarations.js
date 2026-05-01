@@ -2,7 +2,7 @@ let esc1; // error
 function a<T>() {
   esc1 = 1;
 }
-(esc1: void);
+esc1 as void;
 
 let esc2; // error
 function b<T>() {
@@ -11,13 +11,13 @@ function b<T>() {
 function c<T>() {
   esc2 = 2;
 }
-(esc2: void);
+esc2 as void;
 
 let esc3 = null; // error
 function d<T>() {
   esc3 = 1;
 }
-(esc3: null);
+esc3 as null;
 
 let esc4 = null; // error
 function e<T>() {
@@ -26,4 +26,4 @@ function e<T>() {
 function f<T>() {
   esc4 = 2;
 }
-(esc4: null);
+esc4 as null;

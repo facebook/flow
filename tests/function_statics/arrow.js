@@ -1,21 +1,21 @@
 const f = () => {
-  (this: number); // ERROR
+  this as number; // ERROR
 };
 f.a = 1;
 
-(f.a: number); // OK
-(f.a: empty); // ERROR
+f.a as number; // OK
+f.a as empty; // ERROR
 
 const g = () => {};
 g.v = true;
 
-(g.v: boolean); // OK
+g.v as boolean; // OK
 
 f.c = ""; // OK
-(f.c: string); // OK
+f.c as string; // OK
 
 g.w = 1; // OK
-(g.w: number); // OK
+g.w as number; // OK
 
 declare function debounce<Args>(
   func: (...Args) => mixed,

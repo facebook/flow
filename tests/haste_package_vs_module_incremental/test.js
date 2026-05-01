@@ -1,4 +1,4 @@
 // @flow
 
 import pkg from 'package';
-(pkg: string); // error
+pkg as string; // error

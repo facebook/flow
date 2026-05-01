@@ -5,7 +5,7 @@ function coerce<T, U>(t: T): U {
   function corrupt<S: string>(s: S): S {
     return "BAD_" + s;
   }
-  const fruit: Fruit<T> = { type: (corrupt("APPLE"): "APPLE"), value: t };
+  const fruit: Fruit<T> = { type: corrupt("APPLE") as "APPLE", value: t };
   if (fruit.type === "BAD_APPLE") {
     return fruit.value;
   } else {

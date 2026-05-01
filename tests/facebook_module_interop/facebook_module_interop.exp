@@ -1,35 +1,35 @@
-Error --------------------------------------------------------------------------------------------------------- b.js:3:2
+Error --------------------------------------------------------------------------------------------------------- b.js:3:1
 
 Cannot cast `A.default` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   b.js:3:2
-   3| (A.default: string); // Error: cannot cast number to string
-       ^^^^^^^^^
+   b.js:3:1
+   3| A.default as string; // Error: cannot cast number to string
+      ^^^^^^^^^
 
 References:
    a.js:2:12
    2|   default: 1,
                  ^ [1]
-   b.js:3:13
-   3| (A.default: string); // Error: cannot cast number to string
-                  ^^^^^^ [2]
+   b.js:3:14
+   3| A.default as string; // Error: cannot cast number to string
+                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- b.js:4:2
+Error --------------------------------------------------------------------------------------------------------- b.js:4:1
 
 Cannot cast `A.foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   b.js:4:2
-   4| (A.foo: string); // Error: cannot cast number to string
-       ^^^^^
+   b.js:4:1
+   4| A.foo as string; // Error: cannot cast number to string
+      ^^^^^
 
 References:
    a.js:3:8
    3|   foo: 2,
              ^ [1]
-   b.js:4:9
-   4| (A.foo: string); // Error: cannot cast number to string
-              ^^^^^^ [2]
+   b.js:4:10
+   4| A.foo as string; // Error: cannot cast number to string
+               ^^^^^^ [2]
 
 
 

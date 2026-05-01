@@ -26,17 +26,17 @@ test.apply("", "not array"); // error: string ~> object
 // - 123 is not a string
 // - 'foo' is not a number
 // - return type (number) is not void
-(test.call.apply(test, [0, 123, 'foo']): void);
+test.call.apply(test, [0, 123, 'foo']) as void;
 
 // expect 2 errors:
 // - lookup length on number (0 is used as `this`)
 // - 123 is not a string
-(test.bind.apply(test, [0, 123]): (b: number) => number);
+test.bind.apply(test, [0, 123]) as (b: number) => number;
 
 // args are optional
 function test2(): number { return 0; }
-(test2.apply(): number);
-(test2.apply(""): number);
+test2.apply() as number;
+test2.apply("") as number;
 
 // callable objects
 function test3(x: { (a: string, b: string): void }) {

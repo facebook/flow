@@ -8,4 +8,4 @@ class C {
 
 declare var x : C;
 
-(x : T);
+x as T;

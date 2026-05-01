@@ -19,8 +19,8 @@ let tests = [
 
   // callable objects with overridden `bind` method
   function(x: {(a: string, b: string): void, bind(a: string): void}) {
-    (x.bind('foo'): void); // ok
-    (x.bind(123): void); // error, number !~> string
+    x.bind('foo') as void; // ok
+    x.bind(123) as void; // error, number !~> string
   },
 
 ];

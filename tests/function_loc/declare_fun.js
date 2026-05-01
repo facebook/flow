@@ -1,3 +1,3 @@
 declare function f(): void;
-(f: empty); // err
+f as empty; // err
 module.exports = f;

@@ -1,6 +1,5 @@
 /**
- * @format
  * @flow
  */
 
-(null: typeof 42);
+null as typeof 42;

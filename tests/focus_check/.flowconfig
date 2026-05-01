@@ -2,6 +2,7 @@
 <PROJECT_ROOT>/other_root/other_root_dependent\.js$
 
 [options]
+casting_syntax=as
 all=false
 module.file_ext=.js
 module.file_ext=.foo

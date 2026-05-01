@@ -1,4 +1,4 @@
 const f = require('./arrow_with_statics');
-(f: empty); // err
-(f.x: empty); // err
+f as empty; // err
+f.x as empty; // err
 f.missing; // err

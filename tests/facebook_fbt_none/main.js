@@ -1,3 +1,3 @@
 var React = require('react');
-(<fbt />: React.MixedElement);
-(<fbt />: number); // Error: ReactElement ~> number
+<fbt /> as React.MixedElement;
+<fbt /> as number; // Error: ReactElement ~> number

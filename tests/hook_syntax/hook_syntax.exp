@@ -105,12 +105,12 @@ called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks
 [react-rule-hook-definitely-not-in-component-or-hook]
 
    declare_hook_tests.js:23:5
-   23|     useBadHook([], (42: any)); // error
+   23|     useBadHook([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    declare_hook_tests.js:23:5
-   23|     useBadHook([], (42: any)); // error
+   23|     useBadHook([], 42 as any); // error
            ^^^^^^^^^^ [1]
 
 
@@ -121,12 +121,12 @@ called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks
 [react-rule-hook-definitely-not-in-component-or-hook]
 
    declare_hook_tests.js:25:5
-   25|     badName([], (42: any)); // error
+   25|     badName([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    declare_hook_tests.js:25:5
-   25|     badName([], (42: any)); // error
+   25|     badName([], 42 as any); // error
            ^^^^^^^ [1]
 
 
@@ -136,12 +136,12 @@ Cannot call hook because callee [1]'s name does not conform to React hook rules.
 followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    declare_hook_tests.js:34:5
-   34|     badName([], (42: any)); // error
+   34|     badName([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    declare_hook_tests.js:34:5
-   34|     badName([], (42: any)); // error
+   34|     badName([], 42 as any); // error
            ^^^^^^^ [1]
 
 
@@ -151,12 +151,12 @@ Cannot call hook [1] because React hooks cannot be called in conditional context
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
 
    declare_hook_tests.js:37:9
-   37|         useBadHook([], (42: any)); // error
+   37|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    declare_hook_tests.js:37:9
-   37|         useBadHook([], (42: any)); // error
+   37|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^ [1]
 
 
@@ -167,12 +167,12 @@ callees must either be definitely a hook or definitely not a hook, because the s
 component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    declare_hook_tests.js:47:5
-   47|     f([], (42: any)) // error
+   47|     f([], 42 as any) // error
            ^^^^^^^^^^^^^^^^
 
 References:
    declare_hook_tests.js:47:5
-   47|     f([], (42: any)) // error
+   47|     f([], 42 as any) // error
            ^ [1]
    declare_hook_tests.js:20:24
    20| declare hook useBadHook(x: Array<number>, y: React.RefObject<number>): void;
@@ -203,12 +203,12 @@ Cannot call hook because callee [1]'s name does not conform to React hook rules.
 followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    declare_hook_tests.js:56:5
-   56|     badName([], (42: any)); // error
+   56|     badName([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    declare_hook_tests.js:56:5
-   56|     badName([], (42: any)); // error
+   56|     badName([], 42 as any); // error
            ^^^^^^^ [1]
 
 
@@ -218,12 +218,12 @@ Cannot call hook [1] because React hooks cannot be called in conditional context
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
 
    declare_hook_tests.js:59:9
-   59|         useBadHook([], (42: any)); // error
+   59|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    declare_hook_tests.js:59:9
-   59|         useBadHook([], (42: any)); // error
+   59|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^ [1]
 
 
@@ -234,12 +234,12 @@ callees must either be definitely a hook or definitely not a hook, because the s
 component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    declare_hook_tests.js:69:5
-   69|     f([], (42: any)) // error
+   69|     f([], 42 as any) // error
            ^^^^^^^^^^^^^^^^
 
 References:
    declare_hook_tests.js:69:5
-   69|     f([], (42: any)) // error
+   69|     f([], 42 as any) // error
            ^ [1]
    declare_hook_tests.js:20:24
    20| declare hook useBadHook(x: Array<number>, y: React.RefObject<number>): void;
@@ -507,12 +507,12 @@ called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks
 [react-rule-hook-definitely-not-in-component-or-hook]
 
    hook_tests.js:51:5
-   51|     useBadHook([], (42: any)); // error
+   51|     useBadHook([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_tests.js:51:5
-   51|     useBadHook([], (42: any)); // error
+   51|     useBadHook([], 42 as any); // error
            ^^^^^^^^^^ [1]
 
 
@@ -523,12 +523,12 @@ called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks
 [react-rule-hook-definitely-not-in-component-or-hook]
 
    hook_tests.js:53:5
-   53|     badName([], (42: any)); // error
+   53|     badName([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_tests.js:53:5
-   53|     badName([], (42: any)); // error
+   53|     badName([], 42 as any); // error
            ^^^^^^^ [1]
 
 
@@ -538,12 +538,12 @@ Cannot call hook because callee [1]'s name does not conform to React hook rules.
 followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    hook_tests.js:62:5
-   62|     badName([], (42: any)); // error
+   62|     badName([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_tests.js:62:5
-   62|     badName([], (42: any)); // error
+   62|     badName([], 42 as any); // error
            ^^^^^^^ [1]
 
 
@@ -553,12 +553,12 @@ Cannot call hook [1] because React hooks cannot be called in conditional context
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
 
    hook_tests.js:65:9
-   65|         useBadHook([], (42: any)); // error
+   65|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_tests.js:65:9
-   65|         useBadHook([], (42: any)); // error
+   65|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^ [1]
 
 
@@ -569,12 +569,12 @@ callees must either be definitely a hook or definitely not a hook, because the s
 component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    hook_tests.js:75:5
-   75|     f([], (42: any)) // error
+   75|     f([], 42 as any) // error
            ^^^^^^^^^^^^^^^^
 
 References:
    hook_tests.js:75:5
-   75|     f([], (42: any)) // error
+   75|     f([], 42 as any) // error
            ^ [1]
    hook_tests.js:41:1
    41| hook useBadHook(x: Array<number>, y: React.RefObject<number>): void {
@@ -605,12 +605,12 @@ Cannot call hook because callee [1]'s name does not conform to React hook rules.
 followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    hook_tests.js:84:5
-   84|     badName([], (42: any)); // error
+   84|     badName([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_tests.js:84:5
-   84|     badName([], (42: any)); // error
+   84|     badName([], 42 as any); // error
            ^^^^^^^ [1]
 
 
@@ -620,12 +620,12 @@ Cannot call hook [1] because React hooks cannot be called in conditional context
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
 
    hook_tests.js:87:9
-   87|         useBadHook([], (42: any)); // error
+   87|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_tests.js:87:9
-   87|         useBadHook([], (42: any)); // error
+   87|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^ [1]
 
 
@@ -636,12 +636,12 @@ callees must either be definitely a hook or definitely not a hook, because the s
 component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    hook_tests.js:97:5
-   97|     f([], (42: any)) // error
+   97|     f([], 42 as any) // error
            ^^^^^^^^^^^^^^^^
 
 References:
    hook_tests.js:97:5
-   97|     f([], (42: any)) // error
+   97|     f([], 42 as any) // error
            ^ [1]
    hook_tests.js:41:1
    41| hook useBadHook(x: Array<number>, y: React.RefObject<number>): void {
@@ -941,12 +941,12 @@ called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks
 [react-rule-hook-definitely-not-in-component-or-hook]
 
    hook_type_tests.js:23:5
-   23|     useBadHook([], (42: any)); // error
+   23|     useBadHook([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_type_tests.js:23:5
-   23|     useBadHook([], (42: any)); // error
+   23|     useBadHook([], 42 as any); // error
            ^^^^^^^^^^ [1]
 
 
@@ -957,12 +957,12 @@ called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks
 [react-rule-hook-definitely-not-in-component-or-hook]
 
    hook_type_tests.js:25:5
-   25|     badName([], (42: any)); // error
+   25|     badName([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_type_tests.js:25:5
-   25|     badName([], (42: any)); // error
+   25|     badName([], 42 as any); // error
            ^^^^^^^ [1]
 
 
@@ -972,12 +972,12 @@ Cannot call hook because callee [1]'s name does not conform to React hook rules.
 followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    hook_type_tests.js:34:5
-   34|     badName([], (42: any)); // error
+   34|     badName([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_type_tests.js:34:5
-   34|     badName([], (42: any)); // error
+   34|     badName([], 42 as any); // error
            ^^^^^^^ [1]
 
 
@@ -987,12 +987,12 @@ Cannot call hook [1] because React hooks cannot be called in conditional context
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
 
    hook_type_tests.js:37:9
-   37|         useBadHook([], (42: any)); // error
+   37|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_type_tests.js:37:9
-   37|         useBadHook([], (42: any)); // error
+   37|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^ [1]
 
 
@@ -1003,12 +1003,12 @@ callees must either be definitely a hook or definitely not a hook, because the s
 component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    hook_type_tests.js:47:5
-   47|     f([], (42: any)) // error
+   47|     f([], 42 as any) // error
            ^^^^^^^^^^^^^^^^
 
 References:
    hook_type_tests.js:47:5
-   47|     f([], (42: any)) // error
+   47|     f([], 42 as any) // error
            ^ [1]
    hook_type_tests.js:20:27
    20| declare const useBadHook: hook (x: Array<number>, y: React.RefObject<number>) => void;
@@ -1039,12 +1039,12 @@ Cannot call hook because callee [1]'s name does not conform to React hook rules.
 followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    hook_type_tests.js:56:5
-   56|     badName([], (42: any)); // error
+   56|     badName([], 42 as any); // error
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_type_tests.js:56:5
-   56|     badName([], (42: any)); // error
+   56|     badName([], 42 as any); // error
            ^^^^^^^ [1]
 
 
@@ -1054,12 +1054,12 @@ Cannot call hook [1] because React hooks cannot be called in conditional context
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
 
    hook_type_tests.js:59:9
-   59|         useBadHook([], (42: any)); // error
+   59|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    hook_type_tests.js:59:9
-   59|         useBadHook([], (42: any)); // error
+   59|         useBadHook([], 42 as any); // error
                ^^^^^^^^^^ [1]
 
 
@@ -1070,12 +1070,12 @@ callees must either be definitely a hook or definitely not a hook, because the s
 component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    hook_type_tests.js:69:5
-   69|     f([], (42: any)) // error
+   69|     f([], 42 as any) // error
            ^^^^^^^^^^^^^^^^
 
 References:
    hook_type_tests.js:69:5
-   69|     f([], (42: any)) // error
+   69|     f([], 42 as any) // error
            ^ [1]
    hook_type_tests.js:20:27
    20| declare const useBadHook: hook (x: Array<number>, y: React.RefObject<number>) => void;

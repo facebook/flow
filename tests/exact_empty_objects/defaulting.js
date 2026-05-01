@@ -5,17 +5,17 @@ declare var o: ?{prop: number};
   const x = o ?? {};
 
   const a = x.prop;
-  (a: number | void); // OK
+  a as number | void; // OK
 
-  (a: true); // ERROR
-  (a: number); // ERROR
-  (a: void); // ERROR
+  a as true; // ERROR
+  a as number; // ERROR
+  a as void; // ERROR
   (x.XXX); // ERROR
 
   // Destructuring
   const {prop} = x;
-  (prop: number | void); // OK
-  (prop: number); // ERROR
+  prop as number | void; // OK
+  prop as number; // ERROR
 }
 
 // ||
@@ -23,17 +23,17 @@ declare var o: ?{prop: number};
   const x = o || {};
 
   const a = x.prop;
-  (a: number | void); // OK
+  a as number | void; // OK
 
-  (a: true); // ERROR
-  (a: number); // ERROR
-  (a: void); // ERROR
+  a as true; // ERROR
+  a as number; // ERROR
+  a as void; // ERROR
   (x.XXX); // ERROR
 
   // Destructuring
   const {prop} = x;
-  (prop: number | void); // OK
-  (prop: number); // ERROR
+  prop as number | void; // OK
+  prop as number; // ERROR
 }
 
 // ? :
@@ -41,17 +41,17 @@ declare var o: ?{prop: number};
   const x = o != null ? o : {};
 
   const a = x.prop;
-  (a: number | void); // OK
+  a as number | void; // OK
 
-  (a: true); // ERROR
-  (a: number); // ERROR
-  (a: void); // ERROR
+  a as true; // ERROR
+  a as number; // ERROR
+  a as void; // ERROR
   (x.XXX); // ERROR
 
   // Destructuring
   const {prop} = x;
-  (prop: number | void); // OK
-  (prop: number); // ERROR
+  prop as number | void; // OK
+  prop as number; // ERROR
 }
 
 // With non-exact hit
@@ -65,17 +65,17 @@ declare var n: ?{
   const x = n ?? {};
 
   const a = x.prop;
-  (a: number | void); // OK
+  a as number | void; // OK
 
-  (a: true); // ERROR
-  (a: number); // ERROR
-  (a: void); // ERROR
+  a as true; // ERROR
+  a as number; // ERROR
+  a as void; // ERROR
   (x.XXX); // ERROR
 
   // Destructuring
   const {prop} = x;
-  (prop: number | void); // OK
-  (prop: number); // ERROR
+  prop as number | void; // OK
+  prop as number; // ERROR
 }
 
 // With instance hit
@@ -89,17 +89,17 @@ declare var c: ?C;
   const x = c ?? {};
 
   const a = x.prop;
-  (a: number | void); // OK
+  a as number | void; // OK
 
-  (a: true); // ERROR
-  (a: number); // ERROR
-  (a: void); // ERROR
+  a as true; // ERROR
+  a as number; // ERROR
+  a as void; // ERROR
   (x.XXX); // ERROR
 
   // Destructuring
   const {prop} = x;
-  (prop: number | void); // OK
-  (prop: number); // ERROR
+  prop as number | void; // OK
+  prop as number; // ERROR
 }
 
 // any
@@ -115,5 +115,5 @@ declare var a: ?any;
   const x = o ?? {};
 
   const a = x['prop'];
-  (a: number | void); // OK
+  a as number | void; // OK
 }

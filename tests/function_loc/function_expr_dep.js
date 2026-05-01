@@ -1,2 +1,2 @@
 const f = require('./function_expr');
-(f: empty); // err
+f as empty; // err

@@ -1,3 +1,3 @@
 import type {fun} from './fun';
 
-({}: fun)
+({}) as fun
