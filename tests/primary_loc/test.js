@@ -7,10 +7,10 @@ f("asdf");
 //$FlowFixMe (unused)
 type T = string;
 
-(3 : T);
+3 as T;
 
 
 type U = number;
 
 //$FlowFixMe[incompatible-type] (used)
-("asdf" : U);
+"asdf" as U;

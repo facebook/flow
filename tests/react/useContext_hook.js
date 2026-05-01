@@ -46,8 +46,8 @@ type CustomType = {|
     },
   );
   const {foo} = React.useContext(Context, 0b001);
-  (foo: number); // Ok
+  foo as number; // Ok
   const {bar} = React.useContext(Context, 0b010);
-  (bar: number); // Ok
-  (bar: string); // Error: number is incompatible with string
+  bar as number; // Ok
+  bar as string; // Error: number is incompatible with string
 }

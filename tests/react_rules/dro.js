@@ -7,11 +7,11 @@ const y = x.y;
 const z = y[0]
 const w = z.w;
 const v = w.v;
-(v: empty); //error
+v as empty; //error
 w.v = 0; // error
 x.x.a = 42; // error
 x.x.y = []; // error
-x.x = (42: any);
+x.x = 42 as any;
 
 declare const rr: $ReactDeepReadOnly<{current: number}>;
 rr.current = 42; // ok

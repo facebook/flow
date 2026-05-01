@@ -23,8 +23,8 @@ const initialState = { count: 0 };
 
 {
   const [state, dispatch] = React.useReducer(reducer, initialState);
-  (state.count: number); // Ok
-  (state.count: string); // Error: number is incompatible with string
+  state.count as number; // Ok
+  state.count as string; // Error: number is incompatible with string
 
   dispatch({ type: "reset", payload: 123 });
   dispatch({ type: "increment" });
@@ -39,7 +39,7 @@ const initialState = { count: 0 };
   }
 
   const [state, dispatch] = React.useReducer(reducer, { initial: 123 }, init);
-  (state.count: number); // Ok
+  state.count as number; // Ok
 
   dispatch({ type: "reset", payload: 123 });
   dispatch({ type: "increment" });

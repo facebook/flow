@@ -28,7 +28,7 @@ let p5 : PFoo = {x : ""};
 let p6 : PFoo = 3; // error
 
 type Err = Partial<number> // error
-(3 : Err);
+3 as Err;
 
 interface IFace {
     x : string,

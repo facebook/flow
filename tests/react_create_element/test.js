@@ -33,17 +33,17 @@ React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
 React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
 React.createElement(A, null); // Error: `foo` and `bar` are missing.
 React.createElement(B, null); // Error: `foo` and `bar` are missing.
-(React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+(React.createElement(A, {foo: 1, bar: 2}) as ExactReactElement_DEPRECATED<
   Class<A>,
 >); // OK
-(React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+(React.createElement(B, {foo: 1, bar: 2}) as ExactReactElement_DEPRECATED<
   typeof B,
 >); // OK
-(React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+(React.createElement(A, {foo: 1, bar: 2}) as ExactReactElement_DEPRECATED<
   Class<A>,
   {foo: boolean, bar: number},
 >); // error
-(React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+(React.createElement(B, {foo: 1, bar: 2}) as ExactReactElement_DEPRECATED<
   typeof B,
   {foo: boolean, bar: number},
 >); // error
@@ -72,8 +72,8 @@ React.createElement(D, {
 });
 React.createElement(C, {foo: 42}); // OK: `bar` is in `defaultProps`.
 React.createElement(D, {foo: 42}); // OK: `bar` is optional
-(React.createElement(C, {foo: 42}): ExactReactElement_DEPRECATED<Class<C>>); // OK
-(React.createElement(D, {foo: 42}): ExactReactElement_DEPRECATED<
+React.createElement(C, {foo: 42}) as ExactReactElement_DEPRECATED<Class<C>>; // OK
+(React.createElement(D, {foo: 42}) as ExactReactElement_DEPRECATED<
   typeof D,
   {foo: number, bar?: number},
 >); // OK
@@ -96,10 +96,10 @@ React.createElement(E, {}, [1, 2], [3, 4]); // Error
 React.createElement(E, {}, ...[]); // Error
 React.createElement(E, {}, ...[1]); // OK
 React.createElement(E, {}, ...[1, 2]); // Error
-React.createElement(E, {}, ...(any: Array<number>)); // Error
+React.createElement(E, {}, ...any as Array<number>); // Error
 React.createElement(E, {}, 1, ...[]); // OK
 React.createElement(E, {}, 1, ...[2]); // Error
-React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
+React.createElement(E, {}, 1, ...any as Array<number>); // Error
 
 class F extends React.Component<{children: Array<number>}> {}
 React.createElement(F, {}); // Error
@@ -117,10 +117,10 @@ React.createElement(F, {}, [1, 2], [3, 4]); // Error
 React.createElement(F, {}, ...[]); // Error
 React.createElement(F, {}, ...[1]); // Error
 React.createElement(F, {}, ...[1, 2]); // OK
-React.createElement(F, {}, ...(any: Array<number>)); // Error
+React.createElement(F, {}, ...any as Array<number>); // Error
 React.createElement(F, {}, 1, ...[]); // Error
 React.createElement(F, {}, 1, ...[2]); // OK
-React.createElement(F, {}, 1, ...(any: Array<number>)); // missing error, potentially unsafe when any = []
+React.createElement(F, {}, 1, ...any as Array<number>); // missing error, potentially unsafe when any = []
 
 class G extends React.Component<{children: number | ReadonlyArray<number>}> {}
 React.createElement(G, {}); // Error
@@ -132,10 +132,10 @@ React.createElement(G, {}, [1, 2], [3, 4]); // Error
 React.createElement(G, {}, ...[]); // Error
 React.createElement(G, {}, ...[1]); // OK
 React.createElement(G, {}, ...[1, 2]); // OK
-React.createElement(G, {}, ...(any: Array<number>)); // Error
+React.createElement(G, {}, ...any as Array<number>); // Error
 React.createElement(G, {}, 1, ...[]); // OK
 React.createElement(G, {}, 1, ...[2]); // OK
-React.createElement(G, {}, 1, ...(any: Array<number>)); // OK
+React.createElement(G, {}, 1, ...any as Array<number>); // OK
 
 class G2 extends React.Component<{children?: number | ReadonlyArray<number>}> {}
 React.createElement(G2, {}); // OK
@@ -147,10 +147,10 @@ React.createElement(G2, {}, [1, 2], [3, 4]); // Error
 React.createElement(G2, {}, ...[]); // OK
 React.createElement(G2, {}, ...[1]); // OK
 React.createElement(G2, {}, ...[1, 2]); // OK
-React.createElement(G2, {}, ...(any: Array<number>)); // OK
+React.createElement(G2, {}, ...any as Array<number>); // OK
 React.createElement(G2, {}, 1, ...[]); // OK
 React.createElement(G2, {}, 1, ...[2]); // OK
-React.createElement(G2, {}, 1, ...(any: Array<number>)); // OK
+React.createElement(G2, {}, 1, ...any as Array<number>); // OK
 
 type NumberArrayRecursive = number | ReadonlyArray<NumberArrayRecursive>;
 class H extends React.Component<{children: NumberArrayRecursive}> {}
@@ -163,10 +163,10 @@ React.createElement(H, {}, [1, 2], [3, 4]); // OK
 React.createElement(H, {}, ...[]); // Error
 React.createElement(H, {}, ...[1]); // OK
 React.createElement(H, {}, ...[1, 2]); // OK
-React.createElement(H, {}, ...(any: Array<number>)); // missing error, potentially unsafe when any = [1]
+React.createElement(H, {}, ...any as Array<number>); // missing error, potentially unsafe when any = [1]
 React.createElement(H, {}, 1, ...[]); // OK
 React.createElement(H, {}, 1, ...[2]); // OK
-React.createElement(H, {}, 1, ...(any: Array<number>)); // OK
+React.createElement(H, {}, 1, ...any as Array<number>); // OK
 
 class I extends React.Component<{children?: number}> {}
 React.createElement(I, {}); // OK
@@ -177,10 +177,10 @@ React.createElement(I, {}, 1, 2); // Error
 React.createElement(I, {}, ...[]); // OK
 React.createElement(I, {}, ...[1]); // OK
 React.createElement(I, {}, ...[1, 2]); // Error
-React.createElement(I, {}, ...(any: Array<number>)); // Error
+React.createElement(I, {}, ...any as Array<number>); // Error
 React.createElement(I, {}, 1, ...[]); // OK
 React.createElement(I, {}, 1, ...[2]); // Error
-React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
+React.createElement(I, {}, 1, ...any as Array<number>); // Error
 
 class J extends React.Component<{children: ?number}> {}
 React.createElement(J, {}); // Error
@@ -191,10 +191,10 @@ React.createElement(J, {}, 1, 2); // Error
 React.createElement(J, {}, ...[]); // Error
 React.createElement(J, {}, ...[1]); // OK
 React.createElement(J, {}, ...[1, 2]); // Error
-React.createElement(J, {}, ...(any: Array<number>)); // Error
+React.createElement(J, {}, ...any as Array<number>); // Error
 React.createElement(J, {}, 1, ...[]); // OK
 React.createElement(J, {}, 1, ...[2]); // Error
-React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
+React.createElement(J, {}, 1, ...any as Array<number>); // Error
 
 class K extends React.Component<{children: number}> {}
 React.createElement(K, {}, 42); // OK
@@ -230,9 +230,9 @@ React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error
 
 class M extends React.Component<{}> {}
 class N extends React.Component<{}> {}
-(React.createElement(M): ExactReactElement_DEPRECATED<Class<M>, any>); // OK
-(React.createElement(M): ExactReactElement_DEPRECATED<Class<N>, any>); // Error
+React.createElement(M) as ExactReactElement_DEPRECATED<Class<M>, any>; // OK
+React.createElement(M) as ExactReactElement_DEPRECATED<Class<N>, any>; // Error
 
 declare function P(x: {children: [1, 2]}): void;
 React.createElement(P, null, 1, 2); // TODO(T225770118) OK
-React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
+React.createElement(P, null, 1, 2, ...any as Array<number>); // ERROR

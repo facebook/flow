@@ -184,21 +184,21 @@ References:
                        ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- test2.js:7:2
+Error ----------------------------------------------------------------------------------------------------- test2.js:7:1
 
 Cannot cast `foo.bar(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test2.js:7:2
-   7| (foo.bar('hmmm'): number); // error
-       ^^^^^^^^^^^^^^^
+   test2.js:7:1
+   7| foo.bar('hmmm') as number; // error
+      ^^^^^^^^^^^^^^^
 
 References:
    test2.js:3:19
    3|   bar(x: string): string;
                         ^^^^^^ [1]
-   test2.js:7:19
-   7| (foo.bar('hmmm'): number); // error
-                        ^^^^^^ [2]
+   test2.js:7:20
+   7| foo.bar('hmmm') as number; // error
+                         ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:8:1

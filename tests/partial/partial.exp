@@ -1,9 +1,9 @@
-Error ------------------------------------------------------------------------------------------ deprecated-alias.js:1:6
+Error ------------------------------------------------------------------------------------------ deprecated-alias.js:1:8
 
 The utility type `$Partial` is deprecated, use `Partial` instead. [deprecated-utility]
 
-   1| ({}: $Partial<{x: string, y: string}>); // ERROR: deprecated utility - use `Partial` instead
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   1| ({} as $Partial<{x: string, y: string}>); // ERROR: deprecated utility - use `Partial` instead
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------- deprecated-alias.js:8:17
@@ -250,12 +250,12 @@ Cannot assign `1` to `x.r` because property `r` is not writable. [cannot-write]
            ^
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:13:6
+Error ------------------------------------------------------------------------------------------------- variance.js:13:5
 
 Cannot get `x.w` because property `w` is not readable. [cannot-read]
 
-   13|   (x.w: number | void); // ERROR
-            ^
+   13|   x.w as number | void; // ERROR
+           ^
 
 
 

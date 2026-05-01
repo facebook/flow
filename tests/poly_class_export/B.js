@@ -6,4 +6,4 @@ class B extends A<string> {
   }
 }
 
-module.exports = (new B(): B);
+module.exports = new B() as B;

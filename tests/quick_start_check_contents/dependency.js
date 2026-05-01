@@ -1,2 +1,2 @@
 // @flow
-module.exports = ("hello": number);
+module.exports = "hello" as number;

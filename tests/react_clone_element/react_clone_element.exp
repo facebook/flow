@@ -109,14 +109,14 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:25:8
+Error ----------------------------------------------------------------------------------------------------- test.js:25:7
 
 Cannot call `React.cloneElement` because in type argument `ElementType` [1]: `A` [2] is incompatible with `B` [3].
 [incompatible-type]
 
-   test.js:25:8
-   25| (React.cloneElement(a): ExactReactElement_DEPRECATED<Class<B>>); // Error: A ~> B
-              ^^^^^^^^^^^^
+   test.js:25:7
+   25| React.cloneElement(a) as ExactReactElement_DEPRECATED<Class<B>>; // Error: A ~> B
+             ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
@@ -125,9 +125,9 @@ References:
    test.js:13:51
    13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
                                                          ^ [2]
-   test.js:25:60
-   25| (React.cloneElement(a): ExactReactElement_DEPRECATED<Class<B>>); // Error: A ~> B
-                                                                  ^ [3]
+   test.js:25:61
+   25| React.cloneElement(a) as ExactReactElement_DEPRECATED<Class<B>>; // Error: A ~> B
+                                                                   ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:7

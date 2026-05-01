@@ -13,4 +13,4 @@ export function hide(x: number) : ID {
 }
 
 opaque type MyNum = number;
-("hello": MyNum) // Error: string ~> number
+"hello" as MyNum // Error: string ~> number

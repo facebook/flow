@@ -5,7 +5,7 @@ Promise.allSettled<Array<mixed>>(); // Error: expected $Iterable instead of unde
 Promise.allSettled<Array<mixed>>(0); // Error: expected $Iterable instead of number
 
 // Promise.allSettled is a function
-(Promise.allSettled : Function);
+Promise.allSettled as Function;
 
 class Foo {
   foo() {}
@@ -31,7 +31,7 @@ async function test1(): Promise<[$SettledPromiseResult<Foo>, $SettledPromiseResu
       break;
     }
     default:
-      (first.status: empty) // Error: 'rejected' case was not covered
+      first.status as empty // Error: 'rejected' case was not covered
       throw Error(`unknown status: ${first.status}`);
   }
 
@@ -41,7 +41,7 @@ async function test1(): Promise<[$SettledPromiseResult<Foo>, $SettledPromiseResu
   } else if (second.status === 'rejected')  {
     console.log(second.reason);
   } else {
-    return (second.status: empty); // ok
+    return second.status as empty; // ok
   }
 
   return settled;

@@ -3,7 +3,7 @@ import * as React from 'react';
 function connect<TProps: {+prop: mixed, ...}>(
   Component: React.ComponentType<TProps>,
 ): React.ComponentType<Omit<TProps, 'prop'>> {
-  return (null: any);
+  return null as any;
 }
 
 class MyComponent extends React.Component<{

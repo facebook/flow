@@ -1,4 +1,4 @@
 // @flow
 
 var { a, b, c } = require('./f1');
-(c: { x: number });
+c as { x: number };

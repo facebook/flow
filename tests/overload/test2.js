@@ -3,5 +3,5 @@ declare class Foo {
   bar(x: string): string;
 }
 var foo = new Foo;
-(foo.bar('hmm'): number); // OK
-(foo.bar('hmmm'): number); // error
+foo.bar('hmm') as number; // OK
+foo.bar('hmmm') as number; // error

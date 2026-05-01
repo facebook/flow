@@ -167,14 +167,14 @@ References:
               ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:130:54
+Error --------------------------------------------------------------------------------------------------- test.js:130:55
 
 Cannot create `Class_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
 number [2]. [incompatible-type]
 
-   test.js:130:54
-   130|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
+   test.js:130:55
+   130|   {...{string1: 'foo', string2: 'bar', number: any as ?number}}
+                                                              ^^^^^^^ [1]
 
 References:
    test.js:68:11
@@ -350,14 +350,14 @@ References:
               ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:192:54
+Error --------------------------------------------------------------------------------------------------- test.js:192:55
 
 Cannot create `ClassExact_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
 number [2]. [incompatible-type]
 
-   test.js:192:54
-   192|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
+   test.js:192:55
+   192|   {...{string1: 'foo', string2: 'bar', number: any as ?number}}
+                                                              ^^^^^^^ [1]
 
 References:
    test.js:68:11
@@ -480,14 +480,14 @@ References:
               ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:254:54
+Error --------------------------------------------------------------------------------------------------- test.js:254:55
 
 Cannot create `ClassPure_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
 number [2]. [incompatible-type]
 
-   test.js:254:54
-   254|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
+   test.js:254:55
+   254|   {...{string1: 'foo', string2: 'bar', number: any as ?number}}
+                                                              ^^^^^^^ [1]
 
 References:
    test.js:68:11
@@ -610,14 +610,14 @@ References:
                                            ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:316:54
+Error --------------------------------------------------------------------------------------------------- test.js:316:55
 
 Cannot create `Function_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
 number [2]. [incompatible-type]
 
-   test.js:316:54
-   316|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
+   test.js:316:55
+   316|   {...{string1: 'foo', string2: 'bar', number: any as ?number}}
+                                                              ^^^^^^^ [1]
 
 References:
    test.js:68:11
@@ -793,14 +793,14 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:378:54
+Error --------------------------------------------------------------------------------------------------- test.js:378:55
 
 Cannot create `FunctionExact_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
 number [2]. [incompatible-type]
 
-   test.js:378:54
-   378|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
+   test.js:378:55
+   378|   {...{string1: 'foo', string2: 'bar', number: any as ?number}}
+                                                              ^^^^^^^ [1]
 
 References:
    test.js:68:11
@@ -923,14 +923,14 @@ References:
                                                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:440:54
+Error --------------------------------------------------------------------------------------------------- test.js:440:55
 
 Cannot create `Abstract_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
 number [2]. [incompatible-type]
 
-   test.js:440:54
-   440|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
+   test.js:440:55
+   440|   {...{string1: 'foo', string2: 'bar', number: any as ?number}}
+                                                              ^^^^^^^ [1]
 
 References:
    test.js:68:11
@@ -1106,14 +1106,14 @@ References:
                                                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:503:54
+Error --------------------------------------------------------------------------------------------------- test.js:503:55
 
 Cannot create `AbstractExact_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
 number [2]. [incompatible-type]
 
-   test.js:503:54
-   503|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
+   test.js:503:55
+   503|   {...{string1: 'foo', string2: 'bar', number: any as ?number}}
+                                                              ^^^^^^^ [1]
 
 References:
    test.js:68:11
@@ -1236,14 +1236,14 @@ References:
               ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:565:54
+Error --------------------------------------------------------------------------------------------------- test.js:565:55
 
 Cannot create `Member_ManyProps.prop` element because in property `number`: null or undefined [1] is incompatible with
 number [2]. [incompatible-type]
 
-   test.js:565:54
-   565|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
+   test.js:565:55
+   565|   {...{string1: 'foo', string2: 'bar', number: any as ?number}}
+                                                              ^^^^^^^ [1]
 
 References:
    test.js:68:11
@@ -1366,14 +1366,14 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:627:54
+Error --------------------------------------------------------------------------------------------------- test.js:627:55
 
 Cannot create `EnhancedClass_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
 number [2]. [incompatible-type]
 
-   test.js:627:54
-   627|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
+   test.js:627:55
+   627|   {...{string1: 'foo', string2: 'bar', number: any as ?number}}
+                                                              ^^^^^^^ [1]
 
 References:
    test.js:68:11
@@ -1496,14 +1496,14 @@ References:
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:689:54
+Error --------------------------------------------------------------------------------------------------- test.js:689:55
 
 Cannot create `EnhancedFunction_ManyProps` element because in property `number`: null or undefined [1] is incompatible
 with number [2]. [incompatible-type]
 
-   test.js:689:54
-   689|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
-                                                             ^^^^^^^ [1]
+   test.js:689:55
+   689|   {...{string1: 'foo', string2: 'bar', number: any as ?number}}
+                                                              ^^^^^^^ [1]
 
 References:
    test.js:68:11

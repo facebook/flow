@@ -1,19 +1,19 @@
-Error -------------------------------------------------------------------------------------------------- commonjs.js:4:2
+Error -------------------------------------------------------------------------------------------------- commonjs.js:4:1
 
 Cannot cast `React.Component` to number because class `Component` [1] is incompatible with number [2].
 [incompatible-type]
 
-   commonjs.js:4:2
-     4| (React.Component: number); // Error
-         ^^^^^^^^^^^^^^^
+   commonjs.js:4:1
+     4| React.Component as number; // Error
+        ^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:968:19
    968|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [1]
-   commonjs.js:4:19
-     4| (React.Component: number); // Error
-                          ^^^^^^ [2]
+   commonjs.js:4:20
+     4| React.Component as number; // Error
+                           ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- commonjs.js:6:2
@@ -24,7 +24,7 @@ Cannot cast object literal to `Node` because: [incompatible-type]
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
    commonjs.js:6:2
-    6| ({}: React.Node); // Error
+    6| ({} as React.Node); // Error
         ^^ [1]
 
 References:
@@ -39,13 +39,13 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- commonjs.js:7:14
+Error ------------------------------------------------------------------------------------------------- commonjs.js:7:15
 
 Cannot get `React.Missing` because property `Missing` is missing in module `react` [1]. [prop-missing]
 
-   commonjs.js:7:14
-   7| (null: React.Missing); // Error
-                   ^^^^^^^
+   commonjs.js:7:15
+   7| null as React.Missing; // Error
+                    ^^^^^^^
 
 References:
    commonjs.js:1:15
@@ -53,22 +53,22 @@ References:
                     ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ es-default.js:4:2
+Error ------------------------------------------------------------------------------------------------ es-default.js:4:1
 
 Cannot cast `React.Component` to number because class `Component` [1] is incompatible with number [2].
 [incompatible-type]
 
-   es-default.js:4:2
-     4| (React.Component: number); // Error
-         ^^^^^^^^^^^^^^^
+   es-default.js:4:1
+     4| React.Component as number; // Error
+        ^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:968:19
    968|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [1]
-   es-default.js:4:19
-     4| (React.Component: number); // Error
-                          ^^^^^^ [2]
+   es-default.js:4:20
+     4| React.Component as number; // Error
+                           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ es-default.js:6:2
@@ -79,7 +79,7 @@ Cannot cast object literal to `Node` because: [incompatible-type]
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
    es-default.js:6:2
-    6| ({}: React.Node); // Error.
+    6| ({} as React.Node); // Error.
         ^^ [1]
 
 References:
@@ -94,13 +94,13 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------- es-default.js:7:14
+Error ----------------------------------------------------------------------------------------------- es-default.js:7:15
 
 Cannot get `React.Missing` because property `Missing` is missing in namespace React [1]. [prop-missing]
 
-   es-default.js:7:14
-      7| (null: React.Missing); // Error: Not in default export.
-                      ^^^^^^^
+   es-default.js:7:15
+      7| null as React.Missing; // Error: Not in default export.
+                       ^^^^^^^
 
 References:
    <BUILTINS>/react.js:1542:26
@@ -108,22 +108,22 @@ References:
                                   ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
+Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:1
 
 Cannot cast `React.Component` to number because class `Component` [1] is incompatible with number [2].
 [incompatible-type]
 
-   es-namespace.js:4:2
-     4| (React.Component: number); // Error
-         ^^^^^^^^^^^^^^^
+   es-namespace.js:4:1
+     4| React.Component as number; // Error
+        ^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:968:19
    968|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [1]
-   es-namespace.js:4:19
-     4| (React.Component: number); // Error
-                          ^^^^^^ [2]
+   es-namespace.js:4:20
+     4| React.Component as number; // Error
+                           ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:6:2
@@ -134,7 +134,7 @@ Cannot cast object literal to `Node` because: [incompatible-type]
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
    es-namespace.js:6:2
-    6| ({}: React.Node); // Error
+    6| ({} as React.Node); // Error
         ^^ [1]
 
 References:
@@ -149,13 +149,13 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- es-namespace.js:7:14
+Error --------------------------------------------------------------------------------------------- es-namespace.js:7:15
 
 Cannot get `React.Missing` because property `Missing` is missing in module `react` [1]. [prop-missing]
 
-   es-namespace.js:7:14
-     7| (null: React.Missing); // Error
-                     ^^^^^^^
+   es-namespace.js:7:15
+     7| null as React.Missing; // Error
+                      ^^^^^^^
 
 References:
    <BUILTINS>/react.js:343:16

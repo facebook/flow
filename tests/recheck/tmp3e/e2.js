@@ -8,4 +8,4 @@ const f = (): Action => {
 
 import { LIFE } from './e1';
 
-(LIFE: 0);
+LIFE as 0;

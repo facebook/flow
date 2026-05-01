@@ -1,3 +1,3 @@
 // @flow
 require('./unchecked-dependency');
-(require('./dependency'): string);
+require('./dependency') as string;

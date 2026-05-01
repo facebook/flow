@@ -12,8 +12,8 @@ import React from 'react';
 
 {
   const callback = React.useCallback((num: number, str: string) => {
-    (num: number);
-    (str: string);
+    num as number;
+    str as string;
   });
   callback(123, 'abc'); // Ok
   callback(true); // Error: function requires another argument.

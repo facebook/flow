@@ -21,8 +21,8 @@ React.cloneElement('nope'); // Error: Not a valid element type.
 React.cloneElement({ type: any }); // Error: Not a valid element type.
 React.cloneElement(a); // OK: `a` is an element.
 
-(React.cloneElement(a): ExactReactElement_DEPRECATED<Class<A>>); // OK
-(React.cloneElement(a): ExactReactElement_DEPRECATED<Class<B>>); // Error: A ~> B
+React.cloneElement(a) as ExactReactElement_DEPRECATED<Class<A>>; // OK
+React.cloneElement(a) as ExactReactElement_DEPRECATED<Class<B>>; // Error: A ~> B
 
 React.cloneElement(a, {}); // OK
 React.cloneElement(a, undefined); // OK

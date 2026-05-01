@@ -10,4 +10,4 @@ const bar = require('./b.js');
 
 export type Bar= <T>(x: T) => T;
 
-(bar: Bar);
+bar as Bar;

@@ -1,4 +1,4 @@
-({}: $Partial<{x: string, y: string}>); // ERROR: deprecated utility - use `Partial` instead
+({} as $Partial<{x: string, y: string}>); // ERROR: deprecated utility - use `Partial` instead
 
 function shadowed() {
   type $Partial = number; // OK

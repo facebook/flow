@@ -15,4 +15,4 @@ export default (compose(
   withProps<{| buz: string |}, _>(({ buz }) => ({
     bar: buz,
   })),
-)(Bad): React.ComponentType<any>);
+)(Bad) as React.ComponentType<any>);

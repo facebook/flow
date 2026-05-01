@@ -1,127 +1,127 @@
-Error ---------------------------------------------------------------------------------------------------- class.js:9:52
+Error ---------------------------------------------------------------------------------------------------- class.js:9:54
 
 Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing in `Foo` [1]. [prop-missing]
 
-   class.js:9:52
-   9| (any: $NonMaybeType<React.ElementRef<Class<Foo>>>).yep2; // Error
-                                                         ^^^^
+   class.js:9:54
+   9| (any as $NonMaybeType<React.ElementRef<Class<Foo>>>).yep2; // Error
+                                                           ^^^^
 
 References:
-   class.js:9:21
-   9| (any: $NonMaybeType<React.ElementRef<Class<Foo>>>).yep2; // Error
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   class.js:9:23
+   9| (any as $NonMaybeType<React.ElementRef<Class<Foo>>>).yep2; // Error
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:10:52
+Error --------------------------------------------------------------------------------------------------- class.js:10:54
 
 Cannot get `any.nope` because property `nope` is missing in `Foo` [1]. [prop-missing]
 
-   class.js:10:52
-   10| (any: $NonMaybeType<React.ElementRef<Class<Foo>>>).nope; // Error
-                                                          ^^^^
+   class.js:10:54
+   10| (any as $NonMaybeType<React.ElementRef<Class<Foo>>>).nope; // Error
+                                                            ^^^^
 
 References:
-   class.js:10:21
-   10| (any: $NonMaybeType<React.ElementRef<Class<Foo>>>).nope; // Error
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   class.js:10:23
+   10| (any as $NonMaybeType<React.ElementRef<Class<Foo>>>).nope; // Error
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:11:52
+Error --------------------------------------------------------------------------------------------------- class.js:11:54
 
 Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing in `Bar` [1]. [prop-missing]
 
-   class.js:11:52
-   11| (any: $NonMaybeType<React.ElementRef<Class<Bar>>>).yep1; // Error
-                                                          ^^^^
+   class.js:11:54
+   11| (any as $NonMaybeType<React.ElementRef<Class<Bar>>>).yep1; // Error
+                                                            ^^^^
 
 References:
-   class.js:11:21
-   11| (any: $NonMaybeType<React.ElementRef<Class<Bar>>>).yep1; // Error
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   class.js:11:23
+   11| (any as $NonMaybeType<React.ElementRef<Class<Bar>>>).yep1; // Error
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:13:52
+Error --------------------------------------------------------------------------------------------------- class.js:13:54
 
 Cannot get `any.nope` because property `nope` is missing in `Bar` [1]. [prop-missing]
 
-   class.js:13:52
-   13| (any: $NonMaybeType<React.ElementRef<Class<Bar>>>).nope; // Error
-                                                          ^^^^
+   class.js:13:54
+   13| (any as $NonMaybeType<React.ElementRef<Class<Bar>>>).nope; // Error
+                                                            ^^^^
 
 References:
-   class.js:13:21
-   13| (any: $NonMaybeType<React.ElementRef<Class<Bar>>>).nope; // Error
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   class.js:13:23
+   13| (any as $NonMaybeType<React.ElementRef<Class<Bar>>>).nope; // Error
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:5:37
+Error ------------------------------------------------------------------------------------------------- function.js:5:39
 
 Cannot get `any.nope` because property `nope` is missing in undefined [1]. [incompatible-use]
 
-   function.js:5:37
-   5| (any: React.ElementRef<typeof Foo>).nope; // Error
-                                          ^^^^
+   function.js:5:39
+   5| (any as React.ElementRef<typeof Foo>).nope; // Error
+                                            ^^^^
 
 References:
-   function.js:5:7
-   5| (any: React.ElementRef<typeof Foo>).nope; // Error
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   function.js:5:9
+   5| (any as React.ElementRef<typeof Foo>).nope; // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ intrinsic.js:4:32
+Error ------------------------------------------------------------------------------------------------ intrinsic.js:4:34
 
 Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing in object type [1]. [prop-missing]
 
-   intrinsic.js:4:32
-   4| (any: React.ElementRef<'foo'>).yep2; // Error
-                                     ^^^^
+   intrinsic.js:4:34
+   4| (any as React.ElementRef<'foo'>).yep2; // Error
+                                       ^^^^
 
 References:
-   intrinsic.js:4:7
-   4| (any: React.ElementRef<'foo'>).yep2; // Error
-            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   intrinsic.js:4:9
+   4| (any as React.ElementRef<'foo'>).yep2; // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ intrinsic.js:5:32
+Error ------------------------------------------------------------------------------------------------ intrinsic.js:5:34
 
 Cannot get `any.nope` because property `nope` is missing in object type [1]. [prop-missing]
 
-   intrinsic.js:5:32
-   5| (any: React.ElementRef<'foo'>).nope; // Error
-                                     ^^^^
+   intrinsic.js:5:34
+   5| (any as React.ElementRef<'foo'>).nope; // Error
+                                       ^^^^
 
 References:
-   intrinsic.js:5:7
-   5| (any: React.ElementRef<'foo'>).nope; // Error
-            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   intrinsic.js:5:9
+   5| (any as React.ElementRef<'foo'>).nope; // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ intrinsic.js:6:32
+Error ------------------------------------------------------------------------------------------------ intrinsic.js:6:34
 
 Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing in object type [1]. [prop-missing]
 
-   intrinsic.js:6:32
-   6| (any: React.ElementRef<'bar'>).yep1; // Error
-                                     ^^^^
+   intrinsic.js:6:34
+   6| (any as React.ElementRef<'bar'>).yep1; // Error
+                                       ^^^^
 
 References:
-   intrinsic.js:6:7
-   6| (any: React.ElementRef<'bar'>).yep1; // Error
-            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   intrinsic.js:6:9
+   6| (any as React.ElementRef<'bar'>).yep1; // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ intrinsic.js:8:32
+Error ------------------------------------------------------------------------------------------------ intrinsic.js:8:34
 
 Cannot get `any.nope` because property `nope` is missing in object type [1]. [prop-missing]
 
-   intrinsic.js:8:32
-   8| (any: React.ElementRef<'bar'>).nope; // Error
-                                     ^^^^
+   intrinsic.js:8:34
+   8| (any as React.ElementRef<'bar'>).nope; // Error
+                                       ^^^^
 
 References:
-   intrinsic.js:8:7
-   8| (any: React.ElementRef<'bar'>).nope; // Error
-            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   intrinsic.js:8:9
+   8| (any as React.ElementRef<'bar'>).nope; // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 

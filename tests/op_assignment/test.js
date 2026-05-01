@@ -41,21 +41,21 @@ declare function invariant(x: boolean): empty;
   declare function expectNullable(x: null): A;
 
   let x: A | null = null;
-  x &&= (x: A);
+  x &&= x as A;
   let y: A | null = null;
   y ||= expectNullable(y);
-  (y: A)
+  y as A
 }
 
 {
   // ??= refinement after statement
   let v: ?number;
   v ??= 3;
-  (v: number)
+  v as number
 
   const o: {|p: ?number|} = {p: null};
   o.p ??= 3;
-  (o.p: number)
+  o.p as number
 }
 
 ////////////
@@ -126,7 +126,7 @@ declare function invariant(x: boolean): empty;
   declare function expectNullable(x: null): A;
 
   let x: A | null = null;
-  x ??= (x: null); // TODO: should not error `A` is not compatible with null
+  x ??= x as null; // TODO: should not error `A` is not compatible with null
 }
 
 {

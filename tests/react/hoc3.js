@@ -3,7 +3,7 @@ import * as React from 'react';
 function connect<TProps: {...}>(
   Component: React.ComponentType<{...$Exact<TProps>, prop: number, ...}>,
 ): React.ComponentType<TProps> {
-  return (null: any);
+  return null as any;
 }
 
 class MyComponent extends React.Component<{

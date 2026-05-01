@@ -10,18 +10,18 @@ The Flow server is currently in lazy mode and is only checking 0/1 source files 
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Change @flow file, expect error.
-Error --------------------------------------------------------------------------------------------------------- a.js:3:2
+Error --------------------------------------------------------------------------------------------------------- a.js:3:1
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   a.js:3:2
-   3| (0: string);
-       ^ [1]
+   a.js:3:1
+   3| 0 as string;
+      ^ [1]
 
 References:
-   a.js:3:5
-   3| (0: string);
-          ^^^^^^ [2]
+   a.js:3:6
+   3| 0 as string;
+           ^^^^^^ [2]
 
 
 
@@ -37,18 +37,18 @@ The Flow server is currently in lazy mode and is only checking 0/0 source files 
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Revert file, expect error again.
-Error --------------------------------------------------------------------------------------------------------- a.js:3:2
+Error --------------------------------------------------------------------------------------------------------- a.js:3:1
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   a.js:3:2
-   3| (0: string);
-       ^ [1]
+   a.js:3:1
+   3| 0 as string;
+      ^ [1]
 
 References:
-   a.js:3:5
-   3| (0: string);
-          ^^^^^^ [2]
+   a.js:3:6
+   3| 0 as string;
+           ^^^^^^ [2]
 
 
 

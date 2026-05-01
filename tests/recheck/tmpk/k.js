@@ -1,4 +1,4 @@
 /* @flow */
 
 declare var x: LibK;
-(x.p: string);
+x.p as string;

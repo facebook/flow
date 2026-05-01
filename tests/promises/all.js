@@ -8,13 +8,13 @@ Promise.all([
 ]).then((xs) => {
   // tuple information is preserved
   let [a,b,c] = xs;
-  (a: number);  // Error: string ~> number
-  (b: boolean); // Error: number ~> boolean
-  (c: string);  // Error: boolean ~> string
+  a as number;  // Error: string ~> number
+  b as boolean; // Error: number ~> boolean
+  c as string;  // Error: boolean ~> string
 
   // array element type is (string | number | boolean)
   xs.forEach(x => {
-    (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
+    x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
   });
 });
 
@@ -25,7 +25,7 @@ Promise.all<Array<mixed>>(); // Error: expected array instead of undefined (too 
 Promise.all<Array<mixed>>(0); // Error: expected array instead of number
 
 // Promise.all is a function
-(Promise.all : Function);
+Promise.all as Function;
 
 // Promise.all supports iterables
 function test(val: Iterable<Promise<number>>) {

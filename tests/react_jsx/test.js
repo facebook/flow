@@ -118,7 +118,7 @@ class Class_ManyProps extends React.Component<Props_ManyProps> {}
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
 <Class_ManyProps // OK: `number` is overwritten at the end of the element.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
   boolean1
   boolean2={false}
   number={42}
@@ -127,7 +127,7 @@ class Class_ManyProps extends React.Component<Props_ManyProps> {}
   boolean1
   boolean2={false}
   number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
 />;
 
 class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
@@ -180,7 +180,7 @@ class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
 <ClassExact_ManyProps // OK: `number` is overwritten at the end of the element.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
   boolean1
   boolean2={false}
   number={42}
@@ -189,7 +189,7 @@ class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
   boolean1
   boolean2={false}
   number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
 />;
 
 class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
@@ -242,7 +242,7 @@ class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
 <ClassPure_ManyProps // OK: `number` is overwritten at the end of the element.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
   boolean1
   boolean2={false}
   number={42}
@@ -251,7 +251,7 @@ class ClassPure_ManyProps extends React.PureComponent<Props_ManyProps> {}
   boolean1
   boolean2={false}
   number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
 />;
 
 const Function_ManyProps = (props: Props_ManyProps) => any;
@@ -304,7 +304,7 @@ const Function_ManyProps = (props: Props_ManyProps) => any;
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
 <Function_ManyProps // OK: `number` is overwritten at the end of the element.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
   boolean1
   boolean2={false}
   number={42}
@@ -313,7 +313,7 @@ const Function_ManyProps = (props: Props_ManyProps) => any;
   boolean1
   boolean2={false}
   number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
 />;
 
 const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
@@ -366,7 +366,7 @@ const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
 <FunctionExact_ManyProps // Error (TODO), but OK: `number` is overwritten.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
   boolean1
   boolean2={false}
   number={42}
@@ -375,7 +375,7 @@ const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
   boolean1
   boolean2={false}
   number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
 />;
 
 const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
@@ -428,7 +428,7 @@ const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
 <Abstract_ManyProps // OK: `number` is overwritten at the end of the element.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
   boolean1
   boolean2={false}
   number={42}
@@ -437,7 +437,7 @@ const Abstract_ManyProps: React.ComponentType<Props_ManyProps> = any;
   boolean1
   boolean2={false}
   number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
 />;
 
 const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
@@ -491,7 +491,7 @@ const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
 <AbstractExact_ManyProps // OK: `number` is overwritten.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
   boolean1
   boolean2={false}
   number={42}
@@ -500,7 +500,7 @@ const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
   boolean1
   boolean2={false}
   number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
 />;
 
 const Member_ManyProps = {prop: Class_ManyProps};
@@ -553,7 +553,7 @@ const Member_ManyProps = {prop: Class_ManyProps};
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
 <Member_ManyProps.prop // OK: `number` is overwritten at the end of the element.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
   boolean1
   boolean2={false}
   number={42}
@@ -562,7 +562,7 @@ const Member_ManyProps = {prop: Class_ManyProps};
   boolean1
   boolean2={false}
   number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
 />;
 
 const EnhancedClass_ManyProps = hoc(Class_ManyProps);
@@ -615,7 +615,7 @@ const EnhancedClass_ManyProps = hoc(Class_ManyProps);
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
 <EnhancedClass_ManyProps // OK: `number` is overwritten at the end of the element.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
   boolean1
   boolean2={false}
   number={42}
@@ -624,7 +624,7 @@ const EnhancedClass_ManyProps = hoc(Class_ManyProps);
   boolean1
   boolean2={false}
   number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
 />;
 
 const EnhancedFunction_ManyProps = hoc(Function_ManyProps);
@@ -677,7 +677,7 @@ const EnhancedFunction_ManyProps = hoc(Function_ManyProps);
   {...{number: 42, a: 1, b: 2, c: 3}}
 />;
 <EnhancedFunction_ManyProps // OK: `number` is overwritten at the end of the element.
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
   boolean1
   boolean2={false}
   number={42}
@@ -686,7 +686,7 @@ const EnhancedFunction_ManyProps = hoc(Function_ManyProps);
   boolean1
   boolean2={false}
   number={42}
-  {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+  {...{string1: 'foo', string2: 'bar', number: any as ?number}}
 />;
 
 /* ========================================================================== *\

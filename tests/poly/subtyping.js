@@ -25,7 +25,7 @@
     return g(<T>(y: T): A => x)();
   }
 
-  (coerce('a'): empty);
+  coerce('a') as empty;
   coerce<_, number>('a').toFixed();
 }
 

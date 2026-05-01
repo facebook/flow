@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-(React.Component: Object); // OK
-(React.Component: number); // Error
-('Hello, world!': React.Node); // OK
-({}: React.Node); // Error
-(null: React.Missing); // Error
+React.Component as Object; // OK
+React.Component as number; // Error
+'Hello, world!' as React.Node; // OK
+({} as React.Node); // Error
+null as React.Missing; // Error

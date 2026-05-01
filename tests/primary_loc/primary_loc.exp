@@ -28,17 +28,17 @@ Suppression is missing a code. Please update this suppression to use an error co
       ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:10:2
+Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
 Cannot cast `3` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:10:2
-   10| (3 : T);
-        ^ [1]
+   test.js:10:1
+   10| 3 as T;
+       ^ [1]
 
 References:
    test.js:10:6
-   10| (3 : T);
+   10| 3 as T;
             ^ [2]
 
 

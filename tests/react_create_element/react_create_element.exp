@@ -296,12 +296,12 @@ Cannot call `React.createElement` because: [incompatible-type]
    missing in object type [4]. Exact objects do not accept extra props.
 
    test.js:42:8
-   42| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+   42| (React.createElement(A, {foo: 1, bar: 2}) as ExactReactElement_DEPRECATED<
               ^^^^^^^^^^^^^
 
 References:
    test.js:42:25
-   42| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+   42| (React.createElement(A, {foo: 1, bar: 2}) as ExactReactElement_DEPRECATED<
                                ^^^^^^^^^^^^^^^^ [1]
    lib.js:34:11
    34|   props?: null | void,
@@ -322,12 +322,12 @@ Cannot call `React.createElement` because: [incompatible-type]
    boolean [4].
 
    test.js:46:8
-   46| (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+   46| (React.createElement(B, {foo: 1, bar: 2}) as ExactReactElement_DEPRECATED<
               ^^^^^^^^^^^^^
 
 References:
    test.js:46:25
-   46| (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<
+   46| (React.createElement(B, {foo: 1, bar: 2}) as ExactReactElement_DEPRECATED<
                                ^^^^^^^^^^^^^^^^ [1]
    lib.js:34:11
    34|   props?: null | void,
@@ -670,12 +670,12 @@ Cannot call `React.createElement` because in type argument `_ValidatedProps` > p
 incompatible with number [2]. [incompatible-type]
 
    test.js:99:7
-   99| React.createElement(E, {}, ...(any: Array<number>)); // Error
+   99| React.createElement(E, {}, ...any as Array<number>); // Error
              ^^^^^^^^^^^^^
 
 References:
    test.js:99:1
-   99| React.createElement(E, {}, ...(any: Array<number>)); // Error
+   99| React.createElement(E, {}, ...any as Array<number>); // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:83:44
    83| class E extends React.Component<{children: number}> {}
@@ -706,12 +706,12 @@ Cannot call `React.createElement` because in type argument `_ValidatedProps` > p
 incompatible with number [2]. [incompatible-type]
 
    test.js:102:7
-   102| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
+   102| React.createElement(E, {}, 1, ...any as Array<number>); // Error
               ^^^^^^^^^^^^^
 
 References:
    test.js:102:1
-   102| React.createElement(E, {}, 1, ...(any: Array<number>)); // Error
+   102| React.createElement(E, {}, 1, ...any as Array<number>); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:83:44
     83| class E extends React.Component<{children: number}> {}
@@ -1130,12 +1130,12 @@ Cannot call `React.createElement` because in type argument `_ValidatedProps` > p
 incompatible with number [2]. [incompatible-type]
 
    test.js:180:7
-   180| React.createElement(I, {}, ...(any: Array<number>)); // Error
+   180| React.createElement(I, {}, ...any as Array<number>); // Error
               ^^^^^^^^^^^^^
 
 References:
    test.js:180:1
-   180| React.createElement(I, {}, ...(any: Array<number>)); // Error
+   180| React.createElement(I, {}, ...any as Array<number>); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:171:45
    171| class I extends React.Component<{children?: number}> {}
@@ -1166,12 +1166,12 @@ Cannot call `React.createElement` because in type argument `_ValidatedProps` > p
 incompatible with number [2]. [incompatible-type]
 
    test.js:183:7
-   183| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
+   183| React.createElement(I, {}, 1, ...any as Array<number>); // Error
               ^^^^^^^^^^^^^
 
 References:
    test.js:183:1
-   183| React.createElement(I, {}, 1, ...(any: Array<number>)); // Error
+   183| React.createElement(I, {}, 1, ...any as Array<number>); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:171:45
    171| class I extends React.Component<{children?: number}> {}
@@ -1264,12 +1264,12 @@ Cannot call `React.createElement` because in type argument `_ValidatedProps` > p
 incompatible with number [2]. [incompatible-type]
 
    test.js:194:7
-   194| React.createElement(J, {}, ...(any: Array<number>)); // Error
+   194| React.createElement(J, {}, ...any as Array<number>); // Error
               ^^^^^^^^^^^^^
 
 References:
    test.js:194:1
-   194| React.createElement(J, {}, ...(any: Array<number>)); // Error
+   194| React.createElement(J, {}, ...any as Array<number>); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:185:45
    185| class J extends React.Component<{children: ?number}> {}
@@ -1300,12 +1300,12 @@ Cannot call `React.createElement` because in type argument `_ValidatedProps` > p
 incompatible with number [2]. [incompatible-type]
 
    test.js:197:7
-   197| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
+   197| React.createElement(J, {}, 1, ...any as Array<number>); // Error
               ^^^^^^^^^^^^^
 
 References:
    test.js:197:1
-   197| React.createElement(J, {}, 1, ...(any: Array<number>)); // Error
+   197| React.createElement(J, {}, 1, ...any as Array<number>); // Error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:185:45
    185| class J extends React.Component<{children: ?number}> {}
@@ -1580,22 +1580,22 @@ References:
                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:234:8
+Error ---------------------------------------------------------------------------------------------------- test.js:234:7
 
 Cannot call `React.createElement` because in the first argument: `M` [1] is incompatible with `N` [2].
 [incompatible-type]
 
-   test.js:234:8
-   234| (React.createElement(M): ExactReactElement_DEPRECATED<Class<N>, any>); // Error
-               ^^^^^^^^^^^^^
+   test.js:234:7
+   234| React.createElement(M) as ExactReactElement_DEPRECATED<Class<N>, any>; // Error
+              ^^^^^^^^^^^^^
 
 References:
    test.js:231:7
    231| class M extends React.Component<{}> {}
               ^ [1]
-   test.js:234:61
-   234| (React.createElement(M): ExactReactElement_DEPRECATED<Class<N>, any>); // Error
-                                                                    ^ [2]
+   test.js:234:62
+   234| React.createElement(M) as ExactReactElement_DEPRECATED<Class<N>, any>; // Error
+                                                                     ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:237:7
@@ -1640,12 +1640,12 @@ Cannot call `React.createElement` because in type argument `_ValidatedProps` > p
 an unknown number of elements, so is incompatible with tuple type [2]. [invalid-tuple-arity]
 
    test.js:238:7
-   238| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
+   238| React.createElement(P, null, 1, 2, ...any as Array<number>); // ERROR
               ^^^^^^^^^^^^^
 
 References:
    test.js:238:1
-   238| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
+   238| React.createElement(P, null, 1, 2, ...any as Array<number>); // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:236:34
    236| declare function P(x: {children: [1, 2]}): void;

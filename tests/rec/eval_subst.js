@@ -4,4 +4,4 @@ declare var state: State;
 
 const partialState = { pointers: state.pointers };
 partialState.pointers = partialState.pointers.filter(Boolean);
-(partialState: State);
+partialState as State;

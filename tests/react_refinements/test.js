@@ -11,14 +11,14 @@ if (x != null) {
 }
 if (x != null) {
   <F x={x /* should be ok */}>
-    {(x: number)}
+    {x as number}
     <F x={x = null, 42}/>
-    {(x: number) /* should fail */}
+    {x as number /* should fail */}
   </F>
 }
 
 if (x != null) {
   <F x={x = null, 42}>
-    {(x: number) /* should fail */}
+    {x as number /* should fail */}
   </F>
 }

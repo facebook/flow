@@ -3,7 +3,7 @@ import type {ID} from './test';
 
 opaque type ID2 = number;
 
-(3 : ID); // Error: number ~> ID
+3 as ID; // Error: number ~> ID
 
 function bad1(x: number) : ID { // Error: number ~> ID
     return x;

@@ -1,3 +1,3 @@
-(Promise.resolve(): Promise<number>); // error
+Promise.resolve() as Promise<number>; // error
 
-(Promise.resolve(undefined): Promise<number>); // error
+Promise.resolve(undefined) as Promise<number>; // error

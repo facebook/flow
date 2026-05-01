@@ -1,103 +1,103 @@
-Error ------------------------------------------------------------------------------------------------------ all.js:11:4
+Error ------------------------------------------------------------------------------------------------------ all.js:11:3
 
 Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   all.js:11:4
-     11|   (a: number);  // Error: string ~> number
-            ^
+   all.js:11:3
+     11|   a as number;  // Error: string ~> number
+           ^
 
 References:
    <BUILTINS>/core.js:2348:58
    2348|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
-   all.js:11:7
-     11|   (a: number);  // Error: string ~> number
-               ^^^^^^ [2]
+   all.js:11:8
+     11|   a as number;  // Error: string ~> number
+                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:12:4
+Error ------------------------------------------------------------------------------------------------------ all.js:12:3
 
 Cannot cast `b` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
 
-   all.js:12:4
-     12|   (b: boolean); // Error: number ~> boolean
-            ^
+   all.js:12:3
+     12|   b as boolean; // Error: number ~> boolean
+           ^
 
 References:
    <BUILTINS>/core.js:2348:58
    2348|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
-   all.js:12:7
-     12|   (b: boolean); // Error: number ~> boolean
-               ^^^^^^^ [2]
+   all.js:12:8
+     12|   b as boolean; // Error: number ~> boolean
+                ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:13:4
+Error ------------------------------------------------------------------------------------------------------ all.js:13:3
 
 Cannot cast `c` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   all.js:13:4
-     13|   (c: string);  // Error: boolean ~> string
-            ^
+   all.js:13:3
+     13|   c as string;  // Error: boolean ~> string
+           ^
 
 References:
    <BUILTINS>/core.js:2348:58
    2348|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
-   all.js:13:7
-     13|   (c: string);  // Error: boolean ~> string
-               ^^^^^^ [2]
+   all.js:13:8
+     13|   c as string;  // Error: boolean ~> string
+                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:17:6
+Error ------------------------------------------------------------------------------------------------------ all.js:17:5
 
 Cannot cast `x` to undefined because boolean [1] is incompatible with undefined [2]. [incompatible-type]
 
-   all.js:17:6
-     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-              ^
+   all.js:17:5
+     17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
+             ^
 
 References:
    <BUILTINS>/core.js:2348:58
    2348|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
-   all.js:17:9
-     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-                 ^^^^ [2]
+   all.js:17:10
+     17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
+                  ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:17:6
+Error ------------------------------------------------------------------------------------------------------ all.js:17:5
 
 Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   all.js:17:6
-     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-              ^
+   all.js:17:5
+     17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
+             ^
 
 References:
    <BUILTINS>/core.js:2348:58
    2348|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
-   all.js:17:9
-     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-                 ^^^^ [2]
+   all.js:17:10
+     17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
+                  ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ all.js:17:6
+Error ------------------------------------------------------------------------------------------------------ all.js:17:5
 
 Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   all.js:17:6
-     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-              ^
+   all.js:17:5
+     17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
+             ^
 
 References:
    <BUILTINS>/core.js:2348:58
    2348|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
-   all.js:17:9
-     17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
-                 ^^^^ [2]
+   all.js:17:10
+     17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
+                  ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ all.js:22:9
@@ -166,22 +166,22 @@ References:
                          ^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- allSettled.js:34:8
+Error ----------------------------------------------------------------------------------------------- allSettled.js:34:7
 
 Cannot cast `first.status` to empty because string literal `rejected` [1] is incompatible with empty [2].
 [incompatible-type]
 
-   allSettled.js:34:8
-     34|       (first.status: empty) // Error: 'rejected' case was not covered
-                ^^^^^^^^^^^^
+   allSettled.js:34:7
+     34|       first.status as empty // Error: 'rejected' case was not covered
+               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:2382:12
    2382|   +status: 'rejected',
                     ^^^^^^^^^^ [1]
-   allSettled.js:34:22
-     34|       (first.status: empty) // Error: 'rejected' case was not covered
-                              ^^^^^ [2]
+   allSettled.js:34:23
+     34|       first.status as empty // Error: 'rejected' case was not covered
+                               ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- allSettled.js:40:30
@@ -624,40 +624,40 @@ References:
              ^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- resolve_void.js:1:2
+Error ---------------------------------------------------------------------------------------------- resolve_void.js:1:1
 
 Cannot cast `Promise.resolve()` to `Promise` because in type argument `R` [1]: undefined [2] is incompatible with
 number [3]. [incompatible-type]
 
-   resolve_void.js:1:2
-      1| (Promise.resolve(): Promise<number>); // error
-          ^^^^^^^^^^^^^^^^^ [2]
+   resolve_void.js:1:1
+      1| Promise.resolve() as Promise<number>; // error
+         ^^^^^^^^^^^^^^^^^ [2]
 
 References:
    <BUILTINS>/core.js:2285:24
    2285| declare class Promise<+R = mixed> {
                                 ^ [1]
-   resolve_void.js:1:29
-      1| (Promise.resolve(): Promise<number>); // error
-                                     ^^^^^^ [3]
+   resolve_void.js:1:30
+      1| Promise.resolve() as Promise<number>; // error
+                                      ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- resolve_void.js:3:18
+Error --------------------------------------------------------------------------------------------- resolve_void.js:3:17
 
 Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R` [1]: undefined [2] is incompatible with
 number [3]. [incompatible-type]
 
-   resolve_void.js:3:18
-      3| (Promise.resolve(undefined): Promise<number>); // error
-                          ^^^^^^^^^ [2]
+   resolve_void.js:3:17
+      3| Promise.resolve(undefined) as Promise<number>; // error
+                         ^^^^^^^^^ [2]
 
 References:
    <BUILTINS>/core.js:2285:24
    2285| declare class Promise<+R = mixed> {
                                 ^ [1]
-   resolve_void.js:3:38
-      3| (Promise.resolve(undefined): Promise<number>); // error
-                                              ^^^^^^ [3]
+   resolve_void.js:3:39
+      3| Promise.resolve(undefined) as Promise<number>; // error
+                                               ^^^^^^ [3]
 
 
 

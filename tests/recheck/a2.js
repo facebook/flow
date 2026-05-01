@@ -2,4 +2,4 @@
 
 const foo = require('./a1');
 
-module.exports = (foo(""): string);
+module.exports = foo("") as string;

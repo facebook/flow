@@ -3685,21 +3685,21 @@ References:
                 ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ super_call.js:4:6
+Error ------------------------------------------------------------------------------------------------ super_call.js:4:5
 
 Cannot cast `super()?.a` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
-   super_call.js:4:6
-   4|     (super()?.a: empty); // error
-           ^^^^^^^
+   super_call.js:4:5
+   4|     super()?.a as empty; // error
+          ^^^^^^^
 
 References:
    super_call.js:1:7
    1| class A {}
             ^ [1]
-   super_call.js:4:18
-   4|     (super()?.a: empty); // error
-                       ^^^^^ [2]
+   super_call.js:4:19
+   4|     super()?.a as empty; // error
+                        ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:6:23

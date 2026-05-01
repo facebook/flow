@@ -5,8 +5,8 @@ type Wo = { writeonly p: number };
 type Mn = { -p: number };
 declare var wo: Wo;
 declare var mn: Mn;
-(wo: Mn); // ok
-(mn: Wo); // ok
+wo as Mn; // ok
+mn as Wo; // ok
 
 // 2. Class properties
 class C {
@@ -25,7 +25,7 @@ interface I {
 type Idx = { writeonly [string]: number };
 type IdxMinus = { -[string]: number };
 declare var ix: Idx;
-(ix: IdxMinus); // ok
+ix as IdxMinus; // ok
 
 // 5. Tuples
 type Tup = [writeonly a: string];
@@ -37,7 +37,7 @@ type R = { writeonly: string };
 // 7. writeonly property: reads error, writes succeed
 type W = { writeonly p: number };
 declare var w: W;
-(w.p: number); // error: write-only
+w.p as number; // error: write-only
 w.p = 0; // ok
 
 // 8. Mapped types: +writeonly / writeonly add Negative variance

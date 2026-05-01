@@ -1,3 +1,3 @@
 /* @flow */
 
-(0: string);
+0 as string;
