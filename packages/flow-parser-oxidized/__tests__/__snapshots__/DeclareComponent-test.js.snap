@@ -258,6 +258,9 @@ exports[`DeclareComponent Rest param ESTree 1`] = `
                 "internalSlots": [],
                 "properties": [
                   {
+                    "abstract": false,
+                    "computed": false,
+                    "init": null,
                     "key": {
                       "name": "bar",
                       "optional": false,
@@ -267,8 +270,10 @@ exports[`DeclareComponent Rest param ESTree 1`] = `
                     "kind": "init",
                     "method": false,
                     "optional": false,
+                    "override": false,
                     "proto": false,
                     "static": false,
+                    "tsAccessibility": null,
                     "type": "ObjectTypeProperty",
                     "value": {
                       "type": "StringTypeAnnotation",

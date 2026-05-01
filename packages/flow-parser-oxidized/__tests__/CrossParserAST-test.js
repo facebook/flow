@@ -201,12 +201,18 @@ const KNOWN_TOLERANCES = {
   ExpressionStatement: tol({missing: ['directive']}),
   // #34: PropertyDefinition / MethodDefinition — upstream emits
   // `tsModifiers` (TypeScript-only modifier set, null for non-TS classes);
-  // the Rust serializer doesn't write the slot. Listed as `missing` — the
-  // existing #34 tracking already covers this side of the gap (along with
-  // the over-emits of `override` / `tsAccessibility` that the JS adapter
-  // already strips).
-  PropertyDefinition: tol({missing: ['tsModifiers']}),
-  MethodDefinition: tol({missing: ['tsModifiers']}),
+  // the Rust serializer doesn't write the slot. Listed as `missing`. The
+  // `override` / `tsAccessibility` over-emits used to be stripped by the JS
+  // adapter, but Category-A cleanup removed those strips since the fields
+  // are real OCaml-emitted TS-d.ts-support data.
+  PropertyDefinition: tol({
+    missing: ['tsModifiers'],
+    extra: ['override', 'tsAccessibility'],
+  }),
+  MethodDefinition: tol({
+    missing: ['tsModifiers'],
+    extra: ['override', 'tsAccessibility'],
+  }),
   // #52: ExportSpecifier — the Rust serializer emits `exportKind`
   // (defaulted 'value') on each specifier; upstream does not carry the
   // per-specifier kind (the parent ExportNamedDeclaration's `exportKind`
@@ -216,6 +222,39 @@ const KNOWN_TOLERANCES = {
   // can never be generators; upstream omits the slot, our adapter doesn't
   // strip the false default.
   ArrowFunctionExpression: tol({extra: ['generator']}),
+  // OCaml-ahead fields that the JS adapter previously stripped. Now exposed
+  // as part of the Category-A cleanup (kill the band-aid; OCaml is ahead).
+  // Each is emitted intentionally by OCaml estree_translator.ml and is a
+  // real semantic field (tslib/Flow-only) that upstream hermes-estree
+  // doesn't yet model.
+  ArrayPattern: tol({extra: ['optional']}),
+  ObjectPattern: tol({extra: ['optional']}),
+  ClassDeclaration: tol({extra: ['abstract']}),
+  ClassExpression: tol({extra: ['abstract']}),
+  // PropertyDefinition / MethodDefinition extras already covered above for
+  // tsModifiers (missing); add the over-emit side too:
+  ExportDefaultDeclaration: tol({extra: ['exportKind']}),
+  ComponentDeclaration: tol({extra: ['implicitDeclare']}),
+  DeclareComponent: tol({extra: ['implicitDeclare']}),
+  DeclareNamespace: tol({extra: ['implicitDeclare', 'keyword', 'global']}),
+  DeclareHook: tol({extra: ['implicitDeclare', 'typeAnnotation']}),
+  EnumDeclaration: tol({extra: ['const']}),
+  DeclareEnum: tol({extra: ['const']}),
+  ObjectTypeMappedTypeProperty: tol({extra: ['nameType', 'varianceOp']}),
+  // ObjectTypeProperty / ObjectTypeIndexer — Rust serializer is right per
+  // OCaml's estree_translator.ml emit (line 2411 / 2448). Class-member
+  // fields (`abstract`, `computed`, `init`, `override`, `tsAccessibility`)
+  // are real OCaml-emitted Flow type-grammar data; upstream Hermes doesn't
+  // model them. Same for ObjectTypeIndexer's `optional`.
+  ObjectTypeProperty: tol({
+    extra: ['abstract', 'computed', 'init', 'override', 'tsAccessibility'],
+  }),
+  ObjectTypeIndexer: tol({extra: ['optional']}),
+  // DeclareVariable — Rust serializer is right: OCaml AST shape carries
+  // `declarations: list + kind` (matches VariableDeclaration). Upstream
+  // Hermes flattens to `id + kind`. Both `extra` (declarations) and
+  // `missing` (id) are real cross-parser shape differences.
+  DeclareVariable: tol({extra: ['declarations'], missing: ['id']}),
 };
 
 function deepEqualWithTolerances(

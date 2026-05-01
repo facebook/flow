@@ -68,6 +68,7 @@ const FlowESTreeAndBabelVisitorKeys: VisitorKeys = {
   ClassPrivateMethod: ['key', 'params', 'body', 'returnType', 'typeParameters'],
   ClassProperty: ['key', 'value', 'typeAnnotation', 'variance'],
   ClassPrivateProperty: ['key', 'value', 'typeAnnotation', 'variance'],
+  DeclareVariable: ['id'],
   Directive: ['value'],
   DirectiveLiteral: [],
   ExportNamespaceSpecifier: ['exported'],
@@ -777,6 +778,19 @@ function mapTypeofTypeAnnotation(
 }
 
 function mapDeclareVariable(node: DeclareVariable): DeclareVariable {
+  if (
+    Array.isArray(node.declarations) &&
+    node.declarations.length === 1 &&
+    node.declarations[0] != null &&
+    node.declarations[0].id != null
+  ) {
+    // $FlowExpectedError[cannot-write]
+    // $FlowExpectedError[prop-missing]
+    node.id = node.declarations[0].id;
+    // $FlowExpectedError[cannot-write]
+    // $FlowExpectedError[prop-missing]
+    delete node.declarations;
+  }
   if (node.kind != null) {
     // $FlowExpectedError[cannot-write]
     delete node.kind;
@@ -1169,6 +1183,12 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
         // $FlowExpectedError[cannot-write]
         delete node.typeAnnotation;
       }
+      // OCaml-ahead Flow extension: pattern slots carry an `optional` bit
+      // that upstream patterns don't model. Strip when false for Babel parity.
+      if (node.optional === false) {
+        // $FlowExpectedError[cannot-write]
+        delete node.optional;
+      }
       return node;
     }
     case 'FunctionDeclaration':
@@ -1189,6 +1209,14 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       if (node.typeParameters == null) {
         // $FlowExpectedError[cannot-write]
         delete node.typeParameters;
+      }
+      // Arrow functions cannot be generators, so upstream omits the slot;
+      // OCaml/Rust inherit the FunctionExpression shape and emit
+      // `generator: false`. Strip for Babel parity. Other function kinds
+      // can legitimately carry `generator: true`, so leave them alone.
+      if (node.type === 'ArrowFunctionExpression' && node.generator === false) {
+        // $FlowExpectedError[cannot-write]
+        delete node.generator;
       }
       return node;
     }
@@ -1245,6 +1273,13 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       if (node.typeParameters == null) {
         // $FlowExpectedError[cannot-write]
         delete node.typeParameters;
+      }
+      // `abstract` is a TypeScript-only field upstream Hermes does not emit.
+      // Rust always serializes it (false by default); strip when false for
+      // Babel parity.
+      if (node.abstract === false) {
+        // $FlowExpectedError[cannot-write]
+        delete node.abstract;
       }
       return node;
     }
@@ -1305,6 +1340,96 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       if (node.upperBound != null) {
         // $FlowExpectedError[cannot-write]
         delete node.upperBound;
+      }
+      return node;
+    }
+    case 'ExportSpecifier':
+    case 'ExportDefaultDeclaration': {
+      // Upstream hermes-parser does not surface `exportKind` on either
+      // ExportDefaultDeclaration (only ExportNamedDeclaration carries it)
+      // or per-ExportSpecifier (the parent declaration is the source of
+      // truth). Rust serializer defaults to 'value' on each; strip when
+      // 'value' for Babel parity.
+      if (node.exportKind === 'value') {
+        // $FlowExpectedError[cannot-write]
+        delete node.exportKind;
+      }
+      return node;
+    }
+    case 'DeclareNamespace': {
+      // Upstream emits only `id`+`body`; OCaml/Rust carry the
+      // `implicitDeclare`/`keyword`/`global` discriminants for
+      // upstream-flow_parser fidelity. Strip for Babel parity.
+      // $FlowExpectedError[cannot-write]
+      delete node.implicitDeclare;
+      // $FlowExpectedError[cannot-write]
+      delete node.keyword;
+      // $FlowExpectedError[cannot-write]
+      delete node.global;
+      return node;
+    }
+    case 'DeclareHook': {
+      // Upstream's DeclareHook carries only `type/loc/id`; the Rust
+      // serializer inherits extra declaration slots. Strip for Babel parity.
+      // $FlowExpectedError[cannot-write]
+      delete node.implicitDeclare;
+      // $FlowExpectedError[cannot-write]
+      delete node.typeAnnotation;
+      return node;
+    }
+    case 'ComponentDeclaration':
+    case 'DeclareComponent': {
+      // `implicitDeclare` is a DeclareNamespace-only field upstream; the
+      // Rust serializer over-emits it on Component nodes. Strip for parity.
+      // $FlowExpectedError[cannot-write]
+      delete node.implicitDeclare;
+      return node;
+    }
+    case 'EnumDeclaration':
+    case 'DeclareEnum': {
+      // Upstream Enum nodes have no `const` slot; the Rust serializer
+      // emits the OCaml-aligned discriminant. Strip for Babel parity.
+      // $FlowExpectedError[cannot-write]
+      delete node.const;
+      return node;
+    }
+    case 'ObjectTypeMappedTypeProperty': {
+      // Upstream does not emit `nameType` or `varianceOp`; the Rust
+      // serializer carries those newer wire slots. When absent in source
+      // they should not surface as explicit `null` in Babel output.
+      if (node.nameType == null) {
+        // $FlowExpectedError[cannot-write]
+        delete node.nameType;
+      }
+      if (node.varianceOp == null) {
+        // $FlowExpectedError[cannot-write]
+        delete node.varianceOp;
+      }
+      return node;
+    }
+    case 'ObjectTypeProperty': {
+      // ObjectTypeProperty is a Flow type-grammar node and never carries
+      // the class-member fields `abstract`/`computed`/`init`/`override`/
+      // `tsAccessibility` that the Rust serializer emits when inheriting
+      // the class-member-like base shape. Strip for Babel parity.
+      // $FlowExpectedError[cannot-write]
+      delete node.abstract;
+      // $FlowExpectedError[cannot-write]
+      delete node.computed;
+      // $FlowExpectedError[cannot-write]
+      delete node.init;
+      // $FlowExpectedError[cannot-write]
+      delete node.override;
+      // $FlowExpectedError[cannot-write]
+      delete node.tsAccessibility;
+      return node;
+    }
+    case 'ObjectTypeIndexer': {
+      // Sibling of ObjectTypeProperty — upstream does not carry an
+      // `optional` slot here. Strip when false for Babel parity.
+      if (node.optional === false) {
+        // $FlowExpectedError[cannot-write]
+        delete node.optional;
       }
       return node;
     }

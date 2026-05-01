@@ -35,6 +35,7 @@ describe('Private properties', () => {
        {
          "body": [
            {
+             "abstract": false,
              "body": {
                "body": [
                  {
@@ -42,10 +43,14 @@ describe('Private properties', () => {
                    "decorators": [],
                    "key": {
                      "name": "private",
+                     "optional": false,
                      "type": "PrivateIdentifier",
+                     "typeAnnotation": null,
                    },
                    "kind": "method",
+                   "override": false,
                    "static": false,
+                   "tsAccessibility": null,
                    "type": "MethodDefinition",
                    "value": {
                      "async": false,
@@ -110,6 +115,7 @@ describe('Private properties', () => {
        {
          "body": [
            {
+             "abstract": false,
              "body": {
                "body": [
                  {
@@ -117,10 +123,14 @@ describe('Private properties', () => {
                    "decorators": [],
                    "key": {
                      "name": "private",
+                     "optional": false,
                      "type": "PrivateIdentifier",
+                     "typeAnnotation": null,
                    },
                    "kind": "method",
+                   "override": false,
                    "static": false,
+                   "tsAccessibility": null,
                    "type": "MethodDefinition",
                    "value": {
                      "async": false,
@@ -148,7 +158,9 @@ describe('Private properties', () => {
                      "typeAnnotation": null,
                    },
                    "kind": "constructor",
+                   "override": false,
                    "static": false,
+                   "tsAccessibility": null,
                    "type": "MethodDefinition",
                    "value": {
                      "async": false,
@@ -169,7 +181,9 @@ describe('Private properties', () => {
                                "optional": false,
                                "property": {
                                  "name": "private",
+                                 "optional": false,
                                  "type": "PrivateIdentifier",
+                                 "typeAnnotation": null,
                                },
                                "type": "MemberExpression",
                              },

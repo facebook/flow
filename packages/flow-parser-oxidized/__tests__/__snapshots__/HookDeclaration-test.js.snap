@@ -129,6 +129,7 @@ exports[`HookDeclaration Export default hook ESTree 1`] = `
         "params": [
           {
             "argument": {
+              "optional": false,
               "properties": [
                 {
                   "computed": false,
@@ -172,6 +173,7 @@ exports[`HookDeclaration Export default hook ESTree 1`] = `
         "type": "HookDeclaration",
         "typeParameters": null,
       },
+      "exportKind": "value",
       "type": "ExportDefaultDeclaration",
     },
   ],
@@ -262,6 +264,7 @@ exports[`HookDeclaration Export named hook ESTree 1`] = `
         "params": [
           {
             "argument": {
+              "optional": false,
               "properties": [
                 {
                   "computed": false,
@@ -694,6 +697,7 @@ exports[`HookDeclaration rest params 2 ESTree 1`] = `
       "params": [
         {
           "argument": {
+            "optional": false,
             "properties": [
               {
                 "computed": false,

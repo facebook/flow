@@ -57,6 +57,7 @@ exports[`ComponentDeclaration Basic ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [],
       "rendersType": null,
       "type": "ComponentDeclaration",
@@ -268,6 +269,7 @@ exports[`ComponentDeclaration Complex params ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -420,6 +422,7 @@ exports[`ComponentDeclaration async ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [],
       "rendersType": null,
       "type": "ComponentDeclaration",
@@ -564,6 +567,7 @@ exports[`ComponentDeclaration default params ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -641,7 +645,6 @@ exports[`ComponentDeclaration destructure params Babel 1`] = `
               "shorthand": false,
               "type": "ObjectProperty",
               "value": {
-                "optional": false,
                 "properties": [
                   {
                     "computed": false,
@@ -751,9 +754,11 @@ exports[`ComponentDeclaration destructure params ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
+            "optional": false,
             "properties": [
               {
                 "computed": false,
@@ -952,6 +957,7 @@ exports[`ComponentDeclaration normal and rest params ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -976,6 +982,7 @@ exports[`ComponentDeclaration normal and rest params ESTree 1`] = `
         },
         {
           "argument": {
+            "optional": false,
             "properties": [
               {
                 "computed": false,
@@ -1175,6 +1182,7 @@ exports[`ComponentDeclaration normal and rest params with nested rest ESTree 1`]
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -1199,6 +1207,7 @@ exports[`ComponentDeclaration normal and rest params with nested rest ESTree 1`]
         },
         {
           "argument": {
+            "optional": false,
             "properties": [
               {
                 "computed": false,
@@ -1423,6 +1432,7 @@ exports[`ComponentDeclaration ref and normal params ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -1658,6 +1668,7 @@ exports[`ComponentDeclaration ref and normal params default exported ESTree 1`] 
           "type": "Identifier",
           "typeAnnotation": null,
         },
+        "implicitDeclare": false,
         "params": [
           {
             "local": {
@@ -1713,6 +1724,7 @@ exports[`ComponentDeclaration ref and normal params default exported ESTree 1`] 
         "type": "ComponentDeclaration",
         "typeParameters": null,
       },
+      "exportKind": "value",
       "type": "ExportDefaultDeclaration",
     },
   ],
@@ -1906,6 +1918,7 @@ exports[`ComponentDeclaration ref and normal params named exported ESTree 1`] = 
           "type": "Identifier",
           "typeAnnotation": null,
         },
+        "implicitDeclare": false,
         "params": [
           {
             "local": {
@@ -2157,6 +2170,7 @@ exports[`ComponentDeclaration ref and normal params with hoisting (recursive) ES
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -2627,6 +2641,7 @@ exports[`ComponentDeclaration ref and normal params with hoisting ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -2704,6 +2719,7 @@ exports[`ComponentDeclaration ref and normal params with hoisting ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -3132,6 +3148,7 @@ exports[`ComponentDeclaration ref and normal params within block ESTree 1`] = `
               "type": "Identifier",
               "typeAnnotation": null,
             },
+            "implicitDeclare": false,
             "params": [
               {
                 "local": {
@@ -3229,6 +3246,7 @@ exports[`ComponentDeclaration ref and normal params within block ESTree 1`] = `
               "type": "Identifier",
               "typeAnnotation": null,
             },
+            "implicitDeclare": false,
             "params": [
               {
                 "local": {
@@ -3532,6 +3550,7 @@ exports[`ComponentDeclaration ref and normal params within case ESTree 1`] = `
                 "type": "Identifier",
                 "typeAnnotation": null,
               },
+              "implicitDeclare": false,
               "params": [
                 {
                   "local": {
@@ -3768,6 +3787,7 @@ exports[`ComponentDeclaration ref param ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -3942,6 +3962,7 @@ exports[`ComponentDeclaration ref param renamed ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -4131,9 +4152,11 @@ exports[`ComponentDeclaration ref param renamed destructure ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
+            "optional": false,
             "properties": [
               {
                 "computed": false,
@@ -4331,6 +4354,7 @@ exports[`ComponentDeclaration ref param with default ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -4434,6 +4458,7 @@ exports[`ComponentDeclaration renders maybe type ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [],
       "rendersType": {
         "operator": "renders?",
@@ -4514,6 +4539,7 @@ exports[`ComponentDeclaration renders star type ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [],
       "rendersType": {
         "operator": "renders*",
@@ -4594,6 +4620,7 @@ exports[`ComponentDeclaration renders type (complex) ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [],
       "rendersType": {
         "operator": "renders",
@@ -4689,6 +4716,7 @@ exports[`ComponentDeclaration renders type ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [],
       "rendersType": {
         "operator": "renders",
@@ -4850,6 +4878,7 @@ exports[`ComponentDeclaration rest params ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "argument": {
@@ -4889,9 +4918,11 @@ exports[`ComponentDeclaration rest params ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "argument": {
+            "optional": false,
             "properties": [
               {
                 "computed": false,
@@ -5086,6 +5117,7 @@ exports[`ComponentDeclaration type parameters ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {

@@ -282,11 +282,13 @@ class TypeVisitor extends Visitor {
   }
 
   DeclareVariable(node: DeclareVariable): void {
+    // $FlowExpectedError[prop-missing]
+    const id = node.declarations?.[0]?.id ?? node.id;
     this._referencer
       .currentScope()
-      .defineIdentifier(node.id, new VariableDefinition(node.id, node, node));
+      .defineIdentifier(id, new VariableDefinition(id, node, node));
 
-    this.visit(node.id.typeAnnotation);
+    this.visit(id.typeAnnotation);
   }
 
   FunctionTypeAnnotation(node: FunctionTypeAnnotation): void {

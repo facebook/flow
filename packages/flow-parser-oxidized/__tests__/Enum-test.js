@@ -31,59 +31,60 @@ describe('Enum', () => {
 
   test('ESTree', () => {
     expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-      {
-        "body": [
-          {
-            "body": {
-              "explicitType": false,
-              "hasUnknownMembers": false,
-              "members": [
-                {
-                  "id": {
-                    "name": "A",
-                    "optional": false,
-                    "type": "Identifier",
-                    "typeAnnotation": null,
-                  },
-                  "init": {
-                    "bigint": "1",
-                    "literalType": "bigint",
-                    "raw": "1n",
-                    "type": "Literal",
-                    "value": 1n,
-                  },
-                  "type": "EnumBigIntMember",
-                },
-                {
-                  "id": {
-                    "name": "B",
-                    "optional": false,
-                    "type": "Identifier",
-                    "typeAnnotation": null,
-                  },
-                  "init": {
-                    "bigint": "2",
-                    "literalType": "bigint",
-                    "raw": "2n",
-                    "type": "Literal",
-                    "value": 2n,
-                  },
-                  "type": "EnumBigIntMember",
-                },
-              ],
-              "type": "EnumBigIntBody",
-            },
-            "id": {
-              "name": "T1",
-              "optional": false,
-              "type": "Identifier",
-              "typeAnnotation": null,
-            },
-            "type": "EnumDeclaration",
-          },
-        ],
-        "type": "Program",
-      }
+     {
+       "body": [
+         {
+           "body": {
+             "explicitType": false,
+             "hasUnknownMembers": false,
+             "members": [
+               {
+                 "id": {
+                   "name": "A",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": null,
+                 },
+                 "init": {
+                   "bigint": "1",
+                   "literalType": "bigint",
+                   "raw": "1n",
+                   "type": "Literal",
+                   "value": 1n,
+                 },
+                 "type": "EnumBigIntMember",
+               },
+               {
+                 "id": {
+                   "name": "B",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": null,
+                 },
+                 "init": {
+                   "bigint": "2",
+                   "literalType": "bigint",
+                   "raw": "2n",
+                   "type": "Literal",
+                   "value": 2n,
+                 },
+                 "type": "EnumBigIntMember",
+               },
+             ],
+             "type": "EnumBigIntBody",
+           },
+           "const": false,
+           "id": {
+             "name": "T1",
+             "optional": false,
+             "type": "Identifier",
+             "typeAnnotation": null,
+           },
+           "type": "EnumDeclaration",
+         },
+       ],
+       "type": "Program",
+     }
     `);
     expectEspreeAlignment(testCase);
   });

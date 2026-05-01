@@ -233,7 +233,7 @@ module.exports = {
     'right',
   ],
   DeclareVariable: [
-    'id',
+    'declarations',
   ],
   DeclaredPredicate: [
     'value',

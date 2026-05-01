@@ -33,48 +33,49 @@ describe('DeclareEnum', () => {
 
   test('ESTree', () => {
     expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-      {
-        "body": [
-          {
-            "body": {
-              "explicitType": false,
-              "hasUnknownMembers": false,
-              "members": [
-                {
-                  "id": {
-                    "name": "A",
-                    "optional": false,
-                    "type": "Identifier",
-                    "typeAnnotation": null,
-                  },
-                  "type": "EnumDefaultedMember",
-                },
-                {
-                  "id": {
-                    "name": "B",
-                    "optional": false,
-                    "type": "Identifier",
-                    "typeAnnotation": null,
-                  },
-                  "type": "EnumDefaultedMember",
-                },
-              ],
-              "type": "EnumStringBody",
-            },
-            "id": {
-              "name": "T1",
-              "optional": false,
-              "type": "Identifier",
-              "typeAnnotation": null,
-            },
-            "type": "DeclareEnum",
-          },
-          {
-            "type": "EmptyStatement",
-          },
-        ],
-        "type": "Program",
-      }
+     {
+       "body": [
+         {
+           "body": {
+             "explicitType": false,
+             "hasUnknownMembers": false,
+             "members": [
+               {
+                 "id": {
+                   "name": "A",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": null,
+                 },
+                 "type": "EnumDefaultedMember",
+               },
+               {
+                 "id": {
+                   "name": "B",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": null,
+                 },
+                 "type": "EnumDefaultedMember",
+               },
+             ],
+             "type": "EnumStringBody",
+           },
+           "const": false,
+           "id": {
+             "name": "T1",
+             "optional": false,
+             "type": "Identifier",
+             "typeAnnotation": null,
+           },
+           "type": "DeclareEnum",
+         },
+         {
+           "type": "EmptyStatement",
+         },
+       ],
+       "type": "Program",
+     }
     `);
     expectEspreeAlignment(testCase);
   });

@@ -24,7 +24,6 @@ import * as TransformRecordSyntax from './estree/TransformRecordSyntax';
 import * as StripFlowTypesForBabel from './estree/StripFlowTypesForBabel';
 import * as TransformESTreeToBabel from './babel/TransformESTreeToBabel';
 import * as StripFlowTypes from './estree/StripFlowTypes';
-import {ParserOptionsKeys} from './ParserOptions';
 
 const DEFAULTS = {
   flow: ('detect': 'detect'),
@@ -661,65 +660,6 @@ function applyPerNodeFixups(node, code) {
         node.value = typeof BigInt === 'function' ? BigInt(node.bigint) : null;
       }
       break;
-    case 'ImportSpecifier':
-      // Adapter fixup (HermesASTAdapter.mapImportSpecifier, lines 140-146):
-      // collapse 'value' to null so unannotated specifiers carry
-      // `importKind: null` while `type`/`typeof` specifiers retain their
-      // explicit annotation.
-      if (node.importKind === 'value') {
-        node.importKind = null;
-      }
-      break;
-    case 'ClassDeclaration':
-    case 'ClassExpression':
-      // Adapter fixup (#33 over-emit): `abstract` is a TypeScript-only field
-      // that upstream Hermes does not emit. Rust always serializes it (false
-      // by default). Strip when false to match upstream snapshots.
-      if (node.abstract === false) {
-        delete node.abstract;
-      }
-      break;
-    case 'MethodDefinition':
-      // Adapter fixup (#34 over-emit): `override` and `tsAccessibility` are
-      // TypeScript-only fields not present in Hermes' MethodDefinition shape.
-      // The Rust serializer writes both unconditionally; strip the defaults
-      // (false / null) so the public AST matches upstream. MethodDefinition
-      // also has no `tsModifiers` slot (verified against hermes-parser
-      // 0.35.0 — the slot is PropertyDefinition-only).
-      if (node.override === false) {
-        delete node.override;
-      }
-      if (node.tsAccessibility == null) {
-        delete node.tsAccessibility;
-      }
-      if (node.tsModifiers == null) {
-        delete node.tsModifiers;
-      }
-      break;
-    case 'PropertyDefinition':
-      // Same TS-only-field strip as MethodDefinition (#34); PropertyDefinition
-      // additionally carries `tsAccessibility` and `override`. PropertyDefinition
-      // *does* surface `tsModifiers: null` upstream (verified against
-      // hermes-parser 0.35.0); add the slot when missing so the public AST
-      // matches upstream.
-      if (node.override === false) {
-        delete node.override;
-      }
-      if (node.tsAccessibility == null) {
-        delete node.tsAccessibility;
-      }
-      if (!('tsModifiers' in node)) {
-        node.tsModifiers = null;
-      }
-      break;
-    case 'ArrayPattern':
-      // Adapter fixup (#48 over-emit): `optional` on ArrayPattern is a
-      // Hermes-only Flow extension that the Rust serializer always writes.
-      // Strip the default (false) to match upstream snapshots.
-      if (node.optional === false) {
-        delete node.optional;
-      }
-      break;
     case 'ArrayExpression':
       // Adapter fixup (#10 under-emit): upstream hermes-parser surfaces
       // `trailingComma: boolean` on ArrayExpression (not part of the ESTree
@@ -739,121 +679,6 @@ function applyPerNodeFixups(node, code) {
         node.trailingComma = computeArrayTrailingComma(node, code);
       }
       break;
-    case 'ObjectPattern':
-      // Adapter fixup (#49 over-emit): same as ArrayPattern — `optional` is a
-      // Hermes-only Flow extension; strip when false to match upstream.
-      if (node.optional === false) {
-        delete node.optional;
-      }
-      break;
-    case 'ExportDefaultDeclaration':
-      // Adapter fixup (#49 over-emit): hermes-parser does not surface
-      // `exportKind` on ExportDefaultDeclaration (verified against 0.35.0 —
-      // only `ExportNamedDeclaration` carries it). The Rust serializer
-      // emits the slot defaulted to 'value'; strip when 'value' so the
-      // public AST matches upstream.
-      if (node.exportKind === 'value') {
-        delete node.exportKind;
-      }
-      break;
-    case 'PrivateIdentifier':
-      // Adapter fixup (#38 over-emit): hermes-parser's PrivateIdentifier
-      // (verified against 0.35.0) carries only `type/name` plus loc/range.
-      // The Rust serializer inherits the Identifier shape and emits
-      // `optional` and `typeAnnotation`; strip those when null/false to match
-      // upstream. Note: regular Identifier *does* carry both keys upstream so
-      // is not stripped here — only PrivateIdentifier needs the cleanup.
-      if (node.optional === false) {
-        delete node.optional;
-      }
-      if (node.typeAnnotation == null) {
-        delete node.typeAnnotation;
-      }
-      break;
-    case 'ArrowFunctionExpression':
-      // Adapter fixup (#51 over-emit): arrow functions cannot be generators,
-      // so upstream hermes-parser does not emit the slot. Our serializer
-      // inherits the FunctionExpression shape and writes `generator: false`;
-      // strip when false to match upstream. The Babel snapshots in
-      // ArrowFunctionExpression-test.js also rely on this.
-      if (node.generator === false) {
-        delete node.generator;
-      }
-      break;
-    case 'ExportSpecifier':
-      // Adapter fixup (#52 over-emit): hermes-parser does not surface a
-      // per-specifier `exportKind` — the parent `ExportNamedDeclaration`'s
-      // `exportKind` is the source of truth. The Rust serializer emits
-      // `exportKind: 'value'` defaulted on each specifier; strip it so the
-      // public AST shape matches upstream.
-      if (node.exportKind === 'value') {
-        delete node.exportKind;
-      }
-      break;
-    case 'ObjectTypeProperty':
-      // Adapter fixup (#44 over-emit): ObjectTypeProperty is a Flow type-grammar
-      // node and never carries the class-member fields `abstract`, `computed`,
-      // `init`, `override`, or `tsAccessibility` that the Rust serializer emits
-      // when inheriting the class-member-like base shape. Strip them so the
-      // type-grammar snapshot matches upstream.
-      delete node.abstract;
-      delete node.computed;
-      delete node.init;
-      delete node.override;
-      delete node.tsAccessibility;
-      break;
-    case 'ObjectTypeIndexer':
-      // Adapter fixup (#44 over-emit, sibling of ObjectTypeProperty):
-      // upstream hermes-parser does not carry an `optional` slot on
-      // ObjectTypeIndexer. Strip when false so the public AST shape matches.
-      if (node.optional === false) {
-        delete node.optional;
-      }
-      break;
-    case 'DeclareVariable':
-      // Adapter fixup (#47): the OCaml AST keeps DeclareVariable as a
-      // VariableDeclaration-shaped node (declarations: list, kind: string).
-      // Upstream hermes-parser emits a single `id` (the declarator's id) plus
-      // `kind`. Lift the first declarator's id and drop `declarations`.
-      if (
-        Array.isArray(node.declarations) &&
-        node.declarations.length === 1 &&
-        node.declarations[0] != null &&
-        node.declarations[0].id != null
-      ) {
-        node.id = node.declarations[0].id;
-        delete node.declarations;
-      }
-      break;
-    case 'DeclareNamespace':
-      // Adapter fixup (#32): hermes-parser does not surface `implicitDeclare`,
-      // `keyword`, or `global` on DeclareNamespace (verified against 0.35.0 —
-      // only `id` and `body` are emitted). The Rust serializer carries these
-      // OCaml-aligned discriminants for upstream-flow_parser fidelity; strip
-      // them at the JS adapter layer for hermes-parser parity.
-      delete node.implicitDeclare;
-      delete node.keyword;
-      delete node.global;
-      break;
-    case 'DeclareHook':
-      // Adapter fixup (#54 over-emit): upstream hermes-parser's DeclareHook
-      // carries only `type/loc/id` (verified in
-      // xplat/static_h/tools/hermes-parser/js/hermes-parser/src/HermesParserNodeDeserializers.js).
-      // The Rust serializer inherits extra declaration slots; strip them for
-      // hermes-parser parity.
-      delete node.implicitDeclare;
-      delete node.typeAnnotation;
-      break;
-    case 'ComponentDeclaration':
-      // Adapter fixup (#11 over-emit): `implicitDeclare` is a
-      // DeclareNamespace-only field. Upstream hermes-parser's
-      // `deserializeComponentDeclaration` emits only `type/loc/id/params/body/
-      // typeParameters/rendersType/async` (verified in
-      // xplat/static_h/tools/hermes-parser/js/hermes-parser/src/HermesParserNodeDeserializers.js).
-      // The Rust serializer over-emits the slot; strip it unconditionally for
-      // hermes-parser parity.
-      delete node.implicitDeclare;
-      break;
     case 'BigIntLiteralTypeAnnotation':
       // Adapter fixup (#43): upstream hermes-parser emits `bigint` (the raw
       // numeric string with the trailing `n` and any `_` separators stripped)
@@ -867,15 +692,6 @@ function applyPerNodeFixups(node, code) {
       if (node.bigint != null) {
         node.value = typeof BigInt === 'function' ? BigInt(node.bigint) : null;
       }
-      break;
-    case 'EnumDeclaration':
-    case 'DeclareEnum':
-      // Adapter fixup: upstream hermes-parser's `EnumDeclaration` and
-      // `DeclareEnum` carry only `id` and `body` (verified against
-      // hermes-parser 0.35.0). The Rust serializer emits an additional
-      // `const: bool` discriminant for the OCaml-aligned binary protocol;
-      // strip it for hermes-parser parity.
-      delete node.const;
       break;
     case 'EnumBody':
       // Adapter fixup: the Rust serializer emits a generic `EnumBody` kind
@@ -967,18 +783,6 @@ function applyPerNodeFixups(node, code) {
         delete node.typeParameters;
       }
       break;
-    case 'ObjectTypeMappedTypeProperty':
-      // Adapter fixup (#55 over-emit): upstream hermes-parser does not emit
-      // `nameType` or `varianceOp` on ObjectTypeMappedTypeProperty. The Rust
-      // serializer carries those newer wire slots, but when they are absent in
-      // source they should not surface as explicit `null`s in the public AST.
-      if (node.nameType == null) {
-        delete node.nameType;
-      }
-      if (node.varianceOp == null) {
-        delete node.varianceOp;
-      }
-      break;
     case 'TypeParameter':
       // Adapter fixup (#56): upstream hermes-parser stores `bound` directly as
       // the annotation node (for example NumberTypeAnnotation), while the Rust
@@ -1010,9 +814,3 @@ const Transforms = {
   stripFlowTypes: StripFlowTypes.transformProgram,
 };
 export {Transforms};
-
-// Re-export ParserOptionsKeys explicitly. `export * from './ParserOptions'`
-// above already covers it, but a named re-export is more discoverable for
-// downstream consumers and matches upstream's pattern of making the public API
-// surface explicit at the bottom of the file.
-export {ParserOptionsKeys};

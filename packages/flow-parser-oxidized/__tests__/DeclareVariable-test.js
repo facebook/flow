@@ -35,26 +35,32 @@ describe('DeclareVariable', () => {
 
     test('ESTree', () => {
       expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-        {
-          "body": [
-            {
-              "id": {
-                "name": "T1",
-                "optional": false,
-                "type": "Identifier",
-                "typeAnnotation": {
-                  "type": "TypeAnnotation",
-                  "typeAnnotation": {
-                    "type": "NumberTypeAnnotation",
-                  },
-                },
-              },
-              "kind": "var",
-              "type": "DeclareVariable",
-            },
-          ],
-          "type": "Program",
-        }
+       {
+         "body": [
+           {
+             "declarations": [
+               {
+                 "id": {
+                   "name": "T1",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": {
+                     "type": "TypeAnnotation",
+                     "typeAnnotation": {
+                       "type": "NumberTypeAnnotation",
+                     },
+                   },
+                 },
+                 "init": null,
+                 "type": "VariableDeclarator",
+               },
+             ],
+             "kind": "var",
+             "type": "DeclareVariable",
+           },
+         ],
+         "type": "Program",
+       }
       `);
       expectEspreeAlignment(testCase);
     });
@@ -102,26 +108,32 @@ describe('DeclareVariable', () => {
 
     test('ESTree', () => {
       expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-        {
-          "body": [
-            {
-              "id": {
-                "name": "T1",
-                "optional": false,
-                "type": "Identifier",
-                "typeAnnotation": {
-                  "type": "TypeAnnotation",
-                  "typeAnnotation": {
-                    "type": "NumberTypeAnnotation",
-                  },
-                },
-              },
-              "kind": "let",
-              "type": "DeclareVariable",
-            },
-          ],
-          "type": "Program",
-        }
+       {
+         "body": [
+           {
+             "declarations": [
+               {
+                 "id": {
+                   "name": "T1",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": {
+                     "type": "TypeAnnotation",
+                     "typeAnnotation": {
+                       "type": "NumberTypeAnnotation",
+                     },
+                   },
+                 },
+                 "init": null,
+                 "type": "VariableDeclarator",
+               },
+             ],
+             "kind": "let",
+             "type": "DeclareVariable",
+           },
+         ],
+         "type": "Program",
+       }
       `);
       expectEspreeAlignment(testCase);
     });
@@ -169,26 +181,32 @@ describe('DeclareVariable', () => {
 
     test('ESTree', () => {
       expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-        {
-          "body": [
-            {
-              "id": {
-                "name": "T1",
-                "optional": false,
-                "type": "Identifier",
-                "typeAnnotation": {
-                  "type": "TypeAnnotation",
-                  "typeAnnotation": {
-                    "type": "NumberTypeAnnotation",
-                  },
-                },
-              },
-              "kind": "const",
-              "type": "DeclareVariable",
-            },
-          ],
-          "type": "Program",
-        }
+       {
+         "body": [
+           {
+             "declarations": [
+               {
+                 "id": {
+                   "name": "T1",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": {
+                     "type": "TypeAnnotation",
+                     "typeAnnotation": {
+                       "type": "NumberTypeAnnotation",
+                     },
+                   },
+                 },
+                 "init": null,
+                 "type": "VariableDeclarator",
+               },
+             ],
+             "kind": "const",
+             "type": "DeclareVariable",
+           },
+         ],
+         "type": "Program",
+       }
       `);
       expectEspreeAlignment(testCase);
     });

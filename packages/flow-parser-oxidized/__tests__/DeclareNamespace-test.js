@@ -33,43 +33,52 @@ describe('DeclareNamespace', () => {
 
   test('ESTree', () => {
     expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-      {
-        "body": [
-          {
-            "body": {
-              "body": [
-                {
-                  "id": {
-                    "name": "foo",
-                    "optional": false,
-                    "type": "Identifier",
-                    "typeAnnotation": {
-                      "type": "TypeAnnotation",
-                      "typeAnnotation": {
-                        "type": "StringTypeAnnotation",
-                      },
-                    },
-                  },
-                  "kind": "const",
-                  "type": "DeclareVariable",
-                },
-              ],
-              "type": "BlockStatement",
-            },
-            "id": {
-              "name": "NS",
-              "optional": false,
-              "type": "Identifier",
-              "typeAnnotation": null,
-            },
-            "type": "DeclareNamespace",
-          },
-          {
-            "type": "EmptyStatement",
-          },
-        ],
-        "type": "Program",
-      }
+     {
+       "body": [
+         {
+           "body": {
+             "body": [
+               {
+                 "declarations": [
+                   {
+                     "id": {
+                       "name": "foo",
+                       "optional": false,
+                       "type": "Identifier",
+                       "typeAnnotation": {
+                         "type": "TypeAnnotation",
+                         "typeAnnotation": {
+                           "type": "StringTypeAnnotation",
+                         },
+                       },
+                     },
+                     "init": null,
+                     "type": "VariableDeclarator",
+                   },
+                 ],
+                 "kind": "const",
+                 "type": "DeclareVariable",
+               },
+             ],
+             "type": "BlockStatement",
+           },
+           "global": false,
+           "id": {
+             "name": "NS",
+             "optional": false,
+             "type": "Identifier",
+             "typeAnnotation": null,
+           },
+           "implicitDeclare": false,
+           "keyword": "namespace",
+           "type": "DeclareNamespace",
+         },
+         {
+           "type": "EmptyStatement",
+         },
+       ],
+       "type": "Program",
+     }
     `);
     expectEspreeAlignment(testCase);
   });

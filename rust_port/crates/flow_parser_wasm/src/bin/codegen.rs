@@ -575,15 +575,6 @@ fn extra_visitor_excludes(node: &str) -> &'static [&'static str] {
         // visitor keys even though the field exists on the AST.
         "DeclareFunction" => &["typeAnnotation"],
         "DeclareHook" => &["typeAnnotation"],
-        // Upstream's DeclareVariable visitor keys are `['id']`; our schema
-        // models DeclareVariable as a wrapper around a VariableDeclaration
-        // (with a `declarations: NodeList`). The team-lead-review marker
-        // below records the gap — the JS-side fixup must surface a single
-        // `id` field for ESTree consumers, otherwise visitor traversal
-        // misses the declared identifier.
-        // TODO(team-lead-review): confirm DeclareVariable adapter fixup
-        // exposes `id` instead of `declarations` for ESTree consumers.
-        "DeclareVariable" => &["declarations"],
         // Hermes-only fields: not present in upstream visitor traversal.
         "ObjectTypeMappedTypeProperty" => &["nameType"],
         "ObjectTypeProperty" => &["init"],
@@ -604,8 +595,7 @@ fn extra_visitor_inserts(node: &str) -> &'static [&'static str] {
         // Schema now includes `rest` natively; this entry pins the upstream
         // order so the generated visitor keys list matches byte-for-byte.
         "DeclareComponent" => &["id", "params", "rest", "typeParameters", "rendersType"],
-        // Upstream DeclareVariable visitor keys are `['id']`.
-        "DeclareVariable" => &["id"],
+        // (No DeclareVariable insert — see comment in extra_visitor_excludes.)
         _ => &[],
     }
 }

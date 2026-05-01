@@ -40,6 +40,7 @@ describe('PropertyDefinition', () => {
      {
        "body": [
          {
+           "abstract": false,
            "body": {
              "body": [
                {
@@ -53,8 +54,9 @@ describe('PropertyDefinition', () => {
                    "typeAnnotation": null,
                  },
                  "optional": false,
+                 "override": false,
                  "static": false,
-                 "tsModifiers": null,
+                 "tsAccessibility": null,
                  "type": "PropertyDefinition",
                  "typeAnnotation": null,
                  "value": null,
@@ -71,8 +73,9 @@ describe('PropertyDefinition', () => {
                    "typeAnnotation": null,
                  },
                  "optional": false,
+                 "override": false,
                  "static": false,
-                 "tsModifiers": null,
+                 "tsAccessibility": null,
                  "type": "PropertyDefinition",
                  "typeAnnotation": null,
                  "value": {
@@ -94,8 +97,9 @@ describe('PropertyDefinition', () => {
                    "typeAnnotation": null,
                  },
                  "optional": false,
+                 "override": false,
                  "static": true,
-                 "tsModifiers": null,
+                 "tsAccessibility": null,
                  "type": "PropertyDefinition",
                  "typeAnnotation": null,
                  "value": {
@@ -156,6 +160,7 @@ describe('PropertyDefinition', () => {
          {
            "body": [
              {
+               "abstract": false,
                "body": {
                  "body": [
                    {
@@ -169,8 +174,9 @@ describe('PropertyDefinition', () => {
                        "typeAnnotation": null,
                      },
                      "optional": false,
+                     "override": false,
                      "static": false,
-                     "tsModifiers": null,
+                     "tsAccessibility": null,
                      "type": "PropertyDefinition",
                      "typeAnnotation": {
                        "type": "TypeAnnotation",
@@ -245,6 +251,7 @@ describe('PropertyDefinition', () => {
          {
            "body": [
              {
+               "abstract": false,
                "body": {
                  "body": [
                    {
@@ -258,8 +265,9 @@ describe('PropertyDefinition', () => {
                        "typeAnnotation": null,
                      },
                      "optional": false,
+                     "override": false,
                      "static": false,
-                     "tsModifiers": null,
+                     "tsAccessibility": null,
                      "type": "PropertyDefinition",
                      "typeAnnotation": {
                        "type": "TypeAnnotation",
@@ -319,114 +327,116 @@ describe('PropertyDefinition', () => {
 
       test('ESTree', () => {
         expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-{
-  "body": [
-    {
-      "body": {
-        "body": [
-          {
-            "computed": false,
-            "declare": false,
-            "decorators": [],
-            "key": {
-              "name": "x",
-              "optional": false,
-              "type": "Identifier",
-              "typeAnnotation": null,
-            },
-            "optional": false,
-            "static": false,
-            "tsModifiers": null,
-            "type": "PropertyDefinition",
-            "typeAnnotation": {
-              "type": "TypeAnnotation",
-              "typeAnnotation": {
-                "type": "NumberTypeAnnotation",
-              },
-            },
-            "value": null,
-            "variance": {
-              "kind": "readonly",
-              "type": "Variance",
-            },
-          },
-        ],
-        "type": "ClassBody",
-      },
-      "decorators": [],
-      "id": {
-        "name": "C",
-        "optional": false,
-        "type": "Identifier",
-        "typeAnnotation": null,
-      },
-      "implements": [],
-      "superClass": null,
-      "superTypeArguments": null,
-      "type": "ClassDeclaration",
-      "typeParameters": null,
-    },
-  ],
-  "type": "Program",
-}
-`);
+         {
+           "body": [
+             {
+               "abstract": false,
+               "body": {
+                 "body": [
+                   {
+                     "computed": false,
+                     "declare": false,
+                     "decorators": [],
+                     "key": {
+                       "name": "x",
+                       "optional": false,
+                       "type": "Identifier",
+                       "typeAnnotation": null,
+                     },
+                     "optional": false,
+                     "override": false,
+                     "static": false,
+                     "tsAccessibility": null,
+                     "type": "PropertyDefinition",
+                     "typeAnnotation": {
+                       "type": "TypeAnnotation",
+                       "typeAnnotation": {
+                         "type": "NumberTypeAnnotation",
+                       },
+                     },
+                     "value": null,
+                     "variance": {
+                       "kind": "readonly",
+                       "type": "Variance",
+                     },
+                   },
+                 ],
+                 "type": "ClassBody",
+               },
+               "decorators": [],
+               "id": {
+                 "name": "C",
+                 "optional": false,
+                 "type": "Identifier",
+                 "typeAnnotation": null,
+               },
+               "implements": [],
+               "superClass": null,
+               "superTypeArguments": null,
+               "type": "ClassDeclaration",
+               "typeParameters": null,
+             },
+           ],
+           "type": "Program",
+         }
+        `);
         expectEspreeAlignment(testCase);
       });
 
       test('Babel', () => {
         expect(parseForSnapshot(testCase.code, {babel: true}))
           .toMatchInlineSnapshot(`
-{
-  "body": [
-    {
-      "body": {
-        "body": [
-          {
-            "computed": false,
-            "key": {
-              "name": "x",
-              "type": "Identifier",
-            },
-            "static": false,
-            "type": "ClassProperty",
-            "typeAnnotation": {
-              "type": "TypeAnnotation",
-              "typeAnnotation": {
-                "type": "NumberTypeAnnotation",
-              },
-            },
-            "value": null,
-            "variance": {
-              "end": 41,
-              "kind": "readonly",
-              "loc": {
-                "end": {
-                  "column": 20,
-                  "line": 3,
-                },
-                "start": {
-                  "column": 12,
-                  "line": 3,
-                },
-              },
-              "start": 33,
-              "type": "Variance",
-            },
-          },
-        ],
-        "type": "ClassBody",
-      },
-      "id": {
-        "name": "C",
-        "type": "Identifier",
-      },
-      "superClass": null,
-      "type": "ClassDeclaration",
-    },
-  ],
-  "type": "Program",
-}
-`);
+         {
+           "body": [
+             {
+               "body": {
+                 "body": [
+                   {
+                     "computed": false,
+                     "key": {
+                       "name": "x",
+                       "type": "Identifier",
+                     },
+                     "static": false,
+                     "type": "ClassProperty",
+                     "typeAnnotation": {
+                       "type": "TypeAnnotation",
+                       "typeAnnotation": {
+                         "type": "NumberTypeAnnotation",
+                       },
+                     },
+                     "value": null,
+                     "variance": {
+                       "end": 41,
+                       "kind": "readonly",
+                       "loc": {
+                         "end": {
+                           "column": 20,
+                           "line": 3,
+                         },
+                         "start": {
+                           "column": 12,
+                           "line": 3,
+                         },
+                       },
+                       "start": 33,
+                       "type": "Variance",
+                     },
+                   },
+                 ],
+                 "type": "ClassBody",
+               },
+               "id": {
+                 "name": "C",
+                 "type": "Identifier",
+               },
+               "superClass": null,
+               "type": "ClassDeclaration",
+             },
+           ],
+           "type": "Program",
+         }
+        `);
         expectBabelAlignment(testCase);
       });
     });
