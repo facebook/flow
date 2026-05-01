@@ -6,11 +6,11 @@
  */
 
 use std::io;
+use std::io::Read;
+use std::io::Write;
 use std::net::TcpStream;
 use std::sync::Arc;
 use std::sync::Mutex;
-
-use bincode::error::EncodeError;
 
 use crate::lsp_prot;
 use crate::monitor_prot;
@@ -105,17 +105,57 @@ pub fn state() -> StateKind {
     }
 }
 
+// Cap any single inbound frame at 64 MiB. Mirrors `MAX_MESSAGE_BYTES` in
+// `flow_server_env::server_socket_rpc` (we can't share the constant because
+// `flow_monitor_rpc` is a lower layer than `flow_server_env`).
+const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
+
 // Read a single message from the monitor.
+//
+// Length-prefixed JSON, not bincode: `MonitorToServerMessage` /
+// `ServerToMonitorMessage` carry `RequestWithMetadata` which embeds
+// `lsp_types` request/response structs that use `#[serde(flatten)]`.
+// bincode rejects flatten with `Serde(SequenceMustHaveLength)`.
 pub fn read() -> Result<monitor_prot::MonitorToServerMessage, MonitorError> {
     with_infd(
         || Err(MonitorError::Disabled),
         |infd| {
             flow_parser::loc::with_full_source_serde(|| {
-                bincode::serde::decode_from_std_read(infd, bincode::config::legacy())
+                receive_message::<_, monitor_prot::MonitorToServerMessage>(infd)
                     .map_err(|_| MonitorError::MonitorDied)
             })
         },
     )
+}
+
+fn receive_message<R: Read, T: for<'de> serde::Deserialize<'de>>(
+    reader: &mut R,
+) -> std::io::Result<T> {
+    let mut len_buf = [0u8; 4];
+    reader.read_exact(&mut len_buf)?;
+    let len = u32::from_be_bytes(len_buf) as usize;
+    if len > MAX_FRAME_BYTES {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!(
+                "RPC frame too large: {} bytes exceeds limit {}",
+                len, MAX_FRAME_BYTES
+            ),
+        ));
+    }
+    let mut buf = vec![0u8; len];
+    reader.read_exact(&mut buf)?;
+    serde_json::from_slice(&buf)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+}
+
+fn send_message<W: Write, T: serde::Serialize>(writer: &mut W, msg: &T) -> std::io::Result<()> {
+    let json = serde_json::to_vec(msg)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    let len = json.len() as u32;
+    writer.write_all(&len.to_be_bytes())?;
+    writer.write_all(&json)?;
+    writer.flush()
 }
 
 // Sends a message to the monitor.
@@ -129,19 +169,11 @@ fn send(msg: monitor_prot::ServerToMonitorMessage) {
     with_outfd(
         || {},
         |outfd| {
-            if let Err(e) = flow_parser::loc::with_full_source_serde(|| {
-                bincode::serde::encode_into_std_write(&msg, outfd, bincode::config::legacy())
-            }) {
-                match e {
-                    EncodeError::Io {
-                        inner: io_err,
-                        index: _,
-                    } if io_err.kind() == io::ErrorKind::BrokenPipe => {
-                        panic!("Monitor_died (EPIPE)");
-                    }
-                    _ => {
-                        log::error!("MonitorRPC.send: write failed: {}", e);
-                    }
+            if let Err(e) = flow_parser::loc::with_full_source_serde(|| send_message(outfd, &msg)) {
+                if e.kind() == io::ErrorKind::BrokenPipe {
+                    panic!("Monitor_died (EPIPE)");
+                } else {
+                    log::error!("MonitorRPC.send: write failed: {}", e);
                 }
             }
         },

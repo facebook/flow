@@ -452,6 +452,7 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
 
     fn map_variable_declarator(
         &mut self,
+        kind: ast::VariableKind,
         decl: &'ast statement::variable::Declarator<Loc, Loc>,
     ) -> statement::variable::Declarator<Loc, Loc> {
         match &decl.id {
@@ -488,7 +489,7 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
                     }
                 }
             }
-            _ => ast_visitor::map_variable_declarator_default(self, decl),
+            _ => ast_visitor::map_variable_declarator_default(self, kind, decl),
         }
     }
 

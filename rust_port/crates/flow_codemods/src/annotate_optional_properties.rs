@@ -510,7 +510,7 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
 
     pub fn variable_declarator(
         &mut self,
-        _kind: ast::VariableKind,
+        kind: ast::VariableKind,
         decl: ast::statement::variable::Declarator<Loc, Loc>,
     ) -> ast::statement::variable::Declarator<Loc, Loc> {
         let loc = decl.loc.clone();
@@ -526,7 +526,7 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
                 let oloc = init_expr.loc().clone();
                 let obj_props = self.get_props_for_obj(oloc.clone());
                 if obj_props.is_empty() {
-                    flow_parser::ast_visitor::map_variable_declarator_default(self, &decl)
+                    flow_parser::ast_visitor::map_variable_declarator_default(self, kind, &decl)
                 } else {
                     let id = match &id {
                         ast::pattern::Pattern::Identifier { loc: ploc, inner }
@@ -585,7 +585,7 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
                     ast::statement::variable::Declarator { loc, id, init }
                 }
             }
-            _ => flow_parser::ast_visitor::map_variable_declarator_default(self, &decl),
+            _ => flow_parser::ast_visitor::map_variable_declarator_default(self, kind, &decl),
         }
     }
 
@@ -658,8 +658,9 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateOptionalPropertiesMapper<'
 
     fn map_variable_declarator(
         &mut self,
+        kind: ast::VariableKind,
         decl: &'ast ast::statement::variable::Declarator<Loc, Loc>,
     ) -> ast::statement::variable::Declarator<Loc, Loc> {
-        self.variable_declarator(ast::VariableKind::Var, decl.clone())
+        self.variable_declarator(kind, decl.clone())
     }
 }

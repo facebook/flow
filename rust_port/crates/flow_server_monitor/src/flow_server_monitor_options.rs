@@ -66,6 +66,10 @@ pub struct MonitorOptions {
     pub server_log_file: String,
     // The server's options
     pub server_options: flow_common::options::Options,
+    // CLI-only overrides not reflected in `server_options` but needed when the
+    // monitor spawns the server child (so `make_options` can re-derive
+    // file_options, etc., faithfully).
+    pub cli_overrides: flow_common::cli_overrides::CliOverrides,
     // The explicit lazy-mode CLI override, if one was provided.
     pub lazy_mode: Option<String>,
     // Whether bundled flowlib should be disabled when the monitor spawns servers.

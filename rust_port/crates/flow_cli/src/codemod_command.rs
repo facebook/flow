@@ -206,51 +206,15 @@ pub(crate) fn prepare_codemod(
         &flowconfig_path.to_string_lossy(),
         !ignore_version,
     );
-    let mut options = command_utils::make_options(
-        flowconfig,
-        flowconfig_hash,
+    let options = command_utils::make_options(
         flowconfig_name,
+        flowconfig_hash,
+        flowconfig,
+        Some(flow_config::LazyMode::Lazy),
         root.clone(),
-        command_utils::get_temp_dir(&options_flags.temp_dir),
-        options_flags.no_flowlib,
-        command_utils::MakeOptionsOverrides {
-            all: if args.contains_key("--all") {
-                Some(options_flags.all)
-            } else {
-                None
-            },
-            debug: options_flags.debug,
-            distributed: options_flags.distributed,
-            estimate_recheck_time: options_flags.estimate_recheck_time,
-            flowconfig_flags: Some(options_flags.flowconfig_flags.clone()),
-            lazy_mode: Some(flow_config::LazyMode::Lazy),
-            include_warnings: options_flags.include_warnings,
-            max_warnings: options_flags.max_warnings,
-            merge_timeout: options_flags.merge_timeout,
-            munge_underscore_members: options_flags.munge_underscore_members,
-            no_autoimports: options_flags.no_autoimports,
-            profile: Some(options_flags.profile),
-            quiet: options_flags.quiet,
-            saved_state_fetcher: saved_state_options_flags.saved_state_fetcher,
-            saved_state_force_recheck: Some(saved_state_options_flags.saved_state_force_recheck),
-            saved_state_no_fallback: Some(saved_state_options_flags.saved_state_no_fallback),
-            saved_state_skip_version_check: Some(
-                saved_state_options_flags.saved_state_skip_version_check,
-            ),
-            saved_state_verify: Some(saved_state_options_flags.saved_state_verify),
-            slow_to_check_logging: Some(options_flags.slow_to_check_logging.clone()),
-            strip_root: options_flags.strip_root,
-            verbose: options_flags.verbose.clone(),
-            vpn_less: options_flags.vpn_less,
-            ..Default::default()
-        },
+        options_flags,
+        saved_state_options_flags,
     );
-    options.strip_root = options_flags.strip_root;
-    options.quiet = options_flags.quiet;
-    options.debug = options_flags.debug;
-    if let Some(max_workers) = options_flags.max_workers {
-        options.max_workers = max_workers;
-    }
 
     let roots = command_utils::expand_file_list(&filenames, Some(&options.file_options))
         .into_iter()

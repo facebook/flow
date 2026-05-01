@@ -417,6 +417,7 @@ fn haste_package_path(
                 None
             } else {
                 let package_dir = package_path_parts.join(std::path::MAIN_SEPARATOR_STR);
+                let acc: Vec<String> = acc.into_iter().rev().collect();
                 Some(
                     match main_of_package(&*module_system_info.get_package_info, &package_dir) {
                         Some(main) if path_matches(&acc.join("/"), main.as_ref()) => {
@@ -467,7 +468,7 @@ pub fn from_of_source(
                     haste_package_path(
                         module_system_info,
                         src_dir,
-                        files::chop_flow_ext(from).as_str(),
+                        &files::chop_flow_ext(from).to_absolute(),
                     )
                 }),
                 None => None,

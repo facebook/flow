@@ -20,18 +20,17 @@ use crate::command_spec::arg_spec;
 use crate::command_utils;
 
 fn spec() -> command_spec::Spec {
-    let spec = command_utils::add_profile_flag(command_utils::add_json_flags(
-        command_spec::Spec::new(
-            "unstable-dump-impl-deps",
-            "Outputs the implementation dependency graph as JSON",
-            command_spec::Visibility::Internal,
-            format!(
-                "Usage: {} dump-impl-deps [OPTION]... [ROOT]\n\nOutputs the implementation dependency graph as JSON to stdout.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n",
-                command_utils::exe_name(),
-            ),
+    let spec = command_utils::add_json_flags(command_spec::Spec::new(
+        "unstable-dump-impl-deps",
+        "Outputs the implementation dependency graph as JSON",
+        command_spec::Visibility::Internal,
+        format!(
+            "Usage: {} dump-impl-deps [OPTION]... [ROOT]\n\nOutputs the implementation dependency graph as JSON to stdout.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n",
+            command_utils::exe_name(),
         ),
     ));
     let spec = command_utils::add_base_flags(spec);
+    let spec = command_utils::add_options_flags(spec);
     let spec = command_utils::add_shm_flags(spec);
     let spec = command_utils::add_ignore_version_flag(spec);
     let spec = command_utils::add_from_flag(spec);
@@ -63,8 +62,8 @@ fn graph_to_json(
 fn main(args: &arg_spec::Values) {
     let base_flags = command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;
+    let options_flags = command_utils::get_options_flags(args);
     let ignore_version = command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap();
-    let profile = command_utils::get_profile_flag(args);
     let root_arg =
         command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap();
 
@@ -76,19 +75,21 @@ fn main(args: &arg_spec::Values) {
     if !ignore_version {
         command_utils::assert_version(&flowconfig);
     }
+    let saved_state_options_flags = command_utils::SavedStateFlags {
+        saved_state_fetcher: Some(flow_common::options::SavedStateFetcher::DummyFetcher),
+        saved_state_force_recheck: false,
+        saved_state_no_fallback: false,
+        saved_state_skip_version_check: false,
+        saved_state_verify: false,
+    };
     let options = Arc::new(command_utils::make_options(
-        flowconfig,
-        flowconfig_hash,
         flowconfig_name.clone(),
+        flowconfig_hash,
+        flowconfig,
+        Some(flow_config::LazyMode::NonLazy),
         root.clone(),
-        std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned()),
-        false,
-        command_utils::MakeOptionsOverrides {
-            lazy_mode: Some(flow_config::LazyMode::NonLazy),
-            profile: Some(profile),
-            saved_state_fetcher: Some(flow_common::options::SavedStateFetcher::DummyFetcher),
-            ..Default::default()
-        },
+        options_flags,
+        saved_state_options_flags,
     ));
     flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
     // Disable logging to keep stdout clean for JSON output

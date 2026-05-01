@@ -8,6 +8,7 @@
 #![feature(box_patterns)]
 
 pub mod bitset;
+pub mod cli_overrides;
 pub mod docblock;
 pub mod enclosing_context;
 pub mod files;

@@ -30,7 +30,6 @@ use flow_server_env::lsp_prot::LspId;
 use flow_server_env::lsp_prot::Metadata;
 use flow_server_env::lsp_prot::UriMap;
 use flow_server_env::server_prot;
-use flow_server_env::server_socket_rpc;
 use flow_server_env::server_status;
 use flow_server_env::socket_handshake;
 use lsp_types::MessageType;
@@ -107,6 +106,7 @@ pub type WrappedMap<V> = HashMap<WrappedId, V>;
 pub struct ServerConn {
     pub client_id: lsp_prot::ClientId,
     pub stream: Mutex<TcpStream>,
+    pub incoming: Mutex<Receiver<io::Result<lsp_prot::MessageFromServer>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -749,7 +749,7 @@ fn parse_lsp_request(
                 .and_then(|params| params.get("capabilities"))
                 .and_then(|capabilities| capabilities.get("window"))
                 .and_then(|window| window.get("status"))
-                .and_then(|status| status.as_bool())
+                .map(|status| status.is_object())
             {
                 match initialize_params.capabilities.experimental.as_mut() {
                     Some(serde_json::Value::Object(map)) => {
@@ -765,7 +765,7 @@ fn parse_lsp_request(
                 .and_then(|params| params.get("capabilities"))
                 .and_then(|capabilities| capabilities.get("telemetry"))
                 .and_then(|telemetry| telemetry.get("connectionStatus"))
-                .and_then(|status| status.as_bool())
+                .map(|connection_status| connection_status.is_object())
             {
                 match initialize_params.capabilities.experimental.as_mut() {
                     Some(serde_json::Value::Object(map)) => {
@@ -794,7 +794,18 @@ fn parse_lsp_request(
             lsp_mapper::LspRequest::DocumentSymbolRequest(from_json(params)?)
         }
         "textDocument/references" => {
-            lsp_mapper::LspRequest::FindReferencesRequest(from_json(params)?)
+            let mut params_obj = match params {
+                Some(serde_json::Value::Object(map)) => map.clone(),
+                _ => serde_json::Map::new(),
+            };
+            params_obj.entry("context".to_string()).or_insert_with(|| {
+                serde_json::json!({
+                    "includeDeclaration": true,
+                    "includeIndirectReferences": false,
+                })
+            });
+            let synthesized = serde_json::Value::Object(params_obj);
+            lsp_mapper::LspRequest::FindReferencesRequest(from_json(Some(&synthesized))?)
         }
         "textDocument/prepareRename" => {
             lsp_mapper::LspRequest::PrepareRenameRequest(from_json(params)?)
@@ -824,12 +835,35 @@ fn parse_lsp_request(
         "textDocument/linkedEditingRange" => {
             lsp_mapper::LspRequest::LinkedEditingRangeRequest(from_json(params)?)
         }
+        "textDocument/typeCoverage" => {
+            lsp_mapper::LspRequest::TypeCoverageRequest(from_json(params)?)
+        }
+        "textDocument/diagnostic" => {
+            lsp_mapper::LspRequest::TextDocumentDiagnosticsRequest(from_json(params)?)
+        }
+        "flow/autoCloseJsx" => lsp_mapper::LspRequest::AutoCloseJsxRequest(from_json(params)?),
+        "flow/prepareDocumentPaste" => {
+            lsp_mapper::LspRequest::PrepareDocumentPasteRequest(from_json(params)?)
+        }
+        "flow/provideDocumentPasteEdits" => {
+            lsp_mapper::LspRequest::ProvideDocumentPasteRequest(from_json(params)?)
+        }
+        "flow/renameFileImports" => {
+            lsp_mapper::LspRequest::RenameFileImportsRequest(from_json(params)?)
+        }
+        "llm/context" => lsp_mapper::LspRequest::LLMContextRequest(from_json(params)?),
+        "workspace/willRenameFiles" => {
+            lsp_mapper::LspRequest::WillRenameFilesRequest(from_json(params)?)
+        }
         "telemetry/rage" => lsp_mapper::LspRequest::RageRequest,
         "telemetry/ping" => lsp_mapper::LspRequest::PingRequest,
         "workspace/executeCommand" => {
             let mut params: lsp_types::ExecuteCommandParams = from_json(params)?;
             params.command = parse_command_name(&params.command);
             lsp_mapper::LspRequest::ExecuteCommandRequest(params)
+        }
+        "textDocument/diagnostics" => {
+            lsp_mapper::LspRequest::TextDocumentDiagnosticsRequest(from_json(params)?)
         }
         _ => lsp_mapper::LspRequest::UnknownRequest(method_.to_string(), params.cloned()),
     })
@@ -1162,6 +1196,12 @@ pub fn lsp_fmt_completion_item_fmt_to_json(
     ])
 }
 
+fn normalize_diagnostic_for_wire(diag: &mut lsp_types::Diagnostic) {
+    if diag.related_information.is_none() {
+        diag.related_information = Some(vec![]);
+    }
+}
+
 fn key_code_action_or_command(
     key: &str,
     code_action_or_command: lsp_types::CodeActionOrCommand,
@@ -1173,6 +1213,11 @@ fn key_code_action_or_command(
         lsp_types::CodeActionOrCommand::CodeAction(mut code_action) => {
             if let Some(command) = code_action.command.take() {
                 code_action.command = Some(key_command(key, command));
+            }
+            if let Some(diags) = code_action.diagnostics.as_mut() {
+                for d in diags.iter_mut() {
+                    normalize_diagnostic_for_wire(d);
+                }
             }
             lsp_types::CodeActionOrCommand::CodeAction(code_action)
         }
@@ -1286,7 +1331,9 @@ pub fn lsp_fmt_print_lsp_response(
         lsp_mapper::LspResult::ConfigurationResult(r) => to_json(r),
         lsp_mapper::LspResult::SelectionRangeResult(r) => to_json(r),
         lsp_mapper::LspResult::SignatureHelpResult(r) => to_json(r),
-        lsp_mapper::LspResult::TextDocumentDiagnosticsResult(r) => to_json(r),
+        lsp_mapper::LspResult::TextDocumentDiagnosticsResult(r) => {
+            serde_json::json!({ "kind": "full", "items": r })
+        }
         lsp_mapper::LspResult::DefinitionResult(r) => to_json(r),
         lsp_mapper::LspResult::TypeDefinitionResult(r) => to_json(r),
         lsp_mapper::LspResult::WorkspaceSymbolResult(r) => match r {
@@ -1429,9 +1476,16 @@ pub fn lsp_fmt_print_lsp_response(
                             "importType".to_string(),
                             serde_json::Value::String(import_type.to_string()),
                         );
+                        let import_source_str = if item.import_source_is_resolved {
+                            lsp_types::Url::from_file_path(&item.import_source)
+                                .map(|u| u.to_string())
+                                .unwrap_or_else(|_| item.import_source.clone())
+                        } else {
+                            item.import_source.clone()
+                        };
                         obj.insert(
                             "importSource".to_string(),
-                            serde_json::Value::String(item.import_source.clone()),
+                            serde_json::Value::String(import_source_str),
                         );
                         obj.insert(
                             "importSourceIsResolved".to_string(),
@@ -1732,129 +1786,115 @@ fn connect_temp_dir(connect_params: &ConnectParams) -> String {
     })
 }
 
-fn io_error_is_server_not_running(kind: std::io::ErrorKind) -> bool {
-    matches!(
-        kind,
-        std::io::ErrorKind::ConnectionRefused
-            | std::io::ErrorKind::ConnectionReset
-            | std::io::ErrorKind::ConnectionAborted
-            | std::io::ErrorKind::BrokenPipe
-            | std::io::ErrorKind::UnexpectedEof
-            | std::io::ErrorKind::NotConnected
-    )
-}
-
 fn persistent_canonical_root(root: &std::path::Path) -> FilePath {
     root.canonicalize().unwrap_or_else(|_| root.to_path_buf())
-}
-
-fn persistent_server_lock_is_held(lock_path: &str) -> bool {
-    if !std::path::Path::new(lock_path).exists() {
-        return false;
-    }
-    let file = match std::fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open(lock_path)
-    {
-        Ok(file) => file,
-        Err(_) => return true,
-    };
-    matches!(file.try_lock(), Err(std::fs::TryLockError::WouldBlock))
-}
-
-fn persistent_server_exists(flowconfig_name: &str, tmp_dir: &str, root: &std::path::Path) -> bool {
-    let root = persistent_canonical_root(root);
-    let lock_path = flow_server_files::server_files_js::lock_file(flowconfig_name, tmp_dir, &root);
-    persistent_server_lock_is_held(&lock_path)
 }
 
 fn classify_persistent_connect(
     flowconfig_name: &str,
     env: &DisconnectedEnv,
+    client_handshake: &socket_handshake::ClientHandshake,
 ) -> Result<ServerConn, ConnectError> {
     let tmp_dir = connect_temp_dir(&env.d_ienv.i_connect_params);
     let root = persistent_canonical_root(&env.d_ienv.i_root);
-    let socket_path =
-        flow_server_files::server_files_js::socket_file(flowconfig_name, &tmp_dir, &root);
-    let server_exists_now = || persistent_server_exists(flowconfig_name, &tmp_dir, &root);
-    let port_str = match std::fs::read_to_string(&socket_path) {
-        Ok(port) => port,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            return if server_exists_now() {
-                Err(ConnectError::ServerSocketMissing)
-            } else {
-                Err(ConnectError::ServerMissing)
-            };
+    let conn_result = flow_commands_connect::command_connect_simple::connect_once(
+        flowconfig_name,
+        client_handshake,
+        &tmp_dir,
+        &root,
+    );
+    let (_sockaddr, stream) = match conn_result {
+        Ok((sockaddr, stream)) => (sockaddr, stream),
+        Err(flow_commands_connect::command_connect_simple::CCSError::ServerMissing) => {
+            return Err(ConnectError::ServerMissing);
         }
-        Err(_) => {
+        Err(flow_commands_connect::command_connect_simple::CCSError::ServerSocketMissing) => {
+            return Err(ConnectError::ServerSocketMissing);
+        }
+        Err(flow_commands_connect::command_connect_simple::CCSError::BuildIdMismatch(
+            flow_commands_connect::command_connect_simple::MismatchBehavior::ServerExited,
+        )) => {
+            return Err(ConnectError::BuildIdMismatch(
+                BuildIdMismatchKind::ServerExited,
+            ));
+        }
+        Err(flow_commands_connect::command_connect_simple::CCSError::BuildIdMismatch(
+            flow_commands_connect::command_connect_simple::MismatchBehavior::ClientShouldError {
+                server_bin: _,
+                server_version,
+            },
+        )) => {
+            return Err(ConnectError::BuildIdMismatch(
+                BuildIdMismatchKind::ClientShouldError { server_version },
+            ));
+        }
+        Err(flow_commands_connect::command_connect_simple::CCSError::ServerBusy(
+            flow_commands_connect::command_connect_simple::BusyReason::TooManyClients,
+        )) => {
+            return Err(ConnectError::ServerBusy(ServerBusyKind::TooManyClients));
+        }
+        Err(flow_commands_connect::command_connect_simple::CCSError::ServerBusy(
+            flow_commands_connect::command_connect_simple::BusyReason::NotResponding,
+        )) => {
             return Err(ConnectError::ServerBusy(ServerBusyKind::NotResponding));
         }
-    };
-    let port: u16 = match port_str.trim().parse() {
-        Ok(port) => port,
-        Err(_) => {
-            return if server_exists_now() {
-                Err(ConnectError::ServerSocketMissing)
-            } else {
-                Err(ConnectError::ServerMissing)
-            };
+        Err(flow_commands_connect::command_connect_simple::CCSError::ServerBusy(
+            flow_commands_connect::command_connect_simple::BusyReason::FailOnInit(
+                server_status,
+                watcher_status,
+            ),
+        )) => {
+            return Err(ConnectError::ServerBusy(ServerBusyKind::FailOnInit((
+                server_status,
+                watcher_status,
+            ))));
         }
     };
-    let mut stream = match TcpStream::connect(("127.0.0.1", port)) {
-        Ok(stream) => stream,
-        Err(e) if io_error_is_server_not_running(e.kind()) => {
-            return if server_exists_now() {
-                Err(ConnectError::ServerSocketMissing)
-            } else {
-                Err(ConnectError::ServerMissing)
-            };
-        }
-        Err(_) => return Err(ConnectError::ServerBusy(ServerBusyKind::NotResponding)),
-    };
-    let _ = stream.set_read_timeout(Some(Duration::from_secs(1)));
-    let _ = stream.set_write_timeout(Some(Duration::from_secs(10)));
-    let client_id = env.d_ienv.i_server_id + 1;
-    let request = server_socket_rpc::ServerRequest::PersistentConnect {
-        client_id,
-        lsp_initialize_params: env.d_ienv.i_initialize_params.clone(),
-    };
-    server_socket_rpc::send_message(&mut stream, &request)
+    stream
+        .set_read_timeout(None)
         .map_err(|_| ConnectError::ServerBusy(ServerBusyKind::NotResponding))?;
-    match server_socket_rpc::receive_message(&mut stream) {
-        Ok(server_socket_rpc::ServerResponse::PersistentConnected) => Ok(ServerConn {
-            client_id,
-            stream: Mutex::new(stream),
-        }),
-        Ok(server_socket_rpc::ServerResponse::PersistentBusy {
-            server_status,
-            watcher_status,
-        }) => Err(ConnectError::ServerBusy(ServerBusyKind::FailOnInit((
-            server_status,
-            watcher_status,
-        )))),
-        Ok(_) => Err(ConnectError::ServerBusy(ServerBusyKind::NotResponding)),
-        Err(e) if e.kind() == std::io::ErrorKind::TimedOut => {
-            Err(ConnectError::ServerBusy(ServerBusyKind::NotResponding))
-        }
-        Err(e) if io_error_is_server_not_running(e.kind()) => {
-            if server_exists_now() {
-                Err(ConnectError::ServerBusy(ServerBusyKind::NotResponding))
-            } else {
-                Err(ConnectError::ServerMissing)
+    stream
+        .set_write_timeout(None)
+        .map_err(|_| ConnectError::ServerBusy(ServerBusyKind::NotResponding))?;
+    let reader_stream = stream
+        .try_clone()
+        .map_err(|_| ConnectError::ServerBusy(ServerBusyKind::NotResponding))?;
+    let (sender, receiver) = std::sync::mpsc::channel::<io::Result<lsp_prot::MessageFromServer>>();
+    std::thread::Builder::new()
+        .name("flow_lsp_persistent_reader".to_string())
+        .spawn(move || {
+            let mut stream = reader_stream;
+            loop {
+                let result: io::Result<lsp_prot::MessageFromServer> =
+                    flow_parser::loc::with_full_source_serde(|| {
+                        flow_server_env::server_socket_rpc::receive_message(&mut stream)
+                    });
+                let was_err = result.is_err();
+                if sender.send(result).is_err() {
+                    return;
+                }
+                if was_err {
+                    return;
+                }
             }
-        }
-        Err(_) => Err(ConnectError::ServerBusy(ServerBusyKind::NotResponding)),
-    }
+        })
+        .map_err(|_| ConnectError::ServerBusy(ServerBusyKind::NotResponding))?;
+    let client_id = env.d_ienv.i_server_id + 1;
+    Ok(ServerConn {
+        client_id,
+        stream: Mutex::new(stream),
+        incoming: Mutex::new(receiver),
+    })
 }
 
-fn persistent_rpc(
+fn send_request_with_metadata(
     conn: &ServerConn,
-    request: server_socket_rpc::ServerRequest,
-) -> Result<server_socket_rpc::ServerResponse, std::io::Error> {
+    request_with_metadata: &lsp_prot::RequestWithMetadata,
+) -> Result<(), std::io::Error> {
     let mut stream = conn.stream.lock().unwrap();
-    server_socket_rpc::send_message(&mut *stream, &request)?;
-    server_socket_rpc::receive_message(&mut *stream)
+    flow_parser::loc::with_full_source_serde(|| {
+        flow_server_env::server_socket_rpc::send_message(&mut *stream, request_with_metadata)
+    })
 }
 
 fn flow_cli_command(
@@ -2660,31 +2700,21 @@ fn get_next_event_from_server(
     _flowconfig_name: &str,
     cenv: &ConnectedEnv,
 ) -> Result<Option<Event>, FlowLspError> {
-    match persistent_rpc(
-        &cenv.c_conn,
-        server_socket_rpc::ServerRequest::PersistentPoll {
-            client_id: cenv.c_conn.client_id,
-        },
-    ) {
-        Ok(server_socket_rpc::ServerResponse::PersistentPoll { message }) => {
-            Ok(message.map(Event::ServerMessage))
+    let incoming = cenv.c_conn.incoming.lock().unwrap();
+    match incoming.try_recv() {
+        Ok(Ok(message)) => Ok(Some(Event::ServerMessage(message))),
+        Ok(Err(err)) => {
+            let msg = if err.kind() == std::io::ErrorKind::UnexpectedEof {
+                "End_of_file".to_string()
+            } else {
+                err.to_string()
+            };
+            Err(server_fatal_connection_exception(msg))
         }
-        Ok(server_socket_rpc::ServerResponse::Error { message }) => {
-            Err(server_fatal_connection_exception(message))
-        }
-        Ok(response) => Err(server_fatal_connection_exception(format!(
-            "Unexpected persistent poll response: {:?}",
-            response
-        ))),
-        Err(err)
-            if matches!(
-                err.kind(),
-                io::ErrorKind::TimedOut | io::ErrorKind::WouldBlock
-            ) =>
-        {
-            Ok(None)
-        }
-        Err(err) => Err(server_fatal_connection_exception(err.to_string())),
+        Err(std::sync::mpsc::TryRecvError::Empty) => Ok(None),
+        Err(std::sync::mpsc::TryRecvError::Disconnected) => Err(server_fatal_connection_exception(
+            "Server connection reader thread exited".to_string(),
+        )),
     }
 }
 
@@ -2889,7 +2919,7 @@ fn should_send_status(
 }
 
 fn show_status(
-    ienv: &mut InitializedEnv,
+    mut ienv: InitializedEnv,
     type_: MessageType,
     message: &str,
     short_message: Option<&str>,
@@ -2898,7 +2928,7 @@ fn show_status(
     titles: &[&str],
     handler: Option<Box<dyn FnOnce(&str, &mut ServerState)>>,
     background_color: Option<lsp_mapper::show_status::ShowStatusBackgroundColor>,
-) {
+) -> InitializedEnv {
     let use_status = lsp_helpers_supports_status(&ienv.i_initialize_params);
     let actions: Vec<lsp_types::MessageActionItem> = titles
         .iter()
@@ -2918,7 +2948,8 @@ fn show_status(
         total,
         background_color,
     };
-    let (will_dismiss_old, will_show_new) = should_send_status(ienv, &params);
+    let (will_dismiss_old, will_show_new) = should_send_status(&ienv, &params);
+    // dismiss the old one
     if will_dismiss_old {
         if let ShowStatusT::Shown(Some(id), existing_params) = &ienv.i_status {
             let existing_params = existing_params.clone();
@@ -2928,7 +2959,7 @@ fn show_status(
                     id,
                 });
             let json = {
-                let key = command_key_of_ienv(ienv);
+                let key = command_key_of_ienv(&ienv);
                 lsp_fmt_print_lsp(
                     &key,
                     &lsp_prot::LspMessage::NotificationMessage(notification),
@@ -2938,8 +2969,9 @@ fn show_status(
             ienv.i_status = ShowStatusT::Shown(None, existing_params);
         }
     }
+    // show the new one
     if !will_show_new {
-        return;
+        return ienv;
     }
     let id = NumberOrString::Number(jsonrpc_get_next_request_id());
     let request = if use_status {
@@ -2987,8 +3019,9 @@ fn show_status(
             Ok(())
         })
     };
-    send_request_to_client(ienv, id.clone(), request, on_response, on_error);
+    send_request_to_client(&mut ienv, id.clone(), request, on_response, on_error);
     ienv.i_status = ShowStatusT::Shown(Some(id), params);
+    ienv
 }
 
 // calls realpath on every DocumentUri
@@ -2997,24 +3030,12 @@ fn send_to_server(
     request: lsp_prot::Request,
     metadata: &Metadata,
 ) -> Result<(), FlowLspError> {
+    // calls realpath on every DocumentUri, because we want the server to only run once, on
+    // the canonical files, even if there are multiple clients operating on various symlinks.
     let request = convert_to_server_uris(request);
-    match persistent_rpc(
-        &env.c_conn,
-        server_socket_rpc::ServerRequest::PersistentRequest {
-            client_id: env.c_conn.client_id,
-            request: (request, metadata.clone()),
-        },
-    ) {
-        Ok(server_socket_rpc::ServerResponse::PersistentAck) => Ok(()),
-        Ok(server_socket_rpc::ServerResponse::Error { message }) => {
-            Err(server_fatal_connection_exception(message))
-        }
-        Ok(response) => Err(server_fatal_connection_exception(format!(
-            "Unexpected persistent request response: {:?}",
-            response
-        ))),
-        Err(err) => Err(server_fatal_connection_exception(err.to_string())),
-    }
+    let request_with_metadata: lsp_prot::RequestWithMetadata = (request, metadata.clone());
+    send_request_with_metadata(&env.c_conn, &request_with_metadata)
+        .map_err(|err| server_fatal_connection_exception(err.to_string()))
 }
 
 fn send_lsp_to_server(
@@ -3233,7 +3254,7 @@ fn message_with_flow_and_root_name_prefix(flowconfig: &FlowConfig, msg: &str) ->
     }
 }
 
-fn show_connected_status(cenv: &mut ConnectedEnv) {
+fn show_connected_status(mut cenv: ConnectedEnv) -> ConnectedEnv {
     let flowconfig = cenv.c_ienv.i_flowconfig.clone();
     let message_with_prefix = |msg: &str| message_with_flow_and_root_name_prefix(&flowconfig, msg);
     let (type_, message, short_message, progress, total) = if cenv.c_is_rechecking {
@@ -3290,8 +3311,8 @@ fn show_connected_status(cenv: &mut ConnectedEnv) {
             }
         }
     };
-    show_status(
-        &mut cenv.c_ienv,
+    let c_ienv = show_status(
+        cenv.c_ienv,
         type_,
         &message,
         short_message.as_deref(),
@@ -3301,11 +3322,12 @@ fn show_connected_status(cenv: &mut ConnectedEnv) {
         None,
         None,
     );
+    cenv.c_ienv = c_ienv;
+    cenv
 }
 
-// report that we're connected to telemetry/connectionStatus
-// show green status
-fn show_connected(env: &mut ConnectedEnv) {
+fn show_connected(mut env: ConnectedEnv) -> ServerState {
+    // report that we're connected to telemetry/connectionStatus
     let i_is_connected = lsp_writers_notify_connection_status(
         &env.c_ienv.i_initialize_params,
         to_stdout,
@@ -3313,10 +3335,12 @@ fn show_connected(env: &mut ConnectedEnv) {
         true,
     );
     env.c_ienv.i_is_connected = i_is_connected;
-    show_connected_status(env);
+    // show green status
+    let env = show_connected_status(env);
+    ServerState::Connected(env)
 }
 
-fn show_connecting(reason: &ConnectError, env: &mut DisconnectedEnv) {
+fn show_connecting(reason: &ConnectError, mut env: DisconnectedEnv) -> ServerState {
     if *reason == ConnectError::ServerMissing {
         lsp_writers_log_info(to_stdout, "Starting Flow server");
     }
@@ -3370,8 +3394,8 @@ fn show_connecting(reason: &ConnectError, env: &mut DisconnectedEnv) {
             }
         }
     };
-    show_status(
-        &mut env.d_ienv,
+    let d_ienv = show_status(
+        env.d_ienv,
         MessageType::WARNING,
         &message,
         short_message.as_deref(),
@@ -3381,14 +3405,16 @@ fn show_connecting(reason: &ConnectError, env: &mut DisconnectedEnv) {
         None,
         None,
     );
+    env.d_ienv = d_ienv;
+    ServerState::Disconnected(env)
 }
 
-// report that we're disconnected to telemetry/connectionStatus
 fn show_disconnected(
     code: Option<&FlowExitStatus>,
     message: Option<&str>,
-    env: &mut DisconnectedEnv,
-) {
+    mut env: DisconnectedEnv,
+) -> ServerState {
+    // report that we're disconnected to telemetry/connectionStatus
     let i_is_connected = lsp_writers_notify_connection_status(
         &env.d_ienv.i_initialize_params,
         to_stdout,
@@ -3398,6 +3424,7 @@ fn show_disconnected(
     env.d_ienv.i_is_connected = i_is_connected;
     let flowconfig = env.d_ienv.i_flowconfig.clone();
     let message_with_prefix = |msg: &str| message_with_flow_and_root_name_prefix(&flowconfig, msg);
+    // show red status
     let message = message
         .map(|m| m.to_string())
         .unwrap_or_else(|| message_with_prefix("server is stopped"));
@@ -3417,8 +3444,8 @@ fn show_disconnected(
                 }
             }
         });
-    show_status(
-        &mut env.d_ienv,
+    let d_ienv = show_status(
+        env.d_ienv,
         MessageType::ERROR,
         &message,
         None,
@@ -3428,11 +3455,15 @@ fn show_disconnected(
         Some(handler),
         Some(lsp_mapper::show_status::ShowStatusBackgroundColor::Error),
     );
+    env.d_ienv = d_ienv;
+    ServerState::Disconnected(env)
 }
 
 fn close_conn(env: &ConnectedEnv) {
     if let Ok(stream) = env.c_conn.stream.lock() {
-        let _ = stream.shutdown(Shutdown::Both);
+        match stream.shutdown(Shutdown::Both) {
+            Ok(()) | Err(_) => (),
+        }
     }
 }
 
@@ -3561,11 +3592,11 @@ fn lsp_document_item_to_flow(
 fn loc_to_lsp_range(loc: &flow_parser::loc::Loc) -> lsp_types::Range {
     lsp_types::Range {
         start: lsp_types::Position {
-            line: loc.start.line.saturating_sub(1) as u32,
+            line: loc.start.line.saturating_sub(1).max(0) as u32,
             character: loc.start.column.max(0) as u32,
         },
         end: lsp_types::Position {
-            line: loc.end.line.saturating_sub(1) as u32,
+            line: loc.end.line.saturating_sub(1).max(0) as u32,
             character: loc.end.column.max(0) as u32,
         },
     }
@@ -3595,7 +3626,7 @@ fn live_syntax_errors_enabled(state: &ServerState) -> bool {
         .as_ref()
         .and_then(|opts| opts.get("liveSyntaxErrors"))
         .and_then(|v| v.as_bool())
-        .unwrap_or(false)
+        .unwrap_or(true)
 }
 
 fn parse_and_cache(
@@ -3745,9 +3776,49 @@ fn do_selection_range(
     Ok(())
 }
 
-fn do_rage(_flowconfig_name: &str, state: &ServerState) -> Vec<RageItem> {
+fn do_rage(flowconfig_name: &str, state: &ServerState) -> Vec<RageItem> {
+    // Mirrors OCaml `do_rage` in `flowLsp.ml`: collect log files and the LSP
+    // adapter state. Uses `add_file` to read each file (capping at 10MB) and
+    // `add_string` for the stringified state.
+    fn add_file(items: &mut Vec<RageItem>, file: &std::path::Path) {
+        const MAX_LEN: usize = 10 * 1024 * 1024;
+        let title = Some(file.to_string_lossy().to_string());
+        let data = if file.exists() {
+            match std::fs::read_to_string(file) {
+                Ok(data) => {
+                    if data.len() <= MAX_LEN {
+                        data
+                    } else {
+                        data[data.len() - MAX_LEN..].to_string()
+                    }
+                }
+                Err(e) => format!("Failed to read file: {}", e),
+            }
+        } else {
+            format!("File not found: {}", file.display())
+        };
+        items.push(RageItem { title, data });
+    }
     let mut items: Vec<RageItem> = vec![];
-    let _ienv = get_ienv(state);
+    let ienv = get_ienv(state);
+    let root = ienv.i_root.clone();
+    let tmp_dir = connect_temp_dir(&ienv.i_connect_params);
+    let server_log_file =
+        flow_server_files::server_files_js::log_file(flowconfig_name, &tmp_dir, &root);
+    let monitor_log_file =
+        flow_server_files::server_files_js::monitor_log_file(flowconfig_name, &tmp_dir, &root);
+    add_file(&mut items, std::path::Path::new(&server_log_file));
+    add_file(&mut items, std::path::Path::new(&monitor_log_file));
+    // Also pick up the rotated `.old` siblings — useful if the user reports a
+    // bug after a crash.
+    add_file(
+        &mut items,
+        std::path::Path::new(&format!("{}.old", server_log_file)),
+    );
+    add_file(
+        &mut items,
+        std::path::Path::new(&format!("{}.old", monitor_log_file)),
+    );
     items.push(RageItem {
         title: None,
         data: format!(
@@ -3970,9 +4041,11 @@ fn get_local_request_handler(
 fn try_connect(
     version_mismatch_strategy: &socket_handshake::VersionMismatchStrategy,
     flowconfig_name: &str,
-    env: &mut DisconnectedEnv,
+    env: DisconnectedEnv,
 ) -> ServerState {
     let flowconfig = read_flowconfig_from_disk(flowconfig_name, &env.d_ienv.i_root);
+    // If the version in .flowconfig has changed under our feet then we mustn't
+    // connect. We'll terminate and trust the editor to relaunch an ok version.
     let current_version = flowconfig.version.clone();
     if env.d_ienv.i_version != current_version {
         let prev_version_str = env.d_ienv.i_version.as_deref().unwrap_or("[None]");
@@ -3989,24 +4062,25 @@ fn try_connect(
     let _start_env_connect_params = &env.d_ienv.i_connect_params;
     let _start_env_root = &env.d_ienv.i_root;
 
-    let _client_handshake = lsp_connect_params::persistent_client_handshake(
+    let client_handshake = lsp_connect_params::persistent_client_handshake(
         version_mismatch_strategy,
         env.d_ienv.i_initialize_params.clone(),
     );
 
-    let conn = classify_persistent_connect(flowconfig_name, env);
+    let conn = classify_persistent_connect(flowconfig_name, &env, &client_handshake);
 
     #[allow(unreachable_code)]
     match conn {
         Ok(conn) => {
             let i_server_id = env.d_ienv.i_server_id + 1;
+            // this flag is set to false to prevent restart loops when the flowconfig changes.
+            // once we successfully reconnect, it should be reset back to true (the default).
             let i_can_autostart_after_version_mismatch = true;
-            let mut new_env = ConnectedEnv {
-                c_ienv: InitializedEnv {
-                    i_server_id,
-                    i_can_autostart_after_version_mismatch,
-                    ..env.d_ienv.clone()
-                },
+            let DisconnectedEnv { mut d_ienv, .. } = env;
+            d_ienv.i_server_id = i_server_id;
+            d_ienv.i_can_autostart_after_version_mismatch = i_can_autostart_after_version_mismatch;
+            let new_env = ConnectedEnv {
+                c_ienv: d_ienv,
                 c_conn: conn,
                 c_server_status: (server_status::INITIAL_STATUS, None),
                 c_about_to_exit_code: None,
@@ -4035,13 +4109,12 @@ fn try_connect(
             if let Err(err) = send_to_server(&new_env, lsp_prot::Request::Subscribe, &metadata) {
                 eprintln!("{}", err);
                 close_conn(&new_env);
-                let mut disconnected = DisconnectedEnv {
-                    d_ienv: new_env.c_ienv.clone(),
+                let disconnected = DisconnectedEnv {
+                    d_ienv: new_env.c_ienv,
                     d_autostart: false,
                     d_server_status: None,
                 };
-                show_disconnected(None, Some(&err.to_string()), &mut disconnected);
-                return ServerState::Disconnected(disconnected);
+                return show_disconnected(None, Some(&err.to_string()), disconnected);
             }
             let settings = new_env.c_ienv.i_config.clone();
             if let Err(err) =
@@ -4049,16 +4122,15 @@ fn try_connect(
             {
                 eprintln!("{}", err);
                 close_conn(&new_env);
-                let mut disconnected = DisconnectedEnv {
-                    d_ienv: new_env.c_ienv.clone(),
+                let disconnected = DisconnectedEnv {
+                    d_ienv: new_env.c_ienv,
                     d_autostart: false,
                     d_server_status: None,
                 };
-                show_disconnected(None, Some(&err.to_string()), &mut disconnected);
-                return ServerState::Disconnected(disconnected);
+                return show_disconnected(None, Some(&err.to_string()), disconnected);
             }
             let metadata = make_metadata("synthetic/open");
-            for open_file_info in env.d_ienv.i_open_files.values() {
+            for open_file_info in new_env.c_ienv.i_open_files.values() {
                 let msg = lsp_mapper::LspMessage::NotificationMessage(
                     lsp_mapper::LspNotification::DidOpenNotification(
                         lsp_types::DidOpenTextDocumentParams {
@@ -4069,20 +4141,20 @@ fn try_connect(
                 if let Err(err) = send_lsp_to_server(&new_env, &metadata, msg) {
                     eprintln!("{}", err);
                     close_conn(&new_env);
-                    let mut disconnected = DisconnectedEnv {
-                        d_ienv: new_env.c_ienv.clone(),
+                    let disconnected = DisconnectedEnv {
+                        d_ienv: new_env.c_ienv,
                         d_autostart: false,
                         d_server_status: None,
                     };
-                    show_disconnected(None, Some(&err.to_string()), &mut disconnected);
-                    return ServerState::Disconnected(disconnected);
+                    return show_disconnected(None, Some(&err.to_string()), disconnected);
                 }
             }
+
+            let open_uris: Vec<_> = new_env.c_ienv.i_open_files.keys().cloned().collect();
             // close the old UI and bring up the new
-            show_connected(&mut new_env);
+            let new_state = show_connected(new_env);
             // Generate live errors for the newly opened files
-            let mut state = ServerState::Connected(new_env);
-            let open_uris: Vec<_> = env.d_ienv.i_open_files.keys().cloned().collect();
+            let mut state = new_state;
             for uri in open_uris {
                 if let Err(err) = do_live_diagnostics(
                     &mut state,
@@ -4095,53 +4167,91 @@ fn try_connect(
             }
             state
         }
+        // Server_missing means the lock file is absent, because the server isn't running
         Err(ref reason @ ConnectError::ServerMissing) => {
-            let d_autostart = env.d_autostart;
-            env.d_autostart = false;
-            env.d_server_status = None;
-            if d_autostart {
+            let d_autostart_was_set = env.d_autostart;
+            let DisconnectedEnv { d_ienv, .. } = env;
+            let new_env = DisconnectedEnv {
+                d_ienv,
+                d_autostart: false,
+                d_server_status: None,
+            };
+            if d_autostart_was_set {
                 match start_flow_server(
                     flowconfig_name,
-                    &env.d_ienv.i_connect_params,
-                    &env.d_ienv.i_root,
+                    &new_env.d_ienv.i_connect_params,
+                    &new_env.d_ienv.i_root,
                 ) {
-                    Ok(()) => show_connecting(reason, env),
-                    Err(msg) => show_disconnected(None, Some(&msg), env),
+                    Ok(()) => show_connecting(reason, new_env),
+                    Err(msg) => show_disconnected(None, Some(&msg), new_env),
                 }
             } else {
-                show_disconnected(None, None, env);
+                show_disconnected(None, None, new_env)
             }
-            ServerState::Disconnected(env.clone())
         }
+        // Server_socket_missing means the server is present but lacks its sock
+        // file. There's a tiny race possibility that the server has created a
+        // lock but not yet created a sock file. More likely is that the server
+        // is an old version of the server which doesn't even create the right
+        // sock file. We'll kill the server now so we can start a new one next.
+        // And if it was in that race? bad luck...
         Err(ref reason @ ConnectError::ServerSocketMissing) => {
-            env.d_server_status = None;
             match kill_stale_server(
                 flowconfig_name,
                 &env.d_ienv.i_connect_params,
                 &env.d_ienv.i_root,
             ) {
-                Ok(()) => show_connecting(reason, env),
+                Ok(()) => show_connecting(
+                    reason,
+                    DisconnectedEnv {
+                        d_server_status: None,
+                        ..env
+                    },
+                ),
                 Err(_) => {
                     let msg = "An old version of the Flow server is running. Please stop it.";
-                    show_disconnected(None, Some(msg), env);
+                    show_disconnected(
+                        None,
+                        Some(msg),
+                        DisconnectedEnv {
+                            d_server_status: None,
+                            ..env
+                        },
+                    )
                 }
             }
-            ServerState::Disconnected(env.clone())
         }
+        // The server exited due to a version mismatch between the lsp and the server.
         Err(ref reason @ ConnectError::BuildIdMismatch(BuildIdMismatchKind::ServerExited)) => {
             if env.d_autostart {
-                env.d_server_status = None;
-                show_connecting(reason, env);
+                show_connecting(
+                    reason,
+                    DisconnectedEnv {
+                        d_server_status: None,
+                        ..env
+                    },
+                )
             } else {
-                env.d_server_status = None;
+                // We shouldn't hit this case. When `env.d_autostart` is `false`, we ask the server NOT to
+                // die on a version mismatch.
                 let msg = message_with_flow_and_root_name_prefix(
                     &env.d_ienv.i_flowconfig,
                     "the server was the wrong version",
                 );
-                show_disconnected(None, Some(&msg), env);
+                show_disconnected(
+                    None,
+                    Some(&msg),
+                    DisconnectedEnv {
+                        d_server_status: None,
+                        ..env
+                    },
+                )
             }
-            ServerState::Disconnected(env.clone())
         }
+        // The server and the lsp are different binaries and can't talk to each other. The server is not
+        // stopping (either because we asked it not to stop or because it is newer than this client). In
+        // this case, our best option is to stop the lsp and let the IDE start a new lsp with a newer
+        // binary
         Err(ConnectError::BuildIdMismatch(BuildIdMismatchKind::ClientShouldError {
             ref server_version,
             ..
@@ -4184,15 +4294,26 @@ fn try_connect(
             );
             lsp_exit_bad();
         }
+        // While the server is busy initializing, sometimes we get Server_busy.Fail_on_init
+        // with a server-status telling us how far it is through init. And sometimes we get
+        // just ServerStatus.Not_responding if the server was just too busy to give us a
+        // status update. These are cases where the right version of the server is running
+        // but it's not speaking to us just now. So we'll keep trying until it's ready.
         Err(ref reason @ ConnectError::ServerBusy(ServerBusyKind::FailOnInit(ref st))) => {
-            env.d_server_status = Some(st.clone());
-            show_connecting(reason, env);
-            ServerState::Disconnected(env.clone())
+            show_connecting(
+                reason,
+                DisconnectedEnv {
+                    d_server_status: Some(st.clone()),
+                    ..env
+                },
+            )
         }
+        // The following codes mean the right version of the server is running so
+        // we'll retry. They provide no information about the d_server_status of
+        // the server, so we'll leave it as it was before.
         Err(ref reason @ ConnectError::ServerBusy(ServerBusyKind::NotResponding))
         | Err(ref reason @ ConnectError::ServerBusy(ServerBusyKind::TooManyClients)) => {
-            show_connecting(reason, env);
-            ServerState::Disconnected(env.clone())
+            show_connecting(reason, env)
         }
     }
 }
@@ -4669,20 +4790,57 @@ fn main_handle_initialized_unsafe(
         )) => {
             let start_state = collect_interaction_state(state);
             lsp_interaction::recheck_start(start_state);
-            if let ServerState::Connected(cenv) = state {
+            // To take cenv by value from &mut state, we build a cheap placeholder
+            // DisconnectedEnv from a clone of c_ienv (with handler-swap to avoid the Clone-panic),
+            // swap it into *state, extract the original cenv, run show_connected_status by value,
+            // then put the new ConnectedEnv back into *state.
+            if let ServerState::Connected(cenv_ref) = &mut *state {
+                let saved_handlers =
+                    std::mem::take(&mut cenv_ref.c_ienv.i_outstanding_local_handlers);
+                let cloned_ienv = cenv_ref.c_ienv.clone();
+                cenv_ref.c_ienv.i_outstanding_local_handlers = saved_handlers;
+                let placeholder = ServerState::Disconnected(DisconnectedEnv {
+                    d_ienv: cloned_ienv,
+                    d_autostart: false,
+                    d_server_status: None,
+                });
+                let owned_state = std::mem::replace(state, placeholder);
+                let mut cenv = match owned_state {
+                    ServerState::Connected(c) => c,
+                    ServerState::Disconnected(_) => unreachable!(),
+                };
                 cenv.c_is_rechecking = true;
                 cenv.c_lazy_stats = None;
-                show_connected_status(cenv);
+                let cenv = show_connected_status(cenv);
+                *state = ServerState::Connected(cenv);
             }
             Ok(LogNeeded::LogNotNeeded)
         }
         Event::ServerMessage(MessageFromServer::NotificationFromServer(
             NotificationFromServer::EndRecheck(lazy_stats),
         )) => {
-            if let ServerState::Connected(cenv) = &mut *state {
+            // OCaml: let cenv = { cenv with c_is_rechecking = false; c_lazy_stats = Some lazy_stats } in
+            //        let cenv = show_connected_status cenv in Connected cenv
+            // Same take-ownership trick as StartRecheck above.
+            if let ServerState::Connected(cenv_ref) = &mut *state {
+                let saved_handlers =
+                    std::mem::take(&mut cenv_ref.c_ienv.i_outstanding_local_handlers);
+                let cloned_ienv = cenv_ref.c_ienv.clone();
+                cenv_ref.c_ienv.i_outstanding_local_handlers = saved_handlers;
+                let placeholder = ServerState::Disconnected(DisconnectedEnv {
+                    d_ienv: cloned_ienv,
+                    d_autostart: false,
+                    d_server_status: None,
+                });
+                let owned_state = std::mem::replace(state, placeholder);
+                let mut cenv = match owned_state {
+                    ServerState::Connected(c) => c,
+                    ServerState::Disconnected(_) => unreachable!(),
+                };
                 cenv.c_is_rechecking = false;
                 cenv.c_lazy_stats = Some(lazy_stats);
-                show_connected_status(cenv);
+                let cenv = show_connected_status(cenv);
+                *state = ServerState::Connected(cenv);
             }
             let open_file_uris: Vec<DocumentUri> = get_open_files(state).keys().cloned().collect();
             let method_name = "synthetic/endRecheck";
@@ -4714,16 +4872,40 @@ fn main_handle_initialized_unsafe(
         Event::ServerMessage(MessageFromServer::NotificationFromServer(
             NotificationFromServer::PleaseHold(server_status, watcher_status),
         )) => {
-            if let ServerState::Connected(cenv) = state {
+            if let ServerState::Connected(cenv_ref) = &mut *state {
+                let saved_handlers =
+                    std::mem::take(&mut cenv_ref.c_ienv.i_outstanding_local_handlers);
+                let cloned_ienv = cenv_ref.c_ienv.clone();
+                cenv_ref.c_ienv.i_outstanding_local_handlers = saved_handlers;
+                let placeholder = ServerState::Disconnected(DisconnectedEnv {
+                    d_ienv: cloned_ienv,
+                    d_autostart: false,
+                    d_server_status: None,
+                });
+                let owned_state = std::mem::replace(state, placeholder);
+                let mut cenv = match owned_state {
+                    ServerState::Connected(c) => c,
+                    ServerState::Disconnected(_) => unreachable!(),
+                };
                 cenv.c_server_status = (server_status, Some(watcher_status));
-                show_connected_status(cenv);
+                let cenv = show_connected_status(cenv);
+                *state = ServerState::Connected(cenv);
             }
             Ok(LogNeeded::LogNotNeeded)
         }
         Event::Tick if matches!(state, ServerState::Disconnected(_)) => {
             let version_mismatch_strategy = socket_handshake::VersionMismatchStrategy::ErrorClient;
             if let ServerState::Disconnected(env) = &mut *state {
-                let new_state = try_connect(&version_mismatch_strategy, flowconfig_name, env);
+                let saved_handlers = std::mem::take(&mut env.d_ienv.i_outstanding_local_handlers);
+                let placeholder = env.clone();
+                env.d_ienv.i_outstanding_local_handlers = saved_handlers;
+                let owned_state = std::mem::replace(state, ServerState::Disconnected(placeholder));
+                let new_state = match owned_state {
+                    ServerState::Disconnected(env) => {
+                        try_connect(&version_mismatch_strategy, flowconfig_name, env)
+                    }
+                    ServerState::Connected(_) => unreachable!(),
+                };
                 *state = new_state;
             }
             Ok(LogNeeded::LogNotNeeded)
@@ -4829,13 +5011,13 @@ fn main_handle_unsafe(
             let version_mismatch_strategy =
                 socket_handshake::VersionMismatchStrategy::AlwaysStopServer;
 
-            let mut env = DisconnectedEnv {
+            let env = DisconnectedEnv {
                 d_ienv,
                 d_autostart: true,
                 d_server_status: None,
             };
 
-            let server_state = try_connect(&version_mismatch_strategy, flowconfig_name, &mut env);
+            let server_state = try_connect(&version_mismatch_strategy, flowconfig_name, env);
             Ok((
                 State::Initialized(server_state),
                 LogNeeded::LogNeeded(metadata),

@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_commands_connect::command_connect_simple as CCS;
+use flow_commands_connect::command_connect_simple::CCSError;
+use flow_commands_connect::command_connect_simple::MismatchBehavior;
+use flow_commands_connect::command_mean_kill;
 use flow_server_env::socket_handshake;
 
-use crate::command_connect_simple as CCS;
-use crate::command_connect_simple::CCSError;
-use crate::command_connect_simple::MismatchBehavior;
-use crate::command_mean_kill;
 use crate::command_spec;
 use crate::command_spec::arg_spec;
 use crate::command_utils;

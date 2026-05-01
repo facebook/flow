@@ -279,7 +279,7 @@ fn mod_ts(
         s
     };
     let init_acc: Vec<ast::types::Type<Loc, Loc>> = vec![last];
-    let (_, acc) =
+    let (_, mut acc) =
         ts_rev_rest
             .iter()
             .rev()
@@ -293,6 +293,7 @@ fn mod_ts(
                     (seen, acc)
                 }
             });
+    acc.reverse();
     Some(acc)
 }
 

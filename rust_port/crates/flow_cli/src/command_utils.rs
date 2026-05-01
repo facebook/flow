@@ -247,10 +247,6 @@ pub(crate) fn add_profile_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn get_profile_flag(args: &arg_spec::Values) -> bool {
-    command_spec::get(args, "--profile", &arg_spec::truthy()).unwrap()
-}
-
 #[derive(Clone, Debug)]
 pub(crate) struct ErrorFlagsArgs {
     pub(crate) color: cli_output::RenderingMode,
@@ -977,7 +973,7 @@ pub(super) fn assert_version(flowconfig: &FlowConfig) {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub(crate) struct FlowconfigFlags {
     pub(crate) ignores: Vec<String>,
     pub(crate) includes: Vec<String>,
@@ -1979,48 +1975,16 @@ pub fn get_temp_dir(cli_value: &Option<String>) -> String {
     }
 }
 
-#[derive(Clone, Debug, Default)]
-pub(crate) struct MakeOptionsOverrides {
-    pub(crate) autoimports: Option<bool>,
-    pub(crate) all: Option<bool>,
-    pub(crate) debug: bool,
-    pub(crate) distributed: bool,
-    pub(crate) estimate_recheck_time: Option<bool>,
-    pub(crate) flowconfig_flags: Option<FlowconfigFlags>,
-    pub(crate) include_suppressions: Option<bool>,
-    pub(crate) include_warnings: bool,
-    pub(crate) lazy_mode: Option<flow_config::LazyMode>,
-    pub(crate) long_lived_workers: Option<bool>,
-    pub(crate) max_warnings: Option<i32>,
-    pub(crate) max_workers: Option<i32>,
-    pub(crate) merge_timeout: Option<i32>,
-    pub(crate) munge_underscore_members: bool,
-    pub(crate) no_autoimports: bool,
-    pub(crate) profile: Option<bool>,
-    pub(crate) quiet: bool,
-    pub(crate) saved_state_fetcher: Option<SavedStateFetcher>,
-    pub(crate) saved_state_force_recheck: Option<bool>,
-    pub(crate) saved_state_no_fallback: Option<bool>,
-    pub(crate) saved_state_skip_version_check: Option<bool>,
-    pub(crate) saved_state_verify: Option<bool>,
-    pub(crate) slow_to_check_logging:
-        Option<flow_common::slow_to_check_logging::SlowToCheckLogging>,
-    pub(crate) strip_root: bool,
-    pub(crate) temp_dir: Option<String>,
-    pub(crate) verbose: Option<Verbose>,
-    pub(crate) vpn_less: Option<bool>,
-    pub(crate) wait_for_recheck: Option<bool>,
-}
-
 pub(super) fn make_options(
-    flowconfig: FlowConfig,
-    flowconfig_hash: String,
     flowconfig_name: String,
+    flowconfig_hash: String,
+    flowconfig: FlowConfig,
+    lazy_mode: Option<LazyMode>,
     root: std::path::PathBuf,
-    temp_dir: String,
-    cli_no_flowlib: bool,
-    overrides: MakeOptionsOverrides,
+    options_flags: OptionsFlags,
+    saved_state_options_flags: SavedStateFlags,
 ) -> Options {
+    let lazy_mode_override = lazy_mode;
     let FlowConfig {
         rollouts,
         ignores,
@@ -2173,36 +2137,38 @@ pub(super) fn make_options(
         version: _version,
     } = flowconfig;
 
-    let MakeOptionsOverrides {
-        autoimports: autoimports_override,
+    let OptionsFlags {
         all: all_override,
         debug: debug_override,
-        distributed: distributed_override,
-        estimate_recheck_time: estimate_recheck_time_override,
-        flowconfig_flags: flowconfig_flags_override,
-        include_suppressions: include_suppressions_override,
+        flowconfig_flags,
         include_warnings: include_warnings_override,
-        lazy_mode: lazy_mode_override,
-        long_lived_workers: long_lived_workers_override,
         max_warnings: max_warnings_override,
         max_workers: max_workers_override,
         merge_timeout: merge_timeout_override,
         munge_underscore_members: munge_underscore_members_override,
-        no_autoimports: no_autoimports_override,
+        no_flowlib: cli_no_flowlib,
         profile: profile_override,
         quiet: quiet_override,
+        slow_to_check_logging: slow_to_check_logging_override,
+        strip_root: strip_root_override,
+        temp_dir: temp_dir_override,
+        verbose: verbose_override,
+        wait_for_recheck: wait_for_recheck_override,
+        vpn_less: vpn_less_override,
+        include_suppressions: include_suppressions_override,
+        estimate_recheck_time: estimate_recheck_time_override,
+        long_lived_workers: long_lived_workers_override,
+        distributed: distributed_override,
+        no_autoimports: no_autoimports_override,
+    } = options_flags;
+
+    let SavedStateFlags {
         saved_state_fetcher: saved_state_fetcher_override,
         saved_state_force_recheck,
         saved_state_no_fallback,
         saved_state_skip_version_check: saved_state_skip_version_check_override,
         saved_state_verify,
-        slow_to_check_logging: slow_to_check_logging_override,
-        strip_root: strip_root_override,
-        temp_dir: temp_dir_override,
-        verbose: verbose_override,
-        vpn_less: vpn_less_override,
-        wait_for_recheck: wait_for_recheck_override,
-    } = overrides;
+    } = saved_state_options_flags;
 
     let FlowconfigFlags {
         ignores: ignores_override,
@@ -2211,11 +2177,12 @@ pub(super) fn make_options(
         raw_lint_severities,
         untyped: untyped_override,
         declarations: declarations_override,
-    } = flowconfig_flags_override.unwrap_or_default();
+    } = flowconfig_flags;
 
-    let all = all_override.unwrap_or(all.unwrap_or(false));
-    let autoimports =
-        !no_autoimports_override && autoimports_override.unwrap_or(autoimports.unwrap_or(true));
+    let temp_dir = get_temp_dir(&temp_dir_override);
+
+    let all = all_override || all.unwrap_or(false);
+    let autoimports = !no_autoimports_override && autoimports.unwrap_or(true);
     let autoimports_min_characters = autoimports_min_characters.unwrap_or(0) as i32;
     let autoimports_ranked_by_usage_boost_exact_match_min_length =
         autoimports_ranked_by_usage_boost_exact_match_min_length as i32;
@@ -2263,7 +2230,6 @@ pub(super) fn make_options(
 
     let enable_jest_integration = jest_integration;
     let enable_relay_integration = relay_integration;
-    let temp_dir = temp_dir_override.unwrap_or(temp_dir);
     let vpn_less = vpn_less_override.unwrap_or(vpn_less);
 
     let unsuppressable_error_codes: Arc<HashSet<FlowSmolStr>> = Arc::new(
@@ -2716,7 +2682,7 @@ pub(super) fn make_options(
         hook_compatibility_excludes,
         hook_compatibility_includes,
         ignore_non_literal_requires,
-        include_suppressions: include_suppressions_override.unwrap_or(false),
+        include_suppressions: include_suppressions_override,
         include_warnings: include_warnings_override
             || max_warnings_override.is_some()
             || include_warnings,
@@ -2756,7 +2722,7 @@ pub(super) fn make_options(
                 .collect::<Vec<_>>(),
         ),
         opaque_type_new_bound_syntax,
-        profile: profile_override.unwrap_or(false),
+        profile: profile_override,
         projects_options,
         quiet: quiet_override,
         records_includes: Arc::from(
@@ -2780,14 +2746,14 @@ pub(super) fn make_options(
         saved_state_parallel_decompress,
         // The CLI flag overrides the .flowconfig
         saved_state_fetcher: saved_state_fetcher_override.unwrap_or(saved_state_fetcher),
-        saved_state_force_recheck: saved_state_force_recheck.unwrap_or(false),
-        saved_state_no_fallback: saved_state_no_fallback.unwrap_or(false),
+        saved_state_force_recheck,
+        saved_state_no_fallback,
         saved_state_persist_export_index,
         saved_state_reinit_on_lib_change,
-        saved_state_skip_version_check: saved_state_skip_version_check_override.unwrap_or(false)
+        saved_state_skip_version_check: saved_state_skip_version_check_override
             || saved_state_skip_version_check,
-        saved_state_verify: saved_state_verify.unwrap_or(false),
-        slow_to_check_logging: slow_to_check_logging_override.unwrap_or_default(),
+        saved_state_verify,
+        slow_to_check_logging: slow_to_check_logging_override,
         strict_es6_import_export,
         strict_mode,
         strip_root: strip_root_override,
@@ -2815,7 +2781,7 @@ fn make_env<'a>(
     connect_flags: &'a ConnectParams,
     root: &'a std::path::Path,
     tmp_dir: &'a str,
-) -> crate::command_connect::Env<'a> {
+) -> flow_commands_connect::command_connect::Env<'a> {
     let retries = connect_flags.retries;
     let expiry = connect_flags
         .timeout
@@ -2829,7 +2795,7 @@ fn make_env<'a>(
         LazyMode::NonLazy => "false",
         LazyMode::WatchmanDeprecated => "watchman",
     });
-    crate::command_connect::Env {
+    flow_commands_connect::command_connect::Env {
         root,
         autostart: !connect_flags.no_auto_start,
         lazy_mode,
@@ -3083,7 +3049,12 @@ fn connect_and_make_request_inner(
             command: cmd.clone(),
         };
         flow_parser::loc::with_full_source_serde(|| {
-            bincode::serde::encode_into_std_write(&command, stream, bincode::config::legacy())
+            bincode::serde::encode_into_std_write(
+                &command,
+                stream,
+                bincode::config::legacy()
+                    .with_limit::<{ flow_commands_connect::command_connect_simple::MAX_FRAME_BYTES }>(),
+            )
         })?;
         Ok(())
     }
@@ -3098,7 +3069,11 @@ fn connect_and_make_request_inner(
         loop {
             let response: Result<MonitorToClientMessage, _> =
                 flow_parser::loc::with_full_source_serde(|| {
-                    bincode::serde::decode_from_std_read(&mut *stream, bincode::config::legacy())
+                    bincode::serde::decode_from_std_read(
+                        &mut *stream,
+                        bincode::config::legacy()
+                            .with_limit::<{ flow_commands_connect::command_connect_simple::MAX_FRAME_BYTES }>(),
+                    )
                 });
             let response = match response {
                 Ok(r) => r,
@@ -3187,7 +3162,8 @@ fn connect_and_make_request_inner(
         &tmp_dir_str,
     );
 
-    let (sockaddr, mut stream) = crate::command_connect::connect(&env, &client_handshake);
+    let (sockaddr, mut stream) =
+        flow_commands_connect::command_connect::connect(&env, &client_handshake);
 
     if let Err(e) = send_command(&mut stream, request) {
         panic!("Error sending command to server: {}", e);
@@ -3196,7 +3172,7 @@ fn connect_and_make_request_inner(
     match wait_for_response(&mut stream, quiet, root) {
         Ok(response) => response,
         Err(()) => {
-            crate::command_connect_simple::close_connection(sockaddr);
+            flow_commands_connect::command_connect_simple::close_connection(sockaddr);
             if !quiet {
                 eprintln!(
                     "Lost connection to the flow server ({} {} remaining)",

@@ -18,6 +18,7 @@
 // `RequestWithMetadata` / `MessageFromServer`. All bincode-framed.
 use std::sync::Arc;
 
+use crate::flow_server_monitor_connection::MAX_FRAME_BYTES;
 use crate::flow_server_monitor_server as Server;
 
 // Just forward requests to the server.
@@ -315,9 +316,13 @@ fn perform_handshake_and_get_client_handshake(
         .expect("server executable path is not valid UTF-8");
 
     // Handshake step 1: client sends handshake (bincode-framed, OCaml-faithful).
+    // Size-limited bincode config; see `MAX_FRAME_BYTES`. Defends against
+    // corrupt or out-of-sync handshake bytes so the monitor returns an error
+    // (and we log + close the socket) instead of aborting the whole monitor
+    // process via `handle_alloc_error`.
     let wire: ClientHandshakeWire = match bincode::serde::decode_from_std_read(
         &mut *client_stream,
-        bincode::config::legacy(),
+        bincode::config::legacy().with_limit::<MAX_FRAME_BYTES>(),
     ) {
         Ok(w) => w,
         Err(e) => {
@@ -353,10 +358,14 @@ fn perform_handshake_and_get_client_handshake(
             client_type: ClientType::Ephemeral,
         })
     } else {
-        match bincode::serde::decode_from_slice(&wire.1, bincode::config::legacy()) {
-            Ok((c, _)) => Some(c),
+        // The handshake tail is JSON-encoded (matching `command_connect_simple`'s
+        // client write side). bincode would reject `lsp_types::InitializeParams`
+        // (carried inside `ClientType::Persistent`) because it uses
+        // `#[serde(flatten)]`.
+        match serde_json::from_slice::<ClientToMonitor2>(&wire.1) {
+            Ok(c) => Some(c),
             Err(e) => {
-                flow_hh_logger::error!("Failed to decode bincode tail of client handshake: {}", e);
+                flow_hh_logger::error!("Failed to decode JSON tail of client handshake: {}", e);
                 Some(ClientToMonitor2 {
                     client_type: ClientType::Ephemeral,
                 })
@@ -379,9 +388,13 @@ fn perform_handshake_and_get_client_handshake(
             server_version,
         };
         let json = monitor_to_client_1_to_json(&server1);
-        let server2_bytes = server2.map(|s| {
-            bincode::serde::encode_to_vec(&s, bincode::config::legacy()).expect("bincode serialize")
-        });
+        // JSON, not bincode: keeps the handshake symmetric with the client side
+        // (which JSON-encodes its tail because `lsp_types::InitializeParams`
+        // uses `#[serde(flatten)]`). `MonitorToClient2` doesn't need flatten
+        // today, but going JSON here too means future additions to the variant
+        // payloads stay safe.
+        let server2_bytes =
+            server2.map(|s| serde_json::to_vec(&s).expect("server2 JSON serialize"));
         let wire: ServerHandshakeWire = (json.to_string(), server2_bytes);
         // Buffer the handshake-write so bincode's many small writes coalesce
         // into one (or a few) syscall instead of N.

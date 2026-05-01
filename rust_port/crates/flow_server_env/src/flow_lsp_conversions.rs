@@ -17,11 +17,11 @@ use crate::server_prot;
 fn loc_to_lsp_range(loc: &Loc) -> lsp_types::Range {
     lsp_types::Range {
         start: lsp_types::Position {
-            line: loc.start.line.saturating_sub(1) as u32,
+            line: loc.start.line.saturating_sub(1).max(0) as u32,
             character: loc.start.column.max(0) as u32,
         },
         end: lsp_types::Position {
-            line: loc.end.line.saturating_sub(1) as u32,
+            line: loc.end.line.saturating_sub(1).max(0) as u32,
             character: loc.end.column.max(0) as u32,
         },
     }
@@ -96,7 +96,7 @@ pub fn error_to_lsp(
             .into_iter()
             .map(|(style, text)| serde_json::json!({ "style": map_style(&style), "text": text }))
             .collect::<Vec<_>>();
-        Some(serde_json::json!({ "version": "0", "rendered": rendered }))
+        Some(serde_json::json!({ "version": 0, "rendered": rendered }))
     } else {
         None
     };
@@ -197,7 +197,12 @@ pub fn flow_completion_item_to_lsp(
             new_text,
         })
         .collect();
-    let documentation = item.documentation.map(lsp_types::Documentation::String);
+    let documentation = item.documentation.map(|doc| {
+        lsp_types::Documentation::MarkupContent(lsp_types::MarkupContent {
+            kind: lsp_types::MarkupKind::Markdown,
+            value: doc.trim().to_string(),
+        })
+    });
     let tags = item.tags.and_then(|tags| {
         let tags: Vec<_> = tags
             .into_iter()
@@ -246,7 +251,11 @@ pub fn flow_completion_item_to_lsp(
         detail: item.itemDetail,
         documentation,
         tags,
-        preselect: Some(is_preselect_supported && item.preselect),
+        preselect: if is_preselect_supported && item.preselect {
+            Some(true)
+        } else {
+            None
+        },
         sort_text: item.sort_text,
         filter_text: None,
         insert_text: None,

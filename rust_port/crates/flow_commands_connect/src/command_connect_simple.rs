@@ -16,6 +16,15 @@ use flow_server_env::server_status;
 use flow_server_env::socket_handshake;
 use flow_server_files::server_files_js;
 
+// Same value as `flow_server_monitor::flow_server_monitor_connection::MAX_FRAME_BYTES`. The
+// monitor caps incoming bincode frames here to defend against pathologically-encoded length
+// fields; the LSP / `flow_cli` side mirrors the cap so the two ends stay symmetric.
+//
+// bincode 2.x's `with_limit::<N>()` is a const-generic over `usize`, so this constant is `usize`
+// (the monitor declares its own copy as `u64` because bincode 1.x's `with_limit` took a runtime
+// `u64` — the byte value is the same).
+pub const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
+
 #[derive(Debug)]
 pub enum BusyReason {
     TooManyClients,
@@ -48,6 +57,8 @@ enum ConnectExn {
     Timeout,
     MissingSocket,
 }
+
+struct MonitorMisbehaved;
 
 pub fn server_exists(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool {
     let lock_file = server_files_js::lock_file(flowconfig_name, tmp_dir, root);
@@ -116,23 +127,28 @@ fn open_connection(
     // It's important that we only write this once per connection.
     //
     // The wire shape mirrors OCaml `SocketHandshake.client_handshake_wire`:
-    //   (client1_json, bincode(client2))
+    //   (client1_json, json_bytes(client2))
     // - client1 is JSON-encoded so the monitor can read it before deciding
     //   whether the client/server build ids agree.
-    // - client2 is bincode-encoded; the monitor only deserializes it after
-    //   confirming build ids match.
+    // - client2 is JSON-encoded too: it embeds `ClientType::Persistent {
+    //   lsp_init_params: InitializeParams }`, and `lsp_types::InitializeParams`
+    //   uses `#[serde(flatten)]`, which bincode rejects with
+    //   `Serde(SequenceMustHaveLength)`.
     let (ref client1, ref client2) = *client_handshake;
     let client1_json =
         serde_json::to_string(&socket_handshake::client_to_monitor_1_to_json(client1))
             .map_err(|_| ConnectExn::Timeout)?;
-    let client2_bytes = bincode::serde::encode_to_vec(client2, bincode::config::legacy())
-        .map_err(|_| ConnectExn::Timeout)?;
+    let client2_bytes = serde_json::to_vec(client2).map_err(|_| ConnectExn::Timeout)?;
     let wire: socket_handshake::ClientHandshakeWire = (client1_json, client2_bytes);
     {
         use std::io::Write;
         let mut buffered = std::io::BufWriter::new(&mut conn);
-        bincode::serde::encode_into_std_write(&wire, &mut buffered, bincode::config::legacy())
-            .map_err(|_| ConnectExn::Timeout)?;
+        bincode::serde::encode_into_std_write(
+            &wire,
+            &mut buffered,
+            bincode::config::legacy().with_limit::<MAX_FRAME_BYTES>(),
+        )
+        .map_err(|_| ConnectExn::Timeout)?;
         buffered.flush().map_err(|_| ConnectExn::Timeout)?;
     }
     let conn_clone = conn.try_clone().map_err(|_| ConnectExn::Timeout)?;
@@ -142,10 +158,14 @@ fn open_connection(
     Ok(conn)
 }
 
-pub(crate) fn close_connection(sockaddr: SocketAddr) {
+pub fn close_connection(sockaddr: SocketAddr) {
     with_connections(|conns| {
         if let Some(stream) = conns.remove(&sockaddr) {
-            let _ = stream.shutdown(std::net::Shutdown::Both);
+            // OCaml: try Timeout.shutdown_connection ic with | _ -> ()
+            // Errors from shutdown are intentionally ignored.
+            match stream.shutdown(std::net::Shutdown::Both) {
+                Ok(()) | Err(_) => (),
+            }
         }
     });
 }
@@ -190,29 +210,31 @@ fn get_handshake(
     stream
         .set_read_timeout(Some(std::time::Duration::from_secs(timeout)))
         .map_err(|_| ConnectExn::Timeout)?;
-    let wire: socket_handshake::ServerHandshakeWire =
-        bincode::serde::decode_from_std_read(&mut *stream, bincode::config::legacy()).map_err(
-            |e| {
-                if let bincode::error::DecodeError::Io { inner, .. } = &e {
-                    if inner.kind() == std::io::ErrorKind::TimedOut {
-                        // Timeouts are expected
-                        return ConnectExn::Timeout;
-                    }
-                }
-                close_connection(sockaddr);
-                ConnectExn::Timeout
-            },
-        )?;
+    let wire: socket_handshake::ServerHandshakeWire = bincode::serde::decode_from_std_read(
+        &mut *stream,
+        bincode::config::legacy().with_limit::<MAX_FRAME_BYTES>(),
+    )
+    .map_err(|e| {
+        if let bincode::error::DecodeError::Io { inner, .. } = &e {
+            if inner.kind() == std::io::ErrorKind::TimedOut {
+                // Timeouts are expected
+                return ConnectExn::Timeout;
+            }
+        }
+        close_connection(sockaddr);
+        ConnectExn::Timeout
+    })?;
     let server1_json: serde_json::Value =
         serde_json::from_str(&wire.0).map_err(|_| ConnectExn::Timeout)?;
     let server1 = socket_handshake::json_to_monitor_to_client_1(&server1_json).map_err(|_| {
         close_connection(sockaddr);
         ConnectExn::Timeout
     })?;
-    // Server invariant: it only sends us snd=Some if it knows client+server versions match
+    // Server invariant: it only sends us snd=Some if it knows client+server versions match.
+    // JSON, not bincode: matches the server-side encode (see `socket_acceptor`).
     let server2: Option<socket_handshake::MonitorToClient2> = match &wire.1 {
-        Some(bytes) => match bincode::serde::decode_from_slice(bytes, bincode::config::legacy()) {
-            Ok((s, _)) => Some(s),
+        Some(bytes) => match serde_json::from_slice::<socket_handshake::MonitorToClient2>(bytes) {
+            Ok(s) => Some(s),
             Err(_) => {
                 close_connection(sockaddr);
                 return Err(ConnectExn::Timeout);
@@ -229,7 +251,7 @@ fn verify_handshake(
     server_handshake: &socket_handshake::ServerHandshake,
     sockaddr: SocketAddr,
     stream: &mut TcpStream,
-) -> Result<(), CCSError> {
+) -> Result<Result<(), CCSError>, MonitorMisbehaved> {
     let (client1, _client2) = client_handshake;
     let (server1, server2) = server_handshake;
     // First, let's close the connection as needed
@@ -241,7 +263,9 @@ fn verify_handshake(
             // attempts on the Unix Domain Socket to succeed (only to be doomed to failure).
             // To avoid that fate, we'll wait for the connection to be closed.
             wait_on_server_restart(stream);
-            let _ = stream.shutdown(std::net::Shutdown::Both);
+            match stream.shutdown(std::net::Shutdown::Both) {
+                Ok(()) | Err(_) => (),
+            }
         }
     }
     // Next, let's interpret the server's response into our own response code
@@ -249,46 +273,48 @@ fn verify_handshake(
         (
             socket_handshake::ServerIntent::ServerWillContinue,
             Some(socket_handshake::MonitorToClient2::ServerReady),
-        ) => Ok(()),
+        ) => Ok(Ok(())),
         (
             socket_handshake::ServerIntent::ServerWillContinue,
             Some(socket_handshake::MonitorToClient2::ServerStillInitializing(..)),
-        ) => Ok(()),
+        ) => Ok(Ok(())),
         (
             socket_handshake::ServerIntent::ServerWillHangup,
             Some(socket_handshake::MonitorToClient2::ServerHasTooManyClients),
-        ) => Err(CCSError::ServerBusy(BusyReason::TooManyClients)),
+        ) => Ok(Err(CCSError::ServerBusy(BusyReason::TooManyClients))),
         (
             socket_handshake::ServerIntent::ServerWillHangup,
             Some(socket_handshake::MonitorToClient2::ServerStillInitializing(
                 server_status,
                 watcher_status,
             )),
-        ) => Err(CCSError::ServerBusy(BusyReason::FailOnInit(
+        ) => Ok(Err(CCSError::ServerBusy(BusyReason::FailOnInit(
             server_status.clone(),
             watcher_status.clone(),
-        ))),
+        )))),
         (socket_handshake::ServerIntent::ServerWillHangup, None) => {
             if client1.client_build_id != server1.server_build_id {
-                Err(CCSError::BuildIdMismatch(
+                Ok(Err(CCSError::BuildIdMismatch(
                     MismatchBehavior::ClientShouldError {
                         server_bin: server1.server_bin.clone(),
                         server_version: server1.server_version.clone(),
                     },
-                ))
+                )))
             } else {
-                panic!("Don't know why server closed the connection")
+                Err(MonitorMisbehaved)
             }
         }
         (socket_handshake::ServerIntent::ServerWillExit, None) => {
             if client1.is_stop_request {
-                Ok(())
+                Ok(Ok(()))
             } else {
                 // either the build ids were different, or client1 wasn't valid for server
-                Err(CCSError::BuildIdMismatch(MismatchBehavior::ServerExited))
+                Ok(Err(CCSError::BuildIdMismatch(
+                    MismatchBehavior::ServerExited,
+                )))
             }
         }
-        _ => panic!("Monitor sent incorrect handshake"),
+        _ => Err(MonitorMisbehaved),
     }
 }
 
@@ -299,26 +325,41 @@ pub fn connect_once(
     tmp_dir: &str,
     root: &Path,
 ) -> Result<(SocketAddr, TcpStream), CCSError> {
-    let inner =
-        || -> Result<(SocketAddr, TcpStream, socket_handshake::ServerHandshake), ConnectExn> {
-            let (sockaddr, mut stream) =
-                establish_connection(flowconfig_name, 1, client_handshake, tmp_dir, root)?;
-            let (_, server_handshake) = get_handshake(1, sockaddr, &mut stream)?;
-            Ok((sockaddr, stream, server_handshake))
-        };
-    match inner() {
-        Ok((sockaddr, mut stream, server_handshake)) => {
-            verify_handshake(client_handshake, &server_handshake, sockaddr, &mut stream)?;
-            Ok((sockaddr, stream))
+    enum BroadCatch {
+        MissingSocket,
+        TimeoutOrOther,
+    }
+    let inner = || -> Result<Result<(SocketAddr, TcpStream), CCSError>, BroadCatch> {
+        let (sockaddr, mut stream) =
+            establish_connection(flowconfig_name, 1, client_handshake, tmp_dir, root).map_err(
+                |e| match e {
+                    ConnectExn::MissingSocket => BroadCatch::MissingSocket,
+                    ConnectExn::Timeout => BroadCatch::TimeoutOrOther,
+                },
+            )?;
+        let (sockaddr, server_handshake) =
+            get_handshake(1, sockaddr, &mut stream).map_err(|e| match e {
+                ConnectExn::MissingSocket => BroadCatch::MissingSocket,
+                ConnectExn::Timeout => BroadCatch::TimeoutOrOther,
+            })?;
+        match verify_handshake(client_handshake, &server_handshake, sockaddr, &mut stream) {
+            Ok(Ok(())) => Ok(Ok((sockaddr, stream))),
+            Ok(Err(ccs_err)) => Ok(Err(ccs_err)),
+            // OCaml: `failwith ...` raised inside `verify_handshake`, caught by `| _ ->`.
+            Err(MonitorMisbehaved) => Err(BroadCatch::TimeoutOrOther),
         }
-        Err(ConnectExn::MissingSocket) => {
+    };
+    match inner() {
+        Ok(Ok(conn)) => Ok(conn),
+        Ok(Err(ccs_err)) => Err(ccs_err),
+        Err(BroadCatch::MissingSocket) => {
             if server_exists(flowconfig_name, tmp_dir, root) {
                 Err(CCSError::ServerSocketMissing)
             } else {
                 Err(CCSError::ServerMissing)
             }
         }
-        Err(ConnectExn::Timeout) => {
+        Err(BroadCatch::TimeoutOrOther) => {
             if server_exists(flowconfig_name, tmp_dir, root) {
                 Err(CCSError::ServerBusy(BusyReason::NotResponding))
             } else {

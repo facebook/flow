@@ -184,6 +184,7 @@ fn statement_end_trailing_comments(
 
 fn variable_declaration_end(
     env: &mut ParserEnv,
+    kind: VariableKind,
     declarations: &mut [statement::variable::Declarator<Loc, Loc>],
 ) -> Result<Vec<Comment<Loc>>, Rollback> {
     match semicolon(env, None, true)? {
@@ -198,7 +199,7 @@ fn variable_declaration_end(
         }) => {
             // Remove trailing comments from the last declarator
             if let Some(last) = declarations.last_mut() {
-                *last = remover.map_variable_declarator(last);
+                *last = remover.map_variable_declarator(kind, last);
             }
             Ok(Vec::new())
         }
@@ -1077,7 +1078,7 @@ fn var_statement(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, 
     let (loc, s) = with_loc(None, env, |env| {
         let kind = VariableKind::Var;
         let (mut declarations, leading, errs) = declaration_parser::parse_var(env)?;
-        let trailing = variable_declaration_end(env, &mut declarations)?;
+        let trailing = variable_declaration_end(env, kind, &mut declarations)?;
         for err in errs {
             env.error_at(err.0, err.1)?;
         }
@@ -1099,7 +1100,7 @@ fn const_statement(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>
     let (loc, s) = with_loc(None, env, |env| {
         let kind = VariableKind::Const;
         let (mut declarations, leading, errs) = declaration_parser::parse_const(env)?;
-        let trailing = variable_declaration_end(env, &mut declarations)?;
+        let trailing = variable_declaration_end(env, kind, &mut declarations)?;
         for err in errs {
             env.error_at(err.0, err.1)?;
         }
@@ -1121,7 +1122,7 @@ fn let_statement(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, 
     let (loc, s) = with_loc(None, env, |env| {
         let kind = VariableKind::Let;
         let (mut declarations, leading, errs) = declaration_parser::parse_let(env)?;
-        let trailing = variable_declaration_end(env, &mut declarations)?;
+        let trailing = variable_declaration_end(env, kind, &mut declarations)?;
         for err in errs {
             env.error_at(err.0, err.1)?;
         }
@@ -2100,7 +2101,7 @@ fn declare_var(
     for err in errs {
         env.error_at(err.0, err.1)?;
     }
-    let trailing = variable_declaration_end(env, &mut declarations)?;
+    let trailing = variable_declaration_end(env, kind, &mut declarations)?;
     Ok(statement::DeclareVariable {
         declarations: declarations.into(),
         kind,

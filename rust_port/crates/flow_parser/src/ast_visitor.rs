@@ -5846,12 +5846,13 @@ pub trait AstVisitor<'ast, Loc: Dupe, Type: Dupe = Loc, C = &'ast Loc, E = !> {
 
     fn map_variable_declarator(
         &mut self,
+        kind: ast::VariableKind,
         declarator: &'ast ast::statement::variable::Declarator<Loc, Loc>,
     ) -> ast::statement::variable::Declarator<Loc, Loc>
     where
         Loc: Dupe,
     {
-        map_variable_declarator_default(self, declarator)
+        map_variable_declarator_default(self, kind, declarator)
     }
 
     fn while_(
@@ -11525,11 +11526,7 @@ pub fn map_type_param_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     } = tparam;
     let name_ = visitor.map_identifier(name);
     let bound_ = visitor.map_type_annotation_hint(bound);
-    let variance_ = variance.as_ref().map(|v| ast::Variance {
-        loc: v.loc.dupe(),
-        kind: v.kind.clone(),
-        comments: visitor.map_syntax_opt(v.comments.as_ref()),
-    });
+    let variance_ = visitor.map_variance_opt(variance.as_ref());
     let default_ = default.as_ref().map(|d| visitor.map_type_(d));
     let const__ = const_
         .as_ref()
@@ -13224,7 +13221,7 @@ pub fn map_function_param_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
             argument,
             default,
         } => {
-            let argument_ = visitor.map_pattern(None, argument);
+            let argument_ = visitor.map_function_param_pattern(argument);
             let default_ = default.as_ref().map(|d| visitor.map_expression(d));
             ast::function::Param::RegularParam {
                 loc: loc.dupe(),
@@ -14715,13 +14712,13 @@ pub fn map_jsx_element_name_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
 ) -> ast::jsx::Name<Loc, Loc> {
     match name {
         ast::jsx::Name::Identifier(id) => {
-            ast::jsx::Name::Identifier(visitor.map_jsx_identifier(id))
+            ast::jsx::Name::Identifier(visitor.map_jsx_element_name_identifier(id))
         }
         ast::jsx::Name::NamespacedName(ns) => {
-            ast::jsx::Name::NamespacedName(visitor.map_jsx_namespaced_name(ns))
+            ast::jsx::Name::NamespacedName(visitor.map_jsx_element_name_namespaced(ns))
         }
         ast::jsx::Name::MemberExpression(member) => {
-            ast::jsx::Name::MemberExpression(visitor.map_jsx_member_expression(member))
+            ast::jsx::Name::MemberExpression(visitor.map_jsx_element_name_member_expression(member))
         }
     }
 }
@@ -17250,31 +17247,7 @@ pub fn map_pattern_object_p_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     _loc: &'ast Loc,
     prop: &'ast ast::pattern::object::Property<Loc, Loc>,
 ) -> ast::pattern::object::Property<Loc, Loc> {
-    match prop {
-        ast::pattern::object::Property::NormalProperty(p) => {
-            let ast::pattern::object::NormalProperty {
-                loc,
-                key,
-                pattern,
-                default,
-                shorthand,
-            } = p;
-            let key_ = visitor.map_pattern_object_property_key(kind, key);
-            let pattern_ = visitor.map_pattern_object_property_pattern(kind, pattern);
-            let default_ = visitor.map_default_opt(default.as_ref());
-            ast::pattern::object::Property::NormalProperty(ast::pattern::object::NormalProperty {
-                loc: loc.dupe(),
-                key: key_,
-                pattern: pattern_,
-                default: default_,
-                shorthand: *shorthand,
-            })
-        }
-        ast::pattern::object::Property::RestElement(r) => {
-            let r_ = visitor.map_pattern_object_rest_property(kind, r);
-            ast::pattern::object::Property::RestElement(r_)
-        }
-    }
+    visitor.map_pattern_object_property(kind, prop)
 }
 
 pub fn pattern_object_property_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
@@ -17312,25 +17285,12 @@ pub fn map_pattern_object_property_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
             let key_ = visitor.map_pattern_object_property_key(kind, key);
             let pattern_ = visitor.map_pattern_object_property_pattern(kind, pattern);
             let default_ = default.as_ref().map(|e| visitor.map_expression(e));
-            let shorthand_ = *shorthand && {
-                match (&key_, &pattern_) {
-                    (
-                        ast::pattern::object::Key::Identifier(key_id),
-                        ast::pattern::Pattern::Identifier { loc: _, inner },
-                    ) => {
-                        let key_name = &key_id.name;
-                        let value_name = &inner.name.name;
-                        key_name == value_name
-                    }
-                    _ => false,
-                }
-            };
             ast::pattern::object::Property::NormalProperty(ast::pattern::object::NormalProperty {
                 loc: loc.dupe(),
                 key: key_,
                 pattern: pattern_,
                 default: default_,
-                shorthand: shorthand_,
+                shorthand: *shorthand,
             })
         }
         ast::pattern::object::Property::RestElement(r) => {
@@ -17864,7 +17824,7 @@ pub fn map_function_rest_param_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         comments,
     } = param;
 
-    let argument_ = visitor.map_pattern(None, argument);
+    let argument_ = visitor.map_function_param_pattern(argument);
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
 
     ast::function::RestParam {
@@ -18558,7 +18518,7 @@ pub fn map_variable_declaration_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     let declarations_ = Arc::from(
         declarations
             .iter()
-            .map(|d| visitor.map_variable_declarator(d))
+            .map(|d| visitor.map_variable_declarator(*kind, d))
             .collect::<Vec<_>>(),
     );
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
@@ -18584,10 +18544,11 @@ pub fn variable_declarator_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
 
 pub fn map_variable_declarator_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
+    kind: ast::VariableKind,
     declarator: &'ast ast::statement::variable::Declarator<Loc, Loc>,
 ) -> ast::statement::variable::Declarator<Loc, Loc> {
     let ast::statement::variable::Declarator { loc, id, init } = declarator;
-    let id_ = visitor.map_pattern(None, id);
+    let id_ = visitor.map_variable_declarator_pattern(kind, id);
     let init_ = init.as_ref().map(|i| visitor.map_expression(i));
     ast::statement::variable::Declarator {
         loc: loc.dupe(),

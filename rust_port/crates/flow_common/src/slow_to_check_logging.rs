@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, serde::Serialize, serde::Deserialize)]
 pub struct SlowToCheckLogging {
     pub slow_files_logging_internal: Option<f64>,
     pub slow_components_logging_threshold: Option<f64>,

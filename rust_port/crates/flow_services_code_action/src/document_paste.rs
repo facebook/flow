@@ -166,7 +166,7 @@ impl<'a> ImportInformationExtractor<'a, '_> {
                             if self.cx.file() == f || f.is_lib_file() {
                                 (source_value.dupe(), false)
                             } else {
-                                (FlowSmolStr::from(f.as_str()), true)
+                                (FlowSmolStr::from(f.to_absolute()), true)
                             }
                         }
                         None => (source_value.dupe(), false),
@@ -286,16 +286,14 @@ pub fn prepare_document_paste(
         relevant_imported_defs: &relevant_imported_defs,
         import_items: vec![],
     };
-    // OCaml: ignore @@ extractor#program typed_ast;
-    // The mapper traverses the full AST but only overrides import_declaration.
-    // Since import declarations are always top-level in JS, iterating top-level
-    // statements is semantically equivalent.
     for stmt in typed_ast.statements.iter() {
         if let ast::statement::StatementInner::ImportDeclaration { loc, inner } = &**stmt {
             extractor.import_declaration(loc, inner);
         }
     }
-    extractor.import_items
+    let mut import_items = extractor.import_items;
+    import_items.reverse();
+    import_items
 }
 
 pub fn provide_document_paste_edits(

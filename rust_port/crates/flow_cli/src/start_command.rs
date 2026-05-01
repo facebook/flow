@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::sync::Arc;
-
 use flow_config::LazyMode;
 use flow_server_files::server_files_js;
 use flow_server_monitor as monitor;
@@ -77,56 +75,18 @@ fn main(
     let flowconfig_path = server_files_js::config_file(&flowconfig_name, &root);
     let (flowconfig, flowconfig_hash) =
         command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
-    let overrides = command_utils::MakeOptionsOverrides {
-        all: if options_flags.all { Some(true) } else { None },
-        debug: options_flags.debug,
-        distributed: options_flags.distributed,
-        estimate_recheck_time: options_flags.estimate_recheck_time,
-        flowconfig_flags: Some(options_flags.flowconfig_flags.clone()),
-        include_suppressions: if options_flags.include_suppressions {
-            Some(true)
-        } else {
-            None
-        },
-        include_warnings: options_flags.include_warnings,
-        lazy_mode: lazy_mode.clone(),
-        long_lived_workers: options_flags.long_lived_workers,
-        max_warnings: options_flags.max_warnings,
-        max_workers: options_flags.max_workers,
-        merge_timeout: options_flags.merge_timeout,
-        munge_underscore_members: options_flags.munge_underscore_members,
-        no_autoimports: options_flags.no_autoimports,
-        profile: Some(options_flags.profile),
-        quiet: options_flags.quiet,
-        saved_state_fetcher: saved_state_options_flags.saved_state_fetcher.clone(),
-        saved_state_force_recheck: Some(saved_state_options_flags.saved_state_force_recheck),
-        saved_state_no_fallback: Some(saved_state_options_flags.saved_state_no_fallback),
-        saved_state_skip_version_check: Some(
-            saved_state_options_flags.saved_state_skip_version_check,
-        ),
-        saved_state_verify: Some(saved_state_options_flags.saved_state_verify),
-        slow_to_check_logging: Some(options_flags.slow_to_check_logging.clone()),
-        strip_root: options_flags.strip_root,
-        temp_dir: options_flags.temp_dir.clone(),
-        verbose: options_flags.verbose.clone(),
-        vpn_less: options_flags.vpn_less,
-        wait_for_recheck: options_flags.wait_for_recheck,
-        ..Default::default()
-    };
-    let mut options = command_utils::make_options(
-        flowconfig.clone(),
-        flowconfig_hash,
+    let options = command_utils::make_options(
         flowconfig_name.clone(),
+        flowconfig_hash,
+        flowconfig.clone(),
+        lazy_mode,
         root.clone(),
-        command_utils::get_temp_dir(&options_flags.temp_dir),
-        options_flags.no_flowlib,
-        overrides,
+        options_flags.clone(),
+        saved_state_options_flags.clone(),
     );
-    options.debug = options_flags.debug;
-    options.quiet = options_flags.quiet;
-    options.verbose = options_flags.verbose.clone().map(Arc::new);
     let _init_id = crate::random_id_short_string();
     // initialize loggers before doing too much, especially anything that might exit
+    flow_logging_utils::init_loggers(&options, None);
 
     if !ignore_version {
         command_utils::assert_version(&flowconfig);
@@ -211,6 +171,22 @@ fn main(
         saved_state_no_fallback: saved_state_options_flags.saved_state_no_fallback,
         saved_state_skip_version_check: saved_state_options_flags.saved_state_skip_version_check,
         saved_state_verify: saved_state_options_flags.saved_state_verify,
+        strip_root: options_flags.strip_root,
+        distributed: options_flags.distributed,
+        estimate_recheck_time: options_flags.estimate_recheck_time,
+        include_warnings: options_flags.include_warnings,
+        max_warnings: options_flags.max_warnings,
+        merge_timeout: options_flags.merge_timeout,
+        munge_underscore_members: options_flags.munge_underscore_members,
+        no_autoimports: options_flags.no_autoimports,
+        slow_to_check_logging: options_flags.slow_to_check_logging.clone(),
+        vpn_less: options_flags.vpn_less,
+        flowconfig_ignores: options_flags.flowconfig_flags.ignores.clone(),
+        flowconfig_includes: options_flags.flowconfig_flags.includes.clone(),
+        flowconfig_libs: options_flags.flowconfig_flags.libs.clone(),
+        flowconfig_raw_lint_severities: options_flags.flowconfig_flags.raw_lint_severities.clone(),
+        flowconfig_untyped: options_flags.flowconfig_flags.untyped.clone(),
+        flowconfig_declarations: options_flags.flowconfig_flags.declarations.clone(),
         no_restart,
         autostop,
         no_cgroup,

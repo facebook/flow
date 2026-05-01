@@ -631,6 +631,7 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, !> for TrailingCommentsRemover 
 
     fn map_variable_declarator(
         &mut self,
+        _kind: ast::VariableKind,
         decl: &'ast ast::statement::variable::Declarator<Loc, Loc>,
     ) -> ast::statement::variable::Declarator<Loc, Loc> {
         match &decl.init {

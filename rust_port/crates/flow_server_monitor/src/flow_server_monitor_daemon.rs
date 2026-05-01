@@ -251,6 +251,7 @@ pub fn daemonize(
     let name = format!("monitor for {}", root_str);
 
     let server_options = &monitor_options.server_options;
+    let cli_overrides = &monitor_options.cli_overrides;
     let args = DaemonizeArgs {
         flowconfig_name: server_options.flowconfig_name.to_string(),
         no_flowlib: monitor_options.no_flowlib,
@@ -292,6 +293,22 @@ pub fn daemonize(
         saved_state_no_fallback: server_options.saved_state_no_fallback,
         saved_state_skip_version_check: server_options.saved_state_skip_version_check,
         saved_state_verify: server_options.saved_state_verify,
+        strip_root: server_options.strip_root,
+        distributed: server_options.distributed,
+        estimate_recheck_time: Some(server_options.estimate_recheck_time),
+        include_warnings: server_options.include_warnings,
+        max_warnings: cli_overrides.max_warnings,
+        merge_timeout: server_options.merge_timeout.map(|t| t as i32),
+        munge_underscore_members: server_options.munge_underscores,
+        no_autoimports: cli_overrides.no_autoimports,
+        slow_to_check_logging: server_options.slow_to_check_logging,
+        vpn_less: Some(server_options.vpn_less),
+        flowconfig_ignores: cli_overrides.flowconfig_ignores.clone(),
+        flowconfig_includes: cli_overrides.flowconfig_includes.clone(),
+        flowconfig_libs: cli_overrides.flowconfig_libs.clone(),
+        flowconfig_raw_lint_severities: cli_overrides.flowconfig_raw_lint_severities.clone(),
+        flowconfig_untyped: cli_overrides.flowconfig_untyped.clone(),
+        flowconfig_declarations: cli_overrides.flowconfig_declarations.clone(),
         no_cgroup: false,
         root: (*server_options.root).clone(),
         temp_dir: server_options.temp_dir.to_string(),
@@ -318,15 +335,16 @@ pub fn daemonize(
             exit(FlowExitStatus::ServerStartFailed);
         }
     };
-    let pid = handle.child.id();
 
-    on_spawn(pid);
-
+    // We never write to the child process so we can close this channel
     if let Err(e) = shutdown_out_write(&mut handle.channels.1) {
         flow_hh_logger::debug!("failed to shutdown monitor parent_out: {}", e);
     }
 
+    let pid = handle.child.id();
+    on_spawn(pid);
+
     // If wait is true, wait for the "Ready" message.
-    // Otherwise, only wait for the "Starting" message.
+    // Otherwise, only wait for the "Starting message"
     wait_loop(wait, &mut handle);
 }

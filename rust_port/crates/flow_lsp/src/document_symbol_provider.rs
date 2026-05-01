@@ -110,11 +110,11 @@ fn kind_of_property(is_method: bool) -> SymbolKind {
 fn loc_to_lsp_range(loc: &Loc) -> Range {
     Range {
         start: Position {
-            line: loc.start.line.saturating_sub(1) as u32,
+            line: loc.start.line.saturating_sub(1).max(0) as u32,
             character: loc.start.column.max(0) as u32,
         },
         end: Position {
-            line: loc.end.line.saturating_sub(1) as u32,
+            line: loc.end.line.saturating_sub(1).max(0) as u32,
             character: loc.end.column.max(0) as u32,
         },
     }
@@ -130,13 +130,14 @@ fn mk(
 ) -> DocumentSymbol {
     let range = loc_to_lsp_range(loc);
     let selection_range = loc_to_lsp_range(selection);
+    let children = children.and_then(|c| if c.is_empty() { None } else { Some(c) });
     #[allow(deprecated)]
     DocumentSymbol {
         name,
         detail,
         kind,
         tags: None,
-        deprecated: Some(false),
+        deprecated: None,
         range,
         selection_range,
         children,
@@ -402,7 +403,29 @@ impl<'ast> AstVisitor<'ast, Loc> for Visitor {
             class::MethodKind::Set => (SymbolKind::PROPERTY, format!("(set) {}", name)),
         };
         self.add_with_children(loc, &selection, name, None, kind, |this| {
-            ast_visitor::class_method_default(this, meth).into_ok();
+            let class::Method {
+                loc: _,
+                kind: _,
+                key,
+                value,
+                static_: _,
+                override_: _,
+                ts_accessibility: _,
+                decorators,
+                comments,
+            } = meth;
+            ast_visitor::AstVisitor::object_key(this, key).into_ok();
+            let (func_loc, func) = value;
+            ast_visitor::AstVisitor::function_(
+                this,
+                <Self as ast_visitor::AstVisitor<Loc, Loc, &Loc, !>>::normalize_loc(func_loc),
+                func,
+            )
+            .into_ok();
+            for decorator in decorators.iter() {
+                ast_visitor::AstVisitor::class_decorator(this, decorator).into_ok();
+            }
+            ast_visitor::AstVisitor::syntax_opt(this, comments.as_ref()).into_ok();
         });
         Ok(())
     }

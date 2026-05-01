@@ -11,7 +11,7 @@ use std::process::Command;
 
 use flow_server_files::server_files_js;
 
-pub(crate) enum FailedToKill {
+pub enum FailedToKill {
     Message(Option<String>),
 }
 
@@ -34,7 +34,7 @@ fn server_lock_is_held(lock_path: &str) -> bool {
     matches!(file.try_lock(), Err(std::fs::TryLockError::WouldBlock))
 }
 
-pub(crate) fn server_exists(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool {
+pub fn server_exists(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool {
     let root = canonical_root(root);
     let lock_path = server_files_js::lock_file(flowconfig_name, tmp_dir, &root);
     server_lock_is_held(&lock_path)
@@ -44,11 +44,7 @@ fn server_may_still_be_alive_after_kill(flowconfig_name: &str, tmp_dir: &str, ro
     server_exists(flowconfig_name, tmp_dir, root)
 }
 
-pub(crate) fn mean_kill(
-    flowconfig_name: &str,
-    tmp_dir: &str,
-    root: &Path,
-) -> Result<(), FailedToKill> {
+pub fn mean_kill(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> Result<(), FailedToKill> {
     let root = canonical_root(root);
     let pids_file = server_files_js::pids_file(flowconfig_name, tmp_dir, &root);
     let pids = match std::fs::read_to_string(&pids_file) {

@@ -622,6 +622,7 @@ pub fn daemonize(
     ignore_version: bool,
     file_watcher_pid: Option<u32>,
     options: Arc<Options>,
+    cli_overrides: &flow_common::cli_overrides::CliOverrides,
 ) -> Result<flow_daemon::Handle<(), ()>, String> {
     server_daemon::daemonize(
         init_id,
@@ -632,5 +633,6 @@ pub fn daemonize(
         ignore_version,
         options,
         file_watcher_pid,
+        cli_overrides,
     )
 }

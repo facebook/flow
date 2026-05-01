@@ -23,6 +23,7 @@ pub mod type_coverage {
     use lsp_types::TextDocumentIdentifier;
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
     pub struct Params {
         pub text_document: TextDocumentIdentifier,
     }
@@ -74,6 +75,7 @@ pub mod rename_files {
     use lsp_types::Url;
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
     pub struct FileRename {
         pub old_uri: Url,
         pub new_uri: Url,
@@ -102,12 +104,14 @@ pub mod llm_context {
     use lsp_types::WorkspaceFolder;
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
     pub struct EnvironmentDetails {
         pub workspace_folders: Vec<WorkspaceFolder>,
         pub os: String,
     }
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
     pub struct Params {
         pub edited_file_paths: Vec<String>,
         pub environment_details: EnvironmentDetails,
@@ -115,6 +119,7 @@ pub mod llm_context {
     }
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
     pub struct Result {
         pub llm_context: String,
         pub files_processed: Vec<String>,
@@ -137,7 +142,8 @@ pub mod document_paste {
         ImportTypeOfAsNamespace,
     }
 
-    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    #[derive(Debug, Clone, serde::Serialize)]
+    #[serde(rename_all = "camelCase")]
     pub struct ImportItem {
         pub remote_name: String,
         pub local_name: Option<String>,
@@ -146,7 +152,44 @@ pub mod document_paste {
         pub import_source_is_resolved: bool,
     }
 
+    impl<'de> serde::Deserialize<'de> for ImportItem {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            #[derive(serde::Deserialize)]
+            #[serde(rename_all = "camelCase")]
+            struct Helper {
+                remote_name: String,
+                local_name: Option<String>,
+                import_type: ImportType,
+                import_source: String,
+                import_source_is_resolved: bool,
+            }
+            let h = Helper::deserialize(deserializer)?;
+            let import_source = if h.import_source_is_resolved {
+                match lsp_types::Url::parse(&h.import_source) {
+                    Ok(url) => match url.to_file_path() {
+                        Ok(p) => p.to_string_lossy().into_owned(),
+                        Err(()) => h.import_source,
+                    },
+                    Err(_) => h.import_source,
+                }
+            } else {
+                h.import_source
+            };
+            Ok(ImportItem {
+                remote_name: h.remote_name,
+                local_name: h.local_name,
+                import_type: h.import_type,
+                import_source,
+                import_source_is_resolved: h.import_source_is_resolved,
+            })
+        }
+    }
+
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
     pub enum DataTransfer {
         ImportMetadata { imports: Vec<ImportItem> },
     }
@@ -158,10 +201,39 @@ pub mod document_paste {
     }
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
     pub struct ProvideParams {
+        #[serde(deserialize_with = "deserialize_lenient_text_document_item")]
         pub text_document: TextDocumentItem,
         pub ranges: Vec<Range>,
         pub data_transfer: DataTransfer,
+    }
+
+    fn deserialize_lenient_text_document_item<'de, D>(
+        deserializer: D,
+    ) -> Result<TextDocumentItem, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::Deserialize;
+        #[derive(serde::Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Helper {
+            uri: lsp_types::Url,
+            #[serde(default)]
+            language_id: String,
+            #[serde(default)]
+            version: i32,
+            #[serde(default)]
+            text: String,
+        }
+        let h = Helper::deserialize(deserializer)?;
+        Ok(TextDocumentItem {
+            uri: h.uri,
+            language_id: h.language_id,
+            version: h.version,
+            text: h.text,
+        })
     }
 }
 
@@ -169,7 +241,9 @@ pub mod text_document_diagnostics {
     use lsp_types::Diagnostic;
     use lsp_types::TextDocumentIdentifier;
 
+    // `textDocument` on the wire.
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
     pub struct Params {
         pub text_document: TextDocumentIdentifier,
     }

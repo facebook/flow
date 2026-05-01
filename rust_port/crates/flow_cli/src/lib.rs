@@ -23,9 +23,6 @@ mod autofix_command;
 mod batch_coverage_command;
 mod check_contents_command;
 mod codemod_command;
-mod command_connect;
-pub mod command_connect_simple;
-mod command_mean_kill;
 pub mod command_spec;
 pub mod command_utils;
 mod config_command;
@@ -62,25 +59,25 @@ mod type_of_name_command;
 mod version_command;
 
 pub(crate) fn get_options_with_root_and_flowconfig_name(
-    no_flowlib: bool,
     ignore_version: bool,
     root: &Path,
     flowconfig_name: &str,
-    overrides: command_utils::MakeOptionsOverrides,
+    lazy_mode: Option<LazyMode>,
+    options_flags: command_utils::OptionsFlags,
+    saved_state_options_flags: command_utils::SavedStateFlags,
 ) -> Arc<Options> {
     let flowconfig_path = root.join(flowconfig_name);
     let flowconfig_path = flowconfig_path.to_string_lossy().to_string();
     let (flowconfig, flowconfig_hash) =
         command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
-    let temp_dir = command_utils::get_temp_dir(&overrides.temp_dir);
     Arc::new(command_utils::make_options(
-        flowconfig,
-        flowconfig_hash,
         flowconfig_name.to_string(),
+        flowconfig_hash,
+        flowconfig,
+        lazy_mode,
         root.to_path_buf(),
-        temp_dir,
-        no_flowlib,
-        overrides,
+        options_flags,
+        saved_state_options_flags,
     ))
 }
 
@@ -98,36 +95,52 @@ fn build_monitor_options_and_start_args(
     args: &flow_server_monitor::DaemonizeArgs,
 ) -> (Arc<Options>, StartArgs) {
     let lazy_mode = args.lazy_mode.as_deref().and_then(parse_lazy_mode);
-    let overrides = command_utils::MakeOptionsOverrides {
-        include_suppressions: if args.include_suppressions {
-            Some(true)
-        } else {
-            None
-        },
-        all: if args.all { Some(true) } else { None },
+    let options_flags = command_utils::OptionsFlags {
+        all: args.all,
         debug: args.debug,
-        lazy_mode,
-        long_lived_workers: args.long_lived_workers,
+        flowconfig_flags: command_utils::FlowconfigFlags {
+            ignores: args.flowconfig_ignores.clone(),
+            includes: args.flowconfig_includes.clone(),
+            libs: args.flowconfig_libs.clone(),
+            raw_lint_severities: args.flowconfig_raw_lint_severities.clone(),
+            untyped: args.flowconfig_untyped.clone(),
+            declarations: args.flowconfig_declarations.clone(),
+        },
+        include_warnings: args.include_warnings,
+        max_warnings: args.max_warnings,
         max_workers: args.max_workers,
-        profile: Some(args.profile),
+        merge_timeout: args.merge_timeout,
+        munge_underscore_members: args.munge_underscore_members,
+        no_flowlib: args.no_flowlib,
+        profile: args.profile,
         quiet: args.quiet,
-        saved_state_fetcher: args.saved_state_fetcher,
-        saved_state_force_recheck: Some(args.saved_state_force_recheck),
-        saved_state_no_fallback: Some(args.saved_state_no_fallback),
-        saved_state_skip_version_check: Some(args.saved_state_skip_version_check),
-        saved_state_verify: Some(args.saved_state_verify),
+        slow_to_check_logging: args.slow_to_check_logging,
+        strip_root: args.strip_root,
         temp_dir: Some(args.temp_dir.clone()),
         verbose: args.verbose.clone(),
         wait_for_recheck: args.wait_for_recheck,
-        ..Default::default()
+        vpn_less: args.vpn_less,
+        include_suppressions: args.include_suppressions,
+        estimate_recheck_time: args.estimate_recheck_time,
+        long_lived_workers: args.long_lived_workers,
+        distributed: args.distributed,
+        no_autoimports: args.no_autoimports,
+    };
+    let saved_state_options_flags = command_utils::SavedStateFlags {
+        saved_state_fetcher: args.saved_state_fetcher,
+        saved_state_force_recheck: args.saved_state_force_recheck,
+        saved_state_no_fallback: args.saved_state_no_fallback,
+        saved_state_skip_version_check: args.saved_state_skip_version_check,
+        saved_state_verify: args.saved_state_verify,
     };
 
     let options = get_options_with_root_and_flowconfig_name(
-        args.no_flowlib,
         args.ignore_version,
         &args.root,
         &args.flowconfig_name,
-        overrides,
+        lazy_mode,
+        options_flags,
+        saved_state_options_flags,
     );
 
     let start_args = StartArgs {
@@ -148,6 +161,16 @@ fn build_monitor_options_and_start_args(
         from: args.from.clone(),
         autostop: args.autostop,
         no_restart: args.no_restart,
+        cli_overrides: flow_common::cli_overrides::CliOverrides {
+            max_warnings: args.max_warnings,
+            no_autoimports: args.no_autoimports,
+            flowconfig_ignores: args.flowconfig_ignores.clone(),
+            flowconfig_includes: args.flowconfig_includes.clone(),
+            flowconfig_libs: args.flowconfig_libs.clone(),
+            flowconfig_raw_lint_severities: args.flowconfig_raw_lint_severities.clone(),
+            flowconfig_untyped: args.flowconfig_untyped.clone(),
+            flowconfig_declarations: args.flowconfig_declarations.clone(),
+        },
     };
 
     (options, start_args)
@@ -157,36 +180,52 @@ fn build_server_daemon_options(
     args: &flow_server::server_daemon::ServerDaemonArgs,
 ) -> Arc<Options> {
     let lazy_mode = args.lazy_mode.as_deref().and_then(parse_lazy_mode);
-    let overrides = command_utils::MakeOptionsOverrides {
-        include_suppressions: if args.include_suppressions {
-            Some(true)
-        } else {
-            None
-        },
-        all: if args.all { Some(true) } else { None },
+    let options_flags = command_utils::OptionsFlags {
+        all: args.all,
         debug: args.debug,
-        lazy_mode,
-        long_lived_workers: args.long_lived_workers,
+        flowconfig_flags: command_utils::FlowconfigFlags {
+            ignores: args.cli_overrides.flowconfig_ignores.clone(),
+            includes: args.cli_overrides.flowconfig_includes.clone(),
+            libs: args.cli_overrides.flowconfig_libs.clone(),
+            raw_lint_severities: args.cli_overrides.flowconfig_raw_lint_severities.clone(),
+            untyped: args.cli_overrides.flowconfig_untyped.clone(),
+            declarations: args.cli_overrides.flowconfig_declarations.clone(),
+        },
+        include_warnings: args.include_warnings,
+        max_warnings: args.cli_overrides.max_warnings,
         max_workers: args.max_workers,
-        profile: Some(args.profile),
+        merge_timeout: args.merge_timeout,
+        munge_underscore_members: args.munge_underscore_members,
+        no_flowlib: args.no_flowlib,
+        profile: args.profile,
         quiet: args.quiet,
-        saved_state_fetcher: args.saved_state_fetcher,
-        saved_state_force_recheck: Some(args.saved_state_force_recheck),
-        saved_state_no_fallback: Some(args.saved_state_no_fallback),
-        saved_state_skip_version_check: Some(args.saved_state_skip_version_check),
-        saved_state_verify: Some(args.saved_state_verify),
+        slow_to_check_logging: args.slow_to_check_logging,
+        strip_root: args.strip_root,
         temp_dir: Some(args.temp_dir.clone()),
         verbose: args.verbose.clone(),
         wait_for_recheck: args.wait_for_recheck,
-        ..Default::default()
+        vpn_less: args.vpn_less,
+        include_suppressions: args.include_suppressions,
+        estimate_recheck_time: args.estimate_recheck_time,
+        long_lived_workers: args.long_lived_workers,
+        distributed: args.distributed,
+        no_autoimports: args.cli_overrides.no_autoimports,
+    };
+    let saved_state_options_flags = command_utils::SavedStateFlags {
+        saved_state_fetcher: args.saved_state_fetcher,
+        saved_state_force_recheck: args.saved_state_force_recheck,
+        saved_state_no_fallback: args.saved_state_no_fallback,
+        saved_state_skip_version_check: args.saved_state_skip_version_check,
+        saved_state_verify: args.saved_state_verify,
     };
 
     get_options_with_root_and_flowconfig_name(
-        args.no_flowlib,
         args.ignore_version,
         &args.root,
         &args.flowconfig_name,
-        overrides,
+        lazy_mode,
+        options_flags,
+        saved_state_options_flags,
     )
 }
 

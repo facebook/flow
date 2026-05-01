@@ -2398,7 +2398,7 @@ pub fn ast_transforms_of_error(
             }) => {
                 match (
                     loc_opt_intersects(loc, error_loc.dupe()),
-                    &reason_lower.desc,
+                    reason_lower.desc.unwrap(),
                 ) {
                     (
                         true,

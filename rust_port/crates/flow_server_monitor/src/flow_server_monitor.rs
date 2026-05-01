@@ -13,6 +13,7 @@ use std::sync::Mutex;
 use bincode::error::EncodeError;
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
+use flow_common::slow_to_check_logging::SlowToCheckLogging;
 use flow_common::verbose::Verbose;
 pub use flow_server::standalone::LazyStats;
 use flow_server_files::server_files_js;
@@ -56,6 +57,22 @@ pub struct DaemonizeArgs {
     pub saved_state_no_fallback: bool,
     pub saved_state_skip_version_check: bool,
     pub saved_state_verify: bool,
+    pub strip_root: bool,
+    pub distributed: bool,
+    pub estimate_recheck_time: Option<bool>,
+    pub include_warnings: bool,
+    pub max_warnings: Option<i32>,
+    pub merge_timeout: Option<i32>,
+    pub munge_underscore_members: bool,
+    pub no_autoimports: bool,
+    pub slow_to_check_logging: SlowToCheckLogging,
+    pub vpn_less: Option<bool>,
+    pub flowconfig_ignores: Vec<String>,
+    pub flowconfig_includes: Vec<String>,
+    pub flowconfig_libs: Vec<String>,
+    pub flowconfig_raw_lint_severities: Vec<String>,
+    pub flowconfig_untyped: Vec<String>,
+    pub flowconfig_declarations: Vec<String>,
     pub no_cgroup: bool,
     pub root: PathBuf,
     pub temp_dir: String,
@@ -79,6 +96,7 @@ pub struct StartArgs {
     pub from: Option<String>,
     pub autostop: bool,
     pub no_restart: bool,
+    pub cli_overrides: flow_common::cli_overrides::CliOverrides,
 }
 
 fn prepare_log_file(log_file: &str) -> Result<(), String> {
@@ -271,6 +289,7 @@ fn internal_start(
         from: _,
         autostop,
         no_restart,
+        cli_overrides,
     } = args;
     let monitor_options = MonitorOptions {
         log_file: monitor_log_file,
@@ -278,6 +297,7 @@ fn internal_start(
         no_restart,
         server_log_file,
         server_options: (*options).clone(),
+        cli_overrides,
         lazy_mode,
         no_flowlib,
         ignore_version,

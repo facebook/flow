@@ -33,6 +33,16 @@ use tokio::task::JoinHandle;
 
 use crate::runtime;
 
+// Cap any single bincode-framed inbound frame at 64 MiB. Without this cap,
+// `bincode::serde::decode_from_std_read` will read a length prefix and call
+// `Vec::with_capacity(N)` directly; if `N` is corrupt (e.g. framing got out of
+// sync), the std allocator's failure handler aborts the whole monitor process
+// without unwinding (so neither Tokio nor the connection's read loop can
+// recover). The 64 MiB ceiling matches `server_socket_rpc::MAX_MESSAGE_BYTES`.
+// `pub(crate)` so the handshake reads in `socket_acceptor` can share the same
+// limit. bincode 2.x's `with_limit::<N>()` is a const-generic over `usize`.
+pub(crate) const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
+
 // A `Channel` abstracts the wire I/O for a `Connection`. Each `ConnectionProcessor` chooses its
 // channel. All Flow monitor channels are bincode-framed (OCaml-faithful, matching
 // `Marshal_tools.{from,to}_fd_with_preamble`):
@@ -421,25 +431,19 @@ where
     type OutMessage = O;
 
     fn read(reader: &mut Self::Reader) -> io::Result<ReadOutcome<I, O>> {
+        // Length-prefixed JSON, not bincode: `MonitorToServerMessage` /
+        // `ServerToMonitorMessage` carry `RequestWithMetadata` which embeds
+        // `lsp_types` request/response structs that use `#[serde(flatten)]`.
+        // bincode rejects flatten with `Serde(SequenceMustHaveLength)`.
         flow_parser::loc::with_full_source_serde(|| {
-            bincode::serde::decode_from_std_read(reader, bincode::config::legacy())
+            flow_server_env::server_socket_rpc::receive_message::<_, I>(reader)
                 .map(ReadOutcome::Message)
-                .map_err(|e| match e {
-                    DecodeError::Io {
-                        inner: io_err,
-                        additional: _,
-                    } => io_err,
-                    other => io::Error::other(other.to_string()),
-                })
         })
     }
 
     fn write(writer: &mut Self::Writer, msg: &O) -> io::Result<()> {
         flow_parser::loc::with_full_source_serde(|| {
-            match bincode::serde::encode_into_std_write(msg, writer, bincode::config::legacy()) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(io::Error::other(e.to_string())),
-            }
+            flow_server_env::server_socket_rpc::send_message(writer, msg)
         })
     }
 }
@@ -460,15 +464,22 @@ where
 
     fn read(reader: &mut Self::Reader) -> io::Result<ReadOutcome<I, O>> {
         flow_parser::loc::with_full_source_serde(|| {
-            bincode::serde::decode_from_std_read(reader, bincode::config::legacy())
-                .map(ReadOutcome::Message)
-                .map_err(|e| match e {
-                    DecodeError::Io {
-                        inner: io_err,
-                        additional: _,
-                    } => io_err,
-                    other => io::Error::other(other.to_string()),
-                })
+            // Size-limited bincode config; see `MAX_FRAME_BYTES`. Defends
+            // against corrupt or out-of-sync ephemeral CLI socket frames so
+            // the monitor returns an `io::Error` and disconnects instead of
+            // aborting the whole monitor process.
+            bincode::serde::decode_from_std_read::<I, _, _>(
+                reader,
+                bincode::config::legacy().with_limit::<MAX_FRAME_BYTES>(),
+            )
+            .map(ReadOutcome::Message)
+            .map_err(|e| match e {
+                DecodeError::Io {
+                    inner: io_err,
+                    additional: _,
+                } => io_err,
+                other => io::Error::other(other.to_string()),
+            })
         })
     }
 
@@ -489,6 +500,12 @@ where
 // `flow/src/monitor/connections/persistentConnection.ml`). The Rust port keeps an outbound queue
 // inside `PersistentWriter` so that `Connection`'s command loop can drain it on the writer thread,
 // matching how OCaml's `EphemeralConnection.write` enqueues into the connection's command stream.
+//
+// NOTE: framing is length-prefixed JSON (matching `server_socket_rpc::{send,receive}_message`),
+// not bincode. Many `lsp_types` request/response structs use `#[serde(flatten)]` (e.g.
+// `CompletionParams`'s `text_document_position` / `work_done_progress_params` /
+// `partial_result_params` fields), which bincode rejects with `Serde(SequenceMustHaveLength)`
+// because flatten requires a map serializer with unknown length. JSON has no such restriction.
 pub struct PersistentBincodeChannel;
 
 impl Channel for PersistentBincodeChannel {
@@ -501,28 +518,16 @@ impl Channel for PersistentBincodeChannel {
         reader: &mut Self::Reader,
     ) -> io::Result<ReadOutcome<Self::InMessage, Self::OutMessage>> {
         flow_parser::loc::with_full_source_serde(|| {
-            bincode::serde::decode_from_std_read(&mut reader.stream, bincode::config::legacy())
-                .map(ReadOutcome::Message)
-                .map_err(|e| match e {
-                    DecodeError::Io {
-                        inner: io_err,
-                        additional: _,
-                    } => io_err,
-                    other => io::Error::other(other.to_string()),
-                })
+            flow_server_env::server_socket_rpc::receive_message::<_, Self::InMessage>(
+                &mut reader.stream,
+            )
+            .map(ReadOutcome::Message)
         })
     }
 
     fn write(writer: &mut Self::Writer, msg: &Self::OutMessage) -> io::Result<()> {
         flow_parser::loc::with_full_source_serde(|| {
-            match bincode::serde::encode_into_std_write(
-                msg,
-                &mut writer.stream,
-                bincode::config::legacy(),
-            ) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(io::Error::other(e.to_string())),
-            }
+            flow_server_env::server_socket_rpc::send_message(&mut writer.stream, msg)
         })
     }
 }

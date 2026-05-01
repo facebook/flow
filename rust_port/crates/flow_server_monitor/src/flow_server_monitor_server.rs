@@ -678,6 +678,7 @@ pub mod server_instance {
             *ignore_version,
             file_watcher_pid.map(|p| p as u32),
             server_options_arc,
+            &monitor_options.cli_overrides,
         )
         .unwrap_or_else(|e| panic!("failed to spawn server daemon: {}", e));
         let pid: i32 = server_handle.child.id() as i32;

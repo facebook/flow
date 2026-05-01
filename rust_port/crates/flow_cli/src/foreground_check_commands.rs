@@ -160,56 +160,15 @@ fn check_main(
             saved_state_verify: false,
         };
         Arc::new(command_utils::make_options(
-            flowconfig,
-            flowconfig_hash,
             flowconfig_name,
+            flowconfig_hash,
+            flowconfig,
+            lazy_mode,
             root.clone(),
-            options_flags.temp_dir.clone().unwrap_or_else(|| {
-                std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned())
-            }),
-            options_flags.no_flowlib,
-            command_utils::MakeOptionsOverrides {
-                all: if options_flags.all { Some(true) } else { None },
-                debug: options_flags.debug,
-                distributed: options_flags.distributed,
-                estimate_recheck_time: options_flags.estimate_recheck_time,
-                flowconfig_flags: Some(options_flags.flowconfig_flags.clone()),
-                include_suppressions: if options_flags.include_suppressions {
-                    Some(true)
-                } else {
-                    None
-                },
-                include_warnings: options_flags.include_warnings,
-                lazy_mode,
-                long_lived_workers: options_flags.long_lived_workers,
-                max_warnings: options_flags.max_warnings,
-                max_workers: options_flags.max_workers,
-                merge_timeout: options_flags.merge_timeout,
-                munge_underscore_members: options_flags.munge_underscore_members,
-                no_autoimports: options_flags.no_autoimports,
-                profile: Some(options_flags.profile),
-                quiet: options_flags.quiet,
-                saved_state_fetcher: saved_state_options_flags.saved_state_fetcher,
-                saved_state_force_recheck: Some(
-                    saved_state_options_flags.saved_state_force_recheck,
-                ),
-                saved_state_no_fallback: Some(saved_state_options_flags.saved_state_no_fallback),
-                saved_state_skip_version_check: Some(
-                    saved_state_options_flags.saved_state_skip_version_check,
-                ),
-                saved_state_verify: Some(saved_state_options_flags.saved_state_verify),
-                slow_to_check_logging: Some(options_flags.slow_to_check_logging.clone()),
-                strip_root: options_flags.strip_root,
-                verbose: options_flags.verbose.clone(),
-                vpn_less: options_flags.vpn_less,
-                wait_for_recheck: options_flags.wait_for_recheck,
-                ..Default::default()
-            },
+            options_flags.clone(),
+            saved_state_options_flags,
         ))
     };
-    if options_flags.strip_root {
-        Arc::make_mut(&mut options).strip_root = true;
-    }
     // Auto-imports indexing is only useful for IDE/LSP features (autocomplete,
     // code actions). Foreground check commands never serve those requests, so
     // skip building the export index to save time and memory.
@@ -380,55 +339,14 @@ mod focus_check_command {
             command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
         let flowconfig_for_assert = flowconfig.clone();
         let mut options = Arc::new(command_utils::make_options(
-            flowconfig,
-            flowconfig_hash,
             flowconfig_name,
+            flowconfig_hash,
+            flowconfig,
+            Some(flow_config::LazyMode::NonLazy),
             root.clone(),
-            options_flags.temp_dir.clone().unwrap_or_else(|| {
-                std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned())
-            }),
-            options_flags.no_flowlib,
-            command_utils::MakeOptionsOverrides {
-                all: if options_flags.all { Some(true) } else { None },
-                debug: options_flags.debug,
-                distributed: options_flags.distributed,
-                estimate_recheck_time: options_flags.estimate_recheck_time,
-                flowconfig_flags: Some(options_flags.flowconfig_flags.clone()),
-                include_suppressions: if options_flags.include_suppressions {
-                    Some(true)
-                } else {
-                    None
-                },
-                include_warnings: options_flags.include_warnings,
-                lazy_mode: Some(flow_config::LazyMode::NonLazy),
-                long_lived_workers: options_flags.long_lived_workers,
-                max_warnings: options_flags.max_warnings,
-                max_workers: options_flags.max_workers,
-                merge_timeout: options_flags.merge_timeout,
-                munge_underscore_members: options_flags.munge_underscore_members,
-                no_autoimports: options_flags.no_autoimports,
-                profile: Some(options_flags.profile),
-                quiet: options_flags.quiet,
-                saved_state_fetcher: saved_state_options_flags.saved_state_fetcher,
-                saved_state_force_recheck: Some(
-                    saved_state_options_flags.saved_state_force_recheck,
-                ),
-                saved_state_no_fallback: Some(saved_state_options_flags.saved_state_no_fallback),
-                saved_state_skip_version_check: Some(
-                    saved_state_options_flags.saved_state_skip_version_check,
-                ),
-                saved_state_verify: Some(saved_state_options_flags.saved_state_verify),
-                slow_to_check_logging: Some(options_flags.slow_to_check_logging.clone()),
-                strip_root: options_flags.strip_root,
-                verbose: options_flags.verbose.clone(),
-                vpn_less: options_flags.vpn_less,
-                wait_for_recheck: options_flags.wait_for_recheck,
-                ..Default::default()
-            },
+            options_flags.clone(),
+            saved_state_options_flags,
         ));
-        if options_flags.strip_root {
-            Arc::make_mut(&mut options).strip_root = true;
-        }
         // Auto-imports indexing is only useful for IDE/LSP features.
         Arc::make_mut(&mut options).autoimports = false;
         if verbose_focus {

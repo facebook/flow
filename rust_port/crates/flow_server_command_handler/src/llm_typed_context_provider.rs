@@ -321,6 +321,7 @@ pub fn extract_imports(
     let requires = file_sig.requires();
     requires
         .iter()
+        .rev()
         .filter_map(|require| match require {
             Require::Require { source, .. } => Some(format!("require('{}')", source.1)),
             Require::Import { source, .. } | Require::Import0 { source } => {

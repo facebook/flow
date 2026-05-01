@@ -127,7 +127,6 @@ pub struct Mapper<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expect
     target_is_point: bool,
     error: Option<Errors>,
     changed: bool,
-    current_kind: ast::VariableKind,
 }
 
 impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F> {
@@ -141,7 +140,6 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
             target_is_point,
             error: None,
             changed: false,
-            current_kind: ast::VariableKind::Var,
         }
     }
 
@@ -392,7 +390,7 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
                 })
             }
             _ => Ok(flow_parser::ast_visitor::map_variable_declarator_default(
-                self, &decl,
+                self, kind, &decl,
             )),
         }
     }
@@ -651,23 +649,14 @@ impl<'ast, F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>>
         }
     }
 
-    fn map_variable_declaration(
-        &mut self,
-        loc: &'ast Loc,
-        decl: &'ast ast::statement::VariableDeclaration<Loc, Loc>,
-    ) -> ast::statement::VariableDeclaration<Loc, Loc> {
-        self.current_kind = decl.kind;
-        flow_parser::ast_visitor::map_variable_declaration_default(self, loc, decl)
-    }
-
     fn map_variable_declarator(
         &mut self,
+        kind: ast::VariableKind,
         declarator: &'ast ast::statement::variable::Declarator<Loc, Loc>,
     ) -> ast::statement::variable::Declarator<Loc, Loc> {
         if self.error.is_some() {
             return declarator.clone();
         }
-        let kind = self.current_kind;
         match self.variable_declarator(kind, declarator.clone()) {
             Ok(result) => result,
             Err(err) => {

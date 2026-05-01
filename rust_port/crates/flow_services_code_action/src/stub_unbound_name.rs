@@ -250,6 +250,7 @@ pub fn stub<'a, 'b>(
     };
     let typed_props: Vec<(&str, ast::types::Type<Loc, Loc>)> = typed_props
         .iter()
+        .rev()
         .map(|(k, v)| (k.as_str(), v.dupe()))
         .collect();
     let added_imports = (type_synth.added_imports)();

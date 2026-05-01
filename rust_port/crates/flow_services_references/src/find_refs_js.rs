@@ -43,7 +43,9 @@ use crate::variable_find_refs;
 fn sort_and_dedup(refs: FindRefsFound) -> FindRefsFound {
     let mut refs = refs;
     refs.sort_by(|(_, loc1), (_, loc2)| loc1.cmp(loc2));
+    refs.reverse();
     refs.dedup_by(|(_, loc1), (_, loc2)| *loc1 == *loc2);
+    refs.reverse();
     refs
 }
 

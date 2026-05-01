@@ -5445,7 +5445,7 @@ fn handle_persistent_workspace_symbol(
         match &env.exports {
             None => vec![],
             Some(exports) => {
-                let mut search_options = export_search::default_options();
+                let mut search_options = flow_services_export::fuzzy_path::default_options();
                 search_options.max_results = 100;
                 search_options.num_threads = std::cmp::max(
                     1,
@@ -6783,7 +6783,12 @@ fn rename_module_edits_for_file(
 ) -> Vec<lsp_types::TextEdit> {
     use flow_parser_utils::file_sig::Require;
 
-    file_sig
+    // OCaml `RenameModule.get_edits_for_file` builds a `Loc_collections.LocMap`
+    // from the requires, then `LocMap.fold` iterates the map in ascending loc
+    // order while prepending each entry to the accumulator with `:: acc`. This
+    // means the final list is in DESCENDING loc order. We replicate by
+    // collecting in source order and then reversing.
+    let mut edits: Vec<lsp_types::TextEdit> = file_sig
         .requires()
         .iter()
         .filter_map(|require| {
@@ -6819,7 +6824,9 @@ fn rename_module_edits_for_file(
                 }),
             })
         })
-        .collect()
+        .collect();
+    edits.reverse();
+    edits
 }
 
 fn handle_persistent_rename_file_imports(
@@ -7024,15 +7031,23 @@ fn live_diagnostics_of_uri(
                                 persistent_connection::type_parse_artifacts_cache(&client)
                             });
                         let intermediate_result = parse_contents(options, content, &file_key);
-                        let (result, did_hit_cache) = type_parse_artifacts_with_cache(
-                            options,
-                            type_parse_artifacts_cache.as_ref(),
-                            shared_mem.clone(),
-                            env.master_cx.clone(),
-                            file_key.dupe(),
-                            intermediate_result,
-                            node_modules_containers,
-                        );
+                        let (result, did_hit_cache): (FileArtifactsResult<'static>, Option<bool>) =
+                            if !intermediate_result.1.is_empty() {
+                                (
+                                    Err(TypeContentsError::Errors(intermediate_result.1.clone())),
+                                    None,
+                                )
+                            } else {
+                                type_parse_artifacts_with_cache(
+                                    options,
+                                    type_parse_artifacts_cache.as_ref(),
+                                    shared_mem.clone(),
+                                    env.master_cx.clone(),
+                                    file_key.dupe(),
+                                    intermediate_result,
+                                    node_modules_containers,
+                                )
+                            };
                         let (live_errors, live_warnings) =
                             printable_errors_of_file_artifacts_result(
                                 options,
@@ -8026,7 +8041,16 @@ fn get_persistent_handler(
                 lsp_prot::LspMessage::RequestMessage(id, _) => Some(id.clone()),
                 _ => None,
             };
-            let unhandled_str = format!("{:?}", unhandled);
+            let unhandled_str = match &unhandled {
+                lsp_prot::LspMessage::RequestMessage(
+                    _,
+                    lsp_mapper::LspRequest::UnknownRequest(m, _),
+                ) => m.clone(),
+                lsp_prot::LspMessage::NotificationMessage(
+                    lsp_mapper::LspNotification::UnknownNotification(m, _),
+                ) => m.clone(),
+                _ => format!("{:?}", unhandled),
+            };
             let metadata = metadata.clone();
             PersistentCommandHandler::HandlePersistentImmediately(Box::new(move || {
                 handle_persistent_unsupported(id.clone(), &unhandled_str, metadata)

@@ -19,21 +19,21 @@ use crate::command_connect_simple::BusyReason;
 use crate::command_connect_simple::CCSError;
 use crate::command_connect_simple::MismatchBehavior;
 
-pub(crate) struct Env<'a> {
-    pub(crate) root: &'a Path,
-    pub(crate) autostart: bool,
-    pub(crate) retries: i32,
-    pub(crate) expiry: Option<Instant>,
-    pub(crate) lazy_mode: Option<&'a str>,
-    pub(crate) autostop: bool,
-    pub(crate) tmp_dir: &'a str,
-    pub(crate) shm_hash_table_pow: Option<u32>,
-    pub(crate) ignore_version: bool,
+pub struct Env<'a> {
+    pub root: &'a Path,
+    pub autostart: bool,
+    pub retries: i32,
+    pub expiry: Option<Instant>,
+    pub lazy_mode: Option<&'a str>,
+    pub autostop: bool,
+    pub tmp_dir: &'a str,
+    pub shm_hash_table_pow: Option<u32>,
+    pub ignore_version: bool,
     #[allow(dead_code)]
-    pub(crate) emoji: bool,
-    pub(crate) quiet: bool,
-    pub(crate) flowconfig_name: &'a str,
-    pub(crate) rerun_on_mismatch: bool,
+    pub emoji: bool,
+    pub quiet: bool,
+    pub flowconfig_name: &'a str,
+    pub rerun_on_mismatch: bool,
 }
 
 fn arg(name: &str, value: Option<&str>, arr: &mut Vec<String>) {
@@ -360,7 +360,7 @@ fn handle_missing_server(
     }
 }
 
-pub(crate) fn connect(
+pub fn connect(
     env: &Env,
     client_handshake: &socket_handshake::ClientHandshake,
 ) -> (SocketAddr, TcpStream) {

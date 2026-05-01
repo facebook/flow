@@ -11,8 +11,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::OnceLock;
 
+use flow_common::cli_overrides::CliOverrides;
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
+use flow_common::slow_to_check_logging::SlowToCheckLogging;
 use flow_common::verbose::Verbose;
 use flow_common_exit_status::FlowExitStatus;
 use flow_daemon::ChannelPair;
@@ -51,6 +53,15 @@ pub struct ServerDaemonArgs {
     pub saved_state_no_fallback: bool,
     pub saved_state_skip_version_check: bool,
     pub saved_state_verify: bool,
+    pub strip_root: bool,
+    pub distributed: bool,
+    pub estimate_recheck_time: Option<bool>,
+    pub include_warnings: bool,
+    pub merge_timeout: Option<i32>,
+    pub munge_underscore_members: bool,
+    pub slow_to_check_logging: SlowToCheckLogging,
+    pub vpn_less: Option<bool>,
+    pub cli_overrides: CliOverrides,
     pub root: PathBuf,
     pub temp_dir: String,
 }
@@ -61,6 +72,7 @@ impl ServerDaemonArgs {
         lazy_mode: Option<String>,
         no_flowlib: bool,
         ignore_version: bool,
+        cli_overrides: &CliOverrides,
     ) -> Self {
         Self {
             flowconfig_name: options.flowconfig_name.to_string(),
@@ -84,6 +96,17 @@ impl ServerDaemonArgs {
             saved_state_no_fallback: options.saved_state_no_fallback,
             saved_state_skip_version_check: options.saved_state_skip_version_check,
             saved_state_verify: options.saved_state_verify,
+            strip_root: options.strip_root,
+            distributed: options.distributed,
+            estimate_recheck_time: Some(options.estimate_recheck_time),
+            include_warnings: options.include_warnings,
+            merge_timeout: options
+                .merge_timeout
+                .map(|merge_timeout| merge_timeout as i32),
+            munge_underscore_members: options.munge_underscores,
+            slow_to_check_logging: options.slow_to_check_logging,
+            vpn_less: Some(options.vpn_less),
+            cli_overrides: cli_overrides.clone(),
             root: (*options.root).clone(),
             temp_dir: options.temp_dir.to_string(),
         }
@@ -232,6 +255,7 @@ pub fn daemonize(
     ignore_version: bool,
     options: Arc<Options>,
     file_watcher_pid: Option<u32>,
+    cli_overrides: &CliOverrides,
 ) -> Result<Handle<(), ()>, String> {
     let entry = registered_entry_point();
 
@@ -249,7 +273,13 @@ pub fn daemonize(
 
     let name = format!("server master process watching {}", root.display());
     let param = ServerEntryParam {
-        daemon_args: ServerDaemonArgs::of_options(&options, lazy_mode, no_flowlib, ignore_version),
+        daemon_args: ServerDaemonArgs::of_options(
+            &options,
+            lazy_mode,
+            no_flowlib,
+            ignore_version,
+            cli_overrides,
+        ),
         init_id: init_id.to_string(),
         argv: argv.to_vec(),
         log_file: log_file.to_string(),

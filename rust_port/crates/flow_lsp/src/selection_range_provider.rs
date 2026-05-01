@@ -25,11 +25,11 @@ use lsp_types::SelectionRange;
 fn loc_to_lsp_range(loc: &Loc) -> LspRange {
     LspRange {
         start: LspPosition {
-            line: loc.start.line.saturating_sub(1) as u32,
+            line: loc.start.line.saturating_sub(1).max(0) as u32,
             character: loc.start.column.max(0) as u32,
         },
         end: LspPosition {
-            line: loc.end.line.saturating_sub(1) as u32,
+            line: loc.end.line.saturating_sub(1).max(0) as u32,
             character: loc.end.column.max(0) as u32,
         },
     }
