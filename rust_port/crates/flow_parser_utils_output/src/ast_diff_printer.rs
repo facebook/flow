@@ -8,6 +8,7 @@
 use std::ops::Deref;
 
 use dupe::Dupe;
+use flow_common_utils::list_utils;
 use flow_parser::ast;
 use flow_parser::loc::Loc;
 use flow_parser_utils::flow_ast_differ::Change;
@@ -186,11 +187,7 @@ fn text_of_nodes(
         Some(str) => str.as_str(),
         None => "\n",
     };
-    let text: String = nodes
-        .iter()
-        .map(|node| text_of_node(opts, node))
-        .collect::<Vec<_>>()
-        .join(sep);
+    let text = list_utils::to_string(sep, |node| text_of_node(opts, node), nodes);
     if leading_separator {
         format!("{}{}", sep, text)
     } else {

@@ -9,8 +9,9 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 use dupe::Dupe;
-use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
+use flow_common_utils::list_utils;
+use flow_common_utils::option_utils;
 use flow_typing_context::Context;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::ArrayATData;
@@ -413,19 +414,23 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         }) => {
             let this_t_prime = mapper.type_(cx, map_cx, this_t.dupe());
             let type_prime = mapper.type_(cx, map_cx, type_.dupe());
-            let mut targs_changed = false;
-            let targs_prime = targs.as_ref().map(|ts| {
-                ts.iter()
-                    .map(|t_arg| {
-                        let t_arg_prime = mapper.type_(cx, map_cx, t_arg.dupe());
-                        if !t_arg.ptr_eq(&t_arg_prime) {
-                            targs_changed = true;
-                        }
-                        t_arg_prime
-                    })
-                    .collect()
-            });
-            if this_t.ptr_eq(&this_t_prime) && type_.ptr_eq(&type_prime) && !targs_changed {
+            let targs_prime = option_utils::ident_map(
+                |ts: &Rc<[Type]>| {
+                    list_utils::ident_map(
+                        |t_arg| mapper.type_(cx, map_cx, t_arg.dupe()),
+                        Type::ptr_eq,
+                        ts.dupe(),
+                    )
+                },
+                Rc::ptr_eq,
+                targs.clone(),
+            );
+            let targs_unchanged = match (targs, &targs_prime) {
+                (None, None) => true,
+                (Some(a), Some(b)) => Rc::ptr_eq(a, b),
+                _ => false,
+            };
+            if this_t.ptr_eq(&this_t_prime) && type_.ptr_eq(&type_prime) && targs_unchanged {
                 t
             } else {
                 Type::new(TypeInner::ThisTypeAppT(Box::new(ThisTypeAppTData {
@@ -445,20 +450,15 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             use_desc,
         }) => {
             let type_prime = mapper.type_(cx, map_cx, type_.dupe());
-            let mut targs_changed = false;
-            let targs_prime: Rc<[Type]> = targs
-                .iter()
-                .map(|t_arg| {
-                    let t_arg_prime = mapper.type_(cx, map_cx, t_arg.dupe());
-                    if !t_arg.ptr_eq(&t_arg_prime) {
-                        targs_changed = true;
-                    }
-                    t_arg_prime
-                })
-                .collect();
-            if type_.ptr_eq(&type_prime) && !targs_changed {
+            let targs_prime = list_utils::ident_map(
+                |t_arg| mapper.type_(cx, map_cx, t_arg.dupe()),
+                Type::ptr_eq,
+                targs.dupe(),
+            );
+            if type_.ptr_eq(&type_prime) && Rc::ptr_eq(targs, &targs_prime) {
                 t
             } else {
+                //   TypeAppT { reason; use_op; type_ = type_'; targs = targs'; from_value; use_desc }
                 Type::new(TypeInner::TypeAppT(Box::new(TypeAppTData {
                     reason: reason.dupe(),
                     use_op: use_op.clone(),
@@ -506,17 +506,20 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             op,
             remainder,
         } => {
-            let mut remainder_changed = false;
-            let remainder_prime = remainder.as_ref().map(|r| {
-                let r_prime = mapper.type_(cx, map_cx, r.dupe());
-                if !r.ptr_eq(&r_prime) {
-                    remainder_changed = true;
-                }
-                r_prime
-            });
-            if !remainder_changed {
+            let remainder_prime = option_utils::ident_map(
+                |r| mapper.type_(cx, map_cx, r.dupe()),
+                Type::ptr_eq,
+                remainder.clone(),
+            );
+            let remainder_unchanged = match (remainder, &remainder_prime) {
+                (None, None) => true,
+                (Some(a), Some(b)) => a.ptr_eq(b),
+                _ => false,
+            };
+            if remainder_unchanged {
                 t
             } else {
+                //   StrUtilT { reason; op; remainder = remainder' }
                 Type::new(TypeInner::StrUtilT {
                     reason: reason.dupe(),
                     op: op.clone(),
@@ -564,38 +567,43 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 }
                 nominal::UnderlyingT::FullyOpaque => nominal_type.underlying_t.clone(),
             };
-            let mut lower_t_changed = false;
-            let lower_t = nominal_type.lower_t.as_ref().map(|lt| {
-                let lt_prime = mapper.type_(cx, map_cx, lt.dupe());
-                if !lt.ptr_eq(&lt_prime) {
-                    lower_t_changed = true;
-                }
-                lt_prime
-            });
-            let mut upper_t_changed = false;
-            let upper_t = nominal_type.upper_t.as_ref().map(|ut| {
-                let ut_prime = mapper.type_(cx, map_cx, ut.dupe());
-                if !ut.ptr_eq(&ut_prime) {
-                    upper_t_changed = true;
-                }
-                ut_prime
-            });
-            let mut nominal_type_args_changed = false;
-            let nominal_type_args: Rc<[_]> = nominal_type
-                .nominal_type_args
-                .iter()
-                .map(|(s, r, t_arg, p)| {
-                    let t_arg_prime = mapper.type_(cx, map_cx, t_arg.dupe());
-                    if !t_arg.ptr_eq(&t_arg_prime) {
-                        nominal_type_args_changed = true;
+            let lower_t = option_utils::ident_map(
+                |lt| mapper.type_(cx, map_cx, lt.dupe()),
+                Type::ptr_eq,
+                nominal_type.lower_t.clone(),
+            );
+            let lower_t_unchanged = match (&nominal_type.lower_t, &lower_t) {
+                (None, None) => true,
+                (Some(a), Some(b)) => a.ptr_eq(b),
+                _ => false,
+            };
+            let upper_t = option_utils::ident_map(
+                |ut| mapper.type_(cx, map_cx, ut.dupe()),
+                Type::ptr_eq,
+                nominal_type.upper_t.clone(),
+            );
+            let upper_t_unchanged = match (&nominal_type.upper_t, &upper_t) {
+                (None, None) => true,
+                (Some(a), Some(b)) => a.ptr_eq(b),
+                _ => false,
+            };
+            let nominal_type_args = list_utils::ident_map(
+                |x| {
+                    let (s, r, t, p) = x;
+                    let t_prime = mapper.type_(cx, map_cx, t.dupe());
+                    if t.ptr_eq(&t_prime) {
+                        x.dupe()
+                    } else {
+                        (s.dupe(), r.dupe(), t_prime, *p)
                     }
-                    (s.clone(), r.dupe(), t_arg_prime, *p)
-                })
-                .collect();
+                },
+                |a, b| a.2.ptr_eq(&b.2),
+                nominal_type.nominal_type_args.dupe(),
+            );
             if !underlying_t_changed
-                && !lower_t_changed
-                && !upper_t_changed
-                && !nominal_type_args_changed
+                && lower_t_unchanged
+                && upper_t_unchanged
+                && Rc::ptr_eq(&nominal_type.nominal_type_args, &nominal_type_args)
             {
                 t
             } else {
@@ -928,19 +936,28 @@ pub fn def_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             let component_kind_prime = match component_kind {
                 ComponentKind::Structural => ComponentKind::Structural,
                 ComponentKind::Nominal(id, s, ts) => {
-                    let ts_prime = ts.as_ref().map(|types| {
-                        types
-                            .iter()
-                            .map(|t_arg| {
-                                let t_arg_prime = mapper.type_(cx, map_cx, t_arg.dupe());
-                                if !t_arg.ptr_eq(&t_arg_prime) {
-                                    component_kind_changed = true;
-                                }
-                                t_arg_prime
-                            })
-                            .collect()
-                    });
-                    ComponentKind::Nominal(id.clone(), s.dupe(), ts_prime)
+                    let ts_prime = option_utils::ident_map(
+                        |types: &Rc<[Type]>| {
+                            list_utils::ident_map(
+                                |t_arg| mapper.type_(cx, map_cx, t_arg.dupe()),
+                                Type::ptr_eq,
+                                types.dupe(),
+                            )
+                        },
+                        Rc::ptr_eq,
+                        ts.clone(),
+                    );
+                    let ts_unchanged = match (ts, &ts_prime) {
+                        (None, None) => true,
+                        (Some(a), Some(b)) => Rc::ptr_eq(a, b),
+                        _ => false,
+                    };
+                    if ts_unchanged {
+                        component_kind.clone()
+                    } else {
+                        component_kind_changed = true;
+                        ComponentKind::Nominal(id.clone(), s.dupe(), ts_prime)
+                    }
                 }
             };
             if config.ptr_eq(&config_prime)
@@ -1035,17 +1052,27 @@ pub fn export_types_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 ) -> ExportTypes {
     let value_exports_tmap_prime = mapper.exports(cx, map_cx, t.value_exports_tmap);
     let type_exports_tmap_prime = mapper.exports(cx, map_cx, t.type_exports_tmap);
-    let mut cjs_export_changed = false;
-    let cjs_export_prime = t.cjs_export.as_ref().map(|(loc_opt, inner_t)| {
-        let inner_t_prime = mapper.type_(cx, map_cx, inner_t.dupe());
-        if !inner_t.ptr_eq(&inner_t_prime) {
-            cjs_export_changed = true;
-        }
-        (loc_opt.clone(), inner_t_prime)
-    });
+    let cjs_export_prime = option_utils::ident_map(
+        |export| {
+            let (loc_opt, inner_t) = export;
+            let inner_t_prime = mapper.type_(cx, map_cx, inner_t.dupe());
+            if inner_t.ptr_eq(&inner_t_prime) {
+                export.clone()
+            } else {
+                (loc_opt.clone(), inner_t_prime)
+            }
+        },
+        |a, b| a.1.ptr_eq(&b.1),
+        t.cjs_export.clone(),
+    );
+    let cjs_export_unchanged = match (&t.cjs_export, &cjs_export_prime) {
+        (None, None) => true,
+        (Some((_, a)), Some((_, b))) => a.ptr_eq(b),
+        _ => false,
+    };
     if value_exports_tmap_prime == t.value_exports_tmap
         && type_exports_tmap_prime == t.type_exports_tmap
-        && !cjs_export_changed
+        && cjs_export_unchanged
     {
         t
     } else {
@@ -1065,18 +1092,19 @@ pub fn fun_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     t: Rc<FunType>,
 ) -> Rc<FunType> {
     let this_prime = mapper.type_(cx, map_cx, t.this_t.0.dupe());
-    let mut params_changed = false;
-    let params_prime: Rc<[FunParam]> = t
-        .params
-        .iter()
-        .map(|FunParam(name, inner_t)| {
+    let params_prime = list_utils::ident_map(
+        |param| {
+            let FunParam(name, inner_t) = param;
             let inner_t_prime = mapper.type_(cx, map_cx, inner_t.dupe());
-            if !inner_t.ptr_eq(&inner_t_prime) {
-                params_changed = true;
+            if inner_t.ptr_eq(&inner_t_prime) {
+                param.dupe()
+            } else {
+                FunParam(name.dupe(), inner_t_prime)
             }
-            FunParam(name.dupe(), inner_t_prime)
-        })
-        .collect();
+        },
+        |a, b| a.1.ptr_eq(&b.1),
+        t.params.dupe(),
+    );
     let mut rest_param_changed = false;
     let rest_param_prime = t
         .rest_param
@@ -1088,20 +1116,22 @@ pub fn fun_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             }
             FunRestParam(name.dupe(), loc.clone(), inner_t_prime)
         });
-    let mut type_guard_changed = false;
-    let type_guard_prime = t.type_guard.as_ref().map(|tg| {
-        let tg_prime = mapper.func_type_guard(cx, map_cx, tg);
-        if !tg.ptr_eq(&tg_prime) {
-            type_guard_changed = true;
-        }
-        tg_prime
-    });
+    let type_guard_prime = option_utils::ident_map(
+        |tg| mapper.func_type_guard(cx, map_cx, tg),
+        TypeGuard::ptr_eq,
+        t.type_guard.clone(),
+    );
+    let type_guard_unchanged = match (&t.type_guard, &type_guard_prime) {
+        (None, None) => true,
+        (Some(a), Some(b)) => a.ptr_eq(b),
+        _ => false,
+    };
     let return_t_prime = mapper.type_(cx, map_cx, t.return_t.dupe());
     if t.this_t.0.ptr_eq(&this_prime)
         && t.return_t.ptr_eq(&return_t_prime)
-        && !params_changed
+        && Rc::ptr_eq(&t.params, &params_prime)
         && !rest_param_changed
-        && !type_guard_changed
+        && type_guard_unchanged
     {
         t
     } else {
@@ -1123,36 +1153,31 @@ pub fn inst_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     map_cx: &A,
     i: InstType,
 ) -> InstType {
-    let mut type_args_changed = false;
-    let type_args_prime: Rc<[_]> = i
-        .type_args
-        .iter()
-        .map(|(s, r, t, p)| {
+    let type_args_prime = list_utils::ident_map(
+        |x| {
+            let (s, r, t, p) = x;
             let t_prime = mapper.type_(cx, map_cx, t.dupe());
-            if !t.ptr_eq(&t_prime) {
-                type_args_changed = true;
+            if t.ptr_eq(&t_prime) {
+                x.dupe()
+            } else {
+                (s.dupe(), r.dupe(), t_prime, *p)
             }
-            (s.clone(), r.dupe(), t_prime, *p)
-        })
-        .collect();
+        },
+        |a, b| a.2.ptr_eq(&b.2),
+        i.type_args.dupe(),
+    );
     let own_props_prime = mapper.props(cx, map_cx, i.own_props.dupe());
     let proto_props_prime = mapper.props(cx, map_cx, i.proto_props.dupe());
-    let mut inst_call_t_changed = false;
-    let inst_call_t_prime = i.inst_call_t.map(|id| {
-        let id_prime = mapper.call_prop(cx, map_cx, id);
-        if id_prime != id {
-            inst_call_t_changed = true;
-        }
-        id_prime
-    });
-    let mut inst_dict_changed = false;
-    let inst_dict_prime = i.inst_dict.clone().map(|d| {
-        let d_prime = mapper.dict_type(cx, map_cx, d.clone());
-        if d_prime != d {
-            inst_dict_changed = true;
-        }
-        d_prime
-    });
+    let inst_call_t_prime = option_utils::ident_map(
+        |id| mapper.call_prop(cx, map_cx, *id),
+        |a, b| a == b,
+        i.inst_call_t,
+    );
+    let inst_dict_prime = option_utils::ident_map(
+        |d| mapper.dict_type(cx, map_cx, d.clone()),
+        |a, b| a == b,
+        i.inst_dict.clone(),
+    );
     let class_private_fields_prime = mapper.props(cx, map_cx, i.class_private_fields.dupe());
     let class_private_static_fields_prime =
         mapper.props(cx, map_cx, i.class_private_static_fields.dupe());
@@ -1160,11 +1185,11 @@ pub fn inst_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     let class_private_static_methods_prime =
         mapper.props(cx, map_cx, i.class_private_static_methods.dupe());
 
-    if !type_args_changed
+    if Rc::ptr_eq(&i.type_args, &type_args_prime)
         && own_props_prime == i.own_props
         && proto_props_prime == i.proto_props
-        && !inst_call_t_changed
-        && !inst_dict_changed
+        && i.inst_call_t == inst_call_t_prime
+        && i.inst_dict == inst_dict_prime
         && class_private_fields_prime == i.class_private_fields
         && class_private_static_fields_prime == i.class_private_static_fields
         && class_private_methods_prime == i.class_private_methods
@@ -1200,22 +1225,15 @@ pub fn instance_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
 ) -> InstanceT {
     let static_prime = mapper.type_(cx, map_cx, t.static_.dupe());
     let super_prime = mapper.type_(cx, map_cx, t.super_.dupe());
-    let mut implements_changed = false;
-    let implements_prime: Rc<[Type]> = t
-        .implements
-        .iter()
-        .map(|impl_t| {
-            let impl_t_prime = mapper.type_(cx, map_cx, impl_t.dupe());
-            if !impl_t.ptr_eq(&impl_t_prime) {
-                implements_changed = true;
-            }
-            impl_t_prime
-        })
-        .collect();
+    let implements_prime = list_utils::ident_map(
+        |impl_t| mapper.type_(cx, map_cx, impl_t.dupe()),
+        Type::ptr_eq,
+        t.implements.dupe(),
+    );
     let inst_prime = mapper.inst_type(cx, map_cx, t.inst.clone());
     if t.static_.ptr_eq(&static_prime)
         && t.super_.ptr_eq(&super_prime)
-        && !implements_changed
+        && Rc::ptr_eq(&t.implements, &implements_prime)
         && t.inst.ptr_eq(&inst_prime)
     {
         t.dupe()
@@ -1236,15 +1254,17 @@ pub fn type_param_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     t: &TypeParam,
 ) -> TypeParam {
     let bound_prime = mapper.type_(cx, map_cx, t.bound.dupe());
-    let mut default_changed = false;
-    let default_prime = t.default.as_ref().map(|d| {
-        let d_prime = mapper.type_(cx, map_cx, d.dupe());
-        if !d.ptr_eq(&d_prime) {
-            default_changed = true;
-        }
-        d_prime
-    });
-    if t.bound.ptr_eq(&bound_prime) && !default_changed {
+    let default_prime = option_utils::ident_map(
+        |d| mapper.type_(cx, map_cx, d.dupe()),
+        Type::ptr_eq,
+        t.default.clone(),
+    );
+    let default_unchanged = match (&t.default, &default_prime) {
+        (None, None) => true,
+        (Some(a), Some(b)) => a.ptr_eq(b),
+        _ => false,
+    };
+    if t.bound.ptr_eq(&bound_prime) && default_unchanged {
         t.dupe()
     } else {
         TypeParam::new(TypeParamInner {
@@ -1345,26 +1365,30 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         | Destructor::PartialType
         | Destructor::EnumType => t.dupe(),
         Destructor::SpreadType(box DestructorSpreadTypeData(options, tlist, acc)) => {
-            let mut tlist_changed = false;
-            let tlist_prime: Rc<[object::spread::Operand]> = tlist
-                .iter()
-                .map(|op| {
-                    let op_prime = mapper.object_kit_spread_operand(cx, map_cx, op.clone());
-                    if op_prime != *op {
-                        tlist_changed = true;
+            let tlist_prime = list_utils::ident_map(
+                |op| mapper.object_kit_spread_operand(cx, map_cx, op.clone()),
+                |a, b| match (a, b) {
+                    (object::spread::Operand::Slice(sa), object::spread::Operand::Slice(sb)) => {
+                        sa.ptr_eq(sb)
                     }
-                    op_prime
-                })
-                .collect();
-            let mut acc_changed = false;
-            let acc_prime = acc.as_ref().map(|a| {
-                let a_prime = mapper.object_kit_spread_operand_slice(cx, map_cx, a.clone());
-                if !a.ptr_eq(&a_prime) {
-                    acc_changed = true;
-                }
-                a_prime
-            });
-            if !tlist_changed && !acc_changed {
+                    (object::spread::Operand::Type(ta), object::spread::Operand::Type(tb)) => {
+                        ta.ptr_eq(tb)
+                    }
+                    _ => false,
+                },
+                tlist.dupe(),
+            );
+            let acc_prime = option_utils::ident_map(
+                |a| mapper.object_kit_spread_operand_slice(cx, map_cx, a.clone()),
+                |a, b| a.ptr_eq(b),
+                acc.clone(),
+            );
+            let acc_unchanged = match (acc, &acc_prime) {
+                (None, None) => true,
+                (Some(a), Some(b)) => a.ptr_eq(b),
+                _ => false,
+            };
+            if Rc::ptr_eq(tlist, &tlist_prime) && acc_unchanged {
                 t.dupe()
             } else {
                 Rc::new(Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
@@ -1467,21 +1491,15 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             true_t,
             false_t,
         }) => {
-            let mut infer_tparams_changed = false;
-            let infer_tparams_prime: Rc<[TypeParam]> = infer_tparams
-                .iter()
-                .map(|tp| {
-                    let tp_prime = mapper.type_param(cx, map_cx, tp);
-                    if !tp.ptr_eq(&tp_prime) {
-                        infer_tparams_changed = true;
-                    }
-                    tp_prime
-                })
-                .collect();
+            let infer_tparams_prime = list_utils::ident_map(
+                |tp| mapper.type_param(cx, map_cx, tp),
+                TypeParam::ptr_eq,
+                infer_tparams.dupe(),
+            );
             let extends_t_prime = mapper.type_(cx, map_cx, extends_t.dupe());
             let true_t_prime = mapper.type_(cx, map_cx, true_t.dupe());
             let false_t_prime = mapper.type_(cx, map_cx, false_t.dupe());
-            if !infer_tparams_changed
+            if Rc::ptr_eq(infer_tparams, &infer_tparams_prime)
                 && extends_t.ptr_eq(&extends_t_prime)
                 && true_t.ptr_eq(&true_t_prime)
                 && false_t.ptr_eq(&false_t_prime)
@@ -1554,27 +1572,28 @@ pub fn object_kit_spread_operand_slice_default<'cx, A, M: TypeMapper<'cx, A> + ?
             (name.clone(), prop_prime)
         })
         .collect();
-    let mut dict_changed = false;
-    let dict_prime = slice.dict.as_ref().map(|d| {
-        let d_prime = mapper.dict_type(cx, map_cx, d.clone());
-        if d_prime != *d {
-            dict_changed = true;
-        }
-        d_prime
-    });
-    let mut reachable_targs_changed = false;
-    let reachable_targs_prime: Rc<[(Type, Polarity)]> = slice
-        .reachable_targs
-        .iter()
-        .map(|(inner_t, p)| {
+    let dict_prime = option_utils::ident_map(
+        |d| mapper.dict_type(cx, map_cx, d.clone()),
+        |a, b| a == b,
+        slice.dict.clone(),
+    );
+    let reachable_targs_prime = list_utils::ident_map(
+        |tup| {
+            let (inner_t, p) = tup;
             let inner_t_prime = mapper.type_(cx, map_cx, inner_t.dupe());
-            if !inner_t.ptr_eq(&inner_t_prime) {
-                reachable_targs_changed = true;
+            if inner_t.ptr_eq(&inner_t_prime) {
+                tup.dupe()
+            } else {
+                (inner_t_prime, *p)
             }
-            (inner_t_prime, *p)
-        })
-        .collect();
-    if !prop_map_changed && !dict_changed && !reachable_targs_changed {
+        },
+        |a, b| a.0.ptr_eq(&b.0),
+        slice.reachable_targs.dupe(),
+    );
+    if !prop_map_changed
+        && slice.dict == dict_prime
+        && Rc::ptr_eq(&slice.reachable_targs, &reachable_targs_prime)
+    {
         slice
     } else {
         object::spread::OperandSlice::new(object::spread::OperandSliceInner {
@@ -1664,31 +1683,29 @@ pub fn obj_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     let flags_prime = mapper.obj_flags(cx, map_cx, t.flags.clone());
     let props_tmap_prime = mapper.props(cx, map_cx, t.props_tmap.dupe());
     let proto_t_prime = mapper.type_(cx, map_cx, t.proto_t.dupe());
-    let mut call_t_changed = false;
-    let call_t_prime = t.call_t.map(|id| {
-        let id_prime = mapper.call_prop(cx, map_cx, id);
-        if id_prime != id {
-            call_t_changed = true;
-        }
-        id_prime
-    });
-    let mut reachable_targs_changed = false;
-    let reachable_targs_prime: Rc<[(Type, Polarity)]> = t
-        .reachable_targs
-        .iter()
-        .map(|(inner_t, p)| {
+    let call_t_prime = option_utils::ident_map(
+        |id| mapper.call_prop(cx, map_cx, *id),
+        |a, b| a == b,
+        t.call_t,
+    );
+    let reachable_targs_prime = list_utils::ident_map(
+        |tup| {
+            let (inner_t, p) = tup;
             let inner_t_prime = mapper.type_(cx, map_cx, inner_t.dupe());
-            if !inner_t.ptr_eq(&inner_t_prime) {
-                reachable_targs_changed = true;
+            if inner_t.ptr_eq(&inner_t_prime) {
+                tup.dupe()
+            } else {
+                (inner_t_prime, *p)
             }
-            (inner_t_prime, *p)
-        })
-        .collect();
+        },
+        |a, b| a.0.ptr_eq(&b.0),
+        t.reachable_targs.dupe(),
+    );
     if flags_prime == t.flags
         && props_tmap_prime == t.props_tmap
         && t.proto_t.ptr_eq(&proto_t_prime)
-        && !call_t_changed
-        && !reachable_targs_changed
+        && t.call_t == call_t_prime
+        && Rc::ptr_eq(&t.reachable_targs, &reachable_targs_prime)
     {
         t
     } else {
@@ -1754,34 +1771,36 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             tuple_view,
         }) => {
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
-            let mut tuple_view_changed = false;
-            let tuple_view_prime = tuple_view.as_ref().map(|tv| {
-                let mut elements_changed = false;
-                let elements_prime: Rc<[TupleElement]> = tv
-                    .elements
-                    .iter()
-                    .map(|el| {
-                        let el_prime = mapper.tuple_element(cx, map_cx, el.clone());
-                        if !el.t.ptr_eq(&el_prime.t) {
-                            elements_changed = true;
-                        }
-                        el_prime
-                    })
-                    .collect();
-                if elements_changed {
-                    tuple_view_changed = true;
+            let tuple_view_prime = option_utils::ident_map(
+                |tv: &TupleView| {
+                    let TupleView {
+                        elements,
+                        arity,
+                        inexact,
+                    } = tv;
+                    let elements_prime = list_utils::ident_map(
+                        |el| mapper.tuple_element(cx, map_cx, el.clone()),
+                        |a, b| a.t.ptr_eq(&b.t),
+                        elements.dupe(),
+                    );
                     TupleView {
                         elements: elements_prime,
-                        arity: tv.arity,
-                        inexact: tv.inexact,
+                        arity: *arity,
+                        inexact: *inexact,
                     }
-                } else {
-                    tv.clone()
-                }
-            });
-            if elem_t.ptr_eq(&elem_t_prime) && !tuple_view_changed {
+                },
+                |a, b| Rc::ptr_eq(&a.elements, &b.elements),
+                tuple_view.clone(),
+            );
+            let tuple_view_unchanged = match (tuple_view, &tuple_view_prime) {
+                (None, None) => true,
+                (Some(a), Some(b)) => Rc::ptr_eq(&a.elements, &b.elements),
+                _ => false,
+            };
+            if elem_t.ptr_eq(&elem_t_prime) && tuple_view_unchanged {
                 t
             } else {
+                //   ArrayAT { elem_t = elem_t'; tuple_view = tuple_view'; react_dro }
                 Rc::new(ArrType::ArrayAT(Box::new(ArrayATData {
                     react_dro: react_dro.clone(),
                     elem_t: elem_t_prime,
@@ -1796,19 +1815,14 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             arity,
             inexact,
         }) => {
+            // let elem_t' = self#type_ cx map_cx elem_t in
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
-            let mut elements_changed = false;
-            let elements_prime: Rc<[TupleElement]> = elements
-                .iter()
-                .map(|el| {
-                    let el_prime = mapper.tuple_element(cx, map_cx, el.clone());
-                    if !el.t.ptr_eq(&el_prime.t) {
-                        elements_changed = true;
-                    }
-                    el_prime
-                })
-                .collect();
-            if elem_t.ptr_eq(&elem_t_prime) && !elements_changed {
+            let elements_prime = list_utils::ident_map(
+                |el| mapper.tuple_element(cx, map_cx, el.clone()),
+                |a, b| a.t.ptr_eq(&b.t),
+                elements.dupe(),
+            );
+            if elem_t.ptr_eq(&elem_t_prime) && Rc::ptr_eq(elements, &elements_prime) {
                 t
             } else {
                 Rc::new(ArrType::TupleAT(Box::new(TupleATData {
@@ -1917,33 +1931,32 @@ pub fn predicate_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         | PredicateInner::ImpossibleP => p.dupe(),
         PredicateInner::LatentP(info, indices) => {
             let inner_t_prime = mapper.type_(cx, map_cx, info.2.dupe());
-            let mut targs_changed = false;
-            let targs_prime = info.3.as_ref().map(|ts| {
-                ts.iter()
-                    .map(|t| {
-                        let t_prime = mapper.targ(cx, map_cx, t.clone());
-                        if t_prime != *t {
-                            targs_changed = true;
-                        }
-                        t_prime
-                    })
-                    .collect()
-            });
-            let mut argts_changed = false;
-            let argts_prime: Rc<[CallArg]> = info
-                .4
-                .iter()
-                .map(|a| {
-                    let a_prime = mapper.call_arg(cx, map_cx, a.clone());
-                    if !a.ptr_eq(&a_prime) {
-                        argts_changed = true;
-                    }
-                    a_prime
-                })
-                .collect();
-            if info.2.ptr_eq(&inner_t_prime) && !targs_changed && !argts_changed {
+            let targs_prime = option_utils::ident_map(
+                |ts: &Rc<[Targ]>| {
+                    list_utils::ident_map(
+                        |t| mapper.targ(cx, map_cx, t.clone()),
+                        |a, b| a == b,
+                        ts.dupe(),
+                    )
+                },
+                Rc::ptr_eq,
+                info.3.clone(),
+            );
+            let targs_unchanged = match (&info.3, &targs_prime) {
+                (None, None) => true,
+                (Some(a), Some(b)) => Rc::ptr_eq(a, b),
+                _ => false,
+            };
+            let argts_prime = list_utils::ident_map(
+                |a| mapper.call_arg(cx, map_cx, a.clone()),
+                CallArg::ptr_eq,
+                info.4.dupe(),
+            );
+            if info.2.ptr_eq(&inner_t_prime) && targs_unchanged && Rc::ptr_eq(&info.4, &argts_prime)
+            {
                 p.dupe()
             } else {
+                //   LatentP (lazy (use_op, loc, t', targs', argts'), i)
                 Predicate::new(PredicateInner::LatentP(
                     Box::new(flow_typing_type::type_::PredFuncallInfo(
                         info.0.clone(),
@@ -1958,31 +1971,29 @@ pub fn predicate_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         }
         PredicateInner::LatentThisP(info) => {
             let inner_t_prime = mapper.type_(cx, map_cx, info.2.dupe());
-            let mut targs_changed = false;
-            let targs_prime = info.3.as_ref().map(|ts| {
-                ts.iter()
-                    .map(|t| {
-                        let t_prime = mapper.targ(cx, map_cx, t.clone());
-                        if t_prime != *t {
-                            targs_changed = true;
-                        }
-                        t_prime
-                    })
-                    .collect()
-            });
-            let mut argts_changed = false;
-            let argts_prime: Rc<[CallArg]> = info
-                .4
-                .iter()
-                .map(|a| {
-                    let a_prime = mapper.call_arg(cx, map_cx, a.clone());
-                    if !a.ptr_eq(&a_prime) {
-                        argts_changed = true;
-                    }
-                    a_prime
-                })
-                .collect();
-            if info.2.ptr_eq(&inner_t_prime) && !targs_changed && !argts_changed {
+            let targs_prime = option_utils::ident_map(
+                |ts: &Rc<[Targ]>| {
+                    list_utils::ident_map(
+                        |t| mapper.targ(cx, map_cx, t.clone()),
+                        |a, b| a == b,
+                        ts.dupe(),
+                    )
+                },
+                Rc::ptr_eq,
+                info.3.clone(),
+            );
+            let targs_unchanged = match (&info.3, &targs_prime) {
+                (None, None) => true,
+                (Some(a), Some(b)) => Rc::ptr_eq(a, b),
+                _ => false,
+            };
+            let argts_prime = list_utils::ident_map(
+                |a| mapper.call_arg(cx, map_cx, a.clone()),
+                CallArg::ptr_eq,
+                info.4.dupe(),
+            );
+            if info.2.ptr_eq(&inner_t_prime) && targs_unchanged && Rc::ptr_eq(&info.4, &argts_prime)
+            {
                 p.dupe()
             } else {
                 Predicate::new(PredicateInner::LatentThisP(Box::new(

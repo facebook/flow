@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 
 use dupe::Dupe;
 use flow_common::files;
+use flow_common_utils::list_utils;
 use flow_lint_settings::lints::LintKind;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
@@ -81,6 +82,7 @@ impl std::fmt::Display for ErrorKind {
     Copy,
     PartialEq,
     Eq,
+    Hash,
     PartialOrd,
     Ord,
     serde::Serialize,
@@ -160,6 +162,7 @@ pub mod friendly {
         Clone,
         PartialEq,
         Eq,
+        Hash,
         PartialOrd,
         Ord,
         serde::Serialize,
@@ -177,6 +180,7 @@ pub mod friendly {
         Clone,
         PartialEq,
         Eq,
+        Hash,
         PartialOrd,
         Ord,
         serde::Serialize,
@@ -193,6 +197,7 @@ pub mod friendly {
         Clone,
         PartialEq,
         Eq,
+        Hash,
         PartialOrd,
         Ord,
         serde::Serialize,
@@ -217,6 +222,7 @@ pub mod friendly {
         Clone,
         PartialEq,
         Eq,
+        Hash,
         PartialOrd,
         Ord,
         serde::Serialize,
@@ -268,6 +274,7 @@ pub mod friendly {
         Clone,
         PartialEq,
         Eq,
+        Hash,
         PartialOrd,
         Ord,
         serde::Serialize,
@@ -283,6 +290,7 @@ pub mod friendly {
         Clone,
         PartialEq,
         Eq,
+        Hash,
         PartialOrd,
         Ord,
         serde::Serialize,
@@ -972,19 +980,11 @@ pub mod friendly {
                 } => {
                     // Loop through our speculation branches. We will flatten out relevant
                     // union branches and hide branches with a low score in this loop.
-                    let branches = {
-                        let mut seen = Vec::new();
-                        let mut deduped = Vec::new();
-                        for branch in branches {
-                            if !seen.contains(&branch) {
-                                seen.push(branch.clone());
-                                deduped.push(branch);
-                            }
-                        }
-                        deduped
-                    };
                     let (_, hidden_branches, mut speculation_errors) =
-                        partition_into_visible_and_hidden_branches(show_all_branches, branches);
+                        partition_into_visible_and_hidden_branches(
+                            show_all_branches,
+                            list_utils::dedup(branches),
+                        );
 
                     // If there is only one branch in acc and we have a hidden branch,
                     // show that hidden branch as well. If we improve our scoring logic

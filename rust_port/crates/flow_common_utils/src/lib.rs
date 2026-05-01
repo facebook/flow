@@ -10,5 +10,7 @@ pub mod checked_set;
 pub mod filename_cache;
 pub mod graph;
 pub mod line;
+pub mod list_utils;
+pub mod option_utils;
 pub mod utils_js;
 pub mod utils_jsx;

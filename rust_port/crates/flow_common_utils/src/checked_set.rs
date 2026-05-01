@@ -310,17 +310,15 @@ impl CheckedSet {
     // Helper function for debugging
     pub fn debug_to_string(&self, limit: Option<usize>) -> String {
         fn string_of_set(set: &FlowOrdSet<FileKey>, limit: Option<usize>) -> String {
-            let mut files: Vec<String> =
-                set.iter().map(|f| format!("\"{}\"", f.as_str())).collect();
-
-            if let Some(n) = limit {
-                let total = files.len();
-                if total > n {
-                    files.truncate(n);
-                    files.push(format!("[shown {}/{}]", n, total));
-                }
-            }
-
+            let files: Vec<String> = set.iter().map(|f| format!("\"{}\"", f.as_str())).collect();
+            let files = match limit {
+                None => files,
+                Some(n) => crate::list_utils::first_upto_n(
+                    n,
+                    |t| Some(format!("[shown {}/{}]", n, t)),
+                    files,
+                ),
+            };
             files.join("\n")
         }
 

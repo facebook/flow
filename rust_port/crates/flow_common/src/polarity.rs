@@ -5,10 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use dupe::Dupe;
+
 #[derive(
     Debug,
     Clone,
     Copy,
+    Dupe,
     PartialEq,
     Eq,
     PartialOrd,

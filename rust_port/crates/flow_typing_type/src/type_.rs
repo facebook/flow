@@ -49,6 +49,7 @@ use flow_common::reason::Reason;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::subst_name::SubstName;
+use flow_common_utils::list_utils;
 use flow_data_structure_wrapper::multi_level_map::MultiLevelMap;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -4420,7 +4421,7 @@ pub enum UnsoundnessKind {
     NonBindingPattern,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FunParam(pub Option<FlowSmolStr>, pub Type);
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -4650,7 +4651,7 @@ pub struct MethodCallType {
     pub meth_strict_arity: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Targ {
     /// This tvar gets lower bounds from the instantiations of _. It is used to power type-services
     /// like type-at-pos and should not be used for type checking
@@ -4681,7 +4682,7 @@ pub enum CallArgInner {
     SpreadArg(Type),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CallArg(Rc<CallArgInner>);
 
 impl Deref for CallArg {
@@ -4779,7 +4780,7 @@ pub enum ArrType {
     ROArrayAT(Box<(Type, Option<ReactDro>)>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TupleElement {
     pub reason: Reason,
     pub name: Option<FlowSmolStr>,
@@ -7274,30 +7275,17 @@ pub mod union_rep {
         {
             let t0_prime = f(&self.0.t0);
             let t1_prime = f(&self.0.t1);
-
-            let mut changed =
-                !Rc::ptr_eq(&t0_prime.0, &self.0.t0.0) || !Rc::ptr_eq(&t1_prime.0, &self.0.t1.0);
-            let mut ts_prime = Vec::new();
-
-            for t in self.0.ts.iter() {
-                let t_prime = f(t);
-                changed = changed || !Rc::ptr_eq(&t_prime.0, &t.0);
-                ts_prime.push(t_prime);
-            }
-
+            let ts_prime = list_utils::ident_map(&f, Type::ptr_eq, self.0.ts.dupe());
+            let changed = !Rc::ptr_eq(&t0_prime.0, &self.0.t0.0)
+                || !Rc::ptr_eq(&t1_prime.0, &self.0.t1.0)
+                || !Rc::ptr_eq(&self.0.ts, &ts_prime);
             if changed {
                 let source_aloc = if always_keep_source {
                     self.0.source_aloc.dupe()
                 } else {
                     None
                 };
-                make(
-                    source_aloc,
-                    self.0.kind,
-                    t0_prime,
-                    t1_prime,
-                    ts_prime.into(),
-                )
+                make(source_aloc, self.0.kind, t0_prime, t1_prime, ts_prime)
             } else {
                 self.dupe()
             }
@@ -7309,33 +7297,20 @@ pub mod union_rep {
         {
             let t0_prime = f(&self.0.t0)?;
             let t1_prime = f(&self.0.t1)?;
-
-            let mut changed =
-                !Rc::ptr_eq(&t0_prime.0, &self.0.t0.0) || !Rc::ptr_eq(&t1_prime.0, &self.0.t1.0);
-            let mut ts_prime = Vec::new();
-
-            for t in self.0.ts.iter() {
-                let t_prime = f(t)?;
-                changed = changed || !Rc::ptr_eq(&t_prime.0, &t.0);
-                ts_prime.push(t_prime);
-            }
-
-            if changed {
+            let ts_prime = list_utils::try_ident_map(&mut f, Type::ptr_eq, self.0.ts.dupe())?;
+            let changed = !Rc::ptr_eq(&t0_prime.0, &self.0.t0.0)
+                || !Rc::ptr_eq(&t1_prime.0, &self.0.t1.0)
+                || !Rc::ptr_eq(&self.0.ts, &ts_prime);
+            Ok(if changed {
                 let source_aloc = if always_keep_source {
                     self.0.source_aloc.dupe()
                 } else {
                     None
                 };
-                Ok(make(
-                    source_aloc,
-                    self.0.kind,
-                    t0_prime,
-                    t1_prime,
-                    ts_prime.into(),
-                ))
+                make(source_aloc, self.0.kind, t0_prime, t1_prime, ts_prime)
             } else {
-                Ok(self.dupe())
-            }
+                self.dupe()
+            })
         }
     }
 
@@ -8115,7 +8090,7 @@ pub mod object {
             pub reachable_targs: Rc<[(Type, Polarity)]>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
         pub struct OperandSlice(Rc<OperandSliceInner>);
 
         impl std::ops::Deref for OperandSlice {
@@ -8136,7 +8111,7 @@ pub mod object {
             }
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
         pub enum Operand {
             Slice(OperandSlice),
             Type(Type),

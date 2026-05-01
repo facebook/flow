@@ -10,6 +10,7 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use flow_common_utils::option_utils;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EPropNotWritableData;
 use flow_typing_errors::error_message::ETooFewTypeArgsData;
@@ -1889,21 +1890,23 @@ pub(super) fn reposition<'cx>(
                         }
                     }
                 };
+                let lower_t = option_utils::try_ident_map(
+                    |lt| recurse(cx, trace, desc, mod_reason, seen, lt),
+                    Type::ptr_eq,
+                    nominal_type.lower_t.dupe(),
+                )?;
+                let upper_t = option_utils::try_ident_map(
+                    |ut| recurse(cx, trace, desc, mod_reason, seen, ut),
+                    Type::ptr_eq,
+                    nominal_type.upper_t.dupe(),
+                )?;
                 Ok(Type::new(TypeInner::NominalT {
                     reason: r,
                     nominal_type: Rc::new(NominalType::new(NominalTypeInner {
                         nominal_id: nominal_type.nominal_id.clone(),
                         underlying_t,
-                        lower_t: nominal_type
-                            .lower_t
-                            .as_ref()
-                            .map(|lt| recurse(cx, trace, desc, mod_reason, seen, lt))
-                            .transpose()?,
-                        upper_t: nominal_type
-                            .upper_t
-                            .as_ref()
-                            .map(|ut| recurse(cx, trace, desc, mod_reason, seen, ut))
-                            .transpose()?,
+                        lower_t,
+                        upper_t,
                         nominal_type_args: nominal_type.nominal_type_args.dupe(),
                     })),
                 }))

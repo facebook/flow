@@ -14,6 +14,7 @@ use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
 use flow_common::subst_name::SubstName;
 use flow_common::subst_name::SubstNameInner;
+use flow_common_utils::list_utils;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -330,27 +331,16 @@ where
     let members: Vec<Type> = rep.members_iter().map(|t| t.dupe()).collect();
     let t0 = members[0].dupe();
     let t1 = members[1].dupe();
-    let ts: Vec<Type> = members[2..].iter().map(|t| t.dupe()).collect();
+    let ts: Rc<[Type]> = members[2..].iter().map(|t| t.dupe()).collect();
 
     let t0_ = f(t0.dupe());
     let t1_ = f(t1.dupe());
-    let mut ts_changed = false;
-    let ts_: Vec<Type> = ts
-        .iter()
-        .map(|t_elem| {
-            let t_elem_prime = f(t_elem.dupe());
-            if !t_elem.ptr_eq(&t_elem_prime) {
-                ts_changed = true;
-            }
-            t_elem_prime
-        })
-        .collect();
-
-    if t0.ptr_eq(&t0_) && t1.ptr_eq(&t1_) && !ts_changed {
+    let ts_ = list_utils::ident_map(|t_elem| f(t_elem.dupe()), Type::ptr_eq, ts.dupe());
+    if t0.ptr_eq(&t0_) && t1.ptr_eq(&t1_) && Rc::ptr_eq(&ts, &ts_) {
         t
     } else {
         let mut all_ts = vec![t0_, t1_];
-        all_ts.extend(ts_);
+        all_ts.extend(ts_.iter().map(|t| t.dupe()));
         let flattened = union_flatten(cx, all_ts);
         let mut acc: Vec<Type> = Vec::new();
         let mut seen = HashSet::new();
@@ -840,18 +830,12 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                 use_desc,
             }) => {
                 let type_prime = self.type_(cx, map_cx, type_inner.dupe());
-                let mut targs_changed = false;
-                let targs_prime: Vec<Type> = targs
-                    .iter()
-                    .map(|targ| {
-                        let targ_prime = self.type_(cx, map_cx, targ.dupe());
-                        if !targ.ptr_eq(&targ_prime) {
-                            targs_changed = true;
-                        }
-                        targ_prime
-                    })
-                    .collect();
-                if type_inner.ptr_eq(&type_prime) && !targs_changed {
+                let targs_prime = list_utils::ident_map(
+                    |targ| self.type_(cx, map_cx, targ.dupe()),
+                    Type::ptr_eq,
+                    targs.dupe(),
+                );
+                if type_inner.ptr_eq(&type_prime) && Rc::ptr_eq(targs, &targs_prime) {
                     t.dupe()
                 } else {
                     // If the TypeAppT changed then one of the type arguments had a
@@ -863,7 +847,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                         reason: reason.dupe(),
                         use_op: new_use_op,
                         type_: type_prime,
-                        targs: targs_prime.into(),
+                        targs: targs_prime,
                         from_value: *from_value,
                         use_desc: *use_desc,
                     })))

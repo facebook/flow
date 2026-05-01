@@ -17,6 +17,7 @@ use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
+use flow_common_utils::list_utils;
 use flow_parser::loc_sig::LocSig;
 use flow_server_env::flow_lsp_conversions;
 use flow_server_env::lsp_handler;
@@ -2330,25 +2331,21 @@ fn collect_rage(
     items.push(("env.checked_files".to_string(), data));
     let dep_graph = env.dependency_info.implementation_dependency_graph();
     let dep_map = dep_graph.to_map();
-    let mut dep_lines: Vec<String> = dep_map
-        .iter()
-        .map(|(file, deps)| {
-            let file_str = file.as_str();
-            let dep_strs: Vec<&str> = deps.iter().take(20).map(|d| d.as_str()).collect();
-            let suffix = if deps.len() > 20 {
-                format!(" ...{} more", deps.len() - 20)
-            } else {
-                String::new()
-            };
-            format!("{}:{}{}\n", file_str, dep_strs.join(","), suffix)
-        })
-        .collect();
-    if dep_lines.len() > 200 {
-        let total = dep_lines.len();
-        dep_lines.truncate(200);
-        dep_lines.push(format!("[shown 200/{}]\n", total));
-    }
-    let dependencies = dep_lines.join("");
+    let dependency_to_string = |(file, deps): (
+        &flow_parser::file_key::FileKey,
+        &std::collections::BTreeSet<flow_parser::file_key::FileKey>,
+    )|
+     -> String {
+        let file = file.as_str();
+        let deps: Vec<String> = deps.iter().map(|d| d.as_str().to_string()).collect();
+        let deps = list_utils::first_upto_n(20, |t| Some(format!(" ...{} more", t)), deps);
+        let deps = deps.join(",");
+        format!("{}:{}\n", file, deps)
+    };
+    let dependencies: Vec<String> = dep_map.iter().map(dependency_to_string).collect();
+    let dependencies =
+        list_utils::first_upto_n(200, |t| Some(format!("[shown 200/{}]\n", t)), dependencies);
+    let dependencies = dependencies.join("");
     let data = format!("DEPENDENCIES:\n{}", dependencies);
     items.push(("env.dependencies".to_string(), data));
     let (errors, warnings) = error_collator::get_without_suppressed(env);

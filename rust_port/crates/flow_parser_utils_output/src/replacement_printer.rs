@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_common_utils::list_utils;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser::offset_utils::OffsetTable;
@@ -18,12 +19,15 @@ pub type Patch = Vec<(usize, usize, String)>;
 
 // Location patches retain all the information needed to send edits over the LSP
 pub type LocPatch = Vec<(Loc, String)>;
+
 pub fn show_patch(p: &Patch) -> String {
-    let mut result = String::new();
-    for (s, e, p) in p {
-        result.push_str(&format!("Start: <{}> End: <{}> Patch: <{}>\n", s, e, p));
-    }
-    result
+    list_utils::to_string(
+        "",
+        |(s, e, p): &(usize, usize, String)| {
+            format!("Start: <{}> End: <{}> Patch: <{}>\n", s, e, p)
+        },
+        p,
+    )
 }
 
 fn with_content_of_file_input<T>(file: &FileInput, f: impl FnOnce(&str) -> T) -> T {
