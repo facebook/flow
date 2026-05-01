@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 experimental.ts_syntax=true
 all=true
 no_flowlib=false

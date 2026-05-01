@@ -10,6 +10,7 @@ internal-type=error
 deprecated-type-bool=error
 
 [options]
+casting_syntax=as
 all=true
 file_watcher=none
 lazy_mode=true

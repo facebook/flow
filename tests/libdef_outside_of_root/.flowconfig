@@ -1,3 +1,4 @@
 [options]
+casting_syntax=as
 ; Unrelated to the test and unused. It's here just to make the test runner happy
 all=true

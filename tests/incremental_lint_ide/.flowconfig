@@ -5,4 +5,5 @@
 sketchy-null=error
 
 [options]
+casting_syntax=as
 all=true

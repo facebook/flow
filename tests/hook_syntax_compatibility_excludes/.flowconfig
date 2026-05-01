@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 component_syntax=true
 experimental.component_syntax.hook_compatibility=true
 experimental.component_syntax.hook_compatibility.excludes=<PROJECT_ROOT>/exclude_provider\\.js

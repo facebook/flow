@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 component_syntax=true
 experimental.component_syntax.hook_compatibility=false
 experimental.component_syntax.hook_compatibility.includes=<PROJECT_ROOT>/include_provider\\.js

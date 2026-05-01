@@ -2,4 +2,5 @@
 unnecessary-invariant=error
 
 [options]
+casting_syntax=as
 all=true

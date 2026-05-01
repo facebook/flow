@@ -2,6 +2,7 @@
 lib.js
 
 [options]
+casting_syntax=as
 all=true
 saved_state.allow_reinit=true
 lazy_mode=true

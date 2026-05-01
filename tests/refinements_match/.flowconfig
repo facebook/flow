@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 all=true
 experimental.pattern_matching=true
 dev_only.refinement_info_as_errors=true

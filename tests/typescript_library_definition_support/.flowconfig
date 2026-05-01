@@ -1,3 +1,4 @@
 [options]
+casting_syntax=as
 all=false
 experimental.typescript_library_definition_support=true

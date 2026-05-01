@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 all=true
 experimental.assert_operator=specialized
 experimental.ts_syntax=true

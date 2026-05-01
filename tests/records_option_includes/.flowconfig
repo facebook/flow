@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 all=true
 experimental.records=true
 experimental.records.includes=<PROJECT_ROOT>/ok1

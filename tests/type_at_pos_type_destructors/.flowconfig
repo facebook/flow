@@ -8,6 +8,7 @@ lib.js
 [lints]
 
 [options]
+casting_syntax=as
 all=true
 exact_by_default=false
 no_flowlib=false

@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 all=true
 module.system.node.allow_root_relative=true
 module.system.node.root_relative_dirname=root_relative_for_all

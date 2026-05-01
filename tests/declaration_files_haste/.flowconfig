@@ -6,6 +6,7 @@
 globals.js
 
 [options]
+casting_syntax=as
 module.system=haste
 module.system.haste.paths.excludes=<PROJECT_ROOT>/external/.*
 module.system.haste.paths.excludes=<PROJECT_ROOT>/foo/.*

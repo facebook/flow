@@ -8,6 +8,7 @@
 all=warn
 
 [options]
+casting_syntax=as
 all=true
 
 [strict]

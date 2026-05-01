@@ -3,4 +3,5 @@
 ./libs_b
 
 [options]
+casting_syntax=as
 all=true

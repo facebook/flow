@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 all=true
 component_syntax=true
 react.runtime=automatic

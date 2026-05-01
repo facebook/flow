@@ -2,6 +2,7 @@
 flow-typed
 
 [options]
+casting_syntax=as
 all=true
 no_flowlib=false
 stylex_shorthand_prop=sx

@@ -5,6 +5,7 @@
 [libs]
 
 [options]
+casting_syntax=as
 all=false
 no_flowlib=true
 module.system=haste

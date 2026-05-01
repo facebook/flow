@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 all=true
 react.runtime=automatic
 no_flowlib=false

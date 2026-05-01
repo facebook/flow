@@ -21,4 +21,5 @@
 !<PROJECT_ROOT>/my_untyped/root_typecheck/.*
 
 [options]
+casting_syntax=as
 all=false

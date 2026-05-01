@@ -2,6 +2,7 @@
 unused_ts_shim.js
 
 [options]
+casting_syntax=as
 all=true
 no_flowlib=false
 experimental.allow_readonly_variance=true

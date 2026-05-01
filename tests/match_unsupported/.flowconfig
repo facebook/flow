@@ -1,4 +1,5 @@
 [libs]
 
 [options]
+casting_syntax=as
 all=true

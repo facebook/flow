@@ -5,6 +5,7 @@
 [libs]
 
 [options]
+casting_syntax=as
 all=true
 include_warnings=true
 
