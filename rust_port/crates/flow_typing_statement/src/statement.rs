@@ -3671,7 +3671,9 @@ fn statement_<'a>(
                             declaration: t,
                         } => {
                             let (_, type_alias_ast) = type_alias(cx, d_loc.dupe(), t)?;
-                            if type_env::in_toplevel_scope(cx) {
+                            if type_env::in_toplevel_scope(cx)
+                                && !flow_common::files::has_ts_ext(cx.file())
+                            {
                                 flow_js::add_output_non_speculating(
                                     cx,
                                     ErrorMessage::EUnnecessaryDeclareTypeOnlyExport(d_loc.dupe()),
@@ -3697,7 +3699,9 @@ fn statement_<'a>(
                             declaration: i,
                         } => {
                             let (_, i_ast) = interface(cx, d_loc.dupe(), i)?;
-                            if type_env::in_toplevel_scope(cx) {
+                            if type_env::in_toplevel_scope(cx)
+                                && !flow_common::files::has_ts_ext(cx.file())
+                            {
                                 flow_js::add_output_non_speculating(
                                     cx,
                                     ErrorMessage::EUnnecessaryDeclareTypeOnlyExport(d_loc.dupe()),

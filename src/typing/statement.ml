@@ -2004,7 +2004,7 @@ module Make
             D.DefaultType t_ast
           | D.NamedType (loc, t) ->
             let (_, type_alias_ast) = type_alias cx loc t in
-            if Type_env.in_toplevel_scope cx then
+            if Type_env.in_toplevel_scope cx && not (Files.has_ts_ext (Context.file cx)) then
               Flow_js_utils.add_output cx (Error_message.EUnnecessaryDeclareTypeOnlyExport loc);
             D.NamedType (loc, type_alias_ast)
           | D.NamedOpaqueType (loc, t) ->
@@ -2012,7 +2012,7 @@ module Make
             D.NamedOpaqueType (loc, opaque_type_ast)
           | D.Interface (loc, i) ->
             let (_, i_ast) = interface cx loc i in
-            if Type_env.in_toplevel_scope cx then
+            if Type_env.in_toplevel_scope cx && not (Files.has_ts_ext (Context.file cx)) then
               Flow_js_utils.add_output cx (Error_message.EUnnecessaryDeclareTypeOnlyExport loc);
             D.Interface (loc, i_ast)
           | D.Enum (loc, enum) ->

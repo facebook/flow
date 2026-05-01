@@ -360,6 +360,35 @@ References:
                                ^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------- declare_type_only_export_usage.js:3:1
+
+Cannot cast `'oops'` to `X` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   declare_type_only_export_usage.js:3:1
+   3| 'oops' as X; // ERROR - string is not number
+      ^^^^^^ [1]
+
+References:
+   declare_type_only_export_usage.js:3:11
+   3| 'oops' as X; // ERROR - string is not number
+                ^ [2]
+
+
+Error ---------------------------------------------------------------------------- declare_type_only_export_usage.js:4:2
+
+Cannot cast object literal to `I` because property `baz` is missing in object literal [1] but exists in `I` [2].
+[incompatible-type]
+
+   declare_type_only_export_usage.js:4:2
+   4| ({}) as I; // ERROR - missing baz
+       ^^ [1]
+
+References:
+   declare_type_only_export_usage.js:4:9
+   4| ({}) as I; // ERROR - missing baz
+              ^ [2]
+
+
 Error --------------------------------------------------------------------------------------- declare_var_extras.js:24:1
 
 Cannot cast `s` to string literal `bar` because string literal `foo` [1] is incompatible with string literal `bar` [2].
@@ -1479,4 +1508,4 @@ References:
 
 
 
-Found 100 errors
+Found 102 errors
