@@ -758,18 +758,18 @@ pub fn elab_t<'cx>(
                     todo_rev,
                     head_slice,
                 )) => {
-                    let acc: Rc<[flow_typing_type::type_::object::spread::AccElement]> =
-                        match head_slice {
-                            Some(x) => vec![
-                                flow_typing_type::type_::object::spread::AccElement::InlineSlice(
-                                    x.clone(),
-                                ),
-                            ]
-                            .into(),
-                            None => Rc::from([]),
-                        };
+                    let acc: flow_data_structure_wrapper::list::FlowOcamlList<
+                        flow_typing_type::type_::object::spread::AccElement,
+                    > = match head_slice {
+                        Some(x) => flow_data_structure_wrapper::list::FlowOcamlList::unit(
+                            flow_typing_type::type_::object::spread::AccElement::InlineSlice(
+                                x.clone(),
+                            ),
+                        ),
+                        None => flow_data_structure_wrapper::list::FlowOcamlList::new(),
+                    };
                     let state = type_::object::spread::State {
-                        todo_rev: todo_rev.clone(),
+                        todo_rev: todo_rev.dupe(),
                         acc,
                         spread_id: flow_common::reason::mk_id() as i32,
                         union_reason: None,

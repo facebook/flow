@@ -2704,7 +2704,9 @@ mod type_converter {
         state: &mut State,
         ty: ALocTy,
         target: &flow_typing_type::type_::object::spread::Target,
-        ts: &[flow_typing_type::type_::object::spread::Operand],
+        ts: &flow_data_structure_wrapper::list::FlowOcamlList<
+            flow_typing_type::type_::object::spread::Operand,
+        >,
         head_slice: Option<&flow_typing_type::type_::object::spread::OperandSlice>,
     ) -> Result<ALocTy, Error> {
         use flow_typing_type::type_::object::spread;
@@ -2808,15 +2810,20 @@ mod type_converter {
         state: &mut State,
         ty: ALocTy,
         inexact: bool,
-        resolved: &[flow_typing_type::type_::ResolvedParam],
-        unresolved: &[flow_typing_type::type_::UnresolvedParam],
+        resolved: &flow_data_structure_wrapper::list::FlowOcamlList<
+            flow_typing_type::type_::ResolvedParam,
+        >,
+        unresolved: &flow_data_structure_wrapper::list::FlowOcamlList<
+            flow_typing_type::type_::UnresolvedParam,
+        >,
     ) -> Result<ALocTy, Error> {
         use flow_typing_type::type_::ArrType;
         use flow_typing_type::type_::ResolvedParam;
         use flow_typing_type::type_::UnresolvedParam;
 
+        let resolved_rev_vec: Vec<&ResolvedParam> = resolved.iter().collect();
         let mut head: Vec<ty::TupleElement<ALoc>> = Vec::new();
-        for resolved in resolved.iter() {
+        for resolved in resolved_rev_vec.iter().rev() {
             match resolved {
                 ResolvedParam::ResolvedArg(box ResolvedArgData(elem, _)) => {
                     let t = type__::<I>(env, state, None, &elem.t)?;

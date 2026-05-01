@@ -113,7 +113,7 @@ fn mk_scope_builder_uses_of_all_uses_test(
     let uses: Vec<Vec<Loc>> = all_uses
         .iter()
         .map(|use_loc| {
-            let mut use_locs: Vec<Loc> = info.uses_of_use(use_loc, true).into_iter().collect();
+            let mut use_locs: Vec<Loc> = info.uses_of_use(use_loc, true).iter().cloned().collect();
             use_locs.sort_by(|a, b| a.compare_ignore_source(b));
             use_locs
         })

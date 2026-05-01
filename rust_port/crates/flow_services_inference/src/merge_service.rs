@@ -10,7 +10,6 @@ use std::cell::LazyCell;
 use std::cell::OnceCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -765,7 +764,7 @@ fn mk_check_file(
             })
                 as Box<dyn FnOnce() -> Rc<ALocTable>>))
         };
-        let resolved_modules: BTreeMap<FlowImportSpecifier, ResolvedModule> = {
+        let resolved_modules: Vec<(FlowImportSpecifier, ResolvedModule)> = {
             let requires = parse.requires();
             let resolved_requires = parse.resolved_requires_unsafe();
             let resolved = resolved_requires.get_resolved_modules();
@@ -798,12 +797,26 @@ fn mk_check_file(
         let tolerable_error_set =
             inference_utils::set_of_file_sig_tolerable_errors(file.dupe(), &tolerable_errors);
         let errors = errors.union(&tolerable_error_set);
-        let mut suppressions = cx.error_suppressions().clone();
+        // For codemod paths (`skip_post_check_cleanup = true`), the cx is reused
+        // by the codemod which calls `cx.error_suppressions()` later, so we must
+        // leave the suppressions intact and clone. For the regular check path,
+        // the cx is dropped after this function and we can take ownership to
+        // avoid a deep BTreeMap clone.
+        let mut suppressions = if skip_post_check_cleanup {
+            cx.error_suppressions().clone()
+        } else {
+            cx.take_error_suppressions()
+        };
         let severity_cover = cx.severity_cover().dupe();
         let include_suppressions = cx.include_suppressions();
-        let aloc_tables: HashMap<FileKey, flow_aloc::LazyALocTable> = cx.aloc_tables().clone();
-        let (errors, warnings) =
-            suppressions.filter_lints(errors, &aloc_tables, include_suppressions, &severity_cover);
+        let aloc_tables_ref = cx.aloc_tables();
+        let (errors, warnings) = suppressions.filter_lints(
+            errors,
+            &aloc_tables_ref,
+            include_suppressions,
+            &severity_cover,
+        );
+        drop(aloc_tables_ref);
         // Break Rc cycles eagerly to bound peak memory: without this, every
         // checked file's full type graph stays alive in the cache until the
         // cache itself is dropped (which only happens at the end of a long
@@ -876,7 +889,7 @@ pub fn check_contents_context(
         })
             as Box<dyn FnOnce() -> Rc<ALocTable>>))
     };
-    let resolved_modules: BTreeMap<FlowImportSpecifier, ResolvedModule> = file_sig
+    let resolved_modules: Vec<(FlowImportSpecifier, ResolvedModule)> = file_sig
         .require_loc_map()
         .into_keys()
         .map(|mref| {
@@ -944,7 +957,7 @@ pub fn compute_env_of_contents(
         })
             as Box<dyn FnOnce() -> Rc<ALocTable>>))
     };
-    let resolved_modules: BTreeMap<FlowImportSpecifier, ResolvedModule> = file_sig
+    let resolved_modules: Vec<(FlowImportSpecifier, ResolvedModule)> = file_sig
         .require_loc_map()
         .into_keys()
         .map(|mref| {

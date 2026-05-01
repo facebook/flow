@@ -32,8 +32,8 @@ pub fn local_find_refs(
                 .def_of_use_opt(use_loc)
                 .expect("use should have a def");
             let uses = scope_info.uses_of_def(def, false);
-            for u in uses {
-                sorted_locs.insert(u);
+            for u in uses.iter() {
+                sorted_locs.insert(u.clone());
             }
         }
         let sorted_locs: Vec<Loc> = sorted_locs.into_iter().collect();

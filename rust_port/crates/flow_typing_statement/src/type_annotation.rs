@@ -4863,7 +4863,9 @@ fn convert_object<'a>(
 
             match (&head, &tail[..]) {
                 (AccElement::Spread(t), ts) => {
-                    let operands: Vec<object::spread::Operand> = ts
+                    let operands: flow_data_structure_wrapper::list::FlowOcamlList<
+                        object::spread::Operand,
+                    > = ts
                         .iter()
                         .map(|el| acc_element_to_operand(el, &reason))
                         .collect();
@@ -4873,9 +4875,7 @@ fn convert_object<'a>(
                         &reason,
                         &t.dupe(),
                         &Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
-                            target,
-                            operands.into(),
-                            None,
+                            target, operands, None,
                         ))),
                         eval::Id::generate_id(),
                     )
@@ -4899,7 +4899,9 @@ fn convert_object<'a>(
                             generics: flow_typing_generics::spread_empty(),
                             reachable_targs: Rc::from([]),
                         });
-                    let operands: Vec<object::spread::Operand> = rest[1..]
+                    let operands: flow_data_structure_wrapper::list::FlowOcamlList<
+                        object::spread::Operand,
+                    > = rest[1..]
                         .iter()
                         .map(|el| acc_element_to_operand(el, &reason))
                         .collect();
@@ -4910,7 +4912,7 @@ fn convert_object<'a>(
                         &spread_t,
                         &Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
                             target,
-                            operands.into(),
+                            operands,
                             Some(head_slice_val),
                         ))),
                         eval::Id::generate_id(),

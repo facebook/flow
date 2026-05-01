@@ -247,35 +247,26 @@ fn in_sandbox_cx<'cx>(
 ) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
     cx.run_and_rolled_back_cache(|| {
         let original_errors = cx.errors();
-        // OCaml: let no_lowers r =
-        // OCaml:   match desc_of_reason r with
-        // OCaml:   | RInferredUnionElemArray { is_empty = true; _ } ->
-        // OCaml:     Tvar_resolver.default_no_lowers r
-        // OCaml:   | _ -> raise UnconstrainedTvarException
-        // OCaml: in
-        //
-        // In OCaml, `no_lowers` raises UnconstrainedTvarException for non-exempt tvars,
-        // which immediately aborts resolved_t before set_root_constraints can permanently
-        // mutate the unconstrained tvar to FullyResolved(EmptyT). We pre-check for
-        // unconstrained tvars (exempting RInferredUnionElemArray { is_empty: true }) to
-        // avoid calling resolved_t when it would corrupt the tvar graph.
-        if tvar_resolver::has_unconstrained_tvars_except(cx, t, |r| {
-            matches!(
-                r.desc(true),
-                VirtualReasonDesc::RInferredUnionElemArray { is_empty: true, .. }
-            )
-        }) {
-            cx.reset_errors(original_errors);
-            return Ok(None);
-        }
-        // OCaml: match f (Tvar_resolver.resolved_t cx ~no_lowers ~filter_empty:false t) with
         cx.reset_errors(ErrorSet::empty());
-        let resolved =
-            tvar_resolver::resolved_t(tvar_resolver::default_no_lowers, false, cx, t.dupe());
+        let resolved = tvar_resolver::resolved_t_abortable(
+            |r| match r.desc(true) {
+                VirtualReasonDesc::RInferredUnionElemArray { is_empty: true, .. } => {
+                    Some(tvar_resolver::default_no_lowers(r))
+                }
+                _ => None,
+            },
+            false,
+            cx,
+            t.dupe(),
+        );
+        let resolved = match resolved {
+            None => {
+                cx.reset_errors(original_errors);
+                return Ok(None);
+            }
+            Some(t) => t,
+        };
         match f(resolved) {
-            // OCaml: | (exception Flow_js_utils.SpeculationSingletonError)
-            // OCaml: | (exception UnconstrainedTvarException)
-            // OCaml: | (exception DecompFuncParamOutOfBoundsException) ->
             Err(SandboxError::SpeculationSingleton)
             | Err(SandboxError::UnconstrainedTvar(_))
             | Err(SandboxError::DecompFuncParamOutOfBounds(_))
@@ -284,8 +275,6 @@ fn in_sandbox_cx<'cx>(
                 cx.reset_errors(original_errors);
                 Ok(None)
             }
-            // WorkerCanceled and TimedOut propagate out, matching OCaml's
-            // `| exn -> raise exn`.
             Err(SandboxError::WorkerCanceled(c)) => {
                 cx.reset_errors(original_errors);
                 Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
@@ -298,7 +287,6 @@ fn in_sandbox_cx<'cx>(
                 cx.reset_errors(original_errors);
                 Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc })
             }
-            // OCaml: | t ->
             Ok(t) => {
                 let new_errors = cx.errors();
                 cx.reset_errors(original_errors);
@@ -1630,17 +1618,11 @@ fn fully_resolve_final_result<'cx>(cx: &Context<'cx>, t: Type, kind: HintKind) -
             )]
         });
         HintEvalResult::EncounteredPlaceholder
-    } else if tvar_resolver::has_unconstrained_tvars(cx, &t) {
-        // In OCaml, `no_lowers` raises UnconstrainedTvarException which immediately aborts
-        // Tvar_resolver.resolved_t, preventing any further tvar graph mutations. In Rust,
-        // we pre-check for unconstrained tvars without mutating, then skip resolution entirely.
-        // This prevents cached hint types (via hint_eval_cache) from having their tvars
-        // permanently mutated to FullyResolved(EmptyT), which would cause subsequent evaluations
-        // to incorrectly return HintAvailable instead of DecompositionError.
-        HintEvalResult::DecompositionError
     } else {
-        let resolved = tvar_resolver::resolved_t(tvar_resolver::default_no_lowers, false, cx, t);
-        HintEvalResult::HintAvailable(resolved, kind)
+        match tvar_resolver::resolved_t_abortable(|_| None, false, cx, t) {
+            None => HintEvalResult::DecompositionError,
+            Some(resolved) => HintEvalResult::HintAvailable(resolved, kind),
+        }
     }
 }
 

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -134,12 +135,12 @@ impl<Loc: Dupe + PartialEq + Eq + Ord + Hash> ScopeInfo<Loc> {
         uses
     }
 
-    pub fn defs_of_all_uses(&self) -> BTreeMap<Loc, Def<Loc>> {
-        self.flat_use_def.clone()
+    pub fn defs_of_all_uses(&self) -> &BTreeMap<Loc, Def<Loc>> {
+        &self.flat_use_def
     }
 
-    pub fn uses_of_all_defs(&self) -> BTreeMap<Def<Loc>, BTreeSet<Loc>> {
-        self.flat_def_uses.clone()
+    pub fn uses_of_all_defs(&self) -> &BTreeMap<Def<Loc>, BTreeSet<Loc>> {
+        &self.flat_def_uses
     }
 
     pub fn def_of_use_opt(&self, use_loc: &Loc) -> Option<&Def<Loc>> {
@@ -151,17 +152,19 @@ impl<Loc: Dupe + PartialEq + Eq + Ord + Hash> ScopeInfo<Loc> {
         def.is(use_loc)
     }
 
-    pub fn uses_of_def(&self, def: &Def<Loc>, exclude_def: bool) -> BTreeSet<Loc> {
+    pub fn uses_of_def(&self, def: &Def<Loc>, exclude_def: bool) -> Cow<'_, BTreeSet<Loc>> {
         match self.flat_def_uses.get(def) {
-            None => BTreeSet::new(),
+            None => Cow::Owned(BTreeSet::new()),
             Some(uses) => {
                 if exclude_def {
-                    uses.iter()
-                        .filter(|use_loc| !def.is(use_loc))
-                        .cloned()
-                        .collect()
+                    Cow::Owned(
+                        uses.iter()
+                            .filter(|use_loc| !def.is(use_loc))
+                            .cloned()
+                            .collect(),
+                    )
                 } else {
-                    uses.clone()
+                    Cow::Borrowed(uses)
                 }
             }
         }
@@ -181,9 +184,9 @@ impl<Loc: Dupe + PartialEq + Eq + Ord + Hash> ScopeInfo<Loc> {
         scopes
     }
 
-    pub fn uses_of_use(&self, use_loc: &Loc, exclude_def: bool) -> BTreeSet<Loc> {
+    pub fn uses_of_use(&self, use_loc: &Loc, exclude_def: bool) -> Cow<'_, BTreeSet<Loc>> {
         let Some(def) = self.def_of_use_opt(use_loc) else {
-            return BTreeSet::new();
+            return Cow::Owned(BTreeSet::new());
         };
         self.uses_of_def(def, exclude_def)
     }

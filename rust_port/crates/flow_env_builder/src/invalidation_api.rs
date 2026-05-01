@@ -35,7 +35,7 @@ where
     // We consider a binding to be const-like if all reads point to the same
     // write, modulo initialization.
     let mut writes: BTreeSet<L> = BTreeSet::new();
-    for use_loc in &uses {
+    for use_loc in uses.iter() {
         match values.get(use_loc) {
             None => {
                 // use is a write
@@ -172,12 +172,12 @@ where
     let uses = info.uses_of_use(loc, false);
     let mut result = BTreeSet::new();
 
-    for use_loc in uses {
-        match values.get(&use_loc) {
+    for use_loc in uses.iter() {
+        match values.get(use_loc) {
             None => {
                 // use is a write
-                if !is_not_captured_by_closure(info, &use_loc) {
-                    result.insert(use_loc);
+                if !is_not_captured_by_closure(info, use_loc) {
+                    result.insert(use_loc.dupe());
                 }
             }
             Some(_write_locs) => {

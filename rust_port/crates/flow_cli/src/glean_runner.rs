@@ -1412,7 +1412,7 @@ fn local_declaration_references(
 ) -> Vec<Value> {
     let uses_of_all_defs = scope_info.uses_of_all_defs();
     let mut acc: Vec<Value> = Vec::new();
-    for (def, uses) in &uses_of_all_defs {
+    for (def, uses) in uses_of_all_defs {
         let jsons: Vec<Value> = def
             .locs
             .iter()

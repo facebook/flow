@@ -1179,6 +1179,10 @@ impl<'cx> Context<'cx> {
         self.0.ccx.error_suppressions.borrow()
     }
 
+    pub fn take_error_suppressions(&self) -> ErrorSuppressions {
+        std::mem::take(&mut *self.0.ccx.error_suppressions.borrow_mut())
+    }
+
     pub fn evaluated(&self) -> type_::eval::Map<Type> {
         self.0.ccx.sig_cx.borrow().evaluated.dupe()
     }

@@ -1401,15 +1401,16 @@ where
     let (evals, resolved): (Vec<Type>, Vec<Type>) =
         rep.members_iter().duped().partition(is_union_resolvable);
 
-    if let Some((first, unresolved)) = evals.split_first() {
+    let mut evals_iter = evals.into_iter();
+    if let Some(first) = evals_iter.next() {
         let resolve_union_t = UseT::new(UseTInner::ResolveUnionT(Box::new(ResolveUnionTData {
             reason: reason.dupe(),
-            resolved: resolved.into(),
-            unresolved: Rc::from(unresolved),
+            resolved: resolved.into_iter().collect(),
+            unresolved: evals_iter.collect(),
             upper: Box::new(upper),
             id: mk_id() as i32,
         })));
-        f(cx, trace, (first.dupe(), resolve_union_t))?;
+        f(cx, trace, (first, resolve_union_t))?;
     }
     Ok(())
 }
@@ -6831,32 +6832,42 @@ where
     use flow_typing_type::type_util::tuple_ts_of_elements;
     use flow_typing_type::type_util::union_of_ts;
 
-    let mut resolved: Vec<(TupleElement, Option<flow_typing_generics::GenericId>)> = Vec::new();
-    let mut unresolved: Vec<UnresolvedParam> = Vec::new();
+    let mut resolved_rev: flow_data_structure_wrapper::list::FlowOcamlList<(
+        TupleElement,
+        Option<flow_typing_generics::GenericId>,
+    )> = flow_data_structure_wrapper::list::FlowOcamlList::new();
+    let mut unresolved_rev: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam> =
+        flow_data_structure_wrapper::list::FlowOcamlList::new();
     let mut first_spread: Option<(Reason, Type)> = None;
 
     for el in elements {
         match (&el, &first_spread) {
             (UnresolvedParam::UnresolvedArg(box UnresolvedArgData(tuple_el, generic)), None) => {
-                resolved.push((tuple_el.clone(), generic.clone()));
+                resolved_rev.push_front((tuple_el.clone(), generic.clone()));
             }
             (UnresolvedParam::UnresolvedSpreadArg(t), None) => {
                 first_spread = Some((reason_of_t(t).dupe(), t.dupe()));
             }
             (_, Some(_)) => {
-                unresolved.push(el);
+                unresolved_rev.push_front(el);
             }
         }
     }
 
     match first_spread {
         Some((reason_spread, spread_t)) => {
-            let resolved: Vec<ResolvedParam> = resolved
-                .into_iter()
-                .map(|(el, generic)| {
-                    ResolvedParam::ResolvedArg(Box::new(ResolvedArgData(el, generic)))
-                })
-                .collect();
+            let mut unresolved = unresolved_rev;
+            unresolved.reverse();
+            let resolved_rev: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam> =
+                resolved_rev
+                    .iter()
+                    .map(|(el, generic)| {
+                        ResolvedParam::ResolvedArg(Box::new(ResolvedArgData(
+                            el.clone(),
+                            generic.clone(),
+                        )))
+                    })
+                    .collect();
 
             mk_type_destructor(
                 cx,
@@ -6867,14 +6878,18 @@ where
                     reason_tuple: reason,
                     reason_spread,
                     inexact,
-                    resolved: resolved.into(),
-                    unresolved: unresolved.into(),
+                    resolved: resolved_rev,
+                    unresolved,
                 })),
                 id,
             )
         }
         None => {
-            let elements: Vec<TupleElement> = resolved.into_iter().map(|(el, _)| el).collect();
+            let elements: Vec<TupleElement> = {
+                let mut r = resolved_rev;
+                r.reverse();
+                r.iter().map(|(el, _)| el.clone()).collect()
+            };
             let (valid, arity) = validate_tuple_elements(cx, &reason, true, &elements)?;
             let arity = (arity.0 as i32, arity.1 as i32);
 

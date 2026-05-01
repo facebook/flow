@@ -809,7 +809,7 @@ impl FlowJs {
         cx: &Context<'cx>,
         use_op: UseOp,
         reason_op: &Reason,
-        unresolved_params: Vec<UnresolvedParam>,
+        unresolved_params: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam>,
         spread_resolve: SpreadResolve,
     ) -> Result<(), FlowJsException> {
         multi_arg_helpers::resolve_spread_list(

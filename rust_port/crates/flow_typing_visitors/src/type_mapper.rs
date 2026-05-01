@@ -1365,7 +1365,7 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         | Destructor::PartialType
         | Destructor::EnumType => t.dupe(),
         Destructor::SpreadType(box DestructorSpreadTypeData(options, tlist, acc)) => {
-            let tlist_prime = list_utils::ident_map(
+            let (tlist_prime, tlist_changed) = list_utils::ident_map_ocaml_list(
                 |op| mapper.object_kit_spread_operand(cx, map_cx, op.clone()),
                 |a, b| match (a, b) {
                     (object::spread::Operand::Slice(sa), object::spread::Operand::Slice(sb)) => {
@@ -1388,7 +1388,7 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 (Some(a), Some(b)) => a.ptr_eq(b),
                 _ => false,
             };
-            if Rc::ptr_eq(tlist, &tlist_prime) && acc_unchanged {
+            if !tlist_changed && acc_unchanged {
                 t.dupe()
             } else {
                 Rc::new(Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
@@ -1406,7 +1406,9 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             unresolved,
         }) => {
             let mut unresolved_changed = false;
-            let unresolved_prime: Rc<[UnresolvedParam]> = unresolved
+            let unresolved_prime: flow_data_structure_wrapper::list::FlowOcamlList<
+                UnresolvedParam,
+            > = unresolved
                 .iter()
                 .map(|el| match el {
                     UnresolvedParam::UnresolvedArg(box UnresolvedArgData(element, generic)) => {
@@ -1429,38 +1431,39 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 })
                 .collect();
             let mut resolved_changed = false;
-            let resolved_prime: Rc<[ResolvedParam]> = resolved
-                .iter()
-                .map(|el| match el {
-                    ResolvedParam::ResolvedArg(box ResolvedArgData(element, generic)) => {
-                        let element_prime = mapper.tuple_element(cx, map_cx, element.clone());
-                        if !element.t.ptr_eq(&element_prime.t) {
-                            resolved_changed = true;
+            let resolved_prime: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam> =
+                resolved
+                    .iter()
+                    .map(|el| match el {
+                        ResolvedParam::ResolvedArg(box ResolvedArgData(element, generic)) => {
+                            let element_prime = mapper.tuple_element(cx, map_cx, element.clone());
+                            if !element.t.ptr_eq(&element_prime.t) {
+                                resolved_changed = true;
+                            }
+                            ResolvedParam::ResolvedArg(Box::new(ResolvedArgData(
+                                element_prime,
+                                generic.clone(),
+                            )))
                         }
-                        ResolvedParam::ResolvedArg(Box::new(ResolvedArgData(
-                            element_prime,
-                            generic.clone(),
-                        )))
-                    }
-                    ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
-                        reason,
-                        arr,
-                        generic,
-                    )) => {
-                        let arr_rc = Rc::new(arr.clone());
-                        let arr_prime = mapper.arr_type(cx, map_cx, arr_rc.dupe());
-                        if !Rc::ptr_eq(&arr_rc, &arr_prime) {
-                            resolved_changed = true;
+                        ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
+                            reason,
+                            arr,
+                            generic,
+                        )) => {
+                            let arr_rc = Rc::new(arr.clone());
+                            let arr_prime = mapper.arr_type(cx, map_cx, arr_rc.dupe());
+                            if !Rc::ptr_eq(&arr_rc, &arr_prime) {
+                                resolved_changed = true;
+                            }
+                            ResolvedParam::ResolvedSpreadArg(Box::new(ResolvedSpreadArgData(
+                                reason.dupe(),
+                                (*arr_prime).clone(),
+                                generic.clone(),
+                            )))
                         }
-                        ResolvedParam::ResolvedSpreadArg(Box::new(ResolvedSpreadArgData(
-                            reason.dupe(),
-                            (*arr_prime).clone(),
-                            generic.clone(),
-                        )))
-                    }
-                    ResolvedParam::ResolvedAnySpreadArg(_, _) => el.clone(),
-                })
-                .collect();
+                        ResolvedParam::ResolvedAnySpreadArg(_, _) => el.clone(),
+                    })
+                    .collect();
             if !unresolved_changed && !resolved_changed {
                 t.dupe()
             } else {

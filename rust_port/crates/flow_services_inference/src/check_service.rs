@@ -64,7 +64,7 @@ pub struct CheckFileAndCompEnv {
     pub make_cx: Box<
         dyn FnMut(
                 FileKey,
-                BTreeMap<FlowImportSpecifier, ResolvedModule>,
+                Vec<(FlowImportSpecifier, ResolvedModule)>,
                 Arc<ast::Program<Loc, Loc>>,
                 Arc<Docblock>,
                 LazyALocTable,
@@ -313,15 +313,6 @@ pub fn mk_check_file(
         let resolved_requires_data = parse.resolved_requires_unsafe();
         let requires = parse.requires();
 
-        let resolved_modules: BTreeMap<FlowImportSpecifier, ResolvedModule> = {
-            let resolved = resolved_requires_data.get_resolved_modules();
-            requires
-                .iter()
-                .zip(resolved.iter())
-                .map(|(specifier, module)| (specifier.dupe(), module.clone()))
-                .collect()
-        };
-
         let resolved_requires: Rc<
             RefCell<
                 BTreeMap<
@@ -366,7 +357,8 @@ pub fn mk_check_file(
 
         {
             let mut rr = resolved_requires.borrow_mut();
-            for (mref, m) in &resolved_modules {
+            let resolved = resolved_requires_data.get_resolved_modules();
+            for (mref, m) in requires.iter().zip(resolved.iter()) {
                 // fun mref m -> lazy (dep_module_t cx mref m)
                 let key = mref.dupe();
                 let mref = mref.dupe();
@@ -824,7 +816,7 @@ pub fn mk_check_file(
         let options = options.dupe();
         Box::new(
             move |file_key: FileKey,
-                  resolved_modules: BTreeMap<FlowImportSpecifier, ResolvedModule>,
+                  resolved_modules: Vec<(FlowImportSpecifier, ResolvedModule)>,
                   _ast: Arc<ast::Program<Loc, Loc>>,
                   docblock: Arc<Docblock>,
                   aloc_table: LazyALocTable| {

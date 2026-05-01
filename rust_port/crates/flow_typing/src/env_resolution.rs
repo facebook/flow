@@ -620,7 +620,9 @@ fn resolve_hint<'cx>(
                 let array_reason =
                     reason::mk_reason(reason::VirtualReasonDesc::RDestructuring, hint_loc.dupe());
                 let is_empty = elements.is_empty();
-                let elem_spread_list: Vec<type_::UnresolvedParam> = elements
+                let elem_spread_list: flow_data_structure_wrapper::list::FlowOcamlList<
+                    type_::UnresolvedParam,
+                > = elements
                     .into_iter()
                     .map(|el| match el {
                         ArrayElementPatternHint::ArrayElementPatternHint(h) => {
@@ -648,7 +650,7 @@ fn resolve_hint<'cx>(
                             ))
                         }
                     })
-                    .collect::<Result<Vec<_>, flow_utils_concurrency::job_error::JobError>>()?;
+                    .collect::<Result<_, flow_utils_concurrency::job_error::JobError>>()?;
                 flow_typing_tvar::mk_where(cx, array_reason.dupe(), |cx, tout| {
                     let reason_op = array_reason.dupe();
                     let element_reason = reason_op.dupe().replace_desc(
@@ -1393,7 +1395,9 @@ fn resolve_binding<'cx>(
                         let is_empty = elements.is_empty();
                         // TODO merge code with statement.ml implementation
 
-                        let elem_spread_list: Vec<type_::UnresolvedParam> = elements
+                        let elem_spread_list: flow_data_structure_wrapper::list::FlowOcamlList<
+                            type_::UnresolvedParam,
+                        > = elements
                             .iter()
                             .map(|e| -> Result<type_::UnresolvedParam, CheckExprError> {
                                 use ast::expression::ArrayElement;
@@ -1453,7 +1457,7 @@ fn resolve_binding<'cx>(
                                     }
                                 }
                             })
-                            .collect::<Result<Vec<_>, _>>()?;
+                            .collect::<Result<_, _>>()?;
                         let arr_reason =
                             reason::mk_reason(reason::VirtualReasonDesc::RArrayLit, loc.dupe());
                         flow_typing_tvar::mk_where(cx, arr_reason.dupe(), |cx, tout| {

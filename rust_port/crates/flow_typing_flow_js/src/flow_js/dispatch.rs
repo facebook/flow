@@ -3279,15 +3279,15 @@ fn __flow_impl<'cx>(
                 resolve_spread_type: resolve_spread,
             }),
         ) => {
-            let mut rrt_resolved = resolve_spread.rrt_resolved.to_vec();
-            rrt_resolved.push(ResolvedParam::ResolvedAnySpreadArg(r.dupe(), *src));
+            let mut rrt_resolved = resolve_spread.rrt_resolved.dupe();
+            rrt_resolved.push_front(ResolvedParam::ResolvedAnySpreadArg(r.dupe(), *src));
             resolve_spread_list_rec(
                 cx,
                 Some(trace),
                 use_op.dupe(),
                 reason_op,
                 rrt_resolved,
-                resolve_spread.rrt_unresolved.to_vec(),
+                resolve_spread.rrt_unresolved.dupe(),
                 resolve_spread.rrt_resolve_to.clone(),
             )?;
         }
@@ -3459,21 +3459,21 @@ fn __flow_impl<'cx>(
                             match recursion_depth {
                                 0 => {
                                     // The first time we see this, we process it normally
-                                    let mut rrt_resolved = resolve_spread.rrt_resolved.to_vec();
-                                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(Box::new(
-                                        ResolvedSpreadArgData(
+                                    let mut rrt_resolved = resolve_spread.rrt_resolved.dupe();
+                                    rrt_resolved.push_front(ResolvedParam::ResolvedSpreadArg(
+                                        Box::new(ResolvedSpreadArgData(
                                             reason.dupe(),
                                             arrtype.clone(),
                                             generic.clone(),
-                                        ),
-                                    )));
+                                        )),
+                                    ));
                                     resolve_spread_list_rec(
                                         cx,
                                         Some(trace),
                                         use_op.dupe(),
                                         reason_op,
                                         rrt_resolved,
-                                        resolve_spread.rrt_unresolved.to_vec(),
+                                        resolve_spread.rrt_unresolved.dupe(),
                                         resolve_spread.rrt_resolve_to.clone(),
                                     )?;
                                 }
@@ -3494,10 +3494,10 @@ fn __flow_impl<'cx>(
                                                         ResolveSpreadType {
                                                             rrt_resolved: resolve_spread
                                                                 .rrt_resolved
-                                                                .clone(),
+                                                                .dupe(),
                                                             rrt_unresolved: resolve_spread
                                                                 .rrt_unresolved
-                                                                .clone(),
+                                                                .dupe(),
                                                             rrt_resolve_to:
                                                                 SpreadResolve::ResolveSpreadsToArray(
                                                                     cfe_elem_t.dupe(),
@@ -3532,21 +3532,21 @@ fn __flow_impl<'cx>(
                             match recursion_depth {
                                 0 => {
                                     // The first time we see this, we process it normally *)
-                                    let mut rrt_resolved = resolve_spread.rrt_resolved.to_vec();
-                                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(Box::new(
-                                        ResolvedSpreadArgData(
+                                    let mut rrt_resolved = resolve_spread.rrt_resolved.dupe();
+                                    rrt_resolved.push_front(ResolvedParam::ResolvedSpreadArg(
+                                        Box::new(ResolvedSpreadArgData(
                                             reason.dupe(),
                                             arrtype.clone(),
                                             generic.clone(),
-                                        ),
-                                    )));
+                                        )),
+                                    ));
                                     resolve_spread_list_rec(
                                         cx,
                                         Some(trace),
                                         use_op.dupe(),
                                         reason_op,
                                         rrt_resolved,
-                                        resolve_spread.rrt_unresolved.to_vec(),
+                                        resolve_spread.rrt_unresolved.dupe(),
                                         resolve_spread.rrt_resolve_to.clone(),
                                     )?;
                                 }
@@ -3593,21 +3593,21 @@ fn __flow_impl<'cx>(
                                         })
                                         | ArrType::ROArrayAT(box (_, _)) => arrtype.clone(),
                                     };
-                                    let mut rrt_resolved = resolve_spread.rrt_resolved.to_vec();
-                                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(Box::new(
-                                        ResolvedSpreadArgData(
+                                    let mut rrt_resolved = resolve_spread.rrt_resolved.dupe();
+                                    rrt_resolved.push_front(ResolvedParam::ResolvedSpreadArg(
+                                        Box::new(ResolvedSpreadArgData(
                                             reason.dupe(),
                                             new_arrtype,
                                             generic.clone(),
-                                        ),
-                                    )));
+                                        )),
+                                    ));
                                     resolve_spread_list_rec(
                                         cx,
                                         Some(trace),
                                         use_op.dupe(),
                                         reason_op,
                                         rrt_resolved,
-                                        resolve_spread.rrt_unresolved.to_vec(),
+                                        resolve_spread.rrt_unresolved.dupe(),
                                         resolve_spread.rrt_resolve_to.clone(),
                                     )?;
                                 }
@@ -3619,8 +3619,8 @@ fn __flow_impl<'cx>(
                 }
                 // no caching
                 SpreadResolve::ResolveSpreadsToArray(_, _) => {
-                    let mut rrt_resolved = resolve_spread.rrt_resolved.to_vec();
-                    rrt_resolved.push(ResolvedParam::ResolvedSpreadArg(Box::new(
+                    let mut rrt_resolved = resolve_spread.rrt_resolved.dupe();
+                    rrt_resolved.push_front(ResolvedParam::ResolvedSpreadArg(Box::new(
                         ResolvedSpreadArgData(reason.dupe(), arrtype.clone(), generic.clone()),
                     )));
                     resolve_spread_list_rec(
@@ -3629,7 +3629,7 @@ fn __flow_impl<'cx>(
                         use_op.dupe(),
                         reason_op,
                         rrt_resolved,
-                        resolve_spread.rrt_unresolved.to_vec(),
+                        resolve_spread.rrt_unresolved.dupe(),
                         resolve_spread.rrt_resolve_to.clone(),
                     )?;
                 }
@@ -4943,7 +4943,7 @@ fn __flow_impl<'cx>(
                         let destructor =
                             Rc::new(Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
                                 object::spread::Target::Annot { make_exact: false },
-                                vec![].into(),
+                                flow_data_structure_wrapper::list::FlowOcamlList::new(),
                                 None,
                             ))));
                         Type::new(TypeInner::EvalT {
@@ -5957,8 +5957,10 @@ fn __flow_impl<'cx>(
                 make_seal: obj_type::mk_seal(false, false),
             };
             let spread_state = object::spread::State {
-                todo_rev: vec![object::spread::Operand::Type(o?)].into(),
-                acc: Rc::from([]),
+                todo_rev: flow_data_structure_wrapper::list::FlowOcamlList::unit(
+                    object::spread::Operand::Type(o?),
+                ),
+                acc: flow_data_structure_wrapper::list::FlowOcamlList::new(),
                 spread_id: flow_common::reason::mk_id() as i32,
                 union_reason: None,
                 curr_resolve_idx: 0,

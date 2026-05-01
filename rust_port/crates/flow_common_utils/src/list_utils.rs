@@ -10,6 +10,7 @@ use std::hash::Hash;
 use std::rc::Rc;
 
 use dupe::Dupe;
+use flow_data_structure_wrapper::list::FlowOcamlList;
 
 // this function takes a list and truncates it if needed to no more than
 /// the first n elements. If truncation happened, then the callback 'f'
@@ -86,6 +87,34 @@ where
         Some(vec) => vec.into(),
         None => lst,
     })
+}
+
+pub fn ident_map_ocaml_list<T, F, Same>(
+    mut f: F,
+    mut same: Same,
+    lst: FlowOcamlList<T>,
+) -> (FlowOcamlList<T>, bool)
+where
+    T: Clone + Dupe,
+    F: FnMut(&T) -> T,
+    Same: FnMut(&T, &T) -> bool,
+{
+    let mut result: Option<Vec<T>> = None;
+    for (i, item) in lst.iter().enumerate() {
+        let item_prime = f(item);
+        if let Some(vec) = result.as_mut() {
+            vec.push(item_prime);
+        } else if !same(&item_prime, item) {
+            let mut vec = Vec::with_capacity(lst.len());
+            vec.extend(lst.iter().take(i).map(|t| t.dupe()));
+            vec.push(item_prime);
+            result = Some(vec);
+        }
+    }
+    match result {
+        Some(vec) => (vec.into_iter().collect(), true),
+        None => (lst, false),
+    }
 }
 
 pub fn zipi<X, Y>(xs: Vec<X>, ys: Vec<Y>) -> Vec<(usize, X, Y)> {

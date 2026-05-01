@@ -2315,8 +2315,8 @@ impl<CX> std::fmt::Debug for SealGenericTData<CX> {
 
 pub struct ResolveUnionTData<CX = ()> {
     pub reason: Reason,
-    pub unresolved: Rc<[Type]>,
-    pub resolved: Rc<[Type]>,
+    pub unresolved: flow_data_structure_wrapper::list::FlowOcamlList<Type>,
+    pub resolved: flow_data_structure_wrapper::list::FlowOcamlList<Type>,
     pub upper: Box<UseT<CX>>,
     pub id: i32,
 }
@@ -5627,7 +5627,7 @@ pub enum Selector {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DestructorSpreadTypeData(
     pub object::spread::Target,
-    pub Rc<[object::spread::Operand]>,
+    pub flow_data_structure_wrapper::list::FlowOcamlList<object::spread::Operand>,
     pub Option<object::spread::OperandSlice>,
 );
 
@@ -5636,8 +5636,8 @@ pub struct DestructorSpreadTupleTypeData {
     pub reason_tuple: Reason,
     pub reason_spread: Reason,
     pub inexact: bool,
-    pub resolved: Rc<[ResolvedParam]>,
-    pub unresolved: Rc<[UnresolvedParam]>,
+    pub resolved: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
+    pub unresolved: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -5754,11 +5754,8 @@ pub enum ConcretizationKind {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ResolveSpreadType {
-    /// This is the list of elements that are already resolved (that is have no
-    /// more unresolved spread elements  
-    pub rrt_resolved: Rc<[ResolvedParam]>,
-    /// This is the list of elements that we have yet to resolve
-    pub rrt_unresolved: Rc<[UnresolvedParam]>,
+    pub rrt_resolved: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
+    pub rrt_unresolved: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam>,
     /// Once all the elements have been resolved, this tells us what type to construct
     pub rrt_resolve_to: SpreadResolve,
 }
@@ -8066,8 +8063,8 @@ pub mod object {
 
         #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
         pub struct State {
-            pub todo_rev: Rc<[Operand]>,
-            pub acc: Rc<[AccElement]>,
+            pub todo_rev: flow_data_structure_wrapper::list::FlowOcamlList<Operand>,
+            pub acc: flow_data_structure_wrapper::list::FlowOcamlList<AccElement>,
             pub spread_id: i32,
             pub union_reason: Option<Reason>,
             pub curr_resolve_idx: i32,

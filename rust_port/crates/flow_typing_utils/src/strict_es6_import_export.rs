@@ -284,8 +284,8 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
         for (def_loc, specifier) in &declarations.import_stars {
             let def = scope_info.def_of_use_opt(def_loc).expect("def_of_use");
             let uses = scope_info.uses_of_def(def, false);
-            for use_loc in uses {
-                import_star_uses.insert(use_loc, specifier.clone());
+            for use_loc in uses.iter() {
+                import_star_uses.insert(use_loc.dupe(), specifier.clone());
             }
         }
         ImportExportVisitor {

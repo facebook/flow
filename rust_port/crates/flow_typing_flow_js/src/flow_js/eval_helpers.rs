@@ -494,7 +494,7 @@ pub(super) fn eval_destructor<'cx>(
         let u = UseT::new(UseTInner::ResolveUnionT(Box::new(ResolveUnionTData {
             reason: r,
             unresolved: unresolved.collect(),
-            resolved: Rc::from([]),
+            resolved: flow_data_structure_wrapper::list::FlowOcamlList::new(),
             upper: Box::new(upper),
             id: flow_common::reason::mk_id() as i32,
         })));
@@ -1039,8 +1039,8 @@ pub(super) fn eval_destructor<'cx>(
                     let void = void::why(void_reason.dupe());
                     let u = UseT::new(UseTInner::ResolveUnionT(Box::new(ResolveUnionTData {
                         reason: reason.dupe(),
-                        resolved: vec![void].into(),
-                        unresolved: Rc::from([]),
+                        resolved: flow_data_structure_wrapper::list::FlowOcamlList::unit(void),
+                        unresolved: flow_data_structure_wrapper::list::FlowOcamlList::new(),
                         upper: Box::new(UseT::new(UseTInner::UseT(
                             unknown_use(),
                             Type::new(TypeInner::OpenT(tout.dupe())),
@@ -1056,12 +1056,16 @@ pub(super) fn eval_destructor<'cx>(
                 )) => {
                     use flow_typing_type::type_::object;
                     let tool = object::ResolveTool::Resolve(object::Resolve::Next);
-                    let acc: Rc<[object::spread::AccElement]> = match head_slice {
-                        Some(x) => vec![object::spread::AccElement::InlineSlice(x.clone())].into(),
-                        None => Rc::from([]),
+                    let acc: flow_data_structure_wrapper::list::FlowOcamlList<
+                        object::spread::AccElement,
+                    > = match head_slice {
+                        Some(x) => flow_data_structure_wrapper::list::FlowOcamlList::unit(
+                            object::spread::AccElement::InlineSlice(x.clone()),
+                        ),
+                        None => flow_data_structure_wrapper::list::FlowOcamlList::new(),
                     };
                     let state = object::spread::State {
-                        todo_rev: todo_rev.clone(),
+                        todo_rev: todo_rev.dupe(),
                         acc,
                         spread_id: flow_common::reason::mk_id() as i32,
                         union_reason: None,
@@ -1088,8 +1092,8 @@ pub(super) fn eval_destructor<'cx>(
                         use_op: use_op.dupe(),
                         reason: reason_tuple.dupe(),
                         resolve_spread_type: Box::new(ResolveSpreadType {
-                            rrt_resolved: resolved_rev.clone(),
-                            rrt_unresolved: unresolved.clone(),
+                            rrt_resolved: resolved_rev.dupe(),
+                            rrt_unresolved: unresolved.dupe(),
                             rrt_resolve_to: SpreadResolve::ResolveSpreadsToTupleType {
                                 id: flow_common::reason::mk_id() as i32,
                                 inexact: *inexact,

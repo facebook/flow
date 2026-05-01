@@ -2358,7 +2358,11 @@ fn merge_annot<'cx>(
                     type_::unknown_use(),
                     reason,
                     Rc::new(type_::Destructor::SpreadType(Box::new(
-                        DestructorSpreadTypeData(target, todo_rev.into(), head_slice),
+                        DestructorSpreadTypeData(
+                            target,
+                            todo_rev.into_iter().collect(),
+                            head_slice,
+                        ),
                     ))),
                 )),
                 id,
@@ -2898,15 +2902,17 @@ fn merge_obj_spread_lit<'cx>(
     let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::ObjectSpread {
         op: reason.dupe(),
     }));
-    let acc = match &head_slice {
-        Some(slice) => {
-            vec![flow_typing_type::type_::object::spread::AccElement::InlineSlice(slice.clone())]
-        }
-        None => vec![],
+    let acc: flow_data_structure_wrapper::list::FlowOcamlList<
+        flow_typing_type::type_::object::spread::AccElement,
+    > = match &head_slice {
+        Some(slice) => flow_data_structure_wrapper::list::FlowOcamlList::unit(
+            flow_typing_type::type_::object::spread::AccElement::InlineSlice(slice.clone()),
+        ),
+        None => flow_data_structure_wrapper::list::FlowOcamlList::new(),
     };
     let state = type_::object::spread::State {
-        todo_rev: todo_rev.into(),
-        acc: acc.into(),
+        todo_rev: todo_rev.into_iter().collect(),
+        acc,
         spread_id: reason::mk_id() as i32,
         union_reason: None,
         curr_resolve_idx: 0,

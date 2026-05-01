@@ -530,12 +530,16 @@ fn t_of_use_t<'cx>(
                     todo_rev,
                     head_slice,
                 )) => {
-                    let acc_elements: Vec<object::spread::AccElement> = match head_slice {
-                        Some(x) => vec![object::spread::AccElement::InlineSlice(x.clone())],
-                        None => vec![],
+                    let acc_elements: flow_data_structure_wrapper::list::FlowOcamlList<
+                        object::spread::AccElement,
+                    > = match head_slice {
+                        Some(x) => flow_data_structure_wrapper::list::FlowOcamlList::unit(
+                            object::spread::AccElement::InlineSlice(x.clone()),
+                        ),
+                        None => flow_data_structure_wrapper::list::FlowOcamlList::new(),
                     };
                     let result = merge_lower_or_upper_bounds(cx, seen, &tout_t)?;
-                    let todo_rev = todo_rev.clone();
+                    let todo_rev = todo_rev.dupe();
                     bind_use_t_result(result, &|t: Type| {
                         let reversed = reverse_obj_spread(cx, r, &todo_rev, &acc_elements, &t)?;
                         use_t_result_of_t_option(merge_lower_bounds(cx, &reversed))
@@ -557,8 +561,8 @@ fn t_of_use_t<'cx>(
                     }
                     // Reverse if the spread is the last item in the tuple, there are
                     // no other spreads, and the tuple type is not inexact.
-                    match (&**unresolved, resolved_rev.iter().any(is_spread)) {
-                        ([], false) if !inexact => {
+                    match (unresolved.is_empty(), resolved_rev.iter().any(is_spread)) {
+                        (true, false) if !inexact => {
                             let n = resolved_rev.len() as i32;
                             let result = merge_lower_or_upper_bounds(cx, seen, &tout_t)?;
                             let reason_spread = reason_spread.dupe();
@@ -825,8 +829,8 @@ fn identity_reverse_upper_bound<'cx>(
 fn reverse_obj_spread<'cx>(
     cx: &Context<'cx>,
     r: &Reason,
-    todo_rev: &[object::spread::Operand],
-    acc_elements: &[object::spread::AccElement],
+    todo_rev: &flow_data_structure_wrapper::list::FlowOcamlList<object::spread::Operand>,
+    acc_elements: &flow_data_structure_wrapper::list::FlowOcamlList<object::spread::AccElement>,
     tout: &Type,
 ) -> Result<Type, FlowJsException> {
     let inline_slice_to_t = |s: &object::spread::OperandSlice| -> Type {
@@ -971,8 +975,10 @@ fn reverse_obj_kit_rest<'cx>(
             make_seal: obj_type::mk_seal(false, false),
         };
         let state = object::spread::State {
-            todo_rev: vec![object::spread::Operand::Type(t_rest.dupe())].into(),
-            acc: Rc::from([]),
+            todo_rev: flow_data_structure_wrapper::list::FlowOcamlList::unit(
+                object::spread::Operand::Type(t_rest.dupe()),
+            ),
+            acc: flow_data_structure_wrapper::list::FlowOcamlList::new(),
             spread_id: flow_common::reason::mk_id() as i32,
             union_reason: None,
             curr_resolve_idx: 0,
@@ -1099,7 +1105,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution<'cx>(
     cx: &Context<'cx>,
     tvar: &Type,
     reason: &Reason,
-    resolved: &[ResolvedParam],
+    resolved: &flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
     params: &[FunParam],
     rest_param: &Option<FunRestParam>,
 ) -> Result<Option<Type>, FlowJsException> {

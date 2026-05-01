@@ -395,11 +395,11 @@ where
 
 // Lift a pairwise function that may return an error to a function over a resolved list
 // that may return an error, like spread2
-pub fn merge_result<A: Clone, B, F, C>(
+pub fn merge_result<A: Clone, B: Clone, F, C>(
     f: F,
     conv: C,
     x0: B,
-    rest: (B, Vec<B>),
+    rest: (B, flow_data_structure_wrapper::list::FlowOcamlList<B>),
 ) -> Result<Vec1<A>, FlowJsException>
 where
     F: Fn(&A, &A) -> Result<A, FlowJsException>,
@@ -419,8 +419,8 @@ where
     };
     let (x1, xs) = rest;
     let mut acc = f_prime(conv(x0), x1)?;
-    for xi in xs {
-        acc = f_prime(acc, xi)?;
+    for xi in xs.iter() {
+        acc = f_prime(acc, xi.clone())?;
     }
     Ok(acc)
 }
@@ -695,7 +695,10 @@ pub fn spread<'cx>(
     cx: &Context<'cx>,
     use_op: &UseOp,
     reason: &Reason,
-    nel: (object::spread::AccElement, Vec<object::spread::AccElement>),
+    nel: (
+        object::spread::AccElement,
+        flow_data_structure_wrapper::list::FlowOcamlList<object::spread::AccElement>,
+    ),
 ) -> Result<Vec1<(bool, Option<Reason>, object::Slice)>, FlowJsException> {
     let resolved_of_acc_element =
         |elem: object::spread::AccElement| -> Vec1<(bool, Option<Reason>, object::Slice)> {
@@ -737,19 +740,18 @@ pub fn spread<'cx>(
             }
         };
     let (x, xs) = nel;
-    match xs.as_slice() {
-        [] => Ok(resolved_of_acc_element(x)),
-        _ => {
-            let mut xs_iter = xs.into_iter();
-            let x1 = xs_iter.next().unwrap();
-            let rest: Vec<_> = xs_iter.collect();
-            merge_result(
-                |a, b| spread2(dict_check, cx, use_op, reason, a, b),
-                resolved_of_acc_element,
-                x,
-                (x1, rest),
-            )
-        }
+    if xs.is_empty() {
+        Ok(resolved_of_acc_element(x))
+    } else {
+        let x1 = xs.first().expect("non-empty").clone();
+        let mut rest = xs.dupe();
+        rest.drop_first();
+        merge_result(
+            |a, b| spread2(dict_check, cx, use_op, reason, a, b),
+            resolved_of_acc_element,
+            x,
+            (x1, rest),
+        )
     }
 }
 
@@ -899,10 +901,11 @@ pub fn object_spread<'cx, A>(
     }
     let resolved = object::spread::AccElement::ResolvedSlice(object::Resolved(x.clone()));
 
-    let mut acc = acc.to_vec();
+    let mut acc: flow_data_structure_wrapper::list::FlowOcamlList<object::spread::AccElement> = acc;
     let mut resolved = resolved;
     let mut curr_resolve_idx = curr_resolve_idx;
-    let mut todo_rev = todo_rev.iter().cloned();
+    let mut todo_rev: flow_data_structure_wrapper::list::FlowOcamlList<object::spread::Operand> =
+        todo_rev;
     // Before proceeding to the next spread step, we need to ensure that we aren't going to hit
     // exponential blowup due to multiple spread operands having multiple lower bounds. To do
     // that, we increment the amount of lower bounds found at this resolution index by
@@ -953,27 +956,30 @@ pub fn object_spread<'cx, A>(
         return return_(cx, use_op, any_t::error(reason.dupe()));
     }
     curr_resolve_idx += 1;
-    while let Some(operand) = todo_rev.next() {
+    loop {
+        let operand = match todo_rev.first() {
+            None => break,
+            Some(o) => o.clone(),
+        };
+        todo_rev.drop_first();
         match operand {
             object::spread::Operand::Type(t) => {
                 let resolve_tool = object::ResolveTool::Resolve(object::Resolve::Next);
-                let mut new_acc = vec![resolved];
-                new_acc.extend(acc.into_iter());
+                let mut new_acc = acc;
+                new_acc.push_front(resolved);
                 let state = object::spread::State {
-                    todo_rev: todo_rev.collect::<Vec<_>>().into(),
-                    acc: new_acc.into(),
+                    todo_rev,
+                    acc: new_acc,
                     spread_id,
                     union_reason: None,
                     curr_resolve_idx,
                 };
                 let tool = object::Tool::Spread(Box::new((options.clone(), state)));
-                return recurse(cx, use_op.dupe(), &reason, resolve_tool, tool, t.dupe());
+                return recurse(cx, use_op.dupe(), &reason, resolve_tool, tool, t);
             }
             object::spread::Operand::Slice(operand_slice) => {
-                let mut new_acc = vec![resolved];
-                new_acc.extend(acc.into_iter());
-                acc = new_acc;
-                resolved = object::spread::AccElement::InlineSlice(operand_slice.clone());
+                acc.push_front(resolved);
+                resolved = object::spread::AccElement::InlineSlice(operand_slice);
                 curr_resolve_idx += 1;
             }
         }

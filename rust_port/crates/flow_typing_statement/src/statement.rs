@@ -530,7 +530,9 @@ pub mod object_expression_acc {
                         // by a spread
                         match (t, ts) {
                             (Element::Spread(t), ts) => {
-                                let ts: Vec<spread::Operand> = ts
+                                let ts: flow_data_structure_wrapper::list::FlowOcamlList<
+                                    spread::Operand,
+                                > = ts
                                     .into_iter()
                                     .map(|elem| match elem {
                                         Element::Spread(t) => spread::Operand::Type(t),
@@ -569,7 +571,9 @@ pub mod object_expression_acc {
                                                 generics: flow_typing_generics::spread_empty(),
                                                 reachable_targs: vec![].into(),
                                             });
-                                        let ts: Vec<spread::Operand> = iter
+                                        let ts: flow_data_structure_wrapper::list::FlowOcamlList<
+                                            spread::Operand,
+                                        > = iter
                                             .map(|elem| match elem {
                                                 Element::Spread(t) => spread::Operand::Type(t),
                                                 Element::Slice {
@@ -605,10 +609,12 @@ pub mod object_expression_acc {
                     };
                     let tool = object::ResolveTool::Resolve(object::Resolve::Next);
                     let state = spread::State {
-                        todo_rev: ts.into(),
+                        todo_rev: ts,
                         acc: match head_slice {
-                            Some(x) => vec![spread::AccElement::InlineSlice(x)].into(),
-                            None => vec![].into(),
+                            Some(x) => flow_data_structure_wrapper::list::FlowOcamlList::unit(
+                                spread::AccElement::InlineSlice(x),
+                            ),
+                            None => flow_data_structure_wrapper::list::FlowOcamlList::new(),
                         },
                         spread_id: mk_id() as i32,
                         union_reason: None,
@@ -6247,7 +6253,7 @@ fn array_elements<'a>(
     elements: &[expression::ArrayElement<ALoc, ALoc>],
 ) -> Result<
     (
-        Vec<type_::UnresolvedParam>,
+        flow_data_structure_wrapper::list::FlowOcamlList<type_::UnresolvedParam>,
         Vec<expression::ArrayElement<ALoc, (ALoc, Type)>>,
     ),
     CheckExprError,
@@ -6318,7 +6324,8 @@ fn array_elements<'a>(
             }
         })
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(results.into_iter().unzip())
+    let (unresolved_vec, elements_vec): (Vec<_>, Vec<_>) = results.into_iter().unzip();
+    Ok((unresolved_vec.into_iter().collect(), elements_vec))
 }
 
 pub fn empty_array<'a>(
@@ -7010,7 +7017,7 @@ fn expression_<'a>(
                                 cx,
                                 type_::unknown_use(),
                                 &reason_op,
-                                elem_spread_list.clone(),
+                                elem_spread_list.dupe(),
                                 resolve_to,
                             )
                             .expect("should not fail outside speculation");

@@ -996,41 +996,45 @@ pub(super) fn resolve_union<'cx>(
     trace: DepthTrace,
     reason: &Reason,
     id: i32,
-    resolved: &[Type],
-    unresolved: &[Type],
+    resolved: &flow_data_structure_wrapper::list::FlowOcamlList<Type>,
+    unresolved: &flow_data_structure_wrapper::list::FlowOcamlList<Type>,
     l: &Type,
     upper: &UseT<Context<'cx>>,
 ) -> Result<Option<(Type, UseT<Context<'cx>>)>, FlowJsException> {
-    let do_continue =
-        |resolved: Vec<Type>| -> Result<Option<(Type, UseT<Context<'cx>>)>, FlowJsException> {
-            match unresolved {
-                [] => {
-                    let union_t = type_util::union_of_ts(reason.dupe(), resolved, None);
-                    rec_flow(cx, trace, (&union_t, upper))?;
-                    Ok(None)
-                }
-                [next, rest @ ..] => {
-                    // We intentionally do not rec_flow here. Unions can be very large, and resolving each
-                    // member under the same trace can cause a recursion limit error. To avoid that, we resolve
-                    // each member under their own trace
-                    //
-                    // This is a tail call in OCaml. Return the continuation for the trampoline.
-                    Ok(Some((
-                        next.dupe(),
-                        UseT::new(UseTInner::ResolveUnionT(Box::new(ResolveUnionTData {
-                            reason: reason.dupe(),
-                            resolved: resolved.into(),
-                            unresolved: Rc::from(rest),
-                            upper: Box::new(upper.dupe()),
-                            id,
-                        }))),
-                    )))
-                }
+    let do_continue = |resolved: flow_data_structure_wrapper::list::FlowOcamlList<Type>| -> Result<
+        Option<(Type, UseT<Context<'cx>>)>,
+        FlowJsException,
+    > {
+        match unresolved.first() {
+            None => {
+                let ts: Vec<Type> = resolved.iter().duped().collect();
+                let union_t = type_util::union_of_ts(reason.dupe(), ts, None);
+                rec_flow(cx, trace, (&union_t, upper))?;
+                Ok(None)
             }
-        };
+            Some(next) => {
+                // We intentionally do not rec_flow here. Unions can be very large, and resolving each
+                // member under the same trace can cause a recursion limit error. To avoid that, we resolve
+                // each member under their own trace
+                let next = next.dupe();
+                let mut rest = unresolved.dupe();
+                rest.drop_first();
+                Ok(Some((
+                    next,
+                    UseT::new(UseTInner::ResolveUnionT(Box::new(ResolveUnionTData {
+                        reason: reason.dupe(),
+                        resolved,
+                        unresolved: rest,
+                        upper: Box::new(upper.dupe()),
+                        id,
+                    }))),
+                )))
+            }
+        }
+    };
     match l.deref() {
         TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => {
-            do_continue(resolved.to_vec())
+            do_continue(resolved.dupe())
         }
         _ => {
             let reason_elemt = reason_of_t(l).dupe();
@@ -1041,12 +1045,12 @@ pub(super) fn resolve_union<'cx>(
             const_fold_expansion::guard(cx, id, (reason_elemt, pos), |count| {
                 match count {
                     0 => {
-                        let mut new_resolved = vec![l.dupe()];
-                        new_resolved.extend(resolved.iter().duped());
+                        let mut new_resolved = resolved.dupe();
+                        new_resolved.push_front(l.dupe());
                         do_continue(new_resolved)
                     }
                     // Unions are idempotent, so we can just skip any duplicated elements
-                    1 => do_continue(resolved.to_vec()),
+                    1 => do_continue(resolved.dupe()),
                     _ => Ok(None),
                 }
             })

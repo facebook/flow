@@ -252,31 +252,30 @@ pub(super) fn multiflow_partial<'cx>(
             let rest_reason = reason_of_t(rest_param_t);
             let orig_rest_reason = rest_reason.dupe().reposition(loc.dupe());
 
-            let mut elems: Vec<_> = unused_arglist
-                .iter()
-                .map(|(arg, generic)| {
-                    let reason = flow_common::reason::mk_reason(
-                        VirtualReasonDesc::RArrayElement,
-                        reason_of_t(arg).loc().dupe(),
-                    );
-                    UnresolvedParam::UnresolvedArg(Box::new(UnresolvedArgData(
-                        flow_typing_type::type_util::mk_tuple_element(
-                            reason,
-                            arg.dupe(),
-                            None,
-                            false,
-                            Polarity::Neutral,
-                        ),
-                        generic.clone(),
-                    )))
-                })
-                .collect();
+            let mut rev_elems: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam> =
+                flow_data_structure_wrapper::list::FlowOcamlList::new();
+            for (arg, generic) in unused_arglist.iter() {
+                let reason = flow_common::reason::mk_reason(
+                    VirtualReasonDesc::RArrayElement,
+                    reason_of_t(arg).loc().dupe(),
+                );
+                rev_elems.push_front(UnresolvedParam::UnresolvedArg(Box::new(UnresolvedArgData(
+                    flow_typing_type::type_util::mk_tuple_element(
+                        reason,
+                        arg.dupe(),
+                        None,
+                        false,
+                        Polarity::Neutral,
+                    ),
+                    generic.clone(),
+                ))));
+            }
 
             let unused_rest_param = match spread_arg {
                 None => {
                     // If the rest parameter is consuming N elements, then drop N elements
                     // from the rest parameter
-                    let i = elems.len() as i32;
+                    let i = rev_elems.len() as i32;
                     let rest_param_t = rest_param_t.dupe();
                     let use_op = use_op.dupe();
                     flow_typing_tvar::mk_where(cx, rest_reason.dupe(), |cx, tout| {
@@ -301,22 +300,36 @@ pub(super) fn multiflow_partial<'cx>(
                 // arity. Dropping elements from it isn't worth doing *)
                 Some(_) => rest_param_t.dupe(),
             };
-            if let Some((reason, arrtype, generic)) = spread_arg {
-                let mut spread_array = Type::new(TypeInner::DefT(
-                    reason.dupe(),
-                    DefT::new(DefTInner::ArrT(Rc::new(arrtype.clone()))),
-                ));
-                if let Some(id) = generic {
-                    spread_array = Type::new(TypeInner::GenericT(Box::new(GenericTData {
-                        id: id.clone(),
-                        bound: spread_array,
-                        reason: reason.dupe(),
-                        name: id.subst_name(),
-                        no_infer: false,
-                    })));
-                }
-                elems.push(UnresolvedParam::UnresolvedSpreadArg(spread_array));
-            };
+            let elems: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam> =
+                match spread_arg {
+                    None => {
+                        let mut e = rev_elems;
+                        e.reverse();
+                        e
+                    }
+                    Some((reason, arrtype, generic)) => {
+                        let mut spread_array = Type::new(TypeInner::DefT(
+                            reason.dupe(),
+                            DefT::new(DefTInner::ArrT(Rc::new(arrtype.clone()))),
+                        ));
+                        if let Some(id) = generic {
+                            spread_array = Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                                id: id.clone(),
+                                bound: spread_array,
+                                reason: reason.dupe(),
+                                name: id.subst_name(),
+                                no_infer: false,
+                            })));
+                        }
+                        let mut result = flow_data_structure_wrapper::list::FlowOcamlList::unit(
+                            UnresolvedParam::UnresolvedSpreadArg(spread_array),
+                        );
+                        for elem in rev_elems.iter() {
+                            result.push_front(elem.clone());
+                        }
+                        result
+                    }
+                };
             let arg_array_reason = reason_op
                 .dupe()
                 .replace_desc(VirtualReasonDesc::RRestArrayLit(Arc::new(
@@ -342,7 +355,7 @@ pub(super) fn multiflow_partial<'cx>(
                         elem_t,
                         tout: tout.dupe(),
                     };
-                    resolve_spread_list(cx, use_op.dupe(), reason_op, elems.clone(), resolve_to)
+                    resolve_spread_list(cx, use_op.dupe(), reason_op, elems.dupe(), resolve_to)
                 })?
             };
             {
@@ -378,7 +391,7 @@ pub(super) fn resolve_call_list<'cx>(
     args: Vec<CallArg>,
     resolve_to: SpreadResolve,
 ) -> Result<(), FlowJsException> {
-    let unresolved: Vec<UnresolvedParam> = args
+    let unresolved: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam> = args
         .iter()
         .map(|arg| match arg.deref() {
             CallArgInner::Arg(t) => {
@@ -400,39 +413,63 @@ pub(super) fn resolve_call_list<'cx>(
             CallArgInner::SpreadArg(t) => UnresolvedParam::UnresolvedSpreadArg(t.dupe()),
         })
         .collect();
-    resolve_spread_list_rec(cx, trace, use_op, reason_op, vec![], unresolved, resolve_to)
+    resolve_spread_list_rec(
+        cx,
+        trace,
+        use_op,
+        reason_op,
+        flow_data_structure_wrapper::list::FlowOcamlList::new(),
+        unresolved,
+        resolve_to,
+    )
 }
 
 pub(super) fn resolve_spread_list<'cx>(
     cx: &Context<'cx>,
     use_op: UseOp,
     reason_op: &Reason,
-    list: Vec<UnresolvedParam>,
+    list: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam>,
     resolve_to: SpreadResolve,
 ) -> Result<(), FlowJsException> {
-    resolve_spread_list_rec(cx, None, use_op, reason_op, vec![], list, resolve_to)
+    resolve_spread_list_rec(
+        cx,
+        None,
+        use_op,
+        reason_op,
+        flow_data_structure_wrapper::list::FlowOcamlList::new(),
+        list,
+        resolve_to,
+    )
 }
 
-// This function goes through the unresolved elements to find the next rest
-// element to resolve
 pub(super) fn resolve_spread_list_rec<'cx>(
     cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     use_op: UseOp,
     reason_op: &Reason,
-    mut resolved: Vec<ResolvedParam>,
-    unresolved: Vec<UnresolvedParam>,
+    mut resolved_rev: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
+    mut unresolved: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam>,
     resolve_to: SpreadResolve,
 ) -> Result<(), FlowJsException> {
-    let mut unresolved = VecDeque::from(unresolved);
-
     loop {
-        let Some(next) = unresolved.pop_front() else {
-            return finish_resolve_spread_list(cx, trace, use_op, reason_op, resolved, resolve_to);
+        let next = match unresolved.first() {
+            None => {
+                resolved_rev.reverse();
+                return finish_resolve_spread_list(
+                    cx,
+                    trace,
+                    use_op,
+                    reason_op,
+                    resolved_rev,
+                    resolve_to,
+                );
+            }
+            Some(n) => n.clone(),
         };
+        unresolved.drop_first();
         match next {
             UnresolvedParam::UnresolvedArg(box UnresolvedArgData(next_elem, generic)) => {
-                resolved.push(ResolvedParam::ResolvedArg(Box::new(ResolvedArgData(
+                resolved_rev.push_front(ResolvedParam::ResolvedArg(Box::new(ResolvedArgData(
                     next_elem, generic,
                 ))));
             }
@@ -446,8 +483,8 @@ pub(super) fn resolve_spread_list_rec<'cx>(
                             use_op,
                             reason: reason_op.dupe(),
                             resolve_spread_type: Box::new(ResolveSpreadType {
-                                rrt_resolved: resolved.into(),
-                                rrt_unresolved: Vec::from(unresolved).into(),
+                                rrt_resolved: resolved_rev,
+                                rrt_unresolved: unresolved,
                                 rrt_resolve_to: resolve_to,
                             }),
                         }))),
@@ -464,7 +501,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
     trace: Option<DepthTrace>,
     use_op: UseOp,
     reason_op: &Reason,
-    resolved: Vec<ResolvedParam>,
+    resolved: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
     resolve_to: SpreadResolve,
 ) -> Result<(), FlowJsException> {
     use ResolvedParam;
@@ -499,7 +536,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
     // Turn tuple rest params into single params
     fn flatten_spread_args<'cx>(
         cx: &Context<'cx>,
-        args: &[ResolvedParam],
+        args: &flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
     ) -> Result<(Vec<ResolvedParam>, bool, bool), FlowJsException> {
         let (args, spread_after_opt, _seen_opt, inexact_spread) = args.iter().try_fold(
             (Vec::<ResolvedParam>::new(), false, false, false),
@@ -608,7 +645,9 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         Ok((args, spread_after_opt, inexact_spread))
     }
 
-    fn spread_resolved_to_any_src(resolved: &[ResolvedParam]) -> Option<AnySource> {
+    fn spread_resolved_to_any_src(
+        resolved: &flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
+    ) -> Option<AnySource> {
         resolved.iter().find_map(|arg| match arg {
             ResolvedParam::ResolvedAnySpreadArg(_, src) => Some(*src),
             ResolvedParam::ResolvedArg(box ResolvedArgData(_, _))
@@ -622,7 +661,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         trace: Option<DepthTrace>,
         reason_op: &Reason,
         resolve_to: SpreadArrayResolveTo,
-        resolved: &[ResolvedParam],
+        resolved: &flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
         elem_t: &Type,
         tout: &Type,
     ) -> Result<(), FlowJsException> {
@@ -938,7 +977,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         cx: &Context<'cx>,
         use_op: UseOp,
         r: &Reason,
-        resolved: &[ResolvedParam],
+        resolved: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
     ) -> Result<
         (
             Vec<(Type, Option<flow_typing_generics::GenericId>)>,
@@ -950,7 +989,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             cx: &Context<'cx>,
             mut args: Vec<(Type, Option<flow_typing_generics::GenericId>)>,
             spread: Option<(type_ex_set::TypeExSet, Option<ArrType>, array_spread::T)>,
-            resolved: &[ResolvedParam],
+            resolved: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
         ) -> (
             Vec<(Type, Option<flow_typing_generics::GenericId>)>,
             Option<(type_ex_set::TypeExSet, Option<ArrType>, array_spread::T)>,
@@ -960,13 +999,16 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             }
             match spread {
                 None => {
-                    match &resolved[0] {
+                    let head = resolved.first().expect("non-empty");
+                    match head {
                         ResolvedParam::ResolvedArg(box ResolvedArgData(
                             TupleElement { t, .. },
                             generic,
                         )) => {
                             args.push((t.dupe(), generic.clone()));
-                            flatten(cx, args, None, &resolved[1..])
+                            let mut rest = resolved.dupe();
+                            rest.drop_first();
+                            flatten(cx, args, None, rest)
                         }
                         ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
                             _,
@@ -1001,7 +1043,9 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                     Some((type_ex_set::empty(), None, array_spread::T::Bottom));
                                 flatten(cx, args, spread, resolved)
                             } else {
-                                flatten(cx, args, None, &resolved[1..])
+                                let mut rest = resolved.dupe();
+                                rest.drop_first();
+                                flatten(cx, args, None, rest)
                             }
                         }
                         ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(_, _, _))
@@ -1017,25 +1061,29 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                 }
                 // | Some (tset, last_inexact_tuple, generic) ->
                 Some((mut tset, last_inexact_tuple, generic)) => {
-                    let (tset_new, lit_new, g_prime, ro, rest) = match &resolved[0] {
+                    let resolved_len = resolved.len();
+                    let head = resolved.first().expect("non-empty");
+                    let (tset_new, lit_new, g_prime, ro, rest) = match head {
                         ResolvedParam::ResolvedArg(box ResolvedArgData(
                             TupleElement { t, .. },
                             generic,
                         )) => {
                             type_ex_set::add(t.dupe(), &mut tset);
+                            let mut rest = resolved.dupe();
+                            rest.drop_first();
                             (
                                 tset,
                                 last_inexact_tuple,
                                 generic.as_ref(),
                                 array_spread::RoStatus::NonROSpread,
-                                &resolved[1..],
+                                rest,
                             )
                         }
                         ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
                             _,
                             arrtype,
                             generic_val,
-                        )) if resolved.len() == 1
+                        )) if resolved_len == 1
                             && matches!(
                                 arrtype,
                                 ArrType::TupleAT(box TupleATData { inexact: true, .. })
@@ -1047,7 +1095,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 Some(arrtype.clone()),
                                 generic_val.as_ref(),
                                 ro_of_arrtype(arrtype),
-                                &resolved[1..],
+                                flow_data_structure_wrapper::list::FlowOcamlList::new(),
                             )
                         }
                         ResolvedParam::ResolvedSpreadArg(box ResolvedSpreadArgData(
@@ -1056,22 +1104,26 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                             generic_val,
                         )) => {
                             type_ex_set::add(elemt_of_arrtype(arrtype), &mut tset);
+                            let mut rest = resolved.dupe();
+                            rest.drop_first();
                             (
                                 tset,
                                 last_inexact_tuple,
                                 generic_val.as_ref(),
                                 ro_of_arrtype(arrtype),
-                                &resolved[1..],
+                                rest,
                             )
                         }
                         ResolvedParam::ResolvedAnySpreadArg(reason, any_src) => {
                             type_ex_set::add(any_t::why(*any_src, reason.dupe()), &mut tset);
+                            let mut rest = resolved.dupe();
+                            rest.drop_first();
                             (
                                 tset,
                                 last_inexact_tuple,
                                 None,
                                 array_spread::RoStatus::NonROSpread,
-                                &resolved[1..],
+                                rest,
                             )
                         }
                     };
@@ -1136,7 +1188,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         reason_op: &Reason,
         ft: &FunType,
         call_reason: &Reason,
-        resolved: &[ResolvedParam],
+        resolved: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
         tout: &Type,
     ) -> Result<(), FlowJsException> {
         // Multiflows always come out of a flow
@@ -1208,7 +1260,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
         reason_op: &Reason,
         is_strict: bool,
         ft: &FunType,
-        resolved: &[ResolvedParam],
+        resolved: flow_data_structure_wrapper::list::FlowOcamlList<ResolvedParam>,
     ) -> Result<(), FlowJsException> {
         // (* Multiflows always come out of a flow *)
         let trace = trace.expect("All multiflows show have a trace");
@@ -1284,14 +1336,14 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             reason_op,
             &ft,
             &call_reason,
-            &resolved,
+            resolved,
             &tout,
         ),
         SpreadResolve::ResolveSpreadsToMultiflowCallFull(_, ft) => {
-            finish_multiflow_full(cx, trace, use_op, reason_op, true, &ft, &resolved)
+            finish_multiflow_full(cx, trace, use_op, reason_op, true, &ft, resolved)
         }
         SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(_, ft) => {
-            finish_multiflow_full(cx, trace, use_op, reason_op, false, &ft, &resolved)
+            finish_multiflow_full(cx, trace, use_op, reason_op, false, &ft, resolved)
         }
     }
 }

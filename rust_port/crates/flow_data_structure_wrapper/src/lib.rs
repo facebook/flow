@@ -7,6 +7,7 @@
 
 pub mod hash_set;
 pub mod int_map;
+pub mod list;
 pub mod multi_level_map;
 pub mod ord_map;
 pub mod ord_set;
