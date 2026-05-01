@@ -1,18 +1,18 @@
-Error ------------------------------------------------------------------------------------------------------ main.js:3:2
+Error ------------------------------------------------------------------------------------------------------ main.js:3:1
 
 Cannot cast `declare_module_exports` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   main.js:3:2
-   3| (declare_module_exports: string); // Error: number ~> string
-       ^^^^^^^^^^^^^^^^^^^^^^
+   main.js:3:1
+   3| declare_module_exports as string; // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    flow-typed/libs.js:2:27
    2|   declare module.exports: number;
                                 ^^^^^^ [1]
-   main.js:3:26
-   3| (declare_module_exports: string); // Error: number ~> string
-                               ^^^^^^ [2]
+   main.js:3:27
+   3| declare_module_exports as string; // Error: number ~> string
+                                ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ main.js:6:9
@@ -24,130 +24,130 @@ Cannot import `str` because there is no `str` export in `declare_m_e_with_other_
               ^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:10:2
+Error ----------------------------------------------------------------------------------------------------- main.js:10:1
 
 Cannot cast `42` to `str2` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   main.js:10:2
-   10| (42: str2); // Error: number ~> string
-        ^^ [1]
+   main.js:10:1
+   10| 42 as str2; // Error: number ~> string
+       ^^ [1]
 
 References:
-   main.js:10:6
-   10| (42: str2); // Error: number ~> string
-            ^^^^ [2]
+   main.js:10:7
+   10| 42 as str2; // Error: number ~> string
+             ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:19:2
+Error ----------------------------------------------------------------------------------------------------- main.js:19:1
 
 Cannot cast `declare_var_exports.exports` to string because number [1] is incompatible with string [2].
 [incompatible-type]
 
-   main.js:19:2
-   19| (declare_var_exports.exports: string); // Error: number ~> string
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   main.js:19:1
+   19| declare_var_exports.exports as string; // Error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    flow-typed/libs.js:21:24
    21|   declare var exports: number;
                               ^^^^^^ [1]
-   main.js:19:31
-   19| (declare_var_exports.exports: string); // Error: number ~> string
-                                     ^^^^^^ [2]
+   main.js:19:32
+   19| declare_var_exports.exports as string; // Error: number ~> string
+                                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:23:2
+Error ----------------------------------------------------------------------------------------------------- main.js:23:1
 
 Cannot cast `declare_m_e_with_declare_var_e` to string because number [1] is incompatible with string [2].
 [incompatible-type]
 
-   main.js:23:2
-   23| (declare_m_e_with_declare_var_e: string); // Error: number ~> string
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   main.js:23:1
+   23| declare_m_e_with_declare_var_e as string; // Error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    flow-typed/libs.js:28:27
    28|   declare module.exports: number;
                                  ^^^^^^ [1]
-   main.js:23:34
-   23| (declare_m_e_with_declare_var_e: string); // Error: number ~> string
-                                        ^^^^^^ [2]
+   main.js:23:35
+   23| declare_m_e_with_declare_var_e as string; // Error: number ~> string
+                                         ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:27:2
+Error ----------------------------------------------------------------------------------------------------- main.js:27:1
 
 Cannot cast `foo(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   main.js:27:2
-   27| (foo(0): string); // Error: number ~> string
-        ^^^^^^
+   main.js:27:1
+   27| foo(0) as string; // Error: number ~> string
+       ^^^^^^
 
 References:
    flow-typed/libs.js:37:36
    37|   declare function foo(x: number): number;
                                           ^^^^^^ [1]
-   main.js:27:10
-   27| (foo(0): string); // Error: number ~> string
-                ^^^^^^ [2]
+   main.js:27:11
+   27| foo(0) as string; // Error: number ~> string
+                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:29:2
+Error ----------------------------------------------------------------------------------------------------- main.js:29:1
 
 Cannot cast `foo(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   main.js:29:2
-   29| (foo(""): number); // Error: string ~> number
-        ^^^^^^^
+   main.js:29:1
+   29| foo("") as number; // Error: string ~> number
+       ^^^^^^^
 
 References:
    flow-typed/libs.js:36:36
    36|   declare function foo(x: string): string;
                                           ^^^^^^ [1]
-   main.js:29:11
-   29| (foo(""): number); // Error: string ~> number
-                 ^^^^^^ [2]
+   main.js:29:12
+   29| foo("") as number; // Error: string ~> number
+                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:33:2
+Error ----------------------------------------------------------------------------------------------------- main.js:33:1
 
 Cannot cast `"str"` to `BT` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   main.js:33:2
-   33| ("str": BT); // Error: string ~> number
-        ^^^^^ [1]
+   main.js:33:1
+   33| "str" as BT; // Error: string ~> number
+       ^^^^^ [1]
 
 References:
-   main.js:33:9
-   33| ("str": BT); // Error: string ~> number
-               ^^ [2]
+   main.js:33:10
+   33| "str" as BT; // Error: string ~> number
+                ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:38:2
+Error ----------------------------------------------------------------------------------------------------- main.js:38:1
 
 Cannot cast `42` to `BDefault` because number [1] is incompatible with `Def` [2]. [incompatible-type]
 
-   main.js:38:2
-   38| (42: BDefault); // Error: number ~> Def
-        ^^ [1]
+   main.js:38:1
+   38| 42 as BDefault; // Error: number ~> Def
+       ^^ [1]
 
 References:
-   main.js:38:6
-   38| (42: BDefault); // Error: number ~> Def
-            ^^^^^^^^ [2]
+   main.js:38:7
+   38| 42 as BDefault; // Error: number ~> Def
+             ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:54:2
+Error ----------------------------------------------------------------------------------------------------- main.js:54:1
 
 Cannot cast `new E()` to empty because `Def` [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:54:2
-   54| (new E(): empty); // error
-        ^^^^^^^ [1]
+   main.js:54:1
+   54| new E() as empty; // error
+       ^^^^^^^ [1]
 
 References:
-   main.js:54:11
-   54| (new E(): empty); // error
-                 ^^^^^ [2]
+   main.js:54:12
+   54| new E() as empty; // error
+                  ^^^^^ [2]
 
 
 

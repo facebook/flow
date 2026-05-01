@@ -1,35 +1,35 @@
-Error ----------------------------------------------------------------------------------------------------- const.js:3:2
+Error ----------------------------------------------------------------------------------------------------- const.js:3:1
 
 Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   const.js:3:2
-   3| (x: empty); // ERROR
-       ^
+   const.js:3:1
+   3| x as empty; // ERROR
+      ^
 
 References:
    const.js:1:18
    1| declare const x: string;
                        ^^^^^^ [1]
-   const.js:3:5
-   3| (x: empty); // ERROR
-          ^^^^^ [2]
+   const.js:3:6
+   3| x as empty; // ERROR
+           ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- const.js:8:4
+Error ----------------------------------------------------------------------------------------------------- const.js:8:3
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   const.js:8:4
-   8|   (x: string); // ERROR
-         ^
+   const.js:8:3
+   8|   x as string; // ERROR
+        ^
 
 References:
    const.js:6:20
    6|   declare const x: number;
                          ^^^^^^ [1]
-   const.js:8:7
-   8|   (x: string); // ERROR
-            ^^^^^^ [2]
+   const.js:8:8
+   8|   x as string; // ERROR
+             ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- const.js:10:3
@@ -68,72 +68,72 @@ Cannot resolve name `y`. [cannot-resolve-name]
          ^
 
 
-Error ---------------------------------------------------------------------------------------------------- import.js:4:2
+Error ---------------------------------------------------------------------------------------------------- import.js:4:1
 
 Cannot cast `s` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   import.js:4:2
-   4| (s: empty); // ERROR
-       ^
+   import.js:4:1
+   4| s as empty; // ERROR
+      ^
 
 References:
    flow-typed/module.js:2:25
    2|   declare export let s: string;
                               ^^^^^^ [1]
-   import.js:4:5
-   4| (s: empty); // ERROR
-          ^^^^^ [2]
+   import.js:4:6
+   4| s as empty; // ERROR
+           ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- import.js:7:2
+Error ---------------------------------------------------------------------------------------------------- import.js:7:1
 
 Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   import.js:7:2
-   7| (n: empty); // ERROR
-       ^
+   import.js:7:1
+   7| n as empty; // ERROR
+      ^
 
 References:
    flow-typed/module.js:3:27
    3|   declare export const n: number;
                                 ^^^^^^ [1]
-   import.js:7:5
-   7| (n: empty); // ERROR
-          ^^^^^ [2]
+   import.js:7:6
+   7| n as empty; // ERROR
+           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- let.js:3:2
+Error ------------------------------------------------------------------------------------------------------- let.js:3:1
 
 Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   let.js:3:2
-   3| (x: empty); // ERROR
-       ^
+   let.js:3:1
+   3| x as empty; // ERROR
+      ^
 
 References:
    let.js:1:16
    1| declare let x: string;
                      ^^^^^^ [1]
-   let.js:3:5
-   3| (x: empty); // ERROR
-          ^^^^^ [2]
+   let.js:3:6
+   3| x as empty; // ERROR
+           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- let.js:8:4
+Error ------------------------------------------------------------------------------------------------------- let.js:8:3
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   let.js:8:4
-   8|   (x: string); // ERROR
-         ^
+   let.js:8:3
+   8|   x as string; // ERROR
+        ^
 
 References:
    let.js:6:18
    6|   declare let x: number;
                        ^^^^^^ [1]
-   let.js:8:7
-   8|   (x: string); // ERROR
-            ^^^^^^ [2]
+   let.js:8:8
+   8|   x as string; // ERROR
+             ^^^^^^ [2]
 
 
 

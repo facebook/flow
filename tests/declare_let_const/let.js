@@ -1,11 +1,11 @@
 declare let x: string;
-(x: string); // OK
-(x: empty); // ERROR
+x as string; // OK
+x as empty; // ERROR
 
 {
   declare let x: number;
-  (x: number); // OK
-  (x: string); // ERROR
+  x as number; // OK
+  x as string; // ERROR
 
   x = 1; // OK
 }

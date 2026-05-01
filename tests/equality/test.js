@@ -24,6 +24,6 @@ declare var x1: number | string;
 declare var y1: number | string;
 x1 != y1; // error
 
-const x2 = (1: ?number) || "";
-const y2 = (1: ?number) || "";
+const x2 = 1 as ?number || "";
+const y2 = 1 as ?number || "";
 x2 != y2; // errors

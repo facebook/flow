@@ -10,8 +10,8 @@ function subtyping(
   v1: Variance<A,B>,
   v2: Variance<B,A>
 ) {
-  (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-  (v2: Variance<A,B>); // OK for both targs (B ~> A)
+  v1 as Variance<B,A>; // error on both targs (A ~/~> B)
+  v2 as Variance<A,B>; // OK for both targs (B ~> A)
 }
 
 class PropVariance<out Out, in In> {

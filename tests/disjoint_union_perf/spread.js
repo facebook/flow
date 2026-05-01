@@ -17,5 +17,5 @@ export type Union =
   | Two
 
 function toMetricConfig(config: Union) {
-  if(config.type === (0: any)) {}
+  if(config.type === 0 as any) {}
 };

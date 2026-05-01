@@ -4,10 +4,10 @@ let [b, ...zs] = ys;
 let c = zs[0]; // retain tuple info
 let d = zs[1]; // run off the end
 
-(a: void); // error: number ~> void
-(b: void); // error: string ~> void
-(c: void); // error: boolean ~> void
-(d: void); // error: number|string|boolean ~> void
+a as void; // error: number ~> void
+b as void; // error: string ~> void
+c as void; // error: boolean ~> void
+d as void; // error: number|string|boolean ~> void
 
 let [...e] = 0;
 

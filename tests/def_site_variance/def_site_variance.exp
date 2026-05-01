@@ -28,14 +28,14 @@ References:
                            ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:4
+Error ----------------------------------------------------------------------------------------------------- test.js:13:3
 
 Cannot cast `v1` to `Variance` because in type argument `Out` [1]: `A` [2] is incompatible with `B` [3].
 [incompatible-type]
 
-   test.js:13:4
-   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-          ^^
+   test.js:13:3
+   13|   v1 as Variance<B,A>; // error on both targs (A ~/~> B)
+         ^^
 
 References:
    test.js:1:17
@@ -44,19 +44,19 @@ References:
    test.js:10:16
    10|   v1: Variance<A,B>,
                       ^ [2]
-   test.js:13:17
-   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-                       ^ [3]
+   test.js:13:18
+   13|   v1 as Variance<B,A>; // error on both targs (A ~/~> B)
+                        ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:4
+Error ----------------------------------------------------------------------------------------------------- test.js:13:3
 
 Cannot cast `v1` to `Variance` because in type argument `In` [1]: `B` [2] is incompatible with `A` [3].
 [incompatible-type]
 
-   test.js:13:4
-   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-          ^^
+   test.js:13:3
+   13|   v1 as Variance<B,A>; // error on both targs (A ~/~> B)
+         ^^
 
 References:
    test.js:1:22
@@ -65,9 +65,9 @@ References:
    test.js:10:18
    10|   v1: Variance<A,B>,
                         ^ [2]
-   test.js:13:19
-   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-                         ^ [3]
+   test.js:13:20
+   13|   v1 as Variance<B,A>; // error on both targs (A ~/~> B)
+                          ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:9
@@ -220,14 +220,14 @@ References:
                                  ^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:13:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:13:3
 
 Cannot cast `v1` to `Variance` because in type argument `Out` [1]: `A` [2] is incompatible with `B` [3].
 [incompatible-type]
 
-   test_keyword.js:13:4
-   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-          ^^
+   test_keyword.js:13:3
+   13|   v1 as Variance<B,A>; // error on both targs (A ~/~> B)
+         ^^
 
 References:
    test_keyword.js:1:20
@@ -236,19 +236,19 @@ References:
    test_keyword.js:10:16
    10|   v1: Variance<A,B>,
                       ^ [2]
-   test_keyword.js:13:17
-   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-                       ^ [3]
+   test_keyword.js:13:18
+   13|   v1 as Variance<B,A>; // error on both targs (A ~/~> B)
+                        ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:13:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:13:3
 
 Cannot cast `v1` to `Variance` because in type argument `In` [1]: `B` [2] is incompatible with `A` [3].
 [incompatible-type]
 
-   test_keyword.js:13:4
-   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-          ^^
+   test_keyword.js:13:3
+   13|   v1 as Variance<B,A>; // error on both targs (A ~/~> B)
+         ^^
 
 References:
    test_keyword.js:1:28
@@ -257,9 +257,9 @@ References:
    test_keyword.js:10:18
    10|   v1: Variance<A,B>,
                         ^ [2]
-   test_keyword.js:13:19
-   13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
-                         ^ [3]
+   test_keyword.js:13:20
+   13|   v1 as Variance<B,A>; // error on both targs (A ~/~> B)
+                          ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- test_keyword.js:18:9

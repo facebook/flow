@@ -13,4 +13,4 @@ function tag2(strings: $ReadOnlyArray<string>, ...values: Array<number>) {
 }
 
 var s3 = tag2 `la la la`;
-(s3.foo: number); // error: string ~> number
+s3.foo as number; // error: string ~> number

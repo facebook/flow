@@ -4,4 +4,4 @@
 
 import {foo} from './bar';
 
-(foo: empty); // error: should be string
+foo as empty; // error: should be string

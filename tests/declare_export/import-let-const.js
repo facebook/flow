@@ -1,8 +1,8 @@
 import {l} from './let';
 import {c} from './const';
 
-(l: "let"); // OK
-(l: empty); // ERROR
+l as "let"; // OK
+l as empty; // ERROR
 
-(c: "const"); // OK
-(c: empty); // ERROR
+c as "const"; // OK
+c as empty; // ERROR

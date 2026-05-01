@@ -26,20 +26,20 @@ References:
                               ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:7:2
+Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
 Cannot call `foo` because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   test.js:7:2
-   7| (foo(false): void); // error, boolean ~/~ undefined
-       ^^^
+   test.js:7:1
+   7| foo(false) as void; // error, boolean ~/~ undefined
+      ^^^
 
 References:
-   test.js:7:6
-   7| (foo(false): void); // error, boolean ~/~ undefined
-           ^^^^^ [1]
+   test.js:7:5
+   7| foo(false) as void; // error, boolean ~/~ undefined
+          ^^^^^ [1]
    test.js:1:25
    1| declare function foo(x: number): string;
                               ^^^^^^ [2]

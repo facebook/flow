@@ -1,7 +1,7 @@
 import {s, n} from "M";
 
-(s: string); // OK
-(s: empty); // ERROR
+s as string; // OK
+s as empty; // ERROR
 
-(n: number); // OK
-(n: empty); // ERROR
+n as number; // OK
+n as empty; // ERROR

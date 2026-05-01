@@ -1,8 +1,8 @@
 {
   declare const x: [string];
   const [a] = x;
-  (a: string); // OK
-  (a: empty); // ERROR
+  a as string; // OK
+  a as empty; // ERROR
 }
 
 // Non-arrays/tuples

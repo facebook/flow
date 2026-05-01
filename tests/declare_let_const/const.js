@@ -1,11 +1,11 @@
 declare const x: string;
-(x: string); // OK
-(x: empty); // ERROR
+x as string; // OK
+x as empty; // ERROR
 
 {
   declare const x: number;
-  (x: number); // OK
-  (x: string); // ERROR
+  x as number; // OK
+  x as string; // ERROR
 
   x = 1; // ERROR
 }

@@ -1,5 +1,5 @@
 import {a} from './A';
 
-(a: string);
+a as string;
 
 export const b: string = "b";

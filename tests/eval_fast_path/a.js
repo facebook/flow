@@ -10,4 +10,4 @@ const bar = require('./b.js');
 
 export type Bar = {p:string}['p'] => void;
 
-(bar: Bar);
+bar as Bar;

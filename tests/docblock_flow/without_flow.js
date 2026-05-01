@@ -1,3 +1,3 @@
 /* some other comment */
 
-("": void); // no error
+"" as void; // no error

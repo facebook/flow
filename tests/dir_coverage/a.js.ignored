@@ -1,4 +1,4 @@
 // @flow
 
 let x : number = 4;
-module.exports = (x : any);
+module.exports = x as any;

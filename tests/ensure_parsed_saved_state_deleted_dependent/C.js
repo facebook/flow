@@ -1,3 +1,3 @@
 import {b} from './B';
 
-(b: string);
+b as string;

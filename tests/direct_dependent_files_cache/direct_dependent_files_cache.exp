@@ -1,19 +1,19 @@
 == Initial there should be 2 errors ==
-Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:1
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   src/dependent.js:4:2
-   4| (dependency: string);
-       ^^^^^^^^^^
+   src/dependent.js:4:1
+   4| dependency as string;
+      ^^^^^^^^^^
 
 References:
    src/node_modules/dependency.js:3:16
    3| export default true;
                      ^^^^ [1]
-   src/dependent.js:4:14
-   4| (dependency: string);
-                   ^^^^^^ [2]
+   src/dependent.js:4:15
+   4| dependency as string;
+                    ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
@@ -34,21 +34,21 @@ References:
 Found 2 errors
 
 == Delete unrelated.js and now there is 1 error ==
-Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:1
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   src/dependent.js:4:2
-   4| (dependency: string);
-       ^^^^^^^^^^
+   src/dependent.js:4:1
+   4| dependency as string;
+      ^^^^^^^^^^
 
 References:
    src/node_modules/dependency.js:3:16
    3| export default true;
                      ^^^^ [1]
-   src/dependent.js:4:14
-   4| (dependency: string);
-                   ^^^^^^ [2]
+   src/dependent.js:4:15
+   4| dependency as string;
+                    ^^^^^^ [2]
 
 
 
@@ -56,21 +56,21 @@ Found 1 error
 
 
 == Restore unrelated.js and back to 2 errors ==
-Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:1
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   src/dependent.js:4:2
-   4| (dependency: string);
-       ^^^^^^^^^^
+   src/dependent.js:4:1
+   4| dependency as string;
+      ^^^^^^^^^^
 
 References:
    src/node_modules/dependency.js:3:16
    3| export default true;
                      ^^^^ [1]
-   src/dependent.js:4:14
-   4| (dependency: string);
-                   ^^^^^^ [2]
+   src/dependent.js:4:15
+   4| dependency as string;
+                    ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
@@ -92,21 +92,21 @@ Found 2 errors
 
 
 == Delete src/node_modules/dependency.js changes an error ==
-Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:1
 
 Cannot cast `dependency` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   src/dependent.js:4:2
-   4| (dependency: string);
-       ^^^^^^^^^^
+   src/dependent.js:4:1
+   4| dependency as string;
+      ^^^^^^^^^^
 
 References:
    node_modules/dependency.js:3:16
    3| export default 123;
                      ^^^ [1]
-   src/dependent.js:4:14
-   4| (dependency: string);
-                   ^^^^^^ [2]
+   src/dependent.js:4:15
+   4| dependency as string;
+                    ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
@@ -128,21 +128,21 @@ Found 2 errors
 
 
 == Restore src/node_modules/dependency.js change it back ==
-Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:1
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   src/dependent.js:4:2
-   4| (dependency: string);
-       ^^^^^^^^^^
+   src/dependent.js:4:1
+   4| dependency as string;
+      ^^^^^^^^^^
 
 References:
    src/node_modules/dependency.js:3:16
    3| export default true;
                      ^^^^ [1]
-   src/dependent.js:4:14
-   4| (dependency: string);
-                   ^^^^^^ [2]
+   src/dependent.js:4:15
+   4| dependency as string;
+                    ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
@@ -183,21 +183,21 @@ Found 1 error
 
 
 == Add the import back to dependent.js ==
-Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:1
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   src/dependent.js:4:2
-   4| (dependency: string);
-       ^^^^^^^^^^
+   src/dependent.js:4:1
+   4| dependency as string;
+      ^^^^^^^^^^
 
 References:
    src/node_modules/dependency.js:3:16
    3| export default true;
                      ^^^^ [1]
-   src/dependent.js:4:14
-   4| (dependency: string);
-                   ^^^^^^ [2]
+   src/dependent.js:4:15
+   4| dependency as string;
+                    ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
@@ -219,21 +219,21 @@ Found 2 errors
 
 
 == Adding code that doesn't import has no effect on dep graph ==
-Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
+Error --------------------------------------------------------------------------------------------- src/dependent.js:4:1
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   src/dependent.js:4:2
-   4| (dependency: string);
-       ^^^^^^^^^^
+   src/dependent.js:4:1
+   4| dependency as string;
+      ^^^^^^^^^^
 
 References:
    src/node_modules/dependency.js:3:16
    3| export default true;
                      ^^^^ [1]
-   src/dependent.js:4:14
-   4| (dependency: string);
-                   ^^^^^^ [2]
+   src/dependent.js:4:15
+   4| dependency as string;
+                    ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19

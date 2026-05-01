@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 module.system=haste
 module.system.haste.paths.includes=<PROJECT_ROOT>/.*
 module.system.haste.paths.excludes=.*/node_modules/.*

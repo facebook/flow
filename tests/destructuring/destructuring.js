@@ -42,8 +42,8 @@ function test1() {
 function test2() {
   var x = {foo: 'abc', bar: 123};
   var {foo, ...rest} = x;
-  (x.baz: string); // error, baz doesn't exist
-  (rest.baz: string); // error, rest is sealed
+  x.baz as string; // error, baz doesn't exist
+  rest.baz as string; // error, rest is sealed
 }
 
 module.exports = corge;

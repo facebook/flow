@@ -206,11 +206,11 @@ using strict equality (`===` or `!==`) instead. [invalid-compare]
        ^^
 
 References:
-   test.js:27:17
-   27| const x2 = (1: ?number) || "";
-                       ^^^^^^ [1]
+   test.js:27:18
+   27| const x2 = 1 as ?number || "";
+                        ^^^^^^ [1]
    test.js:28:28
-   28| const y2 = (1: ?number) || "";
+   28| const y2 = 1 as ?number || "";
                                   ^^ [2]
 
 
@@ -225,11 +225,11 @@ using strict equality (`===` or `!==`) instead. [invalid-compare]
 
 References:
    test.js:27:28
-   27| const x2 = (1: ?number) || "";
+   27| const x2 = 1 as ?number || "";
                                   ^^ [1]
-   test.js:28:17
-   28| const y2 = (1: ?number) || "";
-                       ^^^^^^ [2]
+   test.js:28:18
+   28| const y2 = 1 as ?number || "";
+                        ^^^^^^ [2]
 
 
 

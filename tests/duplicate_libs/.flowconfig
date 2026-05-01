@@ -4,4 +4,5 @@ lib
 lib/shared
 
 [options]
+casting_syntax=as
 all=true

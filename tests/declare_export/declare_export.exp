@@ -1041,38 +1041,38 @@ References:
                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ import-let-const.js:5:2
+Error ------------------------------------------------------------------------------------------ import-let-const.js:5:1
 
 Cannot cast `l` to empty because string literal `let` [1] is incompatible with empty [2]. [incompatible-type]
 
-   import-let-const.js:5:2
-   5| (l: empty); // ERROR
-       ^
+   import-let-const.js:5:1
+   5| l as empty; // ERROR
+      ^
 
 References:
    let.js:1:23
    1| declare export let l: "let";
                             ^^^^^ [1]
-   import-let-const.js:5:5
-   5| (l: empty); // ERROR
-          ^^^^^ [2]
+   import-let-const.js:5:6
+   5| l as empty; // ERROR
+           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ import-let-const.js:8:2
+Error ------------------------------------------------------------------------------------------ import-let-const.js:8:1
 
 Cannot cast `c` to empty because string literal `const` [1] is incompatible with empty [2]. [incompatible-type]
 
-   import-let-const.js:8:2
-   8| (c: empty); // ERROR
-       ^
+   import-let-const.js:8:1
+   8| c as empty; // ERROR
+      ^
 
 References:
    const.js:1:25
    1| declare export const c: "const";
                               ^^^^^^^ [1]
-   import-let-const.js:8:5
-   8| (c: empty); // ERROR
-          ^^^^^ [2]
+   import-let-const.js:8:6
+   8| c as empty; // ERROR
+           ^^^^^ [2]
 
 
 

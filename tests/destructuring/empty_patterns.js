@@ -2,8 +2,8 @@ function assignment_tests() {
   declare var m: any;
   [] = 1; // ok
   ({} = 1); // ok
-  [m.foo] = (1: any); // only unsupported syntax error
-  [m.foo, {bar: [m.baz]}] = (1: any); // only unsupported syntax error
+  [m.foo] = 1 as any; // only unsupported syntax error
+  [m.foo, {bar: [m.baz]}] = 1 as any; // only unsupported syntax error
   return 1;
 }
 
@@ -19,6 +19,6 @@ function fun_param_tests() {
 }
 
 function var_decl_tests() {
-  const {} = (1: any); // ok
-  const [] = (1: any); // ok
+  const {} = 1 as any; // ok
+  const [] = 1 as any; // ok
 }

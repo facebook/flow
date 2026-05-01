@@ -91,106 +91,106 @@ the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, stri
                      ^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ array_rest.js:7:2
+Error ------------------------------------------------------------------------------------------------ array_rest.js:7:1
 
 Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   array_rest.js:7:2
-   7| (a: void); // error: number ~> void
-       ^
+   array_rest.js:7:1
+   7| a as void; // error: number ~> void
+      ^
 
 References:
    array_rest.js:1:11
    1| let xs = [0, "", true];
                 ^ [1]
-   array_rest.js:7:5
-   7| (a: void); // error: number ~> void
-          ^^^^ [2]
+   array_rest.js:7:6
+   7| a as void; // error: number ~> void
+           ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ array_rest.js:8:2
+Error ------------------------------------------------------------------------------------------------ array_rest.js:8:1
 
 Cannot cast `b` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   array_rest.js:8:2
-   8| (b: void); // error: string ~> void
-       ^
+   array_rest.js:8:1
+   8| b as void; // error: string ~> void
+      ^
 
 References:
    array_rest.js:1:14
    1| let xs = [0, "", true];
                    ^^ [1]
-   array_rest.js:8:5
-   8| (b: void); // error: string ~> void
-          ^^^^ [2]
+   array_rest.js:8:6
+   8| b as void; // error: string ~> void
+           ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ array_rest.js:9:2
+Error ------------------------------------------------------------------------------------------------ array_rest.js:9:1
 
 Cannot cast `c` to undefined because boolean [1] is incompatible with undefined [2]. [incompatible-type]
 
-   array_rest.js:9:2
-   9| (c: void); // error: boolean ~> void
-       ^
+   array_rest.js:9:1
+   9| c as void; // error: boolean ~> void
+      ^
 
 References:
    array_rest.js:1:18
    1| let xs = [0, "", true];
                        ^^^^ [1]
-   array_rest.js:9:5
-   9| (c: void); // error: boolean ~> void
-          ^^^^ [2]
+   array_rest.js:9:6
+   9| c as void; // error: boolean ~> void
+           ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_rest.js:10:2
+Error ----------------------------------------------------------------------------------------------- array_rest.js:10:1
 
 Cannot cast `d` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   array_rest.js:10:2
-   10| (d: void); // error: number|string|boolean ~> void
-        ^
+   array_rest.js:10:1
+   10| d as void; // error: number|string|boolean ~> void
+       ^
 
 References:
    array_rest.js:1:11
     1| let xs = [0, "", true];
                  ^ [1]
-   array_rest.js:10:5
-   10| (d: void); // error: number|string|boolean ~> void
-           ^^^^ [2]
+   array_rest.js:10:6
+   10| d as void; // error: number|string|boolean ~> void
+            ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_rest.js:10:2
+Error ----------------------------------------------------------------------------------------------- array_rest.js:10:1
 
 Cannot cast `d` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   array_rest.js:10:2
-   10| (d: void); // error: number|string|boolean ~> void
-        ^
+   array_rest.js:10:1
+   10| d as void; // error: number|string|boolean ~> void
+       ^
 
 References:
    array_rest.js:1:14
     1| let xs = [0, "", true];
                     ^^ [1]
-   array_rest.js:10:5
-   10| (d: void); // error: number|string|boolean ~> void
-           ^^^^ [2]
+   array_rest.js:10:6
+   10| d as void; // error: number|string|boolean ~> void
+            ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_rest.js:10:2
+Error ----------------------------------------------------------------------------------------------- array_rest.js:10:1
 
 Cannot cast `d` to undefined because boolean [1] is incompatible with undefined [2]. [incompatible-type]
 
-   array_rest.js:10:2
-   10| (d: void); // error: number|string|boolean ~> void
-        ^
+   array_rest.js:10:1
+   10| d as void; // error: number|string|boolean ~> void
+       ^
 
 References:
    array_rest.js:1:18
     1| let xs = [0, "", true];
                         ^^^^ [1]
-   array_rest.js:10:5
-   10| (d: void); // error: number|string|boolean ~> void
-           ^^^^ [2]
+   array_rest.js:10:6
+   10| d as void; // error: number|string|boolean ~> void
+            ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:12:9
@@ -229,21 +229,21 @@ References:
                                   ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------- computed.js:2:2
+Error -------------------------------------------------------------------------------------------------- computed.js:2:1
 
 Cannot cast `val1` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   computed.js:2:2
-   2| (val1: void); // error: string ~> void
-       ^^^^
+   computed.js:2:1
+   2| val1 as void; // error: string ~> void
+      ^^^^
 
 References:
    computed.js:1:32
    1| var { ["key"]: val1 } = { key: "val" };
                                      ^^^^^ [1]
-   computed.js:2:8
-   2| (val1: void); // error: string ~> void
-             ^^^^ [2]
+   computed.js:2:9
+   2| val1 as void; // error: string ~> void
+              ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- computed.js:5:8
@@ -263,56 +263,56 @@ References:
                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- computed.js:9:2
+Error -------------------------------------------------------------------------------------------------- computed.js:9:1
 
 Cannot cast `spread.key` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   computed.js:9:2
-   9| (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
-       ^^^^^^^^^^
+   computed.js:9:1
+   9| spread.key as void; // error (gasp!) in general we don't know if a computed prop should be excluded from spread
+      ^^^^^^^^^^
 
 References:
    computed.js:8:43
    8| var { ["key"]: val3, ...spread } = { key: "val" };
                                                 ^^^^^ [1]
-   computed.js:9:14
-   9| (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
-                   ^^^^ [2]
+   computed.js:9:15
+   9| spread.key as void; // error (gasp!) in general we don't know if a computed prop should be excluded from spread
+                    ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- computed.js:14:2
+Error ------------------------------------------------------------------------------------------------- computed.js:14:1
 
 Cannot cast `foo` to number literal `42` because number literal `17` [1] is incompatible with number literal `42` [2].
 [incompatible-type]
 
-   computed.js:14:2
-   14| (foo: 42); // error 17 ~> 42
-        ^^^
+   computed.js:14:1
+   14| foo as 42; // error 17 ~> 42
+       ^^^
 
 References:
    computed.js:11:40
    11| const arr = [{foo: 42 as const}, {foo: 17 as const}];
                                               ^^ [1]
-   computed.js:14:7
-   14| (foo: 42); // error 17 ~> 42
-             ^^ [2]
+   computed.js:14:8
+   14| foo as 42; // error 17 ~> 42
+              ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- computed.js:16:2
+Error ------------------------------------------------------------------------------------------------- computed.js:16:1
 
 Cannot cast `foo` to string because number literal `17` [1] is incompatible with string [2]. [incompatible-type]
 
-   computed.js:16:2
-   16| (foo: string); // error 17 ~> string
-        ^^^
+   computed.js:16:1
+   16| foo as string; // error 17 ~> string
+       ^^^
 
 References:
    computed.js:11:40
    11| const arr = [{foo: 42 as const}, {foo: 17 as const}];
                                               ^^ [1]
-   computed.js:16:7
-   16| (foo: string); // error 17 ~> string
-             ^^^^^^ [2]
+   computed.js:16:8
+   16| foo as string; // error 17 ~> string
+              ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- defaults.js:4:8
@@ -983,28 +983,28 @@ References:
                           ^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- destructuring.js:45:4
+Error -------------------------------------------------------------------------------------------- destructuring.js:45:3
 
 Cannot cast `x.baz` to string because `void` (due to access of non-existent property `baz`) [1] is incompatible with
 string [2]. [incompatible-type]
 
-   destructuring.js:45:4
-   45|   (x.baz: string); // error, baz doesn't exist
-          ^^^^^ [1]
+   destructuring.js:45:3
+   45|   x.baz as string; // error, baz doesn't exist
+         ^^^^^ [1]
 
 References:
-   destructuring.js:45:11
-   45|   (x.baz: string); // error, baz doesn't exist
-                 ^^^^^^ [2]
+   destructuring.js:45:12
+   45|   x.baz as string; // error, baz doesn't exist
+                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- destructuring.js:45:6
+Error -------------------------------------------------------------------------------------------- destructuring.js:45:5
 
 Cannot get `x.baz` because property `baz` (did you mean `bar`?) is missing in object literal [1]. [prop-missing]
 
-   destructuring.js:45:6
-   45|   (x.baz: string); // error, baz doesn't exist
-            ^^^
+   destructuring.js:45:5
+   45|   x.baz as string; // error, baz doesn't exist
+           ^^^
 
 References:
    destructuring.js:43:11
@@ -1012,29 +1012,29 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- destructuring.js:46:4
+Error -------------------------------------------------------------------------------------------- destructuring.js:46:3
 
 Cannot cast `rest.baz` to string because `void` (due to access of non-existent property `baz`) [1] is incompatible with
 string [2]. [incompatible-type]
 
-   destructuring.js:46:4
-   46|   (rest.baz: string); // error, rest is sealed
-          ^^^^^^^^ [1]
+   destructuring.js:46:3
+   46|   rest.baz as string; // error, rest is sealed
+         ^^^^^^^^ [1]
 
 References:
-   destructuring.js:46:14
-   46|   (rest.baz: string); // error, rest is sealed
-                    ^^^^^^ [2]
+   destructuring.js:46:15
+   46|   rest.baz as string; // error, rest is sealed
+                     ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- destructuring.js:46:9
+Error -------------------------------------------------------------------------------------------- destructuring.js:46:8
 
 Cannot get `rest.baz` because property `baz` (did you mean `bar`?) is missing in rest of object pattern [1].
 [prop-missing]
 
-   destructuring.js:46:9
-   46|   (rest.baz: string); // error, rest is sealed
-               ^^^
+   destructuring.js:46:8
+   46|   rest.baz as string; // error, rest is sealed
+              ^^^
 
 References:
    destructuring.js:44:16
@@ -1363,7 +1363,7 @@ Error --------------------------------------------------------------------------
 
 Unsupported expression pattern in destructuring. [unsupported-syntax]
 
-   5|   [m.foo] = (1: any); // only unsupported syntax error
+   5|   [m.foo] = 1 as any; // only unsupported syntax error
          ^^^^^
 
 
@@ -1371,7 +1371,7 @@ Error --------------------------------------------------------------------------
 
 Unsupported expression pattern in destructuring. [unsupported-syntax]
 
-   6|   [m.foo, {bar: [m.baz]}] = (1: any); // only unsupported syntax error
+   6|   [m.foo, {bar: [m.baz]}] = 1 as any; // only unsupported syntax error
          ^^^^^
 
 
@@ -1379,7 +1379,7 @@ Error --------------------------------------------------------------------------
 
 Unsupported expression pattern in destructuring. [unsupported-syntax]
 
-   6|   [m.foo, {bar: [m.baz]}] = (1: any); // only unsupported syntax error
+   6|   [m.foo, {bar: [m.baz]}] = 1 as any; // only unsupported syntax error
                        ^^^^^
 
 
@@ -1572,38 +1572,38 @@ References:
             ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ string_lit.js:2:2
+Error ------------------------------------------------------------------------------------------------ string_lit.js:2:1
 
 Cannot cast `val` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   string_lit.js:2:2
-   2| (val: void); // error: string ~> void
-       ^^^
+   string_lit.js:2:1
+   2| val as void; // error: string ~> void
+      ^^^
 
 References:
    string_lit.js:1:29
    1| var { "key": val } = { key: "val" };
                                   ^^^^^ [1]
-   string_lit.js:2:7
-   2| (val: void); // error: string ~> void
-            ^^^^ [2]
+   string_lit.js:2:8
+   2| val as void; // error: string ~> void
+             ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- tuple.js:5:4
+Error ----------------------------------------------------------------------------------------------------- tuple.js:5:3
 
 Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   tuple.js:5:4
-   5|   (a: empty); // ERROR
-         ^
+   tuple.js:5:3
+   5|   a as empty; // ERROR
+        ^
 
 References:
    tuple.js:2:21
    2|   declare const x: [string];
                           ^^^^^^ [1]
-   tuple.js:5:7
-   5|   (a: empty); // ERROR
-            ^^^^^ [2]
+   tuple.js:5:8
+   5|   a as empty; // ERROR
+             ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- tuple.js:11:10

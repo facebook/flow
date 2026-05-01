@@ -8,8 +8,8 @@ declare class C {
 C.x = "";
 C.foo("");
 
-(C.name: string);
-(C.name: number); // error, it's a string
+C.name as string;
+C.name as number; // error, it's a string
 
 declare class D extends C { }
 new D(123); // error, number ~> string
@@ -17,4 +17,4 @@ new D(123); // error, number ~> string
 declare class E {
     +[key: string]: number;
 }
-;(new E()['a']: number) // no error
+;new E()['a'] as number // no error

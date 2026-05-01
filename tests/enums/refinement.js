@@ -11,97 +11,97 @@ enum B of boolean {
 declare var bVoidable: void | B;
 
 if (typeof bVoidable === "undefined") {
-  (bVoidable: void); // Valid
-  (bVoidable: B); // Error
+  bVoidable as void; // Valid
+  bVoidable as B; // Error
 }
 
 if (typeof bVoidable !== "undefined") {
-  (bVoidable: void); // Error
-  (bVoidable: B); // Valid
+  bVoidable as void; // Error
+  bVoidable as B; // Valid
 }
 
 if (typeof bVoidable === "boolean") {
-  (bVoidable: void); // Error
-  (bVoidable: B); // Valid
+  bVoidable as void; // Error
+  bVoidable as B; // Valid
 }
 
 if (typeof bVoidable !== "boolean") {
-  (bVoidable: void); // Valid
-  (bVoidable: B); // Error
+  bVoidable as void; // Valid
+  bVoidable as B; // Error
 }
 
 if (bVoidable === undefined) {
-  (bVoidable: void); // Valid
-  (bVoidable: B); // Error
+  bVoidable as void; // Valid
+  bVoidable as B; // Error
 }
 
 if (bVoidable !== undefined) {
-  (bVoidable: void); // Error
-  (bVoidable: B); // Valid
+  bVoidable as void; // Error
+  bVoidable as B; // Valid
 }
 
 declare var bMaybe: ?B;
 
 if (bMaybe == null) {
-  (bMaybe: null | void); // Valid
-  (bMaybe: B); // Error
+  bMaybe as null | void; // Valid
+  bMaybe as B; // Error
 }
 
 if (bMaybe != null) {
-  (bMaybe: null); // Error
-  (bMaybe: void); // Error
-  (bMaybe: B); // Valid
+  bMaybe as null; // Error
+  bMaybe as void; // Error
+  bMaybe as B; // Valid
 }
 
 if (bMaybe === null || bMaybe === undefined) {
-  (bMaybe: null | void); // Valid
-  (bMaybe: B); // Error
+  bMaybe as null | void; // Valid
+  bMaybe as B; // Error
 }
 
 if (bMaybe !== null && bMaybe !== undefined) {
-  (bMaybe: null); // Error
-  (bMaybe: void); // Error
-  (bMaybe: B); // Valid
+  bMaybe as null; // Error
+  bMaybe as void; // Error
+  bMaybe as B; // Valid
 }
 
 declare var bBoolVoid: B | boolean | void;
 
 if (typeof bBoolVoid === "boolean") {
-  (bBoolVoid: void); // Error
-  (bBoolVoid: boolean); // Valid
-  (bBoolVoid: B); // Error
-  (bBoolVoid: B | boolean); // Valid
+  bBoolVoid as void; // Error
+  bBoolVoid as boolean; // Valid
+  bBoolVoid as B; // Error
+  bBoolVoid as B | boolean; // Valid
 }
 
 if (typeof bBoolVoid !== "boolean") {
-  (bBoolVoid: void); // Valid
-  (bBoolVoid: boolean); // Error
-  (bBoolVoid: B); // Error
-  (bBoolVoid: B | boolean); // Error
+  bBoolVoid as void; // Valid
+  bBoolVoid as boolean; // Error
+  bBoolVoid as B; // Error
+  bBoolVoid as B | boolean; // Error
 }
 
 if (bVoidable) {
-  (bVoidable: void); // Error
-  (bVoidable: B); // Valid
+  bVoidable as void; // Error
+  bVoidable as B; // Valid
 }
 
 if (!bVoidable) {
-  (bVoidable: void | B); // Valid
-  (bVoidable: B); // Error
-  (bVoidable: void); // Error
+  bVoidable as void | B; // Valid
+  bVoidable as B; // Error
+  bVoidable as void; // Error
 }
 
 enum BEmpty {}
 declare var bEmpty: BEmpty | void;
 
 if (bEmpty) {
-  (bEmpty: void); // Error
-  (bEmpty: BEmpty); // Valid
+  bEmpty as void; // Error
+  bEmpty as BEmpty; // Valid
 }
 
 if (!bEmpty) {
-  (bEmpty: void); // Valid
-  (bEmpty: BEmpty); // Error
+  bEmpty as void; // Valid
+  bEmpty as BEmpty; // Error
 }
 
 enum BTrue {
@@ -110,13 +110,13 @@ enum BTrue {
 declare var bTrue: BTrue | void;
 
 if (bTrue) {
-  (bTrue: void); // Error
-  (bTrue: BTrue); // Valid
+  bTrue as void; // Error
+  bTrue as BTrue; // Valid
 }
 
 if (!bTrue) {
-  (bTrue: void); // Valid
-  (bTrue: BTrue); // Error
+  bTrue as void; // Valid
+  bTrue as BTrue; // Error
 }
 
 enum BFalse {
@@ -125,13 +125,13 @@ enum BFalse {
 declare var bFalse: BFalse | true;
 
 if (bFalse) {
-  (bFalse: true); // Valid
-  (bFalse: BFalse); // Error
+  bFalse as true; // Valid
+  bFalse as BFalse; // Error
 }
 
 if (!bFalse) {
-  (bFalse: true); // Error
-  (bFalse: BFalse); // Valid
+  bFalse as true; // Error
+  bFalse as BFalse; // Valid
 }
 
 ////////////
@@ -145,63 +145,63 @@ enum N of number {
 declare var nVoidable: void | N;
 
 if (typeof nVoidable === "undefined") {
-  (nVoidable: void); // Valid
-  (nVoidable: N); // Error
+  nVoidable as void; // Valid
+  nVoidable as N; // Error
 }
 
 if (typeof nVoidable !== "undefined") {
-  (nVoidable: void); // Error
-  (nVoidable: N); // Valid
+  nVoidable as void; // Error
+  nVoidable as N; // Valid
 }
 
 if (typeof nVoidable === "number") {
-  (nVoidable: void); // Error
-  (nVoidable: N); // Valid
+  nVoidable as void; // Error
+  nVoidable as N; // Valid
 }
 
 if (typeof nVoidable !== "number") {
-  (nVoidable: void); // Valid
-  (nVoidable: N); // Error
+  nVoidable as void; // Valid
+  nVoidable as N; // Error
 }
 
 declare var nMaybe: ?N;
 
 if (nMaybe == null) {
-  (nMaybe: null | void); // Valid
-  (nMaybe: N); // Error
+  nMaybe as null | void; // Valid
+  nMaybe as N; // Error
 }
 
 if (nMaybe != null) {
-  (nMaybe: null); // Error
-  (nMaybe: void); // Error
-  (nMaybe: N); // Valid
+  nMaybe as null; // Error
+  nMaybe as void; // Error
+  nMaybe as N; // Valid
 }
 
 declare var nNumVoid: N | number | void;
 
 if (typeof nNumVoid === "number") {
-  (nNumVoid: void); // Error
-  (nNumVoid: number); // Valid
-  (nNumVoid: N); // Error
-  (nNumVoid: N | number); // Valid
+  nNumVoid as void; // Error
+  nNumVoid as number; // Valid
+  nNumVoid as N; // Error
+  nNumVoid as N | number; // Valid
 }
 
 if (typeof nNumVoid !== "number") {
-  (nNumVoid: void); // Valid
-  (nNumVoid: number); // Error
-  (nNumVoid: N); // Error
-  (nNumVoid: N | number); // Error
+  nNumVoid as void; // Valid
+  nNumVoid as number; // Error
+  nNumVoid as N; // Error
+  nNumVoid as N | number; // Error
 }
 
 if (nVoidable) {
-  (nVoidable: void); // Error
-  (nVoidable: N); // Valid
+  nVoidable as void; // Error
+  nVoidable as N; // Valid
 }
 
 if (!nVoidable) {
-  (nVoidable: void | N); // Valid
-  (nVoidable: N); // Error
-  (nVoidable: void); // Error
+  nVoidable as void | N; // Valid
+  nVoidable as N; // Error
+  nVoidable as void; // Error
 }
 
 enum NTruthy {
@@ -211,13 +211,13 @@ enum NTruthy {
 declare var nTruthy: NTruthy | void;
 
 if (nTruthy) {
-  (nTruthy: void); // Error
-  (nTruthy: NTruthy); // Valid
+  nTruthy as void; // Error
+  nTruthy as NTruthy; // Valid
 }
 
 if (!nTruthy) {
-  (nTruthy: void); // Valid
-  (nTruthy: NTruthy); // Error
+  nTruthy as void; // Valid
+  nTruthy as NTruthy; // Error
 }
 
 ////////////
@@ -231,63 +231,63 @@ enum S of string {
 declare var sVoidable: void | S;
 
 if (typeof sVoidable === "undefined") {
-  (sVoidable: void); // Valid
-  (sVoidable: S); // Error
+  sVoidable as void; // Valid
+  sVoidable as S; // Error
 }
 
 if (typeof sVoidable !== "undefined") {
-  (sVoidable: void); // Error
-  (sVoidable: S); // Valid
+  sVoidable as void; // Error
+  sVoidable as S; // Valid
 }
 
 if (typeof sVoidable === "string") {
-  (sVoidable: void); // Error
-  (sVoidable: S); // Valid
+  sVoidable as void; // Error
+  sVoidable as S; // Valid
 }
 
 if (typeof sVoidable !== "string") {
-  (sVoidable: void); // Valid
-  (sVoidable: S); // Error
+  sVoidable as void; // Valid
+  sVoidable as S; // Error
 }
 
 declare var sMaybe: ?S;
 
 if (sMaybe == null) {
-  (sMaybe: null | void); // Valid
-  (sMaybe: S); // Error
+  sMaybe as null | void; // Valid
+  sMaybe as S; // Error
 }
 
 if (sMaybe != null) {
-  (sMaybe: null); // Error
-  (sMaybe: void); // Error
-  (sMaybe: S); // Valid
+  sMaybe as null; // Error
+  sMaybe as void; // Error
+  sMaybe as S; // Valid
 }
 
 declare var sStrVoid: S | string | void;
 
 if (typeof sStrVoid === "string") {
-  (sStrVoid: void); // Error
-  (sStrVoid: string); // Valid
-  (sStrVoid: S); // Error
-  (sStrVoid: S | string); // Valid
+  sStrVoid as void; // Error
+  sStrVoid as string; // Valid
+  sStrVoid as S; // Error
+  sStrVoid as S | string; // Valid
 }
 
 if (typeof sStrVoid !== "string") {
-  (sStrVoid: void); // Valid
-  (sStrVoid: string); // Error
-  (sStrVoid: S); // Error
-  (sStrVoid: S | string); // Error
+  sStrVoid as void; // Valid
+  sStrVoid as string; // Error
+  sStrVoid as S; // Error
+  sStrVoid as S | string; // Error
 }
 
 if (sVoidable) {
-  (sVoidable: void); // Error
-  (sVoidable: S); // Valid
+  sVoidable as void; // Error
+  sVoidable as S; // Valid
 }
 
 if (!sVoidable) {
-  (sVoidable: void | S); // Valid
-  (sVoidable: S); // Error
-  (sVoidable: void); // Error
+  sVoidable as void | S; // Valid
+  sVoidable as S; // Error
+  sVoidable as void; // Error
 }
 
 enum STruthy {
@@ -297,13 +297,13 @@ enum STruthy {
 declare var sTruthy: STruthy | void;
 
 if (sTruthy) {
-  (sTruthy: void); // Error
-  (sTruthy: STruthy); // Valid
+  sTruthy as void; // Error
+  sTruthy as STruthy; // Valid
 }
 
 if (!sTruthy) {
-  (sTruthy: void); // Valid
-  (sTruthy: STruthy); // Error
+  sTruthy as void; // Valid
+  sTruthy as STruthy; // Error
 }
 
 //////////////
@@ -312,13 +312,13 @@ if (!sTruthy) {
 declare var bn: B | N;
 
 if (typeof bn == "boolean") {
-  (bn: B); // Valid
-  (bn: N); // Error
+  bn as B; // Valid
+  bn as N; // Error
 }
 
 if (typeof bn == "number") {
-  (bn: B); // Error
-  (bn: N); // Valid
+  bn as B; // Error
+  bn as N; // Valid
 }
 
 //////////////////
@@ -357,63 +357,63 @@ enum Big of bigint {
 declare var bigVoidable: void | Big;
 
 if (typeof bigVoidable === "undefined") {
-  (bigVoidable: void); // Valid
-  (bigVoidable: Big); // Error
+  bigVoidable as void; // Valid
+  bigVoidable as Big; // Error
 }
 
 if (typeof bigVoidable !== "undefined") {
-  (bigVoidable: void); // Error
-  (bigVoidable: Big); // Valid
+  bigVoidable as void; // Error
+  bigVoidable as Big; // Valid
 }
 
 if (typeof bigVoidable === "bigint") {
-  (bigVoidable: void); // Error
-  (bigVoidable: Big); // Valid
+  bigVoidable as void; // Error
+  bigVoidable as Big; // Valid
 }
 
 if (typeof bigVoidable !== "bigint") {
-  (bigVoidable: void); // Valid
-  (bigVoidable: Big); // Error
+  bigVoidable as void; // Valid
+  bigVoidable as Big; // Error
 }
 
 declare var bigMaybe: ?Big;
 
 if (bigMaybe == null) {
-  (bigMaybe: null | void); // Valid
-  (bigMaybe: Big); // Error
+  bigMaybe as null | void; // Valid
+  bigMaybe as Big; // Error
 }
 
 if (bigMaybe != null) {
-  (bigMaybe: null); // Error
-  (bigMaybe: void); // Error
-  (bigMaybe: Big); // Valid
+  bigMaybe as null; // Error
+  bigMaybe as void; // Error
+  bigMaybe as Big; // Valid
 }
 
 declare var bigBigintVoid: Big | bigint | void;
 
 if (typeof bigBigintVoid === "bigint") {
-  (bigBigintVoid: void); // Error
-  (bigBigintVoid: bigint); // Valid
-  (bigBigintVoid: Big); // Error
-  (bigBigintVoid: Big | bigint); // Valid
+  bigBigintVoid as void; // Error
+  bigBigintVoid as bigint; // Valid
+  bigBigintVoid as Big; // Error
+  bigBigintVoid as Big | bigint; // Valid
 }
 
 if (typeof bigBigintVoid !== "bigint") {
-  (bigBigintVoid: void); // Valid
-  (bigBigintVoid: bigint); // Error
-  (bigBigintVoid: Big); // Error
-  (bigBigintVoid: Big | bigint); // Error
+  bigBigintVoid as void; // Valid
+  bigBigintVoid as bigint; // Error
+  bigBigintVoid as Big; // Error
+  bigBigintVoid as Big | bigint; // Error
 }
 
 if (bigVoidable) {
-  (bigVoidable: void); // Error
-  (bigVoidable: Big); // Valid
+  bigVoidable as void; // Error
+  bigVoidable as Big; // Valid
 }
 
 if (!bigVoidable) {
-  (bigVoidable: void | Big); // Valid
-  (bigVoidable: Big); // Error
-  (bigVoidable: void); // Error
+  bigVoidable as void | Big; // Valid
+  bigVoidable as Big; // Error
+  bigVoidable as void; // Error
 }
 
 enum BigTruthy {
@@ -423,11 +423,11 @@ enum BigTruthy {
 declare var bigTruthy: BigTruthy | void;
 
 if (bigTruthy) {
-  (bigTruthy: void); // Error
-  (bigTruthy: BigTruthy); // Valid
+  bigTruthy as void; // Error
+  bigTruthy as BigTruthy; // Valid
 }
 
 if (!bigTruthy) {
-  (bigTruthy: void); // Valid
-  (bigTruthy: BigTruthy); // Error
+  bigTruthy as void; // Valid
+  bigTruthy as BigTruthy; // Error
 }

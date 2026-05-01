@@ -3,4 +3,4 @@
  * parameter and return types. */
 type T<X> = (X => X) | X;
 type D = { [string]: number };
-(x => x: T<D>);
+(x => x) as T<D>;
