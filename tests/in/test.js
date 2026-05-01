@@ -9,9 +9,9 @@ let tests = [
 
   // arrays on RHS
   function() {
-    ('foo' in ([]: Array<string>));
-    (0 in ([]: Array<string>));
-    ('length' in ([]: Array<string>));
+    ('foo' in ([] as Array<string>));
+    (0 in ([] as Array<string>));
+    ('length' in ([] as Array<string>));
   },
 
   // primitive classes on RHS
@@ -33,8 +33,8 @@ let tests = [
     (null in {}); // error
     (void 0 in {}); // error
     ({} in {}); // error
-    (([]: Array<string>) in {}); // error
-    (false in ([]: Array<string>)); // error
+    (([] as Array<string>) in {}); // error
+    (false in ([] as Array<string>)); // error
   },
 
   // in predicates

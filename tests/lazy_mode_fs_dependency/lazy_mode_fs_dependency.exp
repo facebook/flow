@@ -6,21 +6,21 @@ The Flow server is currently in lazy mode and is only checking 0/2 source files 
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Focus a file
-Error ------------------------------------------------------------------------------------------------------- foo.js:3:2
+Error ------------------------------------------------------------------------------------------------------- foo.js:3:1
 
 Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   foo.js:3:2
-   3| (require('bar'): string);
-       ^^^^^^^^^^^^^^
+   foo.js:3:1
+   3| require('bar') as string;
+      ^^^^^^^^^^^^^^
 
 References:
    node_modules/bar/index.js:3:18
    3| module.exports = 0;
                        ^ [1]
-   foo.js:3:18
-   3| (require('bar'): string);
-                       ^^^^^^ [2]
+   foo.js:3:19
+   3| require('bar') as string;
+                        ^^^^^^ [2]
 
 
 
@@ -36,21 +36,21 @@ The Flow server is currently in lazy mode and is only checking 1/2 source files 
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Revert edit
-Error ------------------------------------------------------------------------------------------------------- foo.js:3:2
+Error ------------------------------------------------------------------------------------------------------- foo.js:3:1
 
 Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   foo.js:3:2
-   3| (require('bar'): string);
-       ^^^^^^^^^^^^^^
+   foo.js:3:1
+   3| require('bar') as string;
+      ^^^^^^^^^^^^^^
 
 References:
    node_modules/bar/index.js:3:18
    3| module.exports = 0;
                        ^ [1]
-   foo.js:3:18
-   3| (require('bar'): string);
-                       ^^^^^^ [2]
+   foo.js:3:19
+   3| require('bar') as string;
+                        ^^^^^^ [2]
 
 
 

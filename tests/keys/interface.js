@@ -15,12 +15,12 @@ interface WithBoth {
 
 declare var xy: 'x' | 'y';
 
-(xy: keyof WithDict); // OK
-('xxx': keyof WithDict); // ERROR
+xy as keyof WithDict; // OK
+'xxx' as keyof WithDict; // ERROR
 
-('a': keyof WithProps); // OK
-('xxx': keyof WithProps); // ERROR
+'a' as keyof WithProps; // OK
+'xxx' as keyof WithProps; // ERROR
 
-('a': keyof WithBoth); // OK
-(xy: keyof WithBoth); // OK
-('xxx': keyof WithBoth); // ERROR
+'a' as keyof WithBoth; // OK
+xy as keyof WithBoth; // OK
+'xxx' as keyof WithBoth; // ERROR

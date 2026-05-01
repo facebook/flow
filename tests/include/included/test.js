@@ -1,1 +1,1 @@
-(123: string);
+123 as string;

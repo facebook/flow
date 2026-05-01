@@ -1,4 +1,4 @@
 // @flow
 
 import b from './b';
-(b: string);
+b as string;

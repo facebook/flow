@@ -5,8 +5,8 @@ var o = keyMirror({
   BAR: null,
 });
 
-(o.FOO : 'FOO'); // ok
-(o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
+o.FOO as 'FOO'; // ok
+o.FOO as 'BAR'; // error, 'FOO' incompatible with 'BAR'
 
 
 export type Props = $ReadOnly<{
@@ -23,7 +23,7 @@ export type SpreadKeyMirroredProps = $ReadOnly<{
 // The following should be okay, since KeyMirroredProps should behave just like
 // `$ReadOnly<$ObjMapi<Props, <K>(K) => K>>` that preserves the optionality of the
 // properties.
-({b: 'b'}: SpreadKeyMirroredProps);
+({b: 'b'} as SpreadKeyMirroredProps);
 
 declare var badKeyMirror: $KeyMirror<1>;
 badKeyMirror.f; // error

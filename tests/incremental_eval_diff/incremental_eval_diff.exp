@@ -18,16 +18,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `a` to object type because number [1] is incompatible with object type [2]. [incompatible-type]
 
    b.js:6:2
-   6| (a: {
+   6| (a as {
        ^
 
 References:
    b.js:5:16
    5| declare var a: A;
                      ^ [1]
-   b.js:6:5
-          v
-   6| (a: {
+   b.js:6:7
+            v
+   6| (a as {
    7|     m: number,
    8|     n: number,
    9| });

@@ -1,3 +1,3 @@
 // @flow
 const foo = require("foo");
-(foo: empty);
+foo as empty;

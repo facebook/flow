@@ -17,10 +17,10 @@ class C {
 
 // check
 
-((new C).foo(): boolean); // last wins
-((new C).x: boolean); // last wins
-((new C).bar: empty); // error: string ~> empty (own prop wins)
-((new C).qux: empty); // error: number ~> empty (own prop wins)
+(new C).foo() as boolean; // last wins
+(new C).x as boolean; // last wins
+(new C).bar as empty; // error: string ~> empty (own prop wins)
+(new C).qux as empty; // error: number ~> empty (own prop wins)
 
 // Objects
 
@@ -37,7 +37,7 @@ const o = {
 
 // check
 
-(o.foo(): boolean); // last wins
-(o.x: boolean); // last wins
-(o.bar: boolean); // last wins
-(o.qux(): boolean); // last wins
+o.foo() as boolean; // last wins
+o.x as boolean; // last wins
+o.bar as boolean; // last wins
+o.qux() as boolean; // last wins

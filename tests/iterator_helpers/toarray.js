@@ -2,4 +2,4 @@
 declare const iterator: Iterator<number>;
 
 // Basic usage
-(iterator.toArray(): Array<number>); // OK
+iterator.toArray() as Array<number>; // OK

@@ -4,7 +4,7 @@ class A {
 
 let a = new A();
 
-(a : $ReadOnly<interface {foo : number}>);
+a as $ReadOnly<interface {foo : number}>;
 
 declare var x : $ReadOnly<interface {foo : number}>;
 x.foo = 3; // error as expected
@@ -30,4 +30,4 @@ interface K extends J {
   baz : boolean
 }
 
-(b : $ReadOnly<K>); // error
+b as $ReadOnly<K>; // error

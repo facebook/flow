@@ -62,39 +62,39 @@ References:
                                                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ call.js:2:2
+Error ------------------------------------------------------------------------------------------------------ call.js:2:1
 
 Cannot cast `y` to object type because object type [1] is incompatible with function prototype [2]. [incompatible-type]
 
-   call.js:2:2
-   2| (y: {(number): string, ...});
-       ^
+   call.js:2:1
+   2| y as {(number): string, ...};
+      ^
 
 References:
    call.js:1:16
    1| declare var y: {[string]: boolean};
                      ^^^^^^^^^^^^^^^^^^^ [1]
-   call.js:2:5
-   2| (y: {(number): string, ...});
-          ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   call.js:2:6
+   2| y as {(number): string, ...};
+           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ call.js:2:2
+Error ------------------------------------------------------------------------------------------------------ call.js:2:1
 
 Cannot cast `y` to object type because a call signature declaring the expected parameter / return type is missing in
 object type [1] but exists in object type [2]. [incompatible-type]
 
-   call.js:2:2
-   2| (y: {(number): string, ...});
-       ^
+   call.js:2:1
+   2| y as {(number): string, ...};
+      ^
 
 References:
    call.js:1:16
    1| declare var y: {[string]: boolean};
                      ^^^^^^^^^^^^^^^^^^^ [1]
-   call.js:2:5
-   2| (y: {(number): string, ...});
-          ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   call.js:2:6
+   2| y as {(number): string, ...};
+           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- multiple.js:5:7

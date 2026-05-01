@@ -448,19 +448,19 @@ Cannot use `in` because on the left-hand side, object literal [1] must be a stri
             ^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:36:11
+Error ---------------------------------------------------------------------------------------------------- test.js:36:13
 
 Cannot use `in` because on the left-hand side, array type [1] must be a string or number. [invalid-in-lhs]
 
-   36|     (([]: Array<string>) in {}); // error
-                 ^^^^^^^^^^^^^ [1]
+   36|     (([] as Array<string>) in {}); // error
+                   ^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:37:6
 
 Cannot use `in` because on the left-hand side, boolean [1] must be a string or number. [invalid-in-lhs]
 
-   37|     (false in ([]: Array<string>)); // error
+   37|     (false in ([] as Array<string>)); // error
             ^^^^^ [1]
 
 

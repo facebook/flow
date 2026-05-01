@@ -15,8 +15,8 @@ interface PropAndIndexer {
 }
 {
   declare const x: PropAndIndexer;
-  (x.foo: boolean); // OK
-  (x['foo']: boolean); // OK
+  x.foo as boolean; // OK
+  x['foo'] as boolean; // OK
   x['foo'] = true; // OK
 }
 
@@ -61,28 +61,28 @@ interface Contravariant {
 
 {
   declare const x: {[Keys]: number};
-  (x: Invariant); // ERROR
-  (x: Covariant); // OK
-  (x: Contravariant); // OK
+  x as Invariant; // ERROR
+  x as Covariant; // OK
+  x as Contravariant; // OK
 }
 {
   declare const x: interface {[Keys]: number};
-  (x: Invariant); // ERROR
-  (x: Covariant); // OK
-  (x: Contravariant); // OK
+  x as Invariant; // ERROR
+  x as Covariant; // OK
+  x as Contravariant; // OK
 }
 
 {
   declare const x: {[Keys]: number | string};
-  (x: interface {[Keys]: number}); // ERROR
-  (x: interface {+[Keys]: number}); // ERROR
-  (x: interface {-[Keys]: number}); // OK
+  x as interface {[Keys]: number}; // ERROR
+  x as interface {+[Keys]: number}; // ERROR
+  x as interface {-[Keys]: number}; // OK
 }
 {
   declare const x: interface {[Keys]: number | string};
-  (x: interface {[Keys]: number}); // ERROR
-  (x: interface {+[Keys]: number}); // ERROR
-  (x: interface {-[Keys]: number}); // OK
+  x as interface {[Keys]: number}; // ERROR
+  x as interface {+[Keys]: number}; // ERROR
+  x as interface {-[Keys]: number}; // OK
 }
 
 // Extends
@@ -94,8 +94,8 @@ interface A extends NumIndexer {
 }
 {
   declare const x: A;
-  (x['foo']: string); // OK
-  (x[1]: boolean); // OK
+  x['foo'] as string; // OK
+  x[1] as boolean; // OK
   x[1] = true; // OK
 }
 
@@ -107,8 +107,8 @@ interface B extends StrIndexer {
 }
 {
   declare const x: B;
-  (x['foo']: string); // OK
-  (x['bar']: boolean); // OK
+  x['foo'] as string; // OK
+  x['bar'] as boolean; // OK
   x['bar'] = true; // OK
 }
 
@@ -120,8 +120,8 @@ interface C extends Super {
 }
 {
   declare const x: C;
-  (x.bar: string); // OK
-  (x['bar']: string); // OK
+  x.bar as string; // OK
+  x['bar'] as string; // OK
 }
 interface SuperWithMethod {
   bar: string;
@@ -132,20 +132,20 @@ interface D extends SuperWithMethod {
 }
 {
   declare const x: D;
-  (x.bar: string); // OK
-  (x['bar']: string); // OK
-  (x['bar']: empty); // ERROR
-  (x['xxx']: () => number); // OK
+  x.bar as string; // OK
+  x['bar'] as string; // OK
+  x['bar'] as empty; // ERROR
+  x['xxx'] as () => number; // OK
 
   (x['bar'] = "foo"); // OK
   (x.bar = "foo"); // OK
 
   x.foo(); // OK
   x['foo'](); // OK
-  (x['foo']: empty); // ERROR
+  x['foo'] as empty; // ERROR
 
-  (x['xxx'](): number); // OK
-  (x['xxx']: empty); // ERROR
+  x['xxx']() as number; // OK
+  x['xxx'] as empty; // ERROR
 }
 
 // Methods
@@ -157,7 +157,7 @@ interface M {
   declare const x: M;
   x.foo(); // OK
   x['foo'](); // OK
-  (x['xxx']: boolean); // OK
+  x['xxx'] as boolean; // OK
 }
 interface M2 extends M {
   bar(): boolean;
@@ -179,5 +179,5 @@ interface M2 extends M {
   x[true]; // ERROR
 
   declare const y: {+a: number};
-  (y: $ReadOnly<interface {[string]: number}>); // OK
+  y as $ReadOnly<interface {[string]: number}>; // OK
 }

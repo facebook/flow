@@ -1,26 +1,26 @@
-Error ---------------------------------------------------------------------------------------------------- import.js:4:2
+Error ---------------------------------------------------------------------------------------------------- import.js:4:1
 
 Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
-   import.js:4:2
-   4| (1: ObjFoo); // Error
-       ^ [1]
+   import.js:4:1
+   4| 1 as ObjFoo; // Error
+      ^ [1]
 
 References:
-   import.js:4:5
-   4| (1: ObjFoo); // Error
-          ^^^^^^ [2]
+   import.js:4:6
+   4| 1 as ObjFoo; // Error
+           ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:10:2
+Error --------------------------------------------------------------------------------------------------- import.js:10:1
 
 Cannot cast `1` to `B` because: [incompatible-type]
  - Either number [1] is incompatible with boolean [2].
  - Or number [1] is incompatible with undefined [3].
 
-   import.js:10:2
-   10| (1: B); // Error
-        ^ [1]
+   import.js:10:1
+   10| 1 as B; // Error
+       ^ [1]
 
 References:
    optional_export.js:2:6
@@ -31,15 +31,15 @@ References:
                        ^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:14:2
+Error --------------------------------------------------------------------------------------------------- import.js:14:1
 
 Cannot cast `true` to `N` because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   import.js:14:2
-   14| (true: N); // Error
-        ^^^^ [1]
+   import.js:14:1
+   14| true as N; // Error
+       ^^^^ [1]
 
 References:
    optional_export.js:4:9
@@ -50,15 +50,15 @@ References:
                        ^^^^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:18:2
+Error --------------------------------------------------------------------------------------------------- import.js:18:1
 
 Cannot cast `true` to `S` because: [incompatible-type]
  - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   import.js:18:2
-   18| (true: S); // Error
-        ^^^^ [1]
+   import.js:18:1
+   18| true as S; // Error
+       ^^^^ [1]
 
 References:
    optional_export.js:7:9
@@ -69,14 +69,14 @@ References:
                        ^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:8:18
+Error ------------------------------------------------------------------------------------------------- optional.js:8:19
 
 Cannot access string literal `xxx` on indexed access because property `xxx` is missing in object type [1].
 [prop-missing]
 
-   optional.js:8:18
-   8| (1: Obj['foo']?.['xxx']); // Error - wrong prop
-                       ^^^^^
+   optional.js:8:19
+   8| 1 as Obj['foo']?.['xxx']; // Error - wrong prop
+                        ^^^^^
 
 References:
    optional.js:2:9
@@ -102,15 +102,15 @@ References:
                 ^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:15:2
+Error ------------------------------------------------------------------------------------------------- optional.js:15:1
 
 Cannot cast `true` to `T` because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:15:2
-   15| (true: T); // Error - wrong type
-        ^^^^ [1]
+   optional.js:15:1
+   15| true as T; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:3:10
@@ -121,59 +121,59 @@ References:
                 ^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:20:12
+Error ------------------------------------------------------------------------------------------------ optional.js:20:13
 
 Cannot access string literal `b` on indexed access because property `b` is missing in null or undefined [1].
 [incompatible-use]
 
-   optional.js:20:12
-   20| (1: Y["a"]["b"]?.["c"]); // Error - access `b` on undefined
-                  ^^^
+   optional.js:20:13
+   20| 1 as Y["a"]["b"]?.["c"]; // Error - access `b` on undefined
+                   ^^^
 
 References:
-   optional.js:20:5
-   20| (1: Y["a"]["b"]?.["c"]); // Error - access `b` on undefined
-           ^^^^^^ [1]
+   optional.js:20:6
+   20| 1 as Y["a"]["b"]?.["c"]; // Error - access `b` on undefined
+            ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:21:23
+Error ------------------------------------------------------------------------------------------------ optional.js:21:24
 
 Cannot access string literal `c` on optional indexed access because property `c` is missing in null or undefined [1].
 [incompatible-use]
 
-   optional.js:21:23
-   21| (1: Y["a"]?.["opt_b"]["c"]); // Error - access `c` on undefined
-                             ^^^
+   optional.js:21:24
+   21| 1 as Y["a"]?.["opt_b"]["c"]; // Error - access `c` on undefined
+                              ^^^
 
 References:
-   optional.js:21:5
-   21| (1: Y["a"]?.["opt_b"]["c"]); // Error - access `c` on undefined
-           ^^^^^^^^^^^^^^^^^ [1]
+   optional.js:21:6
+   21| 1 as Y["a"]?.["opt_b"]["c"]; // Error - access `c` on undefined
+            ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:22:21
+Error ------------------------------------------------------------------------------------------------ optional.js:22:22
 
 Cannot access string literal `c` on optional indexed access because property `c` is missing in undefined [1].
 [incompatible-use]
 
-   optional.js:22:21
-   22| (1: (Y["a"]?.["b"])["c"]); // Error - access `c` on undefined
-                           ^^^
+   optional.js:22:22
+   22| 1 as (Y["a"]?.["b"])["c"]; // Error - access `c` on undefined
+                            ^^^
 
 References:
-   optional.js:22:6
-   22| (1: (Y["a"]?.["b"])["c"]); // Error - access `c` on undefined
-            ^^^^^^ [1]
+   optional.js:22:7
+   22| 1 as (Y["a"]?.["b"])["c"]; // Error - access `c` on undefined
+             ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:23:14
+Error ------------------------------------------------------------------------------------------------ optional.js:23:15
 
 Cannot access string literal `xxx` on indexed access because property `xxx` is missing in object type [1].
 [prop-missing]
 
-   optional.js:23:14
-   23| (1: Y["a"]?.["xxx"]); // Error - non-existent prop
-                    ^^^^^
+   optional.js:23:15
+   23| 1 as Y["a"]?.["xxx"]; // Error - non-existent prop
+                     ^^^^^
 
 References:
    optional.js:18:16
@@ -181,258 +181,258 @@ References:
                       ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:24:2
+Error ------------------------------------------------------------------------------------------------- optional.js:24:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:24:2
-   24| (true: Z?.['c']); // Error - wrong type
-        ^^^^ [1]
+   optional.js:24:1
+   24| true as Z?.['c']; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional.js:24:8
-   24| (true: Z?.['c']); // Error - wrong type
-              ^ [3]
+   optional.js:24:9
+   24| true as Z?.['c']; // Error - wrong type
+               ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:28:2
+Error ------------------------------------------------------------------------------------------------- optional.js:28:1
 
 Cannot cast `true` to indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:28:2
-   28| (true: Y["a"]?.["b"]["c"]); // Error - wrong type
-        ^^^^ [1]
+   optional.js:28:1
+   28| true as Y["a"]?.["b"]["c"]; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional.js:28:8
-   28| (true: Y["a"]?.["b"]["c"]); // Error - wrong type
-              ^^^^^^^^^^^^^ [3]
+   optional.js:28:9
+   28| true as Y["a"]?.["b"]["c"]; // Error - wrong type
+               ^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:32:2
+Error ------------------------------------------------------------------------------------------------- optional.js:32:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:32:2
-   32| (true: Y["a"]?.["b"]?.["c"]); // Error - wrong type
-        ^^^^ [1]
+   optional.js:32:1
+   32| true as Y["a"]?.["b"]?.["c"]; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional.js:32:8
-   32| (true: Y["a"]?.["b"]?.["c"]); // Error - wrong type
-              ^^^^^^^^^^^^^ [3]
+   optional.js:32:9
+   32| true as Y["a"]?.["b"]?.["c"]; // Error - wrong type
+               ^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:36:2
+Error ------------------------------------------------------------------------------------------------- optional.js:36:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:36:2
-   36| (true: Y["a"]?.["opt_b"]?.["c"]); // Error - wrong type
-        ^^^^ [1]
+   optional.js:36:1
+   36| true as Y["a"]?.["opt_b"]?.["c"]; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional.js:36:8
-   36| (true: Y["a"]?.["opt_b"]?.["c"]); // Error - wrong type
-              ^^^^^^^^^^^^^^^^^ [3]
+   optional.js:36:9
+   36| true as Y["a"]?.["opt_b"]?.["c"]; // Error - wrong type
+               ^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:39:2
+Error ------------------------------------------------------------------------------------------------- optional.js:39:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:39:2
-   39| (true: Z?.['c']); // Error - wrong type
-        ^^^^ [1]
+   optional.js:39:1
+   39| true as Z?.['c']; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional.js:39:8
-   39| (true: Z?.['c']); // Error - wrong type
-              ^ [3]
+   optional.js:39:9
+   39| true as Z?.['c']; // Error - wrong type
+               ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:46:2
+Error ------------------------------------------------------------------------------------------------- optional.js:46:1
 
 Cannot cast `true` to indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:46:2
-   46| (true: U["a"]?.["b"]["c"]); // Error - wrong type
-        ^^^^ [1]
+   optional.js:46:1
+   46| true as U["a"]?.["b"]["c"]; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional.js:46:8
-   46| (true: U["a"]?.["b"]["c"]); // Error - wrong type
-              ^^^^^^^^^^^^^ [3]
+   optional.js:46:9
+   46| true as U["a"]?.["b"]["c"]; // Error - wrong type
+               ^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:50:2
+Error ------------------------------------------------------------------------------------------------- optional.js:50:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:50:2
-   50| (true: U["a"]?.["b"]?.["c"]); // Error - wrong type
-        ^^^^ [1]
+   optional.js:50:1
+   50| true as U["a"]?.["b"]?.["c"]; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional.js:50:8
-   50| (true: U["a"]?.["b"]?.["c"]); // Error - wrong type
-              ^^^^^^^^^^^^^ [3]
+   optional.js:50:9
+   50| true as U["a"]?.["b"]?.["c"]; // Error - wrong type
+               ^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:54:2
+Error ------------------------------------------------------------------------------------------------- optional.js:54:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:54:2
-   54| (true: U["a"]?.["opt_b"]?.["c"]); // Error - wrong type
-        ^^^^ [1]
+   optional.js:54:1
+   54| true as U["a"]?.["opt_b"]?.["c"]; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional.js:54:8
-   54| (true: U["a"]?.["opt_b"]?.["c"]); // Error - wrong type
-              ^^^^^^^^^^^^^^^^^ [3]
+   optional.js:54:9
+   54| true as U["a"]?.["opt_b"]?.["c"]; // Error - wrong type
+               ^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:59:2
+Error ------------------------------------------------------------------------------------------------- optional.js:59:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:59:2
-   59| (true: MaybeZ?.['c']); // Error - wrong type
-        ^^^^ [1]
+   optional.js:59:1
+   59| true as MaybeZ?.['c']; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional.js:59:8
-   59| (true: MaybeZ?.['c']); // Error - wrong type
-              ^^^^^^ [3]
+   optional.js:59:9
+   59| true as MaybeZ?.['c']; // Error - wrong type
+               ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:64:2
+Error ------------------------------------------------------------------------------------------------- optional.js:64:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional.js:64:2
-   64| (true: VoidZ?.['c']); // Error - wrong type
-        ^^^^ [1]
+   optional.js:64:1
+   64| true as VoidZ?.['c']; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional.js:64:8
-   64| (true: VoidZ?.['c']); // Error - wrong type
-              ^^^^^ [3]
+   optional.js:64:9
+   64| true as VoidZ?.['c']; // Error - wrong type
+               ^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:68:2
+Error ------------------------------------------------------------------------------------------------- optional.js:68:1
 
 Cannot cast `1` to optional indexed access because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   optional.js:68:2
-   68| (1: void?.['c']); // Error
-        ^ [1]
+   optional.js:68:1
+   68| 1 as void?.['c']; // Error
+       ^ [1]
 
 References:
-   optional.js:68:5
-   68| (1: void?.['c']); // Error
-           ^^^^ [2]
+   optional.js:68:6
+   68| 1 as void?.['c']; // Error
+            ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:71:2
+Error ------------------------------------------------------------------------------------------------- optional.js:71:1
 
 Cannot cast `1` to optional indexed access because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   optional.js:71:2
-   71| (1: empty?.['x']); // Error
-        ^ [1]
+   optional.js:71:1
+   71| 1 as empty?.['x']; // Error
+       ^ [1]
 
 References:
-   optional.js:71:5
-   71| (1: empty?.['x']); // Error
-           ^^^^^ [2]
+   optional.js:71:6
+   71| 1 as empty?.['x']; // Error
+            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:79:2
+Error ------------------------------------------------------------------------------------------------- optional.js:79:1
 
 Cannot cast `f(...)` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
 [incompatible-type]
 
-   optional.js:79:2
-   79| (f(z, 'c'): true); // Error - wrong type
-        ^^^^^^^^^
+   optional.js:79:1
+   79| f(z, 'c') as true; // Error - wrong type
+       ^^^^^^^^^
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [1]
-   optional.js:79:13
-   79| (f(z, 'c'): true); // Error - wrong type
-                   ^^^^ [2]
+   optional.js:79:14
+   79| f(z, 'c') as true; // Error - wrong type
+                    ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:79:2
+Error ------------------------------------------------------------------------------------------------- optional.js:79:1
 
 Cannot cast `f(...)` to boolean literal `true` because undefined [1] is incompatible with boolean literal `true` [2].
 [incompatible-type]
 
-   optional.js:79:2
-   79| (f(z, 'c'): true); // Error - wrong type
-        ^^^^^^^^^
+   optional.js:79:1
+   79| f(z, 'c') as true; // Error - wrong type
+       ^^^^^^^^^
 
 References:
    optional.js:73:55
    73| function f<K: string, T: ?{+[K]: mixed}>(t: T, k: K): T?.[K] {
                                                              ^ [1]
-   optional.js:79:13
-   79| (f(z, 'c'): true); // Error - wrong type
-                   ^^^^ [2]
+   optional.js:79:14
+   79| f(z, 'c') as true; // Error - wrong type
+                    ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:80:6
@@ -449,40 +449,40 @@ References:
                       ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:84:2
+Error ------------------------------------------------------------------------------------------------- optional.js:84:1
 
 Cannot cast `f(...)` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
 [incompatible-type]
 
-   optional.js:84:2
-   84| (f(mz, 'c'): true); // Error - wrong type
-        ^^^^^^^^^^
+   optional.js:84:1
+   84| f(mz, 'c') as true; // Error - wrong type
+       ^^^^^^^^^^
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [1]
-   optional.js:84:14
-   84| (f(mz, 'c'): true); // Error - wrong type
-                    ^^^^ [2]
+   optional.js:84:15
+   84| f(mz, 'c') as true; // Error - wrong type
+                     ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:84:2
+Error ------------------------------------------------------------------------------------------------- optional.js:84:1
 
 Cannot cast `f(...)` to boolean literal `true` because undefined [1] is incompatible with boolean literal `true` [2].
 [incompatible-type]
 
-   optional.js:84:2
-   84| (f(mz, 'c'): true); // Error - wrong type
-        ^^^^^^^^^^
+   optional.js:84:1
+   84| f(mz, 'c') as true; // Error - wrong type
+       ^^^^^^^^^^
 
 References:
    optional.js:73:55
    73| function f<K: string, T: ?{+[K]: mixed}>(t: T, k: K): T?.[K] {
                                                              ^ [1]
-   optional.js:84:14
-   84| (f(mz, 'c'): true); // Error - wrong type
-                    ^^^^ [2]
+   optional.js:84:15
+   84| f(mz, 'c') as true; // Error - wrong type
+                     ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:85:7
@@ -499,15 +499,15 @@ References:
                        ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:88:2
+Error ------------------------------------------------------------------------------------------------- optional.js:88:1
 
 Cannot cast `'s'` to `Before` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or string [1] is incompatible with undefined [3].
 
-   optional.js:88:2
-   88| ('s': Before); // Error
-        ^^^ [1]
+   optional.js:88:1
+   88| 's' as Before; // Error
+       ^^^ [1]
 
 References:
    optional.js:91:19
@@ -518,140 +518,140 @@ References:
                      ^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:103:2
+Error ------------------------------------------------------------------------------------------------ optional.js:103:1
 
 Cannot cast `'xx'` to optional indexed access because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or string [1] is incompatible with undefined [3].
 
-   optional.js:103:2
-   103| ('xx': O?.['bar']); // Error
-         ^^^^ [1]
+   optional.js:103:1
+   103| 'xx' as O?.['bar']; // Error
+        ^^^^ [1]
 
 References:
    optional.js:96:8
     96|   bar: number;
                ^^^^^^ [2]
-   optional.js:103:8
-   103| ('xx': O?.['bar']); // Error
-               ^ [3]
+   optional.js:103:9
+   103| 'xx' as O?.['bar']; // Error
+                ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:117:2
+Error ------------------------------------------------------------------------------------------------ optional.js:117:1
 
 Cannot cast `'xx'` to optional indexed access because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or string [1] is incompatible with undefined [3].
 
-   optional.js:117:2
-   117| ('xx': C?.['bar']); // Error
-         ^^^^ [1]
+   optional.js:117:1
+   117| 'xx' as C?.['bar']; // Error
+        ^^^^ [1]
 
 References:
    optional.js:109:8
    109|   bar: number;
                ^^^^^^ [2]
-   optional.js:117:8
-   117| ('xx': C?.['bar']); // Error
-               ^ [3]
+   optional.js:117:9
+   117| 'xx' as C?.['bar']; // Error
+                ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:122:2
+Error ------------------------------------------------------------------------------------------------ optional.js:122:1
 
 Cannot cast `true` to `NonMaybeNumber` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
-   optional.js:122:2
-   122| (true: NonMaybeNumber); // Error
-         ^^^^ [1]
+   optional.js:122:1
+   122| true as NonMaybeNumber; // Error
+        ^^^^ [1]
 
 References:
-   optional.js:122:8
-   122| (true: NonMaybeNumber); // Error
-               ^^^^^^^^^^^^^^ [2]
+   optional.js:122:9
+   122| true as NonMaybeNumber; // Error
+                ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:123:2
+Error ------------------------------------------------------------------------------------------------ optional.js:123:1
 
 Cannot cast `undefined` to `NonMaybeNumber` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   optional.js:123:2
-   123| (undefined: NonMaybeNumber); // Error
-         ^^^^^^^^^ [1]
+   optional.js:123:1
+   123| undefined as NonMaybeNumber; // Error
+        ^^^^^^^^^ [1]
 
 References:
-   optional.js:123:13
-   123| (undefined: NonMaybeNumber); // Error
-                    ^^^^^^^^^^^^^^ [2]
+   optional.js:123:14
+   123| undefined as NonMaybeNumber; // Error
+                     ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- optional_import.js:5:2
+Error ------------------------------------------------------------------------------------------- optional_import.js:5:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
-   optional_import.js:5:2
-    5| (true: MaybeZ?.['c']); // Error - wrong type
-        ^^^^ [1]
+   optional_import.js:5:1
+    5| true as MaybeZ?.['c']; // Error - wrong type
+       ^^^^ [1]
 
 References:
    optional.js:17:15
    17| type Z = {|c: number|};
                      ^^^^^^ [2]
-   optional_import.js:5:8
-    5| (true: MaybeZ?.['c']); // Error - wrong type
-              ^^^^^^ [3]
+   optional_import.js:5:9
+    5| true as MaybeZ?.['c']; // Error - wrong type
+               ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:5:2
+Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
 Cannot cast `'hello world'` to `ArrElem` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:5:2
-   5| ('hello world': ArrElem); // Error
-       ^^^^^^^^^^^^^ [1]
+   test.js:5:1
+   5| 'hello world' as ArrElem; // Error
+      ^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:5:17
-   5| ('hello world': ArrElem); // Error
-                      ^^^^^^^ [2]
+   test.js:5:18
+   5| 'hello world' as ArrElem; // Error
+                       ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:16:2
+Error ----------------------------------------------------------------------------------------------------- test.js:16:1
 
 Cannot cast `'hello world'` to `DictElem` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:16:2
-   16| ('hello world': DictElem); // Error
-        ^^^^^^^^^^^^^ [1]
+   test.js:16:1
+   16| 'hello world' as DictElem; // Error
+       ^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:16:17
-   16| ('hello world': DictElem); // Error
-                       ^^^^^^^^ [2]
+   test.js:16:18
+   16| 'hello world' as DictElem; // Error
+                        ^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:31:2
+Error ----------------------------------------------------------------------------------------------------- test.js:31:1
 
 Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
-   test.js:31:2
-   31| (1: ObjFoo); // Error
-        ^ [1]
+   test.js:31:1
+   31| 1 as ObjFoo; // Error
+       ^ [1]
 
 References:
-   test.js:31:5
-   31| (1: ObjFoo); // Error
-           ^^^^^^ [2]
+   test.js:31:6
+   31| 1 as ObjFoo; // Error
+            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:34:2
+Error ----------------------------------------------------------------------------------------------------- test.js:34:1
 
 Cannot cast `1` to indexed access because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:34:2
-   34| (1: Obj['baz']); // Error
-        ^ [1]
+   test.js:34:1
+   34| 1 as Obj['baz']; // Error
+       ^ [1]
 
 References:
    test.js:25:8
@@ -659,21 +659,21 @@ References:
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:42:2
+Error ----------------------------------------------------------------------------------------------------- test.js:42:1
 
 Cannot cast `f(...)` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:42:2
-   42| (f(o): string); // Error
-        ^^^^
+   test.js:42:1
+   42| f(o) as string; // Error
+       ^^^^
 
 References:
    test.js:24:8
    24|   foo: boolean,
               ^^^^^^^ [1]
-   test.js:42:8
-   42| (f(o): string); // Error
-              ^^^^^^ [2]
+   test.js:42:9
+   42| f(o) as string; // Error
+               ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:44:25
@@ -712,41 +712,41 @@ Cannot access boolean on `Arr` because boolean [1] is not an array index. [incom
                                  ^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:53:10
+Error ---------------------------------------------------------------------------------------------------- test.js:53:11
 
 Cannot access string literal `x` on undefined because property `x` is missing in undefined [1]. [incompatible-use]
 
-   test.js:53:10
-   53| (1: void['x']); // Error
-                ^^^
+   test.js:53:11
+   53| 1 as void['x']; // Error
+                 ^^^
 
 References:
-   test.js:53:5
-   53| (1: void['x']); // Error
-           ^^^^ [1]
+   test.js:53:6
+   53| 1 as void['x']; // Error
+            ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:54:10
+Error ---------------------------------------------------------------------------------------------------- test.js:54:11
 
 Cannot access string literal `x` on null because property `x` is missing in null [1]. [incompatible-use]
 
-   test.js:54:10
-   54| (1: null['x']); // Error
-                ^^^
+   test.js:54:11
+   54| 1 as null['x']; // Error
+                 ^^^
 
 References:
-   test.js:54:5
-   54| (1: null['x']); // Error
-           ^^^^ [1]
+   test.js:54:6
+   54| 1 as null['x']; // Error
+            ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:65:2
+Error ----------------------------------------------------------------------------------------------------- test.js:65:1
 
 Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:65:2
-   65| ('xx': O['bar']); // Error
-        ^^^^ [1]
+   test.js:65:1
+   65| 'xx' as O['bar']; // Error
+       ^^^^ [1]
 
 References:
    test.js:60:8
@@ -754,13 +754,13 @@ References:
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:74:2
+Error ----------------------------------------------------------------------------------------------------- test.js:74:1
 
 Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:74:2
-   74| ('xx': C['bar']); // Error
-        ^^^^ [1]
+   test.js:74:1
+   74| 'xx' as C['bar']; // Error
+       ^^^^ [1]
 
 References:
    test.js:69:8
@@ -768,13 +768,13 @@ References:
               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:83:2
+Error ----------------------------------------------------------------------------------------------------- test.js:83:1
 
 Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:83:2
-   83| ('xx': I['bar']); // ERROR
-        ^^^^ [1]
+   test.js:83:1
+   83| 'xx' as I['bar']; // ERROR
+       ^^^^ [1]
 
 References:
    test.js:78:8
@@ -814,38 +814,38 @@ References:
                   ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- unions.js:7:2
+Error ---------------------------------------------------------------------------------------------------- unions.js:7:1
 
 Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   unions.js:7:2
-   7| (v: string); // error
-       ^
+   unions.js:7:1
+   7| v as string; // error
+      ^
 
 References:
    unions.js:2:6
    2|   a: number,
            ^^^^^^ [1]
-   unions.js:7:5
-   7| (v: string); // error
-          ^^^^^^ [2]
+   unions.js:7:6
+   7| v as string; // error
+           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- unions.js:8:2
+Error ---------------------------------------------------------------------------------------------------- unions.js:8:1
 
 Cannot cast `v` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   unions.js:8:2
-   8| (v: number); // error
-       ^
+   unions.js:8:1
+   8| v as number; // error
+      ^
 
 References:
    unions.js:3:6
    3|   b: string,
            ^^^^^^ [1]
-   unions.js:8:5
-   8| (v: number); // error
-          ^^^^^^ [2]
+   unions.js:8:6
+   8| v as number; // error
+           ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- unions.js:13:5
@@ -867,13 +867,13 @@ References:
             ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- unions.js:21:2
+Error --------------------------------------------------------------------------------------------------- unions.js:21:1
 
 Cannot cast `w` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
 
-   unions.js:21:2
-   21| (w: M['a']); // error
-        ^
+   unions.js:21:1
+   21| w as M['a']; // error
+       ^
 
 References:
    unions.js:19:16

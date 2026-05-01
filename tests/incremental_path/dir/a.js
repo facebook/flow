@@ -1,2 +1,2 @@
 // @flow
-(require('b'): boolean);
+require('b') as boolean;

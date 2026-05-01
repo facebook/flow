@@ -5,89 +5,89 @@ type Obj = {|
 |};
 
 
-(1: Obj['foo']?.['xxx']); // Error - wrong prop
+1 as Obj['foo']?.['xxx']; // Error - wrong prop
 
 type X = Obj['foo']['bar']; // Error - access `bar` on undefined
-(1: X);
+1 as X;
 
 type T = Obj['foo']?.['bar'];
-(1: T); // OK
-(true: T); // Error - wrong type
+1 as T; // OK
+true as T; // Error - wrong type
 
 type Z = {|c: number|};
 type Y = {|a: ?{|b: Z, opt_b: ?Z|}|};
 
-(1: Y["a"]["b"]?.["c"]); // Error - access `b` on undefined
-(1: Y["a"]?.["opt_b"]["c"]); // Error - access `c` on undefined
-(1: (Y["a"]?.["b"])["c"]); // Error - access `c` on undefined
-(1: Y["a"]?.["xxx"]); // Error - non-existent prop
-(true: Z?.['c']); // Error - wrong type
+1 as Y["a"]["b"]?.["c"]; // Error - access `b` on undefined
+1 as Y["a"]?.["opt_b"]["c"]; // Error - access `c` on undefined
+1 as (Y["a"]?.["b"])["c"]; // Error - access `c` on undefined
+1 as Y["a"]?.["xxx"]; // Error - non-existent prop
+true as Z?.['c']; // Error - wrong type
 
-(1: Y["a"]?.["b"]["c"]); // OK
-(undefined: Y["a"]?.["b"]["c"]); // OK
-(true: Y["a"]?.["b"]["c"]); // Error - wrong type
+1 as Y["a"]?.["b"]["c"]; // OK
+undefined as Y["a"]?.["b"]["c"]; // OK
+true as Y["a"]?.["b"]["c"]; // Error - wrong type
 
-(1: Y["a"]?.["b"]?.["c"]); // OK
-(undefined: Y["a"]?.["b"]?.["c"]); // OK
-(true: Y["a"]?.["b"]?.["c"]); // Error - wrong type
+1 as Y["a"]?.["b"]?.["c"]; // OK
+undefined as Y["a"]?.["b"]?.["c"]; // OK
+true as Y["a"]?.["b"]?.["c"]; // Error - wrong type
 
-(1: Y["a"]?.["opt_b"]?.["c"]); // OK
-(undefined: Y["a"]?.["opt_b"]?.["c"]); // OK
-(true: Y["a"]?.["opt_b"]?.["c"]); // Error - wrong type
+1 as Y["a"]?.["opt_b"]?.["c"]; // OK
+undefined as Y["a"]?.["opt_b"]?.["c"]; // OK
+true as Y["a"]?.["opt_b"]?.["c"]; // Error - wrong type
 
-(1: Z?.['c']); // OK
-(true: Z?.['c']); // Error - wrong type
-(undefined: Z?.['c']); // OK - this behaviour does not match optional chaining at the value level, if in the future this changes to be an error that would be fine
+1 as Z?.['c']; // OK
+true as Z?.['c']; // Error - wrong type
+undefined as Z?.['c']; // OK - this behaviour does not match optional chaining at the value level, if in the future this changes to be an error that would be fine
 
 type U = {|a: void | {|b: Z, opt_b: null | Z|}|};
 
-(1: U["a"]?.["b"]["c"]); // OK
-(undefined: U["a"]?.["b"]["c"]); // OK
-(true: U["a"]?.["b"]["c"]); // Error - wrong type
+1 as U["a"]?.["b"]["c"]; // OK
+undefined as U["a"]?.["b"]["c"]; // OK
+true as U["a"]?.["b"]["c"]; // Error - wrong type
 
-(1: U["a"]?.["b"]?.["c"]); // OK
-(undefined: U["a"]?.["b"]?.["c"]); // OK
-(true: U["a"]?.["b"]?.["c"]); // Error - wrong type
+1 as U["a"]?.["b"]?.["c"]; // OK
+undefined as U["a"]?.["b"]?.["c"]; // OK
+true as U["a"]?.["b"]?.["c"]; // Error - wrong type
 
-(1: U["a"]?.["opt_b"]?.["c"]); // OK
-(undefined: U["a"]?.["opt_b"]?.["c"]); // OK
-(true: U["a"]?.["opt_b"]?.["c"]); // Error - wrong type
+1 as U["a"]?.["opt_b"]?.["c"]; // OK
+undefined as U["a"]?.["opt_b"]?.["c"]; // OK
+true as U["a"]?.["opt_b"]?.["c"]; // Error - wrong type
 
 export type MaybeZ = ?Z;
-(1: MaybeZ?.['c']); // OK
-(undefined: MaybeZ?.['c']); // OK
-(true: MaybeZ?.['c']); // Error - wrong type
+1 as MaybeZ?.['c']; // OK
+undefined as MaybeZ?.['c']; // OK
+true as MaybeZ?.['c']; // Error - wrong type
 
 type VoidZ = void | Z;
-(1: VoidZ?.['c']); // OK
-(undefined: VoidZ?.['c']); // OK
-(true: VoidZ?.['c']); // Error - wrong type
+1 as VoidZ?.['c']; // OK
+undefined as VoidZ?.['c']; // OK
+true as VoidZ?.['c']; // Error - wrong type
 
-(undefined: null?.['c']); // OK
-(undefined: void?.['c']); // OK
-(1: void?.['c']); // Error
+undefined as null?.['c']; // OK
+undefined as void?.['c']; // OK
+1 as void?.['c']; // Error
 
-(undefined: empty?.['x']); // OK
-(1: empty?.['x']); // Error
+undefined as empty?.['x']; // OK
+1 as empty?.['x']; // Error
 
 function f<K: string, T: ?{+[K]: mixed}>(t: T, k: K): T?.[K] {
   return t?.[k];
 }
 
 declare var z: Z;
-(f(z, 'c'): number | void); // OK
-(f(z, 'c'): true); // Error - wrong type
+f(z, 'c') as number | void; // OK
+f(z, 'c') as true; // Error - wrong type
 f(z, 'xxx'); // Error - non-existent prop
 
 declare var mz: MaybeZ;
-(f(mz, 'c'): number | void); // OK
-(f(mz, 'c'): true); // Error - wrong type
+f(mz, 'c') as number | void; // OK
+f(mz, 'c') as true; // Error - wrong type
 f(mz, 'xxx'); // Error - non-existent prop
 
 type Before = Later?.['a'];
-('s': Before); // Error
-(0: Before); // OK
-(undefined: Before); // OK
+'s' as Before; // Error
+0 as Before; // OK
+undefined as Before; // OK
 type Later = ?{a: number};
 
 type O = ?{
@@ -98,10 +98,10 @@ type O = ?{
     goop: number,
   },
 }
-(1: O?.['bar']); // OK
-(true: O?.[number]); // OK
-('xx': O?.['bar']); // Error
-(1: O?.['nested']['goop']); // OK
+1 as O?.['bar']; // OK
+true as O?.[number]; // OK
+'xx' as O?.['bar']; // Error
+1 as O?.['nested']['goop']; // OK
 
 declare class Cx {
   [number]: boolean;
@@ -112,12 +112,12 @@ declare class Cx {
   },
 }
 type C = ?Cx;
-(1: C?.['bar']); // OK
-(true: C?.[number]); // OK
-('xx': C?.['bar']); // Error
-(1: C?.['nested']['goop']); // OK
+1 as C?.['bar']; // OK
+true as C?.[number]; // OK
+'xx' as C?.['bar']; // Error
+1 as C?.['nested']['goop']; // OK
 
 type NonMaybeNumber = $NonMaybeType<Obj['foo']?.['bar']>;
-(1: NonMaybeNumber); // OK
-(true: NonMaybeNumber); // Error
-(undefined: NonMaybeNumber); // Error
+1 as NonMaybeNumber; // OK
+true as NonMaybeNumber; // Error
+undefined as NonMaybeNumber; // Error

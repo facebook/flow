@@ -2,4 +2,4 @@
 
 import {x} from './dependency';
 
-(x: number); // error
+x as number; // error

@@ -7,10 +7,10 @@ class P<X> {
 declare var a: any;
 
 if (a instanceof A) {
-    (a: empty); // error A ~> empty
+    a as empty; // error A ~> empty
 }
 if (a instanceof P) {
-    (a: empty); // error P ~> empty
-    (a.n: empty); // error number ~> empty
-    (a.x: empty); // ok X instantiated to any
+    a as empty; // error P ~> empty
+    a.n as empty; // error number ~> empty
+    a.x as empty; // ok X instantiated to any
 }

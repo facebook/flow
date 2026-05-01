@@ -162,14 +162,14 @@ References:
                                                        ^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- string.js:3:2
+Error ---------------------------------------------------------------------------------------------------- string.js:3:1
 
 Cannot cast `new String(...)` to `Iterable` because in property `@@iterator` > the return value > type argument
 `Yield` [1]: string [2] is incompatible with number [3]. [incompatible-type]
 
-   string.js:3:2
-      3| (new String("hi"): Iterable<number>); // Error - string is a Iterable<string>
-          ^^^^^^^^^^^^^^^^
+   string.js:3:1
+      3| new String("hi") as Iterable<number>; // Error - string is a Iterable<string>
+         ^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1880:30
@@ -178,9 +178,9 @@ References:
    <BUILTINS>/core.js:1298:28
    1298|     @@iterator(): Iterator<string>;
                                     ^^^^^^ [2]
-   string.js:3:29
-      3| (new String("hi"): Iterable<number>); // Error - string is a Iterable<string>
-                                     ^^^^^^ [3]
+   string.js:3:30
+      3| new String("hi") as Iterable<number>; // Error - string is a Iterable<string>
+                                      ^^^^^^ [3]
 
 
 

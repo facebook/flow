@@ -1,3 +1,3 @@
 // @flow
 
-(require('./dependency'): string);
+require('./dependency') as string;

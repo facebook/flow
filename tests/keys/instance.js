@@ -15,12 +15,12 @@ class B extends A {
 
 type T = keyof B;
 
-('bOne': T); // OK
-('bTwo': T); // OK
+'bOne' as T; // OK
+'bTwo' as T; // OK
 
-('missing': T); // Error
+'missing' as T; // Error
 
-('bMethod': T); // Error: methods are on proto
+'bMethod' as T; // Error: methods are on proto
 
-('aOne': T); // Error: non-own field
-('aMethod': T); // Error: non-own field
+'aOne' as T; // Error: non-own field
+'aMethod' as T; // Error: non-own field

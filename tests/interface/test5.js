@@ -9,7 +9,7 @@ interface B {
 }
 
 declare var a: A;
-(a.x: empty); // error: function ~> empty
+a.x as empty; // error: function ~> empty
 
 declare var b: B;
-(b.x: empty); // error: number ~> empty
+b.x as empty; // error: number ~> empty

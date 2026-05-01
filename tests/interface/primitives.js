@@ -1,24 +1,24 @@
-(undefined: interface {}); // ERROR
-(null: interface {}); // ERROR
+undefined as interface {}; // ERROR
+null as interface {}; // ERROR
 
 {
-  (1: interface {}); // ERROR
+  1 as interface {}; // ERROR
   declare const x: number;
-  (x: interface {}); // ERROR
+  x as interface {}; // ERROR
 
-  (new Number(x): interface {toFixed(): string}); // OK
+  new Number(x) as interface {toFixed(): string}; // OK
 }
 
 {
-  (true: interface {}); // ERROR
+  true as interface {}; // ERROR
   declare const x: boolean;
-  (x: interface {}); // ERROR
+  x as interface {}; // ERROR
 
-  (new Boolean(x): interface {toString(): string}); // OK
+  new Boolean(x) as interface {toString(): string}; // OK
 }
 {
   declare const x: symbol;
-  (x: interface {}); // ERROR
+  x as interface {}; // ERROR
 
   // `new Symbol` is not allowed at runtime
 }

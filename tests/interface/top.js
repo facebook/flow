@@ -1,3 +1,3 @@
 declare var x: mixed;
 
-(x: interface {}); // ERROR
+x as interface {}; // ERROR

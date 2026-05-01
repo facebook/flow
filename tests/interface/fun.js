@@ -7,8 +7,8 @@ var f1: F = () => {}; // ok
 
 // function statics
 function f() {}
-(f: interface {}); // OK
-(f: interface {xxx: boolean}); // ERROR
+f as interface {}; // OK
+f as interface {xxx: boolean}; // ERROR
 
 class S {
   static build(): S {
@@ -17,5 +17,5 @@ class S {
 }
 
 const build = S.build;
-(build: interface {}); // OK
-(build: interface {foo: boolean}); // ERROR
+build as interface {}; // OK
+build as interface {foo: boolean}; // ERROR

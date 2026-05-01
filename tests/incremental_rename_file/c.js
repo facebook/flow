@@ -2,4 +2,4 @@
 
 import x from './b';
 
-(x: string);
+x as string;

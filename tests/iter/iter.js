@@ -8,7 +8,7 @@ for (const k in a) {
     foo(a[k]); // k is a string, which shouldn't be used for array access
 }
 
-var b = (null : ?{[key: string]: string});
+var b = null as ?{[key: string]: string};
 for (const j in b) {
     foo(b[j]);
 }

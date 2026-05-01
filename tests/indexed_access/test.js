@@ -1,8 +1,8 @@
 type Arr = Array<number>;
 type ArrElem = Arr[number];
 
-(42: ArrElem); // OK
-('hello world': ArrElem); // Error
+42 as ArrElem; // OK
+'hello world' as ArrElem; // Error
 
 function foo(a: Arr): Arr[number] {
   if (false) return a[0];
@@ -12,8 +12,8 @@ function foo(a: Arr): Arr[number] {
 type Dict = { [key: string]: number };
 type DictElem = Dict[string];
 
-(42: DictElem); // OK
-('hello world': DictElem); // Error
+42 as DictElem; // OK
+'hello world' as DictElem; // Error
 
 function bar(o: Dict): Dict[string] {
   if (false) return o['buz'];
@@ -27,31 +27,31 @@ type Obj = {
 };
 
 export type ObjFoo = Obj['foo'];
-(true: ObjFoo); // OK
-(1: ObjFoo); // Error
+true as ObjFoo; // OK
+1 as ObjFoo; // Error
 
-('hi': Obj['baz']); // OK
-(1: Obj['baz']); // Error
+'hi' as Obj['baz']; // OK
+1 as Obj['baz']; // Error
 
 function f<To: Obj>(o: To): To['foo'] {
   return o.foo;
 }
 declare var o: Obj;
-(f(o): boolean); // OK
-(f({foo: true, baz: 'hi', bort: 1}): boolean); // OK
-(f(o): string); // Error
+f(o) as boolean; // OK
+f({foo: true, baz: 'hi', bort: 1}) as boolean; // OK
+f(o) as string; // Error
 
 type Nonexistant1 = Obj['bork']; // Error
-(1: Nonexistant1);
+1 as Nonexistant1;
 
 type Nonexistant2 = Obj[string]; // Error
-(1: Nonexistant2);
+1 as Nonexistant2;
 
 type ArrNonexistant = Arr[boolean]; // Error
-(1: ArrNonexistant);
+1 as ArrNonexistant;
 
-(1: void['x']); // Error
-(1: null['x']); // Error
+1 as void['x']; // Error
+1 as null['x']; // Error
 
 type Bar = 'bar';
 
@@ -59,28 +59,28 @@ type O = {
   [number]: boolean;
   bar: number;
 }
-(1: O['bar']); // OK
-(1: O[Bar]); // OK
-(true: O[number]); // OK
-('xx': O['bar']); // Error
+1 as O['bar']; // OK
+1 as O[Bar]; // OK
+true as O[number]; // OK
+'xx' as O['bar']; // Error
 
 declare class C {
   [number]: boolean;
   bar: number;
 }
-(1: C['bar']); // OK
-(1: C[Bar]); // Should be ok, currently errors
-(true: C[number]); // OK
-('xx': C['bar']); // Error
+1 as C['bar']; // OK
+1 as C[Bar]; // Should be ok, currently errors
+true as C[number]; // OK
+'xx' as C['bar']; // Error
 
 interface I {
   [number]: boolean;
   bar: number;
 }
-(1: I['bar']); // OK
-(1: I[Bar]); // Should be ok, currently errors
-(true: I[number]); // OK
-('xx': I['bar']); // ERROR
+1 as I['bar']; // OK
+1 as I[Bar]; // Should be ok, currently errors
+true as I[number]; // OK
+'xx' as I['bar']; // ERROR
 
 interface M {
   method(): number;

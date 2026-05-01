@@ -1,4 +1,4 @@
 declare var a: Array<number>;
 
-(a: interface {pop(): number | void}); // OK
-(a: interface {pop(): boolean | void}); // ERROR
+a as interface {pop(): number | void}; // OK
+a as interface {pop(): boolean | void}; // ERROR

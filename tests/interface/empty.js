@@ -1,2 +1,2 @@
 declare const x: empty;
-(x: interface {}); // OK
+x as interface {}; // OK
