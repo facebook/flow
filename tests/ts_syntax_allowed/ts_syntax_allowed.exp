@@ -413,6 +413,38 @@ Cannot assign empty string to `readonly_array[0]` because read-only arrays canno
        ^^^^^^^^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------- readonly_type_precedence.js:14:3
+
+Cannot assign `'x'` to `f1[0]` because read-only arrays cannot be written to. [cannot-write]
+
+   14|   f1[0] = 'x'; // ERROR: not writable
+         ^^^^^
+
+
+Error --------------------------------------------------------------------------------- readonly_type_precedence.js:20:3
+
+Cannot assign `1` to `f5[0]` because tuple element at index `0` [1] is not writable. [cannot-write]
+
+   20|   f5[0] = 1; // ERROR: not writable
+         ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- readonly_type_precedence.js:25:1
+
+Cannot assign `'x'` to `f4[0]` because: [incompatible-use]
+ - Either read-only arrays cannot be written to.
+ - Or property `0` is missing in object type [1].
+
+   readonly_type_precedence.js:25:1
+   25| f4[0] = 'x'; // ERROR: not writable
+       ^^^^^
+
+References:
+   readonly_type_precedence.js:8:31
+    8| type F4 = readonly string[] & {length: number};
+                                     ^^^^^^^^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- tparam_bound.js:2:3
 
 Cannot call `f` because in type argument `T`: number [1] is incompatible with string [2]. [incompatible-type]
@@ -566,4 +598,4 @@ Cannot assign empty string to `exported_with_ts_typenames.e.foo` because propert
 
 
 
-Found 43 errors
+Found 46 errors

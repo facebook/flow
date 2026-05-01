@@ -872,7 +872,7 @@ fn primary(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                 let leading = peek::comments(env);
                 eat::token(env)?;
                 let trailing = eat::trailing_comments(env);
-                let argument = type_inner(env)?;
+                let argument = prefix(env)?;
                 Ok(types::ReadOnly {
                     argument,
                     comments: mk_comments_opt(Some(leading.into()), Some(trailing.into())),
