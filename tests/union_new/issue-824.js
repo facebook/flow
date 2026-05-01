@@ -17,4 +17,4 @@ export default class A {
 
 /* Simpler repro */
 declare var x: boolean & (number | string);
-(x: number | string);
+x as number | string;

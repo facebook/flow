@@ -1,52 +1,52 @@
-Error -------------------------------------------------------------------------------------------------- classes.js:15:2
+Error -------------------------------------------------------------------------------------------------- classes.js:15:1
 
 Cannot cast `b_number.p` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
 
-   classes.js:15:2
-   15| (b_number.p: boolean); // Error number ~> boolean
-        ^^^^^^^^^^
+   classes.js:15:1
+   15| b_number.p as boolean; // Error number ~> boolean
+       ^^^^^^^^^^
 
 References:
    classes.js:11:17
    11| var b_number: B<number> = new B(123);
                        ^^^^^^ [1]
-   classes.js:15:14
-   15| (b_number.p: boolean); // Error number ~> boolean
-                    ^^^^^^^ [2]
+   classes.js:15:15
+   15| b_number.p as boolean; // Error number ~> boolean
+                     ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:16:2
+Error -------------------------------------------------------------------------------------------------- classes.js:16:1
 
 Cannot cast `b_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
-   classes.js:16:2
-   16| (b_void.p: boolean); // Error void ~> boolean
-        ^^^^^^^^
+   classes.js:16:1
+   16| b_void.p as boolean; // Error void ~> boolean
+       ^^^^^^^^
 
 References:
    classes.js:12:15
    12| var b_void: B<void> = new B();
                      ^^^^ [1]
-   classes.js:16:12
-   16| (b_void.p: boolean); // Error void ~> boolean
-                  ^^^^^^^ [2]
+   classes.js:16:13
+   16| b_void.p as boolean; // Error void ~> boolean
+                   ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:17:2
+Error -------------------------------------------------------------------------------------------------- classes.js:17:1
 
 Cannot cast `b_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
-   classes.js:17:2
-   17| (b_default.p: boolean); // Error string ~> boolean
-        ^^^^^^^^^^^
+   classes.js:17:1
+   17| b_default.p as boolean; // Error string ~> boolean
+       ^^^^^^^^^^^
 
 References:
    classes.js:9:13
     9| class B<T = string> extends A<T> {}
                    ^^^^^^ [1]
-   classes.js:17:15
-   17| (b_default.p: boolean); // Error string ~> boolean
-                     ^^^^^^^ [2]
+   classes.js:17:16
+   17| b_default.p as boolean; // Error string ~> boolean
+                      ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:21:17
@@ -80,38 +80,38 @@ References:
                    ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:25:2
+Error -------------------------------------------------------------------------------------------------- classes.js:25:1
 
 Cannot cast `c_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
-   classes.js:25:2
-   25| (c_void.p: boolean); // Error void ~> boolean
-        ^^^^^^^^
+   classes.js:25:1
+   25| c_void.p as boolean; // Error void ~> boolean
+       ^^^^^^^^
 
 References:
    classes.js:22:15
    22| var c_void: C<void> = new C();
                      ^^^^ [1]
-   classes.js:25:12
-   25| (c_void.p: boolean); // Error void ~> boolean
-                  ^^^^^^^ [2]
+   classes.js:25:13
+   25| c_void.p as boolean; // Error void ~> boolean
+                   ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:26:2
+Error -------------------------------------------------------------------------------------------------- classes.js:26:1
 
 Cannot cast `c_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
-   classes.js:26:2
-   26| (c_default.p: boolean); // Error string ~> boolean
-        ^^^^^^^^^^^
+   classes.js:26:1
+   26| c_default.p as boolean; // Error string ~> boolean
+       ^^^^^^^^^^^
 
 References:
    classes.js:19:22
    19| class C<T: ?string = string> extends A<T> {}
                             ^^^^^^ [1]
-   classes.js:26:15
-   26| (c_default.p: boolean); // Error string ~> boolean
-                     ^^^^^^^ [2]
+   classes.js:26:16
+   26| c_default.p as boolean; // Error string ~> boolean
+                      ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:32:21
@@ -142,55 +142,55 @@ References:
               ^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:35:2
+Error -------------------------------------------------------------------------------------------------- classes.js:35:1
 
 Cannot cast `d_number.p` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
 
-   classes.js:35:2
-   35| (d_number.p: boolean); // Error number ~> boolean
-        ^^^^^^^^^^
+   classes.js:35:1
+   35| d_number.p as boolean; // Error number ~> boolean
+       ^^^^^^^^^^
 
 References:
    classes.js:29:24
    29| var d_number: D<mixed, number> = new D(123);
                               ^^^^^^ [1]
-   classes.js:35:14
-   35| (d_number.p: boolean); // Error number ~> boolean
-                    ^^^^^^^ [2]
+   classes.js:35:15
+   35| d_number.p as boolean; // Error number ~> boolean
+                     ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:36:2
+Error -------------------------------------------------------------------------------------------------- classes.js:36:1
 
 Cannot cast `d_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
-   classes.js:36:2
-   36| (d_void.p: boolean); // Error void ~> boolean
-        ^^^^^^^^
+   classes.js:36:1
+   36| d_void.p as boolean; // Error void ~> boolean
+       ^^^^^^^^
 
 References:
    classes.js:30:22
    30| var d_void: D<mixed, void> = new D();
                             ^^^^ [1]
-   classes.js:36:12
-   36| (d_void.p: boolean); // Error void ~> boolean
-                  ^^^^^^^ [2]
+   classes.js:36:13
+   36| d_void.p as boolean; // Error void ~> boolean
+                   ^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:37:2
+Error -------------------------------------------------------------------------------------------------- classes.js:37:1
 
 Cannot cast `d_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
-   classes.js:37:2
-   37| (d_default.p: boolean); // Error string ~> boolean
-        ^^^^^^^^^^^
+   classes.js:37:1
+   37| d_default.p as boolean; // Error string ~> boolean
+       ^^^^^^^^^^^
 
 References:
    classes.js:28:16
    28| class D<S, T = string> extends A<T> {}
                       ^^^^^^ [1]
-   classes.js:37:15
-   37| (d_default.p: boolean); // Error string ~> boolean
-                     ^^^^^^^ [2]
+   classes.js:37:16
+   37| d_default.p as boolean; // Error string ~> boolean
+                      ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:32
@@ -221,21 +221,21 @@ References:
                              ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:46:2
+Error -------------------------------------------------------------------------------------------------- classes.js:46:1
 
 Cannot cast `g_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
-   classes.js:46:2
-   46| (g_default.p: boolean); // Error string ~> boolean
-        ^^^^^^^^^^^
+   classes.js:46:1
+   46| g_default.p as boolean; // Error string ~> boolean
+       ^^^^^^^^^^^
 
 References:
    classes.js:44:18
    44| var g_default: G<string> = new G('hello');
                         ^^^^^^ [1]
-   classes.js:46:15
-   46| (g_default.p: boolean); // Error string ~> boolean
-                     ^^^^^^^ [2]
+   classes.js:46:16
+   46| g_default.p as boolean; // Error string ~> boolean
+                      ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:48:13

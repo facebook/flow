@@ -126,16 +126,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test17.js:7:1
-   7| ([]: Array<empty>).concat([0, 1])[1] as string;
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   7| ([] as Array<empty>).concat([0, 1])[1] as string;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test17.js:7:28
-   7| ([]: Array<empty>).concat([0, 1])[1] as string;
-                                 ^ [1]
-   test17.js:7:41
-   7| ([]: Array<empty>).concat([0, 1])[1] as string;
-                                              ^^^^^^ [2]
+   test17.js:7:30
+   7| ([] as Array<empty>).concat([0, 1])[1] as string;
+                                   ^ [1]
+   test17.js:7:43
+   7| ([] as Array<empty>).concat([0, 1])[1] as string;
+                                                ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:1
@@ -143,16 +143,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test17.js:7:1
-   7| ([]: Array<empty>).concat([0, 1])[1] as string;
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   7| ([] as Array<empty>).concat([0, 1])[1] as string;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test17.js:7:31
-   7| ([]: Array<empty>).concat([0, 1])[1] as string;
-                                    ^ [1]
-   test17.js:7:41
-   7| ([]: Array<empty>).concat([0, 1])[1] as string;
-                                              ^^^^^^ [2]
+   test17.js:7:33
+   7| ([] as Array<empty>).concat([0, 1])[1] as string;
+                                      ^ [1]
+   test17.js:7:43
+   7| ([] as Array<empty>).concat([0, 1])[1] as string;
+                                                ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test19.js:5:16

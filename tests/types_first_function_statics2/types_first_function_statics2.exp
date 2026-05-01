@@ -1,27 +1,27 @@
-Error --------------------------------------------------------------------------------------------------------- b.js:5:2
+Error --------------------------------------------------------------------------------------------------------- b.js:5:1
 
 Cannot cast `a.g` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   b.js:5:2
-   5| (a.g: number);
-       ^^^
+   b.js:5:1
+   5| a.g as number;
+      ^^^
 
 References:
    a.js:3:7
    3| f.g = "a";
             ^^^ [1]
-   b.js:5:7
-   5| (a.g: number);
-            ^^^^^^ [2]
+   b.js:5:8
+   5| a.g as number;
+             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- b.js:6:4
+Error --------------------------------------------------------------------------------------------------------- b.js:6:3
 
 Cannot get `a.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
-   b.js:6:4
-   6| (a.other: string);
-         ^^^^^
+   b.js:6:3
+   6| a.other as string;
+        ^^^^^
 
 References:
    a.js:1:11
@@ -29,30 +29,30 @@ References:
                 ^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:13:2
+Error -------------------------------------------------------------------------------------------------------- b.js:13:1
 
 Cannot cast `poly_a.g` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   b.js:13:2
-   13| (poly_a.g: number);
-        ^^^^^^^^
+   b.js:13:1
+   13| poly_a.g as number;
+       ^^^^^^^^
 
 References:
    poly_a.js:3:7
     3| f.g = "a";
              ^^^ [1]
-   b.js:13:12
-   13| (poly_a.g: number);
-                  ^^^^^^ [2]
+   b.js:13:13
+   13| poly_a.g as number;
+                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:14:9
+Error -------------------------------------------------------------------------------------------------------- b.js:14:8
 
 Cannot get `poly_a.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
-   b.js:14:9
-   14| (poly_a.other: string);
-               ^^^^^
+   b.js:14:8
+   14| poly_a.other as string;
+              ^^^^^
 
 References:
    poly_a.js:1:11

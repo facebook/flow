@@ -1,18 +1,18 @@
-Error ------------------------------------------------------------------------------------------ enum-filtering.js:16:17
+Error ------------------------------------------------------------------------------------------ enum-filtering.js:16:16
 
 Cannot cast `y.x` to empty because string literal `NONE` [1] is incompatible with empty [2]. [incompatible-type]
 
-   enum-filtering.js:16:17
-   16|       default: (y.x: empty); // We error here. Ideally we would not, so if you figure it out in the future with good perf, you can remove error from snapshot
-                       ^^^
+   enum-filtering.js:16:16
+   16|       default: y.x as empty; // We error here. Ideally we would not, so if you figure it out in the future with good perf, you can remove error from snapshot
+                      ^^^
 
 References:
    enum-filtering.js:2:53
     2| type Selection = { x: 'ONE' } | { x: 'TWO' } | { x: 'NONE' }
                                                            ^^^^^^ [1]
-   enum-filtering.js:16:22
-   16|       default: (y.x: empty); // We error here. Ideally we would not, so if you figure it out in the future with good perf, you can remove error from snapshot
-                            ^^^^^ [2]
+   enum-filtering.js:16:23
+   16|       default: y.x as empty; // We error here. Ideally we would not, so if you figure it out in the future with good perf, you can remove error from snapshot
+                             ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ issue-198.js:9:20
@@ -51,55 +51,55 @@ References:
                         ^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- issue-7322.js:20:2
+Error ----------------------------------------------------------------------------------------------- issue-7322.js:20:1
 
 Cannot cast `x.noReturn()` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   issue-7322.js:20:2
-   20| (x.noReturn(): number);
-        ^^^^^^^^^^^^
+   issue-7322.js:20:1
+   20| x.noReturn() as number;
+       ^^^^^^^^^^^^
 
 References:
    issue-7322.js:2:13
     2|   noReturn() { }
                    ^ [1]
-   issue-7322.js:20:16
-   20| (x.noReturn(): number);
-                      ^^^^^^ [2]
+   issue-7322.js:20:17
+   20| x.noReturn() as number;
+                       ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- issue-7322.js:21:2
+Error ----------------------------------------------------------------------------------------------- issue-7322.js:21:1
 
 Cannot cast `x.returnNoArg()` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   issue-7322.js:21:2
-   21| (x.returnNoArg(): number);
-        ^^^^^^^^^^^^^^^
+   issue-7322.js:21:1
+   21| x.returnNoArg() as number;
+       ^^^^^^^^^^^^^^^
 
 References:
    issue-7322.js:3:18
     3|   returnNoArg(): void {
                         ^^^^ [1]
-   issue-7322.js:21:19
-   21| (x.returnNoArg(): number);
-                         ^^^^^^ [2]
+   issue-7322.js:21:20
+   21| x.returnNoArg() as number;
+                          ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- issue-7322.js:22:2
+Error ----------------------------------------------------------------------------------------------- issue-7322.js:22:1
 
 Cannot cast `x.returnUndefined()` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   issue-7322.js:22:2
-   22| (x.returnUndefined(): number);
-        ^^^^^^^^^^^^^^^^^^^
+   issue-7322.js:22:1
+   22| x.returnUndefined() as number;
+       ^^^^^^^^^^^^^^^^^^^
 
 References:
    issue-7322.js:6:22
     6|   returnUndefined(): void {
                             ^^^^ [1]
-   issue-7322.js:22:23
-   22| (x.returnUndefined(): number);
-                             ^^^^^^ [2]
+   issue-7322.js:22:24
+   22| x.returnUndefined() as number;
+                              ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- short_enum_error.js:11:8

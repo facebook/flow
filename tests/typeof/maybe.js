@@ -6,4 +6,4 @@ function f<A>(a: A): ?A {
   }
 }
 var x = f(42);
-('foo': typeof x); // error: string ~> number
+'foo' as typeof x; // error: string ~> number

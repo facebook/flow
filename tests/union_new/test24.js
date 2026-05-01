@@ -29,4 +29,4 @@ declare class D extends C {
   unref():  D;
 }
 
-(0: D | number);
+0 as D | number;

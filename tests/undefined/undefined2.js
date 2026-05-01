@@ -2,18 +2,18 @@ let tests = [
   function(x: number) {
     var id;
     var name = id ? 'John' : undefined; // error: id is unitialized, so constant-condition
-    (name: boolean); // error, string or void
+    name as boolean; // error, string or void
 
     const bar = [
       undefined,
       'bar',
     ];
-    (bar[x]: boolean); // error, string or void
+    bar[x] as boolean; // error, string or void
   },
 
   function(x: number) {
     var undefined = 6;
-    (undefined: number); // ok
+    undefined as number; // ok
 
     var x;
     if (x !== undefined) {
@@ -24,6 +24,6 @@ let tests = [
       undefined,
       'bar',
     ];
-    (bar[x]: boolean); // error, string only
+    bar[x] as boolean; // error, string only
   },
 ];

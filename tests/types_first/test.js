@@ -5,10 +5,10 @@ import { type T } from './import-type1';
 import { type S } from './import-type2';
 import { type O } from './import-type5';
 
-(n: T); // error: string ~/~> number
-(f(""): S); // error: string (argument) ~/~> number, string (return) ~/~> number
-(o: O); // error: number (property x) <~/~> string
-(o.y: O); // error: number (property x) <~/~> string
+n as T; // error: string ~/~> number
+f("") as S; // error: string (argument) ~/~> number, string (return) ~/~> number
+o as O; // error: number (property x) <~/~> string
+o.y as O; // error: number (property x) <~/~> string
 
 import {
   functionWithTypeof,

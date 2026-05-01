@@ -2,4 +2,4 @@
 
 import {foo} from 'foo';
 
-(foo(): empty);
+foo() as empty;

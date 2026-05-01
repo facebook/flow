@@ -1,4 +1,4 @@
 const a = require('./multiple-export-2');
 
-(a.f: string);
-(a.f: number);
+a.f as string;
+a.f as number;

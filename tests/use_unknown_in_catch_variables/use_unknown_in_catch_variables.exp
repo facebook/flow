@@ -1,18 +1,18 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:3:4
+Error ------------------------------------------------------------------------------------------------------ test.js:3:3
 
 Cannot cast `e` to empty because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:3:4
-   3|   (e: empty); // ERROR - is `unknown`
-         ^
+   test.js:3:3
+   3|   e as empty; // ERROR - is `unknown`
+        ^
 
 References:
    test.js:2:10
    2| } catch (e) { // OK
                ^ [1]
-   test.js:3:7
-   3|   (e: empty); // ERROR - is `unknown`
-            ^^^^^ [2]
+   test.js:3:8
+   3|   e as empty; // ERROR - is `unknown`
+             ^^^^^ [2]
 
 
 

@@ -40,7 +40,7 @@ class G<T> {
 declare var g: G<number|string>;
 g.m(0); // ok
 g.m(true); // err, boolean ~> number|string
-(g.m(""): G<number>); // err, string ~> number
+g.m("") as G<number>; // err, string ~> number
 
 
 // Shadow bounds incompatible with parent

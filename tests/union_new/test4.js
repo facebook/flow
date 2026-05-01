@@ -10,7 +10,7 @@
 
 function fun(a: ((x: number) => void) | ((x: string) => void)) { }
 
-const a1 = ((x) => {}: A1);
+const a1 = (x) => {} as A1;
 fun(a1);
 
 function fun_call(x: string) { a1(x); }
@@ -25,7 +25,7 @@ type B1 = string;
 
 function arr(a: number[] | string[]) { }
 
-const a2 = ([]: A2);
+const a2 = [] as A2;
 arr(a2);
 
 function arr_set(x: string, i: number) { a2[i] = x; }

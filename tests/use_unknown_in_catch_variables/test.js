@@ -1,5 +1,5 @@
 try {
 } catch (e) { // OK
-  (e: empty); // ERROR - is `unknown`
-  (e: unknown); // OK - is `unknown`
+  e as empty; // ERROR - is `unknown`
+  e as unknown; // OK - is `unknown`
 }

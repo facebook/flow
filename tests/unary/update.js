@@ -1,15 +1,15 @@
 let tests = [
   function(y: number) {
-    (y++: number);
-    (y--: number);
-    (++y: number);
-    (--y: number);
+    y++ as number;
+    y-- as number;
+    ++y as number;
+    --y as number;
   },
 
   function(y: string) {
     y++; // error, we don't allow coercion here
-    (y: number); // ok, y is now any
-    (y: bigint); // ok, y is now any
+    y as number; // ok, y is now any
+    y as bigint; // ok, y is now any
   },
 
   function(y: string) {
@@ -47,18 +47,18 @@ let tests = [
   },
 
   function(y: any) {
-    (y++: number); // ok (because any)
-    (y++: bigint); // ok (because any)
+    y++ as number; // ok (because any)
+    y++ as bigint; // ok (because any)
   },
 
   function(y: empty) {
-    (y++: empty); // ok
+    y++ as empty; // ok
   },
 
   function(y: bigint) {
-    (y++: bigint);
-    (y--: bigint);
-    (++y: bigint);
-    (--y: bigint);
+    y++ as bigint;
+    y-- as bigint;
+    ++y as bigint;
+    --y as bigint;
   },
 ];

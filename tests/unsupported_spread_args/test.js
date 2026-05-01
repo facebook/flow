@@ -13,7 +13,7 @@ const o1 = Object.assign(...objArr); // error
 o1.x;
 // This is actually fine, we just use array element type
 // $FlowExpectedError[unsafe-object-assign]
-const o2 = Object.assign(({}: {x?: string, y?: number}), ...objArr);
+const o2 = Object.assign({} as {x?: string, y?: number}, ...objArr);
 o2.x;
 // But this is an error since the array contains non-objects
 // $FlowExpectedError[unsafe-object-assign]

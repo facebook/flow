@@ -4,14 +4,14 @@ const b1 = require('./test1');
 import type { B as B2 } from './test2';
 const b2 = require('./test2');
 
-(b1: B1); // Error number ~> string
-(b1.x: string); // Error number ~> string
-(b1.y: string); // Error, y may not exist, number ~> string
-(b1.z: string); // Error, z may not exist, number ~> string
+b1 as B1; // Error number ~> string
+b1.x as string; // Error number ~> string
+b1.y as string; // Error, y may not exist, number ~> string
+b1.z as string; // Error, z may not exist, number ~> string
 
-(b2: B2); // Error, number ~> string
-(b2.x: string); // Error number ~> string
-(b2.z: string); // Error number ~> string
+b2 as B2; // Error, number ~> string
+b2.x as string; // Error number ~> string
+b2.z as string; // Error number ~> string
 
 const b3 = require('./test3');
-(b3: {| |}); // Error inexact -> exact
+b3 as {| |}; // Error inexact -> exact

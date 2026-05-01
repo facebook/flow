@@ -6,4 +6,4 @@ interface A { x: number; }
 const v: number = A;
 
 // Type position resolves to the interface.
-const w: A = ({ x: 1 }: A);
+const w: A = { x: 1 } as A;

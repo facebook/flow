@@ -38,163 +38,163 @@ declare var dwoB: dWOB;
 // X ~> A
 {
   // literal A
-  ({p: new A}: RWA); // ok
-  ({p: new A}: dRWA); // ok
+  ({p: new A} as RWA); // ok
+  ({p: new A} as dRWA); // ok
 
   // A
-  (rwA: RWA); // ok
-  (drwA: dRWA); // ok
+  rwA as RWA; // ok
+  drwA as dRWA; // ok
 
   // readonly A
-  (roA: RWA); // error
-  (droA: dRWA); // error
+  roA as RWA; // error
+  droA as dRWA; // error
 
   // writeonly A
-  (woA: RWA); // error
-  (dwoA: dRWA); // error
+  woA as RWA; // error
+  dwoA as dRWA; // error
 
   // literal B
-  ({p: new B}: RWA); // ok
-  ({p: new B}: dRWA); // ok
+  ({p: new B} as RWA); // ok
+  ({p: new B} as dRWA); // ok
 
   // B
-  (rwB: RWA); // error
-  (drwB: dRWA); // error
+  rwB as RWA; // error
+  drwB as dRWA; // error
 
   // readonly B
-  (roB: RWA); // error
-  (droB: dRWA); // error
+  roB as RWA; // error
+  droB as dRWA; // error
 
   // writeonly B
-  (woB: RWA); // error
-  (dwoB: dRWA); // error
+  woB as RWA; // error
+  dwoB as dRWA; // error
 }
 
 // X ~> readonly A
 {
   // literal A
-  ({p: new A}: ROA); // ok
-  ({p: new A}: dROA); // ok
+  ({p: new A} as ROA); // ok
+  ({p: new A} as dROA); // ok
 
   // A
-  (rwA: ROA); // ok
-  (drwA: dROA); // ok
+  rwA as ROA; // ok
+  drwA as dROA; // ok
 
   // readonly A
-  (roA: ROA); // ok
-  (droA: dROA); // ok
+  roA as ROA; // ok
+  droA as dROA; // ok
 
   // writeonly A
-  (woA: ROA); // error
-  (dwoA: dROA); // error
+  woA as ROA; // error
+  dwoA as dROA; // error
 
   // literal B
-  ({p: new B}: ROA); // ok
-  ({p: new B}: dROA); // ok
+  ({p: new B} as ROA); // ok
+  ({p: new B} as dROA); // ok
 
   // B
-  (rwB: ROA); // ok
-  (drwB: dROA); // ok
+  rwB as ROA; // ok
+  drwB as dROA; // ok
 
   // readonly B
-  (roB: ROA); // ok
-  (droB: dROA); // ok
+  roB as ROA; // ok
+  droB as dROA; // ok
 
   // writeonly B
-  (woB: ROA); // error
-  (dwoB: dROA); // error
+  woB as ROA; // error
+  dwoB as dROA; // error
 }
 
 // X ~> writeonly A
 {
   // literal A
-  ({p: new A}: WOA); // ok
-  ({p: new A}: dWOA); // ok
+  ({p: new A} as WOA); // ok
+  ({p: new A} as dWOA); // ok
 
   // A
-  (rwA: WOA); // ok
-  (rwA: dWOA); // ok
+  rwA as WOA; // ok
+  rwA as dWOA; // ok
 
   // readonly A
-  (roA: WOA); // error
-  (droA: dWOA); // error
+  roA as WOA; // error
+  droA as dWOA; // error
 
   // writeonly A
-  (woA: WOA); // ok
-  (dwoA: dWOA); // ok
+  woA as WOA; // ok
+  dwoA as dWOA; // ok
 
   // literal B
-  ({p: new B}: WOA); // ok
-  ({p: new B}: dWOA); // ok
+  ({p: new B} as WOA); // ok
+  ({p: new B} as dWOA); // ok
 
   // B
-  (rwB: WOA); // error
-  (drwB: dWOA); // error
+  rwB as WOA; // error
+  drwB as dWOA; // error
 
   // readonly B
-  (roB: WOA); // error
-  (droB: dWOA); // error
+  roB as WOA; // error
+  droB as dWOA; // error
 
   // writeonly B
-  (woB: WOA); // error
-  (dwoB: dWOA); // error
+  woB as WOA; // error
+  dwoB as dWOA; // error
 }
 
 // X ~> B
 {
   // literal A
-  ({p: new A}: RWB); // error
-  ({p: new A}: dRWB); // error
+  ({p: new A} as RWB); // error
+  ({p: new A} as dRWB); // error
 
   // A
-  (rwA: RWB); // error
-  (drwA: dRWB); // error
+  rwA as RWB; // error
+  drwA as dRWB; // error
 
   // readonly A
-  (roA: RWB); // error
-  (droA: dRWB); // error
+  roA as RWB; // error
+  droA as dRWB; // error
 
   // writeonly A
-  (woA: RWB); // error
-  (dwoA: dRWB); // error
+  woA as RWB; // error
+  dwoA as dRWB; // error
 }
 
 // X ~> readonly B
 {
   // literal A
-  ({p: new A}: ROB); // error
-  ({p: new A}: dROB); // error
+  ({p: new A} as ROB); // error
+  ({p: new A} as dROB); // error
 
   // A
-  (rwA: ROB); // error
-  (drwA: dROB); // error
+  rwA as ROB; // error
+  drwA as dROB; // error
 
   // readonly A
-  (roA: ROB); // error
-  (droA: dROB); // error
+  roA as ROB; // error
+  droA as dROB; // error
 
   // writeonly A
-  (woA: ROB); // error
-  (dwoA: dROB); // error
+  woA as ROB; // error
+  dwoA as dROB; // error
 }
 
 // X ~> writeonly B
 {
   // literal A
-  ({p: new A}: WOB); // ok
-  ({p: new A}: dWOB); // ok
+  ({p: new A} as WOB); // ok
+  ({p: new A} as dWOB); // ok
 
   // A
-  (rwA: WOB); // ok
-  (drwA: dWOB); // ok
+  rwA as WOB; // ok
+  drwA as dWOB; // ok
 
   // readonly A
-  (roA: WOB); // error
-  (droA: dWOB); // error
+  roA as WOB; // error
+  droA as dWOB; // error
 
   // writeonly A
-  (woA: WOB); // ok
-  (dwoA: dWOB); // ok
+  woA as WOB; // ok
+  dwoA as dWOB; // ok
 }
 
 // unification
@@ -202,19 +202,19 @@ declare var dwoB: dWOB;
   // Note: these tests don't reuse the type aliases from the prelude because
   // doing so results in "naive" unification instead of rec_unify.
 
-  (([rwA]: Array<{p:A,...}>): Array<{p:A,...}>); // ok
+  [rwA] as Array<{p:A,...}> as Array<{p:A,...}>; // ok
 
-  (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
+  [roA] as Array<{readonly p:A,...}> as Array<{p:A,...}>; // error
 
-  (([woA]: Array<{writeonly p:A,...}>): Array<{p:A,...}>); // error 
-  (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
+  [woA] as Array<{writeonly p:A,...}> as Array<{p:A,...}>; // error 
+  [rwA] as Array<{p:A,...}> as Array<{readonly p:A,...}>; // error
 
-  (([roA]: Array<{readonly p:A,...}>): Array<{readonly p:A,...}>); // ok
+  [roA] as Array<{readonly p:A,...}> as Array<{readonly p:A,...}>; // ok
 
-  (([woA]: Array<{writeonly p:A,...}>): Array<{readonly p:A,...}>); // error 
-  (([rwA]: Array<{p:A,...}>): Array<{writeonly p:A,...}>); // error 
-  (([roA]: Array<{readonly p:A,...}>): Array<{writeonly p:A,...}>); // error 
-  (([woA]: Array<{writeonly p:A,...}>): Array<{writeonly p:A,...}>); // ok 
+  [woA] as Array<{writeonly p:A,...}> as Array<{readonly p:A,...}>; // error 
+  [rwA] as Array<{p:A,...}> as Array<{writeonly p:A,...}>; // error 
+  [roA] as Array<{readonly p:A,...}> as Array<{writeonly p:A,...}>; // error 
+  [woA] as Array<{writeonly p:A,...}> as Array<{writeonly p:A,...}>; // ok 
 }
 
 // summarized [incompatible-variance] error

@@ -1,44 +1,44 @@
 type NoProps = Values<{}>;
 const noReadProps = { set a(value: number) { /* noop */ } };
 type NoReadProps = Values<typeof noReadProps>;
-(123: NoProps); // Error: There are no props.
-(345: NoReadProps); // Error: There are no props which can be read.
+123 as NoProps; // Error: There are no props.
+345 as NoReadProps; // Error: There are no props which can be read.
 
 type OneProp = Values<{ a: string }>;
-('yo': OneProp); // OK: There is a property with the type of string.
-(123: OneProp); // Error: There is no property with the type of number.
-(true: OneProp); // Error: There is no property with the type of boolean.
-(((null: any): OneProp): string | number); // OK: The values are a subset.
-(((null: any): OneProp): number); // Error: There is no string in the final
+'yo' as OneProp; // OK: There is a property with the type of string.
+123 as OneProp; // Error: There is no property with the type of number.
+true as OneProp; // Error: There is no property with the type of boolean.
+null as any as OneProp as string | number; // OK: The values are a subset.
+null as any as OneProp as number; // Error: There is no string in the final
                                   // union.
 
 type ManyProps = Values<{ a: string, b: string, c: number }>;
-('yo': ManyProps); // OK: There is a property with the type of string.
-(123: ManyProps); // OK: There is a property with the type of number.
-(true: ManyProps); // Error: There is no property with the type of boolean.
-(((null: any): ManyProps): string | number | boolean); // OK: The values are a
+'yo' as ManyProps; // OK: There is a property with the type of string.
+123 as ManyProps; // OK: There is a property with the type of number.
+true as ManyProps; // Error: There is no property with the type of boolean.
+null as any as ManyProps as string | number | boolean; // OK: The values are a
                                                        // subset.
-(((null: any): ManyProps): string | boolean); // Error: There is no number in
+null as any as ManyProps as string | boolean; // Error: There is no number in
                                               // the final union.
 
 type DictProps = Values<{ a: boolean, [key: string]: number }>;
-('yo': DictProps); // Error: There is no property with the type of string.
-(123: DictProps); // OK: There is a dictionary value with the type of number.
-(true: DictProps); // OK: There is a property with the type of boolean.
-(((null: any): DictProps): string | number | boolean); // OK: The values are a
+'yo' as DictProps; // Error: There is no property with the type of string.
+123 as DictProps; // OK: There is a dictionary value with the type of number.
+true as DictProps; // OK: There is a property with the type of boolean.
+null as any as DictProps as string | number | boolean; // OK: The values are a
                                                        // subset.
-(((null: any): DictProps): string | boolean); // Error: There is no number in
+null as any as DictProps as string | boolean; // Error: There is no number in
                                               // the final union.
 
 interface CallableProp { a: string; b: number; (): boolean }
-('yo': Values<CallableProp>); // OK: There is a property with the type of
+'yo' as Values<CallableProp>; // OK: There is a property with the type of
                                // string.
-(123: Values<CallableProp>); // OK: There is a property with the type of
+123 as Values<CallableProp>; // OK: There is a property with the type of
                               // number.
-(true: Values<CallableProp>); // Error: There is no property with the type of
+true as Values<CallableProp>; // Error: There is no property with the type of
                                // boolean even though the interface is callable
                                // and may return a boolean.
-((() => true): Values<CallableProp>); // Error: There is no property with a
+(() => true) as Values<CallableProp>; // Error: There is no property with a
                                        // function of this signature even though
                                        // the interface is callable with this
                                        // signature.
@@ -63,12 +63,12 @@ function magicTrick(suite: SuiteEnum) {
   // ...
 }
 
-('Diamonds': SuiteEnum); // OK: 'Diamonds' is a valid value.
-(DIAMONDS: SuiteEnum); // OK: The value of `DIAMONDS` is the valid value
+'Diamonds' as SuiteEnum; // OK: 'Diamonds' is a valid value.
+DIAMONDS as SuiteEnum; // OK: The value of `DIAMONDS` is the valid value
                        // 'Diamonds'.
-('DIAMONDS': SuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
-('Magic': SuiteEnum); // Error: 'Magic' is not a value.
-(('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
+'DIAMONDS' as SuiteEnum; // Error: 'DIAMONDS' is a key, but not a value.
+'Magic' as SuiteEnum; // Error: 'Magic' is not a value.
+'Diamonds' as string as SuiteEnum; // Error: the `string` type is to general and
                                    // not a value.
 
 magicTrick('Diamonds'); // OK: 'Diamonds' is a valid value.
@@ -76,7 +76,7 @@ magicTrick(DIAMONDS); // OK: The value of `DIAMONDS` is the valid value
                       // 'Diamonds'.
 magicTrick('DIAMONDS'); // Error: 'DIAMONDS' is a key, but not a value.
 magicTrick('Magic'); // Error: 'Magic' is not a value.
-magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
+magicTrick('Diamonds' as string); // Error: the `string` type is to general and
                                   // not a value.
 
 // same as Suite above, but uses Object.freeze instead of needing an
@@ -88,11 +88,11 @@ const FrozenSuite = Object.freeze({
   SPADES: 'Spades',
 });
 type FrozenSuiteEnum = Values<typeof FrozenSuite>
-('Diamonds': FrozenSuiteEnum); // ok
-(DIAMONDS: FrozenSuiteEnum); // ok
-('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
-('Magic': FrozenSuiteEnum); // Error: 'Magic' is not a value.
-(('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
+'Diamonds' as FrozenSuiteEnum; // ok
+DIAMONDS as FrozenSuiteEnum; // ok
+'DIAMONDS' as FrozenSuiteEnum; // Error: 'DIAMONDS' is a key, but not a value.
+'Magic' as FrozenSuiteEnum; // Error: 'Magic' is not a value.
+'Diamonds' as string as FrozenSuiteEnum; // Error: `string` is too general
 
 
 const Numbers = Object.freeze({
@@ -100,9 +100,9 @@ const Numbers = Object.freeze({
   bar: 2,
 });
 type NumbersEnum = Values<typeof Numbers>
-(-1: NumbersEnum); // ok
-(2: NumbersEnum); // ok
-(1: NumbersEnum); // error, NumbersEnum = -1 | 2
+-1 as NumbersEnum; // ok
+2 as NumbersEnum; // ok
+1 as NumbersEnum; // error, NumbersEnum = -1 | 2
 
 interface IfaceWithDict {
   [string]: 1;
@@ -116,10 +116,10 @@ interface IfaceWithDictAndProps {
   method(): void;
 }
 
-(1: Values<IfaceWithDict>); // OK
-('s': Values<IfaceWithDict>); // ERROR
-(1: Values<IfaceWithWriteOnlyDict>); // ERROR
-(1: Values<IfaceWithDictAndProps>); // OK
-(2: Values<IfaceWithDictAndProps>); // OK
-('s': Values<IfaceWithDictAndProps>); // ERROR
-(() => {}: Values<IfaceWithDictAndProps>); // ERROR
+1 as Values<IfaceWithDict>; // OK
+'s' as Values<IfaceWithDict>; // ERROR
+1 as Values<IfaceWithWriteOnlyDict>; // ERROR
+1 as Values<IfaceWithDictAndProps>; // OK
+2 as Values<IfaceWithDictAndProps>; // OK
+'s' as Values<IfaceWithDictAndProps>; // ERROR
+(() => {}) as Values<IfaceWithDictAndProps>; // ERROR

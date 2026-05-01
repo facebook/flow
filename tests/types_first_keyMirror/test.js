@@ -4,7 +4,7 @@ const {LayerKey, LayerActions} = require("./Layer");
 ({
   type: 'LAYER_SET_LAYER_LABEL',
   layerKey: new LayerKey()
-}: LayerActionType);
+} as LayerActionType);
 
 import type {Action} from './Action';
 const {ActionTypes} = require('./Action');
@@ -23,5 +23,5 @@ const openModal = (
 };
 
 const literal = require('./literal');
-(literal.foo: 'foo'); // ok
-(literal.foo: empty); // error, 'foo' </: empty
+literal.foo as 'foo'; // ok
+literal.foo as empty; // error, 'foo' </: empty

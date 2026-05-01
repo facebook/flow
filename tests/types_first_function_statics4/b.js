@@ -1,4 +1,4 @@
 import A, {B} from './a';
 
-(A.prop : string);
-(B.prop : string);
+A.prop as string;
+B.prop as string;

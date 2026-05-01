@@ -6,4 +6,4 @@ function f<A>(a: A): {p?: A} {
   }
 }
 var x = f(42).p;
-(null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
+null as typeof x; // error: null ~> $Optional<number> (i.e., void|number)

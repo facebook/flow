@@ -5,7 +5,7 @@
 
 // Normal types in comment syntax work fine
 /*:: declare var numInComment: number */
-(numInComment: number); // ok
+numInComment as number; // ok
 
 // Type annotation using comment syntax with various token boundaries
 function f(x/*: number */)/*: number */ { return x; }

@@ -1,76 +1,76 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:49:4
+Error ----------------------------------------------------------------------------------------------------- test.js:49:3
 
 Cannot cast `roA` to `RWA` because property `p` is read-only in `ROA` [1] but writable in `RWA` [2].
 [incompatible-variance]
 
-   test.js:49:4
-   49|   (roA: RWA); // error
-          ^^^
+   test.js:49:3
+   49|   roA as RWA; // error
+         ^^^
 
 References:
    test.js:14:18
    14| declare var roA: ROA;
                         ^^^ [1]
-   test.js:49:9
-   49|   (roA: RWA); // error
-               ^^^ [2]
+   test.js:49:10
+   49|   roA as RWA; // error
+                ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:50:4
+Error ----------------------------------------------------------------------------------------------------- test.js:50:3
 
 Cannot cast `droA` to `dRWA` because an index signature declaring the expected key / value type is read-only in
 `dROA` [1] but writable in `dRWA` [2]. [incompatible-variance]
 
-   test.js:50:4
-   50|   (droA: dRWA); // error
-          ^^^^
+   test.js:50:3
+   50|   droA as dRWA; // error
+         ^^^^
 
 References:
    test.js:31:19
    31| declare var droA: dROA;
                          ^^^^ [1]
-   test.js:50:10
-   50|   (droA: dRWA); // error
-                ^^^^ [2]
+   test.js:50:11
+   50|   droA as dRWA; // error
+                 ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:53:4
+Error ----------------------------------------------------------------------------------------------------- test.js:53:3
 
 Cannot cast `woA` to `RWA` because property `p` is write-only in `WOA` [1] but readable in `RWA` [2].
 [incompatible-variance]
 
-   test.js:53:4
-   53|   (woA: RWA); // error
-          ^^^
+   test.js:53:3
+   53|   woA as RWA; // error
+         ^^^
 
 References:
    test.js:15:18
    15| declare var woA: WOA;
                         ^^^ [1]
-   test.js:53:9
-   53|   (woA: RWA); // error
-               ^^^ [2]
+   test.js:53:10
+   53|   woA as RWA; // error
+                ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:54:4
+Error ----------------------------------------------------------------------------------------------------- test.js:54:3
 
 Cannot cast `dwoA` to `dRWA` because an index signature declaring the expected key / value type is write-only in
 `dWOA` [1] but readable in `dRWA` [2]. [incompatible-variance]
 
-   test.js:54:4
-   54|   (dwoA: dRWA); // error
-          ^^^^
+   test.js:54:3
+   54|   dwoA as dRWA; // error
+         ^^^^
 
 References:
    test.js:32:19
    32| declare var dwoA: dWOA;
                          ^^^^ [1]
-   test.js:54:10
-   54|   (dwoA: dRWA); // error
-                ^^^^ [2]
+   test.js:54:11
+   54|   dwoA as dRWA; // error
+                 ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:61:4
+Error ----------------------------------------------------------------------------------------------------- test.js:61:3
 
 Cannot cast `rwB` to `RWA` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
@@ -79,9 +79,9 @@ The above-mentioned two types must be the same because property `p` is invariant
 - Or make property `p` in `RWA` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test.js:61:4
-   61|   (rwB: RWA); // error
-          ^^^
+   test.js:61:3
+   61|   rwB as RWA; // error
+         ^^^
 
 References:
    test.js:9:16
@@ -96,12 +96,12 @@ References:
    test.js:6:12
     6| type RWA = {p: A}
                   ^^^^^^ [4]
-   test.js:61:9
-   61|   (rwB: RWA); // error
-               ^^^ [5]
+   test.js:61:10
+   61|   rwB as RWA; // error
+                ^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:62:4
+Error ----------------------------------------------------------------------------------------------------- test.js:62:3
 
 Cannot cast `drwB` to `dRWA` because in the indexer property: `B` [1] is not exactly the same as `A` [2].
 [incompatible-type]
@@ -111,9 +111,9 @@ The above-mentioned two types must be the same because the indexer is invariantl
 - Or make the indexer in `dRWA` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test.js:62:4
-   62|   (drwB: dRWA); // error
-          ^^^^
+   test.js:62:3
+   62|   drwB as dRWA; // error
+         ^^^^
 
 References:
    test.js:26:24
@@ -128,72 +128,72 @@ References:
    test.js:23:13
    23| type dRWA = {[string]: A};
                    ^^^^^^^^^^^^^ [4]
-   test.js:62:10
-   62|   (drwB: dRWA); // error
-                ^^^^ [5]
+   test.js:62:11
+   62|   drwB as dRWA; // error
+                 ^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:65:4
+Error ----------------------------------------------------------------------------------------------------- test.js:65:3
 
 Cannot cast `roB` to `RWA` because property `p` is read-only in `ROB` [1] but writable in `RWA` [2].
 [incompatible-variance]
 
-   test.js:65:4
-   65|   (roB: RWA); // error
-          ^^^
+   test.js:65:3
+   65|   roB as RWA; // error
+         ^^^
 
 References:
    test.js:18:18
    18| declare var roB: ROB;
                         ^^^ [1]
-   test.js:65:9
-   65|   (roB: RWA); // error
-               ^^^ [2]
+   test.js:65:10
+   65|   roB as RWA; // error
+                ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:66:4
+Error ----------------------------------------------------------------------------------------------------- test.js:66:3
 
 Cannot cast `droB` to `dRWA` because an index signature declaring the expected key / value type is read-only in
 `dROB` [1] but writable in `dRWA` [2]. [incompatible-variance]
 
-   test.js:66:4
-   66|   (droB: dRWA); // error
-          ^^^^
+   test.js:66:3
+   66|   droB as dRWA; // error
+         ^^^^
 
 References:
    test.js:35:19
    35| declare var droB: dROB;
                          ^^^^ [1]
-   test.js:66:10
-   66|   (droB: dRWA); // error
-                ^^^^ [2]
+   test.js:66:11
+   66|   droB as dRWA; // error
+                 ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:69:4
+Error ----------------------------------------------------------------------------------------------------- test.js:69:3
 
 Cannot cast `woB` to `RWA` because property `p` is write-only in `WOB` [1] but readable in `RWA` [2].
 [incompatible-variance]
 
-   test.js:69:4
-   69|   (woB: RWA); // error
-          ^^^
+   test.js:69:3
+   69|   woB as RWA; // error
+         ^^^
 
 References:
    test.js:19:18
    19| declare var woB: WOB;
                         ^^^ [1]
-   test.js:69:9
-   69|   (woB: RWA); // error
-               ^^^ [2]
+   test.js:69:10
+   69|   woB as RWA; // error
+                ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:69:4
+Error ----------------------------------------------------------------------------------------------------- test.js:69:3
 
 Cannot cast `woB` to `RWA` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:69:4
-   69|   (woB: RWA); // error
-          ^^^
+   test.js:69:3
+   69|   woB as RWA; // error
+         ^^^
 
 References:
    test.js:6:16
@@ -204,31 +204,31 @@ References:
                        ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:70:4
+Error ----------------------------------------------------------------------------------------------------- test.js:70:3
 
 Cannot cast `dwoB` to `dRWA` because an index signature declaring the expected key / value type is write-only in
 `dWOB` [1] but readable in `dRWA` [2]. [incompatible-variance]
 
-   test.js:70:4
-   70|   (dwoB: dRWA); // error
-          ^^^^
+   test.js:70:3
+   70|   dwoB as dRWA; // error
+         ^^^^
 
 References:
    test.js:36:19
    36| declare var dwoB: dWOB;
                          ^^^^ [1]
-   test.js:70:10
-   70|   (dwoB: dRWA); // error
-                ^^^^ [2]
+   test.js:70:11
+   70|   dwoB as dRWA; // error
+                 ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:70:4
+Error ----------------------------------------------------------------------------------------------------- test.js:70:3
 
 Cannot cast `dwoB` to `dRWA` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:70:4
-   70|   (dwoB: dRWA); // error
-          ^^^^
+   test.js:70:3
+   70|   dwoB as dRWA; // error
+         ^^^^
 
 References:
    test.js:23:24
@@ -239,121 +239,121 @@ References:
                                ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:88:4
+Error ----------------------------------------------------------------------------------------------------- test.js:88:3
 
 Cannot cast `woA` to `ROA` because property `p` is write-only in `WOA` [1] but read-only in `ROA` [2].
 [incompatible-variance]
 
-   test.js:88:4
-   88|   (woA: ROA); // error
-          ^^^
+   test.js:88:3
+   88|   woA as ROA; // error
+         ^^^
 
 References:
    test.js:15:18
    15| declare var woA: WOA;
                         ^^^ [1]
-   test.js:88:9
-   88|   (woA: ROA); // error
-               ^^^ [2]
+   test.js:88:10
+   88|   woA as ROA; // error
+                ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:89:4
+Error ----------------------------------------------------------------------------------------------------- test.js:89:3
 
 Cannot cast `dwoA` to `dROA` because an index signature declaring the expected key / value type is write-only in
 `dWOA` [1] but read-only in `dROA` [2]. [incompatible-variance]
 
-   test.js:89:4
-   89|   (dwoA: dROA); // error
-          ^^^^
+   test.js:89:3
+   89|   dwoA as dROA; // error
+         ^^^^
 
 References:
    test.js:32:19
    32| declare var dwoA: dWOA;
                          ^^^^ [1]
-   test.js:89:10
-   89|   (dwoA: dROA); // error
-                ^^^^ [2]
+   test.js:89:11
+   89|   dwoA as dROA; // error
+                 ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:104:4
+Error ---------------------------------------------------------------------------------------------------- test.js:104:3
 
 Cannot cast `woB` to `ROA` because property `p` is write-only in `WOB` [1] but read-only in `ROA` [2].
 [incompatible-variance]
 
-   test.js:104:4
-   104|   (woB: ROA); // error
-           ^^^
+   test.js:104:3
+   104|   woB as ROA; // error
+          ^^^
 
 References:
    test.js:19:18
     19| declare var woB: WOB;
                          ^^^ [1]
-   test.js:104:9
-   104|   (woB: ROA); // error
-                ^^^ [2]
+   test.js:104:10
+   104|   woB as ROA; // error
+                 ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:105:4
+Error ---------------------------------------------------------------------------------------------------- test.js:105:3
 
 Cannot cast `dwoB` to `dROA` because an index signature declaring the expected key / value type is write-only in
 `dWOB` [1] but read-only in `dROA` [2]. [incompatible-variance]
 
-   test.js:105:4
-   105|   (dwoB: dROA); // error
-           ^^^^
+   test.js:105:3
+   105|   dwoB as dROA; // error
+          ^^^^
 
 References:
    test.js:36:19
     36| declare var dwoB: dWOB;
                           ^^^^ [1]
-   test.js:105:10
-   105|   (dwoB: dROA); // error
-                 ^^^^ [2]
+   test.js:105:11
+   105|   dwoB as dROA; // error
+                  ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:119:4
+Error ---------------------------------------------------------------------------------------------------- test.js:119:3
 
 Cannot cast `roA` to `WOA` because property `p` is read-only in `ROA` [1] but write-only in `WOA` [2].
 [incompatible-variance]
 
-   test.js:119:4
-   119|   (roA: WOA); // error
-           ^^^
+   test.js:119:3
+   119|   roA as WOA; // error
+          ^^^
 
 References:
    test.js:14:18
     14| declare var roA: ROA;
                          ^^^ [1]
-   test.js:119:9
-   119|   (roA: WOA); // error
-                ^^^ [2]
+   test.js:119:10
+   119|   roA as WOA; // error
+                 ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:120:4
+Error ---------------------------------------------------------------------------------------------------- test.js:120:3
 
 Cannot cast `droA` to `dWOA` because an index signature declaring the expected key / value type is read-only in
 `dROA` [1] but write-only in `dWOA` [2]. [incompatible-variance]
 
-   test.js:120:4
-   120|   (droA: dWOA); // error
-           ^^^^
+   test.js:120:3
+   120|   droA as dWOA; // error
+          ^^^^
 
 References:
    test.js:31:19
     31| declare var droA: dROA;
                           ^^^^ [1]
-   test.js:120:10
-   120|   (droA: dWOA); // error
-                 ^^^^ [2]
+   test.js:120:11
+   120|   droA as dWOA; // error
+                  ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:131:4
+Error ---------------------------------------------------------------------------------------------------- test.js:131:3
 
 Cannot cast `rwB` to `WOA` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:131:4
-   131|   (rwB: WOA); // error
-           ^^^
+   test.js:131:3
+   131|   rwB as WOA; // error
+          ^^^
 
 References:
    test.js:8:17
@@ -364,13 +364,13 @@ References:
                        ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:132:4
+Error ---------------------------------------------------------------------------------------------------- test.js:132:3
 
 Cannot cast `drwB` to `dWOA` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:132:4
-   132|   (drwB: dWOA); // error
-           ^^^^
+   test.js:132:3
+   132|   drwB as dWOA; // error
+          ^^^^
 
 References:
    test.js:25:25
@@ -381,49 +381,49 @@ References:
                                ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:135:4
+Error ---------------------------------------------------------------------------------------------------- test.js:135:3
 
 Cannot cast `roB` to `WOA` because property `p` is read-only in `ROB` [1] but write-only in `WOA` [2].
 [incompatible-variance]
 
-   test.js:135:4
-   135|   (roB: WOA); // error
-           ^^^
+   test.js:135:3
+   135|   roB as WOA; // error
+          ^^^
 
 References:
    test.js:18:18
     18| declare var roB: ROB;
                          ^^^ [1]
-   test.js:135:9
-   135|   (roB: WOA); // error
-                ^^^ [2]
+   test.js:135:10
+   135|   roB as WOA; // error
+                 ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:136:4
+Error ---------------------------------------------------------------------------------------------------- test.js:136:3
 
 Cannot cast `droB` to `dWOA` because an index signature declaring the expected key / value type is read-only in
 `dROB` [1] but write-only in `dWOA` [2]. [incompatible-variance]
 
-   test.js:136:4
-   136|   (droB: dWOA); // error
-           ^^^^
+   test.js:136:3
+   136|   droB as dWOA; // error
+          ^^^^
 
 References:
    test.js:35:19
     35| declare var droB: dROB;
                           ^^^^ [1]
-   test.js:136:10
-   136|   (droB: dWOA); // error
-                 ^^^^ [2]
+   test.js:136:11
+   136|   droB as dWOA; // error
+                  ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:139:4
+Error ---------------------------------------------------------------------------------------------------- test.js:139:3
 
 Cannot cast `woB` to `WOA` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:139:4
-   139|   (woB: WOA); // error
-           ^^^
+   test.js:139:3
+   139|   woB as WOA; // error
+          ^^^
 
 References:
    test.js:8:17
@@ -434,13 +434,13 @@ References:
                         ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:140:4
+Error ---------------------------------------------------------------------------------------------------- test.js:140:3
 
 Cannot cast `dwoB` to `dWOA` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:140:4
-   140|   (dwoB: dWOA); // error
-           ^^^^
+   test.js:140:3
+   140|   dwoB as dWOA; // error
+          ^^^^
 
 References:
    test.js:25:25
@@ -456,7 +456,7 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to `RWB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:146:8
-   146|   ({p: new A}: RWB); // error
+   146|   ({p: new A} as RWB); // error
                ^^^^^ [1]
 
 References:
@@ -470,7 +470,7 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to `dRWB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:147:8
-   147|   ({p: new A}: dRWB); // error
+   147|   ({p: new A} as dRWB); // error
                ^^^^^ [1]
 
 References:
@@ -479,7 +479,7 @@ References:
                                ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:150:4
+Error ---------------------------------------------------------------------------------------------------- test.js:150:3
 
 Cannot cast `rwA` to `RWB` because in property `p`: `A` [1] is not exactly the same as `B` [2]. [incompatible-type]
 
@@ -488,9 +488,9 @@ The above-mentioned two types must be the same because property `p` is invariant
 - Or make property `p` in `RWB` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test.js:150:4
-   150|   (rwA: RWB); // error
-           ^^^
+   test.js:150:3
+   150|   rwA as RWB; // error
+          ^^^
 
 References:
    test.js:6:16
@@ -505,12 +505,12 @@ References:
    test.js:9:12
      9| type RWB = {p: B}
                    ^^^^^^ [4]
-   test.js:150:9
-   150|   (rwA: RWB); // error
-                ^^^ [5]
+   test.js:150:10
+   150|   rwA as RWB; // error
+                 ^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:151:4
+Error ---------------------------------------------------------------------------------------------------- test.js:151:3
 
 Cannot cast `drwA` to `dRWB` because in the indexer property: `A` [1] is not exactly the same as `B` [2].
 [incompatible-type]
@@ -520,9 +520,9 @@ The above-mentioned two types must be the same because the indexer is invariantl
 - Or make the indexer in `dRWB` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test.js:151:4
-   151|   (drwA: dRWB); // error
-           ^^^^
+   test.js:151:3
+   151|   drwA as dRWB; // error
+          ^^^^
 
 References:
    test.js:23:24
@@ -537,36 +537,36 @@ References:
    test.js:26:13
     26| type dRWB = {[string]: B};
                     ^^^^^^^^^^^^^ [4]
-   test.js:151:10
-   151|   (drwA: dRWB); // error
-                 ^^^^ [5]
+   test.js:151:11
+   151|   drwA as dRWB; // error
+                  ^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:154:4
+Error ---------------------------------------------------------------------------------------------------- test.js:154:3
 
 Cannot cast `roA` to `RWB` because property `p` is read-only in `ROA` [1] but writable in `RWB` [2].
 [incompatible-variance]
 
-   test.js:154:4
-   154|   (roA: RWB); // error
-           ^^^
+   test.js:154:3
+   154|   roA as RWB; // error
+          ^^^
 
 References:
    test.js:14:18
     14| declare var roA: ROA;
                          ^^^ [1]
-   test.js:154:9
-   154|   (roA: RWB); // error
-                ^^^ [2]
+   test.js:154:10
+   154|   roA as RWB; // error
+                 ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:154:4
+Error ---------------------------------------------------------------------------------------------------- test.js:154:3
 
 Cannot cast `roA` to `RWB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:154:4
-   154|   (roA: RWB); // error
-           ^^^
+   test.js:154:3
+   154|   roA as RWB; // error
+          ^^^
 
 References:
    test.js:7:17
@@ -577,31 +577,31 @@ References:
                        ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:155:4
+Error ---------------------------------------------------------------------------------------------------- test.js:155:3
 
 Cannot cast `droA` to `dRWB` because an index signature declaring the expected key / value type is read-only in
 `dROA` [1] but writable in `dRWB` [2]. [incompatible-variance]
 
-   test.js:155:4
-   155|   (droA: dRWB); // error
-           ^^^^
+   test.js:155:3
+   155|   droA as dRWB; // error
+          ^^^^
 
 References:
    test.js:31:19
     31| declare var droA: dROA;
                           ^^^^ [1]
-   test.js:155:10
-   155|   (droA: dRWB); // error
-                 ^^^^ [2]
+   test.js:155:11
+   155|   droA as dRWB; // error
+                  ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:155:4
+Error ---------------------------------------------------------------------------------------------------- test.js:155:3
 
 Cannot cast `droA` to `dRWB` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:155:4
-   155|   (droA: dRWB); // error
-           ^^^^
+   test.js:155:3
+   155|   droA as dRWB; // error
+          ^^^^
 
 References:
    test.js:24:25
@@ -612,40 +612,40 @@ References:
                                ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:158:4
+Error ---------------------------------------------------------------------------------------------------- test.js:158:3
 
 Cannot cast `woA` to `RWB` because property `p` is write-only in `WOA` [1] but readable in `RWB` [2].
 [incompatible-variance]
 
-   test.js:158:4
-   158|   (woA: RWB); // error
-           ^^^
+   test.js:158:3
+   158|   woA as RWB; // error
+          ^^^
 
 References:
    test.js:15:18
     15| declare var woA: WOA;
                          ^^^ [1]
-   test.js:158:9
-   158|   (woA: RWB); // error
-                ^^^ [2]
+   test.js:158:10
+   158|   woA as RWB; // error
+                 ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:159:4
+Error ---------------------------------------------------------------------------------------------------- test.js:159:3
 
 Cannot cast `dwoA` to `dRWB` because an index signature declaring the expected key / value type is write-only in
 `dWOA` [1] but readable in `dRWB` [2]. [incompatible-variance]
 
-   test.js:159:4
-   159|   (dwoA: dRWB); // error
-           ^^^^
+   test.js:159:3
+   159|   dwoA as dRWB; // error
+          ^^^^
 
 References:
    test.js:32:19
     32| declare var dwoA: dWOA;
                           ^^^^ [1]
-   test.js:159:10
-   159|   (dwoA: dRWB); // error
-                 ^^^^ [2]
+   test.js:159:11
+   159|   dwoA as dRWB; // error
+                  ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:165:8
@@ -653,7 +653,7 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to `ROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:165:8
-   165|   ({p: new A}: ROB); // error
+   165|   ({p: new A} as ROB); // error
                ^^^^^ [1]
 
 References:
@@ -667,7 +667,7 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to `dROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:166:8
-   166|   ({p: new A}: dROB); // error
+   166|   ({p: new A} as dROB); // error
                ^^^^^ [1]
 
 References:
@@ -676,13 +676,13 @@ References:
                                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:169:4
+Error ---------------------------------------------------------------------------------------------------- test.js:169:3
 
 Cannot cast `rwA` to `ROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:169:4
-   169|   (rwA: ROB); // error
-           ^^^
+   test.js:169:3
+   169|   rwA as ROB; // error
+          ^^^
 
 References:
    test.js:6:16
@@ -693,13 +693,13 @@ References:
                         ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:170:4
+Error ---------------------------------------------------------------------------------------------------- test.js:170:3
 
 Cannot cast `drwA` to `dROB` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:170:4
-   170|   (drwA: dROB); // error
-           ^^^^
+   test.js:170:3
+   170|   drwA as dROB; // error
+          ^^^^
 
 References:
    test.js:23:24
@@ -710,13 +710,13 @@ References:
                                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:173:4
+Error ---------------------------------------------------------------------------------------------------- test.js:173:3
 
 Cannot cast `roA` to `ROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:173:4
-   173|   (roA: ROB); // error
-           ^^^
+   test.js:173:3
+   173|   roA as ROB; // error
+          ^^^
 
 References:
    test.js:7:17
@@ -727,13 +727,13 @@ References:
                         ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:174:4
+Error ---------------------------------------------------------------------------------------------------- test.js:174:3
 
 Cannot cast `droA` to `dROB` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test.js:174:4
-   174|   (droA: dROB); // error
-           ^^^^
+   test.js:174:3
+   174|   droA as dROB; // error
+          ^^^^
 
 References:
    test.js:24:25
@@ -744,81 +744,81 @@ References:
                                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:177:4
+Error ---------------------------------------------------------------------------------------------------- test.js:177:3
 
 Cannot cast `woA` to `ROB` because property `p` is write-only in `WOA` [1] but read-only in `ROB` [2].
 [incompatible-variance]
 
-   test.js:177:4
-   177|   (woA: ROB); // error
-           ^^^
+   test.js:177:3
+   177|   woA as ROB; // error
+          ^^^
 
 References:
    test.js:15:18
     15| declare var woA: WOA;
                          ^^^ [1]
-   test.js:177:9
-   177|   (woA: ROB); // error
-                ^^^ [2]
+   test.js:177:10
+   177|   woA as ROB; // error
+                 ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:178:4
+Error ---------------------------------------------------------------------------------------------------- test.js:178:3
 
 Cannot cast `dwoA` to `dROB` because an index signature declaring the expected key / value type is write-only in
 `dWOA` [1] but read-only in `dROB` [2]. [incompatible-variance]
 
-   test.js:178:4
-   178|   (dwoA: dROB); // error
-           ^^^^
+   test.js:178:3
+   178|   dwoA as dROB; // error
+          ^^^^
 
 References:
    test.js:32:19
     32| declare var dwoA: dWOA;
                           ^^^^ [1]
-   test.js:178:10
-   178|   (dwoA: dROB); // error
-                 ^^^^ [2]
+   test.js:178:11
+   178|   dwoA as dROB; // error
+                  ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:192:4
+Error ---------------------------------------------------------------------------------------------------- test.js:192:3
 
 Cannot cast `roA` to `WOB` because property `p` is read-only in `ROA` [1] but write-only in `WOB` [2].
 [incompatible-variance]
 
-   test.js:192:4
-   192|   (roA: WOB); // error
-           ^^^
+   test.js:192:3
+   192|   roA as WOB; // error
+          ^^^
 
 References:
    test.js:14:18
     14| declare var roA: ROA;
                          ^^^ [1]
-   test.js:192:9
-   192|   (roA: WOB); // error
-                ^^^ [2]
+   test.js:192:10
+   192|   roA as WOB; // error
+                 ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:193:4
+Error ---------------------------------------------------------------------------------------------------- test.js:193:3
 
 Cannot cast `droA` to `dWOB` because an index signature declaring the expected key / value type is read-only in
 `dROA` [1] but write-only in `dWOB` [2]. [incompatible-variance]
 
-   test.js:193:4
-   193|   (droA: dWOB); // error
-           ^^^^
+   test.js:193:3
+   193|   droA as dWOB; // error
+          ^^^^
 
 References:
    test.js:31:19
     31| declare var droA: dROA;
                           ^^^^ [1]
-   test.js:193:10
-   193|   (droA: dWOB); // error
-                 ^^^^ [2]
+   test.js:193:11
+   193|   droA as dWOB; // error
+                  ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:207:18
 
-Cannot cast array literal to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
 `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -827,24 +827,24 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:207:18
-   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
+   207|   [roA] as Array<{+p:A,...}> as Array<{p:A,...}>; // error
                          ^^^^^^^^^^ [1]
 
 References:
-   test.js:207:38
-   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
-                                             ^^^^^^^^^ [2]
+   test.js:207:39
+   207|   [roA] as Array<{+p:A,...}> as Array<{p:A,...}>; // error
+                                              ^^^^^^^^^ [2]
    test.js:207:12
-   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
+   207|   [roA] as Array<{+p:A,...}> as Array<{p:A,...}>; // error
                    ^^^^^^^^^^^^^^^^^ [3]
-   test.js:207:32
-   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
-                                       ^^^^^^^^^^^^^^^^ [4]
+   test.js:207:33
+   207|   [roA] as Array<{+p:A,...}> as Array<{p:A,...}>; // error
+                                        ^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:209:18
 
-Cannot cast array literal to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
 `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -853,24 +853,24 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:209:18
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+   209|   [woA] as Array<{-p:A,...}> as Array<{p:A,...}>; // error
                          ^^^^^^^^^^ [1]
 
 References:
-   test.js:209:38
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
-                                             ^^^^^^^^^ [2]
+   test.js:209:39
+   209|   [woA] as Array<{-p:A,...}> as Array<{p:A,...}>; // error
+                                              ^^^^^^^^^ [2]
    test.js:209:12
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+   209|   [woA] as Array<{-p:A,...}> as Array<{p:A,...}>; // error
                    ^^^^^^^^^^^^^^^^^ [3]
-   test.js:209:32
-   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
-                                       ^^^^^^^^^^^^^^^^ [4]
+   test.js:209:33
+   209|   [woA] as Array<{-p:A,...}> as Array<{p:A,...}>; // error
+                                        ^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:211:18
 
-Cannot cast array literal to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
 `{+p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -879,24 +879,24 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:211:18
-   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
+   211|   [rwA] as Array<{p:A,...}> as Array<{+p:A,...}>; // error
                          ^^^^^^^^^ [1]
 
 References:
-   test.js:211:37
-   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
-                                            ^^^^^^^^^^ [2]
+   test.js:211:38
+   211|   [rwA] as Array<{p:A,...}> as Array<{+p:A,...}>; // error
+                                             ^^^^^^^^^^ [2]
    test.js:211:12
-   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
+   211|   [rwA] as Array<{p:A,...}> as Array<{+p:A,...}>; // error
                    ^^^^^^^^^^^^^^^^ [3]
-   test.js:211:31
-   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
-                                      ^^^^^^^^^^^^^^^^^ [4]
+   test.js:211:32
+   211|   [rwA] as Array<{p:A,...}> as Array<{+p:A,...}>; // error
+                                       ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:215:18
 
-Cannot cast array literal to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
 `{+p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -905,24 +905,24 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:215:18
-   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
+   215|   [woA] as Array<{-p:A,...}> as Array<{+p:A,...}>; // error
                          ^^^^^^^^^^ [1]
 
 References:
-   test.js:215:38
-   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
-                                             ^^^^^^^^^^ [2]
+   test.js:215:39
+   215|   [woA] as Array<{-p:A,...}> as Array<{+p:A,...}>; // error
+                                              ^^^^^^^^^^ [2]
    test.js:215:12
-   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
+   215|   [woA] as Array<{-p:A,...}> as Array<{+p:A,...}>; // error
                    ^^^^^^^^^^^^^^^^^ [3]
-   test.js:215:32
-   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
-                                       ^^^^^^^^^^^^^^^^^ [4]
+   test.js:215:33
+   215|   [woA] as Array<{-p:A,...}> as Array<{+p:A,...}>; // error
+                                        ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:217:18
 
-Cannot cast array literal to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
 `{-p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -931,24 +931,24 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:217:18
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+   217|   [rwA] as Array<{p:A,...}> as Array<{-p:A,...}>; // error
                          ^^^^^^^^^ [1]
 
 References:
-   test.js:217:37
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
-                                            ^^^^^^^^^^ [2]
+   test.js:217:38
+   217|   [rwA] as Array<{p:A,...}> as Array<{-p:A,...}>; // error
+                                             ^^^^^^^^^^ [2]
    test.js:217:12
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+   217|   [rwA] as Array<{p:A,...}> as Array<{-p:A,...}>; // error
                    ^^^^^^^^^^^^^^^^ [3]
-   test.js:217:31
-   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
-                                      ^^^^^^^^^^^^^^^^^ [4]
+   test.js:217:32
+   217|   [rwA] as Array<{p:A,...}> as Array<{-p:A,...}>; // error
+                                       ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:219:18
 
-Cannot cast array literal to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
 `{-p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -957,19 +957,19 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:219:18
-   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
+   219|   [roA] as Array<{+p:A,...}> as Array<{-p:A,...}>; // error
                          ^^^^^^^^^^ [1]
 
 References:
-   test.js:219:38
-   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
-                                             ^^^^^^^^^^ [2]
+   test.js:219:39
+   219|   [roA] as Array<{+p:A,...}> as Array<{-p:A,...}>; // error
+                                              ^^^^^^^^^^ [2]
    test.js:219:12
-   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
+   219|   [roA] as Array<{+p:A,...}> as Array<{-p:A,...}>; // error
                    ^^^^^^^^^^^^^^^^^ [3]
-   test.js:219:32
-   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
-                                       ^^^^^^^^^^^^^^^^^ [4]
+   test.js:219:33
+   219|   [roA] as Array<{+p:A,...}> as Array<{-p:A,...}>; // error
+                                        ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:230:3
@@ -1012,79 +1012,79 @@ References:
                 ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:49:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:49:3
 
 Cannot cast `roA` to `RWA` because property `p` is read-only in `ROA` [1] but writable in `RWA` [2].
 [incompatible-variance]
 
-   test_keyword.js:49:4
-   49|   (roA: RWA); // error
-          ^^^
+   test_keyword.js:49:3
+   49|   roA as RWA; // error
+         ^^^
 
 References:
    test_keyword.js:14:18
    14| declare var roA: ROA;
                         ^^^ [1]
-   test_keyword.js:49:9
-   49|   (roA: RWA); // error
-               ^^^ [2]
+   test_keyword.js:49:10
+   49|   roA as RWA; // error
+                ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:50:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:50:3
 
 Cannot cast `droA` to `dRWA` because an index signature declaring the expected key / value type is read-only in
 `dROA` [1] but writable in `dRWA` [2]. [incompatible-variance]
 
-   test_keyword.js:50:4
-   50|   (droA: dRWA); // error
-          ^^^^
+   test_keyword.js:50:3
+   50|   droA as dRWA; // error
+         ^^^^
 
 References:
    test_keyword.js:31:19
    31| declare var droA: dROA;
                          ^^^^ [1]
-   test_keyword.js:50:10
-   50|   (droA: dRWA); // error
-                ^^^^ [2]
+   test_keyword.js:50:11
+   50|   droA as dRWA; // error
+                 ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:53:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:53:3
 
 Cannot cast `woA` to `RWA` because property `p` is write-only in `WOA` [1] but readable in `RWA` [2].
 [incompatible-variance]
 
-   test_keyword.js:53:4
-   53|   (woA: RWA); // error
-          ^^^
+   test_keyword.js:53:3
+   53|   woA as RWA; // error
+         ^^^
 
 References:
    test_keyword.js:15:18
    15| declare var woA: WOA;
                         ^^^ [1]
-   test_keyword.js:53:9
-   53|   (woA: RWA); // error
-               ^^^ [2]
+   test_keyword.js:53:10
+   53|   woA as RWA; // error
+                ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:54:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:54:3
 
 Cannot cast `dwoA` to `dRWA` because an index signature declaring the expected key / value type is write-only in
 `dWOA` [1] but readable in `dRWA` [2]. [incompatible-variance]
 
-   test_keyword.js:54:4
-   54|   (dwoA: dRWA); // error
-          ^^^^
+   test_keyword.js:54:3
+   54|   dwoA as dRWA; // error
+         ^^^^
 
 References:
    test_keyword.js:32:19
    32| declare var dwoA: dWOA;
                          ^^^^ [1]
-   test_keyword.js:54:10
-   54|   (dwoA: dRWA); // error
-                ^^^^ [2]
+   test_keyword.js:54:11
+   54|   dwoA as dRWA; // error
+                 ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:61:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:61:3
 
 Cannot cast `rwB` to `RWA` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
@@ -1093,9 +1093,9 @@ The above-mentioned two types must be the same because property `p` is invariant
 - Or make property `p` in `RWA` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test_keyword.js:61:4
-   61|   (rwB: RWA); // error
-          ^^^
+   test_keyword.js:61:3
+   61|   rwB as RWA; // error
+         ^^^
 
 References:
    test_keyword.js:9:16
@@ -1110,12 +1110,12 @@ References:
    test_keyword.js:6:12
     6| type RWA = {p: A}
                   ^^^^^^ [4]
-   test_keyword.js:61:9
-   61|   (rwB: RWA); // error
-               ^^^ [5]
+   test_keyword.js:61:10
+   61|   rwB as RWA; // error
+                ^^^ [5]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:62:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:62:3
 
 Cannot cast `drwB` to `dRWA` because in the indexer property: `B` [1] is not exactly the same as `A` [2].
 [incompatible-type]
@@ -1125,9 +1125,9 @@ The above-mentioned two types must be the same because the indexer is invariantl
 - Or make the indexer in `dRWA` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test_keyword.js:62:4
-   62|   (drwB: dRWA); // error
-          ^^^^
+   test_keyword.js:62:3
+   62|   drwB as dRWA; // error
+         ^^^^
 
 References:
    test_keyword.js:26:24
@@ -1142,72 +1142,72 @@ References:
    test_keyword.js:23:13
    23| type dRWA = {[string]: A};
                    ^^^^^^^^^^^^^ [4]
-   test_keyword.js:62:10
-   62|   (drwB: dRWA); // error
-                ^^^^ [5]
+   test_keyword.js:62:11
+   62|   drwB as dRWA; // error
+                 ^^^^ [5]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:65:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:65:3
 
 Cannot cast `roB` to `RWA` because property `p` is read-only in `ROB` [1] but writable in `RWA` [2].
 [incompatible-variance]
 
-   test_keyword.js:65:4
-   65|   (roB: RWA); // error
-          ^^^
+   test_keyword.js:65:3
+   65|   roB as RWA; // error
+         ^^^
 
 References:
    test_keyword.js:18:18
    18| declare var roB: ROB;
                         ^^^ [1]
-   test_keyword.js:65:9
-   65|   (roB: RWA); // error
-               ^^^ [2]
+   test_keyword.js:65:10
+   65|   roB as RWA; // error
+                ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:66:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:66:3
 
 Cannot cast `droB` to `dRWA` because an index signature declaring the expected key / value type is read-only in
 `dROB` [1] but writable in `dRWA` [2]. [incompatible-variance]
 
-   test_keyword.js:66:4
-   66|   (droB: dRWA); // error
-          ^^^^
+   test_keyword.js:66:3
+   66|   droB as dRWA; // error
+         ^^^^
 
 References:
    test_keyword.js:35:19
    35| declare var droB: dROB;
                          ^^^^ [1]
-   test_keyword.js:66:10
-   66|   (droB: dRWA); // error
-                ^^^^ [2]
+   test_keyword.js:66:11
+   66|   droB as dRWA; // error
+                 ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:69:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:69:3
 
 Cannot cast `woB` to `RWA` because property `p` is write-only in `WOB` [1] but readable in `RWA` [2].
 [incompatible-variance]
 
-   test_keyword.js:69:4
-   69|   (woB: RWA); // error
-          ^^^
+   test_keyword.js:69:3
+   69|   woB as RWA; // error
+         ^^^
 
 References:
    test_keyword.js:19:18
    19| declare var woB: WOB;
                         ^^^ [1]
-   test_keyword.js:69:9
-   69|   (woB: RWA); // error
-               ^^^ [2]
+   test_keyword.js:69:10
+   69|   woB as RWA; // error
+                ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:69:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:69:3
 
 Cannot cast `woB` to `RWA` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:69:4
-   69|   (woB: RWA); // error
-          ^^^
+   test_keyword.js:69:3
+   69|   woB as RWA; // error
+         ^^^
 
 References:
    test_keyword.js:6:16
@@ -1218,31 +1218,31 @@ References:
                                 ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:70:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:70:3
 
 Cannot cast `dwoB` to `dRWA` because an index signature declaring the expected key / value type is write-only in
 `dWOB` [1] but readable in `dRWA` [2]. [incompatible-variance]
 
-   test_keyword.js:70:4
-   70|   (dwoB: dRWA); // error
-          ^^^^
+   test_keyword.js:70:3
+   70|   dwoB as dRWA; // error
+         ^^^^
 
 References:
    test_keyword.js:36:19
    36| declare var dwoB: dWOB;
                          ^^^^ [1]
-   test_keyword.js:70:10
-   70|   (dwoB: dRWA); // error
-                ^^^^ [2]
+   test_keyword.js:70:11
+   70|   dwoB as dRWA; // error
+                 ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:70:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:70:3
 
 Cannot cast `dwoB` to `dRWA` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:70:4
-   70|   (dwoB: dRWA); // error
-          ^^^^
+   test_keyword.js:70:3
+   70|   dwoB as dRWA; // error
+         ^^^^
 
 References:
    test_keyword.js:23:24
@@ -1253,121 +1253,121 @@ References:
                                         ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:88:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:88:3
 
 Cannot cast `woA` to `ROA` because property `p` is write-only in `WOA` [1] but read-only in `ROA` [2].
 [incompatible-variance]
 
-   test_keyword.js:88:4
-   88|   (woA: ROA); // error
-          ^^^
+   test_keyword.js:88:3
+   88|   woA as ROA; // error
+         ^^^
 
 References:
    test_keyword.js:15:18
    15| declare var woA: WOA;
                         ^^^ [1]
-   test_keyword.js:88:9
-   88|   (woA: ROA); // error
-               ^^^ [2]
+   test_keyword.js:88:10
+   88|   woA as ROA; // error
+                ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- test_keyword.js:89:4
+Error --------------------------------------------------------------------------------------------- test_keyword.js:89:3
 
 Cannot cast `dwoA` to `dROA` because an index signature declaring the expected key / value type is write-only in
 `dWOA` [1] but read-only in `dROA` [2]. [incompatible-variance]
 
-   test_keyword.js:89:4
-   89|   (dwoA: dROA); // error
-          ^^^^
+   test_keyword.js:89:3
+   89|   dwoA as dROA; // error
+         ^^^^
 
 References:
    test_keyword.js:32:19
    32| declare var dwoA: dWOA;
                          ^^^^ [1]
-   test_keyword.js:89:10
-   89|   (dwoA: dROA); // error
-                ^^^^ [2]
+   test_keyword.js:89:11
+   89|   dwoA as dROA; // error
+                 ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:104:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:104:3
 
 Cannot cast `woB` to `ROA` because property `p` is write-only in `WOB` [1] but read-only in `ROA` [2].
 [incompatible-variance]
 
-   test_keyword.js:104:4
-   104|   (woB: ROA); // error
-           ^^^
+   test_keyword.js:104:3
+   104|   woB as ROA; // error
+          ^^^
 
 References:
    test_keyword.js:19:18
     19| declare var woB: WOB;
                          ^^^ [1]
-   test_keyword.js:104:9
-   104|   (woB: ROA); // error
-                ^^^ [2]
+   test_keyword.js:104:10
+   104|   woB as ROA; // error
+                 ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:105:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:105:3
 
 Cannot cast `dwoB` to `dROA` because an index signature declaring the expected key / value type is write-only in
 `dWOB` [1] but read-only in `dROA` [2]. [incompatible-variance]
 
-   test_keyword.js:105:4
-   105|   (dwoB: dROA); // error
-           ^^^^
+   test_keyword.js:105:3
+   105|   dwoB as dROA; // error
+          ^^^^
 
 References:
    test_keyword.js:36:19
     36| declare var dwoB: dWOB;
                           ^^^^ [1]
-   test_keyword.js:105:10
-   105|   (dwoB: dROA); // error
-                 ^^^^ [2]
+   test_keyword.js:105:11
+   105|   dwoB as dROA; // error
+                  ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:119:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:119:3
 
 Cannot cast `roA` to `WOA` because property `p` is read-only in `ROA` [1] but write-only in `WOA` [2].
 [incompatible-variance]
 
-   test_keyword.js:119:4
-   119|   (roA: WOA); // error
-           ^^^
+   test_keyword.js:119:3
+   119|   roA as WOA; // error
+          ^^^
 
 References:
    test_keyword.js:14:18
     14| declare var roA: ROA;
                          ^^^ [1]
-   test_keyword.js:119:9
-   119|   (roA: WOA); // error
-                ^^^ [2]
+   test_keyword.js:119:10
+   119|   roA as WOA; // error
+                 ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:120:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:120:3
 
 Cannot cast `droA` to `dWOA` because an index signature declaring the expected key / value type is read-only in
 `dROA` [1] but write-only in `dWOA` [2]. [incompatible-variance]
 
-   test_keyword.js:120:4
-   120|   (droA: dWOA); // error
-           ^^^^
+   test_keyword.js:120:3
+   120|   droA as dWOA; // error
+          ^^^^
 
 References:
    test_keyword.js:31:19
     31| declare var droA: dROA;
                           ^^^^ [1]
-   test_keyword.js:120:10
-   120|   (droA: dWOA); // error
-                 ^^^^ [2]
+   test_keyword.js:120:11
+   120|   droA as dWOA; // error
+                  ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:131:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:131:3
 
 Cannot cast `rwB` to `WOA` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:131:4
-   131|   (rwB: WOA); // error
-           ^^^
+   test_keyword.js:131:3
+   131|   rwB as WOA; // error
+          ^^^
 
 References:
    test_keyword.js:8:26
@@ -1378,13 +1378,13 @@ References:
                        ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:132:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:132:3
 
 Cannot cast `drwB` to `dWOA` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:132:4
-   132|   (drwB: dWOA); // error
-           ^^^^
+   test_keyword.js:132:3
+   132|   drwB as dWOA; // error
+          ^^^^
 
 References:
    test_keyword.js:25:34
@@ -1395,49 +1395,49 @@ References:
                                ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:135:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:135:3
 
 Cannot cast `roB` to `WOA` because property `p` is read-only in `ROB` [1] but write-only in `WOA` [2].
 [incompatible-variance]
 
-   test_keyword.js:135:4
-   135|   (roB: WOA); // error
-           ^^^
+   test_keyword.js:135:3
+   135|   roB as WOA; // error
+          ^^^
 
 References:
    test_keyword.js:18:18
     18| declare var roB: ROB;
                          ^^^ [1]
-   test_keyword.js:135:9
-   135|   (roB: WOA); // error
-                ^^^ [2]
+   test_keyword.js:135:10
+   135|   roB as WOA; // error
+                 ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:136:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:136:3
 
 Cannot cast `droB` to `dWOA` because an index signature declaring the expected key / value type is read-only in
 `dROB` [1] but write-only in `dWOA` [2]. [incompatible-variance]
 
-   test_keyword.js:136:4
-   136|   (droB: dWOA); // error
-           ^^^^
+   test_keyword.js:136:3
+   136|   droB as dWOA; // error
+          ^^^^
 
 References:
    test_keyword.js:35:19
     35| declare var droB: dROB;
                           ^^^^ [1]
-   test_keyword.js:136:10
-   136|   (droB: dWOA); // error
-                 ^^^^ [2]
+   test_keyword.js:136:11
+   136|   droB as dWOA; // error
+                  ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:139:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:139:3
 
 Cannot cast `woB` to `WOA` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:139:4
-   139|   (woB: WOA); // error
-           ^^^
+   test_keyword.js:139:3
+   139|   woB as WOA; // error
+          ^^^
 
 References:
    test_keyword.js:8:26
@@ -1448,13 +1448,13 @@ References:
                                  ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:140:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:140:3
 
 Cannot cast `dwoB` to `dWOA` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:140:4
-   140|   (dwoB: dWOA); // error
-           ^^^^
+   test_keyword.js:140:3
+   140|   dwoB as dWOA; // error
+          ^^^^
 
 References:
    test_keyword.js:25:34
@@ -1470,7 +1470,7 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to `RWB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test_keyword.js:146:8
-   146|   ({p: new A}: RWB); // error
+   146|   ({p: new A} as RWB); // error
                ^^^^^ [1]
 
 References:
@@ -1484,7 +1484,7 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to `dRWB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test_keyword.js:147:8
-   147|   ({p: new A}: dRWB); // error
+   147|   ({p: new A} as dRWB); // error
                ^^^^^ [1]
 
 References:
@@ -1493,7 +1493,7 @@ References:
                                ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:150:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:150:3
 
 Cannot cast `rwA` to `RWB` because in property `p`: `A` [1] is not exactly the same as `B` [2]. [incompatible-type]
 
@@ -1502,9 +1502,9 @@ The above-mentioned two types must be the same because property `p` is invariant
 - Or make property `p` in `RWB` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test_keyword.js:150:4
-   150|   (rwA: RWB); // error
-           ^^^
+   test_keyword.js:150:3
+   150|   rwA as RWB; // error
+          ^^^
 
 References:
    test_keyword.js:6:16
@@ -1519,12 +1519,12 @@ References:
    test_keyword.js:9:12
      9| type RWB = {p: B}
                    ^^^^^^ [4]
-   test_keyword.js:150:9
-   150|   (rwA: RWB); // error
-                ^^^ [5]
+   test_keyword.js:150:10
+   150|   rwA as RWB; // error
+                 ^^^ [5]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:151:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:151:3
 
 Cannot cast `drwA` to `dRWB` because in the indexer property: `A` [1] is not exactly the same as `B` [2].
 [incompatible-type]
@@ -1534,9 +1534,9 @@ The above-mentioned two types must be the same because the indexer is invariantl
 - Or make the indexer in `dRWB` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test_keyword.js:151:4
-   151|   (drwA: dRWB); // error
-           ^^^^
+   test_keyword.js:151:3
+   151|   drwA as dRWB; // error
+          ^^^^
 
 References:
    test_keyword.js:23:24
@@ -1551,36 +1551,36 @@ References:
    test_keyword.js:26:13
     26| type dRWB = {[string]: B};
                     ^^^^^^^^^^^^^ [4]
-   test_keyword.js:151:10
-   151|   (drwA: dRWB); // error
-                 ^^^^ [5]
+   test_keyword.js:151:11
+   151|   drwA as dRWB; // error
+                  ^^^^ [5]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:154:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:154:3
 
 Cannot cast `roA` to `RWB` because property `p` is read-only in `ROA` [1] but writable in `RWB` [2].
 [incompatible-variance]
 
-   test_keyword.js:154:4
-   154|   (roA: RWB); // error
-           ^^^
+   test_keyword.js:154:3
+   154|   roA as RWB; // error
+          ^^^
 
 References:
    test_keyword.js:14:18
     14| declare var roA: ROA;
                          ^^^ [1]
-   test_keyword.js:154:9
-   154|   (roA: RWB); // error
-                ^^^ [2]
+   test_keyword.js:154:10
+   154|   roA as RWB; // error
+                 ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:154:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:154:3
 
 Cannot cast `roA` to `RWB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:154:4
-   154|   (roA: RWB); // error
-           ^^^
+   test_keyword.js:154:3
+   154|   roA as RWB; // error
+          ^^^
 
 References:
    test_keyword.js:7:25
@@ -1591,31 +1591,31 @@ References:
                        ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:155:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:155:3
 
 Cannot cast `droA` to `dRWB` because an index signature declaring the expected key / value type is read-only in
 `dROA` [1] but writable in `dRWB` [2]. [incompatible-variance]
 
-   test_keyword.js:155:4
-   155|   (droA: dRWB); // error
-           ^^^^
+   test_keyword.js:155:3
+   155|   droA as dRWB; // error
+          ^^^^
 
 References:
    test_keyword.js:31:19
     31| declare var droA: dROA;
                           ^^^^ [1]
-   test_keyword.js:155:10
-   155|   (droA: dRWB); // error
-                 ^^^^ [2]
+   test_keyword.js:155:11
+   155|   droA as dRWB; // error
+                  ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:155:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:155:3
 
 Cannot cast `droA` to `dRWB` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:155:4
-   155|   (droA: dRWB); // error
-           ^^^^
+   test_keyword.js:155:3
+   155|   droA as dRWB; // error
+          ^^^^
 
 References:
    test_keyword.js:24:33
@@ -1626,40 +1626,40 @@ References:
                                ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:158:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:158:3
 
 Cannot cast `woA` to `RWB` because property `p` is write-only in `WOA` [1] but readable in `RWB` [2].
 [incompatible-variance]
 
-   test_keyword.js:158:4
-   158|   (woA: RWB); // error
-           ^^^
+   test_keyword.js:158:3
+   158|   woA as RWB; // error
+          ^^^
 
 References:
    test_keyword.js:15:18
     15| declare var woA: WOA;
                          ^^^ [1]
-   test_keyword.js:158:9
-   158|   (woA: RWB); // error
-                ^^^ [2]
+   test_keyword.js:158:10
+   158|   woA as RWB; // error
+                 ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:159:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:159:3
 
 Cannot cast `dwoA` to `dRWB` because an index signature declaring the expected key / value type is write-only in
 `dWOA` [1] but readable in `dRWB` [2]. [incompatible-variance]
 
-   test_keyword.js:159:4
-   159|   (dwoA: dRWB); // error
-           ^^^^
+   test_keyword.js:159:3
+   159|   dwoA as dRWB; // error
+          ^^^^
 
 References:
    test_keyword.js:32:19
     32| declare var dwoA: dWOA;
                           ^^^^ [1]
-   test_keyword.js:159:10
-   159|   (dwoA: dRWB); // error
-                 ^^^^ [2]
+   test_keyword.js:159:11
+   159|   dwoA as dRWB; // error
+                  ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:165:8
@@ -1667,7 +1667,7 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to `ROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test_keyword.js:165:8
-   165|   ({p: new A}: ROB); // error
+   165|   ({p: new A} as ROB); // error
                ^^^^^ [1]
 
 References:
@@ -1681,7 +1681,7 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to `dROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test_keyword.js:166:8
-   166|   ({p: new A}: dROB); // error
+   166|   ({p: new A} as dROB); // error
                ^^^^^ [1]
 
 References:
@@ -1690,13 +1690,13 @@ References:
                                         ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:169:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:169:3
 
 Cannot cast `rwA` to `ROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:169:4
-   169|   (rwA: ROB); // error
-           ^^^
+   test_keyword.js:169:3
+   169|   rwA as ROB; // error
+          ^^^
 
 References:
    test_keyword.js:6:16
@@ -1707,13 +1707,13 @@ References:
                                 ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:170:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:170:3
 
 Cannot cast `drwA` to `dROB` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:170:4
-   170|   (drwA: dROB); // error
-           ^^^^
+   test_keyword.js:170:3
+   170|   drwA as dROB; // error
+          ^^^^
 
 References:
    test_keyword.js:23:24
@@ -1724,13 +1724,13 @@ References:
                                         ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:173:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:173:3
 
 Cannot cast `roA` to `ROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:173:4
-   173|   (roA: ROB); // error
-           ^^^
+   test_keyword.js:173:3
+   173|   roA as ROB; // error
+          ^^^
 
 References:
    test_keyword.js:7:25
@@ -1741,13 +1741,13 @@ References:
                                 ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:174:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:174:3
 
 Cannot cast `droA` to `dROB` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   test_keyword.js:174:4
-   174|   (droA: dROB); // error
-           ^^^^
+   test_keyword.js:174:3
+   174|   droA as dROB; // error
+          ^^^^
 
 References:
    test_keyword.js:24:33
@@ -1758,81 +1758,81 @@ References:
                                         ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:177:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:177:3
 
 Cannot cast `woA` to `ROB` because property `p` is write-only in `WOA` [1] but read-only in `ROB` [2].
 [incompatible-variance]
 
-   test_keyword.js:177:4
-   177|   (woA: ROB); // error
-           ^^^
+   test_keyword.js:177:3
+   177|   woA as ROB; // error
+          ^^^
 
 References:
    test_keyword.js:15:18
     15| declare var woA: WOA;
                          ^^^ [1]
-   test_keyword.js:177:9
-   177|   (woA: ROB); // error
-                ^^^ [2]
+   test_keyword.js:177:10
+   177|   woA as ROB; // error
+                 ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:178:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:178:3
 
 Cannot cast `dwoA` to `dROB` because an index signature declaring the expected key / value type is write-only in
 `dWOA` [1] but read-only in `dROB` [2]. [incompatible-variance]
 
-   test_keyword.js:178:4
-   178|   (dwoA: dROB); // error
-           ^^^^
+   test_keyword.js:178:3
+   178|   dwoA as dROB; // error
+          ^^^^
 
 References:
    test_keyword.js:32:19
     32| declare var dwoA: dWOA;
                           ^^^^ [1]
-   test_keyword.js:178:10
-   178|   (dwoA: dROB); // error
-                 ^^^^ [2]
+   test_keyword.js:178:11
+   178|   dwoA as dROB; // error
+                  ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:192:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:192:3
 
 Cannot cast `roA` to `WOB` because property `p` is read-only in `ROA` [1] but write-only in `WOB` [2].
 [incompatible-variance]
 
-   test_keyword.js:192:4
-   192|   (roA: WOB); // error
-           ^^^
+   test_keyword.js:192:3
+   192|   roA as WOB; // error
+          ^^^
 
 References:
    test_keyword.js:14:18
     14| declare var roA: ROA;
                          ^^^ [1]
-   test_keyword.js:192:9
-   192|   (roA: WOB); // error
-                ^^^ [2]
+   test_keyword.js:192:10
+   192|   roA as WOB; // error
+                 ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- test_keyword.js:193:4
+Error -------------------------------------------------------------------------------------------- test_keyword.js:193:3
 
 Cannot cast `droA` to `dWOB` because an index signature declaring the expected key / value type is read-only in
 `dROA` [1] but write-only in `dWOB` [2]. [incompatible-variance]
 
-   test_keyword.js:193:4
-   193|   (droA: dWOB); // error
-           ^^^^
+   test_keyword.js:193:3
+   193|   droA as dWOB; // error
+          ^^^^
 
 References:
    test_keyword.js:31:19
     31| declare var droA: dROA;
                           ^^^^ [1]
-   test_keyword.js:193:10
-   193|   (droA: dWOB); // error
-                 ^^^^ [2]
+   test_keyword.js:193:11
+   193|   droA as dWOB; // error
+                  ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:207:18
 
-Cannot cast array literal to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
 `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1841,24 +1841,24 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:207:18
-   207|   (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
+   207|   [roA] as Array<{readonly p:A,...}> as Array<{p:A,...}>; // error
                          ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:207:46
-   207|   (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
-                                                     ^^^^^^^^^ [2]
+   test_keyword.js:207:47
+   207|   [roA] as Array<{readonly p:A,...}> as Array<{p:A,...}>; // error
+                                                      ^^^^^^^^^ [2]
    test_keyword.js:207:12
-   207|   (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
+   207|   [roA] as Array<{readonly p:A,...}> as Array<{p:A,...}>; // error
                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:207:40
-   207|   (([roA]: Array<{readonly p:A,...}>): Array<{p:A,...}>); // error
-                                               ^^^^^^^^^^^^^^^^ [4]
+   test_keyword.js:207:41
+   207|   [roA] as Array<{readonly p:A,...}> as Array<{p:A,...}>; // error
+                                                ^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:209:18
 
-Cannot cast array literal to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
 `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1867,24 +1867,24 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:209:18
-   209|   (([woA]: Array<{writeonly p:A,...}>): Array<{p:A,...}>); // error 
+   209|   [woA] as Array<{writeonly p:A,...}> as Array<{p:A,...}>; // error 
                          ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:209:47
-   209|   (([woA]: Array<{writeonly p:A,...}>): Array<{p:A,...}>); // error 
-                                                      ^^^^^^^^^ [2]
+   test_keyword.js:209:48
+   209|   [woA] as Array<{writeonly p:A,...}> as Array<{p:A,...}>; // error 
+                                                       ^^^^^^^^^ [2]
    test_keyword.js:209:12
-   209|   (([woA]: Array<{writeonly p:A,...}>): Array<{p:A,...}>); // error 
+   209|   [woA] as Array<{writeonly p:A,...}> as Array<{p:A,...}>; // error 
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:209:41
-   209|   (([woA]: Array<{writeonly p:A,...}>): Array<{p:A,...}>); // error 
-                                                ^^^^^^^^^^^^^^^^ [4]
+   test_keyword.js:209:42
+   209|   [woA] as Array<{writeonly p:A,...}> as Array<{p:A,...}>; // error 
+                                                 ^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:210:18
 
-Cannot cast array literal to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
 `{+p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1893,24 +1893,24 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:210:18
-   210|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
+   210|   [rwA] as Array<{p:A,...}> as Array<{readonly p:A,...}>; // error
                          ^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:210:37
-   210|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
-                                            ^^^^^^^^^^^^^^^^^^ [2]
+   test_keyword.js:210:38
+   210|   [rwA] as Array<{p:A,...}> as Array<{readonly p:A,...}>; // error
+                                             ^^^^^^^^^^^^^^^^^^ [2]
    test_keyword.js:210:12
-   210|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
+   210|   [rwA] as Array<{p:A,...}> as Array<{readonly p:A,...}>; // error
                    ^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:210:31
-   210|   (([rwA]: Array<{p:A,...}>): Array<{readonly p:A,...}>); // error
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   test_keyword.js:210:32
+   210|   [rwA] as Array<{p:A,...}> as Array<{readonly p:A,...}>; // error
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:214:18
 
-Cannot cast array literal to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
 `{+p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1919,24 +1919,24 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:214:18
-   214|   (([woA]: Array<{writeonly p:A,...}>): Array<{readonly p:A,...}>); // error 
+   214|   [woA] as Array<{writeonly p:A,...}> as Array<{readonly p:A,...}>; // error 
                          ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:214:47
-   214|   (([woA]: Array<{writeonly p:A,...}>): Array<{readonly p:A,...}>); // error 
-                                                      ^^^^^^^^^^^^^^^^^^ [2]
+   test_keyword.js:214:48
+   214|   [woA] as Array<{writeonly p:A,...}> as Array<{readonly p:A,...}>; // error 
+                                                       ^^^^^^^^^^^^^^^^^^ [2]
    test_keyword.js:214:12
-   214|   (([woA]: Array<{writeonly p:A,...}>): Array<{readonly p:A,...}>); // error 
+   214|   [woA] as Array<{writeonly p:A,...}> as Array<{readonly p:A,...}>; // error 
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:214:41
-   214|   (([woA]: Array<{writeonly p:A,...}>): Array<{readonly p:A,...}>); // error 
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   test_keyword.js:214:42
+   214|   [woA] as Array<{writeonly p:A,...}> as Array<{readonly p:A,...}>; // error 
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:215:18
 
-Cannot cast array literal to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
 `{-p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1945,24 +1945,24 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:215:18
-   215|   (([rwA]: Array<{p:A,...}>): Array<{writeonly p:A,...}>); // error 
+   215|   [rwA] as Array<{p:A,...}> as Array<{writeonly p:A,...}>; // error 
                          ^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:215:37
-   215|   (([rwA]: Array<{p:A,...}>): Array<{writeonly p:A,...}>); // error 
-                                            ^^^^^^^^^^^^^^^^^^^ [2]
+   test_keyword.js:215:38
+   215|   [rwA] as Array<{p:A,...}> as Array<{writeonly p:A,...}>; // error 
+                                             ^^^^^^^^^^^^^^^^^^^ [2]
    test_keyword.js:215:12
-   215|   (([rwA]: Array<{p:A,...}>): Array<{writeonly p:A,...}>); // error 
+   215|   [rwA] as Array<{p:A,...}> as Array<{writeonly p:A,...}>; // error 
                    ^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:215:31
-   215|   (([rwA]: Array<{p:A,...}>): Array<{writeonly p:A,...}>); // error 
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   test_keyword.js:215:32
+   215|   [rwA] as Array<{p:A,...}> as Array<{writeonly p:A,...}>; // error 
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:216:18
 
-Cannot cast array literal to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
 `{-p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -1971,19 +1971,19 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test_keyword.js:216:18
-   216|   (([roA]: Array<{readonly p:A,...}>): Array<{writeonly p:A,...}>); // error 
+   216|   [roA] as Array<{readonly p:A,...}> as Array<{writeonly p:A,...}>; // error 
                          ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test_keyword.js:216:46
-   216|   (([roA]: Array<{readonly p:A,...}>): Array<{writeonly p:A,...}>); // error 
-                                                     ^^^^^^^^^^^^^^^^^^^ [2]
+   test_keyword.js:216:47
+   216|   [roA] as Array<{readonly p:A,...}> as Array<{writeonly p:A,...}>; // error 
+                                                      ^^^^^^^^^^^^^^^^^^^ [2]
    test_keyword.js:216:12
-   216|   (([roA]: Array<{readonly p:A,...}>): Array<{writeonly p:A,...}>); // error 
+   216|   [roA] as Array<{readonly p:A,...}> as Array<{writeonly p:A,...}>; // error 
                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test_keyword.js:216:40
-   216|   (([roA]: Array<{readonly p:A,...}>): Array<{writeonly p:A,...}>); // error 
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   test_keyword.js:216:41
+   216|   [roA] as Array<{readonly p:A,...}> as Array<{writeonly p:A,...}>; // error 
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- test_keyword.js:225:3

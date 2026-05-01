@@ -1,27 +1,27 @@
-Error --------------------------------------------------------------------------------------------------------- b.js:5:2
+Error --------------------------------------------------------------------------------------------------------- b.js:5:1
 
 Cannot cast `a.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   b.js:5:2
-   5| (a.x: string);
-       ^^^
+   b.js:5:1
+   5| a.x as string;
+      ^^^
 
 References:
    a.js:3:9
    3| foo.x = 1;
               ^ [1]
-   b.js:5:7
-   5| (a.x: string);
-            ^^^^^^ [2]
+   b.js:5:8
+   5| a.x as string;
+             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- b.js:6:4
+Error --------------------------------------------------------------------------------------------------------- b.js:6:3
 
 Cannot get `a.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
-   b.js:6:4
-   6| (a.other: number);
-         ^^^^^
+   b.js:6:3
+   6| a.other as number;
+        ^^^^^
 
 References:
    a.js:1:1
@@ -29,30 +29,30 @@ References:
       ^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:13:2
+Error -------------------------------------------------------------------------------------------------------- b.js:13:1
 
 Cannot cast `poly_a.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   b.js:13:2
-   13| (poly_a.x: string);
-        ^^^^^^^^
+   b.js:13:1
+   13| poly_a.x as string;
+       ^^^^^^^^
 
 References:
    poly_a.js:3:9
     3| foo.x = 1;
                ^ [1]
-   b.js:13:12
-   13| (poly_a.x: string);
-                  ^^^^^^ [2]
+   b.js:13:13
+   13| poly_a.x as string;
+                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------------- b.js:14:9
+Error -------------------------------------------------------------------------------------------------------- b.js:14:8
 
 Cannot get `poly_a.other` because property `other` is missing in statics of function [1]. [prop-missing]
 
-   b.js:14:9
-   14| (poly_a.other: number);
-               ^^^^^
+   b.js:14:8
+   14| poly_a.other as number;
+              ^^^^^
 
 References:
    poly_a.js:1:1
@@ -60,13 +60,13 @@ References:
        ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- conditional-import.js:4:4
+Error ---------------------------------------------------------------------------------------- conditional-import.js:4:3
 
 Cannot get `f.a` because property `a` is missing in statics of function [1]. [prop-missing]
 
-   conditional-import.js:4:4
-   4| (f.a: number); // ERROR
-         ^
+   conditional-import.js:4:3
+   4| f.a as number; // ERROR
+        ^
 
 References:
    conditional.js:5:8
@@ -74,13 +74,13 @@ References:
              ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- conditional-import.js:5:4
+Error ---------------------------------------------------------------------------------------- conditional-import.js:5:3
 
 Cannot get `f.b` because property `b` is missing in statics of function [1]. [prop-missing]
 
-   conditional-import.js:5:4
-   5| (f.b: number); // ERROR
-         ^
+   conditional-import.js:5:3
+   5| f.b as number; // ERROR
+        ^
 
 References:
    conditional.js:5:8
@@ -88,13 +88,13 @@ References:
              ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- conditional-import.js:8:4
+Error ---------------------------------------------------------------------------------------- conditional-import.js:8:3
 
 Cannot get `g.a` because property `a` is missing in statics of function [1]. [prop-missing]
 
-   conditional-import.js:8:4
-    8| (g.a: number); // ERROR
-          ^
+   conditional-import.js:8:3
+    8| g.a as number; // ERROR
+         ^
 
 References:
    conditional.js:20:11

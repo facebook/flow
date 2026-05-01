@@ -10,7 +10,7 @@
 
 function fun(a: ((x: number) => void) | ((x: string) => void)) { }
 
-fun((((x) => {}): A1));
+fun(((x) => {} as A1);
 
 type A1 = (x: B1) => void;
 
@@ -22,7 +22,7 @@ type B1 = string;
 
 function arr(a: number[] | string[]) { }
 
-arr(([]: A2));
+arr([] as A2);
 
 type A2 = B2[];
 

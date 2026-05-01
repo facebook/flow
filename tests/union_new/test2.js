@@ -10,7 +10,7 @@
 
 function obj(a: { x: number } | { x: string }) { }
 
-obj(({ x: "" }: A1));
+obj({ x: "" } as A1);
 
 type A1 = { x: B1 };
 
@@ -22,7 +22,7 @@ type B1 = string;
 
 function fun(a: (() => number) | (() => string)) { }
 
-fun(((() => ""): A2));
+fun((() => "" as A2);
 
 type A2 = () => B2;
 
@@ -36,7 +36,7 @@ class C<X> { }
 
 function inst(a: C<number> | C<string>) { }
 
-inst((new C: A3));
+inst(new C as A3);
 
 type A3 = C<B3>;
 
@@ -71,7 +71,7 @@ type B5 = string;
 
 function tup(a: [number,boolean] | [string,boolean]) { }
 
-tup((["",false]: A6));
+tup(["",false] as A6);
 
 type A6 = [B6,boolean];
 type B6 = string;

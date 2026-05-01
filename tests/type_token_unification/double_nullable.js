@@ -12,7 +12,7 @@ var z: ??number = undefined;
 var w: ??number = 42;
 
 // Test 3: Double nullable in cast
-(('hello': ??string): ?string); // ok
+'hello' as ??string as ?string; // ok
 
 // Test 4: Double nullable in object type
 type Obj = {

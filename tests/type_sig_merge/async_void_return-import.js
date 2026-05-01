@@ -1,3 +1,3 @@
 import {f} from './async_void_return-export';
 
-(f(): empty); // error: Promise ~> empty
+f() as empty; // error: Promise ~> empty

@@ -6,4 +6,4 @@ type ActionType =
   | { type: 'foo', x: number }
   | { type: 'bar', x: number }
 
-({ type: Constants.BAR, x: 0 }: ActionType);
+{ type: Constants.BAR, x: 0 } as ActionType;

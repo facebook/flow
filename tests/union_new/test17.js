@@ -4,4 +4,4 @@
 
 ([] as Array<empty>).concat([]);
 
-([]: Array<empty>).concat([0, 1])[1] as string;
+([] as Array<empty>).concat([0, 1])[1] as string;

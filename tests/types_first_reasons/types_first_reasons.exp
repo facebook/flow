@@ -65,9 +65,9 @@ Cannot get `b.bzzt` because property `bzzt` is missing in `B` [1]. [prop-missing
         ^^^^
 
 References:
-   qualified.js:3:26
-   3| module.exports = (new B: A.B);
-                               ^^^ [1]
+   qualified.js:3:27
+   3| module.exports = new B as A.B;
+                                ^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- qualified_typeapp.js:3:25

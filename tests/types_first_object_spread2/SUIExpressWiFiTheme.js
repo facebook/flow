@@ -12,4 +12,4 @@ export type ComponentUniforms = {
 // NOTE: This should error but does not because temporary object spreads use
 // object literal reasons. When that becomes the case, this should error because
 // the read-write properties will fail to unify.
-(SUIExpressWiFiThemeComponents: ComponentUniforms);
+SUIExpressWiFiThemeComponents as ComponentUniforms;

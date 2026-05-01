@@ -1,3 +1,3 @@
 // @flow
 
-(require('./foo'): string);
+require('./foo') as string;

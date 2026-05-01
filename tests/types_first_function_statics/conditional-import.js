@@ -1,8 +1,8 @@
 import {f, g} from './conditional';
 
-(f.legal: number); // OK
-(f.a: number); // ERROR
-(f.b: number); // ERROR
+f.legal as number; // OK
+f.a as number; // ERROR
+f.b as number; // ERROR
 
-(g.legal: number); // OK
-(g.a: number); // ERROR
+g.legal as number; // OK
+g.a as number; // ERROR

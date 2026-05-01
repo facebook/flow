@@ -1,4 +1,4 @@
 const x = require('./import_dynamic');
 x.then(y => {
-  (y: empty); // error: number ~> empty
+  y as empty; // error: number ~> empty
 });

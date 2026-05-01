@@ -65,18 +65,18 @@ References:
                                ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- method_shadow.js:43:6
+Error -------------------------------------------------------------------------------------------- method_shadow.js:43:5
 
 Cannot call `g.m` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   method_shadow.js:43:6
-   43| (g.m(""): G<number>); // err, string ~> number
-            ^^ [1]
+   method_shadow.js:43:5
+   43| g.m("") as G<number>; // err, string ~> number
+           ^^ [1]
 
 References:
-   method_shadow.js:43:13
-   43| (g.m(""): G<number>); // err, string ~> number
-                   ^^^^^^ [2]
+   method_shadow.js:43:14
+   43| g.m("") as G<number>; // err, string ~> number
+                    ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- method_shadow.js:51:18

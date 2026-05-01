@@ -1,20 +1,20 @@
 
 Server should start in types-first mode
-Error ------------------------------------------------------------------------------------------------------- bar.js:4:2
+Error ------------------------------------------------------------------------------------------------------- bar.js:4:1
 
 Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   bar.js:4:2
-   4| (foo: string);
-       ^^^
+   bar.js:4:1
+   4| foo as string;
+      ^^^
 
 References:
    foo.js:3:11
    3| const x = 0;
                 ^ [1]
-   bar.js:4:7
-   4| (foo: string);
-            ^^^^^^ [2]
+   bar.js:4:8
+   4| foo as string;
+             ^^^^^^ [2]
 
 
 
@@ -36,59 +36,59 @@ Fixing a type error in a previously unparsed file should make the error go away
 No errors!
 
 Revert to initial state
-Error ------------------------------------------------------------------------------------------------------- bar.js:4:2
+Error ------------------------------------------------------------------------------------------------------- bar.js:4:1
 
 Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   bar.js:4:2
-   4| (foo: string);
-       ^^^
+   bar.js:4:1
+   4| foo as string;
+      ^^^
 
 References:
    foo.js:3:11
    3| const x = 0;
                 ^ [1]
-   bar.js:4:7
-   4| (foo: string);
-            ^^^^^^ [2]
+   bar.js:4:8
+   4| foo as string;
+             ^^^^^^ [2]
 
 
 
 Found 1 error
 
 Add a recursive dependent
-Error ------------------------------------------------------------------------------------------------------- bar.js:4:2
+Error ------------------------------------------------------------------------------------------------------- bar.js:4:1
 
 Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   bar.js:4:2
-   4| (foo: string);
-       ^^^
+   bar.js:4:1
+   4| foo as string;
+      ^^^
 
 References:
    foo.js:3:11
    3| const x = 0;
                 ^ [1]
-   bar.js:4:7
-   4| (foo: string);
-            ^^^^^^ [2]
+   bar.js:4:8
+   4| foo as string;
+             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- qux.js:3:2
+Error ------------------------------------------------------------------------------------------------------- qux.js:3:1
 
 Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   qux.js:3:2
-   3| (require('./bar'): string);
-       ^^^^^^^^^^^^^^^^
+   qux.js:3:1
+   3| require('./bar') as string;
+      ^^^^^^^^^^^^^^^^
 
 References:
    foo.js:3:11
    3| const x = 0;
                 ^ [1]
-   qux.js:3:20
-   3| (require('./bar'): string);
-                         ^^^^^^ [2]
+   qux.js:3:21
+   3| require('./bar') as string;
+                          ^^^^^^ [2]
 
 
 

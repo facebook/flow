@@ -1,18 +1,18 @@
-Error --------------------------------------------------------------------------------------------------------- a.js:3:2
+Error --------------------------------------------------------------------------------------------------------- a.js:3:1
 
 Cannot cast `x` to number because `O` [1] is incompatible with number [2]. [incompatible-type]
 
-   a.js:3:2
-   3| (x: number); // error O ~> number
-       ^
+   a.js:3:1
+   3| x as number; // error O ~> number
+      ^
 
 References:
    a.js:2:16
    2| declare var x: O;
                      ^ [1]
-   a.js:3:5
-   3| (x: number); // error O ~> number
-          ^^^^^^ [2]
+   a.js:3:6
+   3| x as number; // error O ~> number
+           ^^^^^^ [2]
 
 
 

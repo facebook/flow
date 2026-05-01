@@ -18,4 +18,4 @@ type Props2 = {
 };
 
 declare var props: Props1;
-(props: Props2);
+props as Props2;

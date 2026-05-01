@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 all=true
 experimental.allow_variance_keywords=true
 experimental.allow_readonly_variance=true

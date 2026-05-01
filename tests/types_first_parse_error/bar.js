@@ -1,6 +1,6 @@
 // @flow
 
 const foo = require('./foo');
-(foo: string);
+foo as string;
 
 module.exports = foo;

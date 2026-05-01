@@ -26,7 +26,7 @@ type A2 = { x: B2 };
 type B1 = number;
 type B2 = string;
 
-(obj_result: B1 | B2);
+obj_result as B1 | B2;
 
 ///////////////////////////////////////
 // similar example with function types
@@ -44,7 +44,7 @@ type A4 = () => B4;
 type B3 = number;
 type B4 = string;
 
-(fun_result: B3 | B4);
+fun_result as B3 | B4;
 
 /////////////////////////////////////////////
 // similar example with class instance types

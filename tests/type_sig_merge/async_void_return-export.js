@@ -1,3 +1,3 @@
 export const f = async () => {};
 
-(f(): empty); // error: Promise ~> empty
+f() as empty; // error: Promise ~> empty

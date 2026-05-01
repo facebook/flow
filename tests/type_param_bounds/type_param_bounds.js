@@ -1,2 +1,2 @@
 type X<T: number> = boolean;
-(true: X<string>);
+true as X<string>;

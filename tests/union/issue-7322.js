@@ -12,11 +12,11 @@ type Bar = {
   useFoo(f: Foo): void
 };
 
-({}: Bar | {});
+({} as Bar | {});
 
 const x: Foo = new Foo();
 
 // These should all error
-(x.noReturn(): number);
-(x.returnNoArg(): number);
-(x.returnUndefined(): number);
+x.noReturn() as number;
+x.returnNoArg() as number;
+x.returnUndefined() as number;
