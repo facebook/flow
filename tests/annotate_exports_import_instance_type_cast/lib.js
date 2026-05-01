@@ -2,4 +2,4 @@
 
 class C {}
 
-module.exports = (new C(): C);
+module.exports = new C() as C;

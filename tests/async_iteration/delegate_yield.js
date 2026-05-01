@@ -14,7 +14,7 @@ async function *delegate_yield() {
 }
 (async () => {
   for await (const x of delegate_yield()) {
-    (x: void); // error: number ~> void
+    x as void; // error: number ~> void
   }
 });
 

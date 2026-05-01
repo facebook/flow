@@ -2,4 +2,4 @@
 
 import {x} from "./sleep"
 
-(x: string);
+x as string;

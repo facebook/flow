@@ -20,5 +20,5 @@ const b = [].reduce(
   { a: "" }
 );
 
-(a: ReturnType); // ok
-(b: ReturnType); // ok
+a as ReturnType; // ok
+b as ReturnType; // ok

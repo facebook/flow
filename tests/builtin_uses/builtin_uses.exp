@@ -1,35 +1,35 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:2:2
+Error ------------------------------------------------------------------------------------------------------ test.js:2:1
 
 Cannot cast `o.foo` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:2:2
-   2| (o.foo: string);
-       ^^^^^
+   test.js:2:1
+   2| o.foo as string;
+      ^^^^^
 
 References:
    test.js:1:32
    1| const o = Object.freeze({ foo: 0 });
                                      ^ [1]
-   test.js:2:9
-   2| (o.foo: string);
-              ^^^^^^ [2]
+   test.js:2:10
+   2| o.foo as string;
+               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test2.js:2:2
+Error ----------------------------------------------------------------------------------------------------- test2.js:2:1
 
 Cannot cast `o.foo` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-type]
 
-   test2.js:2:2
-   2| (o.foo: string);
-       ^^^^^
+   test2.js:2:1
+   2| o.foo as string;
+      ^^^^^
 
 References:
    test.js:1:32
    1| const o = Object.freeze({ foo: 0 });
                                      ^ [1]
-   test2.js:2:9
-   2| (o.foo: string);
-              ^^^^^^ [2]
+   test2.js:2:10
+   2| o.foo as string;
+               ^^^^^^ [2]
 
 
 

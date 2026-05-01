@@ -23,7 +23,7 @@ function recursion_limit_exceeded_regression_1() {
 
 function recursion_limit_exceeded_regression_2() {
   let Val: Val<string>;
-  Val = (42: any);
+  Val = 42 as any;
   const {f} = Val; // error on Val, no recursion-limit-exceeded
 }
 

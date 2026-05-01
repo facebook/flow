@@ -18,10 +18,10 @@ x &= 0;
 
 const { foo } = { foo: "foo" }
 const [ bar ] = ["bar"];
-(foo: number); // error: string ~> number
-(bar: number); // error: string ~> number
+foo as number; // error: string ~> number
+bar as number; // error: string ~> number
 
 declare var bazzes: { baz: string }[];
 for (const { baz } of bazzes) {
-  (baz: number); // error: string ~> number
+  baz as number; // error: string ~> number
 }

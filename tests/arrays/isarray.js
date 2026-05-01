@@ -13,7 +13,7 @@ function coerce<T, U>(t: T): U {
   }
   const result: Array<{value: T}> = hmm([{value: t}]);
   if (Array.isArray(result)) throw new Error('Unreachable.');
-  return ((result: empty).value: U);
+  return (result as empty).value as U;
 }
 const twelve: number = coerce('twelve');
 twelve.toFixed();

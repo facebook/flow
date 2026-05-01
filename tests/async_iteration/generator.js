@@ -20,6 +20,6 @@ async function* readLines(path: string) {
 
 async function f() {
   for await (const line of readLines("/path/to/file")) {
-    (line: void); // error: string ~> void
+    line as void; // error: string ~> void
   }
 }

@@ -8,4 +8,4 @@ function f(x: string) {
   return x.length;
 }
 
-(f: F);
+f as F;

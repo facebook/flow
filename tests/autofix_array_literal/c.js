@@ -10,6 +10,6 @@ function foo() {
   ];
 }
 
-(foo(): Array<Exact>);
+foo() as Array<Exact>;
 
 module.exports = foo;

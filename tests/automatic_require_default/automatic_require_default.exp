@@ -3,7 +3,7 @@ Error --------------------------------------------------------------------------
 Cannot get `Default.T` because property `T` is missing in `Number` [1]. [prop-missing]
 
    imports.js:9:14
-     9| (1 : Default.T); // error T missing in number
+     9| 1 as Default.T; // error T missing in number
                      ^
 
 References:
@@ -17,7 +17,7 @@ Error --------------------------------------------------------------------------
 Cannot get `react.NotAType` because property `NotAType` is missing in module `react` [1]. [prop-missing]
 
    react.js:6:13
-   6| ("" : react.NotAType); // error NotAType missing in react
+   6| "" as react.NotAType; // error NotAType missing in react
                   ^^^^^^^^
 
 References:

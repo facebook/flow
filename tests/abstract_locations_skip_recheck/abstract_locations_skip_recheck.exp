@@ -1,69 +1,69 @@
 
 Server should start in types-first mode
-Error ----------------------------------------------------------------------------------------------------- test2.js:3:2
+Error ----------------------------------------------------------------------------------------------------- test2.js:3:1
 
 Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test2.js:3:2
-   3| (require('./test1'): string);
-       ^^^^^^^^^^^^^^^^^^
+   test2.js:3:1
+   3| require('./test1') as string;
+      ^^^^^^^^^^^^^^^^^^
 
 References:
    test1.js:5:18
    5| module.exports = 0;
                        ^ [1]
-   test2.js:3:22
-   3| (require('./test1'): string);
-                           ^^^^^^ [2]
+   test2.js:3:23
+   3| require('./test1') as string;
+                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test3.js:5:2
+Error ----------------------------------------------------------------------------------------------------- test3.js:5:1
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test3.js:5:2
-   5| (0: string);
-       ^ [1]
+   test3.js:5:1
+   5| 0 as string;
+      ^ [1]
 
 References:
-   test3.js:5:5
-   5| (0: string);
-          ^^^^^^ [2]
+   test3.js:5:6
+   5| 0 as string;
+           ^^^^^^ [2]
 
 
 
 Found 2 errors
 
 Adding a line should cause minimal rechecking (but preserve errors)
-Error ----------------------------------------------------------------------------------------------------- test2.js:3:2
+Error ----------------------------------------------------------------------------------------------------- test2.js:3:1
 
 Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test2.js:3:2
-   3| (require('./test1'): string);
-       ^^^^^^^^^^^^^^^^^^
+   test2.js:3:1
+   3| require('./test1') as string;
+      ^^^^^^^^^^^^^^^^^^
 
 References:
    test1.js:6:18
    6| module.exports = 0;
                        ^ [1]
-   test2.js:3:22
-   3| (require('./test1'): string);
-                           ^^^^^^ [2]
+   test2.js:3:23
+   3| require('./test1') as string;
+                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test3.js:5:2
+Error ----------------------------------------------------------------------------------------------------- test3.js:5:1
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test3.js:5:2
-   5| (0: string);
-       ^ [1]
+   test3.js:5:1
+   5| 0 as string;
+      ^ [1]
 
 References:
-   test3.js:5:5
-   5| (0: string);
-          ^^^^^^ [2]
+   test3.js:5:6
+   5| 0 as string;
+           ^^^^^^ [2]
 
 
 
@@ -74,35 +74,35 @@ Merge skipped 2 of 3 modules
 Check will skip 2 of 3 files
 
 Adding a comment should cause minimal rechecking (but preserve errors)
-Error ----------------------------------------------------------------------------------------------------- test2.js:3:2
+Error ----------------------------------------------------------------------------------------------------- test2.js:3:1
 
 Cannot cast `require(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test2.js:3:2
-   3| (require('./test1'): string);
-       ^^^^^^^^^^^^^^^^^^
+   test2.js:3:1
+   3| require('./test1') as string;
+      ^^^^^^^^^^^^^^^^^^
 
 References:
    test1.js:6:18
    6| module.exports = 0;
                        ^ [1]
-   test2.js:3:22
-   3| (require('./test1'): string);
-                           ^^^^^^ [2]
+   test2.js:3:23
+   3| require('./test1') as string;
+                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test3.js:5:2
+Error ----------------------------------------------------------------------------------------------------- test3.js:5:1
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test3.js:5:2
-   5| (0: string);
-       ^ [1]
+   test3.js:5:1
+   5| 0 as string;
+      ^ [1]
 
 References:
-   test3.js:5:5
-   5| (0: string);
-          ^^^^^^ [2]
+   test3.js:5:6
+   5| 0 as string;
+           ^^^^^^ [2]
 
 
 

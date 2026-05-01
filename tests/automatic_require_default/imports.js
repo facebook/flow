@@ -4,10 +4,10 @@ const Default = require('./default_export');
 const Named = require('./named_export');
 
 // Default export
-(Default : number);
-(1 : DefaultT);
-(1 : Default.T); // error T missing in number
+Default as number;
+1 as DefaultT;
+1 as Default.T; // error T missing in number
 
 // Object of named exports
-(Named.foo : number);
-(1 : Named.T);
+Named.foo as number;
+1 as Named.T;

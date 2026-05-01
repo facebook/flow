@@ -121,13 +121,13 @@ References:
                 ^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- numeric_elem.js:7:2
+Error ---------------------------------------------------------------------------------------------- numeric_elem.js:7:1
 
 Cannot get `arr[day]` because `Date` [1] is not an array index. [incompatible-use]
 
-   numeric_elem.js:7:2
-   7| (arr[day]: string); // error: number ~> string
-       ^^^^^^^^
+   numeric_elem.js:7:1
+   7| arr[day] as string; // error: number ~> string
+      ^^^^^^^^
 
 References:
    numeric_elem.js:2:11
@@ -135,25 +135,25 @@ References:
                 ^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:67:2
+Error --------------------------------------------------------------------------------------------------- spread.js:67:1
 
 Cannot cast array literal to array type because in array element: number [1] is incompatible with string [2].
 [incompatible-type]
 
-   spread.js:67:2
-   67| ([...emp]: Array<string>); // error
-        ^^^^^^^^
+   spread.js:67:1
+   67| [...emp] as Array<string>; // error
+       ^^^^^^^^
 
 References:
    spread.js:66:10
    66| emp.push(42);
                 ^^ [1]
-   spread.js:67:18
-   67| ([...emp]: Array<string>); // error
-                        ^^^^^^ [2]
+   spread.js:67:19
+   67| [...emp] as Array<string>; // error
+                         ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- subtyping.js:5:4
+Error ------------------------------------------------------------------------------------------------- subtyping.js:5:3
 
 Cannot cast `arr` to array type because in array element: `Dog` [1] is not exactly the same as `Animal` [2].
 [incompatible-type]
@@ -163,26 +163,26 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   subtyping.js:5:4
-   5|   (arr: Array<Animal>); // error
-         ^^^
+   subtyping.js:5:3
+   5|   arr as Array<Animal>; // error
+        ^^^
 
 References:
    subtyping.js:4:28
    4|   declare const arr: Array<Dog>;
                                  ^^^ [1]
-   subtyping.js:5:15
-   5|   (arr: Array<Animal>); // error
-                    ^^^^^^ [2]
+   subtyping.js:5:16
+   5|   arr as Array<Animal>; // error
+                     ^^^^^^ [2]
    subtyping.js:4:22
    4|   declare const arr: Array<Dog>;
                            ^^^^^^^^^^ [3]
-   subtyping.js:5:9
-   5|   (arr: Array<Animal>); // error
-              ^^^^^^^^^^^^^ [4]
+   subtyping.js:5:10
+   5|   arr as Array<Animal>; // error
+               ^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------ subtyping.js:10:4
+Error ------------------------------------------------------------------------------------------------ subtyping.js:10:3
 
 Cannot cast `arr` to array type because in array element: `{foo: string, ...}` [1] is not exactly the same as
 `{...}` [2]. [incompatible-type]
@@ -192,26 +192,26 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   subtyping.js:10:4
-   10|   (arr: Array<{...}>); // error
-          ^^^
+   subtyping.js:10:3
+   10|   arr as Array<{...}>; // error
+         ^^^
 
 References:
    subtyping.js:9:28
     9|   declare const arr: Array<{foo: string, ...}>;
                                   ^^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:10:15
-   10|   (arr: Array<{...}>); // error
-                     ^^^^^ [2]
+   subtyping.js:10:16
+   10|   arr as Array<{...}>; // error
+                      ^^^^^ [2]
    subtyping.js:9:22
     9|   declare const arr: Array<{foo: string, ...}>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   subtyping.js:10:9
-   10|   (arr: Array<{...}>); // error
-               ^^^^^^^^^^^^ [4]
+   subtyping.js:10:10
+   10|   arr as Array<{...}>; // error
+                ^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------ subtyping.js:15:4
+Error ------------------------------------------------------------------------------------------------ subtyping.js:15:3
 
 Cannot cast `arr` to array type because in array element: `{foo: string}` [1] is not exactly the same as `{}` [2].
 [incompatible-type]
@@ -221,23 +221,23 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   subtyping.js:15:4
-   15|   (arr: Array<{}>); // error
-          ^^^
+   subtyping.js:15:3
+   15|   arr as Array<{}>; // error
+         ^^^
 
 References:
    subtyping.js:14:28
    14|   declare const arr: Array<{foo: string}>;
                                   ^^^^^^^^^^^^^ [1]
-   subtyping.js:15:15
-   15|   (arr: Array<{}>); // error
-                     ^^ [2]
+   subtyping.js:15:16
+   15|   arr as Array<{}>; // error
+                      ^^ [2]
    subtyping.js:14:22
    14|   declare const arr: Array<{foo: string}>;
                             ^^^^^^^^^^^^^^^^^^^^ [3]
-   subtyping.js:15:9
-   15|   (arr: Array<{}>); // error
-               ^^^^^^^^^ [4]
+   subtyping.js:15:10
+   15|   arr as Array<{}>; // error
+                ^^^^^^^^^ [4]
 
 
 

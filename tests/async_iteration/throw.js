@@ -9,7 +9,7 @@ async function *catch_return() {
 (async () => {
   catch_return().throw("").then(({value}) => {
     if (value !== undefined) {
-      (value: void); // error: number ~> void
+      value as void; // error: number ~> void
     }
   });
 });
@@ -26,7 +26,7 @@ async function *yield_return() {
 (async () => {
   yield_return().throw("").then(({value}) => {
     if (value !== undefined) {
-      (value: void); // error: number ~> void
+      value as void; // error: number ~> void
     }
   });
 });

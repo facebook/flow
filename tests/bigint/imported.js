@@ -1,17 +1,17 @@
 import {x, z, a, c} from './exported';
 import y from './exported';
 
-(x : bigint); // ok
-(x : empty); // error
+x as bigint; // ok
+x as empty; // error
 
-(y : bigint); // ok
-(y : empty); // error
+y as bigint; // ok
+y as empty; // error
 
-(z : bigint); // ok
-(z : empty); // error
+z as bigint; // ok
+z as empty; // error
 
-(a : bigint); // ok
-(a : empty); // error
+a as bigint; // ok
+a as empty; // error
 
-(c : bigint); // ok
-(c : empty); // error
+c as bigint; // ok
+c as empty; // error

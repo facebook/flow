@@ -114,10 +114,10 @@ function function_type_annotation_scope() {
   const z: boolean = true;
   // Function parameter annotations are in the scope of the function.
   function f(x: number, y: boolean, z: string, a: typeof x, b: typeof y, c: typeof z) {
-    (a: number); // OK
-    (a: string); // error a ~> number
-    (b: number); // error boolean ~> number
-    (c: boolean); // error string ~> boolean
+    a as number; // OK
+    a as string; // error a ~> number
+    b as number; // error boolean ~> number
+    c as boolean; // error string ~> boolean
   }
 
   function invalid_self_reference(
@@ -132,9 +132,9 @@ function function_type_annotation_scope() {
   function annotations_in_default(
     x: number,
     y: typeof x,
-    f: (number) => void = (z: typeof x) => { (z: number) }
+    f: (number) => void = (z: typeof x) => { z as number }
   ) {
-    (y: string); // error number ~> string
+    y as string; // error number ~> string
   }
 }
 
@@ -181,7 +181,7 @@ function refinement_in_func_with_default_regression()  {
       x = "";
     };
     foo();
-    (x: string); // okay
+    x as string; // okay
   }
 }
 
@@ -189,12 +189,12 @@ function refinement_in_default(
   x: null | number,
   y: number = (x = 1, 1),
 ) {
-  (x: number); // error null ~> number
+  x as number; // error null ~> number
 }
 
 function refinement_in_nested_default(
   x: null | number,
   { y = (x = 1, 1) }: { y: number },
 ) {
-  (x: number); // error null ~> number
+  x as number; // error null ~> number
 }

@@ -19,21 +19,21 @@ References:
       ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- delegate_yield.js:17:6
+Error ------------------------------------------------------------------------------------------- delegate_yield.js:17:5
 
 Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   delegate_yield.js:17:6
-   17|     (x: void); // error: number ~> void
-            ^
+   delegate_yield.js:17:5
+   17|     x as void; // error: number ~> void
+           ^
 
 References:
    delegate_yield.js:11:11
    11|     yield 0;
                  ^ [1]
-   delegate_yield.js:17:9
-   17|     (x: void); // error: number ~> void
-               ^^^^ [2]
+   delegate_yield.js:17:10
+   17|     x as void; // error: number ~> void
+                ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ delegate_yield.js:25:17
@@ -53,123 +53,123 @@ References:
                 ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ generator.js:23:6
+Error ------------------------------------------------------------------------------------------------ generator.js:23:5
 
 Cannot cast `line` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   generator.js:23:6
-   23|     (line: void); // error: string ~> void
-            ^^^^
+   generator.js:23:5
+   23|     line as void; // error: string ~> void
+           ^^^^
 
 References:
    generator.js:2:23
     2|   readLine(): Promise<string>;
                              ^^^^^^ [1]
-   generator.js:23:12
-   23|     (line: void); // error: string ~> void
-                  ^^^^ [2]
+   generator.js:23:13
+   23|     line as void; // error: string ~> void
+                   ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- return.js:6:4
+Error ---------------------------------------------------------------------------------------------------- return.js:6:3
 
 Cannot cast `result.value` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   return.js:6:4
-   6|   (result.value: void); // error: string | number ~> void
-         ^^^^^^^^^^^^
+   return.js:6:3
+   6|   result.value as void; // error: string | number ~> void
+        ^^^^^^^^^^^^
 
 References:
    return.js:1:38
    1| declare var gen: AsyncGenerator<void,string,void>;
                                            ^^^^^^ [1]
-   return.js:6:18
-   6|   (result.value: void); // error: string | number ~> void
-                       ^^^^ [2]
+   return.js:6:19
+   6|   result.value as void; // error: string | number ~> void
+                        ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- return.js:6:4
+Error ---------------------------------------------------------------------------------------------------- return.js:6:3
 
 Cannot cast `result.value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   return.js:6:4
-   6|   (result.value: void); // error: string | number ~> void
-         ^^^^^^^^^^^^
+   return.js:6:3
+   6|   result.value as void; // error: string | number ~> void
+        ^^^^^^^^^^^^
 
 References:
    return.js:5:12
    5| gen.return(0).then(result => {
                  ^ [1]
-   return.js:6:18
-   6|   (result.value: void); // error: string | number ~> void
-                       ^^^^ [2]
+   return.js:6:19
+   6|   result.value as void; // error: string | number ~> void
+                        ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- return.js:20:6
+Error --------------------------------------------------------------------------------------------------- return.js:20:5
 
 Cannot cast `result.value` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
-   return.js:20:6
-     20|     (result.value: string); // error: number | void ~> string
-              ^^^^^^^^^^^^
+   return.js:20:5
+     20|     result.value as string; // error: number | void ~> string
+             ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:1867:14
    1867|     +value?: Return,
                       ^^^^^^ [1]
-   return.js:20:20
-     20|     (result.value: string); // error: number | void ~> string
-                            ^^^^^^ [2]
+   return.js:20:21
+     20|     result.value as string; // error: number | void ~> string
+                             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- return.js:20:6
+Error --------------------------------------------------------------------------------------------------- return.js:20:5
 
 Cannot cast `result.value` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   return.js:20:6
-   20|     (result.value: string); // error: number | void ~> string
-            ^^^^^^^^^^^^
+   return.js:20:5
+   20|     result.value as string; // error: number | void ~> string
+           ^^^^^^^^^^^^
 
 References:
    return.js:15:12
    15|     return 0;
                   ^ [1]
-   return.js:20:20
-   20|     (result.value: string); // error: number | void ~> string
-                          ^^^^^^ [2]
+   return.js:20:21
+   20|     result.value as string; // error: number | void ~> string
+                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- throw.js:12:8
+Error ---------------------------------------------------------------------------------------------------- throw.js:12:7
 
 Cannot cast `value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   throw.js:12:8
-   12|       (value: void); // error: number ~> void
-              ^^^^^
+   throw.js:12:7
+   12|       value as void; // error: number ~> void
+             ^^^^^
 
 References:
    throw.js:3:11
     3|     yield 0;
                  ^ [1]
-   throw.js:12:15
-   12|       (value: void); // error: number ~> void
-                     ^^^^ [2]
+   throw.js:12:16
+   12|       value as void; // error: number ~> void
+                      ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- throw.js:29:8
+Error ---------------------------------------------------------------------------------------------------- throw.js:29:7
 
 Cannot cast `value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   throw.js:29:8
-   29|       (value: void); // error: number ~> void
-              ^^^^^
+   throw.js:29:7
+   29|       value as void; // error: number ~> void
+             ^^^^^
 
 References:
    throw.js:19:11
    19|     yield 0;
                  ^ [1]
-   throw.js:29:15
-   29|       (value: void); // error: number ~> void
-                     ^^^^ [2]
+   throw.js:29:16
+   29|       value as void; // error: number ~> void
+                      ^^^^ [2]
 
 
 

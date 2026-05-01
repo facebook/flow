@@ -5,4 +5,4 @@ export class Foo {}
 
 const z: Foo = foo;
 
-(z: Bar);
+z as Bar;

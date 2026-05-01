@@ -1,2 +1,2 @@
 class C { }
-module.exports = (C: any);
+module.exports = C as any;

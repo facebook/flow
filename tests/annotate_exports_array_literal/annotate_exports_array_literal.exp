@@ -14,8 +14,8 @@ function foo(): Array<{ data: string, type: string }> {
   ];
 }
 
-(foo(): Array<Inexact>);
-(foo(): Array<Exact>);
+foo() as Array<Inexact>;
+foo() as Array<Exact>;
 
 module.exports = foo;
 
@@ -61,8 +61,8 @@ function foo(): Array<{ data: string, type: string }> {
   ];
 }
 
-(foo(): Array<Inexact>);
-(foo(): Array<Exact>);
+foo() as Array<Inexact>;
+foo() as Array<Exact>;
 
 module.exports = foo;
 

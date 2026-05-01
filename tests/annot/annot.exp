@@ -189,7 +189,7 @@ Error --------------------------------------------------------------------------
 Cannot use `C` as a type because it is an `any`-typed value. Type `C` properly, so it is no longer `any`-typed, to use
 it as an annotation. [value-as-type]
 
-   2| ((0: C): string);
+   2| 0 as C as string;
            ^
 
 

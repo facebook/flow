@@ -16,5 +16,5 @@ enum myEnum { Inl, Inr }
 import type {ExportFoo, ExportBar, ExportClass, ExportInterface, ExportEnum} from './type-exports-jsdoc';
 import { typeof exportValue } from './type-exports-jsdoc';
 
-(x :  ) => {};
+x as  => {};
 //   ^

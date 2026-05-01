@@ -290,13 +290,13 @@ Cannot cast object literal to `O` because object literal [1] is incompatible wit
 [incompatible-type]
 
    internal_slot.js:5:2
-   5| ({}: O); // err: no callable property
+   5| ({}) as O; // err: no callable property
        ^^ [1]
 
 References:
-   internal_slot.js:5:6
-   5| ({}: O); // err: no callable property
-           ^ [2]
+   internal_slot.js:5:9
+   5| ({}) as O; // err: no callable property
+              ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- internal_slot.js:5:2
@@ -305,13 +305,13 @@ Cannot cast object literal to `O` because a call signature declaring the expecte
 object literal [1] but exists in `O` [2]. [incompatible-type]
 
    internal_slot.js:5:2
-   5| ({}: O); // err: no callable property
+   5| ({}) as O; // err: no callable property
        ^^ [1]
 
 References:
-   internal_slot.js:5:6
-   5| ({}: O); // err: no callable property
-           ^ [2]
+   internal_slot.js:5:9
+   5| ({}) as O; // err: no callable property
+              ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- internal_slot.js:6:2
@@ -320,12 +320,12 @@ Cannot cast function to `O` because in the return value: number [1] is incompati
 [incompatible-type]
 
    internal_slot.js:6:2
-   6| (function() { return 0 }: O); // err: number ~> void
+   6| (function() { return 0 }) as O; // err: number ~> void
        ^^^^^^^^^^
 
 References:
    internal_slot.js:6:22
-   6| (function() { return 0 }: O); // err: number ~> void
+   6| (function() { return 0 }) as O; // err: number ~> void
                            ^ [1]
    internal_slot.js:2:15
    2|   [[call]](): void;
@@ -338,13 +338,13 @@ Cannot cast object literal to `I` because a call signature declaring the expecte
 object literal [1] but exists in `I` [2]. [incompatible-type]
 
    internal_slot.js:13:2
-   13| ({}: I); // err: no callable property
+   13| ({}) as I; // err: no callable property
         ^^ [1]
 
 References:
-   internal_slot.js:13:6
-   13| ({}: I); // err: no callable property
-            ^ [2]
+   internal_slot.js:13:9
+   13| ({}) as I; // err: no callable property
+               ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:14:2
@@ -353,33 +353,33 @@ Cannot cast function to `I` because in the return value: number [1] is incompati
 [incompatible-type]
 
    internal_slot.js:14:2
-   14| (function() { return 0 }: I); // err: number ~> void
+   14| (function() { return 0 }) as I; // err: number ~> void
         ^^^^^^^^^^
 
 References:
    internal_slot.js:14:22
-   14| (function() { return 0 }: I); // err: number ~> void
+   14| (function() { return 0 }) as I; // err: number ~> void
                             ^ [1]
    internal_slot.js:10:15
    10|   [[call]](): void;
                      ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- internal_slot.js:20:2
+Error -------------------------------------------------------------------------------------------- internal_slot.js:20:1
 
 Cannot cast `C1()` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
-   internal_slot.js:20:2
-   20| (C1(): empty); // error: void ~> empty
-        ^^^^
+   internal_slot.js:20:1
+   20| C1() as empty; // error: void ~> empty
+       ^^^^
 
 References:
    internal_slot.js:18:22
    18|   static [[call]](): void;
                             ^^^^ [1]
-   internal_slot.js:20:8
-   20| (C1(): empty); // error: void ~> empty
-              ^^^^^ [2]
+   internal_slot.js:20:9
+   20| C1() as empty; // error: void ~> empty
+               ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:23:1
@@ -411,31 +411,31 @@ References:
                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- internal_slot.js:29:2
+Error -------------------------------------------------------------------------------------------- internal_slot.js:29:1
 
 Cannot cast `annot_callable(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   internal_slot.js:29:2
-   29| (annot_callable("foo"): empty); // error: number ~> empty
-        ^^^^^^^^^^^^^^^^^^^^^
+   internal_slot.js:29:1
+   29| annot_callable("foo") as empty; // error: number ~> empty
+       ^^^^^^^^^^^^^^^^^^^^^
 
 References:
    internal_slot.js:26:21
    26| type Fn = string => number;
                            ^^^^^^ [1]
-   internal_slot.js:29:25
-   29| (annot_callable("foo"): empty); // error: number ~> empty
-                               ^^^^^ [2]
+   internal_slot.js:29:26
+   29| annot_callable("foo") as empty; // error: number ~> empty
+                                ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- use_ops.js:4:2
+Error --------------------------------------------------------------------------------------------------- use_ops.js:4:1
 
 Cannot cast `a` to `B` because in property `p`: object type [1] is incompatible with function type [2].
 [incompatible-type]
 
-   use_ops.js:4:2
-   4| (a: B); // error HERE and preserve use ops
-       ^
+   use_ops.js:4:1
+   4| a as B; // error HERE and preserve use ops
+      ^
 
 References:
    use_ops.js:1:15

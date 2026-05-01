@@ -10,30 +10,30 @@ y = z; // ok, 10n <: bigint
 
 z = x; // error, bigint </: 10n
 
-(BigInt(3): bigint); // ok
-(BigInt("3"): bigint); // ok
-(BigInt.asIntN(3, y): bigint); // ok
-(BigInt.asUintN(3, y): bigint); // ok
-(x.valueOf(): bigint); // ok
-(BigInt(3n): bigint); // ok
+BigInt(3) as bigint; // ok
+BigInt("3") as bigint; // ok
+BigInt.asIntN(3, y) as bigint; // ok
+BigInt.asUintN(3, y) as bigint; // ok
+x.valueOf() as bigint; // ok
+BigInt(3n) as bigint; // ok
 
 BigInt(null); // error
 
 declare var foo: unknown;
 if (typeof foo === "bigint") {
-    (foo : bigint);
-    (foo : empty); // error
+    foo as bigint;
+    foo as empty; // error
 }
 
 type U = { x: 0n, a: "foo" } | { x: 1n, a: "bar" };
 declare var bar: U;
 if (bar.x === 0n) {
-    (bar.a : "foo");
+    bar.a as "foo";
 } else {
-    (bar.a : "bar");
+    bar.a as "bar";
 }
 
-(0n < 0n : boolean); // ok
+0n < 0n as boolean; // ok
 (0n > ""); // error
 
 declare var b: ?bigint;

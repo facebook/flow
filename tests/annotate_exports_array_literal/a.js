@@ -10,7 +10,7 @@ function foo() {
   ];
 }
 
-(foo(): Array<Inexact>);
-(foo(): Array<Exact>);
+foo() as Array<Inexact>;
+foo() as Array<Exact>;
 
 module.exports = foo;

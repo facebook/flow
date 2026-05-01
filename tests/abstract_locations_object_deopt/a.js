@@ -16,4 +16,4 @@ export type Bar = {|
   },
 |};
 
-(bar: Bar);
+bar as Bar;

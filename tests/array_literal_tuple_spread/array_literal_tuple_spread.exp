@@ -82,86 +82,86 @@ References:
                                ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:44:4
+Error ----------------------------------------------------------------------------------------------------- test.js:44:3
 
 Cannot cast `ret1[0]` to number literal `2` because number [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
-   test.js:44:4
-   44|   (ret1[0]: 2); // error
-          ^^^^^^^
+   test.js:44:3
+   44|   ret1[0] as 2; // error
+         ^^^^^^^
 
 References:
    test.js:39:27
    39|   function foo(arr: Array<number>) {
                                  ^^^^^^ [1]
-   test.js:44:13
-   44|   (ret1[0]: 2); // error
-                   ^ [2]
+   test.js:44:14
+   44|   ret1[0] as 2; // error
+                    ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:45:4
+Error ----------------------------------------------------------------------------------------------------- test.js:45:3
 
 Cannot cast `ret2[0]` to number literal `3` because number [1] is incompatible with number literal `3` [2].
 [incompatible-type]
 
-   test.js:45:4
-   45|   (ret2[0]: 3); // error
-          ^^^^^^^
+   test.js:45:3
+   45|   ret2[0] as 3; // error
+         ^^^^^^^
 
 References:
    test.js:39:27
    39|   function foo(arr: Array<number>) {
                                  ^^^^^^ [1]
-   test.js:45:13
-   45|   (ret2[0]: 3); // error
-                   ^ [2]
+   test.js:45:14
+   45|   ret2[0] as 3; // error
+                    ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:52:4
+Error ----------------------------------------------------------------------------------------------------- test.js:52:3
 
 Cannot cast `nonTup` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
 tuple type [2]. [invalid-tuple-arity]
 
-   test.js:52:4
-   52|   (nonTup: [1,2,3]); // error
-          ^^^^^^
+   test.js:52:3
+   52|   nonTup as [1,2,3]; // error
+         ^^^^^^
 
 References:
    test.js:51:18
    51|   const nonTup = [...tup];
                         ^^^^^^^^ [1]
-   test.js:52:12
-   52|   (nonTup: [1,2,3]); // error
-                  ^^^^^^^ [2]
+   test.js:52:13
+   52|   nonTup as [1,2,3]; // error
+                   ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:59:4
+Error ----------------------------------------------------------------------------------------------------- test.js:59:3
 
 Cannot cast `nonTup` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
 tuple type [2]. [invalid-tuple-arity]
 
-   test.js:59:4
-   59|   (nonTup: [1,2,3]); // error
-          ^^^^^^
+   test.js:59:3
+   59|   nonTup as [1,2,3]; // error
+         ^^^^^^
 
 References:
    test.js:58:18
    58|   const nonTup = [...tup];
                         ^^^^^^^^ [1]
-   test.js:59:12
-   59|   (nonTup: [1,2,3]); // error
-                  ^^^^^^^ [2]
+   test.js:59:13
+   59|   nonTup as [1,2,3]; // error
+                   ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:63:6
+Error ----------------------------------------------------------------------------------------------------- test.js:63:5
 
 string literal `hello` [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in
 `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
-   test.js:63:6
-   63| ([..."hello"]: Array<number>); // ERROR
-            ^^^^^^^ [1]
+   test.js:63:5
+   63| [..."hello"] as Array<number>; // ERROR
+           ^^^^^^^ [1]
 
 References:
    <BUILTINS>/prelude.js:53:11

@@ -5,5 +5,5 @@ const arr = [1,2,3];  // badly-positioned error
 
 // fun.apply()
 (function (this: any) { return this.bar; }).apply(...arr); // error
-(function (this: any) { return this.bar; }).apply(({}: any), ...arr); // error
+(function (this: any) { return this.bar; }).apply({} as any, ...arr); // error
 (function (this: any) { return this.bar; }).apply(...arr, ...arr); // error

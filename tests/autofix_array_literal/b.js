@@ -10,6 +10,6 @@ function foo() {
   ];
 }
 
-(foo(): Array<Inexact>);
+foo() as Array<Inexact>;
 
 module.exports = foo;

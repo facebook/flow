@@ -60,7 +60,7 @@ function moreBreakContinue(b: boolean) {
       continue;
     }
   }
-  (x: number); // Error - null incompatible with number
+  x as number; // Error - null incompatible with number
 }
 
 function differentLabels(b: boolean) {

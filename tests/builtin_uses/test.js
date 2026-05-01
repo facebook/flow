@@ -1,3 +1,3 @@
 const o = Object.freeze({ foo: 0 });
-(o.foo: string);
+o.foo as string;
 module.exports = o;

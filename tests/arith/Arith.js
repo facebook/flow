@@ -76,11 +76,11 @@ let tests = [
   },
 
   function(x: any, y: number, z: string) {
-    (x + y: string); // ok
-    (y + x: string); // ok
+    x + y as string; // ok
+    y + x as string; // ok
 
-    (x + z: any); // ok
-    (z + x: any); // ok
+    x + z as any; // ok
+    z + x as any; // ok
   },
 
   function(x: number, y: number) {

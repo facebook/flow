@@ -41,26 +41,26 @@ function test(arr: [1] | [2, 3]): [1, 10] | [2, 3, 10] {
   }
   const ret1 = foo([2]);
   const ret2 = foo([3]);
-  (ret1[0]: 2); // error
-  (ret2[0]: 3); // error
+  ret1[0] as 2; // error
+  ret2[0] as 3; // error
 }
 
 // Spreading an Array<T> should result in a non-tuple array
 {
   const tup: Array<number> = [1,2,3];
   const nonTup = [...tup];
-  (nonTup: [1,2,3]); // error
+  nonTup as [1,2,3]; // error
 }
 
 // Spreading an ReadonlyArray<T> should result in a non-tuple array
 {
   const tup: ReadonlyArray<number> = [1,2,3];
   const nonTup = [...tup];
-  (nonTup: [1,2,3]); // error
+  nonTup as [1,2,3]; // error
 }
 
 // Spreading a string
-([..."hello"]: Array<number>); // ERROR
+[..."hello"] as Array<number>; // ERROR
 
 // Spreading a generator
 {

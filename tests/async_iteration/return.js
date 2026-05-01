@@ -3,7 +3,7 @@ declare var gen: AsyncGenerator<void,string,void>;
 // You can pass whatever you like to return, it doesn't need to be related to
 // the AsyncGenerator's return type
 gen.return(0).then(result => {
-  (result.value: void); // error: string | number ~> void
+  result.value as void; // error: string | number ~> void
 });
 
 // However, a generator can "refuse" the return by catching an exception and
@@ -17,6 +17,6 @@ async function *refuse_return() {
 }
 refuse_return().return("string").then(result => {
   if (result.done) {
-    (result.value: string); // error: number | void ~> string
+    result.value as string; // error: number | void ~> string
   }
 });

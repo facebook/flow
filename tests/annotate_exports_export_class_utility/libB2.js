@@ -4,4 +4,4 @@ class B2<X> {}
 
 export type { B2 };
 
-module.exports = (B2: Class<B2<any>>);
+module.exports = B2 as Class<B2<any>>;
