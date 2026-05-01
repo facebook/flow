@@ -14,6 +14,8 @@
 set -e -o pipefail
 
 FBCODE_DIR=${1:?"missing FBCODE_DIR arg"}
+# Resolve to absolute path BEFORE any `cd`, since FBCODE_DIR may be `.`.
+FBCODE_ABS=$(cd "$FBCODE_DIR" && pwd -P)
 
 PKG_DIR="$FBCODE_DIR/flow/packages/flow-parser-oxidized"
 PKG_SRC="$PKG_DIR/src"
@@ -81,4 +83,9 @@ yarn install --offline
 # through the built `dist/`.
 yarn build
 
-node --experimental-vm-modules ./node_modules/.bin/jest --no-coverage
+# Use the fbsource third-party Node toolchain (24.x). The system Node may be
+# 16.x which lacks `os.availableParallelism()` — required by jest 30's
+# `getMaxWorkers`. Jest 30 in turn is required to fix the cross-module ESM
+# dynamic import leak that crashes ComponentDeclaration / HookDeclaration
+# tests under jest 27.
+"$FBCODE_ABS/../xplat/third-party/node/bin/node" --experimental-vm-modules ./node_modules/.bin/jest --no-coverage

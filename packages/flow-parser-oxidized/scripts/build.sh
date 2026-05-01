@@ -55,3 +55,14 @@ rsync -a --include="*/" --include="*.js" --exclude="*" "$SRC_DIR/" "$DIST_DIR/"
 # Run babel in-place over dist/. preset-env + the flow-strip + class-properties
 # + flow-enums plugins are picked up from babel.config.js at the package root.
 yarn babel --config-file="$PACKAGE_DIR/babel.config.js" "$DIST_DIR" --out-dir="$DIST_DIR"
+
+# Build and embed the Flow Rust parser WASM. Mirrors upstream
+# hermes-parser/scripts/build.sh's `genWasmParser.js "$WASM_PARSER"` step.
+# The internal facebook script invokes buck2 to compile the Rust parser to
+# emscripten WASM and prints the path; genFlowWasmParser.js wraps that path's
+# contents with the MIT license header and writes dist/FlowParserWASM.js.
+FB_BUILD_WASM_PARSER="$THIS_DIR/facebook/buildFlowWasmParser.sh"
+if [[ -x "$FB_BUILD_WASM_PARSER" ]]; then
+  WASM_PARSER=$("$FB_BUILD_WASM_PARSER")
+  node "$THIS_DIR/genFlowWasmParser.js" "$WASM_PARSER"
+fi

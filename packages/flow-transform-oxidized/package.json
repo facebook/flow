@@ -9,7 +9,7 @@
     "url": "https://github.com/facebook/flow.git"
   },
   "scripts": {
-    "test": "jest"
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest"
   },
   "main": "dist/index.js",
   "dependencies": {

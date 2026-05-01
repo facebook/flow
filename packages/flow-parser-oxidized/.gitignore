@@ -1,2 +1,8 @@
 dist/
 node_modules/
+
+# Generated WASM wrapper. Written into src/ by __tests__/runContractTests.sh
+# (and into dist/ by scripts/build.sh). Never commit this - it's a copy of
+# the buck-built emcc artifact and would bloat the repo.
+src/FlowParserWASM.js
+src/FlowParserWASM.js.lock.d/

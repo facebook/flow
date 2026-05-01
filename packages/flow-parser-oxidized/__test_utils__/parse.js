@@ -18,15 +18,7 @@ import type {VisitorKeys} from '../src/generated/ESTreeVisitorKeys';
 
 import {SimpleTraverser} from '../src/traverse/SimpleTraverser';
 import {parse as parseOriginal} from '../src/index';
-import {print as vendoredPrint} from '../src/transform/print/print';
-
-// Wrapper around vendored hermes-transform `print()` (task #27 / Phase E).
-// The vendored print() returns a bare `string`; wrap it in `{code}` for the
-// shape that `printForSnapshot` expects.
-function printAST(ast: ESNode, source: string, config: mixed): Promise<string> {
-  // $FlowExpectedError[incompatible-call] - ESNode/Program structural compat.
-  return vendoredPrint(ast, source, config);
-}
+import {print as printAST} from '../src/transform/print/print';
 
 // $FlowExpectedError[untyped-import]
 import {VISITOR_KEYS as babelVisitorKeys} from '@babel/types';

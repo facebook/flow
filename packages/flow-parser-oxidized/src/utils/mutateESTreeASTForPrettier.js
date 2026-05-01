@@ -123,21 +123,6 @@ export default function mutate(
         return node;
       }
 
-      // Prettier's flow plugin printer doesn't know about the
-      // `lowerBound`/`upperBound` slots that Flow recently added to
-      // `OpaqueType` / `DeclareOpaqueType` (the `super`/`extends` clauses).
-      // Upstream hermes-transform's printer omits them too. Strip the
-      // fields here so the round-trip output matches upstream's stripped
-      // form. The parser still preserves them on the original AST
-      // (see `OpaqueType-test.js` `parseForSnapshotESTree` snapshot).
-      if (node.type === 'OpaqueType' || node.type === 'DeclareOpaqueType') {
-        // $FlowExpectedError[cannot-write]
-        delete node.lowerBound;
-        // $FlowExpectedError[cannot-write]
-        delete node.upperBound;
-        return node;
-      }
-
       return node;
     },
     visitorKeys,

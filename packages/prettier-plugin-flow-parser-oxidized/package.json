@@ -32,7 +32,7 @@
     "@babel/plugin-proposal-class-properties": "^7.16.5",
     "babel-plugin-transform-flow-enums": "^0.0.2",
     "jest": "^27.4.3",
-    "prettier": "3.8.1"
+    "prettier": "3.6.2"
   },
   "files": [
     "index.mjs",

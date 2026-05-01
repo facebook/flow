@@ -686,7 +686,7 @@ function statementsOfBindings(
 /**
  * For throwing an error if no cases are matched.
  */
-const fallthroughErrorMsgText = `Match: No case successfully matched. Make exhaustive or add a wildcard case using '_'.`;
+const fallthroughErrorMsgText = `Match: No case succesfully matched. Make exhaustive or add a wildcard case using '_'.`;
 function fallthroughErrorMsg(value: Expression): Expression {
   return {
     type: 'BinaryExpression',
