@@ -4870,12 +4870,8 @@ pub fn rec_sub_t<'cx>(
                 (ld.deref(), ud.deref())
                 && matches!(inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
-            let own_props = cx.find_props(inst_t.inst.own_props.dupe());
-            let filtered: properties::PropertiesMap = own_props
-                .iter()
-                .filter(|(x, _)| **x != Name::new("constructor"))
-                .map(|(x, v)| (x.dupe(), v.clone()))
-                .collect();
+            let mut filtered = cx.find_props(inst_t.inst.own_props.dupe());
+            filtered.remove(&Name::new("constructor"));
             if !flow_js_utils::quick_error_fun_as_obj(
                 cx,
                 &use_op,

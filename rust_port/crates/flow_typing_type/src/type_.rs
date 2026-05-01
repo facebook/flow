@@ -6364,6 +6364,9 @@ pub mod properties {
         }
 
         pub fn remove(&mut self, name: &Name) -> Option<Property> {
+            if !self.0.contains_key(name) {
+                return None;
+            }
             Rc::make_mut(&mut self.0).remove(name)
         }
 

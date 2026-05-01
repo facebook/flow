@@ -841,12 +841,7 @@ fn reverse_obj_spread<'cx>(
             obj_kind,
             Some(s.reachable_targs.dupe()),
             None,
-            Some(
-                s.prop_map
-                    .iter()
-                    .map(|(k, v)| (k.dupe(), v.dupe()))
-                    .collect(),
-            ),
+            Some(s.prop_map.dupe()),
             None,
             Type::new(TypeInner::ObjProtoT(r.dupe())),
         )
@@ -944,7 +939,7 @@ fn reverse_component_check_config<'cx>(
             ObjKind::Exact,
             None,
             None,
-            Some(pmap.iter().map(|(k, v)| (k.dupe(), v.dupe())).collect()),
+            Some(pmap.dupe()),
             None,
             Type::new(TypeInner::ObjProtoT(reason.dupe())),
         );
