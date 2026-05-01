@@ -14,6 +14,7 @@
 */
 
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -113,16 +114,52 @@ impl<V> Default for CodeMap<V> {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct ApplicableCodes(pub CodeSet);
+#[derive(Debug, Clone)]
+pub enum ApplicableCodes {
+    Specific(CodeSet),
+    All {
+        locs: BTreeSet<Loc>,
+        warn_unused: bool,
+    },
+}
 
 impl ApplicableCodes {
     pub fn locs(&self) -> Vec<Loc> {
-        self.0.elements().map(|(_, loc)| loc.dupe()).collect()
+        match self {
+            ApplicableCodes::Specific(codes) => {
+                codes.elements().map(|(_, loc)| loc.dupe()).collect()
+            }
+            ApplicableCodes::All {
+                locs,
+                warn_unused: true,
+            } => locs.iter().cloned().collect(),
+            ApplicableCodes::All {
+                warn_unused: false, ..
+            } => Vec::new(),
+        }
     }
 
     pub fn join(self, other: Self) -> Self {
-        Self(self.0.union(other.0))
+        match (self, other) {
+            (ApplicableCodes::Specific(c1), ApplicableCodes::Specific(c2)) => {
+                ApplicableCodes::Specific(c1.union(c2))
+            }
+            (
+                ApplicableCodes::All {
+                    locs: l1,
+                    warn_unused: w1,
+                },
+                ApplicableCodes::All {
+                    locs: l2,
+                    warn_unused: w2,
+                },
+            ) => ApplicableCodes::All {
+                locs: l1.union(&l2).cloned().collect(),
+                warn_unused: w1 && w2,
+            },
+            (c1 @ ApplicableCodes::All { .. }, ApplicableCodes::Specific(_)) => c1,
+            (ApplicableCodes::Specific(_), c2 @ ApplicableCodes::All { .. }) => c2,
+        }
     }
 }
 
@@ -173,45 +210,82 @@ pub enum BadSuppressionKind {
     MalformedCode,
 }
 
+// After matching a TypeScript directive prefix, ensure the next character is
+// not part of the directive identifier — otherwise the prefix isn't really a
+// directive (e.g. `@ts-ignoree`). Anything that can't continue a `[a-zA-Z0-9_-]`
+// identifier is a valid boundary, which permits the common
+// `// @ts-ignore: reason` / `// @ts-expect-error: reason` description form.
+fn ts_directive_boundary(remainder: &str) -> bool {
+    match remainder.chars().next() {
+        None => true,
+        Some(c) => !matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '-'),
+    }
+}
+
+fn try_ts_directive(directive: &str, comment: &str) -> bool {
+    let (rest, matched) = consume_token(directive, comment);
+    matched && ts_directive_boundary(rest)
+}
+
 pub fn should_suppress(
+    is_ts_file: bool,
     comment: &str,
     loc: &Loc,
 ) -> Result<Option<ApplicableCodes>, BadSuppressionKind> {
     let (comment, _) = consume_tokens(&[" ", "\n", "\t", "\r", "*"], comment);
-
-    let (comment, is_suppressor) = consume_tokens(&["$FlowFixMe", "$FlowExpectedError"], comment);
-
-    if !is_suppressor {
-        return Ok(None);
-    }
-
-    let (comment, has_preceding_spaces) = consume_tokens(&[" ", "\n", "\t", "\r"], comment);
-
-    let (comment, has_code) = consume_token("[", comment);
-
-    if !has_code {
-        return Err(BadSuppressionKind::MissingCode);
-    }
-
-    let closing_bracket_index = match comment.find(']') {
-        None => return Err(BadSuppressionKind::MalformedCode), /* Not a code if the bracket is not terminated */
-        Some(0) => return Err(BadSuppressionKind::MalformedCode), /* $FlowFixMe[] is not a real code */
-        Some(index) => index,
-    };
-
-    /* //$FlowFixMe [code] is invalid */
-    if has_preceding_spaces {
-        return Err(BadSuppressionKind::MalformedCode);
-    }
-
-    let code = &comment[..closing_bracket_index];
-
-    if code.chars().all(is_valid_code_char) {
-        Ok(Some(ApplicableCodes(CodeSet::singleton(
-            code.to_string(),
-            loc.dupe(),
-        ))))
+    let ts_match = if is_ts_file {
+        if try_ts_directive("@ts-expect-error", comment) {
+            Some(ApplicableCodes::All {
+                locs: BTreeSet::from([loc.dupe()]),
+                warn_unused: true,
+            })
+        } else if try_ts_directive("@ts-ignore", comment) {
+            Some(ApplicableCodes::All {
+                locs: BTreeSet::from([loc.dupe()]),
+                warn_unused: false,
+            })
+        } else {
+            None
+        }
     } else {
-        Err(BadSuppressionKind::MalformedCode)
+        None
+    };
+    match ts_match {
+        Some(codes) => Ok(Some(codes)),
+        None => {
+            let (comment, is_suppressor) =
+                consume_tokens(&["$FlowFixMe", "$FlowExpectedError"], comment);
+            if !is_suppressor {
+                Ok(None)
+            } else {
+                let (comment, has_preceding_spaces) =
+                    consume_tokens(&[" ", "\n", "\t", "\r"], comment);
+                let (comment, has_code) = consume_token("[", comment);
+                if !has_code {
+                    Err(BadSuppressionKind::MissingCode)
+                } else {
+                    match comment.find(']') {
+                        None => Err(BadSuppressionKind::MalformedCode), /* Not a code if the bracket is not terminated */
+                        Some(0) => Err(BadSuppressionKind::MalformedCode), /* $FlowFixMe[] is not a real code */
+                        Some(index) => {
+                            /* //$FlowFixMe [code] is invalid */
+                            if has_preceding_spaces {
+                                Err(BadSuppressionKind::MalformedCode)
+                            } else {
+                                let code = &comment[..index];
+                                if code.chars().all(is_valid_code_char) {
+                                    Ok(Some(ApplicableCodes::Specific(CodeSet::singleton(
+                                        code.to_string(),
+                                        loc.dupe(),
+                                    ))))
+                                } else {
+                                    Err(BadSuppressionKind::MalformedCode)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

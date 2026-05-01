@@ -24,7 +24,7 @@ module NameDefOrdering = Name_def_ordering.Make (Context) (Flow_js_utils)
    This logic produces a set of error codes associated with the location of the
    bottom suppression in the stack *)
 
-let scan_for_error_suppressions acc errs comments =
+let scan_for_error_suppressions ~is_ts_file acc errs comments =
   let open Suppression_comments in
   let open Loc in
   (* If multiple comments are stacked together, we join them into a codeset positioned on the
@@ -32,12 +32,12 @@ let scan_for_error_suppressions acc errs comments =
   let (supps, errs) =
     Base.List.fold_left comments ~init:([], errs) ~f:(fun (supps, errs) comment ->
         let (loc, { Ast.Comment.text; _ }) = comment in
-        match (should_suppress text loc, supps) with
+        match (should_suppress ~is_ts_file text loc, supps) with
         | (Error MalformedCode, _) -> (supps, Error_message.EMalformedCode (ALoc.of_loc loc) :: errs)
         | (Error MissingCode, _) ->
           (supps, Error_message.ECodelessSuppression (ALoc.of_loc loc) :: errs)
         | (Ok None, _) -> (supps, errs)
-        | (Ok (Some (Specific _ as codes)), (prev_loc, (Specific _ as prev_codes)) :: supps)
+        | (Ok (Some codes), (prev_loc, prev_codes) :: supps)
           when loc.start.line = prev_loc._end.line + 1 ->
           let supp = ({ prev_loc with _end = loc._end }, join_applicable_codes codes prev_codes) in
           (supp :: supps, errs)
@@ -342,9 +342,14 @@ let scan_for_suppressions ~in_libdef lint_severities file_keys_with_comments =
         (file, List.sort (fun (loc1, _) (loc2, _) -> Loc.compare loc1 loc2) comments)
     )
   in
-  let acc = Error_suppressions.empty in
   let (acc, errs) =
-    scan_for_error_suppressions acc [] (Base.List.bind file_keys_with_comments ~f:snd)
+    Base.List.fold_left
+      file_keys_with_comments
+      ~init:(Error_suppressions.empty, [])
+      ~f:(fun (acc, errs) (file_key, comments) ->
+        let is_ts_file = Files.has_ts_ext file_key in
+        scan_for_error_suppressions ~is_ts_file acc errs comments
+    )
   in
   scan_for_lint_suppressions ~in_libdef lint_severities acc errs file_keys_with_comments
 

@@ -1,0 +1,96 @@
+Error -------------------------------------------------------------------------------------------------- boundary.ts:5:1
+
+Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   boundary.ts:5:1
+   5| 3 as string; // ERROR: not suppressed
+      ^ [1]
+
+References:
+   boundary.ts:5:6
+   5| 3 as string; // ERROR: not suppressed
+           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- boundary.ts:8:1
+
+Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   boundary.ts:8:1
+   8| 3 as string; // ERROR: not suppressed
+      ^ [1]
+
+References:
+   boundary.ts:8:6
+   8| 3 as string; // ERROR: not suppressed
+           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- boundary.ts:11:1
+
+Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   boundary.ts:11:1
+   11| 3 as string; // ERROR: not suppressed
+       ^ [1]
+
+References:
+   boundary.ts:11:6
+   11| 3 as string; // ERROR: not suppressed
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- not_ts.js:4:1
+
+Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   not_ts.js:4:1
+   4| 3 as string; // ERROR: not suppressed (file is .js)
+      ^ [1]
+
+References:
+   not_ts.js:4:6
+   4| 3 as string; // ERROR: not suppressed (file is .js)
+           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- not_ts.js:7:1
+
+Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   not_ts.js:7:1
+   7| 3 as string; // ERROR: not suppressed (file is .js)
+      ^ [1]
+
+References:
+   not_ts.js:7:6
+   7| 3 as string; // ERROR: not suppressed (file is .js)
+           ^^^^^^ [2]
+
+
+Warning -------------------------------------------------------------------------------------------- expect_error.ts:8:1
+
+Unused suppression comment. [InferError]
+
+   8| // @ts-expect-error ERROR: unused
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------- expect_error.ts:12:1
+
+Unused suppression comment. [InferError]
+
+   12| // @ts-expect-error ERROR: unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ------------------------------------------------------------------------------------------- expect_error.ts:13:1
+
+Unused suppression comment. [InferError]
+
+   13| // @ts-expect-error ERROR: unused
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors and 3 warnings

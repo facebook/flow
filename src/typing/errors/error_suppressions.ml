@@ -105,6 +105,10 @@ end = struct
             SpanMap.keys suppressions |> Base.List.find_exn ~f:(fun k -> Loc.span_compare k loc = 0)
           in
           SpanMap.add orig_loc (locs, Specific new_codes) suppressions
+      | Some (_, All _) ->
+        (* Wildcard suppressions are dropped entirely on any successful match —
+           there are no per-code remainders to preserve. *)
+        SpanMap.remove loc suppressions
       | None -> SpanMap.remove loc suppressions
       | _ -> suppressions
     in
@@ -190,12 +194,19 @@ let check_loc suppressions specific_codes (result, (unused : t)) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   let specific_codes_set = lazy (specific_codes |> CodeMap.keys |> CodeSet.of_list) in
-  let suppression_applies (Specific specific_codes2) =
-    CodeMap.for_all
-      (fun code -> function
-        | ErrorCodeUnsuppressable -> false
-        | ErrorCodeRequireSpecific -> CodeSet.mem code specific_codes2)
-      specific_codes
+  let suppression_applies = function
+    | Specific specific_codes2 ->
+      CodeMap.for_all
+        (fun code -> function
+          | ErrorCodeUnsuppressable -> false
+          | ErrorCodeRequireSpecific -> CodeSet.mem code specific_codes2)
+        specific_codes
+    | All _ ->
+      CodeMap.for_all
+        (fun _code -> function
+          | ErrorCodeUnsuppressable -> false
+          | ErrorCodeRequireSpecific -> true)
+        specific_codes
   in
   match suppression_at_loc loc suppressions with
   | Some (locs, codes') when suppression_applies codes' ->

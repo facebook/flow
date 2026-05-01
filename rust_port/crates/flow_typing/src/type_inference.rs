@@ -71,6 +71,7 @@ use flow_typing_utils::typed_ast_utils::ErrorMapper;
 // bottom suppression in the stack
 
 fn scan_for_error_suppressions<'a>(
+    is_ts_file: bool,
     mut acc: ErrorSuppressions,
     mut errs: Vec<ErrorMessage<ALoc>>,
     comments: impl Iterator<Item = &'a Comment<Loc>>,
@@ -80,7 +81,7 @@ fn scan_for_error_suppressions<'a>(
     let mut supps: Vec<(Loc, ApplicableCodes)> = Vec::new();
 
     for comment in comments {
-        match should_suppress(&comment.text, &comment.loc) {
+        match should_suppress(is_ts_file, &comment.text, &comment.loc) {
             Err(BadSuppressionKind::MalformedCode) => {
                 errs.push(ErrorMessage::EMalformedCode(ALoc::of_loc(
                     comment.loc.dupe(),
@@ -95,7 +96,7 @@ fn scan_for_error_suppressions<'a>(
             Ok(Some(codes)) => {
                 if let Some((prev_loc, prev_codes)) = supps.last_mut() {
                     if comment.loc.start.line == prev_loc.end.line + 1 {
-                        let joined = std::mem::take(prev_codes).join(codes);
+                        let joined = prev_codes.clone().join(codes);
                         prev_loc.end = comment.loc.end;
                         *prev_codes = joined;
                         continue;
@@ -638,11 +639,13 @@ pub fn scan_for_suppressions(
         })
         .collect();
 
-    let acc = ErrorSuppressions::empty();
-    let all_comments = file_keys_with_comments
-        .iter()
-        .flat_map(|(_, comments)| comments.iter());
-    let (acc, errs) = scan_for_error_suppressions(acc, Vec::new(), all_comments);
+    let (acc, errs) = file_keys_with_comments.iter().fold(
+        (ErrorSuppressions::empty(), Vec::new()),
+        |(acc, errs), (file_key, comments)| {
+            let is_ts_file = files::has_ts_ext(file_key);
+            scan_for_error_suppressions(is_ts_file, acc, errs, comments.iter())
+        },
+    );
     scan_for_lint_suppressions(
         in_libdef,
         lint_severities,

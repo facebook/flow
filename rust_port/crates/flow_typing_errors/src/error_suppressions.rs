@@ -130,8 +130,10 @@ impl FileSuppressions {
     }
 
     fn remove(&mut self, loc: &Loc, codes: &CodeSet) {
-        if let Some((locs, ApplicableCodes(existing_codes))) = self.suppressions.find_opt(loc) {
-            if codes.subset(existing_codes) {
+        match self.suppressions.find_opt(loc) {
+            Some((locs, ApplicableCodes::Specific(existing_codes)))
+                if codes.subset(existing_codes) =>
+            {
                 let new_codes = existing_codes.diff(codes);
                 if new_codes.is_empty() {
                     self.suppressions.remove(loc);
@@ -146,13 +148,20 @@ impl FileSuppressions {
 
                     self.suppressions.add(
                         orig_loc,
-                        (locs.clone(), ApplicableCodes(new_codes)),
+                        (locs.clone(), ApplicableCodes::Specific(new_codes)),
                         None::<fn(_, _) -> _>,
                     );
                 }
             }
-        } else {
-            self.suppressions.remove(loc);
+            Some((_, ApplicableCodes::All { .. })) => {
+                // Wildcard suppressions are dropped entirely on any successful match —
+                // there are no per-code remainders to preserve.
+                self.suppressions.remove(loc);
+            }
+            None => {
+                self.suppressions.remove(loc);
+            }
+            _ => {}
         }
     }
 
@@ -289,12 +298,16 @@ impl ErrorSuppressions {
 
         let suppression_applies = |codes: &ApplicableCodes| -> bool {
             match codes {
-                ApplicableCodes(specific_codes2) => {
+                ApplicableCodes::Specific(specific_codes2) => {
                     specific_codes.for_all(|code, kind| match kind {
                         ErrorCodeKind::Unsuppressable => false,
                         ErrorCodeKind::RequireSpecific => specific_codes2.mem(code),
                     })
                 }
+                ApplicableCodes::All { .. } => specific_codes.for_all(|_code, kind| match kind {
+                    ErrorCodeKind::Unsuppressable => false,
+                    ErrorCodeKind::RequireSpecific => true,
+                }),
             }
         };
 

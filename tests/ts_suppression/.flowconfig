@@ -1,0 +1,9 @@
+[options]
+all=true
+include_warnings=true
+no_flowlib=false
+module.file_ext=.js
+module.file_ext=.ts
+module.file_ext=.tsx
+module.file_ext=.mts
+module.file_ext=.cts
