@@ -6412,65 +6412,6 @@ pub mod properties {
                 property::iter_t(&mut f, prop);
             }
         }
-
-        pub fn map_t<F>(&self, f: F) -> Self
-        where
-            F: Fn(&Type) -> Type,
-        {
-            Self(Rc::new(
-                self.iter()
-                    .map(|(name, prop)| (name.dupe(), property::map_t(&f, prop)))
-                    .collect(),
-            ))
-        }
-
-        pub fn map_fields<F>(&self, f: F) -> Self
-        where
-            F: Fn(&Type) -> Type,
-        {
-            Self(Rc::new(
-                self.iter()
-                    .map(|(name, prop)| {
-                        let new_prop = match prop.deref() {
-                            PropertyInner::Field(fd) => {
-                                Property::new(PropertyInner::Field(Box::new(FieldData {
-                                    preferred_def_locs: fd.preferred_def_locs.clone(),
-                                    key_loc: fd.key_loc.dupe(),
-                                    type_: f(&fd.type_),
-                                    polarity: fd.polarity,
-                                })))
-                            }
-                            _ => prop.dupe(),
-                        };
-                        (name.dupe(), new_prop)
-                    })
-                    .collect(),
-            ))
-        }
-
-        pub fn mapi_fields<F>(&self, f: F) -> Self
-        where
-            F: Fn(&Name, &Type) -> Type,
-        {
-            Self(Rc::new(
-                self.iter()
-                    .map(|(name, prop)| {
-                        let new_prop = match prop.deref() {
-                            PropertyInner::Field(fd) => {
-                                Property::new(PropertyInner::Field(Box::new(FieldData {
-                                    preferred_def_locs: fd.preferred_def_locs.clone(),
-                                    key_loc: fd.key_loc.dupe(),
-                                    type_: f(name, &fd.type_),
-                                    polarity: fd.polarity,
-                                })))
-                            }
-                            _ => prop.dupe(),
-                        };
-                        (name.dupe(), new_prop)
-                    })
-                    .collect(),
-            ))
-        }
     }
 
     impl From<BTreeMap<Name, Property>> for PropertiesMap {
