@@ -2,9 +2,9 @@ import * as React from 'react';
 
 function ref_tests() {
   declare var Component1: component(ref: React.RefSetter<string>);
-  <Component1 ref={(s) => (s: string | null)} />;
+  <Component1 ref={(s) => s as string | null} />;
   declare class Component2 extends React.Component<{}> {}
-  <Component2 ref={(s) => (s: Component2 | null)} />;
+  <Component2 ref={(s) => s as Component2 | null} />;
 }
 
 function cannot_resolve_name_regression_tests() {
@@ -15,8 +15,8 @@ function cannot_resolve_name_regression_tests() {
 
 function react_abstract_component_subtyping() {
   const _: React.ComponentType<{foo: string}> = (props) => {
-    (props.foo: string); // ok
-    (props: empty); // error
+    props.foo as string; // ok
+    props as empty; // error
   };
 }
 
@@ -25,7 +25,7 @@ function jsx_function_children_ok() {
   declare function Parent(x: {children: (number) => React.Node}): React.Node;
 
   return <Parent>
-    {n => <Child foo={(n: number)} /> /* OK */}
+    {n => <Child foo={n as number} /> /* OK */}
   </Parent>;
 }
 
@@ -34,7 +34,7 @@ function jsx_function_children_error() {
   declare function Parent(x: {children: (number) => React.Node}): React.Node;
 
   return <Parent>
-    {n => <Child foo={(n: empty)} /> /* ERROR */}
+    {n => <Child foo={n as empty} /> /* ERROR */}
   </Parent>;
 }
 

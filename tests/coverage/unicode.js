@@ -1,7 +1,7 @@
 // @flow
 
-(null: any);
+null as any;
 
-const emoji = "💩"; (null: any);
+const emoji = "💩"; null as any;
 
-(null: any);
+null as any;

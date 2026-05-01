@@ -5,14 +5,14 @@ function test1() {
   declare function f<T>(f: (string) => T): T;
   // We should be able to infer that c is string.
   const c = f((a) => a);
-  (c: string);
+  c as string;
   const d = f(function (a) { return a });
-  (d: string);
+  d as string;
 
-  let f2: (string) => string = (a) => (a: string); // ok
-  f2 = (b) => (b: string); // ok
+  let f2: (string) => string = (a) => a as string; // ok
+  f2 = (b) => b as string; // ok
 
-  const reasonTest: (string) => mixed = (a) => (a: empty); // ok
+  const reasonTest: (string) => mixed = (a) => a as empty; // ok
 }
 
 function test2() {
@@ -22,9 +22,9 @@ function test2() {
   declare var foo: Foo;
 
   const c = foo.bar((a) => a);
-  (c: string);
+  c as string;
   const d = foo?.bar((a) => a);
-  (d: string);
+  d as string;
 
   class Bar {
     #baz<T>(f: (string) => T): T {
@@ -33,7 +33,7 @@ function test2() {
 
     test() {
       const c = this.#baz((a) => a);
-      (c: string);
+      c as string;
     }
   }
 }
@@ -63,7 +63,7 @@ function test4() {
 
 function test5() {
   declare function id<T>(x: T): T;
-  const f1: (string) => string = id(s => (s: string)); // ok
+  const f1: (string) => string = id(s => s as string); // ok
 
   declare class A<T> {
     constructor(T): void
@@ -83,8 +83,8 @@ function test5() {
   const c2: C<string=>string> = new C(x => x, 1); // OK
 
   declare function Component<T>(x: {v: T, f: (T) => void}): void;
-  <Component v="1" f={(v) => {(v: string)}} />; // OK
-  <PolyComponent v="1" f={(v) => {(v: string)}} />; // OK
+  <Component v="1" f={(v) => {v as string}} />; // OK
+  <PolyComponent v="1" f={(v) => {v as string}} />; // OK
 }
 
 function test6() {
@@ -107,7 +107,7 @@ function test7() {
 
 function test8() {
   declare function f<T=string>(x: T => string): T;
-  f(s => (s: string)); // ok
+  f(s => s as string); // ok
 }
 
 function test9() {
@@ -144,8 +144,8 @@ function test11() {
 function test12(foo: ?Array<string>) {
   const a = new Set(foo || []);
   const b = new Set(foo ?? []);
-  (a: Set<empty>); // error Set<string> ~> Set<empty>
-  (b: Set<empty>); // error Set<string> ~> Set<empty>
+  a as Set<empty>; // error Set<string> ~> Set<empty>
+  b as Set<empty>; // error Set<string> ~> Set<empty>
 }
 
 function test13() {
@@ -153,7 +153,7 @@ function test13() {
 
   foo(
     { elements: [] },
-    (value: { elements: Array<string> }) => { (value: empty); }, // error
+    (value: { elements: Array<string> }) => { value as empty; }, // error
   )
 }
 

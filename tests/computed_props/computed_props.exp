@@ -342,22 +342,22 @@ References:
                         ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:19:2
+Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
 Cannot cast `ColorIdToNumber[ColorId.RED]` to string literal `ffffff` because string literal `ff0000` [1] is
 incompatible with string literal `ffffff` [2]. [incompatible-type]
 
-   test.js:19:2
-   19| (ColorIdToNumber[ColorId.RED]: 'ffffff'); // oops
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   test.js:19:1
+   19| ColorIdToNumber[ColorId.RED] as 'ffffff'; // oops
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    test.js:8:8
     8|   RED: 'ff0000',
               ^^^^^^^^ [1]
-   test.js:19:32
-   19| (ColorIdToNumber[ColorId.RED]: 'ffffff'); // oops
-                                      ^^^^^^^^ [2]
+   test.js:19:33
+   19| ColorIdToNumber[ColorId.RED] as 'ffffff'; // oops
+                                       ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:17
@@ -393,22 +393,22 @@ simple key in object: [signature-verification-failure]
       ^
 
 
-Error ----------------------------------------------------------------------------------------------------- test2.js:9:2
+Error ----------------------------------------------------------------------------------------------------- test2.js:9:1
 
 Cannot cast `ColorIdToNumber[ColorId.GREEN]` to string literal `ffffff` because string literal `00ff00` [1] is
 incompatible with string literal `ffffff` [2]. [incompatible-type]
 
-   test2.js:9:2
-   9| (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   test2.js:9:1
+   9| ColorIdToNumber[ColorId.GREEN] as 'ffffff'; // oops
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    test.js:9:10
    9|   GREEN: '00ff00',
                ^^^^^^^^ [1]
-   test2.js:9:34
-   9| (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
-                                       ^^^^^^^^ [2]
+   test2.js:9:35
+   9| ColorIdToNumber[ColorId.GREEN] as 'ffffff'; // oops
+                                        ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:3:18

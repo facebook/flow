@@ -3,9 +3,9 @@ function test1() {
   declare function foo(tag: 'str', cb: (x: string) => void): void;
   declare function foo(tag: 'num', cb: (x: number) => void): void;
 
-  foo('boolean', (x) => { (x: boolean); }); // okay
-  foo('str', (x) => { (x: number); }); // error
-  foo('a', (x) => { (x: number); }); // error
+  foo('boolean', (x) => { x as boolean; }); // okay
+  foo('str', (x) => { x as number; }); // error
+  foo('a', (x) => { x as number; }); // error
 }
 
 function test2() {
@@ -15,22 +15,22 @@ function test2() {
   type O = (tag: 'obj', cb: (x: {}) => void) => void;
 
   declare var foo: B & (S & (N & O));
-  foo('boolean', (x) => { (x: boolean); }); // okay
-  foo('str', (x) => { (x: string); }); // okay
-  foo('obj', (x) => { (x: string); }); // error
+  foo('boolean', (x) => { x as boolean; }); // okay
+  foo('str', (x) => { x as string; }); // okay
+  foo('obj', (x) => { x as string; }); // error
 
   declare var bar: (B & S) & (N & O);
-  bar('boolean', (x) => { (x: boolean); }); // okay
-  bar('str', (x) => { (x: string); }); // okay
-  bar('obj', (x) => { (x: string); }); // error
+  bar('boolean', (x) => { x as boolean; }); // okay
+  bar('str', (x) => { x as string; }); // okay
+  bar('obj', (x) => { x as string; }); // error
 
   declare var bak: (B & S) & (N & B);
-  bak('boolean', (x) => { (x: boolean); }); // ok
-  bak('boolean', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
+  bak('boolean', (x) => { x as boolean; }); // ok
+  bak('boolean', (x) => { x as string; }); // error in cast (ideally would pick the right overload)
 }
 
 function test4() {
-  [[1]].filter(([n], i: number) => (n: number) > 0); // okay
+  [[1]].filter(([n], i: number) => n as number > 0); // okay
 }
 
 function test5() {
@@ -50,7 +50,7 @@ function test7() {
 
   declare var tags: ?$ReadOnlyArray<string>;
   const tagsList = arrayFrom(tags ?? []);
-  tagsList.forEach(tag => (tag: number)); // error: string ~> number
+  tagsList.forEach(tag => tag as number); // error: string ~> number
 }
 
 function test8() {
@@ -66,6 +66,6 @@ function test9() {
   declare var f1: {| <T>(({| cb: T |}) => void): T |} & ((empty) => mixed);
   declare var f2: (<T>(({| cb: T |}) => void) => T) & ((empty) => mixed);
 
-  (f1(x => (0: any)): {||});
-  (f2(x => (0: any)): {||});
+  f1(x => 0 as any) as {||};
+  f2(x => 0 as any) as {||};
 }

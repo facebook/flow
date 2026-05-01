@@ -18,7 +18,7 @@ const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERRO
 
 import { Foo } from "./statics.js"
 <Foo />; // Ok
-(Foo.displayName: empty); // error, displayName is a string
+Foo.displayName as empty; // error, displayName is a string
 Foo.randomProperty; // ERROR!
 
 import { C } from "./export_syntax.js"

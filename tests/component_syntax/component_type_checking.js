@@ -6,14 +6,14 @@ component InlineParams(
   baz as qux: number,
   destructured as {a}: {a: number},
 ) renders InlineParams {
-  (foo: number); // OK
-  (foo: string); // ERROR
-  (bar: number); // OK
-  (bar: string); // ERROR
-  (baz: number); // ERROR, baz unbound
-  (qux: number); // OK
-  (a: number); // OK
-  (a: string); // ERROR
+  foo as number; // OK
+  foo as string; // ERROR
+  bar as number; // OK
+  bar as string; // ERROR
+  baz as number; // ERROR, baz unbound
+  qux as number; // OK
+  a as number; // OK
+  a as string; // ERROR
   return null; // ERROR
 }
 
@@ -21,10 +21,10 @@ component InlineWithRestParam(
   foo: number,
   ...rest: {foo: number}
 ) {
-  (foo: number);
-  (rest: {foo: number}); // OK
-  (rest: empty); // ERROR
-  return (42: any);
+  foo as number;
+  rest as {foo: number}; // OK
+  rest as empty; // ERROR
+  return 42 as any;
 }
 
 component Defaults(
@@ -34,8 +34,8 @@ component Defaults(
   destructured as {a = 'str'}: {a?: number}, // ERROR
   destructuredAssigned as {b = 3}: {b?: number},
 ) {
-  (b: number); // OK!
-  return (42: any);
+  b as number; // OK!
+  return 42 as any;
 }
 
 component ReactNodeDefaultReturn() {

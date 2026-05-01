@@ -9,10 +9,10 @@ let wr2 = new WeakRef(dict); // OK
 let wr3 = new WeakRef(promise); // OK
 let wr4 = new WeakRef(mixedArray); // OK
 
-(wr1.deref(): void | typeof obj); // OK
-(wr2.deref(): void | typeof dict); // OK
-(wr3.deref(): void | typeof promise); // OK
-(wr4.deref(): void | typeof mixedArray); // OK
+wr1.deref() as void | typeof obj; // OK
+wr2.deref() as void | typeof dict; // OK
+wr3.deref() as void | typeof promise; // OK
+wr4.deref() as void | typeof mixedArray; // OK
 
 let wr5 = new WeakRef(true); // error, must be objects
 let wr6 = new WeakRef(123); // error, must be objects

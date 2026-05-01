@@ -6,6 +6,6 @@ const ColorIdToNumber = {
   [ColorId.BLUE]: ColorNumber.BLUE,
 };
 
-(ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops
+ColorIdToNumber[ColorId.GREEN] as 'ffffff'; // oops
 
 module.exports = ColorIdToNumber;

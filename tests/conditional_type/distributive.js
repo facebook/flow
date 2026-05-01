@@ -5,8 +5,8 @@
   declare const arrUnion: Array<number> | Array<string>;
 
   // TODO: distributed conditional type is not implemented yet
-  (arrUnion: ToArray<string | number>); // ok
-  (unionArr: ToArray<string | number>); // error
+  arrUnion as ToArray<string | number>; // ok
+  unionArr as ToArray<string | number>; // error
 }
 
 {
@@ -16,14 +16,14 @@
   declare class C {};
   declare class D {};
   type A_or_C = Exclude<A|B|C, B>;
-  (new A(): A_or_C); // ok
-  (new B(): A_or_C); // error: B ~> A|C
-  (new C(): A_or_C); // ok
-  (new D(): A_or_C); // error: D ~> A|C
+  new A() as A_or_C; // ok
+  new B() as A_or_C; // error: B ~> A|C
+  new C() as A_or_C; // ok
+  new D() as A_or_C; // error: D ~> A|C
 
   type one_or_three = Exclude<1|2|3,2>;
-  (1: one_or_three); // ok
-  (2: one_or_three); // error: 2 ~> 1|3
-  (3: one_or_three); // ok
-  (4: one_or_three); // error: 4 ~> 1|3
+  1 as one_or_three; // ok
+  2 as one_or_three; // error: 2 ~> 1|3
+  3 as one_or_three; // ok
+  4 as one_or_three; // error: 4 ~> 1|3
 }

@@ -5,13 +5,13 @@ component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
 }
 component B(...props: Props) {
   let { foo, bar } = props;
-  (foo: empty); // foo is string
-  (bar: empty); // bar is number
+  foo as empty; // foo is string
+  bar as empty; // bar is number
   return <div />;
 }
 type IntrinsicProp = React.PropsOf<'div'>;
 declare const intrinsicProp: IntrinsicProp;
-(intrinsicProp.children: empty); // children is ?React.Node
+intrinsicProp.children as empty; // children is ?React.Node
 
 type Str = React.PropOf<A, 'foo'>;
 const s: Str = 42; // Str is string
@@ -20,7 +20,7 @@ let p: PStringBoolNumber = 42;
 if (s) {
   p = 'a';
 } else {
-  (p: ?(boolean | number | string)); // all ok
+  p as ?(boolean | number | string); // all ok
 }
 
 component C(ref: React.RefSetter<React.RefOf<A>>) {

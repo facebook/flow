@@ -10,7 +10,7 @@ export component Poly<T>(foo: T, bar: [T], ...props: { baz?: (T) => void}) {
 <Poly foo={1} bar={[1]} baz={(x: string) => {}} />; //error
 
 declare const x: Poly<number>;
-(x: Poly<string>);
+x as Poly<string>;
 
 component BRB<TValue: string>(foo: TValue) { return null };
 

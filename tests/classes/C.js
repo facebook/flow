@@ -5,6 +5,6 @@ class C extends B {
 }
 
 let c = new C();
-(c.foo: number); // error, number !~> function
+c.foo as number; // error, number !~> function
 
 module.exports = C;

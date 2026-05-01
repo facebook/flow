@@ -18,13 +18,13 @@ Cannot cast object literal to object type because in property `p`: number [1] is
 [incompatible-type]
 
    code_frame.js:1:6
-   1| ({p: 42}: {p: empty});
+   1| ({p: 42} as {p: empty});
            ^^ [1]
 
 References:
-   code_frame.js:1:15
-   1| ({p: 42}: {p: empty});
-                    ^^^^^ [2]
+   code_frame.js:1:17
+   1| ({p: 42} as {p: empty});
+                      ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ code_frame.js:3:6
@@ -33,13 +33,13 @@ Cannot cast object literal to object type because in property `p`: number [1] is
 [incompatible-type]
 
    code_frame.js:3:6
-   3| ({p: 42}: {p: empty});
+   3| ({p: 42} as {p: empty});
            ^^ [1]
 
 References:
-   code_frame.js:3:15
-   3| ({p: 42}: {p: empty});
-                    ^^^^^ [2]
+   code_frame.js:3:17
+   3| ({p: 42} as {p: empty});
+                      ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ code_frame.js:6:6
@@ -63,13 +63,13 @@ Cannot cast object literal to object type because in property `p`: number [1] is
 [incompatible-type]
 
    code_frame.js:11:6
-   11| ({p: 42}: {p: empty});
+   11| ({p: 42} as {p: empty});
             ^^ [1]
 
 References:
-   code_frame.js:11:15
-   11| ({p: 42}: {p: empty});
-                     ^^^^^ [2]
+   code_frame.js:11:17
+   11| ({p: 42} as {p: empty});
+                       ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ code_frame_omit.js:10:4

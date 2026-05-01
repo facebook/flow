@@ -4,19 +4,19 @@
  */
 
 const reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName = 42;
-(reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
+reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName as empty;
 
 const reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName = 42;
-(reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
+reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName as empty;
 
 const abcdefghijklmnopqrstuvwxyzabcdefghijkl = 42;
-(abcdefghijklmnopqrstuvwxyzabcdefghijkl: empty);
+abcdefghijklmnopqrstuvwxyzabcdefghijkl as empty;
 
 const abcdefghijklmnopqrstuvwxyzabcdefghijklm = 42;
-(abcdefghijklmnopqrstuvwxyzabcdefghijklm: empty);
+abcdefghijklmnopqrstuvwxyzabcdefghijklm as empty;
 
 const mnopqrstuvwxyzabcdefghijkl = 42;
-(mnopqrstuvwxyzabcdefghijkl: empty);
+mnopqrstuvwxyzabcdefghijkl as empty;
 
 const mnopqrstuvwxyzabcdefghijklm = 42;
-(mnopqrstuvwxyzabcdefghijklm: empty);
+mnopqrstuvwxyzabcdefghijklm as empty;

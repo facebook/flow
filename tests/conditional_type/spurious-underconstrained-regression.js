@@ -1,4 +1,4 @@
-class C extends (1: any) {
+class C extends (1 as any) {
   children: Array<C>;
 }
 

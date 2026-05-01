@@ -44,8 +44,8 @@ class D extends C<string> {
 }
 
 var d: C<any> = D.create();
-(new A: typeof A);
-(B: typeof A);
+new A as typeof A;
+B as typeof A;
 
 class E {
   static x: number;
@@ -62,9 +62,9 @@ class N {
   }
 }
 
-(N.x: number); // OK
+N.x as number; // OK
 N.x = 1; // OK
-(N.x: empty); // ERROR
+N.x as empty; // ERROR
 N.xxx = () => {}; // ERROR
 
 class M extends N{
@@ -72,8 +72,8 @@ class M extends N{
     return "";
   }
 }
-(M.f(): number); // ERROR
-(M.g(): number); // ERROR
+M.f() as number; // ERROR
+M.g() as number; // ERROR
 
 function test_static_method_to_class_coercion() {
   class A {

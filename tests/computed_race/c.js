@@ -8,4 +8,4 @@ import type {K} from "./a";
 const A = require("./a");
 var o = {[A.FOO]: null};
 declare var k: K;
-(o[k]: empty); // error: null ~> empty
+o[k] as empty; // error: null ~> empty

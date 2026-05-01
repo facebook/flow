@@ -5,6 +5,6 @@ declare class A<T> {
   constructor(T => void): void;
 }
 
-f<string>((v) => { (v: string) }); // ok
-new A<string>((v) => { (v: string) }); // ok
+f<string>((v) => { v as string }); // ok
+new A<string>((v) => { v as string }); // ok
 new A<any>(v => {}); // ok

@@ -6,5 +6,5 @@
 import {a} from './a';
 import {b} from './b';
 
-([a, b]: [empty, empty]);
-([b, a]: [empty, empty]);
+[a, b] as [empty, empty];
+[b, a] as [empty, empty];

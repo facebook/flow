@@ -1,3 +1,3 @@
 import { Comp } from "./test.js";
 
-(Comp: empty); // yes, it's any
+Comp as empty; // yes, it's any

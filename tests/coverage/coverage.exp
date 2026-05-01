@@ -588,9 +588,9 @@ unicode.js
     "covered_count":5,
     "covered_locs":[
       {
-        "end":{"column":5,"line":3,"offset":15},
+        "end":{"column":4,"line":3,"offset":14},
         "source":"unicode.js",
-        "start":{"column":2,"line":3,"offset":11},
+        "start":{"column":1,"line":3,"offset":10},
         "type":"SourceFile"
       },
       {
@@ -606,15 +606,15 @@ unicode.js
         "type":"SourceFile"
       },
       {
-        "end":{"column":24,"line":5,"offset":51},
+        "end":{"column":23,"line":5,"offset":50},
         "source":"unicode.js",
-        "start":{"column":21,"line":5,"offset":47},
+        "start":{"column":20,"line":5,"offset":46},
         "type":"SourceFile"
       },
       {
-        "end":{"column":5,"line":7,"offset":65},
+        "end":{"column":4,"line":7,"offset":64},
         "source":"unicode.js",
-        "start":{"column":2,"line":7,"offset":61},
+        "start":{"column":1,"line":7,"offset":60},
         "type":"SourceFile"
       }
     ],
@@ -645,11 +645,11 @@ unicode.js
 }
 [0m// @flow
 
-[0m[0m([0m[0mnull[0m[0m:[0m[31m any)[0m[0m;
+[0m[0mnull[0m[0m [0m[31mas any[0m[0m;
 
-const [0m[0memoji[0m[0m = [0m[0m"💩"[0m[0m; [0m[0m([0m[0mnull[0m[0m:[0m[31m any)[0m[0m;
+const [0m[0memoji[0m[0m = [0m[0m"💩"[0m[0m; [0m[0mnull[0m[0m [0m[31mas any[0m[0m;
 
-[0m[0m([0m[0mnull[0m[0m:[0m[31m any)[0m[0m;
+[0m[0mnull[0m[0m [0m[31mas any[0m[0m;
 [0m
 Covered: 62.50% (5 of 8 expressions)
 

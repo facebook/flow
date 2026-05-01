@@ -39,13 +39,13 @@ Cannot call `foo` with object literal bound to `x` because property `f` is missi
 `O` [2]. [incompatible-type]
 
    test4.js:7:20
-   7| foo((new C: C<O>), { f_: 0 });
+   7| foo(new C as C<O>, { f_: 0 });
                          ^^^^^^^^^ [1]
 
 References:
-   test4.js:7:15
-   7| foo((new C: C<O>), { f_: 0 });
-                    ^ [2]
+   test4.js:7:16
+   7| foo(new C as C<O>, { f_: 0 });
+                     ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test4.js:13:12

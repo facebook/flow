@@ -31,7 +31,7 @@ let tests = [
 
   // get()
   function(x: Map<string, number>) {
-    (x.get('foo'): boolean); // error, string | void
+    x.get('foo') as boolean; // error, string | void
     x.get(123); // error, wrong key type
   },
 ];

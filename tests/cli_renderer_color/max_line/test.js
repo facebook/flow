@@ -5,7 +5,7 @@
 
 import {foo1, foo2} from './foo';
 
-(foo1: empty);
+foo1 as empty;
 // intentionally empty line
 // intentionally empty line
 // intentionally empty line
@@ -99,4 +99,4 @@ import {foo1, foo2} from './foo';
 // intentionally empty line
 // intentionally empty line
 // intentionally empty line
-(foo2: empty);
+foo2 as empty;

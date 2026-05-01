@@ -5,8 +5,8 @@ component Baz(...x?: {foo: number}) {return null; } // ERROR optional
 component DestructuredObj(
   ...{foo, bar, baz = false}: {foo: number, bar: number, baz?: number} // ERROR bad default for baz
 ) {
-  (foo: number); // OK
-  (bar: string); // ERROR
+  foo as number; // OK
+  bar as string; // ERROR
   return null;
 }
 

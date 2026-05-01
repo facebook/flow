@@ -37,56 +37,56 @@ var o = new Child();
 /**
  * Annotated (but uninitialized) fields still have a type.
  */
-(o.base_annotatedField: number);
-(o.base_annotatedField: string); // Error: number ~> string
-(Child.base_annotatedField: number);
-(Child.base_annotatedField: string); // Error: number ~> string
+o.base_annotatedField as number;
+o.base_annotatedField as string; // Error: number ~> string
+Child.base_annotatedField as number;
+Child.base_annotatedField as string; // Error: number ~> string
 
-(o.child_annotatedField: number);
-(o.child_annotatedField: string); // Error: number ~> string
-(Child.child_annotatedField: number);
-(Child.child_annotatedField: string); // Error: number ~> string
+o.child_annotatedField as number;
+o.child_annotatedField as string; // Error: number ~> string
+Child.child_annotatedField as number;
+Child.child_annotatedField as string; // Error: number ~> string
 
 /**
  * Initialized (but unannotated) fields assume the type of their initializer.
  */
-(o.base_initializedField: number);
-(o.base_initializedField: string); // Error: number ~> string
-(Child.base_initializedField: string);
-(Child.base_initializedField: number); // Error: string ~> number
+o.base_initializedField as number;
+o.base_initializedField as string; // Error: number ~> string
+Child.base_initializedField as string;
+Child.base_initializedField as number; // Error: string ~> number
 
-(o.child_initializedField: number);
-(o.child_initializedField: string); // Error: number ~> string
-(Child.child_initializedField: string);
-(Child.child_initializedField: number); // Error: string ~> number
+o.child_initializedField as number;
+o.child_initializedField as string; // Error: number ~> string
+Child.child_initializedField as string;
+Child.child_initializedField as number; // Error: string ~> number
 
 /**
  * Initialized fields can reference `this`.
  */
-(o.base_initializedFieldWithThis: number);
-(o.base_initializedFieldWithThis: string); // Error: number ~> string
-(Child.base_initializedFieldWithThis: string);
-(Child.base_initializedFieldWithThis: number); // Error: string ~> number
+o.base_initializedFieldWithThis as number;
+o.base_initializedFieldWithThis as string; // Error: number ~> string
+Child.base_initializedFieldWithThis as string;
+Child.base_initializedFieldWithThis as number; // Error: string ~> number
 
-(o.child_initializedFieldWithThis: number);
-(o.child_initializedFieldWithThis: string); // Error: number ~> string
-(Child.child_initializedFieldWithThis: string);
-(Child.child_initializedFieldWithThis: number); // Error: string ~> number
+o.child_initializedFieldWithThis as number;
+o.child_initializedFieldWithThis as string; // Error: number ~> string
+Child.child_initializedFieldWithThis as string;
+Child.child_initializedFieldWithThis as number; // Error: string ~> number
 
 /**
  * Initialized + annotated fields take the type of the annotation.
  * (Note that this matters when the annotation is more general than the type of
  *  the initializer)
  */
-(o.base_annotatedInitializedFieldValid: ?number);
-(o.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-(Child.base_annotatedInitializedFieldValid: ?number);
-(Child.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+o.base_annotatedInitializedFieldValid as ?number;
+o.base_annotatedInitializedFieldValid as number; // Error: ?number ~> number
+Child.base_annotatedInitializedFieldValid as ?number;
+Child.base_annotatedInitializedFieldValid as number; // Error: ?number ~> number
 
-(o.child_annotatedInitializedFieldValid: ?number);
-(o.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
-(Child.child_annotatedInitializedFieldValid: ?number);
-(Child.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+o.child_annotatedInitializedFieldValid as ?number;
+o.child_annotatedInitializedFieldValid as number; // Error: ?number ~> number
+Child.child_annotatedInitializedFieldValid as ?number;
+Child.child_annotatedInitializedFieldValid as number; // Error: ?number ~> number
 
 /**
  * Initialized + annotated fields where the init/annot combo is a mismatch
@@ -94,21 +94,21 @@ var o = new Child();
  *
  * (This happens in addition to erroring at the site of initialization)
  */
-(o.base_annotatedInitializedFieldInvalid: number);
-(o.base_annotatedInitializedFieldInvalid: string); // Error: number ~> string
-(Child.base_annotatedInitializedFieldInvalid: number);
-(Child.base_annotatedInitializedFieldInvalid: string); // Error: number ~> string
+o.base_annotatedInitializedFieldInvalid as number;
+o.base_annotatedInitializedFieldInvalid as string; // Error: number ~> string
+Child.base_annotatedInitializedFieldInvalid as number;
+Child.base_annotatedInitializedFieldInvalid as string; // Error: number ~> string
 
-(o.child_annotatedInitializedFieldInvalid: number);
-(o.child_annotatedInitializedFieldInvalid: string); // Error: number ~> string
-(Child.child_annotatedInitializedFieldInvalid: number);
-(Child.child_annotatedInitializedFieldInvalid: string); // Error: number ~> string
+o.child_annotatedInitializedFieldInvalid as number;
+o.child_annotatedInitializedFieldInvalid as string; // Error: number ~> string
+Child.child_annotatedInitializedFieldInvalid as number;
+Child.child_annotatedInitializedFieldInvalid as string; // Error: number ~> string
 
 /**
  * Derived fields without an initializer that shadow base fields *with* an
  * initializer should have the type of the base field.
  */
-(o.inherited_initializer: number);
-(o.inherited_initializer: string); // Error: number ~> string
-(Child.inherited_initializer: number);
-(Child.inherited_initializer: string); // Error: number ~> string
+o.inherited_initializer as number;
+o.inherited_initializer as string; // Error: number ~> string
+Child.inherited_initializer as number;
+Child.inherited_initializer as string; // Error: number ~> string

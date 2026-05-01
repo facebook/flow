@@ -167,7 +167,7 @@ import React from "react";
   let v;
   const x1 = (cond ? [] : null) ?? 'A'; // OK, [] is truthy, null is falsy
   const x2 = (cond ? [] as Array<number> : null) ?? 'A'; // OK, [] is truthy, null is falsy, testing recursing into the arg of `AsExpression`
-  const x3 = (cond ? ([]: Array<number>): null) ?? 'A'; // OK
+  const x3 = (cond ? [] as Array<number>: null) ?? 'A'; // OK
   const x4 = (cond ? [] as const : null) ?? 'A'; // OK
   const x5 = (cond ? v=[] : null) ?? 'A'; // OK
   const x6 = (cond ? (3,4,5) : null) ?? 'A'; // OK

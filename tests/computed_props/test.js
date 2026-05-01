@@ -16,7 +16,7 @@ const ColorIdToNumber = {
   [ColorId.BLUE]: ColorNumber.BLUE,
 };
 
-(ColorIdToNumber[ColorId.RED]: 'ffffff'); // oops
+ColorIdToNumber[ColorId.RED] as 'ffffff'; // oops
 
 ColorIdToNumber.XXX; // oops
 

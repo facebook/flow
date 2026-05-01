@@ -26,21 +26,35 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- basic.js:5:2
+Error ----------------------------------------------------------------------------------------------------- basic.js:5:1
 
 Cannot cast `str` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   basic.js:5:2
-   5| (str: number); // error: string ~> number
-       ^^^
+   basic.js:5:1
+   5| str as number; // error: string ~> number
+      ^^^
 
 References:
    basic.js:2:12
    2| const str: BasicConditionalType = "";  // ok
                  ^^^^^^^^^^^^^^^^^^^^ [1]
-   basic.js:5:7
-   5| (str: number); // error: string ~> number
-            ^^^^^^ [2]
+   basic.js:5:8
+   5| str as number; // error: string ~> number
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- basic.js:7:1
+
+Cannot cast `0` to conditional type because number [1] is incompatible with string [2]. [incompatible-type]
+
+   basic.js:7:1
+   7| 0 as 1 extends infer T ? string : number as number; // error: number ~> string, string ~> number
+      ^ [1]
+
+References:
+   basic.js:7:26
+   7| 0 as 1 extends infer T ? string : number as number; // error: number ~> string, string ~> number
+                               ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- basic.js:7:6
@@ -48,33 +62,19 @@ Error --------------------------------------------------------------------------
 Cannot cast `0` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    basic.js:7:6
-   7| ((0: 1 extends infer T ? string : number): number); // error: number ~> string, string ~> number
+   7| 0 as 1 extends infer T ? string : number as number; // error: number ~> string, string ~> number
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    basic.js:7:26
-   7| ((0: 1 extends infer T ? string : number): number); // error: number ~> string, string ~> number
+   7| 0 as 1 extends infer T ? string : number as number; // error: number ~> string, string ~> number
                                ^^^^^^ [1]
-   basic.js:7:44
-   7| ((0: 1 extends infer T ? string : number): number); // error: number ~> string, string ~> number
-                                                 ^^^^^^ [2]
+   basic.js:7:45
+   7| 0 as 1 extends infer T ? string : number as number; // error: number ~> string, string ~> number
+                                                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- basic.js:7:3
-
-Cannot cast `0` to conditional type because number [1] is incompatible with string [2]. [incompatible-type]
-
-   basic.js:7:3
-   7| ((0: 1 extends infer T ? string : number): number); // error: number ~> string, string ~> number
-        ^ [1]
-
-References:
-   basic.js:7:26
-   7| ((0: 1 extends infer T ? string : number): number); // error: number ~> string, string ~> number
-                               ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- distributive.js:9:4
+Error ---------------------------------------------------------------------------------------------- distributive.js:9:3
 
 Cannot cast `unionArr` to `ToArray` because: [incompatible-type]
  - Either in array element: number [1] is incompatible with string [2].
@@ -84,34 +84,34 @@ Cannot cast `unionArr` to `ToArray` because: [incompatible-type]
     - Arrays are invariantly typed. See
       https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   distributive.js:9:4
-   9|   (unionArr: ToArray<string | number>); // error
-         ^^^^^^^^
+   distributive.js:9:3
+   9|   unionArr as ToArray<string | number>; // error
+        ^^^^^^^^
 
 References:
    distributive.js:4:42
    4|   declare const unionArr: Array<string | number>;
                                                ^^^^^^ [1]
-   distributive.js:9:22
-   9|   (unionArr: ToArray<string | number>); // error
-                           ^^^^^^ [2]
+   distributive.js:9:23
+   9|   unionArr as ToArray<string | number>; // error
+                            ^^^^^^ [2]
    distributive.js:4:33
    4|   declare const unionArr: Array<string | number>;
                                       ^^^^^^ [3]
-   distributive.js:9:31
-   9|   (unionArr: ToArray<string | number>); // error
-                                    ^^^^^^ [4]
+   distributive.js:9:32
+   9|   unionArr as ToArray<string | number>; // error
+                                     ^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- distributive.js:20:4
+Error --------------------------------------------------------------------------------------------- distributive.js:20:3
 
 Cannot cast `new B()` to `A_or_C` because: [incompatible-type]
  - Either `B` [1] is incompatible with `A` [2].
  - Or `B` [1] is incompatible with `C` [3].
 
-   distributive.js:20:4
-   20|   (new B(): A_or_C); // error: B ~> A|C
-          ^^^^^^^ [1]
+   distributive.js:20:3
+   20|   new B() as A_or_C; // error: B ~> A|C
+         ^^^^^^^ [1]
 
 References:
    distributive.js:18:25
@@ -122,15 +122,15 @@ References:
                                    ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- distributive.js:22:4
+Error --------------------------------------------------------------------------------------------- distributive.js:22:3
 
 Cannot cast `new D()` to `A_or_C` because: [incompatible-type]
  - Either `D` [1] is incompatible with `A` [2].
  - Or `D` [1] is incompatible with `C` [3].
 
-   distributive.js:22:4
-   22|   (new D(): A_or_C); // error: D ~> A|C
-          ^^^^^^^ [1]
+   distributive.js:22:3
+   22|   new D() as A_or_C; // error: D ~> A|C
+         ^^^^^^^ [1]
 
 References:
    distributive.js:18:25
@@ -141,32 +141,32 @@ References:
                                    ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- distributive.js:26:4
+Error --------------------------------------------------------------------------------------------- distributive.js:26:3
 
 Cannot cast `2` to `one_or_three` because number [1] is incompatible with `Exclude` [2]. [incompatible-type]
 
-   distributive.js:26:4
-   26|   (2: one_or_three); // error: 2 ~> 1|3
-          ^ [1]
+   distributive.js:26:3
+   26|   2 as one_or_three; // error: 2 ~> 1|3
+         ^ [1]
 
 References:
-   distributive.js:26:7
-   26|   (2: one_or_three); // error: 2 ~> 1|3
-             ^^^^^^^^^^^^ [2]
+   distributive.js:26:8
+   26|   2 as one_or_three; // error: 2 ~> 1|3
+              ^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- distributive.js:28:4
+Error --------------------------------------------------------------------------------------------- distributive.js:28:3
 
 Cannot cast `4` to `one_or_three` because number [1] is incompatible with `Exclude` [2]. [incompatible-type]
 
-   distributive.js:28:4
-   28|   (4: one_or_three); // error: 4 ~> 1|3
-          ^ [1]
+   distributive.js:28:3
+   28|   4 as one_or_three; // error: 4 ~> 1|3
+         ^ [1]
 
 References:
-   distributive.js:28:7
-   28|   (4: one_or_three); // error: 4 ~> 1|3
-             ^^^^^^^^^^^^ [2]
+   distributive.js:28:8
+   28|   4 as one_or_three; // error: 4 ~> 1|3
+              ^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ duplicate_infer.js:1:89
@@ -183,329 +183,329 @@ References:
                                                                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- duplicate_infer.js:7:2
+Error ------------------------------------------------------------------------------------------- duplicate_infer.js:7:1
 
 Cannot cast `1` to `DuplicatInfer1` because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   duplicate_infer.js:7:2
-   7| (1: DuplicatInfer1); // error: number ~> empty
-       ^ [1]
+   duplicate_infer.js:7:1
+   7| 1 as DuplicatInfer1; // error: number ~> empty
+      ^ [1]
 
 References:
-   duplicate_infer.js:7:5
-   7| (1: DuplicatInfer1); // error: number ~> empty
-          ^^^^^^^^^^^^^^ [2]
+   duplicate_infer.js:7:6
+   7| 1 as DuplicatInfer1; // error: number ~> empty
+           ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- duplicate_infer.js:8:2
+Error ------------------------------------------------------------------------------------------- duplicate_infer.js:8:1
 
 Cannot cast `1` to `DuplicatInfer2` because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   duplicate_infer.js:8:2
-   8| (1: DuplicatInfer2); // error: number ~> empty
-       ^ [1]
+   duplicate_infer.js:8:1
+   8| 1 as DuplicatInfer2; // error: number ~> empty
+      ^ [1]
 
 References:
-   duplicate_infer.js:8:5
-   8| (1: DuplicatInfer2); // error: number ~> empty
-          ^^^^^^^^^^^^^^ [2]
+   duplicate_infer.js:8:6
+   8| 1 as DuplicatInfer2; // error: number ~> empty
+           ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- duplicate_infer.js:9:2
+Error ------------------------------------------------------------------------------------------- duplicate_infer.js:9:1
 
 Cannot cast `1` to `DuplicatInfer3` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   duplicate_infer.js:9:2
-   9| (1: DuplicatInfer3); // error: number ~> string
-       ^ [1]
+   duplicate_infer.js:9:1
+   9| 1 as DuplicatInfer3; // error: number ~> string
+      ^ [1]
 
 References:
-   duplicate_infer.js:9:5
-   9| (1: DuplicatInfer3); // error: number ~> string
-          ^^^^^^^^^^^^^^ [2]
+   duplicate_infer.js:9:6
+   9| 1 as DuplicatInfer3; // error: number ~> string
+           ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ duplicate_infer.js:10:2
+Error ------------------------------------------------------------------------------------------ duplicate_infer.js:10:1
 
 Cannot cast `1` to `DuplicatInfer4` because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   duplicate_infer.js:10:2
-   10| (1: DuplicatInfer4); // error: number ~> empty
-        ^ [1]
+   duplicate_infer.js:10:1
+   10| 1 as DuplicatInfer4; // error: number ~> empty
+       ^ [1]
 
 References:
-   duplicate_infer.js:10:5
-   10| (1: DuplicatInfer4); // error: number ~> empty
-           ^^^^^^^^^^^^^^ [2]
+   duplicate_infer.js:10:6
+   10| 1 as DuplicatInfer4; // error: number ~> empty
+            ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ duplicate_infer.js:11:2
+Error ------------------------------------------------------------------------------------------ duplicate_infer.js:11:1
 
 Cannot cast `1` to `DuplicatInfer5` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   duplicate_infer.js:11:2
-   11| (1: DuplicatInfer5); // error: number ~> string
-        ^ [1]
+   duplicate_infer.js:11:1
+   11| 1 as DuplicatInfer5; // error: number ~> string
+       ^ [1]
 
 References:
-   duplicate_infer.js:11:5
-   11| (1: DuplicatInfer5); // error: number ~> string
-           ^^^^^^^^^^^^^^ [2]
+   duplicate_infer.js:11:6
+   11| 1 as DuplicatInfer5; // error: number ~> string
+            ^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- empty_propagation.js:3:2
+Error ----------------------------------------------------------------------------------------- empty_propagation.js:3:1
 
 Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   empty_propagation.js:3:2
-   3| (x: empty); // error: number ~> empty;
-       ^
+   empty_propagation.js:3:1
+   3| x as empty; // error: number ~> empty;
+      ^
 
 References:
    empty_propagation.js:2:16
    2| declare var x: F<empty | number>;
                      ^^^^^^^^^^^^^^^^^ [1]
-   empty_propagation.js:3:5
-   3| (x: empty); // error: number ~> empty;
-          ^^^^^ [2]
+   empty_propagation.js:3:6
+   3| x as empty; // error: number ~> empty;
+           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ extraction.js:4:4
+Error ------------------------------------------------------------------------------------------------ extraction.js:4:3
 
 Cannot cast `0` to `Extract` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   extraction.js:4:4
-   4|   (0: Extract<Array<string>>); // error: number ~> string
-         ^ [1]
+   extraction.js:4:3
+   4|   0 as Extract<Array<string>>; // error: number ~> string
+        ^ [1]
 
 References:
-   extraction.js:4:7
-   4|   (0: Extract<Array<string>>); // error: number ~> string
-            ^^^^^^^^^^^^^^^^^^^^^^ [2]
+   extraction.js:4:8
+   4|   0 as Extract<Array<string>>; // error: number ~> string
+             ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ extraction.js:5:4
+Error ------------------------------------------------------------------------------------------------ extraction.js:5:3
 
 Cannot cast `true` to `Extract` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
 [incompatible-type]
 
-   extraction.js:5:4
-   5|   (true: Extract<3>); // error: true ~> false
-         ^^^^ [1]
+   extraction.js:5:3
+   5|   true as Extract<3>; // error: true ~> false
+        ^^^^ [1]
 
 References:
-   extraction.js:5:10
-   5|   (true: Extract<3>); // error: true ~> false
-               ^^^^^^^^^^ [2]
+   extraction.js:5:11
+   5|   true as Extract<3>; // error: true ~> false
+                ^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:11:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:11:3
 
 Cannot cast `'0'` to `Extract` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   extraction.js:11:4
-   11|   ('0': Extract<Array<number>>); // error: string ~> number
-          ^^^ [1]
+   extraction.js:11:3
+   11|   '0' as Extract<Array<number>>; // error: string ~> number
+         ^^^ [1]
 
 References:
-   extraction.js:11:9
-   11|   ('0': Extract<Array<number>>); // error: string ~> number
-               ^^^^^^^^^^^^^^^^^^^^^^ [2]
+   extraction.js:11:10
+   11|   '0' as Extract<Array<number>>; // error: string ~> number
+                ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:12:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:12:3
 
 Cannot cast `0` to `Extract` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
-   extraction.js:12:4
-   12|   (0: Extract<Array<string>>); // error: number ~> boolean
-          ^ [1]
+   extraction.js:12:3
+   12|   0 as Extract<Array<string>>; // error: number ~> boolean
+         ^ [1]
 
 References:
-   extraction.js:12:7
-   12|   (0: Extract<Array<string>>); // error: number ~> boolean
-             ^^^^^^^^^^^^^^^^^^^^^^ [2]
+   extraction.js:12:8
+   12|   0 as Extract<Array<string>>; // error: number ~> boolean
+              ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:17:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:17:3
 
 Cannot cast `3` to `ReturnType` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   extraction.js:17:4
-   17|   (3: ReturnType<() => string>); // error: number ~> string
-          ^ [1]
+   extraction.js:17:3
+   17|   3 as ReturnType<() => string>; // error: number ~> string
+         ^ [1]
 
 References:
-   extraction.js:17:7
-   17|   (3: ReturnType<() => string>); // error: number ~> string
-             ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   extraction.js:17:8
+   17|   3 as ReturnType<() => string>; // error: number ~> string
+              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:19:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:19:3
 
 Cannot cast `3` to `ReturnType` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   extraction.js:19:4
-   19|   (3: ReturnType<(number) => string>); // error: number ~> string
-          ^ [1]
+   extraction.js:19:3
+   19|   3 as ReturnType<(number) => string>; // error: number ~> string
+         ^ [1]
 
 References:
-   extraction.js:19:7
-   19|   (3: ReturnType<(number) => string>); // error: number ~> string
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   extraction.js:19:8
+   19|   3 as ReturnType<(number) => string>; // error: number ~> string
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:21:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:21:3
 
 Cannot cast `3` to `ReturnType` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   extraction.js:21:4
-   21|   (3: ReturnType<(number, string, ...any) => string>); // error: number ~> string
-          ^ [1]
+   extraction.js:21:3
+   21|   3 as ReturnType<(number, string, ...any) => string>; // error: number ~> string
+         ^ [1]
 
 References:
-   extraction.js:21:7
-   21|   (3: ReturnType<(number, string, ...any) => string>); // error: number ~> string
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   extraction.js:21:8
+   21|   3 as ReturnType<(number, string, ...any) => string>; // error: number ~> string
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- extraction.js:25:32
+Error ---------------------------------------------------------------------------------------------- extraction.js:25:33
 
 Cannot access number literal `0` on `Parameters` because tuple type [1] only has 0 elements, so index 0 is out of
 bounds. [invalid-tuple-index]
 
-   extraction.js:25:32
-   25|   (3: Parameters<() => number>[0]); // error: invalid-tuple-index
-                                      ^
+   extraction.js:25:33
+   25|   3 as Parameters<() => number>[0]; // error: invalid-tuple-index
+                                       ^
 
 References:
-   extraction.js:25:7
-   25|   (3: Parameters<() => number>[0]); // error: invalid-tuple-index
-             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   extraction.js:25:8
+   25|   3 as Parameters<() => number>[0]; // error: invalid-tuple-index
+              ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:27:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:27:3
 
 Cannot cast `3` to indexed access because number [1] is incompatible with string [2]. [incompatible-type]
 
-   extraction.js:27:4
-   27|   (3: Parameters<(string, number) => string>[0]); // error: number ~> string
-          ^ [1]
+   extraction.js:27:3
+   27|   3 as Parameters<(string, number) => string>[0]; // error: number ~> string
+         ^ [1]
 
 References:
-   extraction.js:27:19
-   27|   (3: Parameters<(string, number) => string>[0]); // error: number ~> string
-                         ^^^^^^ [2]
+   extraction.js:27:20
+   27|   3 as Parameters<(string, number) => string>[0]; // error: number ~> string
+                          ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:28:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:28:3
 
 Cannot cast empty string to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
 
-   extraction.js:28:4
-   28|   ('': Parameters<(string, number) => string>[1]); // error: string ~> number
-          ^^ [1]
+   extraction.js:28:3
+   28|   '' as Parameters<(string, number) => string>[1]; // error: string ~> number
+         ^^ [1]
 
 References:
-   extraction.js:28:28
-   28|   ('': Parameters<(string, number) => string>[1]); // error: string ~> number
-                                  ^^^^^^ [2]
+   extraction.js:28:29
+   28|   '' as Parameters<(string, number) => string>[1]; // error: string ~> number
+                                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:34:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:34:3
 
 Cannot cast empty string to `ThisParameterType` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   extraction.js:34:4
-   34|   ('': ThisParameterType<(this: number, string) => void>); // error: string ~> number
-          ^^ [1]
+   extraction.js:34:3
+   34|   '' as ThisParameterType<(this: number, string) => void>; // error: string ~> number
+         ^^ [1]
 
 References:
-   extraction.js:34:8
-   34|   ('': ThisParameterType<(this: number, string) => void>); // error: string ~> number
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   extraction.js:34:9
+   34|   '' as ThisParameterType<(this: number, string) => void>; // error: string ~> number
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:40:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:40:3
 
 Cannot cast `'3'` to `OmitThisParameter` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   extraction.js:40:4
-   40|   ('3': OmitThisParameter<ThisParameterType<(this: number, string) => void>>); // ok: fn type with this type has an implicit any this type
-          ^^^ [1]
+   extraction.js:40:3
+   40|   '3' as OmitThisParameter<ThisParameterType<(this: number, string) => void>>; // ok: fn type with this type has an implicit any this type
+         ^^^ [1]
 
 References:
-   extraction.js:40:9
-   40|   ('3': OmitThisParameter<ThisParameterType<(this: number, string) => void>>); // ok: fn type with this type has an implicit any this type
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   extraction.js:40:10
+   40|   '3' as OmitThisParameter<ThisParameterType<(this: number, string) => void>>; // ok: fn type with this type has an implicit any this type
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:52:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:52:3
 
 Cannot cast `awaited_null` to empty because null [1] is incompatible with empty [2]. [incompatible-type]
 
-   extraction.js:52:4
-   52|   (awaited_null: empty); // error: null ~> empty
-          ^^^^^^^^^^^^
+   extraction.js:52:3
+   52|   awaited_null as empty; // error: null ~> empty
+         ^^^^^^^^^^^^
 
 References:
    extraction.js:48:29
    48|   declare var awaited_null: Awaited<null>;
                                    ^^^^^^^^^^^^^ [1]
-   extraction.js:52:18
-   52|   (awaited_null: empty); // error: null ~> empty
-                        ^^^^^ [2]
+   extraction.js:52:19
+   52|   awaited_null as empty; // error: null ~> empty
+                         ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:53:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:53:3
 
 Cannot cast `awaited_n1` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   extraction.js:53:4
-   53|   (awaited_n1: empty); // error: number ~> empty
-          ^^^^^^^^^^
+   extraction.js:53:3
+   53|   awaited_n1 as empty; // error: number ~> empty
+         ^^^^^^^^^^
 
 References:
    extraction.js:49:27
    49|   declare var awaited_n1: Awaited<number>;
                                  ^^^^^^^^^^^^^^^ [1]
-   extraction.js:53:16
-   53|   (awaited_n1: empty); // error: number ~> empty
-                      ^^^^^ [2]
+   extraction.js:53:17
+   53|   awaited_n1 as empty; // error: number ~> empty
+                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:54:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:54:3
 
 Cannot cast `awaited_n2` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   extraction.js:54:4
-   54|   (awaited_n2: empty); // error: number ~> empty
-          ^^^^^^^^^^
+   extraction.js:54:3
+   54|   awaited_n2 as empty; // error: number ~> empty
+         ^^^^^^^^^^
 
 References:
    extraction.js:50:27
    50|   declare var awaited_n2: Awaited<Promise<number>>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   extraction.js:54:16
-   54|   (awaited_n2: empty); // error: number ~> empty
-                      ^^^^^ [2]
+   extraction.js:54:17
+   54|   awaited_n2 as empty; // error: number ~> empty
+                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- extraction.js:55:4
+Error ----------------------------------------------------------------------------------------------- extraction.js:55:3
 
 Cannot cast `awaited_n3` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   extraction.js:55:4
-   55|   (awaited_n3: empty); // error: number ~> empty
-          ^^^^^^^^^^
+   extraction.js:55:3
+   55|   awaited_n3 as empty; // error: number ~> empty
+         ^^^^^^^^^^
 
 References:
    extraction.js:51:27
    51|   declare var awaited_n3: Awaited<Promise<Promise<Promise<Promise<number>>>>>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   extraction.js:55:16
-   55|   (awaited_n3: empty); // error: number ~> empty
-                      ^^^^^ [2]
+   extraction.js:55:17
+   55|   awaited_n3 as empty; // error: number ~> empty
+                       ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:63:52
@@ -581,39 +581,39 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- generic.js:12:2
+Error -------------------------------------------------------------------------------------------------- generic.js:12:1
 
 Cannot cast `generic_in_check_type(...)` to empty because boolean [1] is incompatible with empty [2].
 [incompatible-type]
 
-   generic.js:12:2
-   12| (generic_in_check_type(''): empty); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+   generic.js:12:1
+   12| generic_in_check_type('') as empty; // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    generic.js:2:70
     2| function generic_in_check_type<T>(x: T) : [T] extends [+_K:string] ? boolean : number {
                                                                             ^^^^^^^ [1]
-   generic.js:12:29
-   12| (generic_in_check_type(''): empty); // error
-                                   ^^^^^ [2]
+   generic.js:12:30
+   12| generic_in_check_type('') as empty; // error
+                                    ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- generic.js:13:2
+Error -------------------------------------------------------------------------------------------------- generic.js:13:1
 
 Cannot cast `generic_in_check_type(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   generic.js:13:2
-   13| (generic_in_check_type(1): empty); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^
+   generic.js:13:1
+   13| generic_in_check_type(1) as empty; // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    generic.js:2:80
     2| function generic_in_check_type<T>(x: T) : [T] extends [+_K:string] ? boolean : number {
                                                                                       ^^^^^^ [1]
-   generic.js:13:28
-   13| (generic_in_check_type(1): empty); // error
-                                  ^^^^^ [2]
+   generic.js:13:29
+   13| generic_in_check_type(1) as empty; // error
+                                   ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- generic.js:17:12
@@ -644,40 +644,40 @@ References:
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- generic.js:28:2
+Error -------------------------------------------------------------------------------------------------- generic.js:28:1
 
 Cannot cast `generic_in_extends_type(...)` to empty because boolean [1] is incompatible with empty [2].
 [incompatible-type]
 
-   generic.js:28:2
-   28| (generic_in_extends_type(s): empty); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   generic.js:28:1
+   28| generic_in_extends_type(s) as empty; // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    generic.js:15:67
    15| function generic_in_extends_type<T>(x: T): [string] extends [T] ? boolean : number {
                                                                          ^^^^^^^ [1]
-   generic.js:28:30
-   28| (generic_in_extends_type(s): empty); // error
-                                    ^^^^^ [2]
+   generic.js:28:31
+   28| generic_in_extends_type(s) as empty; // error
+                                     ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- generic.js:29:2
+Error -------------------------------------------------------------------------------------------------- generic.js:29:1
 
 Cannot cast `generic_in_extends_type(...)` to empty because number [1] is incompatible with empty [2].
 [incompatible-type]
 
-   generic.js:29:2
-   29| (generic_in_extends_type(n): empty); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   generic.js:29:1
+   29| generic_in_extends_type(n) as empty; // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    generic.js:15:77
    15| function generic_in_extends_type<T>(x: T): [string] extends [T] ? boolean : number {
                                                                                    ^^^^^^ [1]
-   generic.js:29:30
-   29| (generic_in_extends_type(n): empty); // error
-                                    ^^^^^ [2]
+   generic.js:29:31
+   29| generic_in_extends_type(n) as empty; // error
+                                     ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- generic.js:32:21
@@ -714,40 +714,40 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- generic.js:50:2
+Error -------------------------------------------------------------------------------------------------- generic.js:50:1
 
 Cannot cast `definitely_assignable_choose_true_branch(...)` to number because string [1] is incompatible with
 number [2]. [incompatible-type]
 
-   generic.js:50:2
-   50| (definitely_assignable_choose_true_branch(''): number); // error: string ~> number
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   generic.js:50:1
+   50| definitely_assignable_choose_true_branch('') as number; // error: string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   generic.js:50:43
-   50| (definitely_assignable_choose_true_branch(''): number); // error: string ~> number
-                                                 ^^ [1]
-   generic.js:50:48
-   50| (definitely_assignable_choose_true_branch(''): number); // error: string ~> number
-                                                      ^^^^^^ [2]
+   generic.js:50:42
+   50| definitely_assignable_choose_true_branch('') as number; // error: string ~> number
+                                                ^^ [1]
+   generic.js:50:49
+   50| definitely_assignable_choose_true_branch('') as number; // error: string ~> number
+                                                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- generic.js:57:2
+Error -------------------------------------------------------------------------------------------------- generic.js:57:1
 
 Cannot cast `definitely_not_assignable_choose_false_branch(...)` to number because string [1] is incompatible with
 number [2]. [incompatible-type]
 
-   generic.js:57:2
-   57| (definitely_not_assignable_choose_false_branch(''): number); // error: string ~> number
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   generic.js:57:1
+   57| definitely_not_assignable_choose_false_branch('') as number; // error: string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    generic.js:52:102
    52| function definitely_not_assignable_choose_false_branch<T>(x: T): Set<T> extends Array<infer X> ? X : string {
                                                                                                             ^^^^^^ [1]
-   generic.js:57:53
-   57| (definitely_not_assignable_choose_false_branch(''): number); // error: string ~> number
-                                                           ^^^^^^ [2]
+   generic.js:57:54
+   57| definitely_not_assignable_choose_false_branch('') as number; // error: string ~> number
+                                                            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- generic.js:76:31
@@ -826,21 +826,21 @@ References:
         ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- non_distributive.js:23:4
+Error ----------------------------------------------------------------------------------------- non_distributive.js:23:3
 
 Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   non_distributive.js:23:4
-   23|   (v: string); // error: number ~> string
-          ^
+   non_distributive.js:23:3
+   23|   v as string; // error: number ~> string
+         ^
 
 References:
    non_distributive.js:21:20
    21|   declare const v: Mapped<{foo: string | number}>;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   non_distributive.js:23:7
-   23|   (v: string); // error: number ~> string
-             ^^^^^^ [2]
+   non_distributive.js:23:8
+   23|   v as string; // error: number ~> string
+              ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:2:1
@@ -987,21 +987,21 @@ References:
              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- subst.js:4:4
+Error ----------------------------------------------------------------------------------------------------- subst.js:4:3
 
 Cannot cast `num` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   subst.js:4:4
-   4|   (num: empty); // error: number ~> empty
-         ^^^
+   subst.js:4:3
+   4|   num as empty; // error: number ~> empty
+        ^^^
 
 References:
-   subst.js:3:19
-   3|   const num = (1: InferTypeOverlapGenerics<string>); // ok
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   subst.js:4:9
-   4|   (num: empty); // error: number ~> empty
-              ^^^^^ [2]
+   subst.js:3:20
+   3|   const num = 1 as InferTypeOverlapGenerics<string>; // ok
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subst.js:4:10
+   4|   num as empty; // error: number ~> empty
+               ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- type_sig_defs.js:4:28
@@ -1046,58 +1046,58 @@ Template literal type is not enabled. [unsupported-syntax]
                                                                  ^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- type_sig_uses.js:14:2
+Error -------------------------------------------------------------------------------------------- type_sig_uses.js:14:1
 
 Cannot cast `1` to `BasicConditionalType` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   type_sig_uses.js:14:2
-   14| (1: BasicConditionalType); // error: number ~> string
-        ^ [1]
+   type_sig_uses.js:14:1
+   14| 1 as BasicConditionalType; // error: number ~> string
+       ^ [1]
 
 References:
-   type_sig_uses.js:14:5
-   14| (1: BasicConditionalType); // error: number ~> string
-           ^^^^^^^^^^^^^^^^^^^^ [2]
+   type_sig_uses.js:14:6
+   14| 1 as BasicConditionalType; // error: number ~> string
+            ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- type_sig_uses.js:16:2
+Error -------------------------------------------------------------------------------------------- type_sig_uses.js:16:1
 
 Cannot cast empty string to `InferTypeOverlap` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   type_sig_uses.js:16:2
-   16| ("": InferTypeOverlap); // error: string ~> number
-        ^^ [1]
+   type_sig_uses.js:16:1
+   16| "" as InferTypeOverlap; // error: string ~> number
+       ^^ [1]
 
 References:
-   type_sig_uses.js:16:6
-   16| ("": InferTypeOverlap); // error: string ~> number
-            ^^^^^^^^^^^^^^^^ [2]
+   type_sig_uses.js:16:7
+   16| "" as InferTypeOverlap; // error: string ~> number
+             ^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- type_sig_uses.js:18:2
+Error -------------------------------------------------------------------------------------------- type_sig_uses.js:18:1
 
 Cannot cast empty string to `InferTypeOverlapGenerics` because string [1] is incompatible with number [2].
 [incompatible-type]
 
-   type_sig_uses.js:18:2
-   18| ("": InferTypeOverlapGenerics<string>); // error: string ~> number
-        ^^ [1]
+   type_sig_uses.js:18:1
+   18| "" as InferTypeOverlapGenerics<string>; // error: string ~> number
+       ^^ [1]
 
 References:
-   type_sig_uses.js:18:6
-   18| ("": InferTypeOverlapGenerics<string>); // error: string ~> number
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   type_sig_uses.js:18:7
+   18| "" as InferTypeOverlapGenerics<string>; // error: string ~> number
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- type_sig_uses.js:27:2
+Error -------------------------------------------------------------------------------------------- type_sig_uses.js:27:1
 
 Cannot cast `new B()` to `A_or_C` because: [incompatible-type]
  - Either `B` [1] is incompatible with `A` [2].
  - Or `B` [1] is incompatible with `C` [3].
 
-   type_sig_uses.js:27:2
-   27| (new B(): A_or_C); // error: B ~> A|C
-        ^^^^^^^ [1]
+   type_sig_uses.js:27:1
+   27| new B() as A_or_C; // error: B ~> A|C
+       ^^^^^^^ [1]
 
 References:
    type_sig_uses.js:25:23
@@ -1108,15 +1108,15 @@ References:
                                  ^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- type_sig_uses.js:29:2
+Error -------------------------------------------------------------------------------------------- type_sig_uses.js:29:1
 
 Cannot cast `new D()` to `A_or_C` because: [incompatible-type]
  - Either `D` [1] is incompatible with `A` [2].
  - Or `D` [1] is incompatible with `C` [3].
 
-   type_sig_uses.js:29:2
-   29| (new D(): A_or_C); // error: D ~> A|C
-        ^^^^^^^ [1]
+   type_sig_uses.js:29:1
+   29| new D() as A_or_C; // error: D ~> A|C
+       ^^^^^^^ [1]
 
 References:
    type_sig_uses.js:25:23

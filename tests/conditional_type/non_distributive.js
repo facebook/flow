@@ -9,8 +9,8 @@ function avoid_unnecessary_type_app_loop_regression_test() {
   };
 
   declare const o: {+foo: '1'};
-  (o: Mapped<{ foo?: unknown }>); // ok
-  (o: Mapped<{[K in 'foo']?: unknown}>); // ok
+  o as Mapped<{ foo?: unknown }>; // ok
+  o as Mapped<{[K in 'foo']?: unknown}>; // ok
 }
 
 function no_longer_always_distribute() {
@@ -19,6 +19,6 @@ function no_longer_always_distribute() {
     : number
 
   declare const v: Mapped<{foo: string | number}>;
-  (v: number); // ok
-  (v: string); // error: number ~> string
+  v as number; // ok
+  v as string; // error: number ~> string
 }

@@ -1,86 +1,86 @@
-Error --------------------- basic.js:6:2
+Error --------------------- basic.js:6:1
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
 [incompatible-type]
 
-   basic.js:6:2
-   6| (null: empty); // Error: null ~> empty
-       ^^^^ [1]
+   basic.js:6:1
+   6| null as empty; // Error: null ~> empty
+      ^^^^ [1]
 
 References:
-   basic.js:6:8
-   6| (null: empty); // Error: null ~> empty
-             ^^^^^ [2]
+   basic.js:6:9
+   6| null as empty; // Error: null ~> empty
+              ^^^^^ [2]
 
 
-Error - name/that/gets/very/close.js:6:2
+Error - name/that/gets/very/close.js:6:1
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
 [incompatible-type]
 
-   name/that/gets/very/close.js:6:2
-   6| (null: empty); // Error: null ~> empty
-       ^^^^ [1]
+   name/that/gets/very/close.js:6:1
+   6| null as empty; // Error: null ~> empty
+      ^^^^ [1]
 
 References:
-   name/that/gets/very/close.js:6:8
-   6| (null: empty); // Error: null ~> empty
-             ^^^^^ [2]
+   name/that/gets/very/close.js:6:9
+   6| null as empty; // Error: null ~> empty
+              ^^^^^ [2]
 
 
 Error ----------------------------------
-name/that/gets/very/close2.js:6:2
+name/that/gets/very/close2.js:6:1
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
 [incompatible-type]
 
-   name/that/gets/very/close2.js:6:2
-   6| (null: empty); // Error: null ~> empty
-       ^^^^ [1]
+   name/that/gets/very/close2.js:6:1
+   6| null as empty; // Error: null ~> empty
+      ^^^^ [1]
 
 References:
-   name/that/gets/very/close2.js:6:8
-   6| (null: empty); // Error: null ~> empty
-             ^^^^^ [2]
+   name/that/gets/very/close2.js:6:9
+   6| null as empty; // Error: null ~> empty
+              ^^^^^ [2]
 
 
-Error - name_that_gets_very_close.js:6:2
+Error - name_that_gets_very_close.js:6:1
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
 [incompatible-type]
 
-   name_that_gets_very_close.js:6:2
-   6| (null: empty); // Error: null ~> empty
-       ^^^^ [1]
+   name_that_gets_very_close.js:6:1
+   6| null as empty; // Error: null ~> empty
+      ^^^^ [1]
 
 References:
-   name_that_gets_very_close.js:6:8
-   6| (null: empty); // Error: null ~> empty
-             ^^^^^ [2]
+   name_that_gets_very_close.js:6:9
+   6| null as empty; // Error: null ~> empty
+              ^^^^^ [2]
 
 
 Error ----------------------------------
-name_that_gets_very_close2.js:6:2
+name_that_gets_very_close2.js:6:1
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
 [incompatible-type]
 
-   name_that_gets_very_close2.js:6:2
-   6| (null: empty); // Error: null ~> empty
-       ^^^^ [1]
+   name_that_gets_very_close2.js:6:1
+   6| null as empty; // Error: null ~> empty
+      ^^^^ [1]
 
 References:
-   name_that_gets_very_close2.js:6:8
-   6| (null: empty); // Error: null ~> empty
-             ^^^^^ [2]
+   name_that_gets_very_close2.js:6:9
+   6| null as empty; // Error: null ~> empty
+              ^^^^^ [2]
 
 
-Error ------ non_breakable_breaks.js:7:2
+Error ------ non_breakable_breaks.js:7:1
 
 Cannot cast
 `reallyReallyReallyReallyReallyReallyRea
@@ -88,20 +88,20 @@ llyReallyLongVariableName` to empty
 because number [1] is incompatible with
 empty [2]. [incompatible-type]
 
-   non_breakable_breaks.js:7:2
-   7| (reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   non_breakable_breaks.js:7:1
+   7| reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName as empty;
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    non_breakable_breaks.js:6:74
    6| const reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName = 42;
                                                                                ^^ [1]
-   non_breakable_breaks.js:7:68
-   7| (reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
-                                                                         ^^^^^ [2]
+   non_breakable_breaks.js:7:69
+   7| reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName as empty;
+                                                                          ^^^^^ [2]
 
 
-Error ----- non_breakable_breaks.js:10:2
+Error ----- non_breakable_breaks.js:10:1
 
 Cannot cast
 `reallyReallyReallyReallyReallyReallyRea
@@ -110,20 +110,20 @@ eallyReallyReallyLongVariableName` to
 empty because number [1] is incompatible
 with empty [2]. [incompatible-type]
 
-   non_breakable_breaks.js:10:2
-   10| (reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   non_breakable_breaks.js:10:1
+   10| reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    non_breakable_breaks.js:9:122
     9| const reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName = 42;
                                                                                                                                 ^^ [1]
-   non_breakable_breaks.js:10:116
-   10| (reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
-                                                                                                                          ^^^^^ [2]
+   non_breakable_breaks.js:10:117
+   10| reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName as empty;
+                                                                                                                           ^^^^^ [2]
 
 
-Error ----- non_breakable_breaks.js:13:2
+Error ----- non_breakable_breaks.js:13:1
 
 Cannot cast
 `abcdefghijklmnopqrstuvwxyzabcdefghijkl`
@@ -131,20 +131,20 @@ to empty because number [1] is
 incompatible with empty [2].
 [incompatible-type]
 
-   non_breakable_breaks.js:13:2
-   13| (abcdefghijklmnopqrstuvwxyzabcdefghijkl: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   non_breakable_breaks.js:13:1
+   13| abcdefghijklmnopqrstuvwxyzabcdefghijkl as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    non_breakable_breaks.js:12:48
    12| const abcdefghijklmnopqrstuvwxyzabcdefghijkl = 42;
                                                       ^^ [1]
-   non_breakable_breaks.js:13:42
-   13| (abcdefghijklmnopqrstuvwxyzabcdefghijkl: empty);
-                                                ^^^^^ [2]
+   non_breakable_breaks.js:13:43
+   13| abcdefghijklmnopqrstuvwxyzabcdefghijkl as empty;
+                                                 ^^^^^ [2]
 
 
-Error ----- non_breakable_breaks.js:16:2
+Error ----- non_breakable_breaks.js:16:1
 
 Cannot cast
 `abcdefghijklmnopqrstuvwxyzabcdefghijklm
@@ -152,91 +152,91 @@ Cannot cast
 incompatible with empty [2].
 [incompatible-type]
 
-   non_breakable_breaks.js:16:2
-   16| (abcdefghijklmnopqrstuvwxyzabcdefghijklm: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   non_breakable_breaks.js:16:1
+   16| abcdefghijklmnopqrstuvwxyzabcdefghijklm as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    non_breakable_breaks.js:15:49
    15| const abcdefghijklmnopqrstuvwxyzabcdefghijklm = 42;
                                                        ^^ [1]
-   non_breakable_breaks.js:16:43
-   16| (abcdefghijklmnopqrstuvwxyzabcdefghijklm: empty);
-                                                 ^^^^^ [2]
+   non_breakable_breaks.js:16:44
+   16| abcdefghijklmnopqrstuvwxyzabcdefghijklm as empty;
+                                                  ^^^^^ [2]
 
 
-Error ----- non_breakable_breaks.js:19:2
+Error ----- non_breakable_breaks.js:19:1
 
 Cannot cast `mnopqrstuvwxyzabcdefghijkl`
 to empty because number [1] is
 incompatible with empty [2].
 [incompatible-type]
 
-   non_breakable_breaks.js:19:2
-   19| (mnopqrstuvwxyzabcdefghijkl: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   non_breakable_breaks.js:19:1
+   19| mnopqrstuvwxyzabcdefghijkl as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    non_breakable_breaks.js:18:36
    18| const mnopqrstuvwxyzabcdefghijkl = 42;
                                           ^^ [1]
-   non_breakable_breaks.js:19:30
-   19| (mnopqrstuvwxyzabcdefghijkl: empty);
-                                    ^^^^^ [2]
+   non_breakable_breaks.js:19:31
+   19| mnopqrstuvwxyzabcdefghijkl as empty;
+                                     ^^^^^ [2]
 
 
-Error ----- non_breakable_breaks.js:22:2
+Error ----- non_breakable_breaks.js:22:1
 
 Cannot cast
 `mnopqrstuvwxyzabcdefghijklm` to empty
 because number [1] is incompatible with
 empty [2]. [incompatible-type]
 
-   non_breakable_breaks.js:22:2
-   22| (mnopqrstuvwxyzabcdefghijklm: empty);
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   non_breakable_breaks.js:22:1
+   22| mnopqrstuvwxyzabcdefghijklm as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    non_breakable_breaks.js:21:37
    21| const mnopqrstuvwxyzabcdefghijklm = 42;
                                            ^^ [1]
-   non_breakable_breaks.js:22:31
-   22| (mnopqrstuvwxyzabcdefghijklm: empty);
-                                     ^^^^^ [2]
+   non_breakable_breaks.js:22:32
+   22| mnopqrstuvwxyzabcdefghijklm as empty;
+                                      ^^^^^ [2]
 
 
 Error ----------------------------------
-really/long/filename/that/is/much/more/then/40/characters.js:6:2
+really/long/filename/that/is/much/more/then/40/characters.js:6:1
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
 [incompatible-type]
 
-   really/long/filename/that/is/much/more/then/40/characters.js:6:2
-   6| (null: empty); // Error: null ~> empty
-       ^^^^ [1]
+   really/long/filename/that/is/much/more/then/40/characters.js:6:1
+   6| null as empty; // Error: null ~> empty
+      ^^^^ [1]
 
 References:
-   really/long/filename/that/is/much/more/then/40/characters.js:6:8
-   6| (null: empty); // Error: null ~> empty
-             ^^^^^ [2]
+   really/long/filename/that/is/much/more/then/40/characters.js:6:9
+   6| null as empty; // Error: null ~> empty
+              ^^^^^ [2]
 
 
 Error ----------------------------------
-really_long_filename_that_is_much_more_then_40_characters.js:6:2
+really_long_filename_that_is_much_more_then_40_characters.js:6:1
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
 [incompatible-type]
 
-   really_long_filename_that_is_much_more_then_40_characters.js:6:2
-   6| (null: empty); // Error: null ~> empty
-       ^^^^ [1]
+   really_long_filename_that_is_much_more_then_40_characters.js:6:1
+   6| null as empty; // Error: null ~> empty
+      ^^^^ [1]
 
 References:
-   really_long_filename_that_is_much_more_then_40_characters.js:6:8
-   6| (null: empty); // Error: null ~> empty
-             ^^^^^ [2]
+   really_long_filename_that_is_much_more_then_40_characters.js:6:9
+   6| null as empty; // Error: null ~> empty
+              ^^^^^ [2]
 
 
 Error -------------------- wrap.js:21:64

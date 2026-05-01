@@ -17,36 +17,36 @@ var o = new Base();
 /**
  * Annotated (but uninitialized) fields still have a type.
  */
-(o.annotatedField: number);
-(o.annotatedField: string); // Error: number ~> string
-(Base.annotatedField: number);
-(Base.annotatedField: string); // Error: number ~> string
+o.annotatedField as number;
+o.annotatedField as string; // Error: number ~> string
+Base.annotatedField as number;
+Base.annotatedField as string; // Error: number ~> string
 
 /**
  * Initialized (but unannotated) fields assume the type of their initializer.
  */
-(o.initializedField: number);
-(o.initializedField: string); // Error: number ~> string
-(Base.initializedField: string);
-(Base.initializedField: number); // Error: string ~> number
+o.initializedField as number;
+o.initializedField as string; // Error: number ~> string
+Base.initializedField as string;
+Base.initializedField as number; // Error: string ~> number
 
 /**
  * Initialized fields can reference `this`.
  */
-(o.initializedFieldWithThis: number);
-(o.initializedFieldWithThis: string); // Error: number ~> string
-(Base.initializedFieldWithThis: string);
-(Base.initializedFieldWithThis: number); // Error: string ~> number
+o.initializedFieldWithThis as number;
+o.initializedFieldWithThis as string; // Error: number ~> string
+Base.initializedFieldWithThis as string;
+Base.initializedFieldWithThis as number; // Error: string ~> number
 
 /**
  * Initialized + annotated fields take the type of the annotation.
  * (Note that this matters when the annotation is more general than the type of
  *  the initializer)
  */
-(o.annotatedInitializedFieldValid: ?number);
-(o.annotatedInitializedFieldValid: number); // Error: ?number ~> number
-(Base.annotatedInitializedFieldValid: ?number);
-(Base.annotatedInitializedFieldValid: number); // Error: ?number ~> number
+o.annotatedInitializedFieldValid as ?number;
+o.annotatedInitializedFieldValid as number; // Error: ?number ~> number
+Base.annotatedInitializedFieldValid as ?number;
+Base.annotatedInitializedFieldValid as number; // Error: ?number ~> number
 
 /**
  * Initialized + annotated fields where the init/annot combo is a mismatch
@@ -54,7 +54,7 @@ var o = new Base();
  *
  * (This happens in addition to erroring at the site of initialization)
  */
-(o.annotatedInitializedFieldInvalid: number);
-(o.annotatedInitializedFieldInvalid: string); // Error: number ~> string
-(Base.annotatedInitializedFieldInvalid: number);
-(Base.annotatedInitializedFieldInvalid: string); // Error: number ~> string
+o.annotatedInitializedFieldInvalid as number;
+o.annotatedInitializedFieldInvalid as string; // Error: number ~> string
+Base.annotatedInitializedFieldInvalid as number;
+Base.annotatedInitializedFieldInvalid as string; // Error: number ~> string

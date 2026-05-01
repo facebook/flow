@@ -19,24 +19,24 @@ declare var o : O;
 declare var i : I;
 declare var t : T;
 
-(a : O); // error
-(a : I);
-(a : T);
+a as O; // error
+a as I;
+a as T;
 
-(o : A); // error
-(o : I);
-(o : T);
+o as A; // error
+o as I;
+o as T;
 
-(i : A); // error
-(i : O); // error
-(i : T);
+i as A; // error
+i as O; // error
+i as T;
 
-(t : A); // error
-(t : O); // error
-(t : I);
+t as A; // error
+t as O; // error
+t as I;
 
 
 class C { }
 
-(C: { }); // error
-(C : interface { });
+C as { }; // error
+C as interface { };

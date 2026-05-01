@@ -7,10 +7,10 @@ function generic_in_check_type<T>(x: T) : [T] extends [+_K:string] ? boolean : n
   }
 }
 
-(generic_in_check_type(''): boolean); // ok
-(generic_in_check_type(1): number); // ok
-(generic_in_check_type(''): empty); // error
-(generic_in_check_type(1): empty); // error
+generic_in_check_type('') as boolean; // ok
+generic_in_check_type(1) as number; // ok
+generic_in_check_type('') as empty; // error
+generic_in_check_type(1) as empty; // error
 
 function generic_in_extends_type<T>(x: T): [string] extends [T] ? boolean : number {
   if (typeof x === 'string') {
@@ -23,10 +23,10 @@ function generic_in_extends_type<T>(x: T): [string] extends [T] ? boolean : numb
 declare var s: string;
 declare var n: number;
 
-(generic_in_extends_type(s): boolean); // ok
-(generic_in_extends_type(n): number); // ok
-(generic_in_extends_type(s): empty); // error
-(generic_in_extends_type(n): empty); // error
+generic_in_extends_type(s) as boolean; // ok
+generic_in_extends_type(n) as number; // ok
+generic_in_extends_type(s) as empty; // error
+generic_in_extends_type(n) as empty; // error
 
 function assign_from_generic_conditional_type<T>(x: string extends T ? boolean : number): void {
   const y: string = x; // error
@@ -46,15 +46,15 @@ function definitely_assignable_choose_true_branch<T>(x: T): Array<T> extends Rea
   return x; // ok
 }
 
-(definitely_assignable_choose_true_branch(''): string); // ok
-(definitely_assignable_choose_true_branch(''): number); // error: string ~> number
+definitely_assignable_choose_true_branch('') as string; // ok
+definitely_assignable_choose_true_branch('') as number; // error: string ~> number
 
 function definitely_not_assignable_choose_false_branch<T>(x: T): Set<T> extends Array<infer X> ? X : string {
   return ''; // ok
 }
 
-(definitely_not_assignable_choose_false_branch(''): string); // ok
-(definitely_not_assignable_choose_false_branch(''): number); // error: string ~> number
+definitely_not_assignable_choose_false_branch('') as string; // ok
+definitely_not_assignable_choose_false_branch('') as number; // error: string ~> number
 
 function union_as_upper_bound() {
   type ConditionalWithoutInfer<T> =

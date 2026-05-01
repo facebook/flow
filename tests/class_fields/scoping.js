@@ -18,21 +18,21 @@ class Foo {
  * Field initializers execute in a scope immediately under the scope outside the
  * class definition.
  */
-(new Foo().outer: number);
-(new Foo().outer: string); // Error: number ~> string
-(Foo.outer: number);
-(Foo.outer: string); // Error: number ~> string
+new Foo().outer as number;
+new Foo().outer as string; // Error: number ~> string
+Foo.outer as number;
+Foo.outer as string; // Error: number ~> string
 
 /**
  * Field initializers should be able to refer to the class type in their type
  * annotations.
  */
-(new Foo().selfTyped: Foo);
-(new Foo().selfTyped: number); // Error: Foo ~> number
-(Foo.selfTyped: Foo);
-(Foo.selfTyped: number); // Error: Foo ~> number
+new Foo().selfTyped as Foo;
+new Foo().selfTyped as number; // Error: Foo ~> number
+Foo.selfTyped as Foo;
+Foo.selfTyped as number; // Error: Foo ~> number
 
-(new Foo().selfTypedInit: Foo);
-(new Foo().selfTypedInit: number); // Error: Foo ~> number
-(Foo.selfTypedInit: Foo);
-(Foo.selfTypedInit: number); // Error: Foo ~> number
+new Foo().selfTypedInit as Foo;
+new Foo().selfTypedInit as number; // Error: Foo ~> number
+Foo.selfTypedInit as Foo;
+Foo.selfTypedInit as number; // Error: Foo ~> number

@@ -1,673 +1,673 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:6:2
+Error ------------------------------------------------------------------------------------------------------ test.js:6:1
 
 Cannot cast `1` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:6:2
-   6| (1: empty); // Error: number ~> empty
-       ^ [1]
+   test.js:6:1
+   6| 1 as empty; // Error: number ~> empty
+      ^ [1]
 
 References:
-   test.js:6:5
-   6| (1: empty); // Error: number ~> empty
-          ^^^^^ [2]
+   test.js:6:6
+   6| 1 as empty; // Error: number ~> empty
+           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:7:2
+Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
 Cannot cast `2` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:7:2
-   7| (2: empty); // Error: number ~> empty
-       ^ [1]
+   test.js:7:1
+   7| 2 as empty; // Error: number ~> empty
+      ^ [1]
 
 References:
-   test.js:7:5
-   7| (2: empty); // Error: number ~> empty
-          ^^^^^ [2]
+   test.js:7:6
+   7| 2 as empty; // Error: number ~> empty
+           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:8:2
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
 Cannot cast `3` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:8:2
-   8| (3: empty); // Error: number ~> empty
-       ^ [1]
+   test.js:8:1
+   8| 3 as empty; // Error: number ~> empty
+      ^ [1]
 
 References:
-   test.js:8:5
-   8| (3: empty); // Error: number ~> empty
-          ^^^^^ [2]
+   test.js:8:6
+   8| 3 as empty; // Error: number ~> empty
+           ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:9:2
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
 
 Cannot cast `4` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:9:2
-   9| (4: empty); // Error: number ~> empty
-       ^ [1]
+   test.js:9:1
+   9| 4 as empty; // Error: number ~> empty
+      ^ [1]
 
 References:
-   test.js:9:5
-   9| (4: empty); // Error: number ~> empty
-          ^^^^^ [2]
+   test.js:9:6
+   9| 4 as empty; // Error: number ~> empty
+           ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:10:2
+Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
 Cannot cast `5` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:10:2
-   10| (5: empty); // Error: number ~> empty
-        ^ [1]
+   test.js:10:1
+   10| 5 as empty; // Error: number ~> empty
+       ^ [1]
 
 References:
-   test.js:10:5
-   10| (5: empty); // Error: number ~> empty
-           ^^^^^ [2]
+   test.js:10:6
+   10| 5 as empty; // Error: number ~> empty
+            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:11:2
+Error ----------------------------------------------------------------------------------------------------- test.js:11:1
 
 Cannot cast `6` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:11:2
-   11| (6: empty); // Error: number ~> empty
-        ^ [1]
+   test.js:11:1
+   11| 6 as empty; // Error: number ~> empty
+       ^ [1]
 
 References:
-   test.js:11:5
-   11| (6: empty); // Error: number ~> empty
-           ^^^^^ [2]
+   test.js:11:6
+   11| 6 as empty; // Error: number ~> empty
+            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:12:2
+Error ----------------------------------------------------------------------------------------------------- test.js:12:1
 
 Cannot cast `7` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:12:2
-   12| (7: empty); // Error: number ~> empty
-        ^ [1]
+   test.js:12:1
+   12| 7 as empty; // Error: number ~> empty
+       ^ [1]
 
 References:
-   test.js:12:5
-   12| (7: empty); // Error: number ~> empty
-           ^^^^^ [2]
+   test.js:12:6
+   12| 7 as empty; // Error: number ~> empty
+            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:2
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
 Cannot cast `8` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:13:2
-   13| (8: empty); // Error: number ~> empty
-        ^ [1]
+   test.js:13:1
+   13| 8 as empty; // Error: number ~> empty
+       ^ [1]
 
 References:
-   test.js:13:5
-   13| (8: empty); // Error: number ~> empty
-           ^^^^^ [2]
+   test.js:13:6
+   13| 8 as empty; // Error: number ~> empty
+            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:14:2
+Error ----------------------------------------------------------------------------------------------------- test.js:14:1
 
 Cannot cast `9` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:14:2
-   14| (9: empty); // Error: number ~> empty
-        ^ [1]
+   test.js:14:1
+   14| 9 as empty; // Error: number ~> empty
+       ^ [1]
 
 References:
-   test.js:14:5
-   14| (9: empty); // Error: number ~> empty
-           ^^^^^ [2]
+   test.js:14:6
+   14| 9 as empty; // Error: number ~> empty
+            ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:15:2
+Error ----------------------------------------------------------------------------------------------------- test.js:15:1
 
 Cannot cast `10` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:15:2
-   15| (10: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:15:1
+   15| 10 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:15:6
-   15| (10: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:15:7
+   15| 10 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:16:2
+Error ----------------------------------------------------------------------------------------------------- test.js:16:1
 
 Cannot cast `11` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:16:2
-   16| (11: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:16:1
+   16| 11 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:16:6
-   16| (11: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:16:7
+   16| 11 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:17:2
+Error ----------------------------------------------------------------------------------------------------- test.js:17:1
 
 Cannot cast `12` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:17:2
-   17| (12: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:17:1
+   17| 12 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:17:6
-   17| (12: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:17:7
+   17| 12 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:18:2
+Error ----------------------------------------------------------------------------------------------------- test.js:18:1
 
 Cannot cast `13` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:18:2
-   18| (13: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:18:1
+   18| 13 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:18:6
-   18| (13: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:18:7
+   18| 13 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:19:2
+Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
 Cannot cast `14` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:19:2
-   19| (14: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:19:1
+   19| 14 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:19:6
-   19| (14: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:19:7
+   19| 14 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:20:2
+Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
 Cannot cast `15` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:20:2
-   20| (15: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:20:1
+   20| 15 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:20:6
-   20| (15: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:20:7
+   20| 15 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:21:2
+Error ----------------------------------------------------------------------------------------------------- test.js:21:1
 
 Cannot cast `16` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:21:2
-   21| (16: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:21:1
+   21| 16 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:21:6
-   21| (16: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:21:7
+   21| 16 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:22:2
+Error ----------------------------------------------------------------------------------------------------- test.js:22:1
 
 Cannot cast `17` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:22:2
-   22| (17: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:22:1
+   22| 17 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:22:6
-   22| (17: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:22:7
+   22| 17 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:23:2
+Error ----------------------------------------------------------------------------------------------------- test.js:23:1
 
 Cannot cast `18` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:23:2
-   23| (18: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:23:1
+   23| 18 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:23:6
-   23| (18: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:23:7
+   23| 18 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:24:2
+Error ----------------------------------------------------------------------------------------------------- test.js:24:1
 
 Cannot cast `19` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:24:2
-   24| (19: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:24:1
+   24| 19 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:24:6
-   24| (19: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:24:7
+   24| 19 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:25:2
+Error ----------------------------------------------------------------------------------------------------- test.js:25:1
 
 Cannot cast `20` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:25:2
-   25| (20: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:25:1
+   25| 20 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:25:6
-   25| (20: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:25:7
+   25| 20 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:26:2
+Error ----------------------------------------------------------------------------------------------------- test.js:26:1
 
 Cannot cast `21` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:26:2
-   26| (21: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:26:1
+   26| 21 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:26:6
-   26| (21: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:26:7
+   26| 21 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:27:2
+Error ----------------------------------------------------------------------------------------------------- test.js:27:1
 
 Cannot cast `22` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:27:2
-   27| (22: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:27:1
+   27| 22 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:27:6
-   27| (22: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:27:7
+   27| 22 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:28:2
+Error ----------------------------------------------------------------------------------------------------- test.js:28:1
 
 Cannot cast `23` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:28:2
-   28| (23: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:28:1
+   28| 23 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:28:6
-   28| (23: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:28:7
+   28| 23 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:29:2
+Error ----------------------------------------------------------------------------------------------------- test.js:29:1
 
 Cannot cast `24` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:29:2
-   29| (24: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:29:1
+   29| 24 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:29:6
-   29| (24: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:29:7
+   29| 24 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:30:2
+Error ----------------------------------------------------------------------------------------------------- test.js:30:1
 
 Cannot cast `25` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:30:2
-   30| (25: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:30:1
+   30| 25 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:30:6
-   30| (25: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:30:7
+   30| 25 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:31:2
+Error ----------------------------------------------------------------------------------------------------- test.js:31:1
 
 Cannot cast `26` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:31:2
-   31| (26: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:31:1
+   31| 26 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:31:6
-   31| (26: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:31:7
+   31| 26 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:32:2
+Error ----------------------------------------------------------------------------------------------------- test.js:32:1
 
 Cannot cast `27` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:32:2
-   32| (27: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:32:1
+   32| 27 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:32:6
-   32| (27: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:32:7
+   32| 27 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:33:2
+Error ----------------------------------------------------------------------------------------------------- test.js:33:1
 
 Cannot cast `28` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:33:2
-   33| (28: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:33:1
+   33| 28 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:33:6
-   33| (28: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:33:7
+   33| 28 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:34:2
+Error ----------------------------------------------------------------------------------------------------- test.js:34:1
 
 Cannot cast `29` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:34:2
-   34| (29: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:34:1
+   34| 29 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:34:6
-   34| (29: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:34:7
+   34| 29 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:35:2
+Error ----------------------------------------------------------------------------------------------------- test.js:35:1
 
 Cannot cast `30` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:35:2
-   35| (30: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:35:1
+   35| 30 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:35:6
-   35| (30: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:35:7
+   35| 30 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:36:2
+Error ----------------------------------------------------------------------------------------------------- test.js:36:1
 
 Cannot cast `31` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:36:2
-   36| (31: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:36:1
+   36| 31 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:36:6
-   36| (31: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:36:7
+   36| 31 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:37:2
+Error ----------------------------------------------------------------------------------------------------- test.js:37:1
 
 Cannot cast `32` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:37:2
-   37| (32: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:37:1
+   37| 32 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:37:6
-   37| (32: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:37:7
+   37| 32 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:38:2
+Error ----------------------------------------------------------------------------------------------------- test.js:38:1
 
 Cannot cast `33` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:38:2
-   38| (33: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:38:1
+   38| 33 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:38:6
-   38| (33: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:38:7
+   38| 33 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:39:2
+Error ----------------------------------------------------------------------------------------------------- test.js:39:1
 
 Cannot cast `34` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:39:2
-   39| (34: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:39:1
+   39| 34 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:39:6
-   39| (34: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:39:7
+   39| 34 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:40:2
+Error ----------------------------------------------------------------------------------------------------- test.js:40:1
 
 Cannot cast `35` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:40:2
-   40| (35: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:40:1
+   40| 35 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:40:6
-   40| (35: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:40:7
+   40| 35 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:41:2
+Error ----------------------------------------------------------------------------------------------------- test.js:41:1
 
 Cannot cast `36` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:41:2
-   41| (36: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:41:1
+   41| 36 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:41:6
-   41| (36: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:41:7
+   41| 36 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:42:2
+Error ----------------------------------------------------------------------------------------------------- test.js:42:1
 
 Cannot cast `37` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:42:2
-   42| (37: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:42:1
+   42| 37 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:42:6
-   42| (37: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:42:7
+   42| 37 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:43:2
+Error ----------------------------------------------------------------------------------------------------- test.js:43:1
 
 Cannot cast `38` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:43:2
-   43| (38: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:43:1
+   43| 38 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:43:6
-   43| (38: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:43:7
+   43| 38 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:44:2
+Error ----------------------------------------------------------------------------------------------------- test.js:44:1
 
 Cannot cast `39` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:44:2
-   44| (39: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:44:1
+   44| 39 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:44:6
-   44| (39: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:44:7
+   44| 39 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:45:2
+Error ----------------------------------------------------------------------------------------------------- test.js:45:1
 
 Cannot cast `40` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:45:2
-   45| (40: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:45:1
+   45| 40 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:45:6
-   45| (40: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:45:7
+   45| 40 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:46:2
+Error ----------------------------------------------------------------------------------------------------- test.js:46:1
 
 Cannot cast `41` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:46:2
-   46| (41: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:46:1
+   46| 41 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:46:6
-   46| (41: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:46:7
+   46| 41 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:47:2
+Error ----------------------------------------------------------------------------------------------------- test.js:47:1
 
 Cannot cast `42` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:47:2
-   47| (42: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:47:1
+   47| 42 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:47:6
-   47| (42: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:47:7
+   47| 42 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:48:2
+Error ----------------------------------------------------------------------------------------------------- test.js:48:1
 
 Cannot cast `43` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:48:2
-   48| (43: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:48:1
+   48| 43 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:48:6
-   48| (43: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:48:7
+   48| 43 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:49:2
+Error ----------------------------------------------------------------------------------------------------- test.js:49:1
 
 Cannot cast `44` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:49:2
-   49| (44: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:49:1
+   49| 44 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:49:6
-   49| (44: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:49:7
+   49| 44 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:50:2
+Error ----------------------------------------------------------------------------------------------------- test.js:50:1
 
 Cannot cast `45` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:50:2
-   50| (45: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:50:1
+   50| 45 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:50:6
-   50| (45: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:50:7
+   50| 45 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:51:2
+Error ----------------------------------------------------------------------------------------------------- test.js:51:1
 
 Cannot cast `46` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:51:2
-   51| (46: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:51:1
+   51| 46 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:51:6
-   51| (46: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:51:7
+   51| 46 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:52:2
+Error ----------------------------------------------------------------------------------------------------- test.js:52:1
 
 Cannot cast `47` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:52:2
-   52| (47: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:52:1
+   52| 47 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:52:6
-   52| (47: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:52:7
+   52| 47 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:53:2
+Error ----------------------------------------------------------------------------------------------------- test.js:53:1
 
 Cannot cast `48` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:53:2
-   53| (48: empty); // Error: number ~> empty
-        ^^ [1]
+   test.js:53:1
+   53| 48 as empty; // Error: number ~> empty
+       ^^ [1]
 
 References:
-   test.js:53:6
-   53| (48: empty); // Error: number ~> empty
-            ^^^^^ [2]
+   test.js:53:7
+   53| 48 as empty; // Error: number ~> empty
+             ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:6

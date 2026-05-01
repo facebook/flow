@@ -9,11 +9,11 @@ class ClassAnnotated<T> {
 
 var o1 = new ClassAnnotated<number>();
 o1.p = 42;
-(o1.p: number);
-(o1.p: string); // Error: number ~> string
+o1.p as number;
+o1.p as string; // Error: number ~> string
 ClassAnnotated.p = 42;
-(ClassAnnotated.p: number);
-(ClassAnnotated.p: string); // Error: number ~> string
+ClassAnnotated.p as number;
+ClassAnnotated.p as string; // Error: number ~> string
 
 
 /**
@@ -22,8 +22,8 @@ ClassAnnotated.p = 42;
  */
 class ClassGenericInitialized<T, U> {
   invalid: T = 42; // Error: number ~> Generic<T>
-  valid: T = ((42:any):T);
+  valid: T = 42 as any as T;
 
   static invalid: T = 42; // Error: number ~> Generic<T>
-  static valid: T = ((42:any):T);
+  static valid: T = 42 as any as T;
 }

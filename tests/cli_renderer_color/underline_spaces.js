@@ -3,4 +3,4 @@
  * @flow
  */
 
-((42: ?number): number);
+42 as ?number as number;

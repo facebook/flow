@@ -1,2 +1,2 @@
 const o = require('./test5');
-(o.hello: 'nothing'); // oops
+o.hello as 'nothing'; // oops

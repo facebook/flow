@@ -1,6 +1,6 @@
 component Bar() {
     this; // error
-    return (42: any);
+    return 42 as any;
 }
 
 component Baz() {
@@ -9,7 +9,7 @@ component Baz() {
             this; // ok
         }
     }
-    return (42: any)
+    return 42 as any
 }
 
 import * as React from 'react';
@@ -22,7 +22,7 @@ class Ext {
     }
 }
 
-component lowercase() { return (42: any) } // error
+component lowercase() { return 42 as any } // error
 
 component HelloWorld(unannotated) { return } // error
 
@@ -48,4 +48,4 @@ component Poly<T>() { return null; }
 Poly(); // error
 Poly<number>(); // error
 
-(Baz: component(...mixed));
+Baz as component(...mixed);

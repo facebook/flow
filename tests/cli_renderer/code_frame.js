@@ -1,11 +1,11 @@
-({p: 42}: {p: empty});
+({p: 42} as {p: empty});
 
-({p: 42}: {p: empty});
+({p: 42} as {p: empty});
 
 ({
   p: 42,
-}: {
+} as {
   p: empty,
 });
 
-({p: 42}: {p: empty});
+({p: 42} as {p: empty});

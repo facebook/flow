@@ -1,6 +1,6 @@
 const x: number => void = (function () {
     return (x) => {
-        (x: number); // okay
-        (x: string); // error number ~> string
+        x as number; // okay
+        x as string; // error number ~> string
     };
 })();
