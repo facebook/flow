@@ -8666,6 +8666,17 @@ fn class_def<'arena: 'ast, 'ast>(
     use ast::expression::object::Key as ObjKey;
     use class_acc::ClassAcc;
 
+    let is_ts_private =
+        |ts_accessibility: &Option<ast::class::ts_accessibility::TSAccessibility<Loc>>| {
+            matches!(
+                ts_accessibility,
+                Some(ast::class::ts_accessibility::TSAccessibility {
+                    kind: ast::class::ts_accessibility::Kind::Private,
+                    ..
+                })
+            )
+        };
+
     let ast::class::Class {
         body,
         tparams: tps,
@@ -8711,6 +8722,7 @@ fn class_def<'arena: 'ast, 'ast>(
                 value: (_val_loc, fn_val),
                 kind,
                 static_: is_static,
+                ts_accessibility,
                 loc: fn_loc,
                 ..
             }) => {
@@ -8718,6 +8730,15 @@ fn class_def<'arena: 'ast, 'ast>(
                     if opts.munge
                         && flow_parser_utils::signature_utils::is_munged_property_string(&id.name)
                     {
+                        continue;
+                    } else if is_ts_private(ts_accessibility)
+                        && *kind != class::MethodKind::Constructor
+                    {
+                        // TS-private non-constructor members have no public interface.
+                        // Private constructors are kept so the merge layer doesn't
+                        // synthesize a default zero-arg constructor (which would make
+                        // `class C { private constructor(x: number) }` spuriously
+                        // constructible via `new C()`).
                         continue;
                     }
                     let name = id.name.dupe();
@@ -8786,6 +8807,7 @@ fn class_def<'arena: 'ast, 'ast>(
                 value,
                 static_: is_static,
                 variance,
+                ts_accessibility,
                 loc: prop_loc,
                 ..
             }) => {
@@ -8793,6 +8815,9 @@ fn class_def<'arena: 'ast, 'ast>(
                     if opts.munge
                         && flow_parser_utils::signature_utils::is_munged_property_string(&id.name)
                     {
+                        continue;
+                    } else if is_ts_private(ts_accessibility) {
+                        // TS-private members have no public interface.
                         continue;
                     }
 

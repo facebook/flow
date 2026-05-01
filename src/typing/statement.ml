@@ -8119,15 +8119,16 @@ module Make
          Class_sig.t containing this field, as that is when the initializer expression
          gets checked.
     *)
-    let mk_field cx tparams_map reason annot init =
+    let mk_field cx ~suppress_missing_annot tparams_map reason annot init =
       let unconditionally_required_annot annot =
         match annot with
         | Ast.Type.Missing loc ->
-          Flow.add_output
-            cx
-            (Error_message.EMissingLocalAnnotation
-               { reason; hint_available = false; from_generic_function = false }
-            );
+          if not suppress_missing_annot then
+            Flow.add_output
+              cx
+              (Error_message.EMissingLocalAnnotation
+                 { reason; hint_available = false; from_generic_function = false }
+              );
           let t = AnyT.make (AnyError (Some MissingAnnotation)) reason in
           (t, Ast.Type.Missing (loc, t))
         | Ast.Type.Available annot ->
@@ -8841,7 +8842,7 @@ module Make
                   Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
                 in
                 let (field, annot_t, annot_ast, get_value) =
-                  mk_field cx tparams_map_with_this reason annot value
+                  mk_field cx ~suppress_missing_annot:false tparams_map_with_this reason annot value
                 in
                 let get_element () =
                   Body.PrivateField
@@ -8908,8 +8909,16 @@ module Make
                 let decorators =
                   Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
                 in
+                let suppress_missing_annot =
+                  match ts_accessibility with
+                  | Some
+                      (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ })
+                    ->
+                    Context.under_declaration_context cx
+                  | _ -> false
+                in
                 let (field, annot_t, annot, get_value) =
-                  mk_field cx tparams_map_with_this reason annot value
+                  mk_field cx ~suppress_missing_annot tparams_map_with_this reason annot value
                 in
                 let get_element () =
                   Body.Property

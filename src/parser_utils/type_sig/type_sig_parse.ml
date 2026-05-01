@@ -4785,6 +4785,10 @@ and class_def =
         let targs = List.map (annot opts scope tbls xs) targs in
         ClassExplicitExtendsApp { loc; t; targs })
   in
+  let is_ts_private = function
+    | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) -> true
+    | _ -> false
+  in
   let props opts scope tbls xs elements acc =
     List.fold_left
       (fun acc ->
@@ -4798,12 +4802,19 @@ and class_def =
                 kind;
                 static;
                 override = _;
-                ts_accessibility = _;
+                ts_accessibility;
                 decorators = _;
                 comments = _;
               }
             ) ->
           if opts.munge && Signature_utils.is_munged_property_string name then
+            acc
+          else if is_ts_private ts_accessibility && kind <> C.Method.Constructor then
+            (* TS-private non-constructor members have no public interface.
+               Private constructors are kept so the merge layer doesn't
+               synthesize a default zero-arg constructor (which would make
+               `class C { private constructor(x: number) }` spuriously
+               constructible via `new C()`). *)
             acc
           else begin
             match kind with
@@ -4838,12 +4849,15 @@ and class_def =
                 override = _;
                 optional;
                 variance;
-                ts_accessibility = _;
+                ts_accessibility;
                 decorators = _;
                 comments = _;
               }
             ) ->
           if opts.munge && Signature_utils.is_munged_property_string name then
+            acc
+          else if is_ts_private ts_accessibility then
+            (* TS-private members have no public interface. *)
             acc
           else
             let (id_loc, t) =
@@ -4892,7 +4906,7 @@ and class_def =
                 kind;
                 static;
                 override = _;
-                ts_accessibility = _;
+                ts_accessibility;
                 decorators = _;
                 comments = _;
               }
@@ -4900,6 +4914,8 @@ and class_def =
           when Flow_ast_utils.well_known_symbol_name expr <> None ->
           let name = Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr) in
           if opts.munge && Signature_utils.is_munged_property_string name then
+            acc
+          else if is_ts_private ts_accessibility then
             acc
           else begin
             match kind with

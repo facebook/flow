@@ -1112,6 +1112,34 @@ References:
                        ^ [1]
 
 
+Error -------------------------------------------------------------------------------------- private_constructor.js:13:5
+
+Cannot call `Singleton` because function [1] requires another argument. [incompatible-type]
+
+   private_constructor.js:13:5
+   13| new Singleton(); // ERROR: requires `x` arg
+           ^^^^^^^^^
+
+References:
+   private_constructor.js:6:3
+    6|   private constructor(x: number) {}
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------- private_unannotated_class_field_usage.js:5:3
+
+Cannot get `t.cache` because property `cache` is missing in `ThemeCache` [1]. [prop-missing]
+
+   private_unannotated_class_field_usage.js:5:3
+   5| t.cache; // ERROR: prop-missing (private not in public type)
+        ^^^^^
+
+References:
+   private_unannotated_class_field_usage.js:3:11
+   3| const t = new ThemeCache();
+                ^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------- property_value_initializer.js:16:1
 
 Cannot cast `c.code` to string literal `wrong` because string literal `NEXT_STATIC_GEN_BAILOUT` [1] is incompatible with
@@ -1508,4 +1536,4 @@ References:
 
 
 
-Found 102 errors
+Found 104 errors

@@ -14805,6 +14805,7 @@ pub fn mk_class_sig<'a>(
     //   Class_sig.t containing this field, as that is when the initializer expression
     //   gets checked.
     let mk_field = |cx: &Context<'a>,
+                    suppress_missing_annot: bool,
                     tparams_map: &FlowOrdMap<SubstName, Type>,
                     reason: Reason,
                     annot: &ast::types::AnnotationOrHint<ALoc, ALoc>,
@@ -14828,14 +14829,16 @@ pub fn mk_class_sig<'a>(
         > {
             Ok(match annot {
                 ast::types::AnnotationOrHint::Missing(loc) => {
-                    flow_js::add_output_non_speculating(
-                        cx,
-                        ErrorMessage::EMissingLocalAnnotation {
-                            reason: reason.dupe(),
-                            hint_available: false,
-                            from_generic_function: false,
-                        },
-                    );
+                    if !suppress_missing_annot {
+                        flow_js::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EMissingLocalAnnotation {
+                                reason: reason.dupe(),
+                                hint_available: false,
+                                from_generic_function: false,
+                            },
+                        );
+                    }
                     let t = any_t::make(
                         type_::AnySource::AnyError(Some(type_::AnyErrorKind::MissingAnnotation)),
                         reason.dupe(),
@@ -16362,8 +16365,16 @@ pub fn mk_class_sig<'a>(
                                             v
                                         })
                                         .collect();
+                                    let suppress_missing_annot = match ts_accessibility {
+                                        Some(ast::class::ts_accessibility::TSAccessibility {
+                                            kind: ast::class::ts_accessibility::Kind::Private,
+                                            ..
+                                        }) => cx.under_declaration_context(),
+                                        _ => false,
+                                    };
                                     let (field, annot_t, annot_ast, get_value) = mk_field(
                                         cx,
+                                        suppress_missing_annot,
                                         &tparams_map_with_this,
                                         field_reason,
                                         annot,
@@ -16516,8 +16527,14 @@ pub fn mk_class_sig<'a>(
                                     v
                                 })
                                 .collect();
-                            let (field, annot_t, annot_ast, get_value) =
-                                mk_field(cx, &tparams_map_with_this, field_reason, annot, value)?;
+                            let (field, annot_t, annot_ast, get_value) = mk_field(
+                                cx,
+                                false,
+                                &tparams_map_with_this,
+                                field_reason,
+                                annot,
+                                value,
+                            )?;
                             let loc_c = loc.dupe();
                             let annot_t_c = annot_t.dupe();
                             let key_c = pf.key.clone();
