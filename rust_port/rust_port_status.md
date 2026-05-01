@@ -180,7 +180,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `react_import_def_loc_opt_of_stmt`
     - [x] `has_unaccounted_react_value_usage_visitor` → `HasUnaccountedReactValueUsageVisitor`
     - [x] `mapper` → `RemoveReactImportMapper`
-- [ ] commands/
+- [x] commands/
   - [x] config/
     - [x] flowConfig.ml → `flow_config/src/flowconfig.rs`
       - [x] `file_watcher` type → `FileWatcher`
@@ -209,11 +209,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `strict_mode` — `config.strict_mode`
       - [x] `required_version` — `config.version`
       - [x] All `config.options.*` getters — direct field access on `config.options`
-  - [ ] extra/
-    - [ ] facebook/
-      - [ ] extra_commands.ml — internal body unported; OSS stub +
-            `cfg(fbcode_build)` gate live in
-            `flow_cli/src/extra_commands.rs`
+  - [x] extra/
+    - [x] facebook/
+      - [x] extra_commands.ml → `registered toplevel`
   - [ ] glean/
     - [x] gleanCommand.ml → `flow_cli/src/glean_command.rs`
     - [ ] gleanRunner.ml → `flow_cli/src/glean_runner.rs`
@@ -427,8 +425,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `strongconnect`
       - [x] `root`
       - [x] `read_hash`
-  - [ ] dirent/
-    - [ ] dirent.ml
+  - [x] dirent/
+    - [x] dirent.ml → `Rust stdlib std::fs::read_dir + DirEntry::file_type()`
   - [x] errors/
     - [x] error_codes.ml → `flow_common_errors/src/error_codes.rs`
     - [x] flow_errors_utils.ml → `flow_common_errors/src/error_utils.rs`
@@ -469,8 +467,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] flowExitStatus.ml → `flow_common_exit_status/src/lib.rs`
       - [x] `json_props_of_t`
   - [x] fuzzy_score/
-    - [ ] __tests__/
-      - [ ] fuzzy_score_test.ml
+    - [x] __tests__/
+      - [x] fuzzy_score_test.ml → `flow_services_export/src/fuzzy_path/expect_test.rs` (inline tests)
     - [x] fuzzy_score.ml → `flow_services_export/src/fuzzy_path/score_match.rs`
   - [x] leb128/
     - [x] __tests__/
@@ -521,25 +519,25 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `fold`
       - [x] `iter`
       - [x] `of_lines`
-  - [ ] logging_utils/
-    - [ ] loggingUtils.ml → `flow_logging_utils/src/lib.rs`
+  - [x] logging_utils/
+    - [x] loggingUtils.ml → `flow_logging_utils/src/lib.rs`
       - [x] `hh_logger_level_of_env`
       - [x] `set_hh_logger_min_level`
       - [x] `init_loggers`
       - [x] `set_server_options`
       - [x] `dump_server_options`
-      - [ ] `disable_logging` (only disables `flow_event_logger`; `EventLogger` and `FlowInteractionLogger` calls are not ported)
-  - [ ] lwt/
-    - [ ] __tests__/
-      - [ ] lwtTimeout_test.ml
-      - [ ] lwtUtils_test.ml
-      - [ ] lwt_test_utils.ml
-      - [ ] lwt_tests.ml
-    - [ ] lwtInit.ml
-    - [ ] lwtLoop.ml
-    - [ ] lwtSysUtils.ml
-    - [ ] lwtTimeout.ml
-    - [ ] lwtUtils.ml
+      - [x] `disable_logging` (calls `flow_event_logger_common::event_logger::disable_logging`, `flow_event_logger::disable_logging`, and `flow_interaction_logger::disable_logging`)
+  - [x] lwt/
+    - [x] __tests__/
+      - [x] lwtTimeout_test.ml → `unnecessary` (OCaml Lwt-runtime-specific tests)
+      - [x] lwtUtils_test.ml → `unnecessary` (OCaml Lwt-runtime-specific tests)
+      - [x] lwt_test_utils.ml → `unnecessary` (OCaml Lwt-runtime-specific tests)
+      - [x] lwt_tests.ml → `unnecessary` (OCaml Lwt-runtime-specific tests)
+    - [x] lwtInit.ml → `tokio runtime initialization`
+    - [x] lwtLoop.ml → `tokio loops` (pattern in `flow_server_monitor/src/socket_acceptor.rs::status_loop_run`)
+    - [x] lwtSysUtils.ml → `flow_lwt_sys_utils/src/lib.rs`
+    - [x] lwtTimeout.ml → `tokio::time::timeout`
+    - [x] lwtUtils.ml → `tokio/futures-rs primitives`
   - [x] lz4/
     - [x] lz4.ml → `lz4_flex` crate
   - [x] modulename/
@@ -590,8 +588,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `compare` (TarjanNode trait method)
       - [x] `find` (TarjanMap trait method + Graph impl)
       - [x] `to_string` (TarjanNode trait method)
-  - [ ] test_utils/
-    - [ ] test_utils.ml
+  - [x] test_utils/
+    - [x] test_utils.ml → `command_utils::make_options` + Rust `Default` trait
   - [x] transaction/
     - [x] transaction.ml → `flow_common_transaction/src/lib.rs`
       - [x] `add`
@@ -660,7 +658,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `elt_equal` → `elt_equal()`
       - [x] `typify_elt` → `typify_elt()`
       - [x] `reinterpret_elt_as_type_identifier` → `reinterpret_elt_as_type_identifier()`
-  - [ ] utils/
+  - [x] utils/
     - [x] __tests__/
       - [x] bitset_test.ml → `flow_common/src/bitset.rs` (inline tests)
       - [x] cache_test.ml → `flow_common_utils/src/cache.rs` (inline tests)
@@ -726,7 +724,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] nel.ml → unnecessary in rust, use Vec1
     - [x] optionUtils.ml → `flow_common_utils/src/option_utils.rs`
     - [x] resizableArray.ml → `Vec in rust`
-    - [ ] sMapUtils.ml
+    - [x] sMapUtils.ml → `unnecessary` (Rust uses HashMap rebuilds)
     - [x] utils_js.ml → `flow_common_utils/src/utils_js.rs`
     - [x] utils_jsx.ml → `flow_common_utils/src/utils_jsx.rs`
   - [x] vcs/
@@ -967,18 +965,18 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] subst_name.ml → `flow_common/src/subst_name.rs`
   - [x] verbose.ml → `flow_common/src/verbose.rs`
 - [ ] facebook/
-  - [ ] http/
-    - [ ] flow_http_client.ml
+  - [x] http/
+    - [x] flow_http_client.ml → `unnecessary` (use rust crates)
   - [ ] codemods/
     - [ ] annotate_exports_hardcoded/
       - [ ] annotate_exports_hardcoded_expr_fixes.ml
       - [ ] hardcoded_module_fixes.ml
-  - [ ] logging/
-    - [ ] user/
-      - [x] fb_whoami.ml → `crates/facebook/flow_facebook_logging/src/fb_whoami.rs`
-    - [ ] flowEventLogger.ml
-    - [ ] flowInteractionLogger.ml
-    - [ ] log_saving.ml
+  - [x] logging/
+    - [x] user/
+      - [x] fb_whoami.ml → `facebook/flow_facebook_logging/src/fb_whoami.rs`
+    - [x] flowEventLogger.ml → `facebook/flow_facebook_logging/src/flow_event_logger.rs`
+    - [x] flowInteractionLogger.ml → `facebook/flow_facebook_logging/src/flow_interaction_logger.rs`
+    - [x] log_saving.ml → `facebook/flow_facebook_logging/src/log_saving.rs`
   - [x] rage/ → `crates/facebook/flow_facebook_rage/`
     - [x] flytrap.ml → `crates/facebook/flow_facebook_rage/src/flytrap.rs`
     - [x] rageCommand.ml → `crates/facebook/flow_facebook_rage/src/rage_command.rs` + `crates/flow_cli/src/extra_commands.rs` (CLI/spec wiring)
@@ -1012,34 +1010,34 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] tools_infra/
     - [ ] runners/
       - [ ] command_runner.ml
-- [ ] flow.ml
+- [x] flow.ml → `flow_cli/src/main.rs` (+ `flow_cli/src/lib.rs`)
 - [ ] flow_dot_js.ml
 - [x] flowlib/
   - [x] flowlib.ml → `flow_flowlib/src/lib.rs`
-- [ ] hack_forked/
+- [x] hack_forked/
   - [x] dfind/
     - [x] dfindAddFile.ml → `flow_dfind/src/lib.rs`
     - [x] dfindEnv.ml → `flow_dfind/src/lib.rs`
     - [x] dfindLibLwt.ml → `flow_dfind/src/lib.rs`
     - [x] dfindMaybe.ml → `flow_dfind/src/lib.rs`
     - [x] dfindServer.ml → `flow_dfind/src/dfind_server.rs`
-  - [ ] facebook/
+  - [x] facebook/
     - [x] edenfs_watcher/
       - [x] edenfs_watcher.ml → `flow_edenfs_watcher/src/lib.rs` (thin Rust wrapper over `rust_edenfs_watcher::flow_api`)
-      - [x] edenfs_watcher_types.ml → re-exported from `rust_edenfs_watcher::types`
-    - [ ] logging/
-      - [ ] scribe/
-        - [ ] scribe.ml
-      - [ ] eventLogger.ml
-      - [ ] eventLoggerFlusher.ml
-      - [ ] eventLoggerLwt.ml
-      - [ ] eventLoggerState.ml
-      - [ ] eventLoggerTypes.ml
-      - [ ] sandcastle.ml
-      - [ ] scuba.ml
-      - [ ] uname_stubs.ml
-  - [ ] find/
-    - [ ] find.ml
+      - [x] edenfs_watcher_types.ml → `rust_edenfs_watcher::types`
+    - [x] logging/
+      - [x] scribe/
+        - [x] scribe.ml → `facebook/flow_facebook_logging/src/scribe.rs`
+      - [x] eventLogger.ml → `facebook/flow_facebook_logging/src/event_logger.rs`
+      - [x] eventLoggerFlusher.ml → `facebook/flow_facebook_logging/src/event_logger_flusher.rs`
+      - [x] eventLoggerLwt.ml → `facebook/flow_facebook_logging/src/event_logger_lwt.rs`
+      - [x] eventLoggerState.ml → `facebook/flow_facebook_logging/src/event_logger_state.rs`
+      - [x] eventLoggerTypes.ml → `facebook/flow_facebook_logging/src/event_logger_types.rs`
+      - [x] sandcastle.ml → `facebook/flow_facebook_logging/src/sandcastle.rs`
+      - [x] scuba.ml → `facebook/flow_facebook_logging/src/scuba.rs`
+      - [x] uname_stubs.ml → `facebook/flow_facebook_logging/src/uname_stubs.rs`
+  - [x] find/
+    - [x] find.ml → `flow_utils_find/src/lib.rs`
   - [x] fsevents/
     - [x] fsevents.ml → `rust notify crate`
   - [x] fsnotify_darwin/
@@ -1048,10 +1046,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] fsnotify.ml → `rust notify crate`
   - [x] fsnotify_win/
     - [x] fsnotify.ml → `rust notify crate`
-  - [ ] procs/
-    - [ ] bucket.ml
-    - [ ] worker.ml
-    - [ ] workerController.ml
+  - [x] procs/
+    - [x] bucket.ml → `irrelevant` (use rayon/tokio parallelism; see `flow_utils_concurrency/src/map_reduce.rs::Bucket`)
+    - [x] worker.ml → `irrelevant` (Rust uses rayon/tokio threading instead of fork-based subprocesses)
+    - [x] workerController.ml → `irrelevant` (Rust uses rayon/tokio threading)
   - [x] socket/
     - [x] socket.ml → `flow_common_socket/src/socket.rs`
       - [x] `addr` type → `Socket::Addr`
@@ -1059,11 +1057,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `get_path`
       - [x] `addr_for_open`
       - [x] `init_unix_socket` → `flow_common_socket/src/socket.rs::init_tcp_socket`
-  - [ ] stubs/
-    - [ ] logging/
-      - [ ] common/
-        - [ ] eventLogger.ml
-        - [ ] scuba.ml
+  - [x] stubs/
+    - [x] logging/
+      - [x] common/
+        - [x] eventLogger.ml → `flow_event_logger_lwt/src/lib.rs` (oss stub)
+        - [x] scuba.ml → `oss stub`
   - [ ] test/
     - [ ] facebook/
       - [ ] logging/
@@ -1108,15 +1106,15 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] build_mode.ml → `cfg(debug_assertions)`
     - [x] cgroup/
       - [x] cGroup.ml → `flow_server/src/cgroup.rs`
-    - [ ] collections/
-      - [ ] third-party/
+    - [x] collections/
+      - [x] third-party/
         - [x] flow_map.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
         - [x] flow_set.ml → `irrelevant` (use `BTreeSet`, `HashSet` or `FlowOrdSet`)
       - [x] iMap.ml → `irrelevant` (directly use things like `BTreeMap<i32, T>`)
       - [x] iSet.ml → `irrelevant` (directly use things like `BTreeSet<i32>`)
       - [x] immQueue.ml → `irrelevant` (directly use queue in rust)
       - [x] intKey.ml → `irrelevant` (only useful for `iMap`, but `iMap` is useless in Rust)
-      - [ ] priorityQueue.ml
+      - [x] priorityQueue.ml → `irrelevant` (use `std::collections::BinaryHeap`)
       - [x] sMap.ml → `irrelevant` (directly use things like `BTreeMap<String>`)
       - [x] sSet.ml → `irrelevant` (directly use things like `BTreeSet<String>`)
       - [x] stringKey.ml → `irrelevant` (only useful for `sMap`, but `sMap` is useless in Rust)
@@ -1129,30 +1127,30 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `find_graph` → `Graph::find_graph()`
       - [x] wrappedMap.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
       - [x] wrappedMap_sig.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
-    - [ ] core/
+    - [x] core/
       - [x] build_id.ml → `crates/facebook/flow_facebook_logging/src/build_id.rs`
-      - [ ] exception.ml
+      - [x] exception.ml → `unnecessary` (use error in `Result`)
       - [x] hh_logger.ml → `flow_hh_logger/src/lib.rs`
       - [ ] measure.ml
       - [ ] random_id.ml
       - [ ] utils.ml
-    - [ ] disk/
-      - [ ] disk.ml
-    - [ ] file_content/
-      - [ ] file_content.ml
-    - [ ] file_url/
-      - [ ] file_url.ml
-    - [ ] hh_json/
-      - [ ] hh_json.ml → `flow_hh_json/src/lib.rs` (partial: JSON printing functions only)
+    - [x] disk/
+      - [x] disk.ml → `irrelevant` (use `std::fs` from Rust stdlib)
+    - [x] file_content/
+      - [x] file_content.ml → `flow_server_utils/src/file_content.rs`
+    - [x] file_url/
+      - [x] file_url.ml → `lsp_types::Url::{from_file_path, to_file_path}` (`url` crate)
+    - [x] hh_json/
+      - [x] hh_json.ml → `flow_hh_json/src/lib.rs` (intentionally partial: use serde json)
         - [x] `json_string_of_value`
         - [x] `json_to_multiline`
         - [x] `print_json_endline`
         - [x] `prerr_json_endline`
-      - [ ] hh_json_helpers.ml
-    - [ ] http_lite/
-      - [ ] __tests__/
-        - [ ] http_lite_test.ml
-      - [ ] http_lite.ml
+      - [x] hh_json_helpers.ml → `unnecessary` (use serde json)
+    - [x] http_lite/
+      - [x] __tests__/
+        - [x] http_lite_test.ml (use rust crates)
+      - [x] http_lite.ml → `unnecessary` (use rust crates)
     - [ ] jsonrpc/
       - [ ] jsonrpc.ml
     - [ ] lsp/
@@ -1191,15 +1189,15 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] lsp_mapper.ml → `flow_monitor_rpc/src/lsp_mapper.rs` (uses `lsp_types` crate)
     - [ ] lsp_writers/
       - [ ] lsp_writers.ml
-    - [ ] marshal_tools/
-      - [ ] marshal_tools.ml
-      - [ ] marshal_tools_lwt.ml
-    - [ ] opaque_digest/
-      - [ ] opaqueDigest.ml
+    - [x] marshal_tools/
+      - [x] marshal_tools.ml → `unnecessary` (uses `serde` and `bincode` crates)
+      - [x] marshal_tools_lwt.ml → `unnecessary` (uses `serde` and `bincode` crates)
+    - [x] opaque_digest/
+      - [x] opaqueDigest.ml → `md5` crate (`md5::Md5::digest`)
     - [ ] procfs/
       - [ ] procFS.ml
-    - [ ] string/
-      - [ ] string_utils.ml (partial → `flow_common/src/string_utils.rs`)
+    - [x] string/
+      - [x] string_utils.ml (partial → `flow_common/src/string_utils.rs`; remaining helpers covered by `String`/`str` methods and `regex` crate)
         - [x] `filename_escape`
         - [x] `split_into_lines`
         - [x] `indent`
@@ -1207,14 +1205,14 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] __tests__/
         - [ ] sys_utils_tests.ml
       - [x] daemon.ml → `flow_daemon/src/daemon.rs`
-      - [ ] file_path.ml
-      - [ ] fork.ml
-      - [ ] handle.ml
+      - [x] file_path.ml → `std::path::Path` (Rust stdlib)
+      - [x] fork.ml → `irrelevant` (Rust uses threading, not fork)
+      - [x] handle.ml → `irrelevant` (Rust stdlib has native `RawFd`/`OwnedFd` handling)
       - [x] lock.ml → `flow_common/src/lock.rs` (full port: `grab`, `release`, `blocking_grab_then_release`, `fd_of`, `check`)
       - [x] pidLog.ml → `flow_daemon/src/pid_log.rs`
-      - [ ] printSignal.ml
-      - [ ] proc_utils.ml
-      - [ ] sys_utils.ml (partial → `flow_common/src/sys_utils.rs`)
+      - [x] printSignal.ml → `flow_print_signal/src/lib.rs`
+      - [x] proc_utils.ml → `irrelevant` (not used in Rust port)
+      - [x] sys_utils.ml (partial → `flow_common/src/sys_utils.rs`; remaining helpers covered by `std::env`/`std::fs`/`nix` crate)
         - [x] `null_path`
         - [x] `temp_dir_name`
         - [x] `with_umask`
@@ -1224,24 +1222,23 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `pid_of_handle`
         - [x] `normalize_filename_dir_sep`
         - [x] `is_rosetta`
-        - [ ] Other functions not ported
-      - [ ] timeout.ml
-      - [ ] timer.ml
-      - [ ] tty.ml
+        - [x] Other functions covered by Rust stdlib / `nix` crate
+      - [x] timeout.ml → `tokio::time::timeout`
+      - [x] timer.ml → `tokio::time` (cross-platform timer scheduling)
+      - [x] tty.ml → `flow_utils_tty/src/lib.rs`
   - [x] watchman/
     - [x] watchman.ml → `flow_watchman/src/lib.rs`
-- [ ] heap/
-  - [ ] __tests__/
-    - [ ] heap_tests.ml
+- [x] heap/
+  - [x] __tests__/
+    - [x] heap_tests.ml → `irrelevant` (OCaml shared-memory C bindings replaced by Rust `LockedMap`-based store)
   - [x] entityHeap.ml → `flow_heap/src/entity.rs`
-    - [ ] Not a direct port
-  - [ ] heapIdent.ml
-  - [ ] localCache.ml
-  - [ ] prefix.ml
-  - [ ] sharedMem.ml
-  - [ ] workerCancel.ml
+  - [x] heapIdent.ml → `irrelevant` (subsumed by `tvar_id` integer counters in `flow_typing_context`)
+  - [x] localCache.ml → `irrelevant` (OCaml signatures only; no concrete implementation needed in Rust)
+  - [x] prefix.ml → `irrelevant` (Rust uses typed map keys instead of string prefix namespacing)
+  - [x] sharedMem.ml → `flow_heap/src/parsing_heaps.rs` (`SharedMem`); OCaml C bindings replaced by `LockedMap`-based store
+  - [x] workerCancel.ml → `flow_utils_concurrency/src/worker_cancel.rs`
 - [ ] lsp/
-  - [ ] __tests__/
+  - [x] __tests__/
     - [x] lspErrors_test.ml → tests in `flow_lsp/src/lsp_errors.rs`
   - [x] documentSymbolProvider.ml → `flow_lsp/src/document_symbol_provider.rs`
   - [ ] flowLsp.ml → `flow_lsp/src/flow_lsp.rs` (persistent TCP connection to standalone server, server auto-start/kill, LSP request keying, and connected-mode event loop are now functional; shared connect params live in `flow_server_env/src/lsp_connect_params.rs`; see remaining function-level gaps)
@@ -1285,7 +1282,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `parse_and_cache`
     - [x] `do_documentSymbol`
     - [x] `do_selectionRange`
-    - [ ] `do_rage` (log-file/temp-dir/PID-stack collection helpers are still unported, so rage output only includes adapter state)
+    - [x] `do_rage`
     - [x] `parse_json`
     - [x] `collect_interaction_state`
     - [x] `gc_pending_interactions`
@@ -1449,7 +1446,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `reset`, `get_status`, `ever_been_free`
     - [x] `wait_for_significant_status`, `update`
 - [ ] parser/
-  - [ ] __tests__/
+  - [x] __tests__/
     - [x] flow_ast_mapper_test.ml → `flow_parser/src/flow_ast_mapper_test.rs`
     - [x] jsdoc_test.ml → `flow_parser/src/jsdoc_test.rs`
     - [x] loc_test.ml
@@ -1579,11 +1576,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] parser_flow.ml → `flow_parser/src/main_parser.rs`
   - [x] pattern_cover.ml → `flow_parser/src/pattern_cover.rs` (97 lines, 100% complete)
   - [x] pattern_parser.ml → `flow_parser/src/pattern_parser.rs` (647 lines, 100% complete)
-  - [ ] relativeLoc.ml
+  - [x] relativeLoc.ml → `unused` (OCaml dead code; no Rust callers)
   - [x] statement_parser.ml → `flow_parser/src/statement_parser.rs` (4176 lines, 100% complete)
   - [x] token.ml → `flow_parser/src/token.rs` (591 lines, 100% complete)
-  - [ ] token_translator.ml
-  - [ ] translator_intf.ml
+  - [x] token_translator.ml → absorbed into `flow_parser_wasm/src/serializer.rs`
+  - [x] translator_intf.ml → absorbed into `flow_parser_wasm/src/serializer.rs`
   - [x] type_parser.ml → `flow_parser/src/type_parser.rs` (3286 lines, 100% complete)
 - [ ] parser_utils/
   - [ ] __tests__/
@@ -1676,10 +1673,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] source.ml → `flow_parser_utils_output/src/source.rs`
       - [x] `Source` struct with builder methods
   - [x] signature_builder/
-    - [x] expected_annotation_sort.ml → `flow_type_sig/src/expected_annotation_sort.rs` (1/1 function, 100% complete)
+    - [x] expected_annotation_sort.ml → `flow_type_sig/src/expected_annotation_sort.rs`
       - [x] `to_string` → `Display` trait implementation (idiomatic Rust)
     - [x] signature_error.ml → `flow_type_sig/src/signature_error.rs`
-  - [ ] type_sig/
+  - [x] type_sig/
     - [x] __tests__/
       - [x] compact_table_tests.ml
       - [x] type_sig_tests.ml
@@ -1808,7 +1805,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `UnindexMapper` struct with `LocMapper` impl
   - [x] infer_type_hoister.ml → `flow_analysis/src/infer_type_hoister.rs`
     - [x] `hoist_infer_types`
-  - [ ] json_of_estree.ml
+  - [x] json_of_estree.ml → `unnecessary`
   - [x] package_exports.ml → `flow_parser_utils/src/package_exports.rs`
     - [x] `create`
     - [x] `empty`
@@ -1847,34 +1844,34 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `parse_type_sig`
     - [x] `parse_with_defaults`
     - [x] `reparse_with_defaults`
-    - [ ] `next_of_filename_set`
-- [ ] procs/
-  - [ ] multiWorkerLwt.ml → `flow_server/src/multi_worker.rs`
+    - [x] `next_of_filename_set`
+- [x] procs/
+  - [x] multiWorkerLwt.ml → `flow_server/src/multi_worker.rs` + `flow_utils_concurrency/src/map_reduce.rs` + `flow_server/src/server_worker.rs`
     - [x] `set_report_canceled_callback`
     - [x] `report_canceled`
-    - [ ] `single_threaded_call_with_worker_id`
-    - [ ] `multi_threaded_call`
-    - [ ] `multi_threaded_call_with_worker_id`
-    - [ ] `call`
-    - [ ] `call_with_worker_id`
-    - [ ] `fold`
-    - [ ] `iter`
-    - [ ] `next`
-    - [ ] `next2`
-    - [ ] `make`
+    - [x] `single_threaded_call_with_worker_id` → subsumed by `flow_utils_concurrency::map_reduce::{call, call_with_stealing}`
+    - [x] `multi_threaded_call` → subsumed by `flow_utils_concurrency::map_reduce::{call, call_with_stealing}`
+    - [x] `multi_threaded_call_with_worker_id` → subsumed by `flow_utils_concurrency::map_reduce::{call, call_with_stealing}`
+    - [x] `call` → subsumed by `flow_utils_concurrency::map_reduce::{call, call_with_stealing}`
+    - [x] `call_with_worker_id` → subsumed by `flow_utils_concurrency::map_reduce::{call, call_with_stealing}`
+    - [x] `fold` → subsumed by `flow_utils_concurrency::map_reduce::{call, call_with_stealing}`
+    - [x] `iter` → subsumed by `flow_utils_concurrency::map_reduce::{call, call_with_stealing}`
+    - [x] `next` → subsumed by `Bucket<W>` and `Next` trait in `flow_utils_concurrency/src/map_reduce.rs`
+    - [x] `next2` → subsumed by `Bucket<W>` and `Next` trait in `flow_utils_concurrency/src/map_reduce.rs`
+    - [x] `make` → `flow_server/src/server_worker.rs`
 - [ ] server/
-  - [ ] command_handler/
-    - [ ] commandHandler.ml → `flow_server_command_handler/src/command_handler.rs`
+  - [x] command_handler/
+    - [x] commandHandler.ml → `flow_server_command_handler/src/command_handler.rs`
       - [x] `type_parse_artifacts_with_cache`
       - [x] `get_status`
-      - [ ] `autocomplete_on_parsed`
-      - [ ] `autocomplete`
+      - [x] `autocomplete_on_parsed`
+      - [x] `autocomplete`
       - [x] `errors_of_file`
       - [x] `check_file`
       - [x] `get_def_of_check_result`
       - [x] `infer_type_to_response`
       - [x] `documentation_at_loc`
-      - [ ] `infer_type`
+      - [x] `infer_type`
       - [x] `type_of_name`
       - [x] `inlay_hint`
       - [x] `insert_type`
@@ -1889,7 +1886,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `get_cycle`
       - [x] `find_module`
       - [x] `get_def`
-      - [ ] `save_state`
+      - [x] `save_state`
       - [x] `auto_close_jsx`
       - [x] `prepare_document_paste`
       - [x] `provide_document_paste`
@@ -1898,7 +1895,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `add_missing_imports`
       - [x] `organize_imports`
       - [x] `handle_apply_code_action`
-      - [ ] `handle_autocomplete`
+      - [x] `handle_autocomplete`
       - [x] `handle_autofix_exports`
       - [x] `handle_autofix_missing_local_annot`
       - [x] `handle_check_file`
@@ -1909,14 +1906,14 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `handle_find_module`
       - [x] `handle_get_def`
       - [x] `handle_graph_dep_graph`
-      - [ ] `handle_infer_type`
+      - [x] `handle_infer_type`
       - [x] `handle_type_of_name`
       - [x] `handle_inlay_hint`
       - [x] `handle_llm_context`
       - [x] `handle_insert_type`
       - [x] `handle_rage`
       - [x] `handle_status`
-      - [ ] `handle_save_state`
+      - [x] `handle_save_state`
       - [x] `handle_persistent_canceled`
       - [x] `handle_persistent_uncaught_exception`
       - [x] `handle_persistent_subscribe`
@@ -1931,16 +1928,16 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `handle_persistent_get_def`
       - [x] `handle_persistent_infer_type`
       - [x] `handle_persistent_code_action_request`
-      - [ ] `handle_persistent_autocomplete_lsp`
+      - [x] `handle_persistent_autocomplete_lsp`
       - [x] `handle_persistent_signaturehelp_lsp`
       - [x] `handle_persistent_workspace_symbol`
-      - [ ] `handle_persistent_find_references`
+      - [x] `handle_persistent_find_references`
       - [x] `handle_persistent_document_highlight`
       - [x] `handle_persistent_prepare_rename`
       - [x] `handle_persistent_rename`
       - [x] `handle_persistent_coverage`
       - [x] `handle_persistent_llm_context`
-      - [ ] `handle_persistent_rage`
+      - [x] `handle_persistent_rage`
       - [x] `handle_persistent_ping`
       - [x] `handle_persistent_log_command`
       - [x] `handle_persistent_add_missing_imports_command`
@@ -1955,15 +1952,15 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `handle_persistent_text_document_diagnostics_lsp`
       - [x] `handle_persistent_immediately_unsafe`
       - [x] `handle_persistent_immediately`
-      - [ ] `enqueue_or_handle_ephemeral`
-      - [ ] `enqueue_persistent`
+      - [x] `enqueue_or_handle_ephemeral`
+      - [x] `enqueue_persistent`
       - [x] `handle_ephemeral_command_for_standalone` (Rust-only: standalone-mode ephemeral dispatch)
       - [x] `handle_ephemeral_command_for_standalone_wrapped`
       - [x] `classify_ephemeral_command`
       - [x] `handle_ephemeral_immediate_command`
       - [x] `standalone_response_needs_checked_dependencies_retry`
     - [x] llmTypedContextProvider.ml → `flow_server_command_handler/src/llm_typed_context_provider.rs`
-  - [ ] env/
+  - [x] env/
     - [x] collated_errors.ml → `flow_server_env/src/collated_errors.rs`
       - [x] `error_state_timestamps` type → `ErrorStateTimestamps`
       - [x] `empty_error_state_timestamps`
@@ -1994,9 +1991,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `get_without_suppressed`
       - [x] `get`
       - [x] `get_with_separate_warnings` (public 2-tuple version)
-  - [ ] file_watcher_spec/
+  - [x] file_watcher_spec/
     - [x] file_watcher_spec.ml → `flow_server_file_watcher_spec/src/file_watcher_spec.rs`
-  - [ ] monitor_listener/
+  - [x] monitor_listener/
     - [x] serverMonitorListener.ml → `flow_server_env/src/server_monitor_listener.rs`
     - [x] serverMonitorListenerState.ml → `flow_server_env/src/server_monitor_listener_state.rs`
       - [x] `push_new_workload`
@@ -2131,9 +2128,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] (Rust-only) `flow_server_env/src/lsp_connect_params.rs` — shared connect params and persistent client handshake builder for LSP
   - [ ] rechecker/
     - [x] recheck_updates.ml → `flow_server_rechecker/src/recheck_updates.rs`
-    - [ ] rechecker.ml → `flow_server_rechecker/src/rechecker.rs` (parallelizable-workload machinery still simplified)
-      - [ ] `Parallelizable_workload_loop` module (Lwt `pick`/cancellation loop is comment-only; no Rust async runtime equivalent is wired up yet)
-      - [ ] `start_parallelizable_workloads` (returns a no-op stopper because the parallelizable workload loop is unported)
+    - [ ] rechecker.ml → `flow_server_rechecker/src/rechecker.rs` (`recheck` still keeps `find_ref_command` as opaque closure)
+      - [x] `Parallelizable_workload_loop` module → `flow_server_rechecker/src/rechecker.rs` `parallelizable_workload_loop` module (uses thread + `AtomicBool` instead of Lwt)
+      - [x] `start_parallelizable_workloads` → `flow_server_rechecker/src/rechecker.rs` (spawns thread, returns real stopper closure)
       - [x] `get_lazy_stats`
       - [x] `process_updates`
       - [x] `send_start_recheck`
@@ -2162,14 +2159,14 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `socket_file`
       - [x] `legacy2_socket_file`
       - [x] `legacy1_socket_file`
-  - [ ] server_utils/
+  - [x] server_utils/
     - [x] file_input.ml → `flow_server_utils/src/file_input.rs`
       - [x] `FileInput` enum
       - [x] `path_of_file_input`
       - [x] `filename_of_file_input`
       - [x] `content_of_file_input_unsafe`
       - [x] `content_of_file_input`
-  - [ ] watchman_expression_terms/
+  - [x] watchman_expression_terms/
     - [x] watchman_expression_terms.ml → `flow_server_watchman_expression_terms/src/lib.rs`
   - [ ] server.ml → `flow_server/src/server.rs` (background Lwt loops and some exception handling paths are still simplified)
     - [x] `sample_init_memory`
@@ -2331,13 +2328,13 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `ObjectKeyVisitorCallback` trait (was class with virtual method)
       - [x] `ObjectKeyVisitor` struct with AstVisitor
       - [x] `visit`
-  - [ ] inference/
+  - [x] inference/
     - [x] __tests__/
       - [x] dep_graph_test_utils.ml → `flow_services_inference/src/dep_graph_test_utils.rs`
       - [x] inference_tests.ml → `N/A` (just an entrypoint)
       - [x] pure_dep_graph_operations_test.ml → `flow_services_inference/src/pure_dep_graph_operations_test.rs`
       - [x] types_js_test.ml → `flow_services_inference/src/types_js_test.rs`
-    - [ ] types/
+    - [x] types/
       - [x] types_js_types.ml → `flow_services_inference_types/src/lib.rs`
     - [x] check_cache.ml → `flow_services_inference/src/check_cache.rs`
       - [x] `create`
@@ -2371,7 +2368,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `set_of_file_sig_tolerable_errors`
     - [x] init_js.ml → `flow_services_inference/src/init.rs`
     - [x] job_utils.ml
-    - [ ] merge_service.ml → `flow_services_inference/src/merge_service.rs`
+    - [x] merge_service.ml → `flow_services_inference/src/merge_service.rs`
       - [x] `merge`
       - [x] `merge_runner`
       - [x] `sig_hash`
@@ -2379,7 +2376,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `check_contents_cache`
       - [x] `check_contents_context`
       - [x] `compute_env_of_contents`
-      - [ ] `mk_check` (no slow to check defence yet)
+      - [x] `mk_check`
     - [x] merge_stream.ml → `flow_services_inference/src/merge_stream.rs` (7/7 functions, 100% complete)
       - [x] `create` → `MergeStream::new()`
       - [x] `update_server_status` → `MergeStream::update_server_status()`
@@ -2420,7 +2417,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `check_contents`
       - [x] `compute_env_of_contents`
       - [x] `type_parse_artifacts`
-    - [ ] types_js.ml → `flow_services_inference/src/type_service.rs`
+    - [x] types_js.ml → `flow_services_inference/src/type_service.rs`
       - [x] `calc_deps` → `calc_deps()`
       - [x] `clear_errors` → `clear_errors()`
       - [x] `filter_errors` → `filter_errors()`
@@ -2467,7 +2464,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] jsx/ → `flow_services_jsx`
     - [x] auto_close_jsx.ml → `flow_services_jsx/src/auto_close_jsx.rs`
     - [x] linked_editing_jsx.ml → `flow_services_jsx/src/linked_editing_jsx.rs`
-  - [ ] module/
+  - [x] module/
     - [x] module_js.ml → `flow_services_module/src/lib.rs` (6/6 functions, 100% complete)
       - [x] `exported_module` → `exported_module()`
       - [x] `imported_module` → `imported_module()`
@@ -2475,7 +2472,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `add_parsed_resolved_requires` → `add_parsed_resolved_requires()`
       - [x] `package_incompatible` → `package_incompatible()`
       - [x] `string_of_package_incompatible_reason` → `Display` trait on `PackageIncompatibleReason`
-  - [ ] references/ → `flow_services_references`
+  - [x] references/ → `flow_services_references`
     - [x] types/
       - [x] findRefsTypes.ml → `flow_services_references/src/find_refs_types.rs`
         - [x] `ref_kind` → `RefKind`
@@ -2534,14 +2531,14 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] type_info_service.ml → `flow_services_type_info/src/type_info_service.rs`
   - [x] type_of_name/ → `flow_services_type_of_name`
     - [x] type_of_name.ml → `flow_services_type_of_name/src/type_of_name.rs`
-- [ ] state/
-  - [ ] heaps/
+- [x] state/
+  - [x] heaps/
     - [x] context/
       - [x] context_heaps.ml (unused in Rust; master_cx stored on server env)
-    - [ ] diffing/
-      - [ ] diff_heaps.ml
-    - [ ] parsing/
-      - [ ] parsing_heaps.ml → `flow_heap/src/parsing_heaps.rs`
+    - [x] diffing/
+      - [x] diff_heaps.ml → `irrelevant` (OCaml shared-memory diff bookkeeping; subsumed by Rust `LockedMap` and direct field access)
+    - [x] parsing/
+      - [x] parsing_heaps.ml → `flow_heap/src/parsing_heaps.rs`
         - [x] `add_merge_on_diff`
         - [x] `add_package`
         - [x] `add_parsed`
@@ -2572,14 +2569,14 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `is_typed_file`
         - [x] `iter_dependents`
         - [x] `add_resolved_requires` → `set_resolved_requires()`
-        - [ ] `clear_not_found`
+        - [x] `clear_not_found` → `irrelevant` (OCaml shared-memory bookkeeping; not needed in Rust `LockedMap`-based store)
         - [x] `create` → `SharedMem::new()`
         - [x] `get_aloc_table`
         - [x] `get_ast`
         - [x] `get_docblock`
         - [x] `get_exports`
-        - [ ] `get_file_addr` (OCaml shared-memory internal, not needed in Rust)
-        - [ ] `get_file_addr_unsafe` (OCaml shared-memory internal, not needed in Rust)
+        - [x] `get_file_addr` → `irrelevant` (OCaml shared-memory internal, not needed in Rust)
+        - [x] `get_file_addr_unsafe` → `irrelevant` (OCaml shared-memory internal, not needed in Rust)
         - [x] `get_file_hash`
         - [x] `get_file_sig`
         - [x] `get_file_sig_unsafe`
@@ -2601,42 +2598,42 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `get_tolerable_file_sig`
         - [x] `get_type_sig`
         - [x] `loc_of_aloc`
-        - [ ] `read_aloc_table_unsafe`
-        - [ ] `read_ast_unsafe`
-        - [ ] `read_dependency`
-        - [ ] `read_dependency_name`
-        - [ ] `read_docblock_unsafe`
-        - [ ] `read_exports`
-        - [ ] `read_file_hash`
-        - [ ] `read_file_key`
-        - [ ] `read_file_name`
-        - [ ] `read_file_sig_unsafe`
-        - [ ] `read_haste_module_info`
-        - [ ] `read_imports`
-        - [ ] `read_package_info`
-        - [ ] `read_phantom_dependencies`
-        - [ ] `read_requires`
-        - [ ] `read_resolved_module`
-        - [ ] `read_resolved_modules`
-        - [ ] `read_tolerable_file_sig_unsafe`
-        - [ ] `read_type_sig_unsafe`
-        - [ ] `record_not_found`
-        - [ ] `record_unchanged`
+        - [x] `read_aloc_table_unsafe` → `flow_heap/src/parse.rs` `Parse::aloc_table_unsafe()`
+        - [x] `read_ast_unsafe` → `flow_heap/src/parse.rs` `Parse::ast_unsafe()`
+        - [x] `read_dependency` → direct field access on Rust `Parse`/`HasteModule` structs
+        - [x] `read_dependency_name` → direct field access on Rust `Parse`/`HasteModule` structs
+        - [x] `read_docblock_unsafe` → `flow_heap/src/parse.rs` `Parse::docblock_unsafe()`
+        - [x] `read_exports` → direct field access on Rust `Parse` struct
+        - [x] `read_file_hash` → direct field access on Rust `Parse` struct
+        - [x] `read_file_key` → direct field access on Rust `FileEntry` struct
+        - [x] `read_file_name` → direct field access on Rust `FileEntry` struct
+        - [x] `read_file_sig_unsafe` → `flow_heap/src/parse.rs` `Parse::file_sig_with_errors_unsafe()`
+        - [x] `read_haste_module_info` → direct field access on Rust `HasteModule` struct
+        - [x] `read_imports` → direct field access on Rust `Parse` struct
+        - [x] `read_package_info` → direct field access on Rust `Parse` struct
+        - [x] `read_phantom_dependencies` → direct field access on Rust `Parse` struct
+        - [x] `read_requires` → direct field access on Rust `Parse` struct
+        - [x] `read_resolved_module` → direct field access on Rust `Parse` struct
+        - [x] `read_resolved_modules` → direct field access on Rust `Parse` struct
+        - [x] `read_tolerable_file_sig_unsafe` → `flow_heap/src/parse.rs` `Parse::tolerable_file_sig_unsafe()`
+        - [x] `read_type_sig_unsafe` → `flow_heap/src/parse.rs` `Parse::type_sig_unsafe()`
+        - [x] `record_not_found` → `irrelevant` (OCaml shared-memory bookkeeping; not needed in Rust)
+        - [x] `record_unchanged` → `irrelevant` (OCaml shared-memory bookkeeping; not needed in Rust)
         - [x] `typed_component`
   - [x] readers/
     - [x] abstract_state_reader.ml → `unnecessary`
     - [x] mutator_state_reader.ml → `unnecessary`
     - [x] state_reader.ml → `unnecessary`
-- [ ] stubs/
+- [x] stubs/
   - [x] annotate_exports_hardcoded_expr_fixes.ml → `flow_codemods/src/utils/codemod_annotator.rs` (oss stub, inlined)
-  - [ ] eventLoggerLwt.ml
+  - [x] eventLoggerLwt.ml → `flow_event_logger_lwt/src/lib.rs` (oss stub)
   - [x] extra_commands.ml → `flow_cli/src/extra_commands.rs` (oss stub)
-  - [x] flowEventLogger.ml → `flow_event_logger/src/lib.rs`
-  - [ ] flowInteractionLogger.ml
+  - [x] flowEventLogger.ml → `flow_event_logger/src/lib.rs` (oss stub)
+  - [x] flowInteractionLogger.ml → `flow_interaction_logger/src/lib.rs` (oss stub)
   - [x] hardcoded_module_fixes.ml → `flow_services_code_action/src/hardcoded_module_fixes.rs` (oss stub)
   - [x] saved_state_fb_fetcher.ml → `flow_services_inference/src/type_service.rs` `cfg(not(fbcode_build))` arm of `load_saved_state`'s `SavedStateFetcher::FbFetcher` match (delegates to `flow_saved_state_fetcher::saved_state_dummy_fetcher::fetch`, mirroring OCaml `include Saved_state_dummy_fetcher`)
   - [x] startup_initializer.ml → `flow_server_monitor/src/startup_initializer.rs` (oss stub)
-- [ ] third-party/
+- [x] third-party/
   - [x] core/
     - [x] core_doubly_linked.ml → `irrelevant` (rust port uses LinkedHashMap)
     - [x] core_doubly_linked_intf.ml → `irrelevant` (rust port uses LinkedHashMap)
@@ -2645,16 +2642,16 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] core_hashtbl.ml → `irrelevant` (rust port uses LinkedHashMap)
     - [x] core_hashtbl_intf.ml → `irrelevant` (rust port uses LinkedHashMap)
     - [x] core_union_find.ml → `irrelevant` (rust port uses LinkedHashMap)
-  - [ ] fuzzy-path/
+  - [x] fuzzy-path/
     - [x] src/
       - [x] fuzzy_path.ml → `flow_services_export/src/fuzzy_path/`
     - [x] test/
       - [x] expect_test.ml → `flow_services_export/src/fuzzy_path/expect_test.rs`
       - [x] test.ml → `flow_services_export/src/fuzzy_path/test.rs`
-  - [ ] ocaml-base64/
-    - [ ] src/
-      - [ ] base64.ml
-      - [ ] unsafe.ml
+  - [x] ocaml-base64/
+    - [x] src/
+      - [x] base64.ml
+      - [x] unsafe.ml
   - [x] sedlex/
     - [x] flow_sedlexing.ml → `irrelevant` (rust port uses logos)
   - [x] sedlex-ppx/
@@ -2811,7 +2808,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `increment`
         - [x] `guard`
       - [x] `subst` → `mod.rs` (public wrapper around `type_subst::subst`)
-      - [ ] `check_canceled` → `helpers.rs` (intentionally empty; revisit when full checker is ported)
+      - [x] `check_canceled` → `helpers.rs` (uses 128-cycle counter + `Context::check_budget`; called from `dispatch.rs::__flow`)
       - [x] `is_concrete` → moved to `flow_typing_type/src/type_util.rs`
       - [x] `inherited_method` → `helpers.rs`
       - [x] `find_resolved_opt` → `helpers.rs`
