@@ -264,38 +264,38 @@ Cannot assign `3` to `pickedO1.foo` because property `foo` is not writable. [can
                ^^^
 
 
-Error ------------------------------------------------------------------------------------------------------ pick.js:9:2
+Error ------------------------------------------------------------------------------------------------------ pick.js:9:1
 
 Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
-   pick.js:9:2
-      9| (pickedO1.bar: string); // ERROR bar is optional
-          ^^^^^^^^^^^^
+   pick.js:9:1
+      9| pickedO1.bar as string; // ERROR bar is optional
+         ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:3182:62
    3182| type Pick<O: interface {}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
                                                                       ^^^^^^ [1]
-   pick.js:9:16
-      9| (pickedO1.bar: string); // ERROR bar is optional
-                        ^^^^^^ [2]
+   pick.js:9:17
+      9| pickedO1.bar as string; // ERROR bar is optional
+                         ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ pick.js:9:2
+Error ------------------------------------------------------------------------------------------------------ pick.js:9:1
 
 Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
-   pick.js:9:2
-   9| (pickedO1.bar: string); // ERROR bar is optional
-       ^^^^^^^^^^^^
+   pick.js:9:1
+   9| pickedO1.bar as string; // ERROR bar is optional
+      ^^^^^^^^^^^^
 
 References:
    pick.js:1:32
    1| type O1 = {+foo: number, bar?: string};
                                      ^^^^^^ [1]
-   pick.js:9:16
-   9| (pickedO1.bar: string); // ERROR bar is optional
-                     ^^^^^^ [2]
+   pick.js:9:17
+   9| pickedO1.bar as string; // ERROR bar is optional
+                      ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- pick.js:24:10

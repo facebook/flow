@@ -1,13 +1,13 @@
 function Foo() {
-  (new.target: mixed); // OK
-  (new.target: boolean); // Error
+  new.target as mixed; // OK
+  new.target as boolean; // Error
 
   if (!new.target) {} // OK
 }
 
 class A {
   constructor() {
-    (new.target: mixed); // OK
-    (new.target: boolean); // Error
+    new.target as mixed; // OK
+    new.target as boolean; // Error
   }
 }

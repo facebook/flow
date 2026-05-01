@@ -3,13 +3,13 @@ function if_tests() {
     const foo: Array<string> = [];
     let bar: Array<any> = foo;
     if (true) bar = foo;
-    (bar: Array<boolean>); // ok
+    bar as Array<boolean>; // ok
   }
 
   function merge_with_general_undefined() {
     let bar: Array<boolean>;
     if (true) bar = [];
-    (bar: Array<boolean>); // error
+    bar as Array<boolean>; // error
   }
 }
 
@@ -21,7 +21,7 @@ function switch_tests() {
       case 1:
         bar = foo;
     }
-    (bar: Array<boolean>); // ok
+    bar as Array<boolean>; // ok
   }
 
   function merge_with_general_undefined() {
@@ -30,7 +30,7 @@ function switch_tests() {
       case 1:
         bar = [];
     }
-    (bar: Array<boolean>); // error
+    bar as Array<boolean>; // error
   }
 }
 
@@ -42,7 +42,7 @@ function try_catch_tests() {
       ;
       bar = foo;
     } catch {}
-    (bar: Array<boolean>); // ok
+    bar as Array<boolean>; // ok
   }
 
   function merge_with_general_undefined() {
@@ -51,7 +51,7 @@ function try_catch_tests() {
       ;
       bar = [];
     } catch {}
-    (bar: Array<boolean>); // error
+    bar as Array<boolean>; // error
   }
 }
 
@@ -63,7 +63,7 @@ function loop_tests() {
     while (true) {
       bar = foo;
     }
-    (bar: Array<boolean>); // ok
+    bar as Array<boolean>; // ok
   }
 
   function merge_with_general_undefined() {
@@ -71,6 +71,6 @@ function loop_tests() {
     while (true) {
       bar = [];
     }
-    (bar: Array<boolean>); // error
+    bar as Array<boolean>; // error
   }
 }

@@ -5,21 +5,21 @@ type O = {foo: number, bar?: string};
   type Preserve = {[key in keyof O]: O[key]};
 
   declare const preserve: Preserve;
-  (preserve: {foo: number, bar?: string}); // OK
-  (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
+  preserve as {foo: number, bar?: string}; // OK
+  preserve as {foo: string, bar?: number}; // Error string ~> number, number ~> string
 
   declare const lit: {foo: number, bar?: string};
-  (lit: Preserve); // OK
-  ({foo: 'str', bar: 3}: Preserve); // ERROR
+  lit as Preserve; // OK
+  ({foo: 'str', bar: 3} as Preserve); // ERROR
 }
 // +? adds optionality to all properties
 {
   type Add = {[key in keyof O]+?: O[key]};
   declare const add: Add;
-  (add: {foo?: number, bar?: string}); // OK
+  add as {foo?: number, bar?: string}; // OK
 
   declare const lit: {foo?: number, bar?: string};
-  (lit: Add); // OK
+  lit as Add; // OK
 }
 
 

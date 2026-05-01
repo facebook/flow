@@ -2,13 +2,13 @@ type T = void extends void ? any : empty;
 declare var t: T;
 
 // Annot_SpecializeT
-export class x1 extends ((0: any): T) {}
+export class x1 extends (0 as any as T) {}
 
 // Annot_GetPropT
 export const x2 = t.f;
 
 // Annot_GetElemT
-export const x3 = t[('': string)];
+export const x3 = t['' as string];
 
 // Annot_ObjKitT Spread
 export const x4 = { ...t };
@@ -22,7 +22,7 @@ declare var y6: Class<T>;
 export const x6 = y6.f;
 
 // Annot_LookupT
-export class c7 extends ((0: any): Class<T>) {}
+export class c7 extends (0 as any as Class<T>) {}
 declare var y7: c7;
 export const x7 = y7.f;
 

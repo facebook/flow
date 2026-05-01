@@ -13,14 +13,14 @@ function test1() {
   type FilterEntry = $ElementOfSet<SetOfEntries>;
 
   declare var x: MySet<FilterEntry>;
-  (x: SetOfEntries); // no error
+  x as SetOfEntries; // no error
 }
 
 function test2() {
   type FilterEntry = $ElementOfSet<SetOfEntries>;
 
   declare var y: SetOfEntries;
-  (y: MySet<FilterEntry>); // no error
+  y as MySet<FilterEntry>; // no error
 }
 
 /**
@@ -51,5 +51,5 @@ function test3() {
     (p) => {},
   );
 
-  (Spreaded: Opaque<{}>); // error: {} ~> Foo
+  Spreaded as Opaque<{}>; // error: {} ~> Foo
 }

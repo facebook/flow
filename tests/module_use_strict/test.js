@@ -1,1 +1,1 @@
-(01: number);
+01 as number;

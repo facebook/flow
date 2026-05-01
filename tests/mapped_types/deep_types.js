@@ -8,14 +8,14 @@ type DeepPartialState<T> =
 
 {
   declare const a: DeepPartialState<number>;
-  (a: number); // ok
-  (a: empty); // error: number ~> empty
+  a as number; // ok
+  a as empty; // error: number ~> empty
 
   declare const b: DeepPartialState<{foo: {bar: {baz: string}}}>;
-  (b: {+foo?: {+bar?: {+baz?: string}}});
-  (b: {+foo: {+bar?: {+baz?: string}}}); // error: foo not optional
-  (b: {+foo?: {+bar: {+baz?: string}}}); // error: bar not optional
-  (b: {+foo?: {+bar?: {+baz: string}}}); // error: baz not optional
+  b as {+foo?: {+bar?: {+baz?: string}}};
+  b as {+foo: {+bar?: {+baz?: string}}}; // error: foo not optional
+  b as {+foo?: {+bar: {+baz?: string}}}; // error: bar not optional
+  b as {+foo?: {+bar?: {+baz: string}}}; // error: baz not optional
 }
 
 type DeepReadOnly<T> =
@@ -41,7 +41,7 @@ type DeepReadOnly<T> =
     },
     value: 'top value',
   };
-  (obj: empty); // error
+  obj as empty; // error
 
   obj.arr.push({value: 'updated value'}); // error: Cannot mutate arrays.
   obj.arr[0].value = 'updated value'; // error: Cannot mutate objects in arrays.

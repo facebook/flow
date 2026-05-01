@@ -9,5 +9,5 @@
   type FooBarObj = {foo: number, bar: number};
   type MappedFooBarObj = {[key in keyof FooBarObj]: TakesFoo<key>}; // ERROR
 
-  ({foo: 'foo', bar: 'bar'}: MappedFooBarObj);
+  ({foo: 'foo', bar: 'bar'} as MappedFooBarObj);
 }

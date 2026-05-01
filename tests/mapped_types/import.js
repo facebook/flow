@@ -11,25 +11,25 @@ import type {
 
 // No modifiers concrete
 {
-  ({foo: 3, bar: 'str', baz: true}: MappedO); // OK
+  ({foo: 3, bar: 'str', baz: true} as MappedO); // OK
 
   declare const mapped: MappedO;
-  (mapped: {foo: number, bar?: string, +baz: boolean}); // OK
-  (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+  mapped as {foo: number, bar?: string, +baz: boolean}; // OK
+  mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
   mapped.baz = true; // ERROR
 }
 
 // Add optional concrete
 {
-  ({foo: undefined, bar: undefined, baz: undefined}: AddOptional); // OK
+  ({foo: undefined, bar: undefined, baz: undefined} as AddOptional); // OK
   declare const addOptional: AddOptional;
-  (addOptional: {foo?: number, bar?: string, +baz?: boolean}); // OK
+  addOptional as {foo?: number, bar?: string, +baz?: boolean}; // OK
   addOptional.baz = true; // ERROR
 }
 
 // Add readonly concrete
 {
-  ({foo: 3, bar: undefined, baz: true}: AllReadonly);
+  ({foo: 3, bar: undefined, baz: true} as AllReadonly);
   declare const readonly: AllReadonly;
   readonly.foo = 4; // ERROR;
   readonly.bar = 'str'; // ERROR;
@@ -40,25 +40,25 @@ import type {
 type O = {foo: number, bar?: string, +baz: boolean};
 // No modifiers parameterized
 {
-  ({foo: 3, bar: 'str', baz: true}: ParameterizedId<O>); // OK
+  ({foo: 3, bar: 'str', baz: true} as ParameterizedId<O>); // OK
 
   declare const mapped: ParameterizedId<O>;
-  (mapped: {foo: number, bar?: string, +baz: boolean}); // OK
-  (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+  mapped as {foo: number, bar?: string, +baz: boolean}; // OK
+  mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
   mapped.baz = true; // ERROR
 }
 
 // Add optional parameterized
 {
-  ({foo: undefined, bar: undefined, baz: undefined}: ParameterizedPartial<O>); // OK
+  ({foo: undefined, bar: undefined, baz: undefined} as ParameterizedPartial<O>); // OK
   declare const addOptional: ParameterizedPartial<O>;
-  (addOptional: {foo?: number, bar?: string, +baz?: boolean}); // OK
+  addOptional as {foo?: number, bar?: string, +baz?: boolean}; // OK
   addOptional.baz = true; // ERROR
 }
 
 // Add readonly parameterized
 {
-  ({foo: 3, bar: undefined, baz: true}: ParameterizedReadonly<O>);
+  ({foo: 3, bar: undefined, baz: true} as ParameterizedReadonly<O>);
   declare const readonly: ParameterizedReadonly<O>;
   readonly.foo = 4; // ERROR;
   readonly.bar = 'str'; // ERROR;
@@ -67,24 +67,24 @@ type O = {foo: number, bar?: string, +baz: boolean};
 
 // Non-homomorphic mapped types
 {
-  ({foo: 3, bar: 3}: MappedNonHomomorphic); // OK!
-  ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
+  ({foo: 3, bar: 3} as MappedNonHomomorphic); // OK!
+  ({foo: null, bar: null} as MappedNonHomomorphic); // ERROR!
 }
 
 // Semi-homomorphic mapped types
 {
   declare const semi: SemiHomomorphic<{+foo: number, bar: string}, 'foo'>;
-  (semi: {+foo: number}); // OK
-  (semi: {foo: number}); // ERROR
+  semi as {+foo: number}; // OK
+  semi as {foo: number}; // ERROR
 }
 
 // Both homomorphic and semi-homomorphic mapped types are distributive
 {
   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
-  (semi: {+foo: number} | {+foo: string}); // OK!
-  (semi: {foo: number} | {foo: string}); // ERROR 2x
+  semi as {+foo: number} | {+foo: string}; // OK!
+  semi as {foo: number} | {foo: string}; // ERROR 2x
 
   declare const homomorphic: ParameterizedReadonly<{foo: number} | {bar:number} >;
-  (homomorphic: {+foo: number} | {+bar: number}); // OK!
-  (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
+  homomorphic as {+foo: number} | {+bar: number}; // OK!
+  homomorphic as {foo: number} | {bar: number}; // ERROR 2x
 }

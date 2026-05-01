@@ -5,7 +5,7 @@ declare var t: T;
 export const x2 = t.f;
 
 // Annot_GetElemT
-export const x3 = t[('': string)]; // error: unsafe string key access
+export const x3 = t['' as string]; // error: unsafe string key access
 
 // Annot_ObjKitT Spread
 export const x4 = { ...t };

@@ -262,21 +262,21 @@ platforms: `android`, `ios`. Support for the `ios` platform is missing. [missing
              ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------- test_interface_import.js:8:2
+Error ------------------------------------------------------------------------------------- test_interface_import.js:8:1
 
 Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   test_interface_import.js:8:2
-   8| (o1: empty); // error
-       ^^
+   test_interface_import.js:8:1
+   8| o1 as empty; // error
+      ^^
 
 References:
    test_interface_import.js:6:17
    6| declare var o1: MyType;
                       ^^^^^^ [1]
-   test_interface_import.js:8:6
-   8| (o1: empty); // error
-           ^^^^^ [2]
+   test_interface_import.js:8:7
+   8| o1 as empty; // error
+            ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ test_interface_import.js:10:8

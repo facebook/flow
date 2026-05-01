@@ -12,7 +12,7 @@ type Semi<O: {...}, Keys: keyof O> = {
 
   type MappedBad = Semi<O, 'bar'>; // ERROR HERE
   declare const b: MappedBad;
-  (b: {bar: empty}); // NO ERROR
+  b as {bar: empty}; // NO ERROR
 }
 
 {
@@ -22,26 +22,26 @@ type Semi<O: {...}, Keys: keyof O> = {
   type MappedWithIndexer = Semi<P, 'foo' | string>;
 
   declare const withIndexer: MappedWithIndexer;
-  (withIndexer: {foo: number, [string]: boolean}); // OK
-  (withIndexer: {foo: number}); // ERROR, missing indexer
+  withIndexer as {foo: number, [string]: boolean}; // OK
+  withIndexer as {foo: number}; // ERROR, missing indexer
 
   type MappedWithoutIndexer = Semi<P, 'foo' | 'bar'>;
 
   declare const withoutIndexer: MappedWithoutIndexer;
-  (withoutIndexer: {foo: number, bar: string}); // OK
-  (withoutIndexer: P); // Arguably should error, but pre-existing unsoundness
+  withoutIndexer as {foo: number, bar: string}; // OK
+  withoutIndexer as P; // Arguably should error, but pre-existing unsoundness
   declare const p: P;
-  (p: MappedWithoutIndexer); // ERROR
+  p as MappedWithoutIndexer; // ERROR
 
   // Incompatible indexers cause an error at the instantiation site
   // but persist the indexer type.
   type IndexedBad = Semi<P, number>; // ERROR
   declare const bad: IndexedBad;
-  (bad: {[number]: boolean}); // NO ERROR
+  bad as {[number]: boolean}; // NO ERROR
 
   // Indexers when the original type has none cause an error at the instantiation
   // site and an any-typed indexer
   type NoIndexerBad = Semi<{}, number>; // ERROR
   declare const noIndexerBad: NoIndexerBad;
-  (noIndexerBad: {[number]: empty}); // NO ERROR
+  noIndexerBad as {[number]: empty}; // NO ERROR
 }

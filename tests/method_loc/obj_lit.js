@@ -1,3 +1,3 @@
 const o = { m() {} };
-(o.m: empty); // err
+o.m as empty; // err
 module.exports = o;

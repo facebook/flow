@@ -7,46 +7,46 @@ declare var foo: Foo;
 ({
   a: 42, // OK
   b: 42, // OK
-}: Foo);
+} as Foo);
 
 ({
   a: 'asd', // Error: string ~> number
   b: 'asd', // Error: string ~> number
-}: Foo);
+} as Foo);
 
-((any: {
+((any as {
   a: string, // Error: string ~> number
   b: string, // Error: string ~> number
-}): Foo);
+}) as Foo);
 
-(({}: {}): Foo); // Error: `a` and `b` are not defined.
+({} as {} as Foo); // Error: `a` and `b` are not defined.
 
-((any: {}): Foo); // Error: `a` and `b` are not defined.
+any as {} as Foo; // Error: `a` and `b` are not defined.
 
-(foo: {
+(foo as {
   a: number, // OK
   b: number, // OK
 });
 
-(foo: {
+(foo as {
   a: string, // Error: number ~> string
   b: string, // Error: number ~> string
 });
 
-(foo.a: empty); // Error: number ~> empty
+foo.a as empty; // Error: number ~> empty
 
 ({
   foo: 'asd', // OK
-}: IdentityMap<{ foo: number | string }>);
+} as IdentityMap<{ foo: number | string }>);
 
 ({
   foo: 'asd', // OK
-}: IdentityMap<{ foo: number } | { foo: string }>);
+} as IdentityMap<{ foo: number } | { foo: string }>);
 
 ({
   foo: true, // Error: boolean ~> number | string
-}: IdentityMap<{ foo: number | string }>);
+} as IdentityMap<{ foo: number | string }>);
 
 ({
   foo: true, // Error: boolean ~> number | string
-}: IdentityMap<{ foo: number } | { foo: string }>);
+} as IdentityMap<{ foo: number } | { foo: string }>);

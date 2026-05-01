@@ -16,22 +16,22 @@ declare var instance: C;
 
 declare var iface: interface {[string]: number};
 
-(Object.entries(dict): Array<[string, number]>); // OK
-(Object.entries(iface): Array<[string, mixed]>); // OK
-(Object.entries(dictWithProps): Array<[string, mixed]>); // OK
-(Object.entries(dictUnion): Array<[string, number | boolean]>); // OK
-(Object.entries(writeOnlyDict): Array<[string, mixed]>); // OK
-(Object.entries(obj): Array<['a' | 'b', mixed]>); // OK
-(Object.entries(instance): Array<['a' | 'b', mixed]>); // OK
+Object.entries(dict) as Array<[string, number]>; // OK
+Object.entries(iface) as Array<[string, mixed]>; // OK
+Object.entries(dictWithProps) as Array<[string, mixed]>; // OK
+Object.entries(dictUnion) as Array<[string, number | boolean]>; // OK
+Object.entries(writeOnlyDict) as Array<[string, mixed]>; // OK
+Object.entries(obj) as Array<['a' | 'b', mixed]>; // OK
+Object.entries(instance) as Array<['a' | 'b', mixed]>; // OK
 
-(Object.entries(dict): Array<[string, empty]>); // ERROR
-(Object.entries(iface): Array<[string, empty]>); // ERROR
-(Object.entries(dictWithProps): Array<[string, empty]>); // ERROR
-(Object.entries(dictUnion): Array<[string, empty]>); // ERROR
-(Object.entries(writeOnlyDict): Array<[string, empty]>); // ERROR
-(Object.entries(obj): Array<['a' | 'b', empty]>); // ERROR
-(Object.entries(instance): Array<['a' | 'b', empty]>); // ERROR
-(Object.entries(dict): Array<empty>); // ERROR
+Object.entries(dict) as Array<[string, empty]>; // ERROR
+Object.entries(iface) as Array<[string, empty]>; // ERROR
+Object.entries(dictWithProps) as Array<[string, empty]>; // ERROR
+Object.entries(dictUnion) as Array<[string, empty]>; // ERROR
+Object.entries(writeOnlyDict) as Array<[string, empty]>; // ERROR
+Object.entries(obj) as Array<['a' | 'b', empty]>; // ERROR
+Object.entries(instance) as Array<['a' | 'b', empty]>; // ERROR
+Object.entries(dict) as Array<empty>; // ERROR
 
 // Invalid inputs
 Object.entries(undefined); // ERROR

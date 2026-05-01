@@ -1,6 +1,6 @@
 import typeof T from './nested_frozen_object';
 declare var o: T;
 
-(o.a: number);
+o.a as number;
 
 module.exports = o;

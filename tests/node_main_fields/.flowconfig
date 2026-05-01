@@ -1,4 +1,5 @@
 [options]
+casting_syntax=as
 module.system.node.main_field=foo
 module.system.node.main_field=bar
 all=true

@@ -111,13 +111,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `123` to nullable string because number [1] is incompatible with string [2]. [incompatible-type]
 
    maybe.js:3:11
-   3| ((123: ?(?number)): ?string); // error (only num ~> string)
+   3| 123 as ?(?number) as ?string; // error (only num ~> string)
                 ^^^^^^ [1]
 
 References:
-   maybe.js:3:22
-   3| ((123: ?(?number)): ?string); // error (only num ~> string)
-                           ^^^^^^ [2]
+   maybe.js:3:23
+   3| 123 as ?(?number) as ?string; // error (only num ~> string)
+                            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:1:32

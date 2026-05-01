@@ -10,4 +10,4 @@ function methodCaller(x: ObjectType) {
 
 module.exports = (id(
   methodCaller
-): ObjectType => void);
+) as ObjectType => void);

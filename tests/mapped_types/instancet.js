@@ -5,9 +5,9 @@ interface I {
 type MappedInterface = {+[key in keyof I]: I[key]};
 {
   declare const i: MappedInterface;
-  (i: interface {+foo: number}); // OK
-  (i: interface {foo: number}); // ERROR
-  (i: {+foo: number, ...}); // ERROR (class object subtyping)
+  i as interface {+foo: number}; // OK
+  i as interface {foo: number}; // ERROR
+  i as {+foo: number, ...}; // ERROR (class object subtyping)
 }
 
 interface WithIndexer {
@@ -17,8 +17,8 @@ interface WithIndexer {
 type MappedInterfaceWithIndexer = {+[key in keyof WithIndexer]: WithIndexer[key]};
 {
   declare const i: MappedInterfaceWithIndexer;
-  (i: interface {+foo: number, +[string]: boolean}); // OK
-  (i: interface {+foo: number, [string]: boolean}); // ERROR
+  i as interface {+foo: number, +[string]: boolean}; // OK
+  i as interface {+foo: number, [string]: boolean}; // ERROR
 }
 
 class A {
@@ -29,14 +29,14 @@ class A {
 type MappedInstance = {+[key in keyof A]: A[key]};
 {
   declare const inst: MappedInstance;
-  (inst: interface {+foo: number}); // OK
-  (inst: interface {foo: number}); // ERROR
+  inst as interface {+foo: number}; // OK
+  inst as interface {foo: number}; // ERROR
   (inst['bar']); // ERROR
 }
 
 type MappedClass = {+[key in keyof Class<A>]: Class<A>[key]};
 {
   declare const c: MappedClass;
-  (c: interface {+bar: number}); // OK
-  (c: interface {bar: number}); // ERROR
+  c as interface {+bar: number}; // OK
+  c as interface {bar: number}; // ERROR
 }

@@ -5,7 +5,7 @@ This condition is likely falsy.
 out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
 (`T` -> `?T`). [constant-condition]
 
-   2|   (undefined ?? "hello" : string);
+   2|   (undefined ?? "hello") as string;
          ^^^^^^^^^
 
 
@@ -14,16 +14,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `a ?? "hello"` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    nullish_coalescing.js:4:4
-   4|   (a ?? "hello" : empty); // Error
+   4|   (a ?? "hello") as empty; // Error
          ^
 
 References:
    nullish_coalescing.js:1:18
    1| function foo(a: ?string, b: ?number, c : boolean) {
                        ^^^^^^ [1]
-   nullish_coalescing.js:4:19
-   4|   (a ?? "hello" : empty); // Error
-                        ^^^^^ [2]
+   nullish_coalescing.js:4:21
+   4|   (a ?? "hello") as empty; // Error
+                          ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:4:9
@@ -31,13 +31,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `a ?? "hello"` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    nullish_coalescing.js:4:9
-   4|   (a ?? "hello" : empty); // Error
+   4|   (a ?? "hello") as empty; // Error
               ^^^^^^^ [1]
 
 References:
-   nullish_coalescing.js:4:19
-   4|   (a ?? "hello" : empty); // Error
-                        ^^^^^ [2]
+   nullish_coalescing.js:4:21
+   4|   (a ?? "hello") as empty; // Error
+                          ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:6:4
@@ -45,16 +45,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `a ?? 42` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    nullish_coalescing.js:6:4
-   6|   (a ?? 42 : empty); // Error
+   6|   (a ?? 42) as empty; // Error
          ^
 
 References:
    nullish_coalescing.js:1:18
    1| function foo(a: ?string, b: ?number, c : boolean) {
                        ^^^^^^ [1]
-   nullish_coalescing.js:6:14
-   6|   (a ?? 42 : empty); // Error
-                   ^^^^^ [2]
+   nullish_coalescing.js:6:16
+   6|   (a ?? 42) as empty; // Error
+                     ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:6:9
@@ -62,13 +62,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `a ?? 42` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    nullish_coalescing.js:6:9
-   6|   (a ?? 42 : empty); // Error
+   6|   (a ?? 42) as empty; // Error
               ^^ [1]
 
 References:
-   nullish_coalescing.js:6:14
-   6|   (a ?? 42 : empty); // Error
-                   ^^^^^ [2]
+   nullish_coalescing.js:6:16
+   6|   (a ?? 42) as empty; // Error
+                     ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:8:4
@@ -79,7 +79,7 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
 [constant-condition]
 
    nullish_coalescing.js:8:4
-   8|   (d ?? "true" : string); // constant-condition error
+   8|   (d ?? "true") as string; // constant-condition error
          ^
 
 References:
@@ -96,7 +96,7 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
 [constant-condition]
 
    nullish_coalescing.js:9:4
-   9|   (d ?? a ?? b : ?(string | number)); // constant-condition error
+   9|   (d ?? a ?? b) as ?(string | number); // constant-condition error
          ^
 
 References:
@@ -110,16 +110,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `d ?? "hello"` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    nullish_coalescing.js:16:4
-   16|   (d ?? "hello" : empty); // Error
+   16|   (d ?? "hello") as empty; // Error
           ^
 
 References:
    nullish_coalescing.js:1:18
     1| function foo(a: ?string, b: ?number, c : boolean) {
                         ^^^^^^ [1]
-   nullish_coalescing.js:16:19
-   16|   (d ?? "hello" : empty); // Error
-                         ^^^^^ [2]
+   nullish_coalescing.js:16:21
+   16|   (d ?? "hello") as empty; // Error
+                           ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- nullish_coalescing.js:16:4
@@ -127,16 +127,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `d ?? "hello"` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    nullish_coalescing.js:16:4
-   16|   (d ?? "hello" : empty); // Error
+   16|   (d ?? "hello") as empty; // Error
           ^
 
 References:
    nullish_coalescing.js:1:30
     1| function foo(a: ?string, b: ?number, c : boolean) {
                                     ^^^^^^ [1]
-   nullish_coalescing.js:16:19
-   16|   (d ?? "hello" : empty); // Error
-                         ^^^^^ [2]
+   nullish_coalescing.js:16:21
+   16|   (d ?? "hello") as empty; // Error
+                           ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- nullish_coalescing.js:16:9
@@ -144,13 +144,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `d ?? "hello"` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    nullish_coalescing.js:16:9
-   16|   (d ?? "hello" : empty); // Error
+   16|   (d ?? "hello") as empty; // Error
                ^^^^^^^ [1]
 
 References:
-   nullish_coalescing.js:16:19
-   16|   (d ?? "hello" : empty); // Error
-                         ^^^^^ [2]
+   nullish_coalescing.js:16:21
+   16|   (d ?? "hello") as empty; // Error
+                           ^^^^^ [2]
 
 
 

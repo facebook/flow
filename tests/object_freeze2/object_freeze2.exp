@@ -1,10 +1,10 @@
-Error ------------------------------------------------------------------------------------------------ downstream.js:4:2
+Error ------------------------------------------------------------------------------------------------ downstream.js:4:1
 
 Cannot cast `o.a` to number because frozen object literal [1] is incompatible with number [2]. [incompatible-type]
 
-   downstream.js:4:2
-   4| (o.a: number);
-       ^^^
+   downstream.js:4:1
+   4| o.a as number;
+      ^^^
 
 References:
    nested_frozen_object.js:2:20
@@ -13,9 +13,9 @@ References:
    3|     b: 'c',
    4|   }),
         ^ [1]
-   downstream.js:4:7
-   4| (o.a: number);
-            ^^^^^^ [2]
+   downstream.js:4:8
+   4| o.a as number;
+             ^^^^^^ [2]
 
 
 

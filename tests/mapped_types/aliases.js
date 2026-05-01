@@ -7,10 +7,10 @@ type O1 = {foo: number};
 type O2 = {foo: string | number};
 
 declare const x: ReadOnly<O1>;
-(x: ReadOnly<O2>); // OK
+x as ReadOnly<O2>; // OK
 
 declare const y: ReadOnlyDeeper<O1>;
-(y: ReadOnlyDeeper<O2>); // OK
+y as ReadOnlyDeeper<O2>; // OK
 
 declare const z: ReadOnlyDeepest<O1>;
-(z: ReadOnlyDeepest<O2>); // OK
+z as ReadOnlyDeepest<O2>; // OK

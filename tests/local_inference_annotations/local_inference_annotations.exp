@@ -969,7 +969,7 @@ Error --------------------------------------------------------------------------
 
 Missing an annotation on `z`. [missing-local-annot]
 
-   7| let b = ((x => y => (z => 3)(3)): number => number => number); // annot missing on z
+   7| let b = ((x => y => (z => 3)(3)) as number => number => number); // annot missing on z
                            ^
 
 
@@ -977,7 +977,7 @@ Error --------------------------------------------------------------------------
 
 Missing an annotation on `z`. [missing-local-annot]
 
-   11| let d = ((x => { return y => { return (z => 3)(3) }}): number => number => number); // annot missing on z
+   11| let d = ((x => { return y => { return (z => 3)(3) }}) as number => number => number); // annot missing on z
                                               ^
 
 

@@ -4,8 +4,8 @@ Cannot use class extends on conditional type [1] in an export position. Please p
 class extends [2]. [invalid-exported-annotation]
 
    ops_on_eval_conditional.js:5:25
-   5| export class x1 extends ((0: any): T) {}
-                              ^^^^^^^^^^^^^ [2]
+   5| export class x1 extends (0 as any as T) {}
+                              ^^^^^^^^^^^^^^^ [2]
 
 References:
    ops_on_eval_conditional.js:1:10
@@ -34,7 +34,7 @@ Cannot use computed property on conditional type [1] in an export position. Plea
 for computed property [2]. [invalid-exported-annotation]
 
    ops_on_eval_conditional.js:11:19
-   11| export const x3 = t[('': string)];
+   11| export const x3 = t['' as string];
                          ^^^^^^^^^^^^^^^ [2]
 
 References:
@@ -214,7 +214,7 @@ Cannot use computed property on object type [1] in an export position. Please pr
 computed property [2]. [invalid-exported-annotation]
 
    ops_on_eval_mapped_type.js:8:19
-   8| export const x3 = t[('': string)]; // error: unsafe string key access
+   8| export const x3 = t['' as string]; // error: unsafe string key access
                         ^^^^^^^^^^^^^^^ [2]
 
 References:
@@ -223,13 +223,13 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:8:26
+Error ---------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:8:27
 
 Cannot access mapped type [1] with computed property using string [2]. [invalid-computed-prop]
 
-   ops_on_eval_mapped_type.js:8:26
-   8| export const x3 = t[('': string)]; // error: unsafe string key access
-                               ^^^^^^ [2]
+   ops_on_eval_mapped_type.js:8:27
+   8| export const x3 = t['' as string]; // error: unsafe string key access
+                                ^^^^^^ [2]
 
 References:
    ops_on_eval_mapped_type.js:2:16
@@ -348,8 +348,8 @@ Cannot use class extends on intersection type [1] in an export position. Please 
 class extends [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:11:25
-   11| export class x1 extends ((0: any): T) {}
-                               ^^^^^^^^^^^^^ [2]
+   11| export class x1 extends (0 as any as T) {}
+                               ^^^^^^^^^^^^^^^ [2]
 
 References:
    ops_on_intersection.js:4:10
@@ -379,16 +379,16 @@ Cannot get `t['']` because: [incompatible-use]
  - Or cannot access statics of `D` [3] with computed property using string [2].
 
    ops_on_intersection.js:17:19
-   17| export const x3 = t[('': string)];
+   17| export const x3 = t['' as string];
                          ^^^^^^^^^^^^^^^
 
 References:
    ops_on_intersection.js:4:10
     4| type T = typeof C & typeof D;
                 ^^^^^^^^ [1]
-   ops_on_intersection.js:17:26
-   17| export const x3 = t[('': string)];
-                                ^^^^^^ [2]
+   ops_on_intersection.js:17:27
+   17| export const x3 = t['' as string];
+                                 ^^^^^^ [2]
    ops_on_intersection.js:4:21
     4| type T = typeof C & typeof D;
                            ^^^^^^^^ [3]
@@ -400,7 +400,7 @@ Cannot use computed property on intersection type [1] in an export position. Ple
 for computed property [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:17:19
-   17| export const x3 = t[('': string)];
+   17| export const x3 = t['' as string];
                          ^^^^^^^^^^^^^^^ [2]
 
 References:
@@ -430,8 +430,8 @@ Cannot use class extends on intersection type [1] in an export position. Please 
 class extends [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:27:25
-   27| export class c7 extends ((0: any): T) {}
-                               ^^^^^^^^^^^^^ [2]
+   27| export class c7 extends (0 as any as T) {}
+                               ^^^^^^^^^^^^^^^ [2]
 
 References:
    ops_on_intersection.js:4:10
@@ -535,8 +535,8 @@ Cannot use class extends on conditional type [1] in an export position. Please p
 class extends [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:10:25
-   10| export class x1 extends ((0: any): T) {}
-                               ^^^^^^^^^^^^^ [2]
+   10| export class x1 extends (0 as any as T) {}
+                               ^^^^^^^^^^^^^^^ [2]
 
 References:
    ops_on_react_config.js:6:10
@@ -544,17 +544,17 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:36
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:38
 
 Cannot extend `x1` [1] with `T` because object type [2] is not inheritable. [incompatible-use]
 
-   ops_on_react_config.js:10:36
-   10| export class x1 extends ((0: any): T) {}
-                                          ^ [2]
+   ops_on_react_config.js:10:38
+   10| export class x1 extends (0 as any as T) {}
+                                            ^ [2]
 
 References:
    ops_on_react_config.js:10:14
-   10| export class x1 extends ((0: any): T) {}
+   10| export class x1 extends (0 as any as T) {}
                     ^^ [1]
 
 
@@ -579,7 +579,7 @@ Cannot use computed property on conditional type [1] in an export position. Plea
 for computed property [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:16:19
-   16| export const x3 = t[('': string)];
+   16| export const x3 = t['' as string];
                          ^^^^^^^^^^^^^^^ [2]
 
 References:
@@ -588,13 +588,13 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:26
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:27
 
 Cannot access object type [1] with computed property using string [2]. [invalid-computed-prop]
 
-   ops_on_react_config.js:16:26
-   16| export const x3 = t[('': string)];
-                                ^^^^^^ [2]
+   ops_on_react_config.js:16:27
+   16| export const x3 = t['' as string];
+                                 ^^^^^^ [2]
 
 References:
    ops_on_react_config.js:7:16
@@ -666,13 +666,13 @@ Error --------------------------------------------------------------------------
 Cannot extend statics of `T` [1] with `c7` because object type [1] is not inheritable. [incompatible-use]
 
    ops_on_react_config.js:30:14
-   30| export class c7 extends ((0: any): Class<T>) {}
+   30| export class c7 extends (0 as any as Class<T>) {}
                     ^^
 
 References:
    ops_on_react_config.js:30:25
-   30| export class c7 extends ((0: any): Class<T>) {}
-                               ^^^^^^^^^^^^^^^^^^^^ [1]
+   30| export class c7 extends (0 as any as Class<T>) {}
+                               ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:32:19

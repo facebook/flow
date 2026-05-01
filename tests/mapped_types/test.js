@@ -17,7 +17,7 @@ type Mapped<O: {...} | ReadonlyArray<mixed>> = {
 // MappedType ~> ObjT
 {
   declare const o: Mapped<O>;
-  (o: {foo: {contents: number}}); // OK
+  o as {foo: {contents: number}}; // OK
 }
 
 // MappedType ~> array & tuple
@@ -25,24 +25,24 @@ type Mapped<O: {...} | ReadonlyArray<mixed>> = {
   declare const a: Mapped<Arr>;
   declare const b: Mapped<ROArr>;
   declare const c: Mapped<Tuple>;
-  (a: Array<{contents: number}>); // OK
-  (b: ReadonlyArray<{contents: number}>); // OK
-  (c: [a: {contents: number}, +b?: {contents: string | void}]); // OK
-  (a: empty); // ERROR
-  (b: empty); // ERROR
-  (c: empty); // ERROR
+  a as Array<{contents: number}>; // OK
+  b as ReadonlyArray<{contents: number}>; // OK
+  c as [a: {contents: number}, +b?: {contents: string | void}]; // OK
+  a as empty; // ERROR
+  b as empty; // ERROR
+  c as empty; // ERROR
 }
 
 // ObjT ~> MappedType
 {
   declare const o: {foo: {contents: number}};
-  (o: Mapped<O>); // OK
+  o as Mapped<O>; // OK
 
   declare const badKey: {bar: {contents: number}};
-  (badKey: Mapped<O>); // ERROR
+  badKey as Mapped<O>; // ERROR
 
   declare const badVal: {foo: {contents: string}};
-  (badVal: Mapped<O>); // ERROR
+  badVal as Mapped<O>; // ERROR
 }
 
 // array & tuple ~> MappedType
@@ -53,12 +53,12 @@ type Mapped<O: {...} | ReadonlyArray<mixed>> = {
   declare const badA: Array<{contents: string}>;
   declare const badB: ReadonlyArray<{contents: string}>;
   declare const badC: [a: {contents: number}, +b: {contents: string}];
-  (a: Mapped<Arr>); // OK
-  (b: Mapped<ROArr>); // OK
-  (c: Mapped<Tuple>); // OK
-  (badA: Mapped<Arr>); // ERROR
-  (badB: Mapped<ROArr>); // ERROR
-  (badC: Mapped<Tuple>); // ERROR
+  a as Mapped<Arr>; // OK
+  b as Mapped<ROArr>; // OK
+  c as Mapped<Tuple>; // OK
+  badA as Mapped<Arr>; // ERROR
+  badB as Mapped<ROArr>; // ERROR
+  badC as Mapped<Tuple>; // ERROR
 }
 
 // No mapped types in declared classes or interfaces
@@ -76,29 +76,29 @@ type Mapped<O: {...} | ReadonlyArray<mixed>> = {
   type MappedIndexer = Mapped<WithIndexer>;
   declare var mappedIndexer: MappedIndexer;
 
-  (mappedIndexer.foo: number); // ERROR
-  (mappedIndexer.bar: string); // ERROR
-  (mappedIndexer: {foo: Box<number>, [string]: Box<string>}); // OK
+  mappedIndexer.foo as number; // ERROR
+  mappedIndexer.bar as string; // ERROR
+  mappedIndexer as {foo: Box<number>, [string]: Box<string>}; // OK
 
   declare var indexer: {foo: Box<number>, [string]: Box<string>};
-  (indexer: MappedIndexer); // OK
+  indexer as MappedIndexer; // OK
 }
 
 // Variance
 {
   type ReadOnly<T: {...}> = {+[key in keyof T]: T[key]};
   declare const readonly: ReadOnly<O>;
-  (readonly.foo: number); // OK
+  readonly.foo as number; // OK
   readonly.foo = 3; // ERROR
 
   type WriteOnly<T: {...}> = {-[key in keyof T]: T[key]};
   declare const writeonly: WriteOnly<O>;
-  (writeonly.foo: number); // ERROR
+  writeonly.foo as number; // ERROR
   writeonly.foo = 3; // OK
 
   type ReadOnlyIndexer = ReadOnly<WithIndexer>;
   declare const readonlyIndexer: ReadOnlyIndexer;
-  (readonlyIndexer.qux: string); // OK
+  readonlyIndexer.qux as string; // OK
   readonlyIndexer.qux = 'str'; // ERROR
 
   type _Unsupported = {+[key in keyof Arr]: Arr[key]}; // error: unsupported variance
@@ -108,17 +108,17 @@ type Mapped<O: {...} | ReadonlyArray<mixed>> = {
 {
   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
   declare const partial: Partial<O>;
-  (partial.foo: number); // ERROR
-  (partial.foo: number | void); // OK
+  partial.foo as number; // ERROR
+  partial.foo as number | void; // OK
 
   declare const partialIndexer: Partial<WithIndexer>;
-  (partialIndexer.qux: string); // ERROR
-  (partialIndexer.qux: string | void); // OK
+  partialIndexer.qux as string; // ERROR
+  partialIndexer.qux as string | void; // OK
 
   declare const partialArr: Partial<Arr>;
-  (partialArr[0]: number); // ERROR;
+  partialArr[0] as number; // ERROR;
   declare const partialTuple: Partial<Tuple>;
-  (partialTuple[0]: number); // ERROR;
+  partialTuple[0] as number; // ERROR;
 }
 
 // Error positioning
@@ -129,7 +129,7 @@ type Mapped<O: {...} | ReadonlyArray<mixed>> = {
   };
 
   declare var constrained: MappedConstrained<O>; // ERROR HERE, NOT IN DEFINITION OF MAPPEDCONSTRAINED
-  (constrained: {foo: {contents: number}}); // OK
+  constrained as {foo: {contents: number}}; // OK
 }
 
 // Error positioning
@@ -137,5 +137,5 @@ type Mapped<O: {...} | ReadonlyArray<mixed>> = {
   type UnconstrainedKey<T> = {[key in T]: number};
   type BadKeys = UnconstrainedKey<boolean>; // ERROR HERE, NOT LINE ABOVE
   declare const badKeys: BadKeys;
-  (badKeys: empty); // ERROR
+  badKeys as empty; // ERROR
 }

@@ -7,8 +7,8 @@ function switch_scope(x: mixed) {
       a = 0; // doesn't add lower bound to outer a
       b = 0;
   }
-  (a : string); // OK
-  (b : string); // error: number ~> string
+  a as string; // OK
+  b as string; // error: number ~> string
 }
 
 function try_scope_finally() {
@@ -22,8 +22,8 @@ function try_scope_finally() {
     a = 0; // doesn't add lower bound to outer a
     b = 0;
   }
-  (a : string); // ok
-  (b : string); // error: number ~> string
+  a as string; // ok
+  b as string; // error: number ~> string
 }
 
 function for_scope() {
@@ -33,8 +33,8 @@ function for_scope() {
     a = 0; // doesn't add lower bound to outer a
     b = 0;
   }
-  (a : string);
-  (b : string); // error: number ~> string
+  a as string;
+  b as string; // error: number ~> string
 }
 
 function for_in_scope(o: Object) {
@@ -44,8 +44,8 @@ function for_in_scope(o: Object) {
     a = ""; // doesn't add lower bound to outer a
     b = "";
   }
-  (a : number);
-  (b : number); // error: string ~> number
+  a as number;
+  b as number; // error: string ~> number
 }
 
 function for_of_scope(xs: number[]) {
@@ -55,6 +55,6 @@ function for_of_scope(xs: number[]) {
     a = 0; // doesn't add lower bound to outer a
     b = 0;
   }
-  (a : string);
-  (b : string); // error: number ~> string
+  a as string;
+  b as string; // error: number ~> string
 }

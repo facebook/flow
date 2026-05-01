@@ -1,3 +1,3 @@
 import data from 'foo'
 
-(data: string);
+data as string;

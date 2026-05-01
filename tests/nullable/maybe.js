@@ -1,3 +1,3 @@
 // unwrapping nested maybes should work
-(('foo': ?(?string)): ?string); // ok
-((123: ?(?number)): ?string); // error (only num ~> string)
+'foo' as ?(?string) as ?string; // ok
+123 as ?(?number) as ?string; // error (only num ~> string)

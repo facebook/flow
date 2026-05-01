@@ -399,15 +399,15 @@ References:
                                                  ^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- state6.js:39:25
+Error -------------------------------------------------------------------------------------------------- state6.js:39:26
 
 Cannot call `this.setState` with `any` bound to `partialState` because: [incompatible-type]
  - Either in the first parameter: number [1] is incompatible with `State` [2].
  - Or `StateUpdater3` [3] is incompatible with nullable `Readonly` [4].
 
-   state6.js:39:25
-    39|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-                                ^^^^^^^^^^^^^ [3]
+   state6.js:39:26
+    39|     this.setState(any as StateUpdater3); // Error: It has the wrong signature
+                                 ^^^^^^^^^^^^^ [3]
 
 References:
    state6.js:9:24
@@ -421,19 +421,19 @@ References:
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------------- state6.js:45:3
+Error --------------------------------------------------------------------------------------------------- state6.js:45:2
 
 Cannot cast function to partial `State` because inexact function [1] is incompatible with exact `State` [2].
 [incompatible-exact]
 
-   state6.js:45:3
-   45| ((() => {}): Partial<State>); // Error: Functions are not a valid object shape.
-         ^^^^^^^^ [1]
+   state6.js:45:2
+   45| (() => {}) as Partial<State>; // Error: Functions are not a valid object shape.
+        ^^^^^^^^ [1]
 
 References:
-   state6.js:45:22
-   45| ((() => {}): Partial<State>); // Error: Functions are not a valid object shape.
-                            ^^^^^ [2]
+   state6.js:45:23
+   45| (() => {}) as Partial<State>; // Error: Functions are not a valid object shape.
+                             ^^^^^ [2]
 
 
 

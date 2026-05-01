@@ -5,12 +5,12 @@ declare var o: { p: T };
 
 // guard
 if (o.p) {
-  (o.p: T); // OK
+  o.p as T; // OK
 }
 
 // refine
 if (o.p != null) {
-  (o.p: T); // OK
+  o.p as T; // OK
 }
 
 
@@ -33,6 +33,6 @@ if (content != null) {
   declare const x: ?S;
 
   if (x == null) {
-    (x: null | void); // ok
+    x as null | void; // ok
   }
 }

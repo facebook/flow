@@ -1,10 +1,10 @@
 type O = {...empty};
 declare var o: O;
-(42: O); // Error: number ~> empty
-(o: empty); // OK: empty ~> empty
+42 as O; // Error: number ~> empty
+o as empty; // OK: empty ~> empty
 
 function fn1<T>(x: {...T}) {
-  (x: number); // Error: mixed ~> number,
+  x as number; // Error: mixed ~> number,
                // but only one error. empty ~> number is ok.
 }
 

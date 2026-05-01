@@ -41,13 +41,13 @@ References:
         ^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:6
+Error ----------------------------------------------------------------------------------------------------- test.js:13:5
 
 Cannot call `foo.bar` because undefined [1] is not a function. [not-a-function]
 
-   test.js:13:6
-   13| (foo.bar(): string); // error, could be undefined
-            ^^^
+   test.js:13:5
+   13| foo.bar() as string; // error, could be undefined
+           ^^^
 
 References:
    exports_optional_prop.js:2:9
@@ -55,13 +55,13 @@ References:
                ^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:16:6
+Error ----------------------------------------------------------------------------------------------------- test.js:16:5
 
 Cannot call `x.bar` because undefined [1] is not a function. [not-a-function]
 
-   test.js:16:6
-   16|   (x.bar(): string); // error. caused by `f(foo)`; annotate x to track it down.
-            ^^^
+   test.js:16:5
+   16|   x.bar() as string; // error. caused by `f(foo)`; annotate x to track it down.
+           ^^^
 
 References:
    exports_optional_prop.js:2:9

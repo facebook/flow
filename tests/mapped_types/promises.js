@@ -4,6 +4,6 @@ promiseAllByKey({
   foo: Promise.resolve(0),
   bar: 'bar',
 }).then(o => {
-  (o.foo: string); // error, number ~> string
-  (o.bar: 'bar'); // ok
+  o.foo as string; // error, number ~> string
+  o.bar as 'bar'; // ok
 });

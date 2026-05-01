@@ -1,3 +1,3 @@
 import f from './A';
 
-(f(): number);
+f() as number;

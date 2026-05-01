@@ -1,85 +1,85 @@
-Error ------------------------------------------------------------------------------------------------------ lex.js:11:4
+Error ------------------------------------------------------------------------------------------------------ lex.js:11:3
 
 Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   lex.js:11:4
-   11|   (b : string); // error: number ~> string
-          ^
+   lex.js:11:3
+   11|   b as string; // error: number ~> string
+         ^
 
 References:
    lex.js:3:10
     3|   let b: number | string = "";
                 ^^^^^^ [1]
    lex.js:11:8
-   11|   (b : string); // error: number ~> string
+   11|   b as string; // error: number ~> string
               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ lex.js:26:4
+Error ------------------------------------------------------------------------------------------------------ lex.js:26:3
 
 Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   lex.js:26:4
-   26|   (b : string); // error: number ~> string
-          ^
+   lex.js:26:3
+   26|   b as string; // error: number ~> string
+         ^
 
 References:
    lex.js:23:9
    23|     b = 0;
                ^ [1]
    lex.js:26:8
-   26|   (b : string); // error: number ~> string
+   26|   b as string; // error: number ~> string
               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ lex.js:37:4
+Error ------------------------------------------------------------------------------------------------------ lex.js:37:3
 
 Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   lex.js:37:4
-   37|   (b : string); // error: number ~> string
-          ^
+   lex.js:37:3
+   37|   b as string; // error: number ~> string
+         ^
 
 References:
    lex.js:31:19
    31|   let b: string | number = "";
                          ^^^^^^ [1]
    lex.js:37:8
-   37|   (b : string); // error: number ~> string
+   37|   b as string; // error: number ~> string
               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ lex.js:48:4
+Error ------------------------------------------------------------------------------------------------------ lex.js:48:3
 
 Cannot cast `b` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   lex.js:48:4
-   48|   (b : number); // error: string ~> number
-          ^
+   lex.js:48:3
+   48|   b as number; // error: string ~> number
+         ^
 
 References:
    lex.js:42:19
    42|   let b: number | string = 0;
                          ^^^^^^ [1]
    lex.js:48:8
-   48|   (b : number); // error: string ~> number
+   48|   b as number; // error: string ~> number
               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ lex.js:59:4
+Error ------------------------------------------------------------------------------------------------------ lex.js:59:3
 
 Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   lex.js:59:4
-   59|   (b : string); // error: number ~> string
-          ^
+   lex.js:59:3
+   59|   b as string; // error: number ~> string
+         ^
 
 References:
    lex.js:53:10
    53|   let b: number | string = "";
                 ^^^^^^ [1]
    lex.js:59:8
-   59|   (b : string); // error: number ~> string
+   59|   b as string; // error: number ~> string
               ^^^^^^ [2]
 
 

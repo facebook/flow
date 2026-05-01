@@ -4,15 +4,15 @@
 {
   type Homomorphic<O: {...}> = {[key in keyof O]: O[key]};
   declare const o: Homomorphic<{foo: number} | {bar: number}>; // OK
-  (o: {foo: number} | {bar: number}); // OK
-  (o: {foo: empty} | {bar: empty}); // ERROR x2
+  o as {foo: number} | {bar: number}; // OK
+  o as {foo: empty} | {bar: empty}; // ERROR x2
 }
 
 {
   type SemiHomomorphic<O: {...}, Keys: keyof O> = {[key in Keys]: O[key]};
   declare const o: SemiHomomorphic<{foo: number, bar: number} | {foo: string, baz: number}, 'foo'>;
-  (o: {foo: number} | {foo: string}); // OK
-  (o: {}); // ERROR
+  o as {foo: number} | {foo: string}; // OK
+  o as {}; // ERROR
 }
 
 {
@@ -21,10 +21,10 @@
   type O = {foo: number};
 
   declare const oExplicit: DistributeNullAndVoid<O | null | void>;
-  (oExplicit: {-foo: number} | null | void);
-  (oExplicit: {-foo: number}); // ERROR 2x
+  oExplicit as {-foo: number} | null | void;
+  oExplicit as {-foo: number}; // ERROR 2x
 
   declare const oMaybe: DistributeNullAndVoid<?O>;
-  (oMaybe: {-foo: number} | null | void);
-  (oMaybe: {-foo: number}); // ERROR
+  oMaybe as {-foo: number} | null | void;
+  oMaybe as {-foo: number}; // ERROR
 }

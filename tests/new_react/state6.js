@@ -33,13 +33,13 @@ class MyComponent extends React.Component<{prop: number}, State> {
     this.setState((prevState, props) => {
       console.log(props.nope); // Error: `nope` does not exist.
     });
-    this.setState((any: StateUpdater1)); // OK: It has the right signature.
-    this.setState((any: StateUpdater2)); // OK: It has the right signature and
+    this.setState(any as StateUpdater1); // OK: It has the right signature.
+    this.setState(any as StateUpdater2); // OK: It has the right signature and
                                          // the right properties.
-    this.setState((any: StateUpdater3)); // Error: It has the wrong signature
+    this.setState(any as StateUpdater3); // Error: It has the wrong signature
                                          // even though it has the right
                                          // properties.
   }
 }
 
-((() => {}): Partial<State>); // Error: Functions are not a valid object shape.
+(() => {}) as Partial<State>; // Error: Functions are not a valid object shape.

@@ -2,6 +2,6 @@ declare class C {
   static m(): void;
   m(): void;
 }
-(C.m: empty); //err
-(new C().m: empty); // err
+C.m as empty; //err
+new C().m as empty; // err
 module.exports = C;

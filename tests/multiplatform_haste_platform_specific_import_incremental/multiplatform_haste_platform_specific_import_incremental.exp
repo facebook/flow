@@ -2,21 +2,21 @@ In this test setup, we start with an iOS specific file and a common interface fi
 An iOS file tries to import the logical module and expect the more specific type, which should pass.
 A general file tries to import the logical module and expect the more specific type, which should fail.
 
-Error --------------------------------------------------------------------------------------------------- General.js:3:2
+Error --------------------------------------------------------------------------------------------------- General.js:3:1
 
 Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   General.js:3:2
-   3| (a: string);
-       ^
+   General.js:3:1
+   3| a as string;
+      ^
 
 References:
    A.js:1:34
    1| declare export const a: string | number; // more general than platform-specific definition
                                        ^^^^^^ [1]
-   General.js:3:5
-   3| (a: string);
-          ^^^^^^ [2]
+   General.js:3:6
+   3| a as string;
+           ^^^^^^ [2]
 
 
 
@@ -26,38 +26,38 @@ Found 1 error
 
 Remove A.ios.js
 Both iOSOnly and General should error.
-Error --------------------------------------------------------------------------------------------------- General.js:3:2
+Error --------------------------------------------------------------------------------------------------- General.js:3:1
 
 Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   General.js:3:2
-   3| (a: string);
-       ^
+   General.js:3:1
+   3| a as string;
+      ^
 
 References:
    A.js:1:34
    1| declare export const a: string | number; // more general than platform-specific definition
                                        ^^^^^^ [1]
-   General.js:3:5
-   3| (a: string);
-          ^^^^^^ [2]
+   General.js:3:6
+   3| a as string;
+           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- iOSOnly.ios.js:3:2
+Error ----------------------------------------------------------------------------------------------- iOSOnly.ios.js:3:1
 
 Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   iOSOnly.ios.js:3:2
-   3| (a: string);
-       ^
+   iOSOnly.ios.js:3:1
+   3| a as string;
+      ^
 
 References:
    A.js:1:34
    1| declare export const a: string | number; // more general than platform-specific definition
                                        ^^^^^^ [1]
-   iOSOnly.ios.js:3:5
-   3| (a: string);
-          ^^^^^^ [2]
+   iOSOnly.ios.js:3:6
+   3| a as string;
+           ^^^^^^ [2]
 
 
 
@@ -105,21 +105,21 @@ Found 2 errors
 
 Add back both A.ios.js and A.js
 Only General should error.
-Error --------------------------------------------------------------------------------------------------- General.js:3:2
+Error --------------------------------------------------------------------------------------------------- General.js:3:1
 
 Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   General.js:3:2
-   3| (a: string);
-       ^
+   General.js:3:1
+   3| a as string;
+      ^
 
 References:
    A.js:1:34
    1| declare export const a: string | number; // more general than platform-specific definition
                                        ^^^^^^ [1]
-   General.js:3:5
-   3| (a: string);
-          ^^^^^^ [2]
+   General.js:3:6
+   3| a as string;
+           ^^^^^^ [2]
 
 
 

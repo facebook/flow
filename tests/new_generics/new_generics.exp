@@ -954,49 +954,49 @@ References:
                      ^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ misc.js:3:4
+Error ------------------------------------------------------------------------------------------------------ misc.js:3:3
 
 Cannot cast `x + x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-type]
 
-   misc.js:3:4
-   3|   (x + x: X); // nope
-         ^^^^^ [1]
+   misc.js:3:3
+   3|   x + x as X; // nope
+        ^^^^^ [1]
 
 References:
-   misc.js:3:11
-   3|   (x + x: X); // nope
-                ^ [2]
+   misc.js:3:12
+   3|   x + x as X; // nope
+                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ misc.js:6:5
+Error ------------------------------------------------------------------------------------------------------ misc.js:6:4
 
 Cannot cast `-x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-type]
 
-   misc.js:6:5
-   6|   (-x: X); // nope
-          ^
+   misc.js:6:4
+   6|   -x as X; // nope
+         ^
 
 References:
    misc.js:1:26
    1| function a<X: number>(x: X) {
                                ^ [1]
-   misc.js:6:8
-   6|   (-x: X); // nope
-             ^ [2]
+   misc.js:6:9
+   6|   -x as X; // nope
+              ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ misc.js:9:4
+Error ------------------------------------------------------------------------------------------------------ misc.js:9:3
 
 Cannot cast `x * x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-type]
 
-   misc.js:9:4
-   9|   (x * x: X);
-         ^^^^^ [1]
+   misc.js:9:3
+   9|   x * x as X;
+        ^^^^^ [1]
 
 References:
-   misc.js:9:11
-   9|   (x * x: X);
-                ^ [2]
+   misc.js:9:12
+   9|   x * x as X;
+                 ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:19:4
@@ -1005,7 +1005,7 @@ Cannot compare number [1] to string [2] with a non-strict equality check. Make s
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    misc.js:19:4
-   19|   (x == y: boolean); // nope
+   19|   (x == y) as boolean; // nope
           ^
 
 References:
@@ -1024,7 +1024,7 @@ In **rare** cases, these types may have overlapping values but lack a subtyping 
 cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    misc.js:20:4
-   20|   (x === y: boolean); // nope, constant-condition error
+   20|   (x === y) as boolean; // nope, constant-condition error
           ^^^^^^^
 
 References:
@@ -1047,7 +1047,7 @@ Error --------------------------------------------------------------------------
 Cannot compare number [1] to string [2]. [invalid-compare]
 
    misc.js:22:4
-   22|   (x < y: boolean); // nope
+   22|   (x < y) as boolean; // nope
           ^
 
 References:

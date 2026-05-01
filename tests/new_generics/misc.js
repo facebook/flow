@@ -1,25 +1,25 @@
 function a<X: number>(x: X) {
   // AdderT
-  (x + x: X); // nope
-  (x + x: number);
+  x + x as X; // nope
+  x + x as number;
   // UnaryMinusT
-  (-x: X); // nope
-  (-x: number);
+  -x as X; // nope
+  -x as number;
   // AssertArithOperandT
-  (x * x: X);
-  (x * x: number);
+  x * x as X;
+  x * x as number;
   // coercion
-  (`blah ${x}`: string);
+  `blah ${x}` as string;
 }
 
 function b<X: number, Y: string>(x: X, y: Y) {
   //EqT, StrictEqT, CompartatorT
-  (x == x: boolean);
-  (x === x: boolean);
-  (x == y: boolean); // nope
-  (x === y: boolean); // nope, constant-condition error
-  (x < x: boolean);
-  (x < y: boolean); // nope
+  (x == x) as boolean;
+  (x === x) as boolean;
+  (x == y) as boolean; // nope
+  (x === y) as boolean; // nope, constant-condition error
+  (x < x) as boolean;
+  (x < y) as boolean; // nope
 }
 
 function c<S: string, X: {[string]: unknown}, Y: Array<number>>(
@@ -54,7 +54,7 @@ function h<X: [number]>(x: X): {[_K in keyof X]: string} {
 
 // ToStringT
 function gn<TType>(jsEnum: {[TType]: string, ...}) {
-  (Object.keys(jsEnum): ReadonlyArray<TType>);
+  Object.keys(jsEnum) as ReadonlyArray<TType>;
 }
 
 // KeysT

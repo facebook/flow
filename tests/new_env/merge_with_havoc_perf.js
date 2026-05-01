@@ -22,5 +22,5 @@ if (true) data = data.filter(s => s.substring(0));
 if (true) data = data.filter(s => s.substring(0));
 if (true) data = data.filter(s => s.substring(0));
 if (true) data = data.filter(s => s.substring(0));
-(data: Array<string>);
+data as Array<string>;
 // no timeout

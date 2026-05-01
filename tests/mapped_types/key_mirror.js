@@ -5,5 +5,5 @@ var o = keyMirror({
   BAR: null,
 });
 
-(o.FOO : 'FOO'); // ok
-(o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
+o.FOO as 'FOO'; // ok
+o.FOO as 'BAR'; // error, 'FOO' incompatible with 'BAR'

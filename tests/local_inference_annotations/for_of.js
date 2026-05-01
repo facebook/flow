@@ -9,4 +9,4 @@ let a = ((x => {
     return y => 3; // Covered by the annot
   }
   return (y) => 3;
-}): number => number => number);
+}) as number => number => number);

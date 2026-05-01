@@ -305,19 +305,19 @@ The above-mentioned two types must be the same because property `foo` is invaria
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    spread.js:5:28
-   5| (Object.assign(({}: {foo?: string}), ...arrOfObjs): { foo?: number}); // Error: string ~> number
+   5| Object.assign({} as {foo?: string}, ...arrOfObjs) as { foo?: number}; // Error: string ~> number
                                  ^^^^^^ [1]
 
 References:
-   spread.js:5:61
-   5| (Object.assign(({}: {foo?: string}), ...arrOfObjs): { foo?: number}); // Error: string ~> number
-                                                                  ^^^^^^ [2]
+   spread.js:5:62
+   5| Object.assign({} as {foo?: string}, ...arrOfObjs) as { foo?: number}; // Error: string ~> number
+                                                                   ^^^^^^ [2]
    spread.js:5:21
-   5| (Object.assign(({}: {foo?: string}), ...arrOfObjs): { foo?: number}); // Error: string ~> number
+   5| Object.assign({} as {foo?: string}, ...arrOfObjs) as { foo?: number}; // Error: string ~> number
                           ^^^^^^^^^^^^^^ [3]
-   spread.js:5:53
-   5| (Object.assign(({}: {foo?: string}), ...arrOfObjs): { foo?: number}); // Error: string ~> number
-                                                          ^^^^^^^^^^^^^^^ [4]
+   spread.js:5:54
+   5| Object.assign({} as {foo?: string}, ...arrOfObjs) as { foo?: number}; // Error: string ~> number
+                                                           ^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:6:28
@@ -331,19 +331,19 @@ The above-mentioned two types must be the same because property `foo` is invaria
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    spread.js:6:28
-   6| (Object.assign(({}: {foo?: string}), ...roArrOfObjs): { foo?: number}); // Error: string ~> number
+   6| Object.assign({} as {foo?: string}, ...roArrOfObjs) as { foo?: number}; // Error: string ~> number
                                  ^^^^^^ [1]
 
 References:
-   spread.js:6:63
-   6| (Object.assign(({}: {foo?: string}), ...roArrOfObjs): { foo?: number}); // Error: string ~> number
-                                                                    ^^^^^^ [2]
+   spread.js:6:64
+   6| Object.assign({} as {foo?: string}, ...roArrOfObjs) as { foo?: number}; // Error: string ~> number
+                                                                     ^^^^^^ [2]
    spread.js:6:21
-   6| (Object.assign(({}: {foo?: string}), ...roArrOfObjs): { foo?: number}); // Error: string ~> number
+   6| Object.assign({} as {foo?: string}, ...roArrOfObjs) as { foo?: number}; // Error: string ~> number
                           ^^^^^^^^^^^^^^ [3]
-   spread.js:6:55
-   6| (Object.assign(({}: {foo?: string}), ...roArrOfObjs): { foo?: number}); // Error: string ~> number
-                                                            ^^^^^^^^^^^^^^^ [4]
+   spread.js:6:56
+   6| Object.assign({} as {foo?: string}, ...roArrOfObjs) as { foo?: number}; // Error: string ~> number
+                                                             ^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:7:42
@@ -357,22 +357,22 @@ The above-mentioned two types must be the same because property `bar` is invaria
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    spread.js:7:42
-   7| (Object.assign(({}: {foo?: string, bar?: number}), ...tup): { foo?: string, bar?: boolean}); // Error: number ~> boolean
+   7| Object.assign({} as {foo?: string, bar?: number}, ...tup) as { foo?: string, bar?: boolean}; // Error: number ~> boolean
                                                ^^^^^^ [1]
 
 References:
-   spread.js:7:83
-   7| (Object.assign(({}: {foo?: string, bar?: number}), ...tup): { foo?: string, bar?: boolean}); // Error: number ~> boolean
-                                                                                        ^^^^^^^ [2]
+   spread.js:7:84
+   7| Object.assign({} as {foo?: string, bar?: number}, ...tup) as { foo?: string, bar?: boolean}; // Error: number ~> boolean
+                                                                                         ^^^^^^^ [2]
    spread.js:7:21
-   7| (Object.assign(({}: {foo?: string, bar?: number}), ...tup): { foo?: string, bar?: boolean}); // Error: number ~> boolean
+   7| Object.assign({} as {foo?: string, bar?: number}, ...tup) as { foo?: string, bar?: boolean}; // Error: number ~> boolean
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   spread.js:7:61
-   7| (Object.assign(({}: {foo?: string, bar?: number}), ...tup): { foo?: string, bar?: boolean}); // Error: number ~> boolean
-                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   spread.js:7:62
+   7| Object.assign({} as {foo?: string, bar?: number}, ...tup) as { foo?: string, bar?: boolean}; // Error: number ~> boolean
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------------- spread.js:10:25
+Error -------------------------------------------------------------------------------------------------- spread.js:10:26
 
 Cannot cast `Object.assign(...)` to object type because in property `b`: `void | string` [1] is not exactly the same as
 `void | true` [2]. [incompatible-type]
@@ -382,20 +382,20 @@ The above-mentioned two types must be the same because property `b` is invariant
 - Or make property `b` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   spread.js:10:25
-   10|   ({}: {a?: number, b?: string, c?: boolean}),
-                               ^^^^^^ [1]
+   spread.js:10:26
+   10|   {} as {a?: number, b?: string, c?: boolean},
+                                ^^^^^^ [1]
 
 References:
-   spread.js:13:21
-   13| ): {a?: number, b?: true, c?: boolean}); // Error: 'foo' => true
-                           ^^^^ [2]
-   spread.js:10:8
-   10|   ({}: {a?: number, b?: string, c?: boolean}),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   spread.js:13:4
-   13| ): {a?: number, b?: true, c?: boolean}); // Error: 'foo' => true
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   spread.js:13:23
+   13| ) as {a?: number, b?: true, c?: boolean}); // Error: 'foo' => true
+                             ^^^^ [2]
+   spread.js:10:9
+   10|   {} as {a?: number, b?: string, c?: boolean},
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   spread.js:13:6
+   13| ) as {a?: number, b?: true, c?: boolean}); // Error: 'foo' => true
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 

@@ -5,7 +5,7 @@
 // through blocks
 let a = ((x => {
   { return y => 3 };
-}): number => number => number);
+}) as number => number => number);
 
 // Other non-return statements in the block are not annotated by
 // the outer expression's annotation
@@ -14,4 +14,4 @@ let b = ((x => {
     const x = (y) => 3;  // error y missing an annotation
     return y => 3;
   };
-}): number => number => number);
+}) as number => number => number);

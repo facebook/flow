@@ -16,21 +16,21 @@ declare var instance: C;
 
 declare var iface: interface {[string]: number};
 
-(Object.values(dict): Array<number>); // OK
-(Object.values(iface): Array<mixed>); // OK
-(Object.values(dictWithProps): Array<mixed>); // OK
-(Object.values(dictUnion): Array<number | boolean>); // OK
-(Object.values(writeOnlyDict): Array<mixed>); // OK
-(Object.values(obj): Array<mixed>); // OK
-(Object.values(instance): Array<mixed>); // OK
+Object.values(dict) as Array<number>; // OK
+Object.values(iface) as Array<mixed>; // OK
+Object.values(dictWithProps) as Array<mixed>; // OK
+Object.values(dictUnion) as Array<number | boolean>; // OK
+Object.values(writeOnlyDict) as Array<mixed>; // OK
+Object.values(obj) as Array<mixed>; // OK
+Object.values(instance) as Array<mixed>; // OK
 
-(Object.values(dict): Array<empty>); // ERROR
-(Object.values(iface): Array<empty>); // ERROR
-(Object.values(dictWithProps): Array<empty>); // ERROR
-(Object.values(dictUnion): Array<empty>); // ERROR
-(Object.values(writeOnlyDict): Array<empty>); // ERROR
-(Object.values(obj): Array<empty>); // ERROR
-(Object.values(instance): Array<empty>); // ERROR
+Object.values(dict) as Array<empty>; // ERROR
+Object.values(iface) as Array<empty>; // ERROR
+Object.values(dictWithProps) as Array<empty>; // ERROR
+Object.values(dictUnion) as Array<empty>; // ERROR
+Object.values(writeOnlyDict) as Array<empty>; // ERROR
+Object.values(obj) as Array<empty>; // ERROR
+Object.values(instance) as Array<empty>; // ERROR
 
 // Invalid inputs
 Object.values(undefined); // ERROR

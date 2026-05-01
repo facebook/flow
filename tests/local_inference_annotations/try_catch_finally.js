@@ -14,4 +14,4 @@ let a = ((x => {
     const z = (x) => 3; // Non-return statements are not covered by the annot
     return y => 3;
   };
-}): number => number => number);
+}) as number => number => number);

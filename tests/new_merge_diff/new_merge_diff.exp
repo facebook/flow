@@ -1,46 +1,46 @@
-Error ------------------------------------------------------------------------------------------------------ main.js:4:2
+Error ------------------------------------------------------------------------------------------------------ main.js:4:1
 
 Cannot cast `x1` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:4:2
-    4| (x1: empty);
-        ^^
+   main.js:4:1
+    4| x1 as empty;
+       ^^
 
 References:
    get_prop_union.js:13:23
    13| declare export var x: typeof c.f;
                              ^^^^^^^^^^ [1]
-   main.js:4:6
-    4| (x1: empty);
-            ^^^^^ [2]
+   main.js:4:7
+    4| x1 as empty;
+             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ main.js:4:2
+Error ------------------------------------------------------------------------------------------------------ main.js:4:1
 
 Cannot cast `x1` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:4:2
-    4| (x1: empty);
-        ^^
+   main.js:4:1
+    4| x1 as empty;
+       ^^
 
 References:
    get_prop_union.js:13:23
    13| declare export var x: typeof c.f;
                              ^^^^^^^^^^ [1]
-   main.js:4:6
-    4| (x1: empty);
-            ^^^^^ [2]
+   main.js:4:7
+    4| x1 as empty;
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:32:2
+Error ----------------------------------------------------------------------------------------------------- main.js:32:1
 
 Cannot cast `0` to `S4` because: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `R` [3].
 
-   main.js:32:2
-   32| (0: S4); // error number ~> string
-        ^ [1]
+   main.js:32:1
+   32| 0 as S4; // error number ~> string
+       ^ [1]
 
 References:
    recursive_types.js:10:17
@@ -51,18 +51,18 @@ References:
                                 ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:33:2
+Error ----------------------------------------------------------------------------------------------------- main.js:33:1
 
 Cannot cast `0` to `R4` because number [1] is incompatible with `R` [2]. [incompatible-type]
 
-   main.js:33:2
-   33| (0: R4); // error number ~> R (obj)
-        ^ [1]
+   main.js:33:1
+   33| 0 as R4; // error number ~> R (obj)
+       ^ [1]
 
 References:
-   main.js:33:5
-   33| (0: R4); // error number ~> R (obj)
-           ^^ [2]
+   main.js:33:6
+   33| 0 as R4; // error number ~> R (obj)
+            ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ recursive_module.js:1:9

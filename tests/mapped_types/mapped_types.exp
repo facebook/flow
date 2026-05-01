@@ -1,81 +1,81 @@
-Error ----------------------------------------------------------------------------------------------- deep_types.js:12:4
+Error ----------------------------------------------------------------------------------------------- deep_types.js:12:3
 
 Cannot cast `a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   deep_types.js:12:4
-   12|   (a: empty); // error: number ~> empty
-          ^
+   deep_types.js:12:3
+   12|   a as empty; // error: number ~> empty
+         ^
 
 References:
    deep_types.js:10:20
    10|   declare const a: DeepPartialState<number>;
                           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   deep_types.js:12:7
-   12|   (a: empty); // error: number ~> empty
-             ^^^^^ [2]
+   deep_types.js:12:8
+   12|   a as empty; // error: number ~> empty
+              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- deep_types.js:16:4
+Error ----------------------------------------------------------------------------------------------- deep_types.js:16:3
 
 Cannot cast `b` to object type because in property `foo`: undefined [1] is incompatible with object type [2].
 [incompatible-type]
 
-   deep_types.js:16:4
-   16|   (b: {+foo: {+bar?: {+baz?: string}}}); // error: foo not optional
-          ^
+   deep_types.js:16:3
+   16|   b as {+foo: {+bar?: {+baz?: string}}}; // error: foo not optional
+         ^
 
 References:
    deep_types.js:6:23
     6|       [K in keyof T]: DeepPartialState<Partial<T>[K]>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   deep_types.js:16:14
-   16|   (b: {+foo: {+bar?: {+baz?: string}}}); // error: foo not optional
-                    ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   deep_types.js:16:15
+   16|   b as {+foo: {+bar?: {+baz?: string}}}; // error: foo not optional
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- deep_types.js:17:4
+Error ----------------------------------------------------------------------------------------------- deep_types.js:17:3
 
 Cannot cast `b` to object type because in property `foo.bar`: undefined [1] is incompatible with object type [2].
 [incompatible-type]
 
-   deep_types.js:17:4
-   17|   (b: {+foo?: {+bar: {+baz?: string}}}); // error: bar not optional
-          ^
+   deep_types.js:17:3
+   17|   b as {+foo?: {+bar: {+baz?: string}}}; // error: bar not optional
+         ^
 
 References:
    deep_types.js:6:23
     6|       [K in keyof T]: DeepPartialState<Partial<T>[K]>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   deep_types.js:17:22
-   17|   (b: {+foo?: {+bar: {+baz?: string}}}); // error: bar not optional
-                            ^^^^^^^^^^^^^^^ [2]
+   deep_types.js:17:23
+   17|   b as {+foo?: {+bar: {+baz?: string}}}; // error: bar not optional
+                             ^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- deep_types.js:18:4
+Error ----------------------------------------------------------------------------------------------- deep_types.js:18:3
 
 Cannot cast `b` to object type because in property `foo.bar.baz`: undefined [1] is incompatible with string [2].
 [incompatible-type]
 
-   deep_types.js:18:4
-   18|   (b: {+foo?: {+bar?: {+baz: string}}}); // error: baz not optional
-          ^
+   deep_types.js:18:3
+   18|   b as {+foo?: {+bar?: {+baz: string}}}; // error: baz not optional
+         ^
 
 References:
    deep_types.js:6:23
     6|       [K in keyof T]: DeepPartialState<Partial<T>[K]>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   deep_types.js:18:30
-   18|   (b: {+foo?: {+bar?: {+baz: string}}}); // error: baz not optional
-                                    ^^^^^^ [2]
+   deep_types.js:18:31
+   18|   b as {+foo?: {+bar?: {+baz: string}}}; // error: baz not optional
+                                     ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- deep_types.js:44:4
+Error ----------------------------------------------------------------------------------------------- deep_types.js:44:3
 
 Cannot cast `obj` to empty because mapped type [1] is incompatible with empty [2]. [incompatible-type]
 
-   deep_types.js:44:4
-   44|   (obj: empty); // error
-          ^^^
+   deep_types.js:44:3
+   44|   obj as empty; // error
+         ^^^
 
 References:
    deep_types.js:26:14
@@ -90,9 +90,9 @@ References:
    33|     ...
    34|   }> = {
          -^ [1]
-   deep_types.js:44:9
-   44|   (obj: empty); // error
-               ^^^^^ [2]
+   deep_types.js:44:10
+   44|   obj as empty; // error
+                ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- deep_types.js:46:11
@@ -181,126 +181,126 @@ Cannot assign `'goodbye'` to `arr[0]` because read-only arrays cannot be written
          ^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- distributivity.js:8:4
+Error -------------------------------------------------------------------------------------------- distributivity.js:8:3
 
 Cannot cast `o` to union type because: [incompatible-type]
  - Either in property `bar`: number [1] is incompatible with empty [2].
  - Or property `bar` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
    props.
 
-   distributivity.js:8:4
-   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
-         ^
+   distributivity.js:8:3
+   8|   o as {foo: empty} | {bar: empty}; // ERROR x2
+        ^
 
 References:
    distributivity.js:5:51
    5|   type Homomorphic<O: {...}> = {[key in keyof O]: O[key]};
                                                         ^^^^^^ [1]
-   distributivity.js:8:28
-   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
-                                 ^^^^^ [2]
+   distributivity.js:8:29
+   8|   o as {foo: empty} | {bar: empty}; // ERROR x2
+                                  ^^^^^ [2]
    distributivity.js:6:20
    6|   declare const o: Homomorphic<{foo: number} | {bar: number}>; // OK
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   distributivity.js:8:7
-   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
-            ^^^^^^^^^^^^ [4]
+   distributivity.js:8:8
+   8|   o as {foo: empty} | {bar: empty}; // ERROR x2
+             ^^^^^^^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------- distributivity.js:8:4
+Error -------------------------------------------------------------------------------------------- distributivity.js:8:3
 
 Cannot cast `o` to union type because: [incompatible-type]
  - Either in property `foo`: number [1] is incompatible with empty [2].
  - Or property `foo` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
    props.
 
-   distributivity.js:8:4
-   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
-         ^
+   distributivity.js:8:3
+   8|   o as {foo: empty} | {bar: empty}; // ERROR x2
+        ^
 
 References:
    distributivity.js:5:51
    5|   type Homomorphic<O: {...}> = {[key in keyof O]: O[key]};
                                                         ^^^^^^ [1]
-   distributivity.js:8:13
-   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
-                  ^^^^^ [2]
+   distributivity.js:8:14
+   8|   o as {foo: empty} | {bar: empty}; // ERROR x2
+                   ^^^^^ [2]
    distributivity.js:6:20
    6|   declare const o: Homomorphic<{foo: number} | {bar: number}>; // OK
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   distributivity.js:8:22
-   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
-                           ^^^^^^^^^^^^ [4]
+   distributivity.js:8:23
+   8|   o as {foo: empty} | {bar: empty}; // ERROR x2
+                            ^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- distributivity.js:15:4
+Error ------------------------------------------------------------------------------------------- distributivity.js:15:3
 
 Cannot cast `o` to object type because property `foo` is extra in mapped type [1] but missing in object type [2]. Exact
 objects do not accept extra props. [incompatible-type]
 
-   distributivity.js:15:4
-   15|   (o: {}); // ERROR
-          ^
+   distributivity.js:15:3
+   15|   o as {}; // ERROR
+         ^
 
 References:
    distributivity.js:13:20
    13|   declare const o: SemiHomomorphic<{foo: number, bar: number} | {foo: string, baz: number}, 'foo'>;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   distributivity.js:15:7
-   15|   (o: {}); // ERROR
-             ^^ [2]
+   distributivity.js:15:8
+   15|   o as {}; // ERROR
+              ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- distributivity.js:25:4
+Error ------------------------------------------------------------------------------------------- distributivity.js:25:3
 
 Cannot cast `oExplicit` to object type because null [1] is incompatible with object type [2]. [incompatible-type]
 
-   distributivity.js:25:4
-   25|   (oExplicit: {-foo: number}); // ERROR 2x
-          ^^^^^^^^^
+   distributivity.js:25:3
+   25|   oExplicit as {-foo: number}; // ERROR 2x
+         ^^^^^^^^^
 
 References:
    distributivity.js:23:28
    23|   declare const oExplicit: DistributeNullAndVoid<O | null | void>;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   distributivity.js:25:15
-   25|   (oExplicit: {-foo: number}); // ERROR 2x
-                     ^^^^^^^^^^^^^^ [2]
+   distributivity.js:25:16
+   25|   oExplicit as {-foo: number}; // ERROR 2x
+                      ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- distributivity.js:25:4
+Error ------------------------------------------------------------------------------------------- distributivity.js:25:3
 
 Cannot cast `oExplicit` to object type because undefined [1] is incompatible with object type [2]. [incompatible-type]
 
-   distributivity.js:25:4
-   25|   (oExplicit: {-foo: number}); // ERROR 2x
-          ^^^^^^^^^
+   distributivity.js:25:3
+   25|   oExplicit as {-foo: number}; // ERROR 2x
+         ^^^^^^^^^
 
 References:
    distributivity.js:23:28
    23|   declare const oExplicit: DistributeNullAndVoid<O | null | void>;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   distributivity.js:25:15
-   25|   (oExplicit: {-foo: number}); // ERROR 2x
-                     ^^^^^^^^^^^^^^ [2]
+   distributivity.js:25:16
+   25|   oExplicit as {-foo: number}; // ERROR 2x
+                      ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- distributivity.js:29:4
+Error ------------------------------------------------------------------------------------------- distributivity.js:29:3
 
 Cannot cast `oMaybe` to object type because null or undefined [1] is incompatible with object type [2].
 [incompatible-type]
 
-   distributivity.js:29:4
-   29|   (oMaybe: {-foo: number}); // ERROR
-          ^^^^^^
+   distributivity.js:29:3
+   29|   oMaybe as {-foo: number}; // ERROR
+         ^^^^^^
 
 References:
    distributivity.js:27:25
    27|   declare const oMaybe: DistributeNullAndVoid<?O>;
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   distributivity.js:29:12
-   29|   (oMaybe: {-foo: number}); // ERROR
-                  ^^^^^^^^^^^^^^ [2]
+   distributivity.js:29:13
+   29|   oMaybe as {-foo: number}; // ERROR
+                   ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:13:6
@@ -333,7 +333,7 @@ References:
                                               ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:17:8
+Error ------------------------------------------------------------------------------------------------ identity.js:17:10
 
 Cannot cast `any` to `Foo` because properties `a` and `b` of `{a: string, b: string}` [1] are not exactly the same as
 those of mapped type [2]. [incompatible-type]
@@ -343,36 +343,36 @@ The above-mentioned two types must be the same because properties `a` and `b` ar
 - Or make properties `a` and `b` in `IdentityMap` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   identity.js:17:8
-              v
-   17| ((any: {
+   identity.js:17:10
+                v
+   17| ((any as {
    18|   a: string, // Error: string ~> number
    19|   b: string, // Error: string ~> number
-   20| }): Foo);
+   20| }) as Foo);
        ^ [1]
 
 References:
-   identity.js:20:5
-   20| }): Foo);
-           ^^^ [2]
+   identity.js:20:7
+   20| }) as Foo);
+             ^^^ [2]
    identity.js:3:23
     3| type IdentityMap<O> = {[K in keyof O]: O[K]};
                              ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:22:7
+Error ------------------------------------------------------------------------------------------------- identity.js:22:8
 
-Cannot cast object literal to `Foo` because properties `a` and `b` are missing in object type [1] but exist in
+Cannot cast `{...}` to `Foo` because properties `a` and `b` are missing in object type [1] but exist in
 `IdentityMap` [2]. [incompatible-type]
 
-   identity.js:22:7
-   22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
-             ^^ [1]
+   identity.js:22:8
+   22| ({} as {} as Foo); // Error: `a` and `b` are not defined.
+              ^^ [1]
 
 References:
-   identity.js:22:12
-   22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
-                  ^^^ [2]
+   identity.js:22:14
+   22| ({} as {} as Foo); // Error: `a` and `b` are not defined.
+                    ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:24:8
@@ -381,13 +381,13 @@ Cannot cast `any` to `Foo` because properties `a` and `b` are missing in object 
 [incompatible-type]
 
    identity.js:24:8
-   24| ((any: {}): Foo); // Error: `a` and `b` are not defined.
+   24| any as {} as Foo; // Error: `a` and `b` are not defined.
               ^^ [1]
 
 References:
-   identity.js:24:13
-   24| ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                   ^^^ [2]
+   identity.js:24:14
+   24| any as {} as Foo; // Error: `a` and `b` are not defined.
+                    ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:31:2
@@ -401,13 +401,13 @@ The above-mentioned two types must be the same because properties `a` and `b` ar
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    identity.js:31:2
-   31| (foo: {
+   31| (foo as {
         ^^^ [1]
 
 References:
-   identity.js:31:7
-             v
-   31| (foo: {
+   identity.js:31:9
+               v
+   31| (foo as {
    32|   a: string, // Error: number ~> string
    33|   b: string, // Error: number ~> string
    34| });
@@ -417,21 +417,21 @@ References:
                              ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:36:2
+Error ------------------------------------------------------------------------------------------------- identity.js:36:1
 
 Cannot cast `foo.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   identity.js:36:2
-   36| (foo.a: empty); // Error: number ~> empty
-        ^^^^^
+   identity.js:36:1
+   36| foo.a as empty; // Error: number ~> empty
+       ^^^^^
 
 References:
    identity.js:3:40
     3| type IdentityMap<O> = {[K in keyof O]: O[K]};
                                               ^^^^ [1]
-   identity.js:36:9
-   36| (foo.a: empty); // Error: number ~> empty
-               ^^^^^ [2]
+   identity.js:36:10
+   36| foo.a as empty; // Error: number ~> empty
+                ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:47:8
@@ -445,12 +445,12 @@ Cannot cast object literal to `IdentityMap` because in property `foo`: [incompat
               ^^^^ [1]
 
 References:
-   identity.js:48:23
-   48| }: IdentityMap<{ foo: number | string }>);
-                             ^^^^^^ [2]
-   identity.js:48:32
-   48| }: IdentityMap<{ foo: number | string }>);
-                                      ^^^^^^ [3]
+   identity.js:48:25
+   48| } as IdentityMap<{ foo: number | string }>);
+                               ^^^^^^ [2]
+   identity.js:48:34
+   48| } as IdentityMap<{ foo: number | string }>);
+                                        ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:50:2
@@ -463,7 +463,7 @@ Cannot cast object literal to `IdentityMap` because: [incompatible-type]
         v
    50| ({
    51|   foo: true, // Error: boolean ~> number | string
-   52| }: IdentityMap<{ foo: number } | { foo: string }>);
+   52| } as IdentityMap<{ foo: number } | { foo: string }>);
        ^
 
 References:
@@ -489,55 +489,55 @@ References:
                                  ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:33:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:33:3
 
 Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   idx_replacement.js:33:4
-   33|   (idx(obj1, obj => obj.a.b.c): number); // error: result must be MaybeT
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   idx_replacement.js:33:3
+   33|   idx(obj1, obj => obj.a.b.c) as number; // error: result must be MaybeT
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:4
    24| ): ?UnboxDeepRequired<T2>;
           ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:33:33
-   33|   (idx(obj1, obj => obj.a.b.c): number); // error: result must be MaybeT
-                                       ^^^^^^ [2]
+   idx_replacement.js:33:34
+   33|   idx(obj1, obj => obj.a.b.c) as number; // error: result must be MaybeT
+                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:34:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:34:3
 
 Cannot cast `idx(...)` to nullable string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   idx_replacement.js:34:4
-   34|   (idx(obj1, obj => obj.a.b.c): ?string); // error: number ~> string
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   idx_replacement.js:34:3
+   34|   idx(obj1, obj => obj.a.b.c) as ?string; // error: number ~> string
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:5
    24| ): ?UnboxDeepRequired<T2>;
            ^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:34:34
-   34|   (idx(obj1, obj => obj.a.b.c): ?string); // error: number ~> string
-                                        ^^^^^^ [2]
+   idx_replacement.js:34:35
+   34|   idx(obj1, obj => obj.a.b.c) as ?string; // error: number ~> string
+                                         ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:35:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:35:3
 
 Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   idx_replacement.js:35:4
-   35|   (idx(obj1, obj => obj["a"].b.c): number); // error: result must be MaybeT
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   idx_replacement.js:35:3
+   35|   idx(obj1, obj => obj["a"].b.c) as number; // error: result must be MaybeT
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:4
    24| ): ?UnboxDeepRequired<T2>;
           ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:35:36
-   35|   (idx(obj1, obj => obj["a"].b.c): number); // error: result must be MaybeT
-                                          ^^^^^^ [2]
+   idx_replacement.js:35:37
+   35|   idx(obj1, obj => obj["a"].b.c) as number; // error: result must be MaybeT
+                                           ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:36:24
@@ -562,186 +562,186 @@ Cannot assign `null` to `obj.a` because property `a` is not writable. [cannot-wr
                               ^
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:40:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:40:3
 
 Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   idx_replacement.js:40:4
-   40|   (idx(obj2, obj => obj.a.b.c): number); // error: result must be MaybeT
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   idx_replacement.js:40:3
+   40|   idx(obj2, obj => obj.a.b.c) as number; // error: result must be MaybeT
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:4
    24| ): ?UnboxDeepRequired<T2>;
           ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:40:33
-   40|   (idx(obj2, obj => obj.a.b.c): number); // error: result must be MaybeT
-                                       ^^^^^^ [2]
+   idx_replacement.js:40:34
+   40|   idx(obj2, obj => obj.a.b.c) as number; // error: result must be MaybeT
+                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:43:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:43:3
 
 Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   idx_replacement.js:43:4
-   43|   (idx(obj3, obj => obj.a.b.c): number); // error: result must be MaybeT
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   idx_replacement.js:43:3
+   43|   idx(obj3, obj => obj.a.b.c) as number; // error: result must be MaybeT
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:4
    24| ): ?UnboxDeepRequired<T2>;
           ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:43:33
-   43|   (idx(obj3, obj => obj.a.b.c): number); // error: result must be MaybeT
-                                       ^^^^^^ [2]
+   idx_replacement.js:43:34
+   43|   idx(obj3, obj => obj.a.b.c) as number; // error: result must be MaybeT
+                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:3
 
 Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
-   idx_replacement.js:50:4
-   50|   (idx(ab, _ => _.a): empty); // error
-          ^^^^^^^^^^^^^^^^^
+   idx_replacement.js:50:3
+   50|   idx(ab, _ => _.a) as empty; // error
+         ^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:4
    24| ): ?UnboxDeepRequired<T2>;
           ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:50:23
-   50|   (idx(ab, _ => _.a): empty); // error
-                             ^^^^^ [2]
+   idx_replacement.js:50:24
+   50|   idx(ab, _ => _.a) as empty; // error
+                              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:3
 
 Cannot cast `idx(...)` to empty because `void` (due to access of non-existent property `a`) [1] is incompatible with
 empty [2]. [incompatible-type]
 
-   idx_replacement.js:50:4
-   50|   (idx(ab, _ => _.a): empty); // error
-          ^^^^^^^^^^^^^^^^^
+   idx_replacement.js:50:3
+   50|   idx(ab, _ => _.a) as empty; // error
+         ^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:5
    24| ): ?UnboxDeepRequired<T2>;
            ^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:50:23
-   50|   (idx(ab, _ => _.a): empty); // error
-                             ^^^^^ [2]
+   idx_replacement.js:50:24
+   50|   idx(ab, _ => _.a) as empty; // error
+                              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:3
 
 Cannot cast `idx(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   idx_replacement.js:50:4
-   50|   (idx(ab, _ => _.a): empty); // error
-          ^^^^^^^^^^^^^^^^^
+   idx_replacement.js:50:3
+   50|   idx(ab, _ => _.a) as empty; // error
+         ^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:5
    24| ): ?UnboxDeepRequired<T2>;
            ^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:50:23
-   50|   (idx(ab, _ => _.a): empty); // error
-                             ^^^^^ [2]
+   idx_replacement.js:50:24
+   50|   idx(ab, _ => _.a) as empty; // error
+                              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:3
 
 Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
-   idx_replacement.js:51:4
-   51|   (idx(ab, _ => _.b): empty); // error
-          ^^^^^^^^^^^^^^^^^
+   idx_replacement.js:51:3
+   51|   idx(ab, _ => _.b) as empty; // error
+         ^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:4
    24| ): ?UnboxDeepRequired<T2>;
           ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:51:23
-   51|   (idx(ab, _ => _.b): empty); // error
-                             ^^^^^ [2]
+   idx_replacement.js:51:24
+   51|   idx(ab, _ => _.b) as empty; // error
+                              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:3
 
 Cannot cast `idx(...)` to empty because `void` (due to access of non-existent property `b`) [1] is incompatible with
 empty [2]. [incompatible-type]
 
-   idx_replacement.js:51:4
-   51|   (idx(ab, _ => _.b): empty); // error
-          ^^^^^^^^^^^^^^^^^
+   idx_replacement.js:51:3
+   51|   idx(ab, _ => _.b) as empty; // error
+         ^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:5
    24| ): ?UnboxDeepRequired<T2>;
            ^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:51:23
-   51|   (idx(ab, _ => _.b): empty); // error
-                             ^^^^^ [2]
+   idx_replacement.js:51:24
+   51|   idx(ab, _ => _.b) as empty; // error
+                              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:3
 
 Cannot cast `idx(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   idx_replacement.js:51:4
-   51|   (idx(ab, _ => _.b): empty); // error
-          ^^^^^^^^^^^^^^^^^
+   idx_replacement.js:51:3
+   51|   idx(ab, _ => _.b) as empty; // error
+         ^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:5
    24| ): ?UnboxDeepRequired<T2>;
            ^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:51:23
-   51|   (idx(ab, _ => _.b): empty); // error
-                             ^^^^^ [2]
+   idx_replacement.js:51:24
+   51|   idx(ab, _ => _.b) as empty; // error
+                              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:52:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:52:3
 
 Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
-   idx_replacement.js:52:4
-   52|   (idx(ab, _ => _.c): empty); // error
-          ^^^^^^^^^^^^^^^^^
+   idx_replacement.js:52:3
+   52|   idx(ab, _ => _.c) as empty; // error
+         ^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:4
    24| ): ?UnboxDeepRequired<T2>;
           ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:52:23
-   52|   (idx(ab, _ => _.c): empty); // error
-                             ^^^^^ [2]
+   idx_replacement.js:52:24
+   52|   idx(ab, _ => _.c) as empty; // error
+                              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:52:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:52:3
 
 Cannot cast `idx(...)` to empty because `void` (due to access of non-existent property `c`) [1] is incompatible with
 empty [2]. [incompatible-type]
 
-   idx_replacement.js:52:4
-   52|   (idx(ab, _ => _.c): empty); // error
-          ^^^^^^^^^^^^^^^^^
+   idx_replacement.js:52:3
+   52|   idx(ab, _ => _.c) as empty; // error
+         ^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:5
    24| ): ?UnboxDeepRequired<T2>;
            ^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:52:23
-   52|   (idx(ab, _ => _.c): empty); // error
-                             ^^^^^ [2]
+   idx_replacement.js:52:24
+   52|   idx(ab, _ => _.c) as empty; // error
+                              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- idx_replacement.js:52:19
+Error ----------------------------------------------------------------------------------------- idx_replacement.js:52:18
 
 Cannot get `_.c` because property `c` is missing in `DeepRequired` [1]. [prop-missing]
 
-   idx_replacement.js:52:19
-   52|   (idx(ab, _ => _.c): empty); // error
-                         ^
+   idx_replacement.js:52:18
+   52|   idx(ab, _ => _.c) as empty; // error
+                        ^
 
 References:
    idx_replacement.js:23:32
@@ -749,38 +749,38 @@ References:
                                       ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:59:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:59:3
 
 Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   idx_replacement.js:59:4
-   59|   (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   idx_replacement.js:59:3
+   59|   idx(new Foo1(), o => o.a.b) as number; // error: result must be MaybeT
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:4
    24| ): ?UnboxDeepRequired<T2>;
           ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:59:33
-   59|   (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
-                                       ^^^^^^ [2]
+   idx_replacement.js:59:34
+   59|   idx(new Foo1(), o => o.a.b) as number; // error: result must be MaybeT
+                                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:59:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:59:3
 
 Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   idx_replacement.js:59:4
-   59|   (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   idx_replacement.js:59:3
+   59|   idx(new Foo1(), o => o.a.b) as number; // error: result must be MaybeT
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:55:29
    55|   class Foo1 { a: ?Foo1; b: ?number; }
                                    ^^^^^^^ [1]
-   idx_replacement.js:59:33
-   59|   (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
-                                       ^^^^^^ [2]
+   idx_replacement.js:59:34
+   59|   idx(new Foo1(), o => o.a.b) as number; // error: result must be MaybeT
+                                        ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:60:26
@@ -791,21 +791,21 @@ Cannot assign `null` to `o.a` because property `a` is not writable. [cannot-writ
                                 ^
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:72:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:72:3
 
 Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   idx_replacement.js:72:4
-   72|   (idx(42, n => n): number); // error: result must be MaybeT
-          ^^^^^^^^^^^^^^^
+   idx_replacement.js:72:3
+   72|   idx(42, n => n) as number; // error: result must be MaybeT
+         ^^^^^^^^^^^^^^^
 
 References:
    idx_replacement.js:24:4
    24| ): ?UnboxDeepRequired<T2>;
           ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   idx_replacement.js:72:21
-   72|   (idx(42, n => n): number); // error: result must be MaybeT
-                           ^^^^^^ [2]
+   idx_replacement.js:72:22
+   72|   idx(42, n => n) as number; // error: result must be MaybeT
+                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:73:18
@@ -837,41 +837,41 @@ References:
                                       ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:89:4
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:89:3
 
 Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   idx_replacement.js:89:4
-   89|   (a: empty); // error
-          ^
+   idx_replacement.js:89:3
+   89|   a as empty; // error
+         ^
 
 References:
    idx_replacement.js:85:40
    85|   declare const props: { data: { +id: ?string } };
                                               ^^^^^^ [1]
-   idx_replacement.js:89:7
-   89|   (a: empty); // error
-             ^^^^^ [2]
+   idx_replacement.js:89:8
+   89|   a as empty; // error
+              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ idx_replacement.js:91:6
+Error ------------------------------------------------------------------------------------------ idx_replacement.js:91:5
 
 Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   idx_replacement.js:91:6
-   91|     (a: empty); // error
-            ^
+   idx_replacement.js:91:5
+   91|     a as empty; // error
+           ^
 
 References:
    idx_replacement.js:85:40
    85|   declare const props: { data: { +id: ?string } };
                                               ^^^^^^ [1]
-   idx_replacement.js:91:9
-   91|     (a: empty); // error
-               ^^^^^ [2]
+   idx_replacement.js:91:10
+   91|     a as empty; // error
+                ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:18:4
+Error --------------------------------------------------------------------------------------------------- import.js:18:3
 
 Cannot cast `mapped` to object type because properties `bar` and `foo` of object type [1] are not exactly the same as
 those of `{bar: empty, +baz: empty, foo: empty}` [2]. [incompatible-type]
@@ -882,35 +882,35 @@ error,
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   import.js:18:4
-   18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-          ^^^^^^ [1]
+   import.js:18:3
+   18|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+         ^^^^^^ [1]
 
 References:
-   import.js:18:12
-   18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   import.js:18:13
+   18|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    export.js:3:24
     3| export type MappedO = {[key in keyof O]: O[key]};
                               ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:18:4
+Error --------------------------------------------------------------------------------------------------- import.js:18:3
 
 Cannot cast `mapped` to object type because in property `baz`: boolean [1] is incompatible with empty [2].
 [incompatible-type]
 
-   import.js:18:4
-   18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-          ^^^^^^
+   import.js:18:3
+   18|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+         ^^^^^^
 
 References:
    export.js:1:44
     1| type O = {foo: number, bar?: string, +baz: boolean};
                                                   ^^^^^^^ [1]
-   import.js:18:43
-   18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-                                                 ^^^^^ [2]
+   import.js:18:44
+   18|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+                                                  ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:19:10
@@ -953,7 +953,7 @@ Cannot assign `false` to `readonly.baz` because property `baz` is not writable. 
                   ^^^
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:47:4
+Error --------------------------------------------------------------------------------------------------- import.js:47:3
 
 Cannot cast `mapped` to object type because properties `bar` and `foo` of object type [1] are not exactly the same as
 those of `{bar: empty, +baz: empty, foo: empty}` [2]. [incompatible-type]
@@ -964,35 +964,35 @@ error,
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   import.js:47:4
-   47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-          ^^^^^^ [1]
+   import.js:47:3
+   47|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+         ^^^^^^ [1]
 
 References:
-   import.js:47:12
-   47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   import.js:47:13
+   47|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    export.js:7:42
     7| export type ParameterizedId<O: {...}> = {[key in keyof O]: O[key]};
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:47:4
+Error --------------------------------------------------------------------------------------------------- import.js:47:3
 
 Cannot cast `mapped` to object type because in property `baz`: boolean [1] is incompatible with empty [2].
 [incompatible-type]
 
-   import.js:47:4
-   47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-          ^^^^^^
+   import.js:47:3
+   47|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+         ^^^^^^
 
 References:
    import.js:40:44
    40| type O = {foo: number, bar?: string, +baz: boolean};
                                                   ^^^^^^^ [1]
-   import.js:47:43
-   47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-                                                 ^^^^^ [2]
+   import.js:47:44
+   47|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+                                                  ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:48:10
@@ -1041,7 +1041,7 @@ Cannot cast object literal to `MappedNonHomomorphic` because in property `foo`: 
 number [2]. [incompatible-type]
 
    import.js:71:10
-   71|   ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
+   71|   ({foo: null, bar: null} as MappedNonHomomorphic); // ERROR!
                 ^^^^ [1]
 
 References:
@@ -1056,7 +1056,7 @@ Cannot cast object literal to `MappedNonHomomorphic` because in property `bar`: 
 number [2]. [incompatible-type]
 
    import.js:71:21
-   71|   ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
+   71|   ({foo: null, bar: null} as MappedNonHomomorphic); // ERROR!
                            ^^^^ [1]
 
 References:
@@ -1065,190 +1065,190 @@ References:
                                                                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:78:4
+Error --------------------------------------------------------------------------------------------------- import.js:78:3
 
 Cannot cast `semi` to object type because property `foo` is read-only in `SemiHomomorphic` [1] but writable in object
 type [2]. [incompatible-variance]
 
-   import.js:78:4
-   78|   (semi: {foo: number}); // ERROR
-          ^^^^
+   import.js:78:3
+   78|   semi as {foo: number}; // ERROR
+         ^^^^
 
 References:
    import.js:76:23
    76|   declare const semi: SemiHomomorphic<{+foo: number, bar: string}, 'foo'>;
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   import.js:78:10
-   78|   (semi: {foo: number}); // ERROR
-                ^^^^^^^^^^^^^ [2]
+   import.js:78:11
+   78|   semi as {foo: number}; // ERROR
+                 ^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:85:4
+Error --------------------------------------------------------------------------------------------------- import.js:85:3
 
 Cannot cast `semi` to union type because: [incompatible-type]
  - Either in property `foo`: number [1] is incompatible with string [2].
  - Or property `foo` is read-only in object type [3] but writable in object type [4].
 
-   import.js:85:4
-   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
-          ^^^^
+   import.js:85:3
+   85|   semi as {foo: number} | {foo: string}; // ERROR 2x
+         ^^^^
 
 References:
    import.js:83:46
    83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
                                                     ^^^^^^ [1]
-   import.js:85:32
-   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
-                                      ^^^^^^ [2]
+   import.js:85:33
+   85|   semi as {foo: number} | {foo: string}; // ERROR 2x
+                                       ^^^^^^ [2]
    import.js:83:23
    83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   import.js:85:10
-   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
-                ^^^^^^^^^^^^^ [4]
+   import.js:85:11
+   85|   semi as {foo: number} | {foo: string}; // ERROR 2x
+                 ^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:85:4
+Error --------------------------------------------------------------------------------------------------- import.js:85:3
 
 Cannot cast `semi` to union type because: [incompatible-type]
  - Either in property `foo`: string [1] is incompatible with number [2].
  - Or property `foo` is read-only in object type [3] but writable in object type [4].
 
-   import.js:85:4
-   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
-          ^^^^
+   import.js:85:3
+   85|   semi as {foo: number} | {foo: string}; // ERROR 2x
+         ^^^^
 
 References:
    import.js:83:63
    83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
                                                                      ^^^^^^ [1]
-   import.js:85:16
-   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
-                      ^^^^^^ [2]
+   import.js:85:17
+   85|   semi as {foo: number} | {foo: string}; // ERROR 2x
+                       ^^^^^^ [2]
    import.js:83:23
    83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   import.js:85:26
-   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
-                                ^^^^^^^^^^^^^ [4]
+   import.js:85:27
+   85|   semi as {foo: number} | {foo: string}; // ERROR 2x
+                                 ^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:89:4
+Error --------------------------------------------------------------------------------------------------- import.js:89:3
 
 Cannot cast `homomorphic` to union type because: [incompatible-type]
  - Either property `bar` is extra in object type [1] but missing in object type [2]. Exact objects do not accept extra
    props.
  - Or property `bar` is read-only in object type [1] but writable in object type [3].
 
-   import.js:89:4
-   89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
-          ^^^^^^^^^^^
+   import.js:89:3
+   89|   homomorphic as {foo: number} | {bar: number}; // ERROR 2x
+         ^^^^^^^^^^^
 
 References:
    import.js:87:30
    87|   declare const homomorphic: ParameterizedReadonly<{foo: number} | {bar:number} >;
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   import.js:89:17
-   89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
-                       ^^^^^^^^^^^^^ [2]
-   import.js:89:33
-   89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
-                                       ^^^^^^^^^^^^^ [3]
+   import.js:89:18
+   89|   homomorphic as {foo: number} | {bar: number}; // ERROR 2x
+                        ^^^^^^^^^^^^^ [2]
+   import.js:89:34
+   89|   homomorphic as {foo: number} | {bar: number}; // ERROR 2x
+                                        ^^^^^^^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:89:4
+Error --------------------------------------------------------------------------------------------------- import.js:89:3
 
 Cannot cast `homomorphic` to union type because: [incompatible-type]
  - Either property `foo` is read-only in object type [1] but writable in object type [2].
  - Or property `foo` is extra in object type [1] but missing in object type [3]. Exact objects do not accept extra
    props.
 
-   import.js:89:4
-   89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
-          ^^^^^^^^^^^
+   import.js:89:3
+   89|   homomorphic as {foo: number} | {bar: number}; // ERROR 2x
+         ^^^^^^^^^^^
 
 References:
    import.js:87:30
    87|   declare const homomorphic: ParameterizedReadonly<{foo: number} | {bar:number} >;
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   import.js:89:17
-   89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
-                       ^^^^^^^^^^^^^ [2]
-   import.js:89:33
-   89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
-                                       ^^^^^^^^^^^^^ [3]
+   import.js:89:18
+   89|   homomorphic as {foo: number} | {bar: number}; // ERROR 2x
+                        ^^^^^^^^^^^^^ [2]
+   import.js:89:34
+   89|   homomorphic as {foo: number} | {bar: number}; // ERROR 2x
+                                        ^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- instancet.js:9:4
+Error ------------------------------------------------------------------------------------------------- instancet.js:9:3
 
 Cannot cast `i` to interface type because property `foo` is read-only in mapped type [1] but writable in interface
 type [2]. [incompatible-variance]
 
-   instancet.js:9:4
-   9|   (i: interface {foo: number}); // ERROR
-         ^
+   instancet.js:9:3
+   9|   i as interface {foo: number}; // ERROR
+        ^
 
 References:
    instancet.js:7:20
    7|   declare const i: MappedInterface;
                          ^^^^^^^^^^^^^^^ [1]
-   instancet.js:9:7
-   9|   (i: interface {foo: number}); // ERROR
-            ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   instancet.js:9:8
+   9|   i as interface {foo: number}; // ERROR
+             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ instancet.js:10:4
+Error ------------------------------------------------------------------------------------------------ instancet.js:10:3
 
 Cannot cast `i` to object type because mapped type [1] is not a subtype of object type [2]. Class instances are not
 subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
 
-   instancet.js:10:4
-   10|   (i: {+foo: number, ...}); // ERROR (class object subtyping)
-          ^
+   instancet.js:10:3
+   10|   i as {+foo: number, ...}; // ERROR (class object subtyping)
+         ^
 
 References:
    instancet.js:7:20
     7|   declare const i: MappedInterface;
                           ^^^^^^^^^^^^^^^ [1]
-   instancet.js:10:7
-   10|   (i: {+foo: number, ...}); // ERROR (class object subtyping)
-             ^^^^^^^^^^^^^^^^^^^ [2]
+   instancet.js:10:8
+   10|   i as {+foo: number, ...}; // ERROR (class object subtyping)
+              ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ instancet.js:21:4
+Error ------------------------------------------------------------------------------------------------ instancet.js:21:3
 
 Cannot cast `i` to interface type because an index signature declaring the expected key / value type is read-only in
 mapped type [1] but writable in interface type [2]. [incompatible-variance]
 
-   instancet.js:21:4
-   21|   (i: interface {+foo: number, [string]: boolean}); // ERROR
-          ^
+   instancet.js:21:3
+   21|   i as interface {+foo: number, [string]: boolean}; // ERROR
+         ^
 
 References:
    instancet.js:19:20
    19|   declare const i: MappedInterfaceWithIndexer;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   instancet.js:21:7
-   21|   (i: interface {+foo: number, [string]: boolean}); // ERROR
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   instancet.js:21:8
+   21|   i as interface {+foo: number, [string]: boolean}; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ instancet.js:33:4
+Error ------------------------------------------------------------------------------------------------ instancet.js:33:3
 
 Cannot cast `inst` to interface type because property `foo` is read-only in mapped type [1] but writable in interface
 type [2]. [incompatible-variance]
 
-   instancet.js:33:4
-   33|   (inst: interface {foo: number}); // ERROR
-          ^^^^
+   instancet.js:33:3
+   33|   inst as interface {foo: number}; // ERROR
+         ^^^^
 
 References:
    instancet.js:31:23
    31|   declare const inst: MappedInstance;
                              ^^^^^^^^^^^^^^ [1]
-   instancet.js:33:10
-   33|   (inst: interface {foo: number}); // ERROR
-                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   instancet.js:33:11
+   33|   inst as interface {foo: number}; // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ instancet.js:34:9
@@ -1265,39 +1265,39 @@ References:
                              ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ instancet.js:41:4
+Error ------------------------------------------------------------------------------------------------ instancet.js:41:3
 
 Cannot cast `c` to interface type because property `bar` is read-only in mapped type [1] but writable in interface
 type [2]. [incompatible-variance]
 
-   instancet.js:41:4
-   41|   (c: interface {bar: number}); // ERROR
-          ^
+   instancet.js:41:3
+   41|   c as interface {bar: number}; // ERROR
+         ^
 
 References:
    instancet.js:39:20
    39|   declare const c: MappedClass;
                           ^^^^^^^^^^^ [1]
-   instancet.js:41:7
-   41|   (c: interface {bar: number}); // ERROR
-             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   instancet.js:41:8
+   41|   c as interface {bar: number}; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ issue-2674.js:6:2
+Error ------------------------------------------------------------------------------------------------ issue-2674.js:6:1
 
 Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
 `BAR` [2]. [incompatible-type]
 
-   issue-2674.js:6:2
-   6| (b.FOO : 'BAR'); // error
-       ^^^^^
+   issue-2674.js:6:1
+   6| b.FOO as 'BAR'; // error
+      ^^^^^
 
 References:
    issue-2674.js:1:32
    1| type Map<O> = {[K in keyof O]: 'FOO'};
                                      ^^^^^ [1]
    issue-2674.js:6:10
-   6| (b.FOO : 'BAR'); // error
+   6| b.FOO as 'BAR'; // error
                ^^^^^ [2]
 
 
@@ -1316,21 +1316,21 @@ References:
                                      ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ key_mirror.js:9:2
+Error ------------------------------------------------------------------------------------------------ key_mirror.js:9:1
 
 Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
 `BAR` [2]. [incompatible-type]
 
-   key_mirror.js:9:2
-   9| (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
-       ^^^^^
+   key_mirror.js:9:1
+   9| o.FOO as 'BAR'; // error, 'FOO' incompatible with 'BAR'
+      ^^^^^
 
 References:
    key_mirror.js:1:55
    1| declare function keyMirror<O>(o: O): {[K in keyof O]: K};
                                                             ^ [1]
    key_mirror.js:9:10
-   9| (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
+   9| o.FOO as 'BAR'; // error, 'FOO' incompatible with 'BAR'
                ^^^^^ [2]
 
 
@@ -1436,24 +1436,24 @@ Mapped Types cannot be used when other properties or indexers are present. [inva
        ^
 
 
-Error ------------------------------------------------------------------------------------------ non_homomorphic.js:11:4
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:11:3
 
 Cannot cast `mapped` to empty because mapped type [1] is incompatible with empty [2]. [incompatible-type]
 
-   non_homomorphic.js:11:4
-   11|   (mapped: empty); // ERROR!
-          ^^^^^^
+   non_homomorphic.js:11:3
+   11|   mapped as empty; // ERROR!
+         ^^^^^^
 
 References:
    non_homomorphic.js:6:25
     6|   declare const mapped: Mapped;
                                ^^^^^^ [1]
-   non_homomorphic.js:11:12
-   11|   (mapped: empty); // ERROR!
-                  ^^^^^ [2]
+   non_homomorphic.js:11:13
+   11|   mapped as empty; // ERROR!
+                   ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ non_homomorphic.js:12:4
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:12:3
 
 Cannot cast `mapped` to object type because properties `bar` and `foo` of mapped type [1] are not exactly the same as
 those of `{bar: empty, foo: empty}` [2]. [incompatible-type]
@@ -1464,20 +1464,20 @@ error,
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   non_homomorphic.js:12:4
-   12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
-          ^^^^^^ [1]
+   non_homomorphic.js:12:3
+   12|   mapped as {foo: empty, bar: empty}; // ERROR 2x
+         ^^^^^^ [1]
 
 References:
-   non_homomorphic.js:12:12
-   12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
-                  ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   non_homomorphic.js:12:13
+   12|   mapped as {foo: empty, bar: empty}; // ERROR 2x
+                   ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    non_homomorphic.js:4:17
     4|   type Mapped = {[key in Keys]: number};
                        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:3
 
 Cannot cast `withLeftovers` to object type because in property `foo`: number [1] is not exactly the same as
 `string` [2]. [incompatible-type]
@@ -1487,26 +1487,26 @@ The above-mentioned two types must be the same because property `foo` is invaria
 - Or make property `foo` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   non_homomorphic.js:21:4
-   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
-          ^^^^^^^^^^^^^
+   non_homomorphic.js:21:3
+   21|   withLeftovers as {[number]: string, foo: string}; // ERROR 2x
+         ^^^^^^^^^^^^^
 
 References:
    non_homomorphic.js:18:50
    18|   type WithLeftovers = {[key in 'foo' | number]: number};
                                                         ^^^^^^ [1]
-   non_homomorphic.js:21:43
-   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
-                                                 ^^^^^^ [2]
+   non_homomorphic.js:21:44
+   21|   withLeftovers as {[number]: string, foo: string}; // ERROR 2x
+                                                  ^^^^^^ [2]
    non_homomorphic.js:18:24
    18|   type WithLeftovers = {[key in 'foo' | number]: number};
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   non_homomorphic.js:21:19
-   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   non_homomorphic.js:21:20
+   21|   withLeftovers as {[number]: string, foo: string}; // ERROR 2x
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:3
 
 Cannot cast `withLeftovers` to object type because in the indexer property: number [1] is not exactly the same as
 `string` [2]. [incompatible-type]
@@ -1516,23 +1516,23 @@ The above-mentioned two types must be the same because the indexer is invariantl
 - Or make the indexer in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   non_homomorphic.js:21:4
-   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
-          ^^^^^^^^^^^^^
+   non_homomorphic.js:21:3
+   21|   withLeftovers as {[number]: string, foo: string}; // ERROR 2x
+         ^^^^^^^^^^^^^
 
 References:
    non_homomorphic.js:18:50
    18|   type WithLeftovers = {[key in 'foo' | number]: number};
                                                         ^^^^^^ [1]
-   non_homomorphic.js:21:30
-   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
-                                    ^^^^^^ [2]
+   non_homomorphic.js:21:31
+   21|   withLeftovers as {[number]: string, foo: string}; // ERROR 2x
+                                     ^^^^^^ [2]
    non_homomorphic.js:18:24
    18|   type WithLeftovers = {[key in 'foo' | number]: number};
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   non_homomorphic.js:21:19
-   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   non_homomorphic.js:21:20
+   21|   withLeftovers as {[number]: string, foo: string}; // ERROR 2x
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------- non_homomorphic.js:28:27
@@ -1550,7 +1550,7 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:3
 
 Cannot cast `keyMirroredObject` to object type because properties `bar`, `baz`, and `foo` of mapped type [1] are not
 exactly the same as those of `{bar: "baz", baz: "foo", foo: "bar"}` [2]. [incompatible-type]
@@ -1561,38 +1561,38 @@ the error,
 - Or make properties `bar`, `baz`, and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   non_homomorphic.js:40:4
-   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
-          ^^^^^^^^^^^^^^^^^ [1]
+   non_homomorphic.js:40:3
+   40|   keyMirroredObject as {foo: 'bar', bar: 'baz', baz: 'foo'}; // ERROR x3
+         ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   non_homomorphic.js:40:23
-   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   non_homomorphic.js:40:24
+   40|   keyMirroredObject as {foo: 'bar', bar: 'baz', baz: 'foo'}; // ERROR x3
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    non_homomorphic.js:35:64
    35|   declare function keyMirror<const T>(...x: ReadonlyArray<T>): {[key in T]: key};
                                                                       ^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:3
 
 Cannot cast `noContext` to object type because property `baz` is missing in mapped type [1] but exists in object
 type [2]. [incompatible-type]
 
-   non_homomorphic.js:48:4
-   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
-          ^^^^^^^^^
+   non_homomorphic.js:48:3
+   48|   noContext as {foo: empty, bar: empty, baz: number}; // ERROR 3x
+         ^^^^^^^^^
 
 References:
    non_homomorphic.js:45:91
    45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...y: ReadonlyArray<T>): {[key in T]: number};
                                                                                                  ^^^^^^^^^^^^^^^^^^^^ [1]
-   non_homomorphic.js:48:15
-   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   non_homomorphic.js:48:16
+   48|   noContext as {foo: empty, bar: empty, baz: number}; // ERROR 3x
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
+Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:3
 
 Cannot cast `noContext` to object type because properties `bar` and `foo` of mapped type [1] are not exactly the same as
 those of `{bar: empty, baz: number, foo: empty}` [2]. [incompatible-type]
@@ -1603,71 +1603,71 @@ error,
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   non_homomorphic.js:48:4
-   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
-          ^^^^^^^^^ [1]
+   non_homomorphic.js:48:3
+   48|   noContext as {foo: empty, bar: empty, baz: number}; // ERROR 3x
+         ^^^^^^^^^ [1]
 
 References:
-   non_homomorphic.js:48:15
-   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   non_homomorphic.js:48:16
+   48|   noContext as {foo: empty, bar: empty, baz: number}; // ERROR 3x
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    non_homomorphic.js:45:91
    45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...y: ReadonlyArray<T>): {[key in T]: number};
                                                                                                  ^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:10:4
+Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:10:3
 
 Cannot cast `mappedTypeApp` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-type]
 
-   non_homomorphic_resolution.js:10:4
-   10|   (mappedTypeApp: empty); // ERROR
-          ^^^^^^^^^^^^^
+   non_homomorphic_resolution.js:10:3
+   10|   mappedTypeApp as empty; // ERROR
+         ^^^^^^^^^^^^^
 
 References:
    non_homomorphic_resolution.js:9:32
     9|   declare const mappedTypeApp: MappedTypeApp;
                                       ^^^^^^^^^^^^^ [1]
-   non_homomorphic_resolution.js:10:19
-   10|   (mappedTypeApp: empty); // ERROR
-                         ^^^^^ [2]
+   non_homomorphic_resolution.js:10:20
+   10|   mappedTypeApp as empty; // ERROR
+                          ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:18:4
+Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:18:3
 
 Cannot cast `mappedKeys` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-type]
 
-   non_homomorphic_resolution.js:18:4
-   18|   (mappedKeys: empty); // ERROR
-          ^^^^^^^^^^
+   non_homomorphic_resolution.js:18:3
+   18|   mappedKeys as empty; // ERROR
+         ^^^^^^^^^^
 
 References:
    non_homomorphic_resolution.js:17:29
    17|   declare const mappedKeys: MappedKeys;
                                    ^^^^^^^^^^ [1]
-   non_homomorphic_resolution.js:18:16
-   18|   (mappedKeys: empty); // ERROR
-                      ^^^^^ [2]
+   non_homomorphic_resolution.js:18:17
+   18|   mappedKeys as empty; // ERROR
+                       ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:27:4
+Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:27:3
 
 Cannot cast `mappedEval` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-type]
 
-   non_homomorphic_resolution.js:27:4
-   27|   (mappedEval: empty); // ERROR
-          ^^^^^^^^^^
+   non_homomorphic_resolution.js:27:3
+   27|   mappedEval as empty; // ERROR
+         ^^^^^^^^^^
 
 References:
    non_homomorphic_resolution.js:26:29
    26|   declare const mappedEval: MappedEval;
                                    ^^^^^^^^^^ [1]
-   non_homomorphic_resolution.js:27:16
-   27|   (mappedEval: empty); // ERROR
-                      ^^^^^ [2]
+   non_homomorphic_resolution.js:27:17
+   27|   mappedEval as empty; // ERROR
+                       ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
+Error ----------------------------------------------------------------------------------------------- optionality.js:9:3
 
 Cannot cast `preserve` to object type because properties `bar` and `foo` of mapped type [1] are not exactly the same as
 those of `{bar?: number, foo: string}` [2]. [incompatible-type]
@@ -1678,14 +1678,14 @@ error,
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   optionality.js:9:4
-   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
-         ^^^^^^^^ [1]
+   optionality.js:9:3
+   9|   preserve as {foo: string, bar?: number}; // Error string ~> number, number ~> string
+        ^^^^^^^^ [1]
 
 References:
-   optionality.js:9:14
-   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   optionality.js:9:15
+   9|   preserve as {foo: string, bar?: number}; // Error string ~> number, number ~> string
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    optionality.js:5:19
    5|   type Preserve = {[key in keyof O]: O[key]};
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -1697,7 +1697,7 @@ Cannot cast object literal to `Preserve` because in property `foo`: string [1] i
 [incompatible-type]
 
    optionality.js:13:10
-   13|   ({foo: 'str', bar: 3}: Preserve); // ERROR
+   13|   ({foo: 'str', bar: 3} as Preserve); // ERROR
                 ^^^^^ [1]
 
 References:
@@ -1712,7 +1712,7 @@ Cannot cast object literal to `Preserve` because in property `bar`: number [1] i
 [incompatible-type]
 
    optionality.js:13:22
-   13|   ({foo: 'str', bar: 3}: Preserve); // ERROR
+   13|   ({foo: 'str', bar: 3} as Preserve); // ERROR
                             ^ [1]
 
 References:
@@ -1908,40 +1908,40 @@ References:
                                ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- semi_homomorphic.js:26:4
+Error ----------------------------------------------------------------------------------------- semi_homomorphic.js:26:3
 
 Cannot cast `withIndexer` to object type because indexed `Semi` [1] is incompatible with exact object type [2].
 [incompatible-indexer]
 
-   semi_homomorphic.js:26:4
-   26|   (withIndexer: {foo: number}); // ERROR, missing indexer
-          ^^^^^^^^^^^
+   semi_homomorphic.js:26:3
+   26|   withIndexer as {foo: number}; // ERROR, missing indexer
+         ^^^^^^^^^^^
 
 References:
    semi_homomorphic.js:24:30
    24|   declare const withIndexer: MappedWithIndexer;
                                     ^^^^^^^^^^^^^^^^^ [1]
-   semi_homomorphic.js:26:17
-   26|   (withIndexer: {foo: number}); // ERROR, missing indexer
-                       ^^^^^^^^^^^^^ [2]
+   semi_homomorphic.js:26:18
+   26|   withIndexer as {foo: number}; // ERROR, missing indexer
+                        ^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- semi_homomorphic.js:34:4
+Error ----------------------------------------------------------------------------------------- semi_homomorphic.js:34:3
 
 Cannot cast `p` to `MappedWithoutIndexer` because indexed `P` [1] is incompatible with exact `Semi` [2].
 [incompatible-indexer]
 
-   semi_homomorphic.js:34:4
-   34|   (p: MappedWithoutIndexer); // ERROR
-          ^
+   semi_homomorphic.js:34:3
+   34|   p as MappedWithoutIndexer; // ERROR
+         ^
 
 References:
    semi_homomorphic.js:33:20
    33|   declare const p: P;
                           ^ [1]
-   semi_homomorphic.js:34:7
-   34|   (p: MappedWithoutIndexer); // ERROR
-             ^^^^^^^^^^^^^^^^^^^^ [2]
+   semi_homomorphic.js:34:8
+   34|   p as MappedWithoutIndexer; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:38:29
@@ -1974,94 +1974,94 @@ References:
                                  ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:31:4
+Error ----------------------------------------------------------------------------------------------------- test.js:31:3
 
 Cannot cast `a` to empty because array type [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:31:4
-   31|   (a: empty); // ERROR
-          ^
+   test.js:31:3
+   31|   a as empty; // ERROR
+         ^
 
 References:
    test.js:25:20
    25|   declare const a: Mapped<Arr>;
                           ^^^^^^^^^^^ [1]
-   test.js:31:7
-   31|   (a: empty); // ERROR
-             ^^^^^ [2]
+   test.js:31:8
+   31|   a as empty; // ERROR
+              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:32:4
+Error ----------------------------------------------------------------------------------------------------- test.js:32:3
 
 Cannot cast `b` to empty because array type [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:32:4
-   32|   (b: empty); // ERROR
-          ^
+   test.js:32:3
+   32|   b as empty; // ERROR
+         ^
 
 References:
    test.js:26:20
    26|   declare const b: Mapped<ROArr>;
                           ^^^^^^^^^^^^^ [1]
-   test.js:32:7
-   32|   (b: empty); // ERROR
-             ^^^^^ [2]
+   test.js:32:8
+   32|   b as empty; // ERROR
+              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:33:4
+Error ----------------------------------------------------------------------------------------------------- test.js:33:3
 
 Cannot cast `c` to empty because array type [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:33:4
-   33|   (c: empty); // ERROR
-          ^
+   test.js:33:3
+   33|   c as empty; // ERROR
+         ^
 
 References:
    test.js:27:20
    27|   declare const c: Mapped<Tuple>;
                           ^^^^^^^^^^^^^ [1]
-   test.js:33:7
-   33|   (c: empty); // ERROR
-             ^^^^^ [2]
+   test.js:33:8
+   33|   c as empty; // ERROR
+              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:42:4
+Error ----------------------------------------------------------------------------------------------------- test.js:42:3
 
 Cannot cast `badKey` to `Mapped` because property `bar` is extra in object type [1] but missing in `Mapped` [2]. Exact
 objects do not accept extra props. [incompatible-type]
 
-   test.js:42:4
-   42|   (badKey: Mapped<O>); // ERROR
-          ^^^^^^
+   test.js:42:3
+   42|   badKey as Mapped<O>; // ERROR
+         ^^^^^^
 
 References:
    test.js:41:25
    41|   declare const badKey: {bar: {contents: number}};
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:42:12
-   42|   (badKey: Mapped<O>); // ERROR
-                  ^^^^^^^^^ [2]
+   test.js:42:13
+   42|   badKey as Mapped<O>; // ERROR
+                   ^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:42:4
+Error ----------------------------------------------------------------------------------------------------- test.js:42:3
 
 Cannot cast `badKey` to `Mapped` because property `foo` is missing in object type [1] but exists in `Mapped` [2].
 [incompatible-type]
 
-   test.js:42:4
-   42|   (badKey: Mapped<O>); // ERROR
-          ^^^^^^
+   test.js:42:3
+   42|   badKey as Mapped<O>; // ERROR
+         ^^^^^^
 
 References:
    test.js:41:25
    41|   declare const badKey: {bar: {contents: number}};
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:42:12
-   42|   (badKey: Mapped<O>); // ERROR
-                  ^^^^^^^^^ [2]
+   test.js:42:13
+   42|   badKey as Mapped<O>; // ERROR
+                   ^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:45:4
+Error ----------------------------------------------------------------------------------------------------- test.js:45:3
 
 Cannot cast `badVal` to `Mapped` because in property `foo`: `{contents: string}` [1] is not exactly the same as
 `Box` [2]. [incompatible-type]
@@ -2071,9 +2071,9 @@ The above-mentioned two types must be the same because property `foo` is invaria
 - Or make property `foo` in `Mapped` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test.js:45:4
-   45|   (badVal: Mapped<O>); // ERROR
-          ^^^^^^
+   test.js:45:3
+   45|   badVal as Mapped<O>; // ERROR
+         ^^^^^^
 
 References:
    test.js:44:31
@@ -2091,12 +2091,12 @@ References:
    14|   [key in keyof O]: Box<O[key]>,
    15| };
        ^ [4]
-   test.js:45:12
-   45|   (badVal: Mapped<O>); // ERROR
-                  ^^^^^^^^^ [5]
+   test.js:45:13
+   45|   badVal as Mapped<O>; // ERROR
+                   ^^^^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:59:4
+Error ----------------------------------------------------------------------------------------------------- test.js:59:3
 
 Cannot cast `badA` to `Mapped` because in array element: `{contents: string}` [1] is not exactly the same as `Box` [2].
 [incompatible-type]
@@ -2106,9 +2106,9 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [5] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   test.js:59:4
-   59|   (badA: Mapped<Arr>); // ERROR
-          ^^^^
+   test.js:59:3
+   59|   badA as Mapped<Arr>; // ERROR
+         ^^^^
 
 References:
    test.js:53:29
@@ -2126,12 +2126,12 @@ References:
    14|   [key in keyof O]: Box<O[key]>,
    15| };
        ^ [4]
-   test.js:59:10
-   59|   (badA: Mapped<Arr>); // ERROR
-                ^^^^^^^^^^^ [5]
+   test.js:59:11
+   59|   badA as Mapped<Arr>; // ERROR
+                 ^^^^^^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:60:4
+Error ----------------------------------------------------------------------------------------------------- test.js:60:3
 
 Cannot cast `badB` to `Mapped` because in array element > property `contents`: `string` [1] is not exactly the same as
 `ROArr[number]` [2]. [incompatible-type]
@@ -2141,9 +2141,9 @@ The above-mentioned two types must be the same because property `contents` is in
 - Or make property `contents` in `Box` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test.js:60:4
-   60|   (badB: Mapped<ROArr>); // ERROR
-          ^^^^
+   test.js:60:3
+   60|   badB as Mapped<ROArr>; // ERROR
+         ^^^^
 
 References:
    test.js:54:48
@@ -2163,7 +2163,7 @@ References:
                            ^^^^^^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:61:4
+Error ----------------------------------------------------------------------------------------------------- test.js:61:3
 
 Cannot cast `badC` to `Mapped` because in property `1.contents`: `string` [1] is not exactly the same as `Tuple[1]` [2].
 [incompatible-type]
@@ -2173,9 +2173,9 @@ The above-mentioned two types must be the same because property `contents` is in
 - Or make property `contents` in `Box` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test.js:61:4
-   61|   (badC: Mapped<Tuple>); // ERROR
-          ^^^^
+   test.js:61:3
+   61|   badC as Mapped<Tuple>; // ERROR
+         ^^^^
 
 References:
    test.js:55:62
@@ -2211,38 +2211,38 @@ Mapped Types are not supported in interfaces or declared classes. [invalid-mappe
            ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:79:4
+Error ----------------------------------------------------------------------------------------------------- test.js:79:3
 
 Cannot cast `mappedIndexer.foo` to number because `Box` [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:79:4
-   79|   (mappedIndexer.foo: number); // ERROR
-          ^^^^^^^^^^^^^^^^^
+   test.js:79:3
+   79|   mappedIndexer.foo as number; // ERROR
+         ^^^^^^^^^^^^^^^^^
 
 References:
    test.js:14:21
    14|   [key in keyof O]: Box<O[key]>,
                            ^^^^^^^^^^^ [1]
-   test.js:79:23
-   79|   (mappedIndexer.foo: number); // ERROR
-                             ^^^^^^ [2]
+   test.js:79:24
+   79|   mappedIndexer.foo as number; // ERROR
+                              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:80:4
+Error ----------------------------------------------------------------------------------------------------- test.js:80:3
 
 Cannot cast `mappedIndexer.bar` to string because `Box` [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:80:4
-   80|   (mappedIndexer.bar: string); // ERROR
-          ^^^^^^^^^^^^^^^^^
+   test.js:80:3
+   80|   mappedIndexer.bar as string; // ERROR
+         ^^^^^^^^^^^^^^^^^
 
 References:
    test.js:14:21
    14|   [key in keyof O]: Box<O[key]>,
                            ^^^^^^^^^^^ [1]
-   test.js:80:23
-   80|   (mappedIndexer.bar: string); // ERROR
-                             ^^^^^^ [2]
+   test.js:80:24
+   80|   mappedIndexer.bar as string; // ERROR
+                              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:92:12
@@ -2253,12 +2253,12 @@ Cannot assign `3` to `readonly.foo` because property `foo` is not writable. [can
                   ^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:96:14
+Error ---------------------------------------------------------------------------------------------------- test.js:96:13
 
 Cannot get `writeonly.foo` because property `foo` is not readable. [cannot-read]
 
-   96|   (writeonly.foo: number); // ERROR
-                    ^^^
+   96|   writeonly.foo as number; // ERROR
+                   ^^^
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:102:19
@@ -2277,75 +2277,75 @@ Mapped Types do not yet support variance annotations on array inputs. [invalid-m
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:111:4
+Error ---------------------------------------------------------------------------------------------------- test.js:111:3
 
 Cannot cast `partial.foo` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:111:4
-   111|   (partial.foo: number); // ERROR
-           ^^^^^^^^^^^
+   test.js:111:3
+   111|   partial.foo as number; // ERROR
+          ^^^^^^^^^^^
 
 References:
    test.js:109:71
    109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
                                                                               ^^^^^^ [1]
-   test.js:111:17
-   111|   (partial.foo: number); // ERROR
-                        ^^^^^^ [2]
+   test.js:111:18
+   111|   partial.foo as number; // ERROR
+                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:115:4
+Error ---------------------------------------------------------------------------------------------------- test.js:115:3
 
 Cannot cast `partialIndexer.qux` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:115:4
-   115|   (partialIndexer.qux: string); // ERROR
-           ^^^^^^^^^^^^^^^^^^
+   test.js:115:3
+   115|   partialIndexer.qux as string; // ERROR
+          ^^^^^^^^^^^^^^^^^^
 
 References:
    test.js:109:71
    109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
                                                                               ^^^^^^ [1]
-   test.js:115:24
-   115|   (partialIndexer.qux: string); // ERROR
-                               ^^^^^^ [2]
+   test.js:115:25
+   115|   partialIndexer.qux as string; // ERROR
+                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:119:4
+Error ---------------------------------------------------------------------------------------------------- test.js:119:3
 
 Cannot cast `partialArr[0]` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:119:4
-   119|   (partialArr[0]: number); // ERROR;
-           ^^^^^^^^^^^^^
+   test.js:119:3
+   119|   partialArr[0] as number; // ERROR;
+          ^^^^^^^^^^^^^
 
 References:
    test.js:109:71
    109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
                                                                               ^^^^^^ [1]
-   test.js:119:19
-   119|   (partialArr[0]: number); // ERROR;
-                          ^^^^^^ [2]
+   test.js:119:20
+   119|   partialArr[0] as number; // ERROR;
+                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:121:4
+Error ---------------------------------------------------------------------------------------------------- test.js:121:3
 
 Cannot cast `partialTuple[0]` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:121:4
-   121|   (partialTuple[0]: number); // ERROR;
-           ^^^^^^^^^^^^^^^
+   test.js:121:3
+   121|   partialTuple[0] as number; // ERROR;
+          ^^^^^^^^^^^^^^^
 
 References:
    test.js:109:71
    109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
                                                                               ^^^^^^ [1]
-   test.js:121:21
-   121|   (partialTuple[0]: number); // ERROR;
-                            ^^^^^^ [2]
+   test.js:121:22
+   121|   partialTuple[0] as number; // ERROR;
+                             ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:132:4
+Error ---------------------------------------------------------------------------------------------------- test.js:132:3
 
 Cannot cast `constrained` to object type because in property `foo`: `ConstrainedBox` [1] is not exactly the same as
 `{contents: number}` [2]. [incompatible-type]
@@ -2355,26 +2355,26 @@ The above-mentioned two types must be the same because property `foo` is invaria
 - Or make property `foo` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test.js:132:4
-   132|   (constrained: {foo: {contents: number}}); // OK
-           ^^^^^^^^^^^
+   test.js:132:3
+   132|   constrained as {foo: {contents: number}}; // OK
+          ^^^^^^^^^^^
 
 References:
    test.js:128:23
    128|     [key in keyof O]: ConstrainedBox<O[key]>,
                               ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:132:23
-   132|   (constrained: {foo: {contents: number}}); // OK
-                              ^^^^^^^^^^^^^^^^^^ [2]
+   test.js:132:24
+   132|   constrained as {foo: {contents: number}}; // OK
+                               ^^^^^^^^^^^^^^^^^^ [2]
    test.js:127:38
                                              v
    127|   type MappedConstrained<O: {...}> = {
    128|     [key in keyof O]: ConstrainedBox<O[key]>,
    129|   };
           ^ [3]
-   test.js:132:17
-   132|   (constrained: {foo: {contents: number}}); // OK
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   test.js:132:18
+   132|   constrained as {foo: {contents: number}}; // OK
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:138:35
@@ -2392,21 +2392,21 @@ References:
                                      ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:140:4
+Error ---------------------------------------------------------------------------------------------------- test.js:140:3
 
 Cannot cast `badKeys` to empty because `UnconstrainedKey` [1] is incompatible with empty [2]. [incompatible-type]
 
-   test.js:140:4
-   140|   (badKeys: empty); // ERROR
-           ^^^^^^^
+   test.js:140:3
+   140|   badKeys as empty; // ERROR
+          ^^^^^^^
 
 References:
    test.js:139:26
    139|   declare const badKeys: BadKeys;
                                  ^^^^^^^ [1]
-   test.js:140:13
-   140|   (badKeys: empty); // ERROR
-                    ^^^^^ [2]
+   test.js:140:14
+   140|   badKeys as empty; // ERROR
+                     ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- union.js:8:2
@@ -2416,12 +2416,12 @@ Cannot cast object literal to `T` because: [incompatible-type]
  - Or in property `p`: boolean [1] is incompatible with number [3].
 
    union.js:8:2
-   8| ({p:false}: T); // error
+   8| ({p:false} as T); // error
        ^^^^^^^^^
 
 References:
    union.js:8:5
-   8| ({p:false}: T); // error
+   8| ({p:false} as T); // error
           ^^^^^ [1]
    union.js:1:13
    1| type T = {p:string}|{p:number};
@@ -2438,12 +2438,12 @@ Cannot cast object literal to `U` because: [incompatible-type]
  - Or in property `p`: boolean [1] is incompatible with number [2].
 
    union.js:9:2
-   9| ({p:false}: U); // error
+   9| ({p:false} as U); // error
        ^^^^^^^^^
 
 References:
    union.js:9:5
-   9| ({p:false}: U); // error
+   9| ({p:false} as U); // error
           ^^^^^ [1]
    union.js:2:40
    2| type IdentityMap<O> = {[K in keyof O]: O[K]};

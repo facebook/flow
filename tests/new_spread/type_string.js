@@ -1,2 +1,2 @@
 type O1 = {..."foo"}; // Error
-("foo": O1);
+"foo" as O1;

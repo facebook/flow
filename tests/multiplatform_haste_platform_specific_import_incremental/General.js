@@ -1,3 +1,3 @@
 import {a} from 'A';
 
-(a: string);
+a as string;

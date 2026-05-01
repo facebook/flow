@@ -7,16 +7,16 @@ type Mapped<T> = {[key in T]: number};
   type TypeApp<T> = T;
   type MappedTypeApp = Mapped<TypeApp<'foo'>>;
   declare const mappedTypeApp: MappedTypeApp;
-  (mappedTypeApp: empty); // ERROR
-  (mappedTypeApp: {foo: number}); // OK!
+  mappedTypeApp as empty; // ERROR
+  mappedTypeApp as {foo: number}; // OK!
 }
 
 {
   type Keys = keyof {foo: number};
   type MappedKeys = Mapped<Keys>;
   declare const mappedKeys: MappedKeys;
-  (mappedKeys: empty); // ERROR
-  (mappedKeys: {foo: number}); // OK!
+  mappedKeys as empty; // ERROR
+  mappedKeys as {foo: number}; // OK!
 }
 
 {
@@ -24,6 +24,6 @@ type Mapped<T> = {[key in T]: number};
   type Eval = O['foo'];
   type MappedEval = Mapped<Eval>;
   declare const mappedEval: MappedEval;
-  (mappedEval: empty); // ERROR
-  (mappedEval: {foo: number});
+  mappedEval as empty; // ERROR
+  mappedEval as {foo: number};
 }

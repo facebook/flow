@@ -124,4 +124,4 @@ type Omit3 = {
 type Final = Omit<Omit3, 'evenMoreStuff'>;
 
 declare const delegated: {...Final};
-(delegated: Final);
+delegated as Final;

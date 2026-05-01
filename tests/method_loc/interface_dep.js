@@ -1,2 +1,2 @@
 const o = require('./interface');
-(o.m: empty); // err
+o.m as empty; // err
