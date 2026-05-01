@@ -1569,6 +1569,7 @@ and Expression : sig
 
     type ('M, 'T) t = {
       elements: ('M, 'T) element list;
+      trailing_comma: bool;
       comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]

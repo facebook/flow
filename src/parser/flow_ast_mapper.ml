@@ -290,13 +290,13 @@ class ['loc] mapper =
 
     method array _loc (expr : ('loc, 'loc) Ast.Expression.Array.t) =
       let open Ast.Expression in
-      let { Array.elements; comments } = expr in
+      let { Array.elements; trailing_comma; comments } = expr in
       let elements' = map_list this#array_element elements in
       let comments' = this#syntax_opt comments in
       if elements == elements' && comments == comments' then
         expr
       else
-        { Array.elements = elements'; comments = comments' }
+        { Array.elements = elements'; trailing_comma; comments = comments' }
 
     method array_element element =
       let open Ast.Expression.Array in

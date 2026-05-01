@@ -211,7 +211,8 @@
         ],
         "loc":{"source":null,"start":{"line":5,"column":88},"end":{"line":5,"column":90}},
         "range":[299,301],
-        "elements":[]
+        "elements":[],
+        "trailingComma":false
       },
       "body":{
         "type":"BlockStatement",

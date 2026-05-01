@@ -2415,8 +2415,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       None
   and array loc arr1 arr2 : node change list option =
     let open Ast.Expression.Array in
-    let { elements = elems1; comments = comments1 } = arr1 in
-    let { elements = elems2; comments = comments2 } = arr2 in
+    let { elements = elems1; trailing_comma = _; comments = comments1 } = arr1 in
+    let { elements = elems2; trailing_comma = _; comments = comments2 } = arr2 in
     let comments = syntax_opt loc comments1 comments2 in
     let elements = diff_and_recurse_no_trivial array_element elems1 elems2 in
     join_diff_list [comments; elements]

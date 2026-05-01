@@ -61,7 +61,8 @@
                 "value":"duck",
                 "raw":"\"duck\""
               }
-            ]
+            ],
+            "trailingComma":false
           }
         }
       ],

@@ -180,10 +180,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method array (expr : ('M, 'T) Ast.Expression.Array.t) : ('N, 'U) Ast.Expression.Array.t =
       let open Ast.Expression in
-      let { Array.elements; Array.comments } = expr in
+      let { Array.elements; Array.trailing_comma; Array.comments } = expr in
       let elements' = List.map ~f:this#array_element elements in
       let comments' = this#syntax_with_internal_opt comments in
-      { Array.elements = elements'; comments = comments' }
+      { Array.elements = elements'; trailing_comma; comments = comments' }
 
     method array_element (element : ('M, 'T) Ast.Expression.Array.element)
         : ('N, 'U) Ast.Expression.Array.element =

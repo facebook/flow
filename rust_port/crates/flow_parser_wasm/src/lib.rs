@@ -81,6 +81,14 @@ fn nonneg_u32(v: i32) -> u32 {
 /// - enable_enums: enable Flow enum syntax (off by default per OCaml `default_parse_options`)
 /// - enable_records: enable Flow record syntax (`#{ ... }`); off by default
 /// - enable_types: enable Flow/TS type-grammar (on by default; fixtures opt out via `types: false`)
+/// - enable_types_pragma_detection: when non-zero, scan the docblock for
+///   `@flow` and override `enable_types` based on whether the pragma is
+///   present (matches Hermes' C++ pragma scan in
+///   `xplat/static_h/lib/Parser/FlowHelpers.cpp`). When zero, `enable_types`
+///   is honored verbatim. The pragma scan walks leading whitespace, `//` and
+///   `/* */` comments, and directive-prologue string literals up to the
+///   first non-directive token; in each collected comment it searches for
+///   `@flow` followed by a non-word boundary.
 /// - source_type: 0 = unspecified, 1 = script, 2 = module. flow_parser has
 ///   no script/module gate (parser_env.rs:218): `init_env` pins
 ///   `allow_yield: false, allow_await: false` at the top level
@@ -108,6 +116,7 @@ pub extern "C" fn hermesParse(
     enable_records: i32,
     enable_types: i32,
     source_type: i32,
+    enable_types_pragma_detection: i32,
 ) -> *mut ParseResult {
     match source_type {
         0..=2 => {}
@@ -168,19 +177,25 @@ pub extern "C" fn hermesParse(
         }
     };
 
-    // The Rust parser does not have pragma-conditional type parsing; `types`
-    // gates the type grammar at the lexer/parser level. OCaml's
-    // `default_parse_options` keeps `types: true` regardless of the `@flow`
-    // pragma — pragma detection is the consumer's job. Fixtures opt out via
-    // `types: false` in their `.options.json` (e.g. ts_syntax fixtures that
-    // exercise the no-types-grammar path).
+    // When pragma detection is requested, scan the docblock for `@flow` and
+    // override `enable_types` accordingly. Mirrors Hermes' C++
+    // `parser::hasFlowPragma` + `parser::getCommentsInDocBlock`
+    // (xplat/static_h/lib/Parser/FlowHelpers.cpp:17-82) and the JS adapter
+    // helper that previously lived in
+    // flow-parser-oxidized/src/index.js::hasFlowPragma.
+    let resolved_enable_types = if enable_types_pragma_detection != 0 {
+        has_flow_pragma(source_str)
+    } else {
+        enable_types != 0
+    };
+
     let parse_options = flow_parser::ParseOptions {
         components: enable_components != 0,
         enums: enable_enums != 0,
         pattern_matching: enable_match != 0,
         records: enable_records != 0,
         esproposal_decorators: enable_decorators != 0,
-        types: enable_types != 0,
+        types: resolved_enable_types,
         use_strict: false,
         assert_operator: assert_operator != 0,
         module_ref_prefix: None,
@@ -371,6 +386,122 @@ pub extern "C" fn main() -> i32 {
     0
 }
 
+/// Scan `code`'s docblock for an `@flow` pragma. Mirrors C++ hermes-parser
+/// `parser::hasFlowPragma` + `parser::getCommentsInDocBlock` semantics
+/// (`xplat/static_h/lib/Parser/FlowHelpers.cpp:17-82`): walk leading
+/// whitespace, `//` and `/* ... */` comments, and directive-prologue string
+/// literals (each optionally followed by `;`) up to the first non-directive
+/// token, then in each collected comment search for `@flow` followed by a
+/// non-word boundary (end of comment, or any character outside
+/// `[A-Za-z0-9_]`).
+fn has_flow_pragma(code: &str) -> bool {
+    let bytes = code.as_bytes();
+    let len = bytes.len();
+    let mut i = 0;
+    while i < len {
+        let ch = bytes[i];
+        // Whitespace
+        if ch == b' ' || ch == b'\t' || ch == b'\n' || ch == b'\r' {
+            i += 1;
+            continue;
+        }
+        // Comments
+        if ch == b'/' && i + 1 < len {
+            let next = bytes[i + 1];
+            if next == b'/' {
+                i += 2;
+                let start = i;
+                while i < len {
+                    let c = bytes[i];
+                    if c == b'\n' || c == b'\r' {
+                        break;
+                    }
+                    i += 1;
+                }
+                if comment_has_flow_pragma(bytes, start, i) {
+                    return true;
+                }
+                continue;
+            }
+            if next == b'*' {
+                i += 2;
+                let start = i;
+                while i + 1 < len && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                    i += 1;
+                }
+                let end = i;
+                if i + 1 < len {
+                    i += 2; // skip the closing `*/`
+                }
+                if comment_has_flow_pragma(bytes, start, end) {
+                    return true;
+                }
+                continue;
+            }
+        }
+        // String-literal directive prologue
+        if ch == b'"' || ch == b'\'' {
+            let quote = ch;
+            i += 1;
+            while i < len {
+                let c = bytes[i];
+                if c == b'\\' && i + 1 < len {
+                    // Skip the escape character; common case is `\"`/`\\`/`\n`.
+                    i += 2;
+                    continue;
+                }
+                if c == quote {
+                    i += 1;
+                    break;
+                }
+                i += 1;
+            }
+            continue;
+        }
+        // Optional `;` between directives
+        if ch == b';' {
+            i += 1;
+            continue;
+        }
+        // First non-directive token: stop. Anything past this point is
+        // regular code, not docblock.
+        break;
+    }
+    false
+}
+
+fn comment_has_flow_pragma(bytes: &[u8], start: usize, end: usize) -> bool {
+    let needle = b"@flow";
+    let mut from = start;
+    while from + needle.len() <= end {
+        // Manual indexOf (no allocations).
+        let mut found_at = None;
+        let mut search = from;
+        while search + needle.len() <= end {
+            if &bytes[search..search + needle.len()] == needle {
+                found_at = Some(search);
+                break;
+            }
+            search += 1;
+        }
+        let idx = match found_at {
+            Some(i) => i,
+            None => return false,
+        };
+        let after = idx + needle.len();
+        if after >= end {
+            return true;
+        }
+        let c = bytes[after];
+        let is_word = c.is_ascii_digit() || c.is_ascii_alphabetic() || c == b'_';
+        if !is_word {
+            return true;
+        }
+        from = idx + 1;
+    }
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use crate::node_kinds::NodeKind;
@@ -486,6 +617,7 @@ mod tests {
             1, // enable_records
             1, // enable_types
             source_type,
+            0, // enable_types_pragma_detection
         );
         // `bytes` must outlive the call — ensure rustc cannot drop it
         // before `hermesParse` returns by reading it after.

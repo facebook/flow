@@ -933,7 +933,9 @@ let rec resolve_binding cx def_scope_kind reason loc b =
     let t = DefT (reason, ArrT (ArrayAT { elem_t; tuple_view; react_dro = None })) in
     let cache = Context.node_cache cx in
     let exp =
-      ((arr_loc, t), Flow_ast.Expression.(Array { Array.elements = []; comments = None }))
+      ( (arr_loc, t),
+        Flow_ast.Expression.(Array { Array.elements = []; trailing_comma = false; comments = None })
+      )
     in
     Node_cache.set_expression cache exp;
     t

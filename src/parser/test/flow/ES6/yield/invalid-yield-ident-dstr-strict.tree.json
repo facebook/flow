@@ -70,7 +70,8 @@
             "computed":false
           }
         ],
-        "typeAnnotation":null
+        "typeAnnotation":null,
+        "optional":false
       },
       "right":{
         "type":"ArrayExpression",
@@ -83,7 +84,8 @@
             "range":[40,42],
             "properties":[]
           }
-        ]
+        ],
+        "trailingComma":false
       },
       "body":{
         "type":"EmptyStatement",

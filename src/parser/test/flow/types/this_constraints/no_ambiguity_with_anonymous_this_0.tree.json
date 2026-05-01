@@ -45,37 +45,30 @@
                   "range":[23,27],
                   "name":null,
                   "typeAnnotation":{
-                    "type":"GenericTypeAnnotation",
+                    "type":"ThisTypeAnnotation",
                     "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":9}},
-                    "range":[23,27],
-                    "id":{
-                      "type":"Identifier",
-                      "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":9}},
-                      "range":[23,27],
-                      "name":"this",
-                      "typeAnnotation":null,
-                      "optional":false
-                    },
-                    "typeParameters":null
+                    "range":[23,27]
                   },
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"VoidTypeAnnotation",
                 "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":2,"column":16}},
                 "range":[30,34]
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":true,
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           }
         ],
         "indexers":[],

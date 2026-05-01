@@ -32,7 +32,8 @@
               "optional":false
             }
           }
-        ]
+        ],
+        "trailingComma":true
       },
       "directive":null
     }

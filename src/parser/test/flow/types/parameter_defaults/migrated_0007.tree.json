@@ -46,18 +46,13 @@
             "range":[20,39],
             "name":"T",
             "bound":{
-              "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":30}},
-              "range":[21,30],
+              "type":"NullableTypeAnnotation",
+              "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":30}},
+              "range":[23,30],
               "typeAnnotation":{
-                "type":"NullableTypeAnnotation",
-                "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":30}},
-                "range":[23,30],
-                "typeAnnotation":{
-                  "type":"StringTypeAnnotation",
-                  "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":30}},
-                  "range":[24,30]
-                }
+                "type":"StringTypeAnnotation",
+                "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":30}},
+                "range":[24,30]
               }
             },
             "const":false,

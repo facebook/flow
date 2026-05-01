@@ -675,7 +675,7 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.ArrowFunction x -> func_is_synthesizable ~allow_unannotated_this:true x
     | Ast.Expression.Function x -> func_is_synthesizable ~allow_unannotated_this:false x
     | Ast.Expression.Array expr ->
-      let { Ast.Expression.Array.elements; comments = _ } = expr in
+      let { Ast.Expression.Array.elements; trailing_comma = _; comments = _ } = expr in
       Base.List.for_all elements ~f:(function
           | Ast.Expression.Array.Expression expr -> synthesizable expr
           | Ast.Expression.Array.Spread (_, spread) ->
@@ -3857,7 +3857,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method! array loc _ = fail loc "Should be visited by visit_array_expression"
 
     method private visit_array_expression ~array_hints loc expr =
-      let { Ast.Expression.Array.elements; comments = _ } = expr in
+      let { Ast.Expression.Array.elements; trailing_comma = _; comments = _ } = expr in
       let (_ : bool) =
         Base.List.foldi ~init:false elements ~f:(fun i seen_spread element ->
             let mk_hints decomp =

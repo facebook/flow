@@ -773,7 +773,8 @@ module Expressions = struct
   let identifier ?(loc = Loc.none) ?(comments = None) name =
     (loc, Identifier (loc, { Ast.Identifier.name; comments }))
 
-  let array ?(loc = Loc.none) ?comments elements = (loc, Array { Array.elements; comments })
+  let array ?(loc = Loc.none) ?(trailing_comma = false) ?comments elements =
+    (loc, Array { Array.elements; trailing_comma; comments })
 
   let array_expression expr = Array.Expression expr
 

@@ -495,6 +495,7 @@ module.exports = [
       type: 'ArrayExpression',
       loc: this.addEmptyLoc(),
       elements: this.deserializeNodeList(),
+      trailingComma: this.deserializeBoolean(),
     };
   },
 
@@ -624,6 +625,7 @@ module.exports = [
       object: this.deserializeNode(),
       property: this.deserializeNode(),
       computed: this.deserializeBoolean(),
+      optional: this.deserializeBoolean(),
     };
   },
 
@@ -647,6 +649,7 @@ module.exports = [
       callee: this.deserializeNode(),
       typeArguments: this.deserializeNode(),
       arguments: this.deserializeNodeList(),
+      optional: this.deserializeBoolean(),
     };
   },
 
@@ -835,15 +838,17 @@ module.exports = [
     if (valueKind === 1) value = this.deserializeBoolean();
     else if (valueKind === 2) value = this.deserializeNumber();
     else if (valueKind === 3) value = this.deserializeString();
+    const literalType = this.deserializeString();
     const raw = this.deserializeString();
     const bigint = this.deserializeString();
     const regexPattern = this.deserializeString();
     const regexFlags = this.deserializeString();
-    let regex = null;
+    const node = {type: 'Literal', loc, value, raw, literalType};
+    if (bigint != null) node.bigint = bigint;
     if (regexPattern != null) {
-      regex = {pattern: regexPattern, flags: regexFlags ?? ''};
+      node.regex = {pattern: regexPattern, flags: regexFlags ?? ''};
     }
-    return {type: 'Literal', loc, value, raw, bigint, regex};
+    return node;
   },
 
   // 76: Identifier
@@ -1460,6 +1465,7 @@ module.exports = [
       loc: this.addEmptyLoc(),
       value: this.deserializeNode(),
       raw: this.deserializeString(),
+      bigint: this.deserializeString(),
     };
   },
 
@@ -2452,6 +2458,15 @@ module.exports = [
     return {
       type: 'ThisTypeAnnotation',
       loc: this.addEmptyLoc(),
+    };
+  },
+
+  // 230: ChainExpression
+  function () {
+    return {
+      type: 'ChainExpression',
+      loc: this.addEmptyLoc(),
+      expression: this.deserializeNode(),
     };
   },
 ];

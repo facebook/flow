@@ -3800,7 +3800,7 @@ module Make
               comments;
             }
         )
-    | Array { Array.elements; comments } ->
+    | Array { Array.elements; trailing_comma; comments } ->
       (match elements with
       | [] when as_const ->
         (* Special case `[] as const` *)
@@ -3809,17 +3809,17 @@ module Make
         let arrtype =
           TupleAT { elem_t; elements = []; react_dro = None; arity = (0, 0); inexact = false }
         in
-        ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; comments })
+        ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; trailing_comma; comments })
       | [] when Context.typing_mode cx <> Context.CheckingMode ->
         let reason = mk_reason REmptyArrayLit loc in
         let element_reason = mk_reason REmptyArrayElement loc in
         let elem_t = Context.mk_placeholder cx element_reason in
         let arrtype = ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None } in
-        ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; comments })
+        ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; trailing_comma; comments })
       | [] ->
         let (reason, elem_t) = empty_array cx loc in
         let arrtype = ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None } in
-        ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; comments })
+        ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; trailing_comma; comments })
       | elems ->
         let has_hint = lazy (Lazy.force has_hint || Natural_inference.loc_has_hint cx loc) in
         let reason =
@@ -3851,7 +3851,7 @@ module Make
                   resolve_to
             )
           ),
-          Array { Array.elements; comments }
+          Array { Array.elements; trailing_comma; comments }
         ))
     | New
         {

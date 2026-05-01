@@ -136,7 +136,7 @@ struct
         elements env acc remaining
       | Array.Hole loc :: remaining -> elements env (Pattern.Array.Hole loc :: acc) remaining
     in
-    fun env (loc, { Ast.Expression.Array.elements = elems; comments }) ->
+    fun env (loc, { Ast.Expression.Array.elements = elems; trailing_comma = _; comments }) ->
       ( loc,
         Pattern.Array
           {

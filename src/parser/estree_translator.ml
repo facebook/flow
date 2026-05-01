@@ -85,6 +85,15 @@ with type t = Impl.t = struct
           ]
       )
     in
+    (* Optional-chain rewrite: mirror upstream Hermes' mapChainExpression by
+       emitting `OptionalMember`/`OptionalCall` AST nodes as
+       `MemberExpression`/`CallExpression` with `optional` flags, wrapped in a
+       single `ChainExpression` at the chain root. Plain `Member`/`Call` inside
+       an optional chain mark a parenthesis boundary: emit with `optional:
+       false` and reset the chain state for their children so an inner optional
+       access starts a new chain. The chain state is threaded explicitly as
+       the [in_optional_chain] argument of [expression] (and propagated through
+       [call_node_properties] / [member_node_properties]). *)
     let rec node _type location ?comments props =
       let locs =
         if Config.include_locs then
@@ -526,17 +535,20 @@ with type t = Impl.t = struct
             ("importKind", string import_kind_str);
             ("isExport", bool is_export);
           ]
-    and expression =
+    and expression ?(in_optional_chain = false) expr =
       let open Expression in
-      function
+      match expr with
       | (loc, This { This.comments }) -> node ?comments "ThisExpression" loc []
       | (loc, Super { Super.comments }) -> node ?comments "Super" loc []
-      | (loc, Array { Array.elements; comments }) ->
+      | (loc, Array { Array.elements; trailing_comma; comments }) ->
         node
           ?comments:(format_internal_comments comments)
           "ArrayExpression"
           loc
-          [("elements", array_of_list array_element elements)]
+          [
+            ("elements", array_of_list array_element elements);
+            ("trailingComma", bool trailing_comma);
+          ]
       | (loc, Object { Object.properties; comments }) ->
         node
           ?comments:(format_internal_comments comments)
@@ -706,7 +718,7 @@ with type t = Impl.t = struct
         let (arguments, comments) =
           match arguments with
           | Some ((_, { ArgList.comments = args_comments; _ }) as arguments) ->
-            ( arg_list arguments,
+            ( arg_list ~in_optional_chain:false arguments,
               Flow_ast_utils.merge_comments
                 ~inner:(format_internal_comments args_comments)
                 ~outer:comments
@@ -731,7 +743,15 @@ with type t = Impl.t = struct
             ~inner:(format_internal_comments args_comments)
             ~outer:comments
         in
-        node ?comments "CallExpression" loc (call_node_properties call)
+        (* Plain Call inside an optional chain marks a parenthesis boundary:
+           reset chain state for children so an inner optional access starts a
+           new chain. Otherwise, normal call. Either way emit CallExpression
+           with optional=false. *)
+        node
+          ?comments
+          "CallExpression"
+          loc
+          (call_node_properties ~in_optional_chain:false call @ [("optional", bool false)])
       | ( loc,
           OptionalCall
             {
@@ -747,45 +767,85 @@ with type t = Impl.t = struct
             ~inner:(format_internal_comments args_comments)
             ~outer:comments
         in
-
-        let (optional, wrap_callee) =
-          match optional with
-          | OptionalCall.Optional -> (bool true, None)
-          | OptionalCall.NonOptional -> (bool false, None)
-          | OptionalCall.AssertNonnull ->
-            ( bool false,
-              Some
-                (fun callee ->
-                  node "NonNullExpression" loc [("argument", callee); ("chain", bool true)])
+        (match optional with
+        | OptionalCall.AssertNonnull ->
+          (* AssertNonnull (`expr!()`): emit CallExpression with
+             optional=false and the callee wrapped in NonNullExpression
+             (chain: true). Not part of the optional-chain rewrite, so
+             no ChainExpression wrap. *)
+          let wrap_callee callee =
+            node "NonNullExpression" loc [("argument", callee); ("chain", bool true)]
+          in
+          node
+            ?comments
+            "CallExpression"
+            loc
+            (call_node_properties ~in_optional_chain:false ~wrap_callee call
+            @ [("optional", bool false)]
             )
-        in
+        | OptionalCall.Optional
+        | OptionalCall.NonOptional ->
+          let optional_value =
+            match optional with
+            | OptionalCall.Optional -> bool true
+            | _ -> bool false
+          in
+          let emit_inner () =
+            node
+              ?comments
+              "CallExpression"
+              loc
+              (call_node_properties ~in_optional_chain:true call @ [("optional", optional_value)])
+          in
+          if in_optional_chain then
+            emit_inner ()
+          else
+            node "ChainExpression" loc [("expression", emit_inner ())])
+      | (loc, Member ({ Member.comments; _ } as member)) ->
+        (* Plain Member inside an optional chain marks a parenthesis boundary;
+           reset chain state for children so an inner optional access starts a
+           new chain. Either way emit MemberExpression with optional=false. *)
         node
           ?comments
-          "OptionalCallExpression"
+          "MemberExpression"
           loc
-          (call_node_properties ?wrap_callee call @ [("optional", optional)])
-      | (loc, Member ({ Member.comments; _ } as member)) ->
-        node ?comments "MemberExpression" loc (member_node_properties member)
+          (member_node_properties ~in_optional_chain:false member @ [("optional", bool false)])
       | ( loc,
           OptionalMember
             { OptionalMember.member = { Member.comments; _ } as member; optional; filtered_out = _ }
         ) ->
-        let (optional, wrap_receiver) =
-          match optional with
-          | OptionalMember.Optional -> (bool true, None)
-          | OptionalMember.NonOptional -> (bool false, None)
-          | OptionalMember.AssertNonnull ->
-            ( bool false,
-              Some
-                (fun receiver ->
-                  node "NonNullExpression" loc [("argument", receiver); ("chain", bool true)])
+        (match optional with
+        | OptionalMember.AssertNonnull ->
+          let wrap_receiver receiver =
+            node "NonNullExpression" loc [("argument", receiver); ("chain", bool true)]
+          in
+          node
+            ?comments
+            "MemberExpression"
+            loc
+            (member_node_properties ~in_optional_chain:false ~wrap_receiver member
+            @ [("optional", bool false)]
             )
-        in
-        node
-          ?comments
-          "OptionalMemberExpression"
-          loc
-          (member_node_properties ?wrap_receiver member @ [("optional", optional)])
+        | OptionalMember.Optional
+        | OptionalMember.NonOptional ->
+          let optional_value =
+            match optional with
+            | OptionalMember.Optional -> bool true
+            | _ -> bool false
+          in
+          let emit_inner () =
+            node
+              ?comments
+              "MemberExpression"
+              loc
+              (member_node_properties ~in_optional_chain:true member
+              @ [("optional", optional_value)]
+              )
+          in
+          if in_optional_chain then
+            emit_inner ()
+          else
+            node "ChainExpression" loc [("expression", emit_inner ())])
       | (loc, Yield { Yield.argument; delegate; comments; result_out = _ }) ->
         node
           ?comments
@@ -1117,10 +1177,10 @@ with type t = Impl.t = struct
           ("typeAnnotation", hint type_annotation annot);
           ("optional", bool optional);
         ]
-    and arg_list (_loc, { Expression.ArgList.arguments; comments = _ }) =
+    and arg_list ~in_optional_chain (_loc, { Expression.ArgList.arguments; comments = _ }) =
       (* ESTree does not have a unique node for argument lists, so there's nowhere to
          include the loc. *)
-      array_of_list expression_or_spread arguments
+      array_of_list (expression_or_spread ~in_optional_chain) arguments
     and case (loc, { Statement.Switch.Case.test; case_test_loc = _; consequent; comments }) =
       node
         ?comments
@@ -2064,19 +2124,19 @@ with type t = Impl.t = struct
             ("computed", bool computed);
           ]
       | RestElement (loc, el) -> rest_element loc el
-    and spread_element (loc, { Expression.SpreadElement.argument; comments }) =
-      node ?comments "SpreadElement" loc [("argument", expression argument)]
-    and expression_or_spread =
+    and spread_element ~in_optional_chain (loc, { Expression.SpreadElement.argument; comments }) =
+      node ?comments "SpreadElement" loc [("argument", expression ~in_optional_chain argument)]
+    and expression_or_spread ~in_optional_chain =
       let open Expression in
       function
-      | Expression expr -> expression expr
-      | Spread spread -> spread_element spread
+      | Expression expr -> expression ~in_optional_chain expr
+      | Spread spread -> spread_element ~in_optional_chain spread
     and array_element =
       let open Expression.Array in
       function
       | Hole _ -> null
       | Expression expr -> expression expr
-      | Spread spread -> spread_element spread
+      | Spread spread -> spread_element ~in_optional_chain:false spread
     and number_literal (loc, { NumberLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", number value); ("raw", string raw)]
     and bigint_literal (loc, ({ BigIntLiteral.raw; value = _; comments } as bigint)) =
@@ -2558,17 +2618,26 @@ with type t = Impl.t = struct
       in
       node "QualifiedTypeIdentifier" loc [("qualification", qualification); ("id", identifier id)]
     and generic_type (loc, { Type.Generic.id; targs; comments }) =
-      let id =
-        match id with
-        | Type.Generic.Identifier.Unqualified id -> identifier id
-        | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
-        | Type.Generic.Identifier.ImportTypeAnnot it -> import_type it
-      in
-      node
-        ?comments
-        "GenericTypeAnnotation"
-        loc
-        [("id", id); ("typeParameters", option type_args targs)]
+      (* Mirror upstream Hermes' mapGenericTypeAnnotation: collapse the
+         no-targs `this` identifier case to a ThisTypeAnnotation leaf node.
+         OCaml's parser produces `Type.Generic { id: Unqualified "this";
+         targs: None }` for both `type T = this` and `(this) => void` /
+         `m(): this`. *)
+      match (targs, id) with
+      | (None, Type.Generic.Identifier.Unqualified (_, { Identifier.name = "this"; _ })) ->
+        node ?comments "ThisTypeAnnotation" loc []
+      | _ ->
+        let id =
+          match id with
+          | Type.Generic.Identifier.Unqualified id -> identifier id
+          | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
+          | Type.Generic.Identifier.ImportTypeAnnot it -> import_type it
+        in
+        node
+          ?comments
+          "GenericTypeAnnotation"
+          loc
+          [("id", id); ("typeParameters", option type_args targs)]
     and indexed_access_properties { Type.IndexedAccess._object; index; comments = _ } =
       [("objectType", _type _object); ("indexType", _type index)]
     and indexed_access (loc, ({ Type.IndexedAccess.comments; _ } as ia)) =
@@ -2750,7 +2819,11 @@ with type t = Impl.t = struct
            (* we track the location of the name, but don't expose it here for
               backwards-compatibility. TODO: change this? *)
            ("name", string name);
-           ("bound", hint type_annotation bound);
+           (* Hermes' deserializeTypeParameter reads `bound` as a plain type
+              node, NOT a TypeAnnotation-wrapped node. Emit the inner annotation
+              directly rather than going through `type_annotation` (which writes
+              a TypeAnnotation header). When the bound is missing, write null. *)
+           ("bound", hint (fun (_loc, ty) -> _type ty) bound);
            ("const", bool (Option.is_some const));
            ("variance", option variance tp_var);
            ("default", option _type default);
@@ -2993,30 +3066,30 @@ with type t = Impl.t = struct
         | Inferred -> ("InferredPredicate", [])
       in
       node ?comments _type loc value
-    and call_node_properties ?wrap_callee { Expression.Call.callee; targs; arguments; comments = _ }
-        =
+    and call_node_properties
+        ~in_optional_chain ?wrap_callee { Expression.Call.callee; targs; arguments; comments = _ } =
       let callee =
         match wrap_callee with
-        | None -> expression callee
-        | Some wrap -> wrap (expression callee)
+        | None -> expression ~in_optional_chain callee
+        | Some wrap -> wrap (expression ~in_optional_chain callee)
       in
       [
         ("callee", callee);
         ("typeArguments", option call_type_args targs);
-        ("arguments", arg_list arguments);
+        ("arguments", arg_list ~in_optional_chain arguments);
       ]
-    and member_node_properties ?wrap_receiver { Expression.Member._object; property; comments = _ }
-        =
+    and member_node_properties
+        ~in_optional_chain ?wrap_receiver { Expression.Member._object; property; comments = _ } =
       let (property, computed) =
         match property with
         | Expression.Member.PropertyIdentifier id -> (identifier id, false)
         | Expression.Member.PropertyPrivateName name -> (private_identifier name, false)
-        | Expression.Member.PropertyExpression expr -> (expression expr, true)
+        | Expression.Member.PropertyExpression expr -> (expression ~in_optional_chain expr, true)
       in
       let _object =
         match wrap_receiver with
-        | None -> expression _object
-        | Some wrap -> wrap (expression _object)
+        | None -> expression ~in_optional_chain _object
+        | Some wrap -> wrap (expression ~in_optional_chain _object)
       in
       [("object", _object); ("property", property); ("computed", bool computed)]
     in

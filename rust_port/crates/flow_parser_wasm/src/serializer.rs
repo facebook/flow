@@ -46,6 +46,14 @@ pub struct Serializer<'a> {
     positions: Vec<PositionInfo>,
     string_buffer: Vec<u8>,
     next_loc_id: u32,
+    /// Tracks whether we're currently inside an optional chain. Set when
+    /// emitting a ChainExpression wrapper around the chain root; reset
+    /// when a parenthesis boundary (plain Member/Call) is encountered
+    /// inside the chain. Mirrors upstream Hermes' post-rewrite shape:
+    /// every chain has exactly one ChainExpression at its root, and
+    /// MemberExpression/CallExpression nodes inside the chain carry an
+    /// `optional` boolean.
+    in_optional_chain: bool,
 }
 
 impl<'a> Serializer<'a> {
@@ -56,6 +64,7 @@ impl<'a> Serializer<'a> {
             positions: Vec::with_capacity(1024),
             string_buffer: Vec::with_capacity(4096),
             next_loc_id: 0,
+            in_optional_chain: false,
         }
     }
 
@@ -123,11 +132,13 @@ impl<'a> Serializer<'a> {
     // ---------------------------------------------------------------
 
     /// Encode a Literal node with string value.
-    /// Wire format: header, valueKind=3, value(str), raw(str), bigint(null), regex(null,null)
+    /// Wire format: header, valueKind=3, value(str), literalType="string",
+    ///              raw(str), bigint(null), regex(null,null)
     fn write_string_literal(&mut self, loc: &Loc, value: &str, raw: &str) {
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(3);
         self.write_str(value);
+        self.write_str("string");
         self.write_str(raw);
         self.write_str_opt(None);
         self.write_str_opt(None);
@@ -135,11 +146,13 @@ impl<'a> Serializer<'a> {
     }
 
     /// Encode a Literal node with number value.
-    /// Wire format: header, valueKind=2, value(f64), raw(str), bigint(null), regex(null,null)
+    /// Wire format: header, valueKind=2, value(f64), literalType="numeric",
+    ///              raw(str), bigint(null), regex(null,null)
     fn write_number_literal(&mut self, loc: &Loc, value: f64, raw: &str) {
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(2);
         self.write_number(value);
+        self.write_str("numeric");
         self.write_str(raw);
         self.write_str_opt(None);
         self.write_str_opt(None);
@@ -147,29 +160,28 @@ impl<'a> Serializer<'a> {
     }
 
     /// Encode a Literal node with bigint value.
-    /// Wire format: header, valueKind=0, raw(str), bigint(str), regex(null,null)
+    /// Wire format: header, valueKind=0, literalType="bigint", raw(str),
+    ///              bigint(str), regex(null,null)
     ///
     /// Per the ESTree spec, the `bigint` property is the decimal-digit string
     /// of the BigInt value, with no numeric separators (`_`) and no `n` suffix.
     fn write_bigint_literal(&mut self, loc: &Loc, raw: &str) {
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(0);
+        self.write_str("bigint");
         self.write_str(raw);
-        // Strip the `n` suffix and any `_` separators, then convert the
-        // cleaned literal to its decimal-string form. Fall back to the cleaned
-        // source string if it isn't a valid integer literal we can parse.
-        let cleaned = raw.trim_end_matches('n').replace('_', "");
-        let bigint_str = parse_bigint_value(&cleaned).unwrap_or(cleaned);
-        self.write_str(&bigint_str);
+        self.write_str(&clean_bigint_raw(raw));
         self.write_str_opt(None);
         self.write_str_opt(None);
     }
 
     /// Encode a Literal node with null value.
-    /// Wire format: header, valueKind=0, raw="null", bigint(null), regex(null,null)
+    /// Wire format: header, valueKind=0, literalType="null", raw="null",
+    ///              bigint(null), regex(null,null)
     fn write_null_literal(&mut self, loc: &Loc) {
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(0);
+        self.write_str("null");
         self.write_str("null");
         self.write_str_opt(None);
         self.write_str_opt(None);
@@ -177,11 +189,13 @@ impl<'a> Serializer<'a> {
     }
 
     /// Encode a Literal node with boolean value.
-    /// Wire format: header, valueKind=1, value(bool), raw(str), bigint(null), regex(null,null)
+    /// Wire format: header, valueKind=1, value(bool), literalType="boolean",
+    ///              raw(str), bigint(null), regex(null,null)
     fn write_boolean_literal(&mut self, loc: &Loc, value: bool) {
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(1);
         self.write_bool(value);
+        self.write_str("boolean");
         self.write_str(if value { "true" } else { "false" });
         self.write_str_opt(None);
         self.write_str_opt(None);
@@ -189,10 +203,12 @@ impl<'a> Serializer<'a> {
     }
 
     /// Encode a Literal node with regex value.
-    /// Wire format: header, valueKind=0, raw(str), bigint(null), pattern(str), flags(str)
+    /// Wire format: header, valueKind=0, literalType="regexp", raw(str),
+    ///              bigint(null), pattern(str), flags(str)
     fn write_regex_literal(&mut self, loc: &Loc, raw: &str, pattern: &str, flags: &str) {
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(0);
+        self.write_str("regexp");
         self.write_str(raw);
         self.write_str_opt(None);
         self.write_str(pattern);
@@ -408,7 +424,158 @@ impl<'a> Serializer<'a> {
     }
 
     fn serialize_expression(&mut self, expr: &ast::expression::Expression<Loc, Loc>) {
-        self.serialize_expression_dispatch(expr);
+        // Optional-chain rewrite: mirror upstream Hermes' post-rewrite shape
+        // by emitting `OptionalMember`/`OptionalCall` AST nodes as
+        // `MemberExpression`/`CallExpression` with `optional` flags, wrapped
+        // in a single `ChainExpression` at the chain root. Plain
+        // `Member`/`Call` inside an optional chain mark a parenthesis
+        // boundary: emit them with `optional: false` and reset the chain
+        // state for their children so an inner optional access starts a new
+        // chain.
+        use ast::expression::ExpressionInner;
+        match &**expr {
+            ExpressionInner::OptionalMember { loc, inner }
+                if !matches!(
+                    inner.optional,
+                    ast::expression::OptionalMemberKind::AssertNonnull
+                ) =>
+            {
+                if !self.in_optional_chain {
+                    self.write_node_header(NodeKind::ChainExpression, loc);
+                    self.in_optional_chain = true;
+                    self.serialize_optional_member_as_member_expression(loc, inner);
+                    self.in_optional_chain = false;
+                } else {
+                    self.serialize_optional_member_as_member_expression(loc, inner);
+                }
+            }
+            ExpressionInner::OptionalCall { loc, inner }
+                if !matches!(
+                    inner.optional,
+                    ast::expression::OptionalCallKind::AssertNonnull
+                ) =>
+            {
+                if !self.in_optional_chain {
+                    self.write_node_header(NodeKind::ChainExpression, loc);
+                    self.in_optional_chain = true;
+                    self.serialize_optional_call_as_call_expression(loc, inner);
+                    self.in_optional_chain = false;
+                } else {
+                    self.serialize_optional_call_as_call_expression(loc, inner);
+                }
+            }
+            ExpressionInner::OptionalMember { loc, inner } => {
+                // AssertNonnull (`expr!.foo`): emit MemberExpression with
+                // `optional: false` and the object wrapped in NonNullExpression
+                // (chain: true). Not part of the optional-chain rewrite, so no
+                // ChainExpression wrap.
+                self.write_node_header(NodeKind::MemberExpression, loc);
+                self.write_node_header(NodeKind::NonNullExpression, loc);
+                self.serialize_expression(&inner.member.object);
+                self.write_bool(true);
+                self.serialize_member_property(&inner.member.property);
+                self.write_bool(matches!(
+                    &inner.member.property,
+                    ast::expression::member::Property::PropertyExpression(_)
+                ));
+                self.write_bool(false);
+            }
+            ExpressionInner::OptionalCall { loc, inner } => {
+                // AssertNonnull for calls — same shape as for members.
+                self.write_node_header(NodeKind::CallExpression, loc);
+                self.write_node_header(NodeKind::NonNullExpression, loc);
+                self.serialize_expression(&inner.call.callee);
+                self.write_bool(true);
+                self.serialize_call_type_args_opt(&inner.call.targs);
+                self.serialize_arg_list(&inner.call.arguments);
+                self.write_bool(false);
+            }
+            ExpressionInner::Member { .. } | ExpressionInner::Call { .. }
+                if self.in_optional_chain =>
+            {
+                // Parenthesis boundary inside a chain: a plain Member/Call
+                // wrapping an optional sub-expression breaks the chain (the
+                // semantics of `(x?.y).z` differ from `x?.y.z`). Reset the
+                // chain state so the child starts its own ChainExpression.
+                let prev = self.in_optional_chain;
+                self.in_optional_chain = false;
+                self.serialize_expression_dispatch(expr);
+                self.in_optional_chain = prev;
+            }
+            _ => self.serialize_expression_dispatch(expr),
+        }
+    }
+
+    /// Serialize an `OptionalMember` AST node as a wire-format
+    /// `MemberExpression` with the `optional` flag set from the
+    /// `OptionalMemberKind`. Used inside an optional chain (after the chain
+    /// root has emitted its `ChainExpression` wrapper).
+    fn serialize_optional_member_as_member_expression(
+        &mut self,
+        loc: &Loc,
+        inner: &ast::expression::OptionalMember<Loc, Loc>,
+    ) {
+        // 55: MemberExpression — object(Node) property(Node) computed(Bool) optional(Bool)
+        self.write_node_header(NodeKind::MemberExpression, loc);
+        self.serialize_expression(&inner.member.object);
+        self.serialize_member_property(&inner.member.property);
+        self.write_bool(matches!(
+            &inner.member.property,
+            ast::expression::member::Property::PropertyExpression(_)
+        ));
+        self.write_bool(matches!(
+            inner.optional,
+            ast::expression::OptionalMemberKind::Optional
+        ));
+    }
+
+    /// Serialize an `OptionalCall` AST node as a wire-format `CallExpression`
+    /// with the `optional` flag set from the `OptionalCallKind`. Used inside
+    /// an optional chain (after the chain root has emitted its
+    /// `ChainExpression` wrapper).
+    fn serialize_optional_call_as_call_expression(
+        &mut self,
+        loc: &Loc,
+        inner: &ast::expression::OptionalCall<Loc, Loc>,
+    ) {
+        // 57: CallExpression — callee(Node) typeArguments(Node) arguments(NodeList) optional(Bool)
+        self.write_node_header(NodeKind::CallExpression, loc);
+        self.serialize_expression(&inner.call.callee);
+        self.serialize_call_type_args_opt(&inner.call.targs);
+        self.serialize_arg_list(&inner.call.arguments);
+        self.write_bool(matches!(
+            inner.optional,
+            ast::expression::OptionalCallKind::Optional
+        ));
+    }
+
+    /// Serialize a plain `Member` AST node as a wire-format
+    /// `MemberExpression` with `optional: false`.
+    fn serialize_member_expression(
+        &mut self,
+        loc: &Loc,
+        inner: &ast::expression::Member<Loc, Loc>,
+    ) {
+        // 55: MemberExpression — object(Node) property(Node) computed(Bool) optional(Bool)
+        self.write_node_header(NodeKind::MemberExpression, loc);
+        self.serialize_expression(&inner.object);
+        self.serialize_member_property(&inner.property);
+        self.write_bool(matches!(
+            &inner.property,
+            ast::expression::member::Property::PropertyExpression(_)
+        ));
+        self.write_bool(false);
+    }
+
+    /// Serialize a plain `Call` AST node as a wire-format `CallExpression`
+    /// with `optional: false`.
+    fn serialize_call_expression(&mut self, loc: &Loc, inner: &ast::expression::Call<Loc, Loc>) {
+        // 57: CallExpression — callee(Node) typeArguments(Node) arguments(NodeList) optional(Bool)
+        self.write_node_header(NodeKind::CallExpression, loc);
+        self.serialize_expression(&inner.callee);
+        self.serialize_call_type_args_opt(&inner.targs);
+        self.serialize_arg_list(&inner.arguments);
+        self.write_bool(false);
     }
 
     // ---------------------------------------------------------------
@@ -416,6 +583,21 @@ impl<'a> Serializer<'a> {
     // ---------------------------------------------------------------
 
     fn serialize_type(&mut self, ty: &ast::types::Type<Loc, Loc>) {
+        // Mirror upstream Hermes' mapGenericTypeAnnotation: collapse the
+        // no-targs `this` identifier case to a ThisTypeAnnotation leaf node.
+        // OCaml's parser produces `Type::Generic { id: Unqualified "this",
+        // targs: None }` for both `type T = this` and `(this) => void` /
+        // `m(): this`.
+        use ast::types::TypeInner;
+        use ast::types::generic;
+        if let TypeInner::Generic { loc, inner } = &**ty
+            && inner.targs.is_none()
+            && let generic::Identifier::Unqualified(id) = &inner.id
+            && id.name == "this"
+        {
+            self.write_node_header(NodeKind::ThisTypeAnnotation, loc);
+            return;
+        }
         self.serialize_type_dispatch(ty);
     }
 
@@ -454,7 +636,19 @@ impl<'a> Serializer<'a> {
         // 161: TypeParameter — name bound const variance default usesExtendsBound
         self.write_node_header(NodeKind::TypeParameter, &tp.loc);
         self.write_str(&tp.name.name);
-        self.serialize_annotation_or_hint(&tp.bound);
+        // bound: Hermes' deserializeTypeParameter reads `bound` as a plain
+        // Node (the inner annotation), NOT a TypeAnnotation-wrapped node.
+        // Emit the inner annotation directly rather than going through
+        // serialize_annotation_or_hint (which writes a TypeAnnotation
+        // header). When the bound is missing, write null.
+        match &tp.bound {
+            ast::types::AnnotationOrHint::Available(annot) => {
+                self.serialize_type(&annot.annotation);
+            }
+            ast::types::AnnotationOrHint::Missing(_) => {
+                self.write_null_node();
+            }
+        }
         self.write_bool(tp.const_.is_some());
         match &tp.variance {
             Some(v) => self.serialize_variance(v),
@@ -1114,71 +1308,6 @@ impl<'a> Serializer<'a> {
                 }
             }
         }
-    }
-
-    /// When `optional` is `AssertNonnull`, the inner `object` field is wrapped
-    /// in a `NonNullExpression` (chain: true) sharing the outer OptionalMember
-    /// node's loc. The OptionalMemberExpression itself stays, and its
-    /// `optional` boolean is `false` (only `Optional` produces `true`).
-    fn serialize_optional_member_expression(
-        &mut self,
-        loc: &Loc,
-        inner: &ast::expression::OptionalMember<Loc, Loc>,
-    ) {
-        // 56: OptionalMemberExpression — object(Node) property(Node) computed(Bool) optional(Bool)
-        self.write_node_header(NodeKind::OptionalMemberExpression, loc);
-        match inner.optional {
-            ast::expression::OptionalMemberKind::AssertNonnull => {
-                // 71: NonNullExpression — argument(Node) chain(Bool)
-                self.write_node_header(NodeKind::NonNullExpression, loc);
-                self.serialize_expression(&inner.member.object);
-                self.write_bool(true);
-            }
-            ast::expression::OptionalMemberKind::Optional
-            | ast::expression::OptionalMemberKind::NonOptional => {
-                self.serialize_expression(&inner.member.object);
-            }
-        }
-        self.serialize_member_property(&inner.member.property);
-        self.write_bool(matches!(
-            &inner.member.property,
-            ast::expression::member::Property::PropertyExpression(_)
-        ));
-        self.write_bool(matches!(
-            inner.optional,
-            ast::expression::OptionalMemberKind::Optional
-        ));
-    }
-
-    /// When `optional` is `AssertNonnull`, the inner `callee` field is wrapped
-    /// in a `NonNullExpression` (chain: true) sharing the outer OptionalCall
-    /// node's loc. The OptionalCallExpression itself stays, and its
-    /// `optional` boolean is `false` (only `Optional` produces `true`).
-    fn serialize_optional_call_expression(
-        &mut self,
-        loc: &Loc,
-        inner: &ast::expression::OptionalCall<Loc, Loc>,
-    ) {
-        // 58: OptionalCallExpression — callee(Node) typeArguments(Node) arguments(NodeList) optional(Bool)
-        self.write_node_header(NodeKind::OptionalCallExpression, loc);
-        match inner.optional {
-            ast::expression::OptionalCallKind::AssertNonnull => {
-                // 71: NonNullExpression — argument(Node) chain(Bool)
-                self.write_node_header(NodeKind::NonNullExpression, loc);
-                self.serialize_expression(&inner.call.callee);
-                self.write_bool(true);
-            }
-            ast::expression::OptionalCallKind::Optional
-            | ast::expression::OptionalCallKind::NonOptional => {
-                self.serialize_expression(&inner.call.callee);
-            }
-        }
-        self.serialize_call_type_args_opt(&inner.call.targs);
-        self.serialize_arg_list(&inner.call.arguments);
-        self.write_bool(matches!(
-            inner.optional,
-            ast::expression::OptionalCallKind::Optional
-        ));
     }
 
     fn serialize_template_literal(
@@ -3254,12 +3383,13 @@ impl<'a> Serializer<'a> {
     }
 
     fn serialize_array_expression(&mut self, loc: &Loc, inner: &ast::expression::Array<Loc, Loc>) {
-        // 44: ArrayExpression — elements(NodeList)
+        // 44: ArrayExpression — elements(NodeList) trailingComma(Bool)
         self.write_node_header(NodeKind::ArrayExpression, loc);
         self.buf.push(inner.elements.len() as u32);
         for elem in inner.elements.iter() {
             self.serialize_array_element(elem);
         }
+        self.write_bool(inner.trailing_comma);
     }
 
     fn serialize_object_expression(
@@ -3655,6 +3785,16 @@ fn token_kind_to_estree_type_index(t: &TokenKind) -> u32 {
 /// decimal-digit string. Returns `None` if the input is not a valid integer
 /// literal so callers can fall back to the raw source.
 ///
+/// Strip the `n` suffix and any `_` separators from a bigint literal's `raw`,
+/// then convert the cleaned literal to its decimal-string form. Falls back
+/// to the cleaned source string if it isn't a valid integer literal we can
+/// parse. Mirrors the `bigint` field that upstream Hermes emits on both
+/// `Literal` and `BigIntLiteralTypeAnnotation`.
+fn clean_bigint_raw(raw: &str) -> String {
+    let cleaned = raw.trim_end_matches('n').replace('_', "");
+    parse_bigint_value(&cleaned).unwrap_or(cleaned)
+}
+
 /// Uses arbitrary-precision long multiplication so values larger than
 /// `i128::MAX` (e.g. 256-bit hex literals) round-trip correctly to decimal.
 fn parse_bigint_value(s: &str) -> Option<String> {

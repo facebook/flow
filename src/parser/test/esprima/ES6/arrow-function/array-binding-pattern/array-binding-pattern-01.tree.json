@@ -109,7 +109,8 @@
                             "value": 0,
                             "raw": "0"
                         }
-                    ]
+                    ],
+                    "trailingComma": false
                 },
                 "generator": false,
                 "expression": true

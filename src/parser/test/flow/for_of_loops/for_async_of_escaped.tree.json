@@ -27,7 +27,8 @@
             "value":7,
             "raw":"7"
           }
-        ]
+        ],
+        "trailingComma":false
       },
       "body":{
         "type":"EmptyStatement",

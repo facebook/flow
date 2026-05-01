@@ -380,7 +380,7 @@ fn main(args: &arg_spec::Values) {
                         flow_parser::comment_utils::strip_inlined_comments_expression(&mut ast);
                     }
                 }
-                estree_translator::expression(&offset_table, &config, &ast)
+                estree_translator::expression(&offset_table, &config, false, &ast)
             }
         };
         match translated_ast {

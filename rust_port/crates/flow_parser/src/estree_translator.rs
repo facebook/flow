@@ -310,7 +310,7 @@ fn statement(
             vec![
                 (
                     "expression",
-                    expression(offset_table, config, &inner.expression),
+                    expression(offset_table, config, false, &inner.expression),
                 ),
                 ("directive", option(&inner.directive, |d| string(d))),
             ],
@@ -335,7 +335,7 @@ fn statement(
                 loc,
                 inner.comments.as_ref(),
                 vec![
-                    ("test", expression(offset_table, config, &inner.test)),
+                    ("test", expression(offset_table, config, false, &inner.test)),
                     (
                         "consequent",
                         statement(offset_table, config, &inner.consequent),
@@ -384,7 +384,10 @@ fn statement(
             loc,
             inner.comments.as_ref(),
             vec![
-                ("object", expression(offset_table, config, &inner.object)),
+                (
+                    "object",
+                    expression(offset_table, config, false, &inner.object),
+                ),
                 ("body", statement(offset_table, config, &inner.body)),
             ],
         ),
@@ -399,7 +402,10 @@ fn statement(
             loc,
             inner.comments.as_ref(),
             vec![
-                ("argument", expression(offset_table, config, &inner.arg)),
+                (
+                    "argument",
+                    expression(offset_table, config, false, &inner.arg),
+                ),
                 (
                     "cases",
                     array_of_list(&inner.cases, |c| {
@@ -417,7 +423,7 @@ fn statement(
             vec![
                 (
                     "discriminant",
-                    expression(offset_table, config, &switch.discriminant),
+                    expression(offset_table, config, false, &switch.discriminant),
                 ),
                 (
                     "cases",
@@ -433,7 +439,9 @@ fn statement(
             inner.comments.as_ref(),
             vec![(
                 "argument",
-                option(&inner.argument, |e| expression(offset_table, config, e)),
+                option(&inner.argument, |e| {
+                    expression(offset_table, config, false, e)
+                }),
             )],
         ),
         StatementInner::Throw { loc, inner } => node(
@@ -444,7 +452,7 @@ fn statement(
             inner.comments.as_ref(),
             vec![(
                 "argument",
-                expression(offset_table, config, &inner.argument),
+                expression(offset_table, config, false, &inner.argument),
             )],
         ),
         StatementInner::Try {
@@ -480,7 +488,7 @@ fn statement(
             loc,
             inner.comments.as_ref(),
             vec![
-                ("test", expression(offset_table, config, &inner.test)),
+                ("test", expression(offset_table, config, false, &inner.test)),
                 ("body", statement(offset_table, config, &inner.body)),
             ],
         ),
@@ -492,7 +500,7 @@ fn statement(
             inner.comments.as_ref(),
             vec![
                 ("body", statement(offset_table, config, &inner.body)),
-                ("test", expression(offset_table, config, &inner.test)),
+                ("test", expression(offset_table, config, false, &inner.test)),
             ],
         ),
         StatementInner::For {
@@ -505,7 +513,7 @@ fn statement(
                         variable_declaration(offset_table, config, loc, decl)
                     }
                     ast::statement::for_::Init::InitExpression(expr) => {
-                        expression(offset_table, config, expr)
+                        expression(offset_table, config, false, expr)
                     }
                 },
                 None => Value::Null,
@@ -521,11 +529,15 @@ fn statement(
                     ("init", init),
                     (
                         "test",
-                        option(&for_stmt.test, |e| expression(offset_table, config, e)),
+                        option(&for_stmt.test, |e| {
+                            expression(offset_table, config, false, e)
+                        }),
                     ),
                     (
                         "update",
-                        option(&for_stmt.update, |e| expression(offset_table, config, e)),
+                        option(&for_stmt.update, |e| {
+                            expression(offset_table, config, false, e)
+                        }),
                     ),
                     ("body", statement(offset_table, config, &for_stmt.body)),
                 ],
@@ -549,7 +561,10 @@ fn statement(
                 for_in.comments.as_ref(),
                 vec![
                     ("left", left),
-                    ("right", expression(offset_table, config, &for_in.right)),
+                    (
+                        "right",
+                        expression(offset_table, config, false, &for_in.right),
+                    ),
                     ("body", statement(offset_table, config, &for_in.body)),
                     ("each", bool_value(for_in.each)),
                 ],
@@ -572,7 +587,10 @@ fn statement(
                 for_of.comments.as_ref(),
                 vec![
                     ("left", left),
-                    ("right", expression(offset_table, config, &for_of.right)),
+                    (
+                        "right",
+                        expression(offset_table, config, false, &for_of.right),
+                    ),
                     ("body", statement(offset_table, config, &for_of.body)),
                     ("await", bool_value(for_of.await_)),
                 ],
@@ -854,7 +872,7 @@ fn statement(
                     statement(offset_table, config, stmt)
                 }
                 ast::statement::export_default_declaration::Declaration::Expression(expr) => {
-                    expression(offset_table, config, expr)
+                    expression(offset_table, config, false, expr)
                 }
             };
             node(
@@ -872,7 +890,7 @@ fn statement(
         StatementInner::ExportAssignment { loc, inner } => {
             let expr_value = match &inner.rhs {
                 ast::statement::ExportAssignmentRhs::Expression(expr) => {
-                    expression(offset_table, config, expr)
+                    expression(offset_table, config, false, expr)
                 }
                 ast::statement::ExportAssignmentRhs::DeclareFunction(fn_loc, decl) => {
                     declare_function(offset_table, config, fn_loc, decl)
@@ -914,9 +932,10 @@ fn statement(
                     }
                     Key::Identifier(id) => (identifier(offset_table, config, id), false),
                     Key::PrivateName(_) => panic!("Internal Error: Private name"),
-                    Key::Computed(comp) => {
-                        (expression(offset_table, config, &comp.expression), true)
-                    }
+                    Key::Computed(comp) => (
+                        expression(offset_table, config, false, &comp.expression),
+                        true,
+                    ),
                 }
             }
 
@@ -945,7 +964,7 @@ fn statement(
                         (
                             "defaultValue",
                             option(&property.default_value, |e| {
-                                expression(offset_table, config, e)
+                                expression(offset_table, config, false, e)
                             }),
                         ),
                     ],
@@ -974,7 +993,10 @@ fn statement(
                             "typeAnnotation",
                             type_annotation(offset_table, config, &property.annot),
                         ),
-                        ("value", expression(offset_table, config, &property.value)),
+                        (
+                            "value",
+                            expression(offset_table, config, false, &property.value),
+                        ),
                     ],
                 )
             }
@@ -1192,6 +1214,7 @@ fn statement(
 pub fn expression(
     offset_table: &OffsetTable,
     config: &Config,
+    in_optional_chain: bool,
     expr: &ast::expression::Expression<Loc, Loc>,
 ) -> Value {
     use ast::expression::ExpressionInner;
@@ -1221,12 +1244,15 @@ pub fn expression(
                 "ArrayExpression",
                 loc,
                 formatted_comments.as_ref(),
-                vec![(
-                    "elements",
-                    array_of_list(&inner.elements, |el| {
-                        array_element(offset_table, config, el)
-                    }),
-                )],
+                vec![
+                    (
+                        "elements",
+                        array_of_list(&inner.elements, |el| {
+                            array_element(offset_table, config, el)
+                        }),
+                    ),
+                    ("trailingComma", bool_value(inner.trailing_comma)),
+                ],
             )
         }
         ExpressionInner::Object { loc, inner } => {
@@ -1254,7 +1280,7 @@ pub fn expression(
                     (block(offset_table, config, &b.0, &b.1), false)
                 }
                 ast::function::Body::BodyExpression(expr) => {
-                    (expression(offset_table, config, expr), true)
+                    (expression(offset_table, config, false, expr), true)
                 }
             };
 
@@ -1320,7 +1346,7 @@ pub fn expression(
                 vec![
                     (
                         "recordConstructor",
-                        expression(offset_table, config, &inner.constructor),
+                        expression(offset_table, config, false, &inner.constructor),
                     ),
                     (
                         "typeArguments",
@@ -1338,7 +1364,9 @@ pub fn expression(
             inner.comments.as_ref(),
             vec![(
                 "expressions",
-                array_of_list(&inner.expressions, |e| expression(offset_table, config, e)),
+                array_of_list(&inner.expressions, |e| {
+                    expression(offset_table, config, false, e)
+                }),
             )],
         ),
         ExpressionInner::Unary { loc, inner: unary } => {
@@ -1352,7 +1380,7 @@ pub fn expression(
                     unary.comments.as_ref(),
                     vec![(
                         "argument",
-                        expression(offset_table, config, &unary.argument),
+                        expression(offset_table, config, false, &unary.argument),
                     )],
                 ),
                 UnaryOperator::Nonnull => node(
@@ -1364,7 +1392,7 @@ pub fn expression(
                     vec![
                         (
                             "argument",
-                            expression(offset_table, config, &unary.argument),
+                            expression(offset_table, config, false, &unary.argument),
                         ),
                         ("chain", bool_value(false)),
                     ],
@@ -1393,7 +1421,7 @@ pub fn expression(
                             ("prefix", bool_value(true)),
                             (
                                 "argument",
-                                expression(offset_table, config, &unary.argument),
+                                expression(offset_table, config, false, &unary.argument),
                             ),
                         ],
                     )
@@ -1408,8 +1436,11 @@ pub fn expression(
             inner.comments.as_ref(),
             vec![
                 ("operator", string(inner.operator.as_str())),
-                ("left", expression(offset_table, config, &inner.left)),
-                ("right", expression(offset_table, config, &inner.right)),
+                ("left", expression(offset_table, config, false, &inner.left)),
+                (
+                    "right",
+                    expression(offset_table, config, false, &inner.right),
+                ),
             ],
         ),
         ExpressionInner::TypeCast { loc, inner } => node(
@@ -1421,7 +1452,7 @@ pub fn expression(
             vec![
                 (
                     "expression",
-                    expression(offset_table, config, &inner.expression),
+                    expression(offset_table, config, false, &inner.expression),
                 ),
                 (
                     "typeAnnotation",
@@ -1438,7 +1469,7 @@ pub fn expression(
             vec![
                 (
                     "expression",
-                    expression(offset_table, config, &inner.expression),
+                    expression(offset_table, config, false, &inner.expression),
                 ),
                 (
                     "typeAnnotation",
@@ -1455,7 +1486,7 @@ pub fn expression(
             vec![
                 (
                     "expression",
-                    expression(offset_table, config, &inner.expression),
+                    expression(offset_table, config, false, &inner.expression),
                 ),
                 (
                     "typeAnnotation",
@@ -1471,7 +1502,7 @@ pub fn expression(
             inner.comments.as_ref(),
             vec![(
                 "expression",
-                expression(offset_table, config, &inner.expression),
+                expression(offset_table, config, false, &inner.expression),
             )],
         ),
         ExpressionInner::Assignment { loc, inner } => {
@@ -1488,7 +1519,10 @@ pub fn expression(
                 vec![
                     ("operator", string(operator)),
                     ("left", pattern(offset_table, config, &inner.left)),
-                    ("right", expression(offset_table, config, &inner.right)),
+                    (
+                        "right",
+                        expression(offset_table, config, false, &inner.right),
+                    ),
                 ],
             )
         }
@@ -1507,7 +1541,7 @@ pub fn expression(
                     ("operator", string(operator)),
                     (
                         "argument",
-                        expression(offset_table, config, &inner.argument),
+                        expression(offset_table, config, false, &inner.argument),
                     ),
                     ("prefix", bool_value(inner.prefix)),
                 ],
@@ -1527,8 +1561,11 @@ pub fn expression(
                 inner.comments.as_ref(),
                 vec![
                     ("operator", string(operator)),
-                    ("left", expression(offset_table, config, &inner.left)),
-                    ("right", expression(offset_table, config, &inner.right)),
+                    ("left", expression(offset_table, config, false, &inner.left)),
+                    (
+                        "right",
+                        expression(offset_table, config, false, &inner.right),
+                    ),
                 ],
             )
         }
@@ -1539,21 +1576,21 @@ pub fn expression(
             loc,
             inner.comments.as_ref(),
             vec![
-                ("test", expression(offset_table, config, &inner.test)),
+                ("test", expression(offset_table, config, false, &inner.test)),
                 (
                     "consequent",
-                    expression(offset_table, config, &inner.consequent),
+                    expression(offset_table, config, false, &inner.consequent),
                 ),
                 (
                     "alternate",
-                    expression(offset_table, config, &inner.alternate),
+                    expression(offset_table, config, false, &inner.alternate),
                 ),
             ],
         ),
         ExpressionInner::New { loc, inner } => {
             let (arguments, comments) = match &inner.arguments {
                 Some(args) => (
-                    arg_list(offset_table, config, args),
+                    arg_list(offset_table, config, false, args),
                     ast_utils::merge_comments(
                         format_internal_comments(args.comments.as_ref()),
                         inner.comments.dupe(),
@@ -1568,7 +1605,10 @@ pub fn expression(
                 loc,
                 comments.as_ref(),
                 vec![
-                    ("callee", expression(offset_table, config, &inner.callee)),
+                    (
+                        "callee",
+                        expression(offset_table, config, false, &inner.callee),
+                    ),
                     (
                         "typeArguments",
                         option(&inner.targs, |t| call_type_args(offset_table, config, t)),
@@ -1582,13 +1622,19 @@ pub fn expression(
                 format_internal_comments(call.arguments.comments.as_ref()),
                 call.comments.dupe(),
             );
+            // Plain Call inside an optional chain marks a parenthesis
+            // boundary: reset chain state for children so an inner optional
+            // access starts a new chain. Otherwise, normal call. Either way
+            // emit CallExpression with optional=false.
+            let mut props = call_node_properties(offset_table, config, false, None, call);
+            props.push(("optional", bool_value(false)));
             node(
                 offset_table,
                 config,
                 "CallExpression",
                 loc,
                 comments.as_ref(),
-                call_node_properties(offset_table, config, None, call),
+                props,
             )
         }
         ExpressionInner::OptionalCall {
@@ -1601,88 +1647,153 @@ pub fn expression(
                 call.comments.dupe(),
             );
 
-            let (optional, wrap_callee): (
-                Value,
-                Option<Box<dyn Fn(&OffsetTable, &Config, Value) -> Value>>,
-            ) = match optional_call.optional {
-                ast::expression::OptionalCallKind::Optional => (bool_value(true), None),
-                ast::expression::OptionalCallKind::NonOptional => (bool_value(false), None),
+            match optional_call.optional {
                 ast::expression::OptionalCallKind::AssertNonnull => {
-                    let loc = loc.dupe();
-                    (
-                        bool_value(false),
-                        Some(Box::new(move |offset_table, config, callee| {
+                    // AssertNonnull (`expr!()`): emit CallExpression with
+                    // optional=false and the callee wrapped in
+                    // NonNullExpression (chain: true). Not part of the
+                    // optional-chain rewrite — no ChainExpression wrap.
+                    let loc_outer = loc.dupe();
+                    let wrap_callee: Box<dyn Fn(&OffsetTable, &Config, Value) -> Value> =
+                        Box::new(move |offset_table, config, callee| {
                             node(
                                 offset_table,
                                 config,
                                 "NonNullExpression",
-                                &loc,
+                                &loc_outer,
                                 None,
                                 vec![("argument", callee), ("chain", bool_value(true))],
                             )
-                        })),
+                        });
+                    let mut props =
+                        call_node_properties(offset_table, config, false, Some(wrap_callee), call);
+                    props.push(("optional", bool_value(false)));
+                    node(
+                        offset_table,
+                        config,
+                        "CallExpression",
+                        loc,
+                        comments.as_ref(),
+                        props,
                     )
                 }
-            };
-
-            let mut props = call_node_properties(offset_table, config, wrap_callee, call);
-            props.push(("optional", optional));
-
+                ast::expression::OptionalCallKind::Optional
+                | ast::expression::OptionalCallKind::NonOptional => {
+                    let optional_value = bool_value(matches!(
+                        optional_call.optional,
+                        ast::expression::OptionalCallKind::Optional
+                    ));
+                    let emit_inner = |offset_table: &OffsetTable, config: &Config| {
+                        let mut props =
+                            call_node_properties(offset_table, config, true, None, call);
+                        props.push(("optional", optional_value.clone()));
+                        node(
+                            offset_table,
+                            config,
+                            "CallExpression",
+                            loc,
+                            comments.as_ref(),
+                            props,
+                        )
+                    };
+                    if in_optional_chain {
+                        emit_inner(offset_table, config)
+                    } else {
+                        node(
+                            offset_table,
+                            config,
+                            "ChainExpression",
+                            loc,
+                            None,
+                            vec![("expression", emit_inner(offset_table, config))],
+                        )
+                    }
+                }
+            }
+        }
+        ExpressionInner::Member { loc, inner } => {
+            // Plain Member inside an optional chain marks a parenthesis
+            // boundary; reset chain state for children so an inner optional
+            // access starts a new chain. Either way emit MemberExpression
+            // with optional=false.
+            let mut props = member_node_properties(offset_table, config, false, None, inner);
+            props.push(("optional", bool_value(false)));
             node(
                 offset_table,
                 config,
-                "OptionalCallExpression",
+                "MemberExpression",
                 loc,
-                comments.as_ref(),
+                inner.comments.as_ref(),
                 props,
             )
         }
-        ExpressionInner::Member { loc, inner } => node(
-            offset_table,
-            config,
-            "MemberExpression",
-            loc,
-            inner.comments.as_ref(),
-            member_node_properties(offset_table, config, None, inner),
-        ),
         ExpressionInner::OptionalMember { loc, inner } => {
             let member = &inner.member;
 
-            let (optional, wrap_receiver): (
-                Value,
-                Option<Box<dyn Fn(&OffsetTable, &Config, Value) -> Value>>,
-            ) = match inner.optional {
-                ast::expression::OptionalMemberKind::Optional => (bool_value(true), None),
-                ast::expression::OptionalMemberKind::NonOptional => (bool_value(false), None),
+            match inner.optional {
                 ast::expression::OptionalMemberKind::AssertNonnull => {
-                    let loc = loc.dupe();
-                    (
-                        bool_value(false),
-                        Some(Box::new(move |offset_table, config, receiver| {
+                    let loc_outer = loc.dupe();
+                    let wrap_receiver: Box<dyn Fn(&OffsetTable, &Config, Value) -> Value> =
+                        Box::new(move |offset_table, config, receiver| {
                             node(
                                 offset_table,
                                 config,
                                 "NonNullExpression",
-                                &loc,
+                                &loc_outer,
                                 None,
                                 vec![("argument", receiver), ("chain", bool_value(true))],
                             )
-                        })),
+                        });
+                    let mut props = member_node_properties(
+                        offset_table,
+                        config,
+                        false,
+                        Some(wrap_receiver),
+                        member,
+                    );
+                    props.push(("optional", bool_value(false)));
+                    node(
+                        offset_table,
+                        config,
+                        "MemberExpression",
+                        loc,
+                        member.comments.as_ref(),
+                        props,
                     )
                 }
-            };
-
-            let mut props = member_node_properties(offset_table, config, wrap_receiver, member);
-            props.push(("optional", optional));
-
-            node(
-                offset_table,
-                config,
-                "OptionalMemberExpression",
-                loc,
-                member.comments.as_ref(),
-                props,
-            )
+                ast::expression::OptionalMemberKind::Optional
+                | ast::expression::OptionalMemberKind::NonOptional => {
+                    let optional_value = bool_value(matches!(
+                        inner.optional,
+                        ast::expression::OptionalMemberKind::Optional
+                    ));
+                    let emit_inner = |offset_table: &OffsetTable, config: &Config| {
+                        let mut props =
+                            member_node_properties(offset_table, config, true, None, member);
+                        props.push(("optional", optional_value.clone()));
+                        node(
+                            offset_table,
+                            config,
+                            "MemberExpression",
+                            loc,
+                            member.comments.as_ref(),
+                            props,
+                        )
+                    };
+                    if in_optional_chain {
+                        emit_inner(offset_table, config)
+                    } else {
+                        node(
+                            offset_table,
+                            config,
+                            "ChainExpression",
+                            loc,
+                            None,
+                            vec![("expression", emit_inner(offset_table, config))],
+                        )
+                    }
+                }
+            }
         }
         ExpressionInner::Yield { loc, inner } => node(
             offset_table,
@@ -1693,7 +1804,9 @@ pub fn expression(
             vec![
                 (
                     "argument",
-                    option(&inner.argument, |e| expression(offset_table, config, e)),
+                    option(&inner.argument, |e| {
+                        expression(offset_table, config, false, e)
+                    }),
                 ),
                 ("delegate", bool_value(inner.delegate)),
             ],
@@ -1745,7 +1858,10 @@ pub fn expression(
             loc,
             inner.comments.as_ref(),
             vec![
-                ("argument", expression(offset_table, config, &inner.arg)),
+                (
+                    "argument",
+                    expression(offset_table, config, false, &inner.arg),
+                ),
                 (
                     "cases",
                     array_of_list(&inner.cases, |c| {
@@ -1769,9 +1885,12 @@ pub fn expression(
             ],
         ),
         ExpressionInner::Import { loc, inner } => {
-            let mut fields = vec![("source", expression(offset_table, config, &inner.argument))];
+            let mut fields = vec![(
+                "source",
+                expression(offset_table, config, false, &inner.argument),
+            )];
             if let Some(opts) = &inner.options {
-                fields.push(("options", expression(offset_table, config, opts)));
+                fields.push(("options", expression(offset_table, config, false, opts)));
             }
             node(
                 offset_table,
@@ -1795,7 +1914,7 @@ fn match_expression_case(
         config,
         "MatchExpressionCase",
         case,
-        expression,
+        |offset_table, config, expr| expression(offset_table, config, false, expr),
     )
 }
 
@@ -1831,7 +1950,7 @@ where
             ("body", on_case_body(offset_table, config, &case.body)),
             (
                 "guard",
-                option(&case.guard, |e| expression(offset_table, config, e)),
+                option(&case.guard, |e| expression(offset_table, config, false, e)),
             ),
         ],
     )
@@ -2393,6 +2512,7 @@ fn pattern_identifier(
 fn arg_list(
     offset_table: &OffsetTable,
     config: &Config,
+    in_optional_chain: bool,
     arg_list: &ast::expression::ArgList<Loc, Loc>,
 ) -> Value {
     // ESTree does not have a unique node for argument lists, so there's nowhere to
@@ -2400,8 +2520,12 @@ fn arg_list(
     array_of_list(&arg_list.arguments, |arg| {
         use ast::expression::ExpressionOrSpread;
         match arg {
-            ExpressionOrSpread::Expression(expr) => expression(offset_table, config, expr),
-            ExpressionOrSpread::Spread(spread) => spread_element(offset_table, config, spread),
+            ExpressionOrSpread::Expression(expr) => {
+                expression(offset_table, config, in_optional_chain, expr)
+            }
+            ExpressionOrSpread::Spread(spread) => {
+                spread_element(offset_table, config, in_optional_chain, spread)
+            }
         }
     })
 }
@@ -2420,7 +2544,7 @@ fn switch_case(
         vec![
             (
                 "test",
-                option(&case.test, |e| expression(offset_table, config, e)),
+                option(&case.test, |e| expression(offset_table, config, false, e)),
             ),
             (
                 "consequent",
@@ -3069,7 +3193,7 @@ fn class_helper(
         Some(extends) => {
             let merged = ast_utils::merge_comments(extends.comments.dupe(), class.comments.dupe());
             (
-                Some(expression(offset_table, config, &extends.expr)),
+                Some(expression(offset_table, config, false, &extends.expr)),
                 option(&extends.targs, |t| type_args(offset_table, config, t)),
                 merged,
             )
@@ -3142,7 +3266,7 @@ fn class_decorator(
         decorator.comments.as_ref(),
         vec![(
             "expression",
-            expression(offset_table, config, &decorator.expression),
+            expression(offset_table, config, false, &decorator.expression),
         )],
     )
 }
@@ -3261,7 +3385,7 @@ fn class_method(
             let merged =
                 ast_utils::merge_comments(computed_key.comments.dupe(), method.comments.dupe());
             (
-                expression(offset_table, config, &computed_key.expression),
+                expression(offset_table, config, false, &computed_key.expression),
                 true,
                 merged,
             )
@@ -3345,7 +3469,7 @@ fn class_declare_method(
             let merged =
                 ast_utils::merge_comments(computed_key.comments.dupe(), decl_meth.comments.dupe());
             (
-                expression(offset_table, config, &computed_key.expression),
+                expression(offset_table, config, false, &computed_key.expression),
                 true,
                 merged,
             )
@@ -3471,7 +3595,7 @@ fn class_private_field(
         ("key", private_identifier(offset_table, config, &field.key)),
         (
             "value",
-            option(&value, |v| expression(offset_table, config, v)),
+            option(&value, |v| expression(offset_table, config, false, v)),
         ),
         (
             "typeAnnotation",
@@ -3552,7 +3676,7 @@ fn property_key<'a>(
         Key::Computed(computed_key) => {
             let merged = ast_utils::merge_comments(computed_key.comments.dupe(), comments.duped());
             (
-                expression(offset_table, config, &computed_key.expression),
+                expression(offset_table, config, false, &computed_key.expression),
                 true,
                 merged,
             )
@@ -3600,7 +3724,7 @@ fn class_property_helper(
         ("key", key),
         (
             "value",
-            option(&value, |v| expression(offset_table, config, v)),
+            option(&value, |v| expression(offset_table, config, false, v)),
         ),
         (
             "typeAnnotation",
@@ -3746,7 +3870,7 @@ fn component_param(
             None,
             vec![
                 ("left", pattern(offset_table, config, &param.local)),
-                ("right", expression(offset_table, config, default)),
+                ("right", expression(offset_table, config, false, default)),
             ],
         ),
         None => pattern(offset_table, config, &param.local),
@@ -4042,7 +4166,7 @@ fn pattern(
             pattern_identifier(offset_table, config, loc, inner)
         }
         ast::pattern::Pattern::Expression { loc: _, inner } => {
-            expression(offset_table, config, inner)
+            expression(offset_table, config, false, inner)
         }
     }
 }
@@ -4066,7 +4190,7 @@ fn function_param(
                 None,
                 vec![
                     ("left", pattern(offset_table, config, argument)),
-                    ("right", expression(offset_table, config, default)),
+                    ("right", expression(offset_table, config, false, default)),
                 ],
             ),
             None => pattern(offset_table, config, argument),
@@ -4155,7 +4279,7 @@ fn array_pattern_element(
                 None,
                 vec![
                     ("left", pattern(offset_table, config, &inner.argument)),
-                    ("right", expression(offset_table, config, default)),
+                    ("right", expression(offset_table, config, false, default)),
                 ],
             ),
             None => pattern(offset_table, config, &inner.argument),
@@ -4198,7 +4322,7 @@ fn object_property(
                     shorthand,
                 } => (
                     key,
-                    expression(offset_table, config, value),
+                    expression(offset_table, config, false, value),
                     "init",
                     false,
                     *shorthand,
@@ -4267,7 +4391,7 @@ fn object_property(
             spread.comments.as_ref(),
             vec![(
                 "argument",
-                expression(offset_table, config, &spread.argument),
+                expression(offset_table, config, false, &spread.argument),
             )],
         ),
     }
@@ -4296,7 +4420,7 @@ fn object_pattern_property(
                     (identifier(offset_table, config, id), false, None)
                 }
                 ast::pattern::object::Key::Computed(computed_key) => (
-                    expression(offset_table, config, &computed_key.expression),
+                    expression(offset_table, config, false, &computed_key.expression),
                     true,
                     computed_key.comments.dupe(),
                 ),
@@ -4313,7 +4437,7 @@ fn object_pattern_property(
                         None,
                         vec![
                             ("left", pattern(offset_table, config, &normal.pattern)),
-                            ("right", expression(offset_table, config, default)),
+                            ("right", expression(offset_table, config, false, default)),
                         ],
                     )
                 }
@@ -4343,6 +4467,7 @@ fn object_pattern_property(
 fn spread_element(
     offset_table: &OffsetTable,
     config: &Config,
+    in_optional_chain: bool,
     spread: &ast::expression::SpreadElement<Loc, Loc>,
 ) -> Value {
     node(
@@ -4353,7 +4478,7 @@ fn spread_element(
         spread.comments.as_ref(),
         vec![(
             "argument",
-            expression(offset_table, config, &spread.argument),
+            expression(offset_table, config, in_optional_chain, &spread.argument),
         )],
     )
 }
@@ -4365,9 +4490,11 @@ fn array_element(
 ) -> Value {
     match element {
         ast::expression::ArrayElement::Hole(_) => Value::Null,
-        ast::expression::ArrayElement::Expression(expr) => expression(offset_table, config, expr),
+        ast::expression::ArrayElement::Expression(expr) => {
+            expression(offset_table, config, false, expr)
+        }
         ast::expression::ArrayElement::Spread(spread) => {
-            spread_element(offset_table, config, spread)
+            spread_element(offset_table, config, false, spread)
         }
     }
 }
@@ -4519,7 +4646,9 @@ fn template_literal(
             ),
             (
                 "expressions",
-                array_of_list(&lit.expressions, |e| expression(offset_table, config, e)),
+                array_of_list(&lit.expressions, |e| {
+                    expression(offset_table, config, false, e)
+                }),
             ),
         ],
     )
@@ -4557,7 +4686,7 @@ fn tagged_template(
         loc,
         tagged.comments.as_ref(),
         vec![
-            ("tag", expression(offset_table, config, &tagged.tag)),
+            ("tag", expression(offset_table, config, false, &tagged.tag)),
             (
                 "typeArguments",
                 option(&tagged.targs, |t| call_type_args(offset_table, config, t)),
@@ -4610,7 +4739,9 @@ fn variable_declarator(
             ("id", pattern(offset_table, config, &declarator.id)),
             (
                 "init",
-                option(&declarator.init, |e| expression(offset_table, config, e)),
+                option(&declarator.init, |e| {
+                    expression(offset_table, config, false, e)
+                }),
             ),
         ],
     )
@@ -5314,7 +5445,7 @@ fn object_type_property(
         ("kind", string(kind)),
         (
             "init",
-            option(&prop.init, |e| expression(offset_table, config, e)),
+            option(&prop.init, |e| expression(offset_table, config, false, e)),
         ),
     ];
     if computed {
@@ -5613,6 +5744,24 @@ fn generic_type(
     generic: &ast::types::Generic<Loc, Loc>,
 ) -> Value {
     use ast::types::generic;
+
+    // Mirror upstream Hermes' mapGenericTypeAnnotation: collapse the
+    // no-targs `this` identifier case to a ThisTypeAnnotation leaf node.
+    // OCaml's parser produces `Type::Generic { id: Unqualified "this",
+    // targs: None }` for both `type T = this` and `(this) => void` /
+    // `m(): this`.
+    if let (None, generic::Identifier::Unqualified(id)) = (&generic.targs, &generic.id)
+        && id.name == "this"
+    {
+        return node(
+            offset_table,
+            config,
+            "ThisTypeAnnotation",
+            loc,
+            generic.comments.as_ref(),
+            vec![],
+        );
+    }
 
     let id = match &generic.id {
         generic::Identifier::Unqualified(id) => identifier(offset_table, config, id),
@@ -5941,8 +6090,12 @@ fn type_param(
     use ast::types::AnnotationOrHint;
     use ast::types::type_param::BoundKind;
 
+    // Hermes' deserializeTypeParameter reads `bound` as a plain type node,
+    // NOT a TypeAnnotation-wrapped node. Emit the inner annotation directly
+    // rather than going through `type_annotation` (which writes a
+    // TypeAnnotation header). When the bound is missing, write null.
     let bound = match &param.bound {
-        AnnotationOrHint::Available(annot) => type_annotation(offset_table, config, annot),
+        AnnotationOrHint::Available(annot) => type_(offset_table, config, &annot.annotation),
         AnnotationOrHint::Missing(_) => Value::Null,
     };
 
@@ -6277,7 +6430,7 @@ fn jsx_spread_attribute(
         spread.comments.as_ref(),
         vec![(
             "argument",
-            expression(offset_table, config, &spread.argument),
+            expression(offset_table, config, false, &spread.argument),
         )],
     )
 }
@@ -6291,7 +6444,7 @@ fn jsx_expression_container(
     use ast::jsx::expression_container::Expression;
 
     let expression = match &container.expression {
-        Expression::Expression(expr) => expression(offset_table, config, expr),
+        Expression::Expression(expr) => expression(offset_table, config, false, expr),
         Expression::EmptyExpression => {
             let empty_loc = Loc {
                 source: loc.source.clone(),
@@ -6339,7 +6492,7 @@ fn jsx_spread_child(
         spread.comments.as_ref(),
         vec![(
             "expression",
-            expression(offset_table, config, &spread.expression),
+            expression(offset_table, config, false, &spread.expression),
         )],
     )
 }
@@ -6595,7 +6748,7 @@ fn predicate(
     let (node_type, props) = match &pred.kind {
         PredicateKind::Declared(expr) => (
             "DeclaredPredicate",
-            vec![("value", expression(offset_table, config, expr))],
+            vec![("value", expression(offset_table, config, false, expr))],
         ),
         PredicateKind::Inferred => ("InferredPredicate", vec![]),
     };
@@ -6613,15 +6766,16 @@ fn predicate(
 fn call_node_properties(
     offset_table: &OffsetTable,
     config: &Config,
+    in_optional_chain: bool,
     wrap_callee: Option<Box<dyn Fn(&OffsetTable, &Config, Value) -> Value>>,
     call: &ast::expression::Call<Loc, Loc>,
 ) -> Vec<(&'static str, Value)> {
     let callee = match wrap_callee {
-        None => expression(offset_table, config, &call.callee),
+        None => expression(offset_table, config, in_optional_chain, &call.callee),
         Some(wrap) => wrap(
             offset_table,
             config,
-            expression(offset_table, config, &call.callee),
+            expression(offset_table, config, in_optional_chain, &call.callee),
         ),
     };
 
@@ -6631,13 +6785,17 @@ fn call_node_properties(
             "typeArguments",
             option(&call.targs, |t| call_type_args(offset_table, config, t)),
         ),
-        ("arguments", arg_list(offset_table, config, &call.arguments)),
+        (
+            "arguments",
+            arg_list(offset_table, config, in_optional_chain, &call.arguments),
+        ),
     ]
 }
 
 fn member_node_properties(
     offset_table: &OffsetTable,
     config: &Config,
+    in_optional_chain: bool,
     wrap_receiver: Option<Box<dyn Fn(&OffsetTable, &Config, Value) -> Value>>,
     member: &ast::expression::Member<Loc, Loc>,
 ) -> Vec<(&'static str, Value)> {
@@ -6648,17 +6806,18 @@ fn member_node_properties(
         ast::expression::member::Property::PropertyPrivateName(name) => {
             (private_identifier(offset_table, config, name), false)
         }
-        ast::expression::member::Property::PropertyExpression(expr) => {
-            (expression(offset_table, config, expr), true)
-        }
+        ast::expression::member::Property::PropertyExpression(expr) => (
+            expression(offset_table, config, in_optional_chain, expr),
+            true,
+        ),
     };
 
     let object = match wrap_receiver {
-        None => expression(offset_table, config, &member.object),
+        None => expression(offset_table, config, in_optional_chain, &member.object),
         Some(wrap) => wrap(
             offset_table,
             config,
-            expression(offset_table, config, &member.object),
+            expression(offset_table, config, in_optional_chain, &member.object),
         ),
     };
 

@@ -180,7 +180,8 @@
                   ]
                 }
               }
-            ]
+            ],
+            "optional":false
           }
         }
       ],
@@ -298,7 +299,8 @@
                   ]
                 }
               }
-            ]
+            ],
+            "trailingComma":false
           }
         }
       ],

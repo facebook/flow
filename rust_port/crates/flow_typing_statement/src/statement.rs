@@ -6923,6 +6923,7 @@ fn expression_<'a>(
                         loc: (loc, t),
                         inner: (expression::Array {
                             elements: vec![].into(),
+                            trailing_comma: inner.trailing_comma,
                             comments: inner.comments.dupe(),
                         })
                         .into(),
@@ -6950,6 +6951,7 @@ fn expression_<'a>(
                         loc: (loc, t),
                         inner: (expression::Array {
                             elements: vec![].into(),
+                            trailing_comma: inner.trailing_comma,
                             comments: inner.comments.dupe(),
                         })
                         .into(),
@@ -6970,6 +6972,7 @@ fn expression_<'a>(
                         loc: (loc, t),
                         inner: (expression::Array {
                             elements: vec![].into(),
+                            trailing_comma: inner.trailing_comma,
                             comments: inner.comments.dupe(),
                         })
                         .into(),
@@ -7028,6 +7031,7 @@ fn expression_<'a>(
                         loc: (loc, t),
                         inner: (expression::Array {
                             elements: elements.into(),
+                            trailing_comma: inner.trailing_comma,
                             comments: inner.comments.dupe(),
                         })
                         .into(),

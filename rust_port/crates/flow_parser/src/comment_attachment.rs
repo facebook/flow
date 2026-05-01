@@ -61,6 +61,7 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, !> for TrailingCommentsRemover 
     ) -> ast::expression::Array<Loc, Loc> {
         ast::expression::Array {
             elements: expr.elements.dupe(),
+            trailing_comma: expr.trailing_comma,
             comments: self.map_syntax_opt(expr.comments.as_ref()),
         }
     }

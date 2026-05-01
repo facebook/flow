@@ -86,12 +86,10 @@ class FlowParserDeserializer {
 
     // Interpreter directive (OCaml `program` estree_translator.ml:118-123).
     // The serializer writes a Node slot here: an `InterpreterDirective` node
-    // when `#!shebang` is present, otherwise null. Only attach to the program
-    // when present, matching the OCaml shape.
-    const interpreter = this.deserializeNode();
-    if (interpreter != null) {
-      program.interpreter = interpreter;
-    }
+    // when `#!shebang` is present, otherwise null. Always attach the slot so
+    // the public Program shape carries `interpreter: InterpreterDirective | null`
+    // — matches upstream hermes-parser, which exposes the slot uniformly.
+    program.interpreter = this.deserializeNode();
 
     if (this.options.tokens === true) {
       program.tokens = this.deserializeTokens();

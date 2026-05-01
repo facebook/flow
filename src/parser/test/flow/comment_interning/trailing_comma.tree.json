@@ -156,7 +156,8 @@
             "typeAnnotation":null,
             "optional":false
           }
-        ]
+        ],
+        "optional":false
       },
       "directive":null
     },
@@ -217,7 +218,8 @@
             "typeAnnotation":null,
             "optional":false
           }
-        ]
+        ],
+        "trailingComma":true
       },
       "directive":null
     },
@@ -538,7 +540,8 @@
             }
           ]
         },
-        "arguments":[]
+        "arguments":[],
+        "optional":false
       },
       "directive":null
     },

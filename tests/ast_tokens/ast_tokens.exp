@@ -568,13 +568,6 @@
       "range":[342,343],
       "type":"T_SEMICOLON",
       "value":";"
-    },
-    {
-      "context":"normal",
-      "loc":{"end":{"column":0,"line":16},"start":{"column":0,"line":16}},
-      "range":[344,344],
-      "type":"T_EOF",
-      "value":""
     }
   ],
   "type":"Program"

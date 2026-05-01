@@ -4114,7 +4114,8 @@ and expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
     annot opts scope tbls SSet.empty t
   | E.AsConstExpression
       {
-        E.AsConstExpression.expression = (_, E.Array { E.Array.elements = []; comments = _ });
+        E.AsConstExpression.expression =
+          (_, E.Array { E.Array.elements = []; trailing_comma = _; comments = _ });
         comments = _;
       } ->
     (* Empty array literals are an error in general. Special-case `[] as const`. *)
@@ -4134,7 +4135,8 @@ and expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
       )
   | E.Object { E.Object.properties; comments = _ } ->
     object_literal opts scope tbls loc ~frozen:(frozen = FrozenDirect) properties
-  | E.Array { E.Array.elements; comments = _ } -> array_literal opts scope tbls loc elements
+  | E.Array { E.Array.elements; trailing_comma = _; comments = _ } ->
+    array_literal opts scope tbls loc elements
   | E.Unary { E.Unary.operator; argument; comments = _ } -> begin
     match operator with
     | E.Unary.Nonnull

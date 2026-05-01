@@ -264,15 +264,21 @@ fn print_literal_deserializer(def: &NodeDef) {
     println!("    if (valueKind === 1) value = this.deserializeBoolean();");
     println!("    else if (valueKind === 2) value = this.deserializeNumber();");
     println!("    else if (valueKind === 3) value = this.deserializeString();");
+    println!("    const literalType = this.deserializeString();");
     println!("    const raw = this.deserializeString();");
     println!("    const bigint = this.deserializeString();");
     println!("    const regexPattern = this.deserializeString();");
     println!("    const regexFlags = this.deserializeString();");
-    println!("    let regex = null;");
+    // Mirror upstream Hermes: only attach `bigint` / `regex` to the public
+    // shape when they are actually a bigint / regex literal. The wire
+    // format always sends both slots so the layout stays fixed; the JS
+    // shape conditionally includes them.
+    println!("    const node = {{type: 'Literal', loc, value, raw, literalType}};");
+    println!("    if (bigint != null) node.bigint = bigint;");
     println!("    if (regexPattern != null) {{");
-    println!("      regex = {{pattern: regexPattern, flags: regexFlags ?? ''}};");
+    println!("      node.regex = {{pattern: regexPattern, flags: regexFlags ?? ''}};");
     println!("    }}");
-    println!("    return {{type: 'Literal', loc, value, raw, bigint, regex}};");
+    println!("    return node;");
     println!("  }},");
 }
 

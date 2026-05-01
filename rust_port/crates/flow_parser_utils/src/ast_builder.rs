@@ -2005,6 +2005,7 @@ pub mod expressions {
             loc,
             inner: Arc::new(expression::Array {
                 elements: elements.into(),
+                trailing_comma: false,
                 comments,
             }),
         })

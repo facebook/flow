@@ -25,6 +25,7 @@
             "right": {
                 "type": "ArrayExpression",
                 "elements": [],
+                "trailingComma": false,
                 "range": [
                     10,
                     12
@@ -242,9 +243,6 @@
     ],
     "errors": [
         {
-            "index": 6,
-            "lineNumber": 1,
-            "column": 7,
             "message": "Error: Line 1: Invalid left-hand side in for-in"
         }
     ],

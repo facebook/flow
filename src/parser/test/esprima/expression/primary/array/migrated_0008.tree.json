@@ -27,6 +27,7 @@
                 "right": {
                     "type": "ArrayExpression",
                     "elements": [],
+                    "trailingComma": false,
                     "range": [
                         5,
                         7

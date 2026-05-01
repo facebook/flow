@@ -6798,7 +6798,11 @@ pub fn array_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     expr: &'ast ast::expression::Array<Loc, Type>,
 ) -> Result<(), E> {
     let _ = loc;
-    let ast::expression::Array { elements, comments } = expr;
+    let ast::expression::Array {
+        elements,
+        trailing_comma: _,
+        comments,
+    } = expr;
     for element in elements.iter() {
         visitor.array_element(element)?;
     }
@@ -6811,7 +6815,11 @@ pub fn map_array_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     _loc: &'ast Loc,
     expr: &'ast ast::expression::Array<Loc, Loc>,
 ) -> ast::expression::Array<Loc, Loc> {
-    let ast::expression::Array { elements, comments } = expr;
+    let ast::expression::Array {
+        elements,
+        trailing_comma,
+        comments,
+    } = expr;
     let elements_ = Arc::from(
         elements
             .iter()
@@ -6821,6 +6829,7 @@ pub fn map_array_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
     ast::expression::Array {
         elements: elements_,
+        trailing_comma: *trailing_comma,
         comments: comments_,
     }
 }

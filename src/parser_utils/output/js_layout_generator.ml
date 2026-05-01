@@ -975,7 +975,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       match expr with
       | E.This { E.This.comments } -> layout_node_with_comments_opt loc comments (Atom "this")
       | E.Super { E.Super.comments } -> layout_node_with_comments_opt loc comments (Atom "super")
-      | E.Array { E.Array.elements; comments } ->
+      | E.Array { E.Array.elements; trailing_comma = _; comments } ->
         let element_loc = function
           | E.Array.Hole loc -> loc
           | E.Array.Expression (loc, _) -> loc

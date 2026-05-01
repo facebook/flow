@@ -30,6 +30,7 @@
                         }
                     }
                 ],
+                "trailingComma": false,
                 "range": [
                     0,
                     5

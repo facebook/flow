@@ -115,39 +115,34 @@
             "range":[137,252],
             "name":"T",
             "bound":{
-              "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":3,"column":74},"end":{"line":3,"column":99}},
-              "range":[179,204],
-              "typeAnnotation":{
-                "type":"GenericTypeAnnotation",
+              "type":"GenericTypeAnnotation",
+              "loc":{"source":null,"start":{"line":3,"column":94},"end":{"line":3,"column":99}},
+              "range":[199,204],
+              "id":{
+                "type":"Identifier",
+                "trailingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":3,"column":100},"end":{"line":3,"column":117}},
+                    "range":[205,222],
+                    "value":" 2.5 T bound "
+                  }
+                ],
+                "leadingComments":[
+                  {
+                    "type":"Block",
+                    "loc":{"source":null,"start":{"line":3,"column":76},"end":{"line":3,"column":93}},
+                    "range":[181,198],
+                    "value":" 2.4 L bound "
+                  }
+                ],
                 "loc":{"source":null,"start":{"line":3,"column":94},"end":{"line":3,"column":99}},
                 "range":[199,204],
-                "id":{
-                  "type":"Identifier",
-                  "trailingComments":[
-                    {
-                      "type":"Block",
-                      "loc":{"source":null,"start":{"line":3,"column":100},"end":{"line":3,"column":117}},
-                      "range":[205,222],
-                      "value":" 2.5 T bound "
-                    }
-                  ],
-                  "leadingComments":[
-                    {
-                      "type":"Block",
-                      "loc":{"source":null,"start":{"line":3,"column":76},"end":{"line":3,"column":93}},
-                      "range":[181,198],
-                      "value":" 2.4 L bound "
-                    }
-                  ],
-                  "loc":{"source":null,"start":{"line":3,"column":94},"end":{"line":3,"column":99}},
-                  "range":[199,204],
-                  "name":"Bound",
-                  "typeAnnotation":null,
-                  "optional":false
-                },
-                "typeParameters":null
-              }
+                "name":"Bound",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "typeParameters":null
             },
             "const":false,
             "variance":{

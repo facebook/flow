@@ -59,12 +59,12 @@
           }
         ]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":false,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -122,12 +122,12 @@
           }
         ]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":false,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -193,12 +193,12 @@
           }
         ]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":false,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -296,12 +296,12 @@
           }
         ]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":false,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -414,12 +414,12 @@
           }
         ]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":false,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -485,7 +485,8 @@
               "type":"ArrayExpression",
               "loc":{"source":null,"start":{"line":22,"column":59},"end":{"line":22,"column":61}},
               "range":[549,551],
-              "elements":[]
+              "elements":[],
+              "trailingComma":false
             },
             "body":{
               "type":"BlockStatement",
@@ -497,12 +498,12 @@
           }
         ]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":false,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -580,12 +581,12 @@
           }
         ]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":false,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     },
     {
       "type":"BlockStatement",

@@ -11,6 +11,7 @@
 
 const FlowParserDeserializer = require('./FlowParserDeserializer');
 const FlowParserWASMModule = require('./FlowParserWASM');
+const {getModuleDocblock} = require('./getModuleDocblock');
 
 let FlowParserWASM;
 let flowParse;
@@ -51,10 +52,11 @@ function initFlowParserWASM() {
   // flag that mirrors OCaml's `types` option (on by default; fixtures that
   // need to exercise the no-type-grammar path opt out via `types: false`),
   // and a `sourceType` integer (0=unspecified, 1=script, 2=module). The
-  // Rust parser does no pragma-conditional type parsing — `@flow` detection
-  // is the JS adapter's job (src/index.js) and resolves to a concrete
-  // `enableTypes` bool before this call.
+  // Rust parser does docblock `@flow` pragma detection internally when
+  // `enableTypesPragmaDetection` is set; the JS adapter `parse()` resolves
+  // `flow: 'detect'` to that flag rather than computing the pragma in JS.
   flowParse = FlowParserWASM.cwrap('hermesParse', 'number', [
+    'number',
     'number',
     'number',
     'number',
@@ -212,6 +214,13 @@ function parse(source, options) {
       flag(options.enableRecords),
       enableTypes,
       sourceTypeCode,
+      // When set, the Rust parser scans the docblock for `@flow` and
+      // overrides `enableTypes` based on whether the pragma is present.
+      // The JS public `parse()` in src/index.js sets this when the caller
+      // requests `flow: 'detect'`; raw direct callers of `FlowParser.parse`
+      // (e.g. the wasm fixture runner) leave it off and supply
+      // `enableTypes` directly.
+      flag(options.enableTypesPragmaDetection),
     );
 
     // The Rust parser always returns a (possibly partial) AST plus an
@@ -293,6 +302,76 @@ function parse(source, options) {
     }
     fixLocs(ast);
 
+    // Category E - E (shit.md): first-error-throw + `Illegal return statement`
+    // filter + `Invalid flags supplied to RegExp constructor` filter live at
+    // the wasm boundary so the public src/index.js parse() stays close to
+    // upstream. Direct callers (e.g. the wasm fixture runner that wants raw
+    // ast.errors instead of a throw) opt out via
+    // `throwOnParseErrors: false`. Format mirrors HermesASTAdapter.formatError —
+    // `${message} (${line}:${column})`.
+    //
+    // `allowReturnOutsideFunction` is honored at the JS layer rather than in
+    // the Rust port: OCaml flow_parser's `parse_options` has no equivalent
+    // gate (Parse_error.IllegalReturn is raised unconditionally), so adding
+    // a Rust option would extend the port beyond its OCaml ancestor. Filter
+    // the specific diagnostic out when the consumer asked for the
+    // hermes-parser-style relaxation. The ReturnStatement AST node is
+    // produced regardless, so dropping the error is the only behavioral
+    // difference.
+    if (options.throwOnParseErrors !== false) {
+      let errors = ast.errors;
+      if (
+        errors != null &&
+        errors.length > 0 &&
+        options.allowReturnOutsideFunction === true
+      ) {
+        errors = errors.filter(e => e.message !== 'Illegal return statement');
+      }
+      // hermes-parser parity (verified against 0.35.0): an invalid RegExp
+      // flag (e.g. `/foo/qq`) is *not* a parse error — the regex literal is
+      // syntactically well-formed and Hermes leaves the value-construction
+      // failure to the JS `RegExp` constructor at adapter time. Strip the
+      // OCaml flow_parser diagnostic so the Literal node is returned with
+      // `value: null` instead of throwing.
+      if (errors != null && errors.length > 0) {
+        errors = errors.filter(
+          e =>
+            !e.message.startsWith(
+              'Invalid flags supplied to RegExp constructor',
+            ),
+        );
+      }
+      if (errors != null && errors.length > 0) {
+        const first = errors[0];
+        const line = first.loc.start.line;
+        const column = first.loc.start.column;
+        const syntaxError = new SyntaxError(
+          `${first.message} (${line}:${column})`,
+        );
+        syntaxError.loc = {line, column};
+        throw syntaxError;
+      }
+    }
+
+    // Category C - G (shit.md): module-vs-script detection mirroring
+    // HermesASTAdapter.setModuleSourceType. Walks the top-level program body
+    // for import/export forms; a single value-kind import or export is enough
+    // to classify the program as a module. Type-only imports and re-exports
+    // keep the program in script mode. We check only the top-level body
+    // (matching upstream) because nested imports are not legal at runtime.
+    // When the caller pinned `sourceType: 'script'` or `'module'` we honor
+    // it verbatim; `'unambiguous'` was already deleted from `options` in
+    // src/index.js's getOptions so it falls through to detection.
+    if (options.sourceType === 'script' || options.sourceType === 'module') {
+      ast.sourceType = options.sourceType;
+    } else {
+      ast.sourceType = detectSourceType(ast);
+    }
+
+    // Category C - I (shit.md): attach the module docblock derived from the
+    // leading block comment. Mirrors HermesToESTreeAdapter.mapProgram.
+    ast.docblock = getModuleDocblock(ast);
+
     return ast;
   } finally {
     if (parseResult !== 0) {
@@ -305,6 +384,33 @@ function parse(source, options) {
       FlowParserWASM._free(filenameAddr);
     }
   }
+}
+
+function detectSourceType(program) {
+  if (!Array.isArray(program.body)) {
+    return 'script';
+  }
+  for (const stmt of program.body) {
+    if (stmt == null) {
+      continue;
+    }
+    switch (stmt.type) {
+      case 'ImportDeclaration':
+        if (stmt.importKind === 'value' || stmt.importKind == null) {
+          return 'module';
+        }
+        break;
+      case 'ExportDefaultDeclaration':
+        return 'module';
+      case 'ExportNamedDeclaration':
+      case 'ExportAllDeclaration':
+        if (stmt.exportKind === 'value' || stmt.exportKind == null) {
+          return 'module';
+        }
+        break;
+    }
+  }
+  return 'script';
 }
 
 module.exports = {parse};

@@ -6,6 +6,7 @@
             "declaration": {
                 "type": "ArrayExpression",
                 "elements": [],
+                "trailingComma": false,
                 "range": [
                     15,
                     17

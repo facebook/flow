@@ -84,13 +84,6 @@
       "range":[11,17],
       "type":"T_TEMPLATE_PART",
       "value":"} baz`"
-    },
-    {
-      "context":"normal",
-      "loc":{"end":{"column":0,"line":2},"start":{"column":0,"line":2}},
-      "range":[18,18],
-      "type":"T_EOF",
-      "value":""
     }
   ],
   "type":"Program"

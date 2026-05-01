@@ -1828,6 +1828,7 @@ fn resolve_binding<'cx>(
                     loc: (arr_loc.dupe(), t.dupe()),
                     inner: ast::expression::Array {
                         elements: vec![].into(),
+                        trailing_comma: false,
                         comments: None,
                     }
                     .into(),

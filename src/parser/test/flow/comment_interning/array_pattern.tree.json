@@ -50,7 +50,8 @@
                 "optional":false
               }
             ],
-            "typeAnnotation":null
+            "typeAnnotation":null,
+            "optional":false
           },
           "init":{
             "type":"ArrayExpression",
@@ -71,7 +72,8 @@
                 "value":2,
                 "raw":"2"
               }
-            ]
+            ],
+            "trailingComma":false
           }
         }
       ],
@@ -116,7 +118,8 @@
                 "optional":false
               }
             ],
-            "typeAnnotation":null
+            "typeAnnotation":null,
+            "optional":false
           },
           "init":{
             "type":"ArrayExpression",
@@ -137,7 +140,8 @@
                 "value":2,
                 "raw":"2"
               }
-            ]
+            ],
+            "trailingComma":false
           }
         }
       ],
@@ -182,7 +186,8 @@
                 "optional":false
               }
             ],
-            "typeAnnotation":null
+            "typeAnnotation":null,
+            "optional":false
           },
           "init":{
             "type":"ArrayExpression",
@@ -203,7 +208,8 @@
                 "value":2,
                 "raw":"2"
               }
-            ]
+            ],
+            "trailingComma":false
           }
         }
       ],
@@ -261,13 +267,15 @@
                 }
               }
             ],
-            "typeAnnotation":null
+            "typeAnnotation":null,
+            "optional":false
           },
           "init":{
             "type":"ArrayExpression",
             "loc":{"source":null,"start":{"line":8,"column":66},"end":{"line":8,"column":68}},
             "range":[203,205],
-            "elements":[]
+            "elements":[],
+            "trailingComma":false
           }
         }
       ],
@@ -295,13 +303,15 @@
             "loc":{"source":null,"start":{"line":10,"column":6},"end":{"line":10,"column":25}},
             "range":[214,233],
             "elements":[],
-            "typeAnnotation":null
+            "typeAnnotation":null,
+            "optional":false
           },
           "init":{
             "type":"ArrayExpression",
             "loc":{"source":null,"start":{"line":10,"column":28},"end":{"line":10,"column":30}},
             "range":[236,238],
-            "elements":[]
+            "elements":[],
+            "trailingComma":false
           }
         }
       ],
@@ -338,13 +348,15 @@
                 "optional":false
               }
             ],
-            "typeAnnotation":null
+            "typeAnnotation":null,
+            "optional":false
           },
           "init":{
             "type":"ArrayExpression",
             "loc":{"source":null,"start":{"line":12,"column":31},"end":{"line":12,"column":33}},
             "range":[272,274],
-            "elements":[]
+            "elements":[],
+            "trailingComma":false
           }
         }
       ],

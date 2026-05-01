@@ -3874,6 +3874,7 @@ pub mod expression {
     )]
     pub struct Array<M: Dupe, T: Dupe> {
         pub elements: Arc<[ArrayElement<M, T>]>,
+        pub trailing_comma: bool,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 

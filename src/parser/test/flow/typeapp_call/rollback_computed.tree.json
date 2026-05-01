@@ -47,7 +47,8 @@
               "typeAnnotation":null,
               "optional":false
             }
-          ]
+          ],
+          "trailingComma":false
         }
       },
       "directive":null

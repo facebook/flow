@@ -224,25 +224,6 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
                 ],
                 "type": "T_SEMICOLON",
                 "value": ";"
-              },
-              {
-                "context": "normal",
-                "loc": {
-                  "end": {
-                    "column": 0,
-                    "line": 2
-                  },
-                  "start": {
-                    "column": 0,
-                    "line": 2
-                  }
-                },
-                "range": [
-                  20,
-                  20
-                ],
-                "type": "T_EOF",
-                "value": ""
               }
             ],
             "type": "Program"

@@ -1431,34 +1431,45 @@ pub mod eat {
 
     /// Consume a single token
     pub(crate) fn token(env: &mut ParserEnv) -> Result<(), Rollback> {
-        /* If there's a token_sink, emit the lexed token before moving forward */
+        /* If there's a token_sink, emit the lexed token before moving forward.
+         * Skip T_EOF — upstream Hermes' token stream does not include a
+         * sentinel end-of-input token, so neither should ours. The serializer
+         * maps T_EOF to Punctuator with empty value
+         * (`token_kind_to_estree_type_index` in serializer.rs), and the adapter
+         * used to pop it in JS; emit-time skip is the cleaner fix. */
         let token_sink = env.token_sink.take();
-        if let Some(token_sink) = token_sink {
-            let token_loc = peek::loc(env).dupe();
-            let token = peek::token(env).clone();
-            let token_loc = match &token {
-                TokenKind::TInterpreter(loc, _) => loc.dupe(),
-                _ => token_loc,
-            };
-            let token_sink = send_token_to_sink(
-                token_sink,
-                TokenSinkResult {
-                    token_loc,
-                    token_kind: token,
-                    /*
-                     * The lex mode is useful because it gives context to some
-                     * context-sensitive tokens.
-                     *
-                     * Some examples of such tokens include:
-                     *
-                     * `=>` - Part of an arrow function? or part of a type annotation?
-                     * `<`  - A less-than? Or an opening to a JSX element?
-                     * ...etc...
-                     */
-                    token_context: env.lex_mode(),
-                },
-            );
-            env.token_sink = Some(token_sink);
+        match token_sink {
+            None => {}
+            Some(token_sink) if matches!(peek::token(env), TokenKind::TEof) => {
+                env.token_sink = Some(token_sink);
+            }
+            Some(token_sink) => {
+                let token_loc = peek::loc(env).dupe();
+                let token = peek::token(env).clone();
+                let token_loc = match &token {
+                    TokenKind::TInterpreter(loc, _) => loc.dupe(),
+                    _ => token_loc,
+                };
+                let token_sink = send_token_to_sink(
+                    token_sink,
+                    TokenSinkResult {
+                        token_loc,
+                        token_kind: token,
+                        /*
+                         * The lex mode is useful because it gives context to some
+                         * context-sensitive tokens.
+                         *
+                         * Some examples of such tokens include:
+                         *
+                         * `=>` - Part of an arrow function? or part of a type annotation?
+                         * `<`  - A less-than? Or an opening to a JSX element?
+                         * ...etc...
+                         */
+                        token_context: env.lex_mode(),
+                    },
+                );
+                env.token_sink = Some(token_sink);
+            }
         }
 
         env.lex_env = peek::lex_env(env);

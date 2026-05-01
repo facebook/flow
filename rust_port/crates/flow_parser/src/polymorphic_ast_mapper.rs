@@ -875,7 +875,11 @@ pub fn array<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     mapper: &mut impl LocMapper<M, T, N, U, E>,
     expr: &ast::expression::Array<M, T>,
 ) -> Result<ast::expression::Array<N, U>, E> {
-    let ast::expression::Array { elements, comments } = expr;
+    let ast::expression::Array {
+        elements,
+        trailing_comma,
+        comments,
+    } = expr;
     let elements_ = elements
         .iter()
         .map(|e| array_element(mapper, e))
@@ -884,6 +888,7 @@ pub fn array<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
     Ok(ast::expression::Array {
         elements: elements_,
+        trailing_comma: *trailing_comma,
         comments: comments_,
     })
 }

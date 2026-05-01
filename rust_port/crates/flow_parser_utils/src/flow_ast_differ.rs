@@ -3830,10 +3830,12 @@ fn array(
 ) -> Option<Vec<NodeChange>> {
     let expression::Array {
         elements: elems1,
+        trailing_comma: _,
         comments: comments1,
     } = arr1;
     let expression::Array {
         elements: elems2,
+        trailing_comma: _,
         comments: comments2,
     } = arr2;
     let comments = syntax_opt(loc, comments1, comments2);

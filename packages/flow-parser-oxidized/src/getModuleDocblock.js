@@ -4,29 +4,21 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow strict
  * @format
  */
 
 'use strict';
 
-import type {HermesNode} from './HermesAST';
-import type {DocblockDirectives, Program} from 'flow-estree-oxidized';
-
 const DIRECTIVE_REGEX = /^\s*@([a-zA-Z0-9_-]+)( +.+)?$/;
 
-export function parseDocblockString(docblock: string): DocblockDirectives {
+function parseDocblockString(docblock) {
   const directiveLines = docblock
     .split('\n')
     // remove the leading " *" from each line
     .map(line => line.trimStart().replace(/^\* ?/, '').trim())
     .filter(line => line.startsWith('@'));
 
-  const directives: {
-    [string]: Array<string>,
-  } =
-    // $FlowExpectedError[incompatible-type] - flow types  this return as {...}
-    Object.create(null);
+  const directives = Object.create(null);
 
   for (const line of directiveLines) {
     const match = DIRECTIVE_REGEX.exec(line);
@@ -47,16 +39,13 @@ export function parseDocblockString(docblock: string): DocblockDirectives {
   return directives;
 }
 
-export function getModuleDocblock(
-  hermesProgram: HermesNode,
-): Program['docblock'] {
+function getModuleDocblock(hermesProgram) {
   const docblockNode = (() => {
     if (hermesProgram.type !== 'Program') {
       return null;
     }
 
-    // $FlowExpectedError[incompatible-type] - escape out of the unsafe hermes types
-    const program: Program = hermesProgram;
+    const program = hermesProgram;
 
     if (program.comments.length === 0) {
       return null;
@@ -116,3 +105,5 @@ export function getModuleDocblock(
     comment: docblockNode,
   };
 }
+
+module.exports = {parseDocblockString, getModuleDocblock};

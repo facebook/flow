@@ -2950,16 +2950,31 @@ fn array_initializer(
 ) -> Result<(expression::Array<Loc, Loc>, PatternCoverErrors), Rollback> {
     fn elements(
         env: &mut ParserEnv,
-    ) -> Result<(Vec<expression::ArrayElement<Loc, Loc>>, PatternCoverErrors), Rollback> {
+    ) -> Result<
+        (
+            Vec<expression::ArrayElement<Loc, Loc>>,
+            PatternCoverErrors,
+            bool,
+        ),
+        Rollback,
+    > {
+        // `trailing` tracks whether the most recently consumed token before
+        // the eventual T_RBRACKET was a T_COMMA without a following element —
+        // i.e. whether the source had a trailing comma like `[1, 2,]`. Reset
+        // to false whenever we add an element (since the comma was followed
+        // by content); set to true when we consume a comma whose next peek
+        // is T_RBRACKET. Mirrors OCaml expression_parser.ml.
         let mut elements = Vec::new();
         let mut errs = PatternCoverErrors::empty();
+        let mut trailing = false;
         loop {
             match peek::token(env) {
-                TokenKind::TEof | TokenKind::TRbracket => return Ok((elements, errs)),
+                TokenKind::TEof | TokenKind::TRbracket => return Ok((elements, errs, trailing)),
                 TokenKind::TComma => {
                     let loc = peek::loc(env).dupe();
                     eat::token(env)?;
                     elements.push(expression::ArrayElement::Hole(loc));
+                    trailing = false;
                 }
                 TokenKind::TEllipsis => {
                     let leading = peek::comments(env);
@@ -2992,6 +3007,9 @@ fn array_initializer(
                     }
                     if !is_last {
                         expect::token(env, TokenKind::TComma)?;
+                        trailing = peek::token(env) == &TokenKind::TRbracket;
+                    } else {
+                        trailing = false;
                     }
                     elements.push(elem);
                     errs.append(new_errs);
@@ -3003,6 +3021,9 @@ fn array_initializer(
                     };
                     if peek::token(env) != &TokenKind::TRbracket {
                         expect::token(env, TokenKind::TComma)?;
+                        trailing = peek::token(env) == &TokenKind::TRbracket;
+                    } else {
+                        trailing = false;
                     }
                     elements.push(expression::ArrayElement::Expression(elem));
                     errs.append(new_errs);
@@ -3013,7 +3034,7 @@ fn array_initializer(
 
     let leading = peek::comments(env);
     expect::token(env, TokenKind::TLbracket)?;
-    let (elems, errs) = elements(env)?;
+    let (elems, errs, trailing_comma) = elements(env)?;
     let internal = peek::comments(env);
     expect::token(env, TokenKind::TRbracket)?;
     let trailing = eat::trailing_comments(env);
@@ -3021,6 +3042,7 @@ fn array_initializer(
     Ok((
         expression::Array {
             elements: elems.into(),
+            trailing_comma,
             comments: ast_utils::mk_comments_with_internal_opt(
                 Some(leading.into()),
                 Some(trailing.into()),
@@ -3062,12 +3084,16 @@ fn regexp(env: &mut ParserEnv) -> Result<expression::Expression<Loc, Loc>, Rollb
         .filter(|c| matches!(c, 'd' | 'g' | 'i' | 'm' | 's' | 'u' | 'y' | 'v'))
         .collect();
 
-    let flags = filtered_flags;
-    if raw_flags.as_str() != flags.as_str() {
+    // Mirror upstream Hermes: store the raw (possibly-invalid) flags on the
+    // AST. The flag-validity check still surfaces a parse error so callers
+    // can see invalid flags, but the wire format preserves the source as-is
+    // so consumers can reconstruct the original regex text.
+    if raw_flags.as_str() != filtered_flags.as_str() {
         env.error(ParseError::InvalidRegExpFlags(
             raw_flags.as_str().to_owned(),
         ))?;
     }
+    let flags = raw_flags.as_str().to_owned();
 
     let comments = mk_comments_opt(Some(leading.into()), Some(trailing.into()));
     Ok(expression::Expression::new(

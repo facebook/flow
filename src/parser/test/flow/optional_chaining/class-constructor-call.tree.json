@@ -57,6 +57,7 @@
           "typeAnnotation":null,
           "optional":false
         },
+        "typeArguments":null,
         "arguments":[]
       },
       "directive":null
@@ -77,6 +78,7 @@
           "typeAnnotation":null,
           "optional":false
         },
+        "typeArguments":null,
         "arguments":[
           {
             "type":"Identifier",
@@ -107,28 +109,34 @@
         "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":12}},
         "range":[26,38],
         "callee":{
-          "type":"OptionalMemberExpression",
+          "type":"ChainExpression",
           "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":8}},
           "range":[30,34],
-          "object":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":5}},
-            "range":[30,31],
-            "name":"B",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "property":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":5,"column":7},"end":{"line":5,"column":8}},
-            "range":[33,34],
-            "name":"C",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "computed":false,
-          "optional":true
+          "expression":{
+            "type":"MemberExpression",
+            "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":8}},
+            "range":[30,34],
+            "object":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":5}},
+              "range":[30,31],
+              "name":"B",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "property":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":5,"column":7},"end":{"line":5,"column":8}},
+              "range":[33,34],
+              "name":"C",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "computed":false,
+            "optional":true
+          }
         },
+        "typeArguments":null,
         "arguments":[]
       },
       "directive":null
@@ -142,28 +150,34 @@
         "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":16}},
         "range":[40,56],
         "callee":{
-          "type":"OptionalMemberExpression",
+          "type":"ChainExpression",
           "loc":{"source":null,"start":{"line":7,"column":4},"end":{"line":7,"column":8}},
           "range":[44,48],
-          "object":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":7,"column":4},"end":{"line":7,"column":5}},
-            "range":[44,45],
-            "name":"B",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "property":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":7,"column":7},"end":{"line":7,"column":8}},
-            "range":[47,48],
-            "name":"C",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "computed":false,
-          "optional":true
+          "expression":{
+            "type":"MemberExpression",
+            "loc":{"source":null,"start":{"line":7,"column":4},"end":{"line":7,"column":8}},
+            "range":[44,48],
+            "object":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":7,"column":4},"end":{"line":7,"column":5}},
+              "range":[44,45],
+              "name":"B",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "property":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":7,"column":7},"end":{"line":7,"column":8}},
+              "range":[47,48],
+              "name":"C",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "computed":false,
+            "optional":true
+          }
         },
+        "typeArguments":null,
         "arguments":[
           {
             "type":"Identifier",
@@ -194,28 +208,34 @@
         "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":8}},
         "range":[58,66],
         "callee":{
-          "type":"OptionalMemberExpression",
+          "type":"ChainExpression",
           "loc":{"source":null,"start":{"line":9,"column":4},"end":{"line":9,"column":8}},
           "range":[62,66],
-          "object":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":9,"column":4},"end":{"line":9,"column":5}},
-            "range":[62,63],
-            "name":"B",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "property":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":9,"column":7},"end":{"line":9,"column":8}},
-            "range":[65,66],
-            "name":"C",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "computed":false,
-          "optional":true
+          "expression":{
+            "type":"MemberExpression",
+            "loc":{"source":null,"start":{"line":9,"column":4},"end":{"line":9,"column":8}},
+            "range":[62,66],
+            "object":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":9,"column":4},"end":{"line":9,"column":5}},
+              "range":[62,63],
+              "name":"B",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "property":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":9,"column":7},"end":{"line":9,"column":8}},
+              "range":[65,66],
+              "name":"C",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "computed":false,
+            "optional":true
+          }
         },
+        "typeArguments":null,
         "arguments":[]
       },
       "directive":null
@@ -229,28 +249,34 @@
         "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":10}},
         "range":[68,78],
         "callee":{
-          "type":"OptionalMemberExpression",
+          "type":"ChainExpression",
           "loc":{"source":null,"start":{"line":11,"column":4},"end":{"line":11,"column":8}},
           "range":[72,76],
-          "object":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":11,"column":4},"end":{"line":11,"column":5}},
-            "range":[72,73],
-            "name":"B",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "property":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":11,"column":7},"end":{"line":11,"column":8}},
-            "range":[75,76],
-            "name":"C",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "computed":false,
-          "optional":true
+          "expression":{
+            "type":"MemberExpression",
+            "loc":{"source":null,"start":{"line":11,"column":4},"end":{"line":11,"column":8}},
+            "range":[72,76],
+            "object":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":11,"column":4},"end":{"line":11,"column":5}},
+              "range":[72,73],
+              "name":"B",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "property":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":11,"column":7},"end":{"line":11,"column":8}},
+              "range":[75,76],
+              "name":"C",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "computed":false,
+            "optional":true
+          }
         },
+        "typeArguments":null,
         "arguments":[]
       },
       "directive":null
@@ -264,43 +290,49 @@
         "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":12}},
         "range":[80,92],
         "callee":{
-          "type":"OptionalMemberExpression",
+          "type":"ChainExpression",
           "loc":{"source":null,"start":{"line":13,"column":4},"end":{"line":13,"column":10}},
           "range":[84,90],
-          "object":{
-            "type":"OptionalMemberExpression",
-            "loc":{"source":null,"start":{"line":13,"column":4},"end":{"line":13,"column":8}},
-            "range":[84,88],
+          "expression":{
+            "type":"MemberExpression",
+            "loc":{"source":null,"start":{"line":13,"column":4},"end":{"line":13,"column":10}},
+            "range":[84,90],
             "object":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":13,"column":4},"end":{"line":13,"column":5}},
-              "range":[84,85],
-              "name":"C",
-              "typeAnnotation":null,
-              "optional":false
+              "type":"MemberExpression",
+              "loc":{"source":null,"start":{"line":13,"column":4},"end":{"line":13,"column":8}},
+              "range":[84,88],
+              "object":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":13,"column":4},"end":{"line":13,"column":5}},
+                "range":[84,85],
+                "name":"C",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "property":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":13,"column":7},"end":{"line":13,"column":8}},
+                "range":[87,88],
+                "name":"b",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "computed":false,
+              "optional":true
             },
             "property":{
               "type":"Identifier",
-              "loc":{"source":null,"start":{"line":13,"column":7},"end":{"line":13,"column":8}},
-              "range":[87,88],
-              "name":"b",
+              "loc":{"source":null,"start":{"line":13,"column":9},"end":{"line":13,"column":10}},
+              "range":[89,90],
+              "name":"d",
               "typeAnnotation":null,
               "optional":false
             },
             "computed":false,
-            "optional":true
-          },
-          "property":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":13,"column":9},"end":{"line":13,"column":10}},
-            "range":[89,90],
-            "name":"d",
-            "typeAnnotation":null,
             "optional":false
-          },
-          "computed":false,
-          "optional":false
+          }
         },
+        "typeArguments":null,
         "arguments":[]
       },
       "directive":null

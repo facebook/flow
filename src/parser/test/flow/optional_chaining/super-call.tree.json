@@ -72,31 +72,37 @@
                     "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":15}},
                     "range":[54,65],
                     "expression":{
-                      "type":"OptionalMemberExpression",
+                      "type":"ChainExpression",
                       "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":14}},
                       "range":[54,64],
-                      "object":{
-                        "type":"CallExpression",
-                        "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":11}},
-                        "range":[54,61],
-                        "callee":{
-                          "type":"Super",
-                          "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":9}},
-                          "range":[54,59]
+                      "expression":{
+                        "type":"MemberExpression",
+                        "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":14}},
+                        "range":[54,64],
+                        "object":{
+                          "type":"CallExpression",
+                          "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":11}},
+                          "range":[54,61],
+                          "callee":{
+                            "type":"Super",
+                            "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":9}},
+                            "range":[54,59]
+                          },
+                          "typeArguments":null,
+                          "arguments":[],
+                          "optional":false
                         },
-                        "typeArguments":null,
-                        "arguments":[]
-                      },
-                      "property":{
-                        "type":"Identifier",
-                        "loc":{"source":null,"start":{"line":4,"column":13},"end":{"line":4,"column":14}},
-                        "range":[63,64],
-                        "name":"a",
-                        "typeAnnotation":null,
-                        "optional":false
-                      },
-                      "computed":false,
-                      "optional":true
+                        "property":{
+                          "type":"Identifier",
+                          "loc":{"source":null,"start":{"line":4,"column":13},"end":{"line":4,"column":14}},
+                          "range":[63,64],
+                          "name":"a",
+                          "typeAnnotation":null,
+                          "optional":false
+                        },
+                        "computed":false,
+                        "optional":true
+                      }
                     },
                     "directive":null
                   }

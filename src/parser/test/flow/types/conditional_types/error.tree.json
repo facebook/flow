@@ -21,12 +21,12 @@
       "message":"Unexpected token `?`"
     },
     {
-       "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":35}},
-       "message":"Unexpected token `number`, expected the token `?`"
+      "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":35}},
+      "message":"Unexpected token `number`, expected the token `?`"
     },
     {
-       "loc":{"source":null,"start":{"line":2,"column":68},"end":{"line":2,"column":69}},
-       "message":"Unexpected token `;`, expected the token `:`"
+      "loc":{"source":null,"start":{"line":2,"column":68},"end":{"line":2,"column":69}},
+      "message":"Unexpected token `;`, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":68},"end":{"line":2,"column":69}},
@@ -41,95 +41,241 @@
       "message":"Unexpected token `?`"
     }
   ],
-  "type": "Program",
-  "body": [
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":81}},
+  "range":[0,214],
+  "body":[
     {
-      "type": "VariableDeclaration",
-      "kind": "let",
-      "declarations": [{"type": "VariableDeclarator","id":{"type":"Identifier","name":"x"}}]
+      "type":"VariableDeclaration",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":43}},
+      "range":[0,43],
+      "declarations":[
+        {
+          "type":"VariableDeclarator",
+          "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":1,"column":43}},
+          "range":[4,43],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":1,"column":4},"end":{"line":1,"column":43}},
+            "range":[4,43],
+            "name":"x",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":43}},
+              "range":[5,43],
+              "typeAnnotation":{
+                "type":"ConditionalTypeAnnotation",
+                "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":43}},
+                "range":[7,43],
+                "checkType":{
+                  "type":"NumberTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":13}},
+                  "range":[7,13]
+                },
+                "extendsType":{
+                  "type":"StringTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":28}},
+                  "range":[22,28]
+                },
+                "trueType":{
+                  "type":"GenericTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":36}},
+                  "range":[29,36],
+                  "id":{
+                    "type":"Identifier",
+                    "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":36}},
+                    "range":[29,36],
+                    "name":"extends",
+                    "typeAnnotation":null,
+                    "optional":false
+                  },
+                  "typeParameters":null
+                },
+                "falseType":{
+                  "type":"StringTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":1,"column":37},"end":{"line":1,"column":43}},
+                  "range":[37,43]
+                }
+              }
+            },
+            "optional":false
+          },
+          "init":null
+        }
+      ],
+      "kind":"let"
     },
     {
-      "type": "ExpressionStatement",
-      "expression": {
-        "type": "ConditionalExpression",
-        "test": {"type":"Literal", "raw":"null"},
-        "consequent": {"type":"Identifier","name":"string"},
-        "alternate": {"type":"Identifier","name":"string"}
-      }
-    },
-    {
-      "type": "VariableDeclaration",
-      "kind": "let",
-      "declarations": [{"type": "VariableDeclarator","id":{"type":"Identifier","name":"x"}}]
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":44},"end":{"line":1,"column":62}},
+      "range":[44,62],
+      "expression":{
+        "type":"ConditionalExpression",
+        "loc":{"source":null,"start":{"line":1,"column":44},"end":{"line":1,"column":61}},
+        "range":[44,61],
+        "test":{
+          "type":"Literal",
+          "loc":{"source":null,"start":{"line":1,"column":44},"end":{"line":1,"column":45}},
+          "range":[44,45],
+          "value":null,
+          "raw":"null"
+        },
+        "consequent":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":52}},
+          "range":[46,52],
+          "name":"string",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "alternate":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":1,"column":55},"end":{"line":1,"column":61}},
+          "range":[55,61],
+          "name":"string",
+          "typeAnnotation":null,
+          "optional":false
+        }
+      },
+      "directive":null
     },
     {
       "type":"VariableDeclaration",
-      "kind":"let",
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":69}},
+      "range":[63,132],
+      "declarations":[
+        {
+          "type":"VariableDeclarator",
+          "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":2,"column":68}},
+          "range":[67,131],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":2,"column":4},"end":{"line":2,"column":68}},
+            "range":[67,131],
+            "name":"x",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":68}},
+              "range":[68,131],
+              "typeAnnotation":{
+                "type":"ConditionalTypeAnnotation",
+                "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":68}},
+                "range":[70,131],
+                "checkType":{
+                  "type":"NumberTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":13}},
+                  "range":[70,76]
+                },
+                "extendsType":{
+                  "type":"StringTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":2,"column":22},"end":{"line":2,"column":28}},
+                  "range":[85,91]
+                },
+                "trueType":{
+                  "type":"ConditionalTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":68}},
+                  "range":[92,131],
+                  "checkType":{
+                    "type":"NumberTypeAnnotation",
+                    "loc":{"source":null,"start":{"line":2,"column":29},"end":{"line":2,"column":35}},
+                    "range":[92,98]
+                  },
+                  "extendsType":{
+                    "type":"StringTypeAnnotation",
+                    "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":50}},
+                    "range":[107,113]
+                  },
+                  "trueType":{
+                    "type":"StringTypeAnnotation",
+                    "loc":{"source":null,"start":{"line":2,"column":53},"end":{"line":2,"column":59}},
+                    "range":[116,122]
+                  },
+                  "falseType":{
+                    "type":"StringTypeAnnotation",
+                    "loc":{"source":null,"start":{"line":2,"column":62},"end":{"line":2,"column":68}},
+                    "range":[125,131]
+                  }
+                },
+                "falseType":{
+                  "type":"AnyTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":2,"column":68},"end":{"line":2,"column":69}},
+                  "range":[131,132]
+                }
+              }
+            },
+            "optional":false
+          },
+          "init":null
+        }
+      ],
+      "kind":"let"
+    },
+    {
+      "type":"VariableDeclaration",
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":62}},
       "range":[133,195],
-      "declarations":[{
-        "type":"VariableDeclarator",
-        "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":62}},
-        "range":[137,195],
-        "id":{
-          "type":"Identifier",
+      "declarations":[
+        {
+          "type":"VariableDeclarator",
           "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":62}},
           "range":[137,195],
-          "name":"x",
-          "typeAnnotation":{
-            "type":"TypeAnnotation",
-            "loc":{"source":null,"start":{"line":3,"column":5},"end":{"line":3,"column":62}},
-            "range":[138,195],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":62}},
+            "range":[137,195],
+            "name":"x",
             "typeAnnotation":{
-              "type":"ConditionalTypeAnnotation",
-              "loc":{"source":null,"start":{"line":3,"column":7},"end":{"line":3,"column":62}},
-              "range":[140,195],
-              "checkType":{
-                "type":"NumberTypeAnnotation",
-                "loc":{"source":null,"start":{"line":3,"column":7},"end":{"line":3,"column":13}},
-                "range":[140,146]
-              },
-              "extendsType":{
-                "type":"InferTypeAnnotation",
-                "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":44}},
-                "range":[155,177],
-                "typeParameter":{
-                  "type":"TypeParameter",
-                  "loc":{"source":null,"start":{"line":3,"column":28},"end":{"line":3,"column":44}},
-                  "range":[161,177],
-                  "name":"T",
-                  "bound":{
-                    "type":"TypeAnnotation",
-                    "loc":{"source":null,"start":{"line":3,"column":38},"end":{"line":3,"column":44}},
-                    "range":[171,177],
-                    "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":3,"column":5},"end":{"line":3,"column":62}},
+              "range":[138,195],
+              "typeAnnotation":{
+                "type":"ConditionalTypeAnnotation",
+                "loc":{"source":null,"start":{"line":3,"column":7},"end":{"line":3,"column":62}},
+                "range":[140,195],
+                "checkType":{
+                  "type":"NumberTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":3,"column":7},"end":{"line":3,"column":13}},
+                  "range":[140,146]
+                },
+                "extendsType":{
+                  "type":"InferTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":44}},
+                  "range":[155,177],
+                  "typeParameter":{
+                    "type":"TypeParameter",
+                    "loc":{"source":null,"start":{"line":3,"column":28},"end":{"line":3,"column":44}},
+                    "range":[161,177],
+                    "name":"T",
+                    "bound":{
                       "type":"NumberTypeAnnotation",
                       "loc":{"source":null,"start":{"line":3,"column":38},"end":{"line":3,"column":44}},
                       "range":[171,177]
-                    }
-                  },
-                  "const":false,
-                  "variance":null,
-                  "default":null,
-                  "usesExtendsBound":true
+                    },
+                    "const":false,
+                    "variance":null,
+                    "default":null,
+                    "usesExtendsBound":true
+                  }
+                },
+                "trueType":{
+                  "type":"NumberTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":3,"column":47},"end":{"line":3,"column":53}},
+                  "range":[180,186]
+                },
+                "falseType":{
+                  "type":"NumberTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":3,"column":56},"end":{"line":3,"column":62}},
+                  "range":[189,195]
                 }
-              },
-              "trueType":{
-                "type":"NumberTypeAnnotation",
-                "loc":{"source":null,"start":{"line":3,"column":47},"end":{"line":3,"column":53}},
-                "range":[180,186]
-              },
-              "falseType":{
-                "type":"NumberTypeAnnotation",
-                "loc":{"source":null,"start":{"line":3,"column":56},"end":{"line":3,"column":62}},
-                "range":[189,195]
               }
-            }
+            },
+            "optional":false
           },
-          "optional":false
-        },
-        "init":null
-      }]} ,
+          "init":null
+        }
+      ],
+      "kind":"let"
+    },
     {
       "type":"ExpressionStatement",
       "loc":{"source":null,"start":{"line":3,"column":63},"end":{"line":3,"column":81}},
@@ -164,5 +310,6 @@
       },
       "directive":null
     }
-  ]
+  ],
+  "comments":[]
 }

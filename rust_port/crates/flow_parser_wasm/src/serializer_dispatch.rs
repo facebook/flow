@@ -325,27 +325,16 @@ impl<'a> Serializer<'a> {
                 self.serialize_expression(&inner.right);
             }
             ExpressionInner::Member { loc, inner } => {
-                self.write_node_header(NodeKind::MemberExpression, loc);
-                self.serialize_expression(&inner.object);
-                self.serialize_member_property(&inner.property);
-                self.write_bool(
-                    matches!(
-                        &inner.property,
-                        ast::expression::member::Property::PropertyExpression(_)
-                    ),
-                );
+                self.serialize_member_expression(loc, inner);
             }
             ExpressionInner::OptionalMember { loc, inner } => {
-                self.serialize_optional_member_expression(loc, inner);
+                self.serialize_optional_member_as_member_expression(loc, inner);
             }
             ExpressionInner::Call { loc, inner } => {
-                self.write_node_header(NodeKind::CallExpression, loc);
-                self.serialize_expression(&inner.callee);
-                self.serialize_call_type_args_opt(&inner.targs);
-                self.serialize_arg_list(&inner.arguments);
+                self.serialize_call_expression(loc, inner);
             }
             ExpressionInner::OptionalCall { loc, inner } => {
-                self.serialize_optional_call_expression(loc, inner);
+                self.serialize_optional_call_as_call_expression(loc, inner);
             }
             ExpressionInner::New { loc, inner } => {
                 self.write_node_header(NodeKind::NewExpression, loc);
@@ -532,6 +521,7 @@ impl<'a> Serializer<'a> {
                 self.write_node_header(NodeKind::BigIntLiteralTypeAnnotation, loc);
                 self.write_null_node();
                 self.write_str(&literal.raw);
+                self.write_str(&clean_bigint_raw(&literal.raw));
             }
             TypeInner::BooleanLiteral { loc, literal } => {
                 self.write_node_header(NodeKind::BooleanLiteralTypeAnnotation, loc);

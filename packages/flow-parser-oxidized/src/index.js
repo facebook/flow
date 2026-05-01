@@ -15,7 +15,6 @@ import type {ParserOptions} from './ParserOptions';
 import type {BabelFile} from './babel/TransformESTreeToBabel';
 
 import * as FlowParser from './FlowParser';
-import {getModuleDocblock} from './getModuleDocblock';
 import FlowVisitorKeys from './generated/ESTreeVisitorKeys';
 import * as TransformComponentSyntax from './estree/TransformComponentSyntax';
 import * as TransformEnumSyntax from './estree/TransformEnumSyntax';
@@ -28,111 +27,6 @@ import * as StripFlowTypes from './estree/StripFlowTypes';
 const DEFAULTS = {
   flow: ('detect': 'detect'),
 };
-
-// Scan `code`'s docblock for an `@flow` pragma. Mirrors C++ hermes-parser
-// `parser::hasFlowPragma` + `parser::getCommentsInDocBlock` semantics
-// (xplat/static_h/lib/Parser/FlowHelpers.cpp:17-82): walk leading whitespace,
-// `//` and `/* ... */` comments, and directive-prologue string literals
-// (each optionally followed by `;`) up to the first non-directive token,
-// then in each collected comment search for `@flow` followed by a non-word
-// boundary (end of comment, or any character outside `[A-Za-z0-9_]`). The
-// Rust parser has no pragma-conditional type parsing — pragma detection is
-// the JS adapter's job here so the Rust port stays OCaml-faithful (OCaml
-// `default_parse_options` keeps `types: true` regardless of pragma).
-function hasFlowPragma(code: string): boolean {
-  const len = code.length;
-  let i = 0;
-  while (i < len) {
-    const ch = code.charCodeAt(i);
-    // Whitespace
-    if (ch === 0x20 || ch === 0x09 || ch === 0x0a || ch === 0x0d) {
-      i++;
-      continue;
-    }
-    // Comments
-    if (ch === 0x2f /* '/' */ && i + 1 < len) {
-      const next = code.charCodeAt(i + 1);
-      if (next === 0x2f /* '/' */) {
-        i += 2;
-        const start = i;
-        while (i < len) {
-          const c = code.charCodeAt(i);
-          if (c === 0x0a || c === 0x0d) break;
-          i++;
-        }
-        if (commentHasFlowPragma(code, start, i)) return true;
-        continue;
-      }
-      if (next === 0x2a /* '*' */) {
-        i += 2;
-        const start = i;
-        while (
-          i + 1 < len &&
-          !(code.charCodeAt(i) === 0x2a && code.charCodeAt(i + 1) === 0x2f)
-        ) {
-          i++;
-        }
-        const end = i;
-        if (i + 1 < len) {
-          i += 2; // skip the closing `*/`
-        }
-        if (commentHasFlowPragma(code, start, end)) return true;
-        continue;
-      }
-    }
-    // String-literal directive prologue
-    if (ch === 0x22 /* '"' */ || ch === 0x27 /* "'" */) {
-      const quote = ch;
-      i++;
-      while (i < len) {
-        const c = code.charCodeAt(i);
-        if (c === 0x5c /* '\\' */ && i + 1 < len) {
-          // Skip the escape character; common case is `\"`/`\\`/`\n`.
-          i += 2;
-          continue;
-        }
-        if (c === quote) {
-          i++;
-          break;
-        }
-        i++;
-      }
-      continue;
-    }
-    // Optional `;` between directives
-    if (ch === 0x3b /* ';' */) {
-      i++;
-      continue;
-    }
-    // First non-directive token: stop. Anything past this point is regular
-    // code, not docblock.
-    break;
-  }
-  return false;
-}
-
-function commentHasFlowPragma(
-  code: string,
-  start: number,
-  end: number,
-): boolean {
-  let from = start;
-  while (from < end) {
-    const idx = code.indexOf('@flow', from);
-    if (idx === -1 || idx >= end) return false;
-    const after = idx + 5;
-    if (after >= end) return true;
-    const c = code.charCodeAt(after);
-    const isWord =
-      (c >= 0x30 && c <= 0x39) /* 0-9 */ ||
-      (c >= 0x41 && c <= 0x5a) /* A-Z */ ||
-      (c >= 0x61 && c <= 0x7a) /* a-z */ ||
-      c === 0x5f; /* _ */
-    if (!isWord) return true;
-    from = idx + 1;
-  }
-  return false;
-}
 
 function getOptions(opts?: ParserOptions): ParserOptions {
   // Always build a fresh object so we never mutate the caller's input.
@@ -169,32 +63,34 @@ function getOptions(opts?: ParserOptions): ParserOptions {
   }
 
   // Record syntax: upstream defaults `enableExperimentalFlowRecordSyntax` to
-  // `true`. The fork's WASM cwrap (FlowParser.js:215) reads `options.enableRecords`
-  // (slot 13) — a separate, OCaml-aligned key intentionally mirroring
-  // `default_parse_options` (see FlowParser.js:48-50, :213-214). To preserve the
-  // upstream-compatible API surface on the outside while keeping the OCaml-aligned
-  // key on the WASM boundary, bridge: default the upstream key, then mirror it
-  // onto the cwrap key. Naive copy of upstream default alone would be a silent
-  // no-op because the cwrap reads a different field.
+  // `true`. The fork's WASM cwrap (FlowParser.js) reads `options.enableRecords`
+  // — a separate, OCaml-aligned key intentionally mirroring
+  // `default_parse_options`. To preserve the upstream-compatible API surface
+  // on the outside while keeping the OCaml-aligned key on the WASM boundary,
+  // bridge: default the upstream key, then mirror it onto the cwrap key. The
+  // mirroring belongs here (the public-API layer) and not at the wasm
+  // boundary, because the wasm fixture runner under
+  // `__tests__/runWasmFixtures.js` calls `FlowParser.parse` directly and
+  // expects OCaml's strict defaults to apply.
   if (options.enableExperimentalFlowRecordSyntax == null) {
     options.enableExperimentalFlowRecordSyntax = true; // Enable by default
   }
   options.enableRecords = options.enableExperimentalFlowRecordSyntax;
 
   // Enum syntax: upstream hermes-parser always parses Flow `enum` syntax. The
-  // fork's WASM cwrap (FlowParser.js:212) reads `options.enableEnums` — an
-  // OCaml-aligned key that defaults to false in `default_parse_options`. To
-  // preserve hermes-parser parity on the JS surface, default `enableEnums` to
-  // true so unflagged callers can parse `enum X { A }` without opt-in.
+  // fork's WASM cwrap reads `options.enableEnums` — an OCaml-aligned key that
+  // defaults to false in `default_parse_options`. Default `enableEnums` to
+  // true so unflagged hermes-parser-style callers can parse `enum X { A }`
+  // without opt-in. Same wasm-fixture-runner consideration as `enableRecords`.
   if (options.enableEnums == null) {
     options.enableEnums = true;
   }
 
-  // Decorators: upstream hermes-parser supports stage-1 decorators by default
-  // (verified against 0.35.0 — `@dec class C {}` parses without explicit
-  // opt-in). The fork's WASM cwrap (FlowParser.js:205) reads
-  // `enableExperimentalDecorators`, which defaults to false in OCaml's
-  // `default_parse_options`. Default true on the JS surface to match upstream.
+  // Decorators: upstream hermes-parser supports stage-1 decorators by default.
+  // The fork's WASM cwrap reads `enableExperimentalDecorators`, which
+  // defaults to false in OCaml's `default_parse_options`. Default true on the
+  // JS surface to match upstream. Same wasm-fixture-runner consideration as
+  // `enableRecords`.
   if (options.enableExperimentalDecorators == null) {
     options.enableExperimentalDecorators = true;
   }
@@ -225,15 +121,17 @@ export function parse(
 ): BabelFile | ESTreeProgram {
   const options = getOptions(opts);
 
-  // Resolve `flow: 'all' | 'detect'` to a concrete `enableTypes` bool before
-  // calling the Rust parser. `flow: 'all'` always parses Flow type syntax;
-  // `flow: 'detect'` (the default) parses Flow type syntax only when an
-  // `@flow` pragma is present in the docblock. The Rust parser does not
-  // know about the pragma — it just honours `enableTypes`. Pragma detection
-  // mirrors C++ hermes-parser ParseFlowSetting (no OCaml equivalent — the
-  // JS adapter is the right layer for this).
-  options.enableTypes =
-    options.flow === 'all' ? true : hasFlowPragma(code);
+  // Resolve `flow: 'all' | 'detect'` to the Rust parser's option set.
+  // `flow: 'all'` always parses Flow type syntax (`enableTypes: true`).
+  // `flow: 'detect'` opts the Rust parser into docblock-pragma scanning
+  // (`enableTypesPragmaDetection: true`); the Rust lexer mirrors C++
+  // hermes-parser `parser::hasFlowPragma` and overrides `enableTypes`
+  // based on whether the `@flow` pragma is present.
+  if (options.flow === 'all') {
+    options.enableTypes = true;
+  } else {
+    options.enableTypesPragmaDetection = true;
+  }
 
   // Flow Rust parser outputs ESTree-compatible AST directly. The wire→ESTree
   // loc/range normalization (source-filename assignment, `node.range` synthesis
@@ -242,52 +140,6 @@ export function parse(
   // that bypass this hermes-parser-compatibility wrapper still get canonical
   // ESTree loc/range. See FlowParser.js.
   const ast = FlowParser.parse(code, options);
-
-  // Adapter behavior parity with hermes-parser: parse() throws on the first
-  // parse error. The Rust parser surfaces errors via `program.errors` (always
-  // present, possibly empty) so any caller using the raw FlowParser.parse can
-  // still inspect them. Format mirrors HermesASTAdapter.formatError —
-  // `${message} (${line}:${column})`. Source-line/caret rendering that Hermes
-  // bakes into its error string is not available here; the loc property
-  // carries the same coordinate so consumers can reconstruct it themselves.
-  //
-  // `allowReturnOutsideFunction` is honored at the adapter layer rather than
-  // in the Rust port: OCaml flow_parser's `parse_options` has no equivalent
-  // gate (Parse_error.IllegalReturn is raised unconditionally), so adding a
-  // Rust option would extend the port beyond its OCaml ancestor. Instead,
-  // filter the specific diagnostic out when the consumer asked for the
-  // hermes-parser-style relaxation. The ReturnStatement AST node is produced
-  // regardless, so dropping the error is the only behavioural difference.
-  let errors = ast.errors;
-  if (
-    errors != null &&
-    errors.length > 0 &&
-    options.allowReturnOutsideFunction === true
-  ) {
-    errors = errors.filter(e => e.message !== 'Illegal return statement');
-  }
-  // hermes-parser parity (verified against 0.35.0): an invalid RegExp flag
-  // (e.g. `/foo/qq`) is *not* a parse error — the regex literal is
-  // syntactically well-formed and Hermes leaves the value-construction
-  // failure to the JS `RegExp` constructor at adapter time. Strip the
-  // OCaml flow_parser diagnostic so the Literal node is returned with
-  // `value: null` (set by the regex Literal fixup) instead of throwing.
-  if (errors != null && errors.length > 0) {
-    errors = errors.filter(
-      e => !e.message.startsWith('Invalid flags supplied to RegExp constructor'),
-    );
-  }
-  if (errors != null && errors.length > 0) {
-    const first = errors[0];
-    const line = first.loc.start.line;
-    const column = first.loc.start.column;
-    const syntaxError = new SyntaxError(
-      `${first.message} (${line}:${column})`,
-    );
-    // $FlowExpectedError[prop-missing]
-    syntaxError.loc = {line, column};
-    throw syntaxError;
-  }
 
   // Per-node ESTree adapter fixups applied during a single tree walk. These
   // mirror upstream HermesToESTreeAdapter behavior — see ADAPTER_GAPS.md for
@@ -319,152 +171,6 @@ export function parse(
   }
   applyFixupsWalk(ast);
 
-  // Adapter fixup (HermesToESTreeAdapter.mapChainExpression, lines 245-348):
-  // Hermes/Flow emit OptionalMemberExpression / OptionalCallExpression nodes
-  // for optional chains; ESTree wants non-optional Member/CallExpression with
-  // `optional: true`, wrapped in a single ChainExpression at the chain root.
-  // The algorithm is: depth-first; when leaving a Member/Call/Optional* node,
-  // (a) if the child (object/callee/expression) is a ChainExpression, unwrap
-  // it (lift its `expression`); (b) if the node was originally Optional*,
-  // strip the `Optional` prefix and set `optional` from the original; if the
-  // node was a plain MemberExpression/CallExpression (a parenthesis boundary)
-  // set `optional = false`; (c) if either the original was optional or the
-  // child was unwrappable, wrap the node in a ChainExpression. The
-  // `isChildUnwrappable` test excludes plain Member/CallExpression children
-  // because `(x?.y).z` is semantically different from `x?.y.z` and Hermes
-  // marks the parenthesis boundary by emitting a non-Optional kind.
-  function rewriteChain(node) {
-    if (node == null || typeof node !== 'object') {
-      return node;
-    }
-    if (Array.isArray(node)) {
-      for (let i = 0; i < node.length; i++) {
-        node[i] = rewriteChain(node[i]);
-      }
-      return node;
-    }
-    if (typeof node.type !== 'string') {
-      return node;
-    }
-    // Recurse into all child node-typed properties first (depth-first).
-    for (const key of Object.keys(node)) {
-      const val = node[key];
-      if (Array.isArray(val)) {
-        for (let i = 0; i < val.length; i++) {
-          val[i] = rewriteChain(val[i]);
-        }
-      } else if (val != null && typeof val === 'object' && val.type != null) {
-        node[key] = rewriteChain(val);
-      }
-    }
-    if (
-      node.type !== 'MemberExpression' &&
-      node.type !== 'OptionalMemberExpression' &&
-      node.type !== 'CallExpression' &&
-      node.type !== 'OptionalCallExpression'
-    ) {
-      return node;
-    }
-    const isOptional = node.optional === true;
-    let child;
-    let childKey;
-    if (node.type.endsWith('MemberExpression')) {
-      child = node.object;
-      childKey = 'object';
-    } else {
-      child = node.callee;
-      childKey = 'callee';
-    }
-    const isChildUnwrappable =
-      child != null &&
-      typeof child === 'object' &&
-      child.type === 'ChainExpression' &&
-      // (x?.y).z is semantically different to `x?.y.z`.
-      // In the un-parenthesised case `.z` is only executed if and only if `x?.y` returns a non-nullish value.
-      // In the parenthesised case, `.z` is **always** executed, regardless of the return of `x?.y`.
-      // As such the AST is different between the two cases.
-      //
-      // In the hermes AST - any member part of a non-short-circuited optional chain is represented with `OptionalMemberExpression`
-      // so if we see a `MemberExpression`, then we know we've hit a parenthesis boundary.
-      node.type !== 'MemberExpression' &&
-      node.type !== 'CallExpression';
-    if (node.type.startsWith('Optional')) {
-      node.type = node.type.replace('Optional', '');
-      node.optional = isOptional;
-    } else {
-      node.optional = false;
-    }
-    if (!isChildUnwrappable && !isOptional) {
-      return node;
-    }
-    if (isChildUnwrappable) {
-      node[childKey] = child.expression;
-    }
-    return {
-      type: 'ChainExpression',
-      expression: node,
-      loc: node.loc,
-      range: node.range,
-    };
-  }
-  rewriteChain(ast);
-
-  // Adapter fixup: when `tokens: true` the Rust serializer emits each token
-  // with `range` and `loc.source` (mirroring the AST node shape) and appends
-  // a trailing zero-width `{type: 'Punctuator', value: ''}` end-of-input
-  // sentinel. Upstream hermes-parser tokens carry only `type`, `loc`, and
-  // `value` (verified against HermesParserDeserializer.deserializeTokens,
-  // lines 202-218) and have no EOF sentinel. Strip the extras so the public
-  // shape matches.
-  if (options.tokens === true && Array.isArray(ast.tokens)) {
-    if (ast.tokens.length > 0) {
-      const last = ast.tokens[ast.tokens.length - 1];
-      if (
-        last != null &&
-        last.type === 'Punctuator' &&
-        last.value === ''
-      ) {
-        ast.tokens.pop();
-      }
-    }
-    for (const tok of ast.tokens) {
-      if (tok == null) {
-        continue;
-      }
-      delete tok.range;
-      if (tok.loc != null) {
-        delete tok.loc.source;
-      }
-    }
-  }
-
-  // Adapter behavior parity with HermesASTAdapter (lines 113-160): the
-  // returned `sourceType` defaults to `'script'` and is promoted to `'module'`
-  // only when the program contains a value-kind import or export. Type-only
-  // imports/exports (`import type`, `export type`) keep the program in script
-  // mode. When the caller pinned `sourceType: 'script'` or `'module'` we
-  // honor it verbatim; `'unambiguous'` was already deleted from `options` in
-  // `getOptions` so it falls through to detection.
-  if (options.sourceType === 'script' || options.sourceType === 'module') {
-    ast.sourceType = options.sourceType;
-  } else {
-    ast.sourceType = detectSourceType(ast);
-  }
-
-  // Adapter fixup (#30): hermes-parser surfaces `Program.interpreter` as the
-  // hashbang-derived `InterpreterDirective` node (or null when no hashbang
-  // is present). The Rust serializer doesn't write the slot at all; default
-  // to null so the public AST shape matches upstream. The full
-  // hashbang-detection port is tracked separately — `null` is the correct
-  // value for the overwhelmingly-common no-hashbang case.
-  if (!('interpreter' in ast)) {
-    ast.interpreter = null;
-  }
-
-  // Adapter fixup (HermesToESTreeAdapter.mapProgram, lines 100-107):
-  // attach the module docblock derived from the leading block comment.
-  ast.docblock = getModuleDocblock(ast);
-
   const estreeAST = ast;
 
   if (options.babel !== true) {
@@ -487,208 +193,31 @@ export function parse(
   return TransformESTreeToBabel.transformProgram(loweredESTreeAST, options);
 }
 
-// Module-vs-script detection mirroring HermesASTAdapter.setModuleSourceType
-// (HermesASTAdapter.js:117-160). Walks the top-level program body for
-// import/export forms; a single value-kind import or export is enough to
-// classify the program as a module. Type-only imports and re-exports keep the
-// program in script mode. We check only the top-level body (matching upstream)
-// because nested imports are not legal at runtime.
-function detectSourceType(program) {
-  if (!Array.isArray(program.body)) {
-    return 'script';
-  }
-  for (const stmt of program.body) {
-    if (stmt == null) {
-      continue;
-    }
-    switch (stmt.type) {
-      case 'ImportDeclaration':
-        if (stmt.importKind === 'value' || stmt.importKind == null) {
-          return 'module';
-        }
-        break;
-      case 'ExportDefaultDeclaration':
-        return 'module';
-      case 'ExportNamedDeclaration':
-      case 'ExportAllDeclaration':
-        if (stmt.exportKind === 'value' || stmt.exportKind == null) {
-          return 'module';
-        }
-        break;
-    }
-  }
-  return 'script';
-}
-
-// Per-node fixups that mirror HermesToESTreeAdapter's mapNode dispatch. Lives
-// here (not in FlowParserNodeDeserializers.js) because that file is @generated
-// from the codegen template and would be overwritten on the next regen.
-// Recover the `trailingComma: boolean` field that upstream hermes-parser
-// emits on `ArrayExpression` but our Rust serializer does not (because the
-// underlying OCaml `flow_ast.ml` `module Array` has no such bit). Scan the
-// source between the last element's end and the closing `]`, skipping
-// whitespace and `//` / `/* */` comments. Returns `false` for an empty array.
-function computeArrayTrailingComma(node, code) {
-  if (typeof code !== 'string') {
-    return false;
-  }
-  const elements = node.elements;
-  if (!Array.isArray(elements) || elements.length === 0) {
-    return false;
-  }
-  // The closing `]` is the last character of the ArrayExpression's range.
-  // The starting position to scan from is the end of the last non-null
-  // element (or the position right after the previous comma if the last
-  // slot is a hole).
-  if (!Array.isArray(node.range)) {
-    return false;
-  }
-  const closeBracket = node.range[1] - 1;
-  // Find the last non-hole element with a numeric `range[1]`. For trailing
-  // holes (`[1,,]`) the source between the last element's end and `]`
-  // contains the trailing comma we want to detect.
-  let lastEnd = node.range[0] + 1; // just past the `[`
-  for (let i = elements.length - 1; i >= 0; i--) {
-    const el = elements[i];
-    if (el != null && Array.isArray(el.range)) {
-      lastEnd = el.range[1];
-      break;
-    }
-  }
-  let i = lastEnd;
-  while (i < closeBracket) {
-    const c = code.charCodeAt(i);
-    // whitespace
-    if (c === 0x20 || c === 0x09 || c === 0x0a || c === 0x0d) {
-      i++;
-      continue;
-    }
-    // `//` line comment
-    if (c === 0x2f && code.charCodeAt(i + 1) === 0x2f) {
-      i += 2;
-      while (i < closeBracket && code.charCodeAt(i) !== 0x0a) {
-        i++;
-      }
-      continue;
-    }
-    // `/* */` block comment
-    if (c === 0x2f && code.charCodeAt(i + 1) === 0x2a) {
-      i += 2;
-      while (
-        i + 1 < closeBracket &&
-        !(code.charCodeAt(i) === 0x2a && code.charCodeAt(i + 1) === 0x2f)
-      ) {
-        i++;
-      }
-      i += 2;
-      continue;
-    }
-    // any non-whitespace, non-comment character before `]` other than `,`
-    // means there's no trailing comma; a `,` here means there is one.
-    return c === 0x2c;
-  }
-  return false;
-}
-
 function applyPerNodeFixups(node, code) {
   switch (node.type) {
     case 'Literal':
-      // Adapter fixup (#35 over-emit): upstream Hermes does not carry
-      // `bigint` or `regex` side fields on non-bigint/non-regex literals.
-      // The Rust serializer always writes both slots (with null for the
-      // unused kind); strip when null so the public AST shape matches.
-      if (node.bigint == null) {
-        delete node.bigint;
-      }
-      if (node.regex == null) {
-        delete node.regex;
-      }
-      // Adapter fixup (HermesToESTreeAdapter.mapSimpleLiteral, lines 116-138):
-      // upstream's switch is on the original HermesAST node type (NullLiteral /
-      // BooleanLiteral / StringLiteral / JSXStringLiteral / NumericLiteral /
-      // BigIntLiteral / RegExpLiteral). Our wire never carries those distinct
-      // kinds — Rust collapses everything into a single Literal record with a
-      // raw side and `regex`/`bigint` side fields plus a `value` already
-      // populated for boolean / number / string. We synthesize `literalType`
-      // from the value/side-field shape; the mapping is semantically
-      // equivalent to upstream's switch.
-      if (node.literalType == null) {
-        if (node.regex != null) {
-          node.literalType = 'regexp';
-        } else if (node.bigint != null) {
-          node.literalType = 'bigint';
-        } else if (node.value === null) {
-          node.literalType = 'null';
-        } else if (typeof node.value === 'boolean') {
-          node.literalType = 'boolean';
-        } else if (typeof node.value === 'number') {
-          node.literalType = 'numeric';
-        } else if (typeof node.value === 'string') {
-          node.literalType = 'string';
-        } else {
-          node.literalType = null;
-        }
-      }
-      // Adapter fixup (HermesToESTreeAdapter.mapRegExpLiteral, lines 157-176):
-      // build a RegExp from pattern/flags. `new RegExp` can throw if the host
-      // engine doesn't recognise the flags (the wire still carries them so
-      // consumers can see the original source); swallow with null per upstream.
-      // The Rust parser (expression_parser.rs::regexp) strips invalid flag
-      // characters from the wire's `flags` field but preserves them verbatim
-      // in `raw` (`/<pattern>/<raw_flags>`). Hermes's mapRegExpLiteral expects
-      // the raw flags so the test can observe the original (invalid) source
-      // and `new RegExp` throws — recover them from `raw`.
+      // Construct the host-language `value` for regex / bigint literals.
+      // BigInt and RegExp aren't JSON-serializable so they can't live on
+      // the wire — the Rust serializer emits the raw / pattern / flags /
+      // bigint string slots and we lift them to real values here.
+      // `new RegExp` can throw if the host engine doesn't recognise a
+      // flag (the wire still carries the raw flags so consumers can see
+      // the original source); swallow with null per upstream Hermes.
       if (node.regex != null) {
-        if (typeof node.raw === 'string') {
-          const lastSlash = node.raw.lastIndexOf('/');
-          if (lastSlash >= 0) {
-            node.regex.flags = node.raw.slice(lastSlash + 1);
-          }
-        }
         try {
           node.value = new RegExp(node.regex.pattern, node.regex.flags);
         } catch (e) {
           node.value = null;
         }
       }
-      // Adapter fixup (HermesASTAdapter.getBigIntLiteralValue, lines 173-188):
-      // coerce the pre-cleaned `bigint` string (Rust strips the trailing `n`
-      // and `_` separators — see write_bigint_literal in serializer.rs) to a
-      // BigInt value when the host environment supports it.
       if (node.bigint != null) {
-        // coerce the string to a bigint value if supported by the environment
         node.value = typeof BigInt === 'function' ? BigInt(node.bigint) : null;
       }
       break;
-    case 'ArrayExpression':
-      // Adapter fixup (#10 under-emit): upstream hermes-parser surfaces
-      // `trailingComma: boolean` on ArrayExpression (not part of the ESTree
-      // spec — see hermes-estree/src/types.js: `// this is not part of the
-      // ESTree spec, but hermes emits it`). The Rust serializer
-      // (`fbcode/flow/rust_port/crates/flow_parser_wasm/src/serializer.rs`,
-      // `serialize_array_expression` ~line 3216) writes only `elements` and
-      // never emits the slot; the underlying Flow OCaml AST itself does
-      // not carry a `trailing_comma` bit on `Expression.Array`
-      // (`flow_ast.ml` `module Array`: only `elements` + `comments`).
-      // Recover the real value by scanning the source between the last
-      // element's end and the closing `]`: a `,` in that span (skipping
-      // whitespace and `//`/`/* */` comments) means the array had a
-      // trailing comma. The closure below captures `code` from the outer
-      // `parse()` call.
-      if (!('trailingComma' in node)) {
-        node.trailingComma = computeArrayTrailingComma(node, code);
-      }
-      break;
     case 'BigIntLiteralTypeAnnotation':
-      // Adapter fixup (#43): upstream hermes-parser emits `bigint` (the raw
-      // numeric string with the trailing `n` and any `_` separators stripped)
-      // and `value` (BigInt(bigint)) on BigIntLiteralTypeAnnotation. Our Rust
-      // serializer only emits `raw` (e.g. "1234n" / "12_34n") with `value: null`.
-      // Synthesize `bigint` from `raw` and coerce `value` to BigInt when the
-      // host environment supports it.
-      if (node.raw != null && node.bigint == null) {
-        node.bigint = node.raw.replace(/n$/, '').replace(/_/g, '');
-      }
+      // The Rust serializer emits `bigint` (cleaned from `raw`) on the wire;
+      // coerce `value` to BigInt here because BigInt isn't JSON-serializable
+      // and so cannot live on the wire.
       if (node.bigint != null) {
         node.value = typeof BigInt === 'function' ? BigInt(node.bigint) : null;
       }
@@ -762,34 +291,6 @@ function applyPerNodeFixups(node, code) {
         } else {
           node.explicitType = typeof explicitTypeStr === 'string';
         }
-      }
-      break;
-    case 'GenericTypeAnnotation':
-      // Adapter fixup (HermesToESTreeAdapter.mapGenericTypeAnnotation, lines
-      // 198-213): a Generic with no type arguments and an unqualified `this`
-      // identifier collapses to the ESTree `ThisTypeAnnotation` leaf node.
-      // The Rust serializer emits the underlying GenericTypeAnnotation
-      // (matching OCaml flow-parser baseline; see node_kinds.rs commentary
-      // on `ThisTypeAnnotation`), so the conversion lives here in the JS
-      // adapter layer.
-      if (
-        node.typeParameters == null &&
-        node.id != null &&
-        node.id.type === 'Identifier' &&
-        node.id.name === 'this'
-      ) {
-        node.type = 'ThisTypeAnnotation';
-        delete node.id;
-        delete node.typeParameters;
-      }
-      break;
-    case 'TypeParameter':
-      // Adapter fixup (#56): upstream hermes-parser stores `bound` directly as
-      // the annotation node (for example NumberTypeAnnotation), while the Rust
-      // serializer currently wraps some bounds in a TypeAnnotation node.
-      // Unwrap the extra shell for parity.
-      if (node.bound?.type === 'TypeAnnotation') {
-        node.bound = node.bound.typeAnnotation;
       }
       break;
   }

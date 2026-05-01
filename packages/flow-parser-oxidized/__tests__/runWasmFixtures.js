@@ -231,6 +231,12 @@ function runOneCase(testCase, parseOptions) {
     flowAst = FlowParser.parse(testCase.content, {
       ...parseOptions,
       sourceFilename: testCase.filename,
+      // The fixtures want raw `ast.errors`, not a thrown SyntaxError on the
+      // first parse error — they include cases (e.g. invalid-source fixtures)
+      // where the OCaml parser surfaces errors but still produces a partial
+      // AST. Opt out of the public-`parse()`-style throw added in
+      // FlowParser.parse for hermes-parser API parity.
+      throwOnParseErrors: false,
     });
   } catch (e) {
     append('Flow exploded:', util.inspect(e, {depth: null}));

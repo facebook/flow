@@ -86,26 +86,31 @@
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":9}},
       "range":[26,35],
       "expression":{
-        "type":"OptionalMemberExpression",
+        "type":"ChainExpression",
         "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":9}},
         "range":[26,35],
-        "object":{
-          "type":"Literal",
-          "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":4}},
-          "range":[26,30],
-          "value":true,
-          "raw":"true"
-        },
-        "property":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":5,"column":8},"end":{"line":5,"column":9}},
-          "range":[34,35],
-          "name":"",
-          "typeAnnotation":null,
-          "optional":false
-        },
-        "computed":false,
-        "optional":true
+        "expression":{
+          "type":"MemberExpression",
+          "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":9}},
+          "range":[26,35],
+          "object":{
+            "type":"Literal",
+            "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":4}},
+            "range":[26,30],
+            "value":true,
+            "raw":"true"
+          },
+          "property":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":5,"column":8},"end":{"line":5,"column":9}},
+            "range":[34,35],
+            "name":"",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "computed":false,
+          "optional":true
+        }
       },
       "directive":null
     },

@@ -27,30 +27,21 @@
             "range":[76,80],
             "name":null,
             "typeAnnotation":{
-              "type":"GenericTypeAnnotation",
+              "type":"ThisTypeAnnotation",
               "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":2,"column":16}},
-              "range":[76,80],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":2,"column":16}},
-                "range":[76,80],
-                "name":"this",
-                "typeAnnotation":null,
-                "optional":false
-              },
-              "typeParameters":null
+              "range":[76,80]
             },
             "optional":false
           }
         ],
-        "this":null,
         "returnType":{
           "type":"VoidTypeAnnotation",
           "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":25}},
           "range":[85,89]
         },
         "rest":null,
-        "typeParameters":null
+        "typeParameters":null,
+        "this":null
       }
     },
     {
@@ -77,30 +68,21 @@
             "range":[102,106],
             "name":null,
             "typeAnnotation":{
-              "type":"GenericTypeAnnotation",
+              "type":"ThisTypeAnnotation",
               "loc":{"source":null,"start":{"line":3,"column":11},"end":{"line":3,"column":15}},
-              "range":[102,106],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":3,"column":11},"end":{"line":3,"column":15}},
-                "range":[102,106],
-                "name":"this",
-                "typeAnnotation":null,
-                "optional":false
-              },
-              "typeParameters":null
+              "range":[102,106]
             },
             "optional":false
           }
         ],
-        "this":null,
         "returnType":{
           "type":"VoidTypeAnnotation",
           "loc":{"source":null,"start":{"line":3,"column":19},"end":{"line":3,"column":23}},
           "range":[110,114]
         },
         "rest":null,
-        "typeParameters":null
+        "typeParameters":null,
+        "this":null
       }
     }
   ],

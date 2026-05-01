@@ -49,6 +49,7 @@
                             }
                         }
                     ],
+                    "trailingComma": false,
                     "range": [
                         4,
                         13

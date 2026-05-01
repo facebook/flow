@@ -55,7 +55,8 @@
                   ]
                 }
               }
-            }
+            },
+            "optional":false
           },
           "init":{
             "type":"ArrayExpression",
@@ -69,7 +70,8 @@
                 "value":"hello",
                 "raw":"\"hello\""
               }
-            ]
+            ],
+            "trailingComma":false
           }
         }
       ],

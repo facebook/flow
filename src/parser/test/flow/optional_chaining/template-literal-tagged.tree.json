@@ -22,59 +22,65 @@
         "range":[15,17],
         "body":[]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":false,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     },
     {
       "type":"ExpressionStatement",
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":13}},
       "range":[18,31],
       "expression":{
-        "type":"OptionalMemberExpression",
+        "type":"ChainExpression",
         "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":13}},
         "range":[18,31],
-        "object":{
-          "type":"TaggedTemplateExpression",
-          "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":10}},
-          "range":[18,28],
-          "tag":{
+        "expression":{
+          "type":"MemberExpression",
+          "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":13}},
+          "range":[18,31],
+          "object":{
+            "type":"TaggedTemplateExpression",
+            "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":10}},
+            "range":[18,28],
+            "tag":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":3}},
+              "range":[18,21],
+              "name":"tag",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeArguments":null,
+            "quasi":{
+              "type":"TemplateLiteral",
+              "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":10}},
+              "range":[21,28],
+              "quasis":[
+                {
+                  "type":"TemplateElement",
+                  "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":10}},
+                  "range":[21,28],
+                  "value":{"raw":"hello","cooked":"hello"},
+                  "tail":true
+                }
+              ],
+              "expressions":[]
+            }
+          },
+          "property":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":3}},
-            "range":[18,21],
-            "name":"tag",
+            "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":2,"column":13}},
+            "range":[30,31],
+            "name":"a",
             "typeAnnotation":null,
             "optional":false
           },
-          "quasi":{
-            "type":"TemplateLiteral",
-            "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":10}},
-            "range":[21,28],
-            "quasis":[
-              {
-                "type":"TemplateElement",
-                "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":10}},
-                "range":[21,28],
-                "value":{"raw":"hello","cooked":"hello"},
-                "tail":true
-              }
-            ],
-            "expressions":[]
-          }
-        },
-        "property":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":2,"column":13}},
-          "range":[30,31],
-          "name":"a",
-          "typeAnnotation":null,
-          "optional":false
-        },
-        "computed":false,
-        "optional":true
+          "computed":false,
+          "optional":true
+        }
       },
       "directive":null
     }

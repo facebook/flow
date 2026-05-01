@@ -935,6 +935,7 @@ mod esprima_tests {
                                 loc: loc.dupe(),
                                 inner: Arc::new(ast::expression::Array {
                                     elements: elements.into(),
+                                    trailing_comma: false,
                                     comments,
                                 }),
                             },

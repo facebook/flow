@@ -198,23 +198,18 @@
               "range":[116,124],
               "name":"S",
               "bound":{
-                "type":"TypeAnnotation",
-                "loc":{"source":null,"start":{"line":4,"column":19},"end":{"line":4,"column":22}},
-                "range":[117,120],
-                "typeAnnotation":{
-                  "type":"GenericTypeAnnotation",
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":4,"column":21},"end":{"line":4,"column":22}},
+                "range":[119,120],
+                "id":{
+                  "type":"Identifier",
                   "loc":{"source":null,"start":{"line":4,"column":21},"end":{"line":4,"column":22}},
                   "range":[119,120],
-                  "id":{
-                    "type":"Identifier",
-                    "loc":{"source":null,"start":{"line":4,"column":21},"end":{"line":4,"column":22}},
-                    "range":[119,120],
-                    "name":"T",
-                    "typeAnnotation":null,
-                    "optional":false
-                  },
-                  "typeParameters":null
-                }
+                  "name":"T",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
               },
               "const":false,
               "variance":null,

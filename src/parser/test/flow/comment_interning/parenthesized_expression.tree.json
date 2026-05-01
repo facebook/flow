@@ -123,7 +123,8 @@
         ],
         "loc":{"source":null,"start":{"line":7,"column":21},"end":{"line":7,"column":23}},
         "range":[154,156],
-        "elements":[]
+        "elements":[],
+        "trailingComma":false
       },
       "directive":null
     },
@@ -286,7 +287,8 @@
           "optional":false
         },
         "typeArguments":null,
-        "arguments":[]
+        "arguments":[],
+        "optional":false
       },
       "directive":null
     },
@@ -706,7 +708,8 @@
           "typeAnnotation":null,
           "optional":false
         },
-        "computed":false
+        "computed":false,
+        "optional":false
       },
       "directive":null
     },
@@ -780,51 +783,56 @@
       "loc":{"source":null,"start":{"line":41,"column":28},"end":{"line":41,"column":70}},
       "range":[1155,1197],
       "expression":{
-        "type":"OptionalCallExpression",
-        "trailingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":41,"column":41},"end":{"line":41,"column":69}},
-            "range":[1168,1196],
-            "value":" Trailing optional call "
-          }
-        ],
-        "leadingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":41,"column":0},"end":{"line":41,"column":27}},
-            "range":[1127,1154],
-            "value":" Leading optional call "
-          }
-        ],
+        "type":"ChainExpression",
         "loc":{"source":null,"start":{"line":41,"column":29},"end":{"line":41,"column":39}},
         "range":[1156,1166],
-        "callee":{
-          "type":"OptionalMemberExpression",
-          "loc":{"source":null,"start":{"line":41,"column":29},"end":{"line":41,"column":37}},
-          "range":[1156,1164],
-          "object":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":41,"column":29},"end":{"line":41,"column":30}},
-            "range":[1156,1157],
-            "name":"i",
-            "typeAnnotation":null,
-            "optional":false
+        "expression":{
+          "type":"CallExpression",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":41,"column":41},"end":{"line":41,"column":69}},
+              "range":[1168,1196],
+              "value":" Trailing optional call "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":41,"column":0},"end":{"line":41,"column":27}},
+              "range":[1127,1154],
+              "value":" Leading optional call "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":41,"column":29},"end":{"line":41,"column":39}},
+          "range":[1156,1166],
+          "callee":{
+            "type":"MemberExpression",
+            "loc":{"source":null,"start":{"line":41,"column":29},"end":{"line":41,"column":37}},
+            "range":[1156,1164],
+            "object":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":41,"column":29},"end":{"line":41,"column":30}},
+              "range":[1156,1157],
+              "name":"i",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "property":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":41,"column":32},"end":{"line":41,"column":37}},
+              "range":[1159,1164],
+              "name":"isNaN",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "computed":false,
+            "optional":true
           },
-          "property":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":41,"column":32},"end":{"line":41,"column":37}},
-            "range":[1159,1164],
-            "name":"isNaN",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "computed":false,
-          "optional":true
-        },
-        "typeArguments":null,
-        "arguments":[],
-        "optional":false
+          "typeArguments":null,
+          "arguments":[],
+          "optional":false
+        }
       },
       "directive":null
     },
@@ -833,43 +841,48 @@
       "loc":{"source":null,"start":{"line":43,"column":30},"end":{"line":43,"column":72}},
       "range":[1229,1271],
       "expression":{
-        "type":"OptionalMemberExpression",
-        "trailingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":43,"column":41},"end":{"line":43,"column":71}},
-            "range":[1240,1270],
-            "value":" Trailing optional member "
-          }
-        ],
-        "leadingComments":[
-          {
-            "type":"Block",
-            "loc":{"source":null,"start":{"line":43,"column":0},"end":{"line":43,"column":29}},
-            "range":[1199,1228],
-            "value":" Leading optional member "
-          }
-        ],
+        "type":"ChainExpression",
         "loc":{"source":null,"start":{"line":43,"column":31},"end":{"line":43,"column":39}},
         "range":[1230,1238],
-        "object":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":43,"column":31},"end":{"line":43,"column":32}},
-          "range":[1230,1231],
-          "name":"i",
-          "typeAnnotation":null,
-          "optional":false
-        },
-        "property":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":43,"column":34},"end":{"line":43,"column":39}},
-          "range":[1233,1238],
-          "name":"isNaN",
-          "typeAnnotation":null,
-          "optional":false
-        },
-        "computed":false,
-        "optional":true
+        "expression":{
+          "type":"MemberExpression",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":43,"column":41},"end":{"line":43,"column":71}},
+              "range":[1240,1270],
+              "value":" Trailing optional member "
+            }
+          ],
+          "leadingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":43,"column":0},"end":{"line":43,"column":29}},
+              "range":[1199,1228],
+              "value":" Leading optional member "
+            }
+          ],
+          "loc":{"source":null,"start":{"line":43,"column":31},"end":{"line":43,"column":39}},
+          "range":[1230,1238],
+          "object":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":43,"column":31},"end":{"line":43,"column":32}},
+            "range":[1230,1231],
+            "name":"i",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "property":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":43,"column":34},"end":{"line":43,"column":39}},
+            "range":[1233,1238],
+            "name":"isNaN",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "computed":false,
+          "optional":true
+        }
       },
       "directive":null
     },
@@ -942,6 +955,7 @@
           "typeAnnotation":null,
           "optional":false
         },
+        "typeArguments":null,
         "quasi":{
           "type":"TemplateLiteral",
           "loc":{"source":null,"start":{"line":47,"column":34},"end":{"line":47,"column":44}},

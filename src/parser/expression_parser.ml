@@ -1773,15 +1773,20 @@ module Expression
     )
 
   and array_initializer =
-    let rec elements env (acc, errs) =
+    (* `trailing` tracks whether the most recently consumed token before the
+       eventual T_RBRACKET was a T_COMMA without a following element — i.e.
+       whether the source had a trailing comma like `[1, 2,]`. Reset to false
+       whenever we add an element (since the comma was followed by content);
+       set to true when we consume a comma whose next peek is T_RBRACKET. *)
+    let rec elements env (acc, errs, trailing) =
       match Peek.token env with
       | T_EOF
       | T_RBRACKET ->
-        (List.rev acc, Pattern_cover.rev_errors errs)
+        (List.rev acc, Pattern_cover.rev_errors errs, trailing)
       | T_COMMA ->
         let loc = Peek.loc env in
         Eat.token env;
-        elements env (Expression.Array.Hole loc :: acc, errs)
+        elements env (Expression.Array.Hole loc :: acc, errs, false)
       | T_ELLIPSIS ->
         let leading = Peek.comments env in
         let (loc, (argument, new_errs)) =
@@ -1813,30 +1818,43 @@ module Expression
           else
             new_errs
         in
-        if not is_last then Expect.token env T_COMMA;
+        let trailing =
+          if not is_last then begin
+            Expect.token env T_COMMA;
+            Peek.token env = T_RBRACKET
+          end else
+            false
+        in
         let acc = elem :: acc in
         let errs = Pattern_cover.rev_append_errors new_errs errs in
-        elements env (acc, errs)
+        elements env (acc, errs, trailing)
       | _ ->
         let (elem, new_errs) =
           match assignment_cover env with
           | Cover_expr elem -> (elem, Pattern_cover.empty_errors)
           | Cover_patt (elem, new_errs) -> (elem, new_errs)
         in
-        if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
+        let trailing =
+          if Peek.token env <> T_RBRACKET then begin
+            Expect.token env T_COMMA;
+            Peek.token env = T_RBRACKET
+          end else
+            false
+        in
         let acc = Expression.Array.Expression elem :: acc in
         let errs = Pattern_cover.rev_append_errors new_errs errs in
-        elements env (acc, errs)
+        elements env (acc, errs, trailing)
     in
     fun env ->
       let leading = Peek.comments env in
       Expect.token env T_LBRACKET;
-      let (elems, errs) = elements env ([], Pattern_cover.empty_errors) in
+      let (elems, errs, trailing_comma) = elements env ([], Pattern_cover.empty_errors, false) in
       let internal = Peek.comments env in
       Expect.token env T_RBRACKET;
       let trailing = Eat.trailing_comments env in
       ( {
           Ast.Expression.Array.elements = elems;
+          trailing_comma;
           comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
         },
         errs

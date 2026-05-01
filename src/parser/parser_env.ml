@@ -1183,9 +1183,13 @@ let function_as_statement_error_at env loc =
 module Eat = struct
   (* Consume a single token *)
   let token env =
-    (* If there's a token_sink, emit the lexed token before moving forward *)
+    (* If there's a token_sink, emit the lexed token before moving forward.
+       Skip T_EOF — upstream Hermes' token stream does not include a sentinel
+       end-of-input token, so neither should ours. The Rust port mirrors this
+       in `parser_env.rs::token::token`. *)
     (match !(env.token_sink) with
     | None -> ()
+    | Some _ when Peek.token env = Token.T_EOF -> ()
     | Some token_sink ->
       let token_loc = Peek.loc env in
       let token = Peek.token env in

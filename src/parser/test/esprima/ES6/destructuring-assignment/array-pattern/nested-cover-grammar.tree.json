@@ -182,7 +182,8 @@
                             "raw": "0"
                         }
                     }
-                ]
+                ],
+                "trailingComma": false
             }
         }
     ],

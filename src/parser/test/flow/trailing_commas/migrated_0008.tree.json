@@ -46,7 +46,8 @@
                 "value":3,
                 "raw":"3"
               }
-            ]
+            ],
+            "trailingComma":true
           }
         }
       ],

@@ -657,6 +657,7 @@ define_nodes! {
         from Expression::Super { loc, .. } {},
     ArrayExpression = 44 {
         elements: NodeList,
+        trailingComma: Boolean,
     } from Expression::Array { loc, inner }
         {=> self.serialize_array_expression(loc, inner)},
     ObjectExpression = 45 {
@@ -756,37 +757,42 @@ define_nodes! {
         object: Node,
         property: Node,
         computed: Boolean,
-    } from Expression::Member { loc, inner } {
-            self.serialize_expression(&inner.object),
-            self.serialize_member_property(&inner.property),
-            self.write_bool(matches!(
-                &inner.property,
-                ast::expression::member::Property::PropertyExpression(_)
-            )),
-        },
+        optional: Boolean,
+    } from Expression::Member { loc, inner }
+        {=> self.serialize_member_expression(loc, inner)},
+    // The wire never emits OptionalMemberExpression (kind 56): the optional-
+    // chain rewrite in `serialize_expression` (mirroring upstream Hermes'
+    // mapChainExpression) emits MemberExpression (with `optional: true`)
+    // wrapped in a single ChainExpression at the chain root. The from-clause
+    // here exists only to keep the auto-generated dispatch exhaustive on the
+    // AST enum; the dispatch path is unreachable in practice because
+    // `serialize_expression` intercepts OptionalMember before calling
+    // dispatch. The schema fields stay so codegen artifacts (visitor keys,
+    // predicates, selectors, types) remain byte-aligned with upstream.
     OptionalMemberExpression = 56 {
         object: Node,
         property: Node,
         computed: Boolean,
         optional: Boolean,
     } from Expression::OptionalMember { loc, inner }
-        {=> self.serialize_optional_member_expression(loc, inner)},
+        {=> self.serialize_optional_member_as_member_expression(loc, inner)},
     CallExpression = 57 {
         callee: Node,
         typeArguments: Node,
         arguments: NodeList,
-    } from Expression::Call { loc, inner } {
-            self.serialize_expression(&inner.callee),
-            self.serialize_call_type_args_opt(&inner.targs),
-            self.serialize_arg_list(&inner.arguments),
-        },
+        optional: Boolean,
+    } from Expression::Call { loc, inner }
+        {=> self.serialize_call_expression(loc, inner)},
+    // OptionalCallExpression: same as OptionalMemberExpression — the wire
+    // never emits this kind; serializer routes through the chain-rewrite
+    // path. The schema stays for codegen artifact parity.
     OptionalCallExpression = 58 {
         callee: Node,
         typeArguments: Node,
         arguments: NodeList,
         optional: Boolean,
     } from Expression::OptionalCall { loc, inner }
-        {=> self.serialize_optional_call_expression(loc, inner)},
+        {=> self.serialize_optional_call_as_call_expression(loc, inner)},
     NewExpression = 59 {
         callee: Node,
         typeArguments: Node,
@@ -1261,9 +1267,16 @@ define_nodes! {
     BigIntLiteralTypeAnnotation = 133 {
         value: Node,
         raw: String,
+        bigint: String,
     } from Type::BigIntLiteral { loc, literal } {
             self.write_null_node(),
             self.write_str(&literal.raw),
+            // Mirror upstream Hermes' BigIntLiteralTypeAnnotation: emit
+            // `bigint` as the cleaned numeric string (strip trailing `n`
+            // and `_` separators from `raw`). The JS adapter then coerces
+            // `value` to BigInt(bigint) — `value: BigInt(...)` cannot be
+            // JSON-serialized so it can't live on the wire.
+            self.write_str(&clean_bigint_raw(&literal.raw)),
         },
     BooleanLiteralTypeAnnotation = 134 {
         value: Boolean,
@@ -1771,18 +1784,24 @@ define_nodes! {
     // selectors, visitor keys, types) include it natively and stay byte-for-
     // byte aligned with upstream — without hand-coded workarounds.
     //
-    // The Rust serializer never emits this kind on the wire: the OCaml parser
-    // produces `Type::Generic { id: Identifier "this", targs: None }` for both
-    // `type T = this` AND `(this) => void` / `m(): this`, and the WASM
-    // fixture suite verifies wire-format parity with that baseline (so a
-    // Rust-side conversion would regress those fixtures).
-    //
-    // The conversion to ThisTypeAnnotation is instead applied in the JS
-    // Layer-2 adapter (`applyPerNodeFixups` in `flow-parser-oxidized/src/
-    // index.js`), mirroring upstream `HermesToESTreeAdapter.
-    // mapGenericTypeAnnotation`. No `from` clause: this kind has no AST
-    // variant — it's reachable only via the JS-side adapter rewrite.
+    // No `from` clause: there is no AST variant for ThisTypeAnnotation. The
+    // OCaml parser produces `Type::Generic { id: Identifier "this", targs:
+    // None }` for both `type T = this` AND `(this) => void` / `m(): this`.
+    // The Rust `serialize_type` collapses that case to ThisTypeAnnotation
+    // before falling through to the auto-dispatch (mirroring upstream
+    // `HermesToESTreeAdapter.mapGenericTypeAnnotation` and the OCaml
+    // `estree_translator.ml::generic_type` collapse).
     ThisTypeAnnotation = 229 {},
+    // ChainExpression is the ESTree wrapper around an optional chain root.
+    // No `from` clause: there is no AST variant for ChainExpression. The
+    // Rust `serialize_expression` emits a ChainExpression header before the
+    // root MemberExpression/CallExpression of an optional chain (mirroring
+    // upstream Hermes' `mapChainExpression` and the JS adapter's
+    // `rewriteChain`). Defined here so the schema-driven codegen artifacts
+    // include it natively.
+    ChainExpression = 230 {
+        expression: Node,
+    },
 }
 
 // Compile-time check: SCHEMA entries must be in `kind_id` order starting

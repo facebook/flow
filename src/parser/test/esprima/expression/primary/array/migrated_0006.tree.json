@@ -86,6 +86,7 @@
                             }
                         }
                     ],
+                    "trailingComma": true,
                     "range": [
                         4,
                         17
