@@ -11,6 +11,6 @@ const x2: B = funA(isA); // error A ~> B
 
 declare var input: unknown;
 if (funB(isA, input)) {
-  (input: A); // okay
-  (input: B); // error A ~> B
+  input as A; // okay
+  input as B; // error A ~> B
 }

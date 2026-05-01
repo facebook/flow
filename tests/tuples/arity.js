@@ -4,4 +4,4 @@ function foo5(x: [1]): [1, 2] { return x; } // error
 
 // The empty array literal is a 0-tuple
 const foo: [] = [];
-(foo: [1]); // error
+foo as [1]; // error

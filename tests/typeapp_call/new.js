@@ -7,12 +7,12 @@ class C<T> {
 var c1 = new C<number | string>;
 c1.m1(0);
 c1.m2("");
-(c1.x: void); // error: number|string ~> void
+c1.x as void; // error: number|string ~> void
 
 var c2 = new C<string>;
 c2.m1(0); // error: number ~> string
 c2.m2("");
-(c2.x: void); // error: string ~> void
+c2.x as void; // error: string ~> void
 
 class NonPoly {}
 new NonPoly<string>; // error: expected polymorphic type

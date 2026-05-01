@@ -15,10 +15,10 @@ class A<N> {
 let n = new A<number>(3);
 let s = new A<string>("");
 
-(n.method() : number);
-(n.method() : string); // error (number incompatible with string)
-(s.method() : string);
-(s.method() : number); // error (number incompatible with string)
+n.method() as number;
+n.method() as string; // error (number incompatible with string)
+s.method() as string;
+s.method() as number; // error (number incompatible with string)
 
 n.method.bind(s); // TODO: error (number incompatible with string)
 s.method.bind(n); //  TODO: error (number incompatible with string)

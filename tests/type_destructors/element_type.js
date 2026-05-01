@@ -1,8 +1,8 @@
 type Arr = Array<number>;
 type Arr_Elem = Arr[number];
 
-(42: Arr_Elem); // OK: `Arr_Elem` is `number`
-('hello world': Arr_Elem);
+42 as Arr_Elem; // OK: `Arr_Elem` is `number`
+'hello world' as Arr_Elem;
 
 function foo(a: Arr): Arr[number] {
   if (false) return a[0];
@@ -12,8 +12,8 @@ function foo(a: Arr): Arr[number] {
 type Obj = { [key: string]: number };
 type Obj_Elem = Obj[string];
 
-(42: Obj_Elem); // OK: `Obj_Elem` is `number`
-('hello world': Obj_Elem);
+42 as Obj_Elem; // OK: `Obj_Elem` is `number`
+'hello world' as Obj_Elem;
 
 function bar(o: Obj): Obj[string] {
   if (false) return o['buz'];
@@ -21,5 +21,5 @@ function bar(o: Obj): Obj[string] {
 }
 
 type Z = ?{c: number};
-(1: Z['c']); // Error - access 'c' on `void`/`null`
-(1: NonNullable<Z>['c']); // OK
+1 as Z['c']; // Error - access 'c' on `void`/`null`
+1 as NonNullable<Z>['c']; // OK

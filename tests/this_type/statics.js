@@ -11,7 +11,7 @@ class A {
 }
 class B extends A { } // inherits statics method too, with `this` bound to the class
 
-(A.make(): A); // OK
-(B.make(): B); // OK
-(B.make(): A); // OK
-(A.make(): B); // error
+A.make() as A; // OK
+B.make() as B; // OK
+B.make() as A; // OK
+A.make() as B; // error

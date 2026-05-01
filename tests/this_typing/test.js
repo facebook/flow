@@ -50,14 +50,14 @@ function baz<T> (this : { f : T ,... }) : T {
     return this.f;
 }
 
-(baz.bind({f : 3})() : number);
-(baz.bind({f : ""})() : string);
-(baz.bind({f : 3})() : string); // error : number incompatible with string
-(baz.bind({f : ""})() : number); // error : number incompatible with string
+baz.bind({f : 3})() as number;
+baz.bind({f : ""})() as string;
+baz.bind({f : 3})() as string; // error : number incompatible with string
+baz.bind({f : ""})() as number; // error : number incompatible with string
 
 declare function baz2<T>(this : T, x : ?T) : T;
 
-(baz2.bind(3)(3) : number);
+baz2.bind(3)(3) as number;
 type NumOrStr = number | string;
-((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
-((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : NumOrStr);
+(baz2 as (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") as string; // error : number incompatible with string
+(baz2 as (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") as NumOrStr;

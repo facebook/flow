@@ -10,6 +10,6 @@ export type B = string;
 export const b: A = 'b';
 
 // $FlowFixMe[incompatible-type]
-(1: string); // suppressed error
+1 as string; // suppressed error
 
-(1: string); // error
+1 as string; // error

@@ -14,4 +14,4 @@ export const a: B = 'a';
 export {dependency} from './dependency';
 
 // $FlowFixMe[incompatible-type]
-(1: string); // suppressed error
+1 as string; // suppressed error

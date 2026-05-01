@@ -1,4 +1,4 @@
 // @flow
 
 // $FlowFixMe[incompatible-type]
-(123: number);
+123 as number;

@@ -22,7 +22,7 @@ function *generator(x: unknown): x is number { // error
 
 declare var x: unknown;
 if (generator(x)) {
-  (x: number); // error no refining effect
+  x as number; // error no refining effect
 }
 
 async function async(x: unknown): x is number { // error

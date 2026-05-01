@@ -6,6 +6,6 @@ declare class Y {
 
 class X extends Y {
   foo() {
-    (super.a: string);
+    super.a as string;
   }
 }

@@ -21,15 +21,15 @@ References:
                                 ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
+Error ------------------------------------------------------------------------------------------ error_positions.js:11:5
 
 Cannot call `bar` because Flow cannot determine a type for object type [1]. props of class `C` [2] is inexact, so it may
 contain `m` with a type that conflicts with `m`'s definition in object type [1]. Try making props of class `C` [2]
 exact. [cannot-spread-inexact]
 
-   error_positions.js:11:6
-   11| (foo(bar(C)): F<typeof C>); // error on call
-            ^^^
+   error_positions.js:11:5
+   11| foo(bar(C)) as F<typeof C>; // error on call
+           ^^^
 
 References:
    error_positions.js:7:48
@@ -40,22 +40,22 @@ References:
              ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
+Error ------------------------------------------------------------------------------------------ error_positions.js:11:5
 
 Cannot call `foo` with `bar(...)` bound to `x` because `ComponentType` [1] is incompatible with class `C` [2].
 [incompatible-type]
 
-   error_positions.js:11:6
-   11| (foo(bar(C)): F<typeof C>); // error on call
-            ^^^^^^
+   error_positions.js:11:5
+   11| foo(bar(C)) as F<typeof C>; // error on call
+           ^^^^^^
 
 References:
    error_positions.js:7:70
     7| declare function bar<P>(x: React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
                                                                             ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   error_positions.js:11:17
-   11| (foo(bar(C)): F<typeof C>); // error on call
-                       ^^^^^^^^ [2]
+   error_positions.js:11:18
+   11| foo(bar(C)) as F<typeof C>; // error on call
+                        ^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ error_positions.js:16:1
@@ -213,21 +213,21 @@ References:
                       ^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test10.js:3:2
+Error ---------------------------------------------------------------------------------------------------- test10.js:3:1
 
 Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   test10.js:3:2
-   3| (o.p: empty); // error: number ~> empty
-       ^^^
+   test10.js:3:1
+   3| o.p as empty; // error: number ~> empty
+      ^^^
 
 References:
    test10.js:2:14
    2| var o = { p: 0, ...x };
                    ^ [1]
-   test10.js:3:7
-   3| (o.p: empty); // error: number ~> empty
-            ^^^^^ [2]
+   test10.js:3:8
+   3| o.p as empty; // error: number ~> empty
+             ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test11.js:14:3
@@ -284,14 +284,14 @@ References:
              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test6.js:10:2
+Error ---------------------------------------------------------------------------------------------------- test6.js:10:1
 
 Cannot cast `p` to object type because property `abc` is missing in object literal [1] but exists in object type [2].
 [incompatible-type]
 
-   test6.js:10:2
-   10| (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-        ^
+   test6.js:10:1
+   10| p as {foo: string; abc: string}; // error, p doesn't have `abc` yet
+       ^
 
 References:
    test6.js:7:9
@@ -300,9 +300,9 @@ References:
     8|   foo: 'bar'
     9| };
        ^ [1]
-   test6.js:10:5
-   10| (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   test6.js:10:6
+   10| p as {foo: string; abc: string}; // error, p doesn't have `abc` yet
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test6.js:11:5
@@ -335,15 +335,15 @@ Cannot cast object literal to object type because in property `q`: string [1] is
 [incompatible-type]
 
    test8.js:7:2
-    7| ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
-        ^^^^^^^^
+    7| ({...o}) as {p: number, q: number}; // error: string ~> number (prop q)
+        ^^^^^^
 
 References:
    test8.js:12:15
    12| type B = { q: string };
                      ^^^^^^ [1]
    test8.js:7:28
-    7| ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
+    7| ({...o}) as {p: number, q: number}; // error: string ~> number (prop q)
                                   ^^^^^^ [2]
 
 
@@ -353,15 +353,15 @@ Cannot cast object literal to object type because in property `p`: number [1] is
 [incompatible-type]
 
    test8.js:8:2
-    8| ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
-        ^^^^^^^^
+    8| ({...o}) as {p: string, q: string}; // error: number ~> string (prop p)
+        ^^^^^^
 
 References:
    test8.js:11:15
    11| type A = { p: number };
                      ^^^^^^ [1]
    test8.js:8:17
-    8| ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)
+    8| ({...o}) as {p: string, q: string}; // error: number ~> string (prop p)
                        ^^^^^^ [2]
 
 
@@ -372,8 +372,8 @@ because interfaces do not track the own-ness of their properties. Try using an o
 [cannot-spread-interface]
 
    test9.js:5:2
-   5| ({ ...o_call }: { "$call": any }); // error: interfaces cannot be spread 
-       ^^^^^^^^^^^^^ [1]
+   5| ({...o_call}) as {'$call': any}; // error: interfaces cannot be spread
+       ^^^^^^^^^^^ [1]
 
 References:
    test9.js:4:21
@@ -388,8 +388,8 @@ because interfaces do not track the own-ness of their properties. Try using an o
 [cannot-spread-interface]
 
    test9.js:11:2
-   11| ({ ...o_index }: { "$key": any }); // error: interfaces cannot be spread 
-        ^^^^^^^^^^^^^^ [1]
+   11| ({...o_index}) as {'$key': any}; // error: interfaces cannot be spread
+        ^^^^^^^^^^^^ [1]
 
 References:
    test9.js:10:22
@@ -404,8 +404,8 @@ because interfaces do not track the own-ness of their properties. Try using an o
 [cannot-spread-interface]
 
    test9.js:12:2
-   12| ({ ...o_index }: { "$value": any }); // error: interfaces cannot be spread 
-        ^^^^^^^^^^^^^^ [1]
+   12| ({...o_index}) as {'$value': any}; // error: interfaces cannot be spread
+        ^^^^^^^^^^^^ [1]
 
 References:
    test9.js:10:22

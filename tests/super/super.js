@@ -11,7 +11,7 @@ class B extends A {
   }
 
   static anotherStatic() {
-    (super.staticMethod('foo'): number); // error, string !~> number
+    super.staticMethod('foo') as number; // error, string !~> number
     (super.doesntExist()); // error, A doesn't have a doesntExist method
   }
 

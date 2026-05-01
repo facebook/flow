@@ -2,4 +2,4 @@
 
 export class P<X> {}
 
-export default (P: Class<P<any>>);
+export default P as Class<P<any>>;

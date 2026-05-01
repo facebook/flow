@@ -946,18 +946,18 @@ Flags: --pretty
 module-export-1.js:5:9
 Flags: --pretty
 {
-  "end":15,
+  "end":14,
   "endline":5,
   "line":5,
   "loc":{
-    "end":{"column":15,"line":5,"offset":63},
+    "end":{"column":14,"line":5,"offset":62},
     "source":"module-export-1.js",
-    "start":{"column":9,"line":5,"offset":56},
+    "start":{"column":8,"line":5,"offset":55},
     "type":"SourceFile"
   },
   "path":"module-export-1.js",
   "reasons":[],
-  "start":9,
+  "start":8,
   "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
@@ -982,36 +982,36 @@ Flags: --pretty
 module-export-1.js:11:11
 Flags: --pretty
 {
-  "end":17,
+  "end":16,
   "endline":11,
   "line":11,
   "loc":{
-    "end":{"column":17,"line":11,"offset":171},
+    "end":{"column":16,"line":11,"offset":170},
     "source":"module-export-1.js",
-    "start":{"column":11,"line":11,"offset":164},
+    "start":{"column":10,"line":11,"offset":163},
     "type":"SourceFile"
   },
   "path":"module-export-1.js",
   "reasons":[],
-  "start":11,
+  "start":10,
   "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 
 module-export-1.js:14:9
 Flags: --pretty
 {
-  "end":15,
+  "end":14,
   "endline":14,
   "line":14,
   "loc":{
-    "end":{"column":15,"line":14,"offset":220},
+    "end":{"column":14,"line":14,"offset":219},
     "source":"module-export-1.js",
-    "start":{"column":9,"line":14,"offset":213},
+    "start":{"column":8,"line":14,"offset":212},
     "type":"SourceFile"
   },
   "path":"module-export-1.js",
   "reasons":[],
-  "start":9,
+  "start":8,
   "types":{"evaluated":null,"unevaluated":{"type":"number | string"}}
 }
 
@@ -2132,18 +2132,18 @@ Flags: --do_not_use_typed_AST_for_imports --pretty
 module-export-1.js:5:9
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":15,
+  "end":14,
   "endline":5,
   "line":5,
   "loc":{
-    "end":{"column":15,"line":5,"offset":63},
+    "end":{"column":14,"line":5,"offset":62},
     "source":"module-export-1.js",
-    "start":{"column":9,"line":5,"offset":56},
+    "start":{"column":8,"line":5,"offset":55},
     "type":"SourceFile"
   },
   "path":"module-export-1.js",
   "reasons":[],
-  "start":9,
+  "start":8,
   "types":{"evaluated":null,"unevaluated":{"type":"number"}}
 }
 
@@ -2168,36 +2168,36 @@ Flags: --do_not_use_typed_AST_for_imports --pretty
 module-export-1.js:11:11
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":17,
+  "end":16,
   "endline":11,
   "line":11,
   "loc":{
-    "end":{"column":17,"line":11,"offset":171},
+    "end":{"column":16,"line":11,"offset":170},
     "source":"module-export-1.js",
-    "start":{"column":11,"line":11,"offset":164},
+    "start":{"column":10,"line":11,"offset":163},
     "type":"SourceFile"
   },
   "path":"module-export-1.js",
   "reasons":[],
-  "start":11,
+  "start":10,
   "types":{"evaluated":null,"unevaluated":{"type":"string"}}
 }
 
 module-export-1.js:14:9
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":15,
+  "end":14,
   "endline":14,
   "line":14,
   "loc":{
-    "end":{"column":15,"line":14,"offset":220},
+    "end":{"column":14,"line":14,"offset":219},
     "source":"module-export-1.js",
-    "start":{"column":9,"line":14,"offset":213},
+    "start":{"column":8,"line":14,"offset":212},
     "type":"SourceFile"
   },
   "path":"module-export-1.js",
   "reasons":[],
-  "start":9,
+  "start":8,
   "types":{"evaluated":null,"unevaluated":{"type":"number | string"}}
 }
 

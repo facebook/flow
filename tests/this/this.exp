@@ -108,35 +108,35 @@ References:
                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- This.js:36:2
+Error ----------------------------------------------------------------------------------------------------- This.js:36:1
 
 Cannot cast `this` to undefined because global object [1] is incompatible with undefined [2]. [incompatible-type]
 
-   This.js:36:2
-   36| (this: void);
-        ^^^^ [1]
+   This.js:36:1
+   36| this as void;
+       ^^^^ [1]
 
 References:
-   This.js:36:8
-   36| (this: void);
-              ^^^^ [2]
+   This.js:36:9
+   36| this as void;
+               ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- arrows.js:16:2
+Error --------------------------------------------------------------------------------------------------- arrows.js:16:1
 
 Cannot cast `j` to `D` because `C` [1] is incompatible with `D` [2]. [incompatible-type]
 
-   arrows.js:16:2
-   16| (j: D); // error, since return type of bar is C, not the type of `this`
-        ^
+   arrows.js:16:1
+   16| j as D; // error, since return type of bar is C, not the type of `this`
+       ^
 
 References:
    arrows.js:2:16
     2|   foo(): () => C {
                       ^ [1]
-   arrows.js:16:5
-   16| (j: D); // error, since return type of bar is C, not the type of `this`
-           ^ [2]
+   arrows.js:16:6
+   16| j as D; // error, since return type of bar is C, not the type of `this`
+            ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- arrows.js:24:17

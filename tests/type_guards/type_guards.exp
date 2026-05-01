@@ -1,69 +1,69 @@
-Error --------------------------------------------------------------------------------------------- class_imports.js:8:4
+Error --------------------------------------------------------------------------------------------- class_imports.js:8:3
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   class_imports.js:8:4
-   8|   (x: string); // error number ~> string
-         ^
+   class_imports.js:8:3
+   8|   x as string; // error number ~> string
+        ^
 
 References:
    class_exports.js:2:23
    2|   m(x: unknown): x is number {
                             ^^^^^^ [1]
-   class_imports.js:8:7
-   8|   (x: string); // error number ~> string
-            ^^^^^^ [2]
+   class_imports.js:8:8
+   8|   x as string; // error number ~> string
+             ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_imports.js:13:4
+Error -------------------------------------------------------------------------------------------- class_imports.js:13:3
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   class_imports.js:13:4
-   13|   (x: string); // error number ~> string
-          ^
+   class_imports.js:13:3
+   13|   x as string; // error number ~> string
+         ^
 
 References:
    class_exports.js:5:32
     5|   os(x: unknown): implies x is number {
                                       ^^^^^^ [1]
-   class_imports.js:13:7
-   13|   (x: string); // error number ~> string
-             ^^^^^^ [2]
+   class_imports.js:13:8
+   13|   x as string; // error number ~> string
+              ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_imports.js:19:4
+Error -------------------------------------------------------------------------------------------- class_imports.js:19:3
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   class_imports.js:19:4
-   19|   (x: string); // error number ~> string
-          ^
+   class_imports.js:19:3
+   19|   x as string; // error number ~> string
+         ^
 
 References:
    class_exports.js:11:23
    11|   m(x: unknown): x is number;
                              ^^^^^^ [1]
-   class_imports.js:19:7
-   19|   (x: string); // error number ~> string
-             ^^^^^^ [2]
+   class_imports.js:19:8
+   19|   x as string; // error number ~> string
+              ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_imports.js:24:4
+Error -------------------------------------------------------------------------------------------- class_imports.js:24:3
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   class_imports.js:24:4
-   24|   (x: string); // error number ~> string
-          ^
+   class_imports.js:24:3
+   24|   x as string; // error number ~> string
+         ^
 
 References:
    class_exports.js:12:32
    12|   os(x: unknown): implies x is number;
                                       ^^^^^^ [1]
-   class_imports.js:24:7
-   24|   (x: string); // error number ~> string
-             ^^^^^^ [2]
+   class_imports.js:24:8
+   24|   x as string; // error number ~> string
+              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:14
@@ -127,38 +127,38 @@ References:
                                       ^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:30:6
+Error -------------------------------------------------------------------------------------------------- classes.js:30:5
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   classes.js:30:6
-   30|     (x: string); // error number ~> string
-            ^
+   classes.js:30:5
+   30|     x as string; // error number ~> string
+           ^
 
 References:
    classes.js:5:25
     5|     m(x: unknown): x is number {
                                ^^^^^^ [1]
-   classes.js:30:9
-   30|     (x: string); // error number ~> string
-               ^^^^^^ [2]
+   classes.js:30:10
+   30|     x as string; // error number ~> string
+                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:33:6
+Error -------------------------------------------------------------------------------------------------- classes.js:33:5
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   classes.js:33:6
-   33|     (x: number); // error string ~> number
-            ^
+   classes.js:33:5
+   33|     x as number; // error string ~> number
+           ^
 
 References:
    classes.js:9:32
     9|     static s(x: unknown): x is string {
                                       ^^^^^^ [1]
-   classes.js:33:9
-   33|     (x: number); // error string ~> number
-               ^^^^^^ [2]
+   classes.js:33:10
+   33|     x as number; // error string ~> number
+                ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- classes.js:40:5
@@ -262,38 +262,38 @@ References:
                                 ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------- classes.js:98:6
+Error -------------------------------------------------------------------------------------------------- classes.js:98:5
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   classes.js:98:6
-   98|     (x: string); // error number ~> string
-            ^
+   classes.js:98:5
+   98|     x as string; // error number ~> string
+           ^
 
 References:
    classes.js:91:25
    91|     m(x: unknown): x is number;
                                ^^^^^^ [1]
-   classes.js:98:9
-   98|     (x: string); // error number ~> string
-               ^^^^^^ [2]
+   classes.js:98:10
+   98|     x as string; // error number ~> string
+                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:102:6
+Error ------------------------------------------------------------------------------------------------- classes.js:102:5
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   classes.js:102:6
-   102|     (x: number); // error string ~> number
-             ^
+   classes.js:102:5
+   102|     x as number; // error string ~> number
+            ^
 
 References:
    classes.js:92:32
     92|     static s(x: unknown): x is string;
                                        ^^^^^^ [1]
-   classes.js:102:9
-   102|     (x: number); // error string ~> number
-                ^^^^^^ [2]
+   classes.js:102:10
+   102|     x as number; // error string ~> number
+                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:107:5
@@ -358,21 +358,21 @@ References:
               ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:134:6
+Error ------------------------------------------------------------------------------------------------- classes.js:134:5
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   classes.js:134:6
-   134|     (x: string); // error number ~> string
-             ^
+   classes.js:134:5
+   134|     x as string; // error number ~> string
+            ^
 
 References:
    classes.js:131:19
    131|   const p = new P<number>();
                           ^^^^^^ [1]
-   classes.js:134:9
-   134|     (x: string); // error number ~> string
-                ^^^^^^ [2]
+   classes.js:134:10
+   134|     x as string; // error number ~> string
+                 ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- consistency.js:7:33
@@ -1514,21 +1514,21 @@ References:
                                           ^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- invalid.js:25:4
+Error -------------------------------------------------------------------------------------------------- invalid.js:25:3
 
 Cannot cast `x` to number because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
-   invalid.js:25:4
-   25|   (x: number); // error no refining effect
-          ^
+   invalid.js:25:3
+   25|   x as number; // error no refining effect
+         ^
 
 References:
    invalid.js:23:16
    23| declare var x: unknown;
                       ^^^^^^^ [1]
-   invalid.js:25:7
-   25|   (x: number); // error no refining effect
-             ^^^^^^ [2]
+   invalid.js:25:8
+   25|   x as number; // error no refining effect
+              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:28:35
@@ -1605,38 +1605,38 @@ References:
              ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- objects.js:20:6
+Error -------------------------------------------------------------------------------------------------- objects.js:20:5
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   objects.js:20:6
-   20|     (x: string); // error number ~> string
-            ^
+   objects.js:20:5
+   20|     x as string; // error number ~> string
+           ^
 
 References:
    objects.js:6:25
     6|     m(x: unknown): x is number {
                                ^^^^^^ [1]
-   objects.js:20:9
-   20|     (x: string); // error number ~> string
-               ^^^^^^ [2]
+   objects.js:20:10
+   20|     x as string; // error number ~> string
+                ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- objects.js:23:6
+Error -------------------------------------------------------------------------------------------------- objects.js:23:5
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   objects.js:23:6
-   23|     (x: number); // error string ~> number
-            ^
+   objects.js:23:5
+   23|     x as number; // error string ~> number
+           ^
 
 References:
    objects.js:9:25
     9|     f(x: unknown): x is string {
                                ^^^^^^ [1]
-   objects.js:23:9
-   23|     (x: number); // error string ~> number
-               ^^^^^^ [2]
+   objects.js:23:10
+   23|     x as number; // error string ~> number
+                ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- objects.js:29:4
@@ -1645,7 +1645,7 @@ Cannot cast `obj` to object type because in property `m` > the type predicate: n
 string [2]. [incompatible-type]
 
    objects.js:29:4
-   29|   (obj: { // error number ~> string
+   29|   (obj as { // error number ~> string
           ^^^
 
 References:
@@ -1727,21 +1727,21 @@ References:
                                               ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:28:4
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:28:3
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   patterns_and_rest.js:28:4
-   28|   (x: number); // TODO error string ~> number
-          ^
+   patterns_and_rest.js:28:3
+   28|   x as number; // TODO error string ~> number
+         ^
 
 References:
    patterns_and_rest.js:21:82
    21| function valid_pattern({a}: {a: unknown}, x: unknown, ...r: Array<number>): x is string {
                                                                                         ^^^^^^ [1]
-   patterns_and_rest.js:28:7
-   28|   (x: number); // TODO error string ~> number
-             ^^^^^^ [2]
+   patterns_and_rest.js:28:8
+   28|   x as number; // TODO error string ~> number
+              ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- patterns_and_rest.js:31:46
@@ -1758,89 +1758,89 @@ References:
                                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ refinement.js:7:6
+Error ------------------------------------------------------------------------------------------------ refinement.js:7:5
 
 Cannot cast `y` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   refinement.js:7:6
-   7|     (y: string); // error number ~> string
-           ^
+   refinement.js:7:5
+   7|     y as string; // error number ~> string
+          ^
 
 References:
    refinement.js:2:28
    2|   fn: (x: unknown) => x is number,
                                  ^^^^^^ [1]
-   refinement.js:7:9
-   7|     (y: string); // error number ~> string
-              ^^^^^^ [2]
+   refinement.js:7:10
+   7|     y as string; // error number ~> string
+               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:20:6
+Error ----------------------------------------------------------------------------------------------- refinement.js:20:5
 
 Cannot cast `x1` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   refinement.js:20:6
-   20|     (x1: number); // error string ~> number
-            ^^
+   refinement.js:20:5
+   20|     x1 as number; // error string ~> number
+           ^^
 
 References:
    refinement.js:13:7
    13|   x1: string,
              ^^^^^^ [1]
-   refinement.js:20:10
-   20|     (x1: number); // error string ~> number
-                ^^^^^^ [2]
+   refinement.js:20:11
+   20|     x1 as number; // error string ~> number
+                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:24:6
+Error ----------------------------------------------------------------------------------------------- refinement.js:24:5
 
 Cannot cast `x2` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   refinement.js:24:6
-   24|     (x2: number); // error string ~> number
-            ^^
+   refinement.js:24:5
+   24|     x2 as number; // error string ~> number
+           ^^
 
 References:
    refinement.js:14:7
    14|   x2: string | null,
              ^^^^^^ [1]
-   refinement.js:24:10
-   24|     (x2: number); // error string ~> number
-                ^^^^^^ [2]
+   refinement.js:24:11
+   24|     x2 as number; // error string ~> number
+                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:28:6
+Error ----------------------------------------------------------------------------------------------- refinement.js:28:5
 
 Cannot cast `x3` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   refinement.js:28:6
-   28|     (x3: number); // error string ~> number
-            ^^
+   refinement.js:28:5
+   28|     x3 as number; // error string ~> number
+           ^^
 
 References:
    refinement.js:15:7
    15|   x3: string | void,
              ^^^^^^ [1]
-   refinement.js:28:10
-   28|     (x3: number); // error string ~> number
-                ^^^^^^ [2]
+   refinement.js:28:11
+   28|     x3 as number; // error string ~> number
+                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:32:6
+Error ----------------------------------------------------------------------------------------------- refinement.js:32:5
 
 Cannot cast `x4` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   refinement.js:32:6
-   32|     (x4: number); // error string ~> number
-            ^^
+   refinement.js:32:5
+   32|     x4 as number; // error string ~> number
+           ^^
 
 References:
    refinement.js:16:8
    16|   x4: ?string,
               ^^^^^^ [1]
-   refinement.js:32:10
-   32|     (x4: number); // error string ~> number
-                ^^^^^^ [2]
+   refinement.js:32:11
+   32|     x4 as number; // error string ~> number
+                 ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:40:21
@@ -1920,7 +1920,7 @@ References:
                               ^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:61:8
+Error ----------------------------------------------------------------------------------------------- refinement.js:61:7
 
 Cannot cast `x` to `B` because properties `foo` and `tag` of `A` [1] are not exactly the same as those of `B` [2].
 [incompatible-type]
@@ -1931,14 +1931,14 @@ error,
 - Or make properties `foo` and `tag` in `B` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   refinement.js:61:8
-   61|       (x: B); // error A ~> B
-              ^ [1]
+   refinement.js:61:7
+   61|       x as B; // error A ~> B
+             ^ [1]
 
 References:
-   refinement.js:61:11
-   61|       (x: B); // error A ~> B
-                 ^ [2]
+   refinement.js:61:12
+   61|       x as B; // error A ~> B
+                  ^ [2]
    refinement.js:53:12
    53|   type A = { tag: 'A', foo: number };
                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -1947,15 +1947,15 @@ References:
                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:72:8
+Error ----------------------------------------------------------------------------------------------- refinement.js:72:7
 
 Cannot cast `x` to `A` because: [incompatible-type]
  - Either in property `foo`: string [1] is incompatible with number [2].
  - Or inexact object type [3] is incompatible with exact `A` [4].
 
-   refinement.js:72:8
-   72|       (x: A); // error B & {tag_: 'A',...} ~> A
-              ^
+   refinement.js:72:7
+   72|       x as A; // error B & {tag_: 'A',...} ~> A
+             ^
 
 References:
    refinement.js:54:29
@@ -1967,20 +1967,20 @@ References:
    refinement.js:70:59
    70|   declare function invalid_sentinel_key(x: unknown): x is {tag_: 'A', ...};
                                                                  ^^^^^^^^^^^^^^^^ [3]
-   refinement.js:72:11
-   72|       (x: A); // error B & {tag_: 'A',...} ~> A
-                 ^ [4]
+   refinement.js:72:12
+   72|       x as A; // error B & {tag_: 'A',...} ~> A
+                  ^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:73:8
+Error ----------------------------------------------------------------------------------------------- refinement.js:73:7
 
 Cannot cast `x` to `B` because: [incompatible-type]
  - Either in property `foo`: number [1] is incompatible with string [2].
  - Or inexact object type [3] is incompatible with exact `B` [4].
 
-   refinement.js:73:8
-   73|       (x: B); // error A & {tag_: 'A',...} ~> B
-              ^
+   refinement.js:73:7
+   73|       x as B; // error A & {tag_: 'A',...} ~> B
+             ^
 
 References:
    refinement.js:53:29
@@ -1992,18 +1992,18 @@ References:
    refinement.js:70:59
    70|   declare function invalid_sentinel_key(x: unknown): x is {tag_: 'A', ...};
                                                                  ^^^^^^^^^^^^^^^^ [3]
-   refinement.js:73:11
-   73|       (x: B); // error A & {tag_: 'A',...} ~> B
-                 ^ [4]
+   refinement.js:73:12
+   73|       x as B; // error A & {tag_: 'A',...} ~> B
+                  ^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:86:8
+Error ----------------------------------------------------------------------------------------------- refinement.js:86:7
 
 Cannot cast `x` to `B` because in property `foo`: number [1] is incompatible with string [2]. [incompatible-type]
 
-   refinement.js:86:8
-   86|       (x: B); // error A ~> B
-              ^
+   refinement.js:86:7
+   86|       x as B; // error A ~> B
+             ^
 
 References:
    refinement.js:78:38
@@ -2014,14 +2014,14 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:86:8
+Error ----------------------------------------------------------------------------------------------- refinement.js:86:7
 
 Cannot cast `x` to `B` because in property `tag`: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
-   refinement.js:86:8
-   86|       (x: B); // error A ~> B
-              ^
+   refinement.js:86:7
+   86|       x as B; // error A ~> B
+             ^
 
 References:
    refinement.js:78:28
@@ -2032,15 +2032,15 @@ References:
                                   ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:97:8
+Error ----------------------------------------------------------------------------------------------- refinement.js:97:7
 
 Cannot cast `x` to `A` because: [incompatible-type]
  - Either in property `foo`: string [1] is incompatible with number [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
 
-   refinement.js:97:8
-   97|       (x: A); // error B & {+tag_: 'A',...} ~> A
-              ^
+   refinement.js:97:7
+   97|       x as A; // error B & {+tag_: 'A',...} ~> A
+             ^
 
 References:
    refinement.js:79:38
@@ -2052,20 +2052,20 @@ References:
    refinement.js:95:68
    95|   declare function invalid_sentinel_key(x: unknown): x is Readonly<{tag_: 'A', ...}>;
                                                                           ^^^^^^^^^^^^^^^^ [3]
-   refinement.js:97:11
-   97|       (x: A); // error B & {+tag_: 'A',...} ~> A
-                 ^ [4]
+   refinement.js:97:12
+   97|       x as A; // error B & {+tag_: 'A',...} ~> A
+                  ^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------- refinement.js:98:8
+Error ----------------------------------------------------------------------------------------------- refinement.js:98:7
 
 Cannot cast `x` to `B` because: [incompatible-type]
  - Either in property `foo`: number [1] is incompatible with string [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
 
-   refinement.js:98:8
-   98|       (x: B); // error A & {+tag_: 'A',...} ~> B
-              ^
+   refinement.js:98:7
+   98|       x as B; // error A & {+tag_: 'A',...} ~> B
+             ^
 
 References:
    refinement.js:78:38
@@ -2077,20 +2077,20 @@ References:
    refinement.js:95:68
    95|   declare function invalid_sentinel_key(x: unknown): x is Readonly<{tag_: 'A', ...}>;
                                                                           ^^^^^^^^^^^^^^^^ [3]
-   refinement.js:98:11
-   98|       (x: B); // error A & {+tag_: 'A',...} ~> B
-                 ^ [4]
+   refinement.js:98:12
+   98|       x as B; // error A & {+tag_: 'A',...} ~> B
+                  ^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:110:8
+Error ---------------------------------------------------------------------------------------------- refinement.js:110:7
 
 Cannot cast `x` to `A` because: [incompatible-type]
  - Either in property `foo`: string [1] is incompatible with number [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
 
-   refinement.js:110:8
-   110|       (x: A); // error B & {+tag: 'C', ...} ~> A
-               ^
+   refinement.js:110:7
+   110|       x as A; // error B & {+tag: 'C', ...} ~> A
+              ^
 
 References:
    refinement.js:104:48
@@ -2102,20 +2102,20 @@ References:
    refinement.js:108:64
    108|   declare function unknown_sentinel(x: unknown): x is Readonly<{tag: 'C', ...}>;
                                                                        ^^^^^^^^^^^^^^^ [3]
-   refinement.js:110:11
-   110|       (x: A); // error B & {+tag: 'C', ...} ~> A
-                  ^ [4]
+   refinement.js:110:12
+   110|       x as A; // error B & {+tag: 'C', ...} ~> A
+                   ^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:111:8
+Error ---------------------------------------------------------------------------------------------- refinement.js:111:7
 
 Cannot cast `x` to `B` because: [incompatible-type]
  - Either in property `foo`: number [1] is incompatible with string [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
 
-   refinement.js:111:8
-   111|       (x: B); // error A & {+tag: 'C', ...} ~> B
-               ^
+   refinement.js:111:7
+   111|       x as B; // error A & {+tag: 'C', ...} ~> B
+              ^
 
 References:
    refinement.js:103:48
@@ -2127,18 +2127,18 @@ References:
    refinement.js:108:64
    108|   declare function unknown_sentinel(x: unknown): x is Readonly<{tag: 'C', ...}>;
                                                                        ^^^^^^^^^^^^^^^ [3]
-   refinement.js:111:11
-   111|       (x: B); // error A & {+tag: 'C', ...} ~> B
-                  ^ [4]
+   refinement.js:111:12
+   111|       x as B; // error A & {+tag: 'C', ...} ~> B
+                   ^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:117:8
+Error ---------------------------------------------------------------------------------------------- refinement.js:117:7
 
 Cannot cast `x` to `B` because in property `foo`: number [1] is incompatible with string [2]. [incompatible-type]
 
-   refinement.js:117:8
-   117|       (x: B); // error A ~> B
-               ^
+   refinement.js:117:7
+   117|       x as B; // error A ~> B
+              ^
 
 References:
    refinement.js:103:48
@@ -2149,14 +2149,14 @@ References:
                                                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:117:8
+Error ---------------------------------------------------------------------------------------------- refinement.js:117:7
 
 Cannot cast `x` to `B` because in property `tag1`: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
-   refinement.js:117:8
-   117|       (x: B); // error A ~> B
-               ^
+   refinement.js:117:7
+   117|       x as B; // error A ~> B
+              ^
 
 References:
    refinement.js:103:29
@@ -2167,13 +2167,13 @@ References:
                                     ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:122:8
+Error ---------------------------------------------------------------------------------------------- refinement.js:122:7
 
 Cannot cast `x` to `A` because in property `foo`: string [1] is incompatible with number [2]. [incompatible-type]
 
-   refinement.js:122:8
-   122|       (x: A); // error B ~> A
-               ^
+   refinement.js:122:7
+   122|       x as A; // error B ~> A
+              ^
 
 References:
    refinement.js:104:48
@@ -2184,14 +2184,14 @@ References:
                                                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:122:8
+Error ---------------------------------------------------------------------------------------------- refinement.js:122:7
 
 Cannot cast `x` to `A` because in property `tag1`: string literal `B` [1] is incompatible with string literal `A` [2].
 [incompatible-type]
 
-   refinement.js:122:8
-   122|       (x: A); // error B ~> A
-               ^
+   refinement.js:122:7
+   122|       x as A; // error B ~> A
+              ^
 
 References:
    refinement.js:104:29
@@ -2202,13 +2202,13 @@ References:
                                     ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:123:8
+Error ---------------------------------------------------------------------------------------------- refinement.js:123:7
 
 Cannot cast `x` to `B` because in property `foo`: number [1] is incompatible with string [2]. [incompatible-type]
 
-   refinement.js:123:8
-   123|       (x: B); // error A ~> B
-               ^
+   refinement.js:123:7
+   123|       x as B; // error A ~> B
+              ^
 
 References:
    refinement.js:103:48
@@ -2219,14 +2219,14 @@ References:
                                                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:123:8
+Error ---------------------------------------------------------------------------------------------- refinement.js:123:7
 
 Cannot cast `x` to `B` because in property `tag1`: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
-   refinement.js:123:8
-   123|       (x: B); // error A ~> B
-               ^
+   refinement.js:123:7
+   123|       x as B; // error A ~> B
+              ^
 
 References:
    refinement.js:103:29
@@ -2237,202 +2237,202 @@ References:
                                     ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:136:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:136:5
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   refinement.js:136:6
-   136|     (x: string); // error number ~> string
-             ^
+   refinement.js:136:5
+   136|     x as string; // error number ~> string
+            ^
 
 References:
    refinement.js:132:18
    132|   declare var x: number | string;
                          ^^^^^^ [1]
-   refinement.js:136:9
-   136|     (x: string); // error number ~> string
-                ^^^^^^ [2]
+   refinement.js:136:10
+   136|     x as string; // error number ~> string
+                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:139:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:139:5
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   refinement.js:139:6
-   139|     (x: number); // error string ~> number
-             ^
+   refinement.js:139:5
+   139|     x as number; // error string ~> number
+            ^
 
 References:
    refinement.js:132:27
    132|   declare var x: number | string;
                                   ^^^^^^ [1]
-   refinement.js:139:9
-   139|     (x: number); // error string ~> number
-                ^^^^^^ [2]
+   refinement.js:139:10
+   139|     x as number; // error string ~> number
+                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:144:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:144:5
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   refinement.js:144:6
-   144|     (x: number); // error string ~> number
-             ^
+   refinement.js:144:5
+   144|     x as number; // error string ~> number
+            ^
 
 References:
    refinement.js:132:27
    132|   declare var x: number | string;
                                   ^^^^^^ [1]
-   refinement.js:144:9
-   144|     (x: number); // error string ~> number
-                ^^^^^^ [2]
+   refinement.js:144:10
+   144|     x as number; // error string ~> number
+                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:146:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:146:5
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   refinement.js:146:6
-   146|     (x: string); // error string ~> number
-             ^
+   refinement.js:146:5
+   146|     x as string; // error string ~> number
+            ^
 
 References:
    refinement.js:132:18
    132|   declare var x: number | string;
                          ^^^^^^ [1]
-   refinement.js:146:9
-   146|     (x: string); // error string ~> number
-                ^^^^^^ [2]
+   refinement.js:146:10
+   146|     x as string; // error string ~> number
+                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:151:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:151:5
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   refinement.js:151:6
-   151|     (x: number); // error string ~> number
-             ^
+   refinement.js:151:5
+   151|     x as number; // error string ~> number
+            ^
 
 References:
    refinement.js:132:27
    132|   declare var x: number | string;
                                   ^^^^^^ [1]
-   refinement.js:151:9
-   151|     (x: number); // error string ~> number
-                ^^^^^^ [2]
+   refinement.js:151:10
+   151|     x as number; // error string ~> number
+                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:152:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:152:5
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   refinement.js:152:6
-   152|     (x: string); // error number ~> string
-             ^
+   refinement.js:152:5
+   152|     x as string; // error number ~> string
+            ^
 
 References:
    refinement.js:132:18
    132|   declare var x: number | string;
                          ^^^^^^ [1]
-   refinement.js:152:9
-   152|     (x: string); // error number ~> string
-                ^^^^^^ [2]
+   refinement.js:152:10
+   152|     x as string; // error number ~> string
+                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:175:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:175:5
 
 Cannot cast `maybeNumber` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   refinement.js:175:6
-   175|     (maybeNumber: empty); // error number ~> empty
-             ^^^^^^^^^^^
+   refinement.js:175:5
+   175|     maybeNumber as empty; // error number ~> empty
+            ^^^^^^^^^^^
 
 References:
    refinement.js:172:28
    172|   declare var maybeNumber: number;
                                    ^^^^^^ [1]
-   refinement.js:175:19
-   175|     (maybeNumber: empty); // error number ~> empty
-                          ^^^^^ [2]
+   refinement.js:175:20
+   175|     maybeNumber as empty; // error number ~> empty
+                           ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:185:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:185:5
 
 Cannot cast `anyVal` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   refinement.js:185:6
-   185|     (anyVal: empty); // error number ~> empty
-             ^^^^^^
+   refinement.js:185:5
+   185|     anyVal as empty; // error number ~> empty
+            ^^^^^^
 
 References:
    refinement.js:180:55
    180|   declare function isNumber(value: unknown): value is number;
                                                               ^^^^^^ [1]
-   refinement.js:185:14
-   185|     (anyVal: empty); // error number ~> empty
-                     ^^^^^ [2]
+   refinement.js:185:15
+   185|     anyVal as empty; // error number ~> empty
+                      ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:202:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:202:5
 
 Cannot cast `x` to empty because `$FbtResultBase` [1] is incompatible with empty [2]. [incompatible-type]
 
-   refinement.js:202:6
-   202|     (x: empty); // error Fbt ~> empty
-             ^
+   refinement.js:202:5
+   202|     x as empty; // error Fbt ~> empty
+            ^
 
 References:
    refinement.js:198:25
    198|   declare var x: void | Fbt;
                                 ^^^ [1]
-   refinement.js:202:9
-   202|     (x: empty); // error Fbt ~> empty
-                ^^^^^ [2]
+   refinement.js:202:10
+   202|     x as empty; // error Fbt ~> empty
+                 ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:202:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:202:5
 
 Cannot cast `x` to empty because `FbtString` [1] is incompatible with empty [2]. [incompatible-type]
 
-   refinement.js:202:6
-   202|     (x: empty); // error Fbt ~> empty
-             ^
+   refinement.js:202:5
+   202|     x as empty; // error Fbt ~> empty
+            ^
 
 References:
    refinement.js:198:25
    198|   declare var x: void | Fbt;
                                 ^^^ [1]
-   refinement.js:202:9
-   202|     (x: empty); // error Fbt ~> empty
-                ^^^^^ [2]
+   refinement.js:202:10
+   202|     x as empty; // error Fbt ~> empty
+                 ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:202:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:202:5
 
 Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   refinement.js:202:6
-   202|     (x: empty); // error Fbt ~> empty
-             ^
+   refinement.js:202:5
+   202|     x as empty; // error Fbt ~> empty
+            ^
 
 References:
    refinement.js:198:25
    198|   declare var x: void | Fbt;
                                 ^^^ [1]
-   refinement.js:202:9
-   202|     (x: empty); // error Fbt ~> empty
-                ^^^^^ [2]
+   refinement.js:202:10
+   202|     x as empty; // error Fbt ~> empty
+                 ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:214:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:214:5
 
 Cannot cast `x` to `OpaqueOrString` because: [incompatible-type]
  - Either string [1] is incompatible with `OpaqueT` [2].
  - Or `OpaqueT` [1] is incompatible with string [3].
 
-   refinement.js:214:6
-   214|     (x: OpaqueOrString); // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
-             ^
+   refinement.js:214:5
+   214|     x as OpaqueOrString; // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
+            ^
 
 References:
    refinement.js:211:25
@@ -2446,72 +2446,72 @@ References:
                                                ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:225:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:225:5
 
 Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   refinement.js:225:6
-   225|     (x: empty); // error string ~> empty
-             ^
+   refinement.js:225:5
+   225|     x as empty; // error string ~> empty
+            ^
 
 References:
    refinement.js:221:25
    221|   declare var x: void | string | any;
                                 ^^^^^^ [1]
-   refinement.js:225:9
-   225|     (x: empty); // error string ~> empty
-                ^^^^^ [2]
+   refinement.js:225:10
+   225|     x as empty; // error string ~> empty
+                 ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:235:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:235:5
 
 Cannot cast `value` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   refinement.js:235:6
-   235|     (value: string); // error number ~> string
-             ^^^^^
+   refinement.js:235:5
+   235|     value as string; // error number ~> string
+            ^^^^^
 
 References:
    refinement.js:230:10
    230|   value: number | string,
                  ^^^^^^ [1]
-   refinement.js:235:13
-   235|     (value: string); // error number ~> string
-                    ^^^^^^ [2]
+   refinement.js:235:14
+   235|     value as string; // error number ~> string
+                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:237:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:237:5
 
 Cannot cast `value` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   refinement.js:237:6
-   237|     (value: string); // error number ~> string
-             ^^^^^
+   refinement.js:237:5
+   237|     value as string; // error number ~> string
+            ^^^^^
 
 References:
    refinement.js:230:10
    230|   value: number | string,
                  ^^^^^^ [1]
-   refinement.js:237:13
-   237|     (value: string); // error number ~> string
-                    ^^^^^^ [2]
+   refinement.js:237:14
+   237|     value as string; // error number ~> string
+                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:238:6
+Error ---------------------------------------------------------------------------------------------- refinement.js:238:5
 
 Cannot cast `value` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   refinement.js:238:6
-   238|     (value: number); // error string ~> number
-             ^^^^^
+   refinement.js:238:5
+   238|     value as number; // error string ~> number
+            ^^^^^
 
 References:
    refinement.js:230:19
    230|   value: number | string,
                           ^^^^^^ [1]
-   refinement.js:238:13
-   238|     (value: number); // error string ~> number
-                    ^^^^^^ [2]
+   refinement.js:238:14
+   238|     value as number; // error string ~> number
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:243:21
@@ -2757,21 +2757,21 @@ References:
                  ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- subst.js:15:4
+Error ---------------------------------------------------------------------------------------------------- subst.js:15:3
 
 Cannot cast `input` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   subst.js:15:4
-   15|   (input: B); // error A ~> B
-          ^^^^^
+   subst.js:15:3
+   15|   input as B; // error A ~> B
+         ^^^^^
 
 References:
    subst.js:4:40
     4| declare function isA(x: unknown): x is A;
                                               ^ [1]
-   subst.js:15:11
-   15|   (input: B); // error A ~> B
-                 ^ [2]
+   subst.js:15:12
+   15|   input as B; // error A ~> B
+                  ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:6:10

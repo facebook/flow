@@ -8,7 +8,7 @@ declare function bar<P>(x: React.ComponentType<{ m: number, ...P}>): React.Compo
 
 class C extends React.Component<{}> {}
 
-(foo(bar(C)): F<typeof C>); // error on call
+foo(bar(C)) as F<typeof C>; // error on call
 
 declare function spread<T: {}>(x: T): {...T, ...{}}; // error should not appear here
 

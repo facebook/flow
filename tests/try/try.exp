@@ -1,35 +1,35 @@
-Error ---------------------------------------------------------------------------------------------- catch-param.js:18:4
+Error ---------------------------------------------------------------------------------------------- catch-param.js:18:3
 
 Cannot cast `e` to empty because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
-   catch-param.js:18:4
-   18|   (e: empty); // ERROR - is `mixed`
-          ^
+   catch-param.js:18:3
+   18|   e as empty; // ERROR - is `mixed`
+         ^
 
 References:
    catch-param.js:17:13
    17| } catch (e: mixed) { // OK
                    ^^^^^ [1]
-   catch-param.js:18:7
-   18|   (e: empty); // ERROR - is `mixed`
-             ^^^^^ [2]
+   catch-param.js:18:8
+   18|   e as empty; // ERROR - is `mixed`
+              ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- catch-param.js:31:4
+Error ---------------------------------------------------------------------------------------------- catch-param.js:31:3
 
 Cannot cast `e` to empty because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
-   catch-param.js:31:4
-   31|   (e: empty); // ERROR - is `unknown`
-          ^
+   catch-param.js:31:3
+   31|   e as empty; // ERROR - is `unknown`
+         ^
 
 References:
    catch-param.js:30:13
    30| } catch (e: unknown) { // OK
                    ^^^^^^^ [1]
-   catch-param.js:31:7
-   31|   (e: empty); // ERROR - is `unknown`
-             ^^^^^ [2]
+   catch-param.js:31:8
+   31|   e as empty; // ERROR - is `unknown`
+              ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- catch-param.js:43:13

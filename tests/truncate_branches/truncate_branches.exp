@@ -1,4 +1,4 @@
-Error ---------------------------------------------------------------------------------------------------- file.js:107:2
+Error ---------------------------------------------------------------------------------------------------- file.js:107:1
 
 Cannot cast `x` to `T` because: [incompatible-type]
  - Either string [1] is incompatible with string literal `a1` [2].
@@ -54,9 +54,9 @@ Cannot cast `x` to `T` because: [incompatible-type]
 
 Only showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.
 
-   file.js:107:2
-   107| (x: T); // error
-         ^
+   file.js:107:1
+   107| x as T; // error
+        ^
 
 References:
    file.js:106:16
@@ -219,7 +219,7 @@ Found 1 error
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
-Error ---------------------------------------------------------------------------------------------------- file.js:107:2
+Error ---------------------------------------------------------------------------------------------------- file.js:107:1
 
 Cannot cast `x` to `T` because: [incompatible-type]
  - Either string [1] is incompatible with string literal `a1` [2].
@@ -324,9 +324,9 @@ Cannot cast `x` to `T` because: [incompatible-type]
  - Or string [1] is incompatible with string literal `a100` [101].
  - Or string [1] is incompatible with function type [102].
 
-   file.js:107:2
-   107| (x: T); // error
-         ^
+   file.js:107:1
+   107| x as T; // error
+        ^
 
 References:
    file.js:106:16

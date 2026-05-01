@@ -1,3 +1,3 @@
 // @flow
 
-(123: number); // no errors
+123 as number; // no errors

@@ -7,11 +7,11 @@ function tupleLength(tup: $ReadOnlyArray<mixed>): number {
 tupleLength([1,2,3]);
 tupleLength(["a", "b", "c"]);
 // Arrays can flow to $ReadOnlyArray
-tupleLength(([1, 2, 3]: Array<number>));
+tupleLength([1, 2, 3] as Array<number>);
 // Tuple types can flow to $ReadOnlyArray
-tupleLength(([1,2,3]: [1,2,3]));
+tupleLength([1,2,3] as [1,2,3]);
 // $ReadOnlyArray can flow to $ReadOnlyArray
-tupleLength(([1,2,3]: $ReadOnlyArray<number>));
+tupleLength([1,2,3] as $ReadOnlyArray<number>);
 
 const elemCheck = (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup; // error
 const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup; // error
@@ -24,7 +24,7 @@ function foo1(x: [1,2]): string { return x.length; } // error
 function foo2(tup: [1,2], arr: Array<number>): void {
   tup.forEach((value, index, readOnlyRef) => {
     readOnlyRef.push(123); // error
-    (readOnlyRef[0]: 1); // error
+    readOnlyRef[0] as 1; // error
   });
 
   arr.forEach((value, index, writeableRef) => {

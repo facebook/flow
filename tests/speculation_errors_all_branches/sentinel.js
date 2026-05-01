@@ -8,5 +8,5 @@ type X =
   | {type: 'B', p: string}
   | {type: 'C', p: boolean};
 
-({type: 'A', p: 'foo'}: X);
-({type: 'D'}: X);
+({type: 'A', p: 'foo'}) as X;
+({type: 'D'}) as X;

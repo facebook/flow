@@ -1,11 +1,11 @@
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:50:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:50:1
 
 Cannot cast `cft` to `I_Function_this` because in property `x` > the `this` parameter: `C_Function_this` [1] is
 incompatible with `I_Function_this` [2]. [incompatible-type]
 
-   class_interface_subtyping.js:50:2
-   50| (cft : I_Function_this); // error, contravariant
-        ^^^
+   class_interface_subtyping.js:50:1
+   50| cft as I_Function_this; // error, contravariant
+       ^^^
 
 References:
    class_interface_subtyping.js:24:18
@@ -16,14 +16,14 @@ References:
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:51:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:51:1
 
 Cannot cast `cft` to `I_Method_this` because in property `x` > the `this` parameter: `C_Function_this` [1] is
 incompatible with `I_Method_this` [2]. [incompatible-type]
 
-   class_interface_subtyping.js:51:2
-   51| (cft : I_Method_this); // error, contravariant
-        ^^^
+   class_interface_subtyping.js:51:1
+   51| cft as I_Method_this; // error, contravariant
+       ^^^
 
 References:
    class_interface_subtyping.js:24:18
@@ -34,14 +34,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:52:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:52:1
 
 Cannot cast `cft` to `I_Function_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
 incompatible with `unknown` [2]. [incompatible-type]
 
-   class_interface_subtyping.js:52:2
-   52| (cft : I_Function_mixed); // error, contravariant
-        ^^^
+   class_interface_subtyping.js:52:1
+   52| cft as I_Function_mixed; // error, contravariant
+       ^^^
 
 References:
    class_interface_subtyping.js:24:18
@@ -52,14 +52,14 @@ References:
                         ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:53:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:53:1
 
 Cannot cast `cft` to `I_Method_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
 incompatible with `unknown` [2]. [incompatible-type]
 
-   class_interface_subtyping.js:53:2
-   53| (cft : I_Method_mixed); // error, contravariant
-        ^^^
+   class_interface_subtyping.js:53:1
+   53| cft as I_Method_mixed; // error, contravariant
+       ^^^
 
 References:
    class_interface_subtyping.js:24:18
@@ -70,14 +70,14 @@ References:
                     ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:56:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:56:1
 
 Cannot cast `cmt` to `I_Function_this` because in property `x` > the `this` parameter: function [1] cannot be unbound
 from the context [2] where it was defined. [method-unbinding]
 
-   class_interface_subtyping.js:56:2
-   56| (cmt : I_Function_this); // error, unbound method
-        ^^^
+   class_interface_subtyping.js:56:1
+   56| cmt as I_Function_this; // error, unbound method
+       ^^^
 
 References:
    class_interface_subtyping.js:28:5
@@ -88,14 +88,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:58:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:58:1
 
 Cannot cast `cmt` to `I_Function_mixed` because in property `x` > the `this` parameter: function [1] cannot be unbound
 from the context [2] where it was defined. [method-unbinding]
 
-   class_interface_subtyping.js:58:2
-   58| (cmt : I_Function_mixed); // error, unbound method
-        ^^^
+   class_interface_subtyping.js:58:1
+   58| cmt as I_Function_mixed; // error, unbound method
+       ^^^
 
 References:
    class_interface_subtyping.js:28:5
@@ -106,14 +106,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:60:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:60:1
 
 Cannot cast `cmt` to `I_Function_empty` because in property `x` > the `this` parameter: function [1] cannot be unbound
 from the context [2] where it was defined. [method-unbinding]
 
-   class_interface_subtyping.js:60:2
-   60| (cmt : I_Function_empty); // error, unbound method
-        ^^^
+   class_interface_subtyping.js:60:1
+   60| cmt as I_Function_empty; // error, unbound method
+       ^^^
 
 References:
    class_interface_subtyping.js:28:5
@@ -124,14 +124,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:68:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:68:1
 
 Cannot cast `cmm` to `I_Function_this` because in property `x` > the `this` parameter: function [1] cannot be unbound
 from the context [2] where it was defined. [method-unbinding]
 
-   class_interface_subtyping.js:68:2
-   68| (cmm : I_Function_this); // error, unbound method
-        ^^^
+   class_interface_subtyping.js:68:1
+   68| cmm as I_Function_this; // error, unbound method
+       ^^^
 
 References:
    class_interface_subtyping.js:36:5
@@ -142,14 +142,14 @@ References:
                     ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:70:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:70:1
 
 Cannot cast `cmm` to `I_Function_mixed` because in property `x` > the `this` parameter: function [1] cannot be unbound
 from the context [2] where it was defined. [method-unbinding]
 
-   class_interface_subtyping.js:70:2
-   70| (cmm : I_Function_mixed); // error, unbound method
-        ^^^
+   class_interface_subtyping.js:70:1
+   70| cmm as I_Function_mixed; // error, unbound method
+       ^^^
 
 References:
    class_interface_subtyping.js:36:5
@@ -160,14 +160,14 @@ References:
                     ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:72:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:72:1
 
 Cannot cast `cmm` to `I_Function_empty` because in property `x` > the `this` parameter: function [1] cannot be unbound
 from the context [2] where it was defined. [method-unbinding]
 
-   class_interface_subtyping.js:72:2
-   72| (cmm : I_Function_empty); // error, unbound method
-        ^^^
+   class_interface_subtyping.js:72:1
+   72| cmm as I_Function_empty; // error, unbound method
+       ^^^
 
 References:
    class_interface_subtyping.js:36:5
@@ -178,14 +178,14 @@ References:
                     ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:74:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:74:1
 
 Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `I_Function_this` [2]. [incompatible-type]
 
-   class_interface_subtyping.js:74:2
-   74| (cfe : I_Function_this); // error, contravariant
-        ^^^
+   class_interface_subtyping.js:74:1
+   74| cfe as I_Function_this; // error, contravariant
+       ^^^
 
 References:
    class_interface_subtyping.js:40:18
@@ -196,14 +196,14 @@ References:
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:75:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:75:1
 
 Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `I_Method_this` [2]. [incompatible-type]
 
-   class_interface_subtyping.js:75:2
-   75| (cfe : I_Method_this); // error, contravariant
-        ^^^
+   class_interface_subtyping.js:75:1
+   75| cfe as I_Method_this; // error, contravariant
+       ^^^
 
 References:
    class_interface_subtyping.js:40:18
@@ -214,14 +214,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:76:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:76:1
 
 Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
-   class_interface_subtyping.js:76:2
-   76| (cfe : I_Function_mixed); // error, contravariant
-        ^^^
+   class_interface_subtyping.js:76:1
+   76| cfe as I_Function_mixed; // error, contravariant
+       ^^^
 
 References:
    class_interface_subtyping.js:40:18
@@ -232,14 +232,14 @@ References:
                         ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- class_interface_subtyping.js:77:2
+Error -------------------------------------------------------------------------------- class_interface_subtyping.js:77:1
 
 Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
-   class_interface_subtyping.js:77:2
-   77| (cfe : I_Method_mixed); // error, contravariant
-        ^^^
+   class_interface_subtyping.js:77:1
+   77| cfe as I_Method_mixed; // error, contravariant
+       ^^^
 
 References:
    class_interface_subtyping.js:40:18
@@ -495,37 +495,37 @@ References:
                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- class_poly_method.js:19:2
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:19:1
 
 Cannot cast `n.method()` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   class_poly_method.js:19:2
-   19| (n.method() : string); // error (number incompatible with string)
-        ^^^^^^^^^^
+   class_poly_method.js:19:1
+   19| n.method() as string; // error (number incompatible with string)
+       ^^^^^^^^^^
 
 References:
    class_poly_method.js:15:15
    15| let n = new A<number>(3);
                      ^^^^^^ [1]
    class_poly_method.js:19:15
-   19| (n.method() : string); // error (number incompatible with string)
+   19| n.method() as string; // error (number incompatible with string)
                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- class_poly_method.js:21:2
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:21:1
 
 Cannot cast `s.method()` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   class_poly_method.js:21:2
-   21| (s.method() : number); // error (number incompatible with string)
-        ^^^^^^^^^^
+   class_poly_method.js:21:1
+   21| s.method() as number; // error (number incompatible with string)
+       ^^^^^^^^^^
 
 References:
    class_poly_method.js:16:15
    16| let s = new A<string>("");
                      ^^^^^^ [1]
    class_poly_method.js:21:15
-   21| (s.method() : number); // error (number incompatible with string)
+   21| s.method() as number; // error (number incompatible with string)
                      ^^^^^^ [2]
 
 
@@ -595,14 +595,14 @@ References:
                        ^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:54:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:54:1
 
 Cannot cast `cft` to `I_Function_this` because in property `x` > the `this` parameter: `C_Function_this` [1] is
 incompatible with `I_Function_this` [2]. [incompatible-type]
 
-   declare_class_interface_subtyping.js:54:2
-   54| (cft : I_Function_this); // error, contravariant
-        ^^^
+   declare_class_interface_subtyping.js:54:1
+   54| cft as I_Function_this; // error, contravariant
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:24:18
@@ -613,14 +613,14 @@ References:
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:55:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:55:1
 
 Cannot cast `cft` to `I_Method_this` because in property `x` > the `this` parameter: `C_Function_this` [1] is
 incompatible with `I_Method_this` [2]. [incompatible-type]
 
-   declare_class_interface_subtyping.js:55:2
-   55| (cft : I_Method_this); // error, contravariant
-        ^^^
+   declare_class_interface_subtyping.js:55:1
+   55| cft as I_Method_this; // error, contravariant
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:24:18
@@ -631,14 +631,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:56:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:56:1
 
 Cannot cast `cft` to `I_Function_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
 incompatible with `unknown` [2]. [incompatible-type]
 
-   declare_class_interface_subtyping.js:56:2
-   56| (cft : I_Function_mixed); // error, contravariant
-        ^^^
+   declare_class_interface_subtyping.js:56:1
+   56| cft as I_Function_mixed; // error, contravariant
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:24:18
@@ -649,14 +649,14 @@ References:
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:57:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:57:1
 
 Cannot cast `cft` to `I_Method_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
 incompatible with `unknown` [2]. [incompatible-type]
 
-   declare_class_interface_subtyping.js:57:2
-   57| (cft : I_Method_mixed); // error, contravariant
-        ^^^
+   declare_class_interface_subtyping.js:57:1
+   57| cft as I_Method_mixed; // error, contravariant
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:24:18
@@ -667,14 +667,14 @@ References:
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:60:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:60:1
 
 Cannot cast `cmt` to `I_Function_this` because in property `x` > the `this` parameter: function type [1] cannot be
 unbound from the context [2] where it was defined. [method-unbinding]
 
-   declare_class_interface_subtyping.js:60:2
-   60| (cmt : I_Function_this); // error, unbound method
-        ^^^
+   declare_class_interface_subtyping.js:60:1
+   60| cmt as I_Function_this; // error, unbound method
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:28:5
@@ -685,14 +685,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:62:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:62:1
 
 Cannot cast `cmt` to `I_Function_mixed` because in property `x` > the `this` parameter: function type [1] cannot be
 unbound from the context [2] where it was defined. [method-unbinding]
 
-   declare_class_interface_subtyping.js:62:2
-   62| (cmt : I_Function_mixed); // error, unbound method
-        ^^^
+   declare_class_interface_subtyping.js:62:1
+   62| cmt as I_Function_mixed; // error, unbound method
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:28:5
@@ -703,14 +703,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:64:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:64:1
 
 Cannot cast `cmt` to `I_Function_empty` because in property `x` > the `this` parameter: function type [1] cannot be
 unbound from the context [2] where it was defined. [method-unbinding]
 
-   declare_class_interface_subtyping.js:64:2
-   64| (cmt : I_Function_empty); // error, unbound method
-        ^^^
+   declare_class_interface_subtyping.js:64:1
+   64| cmt as I_Function_empty; // error, unbound method
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:28:5
@@ -721,14 +721,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:72:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:72:1
 
 Cannot cast `cmm` to `I_Function_this` because in property `x` > the `this` parameter: function type [1] cannot be
 unbound from the context [2] where it was defined. [method-unbinding]
 
-   declare_class_interface_subtyping.js:72:2
-   72| (cmm : I_Function_this); // error, unbound method
-        ^^^
+   declare_class_interface_subtyping.js:72:1
+   72| cmm as I_Function_this; // error, unbound method
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:36:5
@@ -739,14 +739,14 @@ References:
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:74:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:74:1
 
 Cannot cast `cmm` to `I_Function_mixed` because in property `x` > the `this` parameter: function type [1] cannot be
 unbound from the context [2] where it was defined. [method-unbinding]
 
-   declare_class_interface_subtyping.js:74:2
-   74| (cmm : I_Function_mixed); // error, unbound method
-        ^^^
+   declare_class_interface_subtyping.js:74:1
+   74| cmm as I_Function_mixed; // error, unbound method
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:36:5
@@ -757,14 +757,14 @@ References:
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:76:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:76:1
 
 Cannot cast `cmm` to `I_Function_empty` because in property `x` > the `this` parameter: function type [1] cannot be
 unbound from the context [2] where it was defined. [method-unbinding]
 
-   declare_class_interface_subtyping.js:76:2
-   76| (cmm : I_Function_empty); // error, unbound method
-        ^^^
+   declare_class_interface_subtyping.js:76:1
+   76| cmm as I_Function_empty; // error, unbound method
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:36:5
@@ -775,14 +775,14 @@ References:
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:78:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:78:1
 
 Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `I_Function_this` [2]. [incompatible-type]
 
-   declare_class_interface_subtyping.js:78:2
-   78| (cfe : I_Function_this); // error, contravariant
-        ^^^
+   declare_class_interface_subtyping.js:78:1
+   78| cfe as I_Function_this; // error, contravariant
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:40:18
@@ -793,14 +793,14 @@ References:
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:79:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:79:1
 
 Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `I_Method_this` [2]. [incompatible-type]
 
-   declare_class_interface_subtyping.js:79:2
-   79| (cfe : I_Method_this); // error, contravariant
-        ^^^
+   declare_class_interface_subtyping.js:79:1
+   79| cfe as I_Method_this; // error, contravariant
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:40:18
@@ -811,14 +811,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:80:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:80:1
 
 Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
-   declare_class_interface_subtyping.js:80:2
-   80| (cfe : I_Function_mixed); // error, contravariant
-        ^^^
+   declare_class_interface_subtyping.js:80:1
+   80| cfe as I_Function_mixed; // error, contravariant
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:40:18
@@ -829,14 +829,14 @@ References:
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:81:2
+Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:81:1
 
 Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
-   declare_class_interface_subtyping.js:81:2
-   81| (cfe : I_Method_mixed); // error, contravariant
-        ^^^
+   declare_class_interface_subtyping.js:81:1
+   81| cfe as I_Method_mixed; // error, contravariant
+       ^^^
 
 References:
    declare_class_interface_subtyping.js:40:18
@@ -1035,7 +1035,7 @@ Cannot call `myFun.apply` because in the `this` parameter > property `prop`: num
 boolean [2]. [incompatible-type]
 
    declare_function.js:13:1
-   13| myFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
+   13| myFun.apply({prop: true}, [] as Array<number>); // Error - boolean ~> number
        ^^^^^
 
 References:
@@ -1043,7 +1043,7 @@ References:
     1| declare function myFun(this: {+prop: number}): string;
                                             ^^^^^^ [1]
    declare_function.js:13:20
-   13| myFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
+   13| myFun.apply({prop: true}, [] as Array<number>); // Error - boolean ~> number
                           ^^^^ [2]
 
 
@@ -1086,7 +1086,7 @@ Cannot call `myPolyFun.apply` because in the `this` parameter > property `prop`:
 boolean [2]. [incompatible-type]
 
    declare_function.js:16:1
-   16| myPolyFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
+   16| myPolyFun.apply({prop: true}, [] as Array<number>); // Error - boolean ~> number
        ^^^^^^^^^
 
 References:
@@ -1094,7 +1094,7 @@ References:
     2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
                                                    ^^^^^^ [1]
    declare_function.js:16:24
-   16| myPolyFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
+   16| myPolyFun.apply({prop: true}, [] as Array<number>); // Error - boolean ~> number
                               ^^^^ [2]
 
 
@@ -1246,13 +1246,13 @@ References:
                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:15:2
+Error -------------------------------------------------------------------------------------------- function_type.js:15:1
 
 Cannot cast `y` to `F` because in type argument `T` [1]: number [2] is incompatible with string [3]. [incompatible-type]
 
-   function_type.js:15:2
-   15| (y : F<string>); // error: number incompatible with string
-        ^
+   function_type.js:15:1
+   15| y as F<string>; // error: number incompatible with string
+       ^
 
 References:
    function_type.js:8:8
@@ -1262,52 +1262,52 @@ References:
    10| declare var y : F<number>;
                          ^^^^^^ [2]
    function_type.js:15:8
-   15| (y : F<string>); // error: number incompatible with string
+   15| y as F<string>; // error: number incompatible with string
               ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:20:2
+Error -------------------------------------------------------------------------------------------- function_type.js:20:1
 
 Cannot cast `z.bind(...)()` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   function_type.js:20:2
-   20| (z.bind(3)() : string); // error: number incompatible with string
-        ^^^^^^^^^^^
+   function_type.js:20:1
+   20| z.bind(3)() as string; // error: number incompatible with string
+       ^^^^^^^^^^^
 
 References:
-   function_type.js:20:9
-   20| (z.bind(3)() : string); // error: number incompatible with string
-               ^ [1]
+   function_type.js:20:8
+   20| z.bind(3)() as string; // error: number incompatible with string
+              ^ [1]
    function_type.js:20:16
-   20| (z.bind(3)() : string); // error: number incompatible with string
+   20| z.bind(3)() as string; // error: number incompatible with string
                       ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:21:2
+Error -------------------------------------------------------------------------------------------- function_type.js:21:1
 
 Cannot cast `z.bind(...)()` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   function_type.js:21:2
-   21| (z.bind("")() : number); // error: number incompatible with string
-        ^^^^^^^^^^^^
+   function_type.js:21:1
+   21| z.bind("")() as number; // error: number incompatible with string
+       ^^^^^^^^^^^^
 
 References:
-   function_type.js:21:9
-   21| (z.bind("")() : number); // error: number incompatible with string
-               ^^ [1]
+   function_type.js:21:8
+   21| z.bind("")() as number; // error: number incompatible with string
+              ^^ [1]
    function_type.js:21:17
-   21| (z.bind("")() : number); // error: number incompatible with string
+   21| z.bind("")() as number; // error: number incompatible with string
                        ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:30:2
+Error -------------------------------------------------------------------------------------------- function_type.js:30:1
 
 Cannot cast `x` to `BotFn` because in the `this` parameter: number [1] is incompatible with `unknown` [2].
 [incompatible-type]
 
-   function_type.js:30:2
-   30| (x : BotFn); // error
-        ^
+   function_type.js:30:1
+   30| x as BotFn; // error
+       ^
 
 References:
    function_type.js:2:25
@@ -1318,14 +1318,14 @@ References:
                             ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- function_type.js:30:2
+Error -------------------------------------------------------------------------------------------- function_type.js:30:1
 
 Cannot cast `x` to `BotFn` because in the return value: undefined [1] is incompatible with empty [2].
 [incompatible-type]
 
-   function_type.js:30:2
-   30| (x : BotFn); // error
-        ^
+   function_type.js:30:1
+   30| x as BotFn; // error
+       ^
 
 References:
    function_type.js:2:36
@@ -1594,14 +1594,14 @@ References:
                                       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:35:2
+Error ------------------------------------------------------------------------------------------ mixed_inference.js:35:1
 
 Cannot cast `foo` to `typeof bar2` because in the `this` parameter: number [1] is incompatible with implicit `this`
 parameter of function [2]. [incompatible-type]
 
-   mixed_inference.js:35:2
-   35| (foo : typeof bar2); // mixed incompatible with number
-        ^^^
+   mixed_inference.js:35:1
+   35| foo as typeof bar2; // mixed incompatible with number
+       ^^^
 
 References:
    mixed_inference.js:27:21
@@ -1612,14 +1612,14 @@ References:
                     ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:36:2
+Error ------------------------------------------------------------------------------------------ mixed_inference.js:36:1
 
 Cannot cast `foo` to `typeof baz2` because in the `this` parameter: number [1] is incompatible with implicit `this`
 parameter of function [2]. [incompatible-type]
 
-   mixed_inference.js:36:2
-   36| (foo : typeof baz2); // mixed incompatible with number
-        ^^^
+   mixed_inference.js:36:1
+   36| foo as typeof baz2; // mixed incompatible with number
+       ^^^
 
 References:
    mixed_inference.js:27:21
@@ -1630,14 +1630,14 @@ References:
                            ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:37:2
+Error ------------------------------------------------------------------------------------------ mixed_inference.js:37:1
 
 Cannot cast `foo` to `typeof o2.m` because in the `this` parameter: number [1] is incompatible with implicit `this`
 parameter of function [2]. [incompatible-type]
 
-   mixed_inference.js:37:2
-   37| (foo : typeof o2.m); // mixed incompatible with number
-        ^^^
+   mixed_inference.js:37:1
+   37| foo as typeof o2.m; // mixed incompatible with number
+       ^^^
 
 References:
    mixed_inference.js:27:21
@@ -1648,14 +1648,14 @@ References:
                    ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:38:2
+Error ------------------------------------------------------------------------------------------ mixed_inference.js:38:1
 
 Cannot cast `foo` to `typeof o2.n` because in the `this` parameter: number [1] is incompatible with implicit `this`
 parameter of function [2]. [incompatible-type]
 
-   mixed_inference.js:38:2
-   38| (foo : typeof o2.n); // mixed incompatible with number
-        ^^^
+   mixed_inference.js:38:1
+   38| foo as typeof o2.n; // mixed incompatible with number
+       ^^^
 
 References:
    mixed_inference.js:27:21
@@ -1672,7 +1672,7 @@ Cannot get `i.m` because typeof-annotation `i.m` [1] cannot be unbound from the 
 [method-unbinding]
 
    mixed_inference.js:52:17
-   52| (foo : typeof i.m); // method-unbinding, this type becomes any, so no more this typing errors
+   52| foo as typeof i.m; // method-unbinding, this type becomes any, so no more this typing errors
                        ^ [1]
 
 References:
@@ -1681,15 +1681,15 @@ References:
            ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:55:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:55:1
 
 Cannot cast `cft` to `I_Function_this` because in property `x` > the `this` parameter: `I_Function_this` [1] is not a
 subtype of `C_Function_this` [2]. Class instances are not subtypes of object types; consider rewriting
 `C_Function_this` [2] as an interface. [class-object-subtyping]
 
-   object_interface_subtyping.js:55:2
-   55| (cft : I_Function_this); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:55:1
+   55| cft as I_Function_this; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:2:18
@@ -1700,16 +1700,16 @@ References:
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:56:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:56:1
 
 Cannot cast `cft` to `I_Method_this` because: [method-unbinding]
  - in property `x` > the `this` parameter: `I_Method_this` [1] is incompatible with `C_Function_this` [2]
     - in property `x` > the `this` parameter: function type [3] cannot be unbound from the context [1] where it was
       defined
 
-   object_interface_subtyping.js:56:2
-   56| (cft : I_Method_this); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:56:1
+   56| cft as I_Method_this; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:6:14
@@ -1723,15 +1723,15 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:56:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:56:1
 
 Cannot cast `cft` to `I_Method_this` because in property `x` > the `this` parameter: `I_Method_this` [1] is not a
 subtype of `C_Function_this` [2]. Class instances are not subtypes of object types; consider rewriting
 `C_Function_this` [2] as an interface. [class-object-subtyping]
 
-   object_interface_subtyping.js:56:2
-   56| (cft : I_Method_this); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:56:1
+   56| cft as I_Method_this; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:6:14
@@ -1742,14 +1742,14 @@ References:
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:57:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:57:1
 
 Cannot cast `cft` to `I_Function_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
 incompatible with `unknown` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:57:2
-   57| (cft : I_Function_mixed); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:57:1
+   57| cft as I_Function_mixed; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:24:18
@@ -1760,14 +1760,14 @@ References:
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:58:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:58:1
 
 Cannot cast `cft` to `I_Method_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
 incompatible with `unknown` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:58:2
-   58| (cft : I_Method_mixed); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:58:1
+   58| cft as I_Method_mixed; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:24:18
@@ -1778,15 +1778,15 @@ References:
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:61:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:61:1
 
 Cannot cast `cmt` to `I_Function_this` because in property `x` > the `this` parameter: `I_Function_this` [1] is not a
 subtype of `C_Method_this` [2]. Class instances are not subtypes of object types; consider rewriting `C_Method_this` [2]
 as an interface. [class-object-subtyping]
 
-   object_interface_subtyping.js:61:2
-   61| (cmt : I_Function_this);  // error, contravariant
-        ^^^
+   object_interface_subtyping.js:61:1
+   61| cmt as I_Function_this;  // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:2:18
@@ -1797,16 +1797,16 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:62:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:62:1
 
 Cannot cast `cmt` to `I_Method_this` because: [method-unbinding]
  - in property `x` > the `this` parameter: `I_Method_this` [1] is incompatible with `C_Method_this` [2]
     - in property `x` > the `this` parameter: function type [3] cannot be unbound from the context [1] where it was
       defined
 
-   object_interface_subtyping.js:62:2
-   62| (cmt : I_Method_this);  // error, contravariant
-        ^^^
+   object_interface_subtyping.js:62:1
+   62| cmt as I_Method_this;  // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:6:14
@@ -1820,15 +1820,15 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:62:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:62:1
 
 Cannot cast `cmt` to `I_Method_this` because in property `x` > the `this` parameter: `I_Method_this` [1] is not a
 subtype of `C_Method_this` [2]. Class instances are not subtypes of object types; consider rewriting `C_Method_this` [2]
 as an interface. [class-object-subtyping]
 
-   object_interface_subtyping.js:62:2
-   62| (cmt : I_Method_this);  // error, contravariant
-        ^^^
+   object_interface_subtyping.js:62:1
+   62| cmt as I_Method_this;  // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:6:14
@@ -1839,14 +1839,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:63:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:63:1
 
 Cannot cast `cmt` to `I_Function_mixed` because in property `x` > the `this` parameter: `C_Method_this` [1] is
 incompatible with `unknown` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:63:2
-   63| (cmt : I_Function_mixed);  // error, contravariant
-        ^^^
+   object_interface_subtyping.js:63:1
+   63| cmt as I_Function_mixed;  // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:28:14
@@ -1857,14 +1857,14 @@ References:
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:64:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:64:1
 
 Cannot cast `cmt` to `I_Method_mixed` because in property `x` > the `this` parameter: `C_Method_this` [1] is
 incompatible with `unknown` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:64:2
-   64| (cmt : I_Method_mixed);  // error, contravariant
-        ^^^
+   object_interface_subtyping.js:64:1
+   64| cmt as I_Method_mixed;  // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:28:14
@@ -1875,14 +1875,14 @@ References:
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:79:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:79:1
 
 Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `I_Function_this` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:79:2
-   79| (cfe : I_Function_this);  // error, contravariant
-        ^^^
+   object_interface_subtyping.js:79:1
+   79| cfe as I_Function_this;  // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:40:18
@@ -1893,14 +1893,14 @@ References:
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:80:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:80:1
 
 Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `I_Method_this` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:80:2
-   80| (cfe : I_Method_this); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:80:1
+   80| cfe as I_Method_this; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:40:18
@@ -1911,14 +1911,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:81:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:81:1
 
 Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:81:2
-   81| (cfe : I_Function_mixed); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:81:1
+   81| cfe as I_Function_mixed; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:40:18
@@ -1929,14 +1929,14 @@ References:
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:82:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:82:1
 
 Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:82:2
-   82| (cfe : I_Method_mixed); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:82:1
+   82| cfe as I_Method_mixed; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:40:18
@@ -1947,14 +1947,14 @@ References:
                     ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:85:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:85:1
 
 Cannot cast `cme` to `I_Function_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `I_Function_this` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:85:2
-   85| (cme : I_Function_this); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:85:1
+   85| cme as I_Function_this; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:44:18
@@ -1965,14 +1965,14 @@ References:
                         ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:86:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:86:1
 
 Cannot cast `cme` to `I_Method_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `I_Method_this` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:86:2
-   86| (cme : I_Method_this); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:86:1
+   86| cme as I_Method_this; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:44:18
@@ -1983,14 +1983,14 @@ References:
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:87:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:87:1
 
 Cannot cast `cme` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:87:2
-   87| (cme : I_Function_mixed); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:87:1
+   87| cme as I_Function_mixed; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:44:18
@@ -2001,14 +2001,14 @@ References:
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:88:2
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:88:1
 
 Cannot cast `cme` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
-   object_interface_subtyping.js:88:2
-   88| (cme : I_Method_mixed); // error, contravariant
-        ^^^
+   object_interface_subtyping.js:88:1
+   88| cme as I_Method_mixed; // error, contravariant
+       ^^^
 
 References:
    object_interface_subtyping.js:44:18
@@ -2144,55 +2144,55 @@ References:
                       ^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:55:2
+Error ----------------------------------------------------------------------------------------------------- test.js:55:1
 
 Cannot cast `baz.bind(...)()` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:55:2
-   55| (baz.bind({f : 3})() : string); // error : number incompatible with string
-        ^^^^^^^^^^^^^^^^^^^
+   test.js:55:1
+   55| baz.bind({f : 3})() as string; // error : number incompatible with string
+       ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:55:16
-   55| (baz.bind({f : 3})() : string); // error : number incompatible with string
-                      ^ [1]
+   test.js:55:15
+   55| baz.bind({f : 3})() as string; // error : number incompatible with string
+                     ^ [1]
    test.js:55:24
-   55| (baz.bind({f : 3})() : string); // error : number incompatible with string
+   55| baz.bind({f : 3})() as string; // error : number incompatible with string
                               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:56:2
+Error ----------------------------------------------------------------------------------------------------- test.js:56:1
 
 Cannot cast `baz.bind(...)()` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:56:2
-   56| (baz.bind({f : ""})() : number); // error : number incompatible with string
-        ^^^^^^^^^^^^^^^^^^^^
+   test.js:56:1
+   56| baz.bind({f : ""})() as number; // error : number incompatible with string
+       ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:56:16
-   56| (baz.bind({f : ""})() : number); // error : number incompatible with string
-                      ^^ [1]
+   test.js:56:15
+   56| baz.bind({f : ""})() as number; // error : number incompatible with string
+                     ^^ [1]
    test.js:56:25
-   56| (baz.bind({f : ""})() : number); // error : number incompatible with string
+   56| baz.bind({f : ""})() as number; // error : number incompatible with string
                                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:62:2
+Error ----------------------------------------------------------------------------------------------------- test.js:62:1
 
 Cannot cast `baz2.bind(...)(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:62:2
-   62| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   test.js:62:1
+   62| (baz2 as (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") as string; // error : number incompatible with string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:62:43
-   62| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
-                                                 ^^^^^^^^ [1]
-   test.js:62:67
-   62| ((baz2: (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") : string); // error : number incompatible with string
-                                                                         ^^^^^^ [2]
+   test.js:62:44
+   62| (baz2 as (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") as string; // error : number incompatible with string
+                                                  ^^^^^^^^ [1]
+   test.js:62:69
+   62| (baz2 as (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") as string; // error : number incompatible with string
+                                                                           ^^^^^^ [2]
 
 
 

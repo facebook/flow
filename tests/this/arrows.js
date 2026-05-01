@@ -7,13 +7,13 @@ class C {
 var c = new C;
 var f = c.foo();
 var i = f(); // OK
-(i: C); // OK
+i as C; // OK
 
 class D extends C { }
 var d = new D;
 var g = d.foo();
 var j = g(); // OK
-(j: D); // error, since return type of bar is C, not the type of `this`
+j as D; // error, since return type of bar is C, not the type of `this`
 
 class E {
   foo(x: number) { }

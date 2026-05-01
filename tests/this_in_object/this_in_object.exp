@@ -367,12 +367,12 @@ since these methods may be unbound and rebound. Consider replacing the reference
 or rewriting the object as a class. [object-this-reference]
 
    test.js:89:60
-   89| Object.defineProperties(({}: {foo?: () => void}), { foo() {this} }); // error
+   89| Object.defineProperties({} as {foo?: () => void}, { foo() {this} }); // error
                                                                   ^^^^
 
 References:
    test.js:89:53
-   89| Object.defineProperties(({}: {foo?: () => void}), { foo() {this} }); // error
+   89| Object.defineProperties({} as {foo?: () => void}, { foo() {this} }); // error
                                                            ^^^^^^^^^^^^ [1]
 
 

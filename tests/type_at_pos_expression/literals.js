@@ -19,7 +19,7 @@ type U = "A" | 1 | 1.01 | true;
 const f1 = (x: "A" | "B") => x;
 
 const o1 = { f: "f" };
-const o2 = { f: ("f": "f") };
+const o2 = { f: "f" as "f" };
 
 const f2 = (x: "A" | "B") => x;
 f2("A");

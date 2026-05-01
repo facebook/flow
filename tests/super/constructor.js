@@ -116,8 +116,8 @@ class L extends L_ {
     return x; // error: boolean ~> void
   }
 }
-(new L_(): L_);
-(new L(): L);
+new L_() as L_;
+new L() as L;
 
 class M_ {
   constructor() {
@@ -129,8 +129,8 @@ class M extends M_ {
     return super(); // OK
   }
 }
-(new M_(): M_);
-(new M(): M);
+new M_() as M_;
+new M() as M;
 
 class N_ {
   constructor(): this { // error: this ~> void
@@ -143,8 +143,8 @@ class N extends N_ {
     return super(); // error: N ~> void
   }
 }
-(new N_(): N_);
-(new N(): N);
+new N_() as N_;
+new N() as N;
 
 // super() inside nested function should not count for the enclosing constructor
 class O extends A {

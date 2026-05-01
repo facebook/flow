@@ -9,13 +9,13 @@ function foo2(x: Array<number>): [number, ?number] {
 // Array literals with known elements can flow to tuples
 {
   const arr = [1,2,3] as const;
-  (arr: $ReadOnly<[1,2,3]>); // ok
-  (arr: $ReadOnly<[1,2]>); // error
-  (arr: $ReadOnly<[1,2,3,4]>); // error
+  arr as $ReadOnly<[1,2,3]>; // ok
+  arr as $ReadOnly<[1,2]>; // error
+  arr as $ReadOnly<[1,2,3,4]>; // error
 }
 
 // Fresh array -> tuple can subtype
-([123]: [number | string]); // ok
+[123] as [number | string]; // ok
 
 // Array literals without known elements cannot flow to tuples
 function foo3(arr: Array<number>): [number, number] { return arr; } // error
@@ -27,9 +27,9 @@ function foo4(arr: [1,2]): Array<number> { return arr; } // error
 {
   const tup: [1,2,3,4] = [1,2,3,4];
   const [a, b, ...rest] = tup;
-  (a: 10); // error
-  (b: 20); // error
-  (rest: [3,40]); // error
+  a as 10; // error
+  b as 20; // error
+  rest as [3,40]; // error
 }
 
 // instanceof Array works for tuples

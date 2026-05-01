@@ -3,11 +3,11 @@
 import {b1} from './B1';
 import {b3} from './B3';
 
-(b1: number);
-(b3: number);
+b1 as number;
+b3 as number;
 
 // $FlowFixMe[incompatible-type] -- used suppression in B2.js
-(b1: string);
+b1 as string;
 
 export const b2: number | number = b1;
 

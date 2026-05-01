@@ -26,12 +26,12 @@ function class_test() {
 
   const c = new C();
   if (c.m(x)) {
-    (x: number);
-    (x: string); // error number ~> string
+    x as number;
+    x as string; // error number ~> string
   }
   if (C.s(x)) {
-    (x: number); // error string ~> number
-    (x: string);
+    x as number; // error string ~> number
+    x as string;
   }
 
   // extends checks
@@ -94,13 +94,13 @@ function declare_class_test() {
 
   const c = new C();
   if (c.m(x)) {
-    (x: number);
-    (x: string); // error number ~> string
+    x as number;
+    x as string; // error number ~> string
   }
 
   if (C.s(x)) {
-    (x: number); // error string ~> number
-    (x: string);
+    x as number; // error string ~> number
+    x as string;
   }
 
   class D1 extends C {
@@ -130,7 +130,7 @@ function poly_class_test() {
 
   const p = new P<number>();
   if (p.m(x)) {
-    (x: number);
-    (x: string); // error number ~> string
+    x as number;
+    x as string; // error number ~> string
   }
 }

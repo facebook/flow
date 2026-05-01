@@ -535,33 +535,33 @@ new-array.js:3:15 = {
   "types":{"evaluated":null,"unevaluated":{"type":"class Array<T>"}}
 }
 object-resolution.js:5:2 = {
-  "end":3,
+  "end":2,
   "endline":5,
   "line":5,
   "loc":{
-    "end":{"column":3,"line":5,"offset":67},
+    "end":{"column":2,"line":5,"offset":66},
     "source":"object-resolution.js",
-    "start":{"column":2,"line":5,"offset":65},
+    "start":{"column":1,"line":5,"offset":64},
     "type":"SourceFile"
   },
   "path":"object-resolution.js",
   "reasons":[],
-  "start":2,
+  "start":1,
   "types":{"evaluated":null,"unevaluated":{"type":"{|+p: number|}"}}
 }
 object-resolution.js:10:2 = {
-  "end":5,
+  "end":4,
   "endline":10,
   "line":10,
   "loc":{
-    "end":{"column":5,"line":10,"offset":182},
+    "end":{"column":4,"line":10,"offset":181},
     "source":"object-resolution.js",
-    "start":{"column":2,"line":10,"offset":178},
+    "start":{"column":1,"line":10,"offset":177},
     "type":"SourceFile"
   },
   "path":"object-resolution.js",
   "reasons":[],
-  "start":2,
+  "start":1,
   "types":{
     "evaluated":{"type":"Omit<O2, \"p\">"},
     "unevaluated":{"type":"Omit<O2, keyof O1>"}

@@ -17,4 +17,4 @@ type B<T> = A & {
 
 declare var b: B<any>;
 
-(b: B<any>);
+b as B<any>;

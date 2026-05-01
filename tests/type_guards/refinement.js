@@ -3,8 +3,8 @@ function basic(
   y: unknown,
 ) {
   if (fn(y)) {
-    (y: number); // okay
-    (y: string); // error number ~> string
+    y as number; // okay
+    y as string; // error number ~> string
   }
 }
 
@@ -16,20 +16,20 @@ function nonMaybe(
   x4: ?string,
 ) {
   if (fn(x1)) {
-    (x1: string);
-    (x1: number); // error string ~> number
+    x1 as string;
+    x1 as number; // error string ~> number
   }
   if (fn(x2)) {
-    (x2: string);
-    (x2: number); // error string ~> number
+    x2 as string;
+    x2 as number; // error string ~> number
   }
   if (fn(x3)) {
-    (x3: string);
-    (x3: number); // error string ~> number
+    x3 as string;
+    x3 as number; // error string ~> number
   }
   if (fn(x4)) {
-    (x4: string);
-    (x4: number); // error string ~> number
+    x4 as string;
+    x4 as number; // error string ~> number
   }
 }
 
@@ -57,20 +57,20 @@ function sentinel_simple() {
 
   declare function sentinel_A(x: unknown): x is {tag: 'A', ...};
   if (sentinel_A(x)) {
-      (x: A); // okay A ~> A
-      (x: B); // error A ~> B
+      x as A; // okay A ~> A
+      x as B; // error A ~> B
   }
 
   declare function invalid_sentinel_val(x: unknown): x is {tag: 'C', ...};
   if (invalid_sentinel_val(x)) {
-      (x: A); // okay empty ~> A
-      (x: B); // okay empty ~> B
+      x as A; // okay empty ~> A
+      x as B; // okay empty ~> B
   }
 
   declare function invalid_sentinel_key(x: unknown): x is {tag_: 'A', ...};
   if (invalid_sentinel_key(x)) {
-      (x: A); // error B & {tag_: 'A',...} ~> A
-      (x: B); // error A & {tag_: 'A',...} ~> B
+      x as A; // error B & {tag_: 'A',...} ~> A
+      x as B; // error A & {tag_: 'A',...} ~> B
   }
 }
 
@@ -82,20 +82,20 @@ function sentinel_readonly() {
 
   declare function sentinel_A(x: unknown): x is Readonly<{tag: 'A', ...}>;
   if (sentinel_A(x)) {
-      (x: A); // okay A ~> A
-      (x: B); // error A ~> B
+      x as A; // okay A ~> A
+      x as B; // error A ~> B
   }
 
   declare function invalid_sentinel_val(x: unknown): x is Readonly<{tag: 'C', ...}>;
   if (invalid_sentinel_val(x)) {
-      (x: A); // okay empty ~> A
-      (x: B); // okay empty ~> B
+      x as A; // okay empty ~> A
+      x as B; // okay empty ~> B
   }
 
   declare function invalid_sentinel_key(x: unknown): x is Readonly<{tag_: 'A', ...}>;
   if (invalid_sentinel_key(x)) {
-      (x: A); // error B & {+tag_: 'A',...} ~> A
-      (x: B); // error A & {+tag_: 'A',...} ~> B
+      x as A; // error B & {+tag_: 'A',...} ~> A
+      x as B; // error A & {+tag_: 'A',...} ~> B
   }
 }
 
@@ -107,20 +107,20 @@ function sentinel_multi_tag() {
 
   declare function unknown_sentinel(x: unknown): x is Readonly<{tag: 'C', ...}>;
   if (unknown_sentinel(x)) {
-      (x: A); // error B & {+tag: 'C', ...} ~> A
-      (x: B); // error A & {+tag: 'C', ...} ~> B
+      x as A; // error B & {+tag: 'C', ...} ~> A
+      x as B; // error A & {+tag: 'C', ...} ~> B
   }
 
   declare function sentinel_A_1(x: unknown): x is Readonly<{ tag1: 'A', tag2: 1, ...}>;
   if (sentinel_A_1(x)) {
-      (x: A); // okay A ~> A
-      (x: B); // error A ~> B
+      x as A; // okay A ~> A
+      x as B; // error A ~> B
   }
 
   declare function sentinel_1(x: unknown): x is Readonly<{ tag2: 1, ...}>;
   if (sentinel_1(x)) {
-      (x: A); // error B ~> A
-      (x: B); // error A ~> B
+      x as A; // error B ~> A
+      x as B; // error A ~> B
   }
 }
 
@@ -132,27 +132,27 @@ function negation1() {
   declare var x: number | string;
 
   if (isNumber(x)) {
-    (x: number); // okay
-    (x: string); // error number ~> string
+    x as number; // okay
+    x as string; // error number ~> string
   } else {
-    (x: string); // okay
-    (x: number); // error string ~> number
+    x as string; // okay
+    x as number; // error string ~> number
   }
 
   if (!isNumber(x)) {
-    (x: string); // okay
-    (x: number); // error string ~> number
+    x as string; // okay
+    x as number; // error string ~> number
   } else {
-    (x: string); // error string ~> number
-    (x: number); // okay
+    x as string; // error string ~> number
+    x as number; // okay
   }
 
   if (isNumber(x) || isString(x)) {
-    (x: number); // error string ~> number
-    (x: string); // error number ~> string
+    x as number; // error string ~> number
+    x as string; // error number ~> string
   } else {
-    (x: string); // okay empty ~> string
-    (x: number); // okay empty ~> number
+    x as string; // okay empty ~> string
+    x as number; // okay empty ~> number
   }
 }
 
@@ -162,7 +162,7 @@ function any_input() {
   declare var maybeAny: ?any;
 
   if (isNotMaybe(maybeAny)) {
-    (maybeAny: empty); // okay, we're filtering null and undefined
+    maybeAny as empty; // okay, we're filtering null and undefined
   }
 }
 
@@ -172,7 +172,7 @@ function any_filter() {
   declare var maybeNumber: number;
 
   if (isAny(maybeNumber)) {
-    (maybeNumber: empty); // error number ~> empty
+    maybeNumber as empty; // error number ~> empty
   }
 }
 
@@ -182,7 +182,7 @@ function refine_any_to_type() {
   declare var anyVal: any;
 
   if (isNumber(anyVal)) {
-    (anyVal: empty); // error number ~> empty
+    anyVal as empty; // error number ~> empty
   }
 }
 
@@ -198,8 +198,8 @@ function opaque_types() {
   declare var x: void | Fbt;
 
   if (isTruthy(x)) {
-    (x: Fbt); // okay
-    (x: empty); // error Fbt ~> empty
+    x as Fbt; // okay
+    x as empty; // error Fbt ~> empty
   }
 }
 
@@ -211,7 +211,7 @@ function opaque_types_imported() {
   declare var x: void | OpaqueOrString;
 
   if (isTruthy(x)) {
-    (x: OpaqueOrString); // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
+    x as OpaqueOrString; // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
   }
 }
 
@@ -221,8 +221,8 @@ function union_with_any() {
   declare var x: void | string | any;
 
   if (isTruthy(x)) {
-    (x: string); // okay, type guard filters out void
-    (x: empty); // error string ~> empty
+    x as string; // okay, type guard filters out void
+    x as empty; // error string ~> empty
   }
 }
 
@@ -231,11 +231,11 @@ function one_sided(
   fn: (x: unknown) => implies x is number,
 ) {
   if (fn(value)) {
-    (value: number); // okay
-    (value: string); // error number ~> string
+    value as number; // okay
+    value as string; // error number ~> string
   } else {
-    (value: string); // error number ~> string
-    (value: number); // error string ~> number
+    value as string; // error number ~> string
+    value as number; // error string ~> number
   }
 
   declare class ReadOnlyArray_<+T> {

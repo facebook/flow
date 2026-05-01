@@ -1,25 +1,25 @@
 // No annotation
 try {
 } catch (e) { // OK
-  (e: empty); // OK - is `any`
-  (e: mixed); // OK - is `any`
+  e as empty; // OK - is `any`
+  e as mixed; // OK - is `any`
 }
 
 // `any` annotation
 try {
 } catch (e: any) { // OK
-  (e: empty); // OK - is `any`
-  (e: mixed); // OK - is `any`
+  e as empty; // OK - is `any`
+  e as mixed; // OK - is `any`
 }
 
 // `mixed` annotation
 try {
 } catch (e: mixed) { // OK
-  (e: empty); // ERROR - is `mixed`
-  (e: mixed); // OK - is `mixed`
+  e as empty; // ERROR - is `mixed`
+  e as mixed; // OK - is `mixed`
 
   if (e instanceof Error) { // OK
-    (e: Error); // OK
+    e as Error; // OK
   } else {
     throw e;
   }
@@ -28,11 +28,11 @@ try {
 // `unknown` annotation
 try {
 } catch (e: unknown) { // OK
-  (e: empty); // ERROR - is `unknown`
-  (e: mixed); // OK - is `unknown`
+  e as empty; // ERROR - is `unknown`
+  e as mixed; // OK - is `unknown`
 
   if (e instanceof Error) { // OK
-    (e: Error); // OK
+    e as Error; // OK
   } else {
     throw e;
   }
@@ -41,6 +41,6 @@ try {
 // Invalid annotation
 try {
 } catch (e: Error) { // ERROR
-  (e: empty); // OK - is `any`
-  (e: mixed); // OK - is `any`
+  e as empty; // OK - is `any`
+  e as mixed; // OK - is `any`
 }

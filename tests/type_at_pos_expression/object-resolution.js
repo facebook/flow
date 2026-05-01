@@ -2,12 +2,12 @@
 
 type O = {|p: number|};
 declare var ro: $ReadOnly<O>;
-(ro.p: number);
+ro.p as number;
 
 type O1 = {p: number};
 type O2 = {p: number; q: string};
 declare var diff: Omit<O2, $Keys<O1>>;
-(diff.q: string);
+diff.q as string;
 
 declare var spread: { ...O2 };
-if (spread.q) (spread.q: string);
+if (spread.q) spread.q as string;

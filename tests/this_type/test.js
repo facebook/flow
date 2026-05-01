@@ -27,13 +27,13 @@ class Override extends Base {
 
 class InheritOverride extends Override { }
 
-(new Inherit().foo(): Base);
-(new Inherit().foo(): Inherit); // OK (cf. error above)
-((new Inherit(): Base).foo(): Base);
-(new Override().foo(): Base);
-(new Override().foo(): Override); // OK
-((new Override(): Base).foo(): Base);
+new Inherit().foo() as Base;
+new Inherit().foo() as Inherit; // OK (cf. error above)
+(new Inherit() as Base).foo() as Base;
+new Override().foo() as Base;
+new Override().foo() as Override; // OK
+(new Override() as Base).foo() as Base;
 
-(new InheritOverride().bar_caller(): InheritOverride); // exploits error above
+new InheritOverride().bar_caller() as InheritOverride; // exploits error above
 
-(new Override(): Base).corge(new Base()); // exploits error above
+(new Override() as Base).corge(new Base()); // exploits error above

@@ -6,8 +6,8 @@ class A {
 
 class B extends A {
   static m(): Class<this> {
-    (this: Class<A>);
-    (this: Class<B>);
+    this as Class<A>;
+    this as Class<B>;
     super.m();
     return this;
   }

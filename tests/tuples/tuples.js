@@ -17,12 +17,12 @@ let tests = [
   },
   // very close to 1 toString's to a valid index
   function(t: [number, string]) {
-    (t[1e0]: boolean); // error: boolean !~> string
-    (t[0.9999999999999999999999999999999999999999999]: boolean); // error: boolean !~> string
+    t[1e0] as boolean; // error: boolean !~> string
+    t[0.9999999999999999999999999999999999999999999] as boolean; // error: boolean !~> string
   },
   // very close to 0 toString's to a valid index
   function(t: [number, string]) {
-    (t[56e-13214125]: boolean); // error: boolean !~> number
+    t[56e-13214125] as boolean; // error: boolean !~> number
   },
   // through a variable
   function (t: [number]) {
@@ -32,7 +32,7 @@ let tests = [
   // Make sure tuple length is a singleton.
   function (a: [number]) {
     const a_len = a.length;
-    (a_len: 1);
+    a_len as 1;
   },
   // Return length from a function with mismatched return type.
   function () {
@@ -43,6 +43,6 @@ let tests = [
   function (a: [number]) {
     const a_len = a.length;
     // error: tuple length of 1 !~> number literal `2`
-    (a_len: 2);
+    a_len as 2;
   }
 ];

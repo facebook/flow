@@ -4,4 +4,4 @@
 
 import {b} from './b';
 
-(123: string); // error
+123 as string; // error

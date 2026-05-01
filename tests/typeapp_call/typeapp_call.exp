@@ -12,70 +12,70 @@ References:
                           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:12:2
+Error ----------------------------------------------------------------------------------------------------- call.js:12:1
 
 Cannot cast `cond(...)` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   call.js:12:2
-   12| (cond(test, 0, ""): void); // errors: number|string ~> void
-        ^^^^^^^^^^^^^^^^^
+   call.js:12:1
+   12| cond(test, 0, "") as void; // errors: number|string ~> void
+       ^^^^^^^^^^^^^^^^^
 
 References:
-   call.js:12:13
-   12| (cond(test, 0, ""): void); // errors: number|string ~> void
-                   ^ [1]
-   call.js:12:21
-   12| (cond(test, 0, ""): void); // errors: number|string ~> void
-                           ^^^^ [2]
+   call.js:12:12
+   12| cond(test, 0, "") as void; // errors: number|string ~> void
+                  ^ [1]
+   call.js:12:22
+   12| cond(test, 0, "") as void; // errors: number|string ~> void
+                            ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:12:2
+Error ----------------------------------------------------------------------------------------------------- call.js:12:1
 
 Cannot cast `cond(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   call.js:12:2
-   12| (cond(test, 0, ""): void); // errors: number|string ~> void
-        ^^^^^^^^^^^^^^^^^
+   call.js:12:1
+   12| cond(test, 0, "") as void; // errors: number|string ~> void
+       ^^^^^^^^^^^^^^^^^
 
 References:
-   call.js:12:16
-   12| (cond(test, 0, ""): void); // errors: number|string ~> void
-                      ^^ [1]
-   call.js:12:21
-   12| (cond(test, 0, ""): void); // errors: number|string ~> void
-                           ^^^^ [2]
+   call.js:12:15
+   12| cond(test, 0, "") as void; // errors: number|string ~> void
+                     ^^ [1]
+   call.js:12:22
+   12| cond(test, 0, "") as void; // errors: number|string ~> void
+                            ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:15:2
+Error ----------------------------------------------------------------------------------------------------- call.js:15:1
 
 Cannot cast `cond<...>(...)` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   call.js:15:2
-   15| (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+   call.js:15:1
+   15| cond<number>(test, 0, "") as void; // error: string ~> number, number ~> void
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   call.js:15:7
-   15| (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
-             ^^^^^^ [1]
-   call.js:15:29
-   15| (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
-                                   ^^^^ [2]
+   call.js:15:6
+   15| cond<number>(test, 0, "") as void; // error: string ~> number, number ~> void
+            ^^^^^^ [1]
+   call.js:15:30
+   15| cond<number>(test, 0, "") as void; // error: string ~> number, number ~> void
+                                    ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:15:24
+Error ---------------------------------------------------------------------------------------------------- call.js:15:23
 
 Cannot call `cond` with empty string bound to `b` because string [1] is incompatible with number [2].
 [incompatible-type]
 
-   call.js:15:24
-   15| (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
-                              ^^ [1]
+   call.js:15:23
+   15| cond<number>(test, 0, "") as void; // error: string ~> number, number ~> void
+                             ^^ [1]
 
 References:
-   call.js:15:7
-   15| (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
-             ^^^^^^ [2]
+   call.js:15:6
+   15| cond<number>(test, 0, "") as void; // error: string ~> number, number ~> void
+            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- call.js:19:1
@@ -92,97 +92,97 @@ References:
        ^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:23:2
+Error ----------------------------------------------------------------------------------------------------- call.js:23:1
 
 Cannot cast `o1.m<...>(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   call.js:23:2
-   23| (o1.m<string>(0): void); // error: number ~> string, string ~> void
-        ^^^^^^^^^^^^^^^
+   call.js:23:1
+   23| o1.m<string>(0) as void; // error: number ~> string, string ~> void
+       ^^^^^^^^^^^^^^^
 
 References:
-   call.js:23:7
-   23| (o1.m<string>(0): void); // error: number ~> string, string ~> void
-             ^^^^^^ [1]
-   call.js:23:19
-   23| (o1.m<string>(0): void); // error: number ~> string, string ~> void
-                         ^^^^ [2]
+   call.js:23:6
+   23| o1.m<string>(0) as void; // error: number ~> string, string ~> void
+            ^^^^^^ [1]
+   call.js:23:20
+   23| o1.m<string>(0) as void; // error: number ~> string, string ~> void
+                          ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:23:15
+Error ---------------------------------------------------------------------------------------------------- call.js:23:14
 
 Cannot call `o1.m` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   call.js:23:15
-   23| (o1.m<string>(0): void); // error: number ~> string, string ~> void
-                     ^ [1]
+   call.js:23:14
+   23| o1.m<string>(0) as void; // error: number ~> string, string ~> void
+                    ^ [1]
 
 References:
-   call.js:23:7
-   23| (o1.m<string>(0): void); // error: number ~> string, string ~> void
-             ^^^^^^ [2]
+   call.js:23:6
+   23| o1.m<string>(0) as void; // error: number ~> string, string ~> void
+            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:27:2
+Error ----------------------------------------------------------------------------------------------------- call.js:27:1
 
 Cannot cast `o2.m<...>(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   call.js:27:2
-   27| (o2.m<string>(0): void); // error: number ~> string, string ~> void
-        ^^^^^^^^^^^^^^^
+   call.js:27:1
+   27| o2.m<string>(0) as void; // error: number ~> string, string ~> void
+       ^^^^^^^^^^^^^^^
 
 References:
-   call.js:27:7
-   27| (o2.m<string>(0): void); // error: number ~> string, string ~> void
-             ^^^^^^ [1]
-   call.js:27:19
-   27| (o2.m<string>(0): void); // error: number ~> string, string ~> void
-                         ^^^^ [2]
+   call.js:27:6
+   27| o2.m<string>(0) as void; // error: number ~> string, string ~> void
+            ^^^^^^ [1]
+   call.js:27:20
+   27| o2.m<string>(0) as void; // error: number ~> string, string ~> void
+                          ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:27:15
+Error ---------------------------------------------------------------------------------------------------- call.js:27:14
 
 Cannot call `o2.m` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   call.js:27:15
-   27| (o2.m<string>(0): void); // error: number ~> string, string ~> void
-                     ^ [1]
+   call.js:27:14
+   27| o2.m<string>(0) as void; // error: number ~> string, string ~> void
+                    ^ [1]
 
 References:
-   call.js:27:7
-   27| (o2.m<string>(0): void); // error: number ~> string, string ~> void
-             ^^^^^^ [2]
+   call.js:27:6
+   27| o2.m<string>(0) as void; // error: number ~> string, string ~> void
+            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- call.js:32:2
+Error ----------------------------------------------------------------------------------------------------- call.js:32:1
 
 Cannot cast `o3.m<...>(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   call.js:32:2
-   32| (o3.m<string>(0): void); // error: number ~> string, string ~> void
-        ^^^^^^^^^^^^^^^
+   call.js:32:1
+   32| o3.m<string>(0) as void; // error: number ~> string, string ~> void
+       ^^^^^^^^^^^^^^^
 
 References:
-   call.js:32:7
-   32| (o3.m<string>(0): void); // error: number ~> string, string ~> void
-             ^^^^^^ [1]
-   call.js:32:19
-   32| (o3.m<string>(0): void); // error: number ~> string, string ~> void
-                         ^^^^ [2]
+   call.js:32:6
+   32| o3.m<string>(0) as void; // error: number ~> string, string ~> void
+            ^^^^^^ [1]
+   call.js:32:20
+   32| o3.m<string>(0) as void; // error: number ~> string, string ~> void
+                          ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- call.js:32:15
+Error ---------------------------------------------------------------------------------------------------- call.js:32:14
 
 Cannot call `o3.m` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   call.js:32:15
-   32| (o3.m<string>(0): void); // error: number ~> string, string ~> void
-                     ^ [1]
+   call.js:32:14
+   32| o3.m<string>(0) as void; // error: number ~> string, string ~> void
+                    ^ [1]
 
 References:
-   call.js:32:7
-   32| (o3.m<string>(0): void); // error: number ~> string, string ~> void
-             ^^^^^^ [2]
+   call.js:32:6
+   32| o3.m<string>(0) as void; // error: number ~> string, string ~> void
+            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- call.js:45:12
@@ -233,38 +233,38 @@ References:
                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ new.js:10:2
+Error ------------------------------------------------------------------------------------------------------ new.js:10:1
 
 Cannot cast `c1.x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   new.js:10:2
-   10| (c1.x: void); // error: number|string ~> void
-        ^^^^
+   new.js:10:1
+   10| c1.x as void; // error: number|string ~> void
+       ^^^^
 
 References:
    new.js:7:16
     7| var c1 = new C<number | string>;
                       ^^^^^^ [1]
-   new.js:10:8
-   10| (c1.x: void); // error: number|string ~> void
-              ^^^^ [2]
+   new.js:10:9
+   10| c1.x as void; // error: number|string ~> void
+               ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ new.js:10:2
+Error ------------------------------------------------------------------------------------------------------ new.js:10:1
 
 Cannot cast `c1.x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   new.js:10:2
-   10| (c1.x: void); // error: number|string ~> void
-        ^^^^
+   new.js:10:1
+   10| c1.x as void; // error: number|string ~> void
+       ^^^^
 
 References:
    new.js:7:25
     7| var c1 = new C<number | string>;
                                ^^^^^^ [1]
-   new.js:10:8
-   10| (c1.x: void); // error: number|string ~> void
-              ^^^^ [2]
+   new.js:10:9
+   10| c1.x as void; // error: number|string ~> void
+               ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ new.js:13:7
@@ -281,21 +281,21 @@ References:
                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ new.js:15:2
+Error ------------------------------------------------------------------------------------------------------ new.js:15:1
 
 Cannot cast `c2.x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   new.js:15:2
-   15| (c2.x: void); // error: string ~> void
-        ^^^^
+   new.js:15:1
+   15| c2.x as void; // error: string ~> void
+       ^^^^
 
 References:
    new.js:12:16
    12| var c2 = new C<string>;
                       ^^^^^^ [1]
-   new.js:15:8
-   15| (c2.x: void); // error: string ~> void
-              ^^^^ [2]
+   new.js:15:9
+   15| c2.x as void; // error: string ~> void
+               ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ new.js:18:1

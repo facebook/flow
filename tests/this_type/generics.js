@@ -5,4 +5,4 @@ class Generic<X> {
 class Implicit<X> { arg: X; val: X; }
 class ImplicitNumber extends Implicit { arg: number; }
 
-(new ImplicitNumber().val: string) // error: number ~> string
+new ImplicitNumber().val as string // error: number ~> string

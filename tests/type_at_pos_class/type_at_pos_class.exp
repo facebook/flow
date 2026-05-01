@@ -254,18 +254,18 @@ class-3.js:10:9 = {
   "types":{"evaluated":null,"unevaluated":{"type":"() => B"}}
 }
 class-4.js:9:6 = {
-  "end":10,
+  "end":9,
   "endline":9,
   "line":9,
   "loc":{
-    "end":{"column":10,"line":9,"offset":84},
+    "end":{"column":9,"line":9,"offset":83},
     "source":"class-4.js",
-    "start":{"column":6,"line":9,"offset":79},
+    "start":{"column":5,"line":9,"offset":78},
     "type":"SourceFile"
   },
   "path":"class-4.js",
   "reasons":[],
-  "start":6,
+  "start":5,
   "types":{"evaluated":null,"unevaluated":{"type":"Y"}}
 }
 class-bound.js:4:6 = {
@@ -479,18 +479,18 @@ class-statics.js:8:10 = {
   "types":{"evaluated":null,"unevaluated":{"type":"() => Class<this>"}}
 }
 class-statics.js:9:7 = {
-  "end":9,
+  "end":8,
   "endline":9,
   "line":9,
   "loc":{
-    "end":{"column":9,"line":9,"offset":96},
+    "end":{"column":8,"line":9,"offset":95},
     "source":"class-statics.js",
-    "start":{"column":6,"line":9,"offset":92},
+    "start":{"column":5,"line":9,"offset":91},
     "type":"SourceFile"
   },
   "path":"class-statics.js",
   "reasons":[],
-  "start":6,
+  "start":5,
   "types":{"evaluated":null,"unevaluated":{"type":"Class<this>"}}
 }
 class-statics.js:11:8 = {
@@ -584,18 +584,18 @@ class-statics-poly.js:8:10 = {
   "types":{"evaluated":null,"unevaluated":{"type":"() => Class<B<T>>"}}
 }
 class-statics-poly.js:9:7 = {
-  "end":9,
+  "end":8,
   "endline":9,
   "line":9,
   "loc":{
-    "end":{"column":9,"line":9,"offset":105},
+    "end":{"column":8,"line":9,"offset":104},
     "source":"class-statics-poly.js",
-    "start":{"column":6,"line":9,"offset":101},
+    "start":{"column":5,"line":9,"offset":100},
     "type":"SourceFile"
   },
   "path":"class-statics-poly.js",
   "reasons":[],
-  "start":6,
+  "start":5,
   "types":{"evaluated":null,"unevaluated":{"type":"Class<this>"}}
 }
 class-statics-poly.js:11:8 = {

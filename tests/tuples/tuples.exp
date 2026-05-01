@@ -32,22 +32,22 @@ References:
                              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- arity.js:7:2
+Error ----------------------------------------------------------------------------------------------------- arity.js:7:1
 
 Cannot cast `foo` to tuple type because tuple type [1] has 0 elements but tuple type [2] has 1 element.
 [invalid-tuple-arity]
 
-   arity.js:7:2
-   7| (foo: [1]); // error
-       ^^^
+   arity.js:7:1
+   7| foo as [1]; // error
+      ^^^
 
 References:
    arity.js:6:12
    6| const foo: [] = [];
                  ^^ [1]
-   arity.js:7:7
-   7| (foo: [1]); // error
-            ^^^ [2]
+   arity.js:7:8
+   7| foo as [1]; // error
+             ^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- array.js:2:10
@@ -68,40 +68,40 @@ References:
                                        ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- array.js:13:4
+Error ---------------------------------------------------------------------------------------------------- array.js:13:3
 
 Cannot cast `arr` to `Readonly` because const array literal [1] has 3 elements but tuple type [2] has 2 elements.
 [invalid-tuple-arity]
 
-   array.js:13:4
-   13|   (arr: $ReadOnly<[1,2]>); // error
-          ^^^
+   array.js:13:3
+   13|   arr as $ReadOnly<[1,2]>; // error
+         ^^^
 
 References:
    array.js:11:15
    11|   const arr = [1,2,3] as const;
                      ^^^^^^^ [1]
-   array.js:13:19
-   13|   (arr: $ReadOnly<[1,2]>); // error
-                         ^^^^^ [2]
+   array.js:13:20
+   13|   arr as $ReadOnly<[1,2]>; // error
+                          ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- array.js:14:4
+Error ---------------------------------------------------------------------------------------------------- array.js:14:3
 
 Cannot cast `arr` to `Readonly` because const array literal [1] has 3 elements but tuple type [2] has 4 elements.
 [invalid-tuple-arity]
 
-   array.js:14:4
-   14|   (arr: $ReadOnly<[1,2,3,4]>); // error
-          ^^^
+   array.js:14:3
+   14|   arr as $ReadOnly<[1,2,3,4]>; // error
+         ^^^
 
 References:
    array.js:11:15
    11|   const arr = [1,2,3] as const;
                      ^^^^^^^ [1]
-   array.js:14:19
-   14|   (arr: $ReadOnly<[1,2,3,4]>); // error
-                         ^^^^^^^^^ [2]
+   array.js:14:20
+   14|   arr as $ReadOnly<[1,2,3,4]>; // error
+                          ^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- array.js:21:62
@@ -139,58 +139,58 @@ References:
                                   ^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- array.js:30:4
+Error ---------------------------------------------------------------------------------------------------- array.js:30:3
 
 Cannot cast `a` to number literal `10` because number literal `1` [1] is incompatible with number literal `10` [2].
 [incompatible-type]
 
-   array.js:30:4
-   30|   (a: 10); // error
-          ^
+   array.js:30:3
+   30|   a as 10; // error
+         ^
 
 References:
    array.js:28:15
    28|   const tup: [1,2,3,4] = [1,2,3,4];
                      ^ [1]
-   array.js:30:7
-   30|   (a: 10); // error
-             ^^ [2]
+   array.js:30:8
+   30|   a as 10; // error
+              ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- array.js:31:4
+Error ---------------------------------------------------------------------------------------------------- array.js:31:3
 
 Cannot cast `b` to number literal `20` because number literal `2` [1] is incompatible with number literal `20` [2].
 [incompatible-type]
 
-   array.js:31:4
-   31|   (b: 20); // error
-          ^
+   array.js:31:3
+   31|   b as 20; // error
+         ^
 
 References:
    array.js:28:17
    28|   const tup: [1,2,3,4] = [1,2,3,4];
                        ^ [1]
-   array.js:31:7
-   31|   (b: 20); // error
-             ^^ [2]
+   array.js:31:8
+   31|   b as 20; // error
+              ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- array.js:32:4
+Error ---------------------------------------------------------------------------------------------------- array.js:32:3
 
 Cannot cast `rest` to tuple type because in index `1`: number literal `4` [1] is incompatible with number literal
 `40` [2]. [incompatible-type]
 
-   array.js:32:4
-   32|   (rest: [3,40]); // error
-          ^^^^
+   array.js:32:3
+   32|   rest as [3,40]; // error
+         ^^^^
 
 References:
    array.js:28:21
    28|   const tup: [1,2,3,4] = [1,2,3,4];
                            ^ [1]
-   array.js:32:13
-   32|   (rest: [3,40]); // error
-                   ^^ [2]
+   array.js:32:14
+   32|   rest as [3,40]; // error
+                    ^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- array.js:38:12
@@ -297,14 +297,14 @@ References:
                                     ^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- import.js:7:9
+Error ---------------------------------------------------------------------------------------------------- import.js:7:8
 
 Cannot cast array literal to `T` because in index `2`: number literal `9` [1] is incompatible with number literal
 `2` [2]. [incompatible-type]
 
-   import.js:7:9
-   7| ([0, 1, 9]: T); // ERROR
-              ^ [1]
+   import.js:7:8
+   7| [0, 1, 9] as T; // ERROR
+             ^ [1]
 
 References:
    export.js:1:14
@@ -312,21 +312,21 @@ References:
                    ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- import.js:9:2
+Error ---------------------------------------------------------------------------------------------------- import.js:9:1
 
 Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
 
-   import.js:9:2
-   9| (x: empty); // ERROR
-       ^
+   import.js:9:1
+   9| x as empty; // ERROR
+      ^
 
 References:
    import.js:8:18
    8| declare const x: T;
                        ^ [1]
-   import.js:9:5
-   9| (x: empty); // ERROR
-          ^^^^^ [2]
+   import.js:9:6
+   9| x as empty; // ERROR
+           ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- inexact.js:11:3
@@ -735,13 +735,13 @@ References:
                                             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- labeled.js:5:3
+Error --------------------------------------------------------------------------------------------------- labeled.js:5:2
 
 Cannot cast array literal to `A` because in index `0`: boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   labeled.js:5:3
-   5| ([true, 1]: A); // ERROR
-        ^^^^ [1]
+   labeled.js:5:2
+   5| [true, 1] as A; // ERROR
+       ^^^^ [1]
 
 References:
    labeled.js:2:16
@@ -749,13 +749,13 @@ References:
                      ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- labeled.js:11:8
+Error -------------------------------------------------------------------------------------------------- labeled.js:11:7
 
 Cannot cast array literal to `B` because in index `1`: boolean [1] is incompatible with number [2]. [incompatible-type]
 
-   labeled.js:11:8
-   11| (["s", true]: B); // ERROR
-              ^^^^ [1]
+   labeled.js:11:7
+   11| ["s", true] as B; // ERROR
+             ^^^^ [1]
 
 References:
    labeled.js:8:24
@@ -849,22 +849,22 @@ References:
                         ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- mapped_type_on_tuple.js:25:2
+Error ------------------------------------------------------------------------------------- mapped_type_on_tuple.js:25:1
 
 Cannot cast `issue2674[0]` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
 `BAR` [2]. [incompatible-type]
 
-   mapped_type_on_tuple.js:25:2
-   25| (issue2674[0]: 'BAR'); // error
-        ^^^^^^^^^^^^
+   mapped_type_on_tuple.js:25:1
+   25| issue2674[0] as 'BAR'; // error
+       ^^^^^^^^^^^^
 
 References:
    mapped_type_on_tuple.js:22:56
    22| declare const issue2674: {[K in keyof [mixed, mixed]]: 'FOO'};
                                                               ^^^^^ [1]
-   mapped_type_on_tuple.js:25:16
-   25| (issue2674[0]: 'BAR'); // error
-                      ^^^^^ [2]
+   mapped_type_on_tuple.js:25:17
+   25| issue2674[0] as 'BAR'; // error
+                       ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ mapped_type_on_tuple.js:26:16
@@ -936,44 +936,44 @@ References:
                                         ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- optional.js:2:2
+Error -------------------------------------------------------------------------------------------------- optional.js:2:1
 
 Cannot cast array literal to tuple type because array literal [1] has 1 element but tuple type [2] has 2 elements.
 [invalid-tuple-arity]
 
-   optional.js:2:2
-   2| ([0]: [number, ?string]); // Error, arity is enforced
-       ^^^ [1]
+   optional.js:2:1
+   2| [0] as [number, ?string]; // Error, arity is enforced
+      ^^^ [1]
 
 References:
-   optional.js:2:7
-   2| ([0]: [number, ?string]); // Error, arity is enforced
-            ^^^^^^^^^^^^^^^^^ [2]
+   optional.js:2:8
+   2| [0] as [number, ?string]; // Error, arity is enforced
+             ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- optional.js:4:2
+Error -------------------------------------------------------------------------------------------------- optional.js:4:1
 
 Cannot cast array literal to tuple type because empty array literal [1] has 0 elements but tuple type [2] has 2
 elements. [invalid-tuple-arity]
 
-   optional.js:4:2
-   4| ([]: [?number, string]); // error, since second element is not marked maybe
-       ^^ [1]
+   optional.js:4:1
+   4| [] as [?number, string]; // error, since second element is not marked maybe
+      ^^ [1]
 
 References:
-   optional.js:4:6
-   4| ([]: [?number, string]); // error, since second element is not marked maybe
-           ^^^^^^^^^^^^^^^^^ [2]
+   optional.js:4:7
+   4| [] as [?number, string]; // error, since second element is not marked maybe
+            ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:14:4
+Error ------------------------------------------------------------------------------------------------- optional.js:14:3
 
 Cannot cast `single` to `WithOpt` because in index `1`: string [1] is incompatible with undefined (out of bounds tuple
 access at index 1) [2]. [incompatible-type]
 
-   optional.js:14:4
-   14|   (single: WithOpt); // ERROR
-          ^^^^^^ [2]
+   optional.js:14:3
+   14|   single as WithOpt; // ERROR
+         ^^^^^^ [2]
 
 References:
    optional.js:9:32
@@ -981,57 +981,57 @@ References:
                                       ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:21:4
+Error ------------------------------------------------------------------------------------------------- optional.js:21:3
 
 Cannot cast `withOpt` to `Single` because `WithOpt` [1] has 1-2 elements but `Single` [2] has 1 element.
 [invalid-tuple-arity]
 
-   optional.js:21:4
-   21|   (withOpt: Single); // ERROR
-          ^^^^^^^
+   optional.js:21:3
+   21|   withOpt as Single; // ERROR
+         ^^^^^^^
 
 References:
    optional.js:20:26
    20|   declare const withOpt: WithOpt;
                                 ^^^^^^^ [1]
-   optional.js:21:13
-   21|   (withOpt: Single); // ERROR
-                   ^^^^^^ [2]
+   optional.js:21:14
+   21|   withOpt as Single; // ERROR
+                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:25:4
+Error ------------------------------------------------------------------------------------------------- optional.js:25:3
 
 Cannot cast `withOpt.length` to number literal `2` because length `1` (number) of tuple [1] is incompatible with number
 literal `2` [2]. [incompatible-type]
 
-   optional.js:25:4
-   25|   (withOpt.length: 2); // ERROR
-          ^^^^^^^^^^^^^^
+   optional.js:25:3
+   25|   withOpt.length as 2; // ERROR
+         ^^^^^^^^^^^^^^
 
 References:
    optional.js:20:26
    20|   declare const withOpt: WithOpt;
                                 ^^^^^^^ [1]
-   optional.js:25:20
-   25|   (withOpt.length: 2); // ERROR
-                          ^ [2]
+   optional.js:25:21
+   25|   withOpt.length as 2; // ERROR
+                           ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:29:4
+Error ------------------------------------------------------------------------------------------------- optional.js:29:3
 
 Cannot cast `withOpt[1]` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
-   optional.js:29:4
-   29|   (withOpt[1]: string); // ERROR
-          ^^^^^^^^^^
+   optional.js:29:3
+   29|   withOpt[1] as string; // ERROR
+         ^^^^^^^^^^
 
 References:
    optional.js:9:32
     9| type WithOpt = [a: number, b?: string];
                                       ^^^^^^ [1]
-   optional.js:29:16
-   29|   (withOpt[1]: string); // ERROR
-                      ^^^^^^ [2]
+   optional.js:29:17
+   29|   withOpt[1] as string; // ERROR
+                       ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ optional.js:31:16
@@ -1049,40 +1049,40 @@ References:
                                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:35:4
+Error ------------------------------------------------------------------------------------------------- optional.js:35:3
 
 Cannot cast `withReadOnlyOpt` to `Single` because `WithReadOnlyOpt` [1] has 1-2 elements but `Single` [2] has 1 element.
 [invalid-tuple-arity]
 
-   optional.js:35:4
-   35|   (withReadOnlyOpt: Single); // ERROR
-          ^^^^^^^^^^^^^^^
+   optional.js:35:3
+   35|   withReadOnlyOpt as Single; // ERROR
+         ^^^^^^^^^^^^^^^
 
 References:
    optional.js:34:34
    34|   declare const withReadOnlyOpt: WithReadOnlyOpt;
                                         ^^^^^^^^^^^^^^^ [1]
-   optional.js:35:21
-   35|   (withReadOnlyOpt: Single); // ERROR
-                           ^^^^^^ [2]
+   optional.js:35:22
+   35|   withReadOnlyOpt as Single; // ERROR
+                            ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:36:4
+Error ------------------------------------------------------------------------------------------------- optional.js:36:3
 
 Cannot cast `withReadOnlyOpt` to `WithOpt` because tuple element at index `1` is read-only in `WithReadOnlyOpt` [1] but
 writable in `WithOpt` [2]. [incompatible-variance]
 
-   optional.js:36:4
-   36|   (withReadOnlyOpt: WithOpt); // ERROR
-          ^^^^^^^^^^^^^^^
+   optional.js:36:3
+   36|   withReadOnlyOpt as WithOpt; // ERROR
+         ^^^^^^^^^^^^^^^
 
 References:
    optional.js:34:34
    34|   declare const withReadOnlyOpt: WithReadOnlyOpt;
                                         ^^^^^^^^^^^^^^^ [1]
-   optional.js:36:21
-   36|   (withReadOnlyOpt: WithOpt); // ERROR
-                           ^^^^^^^ [2]
+   optional.js:36:22
+   36|   withReadOnlyOpt as WithOpt; // ERROR
+                            ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:37:3
@@ -1109,40 +1109,40 @@ References:
                                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:41:4
+Error ------------------------------------------------------------------------------------------------- optional.js:41:3
 
 Cannot cast `withWriteOnlyOpt` to tuple type because tuple type [1] has 1-2 elements but tuple type [2] has 1 element.
 [invalid-tuple-arity]
 
-   optional.js:41:4
-   41|   (withWriteOnlyOpt: [a: number]); // ERROR
-          ^^^^^^^^^^^^^^^^
+   optional.js:41:3
+   41|   withWriteOnlyOpt as [a: number]; // ERROR
+         ^^^^^^^^^^^^^^^^
 
 References:
    optional.js:40:35
    40|   declare const withWriteOnlyOpt: [a: number, -b?: string | boolean];
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   optional.js:41:22
-   41|   (withWriteOnlyOpt: [a: number]); // ERROR
-                            ^^^^^^^^^^^ [2]
+   optional.js:41:23
+   41|   withWriteOnlyOpt as [a: number]; // ERROR
+                             ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:42:4
+Error ------------------------------------------------------------------------------------------------- optional.js:42:3
 
 Cannot cast `withWriteOnlyOpt` to tuple type because tuple element at index `1` is write-only in tuple type [1] but
 readable in tuple type [2]. [incompatible-variance]
 
-   optional.js:42:4
-   42|   (withWriteOnlyOpt: [a: number, b?: string | boolean]); // ERROR
-          ^^^^^^^^^^^^^^^^
+   optional.js:42:3
+   42|   withWriteOnlyOpt as [a: number, b?: string | boolean]; // ERROR
+         ^^^^^^^^^^^^^^^^
 
 References:
    optional.js:40:35
    40|   declare const withWriteOnlyOpt: [a: number, -b?: string | boolean];
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   optional.js:42:22
-   42|   (withWriteOnlyOpt: [a: number, b?: string | boolean]); // ERROR
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   optional.js:42:23
+   42|   withWriteOnlyOpt as [a: number, b?: string | boolean]; // ERROR
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:50:3
@@ -1181,29 +1181,29 @@ References:
                                                 ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:60:2
+Error ------------------------------------------------------------------------------------------------- optional.js:60:1
 
 Cannot cast array literal to `Single` because array literal [1] has 2 elements but `Single` [2] has 1 element.
 [invalid-tuple-arity]
 
-   optional.js:60:2
-   60| ([1, undefined]: Single); // ERROR
-        ^^^^^^^^^^^^^^ [1]
+   optional.js:60:1
+   60| [1, undefined] as Single; // ERROR
+       ^^^^^^^^^^^^^^ [1]
 
 References:
-   optional.js:60:18
-   60| ([1, undefined]: Single); // ERROR
-                        ^^^^^^ [2]
+   optional.js:60:19
+   60| [1, undefined] as Single; // ERROR
+                         ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:64:6
+Error ------------------------------------------------------------------------------------------------- optional.js:64:5
 
 Cannot cast array literal to `WithOpt` because in index `1`: you cannot assign undefined [1] to optional tuple
 element [2] (to do so, add `| void` to the tuple element type). [incompatible-type]
 
-   optional.js:64:6
-   64| ([1, undefined]: WithOpt); // ERROR
-            ^^^^^^^^^ [1]
+   optional.js:64:5
+   64| [1, undefined] as WithOpt; // ERROR
+           ^^^^^^^^^ [1]
 
 References:
    optional.js:9:32
@@ -1211,14 +1211,14 @@ References:
                                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:65:6
+Error ------------------------------------------------------------------------------------------------- optional.js:65:5
 
 Cannot cast array literal to `WithOpt` because in index `1`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
-   optional.js:65:6
-   65| ([1, true]: WithOpt); // ERROR
-            ^^^^ [1]
+   optional.js:65:5
+   65| [1, true] as WithOpt; // ERROR
+           ^^^^ [1]
 
 References:
    optional.js:9:32
@@ -1226,14 +1226,14 @@ References:
                                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:69:6
+Error ------------------------------------------------------------------------------------------------- optional.js:69:5
 
 Cannot cast array literal to `WithReadOnlyOpt` because in index `1`: you cannot assign undefined [1] to optional tuple
 element [2] (to do so, add `| void` to the tuple element type). [incompatible-type]
 
-   optional.js:69:6
-   69| ([1, undefined]: WithReadOnlyOpt); // ERROR
-            ^^^^^^^^^ [1]
+   optional.js:69:5
+   69| [1, undefined] as WithReadOnlyOpt; // ERROR
+           ^^^^^^^^^ [1]
 
 References:
    optional.js:10:41
@@ -1241,14 +1241,14 @@ References:
                                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:70:6
+Error ------------------------------------------------------------------------------------------------- optional.js:70:5
 
 Cannot cast array literal to `WithReadOnlyOpt` because in index `1`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
-   optional.js:70:6
-   70| ([1, true]: WithReadOnlyOpt); // ERROR
-            ^^^^ [1]
+   optional.js:70:5
+   70| [1, true] as WithReadOnlyOpt; // ERROR
+           ^^^^ [1]
 
 References:
    optional.js:10:41
@@ -1292,210 +1292,210 @@ References:
                                                      ^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:84:6
+Error ------------------------------------------------------------------------------------------------- optional.js:84:5
 
 Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
 
-   optional.js:84:6
-   84|     (x: empty); // ERROR
-            ^
+   optional.js:84:5
+   84|     x as empty; // ERROR
+           ^
 
 References:
    optional.js:81:20
    81|   declare const x: [number] | [a: boolean, b?: string];
                           ^^^^^^^^ [1]
-   optional.js:84:9
-   84|     (x: empty); // ERROR
-               ^^^^^ [2]
+   optional.js:84:10
+   84|     x as empty; // ERROR
+                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:84:6
+Error ------------------------------------------------------------------------------------------------- optional.js:84:5
 
 Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
 
-   optional.js:84:6
-   84|     (x: empty); // ERROR
-            ^
+   optional.js:84:5
+   84|     x as empty; // ERROR
+           ^
 
 References:
    optional.js:81:31
    81|   declare const x: [number] | [a: boolean, b?: string];
                                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   optional.js:84:9
-   84|     (x: empty); // ERROR
-               ^^^^^ [2]
+   optional.js:84:10
+   84|     x as empty; // ERROR
+                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:88:6
+Error ------------------------------------------------------------------------------------------------- optional.js:88:5
 
 Cannot cast `x` to tuple type because tuple type [1] has 1-2 elements but tuple type [2] has 1 element.
 [invalid-tuple-arity]
 
-   optional.js:88:6
-   88|     (x: [number]); // ERROR
-            ^
+   optional.js:88:5
+   88|     x as [number]; // ERROR
+           ^
 
 References:
    optional.js:81:31
    81|   declare const x: [number] | [a: boolean, b?: string];
                                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   optional.js:88:9
-   88|     (x: [number]); // ERROR
-               ^^^^^^^^ [2]
+   optional.js:88:10
+   88|     x as [number]; // ERROR
+                ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:96:6
+Error ------------------------------------------------------------------------------------------------- optional.js:96:5
 
 Cannot cast `x` to tuple type because tuple type [1] has 2-3 elements but tuple type [2] has 1 element.
 [invalid-tuple-arity]
 
-   optional.js:96:6
-   96|     (x: [number]); // ERROR
-            ^
+   optional.js:96:5
+   96|     x as [number]; // ERROR
+           ^
 
 References:
    optional.js:92:31
    92|   declare const x: [number] | [a: boolean, b: string, c?: string];
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   optional.js:96:9
-   96|     (x: [number]); // ERROR
-               ^^^^^^^^ [2]
+   optional.js:96:10
+   96|     x as [number]; // ERROR
+                ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:99:6
+Error ------------------------------------------------------------------------------------------------- optional.js:99:5
 
 Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
 
-   optional.js:99:6
-   99|     (x: empty); // ERROR
-            ^
+   optional.js:99:5
+   99|     x as empty; // ERROR
+           ^
 
 References:
    optional.js:92:20
    92|   declare const x: [number] | [a: boolean, b: string, c?: string];
                           ^^^^^^^^ [1]
-   optional.js:99:9
-   99|     (x: empty); // ERROR
-               ^^^^^ [2]
+   optional.js:99:10
+   99|     x as empty; // ERROR
+                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:99:6
+Error ------------------------------------------------------------------------------------------------- optional.js:99:5
 
 Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
 
-   optional.js:99:6
-   99|     (x: empty); // ERROR
-            ^
+   optional.js:99:5
+   99|     x as empty; // ERROR
+           ^
 
 References:
    optional.js:92:31
    92|   declare const x: [number] | [a: boolean, b: string, c?: string];
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   optional.js:99:9
-   99|     (x: empty); // ERROR
-               ^^^^^ [2]
+   optional.js:99:10
+   99|     x as empty; // ERROR
+                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:115:4
+Error ------------------------------------------------------------------------------------------------ optional.js:115:3
 
 Cannot cast `rest0` to tuple type because rest of array pattern [1] has 1-3 elements but tuple type [2] has 2-4
 elements. [invalid-tuple-arity]
 
-   optional.js:115:4
-   115|   (rest0: [a: 1, b: 2, c?: 3, d?: 4]); // ERROR
-           ^^^^^
+   optional.js:115:3
+   115|   rest0 as [a: 1, b: 2, c?: 3, d?: 4]; // ERROR
+          ^^^^^
 
 References:
    optional.js:113:15
    113|   const [, ...rest0] = x;
                       ^^^^^ [1]
-   optional.js:115:11
-   115|   (rest0: [a: 1, b: 2, c?: 3, d?: 4]); // ERROR
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   optional.js:115:12
+   115|   rest0 as [a: 1, b: 2, c?: 3, d?: 4]; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:116:4
+Error ------------------------------------------------------------------------------------------------ optional.js:116:3
 
 Cannot cast `rest0` to tuple type because in index `0`: number literal `2` [1] is incompatible with number literal
 `1` [2]. [incompatible-type]
 
-   optional.js:116:4
-   116|   (rest0: [a: 1, b?: 3, c?: 4]); // ERROR
-           ^^^^^
+   optional.js:116:3
+   116|   rest0 as [a: 1, b?: 3, c?: 4]; // ERROR
+          ^^^^^
 
 References:
    optional.js:111:30
    111|   declare const x: [a: 1, b: 2, c?: 3, d?: 4];
                                      ^ [1]
-   optional.js:116:15
-   116|   (rest0: [a: 1, b?: 3, c?: 4]); // ERROR
-                      ^ [2]
+   optional.js:116:16
+   116|   rest0 as [a: 1, b?: 3, c?: 4]; // ERROR
+                       ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:120:4
+Error ------------------------------------------------------------------------------------------------ optional.js:120:3
 
 Cannot cast `rest1` to tuple type because in index `0`: number literal `4` [1] is incompatible with empty [2].
 [incompatible-type]
 
-   optional.js:120:4
-   120|   (rest1: [d?: empty]); // ERROR
-           ^^^^^
+   optional.js:120:3
+   120|   rest1 as [d?: empty]; // ERROR
+          ^^^^^
 
 References:
    optional.js:111:44
    111|   declare const x: [a: 1, b: 2, c?: 3, d?: 4];
                                                    ^ [1]
-   optional.js:120:16
-   120|   (rest1: [d?: empty]); // ERROR
-                       ^^^^^ [2]
+   optional.js:120:17
+   120|   rest1 as [d?: empty]; // ERROR
+                        ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:124:4
+Error ------------------------------------------------------------------------------------------------ optional.js:124:3
 
 Cannot cast `rest2` to tuple type because rest of array pattern [1] has 0 elements but tuple type [2] has 1 element.
 [invalid-tuple-arity]
 
-   optional.js:124:4
-   124|   (rest2: [1]); // ERROR
-           ^^^^^
+   optional.js:124:3
+   124|   rest2 as [1]; // ERROR
+          ^^^^^
 
 References:
    optional.js:122:18
    122|   const [,,,, ...rest2] = x;
                          ^^^^^ [1]
-   optional.js:124:11
-   124|   (rest2: [1]); // ERROR
-                  ^^^ [2]
+   optional.js:124:12
+   124|   rest2 as [1]; // ERROR
+                   ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:136:2
+Error ------------------------------------------------------------------------------------------------ optional.js:136:1
 
 Cannot cast array literal to `AllRequired` because empty array literal [1] has 0 elements but `AllRequired` [2] has 2
 elements. [invalid-tuple-arity]
 
-   optional.js:136:2
-   136| ([]: AllRequired); // ERROR
-         ^^ [1]
+   optional.js:136:1
+   136| [] as AllRequired; // ERROR
+        ^^ [1]
 
 References:
-   optional.js:136:6
-   136| ([]: AllRequired); // ERROR
-             ^^^^^^^^^^^ [2]
+   optional.js:136:7
+   136| [] as AllRequired; // ERROR
+              ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ optional.js:141:2
+Error ------------------------------------------------------------------------------------------------ optional.js:141:1
 
 Cannot cast array literal to required of `AllOptional` because empty array literal [1] has 0 elements but
 `AllOptional` [2] has 2 elements. [invalid-tuple-arity]
 
-   optional.js:141:2
-   141| ([]: Required<AllOptional>); // ERROR
-         ^^ [1]
+   optional.js:141:1
+   141| [] as Required<AllOptional>; // ERROR
+        ^^ [1]
 
 References:
-   optional.js:141:15
-   141| ([]: Required<AllOptional>); // ERROR
-                      ^^^^^^^^^^^ [2]
+   optional.js:141:16
+   141| [] as Required<AllOptional>; // ERROR
+                       ^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ readonly-array.js:16:76
@@ -1577,22 +1577,22 @@ References:
                                                                                     ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- readonly-array.js:27:6
+Error ------------------------------------------------------------------------------------------- readonly-array.js:27:5
 
 Cannot cast `readOnlyRef[0]` to number literal `1` because number literal `2` [1] is incompatible with number literal
 `1` [2]. [incompatible-type]
 
-   readonly-array.js:27:6
-   27|     (readOnlyRef[0]: 1); // error
-            ^^^^^^^^^^^^^^
+   readonly-array.js:27:5
+   27|     readOnlyRef[0] as 1; // error
+           ^^^^^^^^^^^^^^
 
 References:
    readonly-array.js:24:23
    24| function foo2(tup: [1,2], arr: Array<number>): void {
                              ^ [1]
-   readonly-array.js:27:22
-   27|     (readOnlyRef[0]: 1); // error
-                            ^ [2]
+   readonly-array.js:27:23
+   27|     readOnlyRef[0] as 1; // error
+                             ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ readonly-array.js:36:44
@@ -2049,56 +2049,56 @@ integer. [invalid-tuple-index]
              ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- tuples.js:20:6
+Error --------------------------------------------------------------------------------------------------- tuples.js:20:5
 
 Cannot cast `t[1e0]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
-   tuples.js:20:6
-   20|     (t[1e0]: boolean); // error: boolean !~> string
-            ^^^^^^
+   tuples.js:20:5
+   20|     t[1e0] as boolean; // error: boolean !~> string
+           ^^^^^^
 
 References:
    tuples.js:19:24
    19|   function(t: [number, string]) {
                               ^^^^^^ [1]
-   tuples.js:20:14
-   20|     (t[1e0]: boolean); // error: boolean !~> string
-                    ^^^^^^^ [2]
+   tuples.js:20:15
+   20|     t[1e0] as boolean; // error: boolean !~> string
+                     ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tuples.js:21:6
+Error --------------------------------------------------------------------------------------------------- tuples.js:21:5
 
 Cannot cast `t[0.9999999999999999999999999999999999999999999]` to boolean because string [1] is incompatible with
 boolean [2]. [incompatible-type]
 
-   tuples.js:21:6
-   21|     (t[0.9999999999999999999999999999999999999999999]: boolean); // error: boolean !~> string
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   tuples.js:21:5
+   21|     t[0.9999999999999999999999999999999999999999999] as boolean; // error: boolean !~> string
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    tuples.js:19:24
    19|   function(t: [number, string]) {
                               ^^^^^^ [1]
-   tuples.js:21:56
-   21|     (t[0.9999999999999999999999999999999999999999999]: boolean); // error: boolean !~> string
-                                                              ^^^^^^^ [2]
+   tuples.js:21:57
+   21|     t[0.9999999999999999999999999999999999999999999] as boolean; // error: boolean !~> string
+                                                               ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tuples.js:25:6
+Error --------------------------------------------------------------------------------------------------- tuples.js:25:5
 
 Cannot cast `t[56e-13214125]` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
 
-   tuples.js:25:6
-   25|     (t[56e-13214125]: boolean); // error: boolean !~> number
-            ^^^^^^^^^^^^^^^
+   tuples.js:25:5
+   25|     t[56e-13214125] as boolean; // error: boolean !~> number
+           ^^^^^^^^^^^^^^^
 
 References:
    tuples.js:24:16
    24|   function(t: [number, string]) {
                       ^^^^^^ [1]
-   tuples.js:25:23
-   25|     (t[56e-13214125]: boolean); // error: boolean !~> number
-                             ^^^^^^^ [2]
+   tuples.js:25:24
+   25|     t[56e-13214125] as boolean; // error: boolean !~> number
+                              ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:30:7
@@ -2133,182 +2133,182 @@ References:
                                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tuples.js:46:6
+Error --------------------------------------------------------------------------------------------------- tuples.js:46:5
 
 Cannot cast `a_len` to number literal `2` because length `1` (number) of tuple [1] is incompatible with number literal
 `2` [2]. [incompatible-type]
 
-   tuples.js:46:6
-   46|     (a_len: 2);
-            ^^^^^
+   tuples.js:46:5
+   46|     a_len as 2;
+           ^^^^^
 
 References:
    tuples.js:43:16
    43|   function (a: [number]) {
                       ^^^^^^^^ [1]
-   tuples.js:46:13
-   46|     (a_len: 2);
-                   ^ [2]
+   tuples.js:46:14
+   46|     a_len as 2;
+                    ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- value-spread.js:6:4
+Error ---------------------------------------------------------------------------------------------- value-spread.js:6:3
 
 Cannot cast `y` to `Readonly` because const array literal [1] has 4 elements but tuple type [2] has 3 elements.
 [invalid-tuple-arity]
 
-   value-spread.js:6:4
-   6|   (y: $ReadOnly<[0, 1, 2]>); // ERROR
-         ^
+   value-spread.js:6:3
+   6|   y as $ReadOnly<[0, 1, 2]>; // ERROR
+        ^
 
 References:
    value-spread.js:4:13
    4|   const y = [0, ...x, 3] as const;
                   ^^^^^^^^^^^^ [1]
-   value-spread.js:6:17
-   6|   (y: $ReadOnly<[0, 1, 2]>); // ERROR
-                      ^^^^^^^^^ [2]
+   value-spread.js:6:18
+   6|   y as $ReadOnly<[0, 1, 2]>; // ERROR
+                       ^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- value-spread.js:7:4
+Error ---------------------------------------------------------------------------------------------- value-spread.js:7:3
 
 Cannot cast `y` to `Readonly` because const array literal [1] has 4 elements but tuple type [2] has 5 elements.
 [invalid-tuple-arity]
 
-   value-spread.js:7:4
-   7|   (y: $ReadOnly<[0, 1, 2, 3, 4]>); // ERROR
-         ^
+   value-spread.js:7:3
+   7|   y as $ReadOnly<[0, 1, 2, 3, 4]>; // ERROR
+        ^
 
 References:
    value-spread.js:4:13
    4|   const y = [0, ...x, 3] as const;
                   ^^^^^^^^^^^^ [1]
-   value-spread.js:7:17
-   7|   (y: $ReadOnly<[0, 1, 2, 3, 4]>); // ERROR
-                      ^^^^^^^^^^^^^^^ [2]
+   value-spread.js:7:18
+   7|   y as $ReadOnly<[0, 1, 2, 3, 4]>; // ERROR
+                       ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- value-spread.js:8:4
+Error ---------------------------------------------------------------------------------------------- value-spread.js:8:3
 
 Cannot cast `y` to `Readonly` because in index `3`: number literal `3` [1] is incompatible with number literal
 `999` [2]. [incompatible-type]
 
-   value-spread.js:8:4
-   8|   (y: $ReadOnly<[0, 1, 2, 999]>); // ERROR
-         ^
+   value-spread.js:8:3
+   8|   y as $ReadOnly<[0, 1, 2, 999]>; // ERROR
+        ^
 
 References:
    value-spread.js:4:23
    4|   const y = [0, ...x, 3] as const;
                             ^ [1]
-   value-spread.js:8:27
-   8|   (y: $ReadOnly<[0, 1, 2, 999]>); // ERROR
-                                ^^^ [2]
+   value-spread.js:8:28
+   8|   y as $ReadOnly<[0, 1, 2, 999]>; // ERROR
+                                 ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- value-spread.js:15:4
+Error --------------------------------------------------------------------------------------------- value-spread.js:15:3
 
 Cannot cast `y` to tuple type because const array literal [1] has 2-3 elements but tuple type [2] has 2 elements.
 [invalid-tuple-arity]
 
-   value-spread.js:15:4
-   15|   (y: [1, 2]); // ERROR
-          ^
+   value-spread.js:15:3
+   15|   y as [1, 2]; // ERROR
+         ^
 
 References:
    value-spread.js:14:13
    14|   const y = [0, ...x] as const; // OK
                    ^^^^^^^^^ [1]
-   value-spread.js:15:7
-   15|   (y: [1, 2]); // ERROR
-             ^^^^^^ [2]
+   value-spread.js:15:8
+   15|   y as [1, 2]; // ERROR
+              ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- value-spread.js:17:4
+Error --------------------------------------------------------------------------------------------- value-spread.js:17:3
 
 Cannot cast `z` to `Readonly` because array literal [1] has an unknown number of elements, so is incompatible with tuple
 type [2]. [invalid-tuple-arity]
 
-   value-spread.js:17:4
-   17|   (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
-          ^
+   value-spread.js:17:3
+   17|   z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
+         ^
 
 References:
    value-spread.js:16:13
    16|   const z = [0, ...x, 3];
                    ^^^^^^^^^^^^ [1]
-   value-spread.js:17:17
-   17|   (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
-                       ^^^^^^^^^^^^ [2]
+   value-spread.js:17:18
+   17|   z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
+                        ^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- value-spread.js:24:4
+Error --------------------------------------------------------------------------------------------- value-spread.js:24:3
 
 Cannot cast `z` to `Readonly` because const array literal [1] is incompatible with tuple type [2]. [incompatible-type]
 
-   value-spread.js:24:4
-   24|   (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
-          ^
+   value-spread.js:24:3
+   24|   z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
+         ^
 
 References:
    value-spread.js:23:13
    23|   const z = [...x, ...y] as const;
                    ^^^^^^^^^^^^ [1]
-   value-spread.js:24:17
-   24|   (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
-                       ^^^^^^^^^^^^ [2]
+   value-spread.js:24:18
+   24|   z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
+                        ^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- value-spread.js:31:4
+Error --------------------------------------------------------------------------------------------- value-spread.js:31:3
 
 Cannot cast `z` to tuple type because const array literal [1] is incompatible with tuple type [2]. [incompatible-type]
 
-   value-spread.js:31:4
-   31|   (z: [a?: 0, b?: 1, c?: 2]); // ERROR
-          ^
+   value-spread.js:31:3
+   31|   z as [a?: 0, b?: 1, c?: 2]; // ERROR
+         ^
 
 References:
    value-spread.js:30:13
    30|   const z = [...x, ...y] as const;
                    ^^^^^^^^^^^^ [1]
-   value-spread.js:31:7
-   31|   (z: [a?: 0, b?: 1, c?: 2]); // ERROR
-             ^^^^^^^^^^^^^^^^^^^^^ [2]
+   value-spread.js:31:8
+   31|   z as [a?: 0, b?: 1, c?: 2]; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- variance.js:5:2
+Error -------------------------------------------------------------------------------------------------- variance.js:5:1
 
 Cannot cast `a` to tuple type because tuple element at index `0` is read-only in `A` [1] but write-only in tuple
 type [2]. [incompatible-variance]
 
-   variance.js:5:2
-   5| (a: [-foo: string]); // ERROR
-       ^
+   variance.js:5:1
+   5| a as [-foo: string]; // ERROR
+      ^
 
 References:
    variance.js:3:16
    3| declare var a: A;
                      ^ [1]
-   variance.js:5:5
-   5| (a: [-foo: string]); // ERROR
-          ^^^^^^^^^^^^^^ [2]
+   variance.js:5:6
+   5| a as [-foo: string]; // ERROR
+           ^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- variance.js:6:2
+Error -------------------------------------------------------------------------------------------------- variance.js:6:1
 
 Cannot cast `a` to tuple type because tuple element at index `0` is read-only in `A` [1] but writable in tuple type [2].
 [incompatible-variance]
 
-   variance.js:6:2
-   6| (a: [foo: string]); // ERROR
-       ^
+   variance.js:6:1
+   6| a as [foo: string]; // ERROR
+      ^
 
 References:
    variance.js:3:16
    3| declare var a: A;
                      ^ [1]
-   variance.js:6:5
-   6| (a: [foo: string]); // ERROR
-          ^^^^^^^^^^^^^ [2]
+   variance.js:6:6
+   6| a as [foo: string]; // ERROR
+           ^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- variance.js:8:1
@@ -2319,109 +2319,109 @@ Cannot assign `"s"` to `a[0]` because tuple element at index `0` [1] labeled `fo
       ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:15:2
+Error ------------------------------------------------------------------------------------------------- variance.js:15:1
 
 Cannot cast `b` to tuple type because tuple element at index `0` is write-only in `B` [1] but read-only in tuple
 type [2]. [incompatible-variance]
 
-   variance.js:15:2
-   15| (b: [+foo: string]); // ERROR
-        ^
+   variance.js:15:1
+   15| b as [+foo: string]; // ERROR
+       ^
 
 References:
    variance.js:13:16
    13| declare var b: B;
                       ^ [1]
-   variance.js:15:5
-   15| (b: [+foo: string]); // ERROR
-           ^^^^^^^^^^^^^^ [2]
+   variance.js:15:6
+   15| b as [+foo: string]; // ERROR
+            ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:16:2
+Error ------------------------------------------------------------------------------------------------- variance.js:16:1
 
 Cannot cast `b` to tuple type because tuple element at index `0` is write-only in `B` [1] but readable in tuple
 type [2]. [incompatible-variance]
 
-   variance.js:16:2
-   16| (b: [foo: string]); // ERROR
-        ^
+   variance.js:16:1
+   16| b as [foo: string]; // ERROR
+       ^
 
 References:
    variance.js:13:16
    13| declare var b: B;
                       ^ [1]
-   variance.js:16:5
-   16| (b: [foo: string]); // ERROR
-           ^^^^^^^^^^^^^ [2]
+   variance.js:16:6
+   16| b as [foo: string]; // ERROR
+            ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:17:2
+Error ------------------------------------------------------------------------------------------------- variance.js:17:1
 
 Cannot get `b[0]` because tuple element at index `0` [1] labeled `foo` is not readable. [cannot-read]
 
-   17| (b[0]: string); // ERROR - can't read
-        ^^^^ [1]
+   17| b[0] as string; // ERROR - can't read
+       ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:26:2
-
-Cannot cast `c` to tuple type because in index `0`: undefined [1] is incompatible with string [2]. [incompatible-type]
-
-   variance.js:26:2
-   26| (c: [foo: string | void]); // ERROR
-        ^
-
-References:
-   variance.js:26:20
-   26| (c: [foo: string | void]); // ERROR
-                          ^^^^ [1]
-   variance.js:20:16
-   20| type C = [foo: string];
-                      ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- variance.js:27:2
+Error ------------------------------------------------------------------------------------------------- variance.js:26:1
 
 Cannot cast `c` to tuple type because in index `0`: undefined [1] is incompatible with string [2]. [incompatible-type]
 
-   variance.js:27:2
-   27| (c: [-foo: string | void]); // ERROR
-        ^
+   variance.js:26:1
+   26| c as [foo: string | void]; // ERROR
+       ^
 
 References:
-   variance.js:27:21
-   27| (c: [-foo: string | void]); // ERROR
+   variance.js:26:21
+   26| c as [foo: string | void]; // ERROR
                            ^^^^ [1]
    variance.js:20:16
    20| type C = [foo: string];
                       ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:32:2
+Error ------------------------------------------------------------------------------------------------- variance.js:27:1
+
+Cannot cast `c` to tuple type because in index `0`: undefined [1] is incompatible with string [2]. [incompatible-type]
+
+   variance.js:27:1
+   27| c as [-foo: string | void]; // ERROR
+       ^
+
+References:
+   variance.js:27:22
+   27| c as [-foo: string | void]; // ERROR
+                            ^^^^ [1]
+   variance.js:20:16
+   20| type C = [foo: string];
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:32:1
 
 Cannot cast `d` to tuple type because in index `0`: undefined [1] is incompatible with string [2]. [incompatible-type]
 
-   variance.js:32:2
-   32| (d: [foo: string]); // ERROR
-        ^
+   variance.js:32:1
+   32| d as [foo: string]; // ERROR
+       ^
 
 References:
    variance.js:31:26
    31| declare var d: [string | void];
                                 ^^^^ [1]
-   variance.js:32:11
-   32| (d: [foo: string]); // ERROR
-                 ^^^^^^ [2]
+   variance.js:32:12
+   32| d as [foo: string]; // ERROR
+                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:38:2
+Error ------------------------------------------------------------------------------------------------- variance.js:38:1
 
 Cannot cast `m` to `K` because in type argument `T` [1]: tuple element at index `0` is read-only in tuple type [2] but
 writable in tuple type [3]. [incompatible-variance]
 
-   variance.js:38:2
-   38| (m: K<[string]>); // ERROR
-        ^
+   variance.js:38:1
+   38| m as K<[string]>; // ERROR
+       ^
 
 References:
    variance.js:35:17
@@ -2430,9 +2430,9 @@ References:
    variance.js:36:18
    36| declare var m: K<[+foo: string]>;
                         ^^^^^^^^^^^^^^ [2]
-   variance.js:38:7
-   38| (m: K<[string]>); // ERROR
-             ^^^^^^^^ [3]
+   variance.js:38:8
+   38| m as K<[string]>; // ERROR
+              ^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ variance.js:43:15
@@ -2464,21 +2464,21 @@ References:
                                 ^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:45:2
+Error ------------------------------------------------------------------------------------------------- variance.js:45:1
 
 Cannot cast `res` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   variance.js:45:2
-   45| (res: empty); // ERROR
-        ^^^
+   variance.js:45:1
+   45| res as empty; // ERROR
+       ^^^
 
 References:
    variance.js:42:27
    42| declare var n: Array<[+n: number]>;
                                  ^^^^^^ [1]
-   variance.js:45:7
-   45| (res: empty); // ERROR
-             ^^^^^ [2]
+   variance.js:45:8
+   45| res as empty; // ERROR
+              ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ variance.js:52:26
@@ -2496,40 +2496,40 @@ References:
                         ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:58:2
+Error ------------------------------------------------------------------------------------------------- variance.js:58:1
 
 Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `C` [1] but write-only in tuple
 type [2]. [incompatible-variance]
 
-   variance.js:58:2
-   58| (roc: [-foo: string]); // ERROR
-        ^^^
+   variance.js:58:1
+   58| roc as [-foo: string]; // ERROR
+       ^^^
 
 References:
    variance.js:56:18
    56| declare var roc: ROC;
                         ^^^ [1]
-   variance.js:58:7
-   58| (roc: [-foo: string]); // ERROR
-             ^^^^^^^^^^^^^^ [2]
+   variance.js:58:8
+   58| roc as [-foo: string]; // ERROR
+              ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:59:2
+Error ------------------------------------------------------------------------------------------------- variance.js:59:1
 
 Cannot cast `roc` to tuple type because tuple element at index `0` is read-only in `C` [1] but writable in tuple
 type [2]. [incompatible-variance]
 
-   variance.js:59:2
-   59| (roc: [foo: string]); // ERROR
-        ^^^
+   variance.js:59:1
+   59| roc as [foo: string]; // ERROR
+       ^^^
 
 References:
    variance.js:56:18
    56| declare var roc: ROC;
                         ^^^ [1]
-   variance.js:59:7
-   59| (roc: [foo: string]); // ERROR
-             ^^^^^^^^^^^^^ [2]
+   variance.js:59:8
+   59| roc as [foo: string]; // ERROR
+              ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:61:1
@@ -2540,40 +2540,40 @@ Cannot assign `"s"` to `roc[0]` because tuple element at index `0` [1] labeled `
        ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:66:2
+Error ------------------------------------------------------------------------------------------------- variance.js:66:1
 
 Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `B` [1] but write-only in tuple
 type [2]. [incompatible-variance]
 
-   variance.js:66:2
-   66| (rob: [-foo: string]); // ERROR
-        ^^^
+   variance.js:66:1
+   66| rob as [-foo: string]; // ERROR
+       ^^^
 
 References:
    variance.js:64:18
    64| declare var rob: ROB;
                         ^^^ [1]
-   variance.js:66:7
-   66| (rob: [-foo: string]); // ERROR
-             ^^^^^^^^^^^^^^ [2]
+   variance.js:66:8
+   66| rob as [-foo: string]; // ERROR
+              ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:67:2
+Error ------------------------------------------------------------------------------------------------- variance.js:67:1
 
 Cannot cast `rob` to tuple type because tuple element at index `0` is read-only in `B` [1] but writable in tuple
 type [2]. [incompatible-variance]
 
-   variance.js:67:2
-   67| (rob: [foo: string]); // ERROR
-        ^^^
+   variance.js:67:1
+   67| rob as [foo: string]; // ERROR
+       ^^^
 
 References:
    variance.js:64:18
    64| declare var rob: ROB;
                         ^^^ [1]
-   variance.js:67:7
-   67| (rob: [foo: string]); // ERROR
-             ^^^^^^^^^^^^^ [2]
+   variance.js:67:8
+   67| rob as [foo: string]; // ERROR
+              ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:69:1
@@ -2602,37 +2602,37 @@ Cannot assign `"s"` to `inter[0]` because tuple element at index `0` [1] is not 
 
 Error ------------------------------------------------------------------------------------------------ variance.js:83:11
 
-Cannot cast array literal to tuple type because in index `0`: number [1] is incompatible with number literal `1` [2].
+Cannot cast `[...]` to tuple type because in index `0`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    variance.js:83:11
-   83| (([1, 2]: [1, 2]): [number, number]); // ERROR
+   83| [1, 2] as [1, 2] as [number, number]; // ERROR
                  ^^^^^^
 
 References:
-   variance.js:83:21
-   83| (([1, 2]: [1, 2]): [number, number]); // ERROR
-                           ^^^^^^ [1]
+   variance.js:83:22
+   83| [1, 2] as [1, 2] as [number, number]; // ERROR
+                            ^^^^^^ [1]
    variance.js:83:12
-   83| (([1, 2]: [1, 2]): [number, number]); // ERROR
+   83| [1, 2] as [1, 2] as [number, number]; // ERROR
                   ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ variance.js:83:11
 
-Cannot cast array literal to tuple type because in index `1`: number [1] is incompatible with number literal `2` [2].
+Cannot cast `[...]` to tuple type because in index `1`: number [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
    variance.js:83:11
-   83| (([1, 2]: [1, 2]): [number, number]); // ERROR
+   83| [1, 2] as [1, 2] as [number, number]; // ERROR
                  ^^^^^^
 
 References:
-   variance.js:83:29
-   83| (([1, 2]: [1, 2]): [number, number]); // ERROR
-                                   ^^^^^^ [1]
+   variance.js:83:30
+   83| [1, 2] as [1, 2] as [number, number]; // ERROR
+                                    ^^^^^^ [1]
    variance.js:83:15
-   83| (([1, 2]: [1, 2]): [number, number]); // ERROR
+   83| [1, 2] as [1, 2] as [number, number]; // ERROR
                      ^ [2]
 
 

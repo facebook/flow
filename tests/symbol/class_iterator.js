@@ -16,7 +16,7 @@ const iterable: Iterable<number> = new MyIterable();
 
 // Should work - can use for...of
 for (const x of new MyIterable()) {
-  (x: number);
+  x as number;
 }
 
 // Test [Symbol.asyncIterator]

@@ -4,4 +4,4 @@
 
 declare class C<T> { m(): T }
 declare var x: C<string> | C<number>;
-(x.m(): empty); // error: string ~> empty, number ~> empty
+x.m() as empty; // error: string ~> empty, number ~> empty

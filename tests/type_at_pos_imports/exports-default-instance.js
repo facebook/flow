@@ -3,4 +3,4 @@
 declare class Base {}
 class A extends Base {}
 
-module.exports = (new A(): A);
+module.exports = new A() as A;

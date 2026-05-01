@@ -11,7 +11,7 @@ export type Obj = {
 };
 
 export function foo(originalRows: Array<Obj>): Array<Obj> {
-  const groupedRows = groupBy(originalRows, (item: Obj) => (null: any));
+  const groupedRows = groupBy(originalRows, (item: Obj) => null as any);
   return objectEntries(groupedRows).map(([_, rows]) => ({
     a: rows.reduce((mr, row) => (row.a ?? 0) < (mr.a ?? 0) ? row : mr).a,
 //                      ^

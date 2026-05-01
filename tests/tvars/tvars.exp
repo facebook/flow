@@ -6,7 +6,7 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
            ^
 
 
-Error ------------------------------------------------------------------------------- fully_resolved_unification.js:20:2
+Error ------------------------------------------------------------------------------- fully_resolved_unification.js:20:1
 
 Cannot cast `x` to array type because in array element: `empty` [1] is not exactly the same as `{bar: string}` [2].
 [incompatible-type]
@@ -16,20 +16,20 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   fully_resolved_unification.js:20:2
-   20| (x: Array<{bar: string}>); // ERROR
-        ^
+   fully_resolved_unification.js:20:1
+   20| x as Array<{bar: string}>; // ERROR
+       ^
 
 References:
    fully_resolved_unification.js:16:5
    16| let x = []; // ERROR
            ^ [1]
-   fully_resolved_unification.js:20:11
-   20| (x: Array<{bar: string}>); // ERROR
-                 ^^^^^^^^^^^^^ [2]
-   fully_resolved_unification.js:20:5
-   20| (x: Array<{bar: string}>); // ERROR
-           ^^^^^^^^^^^^^^^^^^^^ [3]
+   fully_resolved_unification.js:20:12
+   20| x as Array<{bar: string}>; // ERROR
+                  ^^^^^^^^^^^^^ [2]
+   fully_resolved_unification.js:20:6
+   20| x as Array<{bar: string}>; // ERROR
+            ^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 

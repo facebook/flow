@@ -1,43 +1,43 @@
-Error ---------------------------------------------------------------------------------------------- element_type.js:5:2
+Error ---------------------------------------------------------------------------------------------- element_type.js:5:1
 
 Cannot cast `'hello world'` to `Arr_Elem` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   element_type.js:5:2
-   5| ('hello world': Arr_Elem);
-       ^^^^^^^^^^^^^ [1]
+   element_type.js:5:1
+   5| 'hello world' as Arr_Elem;
+      ^^^^^^^^^^^^^ [1]
 
 References:
-   element_type.js:5:17
-   5| ('hello world': Arr_Elem);
-                      ^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- element_type.js:16:2
-
-Cannot cast `'hello world'` to `Obj_Elem` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   element_type.js:16:2
-   16| ('hello world': Obj_Elem);
-        ^^^^^^^^^^^^^ [1]
-
-References:
-   element_type.js:16:17
-   16| ('hello world': Obj_Elem);
+   element_type.js:5:18
+   5| 'hello world' as Arr_Elem;
                        ^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- element_type.js:24:7
+Error --------------------------------------------------------------------------------------------- element_type.js:16:1
+
+Cannot cast `'hello world'` to `Obj_Elem` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   element_type.js:16:1
+   16| 'hello world' as Obj_Elem;
+       ^^^^^^^^^^^^^ [1]
+
+References:
+   element_type.js:16:18
+   16| 'hello world' as Obj_Elem;
+                        ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- element_type.js:24:8
 
 Cannot access string literal `c` on `Z` because property `c` is missing in null or undefined [1]. [incompatible-use]
 
-   element_type.js:24:7
-   24| (1: Z['c']); // Error - access 'c' on `void`/`null`
-             ^^^
+   element_type.js:24:8
+   24| 1 as Z['c']; // Error - access 'c' on `void`/`null`
+              ^^^
 
 References:
-   element_type.js:24:5
-   24| (1: Z['c']); // Error - access 'c' on `void`/`null`
-           ^ [1]
+   element_type.js:24:6
+   24| 1 as Z['c']; // Error - access 'c' on `void`/`null`
+            ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:5:17
@@ -138,18 +138,18 @@ References:
                     ^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- property_type.js:6:2
+Error --------------------------------------------------------------------------------------------- property_type.js:6:1
 
 Cannot cast `42` to `Obj_Prop_x` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   property_type.js:6:2
-   6| (42: Obj_Prop_x);
-       ^^ [1]
+   property_type.js:6:1
+   6| 42 as Obj_Prop_x;
+      ^^ [1]
 
 References:
-   property_type.js:6:6
-   6| (42: Obj_Prop_x);
-           ^^^^^^^^^^ [2]
+   property_type.js:6:7
+   6| 42 as Obj_Prop_x;
+            ^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- property_type.js:10:15
@@ -520,15 +520,15 @@ References:
                              ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:10:2
+Error ---------------------------------------------------------------------------------------------------- union.js:10:1
 
 Cannot cast `null` to `P2` because: [incompatible-type]
  - Either null [1] is incompatible with string [2].
  - Or null [1] is incompatible with number [3].
 
-   union.js:10:2
-   10| (null: P2); // err, null ~> string|number
-        ^^^^ [1]
+   union.js:10:1
+   10| null as P2; // err, null ~> string|number
+       ^^^^ [1]
 
 References:
    union.js:11:14
@@ -539,15 +539,15 @@ References:
                                   ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:17:4
+Error ---------------------------------------------------------------------------------------------------- union.js:17:3
 
 Cannot cast `x` to `TupleUnion` because: [incompatible-type]
  - Either in index `0`: number literal `3` [1] is incompatible with number literal `1` [2].
  - Or in index `0`: number literal `3` [1] is incompatible with number literal `2` [3].
 
-   union.js:17:4
-   17|   (x: TupleUnion); // ERROR: 1, 2
-          ^
+   union.js:17:3
+   17|   x as TupleUnion; // ERROR: 1, 2
+         ^
 
 References:
    union.js:16:21
@@ -561,15 +561,15 @@ References:
                                  ^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:18:4
+Error ---------------------------------------------------------------------------------------------------- union.js:18:3
 
 Cannot cast `x` to `Readonly` because: [incompatible-type]
  - Either in index `0`: number literal `3` [1] is incompatible with number literal `1` [2].
  - Or in index `0`: number literal `3` [1] is incompatible with number literal `2` [3].
 
-   union.js:18:4
-   18|   (x: Readonly<TupleUnion>); // ERROR: 1, 2 (same order as above)
-          ^
+   union.js:18:3
+   18|   x as Readonly<TupleUnion>; // ERROR: 1, 2 (same order as above)
+         ^
 
 References:
    union.js:16:21

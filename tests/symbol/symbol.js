@@ -19,27 +19,27 @@ declare var s: symbol;
 {
   const x: symbol | boolean = true;
   if (typeof x === "symbol") {
-    (x: symbol); // OK
-    (x: boolean); // Error
+    x as symbol; // OK
+    x as boolean; // Error
   } else {
-    (x: boolean); // OK
-    (x: symbol); // Error
+    x as boolean; // OK
+    x as symbol; // Error
   }
 }
 
 // Well-known symbols
 {
-  (Symbol.hasInstance: symbol); // OK
-  (Symbol.isConcatSpreadable: symbol); // OK
-  (Symbol.match: symbol); // OK
-  (Symbol.matchAll: symbol); // OK
-  (Symbol.replace: symbol); // OK
-  (Symbol.search: symbol); // OK
-  (Symbol.species: symbol); // OK
-  (Symbol.split: symbol); // OK
-  (Symbol.toPrimitive: symbol); // OK
-  (Symbol.toStringTag: symbol); // OK
-  (Symbol.unscopables: symbol); // OK
+  Symbol.hasInstance as symbol; // OK
+  Symbol.isConcatSpreadable as symbol; // OK
+  Symbol.match as symbol; // OK
+  Symbol.matchAll as symbol; // OK
+  Symbol.replace as symbol; // OK
+  Symbol.search as symbol; // OK
+  Symbol.species as symbol; // OK
+  Symbol.split as symbol; // OK
+  Symbol.toPrimitive as symbol; // OK
+  Symbol.toStringTag as symbol; // OK
+  Symbol.unscopables as symbol; // OK
 
   const x: $SymbolMatch = Symbol.match; // OK
   const y: $SymbolMatch = Symbol.toPrimitive; // Error

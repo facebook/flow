@@ -15,6 +15,6 @@ declare class Baz<T> {
   x: T
 }
 
-((new Foo).x: number); // error: Qux wins
-((new Foo).y: string); // error: Bar wins
-((new Foo).z: number); // error: Qux wins
+(new Foo).x as number; // error: Qux wins
+(new Foo).y as string; // error: Bar wins
+(new Foo).z as number; // error: Qux wins

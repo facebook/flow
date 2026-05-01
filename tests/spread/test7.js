@@ -1,6 +1,6 @@
 let tests = [
   function(x: Object) {
-    ({...x}: Object);
-    ({...x}: void); // error, Object
+    ({...x}) as Object;
+    ({...x}) as void; // error, Object
   },
 ];

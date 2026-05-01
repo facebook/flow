@@ -1,5 +1,5 @@
-(new DoublyLinkedList().prev(): DoublyLinkedList);
-(new DoublyLinkedList().next(): DoublyLinkedList)
+new DoublyLinkedList().prev() as DoublyLinkedList;
+new DoublyLinkedList().next() as DoublyLinkedList
 
 var MiniImmutable = require("mini-immutable");
 class C {

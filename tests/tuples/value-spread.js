@@ -2,34 +2,34 @@
 {
   declare const x: [1, 2];
   const y = [0, ...x, 3] as const;
-  (y: $ReadOnly<[0, 1, 2, 3]>); // OK
-  (y: $ReadOnly<[0, 1, 2]>); // ERROR
-  (y: $ReadOnly<[0, 1, 2, 3, 4]>); // ERROR
-  (y: $ReadOnly<[0, 1, 2, 999]>); // ERROR
+  y as $ReadOnly<[0, 1, 2, 3]>; // OK
+  y as $ReadOnly<[0, 1, 2]>; // ERROR
+  y as $ReadOnly<[0, 1, 2, 3, 4]>; // ERROR
+  y as $ReadOnly<[0, 1, 2, 999]>; // ERROR
 }
 
 // Optional members
 {
   declare const x: [b: 1, c?: 2];
   const y = [0, ...x] as const; // OK
-  (y: [1, 2]); // ERROR
+  y as [1, 2]; // ERROR
   const z = [0, ...x, 3];
-  (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
-  (z: $ReadOnlyArray<number | void>); // OK
+  z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
+  z as $ReadOnlyArray<number | void>; // OK
 }
 {
   declare const x: [b: 0, c?: 1];
   declare const y: [2, 3];
   const z = [...x, ...y] as const;
-  (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
-  (z: $ReadOnlyArray<number | void>); // OK
+  z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
+  z as $ReadOnlyArray<number | void>; // OK
 }
 {
   const x: [0, b?: 1] = [0];
   const y: [c?: 2] = [2];
   const z = [...x, ...y] as const;
-  (z: [a?: 0, b?: 1, c?: 2]); // ERROR
-  (z: $ReadOnlyArray<number | void>); // OK
+  z as [a?: 0, b?: 1, c?: 2]; // ERROR
+  z as $ReadOnlyArray<number | void>; // OK
 }
 
 // Variance is not preserved when doing value spread as the result is a copy

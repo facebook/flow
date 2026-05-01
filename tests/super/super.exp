@@ -269,21 +269,21 @@ References:
                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- super.js:14:6
+Error ---------------------------------------------------------------------------------------------------- super.js:14:5
 
 Cannot cast `super.staticMethod(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
-   super.js:14:6
-   14|     (super.staticMethod('foo'): number); // error, string !~> number
-            ^^^^^^^^^^^^^^^^^^^^^^^^^
+   super.js:14:5
+   14|     super.staticMethod('foo') as number; // error, string !~> number
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    super.js:4:34
     4|   static staticMethod(x:string): string { return x; }
                                         ^^^^^^ [1]
-   super.js:14:33
-   14|     (super.staticMethod('foo'): number); // error, string !~> number
-                                       ^^^^^^ [2]
+   super.js:14:34
+   14|     super.staticMethod('foo') as number; // error, string !~> number
+                                        ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- super.js:15:12

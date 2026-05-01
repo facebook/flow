@@ -21,6 +21,6 @@ map(boo) as [+v: number]; // error
 
 declare const issue2674: {[K in keyof [mixed, mixed]]: 'FOO'};
 
-(issue2674[0]: 'FOO'); // ok
-(issue2674[0]: 'BAR'); // error
+issue2674[0] as 'FOO'; // ok
+issue2674[0] as 'BAR'; // error
 issue2674[0] = 'BAR'; // error

@@ -2,4 +2,4 @@
 
 class P<X> {}
 
-module.exports = (new P<number>(): P<number>);
+module.exports = new P<number>() as P<number>;

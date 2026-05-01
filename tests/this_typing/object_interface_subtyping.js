@@ -52,38 +52,38 @@ declare var cmm : C_Method_mixed;
 declare var cfe : C_Function_empty;
 declare var cme : C_Method_empty;
 
-(cft : I_Function_this); // error, contravariant
-(cft : I_Method_this); // error, contravariant
-(cft : I_Function_mixed); // error, contravariant
-(cft : I_Method_mixed); // error, contravariant
-(cft : I_Function_empty);
+cft as I_Function_this; // error, contravariant
+cft as I_Method_this; // error, contravariant
+cft as I_Function_mixed; // error, contravariant
+cft as I_Method_mixed; // error, contravariant
+cft as I_Function_empty;
 
-(cmt : I_Function_this);  // error, contravariant
-(cmt : I_Method_this);  // error, contravariant
-(cmt : I_Function_mixed);  // error, contravariant
-(cmt : I_Method_mixed);  // error, contravariant
-(cmt : I_Function_empty);
+cmt as I_Function_this;  // error, contravariant
+cmt as I_Method_this;  // error, contravariant
+cmt as I_Function_mixed;  // error, contravariant
+cmt as I_Method_mixed;  // error, contravariant
+cmt as I_Function_empty;
 
-(cfm : I_Function_this);
-(cfm : I_Method_this);
-(cfm : I_Function_mixed);
-(cfm : I_Method_mixed);
-(cfm : I_Function_empty);
+cfm as I_Function_this;
+cfm as I_Method_this;
+cfm as I_Function_mixed;
+cfm as I_Method_mixed;
+cfm as I_Function_empty;
 
-(cmm : I_Function_this);
-(cmm : I_Method_this);
-(cmm : I_Function_mixed);
-(cmm : I_Method_mixed);
-(cmm : I_Function_empty);
+cmm as I_Function_this;
+cmm as I_Method_this;
+cmm as I_Function_mixed;
+cmm as I_Method_mixed;
+cmm as I_Function_empty;
 
-(cfe : I_Function_this);  // error, contravariant
-(cfe : I_Method_this); // error, contravariant
-(cfe : I_Function_mixed); // error, contravariant
-(cfe : I_Method_mixed); // error, contravariant
-(cfe : I_Function_empty);
+cfe as I_Function_this;  // error, contravariant
+cfe as I_Method_this; // error, contravariant
+cfe as I_Function_mixed; // error, contravariant
+cfe as I_Method_mixed; // error, contravariant
+cfe as I_Function_empty;
 
-(cme : I_Function_this); // error, contravariant
-(cme : I_Method_this); // error, contravariant
-(cme : I_Function_mixed); // error, contravariant
-(cme : I_Method_mixed); // error, contravariant
-(cme : I_Function_empty);
+cme as I_Function_this; // error, contravariant
+cme as I_Method_this; // error, contravariant
+cme as I_Function_mixed; // error, contravariant
+cme as I_Method_mixed; // error, contravariant
+cme as I_Function_empty;

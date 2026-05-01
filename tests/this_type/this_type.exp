@@ -370,19 +370,19 @@ References:
                 ^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------- import.js:18:23
+Error -------------------------------------------------------------------------------------------------- import.js:18:22
 
 Cannot call `(new B3<...>()).qux` with `0` bound to `x` because number [1] is incompatible with string [2].
 [incompatible-type]
 
-   import.js:18:23
-   18| (new B3<string>().qux(0): string); // error
-                             ^ [1]
+   import.js:18:22
+   18| new B3<string>().qux(0) as string; // error
+                            ^ [1]
 
 References:
-   import.js:18:9
-   18| (new B3<string>().qux(0): string); // error
-               ^^^^^^ [2]
+   import.js:18:8
+   18| new B3<string>().qux(0) as string; // error
+              ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:21:30
@@ -391,33 +391,33 @@ Cannot cast `(new B3<...>()).bar()` to `A2` because in type argument `X` [1]: st
 number [3]. [incompatible-type]
 
    import.js:21:30
-   21| ((new B3<string>().bar(): B3<string>): A2<number>); // error
+   21| new B3<string>().bar() as B3<string> as A2<number>; // error
                                     ^^^^^^ [2]
 
 References:
    export.js:6:17
     6| export class A2<X> {
                        ^ [1]
-   import.js:21:43
-   21| ((new B3<string>().bar(): B3<string>): A2<number>); // error
-                                                 ^^^^^^ [3]
+   import.js:21:44
+   21| new B3<string>().bar() as B3<string> as A2<number>; // error
+                                                  ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:22:2
+Error --------------------------------------------------------------------------------------------------- import.js:22:1
 
 Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   import.js:22:2
-   22| ((new B3(): A2<number>).qux(0): string); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   import.js:22:1
+   22| (new B3() as A2<number>).qux(0) as string; // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   import.js:22:16
-   22| ((new B3(): A2<number>).qux(0): string); // error
-                      ^^^^^^ [1]
-   import.js:22:33
-   22| ((new B3(): A2<number>).qux(0): string); // error
-                                       ^^^^^^ [2]
+   import.js:22:17
+   22| (new B3() as A2<number>).qux(0) as string; // error
+                       ^^^^^^ [1]
+   import.js:22:36
+   22| (new B3() as A2<number>).qux(0) as string; // error
+                                          ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ interface.js:1:25
@@ -428,21 +428,21 @@ Unexpected use of `this` type. [illegal-this]
                               ^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- statics.js:17:2
+Error -------------------------------------------------------------------------------------------------- statics.js:17:1
 
 Cannot cast `A.make()` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
-   statics.js:17:2
-   17| (A.make(): B); // error
-        ^^^^^^^^
+   statics.js:17:1
+   17| A.make() as B; // error
+       ^^^^^^^^
 
 References:
    statics.js:3:7
     3| class A {
              ^ [1]
-   statics.js:17:12
-   17| (A.make(): B); // error
-                  ^ [2]
+   statics.js:17:13
+   17| A.make() as B; // error
+                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:5:28

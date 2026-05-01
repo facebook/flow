@@ -4,22 +4,22 @@ declare var x: unknown;
 
 const c = new C();
 if (c.m(x)) {
-  (x: number);
-  (x: string); // error number ~> string
+  x as number;
+  x as string; // error number ~> string
 }
 
 if (c.os(x)) {
-  (x: number);
-  (x: string); // error number ~> string
+  x as number;
+  x as string; // error number ~> string
 }
 
 const d = new D();
 if (d.m(x)) {
-  (x: number);
-  (x: string); // error number ~> string
+  x as number;
+  x as string; // error number ~> string
 }
 
 if (d.os(x)) {
-  (x: number);
-  (x: string); // error number ~> string
+  x as number;
+  x as string; // error number ~> string
 }

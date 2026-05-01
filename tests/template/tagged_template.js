@@ -21,8 +21,8 @@
 {
   // raw property
   const tag = (quasis: TaggedTemplateLiteralArray, x: number) => {
-    (quasis.raw: $ReadOnlyArray<string>); // OK
-    (quasis.raw: empty); // ERROR
+    quasis.raw as $ReadOnlyArray<string>; // OK
+    quasis.raw as empty; // ERROR
   };
   tag`foo${1}`; // OK
 }
@@ -30,8 +30,8 @@
 {
   // `String.raw`
   const x = String.raw`foo${1}bar`;
-  (x: string); // OK
-  (x: empty); // ERROR
+  x as string; // OK
+  x as empty; // ERROR
 
   String.raw('foo'); // ERROR
 }
@@ -41,6 +41,6 @@
   const x = String.raw({
     raw: ['test']
   });
-  (x: string); // OK
-  (x: empty); // ERROR
+  x as string; // OK
+  x as empty; // ERROR
 }

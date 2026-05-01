@@ -5,4 +5,4 @@ declare var TestComponent: React.ComponentType<Props>;
 const props: Props = {bar: '', baz: 0};
 
 <TestComponent {...props} />; //breaks
-({...props}: Props); //works
+({...props}) as Props; //works

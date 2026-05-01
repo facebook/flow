@@ -104,4 +104,4 @@ type T =
   | () => void;
 
 declare var x: string;
-(x: T); // error
+x as T; // error

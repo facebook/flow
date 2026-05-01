@@ -2,14 +2,14 @@
 
 module.exports = 1;
 //     ^ --pretty
-(module.exports: number);
+module.exports as number;
 //      ^ --pretty
 
 if (0 < 1) {
   module.exports = "blah";
 //       ^ --pretty
-  (module.exports: string);
+  module.exports as string;
 //        ^ --pretty
 }
-(module.exports: number | string);
+module.exports as number | string;
 //      ^ --pretty

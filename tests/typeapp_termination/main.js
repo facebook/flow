@@ -9,4 +9,4 @@ export interface PromiseLike<T> {
 
 declare var p: PromiseLike<mixed>;
 // This check exercises Flow's termination strategies
-(p: RemotePromiseLike<mixed>);
+p as RemotePromiseLike<mixed>;

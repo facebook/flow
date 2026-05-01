@@ -1,15 +1,15 @@
-Error -------------------------------------------------------------------------------------------------- cycle_b.js:15:2
+Error -------------------------------------------------------------------------------------------------- cycle_b.js:15:1
 
 Cannot cast `1` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   cycle_b.js:15:2
-   15| (1: string); // error
-        ^ [1]
+   cycle_b.js:15:1
+   15| 1 as string; // error
+       ^ [1]
 
 References:
-   cycle_b.js:15:5
-   15| (1: string); // error
-           ^^^^^^ [2]
+   cycle_b.js:15:6
+   15| 1 as string; // error
+            ^^^^^^ [2]
 
 
 
@@ -21,18 +21,18 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ========Skipping stats========
 Merge skipped 0 of 3 modules
 Check will skip 0 of 3 files
-Error -------------------------------------------------------------------------------------------------- cycle_b.js:15:2
+Error -------------------------------------------------------------------------------------------------- cycle_b.js:15:1
 
 Cannot cast `1` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   cycle_b.js:15:2
-   15| (1: string); // error
-        ^ [1]
+   cycle_b.js:15:1
+   15| 1 as string; // error
+       ^ [1]
 
 References:
-   cycle_b.js:15:5
-   15| (1: string); // error
-           ^^^^^^ [2]
+   cycle_b.js:15:6
+   15| 1 as string; // error
+            ^^^^^^ [2]
 
 
 

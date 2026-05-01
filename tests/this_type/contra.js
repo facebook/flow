@@ -8,8 +8,8 @@ class C {
 class D extends C { }
 
 var d = new D();
-(d: C).next = new C;
-(d.next: D); // sneaky
+(d as C).next = new C;
+d.next as D; // sneaky
 
 class A {
   foo<X: this>(that: X) { } // error: can't hide contravariance using a bound

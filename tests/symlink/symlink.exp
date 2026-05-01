@@ -4,7 +4,7 @@ Cannot cast object literal to `Foo` because in property `x`: string [1] is incom
 [incompatible-type]
 
    qux.js:2:7
-   2| ({ x: "" }: Foo);
+   2| ({ x: "" }) as Foo;
             ^^ [1]
 
 References:

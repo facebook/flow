@@ -11,14 +11,14 @@ declare var y : F<number>;
 y.bind(3);
 y.bind(""); // error: number incompatible with string
 
-(x : F<number>);
-(y : F<string>); // error: number incompatible with string
+x as F<number>;
+y as F<string>; // error: number incompatible with string
 
 declare var z : <T>(this : T) => T;
-(z.bind(3)() : number);
-(z.bind("")() : string);
-(z.bind(3)() : string); // error: number incompatible with string
-(z.bind("")() : number); // error: number incompatible with string
+z.bind(3)() as number;
+z.bind("")() as string;
+z.bind(3)() as string; // error: number incompatible with string
+z.bind("")() as number; // error: number incompatible with string
 
 /* Subtyping */
 /* this is contravariant */
@@ -26,5 +26,5 @@ declare var z : <T>(this : T) => T;
 type TopFn = (this : empty) => mixed;
 type BotFn = (this : mixed) => empty;
 
-(x : TopFn);
-(x : BotFn); // error
+x as TopFn;
+x as BotFn; // error

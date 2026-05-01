@@ -15,42 +15,42 @@ class W<T> {
 }
 
 type A = number | string;
-(true: A);
+true as A;
 
 type B = string | {p: string};
-(42: B);
-({p: 42}: B);
+42 as B;
+({p: 42}) as B;
 
 type C = string | {a: {b: string}} | boolean | {a: {b: boolean}};
-(42: C);
-({a: {b: 42}}: C);
+42 as C;
+({a: {b: 42}}) as C;
 
 type D = string | {a: string} | {a: {b: string}};
-(42: D);
-({a: 42}: D);
-({a: {b: 42}}: D);
+42 as D;
+({a: 42}) as D;
+({a: {b: 42}}) as D;
 
 type E = X | interface {p: string};
-(42: E);
-(new X(): E);
-(new Y(): E);
-(new Z(): E);
-({p: true}: E);
+42 as E;
+new X() as E;
+new Y() as E;
+new Z() as E;
+({p: true}) as E;
 
 type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-(42: F);
-({p: 42}: F);
-({}: F);
-(new Y(): F);
-(new Z(): F);
-(([1]: [number]): F);
-(([1, 2]: [number, number]): F);
-(([1, 2, 3]: [number, number, number]): F);
-(((null: any): Array<number> & {p: number}): F);
+42 as F;
+({p: 42}) as F;
+({}) as F;
+new Y() as F;
+new Z() as F;
+[1] as [number] as F;
+[1, 2] as [number, number] as F;
+[1, 2, 3] as [number, number, number] as F;
+null as any as Array<number> & {p: number} as F;
 
 type G = string | Z;
-(42: G);
-({}: G);
+42 as G;
+({}) as G;
 
 type M = W<string> | interface {p: string};
-((new W(): W<number>): M);
+new W() as W<number> as M;

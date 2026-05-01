@@ -19,22 +19,22 @@ References:
                              ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------- iterator.js:6:2
+Error -------------------------------------------------------------------------------------------------- iterator.js:6:1
 
 Cannot cast `foo[Symbol.iterator]` to boolean because `Iterator` [1] is incompatible with boolean [2].
 [incompatible-type]
 
-   iterator.js:6:2
-   6| (foo[Symbol.iterator]: boolean); // Error
-       ^^^^^^^^^^^^^^^^^^^^
+   iterator.js:6:1
+   6| foo[Symbol.iterator] as boolean; // Error
+      ^^^^^^^^^^^^^^^^^^^^
 
 References:
    iterator.js:2:15
    2|   @@iterator: Iterator<number>,
                     ^^^^^^^^^^^^^^^^ [1]
-   iterator.js:6:24
-   6| (foo[Symbol.iterator]: boolean); // Error
-                             ^^^^^^^ [2]
+   iterator.js:6:25
+   6| foo[Symbol.iterator] as boolean; // Error
+                              ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:8:17
@@ -51,38 +51,38 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- symbol.js:23:6
+Error --------------------------------------------------------------------------------------------------- symbol.js:23:5
 
 Cannot cast `x` to boolean because symbol [1] is incompatible with boolean [2]. [incompatible-type]
 
-   symbol.js:23:6
-   23|     (x: boolean); // Error
-            ^
+   symbol.js:23:5
+   23|     x as boolean; // Error
+           ^
 
 References:
    symbol.js:20:12
    20|   const x: symbol | boolean = true;
                   ^^^^^^ [1]
-   symbol.js:23:9
-   23|     (x: boolean); // Error
-               ^^^^^^^ [2]
+   symbol.js:23:10
+   23|     x as boolean; // Error
+                ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- symbol.js:26:6
+Error --------------------------------------------------------------------------------------------------- symbol.js:26:5
 
 Cannot cast `x` to symbol because boolean [1] is incompatible with symbol [2]. [incompatible-type]
 
-   symbol.js:26:6
-   26|     (x: symbol); // Error
-            ^
+   symbol.js:26:5
+   26|     x as symbol; // Error
+           ^
 
 References:
    symbol.js:20:21
    20|   const x: symbol | boolean = true;
                            ^^^^^^^ [1]
-   symbol.js:26:9
-   26|     (x: symbol); // Error
-               ^^^^^^ [2]
+   symbol.js:26:10
+   26|     x as symbol; // Error
+                ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- symbol.js:45:27

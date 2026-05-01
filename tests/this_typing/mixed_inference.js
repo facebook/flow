@@ -6,22 +6,22 @@ let baz = function () {};
 
 
 // all ok
-(bar : () => void);
-(baz : () => void);
-(o.m : () => void);
-(o.n : () => void);
+bar as () => void;
+baz as () => void;
+o.m as () => void;
+o.n as () => void;
 
 // all ok
-(bar : (this : mixed) => void);
-(baz : (this : mixed) => void);
-(o.m : (this : mixed) => void);
-(o.n : (this : mixed) => void);
+bar as (this : mixed) => void;
+baz as (this : mixed) => void;
+o.m as (this : mixed) => void;
+o.n as (this : mixed) => void;
 
 // all ok
-(bar : (this : empty) => void);
-(baz : (this : empty) => void);
-(o.m : (this : empty) => void);
-(o.n : (this : empty) => void);
+bar as (this : empty) => void;
+baz as (this : empty) => void;
+o.m as (this : empty) => void;
+o.n as (this : empty) => void;
 
 
 function foo(this : number) {}
@@ -32,10 +32,10 @@ let o2 = { m() {}, n : function() {} }
 
 let baz2 = function () {};
 
-(foo : typeof bar2); // mixed incompatible with number
-(foo : typeof baz2); // mixed incompatible with number
-(foo : typeof o2.m); // mixed incompatible with number
-(foo : typeof o2.n); // mixed incompatible with number
+foo as typeof bar2; // mixed incompatible with number
+foo as typeof baz2; // mixed incompatible with number
+foo as typeof o2.m; // mixed incompatible with number
+foo as typeof o2.n; // mixed incompatible with number
 
 
 function this_default(
@@ -49,13 +49,13 @@ interface I {
 
 declare var i : I;
 
-(foo : typeof i.m); // method-unbinding, this type becomes any, so no more this typing errors
+foo as typeof i.m; // method-unbinding, this type becomes any, so no more this typing errors
 
 //$FlowExpectedError[method-unbinding]
-(i.m : () => void); // ok
+i.m as () => void; // ok
 
 //$FlowExpectedError[method-unbinding]
-(i.m  : (this : mixed) => void); // ok
+i.m as (this : mixed) => void; // ok
 
 //$FlowExpectedError[method-unbinding]
-(i.m  : (this : empty) => void); // ok
+i.m as (this : empty) => void; // ok

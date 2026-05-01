@@ -24,8 +24,8 @@ function valid_pattern({a}: {a: unknown}, x: unknown, ...r: Array<number>): x is
 
 declare var x: unknown;
 if (valid_pattern({a: 42}, x, 1, 2, 3)) {
-  (x: string); // TODO okay
-  (x: number); // TODO error string ~> number
+  x as string; // TODO okay
+  x as number; // TODO error string ~> number
 }
 
 type F = (x: unknown, ...p: Array<mixed>) => p is number; // error p is in rest param

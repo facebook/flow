@@ -1,6 +1,6 @@
-(`foo`: string); // OK
-(`bar`: 'bar'); // OK
-(`baz`: number); // ERROR
+`foo` as string; // OK
+`bar` as 'bar'; // OK
+`baz` as number; // ERROR
 
 `foo ${123} bar`; // OK: number can be appended to string
 `foo ${{bar: 123}} baz`; // ERROR: object can't be appended

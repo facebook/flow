@@ -17,4 +17,4 @@ let x = []; // ERROR
 setState(x);
 
 // The unification here should not "leak" to other uses of x
-(x: Array<{bar: string}>); // ERROR
+x as Array<{bar: string}>; // ERROR

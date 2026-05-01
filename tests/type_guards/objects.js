@@ -16,17 +16,17 @@ function object_test() {
   }
 
   if (obj.m(x)) {
-    (x: number);
-    (x: string); // error number ~> string
+    x as number;
+    x as string; // error number ~> string
   }
   if (obj.f(x)) {
-    (x: number); // error string ~> number
-    (x: string);
+    x as number; // error string ~> number
+    x as string;
   }
 
   // obj subtyping checks
 
-  (obj: { // error number ~> string
+  (obj as { // error number ~> string
     m(x: unknown): x is string,
     ...
   });
