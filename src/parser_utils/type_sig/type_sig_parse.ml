@@ -2565,7 +2565,7 @@ and type_guard_opt opts scope tbls xs guard =
     (* TODO(pvekris) support assert type guards in type_sig_parse *)
     None
 
-and return_annot opts scope tbls xs = function
+and return_annot ?(is_method = false) opts scope tbls xs = function
   | T.Function.Available r -> (annot opts scope tbls xs r, None)
   | T.Function.TypeGuard ((loc, _) as g) ->
     let loc = push_loc tbls loc in
@@ -2578,7 +2578,15 @@ and return_annot opts scope tbls xs = function
     (Annot (Boolean loc), guard)
   | T.Function.Missing loc ->
     let loc = push_loc tbls loc in
-    (Annot (Void loc), None)
+    (* Methods in `.ts` / `.d.ts` files default to implicit `any` to match
+       TypeScript's ambient-declaration semantics; everywhere else (and all
+       non-method callers) preserve the legacy Void default. The typing layer
+       in `type_annotation.ml` applies the same gate so the cross-module
+       signature stays consistent with in-file inference. *)
+    if is_method && opts.is_ts_file then
+      (Annot (Any loc), None)
+    else
+      (Annot (Void loc), None)
 
 and convert_effect opts effect_ fun_loc_opt name_opt =
   match (effect_, fun_loc_opt) with
@@ -2591,7 +2599,7 @@ and convert_effect opts effect_ fun_loc_opt name_opt =
     HookAnnot
   | (Ast.Function.Arbitrary, _) -> ArbitraryEffect
 
-and function_type opts scope tbls xs f =
+and function_type ?(is_method = false) opts scope tbls xs f =
   let module F = T.Function in
   let {
     F.tparams = tps;
@@ -2606,7 +2614,7 @@ and function_type opts scope tbls xs f =
   let this_param = function_type_this_param opts scope tbls xs this_ in
   let params = function_type_params opts scope tbls xs ps in
   let rest_param = function_type_rest_param opts scope tbls xs rp in
-  let (return, type_guard) = return_annot opts scope tbls xs r in
+  let (return, type_guard) = return_annot ~is_method opts scope tbls xs r in
   let effect_ = convert_effect opts effect_ None None in
   FunSig { tparams; params; rest_param; this_param; return; type_guard; effect_ }
 
@@ -2765,7 +2773,7 @@ and optional_method_as_field opts scope tbls xs id_loc fn_loc fn =
      before id_loc. *)
   let fn_loc = push_loc tbls fn_loc in
   let id_loc = push_loc tbls id_loc in
-  let def = function_type opts scope tbls xs fn in
+  let def = function_type ~is_method:true opts scope tbls xs fn in
   let t = Annot (Optional (Annot (FunAnnot (fn_loc, def)))) in
   (id_loc, t)
 
@@ -2776,7 +2784,7 @@ and object_type =
     | (fn_loc, T.Function f) ->
       let fn_loc = push_loc tbls fn_loc in
       let id_loc = push_loc tbls id_loc in
-      let def = function_type opts scope tbls xs f in
+      let def = function_type ~is_method:true opts scope tbls xs f in
       Acc.add_method name id_loc fn_loc def acc
     | _ -> failwith "unexpected method"
   in
@@ -2830,7 +2838,7 @@ and object_type =
           | (fn_loc, T.Function f) ->
             let fn_loc = push_loc tbls fn_loc in
             let (key_ref, ref_loc) = build_key () in
-            let def = function_type opts scope tbls xs f in
+            let def = function_type ~is_method:true opts scope tbls xs f in
             if optional then
               let t = Annot (Optional (Annot (FunAnnot (fn_loc, def)))) in
               Acc.add_computed_field key_ref ref_loc (polarity variance) t acc
@@ -3058,7 +3066,7 @@ and interface_props =
         else
           let fn_loc = push_loc tbls fn_loc in
           let id_loc = push_loc tbls id_loc in
-          let def = function_type opts scope tbls xs fn in
+          let def = function_type ~is_method:true opts scope tbls xs fn in
           Acc.append_method name id_loc fn_loc def acc
       | (true, _) -> acc (* unexpected non-function method *)
       | (false, O.Property.Init (Some t)) ->
@@ -3088,7 +3096,7 @@ and interface_props =
       | (true, O.Property.Init (Some (fn_loc, Ast.Type.Function fn))) ->
         let fn_loc = push_loc tbls fn_loc in
         let (key_ref, ref_loc) = build_key () in
-        let def = function_type opts scope tbls xs fn in
+        let def = function_type ~is_method:true opts scope tbls xs fn in
         if optional then
           let t = Annot (Optional (Annot (FunAnnot (fn_loc, def)))) in
           let polarity = polarity variance in
@@ -3196,7 +3204,7 @@ and declare_class_props =
           else
             let fn_loc = push_loc tbls fn_loc in
             let id_loc = push_loc tbls id_loc in
-            let def = function_type opts scope tbls xs fn in
+            let def = function_type ~is_method:true opts scope tbls xs fn in
             Acc.append_method ~static name id_loc fn_loc def acc
         | (true, _) -> acc (* unexpected non-function method *)
         | (false, O.Property.Init (Some t)) ->
@@ -3244,7 +3252,7 @@ and declare_class_props =
         | (true, O.Property.Init (Some (fn_loc, Ast.Type.Function fn))) ->
           let fn_loc = push_loc tbls fn_loc in
           let (key_ref, ref_loc) = build_key () in
-          let def = function_type opts scope tbls xs fn in
+          let def = function_type ~is_method:true opts scope tbls xs fn in
           if optional then
             let t = Annot (Optional (Annot (FunAnnot (fn_loc, def)))) in
             let polarity = polarity variance in
@@ -4949,7 +4957,7 @@ and class_def =
                so we push id_loc first to maintain location ordering. *)
             let id_loc = push_loc tbls id_loc in
             let fn_loc = push_loc tbls fn_loc in
-            let def = function_type opts scope tbls xs f in
+            let def = function_type ~is_method:true opts scope tbls xs f in
             let t = Annot (Optional (Annot (FunAnnot (fn_loc, def)))) in
             let polarity = Polarity.Neutral in
             Acc.add_field ~static name id_loc polarity t acc
@@ -4967,7 +4975,7 @@ and class_def =
             | C.Method.Constructor ->
               let id_loc = push_loc tbls id_loc in
               let fn_loc = push_loc tbls fn_loc in
-              let def = function_type opts scope tbls xs f in
+              let def = function_type ~is_method:true opts scope tbls xs f in
               Acc.add_method ~static name id_loc fn_loc ~async:false ~generator:false def acc
           end
         | C.Body.DeclareMethod _ -> acc (* unsupported DeclareMethod key types *)

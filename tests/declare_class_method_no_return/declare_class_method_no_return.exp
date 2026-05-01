@@ -22,5 +22,13 @@ Return type annotation is required for `declare class` methods. [unsupported-syn
                                  
 
 
+Error ---------------------------------------------------------------------------------------- method_no_return.js:44:12
 
-Found 3 errors
+Return type annotation is required for `declare class` methods. [unsupported-syntax]
+
+   44|   get foo(); // ERROR — getter without return type still errors
+                  
+
+
+
+Found 4 errors

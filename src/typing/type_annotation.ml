@@ -2672,6 +2672,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         None
       )
     | Function.Missing loc ->
+      let is_ts_file = Files.has_ts_ext (Context.file env.cx) in
       (match meth_kind with
       | ConstructorKind ->
         if not (Context.tslib_syntax env.cx) then
@@ -2681,7 +2682,23 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                (loc, Flow_intermediate_error_types.DeclareClassMethodMissingReturnType)
             );
         (VoidT.at loc, Function.Missing loc, None)
-      | _ ->
+      | SetterKind -> (VoidT.at loc, Function.Missing loc, None)
+      | MethodKind _ ->
+        if not is_ts_file then
+          Flow_js_utils.add_output
+            env.cx
+            (Error_message.EUnsupportedSyntax
+               (loc, Flow_intermediate_error_types.DeclareClassMethodMissingReturnType)
+            );
+        let any_source =
+          if is_ts_file then
+            AnnotatedAny
+          else
+            AnyError None
+        in
+        (AnyT.at any_source loc, Function.Missing loc, None)
+      | GetterKind
+      | FunctionKind ->
         Flow_js_utils.add_output
           env.cx
           (Error_message.EUnsupportedSyntax

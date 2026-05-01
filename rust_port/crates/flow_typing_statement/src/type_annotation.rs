@@ -5333,32 +5333,57 @@ fn convert_return_annotation<'a>(
             );
             (any_t, mapped_ret, None)
         }
-        ReturnAnnotation::Missing(loc) => match meth_kind {
-            MethodKind::ConstructorKind => {
-                if !cx.tslib_syntax() {
-                    flow_js_utils::add_output_non_speculating(
+        ReturnAnnotation::Missing(loc) => {
+            let is_ts_file = flow_common::files::has_ts_ext(cx.file());
+            match meth_kind {
+                MethodKind::ConstructorKind => {
+                    if !cx.tslib_syntax() {
+                        flow_js_utils::add_output_non_speculating(
                             cx,
                             ErrorMessage::EUnsupportedSyntax(Box::new((
                                 loc.dupe(),
                                 intermediate_error_types::UnsupportedSyntax::DeclareClassMethodMissingReturnType,
                             ))),
                         );
+                    }
+                    let void_t = type_::void::at(loc.dupe());
+                    (void_t, ReturnAnnotation::Missing(loc.dupe()), None)
                 }
-                let void_t = type_::void::at(loc.dupe());
-                (void_t, ReturnAnnotation::Missing(loc.dupe()), None)
-            }
-            _ => {
-                flow_js_utils::add_output_non_speculating(
+                MethodKind::SetterKind => {
+                    let void_t = type_::void::at(loc.dupe());
+                    (void_t, ReturnAnnotation::Missing(loc.dupe()), None)
+                }
+                MethodKind::MethodKind { .. } => {
+                    if !is_ts_file {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
+                                loc.dupe(),
+                                intermediate_error_types::UnsupportedSyntax::DeclareClassMethodMissingReturnType,
+                            ))),
+                        );
+                    }
+                    let any_source = if is_ts_file {
+                        type_::AnySource::AnnotatedAny
+                    } else {
+                        type_::AnySource::AnyError(None)
+                    };
+                    let any_t = type_::any_t::at(any_source, loc.dupe());
+                    (any_t, ReturnAnnotation::Missing(loc.dupe()), None)
+                }
+                MethodKind::GetterKind | MethodKind::FunctionKind => {
+                    flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::EUnsupportedSyntax(Box::new((
                             loc.dupe(),
                             intermediate_error_types::UnsupportedSyntax::DeclareClassMethodMissingReturnType,
                         ))),
                     );
-                let any_t = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());
-                (any_t, ReturnAnnotation::Missing(loc.dupe()), None)
+                    let any_t = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());
+                    (any_t, ReturnAnnotation::Missing(loc.dupe()), None)
+                }
             }
-        },
+        }
     })
 }
 

@@ -20,3 +20,7 @@ var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter;
 
 var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
 foo.propOverriddenWithSetter = 123; // Error number ~> string
+
+// Bare setter (no return annotation) — assignment uses parameter type only
+foo.bareSetter = 123; // OK
+foo.bareSetter = 'hello'; // ERROR string ~> number

@@ -27,6 +27,9 @@ declare class Foo {
 
   propOverriddenWithSetter: number; // error: can't shadow proto with incompatible own
   set propOverriddenWithSetter(x: string): void;
+
+  // Bare setter with no return annotation — defaults to void unconditionally
+  set bareSetter(x: number);
 };
 
 export {Foo};
