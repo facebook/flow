@@ -5,4 +5,4 @@ function foo() {
 function bar() { }
 x = 1;
 bar();
-(x: number); // error
+x as number; // error

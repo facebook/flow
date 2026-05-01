@@ -5,8 +5,8 @@ const E = {A: 'A', B: 'B'} as const;
 declare var x: T;
 
 if (x === E.A) {
-  (E.A: T); // OK
-  (E.A: number); // Error expected
+  E.A as T; // OK
+  E.A as number; // Error expected
 }
 
 declare var Enum: {|

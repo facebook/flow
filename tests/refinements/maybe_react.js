@@ -15,14 +15,14 @@ type Props = {|
 declare var x : Props;
 const {title} = x;
 
-((title != null ? title.toString() : '') : string)
+(title != null ? title.toString() : '') as string
 
 type MaybeFun = ?(() => number);
 
 declare const m: MaybeFun;
-(m && m(): ?number); // OK!
+(m && m()) as ?number; // OK!
 
 type MaybeComponent = ?(React.ComponentType<{}>);
 
 declare const C: MaybeComponent;
-(C && <C />: ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>); // ok
+(C && <C />) as ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>; // ok

@@ -3308,72 +3308,72 @@ References:
                        ^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ numeric_sentinel.js:9:4
+Error ------------------------------------------------------------------------------------------ numeric_sentinel.js:9:3
 
 Cannot cast `x1.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   numeric_sentinel.js:9:4
-   9|   (x1.p: string); // should error
-         ^^^^
+   numeric_sentinel.js:9:3
+   9|   x1.p as string; // should error
+        ^^^^
 
 References:
    numeric_sentinel.js:2:18
    2|   | {type: 1, p: number}
                        ^^^^^^ [1]
-   numeric_sentinel.js:9:10
-   9|   (x1.p: string); // should error
-               ^^^^^^ [2]
+   numeric_sentinel.js:9:11
+   9|   x1.p as string; // should error
+                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- numeric_sentinel.js:20:4
+Error ----------------------------------------------------------------------------------------- numeric_sentinel.js:20:3
 
 Cannot cast `x2.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   numeric_sentinel.js:20:4
-   20|   (x2.p: string); // should error
-          ^^^^
+   numeric_sentinel.js:20:3
+   20|   x2.p as string; // should error
+         ^^^^
 
 References:
    numeric_sentinel.js:13:20
    13|   | {type: 1.0, p: number}
                           ^^^^^^ [1]
-   numeric_sentinel.js:20:10
-   20|   (x2.p: string); // should error
-                ^^^^^^ [2]
+   numeric_sentinel.js:20:11
+   20|   x2.p as string; // should error
+                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- numeric_sentinel.js:31:4
+Error ----------------------------------------------------------------------------------------- numeric_sentinel.js:31:3
 
 Cannot cast `x3.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   numeric_sentinel.js:31:4
-   31|   (x3.p: string); // should error
-          ^^^^
+   numeric_sentinel.js:31:3
+   31|   x3.p as string; // should error
+         ^^^^
 
 References:
    numeric_sentinel.js:24:26
    24|   | {type: 1.0 | 1.1, p: number}
                                 ^^^^^^ [1]
-   numeric_sentinel.js:31:10
-   31|   (x3.p: string); // should error
-                ^^^^^^ [2]
+   numeric_sentinel.js:31:11
+   31|   x3.p as string; // should error
+                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- numeric_sentinel.js:35:4
+Error ----------------------------------------------------------------------------------------- numeric_sentinel.js:35:3
 
 Cannot cast `x3.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   numeric_sentinel.js:35:4
-   35|   (x3.p: string); // should error
-          ^^^^
+   numeric_sentinel.js:35:3
+   35|   x3.p as string; // should error
+         ^^^^
 
 References:
    numeric_sentinel.js:24:26
    24|   | {type: 1.0 | 1.1, p: number}
                                 ^^^^^^ [1]
-   numeric_sentinel.js:35:10
-   35|   (x3.p: string); // should error
-                ^^^^^^ [2]
+   numeric_sentinel.js:35:11
+   35|   x3.p as string; // should error
+                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ sentinel.js:11:17

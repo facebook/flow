@@ -10,7 +10,7 @@ function coerce(t: string): number {
       box = { type: "BAD", value: t };
     });
     if (box.type !== "GOOD") {
-      return (box: empty).value;
+      return (box as empty).value;
     }
   }
   throw new Error("Unreachable.");

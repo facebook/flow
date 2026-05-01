@@ -15,21 +15,21 @@ Found correct merge base hash: Yes
 Moving to commit 2
 
 Should find new errors:
-Error ------------------------------------------------------------------------------------------------------ test.js:7:2
+Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
 Cannot cast `dep2` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:7:2
-   7| (dep2: string);
-       ^^^^
+   test.js:7:1
+   7| dep2 as string;
+      ^^^^
 
 References:
    dep2.js:3:16
    3| export default 123;
                      ^^^ [1]
-   test.js:7:8
-   7| (dep2: string);
-             ^^^^^^ [2]
+   test.js:7:9
+   7| dep2 as string;
+              ^^^^^^ [2]
 
 
 

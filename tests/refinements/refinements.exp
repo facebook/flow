@@ -524,13 +524,13 @@ References:
              ^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------- computed_string_literal.js:21:6
+Error ---------------------------------------------------------------------------------- computed_string_literal.js:21:5
 
 Refined at [1] [InferError]
 
-   computed_string_literal.js:21:6
-   21|     (b.a: string); // ok
-            ^
+   computed_string_literal.js:21:5
+   21|     b.a as string; // ok
+           ^
 
 References:
    computed_string_literal.js:20:7
@@ -552,13 +552,13 @@ References:
              ^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------- computed_string_literal.js:24:6
+Error ---------------------------------------------------------------------------------- computed_string_literal.js:24:5
 
 Refined at [1] [InferError]
 
-   computed_string_literal.js:24:6
-   24|     (b.b: string); // ok
-            ^
+   computed_string_literal.js:24:5
+   24|     b.b as string; // ok
+           ^
 
 References:
    computed_string_literal.js:20:7
@@ -608,13 +608,13 @@ References:
                 ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------- computed_string_literal.js:36:8
+Error ---------------------------------------------------------------------------------- computed_string_literal.js:36:7
 
 Refined at [1] [2] [InferError]
 
-   computed_string_literal.js:36:8
-   36|       (b["@type"]: empty);
-              ^
+   computed_string_literal.js:36:7
+   36|       b["@type"] as empty;
+             ^
 
 References:
    computed_string_literal.js:31:10
@@ -625,13 +625,13 @@ References:
                 ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------- computed_string_literal.js:36:8
+Error ---------------------------------------------------------------------------------- computed_string_literal.js:36:7
 
 Refined at [1] [2] [InferError]
 
-   computed_string_literal.js:36:8
-   36|       (b["@type"]: empty);
-              ^^^^^^^^^^
+   computed_string_literal.js:36:7
+   36|       b["@type"] as empty;
+             ^^^^^^^^^^
 
 References:
    computed_string_literal.js:31:10
@@ -684,13 +684,13 @@ References:
        ^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- cond_expr.js:3:4
+Error ------------------------------------------------------------------------------------------------- cond_expr.js:3:3
 
 Cannot get `a.q` because property `q` is missing in object literal [1]. [prop-missing]
 
-   cond_expr.js:3:4
-   3| (a.q: unknown); // An error here
-         ^
+   cond_expr.js:3:3
+   3| a.q as unknown; // An error here
+        ^
 
 References:
    cond_expr.js:1:9
@@ -712,13 +712,13 @@ References:
               ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- cond_expr.js:7:4
+Error ------------------------------------------------------------------------------------------------- cond_expr.js:7:3
 
 Cannot get `b.q` because property `q` is missing in object literal [1]. [prop-missing]
 
-   cond_expr.js:7:4
-   7| (b.q: unknown); // is an error here
-         ^
+   cond_expr.js:7:3
+   7| b.q as unknown; // is an error here
+        ^
 
 References:
    cond_expr.js:5:9
@@ -1103,31 +1103,31 @@ Cannot get `TDR.current` because property `current` is not readable. [cannot-rea
                ^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- exists.js:24:12
+Error -------------------------------------------------------------------------------------------------- exists.js:24:11
 
 Refined at [1] [InferError]
 
-   exists.js:24:12
-   24|   if (!C) (C: empty); // okay
-                  ^
+   exists.js:24:11
+   24|   if (!C) C as empty; // okay
+                 ^
 
 References:
    exists.js:24:8
-   24|   if (!C) (C: empty); // okay
+   24|   if (!C) C as empty; // okay
               ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- exists.js:25:12
+Error -------------------------------------------------------------------------------------------------- exists.js:25:11
 
 Refined at [1] [InferError]
 
-   exists.js:25:12
-   25|   if (!P) (P: empty); // okay
-                  ^
+   exists.js:25:11
+   25|   if (!P) P as empty; // okay
+                 ^
 
 References:
    exists.js:25:8
-   25|   if (!P) (P: empty); // okay
+   25|   if (!P) P as empty; // okay
               ^ [1]
 
 
@@ -1663,38 +1663,38 @@ References:
               ^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------- func_call_precision.js:8:2
+Error --------------------------------------------------------------------------------------- func_call_precision.js:8:1
 
 Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-type]
 
-   func_call_precision.js:8:2
-   8| (x: number); // error
-       ^
+   func_call_precision.js:8:1
+   8| x as number; // error
+      ^
 
 References:
    func_call_precision.js:1:9
    1| let x = null;
               ^^^^ [1]
-   func_call_precision.js:8:5
-   8| (x: number); // error
-          ^^^^^^ [2]
+   func_call_precision.js:8:6
+   8| x as number; // error
+           ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- func_call_recursive.js:10:4
+Error -------------------------------------------------------------------------------------- func_call_recursive.js:10:3
 
 Cannot cast `x` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
-   func_call_recursive.js:10:4
-   10|   (x: number);
-          ^
+   func_call_recursive.js:10:3
+   10|   x as number;
+         ^
 
 References:
    func_call_recursive.js:1:8
     1| var x: ?number = 0;
               ^^^^^^^ [1]
-   func_call_recursive.js:10:7
-   10|   (x: number);
-             ^^^^^^ [2]
+   func_call_recursive.js:10:8
+   10|   x as number;
+              ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:4:5
@@ -2639,22 +2639,22 @@ References:
                              ^ [3]
 
 
-Error --------------------------------------------------------------------------------- inclusion_check_widening.js:68:2
+Error --------------------------------------------------------------------------------- inclusion_check_widening.js:68:1
 
 Cannot cast `key5` to string literal `a` because string [1] is incompatible with string literal `a` [2].
 [incompatible-type]
 
-   inclusion_check_widening.js:68:2
-   68| (key5: 'a'); // error string ~> 'a'
-        ^^^^
+   inclusion_check_widening.js:68:1
+   68| key5 as 'a'; // error string ~> 'a'
+       ^^^^
 
 References:
    inclusion_check_widening.js:66:23
    66| const {key5} = {key5: 'a'};
                              ^^^ [1]
-   inclusion_check_widening.js:68:8
-   68| (key5: 'a'); // error string ~> 'a'
-              ^^^ [2]
+   inclusion_check_widening.js:68:9
+   68| key5 as 'a'; // error string ~> 'a'
+               ^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:13:10
@@ -7865,16 +7865,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `box` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    issue-7103.js:13:15
-   13|       return (box: empty).value;
+   13|       return (box as empty).value;
                      ^^^
 
 References:
    issue-7103.js:7:12
     7|   let box: Box = { type: "GOOD", value: t };
                   ^^^ [1]
-   issue-7103.js:13:20
-   13|       return (box: empty).value;
-                          ^^^^^ [2]
+   issue-7103.js:13:22
+   13|       return (box as empty).value;
+                            ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- issue-7103.js:13:15
@@ -7882,7 +7882,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    issue-7103.js:13:15
-   13|       return (box: empty).value;
+   13|       return (box as empty).value;
                      ^^^
 
 References:
@@ -7896,16 +7896,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `box` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    issue-7104.js:20:15
-   20|       return (box: empty).value; // error, but no underconstrained error
+   20|       return (box as empty).value; // error, but no underconstrained error
                      ^^^
 
 References:
    issue-7104.js:3:12
     3|   let box: Box = { type: "GOOD", value: t };
                   ^^^ [1]
-   issue-7104.js:20:20
-   20|       return (box: empty).value; // error, but no underconstrained error
-                          ^^^^^ [2]
+   issue-7104.js:20:22
+   20|       return (box as empty).value; // error, but no underconstrained error
+                            ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- issue-7104.js:20:15
@@ -7913,7 +7913,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    issue-7104.js:20:15
-   20|       return (box: empty).value; // error, but no underconstrained error
+   20|       return (box as empty).value; // error, but no underconstrained error
                      ^^^
 
 References:
@@ -7952,12 +7952,12 @@ Cannot yield object literal because: [incompatible-type]
    props.
 
    issue-7105.js:9:15
-   9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   9|         yield { type: "DONE", value: (box as empty).value }; // TODO(T225770374)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    issue-7105.js:9:23
-   9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
+   9|         yield { type: "DONE", value: (box as empty).value }; // TODO(T225770374)
                             ^^^^^^ [1]
    issue-7105.js:2:50
    2| type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
@@ -7972,16 +7972,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `box` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    issue-7105.js:9:39
-   9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
+   9|         yield { type: "DONE", value: (box as empty).value }; // TODO(T225770374)
                                             ^^^
 
 References:
    issue-7105.js:4:12
    4|   let box: Box = { type: "GOOD", value: t };
                  ^^^ [1]
-   issue-7105.js:9:44
-   9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
-                                                 ^^^^^ [2]
+   issue-7105.js:9:46
+   9|         yield { type: "DONE", value: (box as empty).value }; // TODO(T225770374)
+                                                   ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:39
@@ -7989,7 +7989,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    issue-7105.js:9:39
-   9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
+   9|         yield { type: "DONE", value: (box as empty).value }; // TODO(T225770374)
                                             ^^^
 
 References:
@@ -8074,18 +8074,18 @@ References:
               ^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- maybe_react.js:18:19
+Error --------------------------------------------------------------------------------------------- maybe_react.js:18:18
 
 Refined at [1] [InferError]
 
-   maybe_react.js:18:19
-   18| ((title != null ? title.toString() : '') : string)
-                         ^^^^^
+   maybe_react.js:18:18
+   18| (title != null ? title.toString() : '') as string
+                        ^^^^^
 
 References:
-   maybe_react.js:18:3
-   18| ((title != null ? title.toString() : '') : string)
-         ^^^^^^^^^^^^^ [1]
+   maybe_react.js:18:2
+   18| (title != null ? title.toString() : '') as string
+        ^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- maybe_react.js:23:7
@@ -8093,12 +8093,12 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    maybe_react.js:23:7
-   23| (m && m(): ?number); // OK!
+   23| (m && m()) as ?number; // OK!
              ^
 
 References:
    maybe_react.js:23:2
-   23| (m && m(): ?number); // OK!
+   23| (m && m()) as ?number; // OK!
         ^ [1]
 
 
@@ -8107,12 +8107,12 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    maybe_react.js:28:8
-   28| (C && <C />: ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>); // ok
+   28| (C && <C />) as ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>; // ok
               ^
 
 References:
    maybe_react.js:28:2
-   28| (C && <C />: ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>); // ok
+   28| (C && <C />) as ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>; // ok
         ^ [1]
 
 
@@ -8746,13 +8746,13 @@ References:
              ^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:58:6
+Error ------------------------------------------------------------------------------------ missing-property-cond.js:58:5
 
 Refined at [1] [InferError]
 
-   missing-property-cond.js:58:6
-   58|     (a.foo: Set<mixed>);
-            ^
+   missing-property-cond.js:58:5
+   58|     a.foo as Set<mixed>;
+           ^
 
 References:
    missing-property-cond.js:57:7
@@ -8760,13 +8760,13 @@ References:
              ^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:58:6
+Error ------------------------------------------------------------------------------------ missing-property-cond.js:58:5
 
 Refined at [1] [InferError]
 
-   missing-property-cond.js:58:6
-   58|     (a.foo: Set<mixed>);
-            ^^^^^
+   missing-property-cond.js:58:5
+   58|     a.foo as Set<mixed>;
+           ^^^^^
 
 References:
    missing-property-cond.js:57:20
@@ -8788,13 +8788,13 @@ References:
              ^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:65:6
+Error ------------------------------------------------------------------------------------ missing-property-cond.js:65:5
 
 Refined at [1] [InferError]
 
-   missing-property-cond.js:65:6
-   65|     (a.foo: $ReadOnlyArray<mixed>);
-            ^
+   missing-property-cond.js:65:5
+   65|     a.foo as $ReadOnlyArray<mixed>;
+           ^
 
 References:
    missing-property-cond.js:64:7
@@ -8802,13 +8802,13 @@ References:
              ^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ missing-property-cond.js:65:6
+Error ------------------------------------------------------------------------------------ missing-property-cond.js:65:5
 
 Refined at [1] [InferError]
 
-   missing-property-cond.js:65:6
-   65|     (a.foo: $ReadOnlyArray<mixed>);
-            ^^^^^
+   missing-property-cond.js:65:5
+   65|     a.foo as $ReadOnlyArray<mixed>;
+           ^^^^^
 
 References:
    missing-property-cond.js:64:20
@@ -9790,17 +9790,17 @@ References:
                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- nested_union_maybe.js:11:18
+Error -------------------------------------------------------------------------------------- nested_union_maybe.js:11:17
 
 Refined at [1] [InferError]
 
-   nested_union_maybe.js:11:18
-   11| if(y != null) { (y : string) }
-                        ^
+   nested_union_maybe.js:11:17
+   11| if(y != null) { y as string }
+                       ^
 
 References:
    nested_union_maybe.js:11:4
-   11| if(y != null) { (y : string) }
+   11| if(y != null) { y as string }
           ^^^^^^^^^ [1]
 
 
@@ -10046,30 +10046,30 @@ References:
                    ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- number.js:6:8
+Error ---------------------------------------------------------------------------------------------------- number.js:6:7
 
 Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   number.js:6:8
-   6|       (x: void); // error
-             ^
+   number.js:6:7
+   6|       x as void; // error
+            ^
 
 References:
    number.js:4:15
    4|   function(x: number) {
                     ^^^^^^ [1]
-   number.js:6:11
-   6|       (x: void); // error
-                ^^^^ [2]
+   number.js:6:12
+   6|       x as void; // error
+                 ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- number.js:6:8
+Error ---------------------------------------------------------------------------------------------------- number.js:6:7
 
 Refined at [1] [InferError]
 
-   number.js:6:8
-   6|       (x: void); // error
-             ^
+   number.js:6:7
+   6|       x as void; // error
+            ^
 
 References:
    number.js:5:9
@@ -10077,57 +10077,57 @@ References:
               ^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- number.js:8:6
+Error ---------------------------------------------------------------------------------------------------- number.js:8:5
 
 Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
 [incompatible-type]
 
-   number.js:8:6
-   8|     (x: 0); // error
-           ^
+   number.js:8:5
+   8|     x as 0; // error
+          ^
 
 References:
    number.js:4:15
    4|   function(x: number) {
                     ^^^^^^ [1]
-   number.js:8:9
-   8|     (x: 0); // error
-              ^ [2]
+   number.js:8:10
+   8|     x as 0; // error
+               ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:13:8
+Error --------------------------------------------------------------------------------------------------- number.js:13:7
 
 Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
 [incompatible-type]
 
-   number.js:13:8
-   13|       (x: 0); // error
-              ^
+   number.js:13:7
+   13|       x as 0; // error
+             ^
 
 References:
    number.js:11:15
    11|   function(x: number) {
                      ^^^^^^ [1]
-   number.js:13:11
-   13|       (x: 0); // error
-                 ^ [2]
+   number.js:13:12
+   13|       x as 0; // error
+                  ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:15:6
+Error --------------------------------------------------------------------------------------------------- number.js:15:5
 
 Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   number.js:15:6
-   15|     (x: void); // error
-            ^
+   number.js:15:5
+   15|     x as void; // error
+           ^
 
 References:
    number.js:11:15
    11|   function(x: number) {
                      ^^^^^^ [1]
-   number.js:15:9
-   15|     (x: void); // error
-               ^^^^ [2]
+   number.js:15:10
+   15|     x as void; // error
+                ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- number.js:19:9
@@ -10241,13 +10241,13 @@ References:
                ^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:48:8
+Error --------------------------------------------------------------------------------------------------- number.js:48:7
 
 Refined at [1] [InferError]
 
-   number.js:48:8
-   48|       (x: 0);
-              ^
+   number.js:48:7
+   48|       x as 0;
+             ^
 
 References:
    number.js:47:9
@@ -10255,47 +10255,47 @@ References:
                ^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:49:8
+Error --------------------------------------------------------------------------------------------------- number.js:49:7
 
 Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2]. [incompatible-type]
 
-   number.js:49:8
-   49|       (x: void); // error
-              ^
+   number.js:49:7
+   49|       x as void; // error
+             ^
 
 References:
    number.js:46:15
    46|   function(x: 0 | 1) {
                      ^ [1]
-   number.js:49:11
-   49|       (x: void); // error
-                 ^^^^ [2]
+   number.js:49:12
+   49|       x as void; // error
+                  ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:49:8
+Error --------------------------------------------------------------------------------------------------- number.js:49:7
 
 Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2]. [incompatible-type]
 
-   number.js:49:8
-   49|       (x: void); // error
-              ^
+   number.js:49:7
+   49|       x as void; // error
+             ^
 
 References:
    number.js:47:15
    47|     if (x === 0) {
                      ^ [1]
-   number.js:49:11
-   49|       (x: void); // error
-                 ^^^^ [2]
+   number.js:49:12
+   49|       x as void; // error
+                  ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:49:8
+Error --------------------------------------------------------------------------------------------------- number.js:49:7
 
 Refined at [1] [InferError]
 
-   number.js:49:8
-   49|       (x: void); // error
-              ^
+   number.js:49:7
+   49|       x as void; // error
+             ^
 
 References:
    number.js:47:9
@@ -10303,13 +10303,13 @@ References:
                ^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:52:8
+Error --------------------------------------------------------------------------------------------------- number.js:52:7
 
 Refined at [1] [InferError]
 
-   number.js:52:8
-   52|       (x: 1);
-              ^
+   number.js:52:7
+   52|       x as 1;
+             ^
 
 References:
    number.js:51:9
@@ -10317,47 +10317,47 @@ References:
                ^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:53:8
+Error --------------------------------------------------------------------------------------------------- number.js:53:7
 
 Cannot cast `x` to undefined because number literal `1` [1] is incompatible with undefined [2]. [incompatible-type]
 
-   number.js:53:8
-   53|       (x: void); // error
-              ^
+   number.js:53:7
+   53|       x as void; // error
+             ^
 
 References:
    number.js:46:19
    46|   function(x: 0 | 1) {
                          ^ [1]
-   number.js:53:11
-   53|       (x: void); // error
-                 ^^^^ [2]
+   number.js:53:12
+   53|       x as void; // error
+                  ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:53:8
+Error --------------------------------------------------------------------------------------------------- number.js:53:7
 
 Cannot cast `x` to undefined because number literal `1` [1] is incompatible with undefined [2]. [incompatible-type]
 
-   number.js:53:8
-   53|       (x: void); // error
-              ^
+   number.js:53:7
+   53|       x as void; // error
+             ^
 
 References:
    number.js:51:15
    51|     if (x === 1) {
                      ^ [1]
-   number.js:53:11
-   53|       (x: void); // error
-                 ^^^^ [2]
+   number.js:53:12
+   53|       x as void; // error
+                  ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- number.js:53:8
+Error --------------------------------------------------------------------------------------------------- number.js:53:7
 
 Refined at [1] [InferError]
 
-   number.js:53:8
-   53|       (x: void); // error
-              ^
+   number.js:53:7
+   53|       x as void; // error
+             ^
 
 References:
    number.js:51:9
@@ -10503,13 +10503,13 @@ References:
                       ^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- number.js:102:10
+Error -------------------------------------------------------------------------------------------------- number.js:102:9
 
 Refined at [1] [InferError]
 
-   number.js:102:10
-   102|         (mode: 0);
-                 ^^^^
+   number.js:102:9
+   102|         mode as 0;
+                ^^^^
 
 References:
    number.js:101:12
@@ -10517,13 +10517,13 @@ References:
                    ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- number.js:107:10
+Error -------------------------------------------------------------------------------------------------- number.js:107:9
 
 Refined at [1] [2] [InferError]
 
-   number.js:107:10
-   107|         (mode: 1 | 2);
-                 ^^^^
+   number.js:107:9
+   107|         mode as 1 | 2;
+                ^^^^
 
 References:
    number.js:101:12
@@ -10579,30 +10579,30 @@ References:
                 ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:124:8
+Error -------------------------------------------------------------------------------------------------- number.js:124:7
 
 Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
-   number.js:124:8
-   124|       (x: void); // error
-               ^
+   number.js:124:7
+   124|       x as void; // error
+              ^
 
 References:
    number.js:122:15
    122|   function(x: number) {
                       ^^^^^^ [1]
-   number.js:124:11
-   124|       (x: void); // error
-                  ^^^^ [2]
+   number.js:124:12
+   124|       x as void; // error
+                   ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:124:8
+Error -------------------------------------------------------------------------------------------------- number.js:124:7
 
 Refined at [1] [InferError]
 
-   number.js:124:8
-   124|       (x: void); // error
-               ^
+   number.js:124:7
+   124|       x as void; // error
+              ^
 
 References:
    number.js:123:9
@@ -10610,58 +10610,58 @@ References:
                 ^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:126:6
+Error -------------------------------------------------------------------------------------------------- number.js:126:5
 
 Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
 [incompatible-type]
 
-   number.js:126:6
-   126|     (x: -1); // error
-             ^
+   number.js:126:5
+   126|     x as -1; // error
+            ^
 
 References:
    number.js:122:15
    122|   function(x: number) {
                       ^^^^^^ [1]
-   number.js:126:9
-   126|     (x: -1); // error
-                ^^ [2]
+   number.js:126:10
+   126|     x as -1; // error
+                 ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:131:8
+Error -------------------------------------------------------------------------------------------------- number.js:131:7
 
 Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
 [incompatible-type]
 
-   number.js:131:8
-   131|       (x: -1); // error
-               ^
+   number.js:131:7
+   131|       x as -1; // error
+              ^
 
 References:
    number.js:129:15
    129|   function(x: number) {
                       ^^^^^^ [1]
-   number.js:131:11
-   131|       (x: -1); // error
-                  ^^ [2]
+   number.js:131:12
+   131|       x as -1; // error
+                   ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:133:6
+Error -------------------------------------------------------------------------------------------------- number.js:133:5
 
 Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
 [incompatible-type]
 
-   number.js:133:6
-   133|     (x: -1); // error
-             ^
+   number.js:133:5
+   133|     x as -1; // error
+            ^
 
 References:
    number.js:129:15
    129|   function(x: number) {
                       ^^^^^^ [1]
-   number.js:133:9
-   133|     (x: -1); // error
-                ^^ [2]
+   number.js:133:10
+   133|     x as -1; // error
+                 ^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- number.js:144:9
@@ -10724,13 +10724,13 @@ References:
                       ^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:152:8
+Error -------------------------------------------------------------------------------------------------- number.js:152:7
 
 Refined at [1] [InferError]
 
-   number.js:152:8
-   152|       (x: 0);
-               ^
+   number.js:152:7
+   152|       x as 0;
+              ^
 
 References:
    number.js:151:9
@@ -12285,13 +12285,13 @@ References:
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- refinements.js:85:10
+Error ---------------------------------------------------------------------------------------------- refinements.js:85:9
 
 Refined at [1] [InferError]
 
-   refinements.js:85:10
-   85|         (x: string); // ok
-                ^
+   refinements.js:85:9
+   85|         x as string; // ok
+               ^
 
 References:
    refinements.js:84:9
@@ -12299,47 +12299,47 @@ References:
                ^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinements.js:87:10
+Error ---------------------------------------------------------------------------------------------- refinements.js:87:9
 
 Cannot cast `x` to string because object type [1] is incompatible with string [2]. [incompatible-type]
 
-   refinements.js:87:10
-   87|         (x: string); // error
-                ^
+   refinements.js:87:9
+   87|         x as string; // error
+               ^
 
 References:
    refinements.js:82:14
    82|     const x: {foo: null} = {foo: null};
                     ^^^^^^^^^^^ [1]
-   refinements.js:87:13
-   87|         (x: string); // error
-                   ^^^^^^ [2]
+   refinements.js:87:14
+   87|         x as string; // error
+                    ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- string.js:6:8
+Error ---------------------------------------------------------------------------------------------------- string.js:6:7
 
 Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   string.js:6:8
-   6|       (x: void); // error
-             ^
+   string.js:6:7
+   6|       x as void; // error
+            ^
 
 References:
    string.js:4:15
    4|   function(x: string) {
                     ^^^^^^ [1]
-   string.js:6:11
-   6|       (x: void); // error
-                ^^^^ [2]
+   string.js:6:12
+   6|       x as void; // error
+                 ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- string.js:6:8
+Error ---------------------------------------------------------------------------------------------------- string.js:6:7
 
 Refined at [1] [InferError]
 
-   string.js:6:8
-   6|       (x: void); // error
-             ^
+   string.js:6:7
+   6|       x as void; // error
+            ^
 
 References:
    string.js:5:9
@@ -12347,57 +12347,57 @@ References:
               ^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- string.js:8:6
+Error ---------------------------------------------------------------------------------------------------- string.js:8:5
 
 Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
 [incompatible-type]
 
-   string.js:8:6
-   8|     (x: 'foo'); // error
-           ^
+   string.js:8:5
+   8|     x as 'foo'; // error
+          ^
 
 References:
    string.js:4:15
    4|   function(x: string) {
                     ^^^^^^ [1]
-   string.js:8:9
-   8|     (x: 'foo'); // error
-              ^^^^^ [2]
+   string.js:8:10
+   8|     x as 'foo'; // error
+               ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- string.js:13:8
+Error --------------------------------------------------------------------------------------------------- string.js:13:7
 
 Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
 [incompatible-type]
 
-   string.js:13:8
-   13|       (x: 'foo'); // error
-              ^
+   string.js:13:7
+   13|       x as 'foo'; // error
+             ^
 
 References:
    string.js:11:15
    11|   function(x: string) {
                      ^^^^^^ [1]
-   string.js:13:11
-   13|       (x: 'foo'); // error
-                 ^^^^^ [2]
+   string.js:13:12
+   13|       x as 'foo'; // error
+                  ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- string.js:15:6
+Error --------------------------------------------------------------------------------------------------- string.js:15:5
 
 Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   string.js:15:6
-   15|     (x: void); // error
-            ^
+   string.js:15:5
+   15|     x as void; // error
+           ^
 
 References:
    string.js:11:15
    11|   function(x: string) {
                      ^^^^^^ [1]
-   string.js:15:9
-   15|     (x: void); // error
-               ^^^^ [2]
+   string.js:15:10
+   15|     x as void; // error
+                ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- string.js:19:9
@@ -12511,13 +12511,13 @@ References:
                ^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- string.js:48:8
+Error --------------------------------------------------------------------------------------------------- string.js:48:7
 
 Refined at [1] [InferError]
 
-   string.js:48:8
-   48|       (x: 'foo');
-              ^
+   string.js:48:7
+   48|       x as 'foo';
+             ^
 
 References:
    string.js:47:9
@@ -12525,47 +12525,47 @@ References:
                ^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- string.js:49:8
+Error --------------------------------------------------------------------------------------------------- string.js:49:7
 
 Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2]. [incompatible-type]
 
-   string.js:49:8
-   49|       (x: void); // error
-              ^
+   string.js:49:7
+   49|       x as void; // error
+             ^
 
 References:
    string.js:46:15
    46|   function(x: 'foo' | 'bar') {
                      ^^^^^ [1]
-   string.js:49:11
-   49|       (x: void); // error
-                 ^^^^ [2]
+   string.js:49:12
+   49|       x as void; // error
+                  ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- string.js:49:8
+Error --------------------------------------------------------------------------------------------------- string.js:49:7
 
 Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2]. [incompatible-type]
 
-   string.js:49:8
-   49|       (x: void); // error
-              ^
+   string.js:49:7
+   49|       x as void; // error
+             ^
 
 References:
    string.js:47:15
    47|     if (x === 'foo') {
                      ^^^^^ [1]
-   string.js:49:11
-   49|       (x: void); // error
-                 ^^^^ [2]
+   string.js:49:12
+   49|       x as void; // error
+                  ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- string.js:49:8
+Error --------------------------------------------------------------------------------------------------- string.js:49:7
 
 Refined at [1] [InferError]
 
-   string.js:49:8
-   49|       (x: void); // error
-              ^
+   string.js:49:7
+   49|       x as void; // error
+             ^
 
 References:
    string.js:47:9
@@ -12573,13 +12573,13 @@ References:
                ^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- string.js:52:8
+Error --------------------------------------------------------------------------------------------------- string.js:52:7
 
 Refined at [1] [InferError]
 
-   string.js:52:8
-   52|       (x: 'bar');
-              ^
+   string.js:52:7
+   52|       x as 'bar';
+             ^
 
 References:
    string.js:51:9
@@ -12587,47 +12587,47 @@ References:
                ^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- string.js:53:8
+Error --------------------------------------------------------------------------------------------------- string.js:53:7
 
 Cannot cast `x` to undefined because string literal `bar` [1] is incompatible with undefined [2]. [incompatible-type]
 
-   string.js:53:8
-   53|       (x: void); // error
-              ^
+   string.js:53:7
+   53|       x as void; // error
+             ^
 
 References:
    string.js:46:23
    46|   function(x: 'foo' | 'bar') {
                              ^^^^^ [1]
-   string.js:53:11
-   53|       (x: void); // error
-                 ^^^^ [2]
+   string.js:53:12
+   53|       x as void; // error
+                  ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- string.js:53:8
+Error --------------------------------------------------------------------------------------------------- string.js:53:7
 
 Cannot cast `x` to undefined because string literal `bar` [1] is incompatible with undefined [2]. [incompatible-type]
 
-   string.js:53:8
-   53|       (x: void); // error
-              ^
+   string.js:53:7
+   53|       x as void; // error
+             ^
 
 References:
    string.js:51:15
    51|     if (x === 'bar') {
                      ^^^^^ [1]
-   string.js:53:11
-   53|       (x: void); // error
-                 ^^^^ [2]
+   string.js:53:12
+   53|       x as void; // error
+                  ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- string.js:53:8
+Error --------------------------------------------------------------------------------------------------- string.js:53:7
 
 Refined at [1] [InferError]
 
-   string.js:53:8
-   53|       (x: void); // error
-              ^
+   string.js:53:7
+   53|       x as void; // error
+             ^
 
 References:
    string.js:51:9
@@ -12773,13 +12773,13 @@ References:
                       ^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- string.js:103:10
+Error -------------------------------------------------------------------------------------------------- string.js:103:9
 
 Refined at [1] [InferError]
 
-   string.js:103:10
-   103|         (mode: "a");
-                 ^^^^
+   string.js:103:9
+   103|         mode as "a";
+                ^^^^
 
 References:
    string.js:102:12
@@ -12787,13 +12787,13 @@ References:
                    ^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- string.js:108:10
+Error -------------------------------------------------------------------------------------------------- string.js:108:9
 
 Refined at [1] [2] [InferError]
 
-   string.js:108:10
-   108|         (mode: "b" | "c");
-                 ^^^^
+   string.js:108:9
+   108|         mode as "b" | "c";
+                ^^^^
 
 References:
    string.js:102:12
@@ -13167,77 +13167,77 @@ References:
                  ^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:34:30
+Error -------------------------------------------------------------------------------------------- tagged_union.js:34:29
 
 Refined at [1] [InferError]
 
-   tagged_union.js:34:30
-   34|   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
-                                    ^
+   tagged_union.js:34:29
+   34|   if (x.kind === 'Fruit') { x.taste as 'Good'; } // error, Apple.taste = Bad
+                                   ^
 
 References:
    tagged_union.js:34:7
-   34|   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
+   34|   if (x.kind === 'Fruit') { x.taste as 'Good'; } // error, Apple.taste = Bad
              ^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:34:30
+Error -------------------------------------------------------------------------------------------- tagged_union.js:34:29
 
 Cannot cast `x.taste` to string literal `Good` because at least one member of `x.taste` [1], e.g. string literal
 `Bad` [2], is incompatible with string literal `Good` [3]. [incompatible-type]
 
-   tagged_union.js:34:30
-   34|   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
-                                    ^^^^^^^ [1]
+   tagged_union.js:34:29
+   34|   if (x.kind === 'Fruit') { x.taste as 'Good'; } // error, Apple.taste = Bad
+                                   ^^^^^^^ [1]
 
 References:
    tagged_union.js:26:38
    26| type Apple = { kind: 'Fruit', taste: 'Bad' }
                                             ^^^^^ [2]
-   tagged_union.js:34:39
-   34|   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
-                                             ^^^^^^ [3]
+   tagged_union.js:34:40
+   34|   if (x.kind === 'Fruit') { x.taste as 'Good'; } // error, Apple.taste = Bad
+                                              ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:35:9
+Error --------------------------------------------------------------------------------------------- tagged_union.js:35:8
 
 Refined at [1] [InferError]
 
-   tagged_union.js:35:9
-   35|   else (x.raw: 'No'); // error, Carrot.raw = Maybe
-               ^
+   tagged_union.js:35:8
+   35|   else x.raw as 'No'; // error, Carrot.raw = Maybe
+              ^
 
 References:
    tagged_union.js:34:7
-   34|   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
+   34|   if (x.kind === 'Fruit') { x.taste as 'Good'; } // error, Apple.taste = Bad
              ^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:35:9
+Error --------------------------------------------------------------------------------------------- tagged_union.js:35:8
 
 Cannot cast `x.raw` to string literal `No` because string literal `Maybe` [1] is incompatible with string literal
 `No` [2]. [incompatible-type]
 
-   tagged_union.js:35:9
-   35|   else (x.raw: 'No'); // error, Carrot.raw = Maybe
-               ^^^^^
+   tagged_union.js:35:8
+   35|   else x.raw as 'No'; // error, Carrot.raw = Maybe
+              ^^^^^
 
 References:
    tagged_union.js:29:50
    29| type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe' }
                                                         ^^^^^^^ [1]
-   tagged_union.js:35:16
-   35|   else (x.raw: 'No'); // error, Carrot.raw = Maybe
-                      ^^^^ [2]
+   tagged_union.js:35:17
+   35|   else x.raw as 'No'; // error, Carrot.raw = Maybe
+                       ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:40:6
+Error --------------------------------------------------------------------------------------------- tagged_union.js:40:5
 
 Refined at [1] [InferError]
 
-   tagged_union.js:40:6
-   40|     (x.raw: 'Yes' | 'No'); // 2 errors:
-            ^
+   tagged_union.js:40:5
+   40|     x.raw as 'Yes' | 'No'; // 2 errors:
+           ^
 
 References:
    tagged_union.js:39:7
@@ -13245,31 +13245,31 @@ References:
              ^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:40:6
+Error --------------------------------------------------------------------------------------------- tagged_union.js:40:5
 
 Cannot cast `x.raw` to union type because string literal `Maybe` [1] is incompatible with union type [2].
 [incompatible-type]
 
-   tagged_union.js:40:6
-   40|     (x.raw: 'Yes' | 'No'); // 2 errors:
-            ^^^^^
+   tagged_union.js:40:5
+   40|     x.raw as 'Yes' | 'No'; // 2 errors:
+           ^^^^^
 
 References:
    tagged_union.js:29:50
    29| type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe' }
                                                         ^^^^^^^ [1]
-   tagged_union.js:40:13
-   40|     (x.raw: 'Yes' | 'No'); // 2 errors:
-                   ^^^^^^^^^^^^ [2]
+   tagged_union.js:40:14
+   40|     x.raw as 'Yes' | 'No'; // 2 errors:
+                    ^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:40:8
+Error --------------------------------------------------------------------------------------------- tagged_union.js:40:7
 
 Cannot get `x.raw` because property `raw` is missing in object type [1]. [prop-missing]
 
-   tagged_union.js:40:8
-   40|     (x.raw: 'Yes' | 'No'); // 2 errors:
-              ^^^
+   tagged_union.js:40:7
+   40|     x.raw as 'Yes' | 'No'; // 2 errors:
+             ^^^
 
 References:
    tagged_union.js:38:17
@@ -13381,30 +13381,30 @@ References:
                            ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:89:8
+Error --------------------------------------------------------------------------------------------- tagged_union.js:89:7
 
 Cannot cast `x.kindTypo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   tagged_union.js:89:8
-   89|       (x.kindTypo: string); // typos can't be used, though
-              ^^^^^^^^^^
+   tagged_union.js:89:7
+   89|       x.kindTypo as string; // typos can't be used, though
+             ^^^^^^^^^^
 
 References:
    tagged_union.js:88:9
    88|     if (x.kindTypo === 1) { // error: kindTypo prop missing
                ^^^^^^^^^^ [1]
-   tagged_union.js:89:20
-   89|       (x.kindTypo: string); // typos can't be used, though
-                          ^^^^^^ [2]
+   tagged_union.js:89:21
+   89|       x.kindTypo as string; // typos can't be used, though
+                           ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- tagged_union.js:89:8
+Error --------------------------------------------------------------------------------------------- tagged_union.js:89:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:89:8
-   89|       (x.kindTypo: string); // typos can't be used, though
-              ^^^^^^^^^^
+   tagged_union.js:89:7
+   89|       x.kindTypo as string; // typos can't be used, though
+             ^^^^^^^^^^
 
 References:
    tagged_union.js:88:9
@@ -13468,13 +13468,13 @@ References:
                ^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:112:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:112:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:112:8
-   112|       (x.legnth: number); // inside the block, it's a number
-               ^^^^^^^^
+   tagged_union.js:112:7
+   112|       x.legnth as number; // inside the block, it's a number
+              ^^^^^^^^
 
 References:
    tagged_union.js:111:9
@@ -13482,30 +13482,30 @@ References:
                 ^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:113:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:113:7
 
 Cannot cast `x.legnth` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   tagged_union.js:113:8
-   113|       (x.legnth: string); // error: number literal 0 !~> string
-               ^^^^^^^^
+   tagged_union.js:113:7
+   113|       x.legnth as string; // error: number literal 0 !~> string
+              ^^^^^^^^
 
 References:
    tagged_union.js:111:9
    111|     if (x.legnth === 0) { // Error, typos
                 ^^^^^^^^ [1]
-   tagged_union.js:113:18
-   113|       (x.legnth: string); // error: number literal 0 !~> string
-                         ^^^^^^ [2]
+   tagged_union.js:113:19
+   113|       x.legnth as string; // error: number literal 0 !~> string
+                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:113:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:113:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:113:8
-   113|       (x.legnth: string); // error: number literal 0 !~> string
-               ^^^^^^^^
+   tagged_union.js:113:7
+   113|       x.legnth as string; // error: number literal 0 !~> string
+              ^^^^^^^^
 
 References:
    tagged_union.js:111:9
@@ -13527,13 +13527,13 @@ References:
                                  ^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:117:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:117:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:117:8
-   117|       (y.legnth: number); // inside the block, it's a number
-               ^^^^^^^^
+   tagged_union.js:117:7
+   117|       y.legnth as number; // inside the block, it's a number
+              ^^^^^^^^
 
 References:
    tagged_union.js:116:9
@@ -13541,30 +13541,30 @@ References:
                 ^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:118:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:118:7
 
 Cannot cast `y.legnth` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   tagged_union.js:118:8
-   118|       (y.legnth: string); // error: number literal 0 !~> string
-               ^^^^^^^^
+   tagged_union.js:118:7
+   118|       y.legnth as string; // error: number literal 0 !~> string
+              ^^^^^^^^
 
 References:
    tagged_union.js:116:9
    116|     if (y.legnth === 0) { // Error, typo
                 ^^^^^^^^ [1]
-   tagged_union.js:118:18
-   118|       (y.legnth: string); // error: number literal 0 !~> string
-                         ^^^^^^ [2]
+   tagged_union.js:118:19
+   118|       y.legnth as string; // error: number literal 0 !~> string
+                          ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:118:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:118:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:118:8
-   118|       (y.legnth: string); // error: number literal 0 !~> string
-               ^^^^^^^^
+   tagged_union.js:118:7
+   118|       y.legnth as string; // error: number literal 0 !~> string
+              ^^^^^^^^
 
 References:
    tagged_union.js:116:9
@@ -13609,13 +13609,13 @@ References:
                                             ^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:122:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:122:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:122:8
-   122|       (z.toStirng: number); // inside the block, it's a number
-               ^^^^^^^^^^
+   tagged_union.js:122:7
+   122|       z.toStirng as number; // inside the block, it's a number
+              ^^^^^^^^^^
 
 References:
    tagged_union.js:121:9
@@ -13623,30 +13623,30 @@ References:
                 ^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:123:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:123:7
 
 Cannot cast `z.toStirng` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   tagged_union.js:123:8
-   123|       (z.toStirng: string); // error: number literal 0 !~> string
-               ^^^^^^^^^^
+   tagged_union.js:123:7
+   123|       z.toStirng as string; // error: number literal 0 !~> string
+              ^^^^^^^^^^
 
 References:
    tagged_union.js:121:9
    121|     if (z.toStirng === 0) { // Error, typo
                 ^^^^^^^^^^ [1]
-   tagged_union.js:123:20
-   123|       (z.toStirng: string); // error: number literal 0 !~> string
-                           ^^^^^^ [2]
+   tagged_union.js:123:21
+   123|       z.toStirng as string; // error: number literal 0 !~> string
+                            ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:123:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:123:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:123:8
-   123|       (z.toStirng: string); // error: number literal 0 !~> string
-               ^^^^^^^^^^
+   tagged_union.js:123:7
+   123|       z.toStirng as string; // error: number literal 0 !~> string
+              ^^^^^^^^^^
 
 References:
    tagged_union.js:121:9
@@ -13691,13 +13691,13 @@ References:
                                                        ^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:127:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:127:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:127:8
-   127|       (q.valeuOf: number); // inside the block, it's a number
-               ^^^^^^^^^
+   tagged_union.js:127:7
+   127|       q.valeuOf as number; // inside the block, it's a number
+              ^^^^^^^^^
 
 References:
    tagged_union.js:126:9
@@ -13705,30 +13705,30 @@ References:
                 ^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:128:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:128:7
 
 Cannot cast `q.valeuOf` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   tagged_union.js:128:8
-   128|       (q.valeuOf: string); // error: number literal 0 !~> string
-               ^^^^^^^^^
+   tagged_union.js:128:7
+   128|       q.valeuOf as string; // error: number literal 0 !~> string
+              ^^^^^^^^^
 
 References:
    tagged_union.js:126:9
    126|     if (q.valeuOf === 0) { // Error, typo
                 ^^^^^^^^^ [1]
-   tagged_union.js:128:19
-   128|       (q.valeuOf: string); // error: number literal 0 !~> string
-                          ^^^^^^ [2]
+   tagged_union.js:128:20
+   128|       q.valeuOf as string; // error: number literal 0 !~> string
+                           ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:128:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:128:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:128:8
-   128|       (q.valeuOf: string); // error: number literal 0 !~> string
-               ^^^^^^^^^
+   tagged_union.js:128:7
+   128|       q.valeuOf as string; // error: number literal 0 !~> string
+              ^^^^^^^^^
 
 References:
    tagged_union.js:126:9
@@ -13773,13 +13773,13 @@ References:
                                        ^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:139:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:139:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:139:8
-   139|       (t.calll: number); // inside the block, it's a number
-               ^^^^^^^
+   tagged_union.js:139:7
+   139|       t.calll as number; // inside the block, it's a number
+              ^^^^^^^
 
 References:
    tagged_union.js:138:9
@@ -13787,30 +13787,30 @@ References:
                 ^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:140:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:140:7
 
 Cannot cast `t.calll` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   tagged_union.js:140:8
-   140|       (t.calll: string); // error: number literal 0 !~> string
-               ^^^^^^^
+   tagged_union.js:140:7
+   140|       t.calll as string; // error: number literal 0 !~> string
+              ^^^^^^^
 
 References:
    tagged_union.js:138:9
    138|     if (t.calll === 0) { // error: calll prop missing
                 ^^^^^^^ [1]
-   tagged_union.js:140:17
-   140|       (t.calll: string); // error: number literal 0 !~> string
-                        ^^^^^^ [2]
+   tagged_union.js:140:18
+   140|       t.calll as string; // error: number literal 0 !~> string
+                         ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:140:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:140:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:140:8
-   140|       (t.calll: string); // error: number literal 0 !~> string
-               ^^^^^^^
+   tagged_union.js:140:7
+   140|       t.calll as string; // error: number literal 0 !~> string
+              ^^^^^^^
 
 References:
    tagged_union.js:138:9
@@ -13818,31 +13818,31 @@ References:
                 ^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:147:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:147:7
 
 Cannot cast `x.str` to string literal `not str` because string literal `str` [1] is incompatible with string literal
 `not str` [2]. [incompatible-type]
 
-   tagged_union.js:147:8
-   147|       (x.str: 'not str'); // error: 'str' !~> 'not str'
-               ^^^^^
+   tagged_union.js:147:7
+   147|       x.str as 'not str'; // error: 'str' !~> 'not str'
+              ^^^^^
 
 References:
    tagged_union.js:146:9
    146|     if (x.str === 'str') {
                 ^^^^^ [1]
-   tagged_union.js:147:15
-   147|       (x.str: 'not str'); // error: 'str' !~> 'not str'
-                      ^^^^^^^^^ [2]
+   tagged_union.js:147:16
+   147|       x.str as 'not str'; // error: 'str' !~> 'not str'
+                       ^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:147:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:147:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:147:8
-   147|       (x.str: 'not str'); // error: 'str' !~> 'not str'
-               ^^^^^
+   tagged_union.js:147:7
+   147|       x.str as 'not str'; // error: 'str' !~> 'not str'
+              ^^^^^
 
 References:
    tagged_union.js:146:9
@@ -13850,31 +13850,31 @@ References:
                 ^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:150:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:150:7
 
 Cannot cast `x.num` to number literal `456` because number literal `123` [1] is incompatible with number literal
 `456` [2]. [incompatible-type]
 
-   tagged_union.js:150:8
-   150|       (x.num: 456); // error: 123 !~> 456
-               ^^^^^
+   tagged_union.js:150:7
+   150|       x.num as 456; // error: 123 !~> 456
+              ^^^^^
 
 References:
    tagged_union.js:149:9
    149|     if (x.num === 123) {
                 ^^^^^ [1]
-   tagged_union.js:150:15
-   150|       (x.num: 456); // error: 123 !~> 456
-                      ^^^ [2]
+   tagged_union.js:150:16
+   150|       x.num as 456; // error: 123 !~> 456
+                       ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:150:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:150:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:150:8
-   150|       (x.num: 456); // error: 123 !~> 456
-               ^^^^^
+   tagged_union.js:150:7
+   150|       x.num as 456; // error: 123 !~> 456
+              ^^^^^
 
 References:
    tagged_union.js:149:9
@@ -13882,31 +13882,31 @@ References:
                 ^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:153:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:153:7
 
 Cannot cast `x.boolean` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean
 literal `false` [2]. [incompatible-type]
 
-   tagged_union.js:153:8
-   153|       (x.boolean: false); // error: true !~> false
-               ^^^^^^^^^
+   tagged_union.js:153:7
+   153|       x.boolean as false; // error: true !~> false
+              ^^^^^^^^^
 
 References:
    tagged_union.js:152:9
    152|     if (x.boolean === true) {
                 ^^^^^^^^^ [1]
-   tagged_union.js:153:19
-   153|       (x.boolean: false); // error: true !~> false
-                          ^^^^^ [2]
+   tagged_union.js:153:20
+   153|       x.boolean as false; // error: true !~> false
+                           ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:153:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:153:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:153:8
-   153|       (x.boolean: false); // error: true !~> false
-               ^^^^^^^^^
+   tagged_union.js:153:7
+   153|       x.boolean as false; // error: true !~> false
+              ^^^^^^^^^
 
 References:
    tagged_union.js:152:9
@@ -13928,30 +13928,30 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:157:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:157:7
 
 Cannot cast `x.badStr` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   tagged_union.js:157:8
-   157|       (x.badStr: empty); // error: 'bad' !~> empty
-               ^^^^^^^^
+   tagged_union.js:157:7
+   157|       x.badStr as empty; // error: 'bad' !~> empty
+              ^^^^^^^^
 
 References:
    tagged_union.js:156:9
    156|     if (x.badStr === 'bad') { // Error, reading unknown property
                 ^^^^^^^^ [1]
-   tagged_union.js:157:18
-   157|       (x.badStr: empty); // error: 'bad' !~> empty
-                         ^^^^^ [2]
+   tagged_union.js:157:19
+   157|       x.badStr as empty; // error: 'bad' !~> empty
+                          ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:157:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:157:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:157:8
-   157|       (x.badStr: empty); // error: 'bad' !~> empty
-               ^^^^^^^^
+   tagged_union.js:157:7
+   157|       x.badStr as empty; // error: 'bad' !~> empty
+              ^^^^^^^^
 
 References:
    tagged_union.js:156:9
@@ -13973,30 +13973,30 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:160:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:160:7
 
 Cannot cast `x.badNum` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   tagged_union.js:160:8
-   160|       (x.badNum: empty); // error: 123 !~> empty
-               ^^^^^^^^
+   tagged_union.js:160:7
+   160|       x.badNum as empty; // error: 123 !~> empty
+              ^^^^^^^^
 
 References:
    tagged_union.js:159:9
    159|     if (x.badNum === 123) { // Error, reading unknown property
                 ^^^^^^^^ [1]
-   tagged_union.js:160:18
-   160|       (x.badNum: empty); // error: 123 !~> empty
-                         ^^^^^ [2]
+   tagged_union.js:160:19
+   160|       x.badNum as empty; // error: 123 !~> empty
+                          ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:160:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:160:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:160:8
-   160|       (x.badNum: empty); // error: 123 !~> empty
-               ^^^^^^^^
+   tagged_union.js:160:7
+   160|       x.badNum as empty; // error: 123 !~> empty
+              ^^^^^^^^
 
 References:
    tagged_union.js:159:9
@@ -14018,30 +14018,30 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:163:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:163:7
 
 Cannot cast `x.badBool` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
-   tagged_union.js:163:8
-   163|       (x.badBool: empty); // error: true !~> empty
-               ^^^^^^^^^
+   tagged_union.js:163:7
+   163|       x.badBool as empty; // error: true !~> empty
+              ^^^^^^^^^
 
 References:
    tagged_union.js:162:9
    162|     if (x.badBool === true) { // Error, reading unknown property
                 ^^^^^^^^^ [1]
-   tagged_union.js:163:19
-   163|       (x.badBool: empty); // error: true !~> empty
-                          ^^^^^ [2]
+   tagged_union.js:163:20
+   163|       x.badBool as empty; // error: true !~> empty
+                           ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:163:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:163:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:163:8
-   163|       (x.badBool: empty); // error: true !~> empty
-               ^^^^^^^^^
+   tagged_union.js:163:7
+   163|       x.badBool as empty; // error: true !~> empty
+              ^^^^^^^^^
 
 References:
    tagged_union.js:162:9
@@ -14049,13 +14049,13 @@ References:
                 ^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:170:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:170:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:170:8
-   170|       (x.y: string);
-               ^
+   tagged_union.js:170:7
+   170|       x.y as string;
+              ^
 
 References:
    tagged_union.js:169:9
@@ -14091,13 +14091,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:173:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:173:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:173:8
-   173|       (x.z: string);
-               ^
+   tagged_union.js:173:7
+   173|       x.z as string;
+              ^
 
 References:
    tagged_union.js:169:9
@@ -14133,13 +14133,13 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:177:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:177:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:177:8
-   177|       (x.z: string);
-               ^
+   tagged_union.js:177:7
+   177|       x.z as string;
+              ^
 
 References:
    tagged_union.js:176:9
@@ -14175,13 +14175,13 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:180:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:180:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:180:8
-   180|       (x.y: string);
-               ^
+   tagged_union.js:180:7
+   180|       x.y as string;
+              ^
 
 References:
    tagged_union.js:176:9
@@ -14217,13 +14217,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:188:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:188:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:188:8
-   188|       (x.y: string); // ok, because 123 !== 'foo'
-               ^
+   tagged_union.js:188:7
+   188|       x.y as string; // ok, because 123 !== 'foo'
+              ^
 
 References:
    tagged_union.js:187:9
@@ -14287,13 +14287,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:196:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:196:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:196:8
-   196|       (x.z: string);
-               ^
+   tagged_union.js:196:7
+   196|       x.z as string;
+              ^
 
 References:
    tagged_union.js:195:9
@@ -14329,13 +14329,13 @@ References:
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:199:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:199:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:199:8
-   199|       (x.y: string);
-               ^
+   tagged_union.js:199:7
+   199|       x.y as string;
+              ^
 
 References:
    tagged_union.js:195:9
@@ -14371,13 +14371,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:207:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:207:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:207:8
-   207|       (x.y: string); // ok, because 123 !== string
-               ^
+   tagged_union.js:207:7
+   207|       x.y as string; // ok, because 123 !== string
+              ^
 
 References:
    tagged_union.js:206:9
@@ -14441,13 +14441,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:215:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:215:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:215:8
-   215|       (x.z: string);
-               ^
+   tagged_union.js:215:7
+   215|       x.z as string;
+              ^
 
 References:
    tagged_union.js:214:9
@@ -14539,13 +14539,13 @@ References:
                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:237:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:237:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:237:8
-   237|       (x.y: string);
-               ^
+   tagged_union.js:237:7
+   237|       x.y as string;
+              ^
 
 References:
    tagged_union.js:236:9
@@ -14581,13 +14581,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:240:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:240:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:240:8
-   240|       (x.z: string);
-               ^
+   tagged_union.js:240:7
+   240|       x.z as string;
+              ^
 
 References:
    tagged_union.js:236:9
@@ -14623,13 +14623,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:244:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:244:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:244:8
-   244|       (x.z: string);
-               ^
+   tagged_union.js:244:7
+   244|       x.z as string;
+              ^
 
 References:
    tagged_union.js:243:9
@@ -14665,13 +14665,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:247:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:247:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:247:8
-   247|       (x.y: string);
-               ^
+   tagged_union.js:247:7
+   247|       x.y as string;
+              ^
 
 References:
    tagged_union.js:243:9
@@ -14707,13 +14707,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:255:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:255:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:255:8
-   255|       (x.y: string);
-               ^
+   tagged_union.js:255:7
+   255|       x.y as string;
+              ^
 
 References:
    tagged_union.js:254:9
@@ -14749,13 +14749,13 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:258:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:258:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:258:8
-   258|       (x.z: string);
-               ^
+   tagged_union.js:258:7
+   258|       x.z as string;
+              ^
 
 References:
    tagged_union.js:254:9
@@ -14791,13 +14791,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:262:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:262:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:262:8
-   262|       (x.z: string);
-               ^
+   tagged_union.js:262:7
+   262|       x.z as string;
+              ^
 
 References:
    tagged_union.js:261:9
@@ -14833,13 +14833,13 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- tagged_union.js:265:8
+Error -------------------------------------------------------------------------------------------- tagged_union.js:265:7
 
 Refined at [1] [InferError]
 
-   tagged_union.js:265:8
-   265|       (x.y: string);
-               ^
+   tagged_union.js:265:7
+   265|       x.y as string;
+              ^
 
 References:
    tagged_union.js:261:9
@@ -14903,13 +14903,13 @@ References:
                 ^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- tuple.js:3:6
+Error ----------------------------------------------------------------------------------------------------- tuple.js:3:5
 
 Refined at [1] [InferError]
 
-   tuple.js:3:6
-   3|     (a[0]: string);
-           ^
+   tuple.js:3:5
+   3|     a[0] as string;
+          ^
 
 References:
    tuple.js:2:7
@@ -14917,13 +14917,13 @@ References:
             ^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- tuple.js:6:6
+Error ----------------------------------------------------------------------------------------------------- tuple.js:6:5
 
 Refined at [1] [InferError]
 
-   tuple.js:6:6
-   6|     (a[0]: number);
-           ^
+   tuple.js:6:5
+   6|     a[0] as number;
+          ^
 
 References:
    tuple.js:2:7
@@ -14931,13 +14931,13 @@ References:
             ^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- tuple.js:7:6
+Error ----------------------------------------------------------------------------------------------------- tuple.js:7:5
 
 Refined at [1] [InferError]
 
-   tuple.js:7:6
-   7|     (a[1]: string);
-           ^
+   tuple.js:7:5
+   7|     a[1] as string;
+          ^
 
 References:
    tuple.js:2:7
@@ -14945,13 +14945,13 @@ References:
             ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:15:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:15:5
 
 Refined at [1] [InferError]
 
-   tuple.js:15:6
-   15|     (a[0]: string);
-            ^
+   tuple.js:15:5
+   15|     a[0] as string;
+           ^
 
 References:
    tuple.js:14:7
@@ -14959,13 +14959,13 @@ References:
              ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:17:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:17:5
 
 Refined at [1] [InferError]
 
-   tuple.js:17:6
-   17|     (a[0]: number);
-            ^
+   tuple.js:17:5
+   17|     a[0] as number;
+           ^
 
 References:
    tuple.js:14:7
@@ -14973,13 +14973,13 @@ References:
              ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:18:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:18:5
 
 Refined at [1] [InferError]
 
-   tuple.js:18:6
-   18|     (a[1]: number);
-            ^
+   tuple.js:18:5
+   18|     a[1] as number;
+           ^
 
 References:
    tuple.js:14:7
@@ -14987,13 +14987,13 @@ References:
              ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:26:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:26:5
 
 Refined at [1] [InferError]
 
-   tuple.js:26:6
-   26|     (a[0]: string);
-            ^
+   tuple.js:26:5
+   26|     a[0] as string;
+           ^
 
 References:
    tuple.js:25:7
@@ -15001,13 +15001,13 @@ References:
              ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:28:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:28:5
 
 Refined at [1] [InferError]
 
-   tuple.js:28:6
-   28|     (a[0]: number);
-            ^
+   tuple.js:28:5
+   28|     a[0] as number;
+           ^
 
 References:
    tuple.js:25:7
@@ -15015,13 +15015,13 @@ References:
              ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:29:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:29:5
 
 Refined at [1] [InferError]
 
-   tuple.js:29:6
-   29|     (a[1]: number);
-            ^
+   tuple.js:29:5
+   29|     a[1] as number;
+           ^
 
 References:
    tuple.js:25:7
@@ -15029,13 +15029,13 @@ References:
              ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:30:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:30:5
 
 Refined at [1] [InferError]
 
-   tuple.js:30:6
-   30|     (a[2]: number); // Error: one of the variants has only 2 elements.
-            ^
+   tuple.js:30:5
+   30|     a[2] as number; // Error: one of the variants has only 2 elements.
+           ^
 
 References:
    tuple.js:25:7
@@ -15043,13 +15043,13 @@ References:
              ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:30:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:30:5
 
 Cannot get `a[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
 
-   tuple.js:30:6
-   30|     (a[2]: number); // Error: one of the variants has only 2 elements.
-            ^^^^
+   tuple.js:30:5
+   30|     a[2] as number; // Error: one of the variants has only 2 elements.
+           ^^^^
 
 References:
    tuple.js:23:17
@@ -15057,13 +15057,13 @@ References:
                        ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:36:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:36:5
 
 Refined at [1] [InferError]
 
-   tuple.js:36:6
-   36|     (a: empty);
-            ^
+   tuple.js:36:5
+   36|     a as empty;
+           ^
 
 References:
    tuple.js:35:7
@@ -15071,13 +15071,13 @@ References:
              ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:42:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:42:5
 
 Refined at [1] [InferError]
 
-   tuple.js:42:6
-   42|     (a: empty);
-            ^
+   tuple.js:42:5
+   42|     a as empty;
+           ^
 
 References:
    tuple.js:41:7
@@ -15085,13 +15085,13 @@ References:
              ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:48:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:48:5
 
 Refined at [1] [InferError]
 
-   tuple.js:48:6
-   48|     (a: empty);
-            ^
+   tuple.js:48:5
+   48|     a as empty;
+           ^
 
 References:
    tuple.js:47:7
@@ -15099,13 +15099,13 @@ References:
              ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:51:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:51:5
 
 Refined at [1] [InferError]
 
-   tuple.js:51:6
-   51|     (a: empty);
-            ^
+   tuple.js:51:5
+   51|     a as empty;
+           ^
 
 References:
    tuple.js:50:7
@@ -15113,13 +15113,13 @@ References:
              ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:54:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:54:5
 
 Refined at [1] [InferError]
 
-   tuple.js:54:6
-   54|     (a: empty);
-            ^
+   tuple.js:54:5
+   54|     a as empty;
+           ^
 
 References:
    tuple.js:53:7
@@ -15127,13 +15127,13 @@ References:
              ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:61:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:61:5
 
 Refined at [1] [InferError]
 
-   tuple.js:61:6
-   61|     (a[0]: string);
-            ^
+   tuple.js:61:5
+   61|     a[0] as string;
+           ^
 
 References:
    tuple.js:60:8
@@ -15141,13 +15141,13 @@ References:
               ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:64:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:64:5
 
 Refined at [1] [InferError]
 
-   tuple.js:64:6
-   64|     (a[0]: number);
-            ^
+   tuple.js:64:5
+   64|     a[0] as number;
+           ^
 
 References:
    tuple.js:60:8
@@ -15155,13 +15155,13 @@ References:
               ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tuple.js:65:6
+Error ---------------------------------------------------------------------------------------------------- tuple.js:65:5
 
 Refined at [1] [InferError]
 
-   tuple.js:65:6
-   65|     (a[1]: string);
-            ^
+   tuple.js:65:5
+   65|     a[1] as string;
+           ^
 
 References:
    tuple.js:60:8
@@ -16753,21 +16753,21 @@ References:
                         ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ union_enum.js:9:4
+Error ------------------------------------------------------------------------------------------------ union_enum.js:9:3
 
 Cannot cast `E.A` to number because string literal `A` [1] is incompatible with number [2]. [incompatible-type]
 
-   union_enum.js:9:4
-   9|   (E.A: number); // Error expected
-         ^^^
+   union_enum.js:9:3
+   9|   E.A as number; // Error expected
+        ^^^
 
 References:
    union_enum.js:3:15
    3| const E = {A: 'A', B: 'B'} as const;
                     ^^^ [1]
-   union_enum.js:9:9
-   9|   (E.A: number); // Error expected
-              ^^^^^^ [2]
+   union_enum.js:9:10
+   9|   E.A as number; // Error expected
+               ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- void.js:4:21

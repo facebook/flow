@@ -23,7 +23,7 @@ echo "Parse error should be reported:"
 echo ""
 assert_errors "$FLOW" # parse error is reported
 
-echo "(a: empty);" >> b.js
+echo "a as empty;" >> b.js
 echo ""
 echo "Parse error, but no typing error in b.js:"
 echo ""

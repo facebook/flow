@@ -98,18 +98,18 @@ var null_tests =
   // obj.p === null (sentinel)
   function(o: { value: string, err: null } | { err: string }) {
     if (o.err === null) {
-      (o.value: string);
+      o.value as string;
     } else {
-      (o.err: string);
+      o.err as string;
     }
   },
 
   // obj.p !== null (sentinel)
   function(o: { value: string, err: null } | { err: string }) {
     if (o.err !== null) {
-      (o.err: string);
+      o.err as string;
     } else {
-      (o.value: string);
+      o.value as string;
     }
   }
 ];

@@ -6,4 +6,4 @@ class A {
   reduce(state, payload): any {}
 }
 
-module.exports = (new A(): A);
+module.exports = new A() as A;

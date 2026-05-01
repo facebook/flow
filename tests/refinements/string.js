@@ -3,16 +3,16 @@ type Mode = "a" | "b" | "c";
 let tests = [
   function(x: string) {
     if (x === 'foo') {
-      (x: void); // error
+      x as void; // error
     }
-    (x: 'foo'); // error
+    x as 'foo'; // error
   },
 
   function(x: string) {
     if (x !== 'foo') {
-      (x: 'foo'); // error
+      x as 'foo'; // error
     }
-    (x: void); // error
+    x as void; // error
   },
 
   function(x: 'bar'): 'foo' {
@@ -31,9 +31,9 @@ let tests = [
 
   function(x: 'foo') {
     if (x !== 'bar') {
-      (x: 'foo');
+      x as 'foo';
     }
-    (x: 'foo');
+    x as 'foo';
   },
 
   function(x: 'foo'): string {
@@ -45,12 +45,12 @@ let tests = [
 
   function(x: 'foo' | 'bar') {
     if (x === 'foo') {
-      (x: 'foo');
-      (x: void); // error
+      x as 'foo';
+      x as void; // error
     }
     if (x === 'bar') {
-      (x: 'bar');
-      (x: void); // error
+      x as 'bar';
+      x as void; // error
     }
   },
 
@@ -100,12 +100,12 @@ let tests = [
   function(mode: Mode) {
     switch (mode) {
       case "a":
-        (mode: "a");
+        mode as "a";
         break;
 
       case "b":
       case "c":
-        (mode: "b" | "c");
+        mode as "b" | "c";
         break;
     }
   },

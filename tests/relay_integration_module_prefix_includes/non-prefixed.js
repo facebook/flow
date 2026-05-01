@@ -7,8 +7,8 @@ const fragment = graphql`
     }
   }`;
 
-(fragment: 1); // OK
-(fragment: string); // ERROR
+fragment as 1; // OK
+fragment as string; // ERROR
 
 const query = graphql`
   query MyQuery {
@@ -17,5 +17,5 @@ const query = graphql`
     }
   }`;
 
-(query: 2); // OK
-(query: string); // ERROR
+query as 2; // OK
+query as string; // ERROR

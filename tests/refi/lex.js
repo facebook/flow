@@ -3,7 +3,7 @@ function block_scope(x: string | number) {
     let x;
     x = ""; // doesn't refine outer x
   }
-  (x : string); // error: number ~> string
+  x as string; // error: number ~> string
 }
 
 function switch_scope(x: string | number) {
@@ -12,7 +12,7 @@ function switch_scope(x: string | number) {
       let x;
       x = ""; // doesn't refine outer x
   }
-  (x : string); // error: number ~> string
+  x as string; // error: number ~> string
 }
 
 function try_scope(x: string | number) {
@@ -22,7 +22,7 @@ function try_scope(x: string | number) {
   } catch (e) {
     x = ""; // refinement would only escape if both sides refined
   }
-  (x : string); // error: number ~> string
+  x as string; // error: number ~> string
 }
 
 function try_scope_catch(x: string | number) {
@@ -32,5 +32,5 @@ function try_scope_catch(x: string | number) {
     let x;
     x = ""; // doesn't refine outer x
   }
-  (x : string); // error: number ~> string
+  x as string; // error: number ~> string
 }

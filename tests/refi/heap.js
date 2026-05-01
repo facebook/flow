@@ -87,7 +87,7 @@ var tests =
     if (!x.y) {
       x.y = "foo";
     }
-    (x.y: string);
+    x.y as string;
   },
 
   function() {
@@ -96,7 +96,7 @@ var tests =
     } else {
       x.y = "foo";
     }
-    (x.y: string);
+    x.y as string;
   },
 
   function() {
@@ -104,7 +104,7 @@ var tests =
     if (!x.y) {
       x.y = 123; // error
     }
-    (x.y: string); // error, this got widened to a number
+    x.y as string; // error, this got widened to a number
   },
 
   function() {
@@ -114,7 +114,7 @@ var tests =
     } else {
       x.y = "bar";
     }
-    (x.y : string);
+    x.y as string;
   },
 
   function() {
@@ -122,7 +122,7 @@ var tests =
     if (typeof x.y == "number") {
       x.y = "foo";
     }
-    (x.y : string); // error, could also be boolean
+    x.y as string; // error, could also be boolean
   },
 
   function() {
@@ -132,7 +132,7 @@ var tests =
     } else if (typeof x.y == "boolean") {
       x.y = "bar";
     }
-    (x.y : boolean); // error, string
+    x.y as boolean; // error, string
   },
 
   function() {
@@ -143,7 +143,7 @@ var tests =
     if (x.y) {
       x.y = null;
     }
-    (x.y : string); // error
+    x.y as string; // error
   },
 
   function() {
@@ -156,7 +156,7 @@ var tests =
       x.y = false;
     }
     // now x.y is only boolean
-    (x.y : string); // error
+    x.y as string; // error
   },
 
   function() {
@@ -169,7 +169,7 @@ var tests =
       x.y = 123;
     }
     // now x.y is number | boolean
-    (x.y : string); // error
+    x.y as string; // error
   },
 
   function() {
@@ -180,17 +180,17 @@ var tests =
     } else {
       x.y = z;
     }
-    (x.y : string);
+    x.y as string;
   },
 
   function(x: string) {
     if (x === 'a') {}
-    (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
+    x as 'b'; // error (but only once, string !~> 'b'; 'a' is irrelevant)
   },
 
   function(x: mixed) {
     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
-    (x: string & number);
+    x as string & number;
   },
 
   // --- nested conditionals ---
@@ -206,7 +206,7 @@ var tests =
       if (false) {}
       x.foo = "foo";
     }
-    (x.foo: string);
+    x.foo as string;
   },
 
   function() {
@@ -215,7 +215,7 @@ var tests =
       while(false) {}
       x.foo = "foo";
     }
-    (x.foo: string);
+    x.foo as string;
   },
 
   function() {
@@ -224,14 +224,14 @@ var tests =
       for (var i = 0; i < 0; i++) {}
       x.foo = "foo";
     }
-    (x.foo: string);
+    x.foo as string;
   },
 
   function() {
     var x : {p:?string} = {p:"xxx"};
     if (x.p != null) {
       var {p} = x; // TODO: annot checked against type of x
-      (p : string); // ok
+      p as string; // ok
     }
   },
 
@@ -239,23 +239,23 @@ var tests =
     var x : {p:?string} = {p:null};
     x.p = "xxx";
     var {p} = x; // TODO: annot checked against type of x
-    (p : string); // ok
+    p as string; // ok
   },
 
   function() {
     var o: { f: number, g: { h: number }} = { f: 1, g: { h: 1 } };
     o.g.h = 2;
     var { f, g: { h } } = o;
-    (h: 2); // ok
+    h as 2; // ok
   },
 
   function() {
     type Disjoint = {| type: "a", payload: number|} | {| type: "b", payload: string|};
-    const obj: {d: Disjoint} = (null: any);
+    const obj: {d: Disjoint} = null as any;
 
     if (obj.d.type === "a") {
       let {d: {payload, type}} = obj;
-      (payload: number); // ok
+      payload as number; // ok
     }
   },
 
@@ -272,22 +272,22 @@ var tests =
       // During the second and third visit, refinements on obj.prop will be invalidated,
       // causing spurious errors on calling function that might be null or undefined.
       const {a, b} = obj.prop(); // ok
-      (a: number); // ok
-      (b: string); // ok
+      a as number; // ok
+      b as string; // ok
     }
   },
 
   function() {
     const o: {p: string | null} = {p: null};
     if (o.p != null || o.p != null) {
-      (o.p: string);
+      o.p as string;
     }
   },
 
   function() {
     const o: {p: string | null} = {p: null};
     if (o.p != null && o.p != null) {
-      (o.p: string);
+      o.p as string;
     }
   }
 ];

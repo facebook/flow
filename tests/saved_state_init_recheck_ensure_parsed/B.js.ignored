@@ -2,4 +2,4 @@
 
 import {A} from './A';
 
-(5: string);
+5 as string;

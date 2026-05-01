@@ -4,21 +4,21 @@ No errors!
 The Flow server is currently in lazy mode and is only checking 0/2 source files (+ 1/1 libdefs).
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 After reinit (should have type error):
-Error ------------------------------------------------------------------------------------------------------ test.js:4:2
+Error ------------------------------------------------------------------------------------------------------ test.js:4:1
 
 Cannot cast `dep` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:4:2
-   4| (dep: string);
-       ^^^
+   test.js:4:1
+   4| dep as string;
+      ^^^
 
 References:
    dep.js:3:16
    3| export default 123;
                      ^^^ [1]
-   test.js:4:7
-   4| (dep: string);
-            ^^^^^^ [2]
+   test.js:4:8
+   4| dep as string;
+             ^^^^^^ [2]
 
 
 

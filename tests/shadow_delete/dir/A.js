@@ -1,3 +1,3 @@
 // @flow
 
-(require('B'): string);
+require('B') as string;

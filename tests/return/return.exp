@@ -251,21 +251,21 @@ undefined. [incompatible-type]
                                   ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- void.js:12:2
+Error ----------------------------------------------------------------------------------------------------- void.js:12:1
 
 Cannot cast `f(...)` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
-   void.js:12:2
-   12| (f(true): void); // error: string ~> void
-        ^^^^^^^
+   void.js:12:1
+   12| f(true) as void; // error: string ~> void
+       ^^^^^^^
 
 References:
    void.js:8:12
     8|     return "nope";
                   ^^^^^^ [1]
-   void.js:12:11
-   12| (f(true): void); // error: string ~> void
-                 ^^^^ [2]
+   void.js:12:12
+   12| f(true) as void; // error: string ~> void
+                  ^^^^ [2]
 
 
 

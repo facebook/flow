@@ -33,13 +33,13 @@ Cannot cast object literal to required of `A` because properties `x` and `y` are
 in `A` [2]. [incompatible-type]
 
    test.js:9:2
-   9| ({}: Required<A>); // ERROR
+   9| ({}) as Required<A>; // ERROR
        ^^ [1]
 
 References:
-   test.js:9:15
-   9| ({}: Required<A>); // ERROR
-                    ^ [2]
+   test.js:9:18
+   9| ({}) as Required<A>; // ERROR
+                       ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
@@ -48,13 +48,13 @@ Cannot cast object literal to required of `A` because property `y` is missing in
 `A` [2]. [incompatible-type]
 
    test.js:10:2
-   10| ({x: 1}: Required<A>); // ERROR
+   10| ({x: 1}) as Required<A>; // ERROR
         ^^^^^^ [1]
 
 References:
-   test.js:10:19
-   10| ({x: 1}: Required<A>); // ERROR
-                         ^ [2]
+   test.js:10:22
+   10| ({x: 1}) as Required<A>; // ERROR
+                            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:2
@@ -63,13 +63,13 @@ Cannot cast object literal to required of `A` because property `x` is missing in
 `A` [2]. [incompatible-type]
 
    test.js:11:2
-   11| ({y: 1}: Required<A>); // ERROR
+   11| ({y: 1}) as Required<A>; // ERROR
         ^^^^^^ [1]
 
 References:
-   test.js:11:19
-   11| ({y: 1}: Required<A>); // ERROR
-                         ^ [2]
+   test.js:11:22
+   11| ({y: 1}) as Required<A>; // ERROR
+                            ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:6
@@ -78,7 +78,7 @@ Cannot cast object literal to required of `A` because in property `x`: undefined
 [incompatible-type]
 
    test.js:12:6
-   12| ({x: undefined, y: undefined}: Required<A>); // ERROR
+   12| ({x: undefined, y: undefined}) as Required<A>; // ERROR
             ^^^^^^^^^ [1]
 
 References:
@@ -93,7 +93,7 @@ Cannot cast object literal to required of `A` because in property `y`: undefined
 [incompatible-type]
 
    test.js:12:20
-   12| ({x: undefined, y: undefined}: Required<A>); // ERROR
+   12| ({x: undefined, y: undefined}) as Required<A>; // ERROR
                           ^^^^^^^^^ [1]
 
 References:
@@ -108,41 +108,41 @@ Cannot cast object literal to required of `A` because property `extra` is extra 
 `A` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:13:2
-   13| ({x: 1, y: 1, extra: 1}: Required<A>); // ERROR
+   13| ({x: 1, y: 1, extra: 1}) as Required<A>; // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:13:35
-   13| ({x: 1, y: 1, extra: 1}: Required<A>); // ERROR
-                                         ^ [2]
+   test.js:13:38
+   13| ({x: 1, y: 1, extra: 1}) as Required<A>; // ERROR
+                                            ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:19:2
+Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
 Cannot cast `null` to required of undefined because null [1] is incompatible with undefined [2]. [incompatible-type]
 
-   test.js:19:2
-   19| (null: Required<void>); // ERROR
-        ^^^^ [1]
+   test.js:19:1
+   19| null as Required<void>; // ERROR
+       ^^^^ [1]
 
 References:
-   test.js:19:17
-   19| (null: Required<void>); // ERROR
-                       ^^^^ [2]
+   test.js:19:18
+   19| null as Required<void>; // ERROR
+                        ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:23:2
+Error ----------------------------------------------------------------------------------------------------- test.js:23:1
 
 Cannot cast `undefined` to required of null because undefined [1] is incompatible with null [2]. [incompatible-type]
 
-   test.js:23:2
-   23| (undefined: Required<null>); // ERROR
-        ^^^^^^^^^ [1]
+   test.js:23:1
+   23| undefined as Required<null>; // ERROR
+       ^^^^^^^^^ [1]
 
 References:
-   test.js:23:22
-   23| (undefined: Required<null>); // ERROR
-                            ^^^^ [2]
+   test.js:23:23
+   23| undefined as Required<null>; // ERROR
+                             ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:2
@@ -152,16 +152,16 @@ Cannot cast object literal to required of nullable `A` because: [incompatible-ty
  - Or object literal [1] is incompatible with null or undefined [3].
 
    test.js:26:2
-   26| ({}: Required<?A>); // ERROR
+   26| ({}) as Required<?A>; // ERROR
         ^^ [1]
 
 References:
-   test.js:26:16
-   26| ({}: Required<?A>); // ERROR
-                      ^ [2]
-   test.js:26:15
-   26| ({}: Required<?A>); // ERROR
-                     ^^ [3]
+   test.js:26:19
+   26| ({}) as Required<?A>; // ERROR
+                         ^ [2]
+   test.js:26:18
+   26| ({}) as Required<?A>; // ERROR
+                        ^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:27:2
@@ -171,16 +171,16 @@ Cannot cast object literal to required of nullable `A` because: [incompatible-ty
  - Or object literal [1] is incompatible with null or undefined [3].
 
    test.js:27:2
-   27| ({x: 1}: Required<?A>); // ERROR
+   27| ({x: 1}) as Required<?A>; // ERROR
         ^^^^^^ [1]
 
 References:
-   test.js:27:20
-   27| ({x: 1}: Required<?A>); // ERROR
-                          ^ [2]
-   test.js:27:19
-   27| ({x: 1}: Required<?A>); // ERROR
-                         ^^ [3]
+   test.js:27:23
+   27| ({x: 1}) as Required<?A>; // ERROR
+                             ^ [2]
+   test.js:27:22
+   27| ({x: 1}) as Required<?A>; // ERROR
+                            ^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:28:2
@@ -190,16 +190,16 @@ Cannot cast object literal to required of nullable `A` because: [incompatible-ty
  - Or object literal [1] is incompatible with null or undefined [3].
 
    test.js:28:2
-   28| ({y: 1}: Required<?A>); // ERROR
+   28| ({y: 1}) as Required<?A>; // ERROR
         ^^^^^^ [1]
 
 References:
-   test.js:28:20
-   28| ({y: 1}: Required<?A>); // ERROR
-                          ^ [2]
-   test.js:28:19
-   28| ({y: 1}: Required<?A>); // ERROR
-                         ^^ [3]
+   test.js:28:23
+   28| ({y: 1}) as Required<?A>; // ERROR
+                             ^ [2]
+   test.js:28:22
+   28| ({y: 1}) as Required<?A>; // ERROR
+                            ^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:29:2
@@ -209,19 +209,19 @@ Cannot cast object literal to required of nullable `A` because: [incompatible-ty
  - Or object literal [3] is incompatible with null or undefined [4].
 
    test.js:29:2
-   29| ({x: undefined, y: undefined}: Required<?A>); // ERROR
+   29| ({x: undefined, y: undefined}) as Required<?A>; // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    test.js:29:6
-   29| ({x: undefined, y: undefined}: Required<?A>); // ERROR
+   29| ({x: undefined, y: undefined}) as Required<?A>; // ERROR
             ^^^^^^^^^ [1]
    test.js:1:15
     1| type A = {x?: number, y?: number};
                      ^^^^^^ [2]
-   test.js:29:41
-   29| ({x: undefined, y: undefined}: Required<?A>); // ERROR
-                                               ^^ [4]
+   test.js:29:44
+   29| ({x: undefined, y: undefined}) as Required<?A>; // ERROR
+                                                  ^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:36:21
@@ -238,13 +238,13 @@ Cannot cast object literal to required of `IFace` because properties `x` and `y`
 exist in `IFace` [2]. [incompatible-type]
 
    test.js:51:2
-   51| ({}: Required<IFace>); // ERROR
+   51| ({}) as Required<IFace>; // ERROR
         ^^ [1]
 
 References:
-   test.js:51:15
-   51| ({}: Required<IFace>); // ERROR
-                     ^^^^^ [2]
+   test.js:51:18
+   51| ({}) as Required<IFace>; // ERROR
+                        ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:52:2
@@ -253,13 +253,13 @@ Cannot cast object literal to required of `IFace` because property `y` is missin
 `IFace` [2]. [incompatible-type]
 
    test.js:52:2
-   52| ({x: 1}: Required<IFace>); // ERROR
+   52| ({x: 1}) as Required<IFace>; // ERROR
         ^^^^^^ [1]
 
 References:
-   test.js:52:19
-   52| ({x: 1}: Required<IFace>); // ERROR
-                         ^^^^^ [2]
+   test.js:52:22
+   52| ({x: 1}) as Required<IFace>; // ERROR
+                            ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:53:2
@@ -268,13 +268,13 @@ Cannot cast object literal to required of `IFace` because property `x` is missin
 `IFace` [2]. [incompatible-type]
 
    test.js:53:2
-   53| ({y: 1}: Required<IFace>); // ERROR
+   53| ({y: 1}) as Required<IFace>; // ERROR
         ^^^^^^ [1]
 
 References:
-   test.js:53:19
-   53| ({y: 1}: Required<IFace>); // ERROR
-                         ^^^^^ [2]
+   test.js:53:22
+   53| ({y: 1}) as Required<IFace>; // ERROR
+                            ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:6
@@ -283,7 +283,7 @@ Cannot cast object literal to required of `IFace` because in property `x`: undef
 number [2]. [incompatible-type]
 
    test.js:54:6
-   54| ({x: undefined, y: undefined}: Required<IFace>); // ERROR
+   54| ({x: undefined, y: undefined}) as Required<IFace>; // ERROR
             ^^^^^^^^^ [1]
 
 References:
@@ -298,7 +298,7 @@ Cannot cast object literal to required of `IFace` because in property `y`: undef
 number [2]. [incompatible-type]
 
    test.js:54:20
-   54| ({x: undefined, y: undefined}: Required<IFace>); // ERROR
+   54| ({x: undefined, y: undefined}) as Required<IFace>; // ERROR
                           ^^^^^^^^^ [1]
 
 References:
@@ -313,13 +313,13 @@ Cannot cast object literal to required of `JFace` because properties `x`, `y`, a
 but exist in `JFace` [2]. [incompatible-type]
 
    test.js:68:2
-   68| ({}: Required<JFace>); // ERROR
+   68| ({}) as Required<JFace>; // ERROR
         ^^ [1]
 
 References:
-   test.js:68:15
-   68| ({}: Required<JFace>); // ERROR
-                     ^^^^^ [2]
+   test.js:68:18
+   68| ({}) as Required<JFace>; // ERROR
+                        ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:69:2
@@ -328,13 +328,13 @@ Cannot cast object literal to required of `JFace` because properties `y` and `z`
 exist in `JFace` [2]. [incompatible-type]
 
    test.js:69:2
-   69| ({x: 1}: Required<JFace>); // ERROR
+   69| ({x: 1}) as Required<JFace>; // ERROR
         ^^^^^^ [1]
 
 References:
-   test.js:69:19
-   69| ({x: 1}: Required<JFace>); // ERROR
-                         ^^^^^ [2]
+   test.js:69:22
+   69| ({x: 1}) as Required<JFace>; // ERROR
+                            ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:70:2
@@ -343,13 +343,13 @@ Cannot cast object literal to required of `JFace` because property `z` is missin
 `JFace` [2]. [incompatible-type]
 
    test.js:70:2
-   70| ({x: 1, y: 1}: Required<JFace>); // ERROR
+   70| ({x: 1, y: 1}) as Required<JFace>; // ERROR
         ^^^^^^^^^^^^ [1]
 
 References:
-   test.js:70:25
-   70| ({x: 1, y: 1}: Required<JFace>); // ERROR
-                               ^^^^^ [2]
+   test.js:70:28
+   70| ({x: 1, y: 1}) as Required<JFace>; // ERROR
+                                  ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:71:6
@@ -358,7 +358,7 @@ Cannot cast object literal to required of `JFace` because in property `x`: undef
 number [2]. [incompatible-type]
 
    test.js:71:6
-   71| ({x: undefined, y: undefined, z: undefined}: Required<JFace>); // ERROR
+   71| ({x: undefined, y: undefined, z: undefined}) as Required<JFace>; // ERROR
             ^^^^^^^^^ [1]
 
 References:
@@ -373,7 +373,7 @@ Cannot cast object literal to required of `JFace` because in property `y`: undef
 number [2]. [incompatible-type]
 
    test.js:71:20
-   71| ({x: undefined, y: undefined, z: undefined}: Required<JFace>); // ERROR
+   71| ({x: undefined, y: undefined, z: undefined}) as Required<JFace>; // ERROR
                           ^^^^^^^^^ [1]
 
 References:
@@ -388,7 +388,7 @@ Cannot cast object literal to required of `JFace` because in property `z`: undef
 number [2]. [incompatible-type]
 
    test.js:71:34
-   71| ({x: undefined, y: undefined, z: undefined}: Required<JFace>); // ERROR
+   71| ({x: undefined, y: undefined, z: undefined}) as Required<JFace>; // ERROR
                                         ^^^^^^^^^ [1]
 
 References:
@@ -405,12 +405,12 @@ Cannot assign `1` to `x.r` because property `r` is not writable. [cannot-write]
            ^
 
 
-Error ------------------------------------------------------------------------------------------------- variance.js:13:6
+Error ------------------------------------------------------------------------------------------------- variance.js:13:5
 
 Cannot get `x.w` because property `w` is not readable. [cannot-read]
 
-   13|   (x.w: number); // ERROR
-            ^
+   13|   x.w as number; // ERROR
+           ^
 
 
 

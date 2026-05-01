@@ -1,1 +1,1 @@
-(require("./foo.css"): string); // error: boolean ~> string
+require("./foo.css") as string; // error: boolean ~> string

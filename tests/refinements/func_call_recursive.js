@@ -7,5 +7,5 @@ function bar() {
 }
 if (x != null) {
   foo();
-  (x: number);
+  x as number;
 }

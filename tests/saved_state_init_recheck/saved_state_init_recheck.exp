@@ -2,21 +2,21 @@ There should be no errors when the saved state is generated
 No errors!
 
 Full init with saved state does recheck & sees new error
-Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
+Error ------------------------------------------------------------------------------------------------------- foo.js:4:1
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   foo.js:4:2
-   4| (x: string);
-       ^
+   foo.js:4:1
+   4| x as string;
+      ^
 
 References:
    bar.js:3:18
    3| export const x = 123
                        ^^^ [1]
-   foo.js:4:5
-   4| (x: string);
-          ^^^^^^ [2]
+   foo.js:4:6
+   4| x as string;
+           ^^^^^^ [2]
 
 
 
@@ -29,21 +29,21 @@ The Flow server is currently in lazy mode and is only checking 0/2 source files 
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ...but focusing the file exposes the error
-Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
+Error ------------------------------------------------------------------------------------------------------- foo.js:4:1
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   foo.js:4:2
-   4| (x: string);
-       ^
+   foo.js:4:1
+   4| x as string;
+      ^
 
 References:
    bar.js:3:18
    3| export const x = 123
                        ^^^ [1]
-   foo.js:4:5
-   4| (x: string);
-          ^^^^^^ [2]
+   foo.js:4:6
+   4| x as string;
+           ^^^^^^ [2]
 
 
 
@@ -53,21 +53,21 @@ The Flow server is currently in lazy mode and is only checking 2/2 source files 
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 --saved-state-force-recheck does recheck & sees new error
-Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
+Error ------------------------------------------------------------------------------------------------------- foo.js:4:1
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   foo.js:4:2
-   4| (x: string);
-       ^
+   foo.js:4:1
+   4| x as string;
+      ^
 
 References:
    bar.js:3:18
    3| export const x = 123
                        ^^^ [1]
-   foo.js:4:5
-   4| (x: string);
-          ^^^^^^ [2]
+   foo.js:4:6
+   4| x as string;
+           ^^^^^^ [2]
 
 
 
@@ -79,21 +79,21 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 A file incompatible with rechecks changed, so no saved state loading
 
 ...so we need to fallback to non-saved-state
-Error ------------------------------------------------------------------------------------------------------- foo.js:4:2
+Error ------------------------------------------------------------------------------------------------------- foo.js:4:1
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   foo.js:4:2
-   4| (x: string);
-       ^
+   foo.js:4:1
+   4| x as string;
+      ^
 
 References:
    bar.js:3:18
    3| export const x = 123
                        ^^^ [1]
-   foo.js:4:5
-   4| (x: string);
-          ^^^^^^ [2]
+   foo.js:4:6
+   4| x as string;
+           ^^^^^^ [2]
 
 
 

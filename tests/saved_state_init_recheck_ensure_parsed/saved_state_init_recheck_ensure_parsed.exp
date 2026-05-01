@@ -16,18 +16,18 @@ Cannot import `A` because there is no `A` export in `./A`. [missing-export]
               ^
 
 
-Error --------------------------------------------------------------------------------------------------------- B.js:5:2
+Error --------------------------------------------------------------------------------------------------------- B.js:5:1
 
 Cannot cast `5` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   B.js:5:2
-   5| (5: string);
-       ^ [1]
+   B.js:5:1
+   5| 5 as string;
+      ^ [1]
 
 References:
-   B.js:5:5
-   5| (5: string);
-          ^^^^^^ [2]
+   B.js:5:6
+   5| 5 as string;
+           ^^^^^^ [2]
 
 
 

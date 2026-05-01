@@ -9,4 +9,4 @@ function f(b: boolean) {
   }
 }
 
-(f(true): void); // error: string ~> void
+f(true) as void; // error: string ~> void

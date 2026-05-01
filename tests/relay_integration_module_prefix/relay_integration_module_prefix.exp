@@ -1,35 +1,35 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:11:2
+Error ----------------------------------------------------------------------------------------------------- test.js:11:1
 
 Cannot cast `fragment` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:11:2
-   11| (fragment: string); // ERROR
-        ^^^^^^^^
+   test.js:11:1
+   11| fragment as string; // ERROR
+       ^^^^^^^^
 
 References:
    __generated__/MyFragment.graphql.js:1:18
     1| module.exports = 1 as const;
                         ^ [1]
-   test.js:11:12
-   11| (fragment: string); // ERROR
-                  ^^^^^^ [2]
+   test.js:11:13
+   11| fragment as string; // ERROR
+                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:21:2
+Error ----------------------------------------------------------------------------------------------------- test.js:21:1
 
 Cannot cast `query` to string because number literal `2` [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:21:2
-   21| (query: string); // ERROR
-        ^^^^^
+   test.js:21:1
+   21| query as string; // ERROR
+       ^^^^^
 
 References:
    __generated__/MyQuery.graphql.js:1:18
     1| module.exports = 2 as const;
                         ^ [1]
-   test.js:21:9
-   21| (query: string); // ERROR
-               ^^^^^^ [2]
+   test.js:21:10
+   21| query as string; // ERROR
+                ^^^^^^ [2]
 
 
 

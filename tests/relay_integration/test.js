@@ -9,8 +9,8 @@ const fragment = graphql`
     }
   }`;
 
-(fragment: 1); // OK
-(fragment: string); // ERROR
+fragment as 1; // OK
+fragment as string; // ERROR
 
 const query = graphql`
   query MyQuery {
@@ -19,8 +19,8 @@ const query = graphql`
     }
   }`;
 
-(query: 2); // OK
-(query: string); // ERROR
+query as 2; // OK
+query as string; // ERROR
 
 const mutation = graphql`
   mutation MyMutation($x: String) {
@@ -29,8 +29,8 @@ const mutation = graphql`
     }
   }`;
 
-(mutation: 3); // OK
-(mutation: string); // ERROR
+mutation as 3; // OK
+mutation as string; // ERROR
 
 const subscription = graphql`
   subscription MySubscription($x: String) {
@@ -39,8 +39,8 @@ const subscription = graphql`
     }
   }`;
 
-(subscription: 4); // OK
-(subscription: string); // ERROR
+subscription as 4; // OK
+subscription as string; // ERROR
 
 // Ignore comments in GraphQL
 const fragmentWithComment = graphql`
@@ -53,8 +53,8 @@ const fragmentWithComment = graphql`
     }
   }`;
 
-(fragmentWithComment: 1); // OK
-(fragmentWithComment: string); // ERROR
+fragmentWithComment as 1; // OK
+fragmentWithComment as string; // ERROR
 
 // Commas are ignored!
 const fragmentWithCommas = graphql`
@@ -67,8 +67,8 @@ const fragmentWithCommas = graphql`
     }
   }`;
 
-(fragmentWithCommas: 1); // OK
-(fragmentWithCommas: string); // ERROR
+fragmentWithCommas as 1; // OK
+fragmentWithCommas as string; // ERROR
 
 graphql``; // ERROR
 graphql`query MyQuery {${fragment}}`; // ERROR

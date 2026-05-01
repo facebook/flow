@@ -30,7 +30,7 @@ cat > test.js <<'EOF'
 // @flow
 
 import dep from './dep';
-(dep: string);
+dep as string;
 EOF
 "$FLOW" force-recheck test.js --missed-changes --changed-mergebase
 

@@ -31,13 +31,13 @@ type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe' }
 type Breakfast = Apple | Orange | Broccoli | Carrot
 
 function bar(x: Breakfast) {
-  if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
-  else (x.raw: 'No'); // error, Carrot.raw = Maybe
+  if (x.kind === 'Fruit') { x.taste as 'Good'; } // error, Apple.taste = Bad
+  else x.raw as 'No'; // error, Carrot.raw = Maybe
 }
 
 function qux(x: Breakfast) {
   if (x.taste === 'Good') {
-    (x.raw: 'Yes' | 'No'); // 2 errors:
+    x.raw as 'Yes' | 'No'; // 2 errors:
                            // Orange.raw doesn't exist
                            // Carrot.raw is neither Yes nor No
   }
@@ -86,7 +86,7 @@ let tests = [
   // non-existent props
   function test7(x: A) {
     if (x.kindTypo === 1) { // error: kindTypo prop missing
-      (x.kindTypo: string); // typos can't be used, though
+      x.kindTypo as string; // typos can't be used, though
     }
   },
 
@@ -109,75 +109,75 @@ let tests = [
   ) {
     if (x.length === 0) {}
     if (x.legnth === 0) { // Error, typos
-      (x.legnth: number); // inside the block, it's a number
-      (x.legnth: string); // error: number literal 0 !~> string
+      x.legnth as number; // inside the block, it's a number
+      x.legnth as string; // error: number literal 0 !~> string
     }
     if (y.length === 0) {}
     if (y.legnth === 0) { // Error, typo
-      (y.legnth: number); // inside the block, it's a number
-      (y.legnth: string); // error: number literal 0 !~> string
+      y.legnth as number; // inside the block, it's a number
+      y.legnth as string; // error: number literal 0 !~> string
     }
     if (z.toString === 0) {} // Error
     if (z.toStirng === 0) { // Error, typo
-      (z.toStirng: number); // inside the block, it's a number
-      (z.toStirng: string); // error: number literal 0 !~> string
+      z.toStirng as number; // inside the block, it's a number
+      z.toStirng as string; // error: number literal 0 !~> string
     }
     if (q.valueOf === 0) {} // Error
     if (q.valeuOf === 0) { // Error, typo
-      (q.valeuOf: number); // inside the block, it's a number
-      (q.valeuOf: string); // error: number literal 0 !~> string
+      q.valeuOf as number; // inside the block, it's a number
+      q.valeuOf as string; // error: number literal 0 !~> string
     }
     if (r.toStirng === 0) { // error: toStirng prop missing
-      (r.toStirng: empty);
+      r.toStirng as empty;
     }
     if (s.call === 0) {} // Error
     if (s.calll === 0) { // error: calll prop missing
-      (s.calll: empty);
+      s.calll as empty;
     }
     if (t.call === 0) {} // Error
     if (t.calll === 0) { // error: calll prop missing
-      (t.calll: number); // inside the block, it's a number
-      (t.calll: string); // error: number literal 0 !~> string
+      t.calll as number; // inside the block, it's a number
+      t.calll as string; // error: number literal 0 !~> string
     }
   },
 
   // sentinel props become the RHS
   function(x: { str: string, num: number, boolean: boolean }) {
     if (x.str === 'str') {
-      (x.str: 'not str'); // error: 'str' !~> 'not str'
+      x.str as 'not str'; // error: 'str' !~> 'not str'
     }
     if (x.num === 123) {
-      (x.num: 456); // error: 123 !~> 456
+      x.num as 456; // error: 123 !~> 456
     }
     if (x.boolean === true) {
-      (x.boolean: false); // error: true !~> false
+      x.boolean as false; // error: true !~> false
     }
     // even if it doesn't exist...
     if (x.badStr === 'bad') { // Error, reading unknown property
-      (x.badStr: empty); // error: 'bad' !~> empty
+      x.badStr as empty; // error: 'bad' !~> empty
     }
     if (x.badNum === 123) { // Error, reading unknown property
-      (x.badNum: empty); // error: 123 !~> empty
+      x.badNum as empty; // error: 123 !~> empty
     }
     if (x.badBool === true) { // Error, reading unknown property
-      (x.badBool: empty); // error: true !~> empty
+      x.badBool as empty; // error: true !~> empty
     }
   },
 
   // type mismatch
   function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
     if (x.foo === 123) {
-      (x.y: string);
+      x.y as string;
       x.z; // error
     } else {
-      (x.z: string);
+      x.z as string;
       x.y; // error
     }
     if (x.foo === 'foo') {
-      (x.z: string);
+      x.z as string;
       x.y; // error
     } else {
-      (x.y: string);
+      x.y as string;
       x.z; // error
     }
   },
@@ -185,7 +185,7 @@ let tests = [
   // type mismatch, but one is not a literal
   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
     if (x.foo === 123) {
-      (x.y: string); // ok, because 123 !== 'foo'
+      x.y as string; // ok, because 123 !== 'foo'
       x.z; // error
     } else {
       x.y; // error: x.foo could be a string
@@ -193,10 +193,10 @@ let tests = [
     }
 
     if (x.foo === 'foo') {
-      (x.z: string);
+      x.z as string;
       x.y; // error
     } else {
-      (x.y: string);
+      x.y as string;
       x.z; // error
     }
   },
@@ -204,7 +204,7 @@ let tests = [
   // type mismatch, neither is a literal
   function(x: { foo: number, y: string } | { foo: string, z: string }) {
     if (x.foo === 123) {
-      (x.y: string); // ok, because 123 !== string
+      x.y as string; // ok, because 123 !== string
       x.z; // error
     } else {
       x.y; // error: x.foo could be a string
@@ -212,7 +212,7 @@ let tests = [
     }
 
     if (x.foo === 'foo') {
-      (x.z: string);
+      x.z as string;
       x.y; // error
     } else {
       x.y; // error: x.foo could be a different string
@@ -234,17 +234,17 @@ let tests = [
   // null
   function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
     if (x.foo === null) {
-      (x.y: string);
+      x.y as string;
       x.z; // error
     } else {
-      (x.z: string);
+      x.z as string;
       x.y; // error
     }
     if (x.foo === 'foo') {
-      (x.z: string);
+      x.z as string;
       x.y; // error
     } else {
-      (x.y: string);
+      x.y as string;
       x.z; // error
     }
   },
@@ -252,17 +252,17 @@ let tests = [
   // void
   function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
     if (x.foo === undefined) {
-      (x.y: string);
+      x.y as string;
       x.z; // error
     } else {
-      (x.z: string);
+      x.z as string;
       x.y; // error
     }
     if (x.foo === 'foo') {
-      (x.z: string);
+      x.z as string;
       x.y; // error
     } else {
-      (x.y: string);
+      x.y as string;
       x.z; // error
     }
   },

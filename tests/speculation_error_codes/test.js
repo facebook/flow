@@ -10,4 +10,4 @@ declare var f: null & (number => void);
 f(true); // incompatible-type
 
 declare var y : number & string;
-(y : boolean) // incompatible-type
+y as boolean // incompatible-type

@@ -297,13 +297,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `42` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    regression_tests.js:54:14
-   54| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
+   54| 42 as any as ModScope as empty; // string ~> empty, not num ~> empty
                     ^^^^^^^^ [1]
 
 References:
-   regression_tests.js:54:25
-   54| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty
-                               ^^^^^ [2]
+   regression_tests.js:54:26
+   54| 42 as any as ModScope as empty; // string ~> empty, not num ~> empty
+                                ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:56:16
@@ -350,9 +350,9 @@ References:
    regression_tests.js:77:44
    77|   declare function inexactSpread<T>(x: T): {bar: 3, ...T, ...};
                                                   ^^^^^^^^^^^^^^^^^^^ [1]
-   regression_tests.js:75:28
-   75|   let inexact = ({foo: 3}: {foo: number, ...});
-                                  ^^^^^^^^^^^^^^^^^^ [2]
+   regression_tests.js:75:29
+   75|   let inexact = {foo: 3} as {foo: number, ...};
+                                   ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:90:18

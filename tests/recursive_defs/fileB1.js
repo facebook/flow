@@ -13,4 +13,4 @@ export type Data = $ReadOnly<
 >;
 
 declare var data: Data;
-(data.propA: empty); // error obj ~> empty
+data.propA as empty; // error obj ~> empty

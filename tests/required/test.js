@@ -1,40 +1,40 @@
 type A = {x?: number, y?: number};
 
-({}: A); // OK
-({x: 1}: A); // OK
-({y: 1}: A); // OK
-({x: 1, y: 1}: A); // OK
+({}) as A; // OK
+({x: 1}) as A; // OK
+({y: 1}) as A; // OK
+({x: 1, y: 1}) as A; // OK
 
 // Required
-({}: Required<A>); // ERROR
-({x: 1}: Required<A>); // ERROR
-({y: 1}: Required<A>); // ERROR
-({x: undefined, y: undefined}: Required<A>); // ERROR
-({x: 1, y: 1, extra: 1}: Required<A>); // ERROR
+({}) as Required<A>; // ERROR
+({x: 1}) as Required<A>; // ERROR
+({y: 1}) as Required<A>; // ERROR
+({x: undefined, y: undefined}) as Required<A>; // ERROR
+({x: 1, y: 1, extra: 1}) as Required<A>; // ERROR
 
-({x: 1, y: 1}: Required<A>); // OK
+({x: 1, y: 1}) as Required<A>; // OK
 
 // Void input
-(undefined: Required<void>); // OK
-(null: Required<void>); // ERROR
+undefined as Required<void>; // OK
+null as Required<void>; // ERROR
 
 // Null input
-(null: Required<null>); // OK
-(undefined: Required<null>); // ERROR
+null as Required<null>; // OK
+undefined as Required<null>; // ERROR
 
 // Nullable input
-({}: Required<?A>); // ERROR
-({x: 1}: Required<?A>); // ERROR
-({y: 1}: Required<?A>); // ERROR
-({x: undefined, y: undefined}: Required<?A>); // ERROR
+({}) as Required<?A>; // ERROR
+({x: 1}) as Required<?A>; // ERROR
+({y: 1}) as Required<?A>; // ERROR
+({x: undefined, y: undefined}) as Required<?A>; // ERROR
 
-(undefined: Required<?A>); // OK
-(null: Required<?A>); // OK
-({x: 1, y: 1}: Required<?A>); // OK
+undefined as Required<?A>; // OK
+null as Required<?A>; // OK
+({x: 1, y: 1}) as Required<?A>; // OK
 
 // Invalid
 type Err = Required<number>; // ERROR
-(1: Err);
+1 as Err;
 
 // Interface
 interface IFace {
@@ -42,35 +42,35 @@ interface IFace {
   y?: number;
 }
 
-({}: IFace); // OK
-({x: 1}: IFace); // OK
-({y: 1}: IFace); // OK
-({x: 1, y: 1}: IFace); // OK
-({x: 1, y: 1, extra: 1}: IFace); // OK
+({}) as IFace; // OK
+({x: 1}) as IFace; // OK
+({y: 1}) as IFace; // OK
+({x: 1, y: 1}) as IFace; // OK
+({x: 1, y: 1, extra: 1}) as IFace; // OK
 
-({}: Required<IFace>); // ERROR
-({x: 1}: Required<IFace>); // ERROR
-({y: 1}: Required<IFace>); // ERROR
-({x: undefined, y: undefined}: Required<IFace>); // ERROR
+({}) as Required<IFace>; // ERROR
+({x: 1}) as Required<IFace>; // ERROR
+({y: 1}) as Required<IFace>; // ERROR
+({x: undefined, y: undefined}) as Required<IFace>; // ERROR
 
-({x: 1, y: 1}: Required<IFace>); // OK
-({x: 1, y: 1, z: 1}: Required<IFace>); // OK
+({x: 1, y: 1}) as Required<IFace>; // OK
+({x: 1, y: 1, z: 1}) as Required<IFace>; // OK
 
 interface JFace extends IFace {
   z?: number;
 }
 
-({}: JFace); // OK
-({x: 1}: JFace); // OK
-({x: 1, y: 1}: JFace); // OK
-({x: 1, y: 1, z: 1}: JFace); // OK
+({}) as JFace; // OK
+({x: 1}) as JFace; // OK
+({x: 1, y: 1}) as JFace; // OK
+({x: 1, y: 1, z: 1}) as JFace; // OK
 
-({}: Required<JFace>); // ERROR
-({x: 1}: Required<JFace>); // ERROR
-({x: 1, y: 1}: Required<JFace>); // ERROR
-({x: undefined, y: undefined, z: undefined}: Required<JFace>); // ERROR
+({}) as Required<JFace>; // ERROR
+({x: 1}) as Required<JFace>; // ERROR
+({x: 1, y: 1}) as Required<JFace>; // ERROR
+({x: undefined, y: undefined, z: undefined}) as Required<JFace>; // ERROR
 
-({x: 1, y: 1, z: 1}: Required<JFace>); // OK
+({x: 1, y: 1, z: 1}) as Required<JFace>; // OK
 
 // No change
-({x: 1, y: 1}: Required<{x: number, y: number}>); // OK
+({x: 1, y: 1}) as Required<{x: number, y: number}>; // OK

@@ -6,108 +6,108 @@ Cannot resolve module `MissingFile.graphql`. [cannot-resolve-module]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:2
+Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
 Cannot cast `fragment` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:13:2
-   13| (fragment: string); // ERROR
-        ^^^^^^^^
+   test.js:13:1
+   13| fragment as string; // ERROR
+       ^^^^^^^^
 
 References:
    MyFragment.graphql.js:1:18
     1| module.exports = 1 as const;
                         ^ [1]
-   test.js:13:12
-   13| (fragment: string); // ERROR
-                  ^^^^^^ [2]
+   test.js:13:13
+   13| fragment as string; // ERROR
+                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:23:2
+Error ----------------------------------------------------------------------------------------------------- test.js:23:1
 
 Cannot cast `query` to string because number literal `2` [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:23:2
-   23| (query: string); // ERROR
-        ^^^^^
+   test.js:23:1
+   23| query as string; // ERROR
+       ^^^^^
 
 References:
    MyQuery.graphql.js:1:18
     1| module.exports = 2 as const;
                         ^ [1]
-   test.js:23:9
-   23| (query: string); // ERROR
-               ^^^^^^ [2]
+   test.js:23:10
+   23| query as string; // ERROR
+                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:33:2
+Error ----------------------------------------------------------------------------------------------------- test.js:33:1
 
 Cannot cast `mutation` to string because number literal `3` [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:33:2
-   33| (mutation: string); // ERROR
-        ^^^^^^^^
+   test.js:33:1
+   33| mutation as string; // ERROR
+       ^^^^^^^^
 
 References:
    MyMutation.graphql.js:1:18
     1| module.exports = 3 as const;
                         ^ [1]
-   test.js:33:12
-   33| (mutation: string); // ERROR
-                  ^^^^^^ [2]
+   test.js:33:13
+   33| mutation as string; // ERROR
+                   ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:43:2
+Error ----------------------------------------------------------------------------------------------------- test.js:43:1
 
 Cannot cast `subscription` to string because number literal `4` [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:43:2
-   43| (subscription: string); // ERROR
-        ^^^^^^^^^^^^
+   test.js:43:1
+   43| subscription as string; // ERROR
+       ^^^^^^^^^^^^
 
 References:
    MySubscription.graphql.js:1:18
     1| module.exports = 4 as const;
                         ^ [1]
-   test.js:43:16
-   43| (subscription: string); // ERROR
-                      ^^^^^^ [2]
+   test.js:43:17
+   43| subscription as string; // ERROR
+                       ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:57:2
+Error ----------------------------------------------------------------------------------------------------- test.js:57:1
 
 Cannot cast `fragmentWithComment` to string because number literal `1` [1] is incompatible with string [2].
 [incompatible-type]
 
-   test.js:57:2
-   57| (fragmentWithComment: string); // ERROR
-        ^^^^^^^^^^^^^^^^^^^
+   test.js:57:1
+   57| fragmentWithComment as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^
 
 References:
    MyFragment.graphql.js:1:18
     1| module.exports = 1 as const;
                         ^ [1]
-   test.js:57:23
-   57| (fragmentWithComment: string); // ERROR
-                             ^^^^^^ [2]
+   test.js:57:24
+   57| fragmentWithComment as string; // ERROR
+                              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:71:2
+Error ----------------------------------------------------------------------------------------------------- test.js:71:1
 
 Cannot cast `fragmentWithCommas` to string because number literal `1` [1] is incompatible with string [2].
 [incompatible-type]
 
-   test.js:71:2
-   71| (fragmentWithCommas: string); // ERROR
-        ^^^^^^^^^^^^^^^^^^
+   test.js:71:1
+   71| fragmentWithCommas as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^
 
 References:
    MyFragment.graphql.js:1:18
     1| module.exports = 1 as const;
                         ^ [1]
-   test.js:71:22
-   71| (fragmentWithCommas: string); // ERROR
-                            ^^^^^^ [2]
+   test.js:71:23
+   71| fragmentWithCommas as string; // ERROR
+                             ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:73:1

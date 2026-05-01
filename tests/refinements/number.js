@@ -3,16 +3,16 @@ type Mode = 0 | 1 | 2;
 let tests = [
   function(x: number) {
     if (x === 0) {
-      (x: void); // error
+      x as void; // error
     }
-    (x: 0); // error
+    x as 0; // error
   },
 
   function(x: number) {
     if (x !== 0) {
-      (x: 0); // error
+      x as 0; // error
     }
-    (x: void); // error
+    x as void; // error
   },
 
   function(x: 1): 0 {
@@ -31,9 +31,9 @@ let tests = [
 
   function(x: 0) {
     if (x !== 1) {
-      (x: 0);
+      x as 0;
     }
-    (x: 0);
+    x as 0;
   },
 
   function(x: 0): number {
@@ -45,12 +45,12 @@ let tests = [
 
   function(x: 0 | 1) {
     if (x === 0) {
-      (x: 0);
-      (x: void); // error
+      x as 0;
+      x as void; // error
     }
     if (x === 1) {
-      (x: 1);
-      (x: void); // error
+      x as 1;
+      x as void; // error
     }
   },
 
@@ -99,12 +99,12 @@ let tests = [
   function(mode: Mode) {
     switch (mode) {
       case 0:
-        (mode: 0);
+        mode as 0;
         break;
 
       case 1:
       case 2:
-        (mode: 1 | 2);
+        mode as 1 | 2;
         break;
     }
   },
@@ -121,16 +121,16 @@ let tests = [
 let negtests = [
   function(x: number) {
     if (x === -1) {
-      (x: void); // error
+      x as void; // error
     }
-    (x: -1); // error
+    x as -1; // error
   },
 
   function(x: number) {
     if (x !== -1) {
-      (x: -1); // error
+      x as -1; // error
     }
-    (x: -1); // error
+    x as -1; // error
   },
 
   function(x: -1): -1 {
@@ -149,9 +149,9 @@ let negtests = [
 
   function(x: -1) {
     if (x === 0) { //error
-      (x: 0);
+      x as 0;
     }
-    (x: -1);
+    x as -1;
   },
 
   function(x: -1 | 0): -1 {

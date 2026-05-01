@@ -56,18 +56,18 @@ var void_tests =
   // obj.p === undefined (sentinel)
   function(o: { value: string, err: void } | { err: string }) {
     if (o.err === undefined) {
-      (o.value: string);
+      o.value as string;
     } else {
-      (o.err: string);
+      o.err as string;
     }
   },
 
   // obj.p !== undefined (sentinel)
   function(o: { value: string, err: void } | { err: string }) {
     if (o.err !== undefined) {
-      (o.err: string);
+      o.err as string;
     } else {
-      (o.value: string);
+      o.value as string;
     }
   }
 ];

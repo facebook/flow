@@ -8,4 +8,4 @@ const query = graphql`
     }
   }`;
 
-(query: string); // OK
+query as string; // OK

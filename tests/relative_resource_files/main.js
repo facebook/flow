@@ -3,4 +3,4 @@ var d3_css = require('./d3.css'); // error - missing resource file
 var d3_mov = require('./d3.mov'); // error - existing non-resource file
 var d3_tar = require('./d3.tar'); // error - missing non-resource file
 
-(d3_svg.x: string); // error number ~> string
+d3_svg.x as string; // error number ~> string

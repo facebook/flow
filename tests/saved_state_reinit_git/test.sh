@@ -65,7 +65,7 @@ printf "Moving to commit 2\n"
 git checkout -f "$COMMIT2" --quiet
 echo
 
-printf "\nimport dep2 from './dep2';\n(dep2: string);\n" >> test.js
+printf "\nimport dep2 from './dep2';\ndep2 as string;\n" >> test.js
 
 assert_ok "$FLOW" force-recheck --missed-changes --changed-mergebase test.js
 

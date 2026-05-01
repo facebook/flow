@@ -8,4 +8,4 @@ const y = true
     : 'fail';
 
 
-if(y != null) { (y : string) }
+if(y != null) { y as string }

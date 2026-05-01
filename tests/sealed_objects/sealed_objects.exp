@@ -27,9 +27,9 @@ References:
                ^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:7:59
+Error ----------------------------------------------------------------------------------------------------- test.js:7:60
 
-Cannot assign object literal to `o3` because property `y` is missing in object type [1] but exists in object type [2].
+Cannot assign `{...}` to `o3` because property `y` is missing in object type [1] but exists in object type [2].
 [incompatible-type]
 
 This optional property of object type [2] is invariantly typed. To fix,
@@ -37,13 +37,13 @@ This optional property of object type [2] is invariantly typed. To fix,
 - Or make object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test.js:7:59
-   7| var o3: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; ... });
-                                                                ^^^^^^^^^^^^^^^^^^ [1]
+   test.js:7:60
+   7| var o3: { x: number; y?: string; ... } = { x: 0, y: 0 } as { x: number; ... };
+                                                                 ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    test.js:7:9
-   7| var o3: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; ... });
+   7| var o3: { x: number; y?: string; ... } = { x: 0, y: 0 } as { x: number; ... };
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -76,9 +76,9 @@ References:
                 ^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:19:80
+Error ---------------------------------------------------------------------------------------------------- test.js:19:81
 
-Cannot assign object literal to `o7` because in property `y`: `number` [1] is not exactly the same as `string` [2].
+Cannot assign `{...}` to `o7` because in property `y`: `number` [1] is not exactly the same as `string` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `y` is invariantly typed. To fix the error,
@@ -86,19 +86,19 @@ The above-mentioned two types must be the same because property `y` is invariant
 - Or make property `y` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   test.js:19:80
-   19| var o7: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                                                                      ^^^^^^ [1]
+   test.js:19:81
+   19| var o7: { x: number; y?: string; ... } = { x: 0, y: 0 } as { x: number; [_:any]:number}; // error
+                                                                                       ^^^^^^ [1]
 
 References:
    test.js:19:26
-   19| var o7: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+   19| var o7: { x: number; y?: string; ... } = { x: 0, y: 0 } as { x: number; [_:any]:number}; // error
                                 ^^^^^^ [2]
-   test.js:19:59
-   19| var o7: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test.js:19:60
+   19| var o7: { x: number; y?: string; ... } = { x: 0, y: 0 } as { x: number; [_:any]:number}; // error
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    test.js:19:9
-   19| var o7: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+   19| var o7: { x: number; y?: string; ... } = { x: 0, y: 0 } as { x: number; [_:any]:number}; // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 

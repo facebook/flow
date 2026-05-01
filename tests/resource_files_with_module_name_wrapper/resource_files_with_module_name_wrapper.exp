@@ -1,18 +1,18 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:1:2
+Error ------------------------------------------------------------------------------------------------------ test.js:1:1
 
 Cannot cast `require(...)` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:1:2
-   1| (require("./foo.css"): string); // error: boolean ~> string
-       ^^^^^^^^^^^^^^^^^^^^
+   test.js:1:1
+   1| require("./foo.css") as string; // error: boolean ~> string
+      ^^^^^^^^^^^^^^^^^^^^
 
 References:
    cssMock.js:2:25
    2| declare module.exports: boolean;
                               ^^^^^^^ [1]
-   test.js:1:24
-   1| (require("./foo.css"): string); // error: boolean ~> string
-                             ^^^^^^ [2]
+   test.js:1:25
+   1| require("./foo.css") as string; // error: boolean ~> string
+                              ^^^^^^ [2]
 
 
 

@@ -18,10 +18,10 @@ function testLiteralProperty(a: A, b: B) {
   }
 
   if (b["@type"] === "A") {
-    (b.a: string); // ok
+    b.a as string; // ok
     stuff(b.a);
   } else {
-    (b.b: string); // ok
+    b.b as string; // ok
     stuff(b.b);
   }
 }
@@ -33,6 +33,6 @@ function testSwitchLiteralProperty(b: B) {
     case "B":
       return b.b;
     default:
-      (b["@type"]: empty);
+      b["@type"] as empty;
   }
 }

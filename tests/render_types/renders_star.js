@@ -1,34 +1,34 @@
 import * as React from 'react';
 component MenuItem() { return null }
-(null: renders* MenuItem); // OK
-(false: renders* MenuItem); // OK
-(false as false: renders* MenuItem); // OK
-(undefined: renders* MenuItem); // OK
-([null, [false, [undefined]]]: renders* MenuItem); // OK
-([null, false, undefined]: renders* MenuItem); // OK
-(true: renders* MenuItem); // ERROR
+null as renders* MenuItem; // OK
+false as renders* MenuItem; // OK
+false as false as renders* MenuItem; // OK
+undefined as renders* MenuItem; // OK
+[null, [false, [undefined]]] as renders* MenuItem; // OK
+[null, false, undefined] as renders* MenuItem; // OK
+true as renders* MenuItem; // ERROR
 
-(<MenuItem />: renders* MenuItem); // OK
+<MenuItem /> as renders* MenuItem; // OK
 declare const menuItemChildrenArray: React.ChildrenArray<ExactReactElement_DEPRECATED<typeof MenuItem>>;
-(menuItemChildrenArray: renders* MenuItem); // OK
+menuItemChildrenArray as renders* MenuItem; // OK
 
 component BlueMenuItem() renders MenuItem { return <MenuItem />; }
-(<BlueMenuItem />: renders* MenuItem); // OK
+<BlueMenuItem /> as renders* MenuItem; // OK
 
 declare const rendersMaybeBlueMenuItem: renders? MenuItem;
-(rendersMaybeBlueMenuItem: renders* MenuItem); // OK
+rendersMaybeBlueMenuItem as renders* MenuItem; // OK
 
 declare const rendersChildrenArrayBlueMenuItem: renders? React.ChildrenArray<BlueMenuItem>; // invalid-render
-(rendersChildrenArrayBlueMenuItem: renders* MenuItem); // OK
+rendersChildrenArrayBlueMenuItem as renders* MenuItem; // OK
 
 component Bad() { return null }
 declare const rendersHuhBad: RendersHuh<Bad>;
-(rendersHuhBad: renders* MenuItem); // ERROR
+rendersHuhBad as renders* MenuItem; // ERROR
 
 declare const rendersStarMenuItem: renders* MenuItem;
-(rendersStarMenuItem: renders (null | false | void | MenuItem | $ReadOnlyArray<renders* MenuItem>)); // type checks, but invalid-render
+rendersStarMenuItem as renders (null | false | void | MenuItem | $ReadOnlyArray<renders* MenuItem>); // type checks, but invalid-render
 
-([<MenuItem />, <BlueMenuItem />, <Bad />]: renders* MenuItem); // ERROR
+[<MenuItem />, <BlueMenuItem />, <Bad />] as renders* MenuItem; // ERROR
 
 component MenuItems() renders* MenuItem {
   return null; // OK

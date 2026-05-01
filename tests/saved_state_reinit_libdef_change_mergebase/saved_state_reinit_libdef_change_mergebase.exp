@@ -21,21 +21,21 @@ No errors!
 The Flow server is currently in lazy mode and is only checking 0/1 source files (+ 2/2 libdefs).
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 After recheck:
-Error ------------------------------------------------------------------------------------------------------ test.js:2:2
+Error ------------------------------------------------------------------------------------------------------ test.js:2:1
 
 Cannot cast `myGlobal` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
-   test.js:2:2
-   2| (myGlobal: string);
-       ^^^^^^^^
+   test.js:2:1
+   2| myGlobal as string;
+      ^^^^^^^^
 
 References:
    libs/lib.js:2:23
    2| declare var myGlobal: boolean;
                             ^^^^^^^ [1]
-   test.js:2:12
-   2| (myGlobal: string);
-                 ^^^^^^ [2]
+   test.js:2:13
+   2| myGlobal as string;
+                  ^^^^^^ [2]
 
 
 

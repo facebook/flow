@@ -21,6 +21,6 @@ function testNotExistsClass() {
   declare class C {}
   declare class P<X> {}
 
-  if (!C) (C: empty); // okay
-  if (!P) (P: empty); // okay
+  if (!C) C as empty; // okay
+  if (!P) P as empty; // okay
 }

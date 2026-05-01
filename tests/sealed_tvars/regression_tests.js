@@ -1,7 +1,7 @@
 function no_missing_env_entry_for_delete() {
   declare var foo: {bar: string | void};
   delete foo.bar; // ok
-  (foo.bar: void); // ok
+  foo.bar as void; // ok
 }
 
 function no_missing_env_entry_for_illegal_type_binding() {
@@ -51,7 +51,7 @@ declare module 'declared-module' {
   declare type ModScope = ModScopeExternal
 }
 type ModScopeExternal = number
-(((42: any): ModScope): empty); // string ~> empty, not num ~> empty
+42 as any as ModScope as empty; // string ~> empty, not num ~> empty
 
 declare module DeclaredModule2 {
   declare type ModScope2 = number
@@ -67,12 +67,12 @@ let UninitializedVar;
 
 class ClassMethodThisAnnotations {
   method1(this: mixed) {
-    (this: mixed);
+    this as mixed;
   }
 }
 
 {
-  let inexact = ({foo: 3}: {foo: number, ...});
+  let inexact = {foo: 3} as {foo: number, ...};
 
   declare function inexactSpread<T>(x: T): {bar: 3, ...T, ...};
   const inexact_spread_err = inexactSpread(inexact);
@@ -109,9 +109,9 @@ function non_assigning_member_assigns() {
   declare var bar: {baz: number};
   bar.baz += 1; // ok
   bar.baz++; // ok
-  (bar.baz: number); // ok
+  bar.baz as number; // ok
   bar.baz--; // ok
-  (bar.baz: number); // ok
+  bar.baz as number; // ok
 }
 
 {
@@ -192,5 +192,5 @@ function non_assigning_member_assigns() {
   declare var array_non_maybe_any: Array<$NonMaybeType<any>>;
   const non_maybe_any = array_non_maybe_any[0];
   type Non_maybe_any = typeof non_maybe_any;
-  (1: Non_maybe_any); // okay 1 ~> any
+  1 as Non_maybe_any; // okay 1 ~> any
 }
