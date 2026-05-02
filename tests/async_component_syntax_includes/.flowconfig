@@ -1,5 +1,4 @@
 [options]
-casting_syntax=as
 component_syntax=true
 experimental.async_component_syntax=false
 experimental.async_component_syntax.includes=<PROJECT_ROOT>/included

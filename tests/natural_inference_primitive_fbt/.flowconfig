@@ -8,7 +8,6 @@ fbt.js.flow
 [lints]
 
 [options]
-casting_syntax=as
 all=true
 facebook.fbt=FbtElement
 component_syntax=true

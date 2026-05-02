@@ -5,6 +5,5 @@
 [libs]
 
 [options]
-casting_syntax=as
 all=true
 experimental.const_params=true

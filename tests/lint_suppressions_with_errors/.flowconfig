@@ -2,5 +2,4 @@
 sketchy-null-mixed=warn
 
 [options]
-casting_syntax=as
 all=true

@@ -2,7 +2,6 @@
 <PROJECT_ROOT>/fixtures
 
 [options]
-casting_syntax=as
 all=true
 module.system=haste
 file_watcher=none

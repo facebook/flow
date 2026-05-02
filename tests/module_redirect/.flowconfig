@@ -6,6 +6,5 @@
 A.js
 
 [options]
-casting_syntax=as
 all=true
 module.system=haste

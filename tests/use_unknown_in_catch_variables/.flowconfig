@@ -1,5 +1,4 @@
 [options]
-casting_syntax=as
 all=true
 
 use_unknown_in_catch_variables=true

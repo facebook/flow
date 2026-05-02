@@ -5,4 +5,3 @@ module.system=haste
 
 relay_integration=true
 relay_integration.esmodules=true
-casting_syntax=as

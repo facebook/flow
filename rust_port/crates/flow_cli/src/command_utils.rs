@@ -2189,7 +2189,7 @@ pub(super) fn make_options(
     let automatic_require_default = automatic_require_default.unwrap_or(false);
     let babel_loose_array_spread = babel_loose_array_spread.unwrap_or(false);
     let ban_spread_key_props = ban_spread_key_props.unwrap_or(false);
-    let casting_syntax = casting_syntax.unwrap_or(CastingSyntax::Both);
+    let casting_syntax = casting_syntax.unwrap_or(CastingSyntax::As);
     let channel_mode = match channel_mode {
         Some(flow_config::ChannelMode::Pipe) => options::ChannelMode::Pipe,
         Some(flow_config::ChannelMode::Socket) => options::ChannelMode::Socket,

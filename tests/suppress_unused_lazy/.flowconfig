@@ -1,5 +1,4 @@
 [options]
-casting_syntax=as
 all=true
 file_watcher=none
 lazy_mode=fs

@@ -2,7 +2,6 @@
 lib.js
 
 [options]
-casting_syntax=as
 all=true
 no_flowlib=false
 component_syntax=true

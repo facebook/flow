@@ -1,5 +1,4 @@
 [options]
-casting_syntax=as
 all=true
 module.declaration_dirnames=<PROJECT_ROOT>/decl1
 module.declaration_dirnames=<PROJECT_ROOT>/decl2

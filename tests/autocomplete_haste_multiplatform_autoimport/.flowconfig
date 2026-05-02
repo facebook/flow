@@ -1,5 +1,4 @@
 [options]
-casting_syntax=as
 all=false
 no_flowlib=false
 enums=true

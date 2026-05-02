@@ -1,7 +1,6 @@
 [libs]
 
 [options]
-casting_syntax=as
 no_flowlib=false
 all=true
 ban_spread_key_props=true

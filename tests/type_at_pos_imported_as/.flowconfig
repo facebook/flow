@@ -7,7 +7,6 @@
 [lints]
 
 [options]
-casting_syntax=as
 enums=true
 component_syntax=true
 all=true

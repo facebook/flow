@@ -1,5 +1,4 @@
 [options]
-casting_syntax=as
 all=true
 experimental.pattern_matching=true
 experimental.pattern_matching.instance_patterns=true

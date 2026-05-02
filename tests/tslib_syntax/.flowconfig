@@ -2,7 +2,6 @@
 global_augmentation.d.ts
 
 [options]
-casting_syntax=as
 all=true
 no_flowlib=false
 experimental.ts_syntax=true

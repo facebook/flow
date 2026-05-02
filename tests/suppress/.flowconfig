@@ -6,6 +6,5 @@
 lib.js
 
 [options]
-casting_syntax=as
 include_warnings=true
 all=true

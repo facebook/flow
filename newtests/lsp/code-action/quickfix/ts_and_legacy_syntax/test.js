@@ -379,7 +379,7 @@ module.exports = (suite(
           '$/cancelRequest',
         ],
       ),
-    ]).flowConfig('_flowconfig_casting_syntax'),
+    ]),
     test('provide quickfix for `satisfies` type cast', [
       addFile(
         'fix-satisfies-expression.js.ignored',
@@ -695,6 +695,6 @@ module.exports = (suite(
         'fix-all-colon-cast.js',
         'quickfix-fix-all-colon-cast',
       ),
-    ).flowConfig('_flowconfig_casting_syntax'),
+    ),
   ],
 ): SuiteType);

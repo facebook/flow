@@ -7,7 +7,6 @@
 [lints]
 
 [options]
-casting_syntax=as
 all=false
 no_flowlib=false
 include_warnings=true

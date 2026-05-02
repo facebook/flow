@@ -14,7 +14,6 @@ libdef-override=error
 deprecated-type-bool=error
 
 [options]
-casting_syntax=as
 all=true
 
 [strict]

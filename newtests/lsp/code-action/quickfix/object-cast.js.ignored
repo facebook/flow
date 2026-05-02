@@ -1,5 +1,5 @@
 // @flow
 
 type T = {| foo: string |};
-({floo: '123'}: T);
+({floo: '123'}) as T;
 //  ^

@@ -1,5 +1,4 @@
 [options]
-casting_syntax=as
 all=false
 no_flowlib=false
 module.file_ext=.ts
