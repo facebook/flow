@@ -5,7 +5,7 @@ var bar: (str:number, i:number)=> string = foo;
 
 var qux = function(str:string, i:number):number { return foo(str,i); }
 
-var obj: {str:string; i:number; j:boolean} = {str: "...", i: "...", k: false};
+var obj: {str:string; i:number; j:boolean, ...} = {str: "...", i: "...", k: false};
 
 var arr: Array<number> = [1,2,"..."];
 
@@ -23,7 +23,7 @@ var array_of_nullable: (?number)[] = [null, 3];
 var array_of_tuple: [number, string][] = [[0, "foo"], [1, "bar"]];
 var array_of_tuple_parens: ([number, string])[] = array_of_tuple;
 
-type ObjType = { 'bar-foo': string; 'foo-bar': number; };
+type ObjType = { 'bar-foo': string; 'foo-bar': number;  ...};
 var test_obj: ObjType = { 'bar-foo': '23' };
 
 // param type annos are strict UBs like var type annos
@@ -34,7 +34,7 @@ function param_anno(n:number):void {
 // another error on param UB, more typical of www (mis)use-cases
 // this one cribbed from API.atlas.js
 function param_anno2(
-    batchRequests: Array<{method: string; path: string; params: ?Object}>,
+    batchRequests: Array<{method: string; path: string; params: ?Object, ...}>,
   ): void {
 
     // error below, since we're assigning elements to batchRequests

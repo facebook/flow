@@ -8,7 +8,7 @@ function x1() {
 }
 
 function x2() {
-  declare const f: ?{ m: F };
+  declare const f: ?{ m: F, ... };
   f?.m("abc");
 }
 
@@ -18,17 +18,17 @@ function x3() {
 }
 
 function x4() {
-  declare const f: ?{ m: { n: F } };
+  declare const f: ?{ m: { n: F, ... }, ... };
   f?.m.n("abc");
 }
 
 function x5() {
-  declare const f: { m: ?F };
+  declare const f: { m: ?F, ... };
   f.m?.("abc");
 }
 
 function x6() {
-  declare const g: ?{ f: F };
+  declare const g: ?{ f: F, ... };
   if (g != null) {
     g.f("abc");
   }

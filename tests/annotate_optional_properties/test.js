@@ -54,6 +54,6 @@ const obj = (() => {
 
 obj.foo.baz = '';
 
-obj as {foo: {bar: number, baz: string}};
+obj as {foo: {bar: number, baz: string, ...}, ...};
 
-let annot: {x: number} = {}; // don't annot
+let annot: {x: number, ...} = {}; // don't annot

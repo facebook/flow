@@ -1,9 +1,9 @@
 //@flow
 
-export type Typical = {|
+export type Typical = {
   x : number,
   y : number
-|};
+};
 
 export const Typhoon = "not a type";
 

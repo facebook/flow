@@ -19,7 +19,7 @@ declare var o: empty;
 
 // this also must not loop
 
-declare var _x:  {};
+declare var _x:  {...};
 
 let x = _x;
 

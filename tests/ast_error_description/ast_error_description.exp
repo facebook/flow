@@ -8,7 +8,7 @@ Cannot cast `[].p` to empty because `unknown` [1] is incompatible with empty [2]
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:15:27
    15| (([] as empty) as T).p as empty;
@@ -39,7 +39,7 @@ Cannot cast `[...].p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:16:28
    16| (([1] as empty) as T).p as empty;
@@ -70,7 +70,7 @@ Cannot cast `[...].p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:17:34
    17| (([1, 2, 3] as empty) as T).p as empty;
@@ -101,7 +101,7 @@ Cannot cast `((...) => { ... }).p` to empty because `unknown` [1] is incompatibl
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:18:35
    18| (((() => {}) as empty) as T).p as empty;
@@ -132,7 +132,7 @@ Cannot cast `((...) => 42).p` to empty because `unknown` [1] is incompatible wit
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:19:35
    19| (((() => 42) as empty) as T).p as empty;
@@ -163,7 +163,7 @@ Cannot cast `((...) => ({...})).p` to empty because `unknown` [1] is incompatibl
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:20:37
    20| (((() => ({})) as empty) as T).p as empty;
@@ -194,7 +194,7 @@ Cannot cast `(a = 42).p` to empty because `unknown` [1] is incompatible with emp
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:21:33
    21| (((a = 42) as empty) as T).p as empty;
@@ -225,7 +225,7 @@ Cannot cast `(a >>>= 42).p` to empty because `unknown` [1] is incompatible with 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:22:36
    22| (((a >>>= 42) as empty) as T).p as empty;
@@ -259,7 +259,7 @@ Cannot cast `({...} = {...}).p` to empty because `unknown` [1] is incompatible w
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:23:40
    23| ((({a} = {a: 42}) as empty) as T).p as empty;
@@ -290,7 +290,7 @@ Cannot cast `([...] = [...]).p` to empty because `unknown` [1] is incompatible w
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:24:37
    24| ((([a] = [42]) as empty) as T).p as empty;
@@ -321,7 +321,7 @@ Cannot cast `(a = a = 42).p` to empty because `unknown` [1] is incompatible with
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:25:37
    25| (((a = a = 42) as empty) as T).p as empty;
@@ -352,7 +352,7 @@ Cannot cast `(1 + 2).p` to empty because `unknown` [1] is incompatible with empt
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:26:30
    26| ((1 + 2 as empty) as T).p as empty;
@@ -383,7 +383,7 @@ Cannot cast `(1 + 2 + 3).p` to empty because `unknown` [1] is incompatible with 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:27:34
    27| ((1 + 2 + 3 as empty) as T).p as empty;
@@ -414,7 +414,7 @@ Cannot cast `(1 - (2 + 3)).p` to empty because `unknown` [1] is incompatible wit
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:28:36
    28| ((1 - (2 + 3) as empty) as T).p as empty;
@@ -445,7 +445,7 @@ Cannot cast `((1 + 2) * (3 + 4)).p` to empty because `unknown` [1] is incompatib
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:29:42
    29| (((1 + 2) * (3 + 4) as empty) as T).p as empty;
@@ -476,7 +476,7 @@ Cannot cast `(1 + (2 * (3 + 4))).p` to empty because `unknown` [1] is incompatib
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:30:42
    30| (((1 + 2 * (3 + 4)) as empty) as T).p as empty;
@@ -507,7 +507,7 @@ Cannot cast `f().p` to empty because `unknown` [1] is incompatible with empty [2
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:31:28
    31| ((f() as empty) as T).p as empty;
@@ -541,7 +541,7 @@ Cannot cast `f(...).p` to empty because `unknown` [1] is incompatible with empty
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:32:30
    32| ((f(42) as empty) as T).p as empty;
@@ -575,7 +575,7 @@ Cannot cast `class { ... }.p` to empty because `unknown` [1] is incompatible wit
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:33:35
    33| (((class {}) as empty) as T).p as empty;
@@ -607,7 +607,7 @@ Cannot cast `(1 ? 2 : 3).p` to empty because `unknown` [1] is incompatible with 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:34:36
    34| (((1 ? 2 : 3) as empty) as T).p as empty;
@@ -652,7 +652,7 @@ Cannot cast `((1 ? 2 : 3) ? 4 : 5).p` to empty because `unknown` [1] is incompat
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:35:46
    35| ((((1 ? 2 : 3) ? 4 : 5) as empty) as T).p as empty;
@@ -705,7 +705,7 @@ Cannot cast `function () { ... }.p` to empty because `unknown` [1] is incompatib
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:36:41
    36| (((function () {}) as empty) as T).p as empty;
@@ -736,7 +736,7 @@ Cannot cast `a.p` to empty because `unknown` [1] is incompatible with empty [2].
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:37:26
    37| ((a as empty) as T).p as empty;
@@ -771,7 +771,7 @@ Cannot cast `import('./expression').p` to empty because `unknown` [1] is incompa
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:38:47
    38| ((import('./expression') as empty) as T).p as empty;
@@ -802,7 +802,7 @@ Cannot cast `<MyComponent />.p` to empty because `unknown` [1] is incompatible w
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:39:40
    39| ((<MyComponent /> as empty) as T).p as empty;
@@ -833,7 +833,7 @@ Cannot cast `<>...</>.p` to empty because `unknown` [1] is incompatible with emp
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:40:33
    40| ((<>foo</> as empty) as T).p as empty;
@@ -864,8 +864,8 @@ Cannot get `React.Fragment` because property `Fragment` is missing in object typ
 
 References:
    expression.js:12:20
-   12| declare var React: {createElement: React$CreateElement};
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   12| declare var React: {createElement: React$CreateElement, ...};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:41:1
@@ -878,7 +878,7 @@ Cannot cast `'foo'.p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:41:30
    41| (('foo' as empty) as T).p as empty;
@@ -909,7 +909,7 @@ Cannot cast `'abcdefghij...'.p` to empty because `unknown` [1] is incompatible w
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:42:53
    42| (('abcdefghijklmnopqrstuvwxyz' as empty) as T).p as empty;
@@ -940,7 +940,7 @@ Cannot cast `42.p` to empty because `unknown` [1] is incompatible with empty [2]
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:43:27
    43| ((42 as empty) as T).p as empty;
@@ -971,7 +971,7 @@ Cannot cast `true.p` to empty because `unknown` [1] is incompatible with empty [
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:44:29
    44| ((true as empty) as T).p as empty;
@@ -1002,7 +1002,7 @@ Cannot cast `false.p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:45:30
    45| ((false as empty) as T).p as empty;
@@ -1033,7 +1033,7 @@ Cannot cast `null.p` to empty because `unknown` [1] is incompatible with empty [
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:46:29
    46| ((null as empty) as T).p as empty;
@@ -1064,7 +1064,7 @@ Cannot cast `o.p.p` to empty because `unknown` [1] is incompatible with empty [2
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:47:28
    47| ((o.p as empty) as T).p as empty;
@@ -1098,7 +1098,7 @@ Cannot cast `(new f()).p` to empty because `unknown` [1] is incompatible with em
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:48:32
    48| ((new f() as empty) as T).p as empty;
@@ -1130,7 +1130,7 @@ Cannot cast `(new f(...)).p` to empty because `unknown` [1] is incompatible with
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:49:34
    49| ((new f(42) as empty) as T).p as empty;
@@ -1162,7 +1162,7 @@ Cannot cast `{...}.p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:50:29
    50| ((({}) as empty) as T).p as empty;
@@ -1193,7 +1193,7 @@ Cannot cast `3.p` to empty because `unknown` [1] is incompatible with empty [2].
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:51:34
    51| (((1, 2, 3) as empty) as T).p as empty;
@@ -1235,7 +1235,7 @@ Cannot cast `super.m.p` to empty because `unknown` [1] is incompatible with empt
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:56:36
    56|     ((super.m as empty) as T).p as empty;
@@ -1252,7 +1252,7 @@ Cannot cast `f`...`.p` to empty because `unknown` [1] is incompatible with empty
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:59:34
    59| ((f`foobar` as empty) as T).p as empty;
@@ -1286,7 +1286,7 @@ Cannot cast ``...`.p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:60:33
    60| ((`foobar` as empty) as T).p as empty;
@@ -1317,7 +1317,7 @@ Cannot cast `this.p` to empty because `unknown` [1] is incompatible with empty [
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:62:31
    62|   ((this as empty) as T).p as empty;
@@ -1351,7 +1351,7 @@ Cannot cast `42.p` to empty because `unknown` [1] is incompatible with empty [2]
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:64:39
    64| (((42 as string) as empty) as T).p as empty;
@@ -1396,7 +1396,7 @@ Cannot cast `(-42).p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:65:28
    65| ((-42 as empty) as T).p as empty;
@@ -1427,7 +1427,7 @@ Cannot cast `(!42).p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:66:28
    66| ((!42 as empty) as T).p as empty;
@@ -1458,7 +1458,7 @@ Cannot cast `(++a).p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:67:28
    67| ((++a as empty) as T).p as empty;
@@ -1489,7 +1489,7 @@ Cannot cast `(a++).p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:68:28
    68| ((a++ as empty) as T).p as empty;
@@ -1520,7 +1520,7 @@ Cannot cast `yield.p` to empty because `unknown` [1] is incompatible with empty 
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:70:34
    70|   (((yield) as empty) as T).p as empty;
@@ -1554,7 +1554,7 @@ Cannot cast `(yield 42).p` to empty because `unknown` [1] is incompatible with e
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:71:37
    71|   (((yield 42) as empty) as T).p as empty;
@@ -1588,7 +1588,7 @@ Cannot cast `(yield* g1()).p` to empty because `unknown` [1] is incompatible wit
 
 References:
    expression.js:6:14
-    6| type T = {p: unknown};
+    6| type T = {p: unknown, ...};
                     ^^^^^^^ [1]
    expression.js:74:40
    74|   (((yield* g1()) as empty) as T).p as empty;

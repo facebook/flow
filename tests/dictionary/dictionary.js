@@ -194,25 +194,25 @@ function subtype_mix_with_declared_props_invariant_r(
   xc.p as C; // not true
 }
 
-function unification_dict_to_obj(x: Array<{[k: string]: X}>): Array<{p: X}> {
+function unification_dict_to_obj(x: Array<{[k: string]: X}>): Array<{p: X, ...}> {
   return x; // error: if allowed, could write {p:X,q:Y} into `x`
 }
 
-function unification_obj_to_dict(x: Array<{p: X}>): Array<{[k: string]: X}> {
+function unification_obj_to_dict(x: Array<{p: X, ...}>): Array<{[k: string]: X}> {
   return x; // error: if allowed, could write {p:X,q:Y} into returned array
 }
 
 function subtype_dict_to_obj(x: {[k: string]: B}) {
-  let a: {p: A} = x; // error
+  let a: {p: A, ...} = x; // error
   a.p = new A(); // x.p no longer B
 
-  let b: {p: B} = x; // ok
+  let b: {p: B, ...} = x; // ok
 
-  let c: {p: C} = x; // error
+  let c: {p: C, ...} = x; // error
   x.p as C; // not true
 }
 
-function subtype_obj_to_dict(x: {|p: B|}) {
+function subtype_obj_to_dict(x: {p: B}) {
   let a: {[k: string]: A} = x; // error
   a.p = new A(); // x.p no longer B
 
@@ -224,7 +224,7 @@ function subtype_obj_to_dict(x: {|p: B|}) {
 
 // Only props in l which are not in u must match indexer, but must do so
 // exactly.
-function subtype_obj_to_mixed(x: {|p: B, x: X|}) {
+function subtype_obj_to_mixed(x: {p: B, x: X}) {
   let a: {[k: string]: A, x: X} = x; // error (as above), but exclusive of x
   let b: {[k: string]: B, x: X} = x; // ok,
   let c: {[k: string]: C, x: X} = x; // error (as above), but exclusive of x
@@ -243,28 +243,28 @@ function subtype_dict_to_mixed(x: {[k: string]: B}) {
 }
 
 function subtype_dict_to_optional_a(x: {[k: string]: B}) {
-  let a: {p?: A} = x; // error
+  let a: {p?: A, ...} = x; // error
 }
 
 function subtype_dict_to_optional_b(x: {[k: string]: B}) {
-  let b: {p?: B} = x; // ok
+  let b: {p?: B, ...} = x; // ok
 }
 
 function subtype_dict_to_optional_c(x: {[k: string]: B}) {
-  let c: {p?: C} = x; // error
+  let c: {p?: C, ...} = x; // error
 }
 
-function subtype_optional_a_to_dict(x: {|p?: A|}): {[k: string]: B} {
+function subtype_optional_a_to_dict(x: {p?: A}): {[k: string]: B} {
   // error: A ~> B
   return x;
 }
 
-function subtype_optional_b_to_dict(x: {|p?: B|}): {[k: string]: B} {
+function subtype_optional_b_to_dict(x: {p?: B}): {[k: string]: B} {
   // ok
   return x;
 }
 
-function subtype_optional_c_to_dict(x: {|p?: C|}): {[k: string]: B} {
+function subtype_optional_c_to_dict(x: {p?: C}): {[k: string]: B} {
   // error: C ~> B
   return x;
 }

@@ -1,12 +1,12 @@
 //@flow
 
-declare var f : {|
+declare var f : {
   a: number,
   b: number,
   c: number,
   d: number,
   e: number,
-|} => void;
+} => void;
 
 const before = {
   a: 1,

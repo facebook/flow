@@ -262,7 +262,7 @@ The above-mentioned two types must be the same because property `p` is invariant
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    statics.js:10:1
-   10| C as {p: number}; // errors, string ~> number & vice versa (unify)
+   10| C as {p: number, ...}; // errors, string ~> number & vice versa (unify)
        ^
 
 References:
@@ -270,14 +270,14 @@ References:
     4|   static p: string;
                    ^^^^^^ [1]
    statics.js:10:10
-   10| C as {p: number}; // errors, string ~> number & vice versa (unify)
+   10| C as {p: number, ...}; // errors, string ~> number & vice versa (unify)
                 ^^^^^^ [2]
    statics.js:3:7
     3| class C {
              ^ [3]
    statics.js:10:6
-   10| C as {p: number}; // errors, string ~> number & vice versa (unify)
-            ^^^^^^^^^^^ [4]
+   10| C as {p: number, ...}; // errors, string ~> number & vice versa (unify)
+            ^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- statics.js:13:1
@@ -290,8 +290,8 @@ Cannot cast `o` to statics of `C` because object type [1] is incompatible with s
 
 References:
    statics.js:12:16
-   12| declare var o: {p: number};
-                      ^^^^^^^^^^^ [1]
+   12| declare var o: {p: number, ...};
+                      ^^^^^^^^^^^^^^^^ [1]
    statics.js:13:6
    13| o as Class<C>; // error, object type incompatible with class type
             ^^^^^^^^ [2]

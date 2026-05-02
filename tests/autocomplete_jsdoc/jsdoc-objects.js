@@ -19,7 +19,7 @@ export type Props = {
    * qux is a literal property
    */
   'qux' : 4,
-}
+ ...}
 
 function FunctionComponent(x: Props) {}
 

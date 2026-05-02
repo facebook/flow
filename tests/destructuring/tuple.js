@@ -7,7 +7,7 @@
 
 // Non-arrays/tuples
 {
-  declare const o: {foo: 1};
+  declare const o: {foo: 1, ...};
   const [x] = o; // ERROR
 }
 

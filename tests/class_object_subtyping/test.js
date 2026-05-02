@@ -4,7 +4,7 @@ class A {
 
 type O = {
     x : string
-}
+, ...}
 
 interface I {
     x : string
@@ -38,5 +38,5 @@ t as I;
 
 class C { }
 
-C as { }; // error
+C as { ...}; // error
 C as interface { };

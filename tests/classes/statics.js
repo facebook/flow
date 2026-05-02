@@ -6,10 +6,10 @@ class C {
 C.p = 'hi';
 
 // Class static fields are compatible with object types
-C as {p: string}; // ok
-C as {p: number}; // errors, string ~> number & vice versa (unify)
+C as {p: string, ...}; // ok
+C as {p: number, ...}; // errors, string ~> number & vice versa (unify)
 
-declare var o: {p: number};
+declare var o: {p: number, ...};
 o as Class<C>; // error, object type incompatible with class type
 
 class Dup1 {

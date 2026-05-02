@@ -7,6 +7,5 @@
 [options]
 casting_syntax=as
 all=false
-exact_by_default=false
 facebook.fbt=FbtElement
 no_flowlib=false

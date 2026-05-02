@@ -1,6 +1,6 @@
 /* @flow */
 
-function foo(abb: {b: string}) {
+function foo(abb: {b: string, ...}) {
   let c: typeof a
 //               ^
 }

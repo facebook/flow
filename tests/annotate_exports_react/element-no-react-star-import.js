@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-type Props = {}
+type Props = {...}
 
 export default () => {
   class Abc extends React.Component<Props> { }

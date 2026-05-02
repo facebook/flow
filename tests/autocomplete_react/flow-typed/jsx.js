@@ -7,17 +7,17 @@ type $JSXIntrinsics = {
   [string]: {
     props: any,
     instance: CommonInstance,
-  },
+ ...  },
   div: {
-    props: {},
+    props: {...},
     instance: DivInstance,
-  },
+ ...  },
   span: {
-    props: {},
+    props: {...},
     instance: SpanInstance,
-  },
+ ...  },
   img: {
-    props: {},
+    props: {...},
     instance: ImgInstance,
-  },
+ ...  },
 }

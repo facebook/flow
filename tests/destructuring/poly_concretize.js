@@ -6,25 +6,25 @@
 
 // A union type used in object type spreads
 type LabelProps =
-  | {label: string, labelledby?: void}
-  | {label?: void, labelledby: string};
+  | {label: string, labelledby?: void, ...}
+  | {label?: void, labelledby: string, ...};
 
 type Base = {
   name: string,
   id: string,
-};
+ ...};
 
 // PressableItem includes both Base and LabelProps via spread
 type PressableItem = {
   ...Base,
   onPress?: () => void,
-  linkProps?: {href: string},
+  linkProps?: {href: string, ...},
   ...LabelProps,
-};
+ ...};
 
 type NonPressableItem = {
   ...Base,
-};
+ ...};
 
 type Item = PressableItem | NonPressableItem;
 
@@ -33,7 +33,7 @@ function mapItems<T: {...}, TKey: string>(
   items: Array<T>,
   additionalOptions: {
     filter?: (item: T) => boolean,
-  },
+ ...  },
 ): Array<T> {
   return items;
 }
@@ -60,7 +60,7 @@ function testRest(item: Item): void {
   }: {
     ...Item,
     name?: string,
-  } = item;
+ ...  } = item;
   // Accessing a property that only exists on one branch of the union
   // should produce an error, but should NOT produce a different error
   // than the baseline.
@@ -68,7 +68,7 @@ function testRest(item: Item): void {
 
 // Test: destructured value used in switch (should preserve full type)
 type Env = 'A' | 'B' | 'C';
-type Config = {env: Env};
+type Config = {env: Env, ...};
 
 function testSwitch(config: Config): void {
   const {env}: Config = config;

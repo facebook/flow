@@ -1,6 +1,6 @@
 //@flow
 
-declare var f : {|
+declare var f : {
   red: number,
   orange: number,
   yellow: number,
@@ -8,7 +8,7 @@ declare var f : {|
   blue: number,
   indigo: number,
   violet: number,
-|} => void;
+} => void;
 
 let subset = {
   red: 1,

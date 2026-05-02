@@ -15,7 +15,7 @@ declare class Bar<T> {
 }
 
 class Baz extends Bar<any> {
-  state: {z:{x:number,y:number}} = {
+  state: {z:{x:number,y:number, ...}, ...} = {
     z: {
       x: 0,
       y: 0,
@@ -23,7 +23,7 @@ class Baz extends Bar<any> {
   };
 
   foo() {
-    declare var z :  { +x: number };
+    declare var z :  { +x: number, ... };
     this.setState({ z });
   }
 }

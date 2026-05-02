@@ -840,7 +840,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":5,
@@ -855,7 +855,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":5,
@@ -870,7 +870,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":6,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":22,
@@ -885,7 +885,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":9,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":13,
@@ -930,7 +930,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":5,
@@ -945,7 +945,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":9,
@@ -990,7 +990,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":5,
@@ -1005,7 +1005,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":9,
@@ -1080,7 +1080,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":5,
@@ -1095,7 +1095,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":9,
@@ -1170,7 +1170,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":5,
@@ -1185,7 +1185,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":9,
@@ -1260,7 +1260,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":5,
@@ -1275,7 +1275,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":9,
@@ -1440,7 +1440,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":19,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":19,
@@ -1455,7 +1455,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":19,
-    "type":"{|FOO: string|}"
+    "type":"{FOO: string}"
   },
   {
     "end":23,

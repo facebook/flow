@@ -2,7 +2,7 @@
 
 const React = require('react');
 
-type Props = {}
+type Props = {...}
 
 module.exports = () => {
   class Abc extends React.Component<Props> { }

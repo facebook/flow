@@ -30,7 +30,7 @@ function foo2(
 }
 
 // OK, since we assume dictionaries have every key
-function foo3(x: {[key: string]: number}): {foo: number} {
+function foo3(x: {[key: string]: number}): {foo: number, ...} {
   return x;
 }
 
@@ -43,12 +43,12 @@ function foo4(x: {[key: string]: number}): {
 }
 
 // error, some prop in x could be incompatible (covariance)
-function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
+function foo5(x: Array<{[key: string]: number}>): Array<{foo: number, ...}> {
   return x;
 }
 
 // error, some prop in return could be incompatible
-function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
+function foo6(x: Array<{foo: number, ...}>): Array<{[key: string]: number}> {
   return x;
 }
 

@@ -75,11 +75,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"{bar?: string, foo: number, ...}",
+  "detail":"{bar?: string, foo: number}",
   "insertTextFormat":1,
   "kind":6,
   "label":"obj",
-  "labelDetails":{"detail":": {bar?: string, foo: number, ...}"},
+  "labelDetails":{"detail":": {bar?: string, foo: number}"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"obj",
@@ -280,11 +280,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"{bar: number, foo: number, ...}",
+  "detail":"{bar: number, foo: number}",
   "insertTextFormat":1,
   "kind":6,
   "label":"obj",
-  "labelDetails":{"detail":": {bar: number, foo: number, ...}"},
+  "labelDetails":{"detail":": {bar: number, foo: number}"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"obj",
@@ -521,11 +521,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"{bar: number, foo: number, ...}",
+  "detail":"{bar: number, foo: number}",
   "insertTextFormat":1,
   "kind":6,
   "label":"obj",
-  "labelDetails":{"detail":": {bar: number, foo: number, ...}"},
+  "labelDetails":{"detail":": {bar: number, foo: number}"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"obj",
@@ -714,11 +714,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"?{bar: number, foo: number, ...}",
+  "detail":"?{bar: number, foo: number}",
   "insertTextFormat":1,
   "kind":13,
   "label":"obj",
-  "labelDetails":{"detail":": ?{bar: number, foo: number, ...}"},
+  "labelDetails":{"detail":": ?{bar: number, foo: number}"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"obj",

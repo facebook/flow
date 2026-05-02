@@ -1,7 +1,6 @@
 [options]
 casting_syntax=as
 all=false
-exact_by_default=false
 no_flowlib=false
 enums=true
 format.single_quotes=true

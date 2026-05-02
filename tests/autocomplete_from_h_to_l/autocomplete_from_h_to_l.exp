@@ -261,7 +261,7 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"type O = {bar?: string, foo: number, ...}",
+  "detail":"type O = {bar?: string, foo: number}",
   "insertTextFormat":1,
   "kind":6,
   "label":"O",
@@ -1460,7 +1460,7 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"type O = ?{bar?: string, foo: number, ...}",
+  "detail":"type O = ?{bar?: string, foo: number}",
   "insertTextFormat":1,
   "kind":13,
   "label":"O",
@@ -2756,11 +2756,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"{\"@@asyncIterator\": AsyncIterator<number>, ...}",
+  "detail":"{\"@@asyncIterator\": AsyncIterator<number>}",
   "insertTextFormat":1,
   "kind":6,
   "label":"bar",
-  "labelDetails":{"detail":": {\"@@asyncIterator\": AsyncIterator<number>, ...}"},
+  "labelDetails":{"detail":": {\"@@asyncIterator\": AsyncIterator<number>}"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"bar",
@@ -2784,11 +2784,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"{\"@@iterator\": Iterator<number>, ...}",
+  "detail":"{\"@@iterator\": Iterator<number>}",
   "insertTextFormat":1,
   "kind":6,
   "label":"foo",
-  "labelDetails":{"detail":": {\"@@iterator\": Iterator<number>, ...}"},
+  "labelDetails":{"detail":": {\"@@iterator\": Iterator<number>}"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"foo",
@@ -2899,11 +2899,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"{\"@@asyncIterator\": AsyncIterator<number>, ...}",
+  "detail":"{\"@@asyncIterator\": AsyncIterator<number>}",
   "insertTextFormat":1,
   "kind":6,
   "label":"bar",
-  "labelDetails":{"detail":": {\"@@asyncIterator\": AsyncIterator<number>, ...}"},
+  "labelDetails":{"detail":": {\"@@asyncIterator\": AsyncIterator<number>}"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"bar",
@@ -2927,11 +2927,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"{\"@@iterator\": Iterator<number>, ...}",
+  "detail":"{\"@@iterator\": Iterator<number>}",
   "insertTextFormat":1,
   "kind":6,
   "label":"foo",
-  "labelDetails":{"detail":": {\"@@iterator\": Iterator<number>, ...}"},
+  "labelDetails":{"detail":": {\"@@iterator\": Iterator<number>}"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"foo",

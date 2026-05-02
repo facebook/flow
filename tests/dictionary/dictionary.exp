@@ -741,17 +741,17 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    dictionary.js:197:43
-   197| function unification_dict_to_obj(x: Array<{[k: string]: X}>): Array<{p: X}> {
+   197| function unification_dict_to_obj(x: Array<{[k: string]: X}>): Array<{p: X, ...}> {
                                                   ^^^^^^^^^^^^^^^^ [1]
    dictionary.js:197:69
-   197| function unification_dict_to_obj(x: Array<{[k: string]: X}>): Array<{p: X}> {
-                                                                            ^^^^^^ [2]
+   197| function unification_dict_to_obj(x: Array<{[k: string]: X}>): Array<{p: X, ...}> {
+                                                                            ^^^^^^^^^^^ [2]
    dictionary.js:197:37
-   197| function unification_dict_to_obj(x: Array<{[k: string]: X}>): Array<{p: X}> {
+   197| function unification_dict_to_obj(x: Array<{[k: string]: X}>): Array<{p: X, ...}> {
                                             ^^^^^^^^^^^^^^^^^^^^^^^ [3]
    dictionary.js:197:63
-   197| function unification_dict_to_obj(x: Array<{[k: string]: X}>): Array<{p: X}> {
-                                                                      ^^^^^^^^^^^^^ [4]
+   197| function unification_dict_to_obj(x: Array<{[k: string]: X}>): Array<{p: X, ...}> {
+                                                                      ^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:202:10
@@ -770,20 +770,20 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    dictionary.js:201:43
-   201| function unification_obj_to_dict(x: Array<{p: X}>): Array<{[k: string]: X}> {
-                                                  ^^^^^^ [1]
-   dictionary.js:201:59
-   201| function unification_obj_to_dict(x: Array<{p: X}>): Array<{[k: string]: X}> {
-                                                                  ^^^^^^^^^^^^^^^^ [2]
+   201| function unification_obj_to_dict(x: Array<{p: X, ...}>): Array<{[k: string]: X}> {
+                                                  ^^^^^^^^^^^ [1]
+   dictionary.js:201:64
+   201| function unification_obj_to_dict(x: Array<{p: X, ...}>): Array<{[k: string]: X}> {
+                                                                       ^^^^^^^^^^^^^^^^ [2]
    dictionary.js:201:37
-   201| function unification_obj_to_dict(x: Array<{p: X}>): Array<{[k: string]: X}> {
-                                            ^^^^^^^^^^^^^ [3]
-   dictionary.js:201:53
-   201| function unification_obj_to_dict(x: Array<{p: X}>): Array<{[k: string]: X}> {
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   201| function unification_obj_to_dict(x: Array<{p: X, ...}>): Array<{[k: string]: X}> {
+                                            ^^^^^^^^^^^^^^^^^^ [3]
+   dictionary.js:201:58
+   201| function unification_obj_to_dict(x: Array<{p: X, ...}>): Array<{[k: string]: X}> {
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- dictionary.js:206:19
+Error --------------------------------------------------------------------------------------------- dictionary.js:206:24
 
 Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
@@ -792,26 +792,26 @@ The above-mentioned two types must be the same because property `p` is invariant
 - Or make property `p` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   dictionary.js:206:19
-   206|   let a: {p: A} = x; // error
-                          ^
+   dictionary.js:206:24
+   206|   let a: {p: A, ...} = x; // error
+                               ^
 
 References:
    dictionary.js:205:47
    205| function subtype_dict_to_obj(x: {[k: string]: B}) {
                                                       ^ [1]
    dictionary.js:206:14
-   206|   let a: {p: A} = x; // error
+   206|   let a: {p: A, ...} = x; // error
                      ^ [2]
    dictionary.js:205:33
    205| function subtype_dict_to_obj(x: {[k: string]: B}) {
                                         ^^^^^^^^^^^^^^^^ [3]
    dictionary.js:206:10
-   206|   let a: {p: A} = x; // error
-                 ^^^^^^ [4]
+   206|   let a: {p: A, ...} = x; // error
+                 ^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- dictionary.js:211:19
+Error --------------------------------------------------------------------------------------------- dictionary.js:211:24
 
 Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the same as `C` [2]. [incompatible-type]
 
@@ -820,23 +820,23 @@ The above-mentioned two types must be the same because property `p` is invariant
 - Or make property `p` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   dictionary.js:211:19
-   211|   let c: {p: C} = x; // error
-                          ^
+   dictionary.js:211:24
+   211|   let c: {p: C, ...} = x; // error
+                               ^
 
 References:
    dictionary.js:205:47
    205| function subtype_dict_to_obj(x: {[k: string]: B}) {
                                                       ^ [1]
    dictionary.js:211:14
-   211|   let c: {p: C} = x; // error
+   211|   let c: {p: C, ...} = x; // error
                      ^ [2]
    dictionary.js:205:33
    205| function subtype_dict_to_obj(x: {[k: string]: B}) {
                                         ^^^^^^^^^^^^^^^^ [3]
    dictionary.js:211:10
-   211|   let c: {p: C} = x; // error
-                 ^^^^^^ [4]
+   211|   let c: {p: C, ...} = x; // error
+                 ^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:212:3
@@ -870,15 +870,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                                     ^
 
 References:
-   dictionary.js:215:38
-   215| function subtype_obj_to_dict(x: {|p: B|}) {
-                                             ^ [1]
+   dictionary.js:215:37
+   215| function subtype_obj_to_dict(x: {p: B}) {
+                                            ^ [1]
    dictionary.js:216:24
    216|   let a: {[k: string]: A} = x; // error
                                ^ [2]
    dictionary.js:215:33
-   215| function subtype_obj_to_dict(x: {|p: B|}) {
-                                        ^^^^^^^^ [3]
+   215| function subtype_obj_to_dict(x: {p: B}) {
+                                        ^^^^^^ [3]
    dictionary.js:216:10
    216|   let a: {[k: string]: A} = x; // error
                  ^^^^^^^^^^^^^^^^ [4]
@@ -898,15 +898,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                                     ^
 
 References:
-   dictionary.js:215:38
-   215| function subtype_obj_to_dict(x: {|p: B|}) {
-                                             ^ [1]
+   dictionary.js:215:37
+   215| function subtype_obj_to_dict(x: {p: B}) {
+                                            ^ [1]
    dictionary.js:221:24
    221|   let c: {[k: string]: C} = x; // error
                                ^ [2]
    dictionary.js:215:33
-   215| function subtype_obj_to_dict(x: {|p: B|}) {
-                                        ^^^^^^^^ [3]
+   215| function subtype_obj_to_dict(x: {p: B}) {
+                                        ^^^^^^ [3]
    dictionary.js:221:10
    221|   let c: {[k: string]: C} = x; // error
                  ^^^^^^^^^^^^^^^^ [4]
@@ -921,9 +921,9 @@ Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompat
           ^^^
 
 References:
-   dictionary.js:215:38
-   215| function subtype_obj_to_dict(x: {|p: B|}) {
-                                             ^ [1]
+   dictionary.js:215:37
+   215| function subtype_obj_to_dict(x: {p: B}) {
+                                            ^ [1]
    dictionary.js:222:10
    222|   x.p as C; // not true
                  ^ [2]
@@ -943,15 +943,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                                           ^
 
 References:
-   dictionary.js:227:39
-   227| function subtype_obj_to_mixed(x: {|p: B, x: X|}) {
-                                              ^ [1]
+   dictionary.js:227:38
+   227| function subtype_obj_to_mixed(x: {p: B, x: X}) {
+                                             ^ [1]
    dictionary.js:228:24
    228|   let a: {[k: string]: A, x: X} = x; // error (as above), but exclusive of x
                                ^ [2]
    dictionary.js:227:34
-   227| function subtype_obj_to_mixed(x: {|p: B, x: X|}) {
-                                         ^^^^^^^^^^^^^^ [3]
+   227| function subtype_obj_to_mixed(x: {p: B, x: X}) {
+                                         ^^^^^^^^^^^^ [3]
    dictionary.js:228:10
    228|   let a: {[k: string]: A, x: X} = x; // error (as above), but exclusive of x
                  ^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -971,15 +971,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                                           ^
 
 References:
-   dictionary.js:227:39
-   227| function subtype_obj_to_mixed(x: {|p: B, x: X|}) {
-                                              ^ [1]
+   dictionary.js:227:38
+   227| function subtype_obj_to_mixed(x: {p: B, x: X}) {
+                                             ^ [1]
    dictionary.js:230:24
    230|   let c: {[k: string]: C, x: X} = x; // error (as above), but exclusive of x
                                ^ [2]
    dictionary.js:227:34
-   227| function subtype_obj_to_mixed(x: {|p: B, x: X|}) {
-                                         ^^^^^^^^^^^^^^ [3]
+   227| function subtype_obj_to_mixed(x: {p: B, x: X}) {
+                                         ^^^^^^^^^^^^ [3]
    dictionary.js:230:10
    230|   let c: {[k: string]: C, x: X} = x; // error (as above), but exclusive of x
                  ^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -1099,7 +1099,7 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- dictionary.js:246:20
+Error --------------------------------------------------------------------------------------------- dictionary.js:246:25
 
 Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
@@ -1108,26 +1108,26 @@ The above-mentioned two types must be the same because property `p` is invariant
 - Or make property `p` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   dictionary.js:246:20
-   246|   let a: {p?: A} = x; // error
-                           ^
+   dictionary.js:246:25
+   246|   let a: {p?: A, ...} = x; // error
+                                ^
 
 References:
    dictionary.js:245:54
    245| function subtype_dict_to_optional_a(x: {[k: string]: B}) {
                                                              ^ [1]
    dictionary.js:246:15
-   246|   let a: {p?: A} = x; // error
+   246|   let a: {p?: A, ...} = x; // error
                       ^ [2]
    dictionary.js:245:40
    245| function subtype_dict_to_optional_a(x: {[k: string]: B}) {
                                                ^^^^^^^^^^^^^^^^ [3]
    dictionary.js:246:10
-   246|   let a: {p?: A} = x; // error
-                 ^^^^^^^ [4]
+   246|   let a: {p?: A, ...} = x; // error
+                 ^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------- dictionary.js:254:20
+Error --------------------------------------------------------------------------------------------- dictionary.js:254:25
 
 Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the same as `C` [2]. [incompatible-type]
 
@@ -1136,23 +1136,23 @@ The above-mentioned two types must be the same because property `p` is invariant
 - Or make property `p` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   dictionary.js:254:20
-   254|   let c: {p?: C} = x; // error
-                           ^
+   dictionary.js:254:25
+   254|   let c: {p?: C, ...} = x; // error
+                                ^
 
 References:
    dictionary.js:253:54
    253| function subtype_dict_to_optional_c(x: {[k: string]: B}) {
                                                              ^ [1]
    dictionary.js:254:15
-   254|   let c: {p?: C} = x; // error
+   254|   let c: {p?: C, ...} = x; // error
                       ^ [2]
    dictionary.js:253:40
    253| function subtype_dict_to_optional_c(x: {[k: string]: B}) {
                                                ^^^^^^^^^^^^^^^^ [3]
    dictionary.js:254:10
-   254|   let c: {p?: C} = x; // error
-                 ^^^^^^^ [4]
+   254|   let c: {p?: C, ...} = x; // error
+                 ^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:259:10
@@ -1169,18 +1169,18 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                  ^
 
 References:
-   dictionary.js:257:46
-   257| function subtype_optional_a_to_dict(x: {|p?: A|}): {[k: string]: B} {
-                                                     ^ [1]
-   dictionary.js:257:66
-   257| function subtype_optional_a_to_dict(x: {|p?: A|}): {[k: string]: B} {
-                                                                         ^ [2]
+   dictionary.js:257:45
+   257| function subtype_optional_a_to_dict(x: {p?: A}): {[k: string]: B} {
+                                                    ^ [1]
+   dictionary.js:257:64
+   257| function subtype_optional_a_to_dict(x: {p?: A}): {[k: string]: B} {
+                                                                       ^ [2]
    dictionary.js:257:40
-   257| function subtype_optional_a_to_dict(x: {|p?: A|}): {[k: string]: B} {
-                                               ^^^^^^^^^ [3]
-   dictionary.js:257:52
-   257| function subtype_optional_a_to_dict(x: {|p?: A|}): {[k: string]: B} {
-                                                           ^^^^^^^^^^^^^^^^ [4]
+   257| function subtype_optional_a_to_dict(x: {p?: A}): {[k: string]: B} {
+                                               ^^^^^^^ [3]
+   dictionary.js:257:50
+   257| function subtype_optional_a_to_dict(x: {p?: A}): {[k: string]: B} {
+                                                         ^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:269:10
@@ -1197,18 +1197,18 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                  ^
 
 References:
-   dictionary.js:267:46
-   267| function subtype_optional_c_to_dict(x: {|p?: C|}): {[k: string]: B} {
-                                                     ^ [1]
-   dictionary.js:267:66
-   267| function subtype_optional_c_to_dict(x: {|p?: C|}): {[k: string]: B} {
-                                                                         ^ [2]
+   dictionary.js:267:45
+   267| function subtype_optional_c_to_dict(x: {p?: C}): {[k: string]: B} {
+                                                    ^ [1]
+   dictionary.js:267:64
+   267| function subtype_optional_c_to_dict(x: {p?: C}): {[k: string]: B} {
+                                                                       ^ [2]
    dictionary.js:267:40
-   267| function subtype_optional_c_to_dict(x: {|p?: C|}): {[k: string]: B} {
-                                               ^^^^^^^^^ [3]
-   dictionary.js:267:52
-   267| function subtype_optional_c_to_dict(x: {|p?: C|}): {[k: string]: B} {
-                                                           ^^^^^^^^^^^^^^^^ [4]
+   267| function subtype_optional_c_to_dict(x: {p?: C}): {[k: string]: B} {
+                                               ^^^^^^^ [3]
+   dictionary.js:267:50
+   267| function subtype_optional_c_to_dict(x: {p?: C}): {[k: string]: B} {
+                                                         ^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:277:12
@@ -1478,17 +1478,17 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    incompatible.js:46:24
-   46| function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
+   46| function foo5(x: Array<{[key: string]: number}>): Array<{foo: number, ...}> {
                               ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    incompatible.js:46:57
-   46| function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
-                                                               ^^^^^^^^^^^^^ [2]
+   46| function foo5(x: Array<{[key: string]: number}>): Array<{foo: number, ...}> {
+                                                               ^^^^^^^^^^^^^^^^^^ [2]
    incompatible.js:46:18
-   46| function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
+   46| function foo5(x: Array<{[key: string]: number}>): Array<{foo: number, ...}> {
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    incompatible.js:46:51
-   46| function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
-                                                         ^^^^^^^^^^^^^^^^^^^^ [4]
+   46| function foo5(x: Array<{[key: string]: number}>): Array<{foo: number, ...}> {
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:52:10
@@ -1507,17 +1507,17 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    incompatible.js:51:24
-   51| function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
-                              ^^^^^^^^^^^^^ [1]
-   incompatible.js:51:47
-   51| function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
-                                                     ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   51| function foo6(x: Array<{foo: number, ...}>): Array<{[key: string]: number}> {
+                              ^^^^^^^^^^^^^^^^^^ [1]
+   incompatible.js:51:52
+   51| function foo6(x: Array<{foo: number, ...}>): Array<{[key: string]: number}> {
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^ [2]
    incompatible.js:51:18
-   51| function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
-                        ^^^^^^^^^^^^^^^^^^^^ [3]
-   incompatible.js:51:41
-   51| function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   51| function foo6(x: Array<{foo: number, ...}>): Array<{[key: string]: number}> {
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   incompatible.js:51:46
+   51| function foo6(x: Array<{foo: number, ...}>): Array<{[key: string]: number}> {
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:60:3

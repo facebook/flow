@@ -2,10 +2,10 @@
 > cat a.js
 // @flow
 
-type Inexact = { data: string; type: string; }
-type Exact = {| data: string; type: string; |}
+type Inexact = { data: string; type: string; ... }
+type Exact = {data: string; type: string;}
 
-function foo(): Array<{| data: string, type: string |}> {
+function foo(): Array<{ data: string, type: string }> {
   return [
     {data: "", type: ""},
     {data: "", type: ""},
@@ -20,10 +20,10 @@ module.exports = foo;
 > cat b.js
 // @flow
 
-type Inexact = { data: string; type: string; }
-type Exact = {| data: string; type: string; |}
+type Inexact = { data: string; type: string; ... }
+type Exact = {data: string; type: string;}
 
-function foo(): Array<{| data: string, type: string |}> {
+function foo(): Array<{ data: string, type: string }> {
   return [
     {data: "", type: ""},
     {data: "", type: ""},
@@ -37,10 +37,10 @@ module.exports = foo;
 > cat c.js
 // @flow
 
-type Inexact = { data: string; type: string; }
-type Exact = {| data: string; type: string; |}
+type Inexact = { data: string; type: string; ... }
+type Exact = {data: string; type: string;}
 
-function foo(): Array<{| data: string, type: string |}> {
+function foo(): Array<{ data: string, type: string }> {
   return [
     {data: "", type: ""},
     {data: "", type: ""},
@@ -67,14 +67,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    a.js:6:23
-    6| function foo(): Array<{| data: string, type: string |}> {
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+    6| function foo(): Array<{ data: string, type: string }> {
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    a.js:13:16
    13| foo() as Array<Inexact>;
                       ^^^^^^^ [2]
    a.js:6:17
-    6| function foo(): Array<{| data: string, type: string |}> {
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    6| function foo(): Array<{ data: string, type: string }> {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    a.js:13:10
    13| foo() as Array<Inexact>;
                 ^^^^^^^^^^^^^^ [4]
@@ -96,14 +96,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    b.js:6:23
-    6| function foo(): Array<{| data: string, type: string |}> {
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+    6| function foo(): Array<{ data: string, type: string }> {
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    b.js:13:16
    13| foo() as Array<Inexact>;
                       ^^^^^^^ [2]
    b.js:6:17
-    6| function foo(): Array<{| data: string, type: string |}> {
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    6| function foo(): Array<{ data: string, type: string }> {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    b.js:13:10
    13| foo() as Array<Inexact>;
                 ^^^^^^^^^^^^^^ [4]

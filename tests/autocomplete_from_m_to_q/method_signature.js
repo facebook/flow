@@ -25,7 +25,7 @@ class Baz extends Bar implements Qux, I {
 
 type O = {
     foo(): string;
-}
+ ...}
 
 const o: O = {
     

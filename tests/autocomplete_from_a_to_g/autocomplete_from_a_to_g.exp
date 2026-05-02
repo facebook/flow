@@ -64,8 +64,8 @@ dispose.js:4:5
 Flags: --pretty
 {
   "result":[
-    {"name":"bar","type":"{\"@@asyncDispose\": Promise<void>, ...}"},
-    {"name":"foo","type":"{\"@@dispose\": void, ...}"},
+    {"name":"bar","type":"{\"@@asyncDispose\": Promise<void>}"},
+    {"name":"foo","type":"{\"@@dispose\": void}"},
     {"name":"Symbol.dispose","type":"void"}
   ]
 }
@@ -74,8 +74,8 @@ dispose.js:8:5
 Flags: --pretty
 {
   "result":[
-    {"name":"bar","type":"{\"@@asyncDispose\": Promise<void>, ...}"},
-    {"name":"foo","type":"{\"@@dispose\": void, ...}"},
+    {"name":"bar","type":"{\"@@asyncDispose\": Promise<void>}"},
+    {"name":"foo","type":"{\"@@dispose\": void}"},
     {"name":"Symbol.asyncDispose","type":"Promise<void>"}
   ]
 }
@@ -304,7 +304,7 @@ Flags: --pretty
     {"name":"interface","type":""},
     {"name":"let","type":""},
     {"name":"new","type":""},
-    {"name":"obj","type":"{|num: number, str: string|}"},
+    {"name":"obj","type":"{num: number, str: string}"},
     {"name":"opaque","type":""},
     {"name":"return","type":""},
     {"name":"static","type":""},

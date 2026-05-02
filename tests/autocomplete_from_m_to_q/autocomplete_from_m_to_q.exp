@@ -372,7 +372,7 @@ Flags: --pretty
     {"name":"Iterator","type":"typeof Iterator"},
     {
       "name":"JSON",
-      "type":"{|+parse: (text: string, reviver?: (key: any, value: any) => any) => any, +stringify: ((value: null | string | number | boolean | interface {} | ReadonlyArray<mixed>, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string) & ((value: mixed, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string | void)|}"
+      "type":"{+parse: (text: string, reviver?: (key: any, value: any) => any) => any, +stringify: ((value: null | string | number | boolean | interface {} | ReadonlyArray<mixed>, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string) & ((value: mixed, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string | void)}"
     },
     {"name":"Map","type":"typeof Map"},
     {
@@ -542,7 +542,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"f","type":"(x?: string) => void"},
-    {"name":"o","type":"{x?: string, ...}"},
+    {"name":"o","type":"{x?: string}"},
     {"name":"x","type":"string | void"}
   ]
 }
@@ -590,7 +590,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"Typesafety","type":"interface Typesafety"},
-    {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
+    {"name":"Typical","type":"type Typical = {x: number, y: number}"},
     {"name":"Tyrannosaurus","type":"class Tyrannosaurus"}
   ]
 }
@@ -600,7 +600,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"Typesafety","type":"interface Typesafety"},
-    {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
+    {"name":"Typical","type":"type Typical = {x: number, y: number}"},
     {"name":"Tyrannosaurus","type":"class Tyrannosaurus"}
   ]
 }

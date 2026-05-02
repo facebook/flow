@@ -3,7 +3,7 @@ declare const o: {
   n: 1,
   b: true,
   i: 1n,
-};
+ ...};
 
 {
   const {s = 'xxx'} = o; // ERROR

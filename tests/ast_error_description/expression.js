@@ -3,13 +3,13 @@
  * @flow
  */
 
-type T = {p: unknown};
+type T = {p: unknown, ...};
 
 let a = 0;
 const f = (x: unknown): unknown => x;
 const o = {p: 42};
 
-declare var React: {createElement: React$CreateElement};
+declare var React: {createElement: React$CreateElement, ...};
 function MyComponent() {}
 
 (([] as empty) as T).p as empty;

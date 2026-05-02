@@ -2,7 +2,7 @@ class C<X> { x: X; }
 
 function foo<X>(c: C<X>, x: X) { }
 
-type O = { f: number };
+type O = { f: number, ... };
 
 foo(new C as C<O>, { f_: 0 });
 
