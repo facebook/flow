@@ -7284,7 +7284,7 @@ Cannot assign `true` to `fn` because: [incompatible-type]
  - Or boolean [1] is incompatible with string [3].
 
    -:13:25
-   13| const fn: Prop$Values = true; // Error!
+   13| const fn: PropValues2 = true; // Error!
                                ^^^^ [1]
 
 References:

@@ -8,7 +8,7 @@ import {SinceVersion} from '../../components/VersionTags';
 
 Flow provides a set of utility types to operate on other types to create new types.
 
-## `keyof T` <SinceVersion version="0.290" /> (alias `$Keys<T>`) {#toc-keys}
+## `keyof T` <SinceVersion version="0.290" /> {#toc-keys}
 
 You can extract the type of the keys from an [object type](./objects.md). Typically this will be a [union](./unions.md) of [string literal](./literals.md) types:
 
@@ -29,7 +29,7 @@ In the example above, the type of `Country` is equivalent to `type Country = 'US
 
 If you want to create an enum type, [Flow Enums](../enums/index.md) might be a better fit for your use-case.
 
-## `Values<T>` <SinceVersion version="0.290" /> (alias `$Values<T>`) {#toc-values}
+## `Values<T>` <SinceVersion version="0.290" /> {#toc-values}
 
 `Values<T>` represents the union type of all the value types of the enumerable properties in an [object type](./objects.md),
 or the elements of an [array](./arrays.md) or [tuple](./tuples.md) type (support for arrays and tuples in Flow version <SinceVersion version="0.240" />):
@@ -42,11 +42,11 @@ type Props = {
 
 // The following two types are equivalent:
 type PropValues = string | number;
-type Prop$Values = Values<Props>;
+type PropValues2 = Values<Props>;
 
-const name: Prop$Values = 'Jon';  // Works
-const age: Prop$Values = 42;  // Works
-const fn: Prop$Values = true; // Error!
+const name: PropValues2 = 'Jon';  // Works
+const age: PropValues2 = 42;  // Works
+const fn: PropValues2 = true; // Error!
 ```
 
 For arrays and tuples:
@@ -90,7 +90,7 @@ acceptsValues(3); // Error! Because the type was interpreted as `1 | 2`.
 
 If you want to create an enum type, [Flow Enums](../enums/index.md) might be a better fit for your use-case.
 
-## `Readonly<T>` <SinceVersion version="0.290" /> (alias `$ReadOnly<T>`) {#toc-readonly}
+## `Readonly<T>` <SinceVersion version="0.290" /> {#toc-readonly}
 
 `Readonly<T>` is a type that represents the read-only version of a given [object type](./objects.md)
 or [tuple type](./tuples.md) `T` (support for tuples is for Flow <SinceVersion version="0.212" />).
@@ -196,8 +196,6 @@ function okPerson(o: Readonly<Partial<Person>>) {
 }
 okPerson(person); // Works
 ```
-
-Note: Up until Flow version 0.201, this utility type was named `$Partial`.
 
 ## `Required<T>` <SinceVersion version="0.201" /> {#toc-required}
 
@@ -411,7 +409,7 @@ const user = {name: 'John Wilkes Booth'};
 const a: ExactUser = user;
 ```
 
-## `NonNullable<T>` <SinceVersion version="0.290" /> (alias `$NonMaybeType<T>`) {#toc-nonmaybe}
+## `NonNullable<T>` <SinceVersion version="0.290" /> {#toc-nonmaybe}
 
 `NonNullable<T>` converts a type `T` to a non-[maybe type](./maybe.md).
 In other words, the values of `NonNullable<T>` are the values of `T` except for `null` and `undefined`.
