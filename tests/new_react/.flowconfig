@@ -5,4 +5,3 @@ fakelib
 casting_syntax=as
 no_flowlib=false
 all=true
-exact_by_default=false

@@ -7,7 +7,7 @@
 declare function JSX<
   Children: $ReadOnlyArray<mixed>,
   Elem,
-  C: (props: {}, children: Children) => Elem,
+  C: (props: {...}, children: Children) => Elem,
 >(
   component: C,
   props: null,
@@ -26,11 +26,11 @@ declare function JSX<
   ...children: Children
 ): Elem;
 
-declare function AcceptsWhatever(props: {} | null, children: any): string;
+declare function AcceptsWhatever(props: {...} | null, children: any): string;
 (<AcceptsWhatever />) as number; // Error string ~> number
 (<AcceptsWhatever name="hi">Text</AcceptsWhatever>) as number; // Error string ~> number
 
-declare function ExpectsProps(props: {name: string}, children: any): string;
+declare function ExpectsProps(props: {name: string, ...}, children: any): string;
 <ExpectsProps />; // Error - missing prop
 (<ExpectsProps name="hi">Text</ExpectsProps>) as number; // Error string ~> number
 

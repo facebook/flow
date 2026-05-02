@@ -7,9 +7,9 @@ declare var x: ?{
   of?: number => string,
   oi?: Array<number>,
   i2: Array<Array<number>>,
-  i3: Array<{a: ?number}>,
+  i3: Array<{a: ?number, ...}>,
   f2: number => number => string,
-};
+ ...};
 
 x?.f(x.a);
 x?.i[x.a];

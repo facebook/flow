@@ -46,8 +46,8 @@ Cannot extend `React.Component` [1] with `Foo` because in property `setState` > 
 missing in object type [2] but exists in object type [3]. [incompatible-type]
 
    classes.js:23:3
-   23|   setState(o: { y_: string }): void { }
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   23|   setState(o: { y_: string, ... }): void { }
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    classes.js:7:19
@@ -57,8 +57,8 @@ References:
     7| class Foo extends React.Component<Props, State> {
                                                 ^^^^^ [2]
    classes.js:23:15
-   23|   setState(o: { y_: string }): void { }
-                     ^^^^^^^^^^^^^^ [3]
+   23|   setState(o: { y_: string, ... }): void { }
+                     ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
@@ -67,8 +67,8 @@ Cannot extend `React.Component` [1] with `Foo` because in property `setState` > 
 incompatible with nullable `Readonly` [3]. [incompatible-type]
 
    classes.js:23:15
-    23|   setState(o: { y_: string }): void { }
-                      ^^^^^^^^^^^^^^ [2]
+    23|   setState(o: { y_: string, ... }): void { }
+                      ^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
    classes.js:7:19
@@ -87,8 +87,8 @@ incompatible with function type [3]. [incompatible-type]
 Functions without statics are not compatible with objects.
 
    classes.js:23:15
-    23|   setState(o: { y_: string }): void { }
-                      ^^^^^^^^^^^^^^ [2]
+    23|   setState(o: { y_: string, ... }): void { }
+                      ^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
    classes.js:7:19
@@ -109,7 +109,7 @@ Cannot assign `this.props.x` to `_` because number [1] is incompatible with stri
 
 References:
    classes.js:4:19
-    4| type Props = { x: number };
+    4| type Props = { x: number, ... };
                          ^^^^^^ [1]
    classes.js:15:12
    15|     var _: string = this.props.x;
@@ -127,7 +127,7 @@ Cannot assign object literal to `this.state` because in property `y`: string [1]
 
 References:
    classes.js:5:19
-    5| type State = { y: number };
+    5| type State = { y: number, ... };
                          ^^^^^^ [2]
 
 
@@ -231,7 +231,7 @@ Cannot create `HelloMessage` element because in property `name`: number [1] is i
 
 References:
    import-react.js:11:52
-   11| class HelloMessage extends React.Component<{ name: string }> {}
+   11| class HelloMessage extends React.Component<{ name: string, ... }> {}
                                                           ^^^^^^ [2]
 
 
@@ -249,8 +249,8 @@ References:
    13| const _a = <Component />; // Error, missing bar
                   ^^^^^^^^^^^^^ [1]
    object_component.js:8:11
-    8|   (props: {| foo?: number, bar: number |}): React.Node,
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    8|   (props: {foo?: number, bar: number}): React.Node,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_component.js:16:13
@@ -267,8 +267,8 @@ References:
    16| const _d = <Component foo={3} bar={3} baz={3} />; // Error, baz is not in the config
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_component.js:8:11
-    8|   (props: {| foo?: number, bar: number |}): React.Node,
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    8|   (props: {foo?: number, bar: number}): React.Node,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_component.js:19:47
@@ -310,7 +310,7 @@ Cannot create `JDiv` element because in property `id`: number [1] is incompatibl
 
 References:
    props4.js:3:41
-   3| class JDiv extends React.Component<{id: string}> {}
+   3| class JDiv extends React.Component<{id: string, ...}> {}
                                               ^^^^^^ [2]
 
 
@@ -328,7 +328,7 @@ References:
    14| <Example foo="foo" />;
        ^^^^^^^^^^^^^^^^^^^^^ [1]
    props4.js:8:7
-    8| class Example extends React.Component<{ bar: string }> {
+    8| class Example extends React.Component<{ bar: string, ... }> {
              ^^^^^^^ [2]
 
 
@@ -363,9 +363,9 @@ References:
    state6.js:28:12
     28|       bar: '42',
                    ^^^^ [1]
-   state6.js:5:34
-     5| type State = {|foo: number, bar: number|};
-                                         ^^^^^^ [2]
+   state6.js:5:33
+     5| type State = {foo: number, bar: number};
+                                        ^^^^^^ [2]
    <BUILTINS>/react.js:977:23
    977|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -380,9 +380,9 @@ Cannot get `prevState.nope` because property `nope` is missing in `State` [1]. [
                                    ^^^^
 
 References:
-   state6.js:11:59
-   11| class MyComponent extends React.Component<{prop: number}, State> {
-                                                                 ^^^^^ [1]
+   state6.js:11:64
+   11| class MyComponent extends React.Component<{prop: number, ...}, State> {
+                                                                      ^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- state6.js:34:25
@@ -395,8 +395,8 @@ Cannot get `props.nope` because property `nope` is missing in object type [1]. [
 
 References:
    state6.js:11:43
-   11| class MyComponent extends React.Component<{prop: number}, State> {
-                                                 ^^^^^^^^^^^^^^ [1]
+   11| class MyComponent extends React.Component<{prop: number, ...}, State> {
+                                                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- state6.js:39:26
@@ -411,11 +411,11 @@ Cannot call `this.setState` with `any` bound to `partialState` because: [incompa
 
 References:
    state6.js:9:24
-     9| type StateUpdater3 = {(number): number, foo: number, bar: number};
+     9| type StateUpdater3 = {(number): number, foo: number, bar: number, ...};
                                ^^^^^^ [1]
-   state6.js:11:59
-    11| class MyComponent extends React.Component<{prop: number}, State> {
-                                                                  ^^^^^ [2]
+   state6.js:11:64
+    11| class MyComponent extends React.Component<{prop: number, ...}, State> {
+                                                                       ^^^^^ [2]
    <BUILTINS>/react.js:977:23
    977|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]

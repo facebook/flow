@@ -4,7 +4,7 @@ function f<X: string, Y: 'lit', Z: 'prop'>(
   y: Y,
   z: Z,
   a: {[X]: string},
-  b: {prop: number},
+  b: {prop: number, ...},
 ) {
   a[x] = 'hi';
   a['foo'] = 'hi'; // nope

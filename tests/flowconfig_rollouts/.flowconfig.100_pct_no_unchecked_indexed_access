@@ -2,5 +2,4 @@
 short_literals=100% on, 0% off
 
 [options]
-exact_by_default=false
 (short_literals=on) no_unchecked_indexed_access=true

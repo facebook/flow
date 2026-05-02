@@ -86,9 +86,9 @@ baz01 as empty; // error number ~> empty
 baz02 as empty; // error number ~> empty
 
 import {x as x19, y as y19, z as z19} from './spread';
-x19 as {f: number};
-y19 as {+a?: number}; // okay
-y19 as {a: number}; // error undefined ~> number
+x19 as {f: number, ...};
+y19 as {+a?: number, ...}; // okay
+y19 as {a: number, ...}; // error undefined ~> number
 z19 as empty; // okay any ~> empty (error on def site)
 
 import {type T as T21} from './mk_instance_poly';
@@ -124,10 +124,10 @@ p2_22 as {f: string, g: string, ...};
 p3_22 as {f: string, g: string, ...};
 p4_22 as {f: string, g: string, ...};
 
-p1_22 as {|f: string, g: string|}; // error incompatible exact
-p2_22 as {|f: string, g: string|}; // error incompatible exact
-p3_22 as {|f: string, g: string|};
-p4_22 as {|f: string, g: string|};
+p1_22 as {f: string, g: string}; // error incompatible exact
+p2_22 as {f: string, g: string}; // error incompatible exact
+p3_22 as {f: string, g: string};
+p4_22 as {f: string, g: string};
 
 import type {T as T24} from './keys';
 declare var t24: T24;

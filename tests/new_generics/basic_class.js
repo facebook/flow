@@ -32,18 +32,18 @@ class E<X> extends C<X, number> {
 }
 
 class F<T> {
-  arr: Array<{value: T}>;
+  arr: Array<{value: T, ...}>;
 
   foo(value: T) {
-    var entry: {value: T} = {value};
+    var entry: {value: T, ...} = {value};
     this.arr[0] = entry;
   }
 }
 
-type D2<X, Y> = {p: Y};
+type D2<X, Y> = {p: Y, ...};
 
 class C2<X, Y> {
-  x: {p: Y};
+  x: {p: Y, ...};
   foo(): D2<X, Y> {
     return this.x;
   }

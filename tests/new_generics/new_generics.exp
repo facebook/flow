@@ -382,8 +382,8 @@ type [1]. [prop-missing]
 
 References:
    computed_keys.js:7:6
-    7|   b: {prop: number},
-            ^^^^^^^^^^^^^^ [1]
+    7|   b: {prop: number, ...},
+            ^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- computed_keys.js:14:5
@@ -396,8 +396,8 @@ Cannot assign `42` to `b[y]` because property `lit` is missing in object type [1
 
 References:
    computed_keys.js:7:6
-    7|   b: {prop: number},
-            ^^^^^^^^^^^^^^ [1]
+    7|   b: {prop: number, ...},
+            ^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- computed_keys.js:16:5
@@ -410,8 +410,8 @@ Cannot access object type [1] with computed property using `X` [2]. [invalid-com
 
 References:
    computed_keys.js:7:6
-    7|   b: {prop: number},
-            ^^^^^^^^^^^^^^ [1]
+    7|   b: {prop: number, ...},
+            ^^^^^^^^^^^^^^^^^^^ [1]
    computed_keys.js:3:6
     3|   x: X,
             ^ [2]
@@ -427,8 +427,8 @@ Cannot get `b[y]` because property `lit` is missing in object type [1]. [prop-mi
 
 References:
    computed_keys.js:7:6
-    7|   b: {prop: number},
-            ^^^^^^^^^^^^^^ [1]
+    7|   b: {prop: number, ...},
+            ^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- defaulted_type_args.js:46:10
@@ -592,13 +592,13 @@ Cannot cast `42` to `X` because object type [1] is incompatible with type includ
 [incompatible-type]
 
    exact.js:7:16
-   7|   42 as any as {||} as $Exact<X>; // nope
-                     ^^^^ [1]
+   7|   42 as any as {} as $Exact<X>; // nope
+                     ^^ [1]
 
 References:
-   exact.js:7:24
-   7|   42 as any as {||} as $Exact<X>; // nope
-                             ^^^^^^^^^ [2]
+   exact.js:7:22
+   7|   42 as any as {} as $Exact<X>; // nope
+                           ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- intersection.js:8:3
@@ -922,7 +922,7 @@ Cannot cast `b.x` to union type because: [incompatible-type]
 
 References:
    maybe.js:85:23
-   85|   declare var a: {x?: X};
+   85|   declare var a: {x?: X, ...};
                              ^ [1]
    maybe.js:88:10
    88|   b.x as Y | void; //nope
@@ -1156,7 +1156,7 @@ Cannot cast `a` to `React.ComponentType` because in type argument `P` [1]: `Prop
 type [3]. [incompatible-type]
 
    react.js:13:3
-    13|   a as React.ComponentType<{a: number}>; // nope, contravariance
+    13|   a as React.ComponentType<{a: number, ...}>; // nope, contravariance
           ^
 
 References:
@@ -1167,8 +1167,8 @@ References:
     11|   declare var a: React.ComponentType<Props>;
                                              ^^^^^ [2]
    react.js:13:28
-    13|   a as React.ComponentType<{a: number}>; // nope, contravariance
-                                   ^^^^^^^^^^^ [3]
+    13|   a as React.ComponentType<{a: number, ...}>; // nope, contravariance
+                                   ^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- react.js:14:3
@@ -1185,8 +1185,8 @@ References:
    968|     declare class Component<Props, State = void> {
                                     ^^^^^ [1]
    react.js:12:34
-    12|   declare var b: React.Component<{+a: number}>;
-                                         ^^^^^^^^^^^^ [2]
+    12|   declare var b: React.Component<{+a: number, ...}>;
+                                         ^^^^^^^^^^^^^^^^^ [2]
    react.js:14:24
     14|   b as React.Component<Props>; // nope
                                ^^^^^ [3]
@@ -1288,16 +1288,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to `Omit` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-type]
 
    rest.js:4:3
-   4|   x as Omit<{...X, ...Y}, keyof Y>; // nope
+   4|   x as Omit<{...X, ...Y, ...}, keyof Y>; // nope
         ^
 
 References:
-   rest.js:3:29
-   3| function f<X: {}, Y: {}>(x: {...X}, y: {...Y}, both: {...X, ...Y}) {
-                                  ^^^^^^ [1]
+   rest.js:3:35
+   3| function f<X: {...}, Y: {...}>(x: {...X, ...}, y: {...Y, ...}, both: {...X, ...Y, ...}) {
+                                        ^^^^^^^^^^^ [1]
    rest.js:4:8
-   4|   x as Omit<{...X, ...Y}, keyof Y>; // nope
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   4|   x as Omit<{...X, ...Y, ...}, keyof Y>; // nope
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ rest.js:5:3
@@ -1305,16 +1305,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `y` to `Omit` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-type]
 
    rest.js:5:3
-   5|   y as Omit<{...X, ...Y}, keyof Y>; // nope
+   5|   y as Omit<{...X, ...Y, ...}, keyof Y>; // nope
         ^
 
 References:
-   rest.js:3:40
-   3| function f<X: {}, Y: {}>(x: {...X}, y: {...Y}, both: {...X, ...Y}) {
-                                             ^^^^^^ [1]
+   rest.js:3:51
+   3| function f<X: {...}, Y: {...}>(x: {...X, ...}, y: {...Y, ...}, both: {...X, ...Y, ...}) {
+                                                        ^^^^^^^^^^^ [1]
    rest.js:5:8
-   5|   y as Omit<{...X, ...Y}, keyof Y>; // nope
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   5|   y as Omit<{...X, ...Y, ...}, keyof Y>; // nope
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:10:3
@@ -1323,7 +1323,7 @@ Cannot cast `rest` to object type because property `x` is missing in rest of obj
 type [2]. [incompatible-type]
 
    rest.js:10:3
-   10|   rest as {...X, ...Y}; //no, because x is missing
+   10|   rest as {...X, ...Y, ...}; //no, because x is missing
          ^^^^
 
 References:
@@ -1331,8 +1331,8 @@ References:
     9|   var {x, ...rest} = o;
                     ^^^^ [1]
    rest.js:10:11
-   10|   rest as {...X, ...Y}; //no, because x is missing
-                 ^^^^^^^^^^^^ [2]
+   10|   rest as {...X, ...Y, ...}; //no, because x is missing
+                 ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:12:3
@@ -1341,7 +1341,7 @@ Cannot cast `rest` to object type because rest of object pattern [1] is incompat
 [incompatible-type]
 
    rest.js:12:3
-   12|   rest as {...X}; // no, because X's props could have been overwritten
+   12|   rest as {...X, ...}; // no, because X's props could have been overwritten
          ^^^^
 
 References:
@@ -1349,8 +1349,8 @@ References:
     9|   var {x, ...rest} = o;
                     ^^^^ [1]
    rest.js:12:11
-   12|   rest as {...X}; // no, because X's props could have been overwritten
-                 ^^^^^^ [2]
+   12|   rest as {...X, ...}; // no, because X's props could have been overwritten
+                 ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- spreads.js:4:4
@@ -1359,13 +1359,13 @@ Cannot cast object literal to object type because object literal [1] is incompat
 [incompatible-type]
 
    spreads.js:4:4
-   4|   ({...x, ...y}) as {...X}; // nope, which is different than old generics
+   4|   ({...x, ...y}) as {...X, ...}; // nope, which is different than old generics
          ^^^^^^^^^^^^ [1]
 
 References:
    spreads.js:4:21
-   4|   ({...x, ...y}) as {...X}; // nope, which is different than old generics
-                          ^^^^^^ [2]
+   4|   ({...x, ...y}) as {...X, ...}; // nope, which is different than old generics
+                          ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- spreads.js:6:4
@@ -1374,13 +1374,13 @@ Cannot cast object literal to object type because object literal [1] is incompat
 [incompatible-type]
 
    spreads.js:6:4
-   6|   ({...x}) as {...Y, ...X}; // nope
+   6|   ({...x}) as {...Y, ...X, ...}; // nope
          ^^^^^^ [1]
 
 References:
    spreads.js:6:15
-   6|   ({...x}) as {...Y, ...X}; // nope
-                    ^^^^^^^^^^^^ [2]
+   6|   ({...x}) as {...Y, ...X, ...}; // nope
+                    ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- spreads.js:7:4
@@ -1389,13 +1389,13 @@ Cannot cast object literal to object type because object literal [1] is incompat
 [incompatible-type]
 
    spreads.js:7:4
-   7|   ({...y, ...x}) as {...X, ...Y}; // nope, which is different than old generics
+   7|   ({...y, ...x}) as {...X, ...Y, ...}; // nope, which is different than old generics
          ^^^^^^^^^^^^ [1]
 
 References:
    spreads.js:7:21
-   7|   ({...y, ...x}) as {...X, ...Y}; // nope, which is different than old generics
-                          ^^^^^^^^^^^^ [2]
+   7|   ({...y, ...x}) as {...X, ...Y, ...}; // nope, which is different than old generics
+                          ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:11:4
@@ -1404,13 +1404,13 @@ Cannot cast object literal to object type because object literal [1] is incompat
 [incompatible-type]
 
    spreads.js:11:4
-   11|   ({...x, ...y}) as {...X, ...Z, ...Y}; // nope
+   11|   ({...x, ...y}) as {...X, ...Z, ...Y, ...}; // nope
           ^^^^^^^^^^^^ [1]
 
 References:
    spreads.js:11:21
-   11|   ({...x, ...y}) as {...X, ...Z, ...Y}; // nope
-                           ^^^^^^^^^^^^^^^^^^ [2]
+   11|   ({...x, ...y}) as {...X, ...Z, ...Y, ...}; // nope
+                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:24:3
@@ -1418,16 +1418,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to object type because `unknown` [1] is incompatible with object type [2]. [incompatible-type]
 
    spreads.js:24:3
-   24|   x as {...X}; // nope
+   24|   x as {...X, ...}; // nope
          ^
 
 References:
    spreads.js:23:19
-   23| function t2<X>(x: X, sp_x: {...X}) {
+   23| function t2<X>(x: X, sp_x: {...X, ...}) {
                          ^ [1]
    spreads.js:24:8
-   24|   x as {...X}; // nope
-              ^^^^^^ [2]
+   24|   x as {...X, ...}; // nope
+              ^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- spreads.js:41:10
@@ -1439,12 +1439,12 @@ Cannot return `y` because object type [1] is incompatible with `{ ...X, ...Y }` 
                 ^
 
 References:
-   spreads.js:40:30
-   40| function f3<X: {}, Y: {}>(y: Y): {...X, ...Y} {
-                                    ^ [1]
-   spreads.js:40:34
-   40| function f3<X: {}, Y: {}>(y: Y): {...X, ...Y} {
-                                        ^^^^^^^^^^^^ [2]
+   spreads.js:40:36
+   40| function f3<X: {...}, Y: {...}>(y: Y): {...X, ...Y, ...} {
+                                          ^ [1]
+   spreads.js:40:40
+   40| function f3<X: {...}, Y: {...}>(y: Y): {...X, ...Y, ...} {
+                                              ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- spreads.js:49:10
@@ -1456,12 +1456,12 @@ Cannot return `y` because object type [1] is incompatible with `Y` [2]. [incompa
                 ^
 
 References:
-   spreads.js:48:31
-   48| function f4b<X: {}, Y: {}>(y: {...Y, ...X}): Y {
-                                     ^^^^^^^^^^^^ [1]
-   spreads.js:48:46
-   48| function f4b<X: {}, Y: {}>(y: {...Y, ...X}): Y {
-                                                    ^ [2]
+   spreads.js:48:37
+   48| function f4b<X: {...}, Y: {...}>(y: {...Y, ...X, ...}): Y {
+                                           ^^^^^^^^^^^^^^^^^ [1]
+   spreads.js:48:57
+   48| function f4b<X: {...}, Y: {...}>(y: {...Y, ...X, ...}): Y {
+                                                               ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:53:3
@@ -1469,16 +1469,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to object type because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-type]
 
    spreads.js:53:3
-   53|   x as {...X & Y}; // nope
+   53|   x as {...X & Y, ...}; // nope
          ^
 
 References:
-   spreads.js:52:39
-   52| function f<X: {}, Y: {}, Z: X & Y>(x: {...X}, xy: {...X, ...Y}, z: {...Z}) {
-                                             ^^^^^^ [1]
+   spreads.js:52:45
+   52| function f<X: {...}, Y: {...}, Z: X & Y>(x: {...X, ...}, xy: {...X, ...Y, ...}, z: {...Z, ...}) {
+                                                   ^^^^^^^^^^^ [1]
    spreads.js:53:8
-   53|   x as {...X & Y}; // nope
-              ^^^^^^^^^^ [2]
+   53|   x as {...X & Y, ...}; // nope
+              ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ synthetic.js:2:10
@@ -1524,12 +1524,12 @@ Cannot return `x` because `Pick` [1] is incompatible with `Pick` [2]. [incompati
                 ^
 
 References:
-   synthetic.js:9:57
-    9| function test3<S: { a: unknown }, T: { a: unknown }>(x: Pick<S, "a">): Pick<T, "a"> {
-                                                               ^^^^^^^^^^^^ [1]
-   synthetic.js:9:72
-    9| function test3<S: { a: unknown }, T: { a: unknown }>(x: Pick<S, "a">): Pick<T, "a"> {
-                                                                              ^^^^^^^^^^^^ [2]
+   synthetic.js:9:67
+    9| function test3<S: { a: unknown, ... }, T: { a: unknown, ... }>(x: Pick<S, "a">): Pick<T, "a"> {
+                                                                         ^^^^^^^^^^^^ [1]
+   synthetic.js:9:82
+    9| function test3<S: { a: unknown, ... }, T: { a: unknown, ... }>(x: Pick<S, "a">): Pick<T, "a"> {
+                                                                                        ^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:14:10

@@ -79,7 +79,7 @@ Cannot cast `obj.a` to `$NonMaybeType` because undefined [1] is incompatible wit
 
 References:
    test.js:32:34
-   32| function test_optional(obj: {a?: number}) {
+   32| function test_optional(obj: {a?: number, ...}) {
                                         ^^^^^^ [1]
    test.js:33:26
    33|   obj.a as $NonMaybeType<mixed>; // error undefined ~> MixedT (non-maybe)
@@ -96,7 +96,7 @@ Cannot cast `obj.a` to number because undefined [1] is incompatible with number 
 
 References:
    test.js:32:34
-   32| function test_optional(obj: {a?: number}) {
+   32| function test_optional(obj: {a?: number, ...}) {
                                         ^^^^^^ [1]
    test.js:34:12
    34|   obj.a as number; // error

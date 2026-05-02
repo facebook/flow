@@ -19,14 +19,14 @@ function b1<A: 'a', B: A>(b: B): void {
   if (b === 'b'){ } // error 'b' not compatible with 'a'
 }
 
-export type S = {|
+export type S = {
   p: number,
-|};
+};
 
-export type T = {|
+export type T = {
   q: string,
   ...S,
-|};
+};
 
 function c<X: T>(x: keyof X) {
   switch (x) {

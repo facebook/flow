@@ -7,9 +7,9 @@ Cannot call method `defineProperty` because string [1] is incompatible with numb
                                             ^^^ [1]
 
 References:
-   obj.js:5:21
-   5| declare var y: {|a: number, b: number|};
-                          ^^^^^^ [2]
+   obj.js:5:20
+   5| declare var y: {a: number, b: number};
+                         ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:11:47
@@ -36,9 +36,9 @@ Cannot call method `defineProperty` because string [1] is incompatible with numb
                              ^^^^^^ [1]
 
 References:
-   obj.js:5:32
-    5| declare var y: {|a: number, b: number|};
-                                      ^^^^^^ [2]
+   obj.js:5:31
+    5| declare var y: {a: number, b: number};
+                                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:13:1
@@ -59,8 +59,8 @@ Cannot call method `defineProperty` because property `c` is missing in object ty
 
 References:
    obj.js:5:16
-    5| declare var y: {|a: number, b: number|};
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+    5| declare var y: {a: number, b: number};
+                      ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:15:26
@@ -73,8 +73,8 @@ Cannot call method `defineProperty` because property `c` is missing in object ty
 
 References:
    obj.js:5:16
-    5| declare var y: {|a: number, b: number|};
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+    5| declare var y: {a: number, b: number};
+                      ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:17:25
@@ -95,8 +95,8 @@ Cannot call method `defineProperties` because property `d` is missing in object 
 
 References:
    obj.js:5:16
-    5| declare var y: {|a: number, b: number|};
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+    5| declare var y: {a: number, b: number};
+                      ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:18:80
@@ -108,9 +108,9 @@ Cannot call method `defineProperties` because string [1] is incompatible with nu
                                                                                       ^^^ [1]
 
 References:
-   obj.js:5:32
-    5| declare var y: {|a: number, b: number|};
-                                      ^^^^^^ [2]
+   obj.js:5:31
+    5| declare var y: {a: number, b: number};
+                                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:19:1
@@ -121,33 +121,33 @@ Cannot call non-polymorphic function with type arguments. [nonpolymorphic-type-a
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- obj.js:26:45
+Error ----------------------------------------------------------------------------------------------------- obj.js:26:50
 
 Cannot get `Object.freeze<...>(...).b` because property `b` is missing in object type [1]. [prop-missing]
 
-   obj.js:26:45
-   26| Object.freeze<{+a: number}>({a: 42, b: 42}).b; // b is hidden
-                                                   ^
+   obj.js:26:50
+   26| Object.freeze<{+a: number, ...}>({a: 42, b: 42}).b; // b is hidden
+                                                        ^
 
 References:
    obj.js:26:15
-   26| Object.freeze<{+a: number}>({a: 42, b: 42}).b; // b is hidden
-                     ^^^^^^^^^^^^ [1]
+   26| Object.freeze<{+a: number, ...}>({a: 42, b: 42}).b; // b is hidden
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- obj.js:27:29
+Error ----------------------------------------------------------------------------------------------------- obj.js:27:34
 
 Cannot call method `freeze` with object literal bound to `o` because property `c` is missing in frozen object
 literal [1] but exists in object type [2]. [incompatible-type]
 
-   obj.js:27:29
-   27| Object.freeze<{+c: number}>({a: 42, b: 42}); // c does not exist
-                                   ^^^^^^^^^^^^^^ [1]
+   obj.js:27:34
+   27| Object.freeze<{+c: number, ...}>({a: 42, b: 42}); // c does not exist
+                                        ^^^^^^^^^^^^^^ [1]
 
 References:
    obj.js:27:15
-   27| Object.freeze<{+c: number}>({a: 42, b: 42}); // c does not exist
-                     ^^^^^^^^^^^^ [2]
+   27| Object.freeze<{+c: number, ...}>({a: 42, b: 42}); // c does not exist
+                     ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:28:1

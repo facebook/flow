@@ -8,7 +8,7 @@ Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [i
 
 References:
    annot.js:1:14
-   1| type O = {p: number, __proto__: {q: string}};
+   1| type O = {p: number, __proto__: {q: string, ...}, ...};
                    ^^^^^^ [1]
    annot.js:3:8
    3| o.p as empty; // error: number ~> empty
@@ -25,7 +25,7 @@ Cannot cast `o.q` to empty because string [1] is incompatible with empty [2]. [i
 
 References:
    annot.js:1:37
-   1| type O = {p: number, __proto__: {q: string}};
+   1| type O = {p: number, __proto__: {q: string, ...}, ...};
                                           ^^^^^^ [1]
    annot.js:4:8
    4| o.q as empty; // error: string ~> empty
@@ -43,7 +43,7 @@ Cannot cast object literal to `O` because in property `q`: number [1] is incompa
 
 References:
    annot.js:1:37
-   1| type O = {p: number, __proto__: {q: string}};
+   1| type O = {p: number, __proto__: {q: string, ...}, ...};
                                           ^^^^^^ [2]
 
 
@@ -58,7 +58,7 @@ Cannot cast object literal to `O` because in property `q`: number [1] is incompa
 
 References:
    annot.js:1:37
-   1| type O = {p: number, __proto__: {q: string}};
+   1| type O = {p: number, __proto__: {q: string, ...}, ...};
                                           ^^^^^^ [2]
 
 
@@ -101,8 +101,8 @@ Cannot cast `o_optional.__proto__` to empty because object type [1] is incompati
 
 References:
    annot.js:13:33
-   13| type O_optional = { __proto__?: { q: 0 } };
-                                       ^^^^^^^^ [1]
+   13| type O_optional = { __proto__?: { q: 0, ... }, ... };
+                                       ^^^^^^^^^^^^^ [1]
    annot.js:16:25
    16| o_optional.__proto__ as empty; // error: void ~> empty, object type ~> empty
                                ^^^^^ [2]
@@ -118,8 +118,8 @@ Cannot cast `o_optional.__proto__` to empty because undefined [1] is incompatibl
 
 References:
    annot.js:13:33
-   13| type O_optional = { __proto__?: { q: 0 } };
-                                       ^^^^^^^^ [1]
+   13| type O_optional = { __proto__?: { q: 0, ... }, ... };
+                                       ^^^^^^^^^^^^^ [1]
    annot.js:16:25
    16| o_optional.__proto__ as empty; // error: void ~> empty, object type ~> empty
                                ^^^^^ [2]
@@ -149,8 +149,8 @@ Cannot cast `o_variance.__proto__` to empty because object type [1] is incompati
 
 References:
    annot.js:19:33
-   19| type O_variance = { +__proto__: { q: 0 } };
-                                       ^^^^^^^^ [1]
+   19| type O_variance = { +__proto__: { q: 0, ... }, ... };
+                                       ^^^^^^^^^^^^^ [1]
    annot.js:22:25
    22| o_variance.__proto__ as empty; // error: object type ~> empty
                                ^^^^^ [2]
@@ -160,7 +160,7 @@ Error --------------------------------------------------------------------------
 
 Unexpected prototype after call property. [unsupported-syntax]
 
-   25| type O_callable = { (): void, __proto__: {} }; // error: unexpected proto after call
+   25| type O_callable = { (): void, __proto__: {...}, ... }; // error: unexpected proto after call
                                      ^^^^^^^^^
 
 
@@ -203,7 +203,7 @@ Cannot cast `o_method.__proto__` to empty because function type [1] is incompati
 
 References:
    annot.js:31:19
-   31| type O_method = { __proto__(): void };
+   31| type O_method = { __proto__(): void, ... };
                          ^^^^^^^^^^^^^^^^^ [1]
    annot.js:33:23
    33| o_method.__proto__ as empty; // error: function ~> empty
@@ -214,7 +214,7 @@ Error --------------------------------------------------------------------------
 
 Invalid trivially recursive definition of prototype.  [recursive-definition]
 
-   35| type O_loop = { p: 0, __proto__: O_loop };
+   35| type O_loop = { p: 0, __proto__: O_loop, ... };
                                         ^^^^^^
 
 
@@ -228,7 +228,7 @@ Cannot cast `o_loop.p` to empty because number literal `0` [1] is incompatible w
 
 References:
    annot.js:35:20
-   35| type O_loop = { p: 0, __proto__: O_loop };
+   35| type O_loop = { p: 0, __proto__: O_loop, ... };
                           ^ [1]
    annot.js:37:13
    37| o_loop.p as empty; // error: number ~> empty
@@ -239,7 +239,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use number [1] as a prototype. Expected an object or null. [not-an-object]
 
-   40| type O_invalid = { __proto__: number }; // error: number is not a valid proto
+   40| type O_invalid = { __proto__: number, ... }; // error: number is not a valid proto
                                      ^^^^^^ [1]
 
 
@@ -247,7 +247,7 @@ Error --------------------------------------------------------------------------
 
 Multiple prototypes specified. [unsupported-syntax]
 
-   44|   __proto__: {}, // error: multiple protos
+   44|   __proto__: {...}, // error: multiple protos
          ^^^^^^^^^
 
 
@@ -477,8 +477,8 @@ Cannot get `o_nonstrict.p` because property `p` is missing in object type [1]. [
 
 References:
    null.js:12:26
-   12| declare var o_nonstrict: { __proto__: null };
-                                ^^^^^^^^^^^^^^^^^^^ [1]
+   12| declare var o_nonstrict: { __proto__: null, ... };
+                                ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- null.js:14:3

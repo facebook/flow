@@ -1,13 +1,13 @@
 //@flow
 // We shouldn't fire the AnnotT special case unless there
 // is no more work to be done in the spread.
-type LiterallyAnyObject = {|
+type LiterallyAnyObject = {
   thisFieldIsMissing: true,
-|};                     
+};                     
 
-type WrapperType = {|
+type WrapperType = {
   object: LiterallyAnyObject | null | LiterallyAnyObject,
-|}
+}
 
 const prevPagers: WrapperType = {
   object: null

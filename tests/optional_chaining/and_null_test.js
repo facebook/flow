@@ -1,6 +1,6 @@
 // @flow
 
-type Obj = {p: string, q: number};
+type Obj = {p: string, q: number, ...};
 
 function test1(data: ?Obj) {
   if (data?.p == null && data?.q == null) throw '';
@@ -11,7 +11,7 @@ function test1(data: ?Obj) {
   data as Obj; // ok
 }
 
-function test2(data: ?{foo: {bar: ?Obj}}) {
+function test2(data: ?{foo: {bar: ?Obj, ...}, ...}) {
   if (data?.foo.bar?.p == null && data?.foo.bar?.q == null) throw '';
 
   // Similar to the reasoning in test1 above, we will have:

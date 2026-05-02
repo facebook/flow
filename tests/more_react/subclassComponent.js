@@ -2,7 +2,7 @@
 
 var React = require("react");
 
-type Props1 = {||}
+type Props1 = {}
 
 declare class A extends React.Component<Props1, void> {}
 declare class B extends A {}
@@ -16,14 +16,14 @@ declare class React$Component2<Props, State = void> {
   props : Props;
 }
 
-type Props2 = {||}
+type Props2 = {}
 
 declare class D extends React$Component2<Props2, void> {}
 
 declare class E extends D {}
 
 declare class F {
-  props : {||}
+  props : {}
 }
 
 <D></D>; // error

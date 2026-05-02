@@ -9,14 +9,14 @@ type Props = Readonly<{
 
 function a<Props: Props>() {
   declare var a: React.ComponentType<Props>;
-  declare var b: React.Component<{+a: number}>;
-  a as React.ComponentType<{a: number}>; // nope, contravariance
+  declare var b: React.Component<{+a: number, ...}>;
+  a as React.ComponentType<{a: number, ...}>; // nope, contravariance
   b as React.Component<Props>; // nope
 }
 
-type DefaultProps = {|
+type DefaultProps = {
   b: string,
-|};
+};
 
 function connect<TProps: {...}, SProps: TProps>(): component(ref?: React.RefSetter<mixed>, ...SProps) {
   return class extends React.Component<TProps> {};
@@ -36,8 +36,8 @@ function HOC<Config: {...}, Instance>(
 
 function WrapInDivWithExtraProp<Props: {...}>(
   X: component(...Props),
-): component(...{|...$Exact<Props>, baz: number|}) {
-  const C = ({baz, ...props}: {|...$Exact<Props>, baz: number|}) => (
+): component(...{...$Exact<Props>, baz: number}) {
+  const C = ({baz, ...props}: {...$Exact<Props>, baz: number}) => (
     <div>
       {baz}
       <X {...props} />

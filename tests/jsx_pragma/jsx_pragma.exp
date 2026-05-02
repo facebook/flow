@@ -126,7 +126,7 @@ Cannot create `Bar` element because in property `x`: number [1] is incompatible 
 
 References:
    respect_local_scope.js:12:42
-   12|   function Foo(elem: number, props: { x: string }) {}
+   12|   function Foo(elem: number, props: { x: string, ... }) {}
                                                 ^^^^^^ [2]
 
 
@@ -143,8 +143,8 @@ References:
    20|   <Bar />; // error: null ~> object type
          ^^^^^^^ [1]
    respect_local_scope.js:18:37
-   18|   function Foo(elem: number, props: { x: string }) {}
-                                           ^^^^^^^^^^^^^ [2]
+   18|   function Foo(elem: number, props: { x: string, ... }) {}
+                                           ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- respect_local_scope.js:26:9
@@ -185,7 +185,7 @@ Cannot create `Bar` element because in property `key`: string [1] is incompatibl
 
 References:
    respect_local_scope.js:30:43
-   30|   function Foo(elem: number, props: {key: boolean, ref: number}) {}
+   30|   function Foo(elem: number, props: {key: boolean, ref: number, ...}) {}
                                                  ^^^^^^^ [2]
 
 
@@ -199,7 +199,7 @@ Cannot create `Bar` element because in property `ref`: string [1] is incompatibl
 
 References:
    respect_local_scope.js:30:57
-   30|   function Foo(elem: number, props: {key: boolean, ref: number}) {}
+   30|   function Foo(elem: number, props: {key: boolean, ref: number, ...}) {}
                                                                ^^^^^^ [2]
 
 
@@ -231,8 +231,8 @@ References:
    44|   <Bar y="hi" />; // error: missing x
          ^^^^^^^^^^^^^^ [1]
    respect_local_scope.js:42:37
-   42|   function Foo(elem: number, props: {x: string}) {}
-                                           ^^^^^^^^^^^ [2]
+   42|   function Foo(elem: number, props: {x: string, ...}) {}
+                                           ^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- respect_local_scope.js:49:4

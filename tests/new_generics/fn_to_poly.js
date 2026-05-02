@@ -7,7 +7,7 @@ foo.bar = 'foo';
 type Foo = {
   <T>(T): T,
   bar: string,
-};
+ ...};
 
 foo as Foo;
 

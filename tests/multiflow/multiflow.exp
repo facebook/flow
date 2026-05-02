@@ -188,9 +188,9 @@ Cannot create `AcceptsWhatever` element because in the return value: string [1] 
          ^^^^^^^^^^^^^^^
 
 References:
-   jsx.js:29:68
-   29| declare function AcceptsWhatever(props: {} | null, children: any): string;
-                                                                          ^^^^^^ [1]
+   jsx.js:29:71
+   29| declare function AcceptsWhatever(props: {...} | null, children: any): string;
+                                                                             ^^^^^^ [1]
    jsx.js:30:26
    30| (<AcceptsWhatever />) as number; // Error string ~> number
                                 ^^^^^^ [2]
@@ -207,9 +207,9 @@ Cannot create `AcceptsWhatever` element because: [incompatible-use]
          ^^^^^^^^^^^^^^^
 
 References:
-   jsx.js:29:68
-   29| declare function AcceptsWhatever(props: {} | null, children: any): string;
-                                                                          ^^^^^^ [1]
+   jsx.js:29:71
+   29| declare function AcceptsWhatever(props: {...} | null, children: any): string;
+                                                                             ^^^^^^ [1]
    jsx.js:31:56
    31| (<AcceptsWhatever name="hi">Text</AcceptsWhatever>) as number; // Error string ~> number
                                                               ^^^^^^ [2]
@@ -233,11 +233,11 @@ Cannot create `ExpectsProps` element because: [incompatible-use]
 
 References:
    jsx.js:10:14
-   10|   C: (props: {}, children: Children) => Elem,
-                    ^^ [1]
+   10|   C: (props: {...}, children: Children) => Elem,
+                    ^^^^^ [1]
    jsx.js:33:38
-   33| declare function ExpectsProps(props: {name: string}, children: any): string;
-                                            ^^^^^^^^^^^^^^ [2]
+   33| declare function ExpectsProps(props: {name: string, ...}, children: any): string;
+                                            ^^^^^^^^^^^^^^^^^^^ [2]
    jsx.js:34:1
    34| <ExpectsProps />; // Error - missing prop
        ^^^^^^^^^^^^^^^^ [3]
@@ -254,9 +254,9 @@ Cannot create `ExpectsProps` element because: [incompatible-use]
          ^^^^^^^^^^^^
 
 References:
-   jsx.js:33:70
-   33| declare function ExpectsProps(props: {name: string}, children: any): string;
-                                                                            ^^^^^^ [1]
+   jsx.js:33:75
+   33| declare function ExpectsProps(props: {name: string, ...}, children: any): string;
+                                                                                 ^^^^^^ [1]
    jsx.js:35:50
    35| (<ExpectsProps name="hi">Text</ExpectsProps>) as number; // Error string ~> number
                                                         ^^^^^^ [2]

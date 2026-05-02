@@ -2,5 +2,4 @@
 short_literals=0% on, 100% off
 
 [options]
-exact_by_default=false
 (short_literals=potato) no_unchecked_indexed_access=true

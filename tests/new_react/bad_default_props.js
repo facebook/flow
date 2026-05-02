@@ -1,7 +1,7 @@
 var React = require('react');
 
-type T1 = { };
-type T2 = { x: number };
+type T1 = { ...};
+type T2 = { x: number, ... };
 
 
 class C1 extends React.Component<T1> { // OK

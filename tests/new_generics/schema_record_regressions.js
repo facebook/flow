@@ -22,16 +22,16 @@ declare class IndexedMap<K, +V> {
 
 declare class ValueSet<T> {}
 
-declare const Immutable: {|
+declare const Immutable: {
   Map: <V>(obj: {[key: string]: V, ...}) => IndexedMap<string, V>,
   Record: <T: interface {}>(spec: T) => RecordFactory<T, RecordOf<T>>,
   Set: <T>(iter: Iterable<T>) => ValueSet<T>,
-|};
+};
 
 type GraphNodeInfo = {
   children: Array<number>,
   id: number,
-};
+ ...};
 
 type GraphNodeRecord = RecordOf<GraphNodeInfo>;
 

@@ -8,20 +8,20 @@ export type Mutate<T> = (recipe: Recipe<T>) => void;
 
 type ConsumerRender<S> = (...S) => globalThis.React.Node;
 
-type ProviderProps<T> = {|
+type ProviderProps<T> = {
   children: globalThis.React.Node,
   initialState?: T,
-|};
+};
 
 export type Provider<T> = ComponentType<ProviderProps<T>>;
 
 type GetReturnType = <T, S>((T) => S) => S;
 
-type ConsumerProps<T, TSelect: $ReadOnlyArray<(T) => mixed>> = {|
+type ConsumerProps<T, TSelect: $ReadOnlyArray<(T) => mixed>> = {
   select?: TSelect,
   children?: ConsumerRender<{[K in keyof TSelect]: ReturnType<TSelect[K]>}>,
   render?: ConsumerRender<{[K in keyof TSelect]: ReturnType<TSelect[K]>}>,
-|};
+};
 
 type Selector<T, R> = T => R;
 
@@ -35,10 +35,10 @@ export type Store<T> = {
     displayName?: ?string,
     propTypes?: any,
     contextTypes?: any,
-  },
+ ...  },
   +mutate: Mutate<T>,
   createSelector<R>(Selector<T, R>): Selector<T, R>,
-};
+ ...};
 
 declare var store : Store<number>;
 <store.Consumer></store.Consumer>

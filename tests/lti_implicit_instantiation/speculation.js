@@ -12,7 +12,7 @@ declare function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
 
 type Props = $ReadOnly<{
   fn: (...$ReadOnlyArray<empty>) => void,
-}>;
+ ...}>;
 
 function Component({
   fn,

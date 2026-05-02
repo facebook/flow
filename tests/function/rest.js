@@ -45,7 +45,7 @@ function rest_union(...xs: [1,2] | Array<number>): number { // OK
   return xs[0];
 }
 
-function rest_intersection(...xs: { x: number } & [1,2]): number { // OK
+function rest_intersection(...xs: { x: number, ... } & [1,2]): number { // OK
   return xs[0] + xs.x;
 }
 

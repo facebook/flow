@@ -1,7 +1,7 @@
 type ContextBox<TItem, TColumnKey> = {
   column: TColumnKey,
   item: TItem,
-};
+ ...};
 
 declare function contextualInner<TItem, TColumnKey = string>(): ContextBox<
   TItem,
@@ -17,7 +17,7 @@ contextualOuter<number, number>() as ContextBox<number, number>;
 type UnderscoreBox<TItem, TColumnKey> = {
   column: TColumnKey,
   item: TItem,
-};
+ ...};
 
 declare function underscoreInner<TItem, TColumnKey = string>(): UnderscoreBox<
   TItem,
@@ -30,7 +30,7 @@ underscoreBox.column as number;
 
 type Plugin<TItem, TColumnKey> = {
   transformBodyCell?: (column: TColumnKey, item: TItem) => void,
-};
+ ...};
 
 declare function siblingPlugin<TItem, TColumnKey>(): Plugin<TItem, TColumnKey>;
 declare function rowInteraction<TItem, TColumnKey = string>(): Plugin<
@@ -49,7 +49,7 @@ function collectPlugins<TItem, TColumnKey>(): Array<Plugin<TItem, TColumnKey>> {
 type LateBox<TItem, TColumnKey> = {
   column: TColumnKey,
   item: TItem,
-};
+ ...};
 
 declare function lateInner<TItem, TColumnKey = string>(): LateBox<
   TItem,

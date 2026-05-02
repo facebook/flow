@@ -1,7 +1,7 @@
 //@flow
 type O = {
     <T, U>(): T,
-}
+ ...}
 
 declare var o: O;
 

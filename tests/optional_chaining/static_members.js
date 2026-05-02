@@ -1,7 +1,7 @@
 // @flow
 
-type X = {foo: number};
-type Y = {bar: X, baz: ?X};
+type X = {foo: number, ...};
+type Y = {bar: X, baz: ?X, ...};
 
 declare var x1: ?X;
 declare var x2: X;

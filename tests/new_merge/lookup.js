@@ -14,14 +14,14 @@ export type S = {
   f: A.f,
   // $FlowExpectedError[prop-missing]
   g: A.g
-};
+, ...};
 
 declare class P<X> { static f: number; }
 declare class Q extends P<any> {}
 export type T = {
   // $FlowExpectedError[value-as-type]
   f: Q.f,
-};
+ ...};
 
 declare var Any: any;
 declare class W extends Any {}

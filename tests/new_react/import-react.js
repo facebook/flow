@@ -8,7 +8,7 @@
 
 import React from "react";
 
-class HelloMessage extends React.Component<{ name: string }> {}
+class HelloMessage extends React.Component<{ name: string, ... }> {}
 
 <HelloMessage name={007} />; // number ~/~> string error
 <HelloMessage name="Bond" />; // ok

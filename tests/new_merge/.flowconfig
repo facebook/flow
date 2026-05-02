@@ -9,7 +9,6 @@
 [options]
 casting_syntax=as
 all=false
-exact_by_default=false
 no_flowlib=false
 include_warnings=true
 enums=true

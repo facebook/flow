@@ -415,7 +415,7 @@ Cannot cast `x18` to empty because number [1] is incompatible with empty [2]. [i
 
 References:
    eval_readonly.js:3:22
-    3| export type U = { f: number } | { f: string };
+    3| export type U = { f: number, ... } | { f: string, ... };
                             ^^^^^^ [1]
    main.js:80:8
    80| x18 as empty; // error number, string ~> empty
@@ -431,9 +431,9 @@ Cannot cast `x18` to empty because string [1] is incompatible with empty [2]. [i
        ^^^
 
 References:
-   eval_readonly.js:3:38
-    3| export type U = { f: number } | { f: string };
-                                            ^^^^^^ [1]
+   eval_readonly.js:3:43
+    3| export type U = { f: number, ... } | { f: string, ... };
+                                                 ^^^^^^ [1]
    main.js:80:8
    80| x18 as empty; // error number, string ~> empty
               ^^^^^ [2]
@@ -466,7 +466,7 @@ Cannot cast `z18` to empty because string [1] is incompatible with empty [2]. [i
 
 References:
    eval_readonly.js:9:15
-    9| type O = { f: string };
+    9| type O = { f: string, ... };
                      ^^^^^^ [1]
    main.js:82:8
    82| z18 as empty; // error string ~> empty
@@ -483,7 +483,7 @@ Cannot cast `baz01` to empty because number [1] is incompatible with empty [2]. 
 
 References:
    eval_indexed_access.js:3:31
-    3| type Foo1 = {foo: {bar: {baz: number}}};
+    3| type Foo1 = {foo: {bar: {baz: number, ...}, ...}, ...};
                                      ^^^^^^ [1]
    main.js:85:10
    85| baz01 as empty; // error number ~> empty
@@ -513,7 +513,7 @@ Cannot cast `y19` to object type because property `a` is missing in object liter
 [incompatible-type]
 
    main.js:91:1
-   91| y19 as {a: number}; // error undefined ~> number
+   91| y19 as {a: number, ...}; // error undefined ~> number
        ^^^
 
 References:
@@ -521,8 +521,8 @@ References:
    10| export const y = { ...t };
                         ^^^^^^^^ [1]
    main.js:91:8
-   91| y19 as {a: number}; // error undefined ~> number
-              ^^^^^^^^^^^ [2]
+   91| y19 as {a: number, ...}; // error undefined ~> number
+              ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- main.js:113:1
@@ -535,7 +535,7 @@ Cannot cast `p1_f_22` to empty because string [1] is incompatible with empty [2]
 
 References:
    eval_spread.js:6:23
-     6| type P1 = { ...O1, f: string };
+     6| type P1 = { ...O1, f: string, ... };
                               ^^^^^^ [1]
    main.js:113:12
    113| p1_f_22 as empty; // error string ~> empty
@@ -552,7 +552,7 @@ Cannot cast `p2_f_22` to empty because string [1] is incompatible with empty [2]
 
 References:
    eval_spread.js:7:23
-     7| type P2 = { ...O2, f: string };
+     7| type P2 = { ...O2, f: string, ... };
                               ^^^^^^ [1]
    main.js:114:12
    114| p2_f_22 as empty; // error string ~> empty
@@ -568,9 +568,9 @@ Cannot cast `p3_f_22` to empty because string [1] is incompatible with empty [2]
         ^^^^^^^
 
 References:
-   eval_spread.js:9:24
-     9| type P3 = {| ...O1, f: string |};
-                               ^^^^^^ [1]
+   eval_spread.js:9:22
+     9| type P3 = {...O1, f: string};
+                             ^^^^^^ [1]
    main.js:115:12
    115| p3_f_22 as empty; // error string ~> empty
                    ^^^^^ [2]
@@ -585,9 +585,9 @@ Cannot cast `p4_f_22` to empty because string [1] is incompatible with empty [2]
         ^^^^^^^
 
 References:
-   eval_spread.js:10:24
-    10| type P4 = {| ...O2, f: string |};
-                               ^^^^^^ [1]
+   eval_spread.js:10:22
+    10| type P4 = {...O2, f: string};
+                             ^^^^^^ [1]
    main.js:116:12
    116| p4_f_22 as empty; // error string ~> empty
                    ^^^^^ [2]
@@ -619,9 +619,9 @@ Cannot cast `p2_g_22` to empty because string [1] is incompatible with empty [2]
         ^^^^^^^
 
 References:
-   eval_spread.js:4:28
-     4| type O2 = {| f: number, g: string |};
-                                   ^^^^^^ [1]
+   eval_spread.js:4:26
+     4| type O2 = {f: number, g: string};
+                                 ^^^^^^ [1]
    main.js:118:12
    118| p2_g_22 as empty; // error string ~> empty
                    ^^^^^ [2]
@@ -653,9 +653,9 @@ Cannot cast `p4_g_22` to empty because string [1] is incompatible with empty [2]
         ^^^^^^^
 
 References:
-   eval_spread.js:4:28
-     4| type O2 = {| f: number, g: string |};
-                                   ^^^^^^ [1]
+   eval_spread.js:4:26
+     4| type O2 = {f: number, g: string};
+                                 ^^^^^^ [1]
    main.js:120:12
    120| p4_g_22 as empty; // error string ~> empty
                    ^^^^^ [2]
@@ -667,7 +667,7 @@ Cannot cast `p1_22` to object type because inexact `P1` [1] is incompatible with
 [incompatible-exact]
 
    main.js:127:1
-   127| p1_22 as {|f: string, g: string|}; // error incompatible exact
+   127| p1_22 as {f: string, g: string}; // error incompatible exact
         ^^^^^
 
 References:
@@ -675,8 +675,8 @@ References:
     12| declare export var p1: P1;
                                ^^ [1]
    main.js:127:10
-   127| p1_22 as {|f: string, g: string|}; // error incompatible exact
-                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   127| p1_22 as {f: string, g: string}; // error incompatible exact
+                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- main.js:128:1
@@ -685,7 +685,7 @@ Cannot cast `p2_22` to object type because inexact `P2` [1] is incompatible with
 [incompatible-exact]
 
    main.js:128:1
-   128| p2_22 as {|f: string, g: string|}; // error incompatible exact
+   128| p2_22 as {f: string, g: string}; // error incompatible exact
         ^^^^^
 
 References:
@@ -693,8 +693,8 @@ References:
     13| declare export var p2: P2;
                                ^^ [1]
    main.js:128:10
-   128| p2_22 as {|f: string, g: string|}; // error incompatible exact
-                 ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   128| p2_22 as {f: string, g: string}; // error incompatible exact
+                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- main.js:134:1

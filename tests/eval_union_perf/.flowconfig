@@ -1,7 +1,6 @@
 [options]
 casting_syntax=as
 all=true
-exact_by_default=false
 
 [lints]
 deprecated-type=off

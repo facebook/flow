@@ -17,4 +17,4 @@ export type S = {
     | x.b<>
     // $FlowExpectedError[value-as-type]
     | x.c<mixed>
-};
+, ...};

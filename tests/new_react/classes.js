@@ -1,8 +1,8 @@
 var React = require('react');
 
-type DefaultProps = { };
-type Props = { x: number };
-type State = { y: number };
+type DefaultProps = { ...};
+type Props = { x: number, ... };
+type State = { y: number, ... };
 
 class Foo extends React.Component<Props, State> {
   static defaultProps: DefaultProps;
@@ -20,7 +20,7 @@ class Foo extends React.Component<Props, State> {
     this.state = { y: "" };
   }
 
-  setState(o: { y_: string }): void { }
+  setState(o: { y_: string, ... }): void { }
 
   componentDidMount(): void {
     this.is_mounted = true;

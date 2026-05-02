@@ -1,13 +1,13 @@
 //@flow
-type OtherProps = {|foo: number|};
+type OtherProps = {foo: number};
 
-declare function HOC<OwnProps: {}>(
-  Component: ({|...OwnProps, ...OtherProps|}) => mixed,
+declare function HOC<OwnProps: {...}>(
+  Component: ({...OwnProps, ...OtherProps}) => mixed,
 ): OwnProps => mixed;
 
-const x = HOC((x: {|foo: number, bar: number|}) => null); // ok
+const x = HOC((x: {foo: number, bar: number}) => null); // ok
 
-declare function ReposLowerTRegressionTest<T>(x: {o?: T}): T;
+declare function ReposLowerTRegressionTest<T>(x: {o?: T, ...}): T;
 ReposLowerTRegressionTest({}); // Error: T under constrained.
 
 declare function ReadOnly<T>(x: $ReadOnly<T>): T;
@@ -31,59 +31,59 @@ declare function ElementRef<T>(x: React.ElementRef<T>): T;
 ElementRef(1); // Error: T under constrained.
 declare function ElementConfig<T>(x: React.ElementConfig<T>): T;
 ElementConfig({foo: 3}) as React.ComponentType<
-  {foo: number},
+  {foo: number, ...},
 >; // ok
 declare function Exact<T>(x: $Exact<T>): T;
 Exact({foo: 3}); // ok
 
 function spreads() {
-  type T = {|bar: number, baz: number|};
+  type T = {bar: number, baz: number};
 
-  declare function spread1<Props>(x: {...Props}): Props;
+  declare function spread1<Props>(x: {...Props, ...}): Props;
   const s1 = spread1({foo: 3, bar: 2, baz: 1}); // ok
   s1.foo as number;
   s1.bar as number;
   s1.baz as number;
   s1.bad; // error
-  declare function spread2<Props>(x: {...Props, bar: number, baz: number}): Props;
+  declare function spread2<Props>(x: {...Props, bar: number, baz: number, ...}): Props;
   const s2 = spread2({foo: 3, bar: 2, baz: 1}); // ok
   s2.foo as number;
   s2.bad; // error
   s2.bar; // error
   s2.baz; // error
-  declare function spread3<Props>(x: {...Props, ...T}): Props;
+  declare function spread3<Props>(x: {...Props, ...T, ...}): Props;
   const s3 = spread3({foo: 3, bar: 2, baz: 1}); // ok
   s3.foo as number;
   s3.bad; // error
   s3.bar; // error
   s3.baz; // error
-  declare function spread4<Props>(x: {baz: number, bar: number, ...Props}): Props;
+  declare function spread4<Props>(x: {baz: number, bar: number, ...Props, ...}): Props;
   const s4 = spread4({foo: 3, bar: 2, baz: 1}); // ok
   s4.foo as number;
   s4.bad; // error
   s4.bar; // error
   s4.baz; // error
-  declare function spread5<Props>(x: {...T, ...Props}): Props;
+  declare function spread5<Props>(x: {...T, ...Props, ...}): Props;
   const s5 = spread5({foo: 3, bar: 2, baz: 1}); // ok
   s5.foo as number;
   s5.bad; // error
   s5.bar; // error
   s5.baz; // error
-  declare function spread6<Props>(x: {hhh: number, ...Props, ...T}): Props;
+  declare function spread6<Props>(x: {hhh: number, ...Props, ...T, ...}): Props;
   const s6 = spread6({foo: 3, bar: 2, baz: 1, hhh: 0}); // ok
   s6.foo as number;
   s6.bad; // error
   s6.bar; // error
   s6.baz; // error
 
-  declare function spread_and_readonly<Props>(x: $ReadOnly<{...Props}>): Props;
+  declare function spread_and_readonly<Props>(x: $ReadOnly<{...Props, ...}>): Props;
   const sr = spread_and_readonly({foo: 1, bar: ''});
   sr.foo as number;
   sr.bar as string;
   sr.bad; // error
 
-  declare var cp: {|bar: number|};
-  declare function optional<P>(x: $ReadOnly<{|cp: P, foo?: string, ...P|}>): P;
+  declare var cp: {bar: number};
+  declare function optional<P>(x: $ReadOnly<{cp: P, foo?: string, ...P}>): P;
   const o = optional({cp, foo: '', bar: 3}); // ok
   o.cp; // error
   o.foo; // error
@@ -138,10 +138,10 @@ function ResolveSpreadsToMultiflowSubtypeFull() {
   f4 as empty; // error: tuple ~> empty
 }
 
-type BaseProps<T> = {|v: T|};
-declare function ResolveUnion<T: React$Key>(x: {|
+type BaseProps<T> = {v: T};
+declare function ResolveUnion<T: React$Key>(x: {
   ...BaseProps<T>,
   foo: string,
-|}): T;
+}): T;
 const resolved_union_result = ResolveUnion({v: 3, foo: ''});
 resolved_union_result as number;

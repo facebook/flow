@@ -8,7 +8,7 @@ var Div = 'div';
 var Bad = 'bad';
 var Str: string = 'str';
 
-const empty_exact: {||} = {...null};
+const empty_exact: {} = {...null};
 
 <Div />; // This is fine
 <Bad />; // This is fine

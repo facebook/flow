@@ -1,10 +1,10 @@
 //@flow
 
-declare var x: ?{a: number, b?: {c: number}};
+declare var x: ?{a: number, b?: {c: number, ...}, ...};
 declare var y: ?{[string]: number};
-declare var z: {d: ?{c: number}};
-declare var w: ?{g: {e: ?number}};
-declare var w2: {g: {e: ?number}};
+declare var z: {d: ?{c: number, ...}, ...};
+declare var w: ?{g: {e: ?number, ...}, ...};
+declare var w2: {g: {e: ?number, ...}, ...};
 
 delete x?.a; // error from writing undefined to number, otherwise ok
 delete x?.b?.c; // error from writing undefined to number, otherwise ok
@@ -15,7 +15,7 @@ delete w?.g.e; // ok
 delete w?.g?.e; // one unnecessary chain
 delete w2?.g?.e; // two unnecessary chains
 
-declare var a: ?{a: ?number};
+declare var a: ?{a: ?number, ...};
 delete a?.a;
 a.a as empty; // don't refine a.a to definitely exist
 

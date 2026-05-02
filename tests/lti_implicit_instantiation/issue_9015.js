@@ -3,7 +3,7 @@
 type ResultSet<Row> = {
   +rowCount: number,
   +rows: Array<Row>,
-};
+ ...};
 
 interface Submittable {
   submit: () => void;

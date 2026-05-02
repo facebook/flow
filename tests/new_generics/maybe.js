@@ -82,7 +82,7 @@ function f<X: number, Y: ?number, Z: ?X>(
   }
 
   // FilterOptionalT
-  declare var a: {x?: X};
+  declare var a: {x?: X, ...};
   var b = {...a};
   b.x as X | void;
   b.x as Y | void; //nope

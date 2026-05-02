@@ -1,6 +1,6 @@
 // @flow
 
-type Foo1 = {foo: {bar: {baz: number}}};
+type Foo1 = {foo: {bar: {baz: number, ...}, ...}, ...};
 declare const bar1: Foo1['foo']['bar'];
 export const baz1 = bar1.baz;
 

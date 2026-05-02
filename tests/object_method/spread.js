@@ -1,7 +1,7 @@
 let x = { m() {} };
 x.m = () => {}; // error: m is read-only
 
-let x2 : {m() : void } = { m() {} };
+let x2 : {m() : void, ... } = { m() {} };
 x2.m = () => {}; // error: m is read-only
 
 let y = {...x};

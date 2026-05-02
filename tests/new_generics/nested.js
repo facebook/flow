@@ -8,7 +8,7 @@ function f<X, Y: X, Z: Y, W>(y: Y, z: X, w: W): X {
   return w; // nope
 }
 
-function g<X, Y: X | number>(a: {y: Y}): {y: Y} {
+function g<X, Y: X | number>(a: {y: Y, ...}): {y: Y, ...} {
   if (typeof a.y !== 'number') {
     return a;
   }

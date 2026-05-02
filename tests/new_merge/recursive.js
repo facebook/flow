@@ -11,4 +11,4 @@ declare export class C {
 declare export var x: {
   p: number;
   q: typeof (x.p);
-}
+ ...}

@@ -7,5 +7,4 @@
 [lints]
 
 [options]
-exact_by_default=false
 include_warnings=true

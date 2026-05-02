@@ -1,12 +1,12 @@
 // @flow
 
-type S = ?{type: 'foo'};
+type S = ?{type: 'foo', ...};
 declare var x: S;
 
 if (x?.type === 'foo') {
   x.type as 'foo';
   x.type as 'foo';
-  x as {type: 'foo'};
+  x as {type: 'foo', ...};
 } else {
   x as null | void;
 }
@@ -16,5 +16,5 @@ if (x?.type !== 'foo') {
 } else {
   x.type as 'foo';
   x.type as 'foo';
-  x as {type: 'foo'};
+  x as {type: 'foo', ...};
 }

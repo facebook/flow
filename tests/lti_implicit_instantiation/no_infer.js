@@ -2,8 +2,8 @@ import * as NoInferExported from './no_infer_exported';
 
 declare function f1<T>(v1: T, v2: T): void;
 declare function f2<T>(v1: T, v2: NoInfer<T>): void;
-declare function f3<T>(v1: T, v2: {f: T}): void;
-declare function f4<T>(v1: T, v2: NoInfer<{f: T}>): void;
+declare function f3<T>(v1: T, v2: {f: T, ...}): void;
+declare function f4<T>(v1: T, v2: NoInfer<{f: T, ...}>): void;
 
 f1('1', 2); // ok
 f2('1', 2); // error: number ~> string

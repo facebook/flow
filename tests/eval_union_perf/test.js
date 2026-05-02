@@ -7,23 +7,23 @@ export type UnionElementTwo = Info<{
     foo: boolean,
 
 
-  }>,
+ ...  }>,
   bar:
-    | {|
+    | {
         type: 'A',
         data: string,
-      |}
-    | {|type: 'B'|}
-    | {|type: 'C'|},
+     }
+    | {type: 'B'}
+    | {type: 'C'},
   baz: $DeepReadOnly<{
 
-  }>,
-}>;
+  ...}>,
+ ...}>;
 
 type Elements = {
   one: UnionElementOne,
   two: UnionElementTwo,
-};
+ ...};
 
 export type NoBar =
   | BarOne
@@ -35,43 +35,43 @@ export type $DeepReadOnly<T> =
   T extends {...} ? {+[K in keyof T]: $DeepReadOnly<T[K]>} : T;
 
 export type Info<
-  T: {+bar: {+type: string}},
+  T: {+bar: {+type: string, ...}, ...},
 > =
-  [+t: T] extends [+t: {bar: infer A}]
+  [+t: T] extends [+t: {bar: infer A, ...}]
   ? {
       bar:
         | BarOne
         | BarTwo
         | BarThree
         | $DeepReadOnly<$Exact<A>>,
-    }
+ ...    }
   : empty;
 
 type Bar<T> = T['bar'];
 
-type BarOne = $DeepReadOnly<{|
+type BarOne = $DeepReadOnly<{
   type: 'one',
-|}>;
+}>;
 
-type BarTwo = $DeepReadOnly<{|
+type BarTwo = $DeepReadOnly<{
   type: 'two',
-|}>;
-type BarThree = $DeepReadOnly<{|
+}>;
+type BarThree = $DeepReadOnly<{
   type: 'three',
-|}>;
-type BarFour = $DeepReadOnly<{|
+}>;
+type BarFour = $DeepReadOnly<{
   type: 'four',
-|}>;
+}>;
 
-type BarFive = $DeepReadOnly<{|
+type BarFive = $DeepReadOnly<{
   type: 'five',
-|}>;
-type BarSix = $DeepReadOnly<{|
+}>;
+type BarSix = $DeepReadOnly<{
   type: 'six',
-|}>;
-type BarSeven = $DeepReadOnly<{|
+}>;
+type BarSeven = $DeepReadOnly<{
   type: 'seven',
-|}>;
+}>;
 
 type BarUnion =
   | BarOne
@@ -83,11 +83,11 @@ type BarUnion =
   | BarSeven
   | $Values<{[K in keyof Elements]: Bar<Elements[K]>}>;
 
-type Config = {|
+type Config = {
   f: (dispatch: (BarUnion) => void) => void,
   g: (dispatch: (BarUnion) => void) => void,
   h: (dispatch: (BarUnion) => void) => void,
-|};
+};
 
 function test<X>(config: Config): Config {
   const {f, g, h} = config;

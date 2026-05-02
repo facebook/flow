@@ -37,11 +37,11 @@ function test3() {
   declare function spreadIt<P2: {...}>(
     Component: Opaque<P2>,
     spec: P2 => mixed
-  ): Opaque<{...P2}>;
+  ): Opaque<{...P2, ...}>;
 
   // The HOCs above are basically convoluted identity functions...
 
-  type Foo = {+foo: string};
+  type Foo = {+foo: string, ...};
   declare var OriginalComponent: Opaque<Foo>;
 
   const IdWrapped = wrapWithId(OriginalComponent);
@@ -51,5 +51,5 @@ function test3() {
     (p) => {},
   );
 
-  Spreaded as Opaque<{}>; // error: {} ~> Foo
+  Spreaded as Opaque<{...}>; // error: {} ~> Foo
 }

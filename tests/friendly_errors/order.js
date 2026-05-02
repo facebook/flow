@@ -12,4 +12,5 @@
 }) as {
   a: boolean,
   c: number,
+  ...
 };

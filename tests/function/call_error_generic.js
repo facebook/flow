@@ -1,6 +1,6 @@
 declare var some: ?{
   x: string;
-}
+ ...}
 
 declare class Set<T> {
   add(x: T): void;

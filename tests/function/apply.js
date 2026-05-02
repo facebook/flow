@@ -39,7 +39,7 @@ test2.apply() as number;
 test2.apply("") as number;
 
 // callable objects
-function test3(x: { (a: string, b: string): void }) {
+function test3(x: { (a: string, b: string): void, ... }) {
   x.apply(x, ['foo', 'bar']); // ok
   x.apply(x, ['foo', 123]); // error, number !~> string
 }

@@ -25,5 +25,5 @@ funWithRestArray('hi', ...arrOf123, ...arrOf123); // No error - ignore the fact 
 // 2. 'bye' ~> number in case the first spread is not empty
 funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
 
-function funWithReadonlyObjectInRestSpread(...args: [{+bar: string }]): void {}
+function funWithReadonlyObjectInRestSpread(...args: [{+bar: string, ... }]): void {}
 funWithReadonlyObjectInRestSpread({ bar: "" });

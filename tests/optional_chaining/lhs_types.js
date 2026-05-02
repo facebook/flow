@@ -1,6 +1,6 @@
 // @flow
 
-type Foo = {foo: number};
+type Foo = {foo: number, ...};
 
 declare var x: Foo;
 declare var mixed: mixed;

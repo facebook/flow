@@ -9,13 +9,13 @@ function Foo(x: string) {}
 }
 
 {
-  function Foo(elem: number, props: { x: string }) {}
+  function Foo(elem: number, props: { x: string, ... }) {}
   // Second arg to jsx function should be props
   <Bar x={123} />; // error: number ~> string
 }
 
 {
-  function Foo(elem: number, props: { x: string }) {}
+  function Foo(elem: number, props: { x: string, ... }) {}
   // Second arg to jsx function is null when there are no attributes
   <Bar />; // error: null ~> object type
 }
@@ -27,7 +27,7 @@ function Foo(x: string) {}
 }
 
 {
-  function Foo(elem: number, props: {key: boolean, ref: number}) {}
+  function Foo(elem: number, props: {key: boolean, ref: number, ...}) {}
   // React ignores certain props, but @jsx shouldn't
   <Bar key="hi" ref="bye" />; // error: string ~> boolean, string ~> number
 }
@@ -39,7 +39,7 @@ function Foo(x: string) {}
 }
 
 {
-  function Foo(elem: number, props: {x: string}) {}
+  function Foo(elem: number, props: {x: string, ...}) {}
   // JSX element missing property should error
   <Bar y="hi" />; // error: missing x
 }
@@ -50,7 +50,7 @@ function Foo(x: string) {}
 }
 
 {
-  function Foo(elem: number, props: {| x: string |}) {}
+  function Foo(elem: number, props: {x: string}) {}
   // Exact prop type without spread should work
   <Bar x="hi" />;
 }
@@ -62,7 +62,7 @@ function Foo(x: string) {}
 }
 
 {
-  function Foo(elem: number, props: {| x: string |}) {}
+  function Foo(elem: number, props: {x: string}) {}
   const props = {x: "hi"};
   // Exact prop type with spread should work
   <Bar {...props} />;

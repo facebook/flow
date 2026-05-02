@@ -1,9 +1,9 @@
 //@flow
 
-function spread<T>(x: T): {...T, ...{||}} {
+function spread<T>(x: T): {...T, ...{}, ...} {
   return null as any;
 }
-declare function spreadExact<T>(x: T): {|...T, ...{||}|};
+declare function spreadExact<T>(x: T): {...T, ...{}};
 let x;
 
 if (true) {
@@ -105,18 +105,18 @@ if (true) {
 }
 
 // We use read only fields to avoid unification
-const union_spread: {+foo: number | string} = spread(union);
+const union_spread: {+foo: number | string, ...} = spread(union);
 
 let optional;
 
 if (true) {
-  optional = {foo: 3} as {foo?: number};
+  optional = {foo: 3} as {foo?: number, ...};
 } else if (true) {
-  optional = {bar: 3} as {bar?: number};
+  optional = {bar: 3} as {bar?: number, ...};
 } else if (true) {
-  optional = {baz: 3} as {baz?: number};
+  optional = {baz: 3} as {baz?: number, ...};
 } else {
-  optional = {qux: 3} as {qux?: number};
+  optional = {qux: 3} as {qux?: number, ...};
 }
 
 const optional_spread = spread(optional);
@@ -138,7 +138,7 @@ let optional2;
 if (true) {
   optional2 = {foo: 3};
 } else {
-  optional2 = {foo: 3} as {foo?: number};
+  optional2 = {foo: 3} as {foo?: number, ...};
 }
 
 const optional2_spread = spread(optional2); // Ok {foo?: number}
@@ -222,8 +222,8 @@ let inexact;
 if (true) {
   inexact = {foo: 3};
 } else {
-  inexact = {foo: 3} as {foo: number};
+  inexact = {foo: 3} as {foo: number, ...};
 }
 
-declare function inexactSpread<T>(x: T): {bar: 3, ...T, ...{||}};
+declare function inexactSpread<T>(x: T): {bar: 3, ...T, ...{}, ...};
 const inexact_spread_err = inexactSpread(inexact);

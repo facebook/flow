@@ -4,7 +4,7 @@ o.q as empty; // error: number ~> empty
 
 var o_get = { get __proto__() { return { q: 1 } } };
 o_get.q as empty; // error: property `q` not found
-o_get.__proto__ as { q: number }; // ok
+o_get.__proto__ as { q: number, ... }; // ok
 
 var o_set = { set __proto__(x: mixed) {} };
 o_set.__proto__ as empty; // error: read from contravariant prop
@@ -15,7 +15,7 @@ o_method.__proto__ as empty; // error: function ~> empty
 var __proto__ = { q: 1 };
 var o_shorthand = { __proto__ };
 o_shorthand.q as empty; // error: property `q` not found
-o_shorthand.__proto__ as { q: number }; // ok
+o_shorthand.__proto__ as { q: number, ... }; // ok
 
 var o_computed = { ["__proto__"]: 0 }; // OK
 o_computed.__proto__ as empty; // error: number ~> empty

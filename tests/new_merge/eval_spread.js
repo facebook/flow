@@ -1,13 +1,13 @@
 // @flow
 
 type O1 = { f: number, g: string, ... };
-type O2 = {| f: number, g: string |};
+type O2 = {f: number, g: string};
 
-type P1 = { ...O1, f: string };
-type P2 = { ...O2, f: string };
+type P1 = { ...O1, f: string, ... };
+type P2 = { ...O2, f: string, ... };
 // $FlowExpectedError[incompatible-exact]
-type P3 = {| ...O1, f: string |};
-type P4 = {| ...O2, f: string |};
+type P3 = {...O1, f: string};
+type P4 = {...O2, f: string};
 
 declare export var p1: P1;
 declare export var p2: P2;

@@ -25,7 +25,7 @@ Cannot cast `x1?.['foo']` to empty because number [1] is incompatible with empty
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:12:16
    12| x1?.['foo'] as empty;
@@ -42,7 +42,7 @@ Cannot cast `x2?.['foo']` to empty because number [1] is incompatible with empty
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:13:16
    13| x2?.['foo'] as empty;
@@ -92,7 +92,7 @@ Cannot cast `y1?.['bar']?.['foo']` to empty because number [1] is incompatible w
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:15:25
    15| y1?.['bar']?.['foo'] as empty;
@@ -139,7 +139,7 @@ Cannot cast `y2?.['bar']?.['foo']` to empty because number [1] is incompatible w
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:16:25
    16| y2?.['bar']?.['foo'] as empty;
@@ -190,7 +190,7 @@ Cannot cast `y1?.['baz']?.['foo']` to empty because null or undefined [1] is inc
 
 References:
    computed_properties.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
    computed_properties.js:17:25
    17| y1?.['baz']?.['foo'] as empty;
@@ -207,7 +207,7 @@ Cannot cast `y1?.['baz']?.['foo']` to empty because number [1] is incompatible w
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:17:25
    17| y1?.['baz']?.['foo'] as empty;
@@ -240,7 +240,7 @@ Cannot cast `y2?.['baz']?.['foo']` to empty because null or undefined [1] is inc
 
 References:
    computed_properties.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
    computed_properties.js:18:25
    18| y2?.['baz']?.['foo'] as empty;
@@ -257,7 +257,7 @@ Cannot cast `y2?.['baz']?.['foo']` to empty because number [1] is incompatible w
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:18:25
    18| y2?.['baz']?.['foo'] as empty;
@@ -292,7 +292,7 @@ Cannot cast `y1?.['bar']['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:20:23
    20| y1?.['bar']['foo'] as empty;
@@ -324,7 +324,7 @@ Cannot cast `y2?.['bar']['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:21:23
    21| y2?.['bar']['foo'] as empty;
@@ -359,7 +359,7 @@ Cannot cast `y1?.['baz']['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:22:23
    22| y1?.['baz']['foo'] as empty;
@@ -376,7 +376,7 @@ Cannot get `y1?.['baz']['foo']` because null or undefined [1] does not have prop
 
 References:
    computed_properties.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
 
 
@@ -405,7 +405,7 @@ Cannot cast `y2?.['baz']['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:23:23
    23| y2?.['baz']['foo'] as empty;
@@ -422,7 +422,7 @@ Cannot get `y2?.['baz']['foo']` because null or undefined [1] does not have prop
 
 References:
    computed_properties.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
 
 
@@ -450,7 +450,7 @@ Cannot cast `y1['bar']?.['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:25:23
    25| y1['bar']?.['foo'] as empty;
@@ -482,7 +482,7 @@ Cannot cast `y2['bar']?.['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:26:23
    26| y2['bar']?.['foo'] as empty;
@@ -529,7 +529,7 @@ Cannot cast `y1['baz']?.['foo']` to empty because null or undefined [1] is incom
 
 References:
    computed_properties.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
    computed_properties.js:27:23
    27| y1['baz']?.['foo'] as empty;
@@ -546,7 +546,7 @@ Cannot cast `y1['baz']?.['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:27:23
    27| y1['baz']?.['foo'] as empty;
@@ -564,7 +564,7 @@ Cannot cast `y2['baz']?.['foo']` to empty because null or undefined [1] is incom
 
 References:
    computed_properties.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
    computed_properties.js:28:23
    28| y2['baz']?.['foo'] as empty;
@@ -581,7 +581,7 @@ Cannot cast `y2['baz']?.['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:28:23
    28| y2['baz']?.['foo'] as empty;
@@ -598,7 +598,7 @@ Cannot cast `y1?.['bar']['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:30:25
    30| (y1?.['bar'])['foo'] as empty;
@@ -629,7 +629,7 @@ Cannot cast `y2?.['bar']['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:31:25
    31| (y2?.['bar'])['foo'] as empty;
@@ -661,7 +661,7 @@ Cannot cast `y1?.['baz']['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:32:25
    32| (y1?.['baz'])['foo'] as empty;
@@ -678,7 +678,7 @@ Cannot get `y1?.['baz']['foo']` because null or undefined [1] does not have prop
 
 References:
    computed_properties.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
 
 
@@ -706,7 +706,7 @@ Cannot cast `y2?.['baz']['foo']` to empty because number [1] is incompatible wit
 
 References:
    computed_properties.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    computed_properties.js:33:25
    33| (y2?.['baz'])['foo'] as empty;
@@ -723,7 +723,7 @@ Cannot get `y2?.['baz']['foo']` because null or undefined [1] does not have prop
 
 References:
    computed_properties.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
 
 
@@ -755,7 +755,7 @@ References:
    9| delete x?.a; // error from writing undefined to number, otherwise ok
       ^^^^^^^^^^^ [1]
    deletion.js:3:21
-   3| declare var x: ?{a: number, b?: {c: number}};
+   3| declare var x: ?{a: number, b?: {c: number, ...}, ...};
                           ^^^^^^ [2]
 
 
@@ -772,7 +772,7 @@ References:
    10| delete x?.b?.c; // error from writing undefined to number, otherwise ok
        ^^^^^^^^^^^^^^ [1]
    deletion.js:3:37
-    3| declare var x: ?{a: number, b?: {c: number}};
+    3| declare var x: ?{a: number, b?: {c: number, ...}, ...};
                                            ^^^^^^ [2]
 
 
@@ -789,7 +789,7 @@ References:
    12| delete z.d?.c; // error from writing undefined to number, otherwise ok
        ^^^^^^^^^^^^^ [1]
    deletion.js:5:25
-    5| declare var z: {d: ?{c: number}};
+    5| declare var z: {d: ?{c: number, ...}, ...};
                                ^^^^^^ [2]
 
 
@@ -863,7 +863,7 @@ Cannot cast `a.a` to empty because null or undefined [1] is incompatible with em
 
 References:
    deletion.js:18:21
-   18| declare var a: ?{a: ?number};
+   18| declare var a: ?{a: ?number, ...};
                            ^^^^^^^ [1]
    deletion.js:20:8
    20| a.a as empty; // don't refine a.a to definitely exist
@@ -880,7 +880,7 @@ Cannot cast `a.a` to empty because number [1] is incompatible with empty [2]. [i
 
 References:
    deletion.js:18:22
-   18| declare var a: ?{a: ?number};
+   18| declare var a: ?{a: ?number, ...};
                             ^^^^^^ [1]
    deletion.js:20:8
    20| a.a as empty; // don't refine a.a to definitely exist
@@ -897,8 +897,8 @@ Cannot get `a.a` because property `a` is missing in null or undefined [1]. [inco
 
 References:
    deletion.js:18:16
-   18| declare var a: ?{a: ?number};
-                      ^^^^^^^^^^^^^ [1]
+   18| declare var a: ?{a: ?number, ...};
+                      ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:23:8
@@ -911,8 +911,8 @@ Cannot assign `42` to `w?.g.e` because property `e` is missing in null or undefi
 
 References:
    deletion.js:6:16
-    6| declare var w: ?{g: {e: ?number}};
-                      ^^^^^^^^^^^^^^^^^^ [1]
+    6| declare var w: ?{g: {e: ?number, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ deletion.js:24:15
@@ -925,8 +925,8 @@ Cannot delete `w?.g.e` because property `e` is missing in null or undefined [1].
 
 References:
    deletion.js:6:16
-    6| declare var w: ?{g: {e: ?number}};
-                      ^^^^^^^^^^^^^^^^^^ [1]
+    6| declare var w: ?{g: {e: ?number, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- function_calls.js:8:1
@@ -1042,10 +1042,10 @@ References:
     7|   of?: number => string,
     8|   oi?: Array<number>,
     9|   i2: Array<Array<number>>,
-   10|   i3: Array<{a: ?number}>,
+   10|   i3: Array<{a: ?number, ...}>,
    11|   f2: number => number => string,
-   12| };
-       ^ [1]
+   12|  ...};
+        ---^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ lhs_types.js:12:1
@@ -1279,8 +1279,8 @@ Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatib
 
 References:
    method_calls.js:15:6
-   15|   b: ?() => ?{c: ?{d: number}},
-            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   15|   b: ?() => ?{c: ?{d: number, ...}, ...},
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    method_calls.js:19:8
    19| var y: empty = a.b?.()?.c?.d;
               ^^^^^ [2]
@@ -1296,8 +1296,8 @@ Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatib
 
 References:
    method_calls.js:15:13
-   15|   b: ?() => ?{c: ?{d: number}},
-                   ^^^^^^^^^^^^^^^^^^ [1]
+   15|   b: ?() => ?{c: ?{d: number, ...}, ...},
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    method_calls.js:19:8
    19| var y: empty = a.b?.()?.c?.d;
               ^^^^^ [2]
@@ -1313,8 +1313,8 @@ Cannot assign `a.b?.()?.c?.d` to `y` because null or undefined [1] is incompatib
 
 References:
    method_calls.js:15:18
-   15|   b: ?() => ?{c: ?{d: number}},
-                        ^^^^^^^^^^^^ [1]
+   15|   b: ?() => ?{c: ?{d: number, ...}, ...},
+                        ^^^^^^^^^^^^^^^^^ [1]
    method_calls.js:19:8
    19| var y: empty = a.b?.()?.c?.d;
               ^^^^^ [2]
@@ -1330,7 +1330,7 @@ Cannot assign `a.b?.()?.c?.d` to `y` because number [1] is incompatible with emp
 
 References:
    method_calls.js:15:23
-   15|   b: ?() => ?{c: ?{d: number}},
+   15|   b: ?() => ?{c: ?{d: number, ...}, ...},
                              ^^^^^^ [1]
    method_calls.js:19:8
    19| var y: empty = a.b?.()?.c?.d;
@@ -1347,8 +1347,8 @@ Cannot assign `a.c?.d?.e` to `x` because null or undefined [1] is incompatible w
 
 References:
    method_calls.js:16:6
-   16|   c: ?{d: ?{e: number}},
-            ^^^^^^^^^^^^^^^^^^ [1]
+   16|   c: ?{d: ?{e: number, ...}, ...},
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    method_calls.js:20:8
    20| var x: empty = a.c?.d?.e;
               ^^^^^ [2]
@@ -1364,8 +1364,8 @@ Cannot assign `a.c?.d?.e` to `x` because null or undefined [1] is incompatible w
 
 References:
    method_calls.js:16:11
-   16|   c: ?{d: ?{e: number}},
-                 ^^^^^^^^^^^^ [1]
+   16|   c: ?{d: ?{e: number, ...}, ...},
+                 ^^^^^^^^^^^^^^^^^ [1]
    method_calls.js:20:8
    20| var x: empty = a.c?.d?.e;
               ^^^^^ [2]
@@ -1381,7 +1381,7 @@ Cannot assign `a.c?.d?.e` to `x` because number [1] is incompatible with empty [
 
 References:
    method_calls.js:16:16
-   16|   c: ?{d: ?{e: number}},
+   16|   c: ?{d: ?{e: number, ...}, ...},
                       ^^^^^^ [1]
    method_calls.js:20:8
    20| var x: empty = a.c?.d?.e;
@@ -1398,8 +1398,8 @@ Cannot assign `a.d?.e.f().g` to `w` because null or undefined [1] is incompatibl
 
 References:
    method_calls.js:17:6
-   17|   d: ?{e: {f: () => {g: number}}},
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   17|   d: ?{e: {f: () => {g: number, ...}, ...}, ...},
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    method_calls.js:21:8
    21| var w: empty = a.d?.e.f().g;
               ^^^^^ [2]
@@ -1415,7 +1415,7 @@ Cannot assign `a.d?.e.f().g` to `w` because number [1] is incompatible with empt
 
 References:
    method_calls.js:17:25
-   17|   d: ?{e: {f: () => {g: number}}},
+   17|   d: ?{e: {f: () => {g: number, ...}, ...}, ...},
                                ^^^^^^ [1]
    method_calls.js:21:8
    21| var w: empty = a.d?.e.f().g;
@@ -1433,7 +1433,7 @@ Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because undefined
 
 References:
    method_calls.js:23:27
-   23| declare var b: {onClick?: null | (() => number)};
+   23| declare var b: {onClick?: null | (() => number), ...};
                                  ^^^^^^^^^^^^^^^^^^^^^ [1]
    method_calls.js:24:8
    24| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
@@ -1451,7 +1451,7 @@ Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because number [1
 
 References:
    method_calls.js:23:41
-   23| declare var b: {onClick?: null | (() => number)};
+   23| declare var b: {onClick?: null | (() => number), ...};
                                                ^^^^^^ [1]
    method_calls.js:24:8
    24| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
@@ -1700,8 +1700,8 @@ Cannot get `a.b.c.d` because property `d` is missing in undefined [1]. [incompat
 
 References:
    refinements.js:10:12
-   10|   b?: {c?: {d: number}, e: number, f: ?() => number, g: ?() => number},
-                  ^^^^^^^^^^^ [1]
+   10|   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
+                  ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:18:3
@@ -1773,9 +1773,9 @@ Cannot call `a.b?.f` because null or undefined [1] is not a function. [not-a-fun
               ^
 
 References:
-   refinements.js:10:39
-   10|   b?: {c?: {d: number}, e: number, f: ?() => number, g: ?() => number},
-                                             ^^^^^^^^^^^^^ [1]
+   refinements.js:10:44
+   10|   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
+                                                  ^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:32:3
@@ -1858,19 +1858,19 @@ Error --------------------------------------------------------------------------
 Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2]. [incompatible-type]
 
    refinements.js:50:3
-   50|   a as {}; // should fail, sanity check
+   50|   a as {...}; // should fail, sanity check
          ^
 
 References:
    refinements.js:9:16
                       v-
     9| declare var a: ?{
-   10|   b?: {c?: {d: number}, e: number, f: ?() => number, g: ?() => number},
-   11| };
-       ^ [1]
+   10|   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
+   11|  ...};
+        ---^ [1]
    refinements.js:50:8
-   50|   a as {}; // should fail, sanity check
-              ^^ [2]
+   50|   a as {...}; // should fail, sanity check
+              ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:51:3
@@ -1885,9 +1885,9 @@ References:
    refinements.js:9:17
                        v
     9| declare var a: ?{
-   10|   b?: {c?: {d: number}, e: number, f: ?() => number, g: ?() => number},
-   11| };
-       ^ [1]
+   10|   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
+   11|  ...};
+        ---^ [1]
    refinements.js:51:8
    51|   a as null | void; // should fail, sanity check
               ^^^^^^^^^^^ [2]
@@ -1935,8 +1935,8 @@ Cannot get `a.b.c.d` because property `d` is missing in undefined [1]. [incompat
 
 References:
    refinements.js:10:12
-   10|   b?: {c?: {d: number}, e: number, f: ?() => number, g: ?() => number},
-                  ^^^^^^^^^^^ [1]
+   10|   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
+                  ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:69:3
@@ -2008,9 +2008,9 @@ Cannot call `a.b?.f` because null or undefined [1] is not a function. [not-a-fun
               ^
 
 References:
-   refinements.js:10:39
-   10|   b?: {c?: {d: number}, e: number, f: ?() => number, g: ?() => number},
-                                             ^^^^^^^^^^^^^ [1]
+   refinements.js:10:44
+   10|   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
+                                                  ^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:83:3
@@ -2093,19 +2093,19 @@ Error --------------------------------------------------------------------------
 Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2]. [incompatible-type]
 
    refinements.js:101:3
-   101|   a as {}; // should fail, sanity check
+   101|   a as {...}; // should fail, sanity check
           ^
 
 References:
    refinements.js:9:16
                        v-
      9| declare var a: ?{
-    10|   b?: {c?: {d: number}, e: number, f: ?() => number, g: ?() => number},
-    11| };
-        ^ [1]
+    10|   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
+    11|  ...};
+         ---^ [1]
    refinements.js:101:8
-   101|   a as {}; // should fail, sanity check
-               ^^ [2]
+   101|   a as {...}; // should fail, sanity check
+               ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:102:3
@@ -2120,9 +2120,9 @@ References:
    refinements.js:9:17
                         v
      9| declare var a: ?{
-    10|   b?: {c?: {d: number}, e: number, f: ?() => number, g: ?() => number},
-    11| };
-        ^ [1]
+    10|   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
+    11|  ...};
+         ---^ [1]
    refinements.js:102:8
    102|   a as null | void; // should fail, sanity check
                ^^^^^^^^^^^ [2]
@@ -2139,7 +2139,7 @@ Cannot cast `b.x` to boolean literal `false` because boolean [1] is incompatible
 
 References:
    refinements.js:105:21
-   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
                             ^^^^^^^ [1]
    refinements.js:110:10
    110|   b.x as false; // nope
@@ -2156,8 +2156,8 @@ Cannot get `b.x` because property `x` is missing in null or undefined [1]. [inco
 
 References:
    refinements.js:105:16
-   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- refinements.js:113:10
@@ -2170,8 +2170,8 @@ Cannot get `b?.w.u` because property `u` is missing in undefined [1]. [incompati
 
 References:
    refinements.js:105:53
-   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
-                                                            ^^^^^^^^^^^^^^^^^ [1]
+   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
+                                                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- refinements.js:119:14
@@ -2184,8 +2184,8 @@ Cannot get `b.w.u` because property `u` is missing in undefined [1]. [incompatib
 
 References:
    refinements.js:105:53
-   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
-                                                            ^^^^^^^^^^^^^^^^^ [1]
+   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
+                                                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:127:5
@@ -2198,8 +2198,8 @@ Cannot get `b.z` because property `z` is missing in null or undefined [1]. [inco
 
 References:
    refinements.js:105:16
-   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:127:3
@@ -2211,9 +2211,9 @@ Cannot cast `b.z.value` to string because number [1] is incompatible with string
           ^^^^^^^^^
 
 References:
-   refinements.js:104:32
-   104| type Z = {|a: 'hello ', value: number|} | {|b: 'goodbye', value: string|};
-                                       ^^^^^^ [1]
+   refinements.js:104:31
+   104| type Z = {a: 'hello ', value: number} | {b: 'goodbye', value: string};
+                                      ^^^^^^ [1]
    refinements.js:127:16
    127|   b.z.value as string; // error
                        ^^^^^^ [2]
@@ -2230,7 +2230,7 @@ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant 
 
 References:
    refinements.js:105:34
-   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
                                          ^^^^^^^ [1]
 
 
@@ -2245,7 +2245,7 @@ Cannot cast `b.y` to boolean literal `false` because boolean [1] is incompatible
 
 References:
    refinements.js:105:34
-   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
                                          ^^^^^^^ [1]
    refinements.js:134:10
    134|   b.y as false; // nope
@@ -2263,7 +2263,7 @@ Cannot cast `b.y` to boolean literal `false` because undefined [1] is incompatib
 
 References:
    refinements.js:105:34
-   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
+   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
                                          ^^^^^^^ [1]
    refinements.js:134:10
    134|   b.y as false; // nope
@@ -2280,8 +2280,8 @@ Cannot get `b.y` because property `y` is missing in null or undefined [1]. [inco
 
 References:
    refinements.js:105:16
-   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number}};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   105| declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:141:8
@@ -2289,13 +2289,13 @@ Error --------------------------------------------------------------------------
 Cannot get `c[1][0]` because null or undefined [1] does not have properties. [incompatible-use]
 
    refinements.js:141:8
-   141|   c[1][0] as {}; // no
+   141|   c[1][0] as {...}; // no
                ^
 
 References:
    refinements.js:137:22
-   137| declare var c: Array<?Array<{a: number, b: {c: {d: string}}}>>;
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   137| declare var c: Array<?Array<{a: number, b: {c: {d: string, ...}, ...}, ...}>>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:147:5
@@ -2308,8 +2308,8 @@ Cannot call `d.a` because undefined [1] is not a function. [not-a-function]
 
 References:
    refinements.js:145:22
-   145| declare var d: ?{a?: () => {b?: {c: number}}, d: number};
-                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   145| declare var d: ?{a?: () => {b?: {c: number, ...}, ...}, d: number, ...};
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:147:5
@@ -2322,8 +2322,8 @@ Cannot call `d.a` because property `a` is missing in null or undefined [1]. [inc
 
 References:
    refinements.js:145:16
-   145| declare var d: ?{a?: () => {b?: {c: number}}, d: number};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   145| declare var d: ?{a?: () => {b?: {c: number, ...}, ...}, d: number, ...};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- refinements.js:147:11
@@ -2336,8 +2336,8 @@ Cannot get `d.a().b.c` because property `c` is missing in undefined [1]. [incomp
 
 References:
    refinements.js:145:33
-   145| declare var d: ?{a?: () => {b?: {c: number}}, d: number};
-                                        ^^^^^^^^^^^ [1]
+   145| declare var d: ?{a?: () => {b?: {c: number, ...}, ...}, d: number, ...};
+                                        ^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- refinements.js:153:18
@@ -2351,7 +2351,7 @@ undefined [2]? [sketchy-null-string]
 
 References:
    refinements.js:150:24
-   150| declare var a11: ?({a: string} | {});
+   150| declare var a11: ?({a: string, ...} | {...});
                                ^^^^^^ [1]
 
 
@@ -2374,7 +2374,7 @@ Cannot assign `a11?.a || b11?.a` to `x11` because string [1] is incompatible wit
 
 References:
    refinements.js:150:24
-   150| declare var a11: ?({a: string} | {});
+   150| declare var a11: ?({a: string, ...} | {...});
                                ^^^^^^ [1]
    refinements.js:153:10
    153| var x11: empty = a11?.a || b11?.a;
@@ -2407,8 +2407,8 @@ Cannot assign `a11?.a || b11?.a` to `x11` because null or undefined [1] is incom
 
 References:
    refinements.js:151:18
-   151| declare var b11: ?{};
-                         ^^^ [1]
+   151| declare var b11: ?{...};
+                         ^^^^^^ [1]
    refinements.js:153:10
    153| var x11: empty = a11?.a || b11?.a;
                  ^^^^^ [2]
@@ -2424,8 +2424,8 @@ Cannot get `b11?.a` because property `a` is missing in object type [1]. [prop-mi
 
 References:
    refinements.js:151:19
-   151| declare var b11: ?{};
-                          ^^ [1]
+   151| declare var b11: ?{...};
+                          ^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements2.js:9:3
@@ -2455,7 +2455,7 @@ Cannot cast `t.a` to number because null [1] is incompatible with number [2]. [i
 
 References:
    refinements2.js:3:14
-    3| type T = {a: null | number};
+    3| type T = {a: null | number, ...};
                     ^^^^ [1]
    refinements2.js:10:10
    10|   t.a as number; // no for two reasons
@@ -2503,7 +2503,7 @@ Cannot cast `t.a` to number because null [1] is incompatible with number [2]. [i
 
 References:
    refinements2.js:3:14
-    3| type T = {a: null | number};
+    3| type T = {a: null | number, ...};
                     ^^^^ [1]
    refinements2.js:14:10
    14|   t.a as number; // no for two reasons
@@ -2551,7 +2551,7 @@ Cannot cast `s.a` to union type because number [1] is incompatible with union ty
 
 References:
    refinements2.js:20:15
-   20| type S = {a: ?number};
+   20| type S = {a: ?number, ...};
                      ^^^^^^ [1]
    refinements2.js:24:10
    24|   s.a as null | void; // no for two reasons
@@ -2599,7 +2599,7 @@ Cannot cast `s.a` to union type because number [1] is incompatible with union ty
 
 References:
    refinements2.js:20:15
-   20| type S = {a: ?number};
+   20| type S = {a: ?number, ...};
                      ^^^^^^ [1]
    refinements2.js:34:10
    34|   s.a as null | void; // no for two reasons
@@ -2647,7 +2647,7 @@ Cannot cast `s.a` to union type because number [1] is incompatible with union ty
 
 References:
    refinements2.js:20:15
-   20| type S = {a: ?number};
+   20| type S = {a: ?number, ...};
                      ^^^^^^ [1]
    refinements2.js:38:10
    38|   s.a as null | void; // no for two reasons
@@ -2678,7 +2678,7 @@ Cannot cast `s.a` to number because null or undefined [1] is incompatible with n
 
 References:
    refinements2.js:20:14
-   20| type S = {a: ?number};
+   20| type S = {a: ?number, ...};
                     ^^^^^^^ [1]
    refinements2.js:41:10
    41|   s.a as number; // no: s.a can be null
@@ -2712,7 +2712,7 @@ Cannot cast `s.a` to union type because number [1] is incompatible with union ty
 
 References:
    refinements2.js:20:15
-   20| type S = {a: ?number};
+   20| type S = {a: ?number, ...};
                      ^^^^^^ [1]
    refinements2.js:46:10
    46|   s.a as null | void; // no for two reasons
@@ -2774,8 +2774,8 @@ Cannot get `a.b` because property `b` is missing in null or undefined [1]. [inco
 
 References:
    refinements2.js:63:16
-   63| declare var a: ?{b: number | string};
-                      ^^^^^^^^^^^^^^^^^^^^^ [1]
+   63| declare var a: ?{b: number | string, ...};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:69:3
@@ -2788,8 +2788,8 @@ Cannot cast `a` to union type because object type [1] is incompatible with union
 
 References:
    refinements2.js:63:17
-   63| declare var a: ?{b: number | string};
-                       ^^^^^^^^^^^^^^^^^^^^ [1]
+   63| declare var a: ?{b: number | string, ...};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refinements2.js:69:8
    69|   a as null | void; // nope
               ^^^^^^^^^^^ [2]
@@ -2805,8 +2805,8 @@ Cannot get `b.a` because property `a` is missing in null or undefined [1]. [inco
 
 References:
    refinements2.js:72:16
-   72| declare var b: ?{a?: number};
-                      ^^^^^^^^^^^^^ [1]
+   72| declare var b: ?{a?: number, ...};
+                      ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:75:3
@@ -2819,8 +2819,8 @@ Cannot cast `b` to union type because object type [1] is incompatible with union
 
 References:
    refinements2.js:72:17
-   72| declare var b: ?{a?: number};
-                       ^^^^^^^^^^^^ [1]
+   72| declare var b: ?{a?: number, ...};
+                       ^^^^^^^^^^^^^^^^^ [1]
    refinements2.js:75:8
    75|   b as null | void; // nope
               ^^^^^^^^^^^ [2]
@@ -2836,8 +2836,8 @@ Cannot get `b.a` because property `a` is missing in null or undefined [1]. [inco
 
 References:
    refinements2.js:72:16
-   72| declare var b: ?{a?: number};
-                      ^^^^^^^^^^^^^ [1]
+   72| declare var b: ?{a?: number, ...};
+                      ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:86:3
@@ -2850,8 +2850,8 @@ Cannot cast `b` to union type because object type [1] is incompatible with union
 
 References:
    refinements2.js:72:17
-   72| declare var b: ?{a?: number};
-                       ^^^^^^^^^^^^ [1]
+   72| declare var b: ?{a?: number, ...};
+                       ^^^^^^^^^^^^^^^^^ [1]
    refinements2.js:86:8
    86|   b as null | void; // nope
               ^^^^^^^^^^^ [2]
@@ -2867,8 +2867,8 @@ Cannot get `c.d` because property `d` is missing in null or undefined [1]. [inco
 
 References:
    refinements2.js:89:16
-   89| declare var c: ?{d?: Array<number>};
-                      ^^^^^^^^^^^^^^^^^^^^ [1]
+   89| declare var c: ?{d?: Array<number>, ...};
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:95:3
@@ -2881,8 +2881,8 @@ Cannot cast `c` to union type because object type [1] is incompatible with union
 
 References:
    refinements2.js:89:17
-   89| declare var c: ?{d?: Array<number>};
-                       ^^^^^^^^^^^^^^^^^^^ [1]
+   89| declare var c: ?{d?: Array<number>, ...};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refinements2.js:95:8
    95|   c as null | void; //nope
               ^^^^^^^^^^^ [2]
@@ -2898,7 +2898,7 @@ Cannot cast `b1.a` to number because undefined [1] is incompatible with number [
 
 References:
    refinements2.js:99:23
-    99| declare var b1: ?{a?: number};
+    99| declare var b1: ?{a?: number, ...};
                               ^^^^^^ [1]
    refinements2.js:102:11
    102|   b1.a as number; // b1.a may not exist and may not be number
@@ -2932,7 +2932,7 @@ Cannot cast `x1?.foo` to empty because number [1] is incompatible with empty [2]
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:12:12
    12| x1?.foo as empty;
@@ -2949,7 +2949,7 @@ Cannot cast `x2?.foo` to empty because number [1] is incompatible with empty [2]
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:13:12
    13| x2?.foo as empty;
@@ -2998,7 +2998,7 @@ Cannot cast `y1?.bar?.foo` to empty because number [1] is incompatible with empt
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:15:17
    15| y1?.bar?.foo as empty;
@@ -3045,7 +3045,7 @@ Cannot cast `y2?.bar?.foo` to empty because number [1] is incompatible with empt
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:16:17
    16| y2?.bar?.foo as empty;
@@ -3094,7 +3094,7 @@ Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatibl
 
 References:
    static_members.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
    static_members.js:17:17
    17| y1?.baz?.foo as empty;
@@ -3111,7 +3111,7 @@ Cannot cast `y1?.baz?.foo` to empty because number [1] is incompatible with empt
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:17:17
    17| y1?.baz?.foo as empty;
@@ -3143,7 +3143,7 @@ Cannot cast `y2?.baz?.foo` to empty because null or undefined [1] is incompatibl
 
 References:
    static_members.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
    static_members.js:18:17
    18| y2?.baz?.foo as empty;
@@ -3160,7 +3160,7 @@ Cannot cast `y2?.baz?.foo` to empty because number [1] is incompatible with empt
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:18:17
    18| y2?.baz?.foo as empty;
@@ -3194,7 +3194,7 @@ Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:20:16
    20| y1?.bar.foo as empty;
@@ -3226,7 +3226,7 @@ Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:21:16
    21| y2?.bar.foo as empty;
@@ -3260,7 +3260,7 @@ Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:22:16
    22| y1?.baz.foo as empty;
@@ -3277,7 +3277,7 @@ Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined 
 
 References:
    static_members.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
 
 
@@ -3306,7 +3306,7 @@ Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:23:16
    23| y2?.baz.foo as empty;
@@ -3323,7 +3323,7 @@ Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined 
 
 References:
    static_members.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
 
 
@@ -3351,7 +3351,7 @@ Cannot cast `y1.bar?.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:25:16
    25| y1.bar?.foo as empty;
@@ -3383,7 +3383,7 @@ Cannot cast `y2.bar?.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:26:16
    26| y2.bar?.foo as empty;
@@ -3429,7 +3429,7 @@ Cannot cast `y1.baz?.foo` to empty because null or undefined [1] is incompatible
 
 References:
    static_members.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
    static_members.js:27:16
    27| y1.baz?.foo as empty;
@@ -3446,7 +3446,7 @@ Cannot cast `y1.baz?.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:27:16
    27| y1.baz?.foo as empty;
@@ -3463,7 +3463,7 @@ Cannot cast `y2.baz?.foo` to empty because null or undefined [1] is incompatible
 
 References:
    static_members.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
    static_members.js:28:16
    28| y2.baz?.foo as empty;
@@ -3480,7 +3480,7 @@ Cannot cast `y2.baz?.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:28:16
    28| y2.baz?.foo as empty;
@@ -3497,7 +3497,7 @@ Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:30:18
    30| (y1?.bar).foo as empty;
@@ -3528,7 +3528,7 @@ Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:31:18
    31| (y2?.bar).foo as empty;
@@ -3560,7 +3560,7 @@ Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:32:18
    32| (y1?.baz).foo as empty;
@@ -3577,7 +3577,7 @@ Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined 
 
 References:
    static_members.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
 
 
@@ -3605,7 +3605,7 @@ Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty
 
 References:
    static_members.js:3:16
-    3| type X = {foo: number};
+    3| type X = {foo: number, ...};
                       ^^^^^^ [1]
    static_members.js:33:18
    33| (y2?.baz).foo as empty;
@@ -3622,7 +3622,7 @@ Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined 
 
 References:
    static_members.js:4:24
-    4| type Y = {bar: X, baz: ?X};
+    4| type Y = {bar: X, baz: ?X, ...};
                               ^^ [1]
 
 

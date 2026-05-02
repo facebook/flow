@@ -328,7 +328,7 @@ References:
    44|   x.apply(x, ['foo', 123]); // error, number !~> string
                             ^^^ [1]
    apply.js:42:36
-   42| function test3(x: { (a: string, b: string): void }) {
+   42| function test3(x: { (a: string, b: string): void, ... }) {
                                           ^^^^^^ [2]
 
 
@@ -356,7 +356,7 @@ Cannot call `y` with `123` bound to `b` because number [1] is incompatible with 
 
 References:
    bind.js:9:32
-    9|   function(x: { (a: string, b: string): void }) {
+    9|   function(x: { (a: string, b: string): void, ... }) {
                                       ^^^^^^ [2]
 
 
@@ -370,8 +370,8 @@ Cannot call `x.bind` because property `bind` is missing in object type [1]. [pro
 
 References:
    bind.js:16:15
-   16|   function(x: { a: string }) {
-                     ^^^^^^^^^^^^^ [1]
+   16|   function(x: { a: string, ... }) {
+                     ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- bind.js:23:12
@@ -384,7 +384,7 @@ Cannot call `x.bind` with `123` bound to `a` because number [1] is incompatible 
 
 References:
    bind.js:21:54
-   21|   function(x: {(a: string, b: string): void, bind(a: string): void}) {
+   21|   function(x: {(a: string, b: string): void, bind(a: string): void, ...}) {
                                                             ^^^^^^ [2]
 
 
@@ -550,7 +550,7 @@ References:
    38|   x.call(x, 'foo', 123); // error, number !~> string
                           ^^^ [1]
    call.js:36:36
-   36| function test3(x: { (a: string, b: string): void }) {
+   36| function test3(x: { (a: string, b: string): void, ... }) {
                                           ^^^^^^ [2]
 
 
@@ -565,7 +565,7 @@ string literal `bar` [2]. [incompatible-type]
 
 References:
    call.js:44:24
-   44|     function f(y: { x: "bar" }): void {}
+   44|     function f(y: { x: "bar", ... }): void {}
                               ^^^^^ [2]
 
 
@@ -580,7 +580,7 @@ number literal `123` [2]. [incompatible-type]
 
 References:
    call.js:50:24
-   50|     function f(y: { x: 123 }): void {}
+   50|     function f(y: { x: 123, ... }): void {}
                               ^^^ [2]
 
 
@@ -595,7 +595,7 @@ with boolean literal `false` [2]. [incompatible-type]
 
 References:
    call.js:56:24
-   56|     function f(y: { x: false }): void {}
+   56|     function f(y: { x: false, ... }): void {}
                               ^^^^^ [2]
 
 
@@ -649,11 +649,11 @@ type [2]. [incompatible-type]
 
 References:
    call_error_generic2.js:3:29
-   3| function bar2(fragmentRef?: {}) {
-                                  ^^ [1]
+   3| function bar2(fragmentRef?: {...}) {
+                                  ^^^^^ [1]
    call_error_generic2.js:1:30
-   1| declare function bar1<TKey: ?{+$data?: mixed}>(key: TKey): void;
-                                   ^^^^^^^^^^^^^^^^ [2]
+   1| declare function bar1<TKey: ?{+$data?: mixed, ...}>(key: TKey): void;
+                                   ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- function.js:23:3

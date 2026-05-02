@@ -5,8 +5,8 @@ const React = require('react');
 // Callable objects are valid react components with a void instance type.
 
 type ObjectComponent = {
-  (props: {| foo?: number, bar: number |}): React.Node,
-};
+  (props: {foo?: number, bar: number}): React.Node,
+ ...};
 
 declare var Component: ObjectComponent;
 

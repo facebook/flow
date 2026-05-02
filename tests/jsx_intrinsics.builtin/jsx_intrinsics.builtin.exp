@@ -12,10 +12,10 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    main.js:3:7
-    3| class CustomComponent extends React.Component<{prop: string}, void> {}
+    3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
              ^^^^^^^^^^^^^^^ [2]
    main.js:4:7
-    4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
+    4| class CustomComponentNope extends React.Component<{prop: string, ...}, void> {}
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -34,10 +34,10 @@ References:
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                                                            ^ [1]
    main.js:4:7
-     4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
+     4| class CustomComponentNope extends React.Component<{prop: string, ...}, void> {}
               ^^^^^^^^^^^^^^^^^^^ [2]
    main.js:3:7
-     3| class CustomComponent extends React.Component<{prop: string}, void> {}
+     3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
               ^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:108:13
    108|     | ((T | null) => mixed)
@@ -59,10 +59,10 @@ References:
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                                                            ^ [1]
    main.js:4:7
-     4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
+     4| class CustomComponentNope extends React.Component<{prop: string, ...}, void> {}
               ^^^^^^^^^^^^^^^^^^^ [2]
    main.js:3:7
-     3| class CustomComponent extends React.Component<{prop: string}, void> {}
+     3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
               ^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:107:23
    107|     | { -current: T | null, ... }
@@ -86,11 +86,11 @@ References:
    968|     declare class Component<Props, State = void> {
                                     ^^^^^ [2]
    main.js:10:59
-    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
-                                                                  ^^^^^^^^^^^^^^^ [3]
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string, ...}, void>>> =
+                                                                  ^^^^^^^^^^^^^^^^^^^^ [3]
    main.js:3:47
-     3| class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                      ^^^^^^^^^^^^^^ [4]
+     3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
+                                                      ^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
@@ -110,11 +110,11 @@ References:
    968|     declare class Component<Props, State = void> {
                                     ^^^^^ [2]
    main.js:3:47
-     3| class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                      ^^^^^^^^^^^^^^ [3]
+     3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
+                                                      ^^^^^^^^^^^^^^^^^^^ [3]
    main.js:10:59
-    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
-                                                                  ^^^^^^^^^^^^^^^ [4]
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string, ...}, void>>> =
+                                                                  ^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
@@ -131,11 +131,11 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                                                           ^ [1]
    main.js:3:7
-    3| class CustomComponent extends React.Component<{prop: string}, void> {}
+    3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
              ^^^^^^^^^^^^^^^ [2]
    main.js:10:37
-   10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string, ...}, void>>> =
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
@@ -153,10 +153,10 @@ References:
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                                                            ^ [1]
    main.js:10:43
-    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string, ...}, void>>> =
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    main.js:3:7
-     3| class CustomComponent extends React.Component<{prop: string}, void> {}
+     3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
               ^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:108:13
    108|     | ((T | null) => mixed)
@@ -178,10 +178,10 @@ References:
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                                                            ^ [1]
    main.js:10:43
-    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string, ...}, void>>> =
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    main.js:3:7
-     3| class CustomComponent extends React.Component<{prop: string}, void> {}
+     3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
               ^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:107:23
    107|     | { -current: T | null, ... }

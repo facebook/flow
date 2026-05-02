@@ -27,7 +27,7 @@ type arguments or cast the expression to your expected type. [underconstrained-i
 
 References:
    contextual_jsx.js:4:20
-   4| function Component<T>(props: {foo?: T}): React.Node { return null; }
+   4| function Component<T>(props: {foo?: T, ...}): React.Node { return null; }
                          ^ [1]
    contextual_jsx.js:6:9
    6| let x = <Component />; // Error
@@ -45,7 +45,7 @@ Cannot create `ComponentWithBound` element because in type argument `T`: boolean
 
 References:
    contextual_jsx.js:17:32
-   17| function ComponentWithBound<T: number>(pprops: {a:T}): React.Node {}
+   17| function ComponentWithBound<T: number>(pprops: {a:T, ...}): React.Node {}
                                       ^^^^^^ [2]
 
 
@@ -248,7 +248,7 @@ Cannot cast `Spreaded` to `Opaque` because in type argument `T` [1]: property `f
 exists in object type [3]. [incompatible-type]
 
    typeapp_expansion.js:54:3
-   54|   Spreaded as Opaque<{}>; // error: {} ~> Foo
+   54|   Spreaded as Opaque<{...}>; // error: {} ~> Foo
          ^^^^^^^^
 
 References:
@@ -256,11 +256,11 @@ References:
    31|   declare opaque type Opaque<-T>;
                                      ^ [1]
    typeapp_expansion.js:54:22
-   54|   Spreaded as Opaque<{}>; // error: {} ~> Foo
-                            ^^ [2]
+   54|   Spreaded as Opaque<{...}>; // error: {} ~> Foo
+                            ^^^^^ [2]
    typeapp_expansion.js:40:13
-   40|   ): Opaque<{...P2}>;
-                   ^^^^^^^ [3]
+   40|   ): Opaque<{...P2, ...}>;
+                   ^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------ underconstrained_class_constructor.js:5:5
@@ -382,7 +382,7 @@ explicit type arguments or cast the expression to your expected type. [undercons
 
 References:
    underconstrained_react.js:5:22
-   5| class PolyReactClass<T> extends React.Component<{}> {}
+   5| class PolyReactClass<T> extends React.Component<{...}> {}
                            ^ [1]
    underconstrained_react.js:7:1
    7| <PolyReactClass />;
@@ -401,7 +401,7 @@ element [2]. Either add explicit type arguments or cast the expression to your e
 
 References:
    underconstrained_react.js:9:32
-    9| function PolyFunctionComponent<T>(props: {foo: ({x: T} => mixed)}): React.Node { return null }
+    9| function PolyFunctionComponent<T>(props: {foo: ({x: T, ...} => mixed), ...}): React.Node { return null }
                                       ^ [1]
    underconstrained_react.js:11:1
    11| <PolyFunctionComponent foo={() => {}}/>;
@@ -420,7 +420,7 @@ Either add explicit type arguments or cast the expression to your expected type.
 
 References:
    upper_non_t.js:10:44
-   10| declare function ReposLowerTRegressionTest<T>(x: {o?: T}): T;
+   10| declare function ReposLowerTRegressionTest<T>(x: {o?: T, ...}): T;
                                                   ^ [1]
    upper_non_t.js:11:1
    11| ReposLowerTRegressionTest({}); // Error: T under constrained.

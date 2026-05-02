@@ -6,7 +6,7 @@ type RecordFactory<T> = Class<RecordInstance<T>>;
 
 declare class BaseStore<TState> { getState(): TState; }
 
-declare var State: RecordFactory<{}>;
+declare var State: RecordFactory<{...}>;
 
 class Store extends BaseStore<State> {}
 

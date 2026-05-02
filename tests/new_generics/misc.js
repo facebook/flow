@@ -36,7 +36,7 @@ function c<S: string, X: {[string]: unknown}, Y: Array<number>>(
 }
 
 // MatchingPropT
-function e<X: {a: 'T'} | {a: 'S'}>(x: X) {
+function e<X: {a: 'T', ...} | {a: 'S', ...}>(x: X) {
   if (x.a === 'T') {
   }
 }
@@ -59,7 +59,7 @@ function gn<TType>(jsEnum: {[TType]: string, ...}) {
 
 // KeysT
 function gv<
-  TFormData: {},
+  TFormData: {...},
   TValidators: {[K in keyof TFormData]: number},
 >(
   data: TFormData,
@@ -74,7 +74,7 @@ function gv<
 }
 
 // More KeysT
-function kt<TKey: keyof {a: 42}>(fieldName: TKey): void {
+function kt<TKey: keyof {a: 42, ...}>(fieldName: TKey): void {
   if (fieldName) {
     return;
   }
@@ -123,8 +123,8 @@ function ObjectFlip<TK: ObjectKey, TV: ?ObjectKey>(
 
 // Type Destructor
 type LLETT =
-  | {response: {account: {activities: number}}}
-  | {response: {account: {}}};
+  | {response: {account: {activities: number, ...}, ...}, ...}
+  | {response: {account: {...}, ...}, ...};
 
 type LLETR = LLETT['response'];
 const elementType = <T: LLETR>(data: T): T['account'] =>
@@ -133,7 +133,7 @@ const elementType = <T: LLETR>(data: T): T['account'] =>
 const directAccount = <T: LLETR>(data: T, otherData: LLETR): Readonly<T> =>
   otherData;
 
-type t = {a: number} | {v: string};
+type t = {a: number, ...} | {v: string, ...};
 
 class C<TConfig: t> {
   _config: TConfig;
