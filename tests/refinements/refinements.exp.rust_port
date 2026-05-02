@@ -407,9 +407,9 @@ Cannot get `x.result` because property `result` is missing in object type [1]. [
                     ^^^^^^
 
 References:
-   bool.js:33:48
-   33|   function(x: { done: true, result: string } | { done: false }) {
-                                                      ^^^^^^^^^^^^^^^ [1]
+   bool.js:33:53
+   33|   function(x: { done: true, result: string, ... } | { done: false, ... }) {
+                                                           ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:42:14
@@ -449,9 +449,9 @@ Cannot get `x.result` because property `result` is missing in object type [1]. [
                     ^^^^^^
 
 References:
-   bool.js:40:48
-   40|   function(x: { done: true, result: string } | { done: false }) {
-                                                      ^^^^^^^^^^^^^^^ [1]
+   bool.js:40:53
+   40|   function(x: { done: true, result: string, ... } | { done: false, ... }) {
+                                                           ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- compound_refinement.js:11:23
@@ -751,7 +751,7 @@ Cannot call `getTypeASTName` with `typeAST.type` bound to `typeAST` because obje
 
 References:
    cond_prop.js:6:66
-    6| type NonNullType = {kind: 'NonNullType', type: Name | ListType | BadType};
+    6| type NonNullType = {kind: 'NonNullType', type: Name | ListType | BadType, ...};
                                                                         ^^^^^^^ [1]
    cond_prop.js:9:34
     9| function getTypeASTName(typeAST: Type): string {
@@ -809,9 +809,9 @@ Cannot get `x.result` because property `result` is missing in object type [1]. [
                     ^^^^^^
 
 References:
-   cond_prop.js:15:47
-   15|   function (x: {done: true, result: string} | {done: false}) {
-                                                     ^^^^^^^^^^^^^ [1]
+   cond_prop.js:15:52
+   15|   function (x: {done: true, result: string, ...} | {done: false, ...}) {
+                                                          ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:24:16
@@ -823,9 +823,9 @@ Cannot get `x.result` because property `result` is missing in object type [1]. [
                       ^^^^^^
 
 References:
-   cond_prop.js:22:47
-   22|   function (x: {done: true, result: string} | {foo: string}) {
-                                                     ^^^^^^^^^^^^^ [1]
+   cond_prop.js:22:52
+   22|   function (x: {done: true, result: string, ...} | {foo: string, ...}) {
+                                                          ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:26:12
@@ -851,9 +851,9 @@ Cannot get `x.result` because property `result` is missing in object type [1]. [
                     ^^^^^^
 
 References:
-   cond_prop.js:22:47
-   22|   function (x: {done: true, result: string} | {foo: string}) {
-                                                     ^^^^^^^^^^^^^ [1]
+   cond_prop.js:22:52
+   22|   function (x: {done: true, result: string, ...} | {foo: string, ...}) {
+                                                          ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:34:11
@@ -922,7 +922,7 @@ Cannot get `o.p` because property `p` is missing in null [1]. [incompatible-use]
 
 References:
    cond_prop.js:51:16
-   51|   function (o: null | {}) {
+   51|   function (o: null | {...}) {
                       ^^^^ [1]
 
 
@@ -936,8 +936,8 @@ Cannot get `o.p` because property `p` is missing in object type [1]. [prop-missi
 
 References:
    cond_prop.js:51:23
-   51|   function (o: null | {}) {
-                             ^^ [1]
+   51|   function (o: null | {...}) {
+                             ^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- eq.js:5:9
@@ -994,7 +994,7 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
 
 References:
    eq.js:18:20
-   18|   function(x: { y: 'foo' } | { y: 'bar' }) {
+   18|   function(x: { y: 'foo', ... } | { y: 'bar', ... }) {
                           ^^^^^ [1]
    eq.js:19:16
    19|     if (x.y == 123) {} // error
@@ -1011,9 +1011,9 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
                ^^^
 
 References:
-   eq.js:18:35
-   18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                                         ^^^^^ [1]
+   eq.js:18:40
+   18|   function(x: { y: 'foo', ... } | { y: 'bar', ... }) {
+                                              ^^^^^ [1]
    eq.js:19:16
    19|     if (x.y == 123) {} // error
                       ^^^ [2]
@@ -1707,7 +1707,7 @@ Cannot call `x.y` because undefined [1] is not a function. [not-a-function]
 
 References:
    hasOwnProperty.js:3:20
-   3| function foo(x:{y?:() => void}) {
+   3| function foo(x:{y?:() => void, ...}) {
                          ^^^^^^^^^^ [1]
 
 
@@ -1721,7 +1721,7 @@ Cannot call `x.y` because undefined [1] is not a function. [not-a-function]
 
 References:
    hasOwnProperty.js:3:20
-   3| function foo(x:{y?:() => void}) {
+   3| function foo(x:{y?:() => void, ...}) {
                          ^^^^^^^^^^ [1]
 
 
@@ -1735,8 +1735,8 @@ Cannot call `x.z` because property `z` is missing in object type [1]. [prop-miss
 
 References:
    hasOwnProperty.js:3:16
-   3| function foo(x:{y?:() => void}) {
-                     ^^^^^^^^^^^^^^^ [1]
+   3| function foo(x:{y?:() => void, ...}) {
+                     ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- heap_defassign.js:8:21
@@ -1749,7 +1749,7 @@ Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2].
 
 References:
    heap_defassign.js:1:26
-   1| type Obj = { p: number | string }
+   1| type Obj = { p: number | string, ... }
                                ^^^^^^ [1]
    heap_defassign.js:8:12
    8|     var x: number = obj.p;      // error, obj.p : number | string
@@ -1780,7 +1780,7 @@ Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2].
 
 References:
    heap_defassign.js:1:26
-    1| type Obj = { p: number | string }
+    1| type Obj = { p: number | string, ... }
                                 ^^^^^^ [1]
    heap_defassign.js:14:12
    14|     var x: number = obj.p;      // error, obj.p : number | string
@@ -1811,7 +1811,7 @@ Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2].
 
 References:
    heap_defassign.js:1:26
-    1| type Obj = { p: number | string }
+    1| type Obj = { p: number | string, ... }
                                 ^^^^^^ [1]
    heap_defassign.js:20:12
    20|     var x: number = obj.p;      // error, obj.p : number | string
@@ -1842,7 +1842,7 @@ Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2].
 
 References:
    heap_defassign.js:1:26
-    1| type Obj = { p: number | string }
+    1| type Obj = { p: number | string, ... }
                                 ^^^^^^ [1]
    heap_defassign.js:28:12
    28|     var y: number = obj.p;      // error, obj.p : number | string
@@ -1859,7 +1859,7 @@ Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2].
 
 References:
    heap_defassign.js:1:26
-    1| type Obj = { p: number | string }
+    1| type Obj = { p: number | string, ... }
                                 ^^^^^^ [1]
    heap_defassign.js:36:12
    36|     var y: number = obj.p;      // error, obj.p : number | string
@@ -1927,7 +1927,7 @@ Cannot assign `obj.p` to `z` because string [1] is incompatible with number [2].
 
 References:
    heap_defassign.js:1:26
-    1| type Obj = { p: number | string }
+    1| type Obj = { p: number | string, ... }
                                 ^^^^^^ [1]
    heap_defassign.js:83:12
    83|     var z: number = obj.p;      // error, (number | string) ~/~ number
@@ -2635,7 +2635,7 @@ References:
    58|         prop !== 0 // error (0 incompatible with C)
                         ^ [2]
    inclusion_check_widening.js:49:23
-   49| type State = { prop: ?C };
+   49| type State = { prop: ?C, ... };
                              ^ [3]
 
 
@@ -2681,7 +2681,7 @@ Cannot call `v.f` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: unknown } = {};
+    6| const v: { f?: unknown, ... } = {};
                       ^^^^^^^ [1]
 
 
@@ -2695,7 +2695,7 @@ Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: unknown } = {};
+    6| const v: { f?: unknown, ... } = {};
                       ^^^^^^^ [1]
 
 
@@ -2723,7 +2723,7 @@ Cannot call `v.f` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: unknown } = {};
+    6| const v: { f?: unknown, ... } = {};
                       ^^^^^^^ [1]
 
 
@@ -2737,7 +2737,7 @@ Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: unknown } = {};
+    6| const v: { f?: unknown, ... } = {};
                       ^^^^^^^ [1]
 
 
@@ -2765,7 +2765,7 @@ Cannot call `v.f` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: unknown } = {};
+    6| const v: { f?: unknown, ... } = {};
                       ^^^^^^^ [1]
 
 
@@ -2779,7 +2779,7 @@ Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: unknown } = {};
+    6| const v: { f?: unknown, ... } = {};
                       ^^^^^^^ [1]
 
 
@@ -2807,7 +2807,7 @@ Cannot call `v.f` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: unknown } = {};
+    6| const v: { f?: unknown, ... } = {};
                       ^^^^^^^ [1]
 
 
@@ -2821,7 +2821,7 @@ Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: unknown } = {};
+    6| const v: { f?: unknown, ... } = {};
                       ^^^^^^^ [1]
 
 
@@ -2835,8 +2835,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:45:47
@@ -2877,8 +2877,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:53:47
@@ -2905,8 +2905,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:54:47
@@ -2933,8 +2933,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:55:47
@@ -2961,8 +2961,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:56:47
@@ -2989,8 +2989,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:57:14
@@ -3025,8 +3025,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:58:47
@@ -3053,8 +3053,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:60:47
@@ -3081,8 +3081,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:61:47
@@ -3109,8 +3109,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:62:47
@@ -3137,8 +3137,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:64:47
@@ -3165,8 +3165,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:65:47
@@ -3193,8 +3193,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:66:47
@@ -3221,8 +3221,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:69:52
@@ -3249,8 +3249,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:70:52
@@ -3277,8 +3277,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:71:52
@@ -3305,8 +3305,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:72:52
@@ -3333,8 +3333,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:73:52
@@ -3361,8 +3361,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:74:52
@@ -3389,8 +3389,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:75:52
@@ -3417,8 +3417,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:76:52
@@ -3445,8 +3445,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:77:52
@@ -3473,8 +3473,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:81:47
@@ -3501,8 +3501,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:82:47
@@ -3529,8 +3529,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:83:47
@@ -3557,8 +3557,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:84:47
@@ -3585,8 +3585,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:85:47
@@ -3613,8 +3613,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:86:47
@@ -3641,8 +3641,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:87:47
@@ -3669,8 +3669,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:88:47
@@ -3697,8 +3697,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:89:47
@@ -3725,8 +3725,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:90:47
@@ -3753,8 +3753,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:91:47
@@ -3781,8 +3781,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:92:47
@@ -3809,8 +3809,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:96:35
@@ -3868,8 +3868,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:97:35
@@ -3927,8 +3927,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:98:35
@@ -3986,8 +3986,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:99:54
@@ -4014,8 +4014,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-   37| type A = {b?: {c: boolean}};
-                     ^^^^^^^^^^^^ [1]
+   37| type A = {b?: {c: boolean, ...}, ...};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:100:54
@@ -4042,8 +4042,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:101:54
@@ -4070,8 +4070,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:103:50
@@ -4112,8 +4112,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:104:50
@@ -4171,8 +4171,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:105:50
@@ -4230,8 +4230,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:106:54
@@ -4258,8 +4258,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:107:30
@@ -4317,8 +4317,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:108:47
@@ -4398,8 +4398,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:111:7
@@ -4471,8 +4471,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:112:36
@@ -4530,8 +4530,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:113:33
@@ -4589,8 +4589,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:114:33
@@ -4648,8 +4648,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:115:33
@@ -4707,8 +4707,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:116:54
@@ -4735,8 +4735,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:117:54
@@ -4763,8 +4763,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:118:54
@@ -4791,8 +4791,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:119:32
@@ -4850,8 +4850,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:120:32
@@ -4909,8 +4909,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:121:32
@@ -4968,8 +4968,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:123:55
@@ -4996,8 +4996,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:124:55
@@ -5024,8 +5024,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:125:55
@@ -5052,8 +5052,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:126:55
@@ -5080,8 +5080,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:127:55
@@ -5108,8 +5108,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:128:55
@@ -5136,8 +5136,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:130:55
@@ -5164,8 +5164,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:131:55
@@ -5192,8 +5192,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:132:55
@@ -5220,8 +5220,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:133:55
@@ -5248,8 +5248,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:134:55
@@ -5276,8 +5276,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:135:55
@@ -5304,8 +5304,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:139:47
@@ -5332,8 +5332,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:140:51
@@ -5346,8 +5346,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:141:51
@@ -5360,8 +5360,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:142:47
@@ -5388,8 +5388,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:143:51
@@ -5402,8 +5402,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:144:51
@@ -5416,8 +5416,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:146:47
@@ -5444,8 +5444,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:147:51
@@ -5458,8 +5458,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:148:47
@@ -5508,8 +5508,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:150:7
@@ -5536,8 +5536,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:151:47
@@ -5586,8 +5586,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:154:7
@@ -5614,8 +5614,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:155:51
@@ -5628,8 +5628,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:156:47
@@ -5656,8 +5656,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:157:51
@@ -5670,8 +5670,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:158:51
@@ -5684,8 +5684,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:159:47
@@ -5712,8 +5712,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:160:51
@@ -5726,8 +5726,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:161:51
@@ -5740,8 +5740,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:162:47
@@ -5768,8 +5768,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:163:51
@@ -5782,8 +5782,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:164:51
@@ -5796,8 +5796,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:166:48
@@ -5824,8 +5824,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:167:52
@@ -5838,8 +5838,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:168:52
@@ -5852,8 +5852,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:169:48
@@ -5880,8 +5880,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:170:52
@@ -5894,8 +5894,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:171:52
@@ -5908,8 +5908,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:173:48
@@ -5936,8 +5936,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:174:52
@@ -5950,8 +5950,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:175:52
@@ -5964,8 +5964,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:176:48
@@ -5992,8 +5992,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:177:52
@@ -6006,8 +6006,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:178:52
@@ -6020,8 +6020,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:188:52
@@ -6048,8 +6048,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:189:52
@@ -6076,8 +6076,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:190:52
@@ -6104,8 +6104,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:191:52
@@ -6182,8 +6182,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:196:57
@@ -6210,8 +6210,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:197:57
@@ -6238,8 +6238,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:198:57
@@ -6266,8 +6266,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:202:52
@@ -6294,8 +6294,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:203:56
@@ -6308,8 +6308,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:204:52
@@ -6336,8 +6336,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:205:56
@@ -6350,8 +6350,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:207:52
@@ -6378,8 +6378,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:208:56
@@ -6392,8 +6392,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:209:52
@@ -6420,8 +6420,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:210:56
@@ -6434,8 +6434,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:212:52
@@ -6462,8 +6462,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:213:56
@@ -6476,8 +6476,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:214:52
@@ -6504,8 +6504,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:215:56
@@ -6518,8 +6518,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:216:52
@@ -6546,8 +6546,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:217:56
@@ -6560,8 +6560,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:218:52
@@ -6588,8 +6588,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:219:56
@@ -6602,8 +6602,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:221:52
@@ -6630,8 +6630,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:222:56
@@ -6644,8 +6644,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:223:52
@@ -6672,8 +6672,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:224:56
@@ -6686,8 +6686,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:226:52
@@ -6714,8 +6714,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:227:56
@@ -6728,8 +6728,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:228:52
@@ -6756,8 +6756,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:229:56
@@ -6770,8 +6770,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:238:47
@@ -6812,8 +6812,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:240:47
@@ -6840,8 +6840,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:247:47
@@ -6868,8 +6868,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:248:47
@@ -6896,8 +6896,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:249:47
@@ -6924,8 +6924,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:250:47
@@ -6952,8 +6952,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:252:47
@@ -6980,8 +6980,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:253:47
@@ -7008,8 +7008,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:254:14
@@ -7044,8 +7044,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:255:47
@@ -7072,8 +7072,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:257:47
@@ -7100,8 +7100,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:258:47
@@ -7128,8 +7128,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:259:47
@@ -7156,8 +7156,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:261:47
@@ -7184,8 +7184,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:262:47
@@ -7212,8 +7212,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:263:47
@@ -7240,8 +7240,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:266:56
@@ -7268,8 +7268,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:267:56
@@ -7296,8 +7296,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:268:56
@@ -7324,8 +7324,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:269:56
@@ -7352,8 +7352,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:270:56
@@ -7380,8 +7380,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:271:54
@@ -7408,8 +7408,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:272:54
@@ -7436,8 +7436,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:273:56
@@ -7464,8 +7464,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:274:56
@@ -7492,8 +7492,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:278:47
@@ -7520,8 +7520,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:279:47
@@ -7548,8 +7548,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:280:47
@@ -7576,8 +7576,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:281:47
@@ -7604,8 +7604,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:282:47
@@ -7632,8 +7632,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:283:47
@@ -7660,8 +7660,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:284:47
@@ -7688,8 +7688,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:285:47
@@ -7716,8 +7716,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:286:47
@@ -7744,8 +7744,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:287:47
@@ -7772,8 +7772,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:288:47
@@ -7800,8 +7800,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:289:47
@@ -7828,8 +7828,8 @@ Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatib
 
 References:
    invalidation.js:37:15
-    37| type A = {b?: {c: boolean}};
-                      ^^^^^^^^^^^^ [1]
+    37| type A = {b?: {c: boolean, ...}, ...};
+                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:306:9
@@ -7842,8 +7842,8 @@ Cannot get `foo.bar` because property `bar` is missing in null or undefined [1].
 
 References:
    invalidation.js:303:22
-   303|   declare const foo: ?{bar: string};
-                             ^^^^^^^^^^^^^^ [1]
+   303|   declare const foo: ?{bar: string, ...};
+                             ^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:308:9
@@ -7856,8 +7856,8 @@ Cannot get `foo.bar` because property `bar` is missing in null or undefined [1].
 
 References:
    invalidation.js:303:22
-   303|   declare const foo: ?{bar: string};
-                             ^^^^^^^^^^^^^^ [1]
+   303|   declare const foo: ?{bar: string, ...};
+                             ^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- issue-7103.js:13:15
@@ -7936,12 +7936,12 @@ References:
    issue-7105.js:7:21
    7|       yield { type: "PENDING" }; // TODO(T225770374)
                           ^^^^^^^^^ [1]
-   issue-7105.js:2:25
-   2| type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
-                              ^^^^^^^^^ [2]
-   issue-7105.js:2:50
-   2| type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
-                                                       ^^^^^^ [3]
+   issue-7105.js:2:23
+   2| type Result = {+type: "PENDING"} | {+type: "DONE", value: number};
+                            ^^^^^^^^^ [2]
+   issue-7105.js:2:44
+   2| type Result = {+type: "PENDING"} | {+type: "DONE", value: number};
+                                                 ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:15
@@ -7959,12 +7959,12 @@ References:
    issue-7105.js:9:23
    9|         yield { type: "DONE", value: (box as empty).value }; // TODO(T225770374)
                             ^^^^^^ [1]
-   issue-7105.js:2:50
-   2| type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
-                                                       ^^^^^^ [2]
+   issue-7105.js:2:44
+   2| type Result = {+type: "PENDING"} | {+type: "DONE", value: number};
+                                                 ^^^^^^ [2]
    issue-7105.js:2:15
-   2| type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
-                    ^^^^^^^^^^^^^^^^^^^^^^ [4]
+   2| type Result = {+type: "PENDING"} | {+type: "DONE", value: number};
+                    ^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:39
@@ -8302,9 +8302,9 @@ Cannot cast `O.x` to empty because number literal `2` [1] is incompatible with e
            ^^^
 
 References:
-   member.js:28:29
-   28|   declare const O: {|x: 1 | 2|};
-                                   ^ [1]
+   member.js:28:28
+   28|   declare const O: {x: 1 | 2};
+                                  ^ [1]
    member.js:41:12
    41|     O.x as empty; // ERROR: `2` remains
                   ^^^^^ [2]
@@ -8361,9 +8361,9 @@ Cannot cast `x.value` to empty because number [1] is incompatible with empty [2]
            ^^^^^^^
 
 References:
-   member.js:52:34
-   52|   type T = {|type: 'foo', value: number|}
-                                        ^^^^^^ [1]
+   member.js:52:33
+   52|   type T = {type: 'foo', value: number}
+                                       ^^^^^^ [1]
    member.js:59:16
    59|     x.value as empty; // ERROR
                       ^^^^^ [2]
@@ -8441,8 +8441,8 @@ Cannot get `o.p1` because property `p1` is missing in object type [1]. [prop-mis
 
 References:
    missing-property-cond.js:1:18
-   1| function foo1(o: { x: number }) {
-                       ^^^^^^^^^^^^^ [1]
+   1| function foo1(o: { x: number, ... }) {
+                       ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:8:9
@@ -8455,8 +8455,8 @@ Cannot get `o.p2` because property `p2` is missing in object type [1]. [prop-mis
 
 References:
    missing-property-cond.js:7:18
-   7| function foo2(o: { x: number }) {
-                       ^^^^^^^^^^^^^ [1]
+   7| function foo2(o: { x: number, ... }) {
+                       ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:9:5
@@ -8497,8 +8497,8 @@ Cannot get `o.p3` because property `p3` is missing in object type [1]. [prop-mis
 
 References:
    missing-property-cond.js:13:18
-   13| function foo3(o: { x: number }) {
-                        ^^^^^^^^^^^^^ [1]
+   13| function foo3(o: { x: number, ... }) {
+                        ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:18:9
@@ -8511,8 +8511,8 @@ Cannot get `o.p4` because property `p4` is missing in object type [1]. [prop-mis
 
 References:
    missing-property-cond.js:17:18
-   17| function foo4(o: $Exact<{ x: number }>) {
-                        ^^^^^^^^^^^^^^^^^^^^^ [1]
+   17| function foo4(o: $Exact<{ x: number, ... }>) {
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:19:5
@@ -10389,11 +10389,11 @@ Cannot return `x.foo` because number [1] is incompatible with number literal `0`
 
 References:
    number.js:57:22
-   57|   function(x: { foo: number }): 0 {
+   57|   function(x: { foo: number, ... }): 0 {
                             ^^^^^^ [1]
-   number.js:57:33
-   57|   function(x: { foo: number }): 0 {
-                                       ^ [2]
+   number.js:57:38
+   57|   function(x: { foo: number, ... }): 0 {
+                                            ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- number.js:68:14
@@ -10434,8 +10434,8 @@ Cannot get `obj.bar` because property `bar` is missing in object type [1]. [prop
 
 References:
    number.js:74:30
-   74|   function(num: number, obj: { foo: number }) {
-                                    ^^^^^^^^^^^^^^^ [1]
+   74|   function(num: number, obj: { foo: number, ... }) {
+                                    ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- number.js:88:12
@@ -10806,9 +10806,9 @@ Cannot cast `x` to empty because object type [1] is incompatible with empty [2].
           ^
 
 References:
-   object_prop_exists.js:2:45
-   2|   declare const x: {|a: true, b: number|} | {|a: false, b: string, c: true|};
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prop_exists.js:2:43
+   2|   declare const x: {a: true, b: number} | {a: false, b: string, c: true};
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:4:10
    4|     x as empty; // ERROR
                ^^^^^ [2]
@@ -10833,7 +10833,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    object_prop_exists.js:5:5
-   5|     x as {|a: false, b: string, c: true|}; // OK
+   5|     x as {a: false, b: string, c: true}; // OK
           ^
 
 References:
@@ -10852,8 +10852,8 @@ Cannot cast `x` to empty because object type [1] is incompatible with empty [2].
 
 References:
    object_prop_exists.js:2:20
-   2|   declare const x: {|a: true, b: number|} | {|a: false, b: string, c: true|};
-                         ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   2|   declare const x: {a: true, b: number} | {a: false, b: string, c: true};
+                         ^^^^^^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:7:10
    7|     x as empty; // ERROR
                ^^^^^ [2]
@@ -10878,7 +10878,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    object_prop_exists.js:8:5
-   8|     x as {|a: true, b: number|}; // OK
+   8|     x as {a: true, b: number}; // OK
           ^
 
 References:
@@ -10912,9 +10912,9 @@ Cannot cast `x` to empty because object type [1] is incompatible with empty [2].
            ^
 
 References:
-   object_prop_exists.js:14:45
-   14|   declare const x: {|a: true, b: number|} | {|a: false, b: string, -c: true|};
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prop_exists.js:14:43
+   14|   declare const x: {a: true, b: number} | {a: false, b: string, -c: true};
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:16:10
    16|     x as empty; // ERROR
                 ^^^^^ [2]
@@ -10944,8 +10944,8 @@ Cannot cast `x` to empty because object type [1] is incompatible with empty [2].
 
 References:
    object_prop_exists.js:14:20
-   14|   declare const x: {|a: true, b: number|} | {|a: false, b: string, -c: true|};
-                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   14|   declare const x: {a: true, b: number} | {a: false, b: string, -c: true};
+                          ^^^^^^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:18:10
    18|     x as empty; // ERROR
                 ^^^^^ [2]
@@ -10960,9 +10960,9 @@ Cannot cast `x` to empty because object type [1] is incompatible with empty [2].
            ^
 
 References:
-   object_prop_exists.js:14:45
-   14|   declare const x: {|a: true, b: number|} | {|a: false, b: string, -c: true|};
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_prop_exists.js:14:43
+   14|   declare const x: {a: true, b: number} | {a: false, b: string, -c: true};
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:18:10
    18|     x as empty; // ERROR
                 ^^^^^ [2]
@@ -10977,9 +10977,9 @@ Cannot cast `result` to empty because object type [1] is incompatible with empty
                       ^^^^^^
 
 References:
-   object_prop_exists.js:23:45
-   23|   function withResult1(result: {ok: true} | {ok: false}): string {
-                                                   ^^^^^^^^^^^ [1]
+   object_prop_exists.js:23:50
+   23|   function withResult1(result: {ok: true, ...} | {ok: false, ...}): string {
+                                                        ^^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:25:26
    25|         return result as empty; // good error: result not refined to empty
                                 ^^^^^ [2]
@@ -11011,9 +11011,9 @@ Cannot cast `result` to empty because object type [1] is incompatible with empty
                       ^^^^^^
 
 References:
-   object_prop_exists.js:29:45
-   29|   function withResult2(result: {ok: true} | {ok: void}): string {
-                                                   ^^^^^^^^^^ [1]
+   object_prop_exists.js:29:50
+   29|   function withResult2(result: {ok: true, ...} | {ok: void, ...}): string {
+                                                        ^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:31:26
    31|         return result as empty; // good error: result not refined to empty
                                 ^^^^^ [2]
@@ -11045,9 +11045,9 @@ Cannot cast `result` to empty because object type [1] is incompatible with empty
                       ^^^^^^
 
 References:
-   object_prop_exists.js:35:45
-   35|   function withResult3(result: {ok: true} | {ok: null}): string {
-                                                   ^^^^^^^^^^ [1]
+   object_prop_exists.js:35:50
+   35|   function withResult3(result: {ok: true, ...} | {ok: null, ...}): string {
+                                                        ^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:37:26
    37|         return result as empty; // good error: result not refined to empty
                                 ^^^^^ [2]
@@ -11079,9 +11079,9 @@ Cannot cast `result` to empty because object type [1] is incompatible with empty
                       ^^^^^^
 
 References:
-   object_prop_exists.js:41:45
-   41|   function withResult4(result: {ok: true} | {ok: null}): string {
-                                                   ^^^^^^^^^^ [1]
+   object_prop_exists.js:41:50
+   41|   function withResult4(result: {ok: true, ...} | {ok: null, ...}): string {
+                                                        ^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:43:26
    43|         return result as empty; // good error: result not refined to empty
                                 ^^^^^ [2]
@@ -11113,9 +11113,9 @@ Cannot cast `result` to empty because object type [1] is incompatible with empty
                       ^^^^^^
 
 References:
-   object_prop_exists.js:47:45
-   47|   function withResult5(result: {ok: true} | {ok: null}): string {
-                                                   ^^^^^^^^^^ [1]
+   object_prop_exists.js:47:50
+   47|   function withResult5(result: {ok: true, ...} | {ok: null, ...}): string {
+                                                        ^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:49:26
    49|         return result as empty; // good error: result not refined to empty
                                 ^^^^^ [2]
@@ -11148,8 +11148,8 @@ Cannot cast `result` to empty because object type [1] is incompatible with empty
 
 References:
    object_prop_exists.js:53:32
-   53|   function withResult6(result: {ok: void} | {ok: null}): string {
-                                      ^^^^^^^^^^ [1]
+   53|   function withResult6(result: {ok: void, ...} | {ok: null, ...}): string {
+                                      ^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:55:26
    55|         return result as empty; // good error: result not refined to empty, and only reference the void case
                                 ^^^^^ [2]
@@ -11210,7 +11210,7 @@ Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [
 
 References:
    object_union_number_keys.js:2:32
-   2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
+   2|   declare const x: {0: 'a', 1: number, ...} | {0: 'b', 1: string, ...};
                                      ^^^^^^ [1]
    object_union_number_keys.js:6:13
    6|     x[1] as empty; // ERROR
@@ -11269,7 +11269,7 @@ Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [
 
 References:
    object_union_number_keys.js:2:32
-    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
+    2|   declare const x: {0: 'a', 1: number, ...} | {0: 'b', 1: string, ...};
                                       ^^^^^^ [1]
    object_union_number_keys.js:13:13
    13|     x[1] as empty; // ERROR
@@ -11402,7 +11402,7 @@ Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [
 
 References:
    object_union_number_keys.js:32:32
-   32|   declare const x: {0: 'a', 1: number} | {0: null, 1: string};
+   32|   declare const x: {0: 'a', 1: number, ...} | {0: null, 1: string, ...};
                                       ^^^^^^ [1]
    object_union_number_keys.js:36:13
    36|     x[1] as empty; // ERROR
@@ -11461,7 +11461,7 @@ Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [
 
 References:
    object_union_number_keys.js:32:32
-   32|   declare const x: {0: 'a', 1: number} | {0: null, 1: string};
+   32|   declare const x: {0: 'a', 1: number, ...} | {0: null, 1: string, ...};
                                       ^^^^^^ [1]
    object_union_number_keys.js:43:13
    43|     x[1] as empty; // ERROR
@@ -11874,11 +11874,11 @@ Cannot return `x[y.z]` because null or undefined [1] is incompatible with string
 
 References:
    property.js:68:32
-   68| function c2(x: {[key: string]: ?string}, y: {z: string}): string {
+   68| function c2(x: {[key: string]: ?string}, y: {z: string, ...}): string {
                                       ^^^^^^^ [1]
-   property.js:68:59
-   68| function c2(x: {[key: string]: ?string}, y: {z: string}): string {
-                                                                 ^^^^^^ [2]
+   property.js:68:64
+   68| function c2(x: {[key: string]: ?string}, y: {z: string, ...}): string {
+                                                                      ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ property.js:71:12
@@ -12309,8 +12309,8 @@ Cannot cast `x` to string because object type [1] is incompatible with string [2
 
 References:
    refinements.js:82:14
-   82|     const x: {foo: null} = {foo: null};
-                    ^^^^^^^^^^^ [1]
+   82|     const x: {foo: null, ...} = {foo: null};
+                    ^^^^^^^^^^^^^^^^ [1]
    refinements.js:87:14
    87|         x as string; // error
                     ^^^^^^ [2]
@@ -12659,11 +12659,11 @@ Cannot return `x.foo` because string [1] is incompatible with string literal `fo
 
 References:
    string.js:57:22
-   57|   function(x: { foo: string }): 'foo' {
+   57|   function(x: { foo: string, ... }): 'foo' {
                             ^^^^^^ [1]
-   string.js:57:33
-   57|   function(x: { foo: string }): 'foo' {
-                                       ^^^^^ [2]
+   string.js:57:38
+   57|   function(x: { foo: string, ... }): 'foo' {
+                                            ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- string.js:68:14
@@ -12704,8 +12704,8 @@ Cannot get `obj.bar` because property `bar` is missing in object type [1]. [prop
 
 References:
    string.js:74:30
-   74|   function(str: string, obj: { foo: string }) {
-                                    ^^^^^^^^^^^^^^^ [1]
+   74|   function(str: string, obj: { foo: string, ... }) {
+                                    ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- string.js:89:12
@@ -13192,7 +13192,7 @@ Cannot cast `x.taste` to string literal `Good` because at least one member of `x
 
 References:
    tagged_union.js:26:38
-   26| type Apple = { kind: 'Fruit', taste: 'Bad' }
+   26| type Apple = { kind: 'Fruit', taste: 'Bad', ... }
                                             ^^^^^ [2]
    tagged_union.js:34:40
    34|   if (x.kind === 'Fruit') { x.taste as 'Good'; } // error, Apple.taste = Bad
@@ -13224,7 +13224,7 @@ is incompatible with string literal `No` [3]. [incompatible-type]
 
 References:
    tagged_union.js:29:50
-   29| type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe' }
+   29| type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe', ... }
                                                         ^^^^^^^ [2]
    tagged_union.js:35:17
    35|   else x.raw as 'No'; // error, Carrot.raw = Maybe
@@ -13256,7 +13256,7 @@ Cannot cast `x.raw` to union type because string literal `Maybe` [1] is incompat
 
 References:
    tagged_union.js:29:50
-   29| type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe' }
+   29| type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe', ... }
                                                         ^^^^^^^ [1]
    tagged_union.js:40:14
    40|     x.raw as 'Yes' | 'No'; // 2 errors:
@@ -13422,8 +13422,8 @@ Cannot get `x.fooTypo` because property `fooTypo` is missing in object type [1].
 
 References:
    tagged_union.js:94:21
-   94|   function test8(x: {foo: {bar: 1}}) {
-                           ^^^^^^^^^^^^^^^ [1]
+   94|   function test8(x: {foo: {bar: 1, ...}, ...}) {
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:101:27
@@ -13924,8 +13924,8 @@ Cannot get `x.badStr` because property `badStr` is missing in object type [1]. [
 
 References:
    tagged_union.js:145:15
-   145|   function(x: { str: string, num: number, boolean: boolean }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   145|   function(x: { str: string, num: number, boolean: boolean, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:157:7
@@ -13969,8 +13969,8 @@ Cannot get `x.badNum` because property `badNum` is missing in object type [1]. [
 
 References:
    tagged_union.js:145:15
-   145|   function(x: { str: string, num: number, boolean: boolean }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   145|   function(x: { str: string, num: number, boolean: boolean, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:160:7
@@ -14014,8 +14014,8 @@ Cannot get `x.badBool` because property `badBool` is missing in object type [1].
 
 References:
    tagged_union.js:145:15
-   145|   function(x: { str: string, num: number, boolean: boolean }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   145|   function(x: { str: string, num: number, boolean: boolean, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:163:7
@@ -14087,8 +14087,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:168:15
-   168|   function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   168|   function(x: { foo: 123, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:173:7
@@ -14128,9 +14128,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:168:41
-   168|   function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:168:46
+   168|   function(x: { foo: 123, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:177:7
@@ -14170,9 +14170,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:168:41
-   168|   function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:168:46
+   168|   function(x: { foo: 123, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:180:7
@@ -14213,8 +14213,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:168:15
-   168|   function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   168|   function(x: { foo: 123, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:188:7
@@ -14255,8 +14255,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:186:15
-   186|   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   186|   function(x: { foo: number, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:191:9
@@ -14268,9 +14268,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:186:44
-   186|   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:186:49
+   186|   function(x: { foo: number, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:192:9
@@ -14283,8 +14283,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:186:15
-   186|   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   186|   function(x: { foo: number, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:196:7
@@ -14324,9 +14324,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:186:44
-   186|   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:186:49
+   186|   function(x: { foo: number, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:199:7
@@ -14367,8 +14367,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:186:15
-   186|   function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   186|   function(x: { foo: number, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:207:7
@@ -14409,8 +14409,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:205:15
-   205|   function(x: { foo: number, y: string } | { foo: string, z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   205|   function(x: { foo: number, y: string, ... } | { foo: string, z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:210:9
@@ -14422,9 +14422,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:205:44
-   205|   function(x: { foo: number, y: string } | { foo: string, z: string }) {
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:205:49
+   205|   function(x: { foo: number, y: string, ... } | { foo: string, z: string, ... }) {
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:211:9
@@ -14437,8 +14437,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:205:15
-   205|   function(x: { foo: number, y: string } | { foo: string, z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   205|   function(x: { foo: number, y: string, ... } | { foo: string, z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:215:7
@@ -14478,9 +14478,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:205:44
-   205|   function(x: { foo: number, y: string } | { foo: string, z: string }) {
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:205:49
+   205|   function(x: { foo: number, y: string, ... } | { foo: string, z: string, ... }) {
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:218:9
@@ -14492,9 +14492,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:205:44
-   205|   function(x: { foo: number, y: string } | { foo: string, z: string }) {
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:205:49
+   205|   function(x: { foo: number, y: string, ... } | { foo: string, z: string, ... }) {
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:219:9
@@ -14507,8 +14507,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:205:15
-   205|   function(x: { foo: number, y: string } | { foo: string, z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   205|   function(x: { foo: number, y: string, ... } | { foo: string, z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:229:9
@@ -14520,9 +14520,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:225:37
-   225|     x: { foo: number, y: string } | { foo: string, z: string },
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:225:42
+   225|     x: { foo: number, y: string, ... } | { foo: string, z: string, ... },
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:230:9
@@ -14535,8 +14535,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:225:8
-   225|     x: { foo: number, y: string } | { foo: string, z: string },
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   225|     x: { foo: number, y: string, ... } | { foo: string, z: string, ... },
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:237:7
@@ -14577,8 +14577,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:235:15
-   235|   function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   235|   function(x: { foo: null, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:240:7
@@ -14618,9 +14618,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:235:42
-   235|   function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:235:47
+   235|   function(x: { foo: null, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:244:7
@@ -14660,9 +14660,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:235:42
-   235|   function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:235:47
+   235|   function(x: { foo: null, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:247:7
@@ -14703,8 +14703,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:235:15
-   235|   function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   235|   function(x: { foo: null, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:255:7
@@ -14745,8 +14745,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:253:15
-   253|   function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   253|   function(x: { foo: void, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:258:7
@@ -14786,9 +14786,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:253:42
-   253|   function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:253:47
+   253|   function(x: { foo: void, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:262:7
@@ -14828,9 +14828,9 @@ Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missi
                 ^
 
 References:
-   tagged_union.js:253:42
-   253|   function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   tagged_union.js:253:47
+   253|   function(x: { foo: void, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:265:7
@@ -14871,8 +14871,8 @@ Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missi
 
 References:
    tagged_union.js:253:15
-   253|   function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   253|   function(x: { foo: void, y: string, ... } | { foo: 'foo', z: string, ... }) {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- tagged_union_import.js:18:34
@@ -16462,7 +16462,7 @@ Cannot use operator `*` with operands null or undefined [1] and number [2] [unsa
 
 References:
    undef.js:42:34
-   42| function undef_prop_fail(x: { x: ?number }) {
+   42| function undef_prop_fail(x: { x: ?number, ... }) {
                                         ^^^^^^^ [1]
    undef.js:44:19
    44|     var y = x.x * 1000;
@@ -16507,7 +16507,7 @@ Cannot use operator `*` with operands null or undefined [1] and number [2] [unsa
 
 References:
    undef.js:48:38
-   48| function undef_prop_fail_rev(x: { x: ?number }) {
+   48| function undef_prop_fail_rev(x: { x: ?number, ... }) {
                                             ^^^^^^^ [1]
    undef.js:51:19
    51|     var y = x.x * 1000;
@@ -17056,7 +17056,7 @@ Cannot use operator `*` with operands null or undefined [1] and number [2] [unsa
 
 References:
    void.js:42:32
-   42| function void_pro_fail(x: { x: ?number }) {
+   42| function void_pro_fail(x: { x: ?number, ... }) {
                                       ^^^^^^^ [1]
    void.js:44:19
    44|     var y = x.x * 1000;
@@ -17101,7 +17101,7 @@ Cannot use operator `*` with operands null or undefined [1] and number [2] [unsa
 
 References:
    void.js:48:36
-   48| function void_pro_fail_rev(x: { x: ?number }) {
+   48| function void_pro_fail_rev(x: { x: ?number, ... }) {
                                           ^^^^^^^ [1]
    void.js:51:19
    51|     var y = x.x * 1000;
@@ -17298,7 +17298,7 @@ Cannot use operator `*` with operands null or undefined [1] and number [2] [unsa
 
 References:
    void.js:68:40
-   68| function void_prop_side_effect(x: { x: ?number }) {
+   68| function void_prop_side_effect(x: { x: ?number, ... }) {
                                               ^^^^^^^ [1]
    void.js:69:42
    69|   if (x.x !== null && x.x !== void(x.x * 1000)) {
@@ -17405,7 +17405,7 @@ Cannot use operator `*` with operands null or undefined [1] and number [2] [unsa
 
 References:
    void.js:74:44
-   74| function void_prop_side_effect_rev(x: { x: ?number }) {
+   74| function void_prop_side_effect_rev(x: { x: ?number, ... }) {
                                                   ^^^^^^^ [1]
    void.js:75:42
    75|   if (x.x === null || x.x === void(x.x * 1000)) {

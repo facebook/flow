@@ -1,20 +1,20 @@
-function foo1(o: { x: number }) {
+function foo1(o: { x: number, ... }) {
   if (o.p1) { // Error, testing for unknown property
     o.x;
   }
 }
 
-function foo2(o: { x: number }) {
+function foo2(o: { x: number, ... }) {
   if (o.p2) { // Error, testing for unknown property
     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
   }
 }
 
-function foo3(o: { x: number }) {
+function foo3(o: { x: number, ... }) {
   o.p3.x; // usual error outside conditional
 }
 
-function foo4(o: $Exact<{ x: number }>) {
+function foo4(o: $Exact<{ x: number, ... }>) {
   if (o.p4) { // Error, testing for unknown property
     o.p4.x; // currently OK, should be unreachable
   } else {
@@ -33,14 +33,14 @@ function foo7(o: unknown) {
   if (o !== null && o !== undefined && typeof o.bar === 'string') {} // ok
 }
 
-function foo8(o: { p: unknown }) {
+function foo8(o: { p: unknown, ... }) {
   if (o.p && o.p.q) {} // this is ok because o.p is truthy, so o.p.q is safe
   if (o.p && o.p.q && o.p.q.r) {}
 }
 
 type Foo9Expected = {
   foo: string,
-}
+ ...}
 
 function foo10() {
   if (null.q) {} // error: property `q` on null

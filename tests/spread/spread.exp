@@ -33,10 +33,10 @@ exact. [cannot-spread-inexact]
 
 References:
    error_positions.js:7:48
-    7| declare function bar<P>(x: React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
-                                                      ^^^^^^^^^^^^^^^^^^ [1]
+    7| declare function bar<P>(x: React.ComponentType<{ m: number, ...P, ...}>): React.ComponentType<P>;
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    error_positions.js:9:7
-    9| class C extends React.Component<{}> {}
+    9| class C extends React.Component<{...}> {}
              ^ [2]
 
 
@@ -50,9 +50,9 @@ Cannot call `foo` with `bar(...)` bound to `x` because `ComponentType` [1] is in
            ^^^^^^
 
 References:
-   error_positions.js:7:70
-    7| declare function bar<P>(x: React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
-                                                                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_positions.js:7:75
+    7| declare function bar<P>(x: React.ComponentType<{ m: number, ...P, ...}>): React.ComponentType<P>;
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
    error_positions.js:11:18
    11| foo(bar(C)) as F<typeof C>; // error on call
                         ^^^^^^^^ [2]
@@ -69,15 +69,15 @@ contain `foo` with a type that conflicts with `foo`'s definition in object type 
        ^^^^^^
 
 References:
-   error_positions.js:13:39
-   13| declare function spread<T: {}>(x: T): {...T, ...{}}; // error should not appear here
-                                             ^^^^^^^^^^^^^ [1]
-   error_positions.js:13:49
-   13| declare function spread<T: {}>(x: T): {...T, ...{}}; // error should not appear here
-                                                       ^^ [2]
+   error_positions.js:13:42
+   13| declare function spread<T: {...}>(x: T): {...T, ...{...}, ...}; // error should not appear here
+                                                ^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_positions.js:13:52
+   13| declare function spread<T: {...}>(x: T): {...T, ...{...}, ...}; // error should not appear here
+                                                          ^^^^^ [2]
    error_positions.js:15:22
-   15| declare var inexact: {foo: number};
-                            ^^^^^^^^^^^^^ [3]
+   15| declare var inexact: {foo: number, ...};
+                            ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- exact.js:12:35
@@ -107,8 +107,8 @@ type [2] exact. [cannot-spread-inexact]
 
 References:
    exact.js:11:20
-   11| const foo_inexact: { baz: number } = { bar: 42, baz: 123 };
-                          ^^^^^^^^^^^^^^^ [2]
+   11| const foo_inexact: { baz: number, ... } = { bar: 42, baz: 123 };
+                          ^^^^^^^^^^^^^^^^^^^^ [2]
    exact.js:7:15
     7| const other = {bar: 'wat'}
                      ^^^^^^^^^^^^ [3]
@@ -129,8 +129,8 @@ References:
    3| declare var works1: {...} | void;
                           ^^^^^ [2]
    nested_unions.js:1:18
-   1| declare var OBJ: {a: string};
-                       ^^^^^^^^^^^ [3]
+   1| declare var OBJ: {a: string, ...};
+                       ^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- nested_unions.js:8:2
@@ -148,8 +148,8 @@ References:
    4| declare var works2: {...} | void | void;
                           ^^^^^ [2]
    nested_unions.js:1:18
-   1| declare var OBJ: {a: string};
-                       ^^^^^^^^^^^ [3]
+   1| declare var OBJ: {a: string, ...};
+                       ^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- nested_unions.js:9:2
@@ -167,8 +167,8 @@ References:
    5| declare var works3: {...} | (void | void);
                           ^^^^^ [2]
    nested_unions.js:1:18
-   1| declare var OBJ: {a: string};
-                       ^^^^^^^^^^^ [3]
+   1| declare var OBJ: {a: string, ...};
+                       ^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- nested_unions.js:17:16
@@ -290,7 +290,7 @@ Cannot cast `p` to object type because property `abc` is missing in object liter
 [incompatible-type]
 
    test6.js:10:1
-   10| p as {foo: string; abc: string}; // error, p doesn't have `abc` yet
+   10| p as {foo: string; abc: string, ...}; // error, p doesn't have `abc` yet
        ^
 
 References:
@@ -301,8 +301,8 @@ References:
     9| };
        ^ [1]
    test6.js:10:6
-   10| p as {foo: string; abc: string}; // error, p doesn't have `abc` yet
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   10| p as {foo: string; abc: string, ...}; // error, p doesn't have `abc` yet
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test6.js:11:5
@@ -335,15 +335,15 @@ Cannot cast object literal to object type because in property `q`: string [1] is
 [incompatible-type]
 
    test8.js:7:2
-    7| ({...o}) as {p: number, q: number}; // error: string ~> number (prop q)
+    7| ({...o}) as {p: number, q: number, ...}; // error: string ~> number (prop q)
         ^^^^^^
 
 References:
    test8.js:12:15
-   12| type B = { q: string };
+   12| type B = { q: string, ... };
                      ^^^^^^ [1]
    test8.js:7:28
-    7| ({...o}) as {p: number, q: number}; // error: string ~> number (prop q)
+    7| ({...o}) as {p: number, q: number, ...}; // error: string ~> number (prop q)
                                   ^^^^^^ [2]
 
 
@@ -353,15 +353,15 @@ Cannot cast object literal to object type because in property `p`: number [1] is
 [incompatible-type]
 
    test8.js:8:2
-    8| ({...o}) as {p: string, q: string}; // error: number ~> string (prop p)
+    8| ({...o}) as {p: string, q: string, ...}; // error: number ~> string (prop p)
         ^^^^^^
 
 References:
    test8.js:11:15
-   11| type A = { p: number };
+   11| type A = { p: number, ... };
                      ^^^^^^ [1]
    test8.js:8:17
-    8| ({...o}) as {p: string, q: string}; // error: number ~> string (prop p)
+    8| ({...o}) as {p: string, q: string, ...}; // error: number ~> string (prop p)
                        ^^^^^^ [2]
 
 
@@ -372,7 +372,7 @@ because interfaces do not track the own-ness of their properties. Try using an o
 [cannot-spread-interface]
 
    test9.js:5:2
-   5| ({...o_call}) as {'$call': any}; // error: interfaces cannot be spread
+   5| ({...o_call}) as {'$call': any, ...}; // error: interfaces cannot be spread
        ^^^^^^^^^^^ [1]
 
 References:
@@ -388,7 +388,7 @@ because interfaces do not track the own-ness of their properties. Try using an o
 [cannot-spread-interface]
 
    test9.js:11:2
-   11| ({...o_index}) as {'$key': any}; // error: interfaces cannot be spread
+   11| ({...o_index}) as {'$key': any, ...}; // error: interfaces cannot be spread
         ^^^^^^^^^^^^ [1]
 
 References:
@@ -404,7 +404,7 @@ because interfaces do not track the own-ness of their properties. Try using an o
 [cannot-spread-interface]
 
    test9.js:12:2
-   12| ({...o_index}) as {'$value': any}; // error: interfaces cannot be spread
+   12| ({...o_index}) as {'$value': any, ...}; // error: interfaces cannot be spread
         ^^^^^^^^^^^^ [1]
 
 References:

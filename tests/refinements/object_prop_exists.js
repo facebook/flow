@@ -1,17 +1,17 @@
 {
-  declare const x: {|a: true, b: number|} | {|a: false, b: string, c: true|};
+  declare const x: {a: true, b: number} | {a: false, b: string, c: true};
   if (x.c) {
     x as empty; // ERROR
-    x as {|a: false, b: string, c: true|}; // OK
+    x as {a: false, b: string, c: true}; // OK
   } else {
     x as empty; // ERROR
-    x as {|a: true, b: number|}; // OK
+    x as {a: true, b: number}; // OK
   }
 }
 
 {
   // Non-readable
-  declare const x: {|a: true, b: number|} | {|a: false, b: string, -c: true|};
+  declare const x: {a: true, b: number} | {a: false, b: string, -c: true};
   if (x.c) { // ERROR: prop not readable
     x as empty; // ERROR
   } else {
@@ -20,37 +20,37 @@
 }
 
 {
-  function withResult1(result: {ok: true} | {ok: false}): string {
+  function withResult1(result: {ok: true, ...} | {ok: false, ...}): string {
     if(result?.ok === false) {
         return result as empty; // good error: result not refined to empty
     }
     return "Hello"
   }
-  function withResult2(result: {ok: true} | {ok: void}): string {
+  function withResult2(result: {ok: true, ...} | {ok: void, ...}): string {
     if(result?.ok === undefined) {
         return result as empty; // good error: result not refined to empty
     }
     return "Hello"
   }
-  function withResult3(result: {ok: true} | {ok: null}): string {
+  function withResult3(result: {ok: true, ...} | {ok: null, ...}): string {
     if(result?.ok === null) {
         return result as empty; // good error: result not refined to empty
     }
     return "Hello"
   }
-  function withResult4(result: {ok: true} | {ok: null}): string {
+  function withResult4(result: {ok: true, ...} | {ok: null, ...}): string {
     if(result?.ok == null) {
         return result as empty; // good error: result not refined to empty
     }
     return "Hello"
   }
-  function withResult5(result: {ok: true} | {ok: null}): string {
+  function withResult5(result: {ok: true, ...} | {ok: null, ...}): string {
     if(result?.ok == undefined) {
         return result as empty; // good error: result not refined to empty
     }
     return "Hello"
   }
-  function withResult6(result: {ok: void} | {ok: null}): string {
+  function withResult6(result: {ok: void, ...} | {ok: null, ...}): string {
     if(result?.ok === undefined) {
         return result as empty; // good error: result not refined to empty, and only reference the void case
     }

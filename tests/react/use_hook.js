@@ -7,7 +7,7 @@ declare const AnswerPromise: Promise<42>;
 
 declare const CustomThennable: {
   then(onFulfil: (string) => void): void;
-};
+ ...};
 
 function Test() {
   // expected to not error

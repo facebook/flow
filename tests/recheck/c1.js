@@ -1,3 +1,3 @@
 // @flow
 
-export function foo(props: { x: number }) { }
+export function foo(props: { x: number, ... }) { }

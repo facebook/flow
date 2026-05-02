@@ -1,9 +1,9 @@
 // Member RHS
 {
-  declare const O: {|
+  declare const O: {
     A: 1,
     B: 2,
-  |};
+ };
   declare const x: 1 | 2;
 
   if (x === O.A) {
@@ -25,7 +25,7 @@
 {
   declare const one: 1;
   declare const two: 2;
-  declare const O: {|x: 1 | 2|};
+  declare const O: {x: 1 | 2};
 
   if (O.x === one) {
     O.x as 1; // OK
@@ -44,13 +44,13 @@
 
 // Negated sentinel regression test
 {
-  declare const O: {|
+  declare const O: {
     foo: 'foo',
     bar: 'bar',
-  |};
+ };
 
-  type T = {|type: 'foo', value: number|}
-         | {|type: 'bar', value: void|};
+  type T = {type: 'foo', value: number}
+         | {type: 'bar', value: void};
 
   declare const x: T;
 
@@ -62,10 +62,10 @@
 
 // Works in a switch
 {
-  declare const O: {|
+  declare const O: {
     A: 1,
     B: 2,
-  |};
+ };
 
   declare const x: 1 | 2;
 
@@ -79,18 +79,18 @@
 
 // With sentinel refinement in switch
 {
-  declare const x: {|
+  declare const x: {
     type: 'foo',
     value: string,
-  |} | {|
+ } | {
     type: 'bar',
     value: number,
-  |};
+ };
 
-  declare const O: {|
+  declare const O: {
     foo: 'foo',
     bar: 'bar',
-  |};
+ };
 
   switch (x.type) {
     case O.foo:
@@ -106,10 +106,10 @@
 
 // Regression test for when RHS and LHS both reference the same object
 {
-  declare const x: {|
+  declare const x: {
     top: 1,
     bottom: 1,
-  |}
+ }
 
   if (x.top === x.bottom) {} // OK
 }

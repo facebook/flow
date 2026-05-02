@@ -7,7 +7,7 @@
 type WithVariance = {
   +readonlyProp: string,
   -writeonlyProp: number,
-};
+ ...};
 
 // Multiple variance annotations on interface (each + is separate)
 interface I {

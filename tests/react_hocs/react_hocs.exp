@@ -8,7 +8,7 @@ Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmet
 
 References:
    Bad.js:12:29
-   12|   mapProps(({ buz }: { buz: string }) => ({ // Error: Missing foo
+   12|   mapProps(({ buz }: { buz: string, ... }) => ({ // Error: Missing foo
                                    ^^^^^^ [1]
    Bad.js:13:17
    13|     buz: (buz * 2).toString(), // Error: string ~> number
@@ -26,12 +26,12 @@ exists in `Props` [2]. [incompatible-type]
 
 References:
    hocs.js:16:13
-                   v-----
-   16| ): component(...{|
+                   v----
+   16| ): component(...{
    17|   ...$Exact<Props>,
    18|   ...$Exact<ExtraProps>,
-   19| |}) => component(...$Exact<Props>) {
-       --^ [1]
+   19| }) => component(...$Exact<Props>) {
+       -^ [1]
    Bad.js:9:21
     9| const Bad = (props: Props) => null;
                            ^^^^^ [2]
@@ -47,9 +47,9 @@ with number [2]. [incompatible-type]
          ^^^
 
 References:
-   Bad.js:15:21
-   15|   withProps<{| buz: string |}, _>(({ buz }) => ({
-                           ^^^^^^ [1]
+   Bad.js:15:19
+   15|   withProps<{buz: string}, _>(({ buz }) => ({
+                         ^^^^^^ [1]
    Bad.js:6:8
     6|   bar: number,
               ^^^^^^ [2]
@@ -69,8 +69,8 @@ References:
     5| <Good foo={1} buz={2} />; // Error: Missing qux
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    Good.js:21:32
-   21| )(Good) as React.ComponentType<{|foo: number, buz: number, qux: number|}>);
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   21| )(Good) as React.ComponentType<{foo: number, buz: number, qux: number}>);
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- Good_use.js:6:2
@@ -87,8 +87,8 @@ References:
     6| <Good foo={1} qux={3} />; // Error: Missing buz
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    Good.js:21:32
-   21| )(Good) as React.ComponentType<{|foo: number, buz: number, qux: number|}>);
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   21| )(Good) as React.ComponentType<{foo: number, buz: number, qux: number}>);
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- Good_use.js:7:2
@@ -105,8 +105,8 @@ References:
     7| <Good buz={2} qux={3} />; // Error: Missing foo
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    Good.js:21:32
-   21| )(Good) as React.ComponentType<{|foo: number, buz: number, qux: number|}>);
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   21| )(Good) as React.ComponentType<{foo: number, buz: number, qux: number}>);
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- Good_use.js:8:19
@@ -118,9 +118,9 @@ Cannot create `Good` element because in property `buz`: string [1] is incompatib
                          ^^^^^^ [1]
 
 References:
-   Good.js:21:52
-   21| )(Good) as React.ComponentType<{|foo: number, buz: number, qux: number|}>);
-                                                          ^^^^^^ [2]
+   Good.js:21:51
+   21| )(Good) as React.ComponentType<{foo: number, buz: number, qux: number}>);
+                                                         ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- Good_use.js:9:27
@@ -132,9 +132,9 @@ Cannot create `Good` element because in property `qux`: string [1] is incompatib
                                  ^^^^^^ [1]
 
 References:
-   Good.js:21:65
-   21| )(Good) as React.ComponentType<{|foo: number, buz: number, qux: number|}>);
-                                                                       ^^^^^^ [2]
+   Good.js:21:64
+   21| )(Good) as React.ComponentType<{foo: number, buz: number, qux: number}>);
+                                                                      ^^^^^^ [2]
 
 
 

@@ -1,9 +1,9 @@
 // @flow
 
-type A = {type: 'a'}
-type B = {type: 'b'}
-type C = {type: 'c'}
-type D = {type: 'd'}
+type A = {type: 'a', ...}
+type B = {type: 'b', ...}
+type C = {type: 'c', ...}
+type D = {type: 'd', ...}
 
 type AB = A | B;
 type CD = C | D;

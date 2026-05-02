@@ -1025,7 +1025,7 @@ Cannot call `myFun.bind` because in property `prop`: boolean [1] is incompatible
 
 References:
    declare_function.js:1:38
-    1| declare function myFun(this: {+prop: number}): string;
+    1| declare function myFun(this: {+prop: number, ...}): string;
                                             ^^^^^^ [2]
 
 
@@ -1040,7 +1040,7 @@ boolean [2]. [incompatible-type]
 
 References:
    declare_function.js:1:38
-    1| declare function myFun(this: {+prop: number}): string;
+    1| declare function myFun(this: {+prop: number, ...}): string;
                                             ^^^^^^ [1]
    declare_function.js:13:20
    13| myFun.apply({prop: true}, [] as Array<number>); // Error - boolean ~> number
@@ -1058,7 +1058,7 @@ Cannot call `myFun.call` because in the `this` parameter > property `prop`: numb
 
 References:
    declare_function.js:1:38
-    1| declare function myFun(this: {+prop: number}): string;
+    1| declare function myFun(this: {+prop: number, ...}): string;
                                             ^^^^^^ [1]
    declare_function.js:14:19
    14| myFun.call({prop: true}); // Error - boolean ~> number
@@ -1076,7 +1076,7 @@ Cannot call `myPolyFun.bind` because in property `prop`: boolean [1] is incompat
 
 References:
    declare_function.js:2:45
-    2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
+    2| declare function myPolyFun<T>(this: {+prop: number, ...}, x: T): T;
                                                    ^^^^^^ [2]
 
 
@@ -1091,7 +1091,7 @@ boolean [2]. [incompatible-type]
 
 References:
    declare_function.js:2:45
-    2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
+    2| declare function myPolyFun<T>(this: {+prop: number, ...}, x: T): T;
                                                    ^^^^^^ [1]
    declare_function.js:16:24
    16| myPolyFun.apply({prop: true}, [] as Array<number>); // Error - boolean ~> number
@@ -1109,7 +1109,7 @@ boolean [2]. [incompatible-type]
 
 References:
    declare_function.js:2:45
-    2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
+    2| declare function myPolyFun<T>(this: {+prop: number, ...}, x: T): T;
                                                    ^^^^^^ [1]
    declare_function.js:17:23
    17| myPolyFun.call({prop: true}); // Error - boolean ~> number
@@ -1142,8 +1142,8 @@ Cannot call `myFun.apply` because in the `this` parameter: object type [1] is in
 
 References:
    declare_function.js:1:30
-    1| declare function myFun(this: {+prop: number}): string;
-                                    ^^^^^^^^^^^^^^^ [1]
+    1| declare function myFun(this: {+prop: number, ...}): string;
+                                    ^^^^^^^^^^^^^^^^^^^^ [1]
    declare_function.js:20:1
    20| myFun.apply(); // Error - void ~> number
        ^^^^^^^^^^^^^ [2]
@@ -1160,8 +1160,8 @@ Cannot call `myFun.call` because in the `this` parameter: object type [1] is inc
 
 References:
    declare_function.js:1:30
-    1| declare function myFun(this: {+prop: number}): string;
-                                    ^^^^^^^^^^^^^^^ [1]
+    1| declare function myFun(this: {+prop: number, ...}): string;
+                                    ^^^^^^^^^^^^^^^^^^^^ [1]
    declare_function.js:21:1
    21| myFun.call(); // Error - void ~> number
        ^^^^^^^^^^^^ [2]
@@ -1193,8 +1193,8 @@ Cannot call `myPolyFun.apply` because in the `this` parameter: object type [1] i
 
 References:
    declare_function.js:2:37
-    2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
-                                           ^^^^^^^^^^^^^^^ [1]
+    2| declare function myPolyFun<T>(this: {+prop: number, ...}, x: T): T;
+                                           ^^^^^^^^^^^^^^^^^^^^ [1]
    declare_function.js:23:1
    23| myPolyFun.apply(); // Error - void ~> number
        ^^^^^^^^^^^^^^^^^ [2]
@@ -1211,8 +1211,8 @@ Cannot call `myPolyFun.call` because in the `this` parameter: object type [1] is
 
 References:
    declare_function.js:2:37
-    2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
-                                           ^^^^^^^^^^^^^^^ [1]
+    2| declare function myPolyFun<T>(this: {+prop: number, ...}, x: T): T;
+                                           ^^^^^^^^^^^^^^^^^^^^ [1]
    declare_function.js:24:1
    24| myPolyFun.call(); // Error - void ~> number
        ^^^^^^^^^^^^^^^^ [2]
@@ -2072,8 +2072,8 @@ Cannot call `bar.bind` because property `f` is missing in object type [1] but ex
 
 References:
    test.js:3:17
-    3| declare var y : { y : string};
-                       ^^^^^^^^^^^^^ [1]
+    3| declare var y : { y : string, ...};
+                       ^^^^^^^^^^^^^^^^^^ [1]
    test.js:12:22
    12| function bar (this : {f : number, ...}) : number {
                             ^^^^^^^^^^^^^^^^^ [2]
@@ -2113,13 +2113,13 @@ References:
    test.js:38:10
                 v
    38| let o3 = {
-   39|     foo(this : {|y : number|}) {},
+   39|     foo(this : {y : number}) {},
    40|     y : 3
    41| }
        ^ [1]
    test.js:39:16
-   39|     foo(this : {|y : number|}) {},
-                      ^^^^^^^^^^^^^^ [2]
+   39|     foo(this : {y : number}) {},
+                      ^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:45:13
@@ -2140,8 +2140,8 @@ References:
    33| }
        ^ [1]
    test.js:39:16
-   39|     foo(this : {|y : number|}) {},
-                      ^^^^^^^^^^^^^^ [2]
+   39|     foo(this : {y : number}) {},
+                      ^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:55:1

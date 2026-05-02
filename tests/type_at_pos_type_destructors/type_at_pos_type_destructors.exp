@@ -108,7 +108,7 @@ conditional-types.js:34:5,34:5
 exact.js:4:6
 Flags:
 type B = $Exact<A>
-= {|x: number|}
+= {x: number}
 
 'A' defined at exact.js:3:5
 'B' defined at exact.js:4:5
@@ -118,7 +118,7 @@ exact.js:4:6,4:6
 exact.js:6:13
 Flags:
 $Exact<A>
-= {|x: number|}
+= {x: number}
 
 'A' defined at exact.js:3:5
 
@@ -127,7 +127,7 @@ exact.js:6:13,6:13
 exact.js:8:13
 Flags:
 $Exact<B>
-= {|x: number|}
+= {x: number}
 
 'B' defined at exact.js:4:5
 
@@ -136,7 +136,7 @@ exact.js:8:13,8:13
 exact.js:10:13
 Flags:
 $Exact<{p: number, ...}>
-= {|p: number|}
+= {p: number}
 exact.js:10:13,10:13
 
 exact.js:13:17
@@ -152,7 +152,7 @@ exact.js:15:7,15:7
 exact.js:19:13
 Flags:
 $Exact<$Exact<A>>
-= {|x: number|}
+= {x: number}
 
 'A' defined at exact.js:3:5
 
@@ -161,7 +161,7 @@ exact.js:19:13,19:13
 exact.js:23:13
 Flags:
 $Exact<Class<C>>
-= {|name: string|}
+= {name: string}
 
 'C' defined at exact.js:22:6
 
@@ -170,7 +170,7 @@ exact.js:23:13,23:13
 exact.js:26:6
 Flags:
 type P<X> = $Exact<{m: (x: X) => void, ...}>
-= {|m: (x: X) => void|}
+= {m: (x: X) => void}
 
 'P' defined at exact.js:26:5
 
@@ -179,7 +179,7 @@ exact.js:26:6,26:6
 exact.js:28:6
 Flags:
 type Q<X> = $Exact<P<X>>
-= {|m: (x: X) => void|}
+= {m: (x: X) => void}
 
 'P' defined at exact.js:26:5
 'Q' defined at exact.js:28:5
@@ -225,7 +225,7 @@ react-component.js:20:13,20:13
 
 spread.js:12:6
 Flags:
-type EObj2 = {|w: O, x: O, y: O, z: O|}
+type EObj2 = {w: O, x: O, y: O, z: O}
 
 'EObj2' defined at spread.js:12:5
 'O' defined at spread.js:3:20
@@ -256,8 +256,8 @@ spread.js:16:6,16:7
 
 spread.js:18:6
 Flags:
-type EC1 = {|...$Exact<C>, o: O|}
-= {|f: O, o: O|}
+type EC1 = {...$Exact<C>, o: O}
+= {f: O, o: O}
 
 'C' defined at spread.js:5:5
 'EC1' defined at spread.js:18:5
@@ -267,8 +267,8 @@ spread.js:18:6,18:8
 
 spread.js:20:6
 Flags:
-type EC2 = {|o: O, ...C|}
-= {|f: O, o: O|}
+type EC2 = {o: O, ...C}
+= {f: O, o: O}
 
 'C' defined at spread.js:5:5
 'EC2' defined at spread.js:20:5
@@ -357,7 +357,7 @@ spread.js:38:6,38:7
 
 spread.js:40:6
 Flags:
-type EB1<T: {...}, S: {...}> = {|...T, ...S, o: O|}
+type EB1<T: {...}, S: {...}> = {...T, ...S, o: O}
 
 'EB1' defined at spread.js:40:5
 'O' defined at spread.js:3:20
@@ -366,7 +366,7 @@ spread.js:40:6,40:8
 
 spread.js:42:6
 Flags:
-type EB2<T: {...}> = {|...T, o: O|}
+type EB2<T: {...}> = {...T, o: O}
 
 'EB2' defined at spread.js:42:5
 'O' defined at spread.js:3:20
@@ -375,7 +375,7 @@ spread.js:42:6,42:8
 
 spread.js:44:6
 Flags:
-type EB3<T: {...}> = {|o: O, ...T|}
+type EB3<T: {...}> = {o: O, ...T}
 
 'EB3' defined at spread.js:44:5
 'O' defined at spread.js:3:20
@@ -384,7 +384,7 @@ spread.js:44:6,44:8
 
 spread.js:46:6
 Flags:
-type EB4<T: {...}> = {|o: O, ...T, oo: O|}
+type EB4<T: {...}> = {o: O, ...T, oo: O}
 
 'EB4' defined at spread.js:46:5
 'O' defined at spread.js:3:20
@@ -393,7 +393,7 @@ spread.js:46:6,46:8
 
 spread.js:48:6
 Flags:
-type EB5<T: {...}> = {|u: O, w: T, v: O, x: O, ...T, y: O|}
+type EB5<T: {...}> = {u: O, w: T, v: O, x: O, ...T, y: O}
 
 'EB5' defined at spread.js:48:5
 'O' defined at spread.js:3:20
@@ -422,7 +422,7 @@ spread.js:52:6,52:9
 
 spread.js:54:6
 Flags:
-type EP1<T> = {|...P<T>, o: O|}
+type EP1<T> = {...P<T>, o: O}
 
 'EP1' defined at spread.js:54:5
 'O' defined at spread.js:3:20
@@ -432,7 +432,7 @@ spread.js:54:6,54:8
 
 spread.js:56:6
 Flags:
-type EP2<T> = {|o: O, ...P<T>|}
+type EP2<T> = {o: O, ...P<T>}
 
 'EP2' defined at spread.js:56:5
 'O' defined at spread.js:3:20
@@ -442,8 +442,8 @@ spread.js:56:6,56:8
 
 spread.js:58:6
 Flags:
-type ECtor1 = {|...Ctor, o: O|}
-= {|name: string, o: O|}
+type ECtor1 = {...Ctor, o: O}
+= {name: string, o: O}
 
 'Ctor' defined at spread.js:8:5
 'ECtor1' defined at spread.js:58:5
@@ -453,7 +453,7 @@ spread.js:58:6,58:11
 
 spread.js:60:6
 Flags:
-type ECtor2 = {|o: O, ...Ctor|}
+type ECtor2 = {o: O, ...Ctor}
 = any (implicit)
 
 'Ctor' defined at spread.js:8:5
@@ -511,7 +511,7 @@ spread.js:70:6,70:10
 
 type-destructor.js:20:6
 Flags:
-type Country = keyof {|FR: string, IT: string, US: string|}
+type Country = keyof {FR: string, IT: string, US: string}
 = "FR" | "IT" | "US"
 
 'Country' defined at type-destructor.js:20:5
@@ -538,7 +538,7 @@ type-destructor.js:27:6,27:16
 
 type-destructor.js:31:6
 Flags:
-type ValuesOfFrozenObject = Values<{|+A: "a", +B: "b"|}>
+type ValuesOfFrozenObject = Values<{+A: "a", +B: "b"}>
 = "a" | "b"
 
 'ValuesOfFrozenObject' defined at type-destructor.js:31:5
@@ -726,7 +726,7 @@ type-destructor.js:105:6,105:35
 
 type-destructor.js:109:6
 Flags:
-type ExportsM = {|+x: number|}
+type ExportsM = {+x: number}
 
 'ExportsM' defined at type-destructor.js:109:5
 
@@ -744,8 +744,8 @@ type-destructor.js:115:18,115:28
 
 type-destructor.js:119:6
 Flags:
-type RecursiveTypeDestructor = {|f: {|g: RecursiveTypeDestructor["f"]|}|}
-= {|f: {|g: {|g: any|}|}|}
+type RecursiveTypeDestructor = {f: {g: RecursiveTypeDestructor["f"]}}
+= {f: {g: {g: any}}}
 
 'RecursiveTypeDestructor' defined at type-destructor.js:119:5
 
@@ -753,10 +753,10 @@ type-destructor.js:119:6,119:28
 
 type-destructor.js:126:6
 Flags:
-type RecursiveTypeDestructorPoly<X> = {|
-  f: {|h: RecursiveTypeDestructorPoly<X>["f"]|} | X
-|}
-= {|f: {|h: {|h: {|h: any|} | X|} | X|} | X|}
+type RecursiveTypeDestructorPoly<X> = {
+  f: {h: RecursiveTypeDestructorPoly<X>["f"]} | X
+}
+= {f: {h: {h: {h: any} | X} | X} | X}
 
 'RecursiveTypeDestructorPoly' defined at type-destructor.js:126:5
 
@@ -790,7 +790,7 @@ type-destructor.js:155:9,155:14
 mapped-type.js:7:6
 Flags:
 type MappedObj1 = {[key in keyof O]: number}
-= {|bar: number, foo: number|}
+= {bar: number, foo: number}
 
 'MappedObj1' defined at mapped-type.js:7:5
 'O' defined at mapped-type.js:3:5
@@ -800,7 +800,7 @@ mapped-type.js:7:6,7:15
 mapped-type.js:9:6
 Flags:
 type MappedObj2 = {[key in keyof O]: O[key]}
-= {|bar: string, foo: number|}
+= {bar: string, foo: number}
 
 'MappedObj2' defined at mapped-type.js:9:5
 'O' defined at mapped-type.js:3:5
@@ -810,7 +810,7 @@ mapped-type.js:9:6,9:15
 mapped-type.js:11:6
 Flags:
 type MappedObj3 = {-[key in keyof O]: O[key]}
-= {|-bar: string, -foo: number|}
+= {-bar: string, -foo: number}
 
 'MappedObj3' defined at mapped-type.js:11:5
 'O' defined at mapped-type.js:3:5
@@ -820,7 +820,7 @@ mapped-type.js:11:6,11:15
 mapped-type.js:13:6
 Flags:
 type MappedObj4 = {+[key in keyof O]: O[key]}
-= {|+bar: string, +foo: number|}
+= {+bar: string, +foo: number}
 
 'MappedObj4' defined at mapped-type.js:13:5
 'O' defined at mapped-type.js:3:5
@@ -830,7 +830,7 @@ mapped-type.js:13:6,13:15
 mapped-type.js:15:6
 Flags:
 type MappedObj5 = {[key in keyof O]?: O[key]}
-= {|bar?: string, foo?: number|}
+= {bar?: string, foo?: number}
 
 'MappedObj5' defined at mapped-type.js:15:5
 'O' defined at mapped-type.js:3:5
@@ -840,7 +840,7 @@ mapped-type.js:15:6,15:15
 mapped-type.js:17:6
 Flags:
 type MappedObj6 = {+[key in keyof O]?: O[key]}
-= {|+bar?: string, +foo?: number|}
+= {+bar?: string, +foo?: number}
 
 'MappedObj6' defined at mapped-type.js:17:5
 'O' defined at mapped-type.js:3:5
@@ -850,7 +850,7 @@ mapped-type.js:17:6,17:15
 mapped-type.js:19:6
 Flags:
 type MappedObj7 = {-[key in keyof O]?: O[key]}
-= {|-bar?: string, -foo?: number|}
+= {-bar?: string, -foo?: number}
 
 'MappedObj7' defined at mapped-type.js:19:5
 'O' defined at mapped-type.js:3:5
@@ -925,13 +925,13 @@ mapped-type.js:40:6,40:17
 
 mapped-type.js:44:4
 Flags:
-{|bar: string, foo: number|}
+{bar: string, foo: number}
 mapped-type.js:44:4,44:4
 
 mapped-type.js:51:6
 Flags:
 type MappedObjNonHomomorphic1 = {[key in Keys]: number}
-= {|bar: number, foo: number|}
+= {bar: number, foo: number}
 
 'Keys' defined at mapped-type.js:47:5
 'MappedObjNonHomomorphic1' defined at mapped-type.js:51:5
@@ -941,7 +941,7 @@ mapped-type.js:51:6,51:29
 mapped-type.js:53:6
 Flags:
 type MappedObjNonHomomorphic2 = {[key in Keys]: O[key]}
-= {|bar: string, foo: number|}
+= {bar: string, foo: number}
 
 'Keys' defined at mapped-type.js:47:5
 'MappedObjNonHomomorphic2' defined at mapped-type.js:53:5
@@ -952,7 +952,7 @@ mapped-type.js:53:6,53:29
 mapped-type.js:55:6
 Flags:
 type MappedObjNonHomomorphic3 = {-[key in Keys]: O[key]}
-= {|-bar: string, -foo: number|}
+= {-bar: string, -foo: number}
 
 'Keys' defined at mapped-type.js:47:5
 'MappedObjNonHomomorphic3' defined at mapped-type.js:55:5
@@ -963,7 +963,7 @@ mapped-type.js:55:6,55:29
 mapped-type.js:57:6
 Flags:
 type MappedObjNonHomomorphic4 = {+[key in Keys]: O[key]}
-= {|+bar: string, +foo: number|}
+= {+bar: string, +foo: number}
 
 'Keys' defined at mapped-type.js:47:5
 'MappedObjNonHomomorphic4' defined at mapped-type.js:57:5
@@ -974,7 +974,7 @@ mapped-type.js:57:6,57:29
 mapped-type.js:59:6
 Flags:
 type MappedObjNonHomomorphic5 = {[key in Keys]?: O[key]}
-= {|bar?: string, foo?: number|}
+= {bar?: string, foo?: number}
 
 'Keys' defined at mapped-type.js:47:5
 'MappedObjNonHomomorphic5' defined at mapped-type.js:59:5
@@ -985,7 +985,7 @@ mapped-type.js:59:6,59:29
 mapped-type.js:61:6
 Flags:
 type MappedObjNonHomomorphic6 = {+[key in Keys]?: O[key]}
-= {|+bar?: string, +foo?: number|}
+= {+bar?: string, +foo?: number}
 
 'Keys' defined at mapped-type.js:47:5
 'MappedObjNonHomomorphic6' defined at mapped-type.js:61:5
@@ -996,7 +996,7 @@ mapped-type.js:61:6,61:29
 mapped-type.js:63:6
 Flags:
 type MappedObjNonHomomorphic7 = {-[key in Keys]?: O[key]}
-= {|-bar?: string, -foo?: number|}
+= {-bar?: string, -foo?: number}
 
 'Keys' defined at mapped-type.js:47:5
 'MappedObjNonHomomorphic7' defined at mapped-type.js:63:5
@@ -1014,7 +1014,7 @@ mapped-type.js:67:6,67:30
 
 mapped-type.js:71:4
 Flags:
-{|bar: string, foo: number|}
+{bar: string, foo: number}
 mapped-type.js:71:4,71:4
 
 mapped-type.js:76:6
@@ -1045,7 +1045,7 @@ evaluated-size-limit.js:6:6
 Flags:
 type ObjSmall = {p1: {[key in Keys]: string}, ...}
 = {
-  p1: {|
+  p1: {
     a: string,
     b: string,
     c: string,
@@ -1072,7 +1072,7 @@ type ObjSmall = {p1: {[key in Keys]: string}, ...}
     x: string,
     y: string,
     z: string
-  |},
+  },
   ...
 }
 

@@ -2,16 +2,16 @@
 
 // refinement of disjoint unions
 
-type Empty = { }
+type Empty = { ...}
 
 type Success = {
   type: 'SUCCESS';
   result: string;
-};
+ ...};
 
 type Error = {
   type: 'ERROR';
-} & Empty;
+ ...} & Empty;
 
 export type T = Success | Error;
 

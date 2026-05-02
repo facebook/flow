@@ -1,15 +1,15 @@
 // @flow
 
-type A = {kind: 'a', e: Type};
-type B = {kind: 'b', k: Type, v: Type};
-type C = {kind: 'c'};
+type A = {kind: 'a', e: Type, ...};
+type B = {kind: 'b', k: Type, v: Type, ...};
+type C = {kind: 'c', ...};
 type Type = A | B | C;
 
-type TypeCases<R> = {|
+type TypeCases<R> = {
     a: (A) => R,
     b: (B) => R,
     c: (C) => R
-|};
+};
 
 function matcher<R>(cases: TypeCases<R>): (Type) => R {
     return (type) => cases[type.kind](type);

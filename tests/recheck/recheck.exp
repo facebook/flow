@@ -145,8 +145,8 @@ in object type [2]. [incompatible-type]
 
 References:
    c1.js:3:28
-   3| export function foo(props: { x: number }) { }
-                                 ^^^^^^^^^^^^^ [2]
+   3| export function foo(props: { x: number, ... }) { }
+                                 ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------------- c3.js:5:5
@@ -160,8 +160,8 @@ in object type [2]. [incompatible-type]
 
 References:
    c2.js:5:28
-   5| export function bar(props: { y: number }) {
-                                 ^^^^^^^^^^^^^ [2]
+   5| export function bar(props: { y: number, ... }) {
+                                 ^^^^^^^^^^^^^^^^^^ [2]
 
 
 
@@ -177,8 +177,8 @@ in object type [2]. [incompatible-type]
 
 References:
    c2.js:5:28
-   5| export function bar(props: { y: number }) {
-                                 ^^^^^^^^^^^^^ [2]
+   5| export function bar(props: { y: number, ... }) {
+                                 ^^^^^^^^^^^^^^^^^^ [2]
 
 
 
@@ -237,22 +237,22 @@ The above-mentioned two types must be the same because property `x` is invariant
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    f2.js:4:1
-   4| c as { x: number };
+   4| c as { x: number, ... };
       ^
 
 References:
    f1.js:4:15
-   4| type S = { x: string };
+   4| type S = { x: string, ... };
                     ^^^^^^ [1]
    f2.js:4:11
-   4| c as { x: number };
+   4| c as { x: number, ... };
                 ^^^^^^ [2]
    f1.js:4:10
-   4| type S = { x: string };
-               ^^^^^^^^^^^^^ [3]
+   4| type S = { x: string, ... };
+               ^^^^^^^^^^^^^^^^^^ [3]
    f2.js:4:6
-   4| c as { x: number };
-           ^^^^^^^^^^^^^ [4]
+   4| c as { x: number, ... };
+           ^^^^^^^^^^^^^^^^^^ [4]
 
 
 
@@ -270,22 +270,22 @@ The above-mentioned two types must be the same because property `x` is invariant
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    f2.js:4:1
-   4| c as { x: number };
+   4| c as { x: number, ... };
       ^
 
 References:
    f1.js:4:15
-   4| type S = { x: string };
+   4| type S = { x: string, ... };
                     ^^^^^^ [1]
    f2.js:4:11
-   4| c as { x: number };
+   4| c as { x: number, ... };
                 ^^^^^^ [2]
    f1.js:4:10
-   4| type S = { x: string };
-               ^^^^^^^^^^^^^ [3]
+   4| type S = { x: string, ... };
+               ^^^^^^^^^^^^^^^^^^ [3]
    f2.js:4:6
-   4| c as { x: number };
-           ^^^^^^^^^^^^^ [4]
+   4| c as { x: number, ... };
+           ^^^^^^^^^^^^^^^^^^ [4]
 
 
 

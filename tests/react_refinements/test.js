@@ -1,7 +1,7 @@
 //@flow
 import React from "react";
 
-function F({x}: {x: number}): null { return null }
+function F({x}: {x: number, ...}): null { return null }
 
 var x: ?number = 42;
 if (x != null) {

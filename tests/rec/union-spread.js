@@ -1,7 +1,7 @@
 //@flow
 
 type X = {[string]: null | void | X};
-type Y = {...X};
+type Y = {...X, ...};
 
 // Trigger optimization for X
 const x: X = {a: null, b: {c: null}};

@@ -4,13 +4,13 @@ type F<T> = (React.ElementConfig<T> => void) => void // error should not appear 
 
 declare function foo<T>(x: T): (React.ElementConfig<T> => void) => void
 
-declare function bar<P>(x: React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
+declare function bar<P>(x: React.ComponentType<{ m: number, ...P, ...}>): React.ComponentType<P>;
 
-class C extends React.Component<{}> {}
+class C extends React.Component<{...}> {}
 
 foo(bar(C)) as F<typeof C>; // error on call
 
-declare function spread<T: {}>(x: T): {...T, ...{}}; // error should not appear here
+declare function spread<T: {...}>(x: T): {...T, ...{...}, ...}; // error should not appear here
 
-declare var inexact: {foo: number};
+declare var inexact: {foo: number, ...};
 spread(inexact); // error on call

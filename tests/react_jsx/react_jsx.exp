@@ -1540,7 +1540,7 @@ Cannot create `Class_OptionalProps` element because in property `foo`: string [1
 
 References:
    test.js:696:35
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                           ^^^^^^ [2]
 
 
@@ -1555,7 +1555,7 @@ Cannot create `Class_OptionalProps` element because in property `bar`: string [1
 
 References:
    test.js:696:49
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                                         ^^^^^^ [2]
 
 
@@ -1588,7 +1588,7 @@ Cannot create `ClassExact_OptionalProps` element because in property `foo`: stri
 
 References:
    test.js:696:35
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                           ^^^^^^ [2]
 
 
@@ -1603,7 +1603,7 @@ Cannot create `ClassExact_OptionalProps` element because in property `bar`: stri
 
 References:
    test.js:696:49
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                                         ^^^^^^ [2]
 
 
@@ -1636,7 +1636,7 @@ Cannot create `ClassPure_OptionalProps` element because in property `foo`: strin
 
 References:
    test.js:696:35
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                           ^^^^^^ [2]
 
 
@@ -1651,7 +1651,7 @@ Cannot create `ClassPure_OptionalProps` element because in property `bar`: strin
 
 References:
    test.js:696:49
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                                         ^^^^^^ [2]
 
 
@@ -1684,7 +1684,7 @@ Cannot create `Function_OptionalProps` element because in property `foo`: string
 
 References:
    test.js:696:35
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                           ^^^^^^ [2]
 
 
@@ -1699,7 +1699,7 @@ Cannot create `Function_OptionalProps` element because in property `bar`: string
 
 References:
    test.js:696:49
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                                         ^^^^^^ [2]
 
 
@@ -1732,7 +1732,7 @@ number [2]. [incompatible-type]
 
 References:
    test.js:696:35
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                           ^^^^^^ [2]
 
 
@@ -1747,7 +1747,7 @@ number [2]. [incompatible-type]
 
 References:
    test.js:696:49
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                                         ^^^^^^ [2]
 
 
@@ -1780,7 +1780,7 @@ Cannot create `Abstract_OptionalProps` element because in property `foo`: string
 
 References:
    test.js:696:35
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                           ^^^^^^ [2]
 
 
@@ -1795,7 +1795,7 @@ Cannot create `Abstract_OptionalProps` element because in property `bar`: string
 
 References:
    test.js:696:49
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                                         ^^^^^^ [2]
 
 
@@ -1828,7 +1828,7 @@ number [2]. [incompatible-type]
 
 References:
    test.js:696:35
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                           ^^^^^^ [2]
 
 
@@ -1843,7 +1843,7 @@ number [2]. [incompatible-type]
 
 References:
    test.js:696:49
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                                         ^^^^^^ [2]
 
 
@@ -1876,7 +1876,7 @@ Cannot create `Member_OptionalProps.prop` element because in property `foo`: str
 
 References:
    test.js:696:35
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                           ^^^^^^ [2]
 
 
@@ -1891,7 +1891,7 @@ Cannot create `Member_OptionalProps.prop` element because in property `bar`: str
 
 References:
    test.js:696:49
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                                         ^^^^^^ [2]
 
 
@@ -1924,7 +1924,7 @@ number [2]. [incompatible-type]
 
 References:
    test.js:696:35
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                           ^^^^^^ [2]
 
 
@@ -1939,7 +1939,7 @@ number [2]. [incompatible-type]
 
 References:
    test.js:696:49
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                                         ^^^^^^ [2]
 
 
@@ -1972,7 +1972,7 @@ number [2]. [incompatible-type]
 
 References:
    test.js:696:35
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                           ^^^^^^ [2]
 
 
@@ -1987,7 +1987,7 @@ number [2]. [incompatible-type]
 
 References:
    test.js:696:49
-   696| type Props_OptionalProps = {foo: ?number, bar?: number};
+   696| type Props_OptionalProps = {foo: ?number, bar?: number, ...};
                                                         ^^^^^^ [2]
 
 

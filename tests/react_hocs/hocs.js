@@ -13,9 +13,9 @@ export function mapProps<InputProps: {...}, OutputProps: {...}>(
 
 export function withProps<Props: {...}, ExtraProps: {...}>(
   extraFn: (Props) => $Exact<ExtraProps>,
-): component(...{|
+): component(...{
   ...$Exact<Props>,
   ...$Exact<ExtraProps>,
-|}) => component(...$Exact<Props>) {
+}) => component(...$Exact<Props>) {
   return Component => props => <Component {...props} {...extraFn(props)} />;
 }

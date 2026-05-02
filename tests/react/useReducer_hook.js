@@ -4,9 +4,9 @@ import React from 'react';
   React.useReducer(); // Error: function requires another argument.
 }
 
-type Action = {type: 'increment' | 'decrement'} | {type: 'reset', payload: number}
+type Action = {type: 'increment' | 'decrement', ...} | {type: 'reset', payload: number, ...}
 
-function reducer(state: {count: number}, action: Action) {
+function reducer(state: {count: number, ...}, action: Action) {
   switch (action.type) {
     case "reset":
       return { count: action.payload };
@@ -32,7 +32,7 @@ const initialState = { count: 0 };
 }
 
 {
-  function init(initialArg: { initial: number }){
+  function init(initialArg: { initial: number, ... }){
     return {
       count: initialArg.initial
     }

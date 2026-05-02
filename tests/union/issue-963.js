@@ -5,15 +5,15 @@
 
 type t1 = {
     p1 : number
-};
+, ...};
 
 type t2 = {
     p2: number
-}
+, ...}
 
 type t3 = {
     p3 : number
-}
+, ...}
 
 type intersected = t1 & t2;
 type union = intersected | t3;

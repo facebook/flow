@@ -3,8 +3,8 @@
 import React from 'react';
 
 class Tuple
-  extends React.Component<{children: [boolean, string, number]}, void> {}
-class TupleOne extends React.Component<{children: [boolean]}, void> {}
+  extends React.Component<{children: [boolean, string, number], ...}, void> {}
+class TupleOne extends React.Component<{children: [boolean], ...}, void> {}
 
 <Tuple />; // Error: `children` is required.
 <Tuple>{true}{'foo'}{42}</Tuple>; // OK: All the tuple items.

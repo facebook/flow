@@ -1,4 +1,4 @@
-type State = {| pointers: Array<{ id?: number }> |};
+type State = {pointers: Array<{ id?: number, ... }>};
 
 declare var state: State;
 

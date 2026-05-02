@@ -17,4 +17,4 @@ var w: ??number = 42;
 // Test 4: Double nullable in object type
 type Obj = {
   x: ??string,
-};
+ ...};

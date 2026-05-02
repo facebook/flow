@@ -1,6 +1,6 @@
 //@flow
 
-declare var x: {y?: {z: number}};
+declare var x: {y?: {z: number, ...}, ...};
 
 if (x.y) {
   x.y.z as empty; //err num

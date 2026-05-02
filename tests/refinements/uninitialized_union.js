@@ -1,4 +1,4 @@
-declare var x: ?{f : string};
+declare var x: ?{f : string, ...};
 
 var y;
 

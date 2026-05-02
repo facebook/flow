@@ -11,7 +11,7 @@ function parseGroup(lines: Array<string>): {
     begin: number;
     end: number;
     text: string;
-} {
+ ...} {
     var counter = parseCounter(lines[0]);
     var timeframe = parseTimeframe(lines[1]);
     return {
@@ -21,7 +21,7 @@ function parseGroup(lines: Array<string>): {
     };
 }
 
-function parseTimeframe(line: string): {| begin: number; end: number |} {
+function parseTimeframe(line: string): {begin: number; end: number} {
     var timestamps = line.split('-->');
     return {
         begin: parseTimestamp(timestamps[0].trim()),

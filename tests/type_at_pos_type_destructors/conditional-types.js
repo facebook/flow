@@ -14,11 +14,11 @@ type T4_2 = string extends (infer X extends (infer Y extends string) ? string : 
 //   ^
 
 // Test that we can distinguish infer type with non-infer type with the same name.
-type T5 = string extends {foo: infer String, bar: String} ? string : number;
+type T5 = string extends {foo: infer String, bar: String, ...} ? string : number;
 //   ^
 
 // Test that we can distinguish infer type with non-infer generic type with the same name.
-type T6 = string extends {foo: infer T, bar: <T>(T) => void} ? string : number;
+type T6 = string extends {foo: infer T, bar: <T>(T) => void, ...} ? string : number;
 //   ^
 
 // Test that infer type and upper generic type can coexist.
@@ -26,7 +26,7 @@ type T7<T> = T extends infer T ? string : number;
 //   ^
 
 // Test that we can distinguish between all the confusing Ts.
-type T8<T> = T extends {foo: infer T, bar: <T>(T) => void} ? string : number;
+type T8<T> = T extends {foo: infer T, bar: <T>(T) => void, ...} ? string : number;
 //   ^
 
 // Distribute-over-union still works for unions coming from implicit instantiation.

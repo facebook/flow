@@ -3,9 +3,9 @@
 type Props = {
   name: string,
   age: number
-};
+, ...};
 
-type DefaultProps = { age: number };
+type DefaultProps = { age: number, ... };
 
 declare opaque type O1;
 declare opaque type O2;
@@ -34,14 +34,14 @@ type ValuesOfFrozenObject = $Values<typeof frozenObject>;
 type ValuesPoly<X> = $Values<X>;
 //   ^
 
-type ValuesPolyBound<X: { f: number }> = $Values<X>;
+type ValuesPolyBound<X: { f: number, ... }> = $Values<X>;
 //   ^
 
 // $ReadOnly<T>
 type ReadOnlyObj = $ReadOnly<{
 //   ^
   key: any
-}>;
+, ...}>;
 
 // $Exact<T>
 // see exact.js
@@ -66,27 +66,27 @@ type NonMaybeTypeAbstract<X> = $NonMaybeType<X>;
 type MappedTypeProps = {[K in keyof Props]: Array<Props[K]>}
 //   ^
 
-type MappedTypePoly<X, Y> = {[K in keyof { a: X, b?: Y }]: Array<{ a: X, b?: Y }[K]>};
+type MappedTypePoly<X, Y> = {[K in keyof { a: X, b?: Y, ... }]: Array<{ a: X, b?: Y, ... }[K]>};
 //   ^
 
-type FnObj = { getName: () => string, getAge: () => number };
-type MappedTypeFnReturnTypes = {[K in keyof FnObj]: { k: K, v: FnObj[K] extends () => infer V ? V : empty } };
+type FnObj = { getName: () => string, getAge: () => number, ... };
+type MappedTypeFnReturnTypes = {[K in keyof FnObj]: { k: K, v: FnObj[K] extends () => infer V ? V : empty, ... } };
 //   ^
 
 // conditional types
-type ExtractPropType = <T>({ prop: T }) => T;
-type PropObj = { prop: number };
-type ConditionalExtractPropType = PropObj extends { prop: infer T } ? T : empty;
+type ExtractPropType = <T>({ prop: T, ... }) => T;
+type PropObj = { prop: number, ... };
+type ConditionalExtractPropType = PropObj extends { prop: infer T, ... } ? T : empty;
 //   ^
 
-type NestedObj = {|
+type NestedObj = {
   +status: ?number,
-  +data: ?$ReadOnlyArray<{|
-    +foo: ?{|
+  +data: ?$ReadOnlyArray<{
+    +foo: ?{
       +bar: number
-    |}
-  |}>
-|};
+   }
+ }>
+};
 
 // If you wanted to extract the type for `bar`, you could use conditional type:
 type ConditionalNestedObjType = NestedObj extends {
@@ -94,15 +94,15 @@ type ConditionalNestedObjType = NestedObj extends {
   +data: ?$ReadOnlyArray<{
     +foo: ?{
       +bar: ?infer T
-    }
-  }>
-} ? T : empty;
+, ...    }
+, ...  }>
+, ...} ? T : empty;
 
 type ConditionalIdPoly<R> = R extends infer N ? N : empty;
 //   ^
 
-type PropObjPoly<P> = { prop: P };
-type ConditionalExtractPropTypePoly<P> = PropObjPoly<P> extends { prop: infer T } ? T : empty;
+type PropObjPoly<P> = { prop: P, ... };
+type ConditionalExtractPropTypePoly<P> = PropObjPoly<P> extends { prop: infer T, ... } ? T : empty;
 //   ^
 
 // $Exports<T>
@@ -110,26 +110,26 @@ type ExportsM = $Exports<"lib_m">;
 //   ^
 
 // Multi-params (ordering)
-declare function right_order<T: {}, K: T>(): T[K];
+declare function right_order<T: {...}, K: T>(): T[K];
 //               ^
-declare function wrong_order<K: T, T: {}>(): T[K];
+declare function wrong_order<K: T, T: {...}>(): T[K];
 //               ^
 
 // Recursive
-type RecursiveTypeDestructor = {|
+type RecursiveTypeDestructor = {
 //   ^
-  f: {|
+  f: {
     g: RecursiveTypeDestructor['f']
-  |}
-|};
+ }
+};
 
-type RecursiveTypeDestructorPoly<X> = {|
+type RecursiveTypeDestructorPoly<X> = {
 //   ^
-  f: {| h: RecursiveTypeDestructorPoly<X>['f'] |} | X // TODO
-|};
+  f: {h: RecursiveTypeDestructorPoly<X>['f']} | X // TODO
+};
 
 // Nested
-type $Pick<O: {}, K: $Keys<O>> = $NonMaybeType<O>[K];
+type $Pick<O: {...}, K: $Keys<O>> = $NonMaybeType<O>[K];
 //   ^
 
 // ReadOnly+destructuring

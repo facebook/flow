@@ -3,10 +3,10 @@ import * as React from 'react';
 /**
  * Basic render: Class component tests
  */
-class A extends React.Component<{}, void> {
+class A extends React.Component<{...}, void> {
   render = (): React.Node => {};
 }
-class B extends React.Component<{}, void> {
+class B extends React.Component<{...}, void> {
   render = (): React.Node => null;
 }
 
@@ -19,11 +19,11 @@ class B extends React.Component<{}, void> {
 /**
  * Basic render: stateless functional component tests
  */
-const C: React.ComponentType<{}> = props => {};
-const D: React.ComponentType<{}> = props => {
+const C: React.ComponentType<{...}> = props => {};
+const D: React.ComponentType<{...}> = props => {
   return;
 };
-const E: React.ComponentType<{}> = props => {
+const E: React.ComponentType<{...}> = props => {
   return null;
 };
 
@@ -36,7 +36,7 @@ const E: React.ComponentType<{}> = props => {
 <E foo="bar" />;
 // OK
 
-type UnfixedPropsType = {|foo?: string|};
+type UnfixedPropsType = {foo?: string};
 
 /**
  * PropsType inference: Class component test

@@ -1,5 +1,5 @@
 // Valid Usage
-type Obj = {p: number};
+type Obj = {p: number, ...};
 declare var obj: $ReadOnly<Obj>;
 obj.p = 42; // Should error!
 obj.p as number; // OK
@@ -7,14 +7,14 @@ obj.p as number; // OK
 declare var writableObj: Obj;
 writableObj as $ReadOnly<Obj>; // OK
 
-type MultiKeyObj = {p: number, q: number};
+type MultiKeyObj = {p: number, q: number, ...};
 declare var multiKeyObj: $ReadOnly<MultiKeyObj>;
 multiKeyObj.p = 42; // Should error!
 multiKeyObj.q = 42; // Should error!
 multiKeyObj.p as number; // OK
 multiKeyObj.q as number; // OK
 
-type UnionObj = {key: 1, p: number} | {key: 2, p: number, q: number};
+type UnionObj = {key: 1, p: number, ...} | {key: 2, p: number, q: number, ...};
 declare var unionObj: $ReadOnly<UnionObj>;
 if (unionObj.key === 1) {
   unionObj.p = 42; // Should error!
@@ -26,9 +26,9 @@ if (unionObj.key === 1) {
   unionObj.p as number; // OK
   unionObj.q as number; // OK
 }
-unionObj as {+key: 1, +p: number} | {+key: 2, +p: number, +q: number}; // OK
+unionObj as {+key: 1, +p: number, ...} | {+key: 2, +p: number, +q: number, ...}; // OK
 
-type SpreadUnionObj = {...UnionObj, z: number};
+type SpreadUnionObj = {...UnionObj, z: number, ...};
 declare var spreadUnionObj: $ReadOnly<SpreadUnionObj>
 if (spreadUnionObj.key === 1) {
   spreadUnionObj.p = 42; // Should error!
@@ -59,22 +59,22 @@ indexerKeyObj.x = true; // Should error!
 indexerKeyObj.p as number; // OK
 indexerKeyObj.x as boolean; // OK
 
-type ExactObj = {|p: number|};
+type ExactObj = {p: number};
 declare var exactObj: $ReadOnly<ExactObj>;
 exactObj.p = 42; // Should error!
 exactObj.p as number; // OK
 
-type SpreadObj = {...{p: number}};
+type SpreadObj = {...{p: number, ...}, ...};
 declare var spreadObj: $ReadOnly<SpreadObj>;
 spreadObj.p = 42; // Should error!
 spreadObj.p as number; // OK
 
-type SpreadExactObj = {|...{|p: number|}|};
+type SpreadExactObj = {...{p: number}};
 declare var spreadExactObj: $ReadOnly<SpreadExactObj>;
 spreadExactObj.p = 42; // Should error!
 spreadExactObj.p as number; // OK
 
-type ObjWithMethod = {p: number, fn(): boolean};
+type ObjWithMethod = {p: number, fn(): boolean, ...};
 declare var objWithMethod: $ReadOnly<ObjWithMethod>;
 objWithMethod.p = 42; // Should error!
 objWithMethod.fn = () => true; // Should error!
@@ -88,7 +88,7 @@ declare var instance: $ReadOnly<A>;
 instance.p = 42; // Should error!
 instance.p as number; // OK
 
-type WriteOnlyObj = {-p: 42};
+type WriteOnlyObj = {-p: 42, ...};
 declare var writeOnlyObj: $ReadOnly<WriteOnlyObj>;
 writeOnlyObj.p = 42; // Should error!
 writeOnlyObj.p as number // OK
@@ -99,4 +99,4 @@ type readOnlyNum = $ReadOnly<number>;
 
 // $ReadOnly preserves literal-ness
 declare function create<S>(obj: S): $ReadOnly<S>;
-create({ f: 1 }) as { f: any };
+create({ f: 1 }) as { f: any, ... };

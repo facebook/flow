@@ -1,6 +1,6 @@
 // @flow
 
-declare function f(x: {p: string}): number;
+declare function f(x: {p: string, ...}): number;
 declare function f(x: mixed): string;
 
 declare var x: {[K]: string}; // NB: `K` defined below

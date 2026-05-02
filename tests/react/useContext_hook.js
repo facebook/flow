@@ -4,10 +4,10 @@ import React from 'react';
   React.useMutationEffect(); // Error: function requires another argument.
 }
 
-type CustomType = {|
+type CustomType = {
   foo: string,
   bar: number,
-|};
+};
 
 {
   let stringValue: string;

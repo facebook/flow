@@ -1,8 +1,8 @@
 /* @flow */
 
 type T =
-    {type: "a"; a: number} |
-    {type: "b"; b: string};
+    {type: "a"; a: number, ...} |
+    {type: "b"; b: string, ...};
 
 var l: Array<T> = [
     {type: "a", a: 1},

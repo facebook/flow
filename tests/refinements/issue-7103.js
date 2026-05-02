@@ -2,7 +2,7 @@ declare class MyPromise {
   constructor(_: unknown): void;
 }
 
-type Box = {| +type: "GOOD", +value: string |} | {| +type: "BAD", +value: string |};
+type Box = {+type: "GOOD", +value: string} | {+type: "BAD", +value: string};
 function coerce(t: string): number {
   let box: Box = { type: "GOOD", value: t };
   if (box.type === "GOOD") {

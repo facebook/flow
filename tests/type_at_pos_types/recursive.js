@@ -4,7 +4,7 @@ var o = { m() { return this; } };
 //                      ^?
 o.m();
 
-type AList = ?{data: number, next: AList};
+type AList = ?{data: number, next: AList, ...};
 function alist(n: number): AList {
 //        ^?
   if (n <= 0) return null;
@@ -13,7 +13,7 @@ function alist(n: number): AList {
 
 const a = alist(10);
 
-type BList = {data: number, a_next: AList, next: BList} | null | '';
+type BList = {data: number, a_next: AList, next: BList, ...} | null | '';
 function blist(n: number): BList {
 //        ^?
   if (n <= 0) return null;
@@ -25,7 +25,7 @@ function blist(n: number): BList {
   };
 }
 
-type CList = {data: number, a_next: AList, next: BList, next: CList} | null | '';
+type CList = {data: number, a_next: AList, next: BList, next: CList, ...} | null | '';
 function clist(n: number): CList {
 //          ^?
   if (n <= 0) return null;

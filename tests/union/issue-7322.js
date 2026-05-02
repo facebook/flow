@@ -10,9 +10,9 @@ class Foo {
 
 type Bar = {
   useFoo(f: Foo): void
-};
+, ...};
 
-({} as Bar | {});
+({} as Bar | {...});
 
 const x: Foo = new Foo();
 

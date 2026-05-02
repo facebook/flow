@@ -21,7 +21,7 @@ var fn: F<number> = new C;
     fn;
 //  ^?
 
-type O<X> = { x: X };
+type O<X> = { x: X, ... };
 var on: O<number> = { x: 0 };
     on;
 //  ^?

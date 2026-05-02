@@ -14,5 +14,5 @@ length({ kind: "cons", next: { kind: "nil" } });
 length({ kind: "empty" }); // `kind` not found
 
 type List = Nil | Cons;
-type Nil = { kind: "nil" };
-type Cons = { kind: "cons", next: List };
+type Nil = { kind: "nil", ... };
+type Cons = { kind: "cons", next: List, ... };

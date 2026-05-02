@@ -1,5 +1,5 @@
-type Box = {| +type: "GOOD", +value: string |} | {| +type: "BAD", +value: string |};
-type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
+type Box = {+type: "GOOD", +value: string} | {+type: "BAD", +value: string};
+type Result = {+type: "PENDING"} | {+type: "DONE", value: number};
 function coerce(t: string): number {
   let box: Box = { type: "GOOD", value: t };
   function* broken(): Iterator<Result> {

@@ -5,7 +5,7 @@ function readT(t: T) {
   t // repositioning here shouldn't cause crashing
 }
 
-type Props = { ...Props }; // error: cyclic
+type Props = { ...Props, ... }; // error: cyclic
 
 function readProps(props: Props) {
   props // repositioning here shouldn't cause crashing

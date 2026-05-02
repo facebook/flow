@@ -15,7 +15,7 @@ let tests = [
     if (x == null) {} // ok
   },
 
-  function(x: { y: 'foo' } | { y: 'bar' }) {
+  function(x: { y: 'foo', ... } | { y: 'bar', ... }) {
     if (x.y == 123) {} // error
     if (x.y === 123) {} // error
   },

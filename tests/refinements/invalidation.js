@@ -3,7 +3,7 @@
 
 // First, write `coerce`, to demonstrate each issue in turn.
 
-const v: { f?: unknown } = {};
+const v: { f?: unknown, ... } = {};
 const vv = v;
 const store = (x: unknown) => { v.f = () => x; };
 
@@ -34,7 +34,7 @@ function coerce8779<A, B>(x: A): B {
 
 // Then, systematically explore different cases.
 
-type A = {b?: {c: boolean}};
+type A = {b?: {c: boolean, ...}, ...};
 
 // Heap refinements, on `a.b` where `a` is local,
 // invalidated by a function call.
@@ -231,7 +231,7 @@ type A = {b?: {c: boolean}};
 
 // Heap refinements, again on `a.b` where `a` is local,
 // invalidated by a write to property `b` on some other heap object.
-declare var x: { b?: { ... } };
+declare var x: { b?: { ... }, ... };
 (a: A) => {
   // Here's an error, a refinement that fixes it,
   // and a write correctly invalidating the refinement.
@@ -300,7 +300,7 @@ declare var ff: unknown => { ... } & Iterator<mixed>;
 
 () => {
   declare function f(x: mixed): boolean;
-  declare const foo: ?{bar: string};
+  declare const foo: ?{bar: string, ...};
 
   if (
     foo.bar != null && // error

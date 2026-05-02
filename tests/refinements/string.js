@@ -54,7 +54,7 @@ let tests = [
     }
   },
 
-  function(x: { foo: string }): 'foo' {
+  function(x: { foo: string, ... }): 'foo' {
     if (x.foo === 'foo') {
       return x.foo;
     }
@@ -62,7 +62,7 @@ let tests = [
   },
 
   function(
-    x: { kind: 'foo', foo: string } | { kind: 'bar', bar: string }
+    x: { kind: 'foo', foo: string, ... } | { kind: 'bar', bar: string, ... }
   ): string {
     if (x.kind === 'foo') {
       return x.foo;
@@ -71,7 +71,7 @@ let tests = [
     }
   },
 
-  function(str: string, obj: { foo: string }) {
+  function(str: string, obj: { foo: string, ... }) {
     if (str === obj.bar) { // Error, testing for unknown property
     }
   },

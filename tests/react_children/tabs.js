@@ -7,8 +7,8 @@
 
 import React from 'react';
 
-class Tab extends React.Component<{}, void> {}
-class NotTab extends React.Component<{}, void> {}
+class Tab extends React.Component<{...}, void> {}
+class NotTab extends React.Component<{...}, void> {}
 
 type TabBarNode =
   | void
@@ -21,7 +21,7 @@ type TabBarNode =
                        // making strings valid children when we use
                        // `Iterable<T>`.
 
-class TabBar extends React.Component<{children: TabBarNode}, void> {}
+class TabBar extends React.Component<{children: TabBarNode, ...}, void> {}
 
 <TabBar />; // Error: `children` is required.
 

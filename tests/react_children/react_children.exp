@@ -296,7 +296,7 @@ References:
    15| <MyComponent />; // Error: `children` is required.
        ^^^^^^^^^^^^^^^ [1]
    component.js:6:7
-    6| class MyComponent extends React.Component<{children: Node}, void> {
+    6| class MyComponent extends React.Component<{children: Node, ...}, void> {
              ^^^^^^^^^^^ [2]
 
 
@@ -314,7 +314,7 @@ References:
    16| <MyComponent></MyComponent>; // Error: `children` is required.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    component.js:6:7
-    6| class MyComponent extends React.Component<{children: Node}, void> {
+    6| class MyComponent extends React.Component<{children: Node, ...}, void> {
              ^^^^^^^^^^^ [2]
 
 
@@ -332,7 +332,7 @@ References:
    18| <MyComponent>{}</MyComponent>; // Error: `children` is required.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    component.js:6:7
-    6| class MyComponent extends React.Component<{children: Node}, void> {
+    6| class MyComponent extends React.Component<{children: Node, ...}, void> {
              ^^^^^^^^^^^ [2]
 
 
@@ -373,7 +373,7 @@ References:
    23| <Fun />; // Error: `children` is required.
        ^^^^^^^ [1]
    fun.js:16:7
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
              ^^^ [2]
 
 
@@ -392,7 +392,7 @@ Cannot create `Fun` element because in property `children`: children array [1] i
 
 References:
    fun.js:16:46
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
                                                     ^^ [2]
 
 
@@ -407,7 +407,7 @@ Cannot create `Fun` element because in property `children`: children array [1] i
 
 References:
    fun.js:16:46
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
                                                     ^^ [2]
 
 
@@ -422,7 +422,7 @@ Cannot create `Fun` element because in property `children`: children array [1] i
 
 References:
    fun.js:16:46
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
                                                     ^^ [2]
 
 
@@ -486,7 +486,7 @@ References:
    47| <Fun>{}</Fun>; // Error: `void` is not allowed.
        ^^^^^^^^^^^^^ [1]
    fun.js:16:7
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
              ^^^ [2]
 
 
@@ -504,7 +504,7 @@ References:
    48| <Fun>{/* Hello, world! */}</Fun>; // Error: comments are not allowed.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    fun.js:16:7
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
              ^^^ [2]
 
 
@@ -519,7 +519,7 @@ Cannot create `Fun` element because in property `children`: undefined [1] is inc
 
 References:
    fun.js:16:46
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
                                                     ^^ [2]
 
 
@@ -533,7 +533,7 @@ Cannot create `Fun` element because in property `children`: null [1] is incompat
 
 References:
    fun.js:16:46
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
                                                     ^^ [2]
 
 
@@ -548,7 +548,7 @@ Cannot create `Fun` element because in property `children`: boolean [1] is incom
 
 References:
    fun.js:16:46
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
                                                     ^^ [2]
 
 
@@ -563,7 +563,7 @@ Cannot create `Fun` element because in property `children`: boolean [1] is incom
 
 References:
    fun.js:16:46
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
                                                     ^^ [2]
 
 
@@ -578,7 +578,7 @@ Cannot create `Fun` element because in property `children`: number [1] is incomp
 
 References:
    fun.js:16:46
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
                                                     ^^ [2]
 
 
@@ -593,7 +593,7 @@ Cannot create `Fun` element because in property `children`: number [1] is incomp
 
 References:
    fun.js:16:46
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
                                                     ^^ [2]
 
 
@@ -608,7 +608,7 @@ Cannot create `Fun` element because in property `children`: React element [1] is
 
 References:
    fun.js:16:46
-   16| class Fun extends React.Component<{children: Fn}, void> {}
+   16| class Fun extends React.Component<{children: Fn, ...}, void> {}
                                                     ^^ [2]
 
 
@@ -626,7 +626,7 @@ References:
    59| <Obj />; // Error: `children` is required.
        ^^^^^^^ [1]
    fun.js:18:7
-   18| class Obj extends React.Component<{children: Data}, void> {}
+   18| class Obj extends React.Component<{children: Data, ...}, void> {}
              ^^^ [2]
 
 
@@ -675,7 +675,7 @@ Cannot create `Obj` element because in property `children`: children array [1] i
 
 References:
    fun.js:18:46
-   18| class Obj extends React.Component<{children: Data}, void> {}
+   18| class Obj extends React.Component<{children: Data, ...}, void> {}
                                                     ^^^^ [2]
 
 
@@ -690,7 +690,7 @@ Cannot create `Obj` element because in property `children`: children array [1] i
 
 References:
    fun.js:18:46
-   18| class Obj extends React.Component<{children: Data}, void> {}
+   18| class Obj extends React.Component<{children: Data, ...}, void> {}
                                                     ^^^^ [2]
 
 
@@ -705,7 +705,7 @@ Cannot create `Obj` element because in property `children`: children array [1] i
 
 References:
    fun.js:18:46
-   18| class Obj extends React.Component<{children: Data}, void> {}
+   18| class Obj extends React.Component<{children: Data, ...}, void> {}
                                                     ^^^^ [2]
 
 
@@ -720,7 +720,7 @@ Cannot create `FunArrayOnly` element because in property `children`: function [1
 
 References:
    fun.js:20:55
-   20| class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+   20| class FunArrayOnly extends React.Component<{children: Array<Fn>, ...}, void> {}
                                                              ^^^^^^^^^ [2]
 
 
@@ -735,7 +735,7 @@ with `Fn` [2]. [incompatible-type]
 
 References:
    fun.js:20:61
-   20| class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+   20| class FunArrayOnly extends React.Component<{children: Array<Fn>, ...}, void> {}
                                                                    ^^ [2]
 
 
@@ -750,7 +750,7 @@ with `Fn` [2]. [incompatible-type]
 
 References:
    fun.js:20:61
-   20| class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+   20| class FunArrayOnly extends React.Component<{children: Array<Fn>, ...}, void> {}
                                                                    ^^ [2]
 
 
@@ -765,7 +765,7 @@ with `Fn` [2]. [incompatible-type]
 
 References:
    fun.js:20:61
-   20| class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+   20| class FunArrayOnly extends React.Component<{children: Array<Fn>, ...}, void> {}
                                                                    ^^ [2]
 
 
@@ -780,7 +780,7 @@ Cannot create `FunArrayOnly` element because in property `children`: function [1
 
 References:
    fun.js:20:55
-   20| class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
+   20| class FunArrayOnly extends React.Component<{children: Array<Fn>, ...}, void> {}
                                                              ^^^^^^^^^ [2]
 
 
@@ -803,10 +803,10 @@ References:
    117|   {[() => 42, () => 42]}
            ^^^^^^^^^^^^^^^^^^^^ [1]
    fun.js:21:62
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                                      ^^ [2]
    fun.js:21:51
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                           ^^ [4]
 
 
@@ -829,10 +829,10 @@ References:
    123|   {[() => 42, () => 42]}
            ^^^^^^^^^^^^^^^^^^^^ [1]
    fun.js:21:62
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                                      ^^ [2]
    fun.js:21:51
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                           ^^ [4]
 
 
@@ -850,7 +850,7 @@ References:
    140| <FunArray>{}</FunArray>; // Error: `void` is not allowed.
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    fun.js:21:7
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
               ^^^^^^^^ [2]
 
 
@@ -868,7 +868,7 @@ References:
    141| <FunArray>{/* Hello, world! */}</FunArray>; // Error: comments are not allowed.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    fun.js:21:7
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
               ^^^^^^^^ [2]
 
 
@@ -884,10 +884,10 @@ Cannot create `FunArray` element because in property `children`: [incompatible-t
 
 References:
    fun.js:21:51
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                           ^^ [2]
    fun.js:21:56
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                                ^^^^^^^^^ [3]
 
 
@@ -903,10 +903,10 @@ Cannot create `FunArray` element because in property `children`: [incompatible-t
 
 References:
    fun.js:21:51
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                           ^^ [2]
    fun.js:21:56
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                                ^^^^^^^^^ [3]
 
 
@@ -922,10 +922,10 @@ Cannot create `FunArray` element because in property `children`: [incompatible-t
 
 References:
    fun.js:21:51
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                           ^^ [2]
    fun.js:21:56
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                                ^^^^^^^^^ [3]
 
 
@@ -941,10 +941,10 @@ Cannot create `FunArray` element because in property `children`: [incompatible-t
 
 References:
    fun.js:21:51
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                           ^^ [2]
    fun.js:21:56
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                                ^^^^^^^^^ [3]
 
 
@@ -960,10 +960,10 @@ Cannot create `FunArray` element because in property `children`: [incompatible-t
 
 References:
    fun.js:21:51
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                           ^^ [2]
    fun.js:21:56
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                                ^^^^^^^^^ [3]
 
 
@@ -979,10 +979,10 @@ Cannot create `FunArray` element because in property `children`: [incompatible-t
 
 References:
    fun.js:21:51
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                           ^^ [2]
    fun.js:21:56
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                                ^^^^^^^^^ [3]
 
 
@@ -998,10 +998,10 @@ Cannot create `FunArray` element because in property `children`: [incompatible-t
 
 References:
    fun.js:21:51
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                           ^^ [2]
    fun.js:21:56
-    21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+    21| class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
                                                                ^^^^^^^^^ [3]
 
 
@@ -1027,7 +1027,7 @@ References:
    26| <TabBar />; // Error: `children` is required.
        ^^^^^^^^^^ [1]
    tabs.js:24:7
-   24| class TabBar extends React.Component<{children: TabBarNode}, void> {}
+   24| class TabBar extends React.Component<{children: TabBarNode, ...}, void> {}
              ^^^^^^ [2]
 
 
@@ -1112,10 +1112,10 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    tabs.js:11:7
-   11| class NotTab extends React.Component<{}, void> {}
+   11| class NotTab extends React.Component<{...}, void> {}
              ^^^^^^ [2]
    tabs.js:10:7
-   10| class Tab extends React.Component<{}, void> {}
+   10| class Tab extends React.Component<{...}, void> {}
              ^^^ [3]
    tabs.js:16:5
    16|   | boolean
@@ -1137,10 +1137,10 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    tabs.js:11:7
-   11| class NotTab extends React.Component<{}, void> {}
+   11| class NotTab extends React.Component<{...}, void> {}
              ^^^^^^ [2]
    tabs.js:10:7
-   10| class Tab extends React.Component<{}, void> {}
+   10| class Tab extends React.Component<{...}, void> {}
              ^^^ [3]
    tabs.js:68:9
    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1171,10 +1171,10 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    tabs.js:11:7
-   11| class NotTab extends React.Component<{}, void> {}
+   11| class NotTab extends React.Component<{...}, void> {}
              ^^^^^^ [2]
    tabs.js:10:7
-   10| class Tab extends React.Component<{}, void> {}
+   10| class Tab extends React.Component<{...}, void> {}
              ^^^ [3]
    tabs.js:73:3
    73|   <NotTab/>
@@ -1198,7 +1198,7 @@ References:
    9| <Text />; // Error: `children` is required.
       ^^^^^^^^ [1]
    text.js:5:7
-   5| class Text extends React.Component<{children: string}, void> {}
+   5| class Text extends React.Component<{children: string, ...}, void> {}
             ^^^^ [2]
 
 
@@ -1216,7 +1216,7 @@ References:
    11| <TextLiteral />; // Error: `children` is required.
        ^^^^^^^^^^^^^^^ [1]
    text.js:7:7
-    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar', ...}, void> {}
              ^^^^^^^^^^^ [2]
 
 
@@ -1234,7 +1234,7 @@ References:
    15| <Text></Text>; // Error: `children` does not exist.
        ^^^^^^^^^^^^^ [1]
    text.js:5:7
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
              ^^^^ [2]
 
 
@@ -1252,7 +1252,7 @@ References:
    18| <Text>{}</Text>; // Error: `children` is required.
        ^^^^^^^^^^^^^^^ [1]
    text.js:5:7
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
              ^^^^ [2]
 
 
@@ -1270,7 +1270,7 @@ References:
    19| <Text>{/* Hello, world! */}</Text>; // Error: `children` is required.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    text.js:5:7
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
              ^^^^ [2]
 
 
@@ -1285,7 +1285,7 @@ Cannot create `Text` element because in property `children`: undefined [1] is in
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1300,7 +1300,7 @@ Cannot create `Text` element because in property `children`: null [1] is incompa
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1315,7 +1315,7 @@ Cannot create `Text` element because in property `children`: boolean [1] is inco
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1330,7 +1330,7 @@ Cannot create `Text` element because in property `children`: boolean [1] is inco
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1345,7 +1345,7 @@ Cannot create `Text` element because in property `children`: number [1] is incom
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1360,7 +1360,7 @@ Cannot create `Text` element because in property `children`: number [1] is incom
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1375,7 +1375,7 @@ Cannot create `Text` element because in property `children`: React element [1] i
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1390,7 +1390,7 @@ Cannot create `Text` element because in property `children`: children array [1] 
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1405,7 +1405,7 @@ Cannot create `Text` element because in property `children`: children array [1] 
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1420,7 +1420,7 @@ Cannot create `Text` element because in property `children`: children array [1] 
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1435,7 +1435,7 @@ Cannot create `Text` element because in property `children`: children array [1] 
 
 References:
    text.js:5:47
-    5| class Text extends React.Component<{children: string}, void> {}
+    5| class Text extends React.Component<{children: string, ...}, void> {}
                                                      ^^^^^^ [2]
 
 
@@ -1450,7 +1450,7 @@ Cannot create `TextLiteral` element because in property `children`: JSX text [1]
 
 References:
    text.js:7:54
-    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar', ...}, void> {}
                                                             ^^^^^^^^^^^^^ [2]
 
 
@@ -1465,7 +1465,7 @@ type [2]. [incompatible-type]
 
 References:
    text.js:7:54
-    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar', ...}, void> {}
                                                             ^^^^^^^^^^^^^ [2]
 
 
@@ -1480,7 +1480,7 @@ Cannot create `TextLiteral` element because in property `children`: JSX text [1]
 
 References:
    text.js:7:54
-    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar', ...}, void> {}
                                                             ^^^^^^^^^^^^^ [2]
 
 
@@ -1495,7 +1495,7 @@ Cannot create `TextLiteral` element because in property `children`: JSX text [1]
 
 References:
    text.js:7:54
-    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar', ...}, void> {}
                                                             ^^^^^^^^^^^^^ [2]
 
 
@@ -1510,7 +1510,7 @@ type [2]. [incompatible-type]
 
 References:
    text.js:7:54
-    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar', ...}, void> {}
                                                             ^^^^^^^^^^^^^ [2]
 
 
@@ -1525,7 +1525,7 @@ type [2]. [incompatible-type]
 
 References:
    text.js:7:54
-    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar', ...}, void> {}
                                                             ^^^^^^^^^^^^^ [2]
 
 
@@ -1558,7 +1558,7 @@ elements. [invalid-tuple-arity]
 
 References:
    tuple.js:6:38
-    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+    6|   extends React.Component<{children: [boolean, string, number], ...}, void> {}
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1573,7 +1573,7 @@ elements. [invalid-tuple-arity]
 
 References:
    tuple.js:6:38
-    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+    6|   extends React.Component<{children: [boolean, string, number], ...}, void> {}
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1588,7 +1588,7 @@ elements. [invalid-tuple-arity]
 
 References:
    tuple.js:6:38
-    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+    6|   extends React.Component<{children: [boolean, string, number], ...}, void> {}
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1603,7 +1603,7 @@ elements. [invalid-tuple-arity]
 
 References:
    tuple.js:6:38
-    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+    6|   extends React.Component<{children: [boolean, string, number], ...}, void> {}
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1618,7 +1618,7 @@ elements. [invalid-tuple-arity]
 
 References:
    tuple.js:6:38
-    6|   extends React.Component<{children: [boolean, string, number]}, void> {}
+    6|   extends React.Component<{children: [boolean, string, number], ...}, void> {}
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1633,7 +1633,7 @@ Cannot create `TupleOne` element because in property `children`: boolean [1] is 
 
 References:
    tuple.js:7:51
-    7| class TupleOne extends React.Component<{children: [boolean]}, void> {}
+    7| class TupleOne extends React.Component<{children: [boolean], ...}, void> {}
                                                          ^^^^^^^^^ [2]
 
 

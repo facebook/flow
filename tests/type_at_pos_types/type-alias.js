@@ -6,14 +6,14 @@ type B = B | null;
 //   ^?
 type C = A;
 //   ^?
-type D = { x: number };
+type D = { x: number, ... };
 //   ^?
 type E = $Exact<D>;
 //   ^?
 type F = ?D;
 //   ^?
 
-type P<T: string> = { t: T } | boolean;
+type P<T: string> = { t: T, ... } | boolean;
 declare var a: P<string>;
 if (typeof a !== "boolean") {
 //         ^?
@@ -28,7 +28,7 @@ function f<X>() {
   //   ^?
   type C = A;
   //   ^?
-  type D = { x: X };
+  type D = { x: X, ... };
   //   ^?
   type E = $Exact<X>;
   //   ^?
@@ -47,7 +47,7 @@ type K = J<number>;
 type L<X, Y> = (<X>(x: X, y: Y) => void) | X | Y | null;
 type M<Z> = L<number, Z>;
 //   ^?
-type N<A> = { x: N<A> } | null;
+type N<A> = { x: N<A>, ... } | null;
 type O = N<number>
 //   ^?
 

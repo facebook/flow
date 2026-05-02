@@ -1,15 +1,15 @@
 type Common = {
-};
+...};
 
 type A = Common & {
   type: 'A',
   foo: number
-};
+, ...};
 
 type B = Common & {
   type: 'B',
   foo: Array<number>
-}
+, ...}
 
 type MyType = A | B;
 

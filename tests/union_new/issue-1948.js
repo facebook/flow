@@ -2,7 +2,7 @@
 type Action = {
   type: 'A' | 'B',
   val: number
-}
+, ...}
 
 type Thunk = (n: number) => number
 

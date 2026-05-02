@@ -10,6 +10,7 @@ import type {ProfilePic_image} from './ProfilePic.graphql';
 
 type Props = {
   image: ProfilePic_image,
+  ...
 };
 
 class ProfilePic extends React.Component<Props> {

@@ -4,5 +4,5 @@ function bad (x : unknown) {
   }
 }
 
-let obj : {a : string} = {a : "oops"};
+let obj : {a : string, ...} = {a : "oops"};
 bad(obj); // yikes

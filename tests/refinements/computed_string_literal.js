@@ -1,8 +1,8 @@
 type A = {
   b_c: ?string
-};
+, ...};
 
-type B = { "@type": "A", a: string } | { "@type": "B", b: string };
+type B = { "@type": "A", a: string, ... } | { "@type": "B", b: string, ... };
 
 function stuff(str: string) {}
 

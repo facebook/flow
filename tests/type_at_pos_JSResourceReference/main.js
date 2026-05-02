@@ -9,4 +9,4 @@ export type SurfaceEntryPoint<TRoute: Route<>> = $ReadOnly<{
   getNavigationOptions: () => number,
   getRoute: () => Class<TRoute>,
   getComponent: () => JSResourceReference<Module<TRoute>>,
-}>;
+ ...}>;

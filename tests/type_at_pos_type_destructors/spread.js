@@ -2,72 +2,72 @@
 
 declare opaque type O;
 declare var o: O;
-type C = {| f: O; |}
+type C = {f: O;}
 class P<X> { p: X }
 class D { g: O; }
 type Ctor = Class<D>;
 
 // Concrete - should be evaluated before normalization
 
-type EObj2  = {|w: O, ...{| x: O, y: O |}, z: O|};
+type EObj2  = {w: O, ...{x: O, y: O}, z: O};
 //   ^
-type C1     = {...C, o: O};
+type C1     = {...C, o: O, ...};
 //   ^
-type C2     = {o: O, ...C};
+type C2     = {o: O, ...C, ...};
 //   ^
-type EC1    = {|...$Exact<C>, o: O|};
+type EC1    = {...$Exact<C>, o: O};
 //   ^
-type EC2    = {|o: O, ...C|};
+type EC2    = {o: O, ...C};
 //   ^
-type Ctor1  = {...Ctor, o: O};
+type Ctor1  = {...Ctor, o: O, ...};
 //   ^
-type P1<T>  = {...P<T>, o: O};
+type P1<T>  = {...P<T>, o: O, ...};
 //   ^
-type Rec    = {o: O, ...Rec};  // Rec = empty
+type Rec    = {o: O, ...Rec, ...};  // Rec = empty
 //   ^
 
 // Unevaluated
-type B1<T: {}, S: {}> = {...T, ...S, o: O};
+type B1<T: {...}, S: {...}> = {...T, ...S, o: O, ...};
 //   ^
-type B2<T: {}> = {...T, o: O};
+type B2<T: {...}> = {...T, o: O, ...};
 //   ^
-type B3<T: {}> = {o: O, ...T};
+type B3<T: {...}> = {o: O, ...T, ...};
 //   ^
-type B4<T: {}> = {o: O, ...T, oo: O};
+type B4<T: {...}> = {o: O, ...T, oo: O, ...};
 //   ^
-type B5<T: {}> = {u: O, ...{ v: O, w: T }, x: O, ...T, y: O};
+type B5<T: {...}> = {u: O, ...{ v: O, w: T, ... }, x: O, ...T, y: O, ...};
 //   ^
-type EB1<T: {}, S: {}> = {|...T, ...S, o: O|};
+type EB1<T: {...}, S: {...}> = {...T, ...S, o: O};
 //   ^
-type EB2<T: {}> = {|...T, o: O|};
+type EB2<T: {...}> = {...T, o: O};
 //   ^
-type EB3<T: {}> = {|o: O, ...T|};
+type EB3<T: {...}> = {o: O, ...T};
 //   ^
-type EB4<T: {}> = {|o: O, ...T, oo: O|};
+type EB4<T: {...}> = {o: O, ...T, oo: O};
 //   ^
-type EB5<T: {}> = {|u: O, ...{ v: O, w: T }, x: O, ...T, y: O|};
+type EB5<T: {...}> = {u: O, ...{ v: O, w: T, ... }, x: O, ...T, y: O};
 //   ^
-type PTA1<T: {}> = {...B2<T>, ...T};
+type PTA1<T: {...}> = {...B2<T>, ...T, ...};
 //   ^
-type PTA2<T: {}> = {...T, ...B2<T>};
+type PTA2<T: {...}> = {...T, ...B2<T>, ...};
 //   ^
-type EP1<T> = {|...P<T>, o: O|};
+type EP1<T> = {...P<T>, o: O};
 //   ^
-type EP2<T> = {|o: O, ...P<T>|};
+type EP2<T> = {o: O, ...P<T>};
 //   ^
-type ECtor1 = {|...Ctor, o: O|};
+type ECtor1 = {...Ctor, o: O};
 //   ^
-type ECtor2 = {|o: O, ...Ctor|};
+type ECtor2 = {o: O, ...Ctor};
 //   ^
-type PRec<X> = {o: O, ...PRec<X>};
+type PRec<X> = {o: O, ...PRec<X>, ...};
 //   ^
-type IP1<T: {}> = {...B1<T>} & {...B2<T>};
+type IP1<T: {...}> = {...B1<T>, ...} & {...B2<T>, ...};
 //   ^
-type Nest1<T: {}> = {...{...T}};
+type Nest1<T: {...}> = {...{...T, ...}, ...};
 //   ^
-type Nest2<T: {}> = {...{...{...T}}};
+type Nest2<T: {...}> = {...{...{...T, ...}, ...}, ...};
 //   ^
-type UNest<T: {}> = {...T} | {...{...T}} | {...{...{...T}}};
+type UNest<T: {...}> = {...T, ...} | {...{...T, ...}, ...} | {...{...{...T, ...}, ...}, ...};
 //   ^
 
 

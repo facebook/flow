@@ -41,7 +41,7 @@ check_fun((x) => x);
 // object annotations
 //////////////////////
 
-function check_obj(_: { x: number } | { x: string }) { }
+function check_obj(_: { x: number, ... } | { x: string, ... }) { }
 
 // ok
 check_obj({ x: "" });

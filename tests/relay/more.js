@@ -31,12 +31,12 @@ export type $RelayProps<Props, _RelayPropT = RelayProp> = MapRelayProps<
 type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
 // prettier-ignore
 type MapRelayProp<T> = T extends null | void ? T
-  : T extends {+__typeof: infer V extends FragmentTypeof}
-    ? {+__fragments: FragmentReference<V>}
-    : T extends $ReadOnlyArray<?{+__typeof: FragmentTypeof}>
+  : T extends {+__typeof: infer V extends FragmentTypeof, ...}
+    ? {+__fragments: FragmentReference<V>, ...}
+    : T extends $ReadOnlyArray<?{+__typeof: FragmentTypeof, ...}>
       ? $ReadOnlyArray<MapRelayProp<T[number]>> : T;
 
-declare function createFragmentContainer<Props: {}>(
+declare function createFragmentContainer<Props: {...}>(
   Component: React.ComponentType<Props>,
   fragments: mixed,
 ): React.ComponentType<$RelayProps<Props, RelayProp>>;
@@ -46,16 +46,16 @@ declare function createFragmentContainer<Props: {}>(
  *********************************/
 
 declare export opaque type RelayModernTypedFlowtest_user$reference: FragmentTypeof;
-export type RelayModernTypedFlowtest_user = {|
+export type RelayModernTypedFlowtest_user = {
   +__typeof: RelayModernTypedFlowtest_user$reference,
   +name: ?string,
-|};
+};
 
 declare export opaque type RelayModernTypedFlowtest_users$reference: FragmentTypeof;
-export type RelayModernTypedFlowtest_users = $ReadOnlyArray<{|
+export type RelayModernTypedFlowtest_users = $ReadOnlyArray<{
   +__typeof: RelayModernTypedFlowtest_users$reference,
   +name: ?string,
-|}>;
+}>;
 
 /*********************************
  * RelayModernTyped-flowtest     *
@@ -67,6 +67,7 @@ class SingularTestInternal extends React.Component<{
   user: RelayModernTypedFlowtest_user,
   nullableUser: ?RelayModernTypedFlowtest_user,
   optionalUser?: RelayModernTypedFlowtest_user,
+  ...
 }> {}
 const SingularTest = createFragmentContainer(
   SingularTestInternal,
@@ -77,6 +78,7 @@ class PluralTestInternal extends React.Component<{
   users: RelayModernTypedFlowtest_users,
   nullableUsers: ?RelayModernTypedFlowtest_users,
   optionalUsers?: RelayModernTypedFlowtest_users,
+  ...
 }> {}
 const PluralTest = createFragmentContainer(
   PluralTestInternal,
@@ -85,18 +87,22 @@ const PluralTest = createFragmentContainer(
 
 declare var aUserRef: {
   +__fragments: FragmentReference<RelayModernTypedFlowtest_user$reference>,
+  ...
 };
 
 declare var oneOfUsersRef: {
   +__fragments: FragmentReference<RelayModernTypedFlowtest_users$reference>,
+  ...
 };
 
 declare var usersRef: $ReadOnlyArray<{
   +__fragments: FragmentReference<RelayModernTypedFlowtest_users$reference>,
+  ...
 }>;
 
 declare var nonUserRef: {
-  +__fragments: BadFragmentReference<{thing: true}>,
+  +__fragments: BadFragmentReference<{thing: true, ...}>,
+  ...
 };
 
 function cb(): void {}
@@ -141,9 +147,10 @@ function cb(): void {}
 
 // OK
 declare var aComplexUserRef: {
-  __fragments: FragmentReference<{thing1: true}> &
+  __fragments: FragmentReference<{thing1: true, ...}> &
     FragmentReference<RelayModernTypedFlowtest_user$reference> &
-    FragmentReference<{thing2: true}>,
+    FragmentReference<{thing2: true, ...}>,
+  ...
 };
 <SingularTest
   string="x"

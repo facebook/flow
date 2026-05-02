@@ -12,9 +12,9 @@ declare function map<Tv, TNext>(
  * result is a new object.
  */
 function test(
-  x: {kind: ?string},
+  x: {kind: ?string, ...},
   kinds: {[key: string]: string},
-): Array<{kind: ?string}> {
+): Array<{kind: ?string, ...}> {
   return map(kinds, value => {
     value as string; // OK
     return {

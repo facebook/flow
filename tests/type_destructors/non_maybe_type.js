@@ -10,7 +10,7 @@ function foo(x: ?string): NonNullable<?string> {
 0 as NonNullable<null>; // error
 0 as NonNullable<?number>; // ok
 0 as NonNullable<number | null>; // ok
-0 as NonNullable<{p?: number}['p']>; // ok
+0 as NonNullable<{p?: number, ...}['p']>; // ok
 
 'str' as NonNullable<mixed>;
 0 as NonNullable<mixed>;
@@ -21,7 +21,7 @@ type Foo = NonNullable<Obj['foo']>;
 
 type Enum = 'A' | 'B' | 'C';
 
-type Obj = {foo: ?Enum};
+type Obj = {foo: ?Enum, ...};
 
 class B {
   type: Foo = 'A';
@@ -38,9 +38,9 @@ declare function mkA<T>(x: T): A<T>;
 
 declare function bar(): Node;
 
-declare var props: {s: string};
+declare var props: {s: string, ...};
 
-function f(this: {props: typeof props}) {
+function f(this: {props: typeof props, ...}) {
   let x = this.props.s === 'S' ? mkA(bar()) : mkA();
   let y = x.concat(mkA(bar()));
   let z: A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
@@ -48,7 +48,7 @@ function f(this: {props: typeof props}) {
 
 'hi' as NonNullable<empty>; // Error
 
-type NonMaybeNumber = NonNullable<Values<{a: number, b: void}>>;
+type NonMaybeNumber = NonNullable<Values<{a: number, b: void, ...}>>;
 1 as NonMaybeNumber; // OK
 true as NonMaybeNumber; // Error
 undefined as NonMaybeNumber; // Error

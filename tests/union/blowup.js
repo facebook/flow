@@ -1,7 +1,7 @@
 export type Select = {
   expression: ArithmeticExpression;
   alias: ?string;
-}
+ ...}
 
 export class Query {
   _select: Array<Select> = [];

@@ -14,7 +14,7 @@ function foo2(x: ?Class<Foo>): string {
   return x && new x().foo || "";
 }
 
-declare var TDR: {-current: {offsetWidth: number}};
+declare var TDR: {-current: {offsetWidth: number, ...}, ...};
 if (TDR.current) { }
 
 function testNotExistsClass() {

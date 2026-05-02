@@ -54,7 +54,7 @@ let tests = [
     }
   },
 
-  function(x: { foo: number }): 0 {
+  function(x: { foo: number, ... }): 0 {
     if (x.foo === 0) {
       return x.foo;
     }
@@ -62,7 +62,7 @@ let tests = [
   },
 
   function(
-    x: { kind: 0, foo: number } | { kind: 1, bar: number }
+    x: { kind: 0, foo: number, ... } | { kind: 1, bar: number, ... }
   ): number {
     if (x.kind === 0) {
       return x.foo;
@@ -71,7 +71,7 @@ let tests = [
     }
   },
 
-  function(num: number, obj: { foo: number }) {
+  function(num: number, obj: { foo: number, ... }) {
     if (num === obj.bar) { // Error, accessing unknown property
     }
   },

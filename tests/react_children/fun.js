@@ -9,16 +9,16 @@ import React from 'react';
 type Data = {
   foo: number,
   bar: number,
-};
+ ...};
 
 type Fn = Data => number;
 
-class Fun extends React.Component<{children: Fn}, void> {}
-class FunOptional extends React.Component<{children?: Fn}, void> {}
-class Obj extends React.Component<{children: Data}, void> {}
-class ObjOptional extends React.Component<{children?: Data}, void> {}
-class FunArrayOnly extends React.Component<{children: Array<Fn>}, void> {}
-class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
+class Fun extends React.Component<{children: Fn, ...}, void> {}
+class FunOptional extends React.Component<{children?: Fn, ...}, void> {}
+class Obj extends React.Component<{children: Data, ...}, void> {}
+class ObjOptional extends React.Component<{children?: Data, ...}, void> {}
+class FunArrayOnly extends React.Component<{children: Array<Fn>, ...}, void> {}
+class FunArray extends React.Component<{children: Fn | Array<Fn>, ...}, void> {}
 
 <Fun />; // Error: `children` is required.
 <FunOptional />; // OK: `children` is optional.

@@ -1,8 +1,8 @@
 // example 1
 
 type Type = Name | ListType;
-type Name = {kind: 'Name', value: string};
-type ListType = {kind: 'ListType', name: string};
+type Name = {kind: 'Name', value: string, ...};
+type ListType = {kind: 'ListType', name: string, ...};
 
 function getTypeASTName(typeAST: Type): string {
   if (typeAST.kind === 'Name') {
@@ -23,10 +23,10 @@ function foo(x: ASTNode) {
 }
 
 // example 3
-type Apple = { kind: 'Fruit', taste: 'Bad' }
-type Orange = { kind: 'Fruit', taste: 'Good' }
-type Broccoli = { kind: 'Veg', taste: 'Bad', raw: 'No' }
-type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe' }
+type Apple = { kind: 'Fruit', taste: 'Bad', ... }
+type Orange = { kind: 'Fruit', taste: 'Good', ... }
+type Broccoli = { kind: 'Veg', taste: 'Bad', raw: 'No', ... }
+type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe', ... }
 
 type Breakfast = Apple | Orange | Broccoli | Carrot
 
@@ -44,7 +44,7 @@ function qux(x: Breakfast) {
 }
 
 // example 4
-type OCamlList = {|kind: 'cons', next: OCamlList|} | {|kind: 'nil'|};
+type OCamlList = {kind: 'cons', next: OCamlList} | {kind: 'nil'};
 function list(n: number): OCamlList {
   if (n > 0) return { kind: "cons", next: list(n-1) };
   return { kind: "nil" };
@@ -62,9 +62,9 @@ function check(n: number) {
 
 // example 5
 var EnumKind = { A: 1, B: 2, C: 3} as const;
-type A = { kind: 1, A: number };
-type B = { kind: 2, B: number };
-type C = { kind: 3, C: number };
+type A = { kind: 1, A: number, ... };
+type B = { kind: 2, B: number, ... };
+type C = { kind: 3, C: number, ... };
 function kind(x: A | B | C): number {
   switch (x.kind) {
   case EnumKind.A: return x.A;
@@ -75,8 +75,8 @@ function kind(x: A | B | C): number {
 kind({ kind: EnumKind.A, A: 1 });
 
 // example 6
-type Citizen = { citizen: true };
-type NonCitizen = { citizen: false, nationality: string }
+type Citizen = { citizen: true, ... };
+type NonCitizen = { citizen: false, nationality: string, ... }
 function nationality(x: Citizen | NonCitizen) {
   if (x.citizen) return "Shire"
   else return x.nationality;
@@ -91,7 +91,7 @@ let tests = [
   },
 
   // nested objects
-  function test8(x: {foo: {bar: 1}}) {
+  function test8(x: {foo: {bar: 1, ...}, ...}) {
     if (x.foo.bar === 1) {}
     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
   },
@@ -142,7 +142,7 @@ let tests = [
   },
 
   // sentinel props become the RHS
-  function(x: { str: string, num: number, boolean: boolean }) {
+  function(x: { str: string, num: number, boolean: boolean, ... }) {
     if (x.str === 'str') {
       x.str as 'not str'; // error: 'str' !~> 'not str'
     }
@@ -165,7 +165,7 @@ let tests = [
   },
 
   // type mismatch
-  function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
+  function(x: { foo: 123, y: string, ... } | { foo: 'foo', z: string, ... }) {
     if (x.foo === 123) {
       x.y as string;
       x.z; // error
@@ -183,7 +183,7 @@ let tests = [
   },
 
   // type mismatch, but one is not a literal
-  function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
+  function(x: { foo: number, y: string, ... } | { foo: 'foo', z: string, ... }) {
     if (x.foo === 123) {
       x.y as string; // ok, because 123 !== 'foo'
       x.z; // error
@@ -202,7 +202,7 @@ let tests = [
   },
 
   // type mismatch, neither is a literal
-  function(x: { foo: number, y: string } | { foo: string, z: string }) {
+  function(x: { foo: number, y: string, ... } | { foo: string, z: string, ... }) {
     if (x.foo === 123) {
       x.y as string; // ok, because 123 !== string
       x.z; // error
@@ -222,7 +222,7 @@ let tests = [
 
   // type mismatch, neither is a literal, test is not a literal either
   function(
-    x: { foo: number, y: string } | { foo: string, z: string },
+    x: { foo: number, y: string, ... } | { foo: string, z: string, ... },
     num: number
   ) {
     if (x.foo === num) {
@@ -232,7 +232,7 @@ let tests = [
   },
 
   // null
-  function(x: { foo: null, y: string } | { foo: 'foo', z: string }) {
+  function(x: { foo: null, y: string, ... } | { foo: 'foo', z: string, ... }) {
     if (x.foo === null) {
       x.y as string;
       x.z; // error
@@ -250,7 +250,7 @@ let tests = [
   },
 
   // void
-  function(x: { foo: void, y: string } | { foo: 'foo', z: string }) {
+  function(x: { foo: void, y: string, ... } | { foo: 'foo', z: string, ... }) {
     if (x.foo === undefined) {
       x.y as string;
       x.z; // error

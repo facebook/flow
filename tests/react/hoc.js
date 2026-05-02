@@ -3,8 +3,8 @@ import * as React from 'react';
 function myHOC(
   Component: component(ref?: React.RefSetter<mixed>, foo: number, bar: number),
 ): component(ref?: React.RefSetter<mixed>, foo: number) {
-  return class extends React.Component<{foo: number}, {bar: number}> {
-    state: {bar: number} = {bar: 2};
+  return class extends React.Component<{foo: number, ...}, {bar: number, ...}> {
+    state: {bar: number, ...} = {bar: 2};
     render(): React.Node {
       <Component />; // Error: `foo` is required.
       <Component foo={42} />; // Error: `bar` is required.
@@ -17,21 +17,21 @@ function myHOC(
 class Unwrapped extends React.Component<{
   foo: number,
   bar: number,
-}, {
+ ...}, {
   buz: number,
-}> {
-  state: {buz: number} = {buz: 3};
+ ...}> {
+  state: {buz: number, ...} = {buz: 3};
   render(): React.Node {
     return this.props.foo + this.props.bar + this.state.buz;
   }
 }
 
-function UnwrappedFun(props: {foo: number, bar: number}) {
+function UnwrappedFun(props: {foo: number, bar: number, ...}) {
   return props.foo + props.bar;
 }
 
-myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-myHOC(function Empty(props: {foo: string}) {}); // Error
+myHOC(class Empty extends React.Component<{foo: string, ...}, void> {}); // Error
+myHOC(function Empty(props: {foo: string, ...}) {}); // Error
 
 const Wrapped: component(ref?: React.RefSetter<mixed>, foo: number) = myHOC(Unwrapped);
 const WrappedFun = myHOC(UnwrappedFun);

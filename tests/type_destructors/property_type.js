@@ -1,6 +1,6 @@
 type AnyNumber = any[number];
 
-type Obj = { x: string };
+type Obj = { x: string, ... };
 type Obj_Prop_x = Obj['x'];
 
 42 as Obj_Prop_x;

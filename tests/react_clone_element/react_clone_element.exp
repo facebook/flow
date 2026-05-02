@@ -183,7 +183,7 @@ References:
      32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
                                      ^^^ [4]
    test.js:5:39
-      5| class A extends React.Component<{foo: number}, void> {}
+      5| class A extends React.Component<{foo: number, ...}, void> {}
                                                ^^^^^^ [5]
 
 
@@ -211,7 +211,7 @@ References:
      38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
                                      ^^^ [4]
    test.js:6:39
-      6| class B extends React.Component<{foo: number, bar: number}, void> {}
+      6| class B extends React.Component<{foo: number, bar: number, ...}, void> {}
                                                ^^^^^^ [5]
 
 
@@ -239,7 +239,7 @@ References:
      44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
                                           ^^^^ [4]
    test.js:7:44
-      7| class C extends React.Component<{children: number}, void> {}
+      7| class C extends React.Component<{children: number, ...}, void> {}
                                                     ^^^^^^ [5]
 
 
@@ -354,7 +354,7 @@ References:
      54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
                                           ^^ [4]
    test.js:8:44
-      8| class D extends React.Component<{children: Array<number>}, void> {}
+      8| class D extends React.Component<{children: Array<number>, ...}, void> {}
                                                     ^^^^^^^^^^^^^ [5]
 
 
@@ -382,7 +382,7 @@ References:
      56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
                                    ^^ [4]
    test.js:8:44
-      8| class D extends React.Component<{children: Array<number>}, void> {}
+      8| class D extends React.Component<{children: Array<number>, ...}, void> {}
                                                     ^^^^^^^^^^^^^ [5]
 
 
@@ -410,7 +410,7 @@ References:
     57| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
                                          ^^ [4]
    test.js:8:44
-     8| class D extends React.Component<{children: Array<number>}, void> {}
+     8| class D extends React.Component<{children: Array<number>, ...}, void> {}
                                                    ^^^^^^^^^^^^^ [5]
 
 
@@ -438,7 +438,7 @@ References:
     58| React.cloneElement(d, null, 42); // Error: `children` is an array.
                                     ^^ [4]
    test.js:8:44
-     8| class D extends React.Component<{children: Array<number>}, void> {}
+     8| class D extends React.Component<{children: Array<number>, ...}, void> {}
                                                    ^^^^^^^^^^^^^ [5]
 
 
@@ -457,8 +457,8 @@ References:
      58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [1]
    test.js:69:1
-     69| function SFC(props: { p: number }) { return null };
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     69| function SFC(props: { p: number, ... }) { return null };
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:1547:4
    1547|   [string]: {
             ^^^^^^ [3]
@@ -466,7 +466,7 @@ References:
      70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
                                                 ^^^^^ [4]
    test.js:69:26
-     69| function SFC(props: { p: number }) { return null };
+     69| function SFC(props: { p: number, ... }) { return null };
                                   ^^^^^^ [5]
 
 

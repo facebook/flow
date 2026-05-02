@@ -14,7 +14,7 @@ type ReactNodeWithoutString =
                                    // making strings valid children when we use
                                    // `Iterable<T>`.
 
-class View extends React.Component<{children: ReactNodeWithoutString}, void> {}
+class View extends React.Component<{children: ReactNodeWithoutString, ...}, void> {}
 
 // OK: Allows any non-string children.
 <View>

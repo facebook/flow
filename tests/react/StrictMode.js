@@ -11,7 +11,7 @@ import * as React from 'react';
 {
   const {Component, StrictMode} = React;
 
-  class ClassExample extends Component<{||}> {
+  class ClassExample extends Component<{}> {
     render(): React.Node {
       return null;
     }

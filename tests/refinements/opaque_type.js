@@ -6,12 +6,12 @@ export type Dict = {
 
 export type Index = {
   index: Dict,
-};
+ ...};
 
 export type State = {
   o: null | Opaque,
   d: null | Index,
-};
+ ...};
 
 function test_refine_to_nullish() {
   declare opaque type Foo;

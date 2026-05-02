@@ -2,7 +2,7 @@
 
 import * as React from "react";
 declare opaque type A;
-declare var props: { data: A, name: string };
+declare var props: { data: A, name: string, ... };
 
 const a = <div style={props.data} id="literal" hidden {...props} />;
 const b = <div>{props.name}</div>;

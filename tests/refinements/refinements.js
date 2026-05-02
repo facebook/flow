@@ -79,7 +79,7 @@ function global_in_conditional2(x: number) {
 }
 
 {
-    const x: {foo: null} = {foo: null};
+    const x: {foo: null, ...} = {foo: null};
 
     if (x.foo != null) {
         x as string; // ok

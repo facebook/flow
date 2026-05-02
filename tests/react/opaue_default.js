@@ -10,10 +10,10 @@ const React = require("react");
 declare opaque type T: string;
 declare var x: T;
 
-type Props = { foo: T }
+type Props = { foo: T, ... }
 
 class C extends React.Component<Props, void> {
-  static defaultProps: {foo: T} = { foo: x };
+  static defaultProps: {foo: T, ...} = { foo: x };
 }
 
 (<C foo={x} />); // OK

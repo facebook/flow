@@ -1,4 +1,4 @@
-let data: Array<{ id: string, name: Array<string>, value: Array<string> }> = [];
+let data: Array<{ id: string, name: Array<string>, value: Array<string>, ... }> = [];
 
 function asObjectList(length: number) {
   while (data.length < length) {

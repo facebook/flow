@@ -22,27 +22,27 @@ interface I_Function_empty {
 
 type C_Function_this = {
     +x : (this : C_Function_this) => void
-}
+, ...}
 
 type C_Method_this = {
     x(this : C_Method_this) : void
-}
+, ...}
 
 type C_Function_mixed = {
     +x : (this : mixed) => void
-}
+, ...}
 
 type C_Method_mixed = {
     x(this : mixed) : void
-}
+, ...}
 
 type C_Function_empty = {
     +x : (this : empty) => void
-}
+, ...}
 
 type C_Method_empty = {
     +x : (this : empty) => void
-}
+, ...}
 
 
 declare var cft : C_Function_this;

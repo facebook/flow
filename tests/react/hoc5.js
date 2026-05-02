@@ -11,8 +11,8 @@ function hoc<Props: {...}, Component: React.ComponentType<Props>>(
   return (props: Props) => <WrappedComponent {...props} />;
 }
 
-class MyComponent1 extends React.Component<{foo: string, bar: number}> {
-  static defaultProps: {foo: string} = {foo: 'qux'};
+class MyComponent1 extends React.Component<{foo: string, bar: number, ...}> {
+  static defaultProps: {foo: string, ...} = {foo: 'qux'};
   render(): React.Node {
     return null;
   }

@@ -10,7 +10,7 @@ function foo(x : ?number) {
 type Bar = {
   parent: ?Bar;
   doStuff: () => void
-}
+, ...}
 
 function bar0(x : Bar) {
   while (x = x.parent) { // can't assign x to ?Bar

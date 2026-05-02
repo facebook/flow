@@ -8,7 +8,7 @@ function foo(x?: string) {
 foo();
 //^?
 
-function bar(obj: { x?: string }) {
+function bar(obj: { x?: string, ... }) {
   return obj
        // ^?
     .x;

@@ -14,7 +14,7 @@ function hoc<Props: {...}, Component: React.ComponentType<Props>>(
  * NoProps                                                                    *
 \* ========================================================================== */
 
-type Props_NoProps = {};
+type Props_NoProps = {...};
 
 class Class_NoProps extends React.Component<Props_NoProps> {}
 <Class_NoProps />; // OK: There are no props.
@@ -66,7 +66,7 @@ type Props_ManyProps = {
   boolean1: boolean,
   boolean2: boolean,
   number: number,
-};
+ ...};
 
 class Class_ManyProps extends React.Component<Props_ManyProps> {}
 <Class_ManyProps />; // Error: There are no props.
@@ -693,7 +693,7 @@ const EnhancedFunction_ManyProps = hoc(Function_ManyProps);
  * OptionalProps                                                              *
 \* ========================================================================== */
 
-type Props_OptionalProps = {foo: ?number, bar?: number};
+type Props_OptionalProps = {foo: ?number, bar?: number, ...};
 
 class Class_OptionalProps extends React.Component<Props_OptionalProps> {}
 <Class_OptionalProps />; // Error: `foo` is required.
@@ -875,10 +875,10 @@ const EnhancedFunction_OptionalProps = hoc(Function_OptionalProps);
 type Props_DefaultProps = {
   foo: number,
   bar: number,
-};
+ ...};
 
 class Class_DefaultProps extends React.Component<Props_DefaultProps> {
-  static defaultProps: {foo: number} = {
+  static defaultProps: {foo: number, ...} = {
     foo: 42,
   };
 }
@@ -895,7 +895,7 @@ class Class_DefaultProps extends React.Component<Props_DefaultProps> {
 
 class ClassExact_DefaultProps
   extends React.Component<$Exact<Props_DefaultProps>> {
-  static defaultProps: {|foo: number|} = {
+  static defaultProps: {foo: number} = {
     foo: 42,
   };
 }
@@ -911,7 +911,7 @@ class ClassExact_DefaultProps
 />;
 
 class ClassPure_DefaultProps extends React.PureComponent<Props_DefaultProps> {
-  static defaultProps: {foo: number} = {
+  static defaultProps: {foo: number, ...} = {
     foo: 42,
   };
 }
@@ -950,7 +950,7 @@ const EnhancedClass_DefaultProps = hoc(Class_DefaultProps);
   foo={1}
 />;
 
-class ThisInJsxTag extends React.Component<{tag: () => React.MixedElement}> {
+class ThisInJsxTag extends React.Component<{tag: () => React.MixedElement, ...}> {
   render(): React.Node {
     return <this.props.tag />; // OK
   }

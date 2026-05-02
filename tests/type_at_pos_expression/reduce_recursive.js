@@ -8,7 +8,7 @@ export type Obj = {
   b: ?number,
   c: ?number,
   d: ?number,
-};
+ ...};
 
 export function foo(originalRows: Array<Obj>): Array<Obj> {
   const groupedRows = groupBy(originalRows, (item: Obj) => null as any);

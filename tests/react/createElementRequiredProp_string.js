@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-class Bar extends React.Component<{test: number}> {
+class Bar extends React.Component<{test: number, ...}> {
   render(): React.Node {
     return (
       <div>
@@ -10,7 +10,7 @@ class Bar extends React.Component<{test: number}> {
   }
 }
 
-class Foo extends React.Component<{}> {
+class Foo extends React.Component<{...}> {
   render(): React.Node {
     const Cmp = Math.random() < 0.5 ? 'div' : Bar;
     return (<Cmp/>);

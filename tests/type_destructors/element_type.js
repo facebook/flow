@@ -20,6 +20,6 @@ function bar(o: Obj): Obj[string] {
   else return 0;
 }
 
-type Z = ?{c: number};
+type Z = ?{c: number, ...};
 1 as Z['c']; // Error - access 'c' on `void`/`null`
 1 as NonNullable<Z>['c']; // OK

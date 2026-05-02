@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-class Foo extends React.Component<{}, void> {}
-class Bar extends React.Component<{}, void> {}
+class Foo extends React.Component<{...}, void> {}
+class Bar extends React.Component<{...}, void> {}
 
 <Foo />; // OK
 <Foo ref="foo" />; // Error: string ref is banned
@@ -12,7 +12,7 @@ class Bar extends React.Component<{}, void> {}
 <Foo ref={foo => foo as Foo | null} />; // OK
 <Foo ref={foo => foo as Bar | null} />; // Error: `Foo` is not `Bar`.
 
-class FooExact extends React.Component<{||}, void> {}
+class FooExact extends React.Component<{}, void> {}
 
 <FooExact />; // OK
 <FooExact ref="foo" />; // Error: string ref is banned

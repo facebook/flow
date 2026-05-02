@@ -16,6 +16,7 @@ import type {Profile_user} from './Profile.graphql';
 type Props = {
   user: Profile_user,
   foo: number,
+  ...
 };
 
 class Profile extends React.Component<Props> {

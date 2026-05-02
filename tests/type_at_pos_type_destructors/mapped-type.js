@@ -1,6 +1,6 @@
 // @flow
 
-type O = {| foo: number, bar: string |};
+type O = {foo: number, bar: string};
 
 // Concrete - should be evaluated before normalization
 
@@ -75,7 +75,7 @@ declare var y: {[key in Keys]: O[key]};
 // we cannot bind a tparam
 type SemiHomomorphic<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
 //   ^
-declare var z: SemiHomomorphic<{foo: number}, 'foo'>;
+declare var z: SemiHomomorphic<{foo: number, ...}, 'foo'>;
    z;
 // ^
 
@@ -92,10 +92,10 @@ type Obj = $ReadOnly<{
   prop7: string,
   prop8: string,
   prop9: string,
-}>
+ ...}>
 
 type IDMap<+Obj: {+[string]: mixed}> = {[Key in keyof Obj]: Id<Obj[Key]>}
 
-declare const props: { obj: $ReadOnly<IDMap<Obj>> };
+declare const props: { obj: $ReadOnly<IDMap<Obj>>, ... };
 props.obj.prop0;
 //         ^

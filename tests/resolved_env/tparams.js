@@ -24,7 +24,7 @@ function removex<A: {+p: mixed, ...}, B>(a: A): [Omit<A, 'p'>, B] {
 }
 
 const [ox, px] = removex<_, number>({x: 'foo', p: 42});
-ox as {|x: string|};
+ox as {x: string};
 px as number;
 
 function test_tparams_signature_scope() {

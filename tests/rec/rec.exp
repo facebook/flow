@@ -74,7 +74,7 @@ Cannot return `y` because in type argument `A` [1]: number [2] is incompatible w
 
 References:
    issue-598.js:3:8
-   3| type F<A> = {foo<B>(x: A): F<B>};
+   3| type F<A> = {foo<B>(x: A): F<B>, ...};
              ^ [1]
    issue-598.js:7:19
    7| function bar(y: F<number>): F<string> {
@@ -143,17 +143,17 @@ References:
     9|     a: (A) => R,
                ^ [3]
    issue6155.js:4:17
-    4| type B = {kind: 'b', k: Type, v: Type};
+    4| type B = {kind: 'b', k: Type, v: Type, ...};
                        ^^^ [4]
    issue6155.js:3:17
-    3| type A = {kind: 'a', e: Type};
+    3| type A = {kind: 'a', e: Type, ...};
                        ^^^ [5]
    issue6155.js:4:10
-    4| type B = {kind: 'b', k: Type, v: Type};
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
+    4| type B = {kind: 'b', k: Type, v: Type, ...};
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
    issue6155.js:3:10
-    3| type A = {kind: 'a', e: Type};
-                ^^^^^^^^^^^^^^^^^^^^ [7]
+    3| type A = {kind: 'a', e: Type, ...};
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:28
@@ -179,17 +179,17 @@ References:
     9|     a: (A) => R,
                ^ [3]
    issue6155.js:5:17
-    5| type C = {kind: 'c'};
+    5| type C = {kind: 'c', ...};
                        ^^^ [4]
    issue6155.js:3:17
-    3| type A = {kind: 'a', e: Type};
+    3| type A = {kind: 'a', e: Type, ...};
                        ^^^ [5]
    issue6155.js:5:10
-    5| type C = {kind: 'c'};
-                ^^^^^^^^^^^ [6]
+    5| type C = {kind: 'c', ...};
+                ^^^^^^^^^^^^^^^^ [6]
    issue6155.js:3:10
-    3| type A = {kind: 'a', e: Type};
-                ^^^^^^^^^^^^^^^^^^^^ [7]
+    3| type A = {kind: 'a', e: Type, ...};
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
 Error ------------------------------------------------------------------------------- recursive_react_component.js:11:30
@@ -388,8 +388,8 @@ Error --------------------------------------------------------------------------
 
 Invalid trivially recursive definition of object type.  [recursive-definition]
 
-   8| type Props = { ...Props }; // error: cyclic
-                   ^^^^^^^^^^^^
+   8| type Props = { ...Props, ... }; // error: cyclic
+                   ^^^^^^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------- trivially_recursive_with_evalt.js:14:10

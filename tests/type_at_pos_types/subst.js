@@ -3,8 +3,8 @@
 const React = require("react");
 
 declare opaque type O<T>;
-type Mono = { m: number };
-type Poly<X> = { f: X };
+type Mono = { m: number, ... };
+type Poly<X> = { f: X, ... };
 
 declare function mapUnion<TNext>(fn: O<TNext> | TNext): TNext;
 declare function map<TNext>(fn: TNext): TNext;

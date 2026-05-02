@@ -489,7 +489,7 @@ Cannot cast `x.y.z` to empty because number [1] is incompatible with empty [2]. 
 
 References:
    heap_refis.js:3:25
-   3| declare var x: {y?: {z: number}};
+   3| declare var x: {y?: {z: number, ...}, ...};
                               ^^^^^^ [1]
    heap_refis.js:6:12
    6|   x.y.z as empty; //err num
@@ -662,7 +662,7 @@ Cannot cast `foo.bar` to number because string [1] is incompatible with number [
 
 References:
    member_assignments.js:4:20
-   4|   type Foo = {bar: string};
+   4|   type Foo = {bar: string, ...};
                          ^^^^^^ [1]
    member_assignments.js:8:14
    8|   foo.bar as number; // error: string is incompatible with number

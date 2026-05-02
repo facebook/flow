@@ -7,12 +7,12 @@ type ElementProp<
   P: keyof React.ElementConfig<T>,
 > = React.ElementConfig<T>[P];
 
-type BaseProps = Readonly<{|
+type BaseProps = Readonly<{
   theme?: ElementProp<typeof TimeoutFn, 'theme'>,
   size?: ElementProp<typeof TimeoutFn, 'size'>,
-|}>;
+}>;
 
-type Props = {|...BaseProps|} | {|...BaseProps|};
+type Props = {...BaseProps} | {...BaseProps};
 
 const TimeoutFn = (props: Props) => {
   const tvarprops = props;

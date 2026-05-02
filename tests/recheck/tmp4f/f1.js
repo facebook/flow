@@ -1,7 +1,7 @@
 // @flow
 
-type T = { x: number };
-type S = { x: string };
+type T = { x: number, ... };
+type S = { x: string, ... };
 
 declare var a: T;
 declare var b: S;

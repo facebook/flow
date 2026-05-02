@@ -1,4 +1,4 @@
-type T = {a: ?{b: ?{x: string, y: number}}};
+type T = {a: ?{b: ?{x: string, y: number, ...}, ...}, ...};
 
 type B = NonNullable<T['a']?.['b']>;
 const b: B = {x: 'hi', y: 3}; // no error

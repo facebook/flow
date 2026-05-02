@@ -10,16 +10,16 @@ class MyComponent extends React.Component<{
   a: number,
   b: number,
   prop: number,
-}> { render(): React.Node { return null } }
+ ...}> { render(): React.Node { return null } }
 
 function MyFunctionComponent(props: {
   a: number,
   b: number,
   prop: number,
-}) { return null }
+ ...}) { return null }
 
 const MyEnhancedComponent = connect(MyComponent);
-const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
+const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number, ...}>(MyFunctionComponent);
 
 <MyEnhancedComponent />; // Error: Needs `a` and `b`.
 <MyEnhancedComponent a={1} b={2} />; // OK

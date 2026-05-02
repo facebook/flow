@@ -2,12 +2,12 @@ import * as React from 'react';
 
 declare var any: any;
 
-class A extends React.Component<{foo: number}, void> {}
-class B extends React.Component<{foo: number, bar: number}, void> {}
-class C extends React.Component<{children: number}, void> {}
-class D extends React.Component<{children: Array<number>}, void> {}
-class E extends React.Component<{foo: number, bar: number}, void> {
-  static defaultProps: {bar: number} = {bar: 42};
+class A extends React.Component<{foo: number, ...}, void> {}
+class B extends React.Component<{foo: number, bar: number, ...}, void> {}
+class C extends React.Component<{children: number, ...}, void> {}
+class D extends React.Component<{children: Array<number>, ...}, void> {}
+class E extends React.Component<{foo: number, bar: number, ...}, void> {
+  static defaultProps: {bar: number, ...} = {bar: 42};
 }
 
 declare var a: ExactReactElement_DEPRECATED<Class<A>>;
@@ -66,20 +66,20 @@ React.cloneElement(e, {foo: 1, bar: 2}); // OK
 React.cloneElement(e, {foo: undefined, bar: 2}); // Error: undefined ~> number
 React.cloneElement(e, {foo: 1, bar: undefined}); // OK: `bar` has a default.
 
-function SFC(props: { p: number }) { return null };
+function SFC(props: { p: number, ... }) { return null };
 React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
 
 // Exact
-declare function Exact(x: {|foo: number|}): void;
+declare function Exact(x: {foo: number}): void;
 declare const exact: ExactReactElement_DEPRECATED<typeof Exact>;
 React.cloneElement(exact, {foo: 1}); // OK
 React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
 
 // Clone typeof element
-type CompProps = $ReadOnly<{|
+type CompProps = $ReadOnly<{
   foo: string,
   bar: string,
-|}>;
+}>;
 {
   declare function Comp(x: CompProps): ExactReactElement_DEPRECATED<'div'>;
   declare const el: ExactReactElement_DEPRECATED<typeof Comp>;
@@ -102,8 +102,8 @@ type CompProps = $ReadOnly<{|
 
 // Cloned element is a union
 function cloneUnionElement() {
-  declare class A extends React.Component<{foo: number}, void> {}
-  declare component B(...props: { foo: number });
+  declare class A extends React.Component<{foo: number, ...}, void> {}
+  declare component B(...props: { foo: number, ... });
 
   declare var element:
     | ExactReactElement_DEPRECATED<Class<A>>
@@ -112,7 +112,7 @@ function cloneUnionElement() {
   React.cloneElement(element); // OK
   React.cloneElement(element, {foo: 1}); // OK
 
-  type Wrap<T> = { f: T }['f'];
+  type Wrap<T> = { f: T, ... }['f'];
 
   declare var wrappedElement: Wrap<
     | ExactReactElement_DEPRECATED<Class<A>>

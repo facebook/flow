@@ -39,7 +39,7 @@ foo as typeof o2.n; // mixed incompatible with number
 
 
 function this_default(
-    this: {y: number},
+    this: {y: number, ...},
     x : number = this.y // do not infer mixed here, this counts as the function body
 ) {}
 

@@ -29,13 +29,13 @@ any.js:17:9,17:11
 
 array.js
 At array.js:3:19
-Array<{|+nums: number|}>
+Array<{+nums: number}>
 array.js:3:16,3:20
 
 At array.js:5:26
 
  A class of Array methods and properties that don't mutate the array.
-ReadonlyArray<{|+nums: number|}>
+ReadonlyArray<{+nums: number}>
 array.js:5:24,5:37
 
 At array.js:8:16
@@ -138,9 +138,9 @@ At implicit-instantiation.js:7:10
 "string"
 implicit-instantiation.js:7:10,7:10
 
-At implicit-instantiation.js:12:41
+At implicit-instantiation.js:12:46
 number | string
-implicit-instantiation.js:12:41,12:41
+implicit-instantiation.js:12:46,12:46
 
 interface.js
 At interface.js:6:6
@@ -724,7 +724,7 @@ type-alias.js:9:6,9:6
 
 At type-alias.js:11:6
 type E = $Exact<D>
-= {|x: number|}
+= {x: number}
 
 'D' defined at type-alias.js:9:5
 'E' defined at type-alias.js:11:5
@@ -853,7 +853,7 @@ type-alias.js:59:6,59:20
 
 type-destructor-trigger.js
 At type-destructor-trigger.js:11:9
-KeyMirrorRecursive<{|A: string|}>
+KeyMirrorRecursive<{A: string}>
 
 'KeyMirrorRecursive' defined at keyMirrorRecursive.js:3:12
 
@@ -950,7 +950,7 @@ At unions.js:60:4
 unions.js:60:1,60:5
 
 At unions.js:66:5
-{|f: number|}
+{f: number}
 unions.js:66:5,66:5
 
 At unions.js:69:13

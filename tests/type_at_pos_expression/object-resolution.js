@@ -1,13 +1,13 @@
 // @flow
 
-type O = {|p: number|};
+type O = {p: number};
 declare var ro: $ReadOnly<O>;
 ro.p as number;
 
-type O1 = {p: number};
-type O2 = {p: number; q: string};
+type O1 = {p: number, ...};
+type O2 = {p: number; q: string, ...};
 declare var diff: Omit<O2, $Keys<O1>>;
 diff.q as string;
 
-declare var spread: { ...O2 };
+declare var spread: { ...O2, ... };
 if (spread.q) spread.q as string;

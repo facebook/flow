@@ -3,15 +3,15 @@
 type DataBase = {
   id: string,
   name: string,
-};
+ ...};
 
 type UserData = DataBase & {
   kind: 'user',
-};
+ ...};
 
 type SystemData = DataBase & {
   kind: 'system',
-};
+ ...};
 
 type Data = UserData | SystemData;
 

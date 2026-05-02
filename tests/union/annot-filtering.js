@@ -1,6 +1,6 @@
 export type T = {
   f: boolean,
-};
+ ...};
 
 declare var xs: T | void;
 

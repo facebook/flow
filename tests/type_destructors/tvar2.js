@@ -6,8 +6,8 @@ class C<T> {
 
 declare function fn<T>(x: C<T>): C<T['foo']>;
 
-declare var c: C<{foo: {bar: any}}>;
+declare var c: C<{foo: {bar: any, ...}, ...}>;
 const x = fn(c);
 
-x as C<{bar: unknown}>;
-x as C<{bar: empty}>;
+x as C<{bar: unknown, ...}>;
+x as C<{bar: empty, ...}>;

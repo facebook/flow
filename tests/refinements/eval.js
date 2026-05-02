@@ -1,16 +1,16 @@
-type A = {|
-  +f: ?{|
+type A = {
+  +f: ?{
     +id: ?string,
-  |}
-|};
+ }
+};
 
 type Foo = A['f'];
 
-type B = {|
-  +f: ?{|
+type B = {
+  +f: ?{
     +id: ?string,
-  |}
-|};
+ }
+};
 
 type Bar = B['f'];
 

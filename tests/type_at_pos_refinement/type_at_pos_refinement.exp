@@ -56,7 +56,7 @@ predicates.js - y (refined obj): {
   "path":"predicates.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"{|FOO: string|}"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"{FOO: string}"}}
 }
 predicates.js - if (y.FOO) obj: {
   "end":5,
@@ -71,7 +71,7 @@ predicates.js - if (y.FOO) obj: {
   "path":"predicates.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"{|FOO: string|}"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"{FOO: string}"}}
 }
 predicates.js - if (y.FOO) prop: {
   "end":9,
@@ -101,7 +101,7 @@ predicates.js - if (y.FOO == '') obj: {
   "path":"predicates.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"{|FOO: string|}"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"{FOO: string}"}}
 }
 predicates.js - if (y.FOO == '') prop: {
   "end":9,
@@ -131,7 +131,7 @@ predicates.js - if (y.FOO === '') obj: {
   "path":"predicates.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"{|FOO: string|}"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"{FOO: string}"}}
 }
 predicates.js - if (y.FOO === '') prop: {
   "end":9,
@@ -198,9 +198,9 @@ refinement.js:7:25 = {
   "endline":7,
   "line":7,
   "loc":{
-    "end":{"column":26,"line":7,"offset":77},
+    "end":{"column":26,"line":7,"offset":81},
     "source":"refinement.js",
-    "start":{"column":24,"line":7,"offset":74},
+    "start":{"column":24,"line":7,"offset":78},
     "type":"SourceFile"
   },
   "path":"refinement.js",
@@ -213,9 +213,9 @@ refinement.js:8:25 = {
   "endline":8,
   "line":8,
   "loc":{
-    "end":{"column":26,"line":8,"offset":107},
+    "end":{"column":26,"line":8,"offset":111},
     "source":"refinement.js",
-    "start":{"column":24,"line":8,"offset":104},
+    "start":{"column":24,"line":8,"offset":108},
     "type":"SourceFile"
   },
   "path":"refinement.js",

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-declare class PolyComponent<T> extends React.Component<{foo: T}> {}
+declare class PolyComponent<T> extends React.Component<{foo: T, ...}> {}
 
 {
   declare var config: React.ElementConfig<typeof PolyComponent>; // T instantiated to mixed

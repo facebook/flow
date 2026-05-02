@@ -1,6 +1,6 @@
 /*************** Basic functions ******************/
-declare var x : { f : number};
-declare var y : { y : string};
+declare var x : { f : number, ...};
+declare var y : { y : string, ...};
 
 function foo(this : mixed) : void {
     return this.x; // error: this is mixed
@@ -36,7 +36,7 @@ o2.foo();
 f.bind(o2)();
 
 let o3 = {
-    foo(this : {|y : number|}) {},
+    foo(this : {y : number}) {},
     y : 3
 }
 

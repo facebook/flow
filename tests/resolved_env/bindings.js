@@ -12,7 +12,7 @@ rest1[0] as string; // num </: string
 
 var {w, ...rest2} = {w: 42, p: 100};
 w as string; // err
-rest2 as {p: number};
+rest2 as {p: number, ...};
 rest2.p as string; //err
 
 try {

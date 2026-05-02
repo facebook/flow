@@ -4,7 +4,7 @@ type K = B | C;
 
 type I = {
   which(): number;
-};
+ ...};
 
 export default class A {
   static foo(p: K): boolean {

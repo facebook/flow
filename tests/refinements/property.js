@@ -7,21 +7,21 @@ function a(x: {[key: string]: ?string}, y: string): string {
   return "";
 }
 
-function b(x: {y: {[key: string]: ?string}}, z: string): string {
+function b(x: {y: {[key: string]: ?string}, ...}, z: string): string {
   if (x.y[z]) {
     return x.y[z];
   }
   return "";
 }
 
-function c(x: {[key: string]: ?string}, y: {z: string}): string {
+function c(x: {[key: string]: ?string}, y: {z: string, ...}): string {
   if (x[y.z]) {
     return x[y.z];
   }
   return "";
 }
 
-function d(x: {y: {[key: string]: ?string}}, a: {b: string}): string {
+function d(x: {y: {[key: string]: ?string}, ...}, a: {b: string, ...}): string {
   if (x.y[a.b]) {
     return x.y[a.b];
   }
@@ -35,21 +35,21 @@ function a_array(x: Array<?string>, y: number): string {
   return "";
 }
 
-function b_array(x: {y: Array<?string>}, z: number): string {
+function b_array(x: {y: Array<?string>, ...}, z: number): string {
   if (x.y[z]) {
     return x.y[z];
   }
   return "";
 }
 
-function c_array(x: Array<?string>, y: {z: number}): string {
+function c_array(x: Array<?string>, y: {z: number, ...}): string {
   if (x[y.z]) {
     return x[y.z];
   }
   return "";
 }
 
-function d_array(x: {y: Array<?string>}, a: {b: number}): string {
+function d_array(x: {y: Array<?string>, ...}, a: {b: number, ...}): string {
   if (x.y[a.b]) {
     return x.y[a.b];
   }
@@ -65,7 +65,7 @@ function e_array(x: Array<?string>): string {
 
 // --- name-sensitive havoc ---
 
-function c2(x: {[key: string]: ?string}, y: {z: string}): string {
+function c2(x: {[key: string]: ?string}, y: {z: string, ...}): string {
   if (x[y.z]) {
     y.z = "HEY";
     return x[y.z];  // error
@@ -73,7 +73,7 @@ function c2(x: {[key: string]: ?string}, y: {z: string}): string {
   return "";
 }
 
-function c3(x: {[key: string]: ?string}, y: {z: string, a: string}): string {
+function c3(x: {[key: string]: ?string}, y: {z: string, a: string, ...}): string {
   if (x[y.z]) {
     y.a = "HEY";
     return x[y.z];  // ok

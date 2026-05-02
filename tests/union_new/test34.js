@@ -1,6 +1,6 @@
 // @flow
 
-type T = {type: 'A', ...A} | {type: 'B', ...B};
+type T = {type: 'A', ...A, ...} | {type: 'B', ...B, ...};
 
 declare var x: T;
 switch (x.type) {
@@ -10,5 +10,5 @@ switch (x.type) {
 }
 
 // types defined below use to ensure annot resolution happens after
-type B = {|bar: string|};
-type A = {|foo: string|};
+type B = {bar: string};
+type A = {foo: string};

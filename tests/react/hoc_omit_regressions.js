@@ -51,7 +51,7 @@ type ResizeProps<
 > = $ReadOnly<{
   ...Omit<Props, 'height' | 'width'>,
   component: React.ComponentType<Props>,
-}>;
+ ...}>;
 
 function injectProps<
   Props: $ReadOnly<{height?: number, width?: number, ...}>,
@@ -73,7 +73,7 @@ declare function ComponentWithSize(props: {
   foo: string,
   height?: ?number,
   width?: ?number,
-}): React.Node;
+ ...}): React.Node;
 
 <Resize component={ComponentWithSize} foo="ok" />; // ERROR
 
@@ -93,7 +93,7 @@ type ComponentProps = Readonly<{
   foo: string,
   height?: ?number,
   width?: ?number,
-}>;
+ ...}>;
 
 class SizedComponent extends React.Component<ComponentProps> {
   render(): React.Node {

@@ -2,8 +2,8 @@
 
 const React = require('react');
 
-type Props1 = {  a : number  }
-type Props2 = {| b : string |}
+type Props1 = {  a : number, ...  }
+type Props2 = {b : string}
 
 class Component1 extends React.Component<Props1>{}
 class Component2 extends React.Component<Props2>{}

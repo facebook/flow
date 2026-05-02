@@ -2,9 +2,9 @@
 
 import React from 'react';
 
-class Text extends React.Component<{children: string}, void> {}
-class TextOptional extends React.Component<{children?: string}, void> {}
-class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
+class Text extends React.Component<{children: string, ...}, void> {}
+class TextOptional extends React.Component<{children?: string, ...}, void> {}
+class TextLiteral extends React.Component<{children: 'foo' | 'bar', ...}, void> {}
 
 <Text />; // Error: `children` is required.
 <TextOptional />; // OK: `children` is optional.

@@ -1,5 +1,5 @@
 {
-  declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
+  declare const x: {0: 'a', 1: number, ...} | {0: 'b', 1: string, ...};
 
   if (x['0'] === 'a') {
     x[1] as number; // OK
@@ -29,7 +29,7 @@
 }
 
 {
-  declare const x: {0: 'a', 1: number} | {0: null, 1: string};
+  declare const x: {0: 'a', 1: number, ...} | {0: null, 1: string, ...};
 
   if (x['0'] != null) {
     x[1] as number; // OK

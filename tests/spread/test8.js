@@ -3,10 +3,10 @@
 
 type O = A & B;
 declare var o: O;
-({...o}) as {p: number, q: string}; // OK
-({...o}) as {p: number, q: number}; // error: string ~> number (prop q)
-({...o}) as {p: string, q: string}; // error: number ~> string (prop p)
+({...o}) as {p: number, q: string, ...}; // OK
+({...o}) as {p: number, q: number, ...}; // error: string ~> number (prop q)
+({...o}) as {p: string, q: string, ...}; // error: number ~> string (prop p)
 
 // types declared below, so they resolve after the spread is processed
-type A = { p: number };
-type B = { q: string };
+type A = { p: number, ... };
+type B = { q: string, ... };

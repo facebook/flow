@@ -1,22 +1,22 @@
 import * as React from 'react';
 
 function connect<TProps: {...}>(
-  Component: React.ComponentType<{|...$Exact<TProps>, prop: number|}>,
+  Component: React.ComponentType<{...$Exact<TProps>, prop: number}>,
 ): React.ComponentType<TProps> {
   return null as any;
 }
 
-class MyComponent extends React.Component<{|
+class MyComponent extends React.Component<{
   a: number,
   b: number,
   prop: number,
-|}> { render(): React.Node { return null }}
+}> { render(): React.Node { return null }}
 
-function MyFunctionComponent(props: {|
+function MyFunctionComponent(props: {
   a: number,
   b: number,
   prop: number,
-|}) { return null }
+}) { return null }
 
 const MyEnhancedComponent = connect(MyComponent);
 const MyEnhancedFunctionComponent = connect(MyFunctionComponent);

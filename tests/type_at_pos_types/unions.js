@@ -16,8 +16,8 @@ if (random()) {
 bar;
 //^?
 
-declare var numObj: { +f: number };
-declare var strObj: { +f: string };
+declare var numObj: { +f: number, ... };
+declare var strObj: { +f: string, ... };
 
 let obj;
 if (random()) {
@@ -56,11 +56,11 @@ declare var top : mixed | mixed | number;
 top;
 //^?
 
-declare var top_g : { g: mixed | mixed | number};
+declare var top_g : { g: mixed | mixed | number, ...};
 top_g;
 // ^?
 
-type A = { f: number }
+type A = { f: number, ... }
 var a1 = { f: 1 };
 var a2 = { f: 2 };
 var a = (0<1) ? a1 : a2;

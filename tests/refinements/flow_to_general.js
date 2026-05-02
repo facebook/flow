@@ -9,7 +9,7 @@ f(42 as any);
 
 type T = 'A' | 'B';
 
-declare var x: {p?: ?T};
+declare var x: {p?: ?T, ...};
 let {p} = x;
 
 if (p === 'C') {

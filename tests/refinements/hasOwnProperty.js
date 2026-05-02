@@ -1,6 +1,6 @@
 /* @flow */
 
-function foo(x:{y?:() => void}) {
+function foo(x:{y?:() => void, ...}) {
   x.y(); // error: could be undefined
   if (x.hasOwnProperty('y')) {
     x.y(); // error: still could be undefined

@@ -374,37 +374,37 @@ function-poly-4.js:3:11 = {
   "path":"function-poly-4.js",
   "reasons":[],
   "start":10,
-  "types":{"evaluated":null,"unevaluated":{"type":"<T>(x: T) => {|f: T|}"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"<T>(x: T) => {f: T}"}}
 }
 function-poly-4.js:7:7 = {
   "end":9,
   "endline":7,
   "line":7,
   "loc":{
-    "end":{"column":9,"line":7,"offset":75},
+    "end":{"column":9,"line":7,"offset":73},
     "source":"function-poly-4.js",
-    "start":{"column":7,"line":7,"offset":72},
+    "start":{"column":7,"line":7,"offset":70},
     "type":"SourceFile"
   },
   "path":"function-poly-4.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"<T>(x: T) => {|f: T|}"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"<T>(x: T) => {f: T}"}}
 }
 function-poly-4.js:9:7 = {
   "end":9,
   "endline":9,
   "line":9,
   "loc":{
-    "end":{"column":9,"line":9,"offset":123},
+    "end":{"column":9,"line":9,"offset":119},
     "source":"function-poly-4.js",
-    "start":{"column":7,"line":9,"offset":120},
+    "start":{"column":7,"line":9,"offset":116},
     "type":"SourceFile"
   },
   "path":"function-poly-4.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"{|m<T>(x: T): {|f: T|}|}"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"{m<T>(x: T): {f: T}}"}}
 }
 function-poly-5.js:3:10 = {
   "end":12,

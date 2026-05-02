@@ -1,6 +1,6 @@
 /* @flow */
 
-type F<A> = {foo<B>(x: A): F<B>};
+type F<A> = {foo<B>(x: A): F<B>, ...};
 declare function foo(x: any): F<any>;
 ({foo}) as F<any>;
 
@@ -16,7 +16,7 @@ function bar2<X>(y: F<any>): F<X> {
 
 type Functor<A> = {
   map<B>(f: (val: A) => B): Functor<B>,
-};
+ ...};
 
 function identity<A>(val: A): Functor<A> {
   return {

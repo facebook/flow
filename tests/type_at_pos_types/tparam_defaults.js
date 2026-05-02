@@ -2,11 +2,11 @@
 
 class Bar {}
 
-type One<T = Bar> = {}
+type One<T = Bar> = {...}
 
-type Two<T1 = Bar, T2 = Bar> = {}
+type Two<T1 = Bar, T2 = Bar> = {...}
 
-type Three<T1 = Bar, T2 = number, T3 = Bar> = {}
+type Three<T1 = Bar, T2 = number, T3 = Bar> = {...}
 
 const one1: One<string> = {};
 //      ^?

@@ -3,14 +3,14 @@
 import React from 'react';
 import type {Node} from 'react';
 
-class MyComponent extends React.Component<{children: Node}, void> {
+class MyComponent extends React.Component<{children: Node, ...}, void> {
   render(): Node {
     // OK: Can pass a node down like so.
     return <MyComponent>{this.props.children}</MyComponent>;
   }
 }
 
-class MyComponentOptional extends React.Component<{children?: Node}, void> {}
+class MyComponentOptional extends React.Component<{children?: Node, ...}, void> {}
 
 <MyComponent />; // Error: `children` is required.
 <MyComponent></MyComponent>; // Error: `children` is required.
