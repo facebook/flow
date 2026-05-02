@@ -4,8 +4,6 @@ slug: /enums/defining-enums
 description: "How to define Flow Enums, including string, number, boolean, bigint, and symbol member types."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 Learn how to define a Flow Enum. Looking for a quick overview? Check out the [Quickstart Guide](./index.md#toc-quickstart).
 
 An enum declaration is a statement. Its name defines both a value (from which to [access its members](./using-enums.md#toc-accessing-enum-members),
@@ -141,9 +139,9 @@ We do not allow defaulting of number enums (unlike some other languages), becaus
 all subsequent member values would be changed. This can be unsafe (e.g. push safety, serialization, logging).
 Requiring the user to be explicit about the renumbering makes them think about the consequences of doing so.
 
-The value provided must be a number literal. Negative numbers are not literals in JS, but since Flow version 0.234 we allow negative number initializers as well.
+The value provided must be a number literal. Negative numbers are not literals in JS, but Flow allows negative number initializers as well.
 
-Example <SinceVersion version="0.234" />:
+Example:
 
 ```js flow-check
 enum Status {

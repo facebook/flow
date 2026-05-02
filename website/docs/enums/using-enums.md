@@ -4,8 +4,6 @@ slug: /enums/using-enums
 description: "How to use Flow Enums: accessing members, using as type annotations, exhaustive checking, methods, and more."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 Flow Enums are not a syntax for [union types](../types/unions.md). They are their own type, and each member of a Flow Enum has the same type.
 Large union types can cause performance issues, as Flow has to consider each member as a separate type. With Flow Enums, no matter how large your enum is,
 Flow will always exhibit good performance as it only has one type to keep track of.
@@ -61,7 +59,7 @@ declare const status: Status;
 const statusString: string = status as string;
 ```
 
-You can also call `.valueOf()` on the enum value <SinceVersion version="0.234" />.
+You can also call `.valueOf()` on the enum value.
 This is particularly useful if you are dealing with [abstract enums](#toc-abstract-enums) and don't know the representation type.
 
 ```js flow-check
@@ -658,7 +656,7 @@ const Status = require('status');
 ```
 
 
-### Abstract enums <SinceVersion version="0.234" /> {#toc-abstract-enums}
+### Abstract enums {#toc-abstract-enums}
 
 You can write code that operates on Flow Enums in a generic way using two types: `Enum<>` and `EnumValue<>`, which accept any Flow Enum and its values.
 

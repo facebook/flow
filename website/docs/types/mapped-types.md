@@ -4,8 +4,6 @@ slug: /types/mapped-types
 description: "How to use mapped types in Flow to transform object types or tuple types by iterating over their keys."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 Mapped types transform object types by iterating over their keys and producing new property types.
 
 ```js flow-check
@@ -141,7 +139,7 @@ type MappedType = {[key in Union]: number};
 
 > NOTE: Flow does not yet support removing variance or optionality modifiers.
 
-## Mapped Type on Arrays  <SinceVersion version="0.246" /> {#toc-mapped-type-on-arrays}
+## Mapped Type on Arrays {#toc-mapped-type-on-arrays}
 
 Mapped type also works on array or tuple inputs. If the mapped type is in the form of
 

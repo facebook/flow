@@ -4,8 +4,6 @@ slug: /config/options
 description: "Reference for all available .flowconfig [options] settings, including type checking behavior, module resolution, and more."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 The `[options]` section in a `.flowconfig` file can contain several key-value
 pairs of the form:
 
@@ -28,7 +26,7 @@ Set this to `true` to check all files, not just those with `@flow`.
 
 The default value for `all` is `false`.
 
-### autoimports <SinceVersion version="0.143.0" /> {#toc-autoimports}
+### autoimports {#toc-autoimports}
 
 Type: `boolean`
 
@@ -57,7 +55,7 @@ const values = [...set]; // Valid ES2015, but Set is not compatible with Readonl
 
 The default value for `babel_loose_array_spread` is `false`.
 
-### ban_spread_key_props <SinceVersion version="0.240.0" /> {#toc-ban-spread-key-props}
+### ban_spread_key_props {#toc-ban-spread-key-props}
 
 Type: `boolean`
 
@@ -224,7 +222,7 @@ much better interface to show warnings.)
 
 The default value is `false`.
 
-### jest_integration <SinceVersion version="0.237.0" /> {#toc-jest-integration}
+### jest_integration {#toc-jest-integration}
 
 Type: `boolean`
 
@@ -326,7 +324,7 @@ The default value for `merge_timeout` is `100`.
 This can be overridden from the CLI using the `--merge-timeout` flag or the
 `FLOW_MERGE_TIMEOUT` environment variable.
 
-### module.declaration_dirnames <SinceVersion version="0.253.0" /> {#toc-module-declaration-dirnames}
+### module.declaration_dirnames {#toc-module-declaration-dirnames}
 
 Type: `string`
 
@@ -586,7 +584,7 @@ ignore the builtin library definitions.
 
 The default value is `false`.
 
-### no_unchecked_indexed_access <SinceVersion version="0.257.0" /> {#toc-no-unchecked-indexed-access}
+### no_unchecked_indexed_access {#toc-no-unchecked-indexed-access}
 
 Type: `boolean`
 
@@ -662,7 +660,7 @@ affects *reads*.
 
 The default value for `no_unchecked_indexed_access` is `false`.
 
-### react.custom_jsx_typing <SinceVersion version="0.245.0" /> {#toc-react-custom-jsx-typing}
+### react.custom_jsx_typing {#toc-react-custom-jsx-typing}
 
 Type: `boolean`
 
@@ -758,7 +756,7 @@ declare type React$CustomJSXFactory = (
 
 The default value for `react.custom_jsx_typing` is `false`.
 
-### react.runtime <SinceVersion version="0.123.0" /> {#toc-react-runtime}
+### react.runtime {#toc-react-runtime}
 
 Type: `automatic | classic`
 
@@ -853,7 +851,7 @@ Enables traces on all error output (showing additional details about the flow of
 types through the system), to the depth specified. This can be very expensive,
 so is disabled by default.
 
-### use_unknown_in_catch_variables <SinceVersion version="0.293" /> {#toc-use-unknown-in-catch-variables}
+### use_unknown_in_catch_variables {#toc-use-unknown-in-catch-variables}
 
 Type: `boolean`
 

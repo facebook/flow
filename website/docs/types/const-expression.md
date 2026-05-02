@@ -4,8 +4,6 @@ slug: /types/const-expression
 description: "How to use as const to create const-expressions that infer literal and read-only types in Flow."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 The `as const` modifier tells Flow to infer the narrowest possible type for a literal expression — [literal types](./literals.md) for primitives and read-only types for containers.
 
 ```js flow-check
@@ -88,7 +86,7 @@ type State =
 Without the use of `as const` the type `typeof STATUS.INIT` would be `string`, which
 would make it unsuitable as a distinguishing tag in a disjoint union.
 
-## Const Expressions for React JSX <SinceVersion version="0.284" />{#toc-const-expression-jsx}
+## Const Expressions for React JSX {#toc-const-expression-jsx}
 
 :::info
 Check out [render types](../react/render-types.md) and [react type references](../react/types.md) if you are not familiar with React typing in Flow.

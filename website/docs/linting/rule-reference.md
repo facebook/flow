@@ -4,8 +4,6 @@ slug: /linting/rule-reference
 description: "Reference for all available Flow lint rules, including ambiguous-object-type, sketchy-null, unclear-type, and more."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 ### `all` {#toc-all}
 While `all` isn't technically a lint rule, it's worth mentioning here. `all` sets the default
 level for lint rules that don't have a level set explicitly. `all` can only
@@ -123,7 +121,7 @@ component Foo() {
 }
 ```
 
-### `libdef-override` <SinceVersion version="0.265" /> {#toc-libdef-override}
+### `libdef-override` {#toc-libdef-override}
 Triggers when a [library definition](../libdefs/index.md) overrides an existing built-in definition. This can happen when a `.js.flow` library file or a `flow-typed` stub re-declares a global variable, type, or module that Flow already provides in its builtins. Overriding built-in definitions can lead to surprising behaviors, because the order in which library files are loaded affects which definition wins.
 
 This lint is enabled as an error by default.

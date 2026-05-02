@@ -4,8 +4,6 @@ slug: /types/unknown
 description: "How the unknown type works in Flow as the safe supertype of all types, requiring refinement before use."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 `unknown` is the [supertype of all types](../lang/type-hierarchy.md). All values are `unknown`, but you must [refine](../lang/refinements.md) an `unknown` value before performing any operations on it.
 
 ## When to use this {#toc-when-to-use}

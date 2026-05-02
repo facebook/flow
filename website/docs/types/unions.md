@@ -4,8 +4,6 @@ slug: /types/unions
 description: "How to use union types in Flow to represent values that can be one of several different types."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 A **union type** represents a value that is ***one of*** a set of types.
 
 ```js flow-check
@@ -287,7 +285,7 @@ conflict with one another and we are able to distinguish which is which.
 
 ## Disjoint tuple unions
 
-Like disjoint object unions explained above, you can also define disjoint tuple unions (support in Flow version <SinceVersion version="0.240" />).
+Like disjoint object unions explained above, you can also define disjoint tuple unions.
 These are unions of tuple types, where each tuple is tagged by a particular element. For example:
 
 ```js flow-check

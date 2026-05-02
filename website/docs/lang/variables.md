@@ -4,8 +4,6 @@ slug: /lang/variables
 description: "How Flow types var, let, and const variable declarations, including reassignment behavior."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 When you are declaring a new variable, you may optionally declare its type.
 
 JavaScript has three ways of declaring local variables:
@@ -46,7 +44,7 @@ const foo /* : number */ = 1;
 const bar: number = 2;
 ```
 
-## `var` and `let` <SinceVersion version="0.186" /> {#toc-var-and-let}
+## `var` and `let` {#toc-var-and-let}
 
 Since `var` and `let` can be re-assigned, there's a few more rules you'll need
 to know about.
@@ -199,7 +197,7 @@ function findIDValue<T>(dict: {[key: string]: T}): T {
 }
 ```
 
-## Catch variables <SinceVersion version="0.197" />
+## Catch variables
 
 If a `catch` variable does not have an annotation, its default type is
 [`any`](../types/any.md).

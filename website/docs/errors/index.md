@@ -4,8 +4,6 @@ slug: /errors
 description: "Learn how to suppress Flow's type errors."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 Flow reports many different kinds of errors for many common programming mistakes, but not every JavaScript pattern can be understood by Flow.
 If you are confident your code is correct, and that Flow is
 erroring too conservatively, you can suppress the error so that
@@ -55,7 +53,7 @@ In order to be a valid suppression comment, there are also some conditions that 
 Starting from version v0.281, suppressions must have error codes.
 :::
 
-Suppressible Flow errors will also have an error code associated with them <SinceVersion version="0.127" />. This code concisely describes the type of issue the error is reporting, and is different between different kinds of errors.
+Suppressible Flow errors will also have an error code associated with them. This code concisely describes the type of issue the error is reporting, and is different between different kinds of errors.
 
 In order to prevent suppressions from suppressing different kinds of type errors on the same line (by default suppressions without codes suppress every error on the following line), you can add an error code to your suppression. For example: `// $FlowFixMe[incompatible-type]` would only suppress errors with the `incompatible-type` code. So:
 
@@ -82,7 +80,7 @@ y.x as string;
 
 This will suppress both of the two errors on this line.
 
-### Unsuppressable Errors <SinceVersion version="0.268" /> {#toc-unsuppressable-errors}
+### Unsuppressable Errors {#toc-unsuppressable-errors}
 
 Certain kinds of errors can be made unsuppressable. For example, to make `react-rule-hook-naming-convention` and `react-rule-hook-conditional` errors unsuppressable, you can add the following to the `[options]` section in `flowconfig`:
 

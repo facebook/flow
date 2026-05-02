@@ -4,11 +4,9 @@ slug: /types/utilities
 description: "Reference for Flow's built-in utility types: keyof, Partial, Required, Readonly, Pick, Omit, Exclude, Extract, and more."
 ---
 
-import {SinceVersion} from '../../components/VersionTags';
-
 Flow provides a set of utility types to operate on other types to create new types.
 
-## `keyof T` <SinceVersion version="0.290" /> {#toc-keys}
+## `keyof T` {#toc-keys}
 
 You can extract the type of the keys from an [object type](./objects.md). Typically this will be a [union](./unions.md) of [string literal](./literals.md) types:
 
@@ -29,10 +27,10 @@ In the example above, the type of `Country` is equivalent to `type Country = 'US
 
 If you want to create an enum type, [Flow Enums](../enums/index.md) might be a better fit for your use-case.
 
-## `Values<T>` <SinceVersion version="0.290" /> {#toc-values}
+## `Values<T>` {#toc-values}
 
 `Values<T>` represents the union type of all the value types of the enumerable properties in an [object type](./objects.md),
-or the elements of an [array](./arrays.md) or [tuple](./tuples.md) type (support for arrays and tuples in Flow version <SinceVersion version="0.240" />):
+or the elements of an [array](./arrays.md) or [tuple](./tuples.md) type:
 
 ```js flow-check
 type Props = {
@@ -90,10 +88,10 @@ acceptsValues(3); // Error! Because the type was interpreted as `1 | 2`.
 
 If you want to create an enum type, [Flow Enums](../enums/index.md) might be a better fit for your use-case.
 
-## `Readonly<T>` <SinceVersion version="0.290" /> {#toc-readonly}
+## `Readonly<T>` {#toc-readonly}
 
 `Readonly<T>` is a type that represents the read-only version of a given [object type](./objects.md)
-or [tuple type](./tuples.md) `T` (support for tuples is for Flow <SinceVersion version="0.212" />).
+or [tuple type](./tuples.md) `T`.
 A read-only object type is an object type whose keys are all [read-only](./objects.md#read-only-object-properties).
 Similarly, a read-only tuple is one where each element is [read-only](./tuples.md#variance-annotations-and-read-only-tuples).
 
@@ -146,12 +144,12 @@ If you want to make other types read-only, you can use one of the following:
 - `WeakSet<T>` -> `ReadonlyWeakSet<T>`
 - `WeakMap<K, V>` -> `ReadonlyWeakMap<K, V>`
 
-## `Partial<T>`  <SinceVersion version="0.201" /> {#toc-partial}
+## `Partial<T>` {#toc-partial}
 
 This utility converts all of an object or interface's named fields to be optional,
 while maintaining all the object's other properties (e.g. exactness, variance).
 
-Since Flow <SinceVersion version="0.212" />, it also converts all of a tuple type's elements to be [optional](./tuples.md#optional-tuple-elements).
+It also converts all of a tuple type's elements to be [optional](./tuples.md#optional-tuple-elements).
 
 Example for objects:
 ```js flow-check
@@ -197,12 +195,12 @@ function okPerson(o: Readonly<Partial<Person>>) {
 okPerson(person); // Works
 ```
 
-## `Required<T>` <SinceVersion version="0.201" /> {#toc-required}
+## `Required<T>` {#toc-required}
 
 The `Required` utility type is the opposite of [`Partial`](#toc-partial):
 it converts all of an object or interface’s optional fields to be required.
 
-Since Flow <SinceVersion version="0.212" />, it also converts all of a tuple type's elements to be [required](./tuples.md#optional-tuple-elements).
+It also converts all of a tuple type's elements to be [required](./tuples.md#optional-tuple-elements).
 
 Example for objects:
 ```js flow-check
@@ -223,7 +221,7 @@ type AllOptional = [a?: number, b?: string];
 [] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
 ```
 
-## `ReturnType<F>` <SinceVersion version="0.209" /> {#toc-return-type}
+## `ReturnType<F>` {#toc-return-type}
 
 This utility type extracts the return type from a given function type.
 
@@ -234,7 +232,7 @@ true as Bool;
 1 as Bool; // Error: number is not boolean
 ```
 
-## `Parameters<F>` <SinceVersion version="0.209" /> {#toc-parameters}
+## `Parameters<F>` {#toc-parameters}
 
 This utility type extracts the parameter types from a given function type into a [tuple type](./tuples.md).
 
@@ -246,7 +244,7 @@ type Tuple = Parameters<typeof f>; // Evaluates to [string, number]
 false as Tuple[2]; // Error: tuple type only has two elements
 ```
 
-## `Exclude<T, U>` <SinceVersion version="0.209" /> {#toc-exclude}
+## `Exclude<T, U>` {#toc-exclude}
 
 This utility type excludes all subtypes of `U` from `T`.
 
@@ -258,7 +256,7 @@ type T = Exclude<1 | 2 | 3 | 4, 1 | 3>; // evaluates to 2 | 4
 4 as T; // ok
 ```
 
-## `Extract<T, U>` <SinceVersion version="0.209" /> {#toc-extract}
+## `Extract<T, U>` {#toc-extract}
 
 This utility type retains only subtypes of `U` from `T`.
 
@@ -273,7 +271,7 @@ new Dog() as T; // ok
 new Cat() as T; // ok
 ```
 
-## `ThisParameterType<F>` <SinceVersion version="0.209" /> {#toc-this-parameter-type}
+## `ThisParameterType<F>` {#toc-this-parameter-type}
 
 This utility type extracts the type of the `this` parameter of a given function type.
 
@@ -283,7 +281,7 @@ type T = ThisParameterType<(this: number, bar: string) => void>; // Evaluates to
 2 as T; // ok
 ```
 
-## `OmitThisParameter<F>` <SinceVersion version="0.209" /> {#toc-omit-this-parameter-type}
+## `OmitThisParameter<F>` {#toc-omit-this-parameter-type}
 
 This utility type removes the `this` parameter from a given function type.
 
@@ -297,7 +295,7 @@ hasThisParam(''); // error: global object is not number
 noThisParam(''); // ok: no this type requirement
 ```
 
-## `Awaited<T>` <SinceVersion version="0.246" /> {#toc-awaited}
+## `Awaited<T>` {#toc-awaited}
 
 `Awaited<T>` unwraps a `Promise` type to extract the type of its resolved value. If `T` is not a `Promise`, it returns `T` unchanged.
 
@@ -332,7 +330,7 @@ const user: User = {name: 'George'}; // OK
 const bad: User = 'not a user'; // Error
 ```
 
-## `Pick<O, Keys>` <SinceVersion version="0.211" /> {#toc-pick}
+## `Pick<O, Keys>` {#toc-pick}
 
 This utility type allows you to generate an object type using a subset of the fields from
 another object type.
@@ -347,7 +345,7 @@ fooAndBar.foo as number; // ok
 fooAndBar.bar as string; // ok
 ```
 
-## `Omit<O, Keys>` <SinceVersion version="0.211" /> {#toc-omit}
+## `Omit<O, Keys>` {#toc-omit}
 
 This utility type allows you to generate an object type by omitting the specified fields from
 another object type.
@@ -361,7 +359,7 @@ justBaz.foo; // error: missing foo
 justBaz.bar; // error: missing bar
 ```
 
-## `Record<Keys, Type>` <SinceVersion version="0.211" /> {#toc-record}
+## `Record<Keys, Type>` {#toc-record}
 
 This utility type allows you to generate an object type from a union of keys with the given
 `Type` for each field.
@@ -409,7 +407,7 @@ const user = {name: 'John Wilkes Booth'};
 const a: ExactUser = user;
 ```
 
-## `NonNullable<T>` <SinceVersion version="0.290" /> {#toc-nonmaybe}
+## `NonNullable<T>` {#toc-nonmaybe}
 
 `NonNullable<T>` converts a type `T` to a non-[maybe type](./maybe.md).
 In other words, the values of `NonNullable<T>` are the values of `T` except for `null` and `undefined`.
@@ -424,7 +422,7 @@ null as MaybeName; // Works
 null as Name; // Error! `null` can't be annotated as Name because Name is not a maybe type
 ```
 
-## `NoInfer<T>` <SinceVersion version="0.230" /> {#toc-noinfer}
+## `NoInfer<T>` {#toc-noinfer}
 
 `NoInfer<T>` prevents a type parameter from being inferred from the wrapped position.
 When Flow infers a type parameter `T`, it normally considers every position where `T` appears.
@@ -560,7 +558,7 @@ import typeof * as T from 'my-module';
 export type MyModuleType = T;
 ```
 
-## `StringPrefix` and `StringSuffix` <SinceVersion version="0.242" />
+## `StringPrefix` and `StringSuffix`
 The `StringPrefix` and `StringSuffix` types represent strings with the specified prefix or suffix, respectively.
 Their first type argument must be a string literal type, representing the prefix or suffix.
 
