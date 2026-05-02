@@ -1,8 +1,10 @@
 ---
 title: Error Suppressions
 slug: /errors
-description: "Learn how to suppress Flow's type errors."
+description: "A suppression is a special comment placed on the line before a Flow type error that tells Flow not to report it. Suppressions are unsafe — they hide real type errors as well as false positives — so use them only when you are confident your code is correct but Flow is erroring too conservatively."
 ---
+
+A **suppression** is a special comment (such as `// $FlowFixMe[incompatible-type]`) placed on the line immediately before a Flow type error that tells Flow not to report that error. Suppressions are **unsafe**: they silence the type checker without fixing the underlying issue, so a suppression can hide a real bug just as easily as a false positive. Use a suppression only when you are confident your code is correct but Flow is erroring too conservatively, or when you intend to fix the error later.
 
 Flow reports many different kinds of errors for many common programming mistakes, but not every JavaScript pattern can be understood by Flow.
 If you are confident your code is correct, and that Flow is

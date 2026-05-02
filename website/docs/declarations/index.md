@@ -1,8 +1,10 @@
 ---
 title: Declaration Files
 slug: /declarations
-description: Learn how to write types in .flow files.
+description: "A declaration file is a .flow file that declares the types of a module separately from its implementation. Use one to add types to a module you cannot or do not want to annotate directly."
 ---
+
+A **declaration file** is a `.flow` file (e.g. `Misc.js.flow`) that declares the types for a module separately from its `.js` implementation. When a `.flow` file sits next to an implementation file of the same name, Flow ignores the implementation and reads the declaration file instead. Use a declaration file to add types to a module you cannot or do not want to annotate directly — for example, generated code, code that must remain plain JavaScript, or a module whose types you want to override.
 
 ## What's a Declaration File? {#toc-what-s-a-declaration-file}
 
