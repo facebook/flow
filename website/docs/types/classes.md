@@ -370,7 +370,7 @@ class MyClass {
   }
 
   useBar() {
-    (this.bar: number); // No errors.
+    this.bar as number; // No errors.
   }
 }
 ```

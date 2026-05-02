@@ -42,9 +42,9 @@ component RenamedParameter(
   'optional-renamed' as bar?: number,
   'optional-with-default-renamed' as baz?: number = 3,
 ) {
-  (foo: number); // OK
-  (bar: number | void); // OK
-  (baz: number); // OK
+  foo as number; // OK
+  bar as number | void; // OK
+  baz as number; // OK
 
   return <div />;
 }
