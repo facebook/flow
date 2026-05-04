@@ -1,3 +1,7 @@
+### 0.312.1
+
+* Fix in saved state checks after a rebase
+
 ### 0.312.0
 
 Likely to cause new Flow errors:
