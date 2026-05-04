@@ -141,36 +141,6 @@ export function parse(
   // ESTree loc/range. See FlowParser.js.
   const ast = FlowParser.parse(code, options);
 
-  // Per-node ESTree adapter fixups applied during a single tree walk. These
-  // mirror upstream HermesToESTreeAdapter behavior — see ADAPTER_GAPS.md for
-  // the full audit. Lives here (not in FlowParserNodeDeserializers.js, which
-  // is @generated and overwritten by codegen). Track visited nodes so a
-  // malformed AST with a cycle doesn't blow the stack.
-  const visitedNodes = new WeakSet();
-  function applyFixupsWalk(node) {
-    if (node == null || typeof node !== 'object') {
-      return;
-    }
-    if (visitedNodes.has(node)) {
-      return;
-    }
-    visitedNodes.add(node);
-    if (typeof node.type === 'string') {
-      applyPerNodeFixups(node, code);
-    }
-    for (const key of Object.keys(node)) {
-      const val = node[key];
-      if (Array.isArray(val)) {
-        for (const child of val) {
-          applyFixupsWalk(child);
-        }
-      } else if (val != null && typeof val === 'object' && val.type != null) {
-        applyFixupsWalk(val);
-      }
-    }
-  }
-  applyFixupsWalk(ast);
-
   const estreeAST = ast;
 
   if (options.babel !== true) {
@@ -191,38 +161,6 @@ export function parse(
   ].reduce((ast, transform) => transform?.(ast, options) ?? ast, estreeAST);
 
   return TransformESTreeToBabel.transformProgram(loweredESTreeAST, options);
-}
-
-function applyPerNodeFixups(node, code) {
-  switch (node.type) {
-    case 'Literal':
-      // Construct the host-language `value` for regex / bigint literals.
-      // BigInt and RegExp aren't JSON-serializable so they can't live on
-      // the wire — the Rust serializer emits the raw / pattern / flags /
-      // bigint string slots and we lift them to real values here.
-      // `new RegExp` can throw if the host engine doesn't recognise a
-      // flag (the wire still carries the raw flags so consumers can see
-      // the original source); swallow with null per upstream Hermes.
-      if (node.regex != null) {
-        try {
-          node.value = new RegExp(node.regex.pattern, node.regex.flags);
-        } catch (e) {
-          node.value = null;
-        }
-      }
-      if (node.bigint != null) {
-        node.value = typeof BigInt === 'function' ? BigInt(node.bigint) : null;
-      }
-      break;
-    case 'BigIntLiteralTypeAnnotation':
-      // The Rust serializer emits `bigint` (cleaned from `raw`) on the wire;
-      // coerce `value` to BigInt here because BigInt isn't JSON-serializable
-      // and so cannot live on the wire.
-      if (node.bigint != null) {
-        node.value = typeof BigInt === 'function' ? BigInt(node.bigint) : null;
-      }
-      break;
-  }
 }
 
 export type {ParserOptions} from './ParserOptions';

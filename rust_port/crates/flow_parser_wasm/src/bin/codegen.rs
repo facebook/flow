@@ -245,12 +245,52 @@ fn print_mechanical_deserializer(def: &NodeDef) {
 }
 
 /// Custom emission for nodes whose JS shape can't be expressed via the
-/// mechanical schema (currently only `Literal`, kind 75).
+/// mechanical schema. Currently used for nodes that need host-language
+/// value construction (BigInt / RegExp) that the wire can't carry.
 fn print_custom_deserializer(def: &NodeDef) {
     match def.name {
         "Literal" => print_literal_deserializer(def),
+        "BigIntLiteralTypeAnnotation" => print_bigint_literal_type_annotation_deserializer(def),
         other => panic!("custom_emit set for {}, but no handler defined", other),
     }
+}
+
+fn print_bigint_literal_type_annotation_deserializer(def: &NodeDef) {
+    println!("  // {}: {}", def.kind_id, def.name);
+    println!("  // Custom encoding: BigInt value constructed inline at deserialize time");
+    println!("  function () {{");
+    println!("    const loc = this.addEmptyLoc();");
+    // The wire reserves a Node slot for `value` to keep the layout uniform
+    // with the other LiteralTypeAnnotation kinds (which carry a literal
+    // value); the slot is always a null Node placeholder for BigInt
+    // because `BigInt(...)` cannot be JSON-serialized. Discard it and
+    // construct the host BigInt value from `bigint` below.
+    println!("    this.deserializeNode();");
+    println!("    const raw = this.deserializeString();");
+    println!("    const bigint = this.deserializeString();");
+    // Mirror upstream Hermes' HermesToESTreeAdapter.mapBigIntLiteralTypeAnnotation
+    // (lines 178-183): coerce the cleaned numeric string to a host BigInt.
+    // BigInt() throws on syntactically-invalid strings (e.g. fixtures
+    // that exercise `1.0n`, `.1n`, `0e0n` — the OCaml parser emits these
+    // with the cleaned `bigint` field even though they're invalid). Mirror
+    // the Literal handling above: swallow with null so the AST shape
+    // stays consistent.
+    println!("    let value = null;");
+    println!("    if (bigint != null && typeof BigInt === 'function') {{");
+    println!("      try {{");
+    println!("        value = BigInt(bigint);");
+    println!("      }} catch (e) {{");
+    println!("        value = null;");
+    println!("      }}");
+    println!("    }}");
+    println!("    return {{");
+    println!("      type: '{}',", def.estree_type);
+    println!("      loc,");
+    println!("      value,");
+    println!("      raw,");
+    println!("      bigint,");
+    println!("    }};");
+    println!("  }},");
 }
 
 fn print_literal_deserializer(def: &NodeDef) {
@@ -269,14 +309,35 @@ fn print_literal_deserializer(def: &NodeDef) {
     println!("    const bigint = this.deserializeString();");
     println!("    const regexPattern = this.deserializeString();");
     println!("    const regexFlags = this.deserializeString();");
-    // Mirror upstream Hermes: only attach `bigint` / `regex` to the public
-    // shape when they are actually a bigint / regex literal. The wire
-    // format always sends both slots so the layout stays fixed; the JS
-    // shape conditionally includes them.
+    // Mirror upstream Hermes' HermesToESTreeAdapter.{mapBigIntLiteral,
+    // mapRegExpLiteral}: construct the host BigInt / RegExp value here at
+    // deserialization time. The wire can't carry these because BigInt and
+    // RegExp aren't JSON-serializable; doing it inline eliminates any
+    // post-deserialization walker. `new RegExp` may throw on invalid
+    // flags — swallow with null per upstream Hermes
+    // (HermesToESTreeAdapter.mapRegExpLiteral lines 161-166).
     println!("    const node = {{type: 'Literal', loc, value, raw, literalType}};");
-    println!("    if (bigint != null) node.bigint = bigint;");
+    println!("    if (bigint != null) {{");
+    println!("      node.bigint = bigint;");
+    // BigInt() throws on syntactically-invalid strings (e.g. fixtures
+    // that exercise `1.0n`, `.1n`, `0e0n` — the OCaml parser emits these
+    // with the cleaned `bigint` field even though they're invalid). Match
+    // the RegExp pattern below: swallow with null so the public AST
+    // shape stays consistent.
+    println!("      try {{");
+    println!("        node.value = typeof BigInt === 'function' ? BigInt(bigint) : null;");
+    println!("      }} catch (e) {{");
+    println!("        node.value = null;");
+    println!("      }}");
+    println!("    }}");
     println!("    if (regexPattern != null) {{");
-    println!("      node.regex = {{pattern: regexPattern, flags: regexFlags ?? ''}};");
+    println!("      const flags = regexFlags ?? '';");
+    println!("      node.regex = {{pattern: regexPattern, flags}};");
+    println!("      try {{");
+    println!("        node.value = new RegExp(regexPattern, flags);");
+    println!("      }} catch (e) {{");
+    println!("        node.value = null;");
+    println!("      }}");
     println!("    }}");
     println!("    return node;");
     println!("  }},");

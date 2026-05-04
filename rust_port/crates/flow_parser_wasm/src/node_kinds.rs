@@ -1268,14 +1268,16 @@ define_nodes! {
         value: Node,
         raw: String,
         bigint: String,
-    } from Type::BigIntLiteral { loc, literal } {
+    } custom { } from Type::BigIntLiteral { loc, literal } {
             self.write_null_node(),
             self.write_str(&literal.raw),
             // Mirror upstream Hermes' BigIntLiteralTypeAnnotation: emit
             // `bigint` as the cleaned numeric string (strip trailing `n`
-            // and `_` separators from `raw`). The JS adapter then coerces
-            // `value` to BigInt(bigint) — `value: BigInt(...)` cannot be
-            // JSON-serialized so it can't live on the wire.
+            // and `_` separators from `raw`). The JS deserializer coerces
+            // `value` to BigInt(bigint) inline (matching upstream's
+            // HermesToESTreeAdapter.mapBigIntLiteralTypeAnnotation) —
+            // `value: BigInt(...)` cannot be JSON-serialized so it can't
+            // live on the wire.
             self.write_str(&clean_bigint_raw(&literal.raw)),
         },
     BooleanLiteralTypeAnnotation = 134 {

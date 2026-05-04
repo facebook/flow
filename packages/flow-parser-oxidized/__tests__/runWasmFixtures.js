@@ -187,7 +187,19 @@ function compare(env, ast, spec, skipComments) {
       }
     }
   } else {
-    if (ast !== spec && !(ast instanceof RegExp && spec === null)) {
+    // The OCaml/Rust source-of-truth tree.json fixtures have `value: null`
+    // for `Literal` (bigint) and `BigIntLiteralTypeAnnotation` because
+    // BigInt is not JSON-serializable, so the wire-format `value` slot is
+    // null. The wasm deserializer constructs the host BigInt value from
+    // the `bigint` slot at deserialize time (mirroring upstream Hermes'
+    // HermesToESTreeAdapter.{mapBigIntLiteral, mapBigIntLiteralTypeAnnotation}).
+    // Treat `BigInt(...)` vs spec=null the same way `new RegExp(...)` vs
+    // spec=null is treated.
+    if (
+      ast !== spec &&
+      !(ast instanceof RegExp && spec === null) &&
+      !(typeof ast === 'bigint' && spec === null)
+    ) {
       env.diff('Wrong value', spec, ast);
     }
   }

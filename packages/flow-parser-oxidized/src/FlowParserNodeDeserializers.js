@@ -844,9 +844,22 @@ module.exports = [
     const regexPattern = this.deserializeString();
     const regexFlags = this.deserializeString();
     const node = {type: 'Literal', loc, value, raw, literalType};
-    if (bigint != null) node.bigint = bigint;
+    if (bigint != null) {
+      node.bigint = bigint;
+      try {
+        node.value = typeof BigInt === 'function' ? BigInt(bigint) : null;
+      } catch (e) {
+        node.value = null;
+      }
+    }
     if (regexPattern != null) {
-      node.regex = {pattern: regexPattern, flags: regexFlags ?? ''};
+      const flags = regexFlags ?? '';
+      node.regex = {pattern: regexPattern, flags};
+      try {
+        node.value = new RegExp(regexPattern, flags);
+      } catch (e) {
+        node.value = null;
+      }
     }
     return node;
   },
@@ -1459,13 +1472,26 @@ module.exports = [
   },
 
   // 133: BigIntLiteralTypeAnnotation
+  // Custom encoding: BigInt value constructed inline at deserialize time
   function () {
+    const loc = this.addEmptyLoc();
+    this.deserializeNode();
+    const raw = this.deserializeString();
+    const bigint = this.deserializeString();
+    let value = null;
+    if (bigint != null && typeof BigInt === 'function') {
+      try {
+        value = BigInt(bigint);
+      } catch (e) {
+        value = null;
+      }
+    }
     return {
       type: 'BigIntLiteralTypeAnnotation',
-      loc: this.addEmptyLoc(),
-      value: this.deserializeNode(),
-      raw: this.deserializeString(),
-      bigint: this.deserializeString(),
+      loc,
+      value,
+      raw,
+      bigint,
     };
   },
 
