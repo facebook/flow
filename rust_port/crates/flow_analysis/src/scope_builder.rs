@@ -1170,7 +1170,7 @@ where
         let Ok(()) = hoist.component_body(body);
         hoist.into_bindings()
     };
-    visitor.with_bindings(true, body.0.dupe(), bindings, |this| {
+    visitor.with_bindings(false, body.0.dupe(), bindings, |this| {
         // Visit params to ensure they are declared
         this.component_params(&params_without_annots_and_defaults)?;
         this.component_body(body)

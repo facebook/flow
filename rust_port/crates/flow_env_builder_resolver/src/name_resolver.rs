@@ -2894,14 +2894,12 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
     fn expecting_abrupt_completions<T>(&mut self, f: impl FnOnce(&mut Self) -> T) -> T {
         let saved = std::mem::take(&mut self.env_state.abrupt_completion_envs);
-        let saved_latest_refinements_len = self.env_state.latest_refinements.len();
+        let saved_latest_refinements = self.env_state.latest_refinements.dupe();
         let result = f(self);
         let mut new_envs = std::mem::take(&mut self.env_state.abrupt_completion_envs);
         new_envs.extend(saved);
         self.env_state.abrupt_completion_envs = new_envs;
-        self.env_state
-            .latest_refinements
-            .truncate(saved_latest_refinements_len);
+        self.env_state.latest_refinements = saved_latest_refinements;
         result
     }
 
