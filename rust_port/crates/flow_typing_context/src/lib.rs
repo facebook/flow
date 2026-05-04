@@ -761,7 +761,7 @@ pub fn empty_sig_cx<'cx>() -> TypeContext<'cx, Context<'cx>> {
         graph: Rc::new(RefCell::new(flow_utils_union_find::Graph::with_capacity(
             1024,
         ))),
-        property_maps: HashMap::with_capacity(256),
+        property_maps: BTreeMap::new(),
         call_props: IntHashMap::with_capacity_and_hasher(128, Default::default()),
         export_maps: HashMap::with_capacity(4),
         evaluated: CACHED_EVALUATED.with(|c| c.clone()),

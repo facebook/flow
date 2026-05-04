@@ -9614,7 +9614,7 @@ pub struct TypeContext<'a, CX = ()> {
     /// map from tvar ids to nodes (type info structures)
     pub graph: Rc<RefCell<flow_utils_union_find::Graph<constraint::Constraints<'a, CX>>>>,
     /// obj types point to mutable property maps
-    pub property_maps: std::collections::HashMap<properties::Id, properties::PropertiesMap>,
+    pub property_maps: BTreeMap<properties::Id, properties::PropertiesMap>,
     /// indirection to support context opt
     pub call_props: flow_data_structure_wrapper::int_map::IntHashMap<i32, Type>,
     /// modules point to mutable export maps

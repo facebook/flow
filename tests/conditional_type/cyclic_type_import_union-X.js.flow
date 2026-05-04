@@ -1,0 +1,17 @@
+// @flow
+
+declare type XInstance = {
+  compile(): XValidationFunction,
+};
+
+declare type XValidationFunction = {
+  (): boolean,
+  errors?: ?Array<string>,
+  schema?: string,
+};
+
+declare class X {
+  constructor(): XInstance;
+}
+
+declare module.exports: typeof X;
