@@ -194,15 +194,16 @@ pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
     }
 
     match (t1.deref(), t2.deref()) {
-        (TypeInner::OpenT(tvar1), TypeInner::OpenT(tvar2)) => {
-            let id1 = tvar1.id() as i32;
-            let id2 = tvar2.id() as i32;
-            let (root_id1, _) = cx.find_constraints(id1);
-            let (root_id2, _) = cx.find_constraints(id2);
-            if root_id1 == root_id2 {
-                return true;
-            }
-            eq_swap_reason(t1, t2)
+        (TypeInner::OpenT(tvar1), TypeInner::OpenT(tvar2))
+            if {
+                let id1 = tvar1.id() as i32;
+                let id2 = tvar2.id() as i32;
+                let (root_id1, _) = cx.find_constraints(id1);
+                let (root_id2, _) = cx.find_constraints(id2);
+                root_id1 == root_id2
+            } =>
+        {
+            true
         }
         (TypeInner::OpenT(tvar), _) => {
             let id1 = tvar.id() as i32;
