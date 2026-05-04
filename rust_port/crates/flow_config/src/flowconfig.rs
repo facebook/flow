@@ -352,7 +352,7 @@ pub mod opts {
             saved_state_direct_serialization: false,
             saved_state_parallel_decompress: false,
             saved_state_fetcher: SavedStateFetcher::DummyFetcher,
-            saved_state_persist_export_index: false,
+            saved_state_persist_export_index: true,
             saved_state_reinit_on_lib_change: true,
             saved_state_skip_version_check: false,
             shm_hash_table_pow: 19,
