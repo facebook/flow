@@ -488,7 +488,8 @@ module Statement
 
   and return =
     with_loc (fun env ->
-        if not (in_function env) then error env Parse_error.IllegalReturn;
+        if not (in_function env || (parse_options env).allow_return_outside_function) then
+          error env Parse_error.IllegalReturn;
         let leading = Peek.comments env in
         let start_loc = Peek.loc env in
         Expect.token env T_RETURN;

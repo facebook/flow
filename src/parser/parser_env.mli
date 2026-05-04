@@ -37,6 +37,9 @@ type parse_options = {
   use_strict: bool;  (** treat the file as strict, without needing a "use strict" directive *)
   module_ref_prefix: string option;
   assert_operator: bool;
+  allow_return_outside_function: bool;
+      (** suppress the [IllegalReturn] diagnostic for top-level [return]
+          statements; matches hermes-parser [allowReturnOutsideFunction] *)
 }
 
 val default_parse_options : parse_options

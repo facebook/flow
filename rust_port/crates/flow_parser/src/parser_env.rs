@@ -233,6 +233,9 @@ pub struct ParseOptions {
     pub module_ref_prefix: Option<FlowSmolStr>,
     /// treat the file as ambient context (e.g. .js.flow or .d.ts)
     pub ambient: bool,
+    /// suppress the [IllegalReturn] diagnostic for top-level [return]
+    /// statements; matches hermes-parser [allowReturnOutsideFunction]
+    pub allow_return_outside_function: bool,
 }
 
 impl Default for ParseOptions {
@@ -248,6 +251,7 @@ impl Default for ParseOptions {
             use_strict: false,
             module_ref_prefix: None,
             ambient: false,
+            allow_return_outside_function: false,
         }
     }
 }
@@ -263,6 +267,7 @@ pub const PERMISSIVE_PARSE_OPTIONS: ParseOptions = ParseOptions {
     use_strict: false,
     module_ref_prefix: None,
     ambient: false,
+    allow_return_outside_function: false,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

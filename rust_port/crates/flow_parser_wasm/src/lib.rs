@@ -69,14 +69,9 @@ fn nonneg_u32(v: i32) -> u32 {
 /// - enable_match: enable match expression syntax
 /// - enable_decorators: enable Stage-1 decorator syntax (when 0, `@` is a parse error)
 /// - tokens: if true, serialize token information
-/// - allow_return_outside: accepted but unused; OCaml flow_parser's
-///   `parse_options` has no equivalent gate, and the `IllegalReturn`
-///   diagnostic is raised unconditionally at statement_parser.rs:722-723
-///   when `!env.in_function()`. The hermes-parser-compatible
-///   `allowReturnOutsideFunction` semantics are implemented at the JS
-///   adapter layer (src/index.js) by filtering this specific diagnostic
-///   from the error list before throwing — keeping the Rust port faithful
-///   to OCaml without adding a new option to ParseOptions.
+/// - allow_return_outside: when non-zero, suppress the `IllegalReturn`
+///   diagnostic for top-level `return` statements. Mirrors hermes-parser
+///   `allowReturnOutsideFunction`.
 /// - assert_operator: enable Flow `expr!` non-null assertion
 /// - enable_enums: enable Flow enum syntax (off by default per OCaml `default_parse_options`)
 /// - enable_records: enable Flow record syntax (`#{ ... }`); off by default
@@ -110,7 +105,7 @@ pub extern "C" fn hermesParse(
     enable_match: i32,
     enable_decorators: i32,
     tokens: i32,
-    _allow_return_outside: i32,
+    allow_return_outside: i32,
     assert_operator: i32,
     enable_enums: i32,
     enable_records: i32,
@@ -200,6 +195,7 @@ pub extern "C" fn hermesParse(
         assert_operator: assert_operator != 0,
         module_ref_prefix: None,
         ambient: false,
+        allow_return_outside_function: allow_return_outside != 0,
     };
 
     let file_key = flow_parser::file_key::FileKey::new(
@@ -520,6 +516,7 @@ mod tests {
             assert_operator: false,
             module_ref_prefix: None,
             ambient: false,
+            allow_return_outside_function: false,
         };
         let file_key = flow_parser::file_key::FileKey::new(
             flow_parser::file_key::FileKeyInner::SourceFile(String::new()),

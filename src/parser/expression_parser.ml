@@ -1877,6 +1877,12 @@ module Expression
         ("", "", "", [])
     in
     Eat.pop_lex_mode env;
+    (* Mirror upstream Hermes: invalid regex flags are not a parse error.
+       The literal is syntactically well-formed; flag validation is left to
+       the JS [RegExp] constructor at adapter time. We still keep the
+       [filtered_flags] computation because downstream tools (e.g. AST
+       printers) consume the recognized-only flags subset, but emit no
+       diagnostic when [flags <> raw_flags]. *)
     let filtered_flags = Buffer.create (String.length raw_flags) in
     String.iter
       (function
@@ -1884,7 +1890,6 @@ module Expression
         | _ -> ())
       raw_flags;
     let flags = Buffer.contents filtered_flags in
-    if flags <> raw_flags then error env (Parse_error.InvalidRegExpFlags raw_flags);
     let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
     (loc, Expression.RegExpLiteral { Ast.RegExpLiteral.pattern; flags; raw; comments })
 

@@ -3079,20 +3079,11 @@ fn regexp(env: &mut ParserEnv) -> Result<expression::Expression<Loc, Loc>, Rollb
 
     eat::pop_lex_mode(env);
 
-    let filtered_flags: String = raw_flags
-        .chars()
-        .filter(|c| matches!(c, 'd' | 'g' | 'i' | 'm' | 's' | 'u' | 'y' | 'v'))
-        .collect();
-
-    // Mirror upstream Hermes: store the raw (possibly-invalid) flags on the
-    // AST. The flag-validity check still surfaces a parse error so callers
-    // can see invalid flags, but the wire format preserves the source as-is
-    // so consumers can reconstruct the original regex text.
-    if raw_flags.as_str() != filtered_flags.as_str() {
-        env.error(ParseError::InvalidRegExpFlags(
-            raw_flags.as_str().to_owned(),
-        ))?;
-    }
+    // Mirror upstream Hermes: invalid regex flags are not a parse error.
+    // The literal is syntactically well-formed; flag validation is left to
+    // the JS [RegExp] constructor at adapter time. The wire format preserves
+    // the raw source flags so consumers can reconstruct the original regex
+    // text.
     let flags = raw_flags.as_str().to_owned();
 
     let comments = mk_comments_opt(Some(leading.into()), Some(trailing.into()));

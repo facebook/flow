@@ -302,45 +302,17 @@ function parse(source, options) {
     }
     fixLocs(ast);
 
-    // Category E - E (shit.md): first-error-throw + `Illegal return statement`
-    // filter + `Invalid flags supplied to RegExp constructor` filter live at
-    // the wasm boundary so the public src/index.js parse() stays close to
-    // upstream. Direct callers (e.g. the wasm fixture runner that wants raw
-    // ast.errors instead of a throw) opt out via
-    // `throwOnParseErrors: false`. Format mirrors HermesASTAdapter.formatError —
-    // `${message} (${line}:${column})`.
-    //
-    // `allowReturnOutsideFunction` is honored at the JS layer rather than in
-    // the Rust port: OCaml flow_parser's `parse_options` has no equivalent
-    // gate (Parse_error.IllegalReturn is raised unconditionally), so adding
-    // a Rust option would extend the port beyond its OCaml ancestor. Filter
-    // the specific diagnostic out when the consumer asked for the
-    // hermes-parser-style relaxation. The ReturnStatement AST node is
-    // produced regardless, so dropping the error is the only behavioral
-    // difference.
+    // First-error-throw lives at the wasm boundary so the public
+    // src/index.js parse() stays close to upstream. Direct callers (e.g.
+    // the wasm fixture runner that wants raw ast.errors instead of a
+    // throw) opt out via `throwOnParseErrors: false`. Format mirrors
+    // HermesASTAdapter.formatError — `${message} (${line}:${column})`.
+    // `allowReturnOutsideFunction` is honored in the Rust parser via
+    // ParseOptions; invalid RegExp flags are no longer surfaced as parse
+    // errors at the Rust source — both filters that used to live here
+    // are gone.
     if (options.throwOnParseErrors !== false) {
-      let errors = ast.errors;
-      if (
-        errors != null &&
-        errors.length > 0 &&
-        options.allowReturnOutsideFunction === true
-      ) {
-        errors = errors.filter(e => e.message !== 'Illegal return statement');
-      }
-      // hermes-parser parity (verified against 0.35.0): an invalid RegExp
-      // flag (e.g. `/foo/qq`) is *not* a parse error — the regex literal is
-      // syntactically well-formed and Hermes leaves the value-construction
-      // failure to the JS `RegExp` constructor at adapter time. Strip the
-      // OCaml flow_parser diagnostic so the Literal node is returned with
-      // `value: null` instead of throwing.
-      if (errors != null && errors.length > 0) {
-        errors = errors.filter(
-          e =>
-            !e.message.startsWith(
-              'Invalid flags supplied to RegExp constructor',
-            ),
-        );
-      }
+      const errors = ast.errors;
       if (errors != null && errors.length > 0) {
         const first = errors[0];
         const line = first.loc.start.line;

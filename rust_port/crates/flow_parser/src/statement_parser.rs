@@ -720,7 +720,7 @@ fn if_statement(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, R
 
 fn return_statement(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, Rollback> {
     let (loc, s) = with_loc(None, env, |env| {
-        if !env.in_function() {
+        if !env.in_function() && !env.parse_options().allow_return_outside_function {
             env.error(ParseError::IllegalReturn)?;
         }
         let leading = peek::comments(env);

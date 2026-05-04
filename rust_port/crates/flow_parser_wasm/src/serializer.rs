@@ -3878,6 +3878,7 @@ mod tests {
             assert_operator: false,
             module_ref_prefix: None,
             ambient: false,
+            allow_return_outside_function: false,
         };
         let (program, errors) = flow_parser::parse_program_file::<()>(
             false,

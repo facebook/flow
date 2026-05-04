@@ -76,6 +76,8 @@ let parse_options jsopts =
     use_strict = bool_opt defaults.use_strict jsopts "use_strict";
     assert_operator = bool_opt defaults.assert_operator jsopts "assert_operator";
     module_ref_prefix = None;
+    allow_return_outside_function =
+      bool_opt defaults.allow_return_outside_function jsopts "allow_return_outside_function";
   }
 
 let translate_tokens offset_table tokens =
