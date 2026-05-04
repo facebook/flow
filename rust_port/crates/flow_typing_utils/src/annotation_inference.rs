@@ -1793,7 +1793,7 @@ fn elab_t_concrete<'cx>(
                                         &trace,
                                         use_op.dupe(),
                                         propref,
-                                        property::type_(&p),
+                                        property::property_type(&p),
                                         reason_op,
                                         &react_dro,
                                     )

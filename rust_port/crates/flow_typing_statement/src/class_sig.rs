@@ -1313,8 +1313,8 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
                 },
             ))));
             let propref = type_util::mk_named_prop(reason.dupe(), false, prop);
-            let pt1 = property::type_(p1);
-            let pt2 = property::type_(p2);
+            let pt1 = property::property_type(p1);
+            let pt2 = property::property_type(p2);
             flow_js::FlowJs::flow_p(cx, use_op, &reason, &reason, &propref, &pt1, &pt2)
                 .expect("flow_p should not fail outside speculation");
         }

@@ -1029,13 +1029,7 @@ pub fn extract_members<'cx>(
                     // TODO: It isn't currently possible to return two types for a given
                     // property in autocomplete, so for now we just return the getter
                     // type.
-                    let t = match p.deref() {
-                        PropertyInner::Field(fd) => fd.type_.dupe(),
-                        PropertyInner::Get { type_, .. } => type_.dupe(),
-                        PropertyInner::Set { type_, .. } => type_.dupe(),
-                        PropertyInner::GetSet(gs) => gs.get_type.dupe(),
-                        PropertyInner::Method { type_, .. } => type_.dupe(),
-                    };
+                    let t = flow_typing_type::type_::property::type_(p).dupe();
                     let locs = flow_typing_type::type_::property::def_locs(p);
                     members.insert(x.clone(), (locs, t));
                 }

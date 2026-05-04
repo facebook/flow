@@ -111,6 +111,7 @@ use vec1::Vec1;
 use crate::flow_js::FlowJs;
 use crate::marked::Marked;
 use crate::natural_inference;
+use crate::slice_utils;
 use crate::speculation_kit;
 
 fn union_flatten_list(ts: impl IntoIterator<Item = Type>) -> Vec<Type> {
@@ -848,21 +849,7 @@ fn reverse_obj_spread<'cx>(
     };
 
     let slice_to_t = |s: &object::Slice| -> Type {
-        let props: properties::PropertiesMap = s
-            .props
-            .iter()
-            .map(|(k, prop)| {
-                (
-                    k.dupe(),
-                    Property::new(PropertyInner::Field(Box::new(FieldData {
-                        preferred_def_locs: None,
-                        key_loc: prop.key_loc.dupe(),
-                        type_: prop.prop_t.dupe(),
-                        polarity: Polarity::Neutral,
-                    }))),
-                )
-            })
-            .collect();
+        let props: properties::PropertiesMap = s.props.dupe();
         obj_type::mk_with_proto(
             cx,
             r.dupe(),

@@ -616,7 +616,7 @@ fn flow_obj_to_obj<'cx>(
                     } else {
                         // prop from aliased LB
                         let additional_polarity_mismatch_errs =
-                            match (property::type_(&lp), property::type_(up)) {
+                            match (property::property_type(&lp), property::property_type(up)) {
                                 (
                                     PropertyType::OrdinaryField {
                                         type_: ref lt,
@@ -699,7 +699,7 @@ fn flow_obj_to_obj<'cx>(
                                 polarity: fd.polarity,
                             }
                         }
-                        _ => property::type_(up),
+                        _ => property::property_type(up),
                     };
                     let subtype_against_indexer =
                         |polarity_mismatch_errs: &mut PolMismatchErrs|
@@ -866,7 +866,7 @@ fn flow_obj_to_obj<'cx>(
                                             LookupAction::LookupPropForSubtyping(Box::new(
                                                 LookupPropForSubtypingData {
                                                     use_op: use_op.dupe(),
-                                                    prop: property::type_(up),
+                                                    prop: property::property_type(up),
                                                     prop_name: name.dupe(),
                                                     reason_lower: lreason.dupe(),
                                                     reason_upper: ureason.dupe(),
@@ -1075,7 +1075,7 @@ fn flow_obj_to_obj<'cx>(
     }
     for up in &ups_to_flow_any {
         let any = any_t::error_of_kind(AnyErrorKind::UnresolvedName, ureason.dupe());
-        match property::type_(up) {
+        match property::property_type(up) {
             PropertyType::OrdinaryField {
                 type_: ut,
                 polarity: Polarity::Neutral,
@@ -1144,7 +1144,7 @@ fn flow_obj_to_obj<'cx>(
                                 polarity: fd.polarity,
                             }
                         }
-                        _ => property::type_(lp),
+                        _ => property::property_type(lp),
                     };
                     let up_type = PropertyType::OrdinaryField {
                         type_: value.dupe(),
@@ -4249,8 +4249,8 @@ pub fn rec_sub_t<'cx>(
                                 ureason,
                                 true,
                                 &propref,
-                                &property::type_(lp),
-                                &property::type_(up),
+                                &property::property_type(lp),
+                                &property::property_type(up),
                             )?;
                             acc.extend(new_errs);
                         }
@@ -4283,7 +4283,7 @@ pub fn rec_sub_t<'cx>(
                                                 LookupAction::LookupPropForSubtyping(Box::new(
                                                     LookupPropForSubtypingData {
                                                         use_op: use_op.dupe(),
-                                                        prop: property::type_(up),
+                                                        prop: property::property_type(up),
                                                         prop_name: name.dupe(),
                                                         reason_lower: lreason.dupe(),
                                                         reason_upper: ureason.dupe(),

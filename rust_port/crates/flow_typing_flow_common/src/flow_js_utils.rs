@@ -5386,7 +5386,7 @@ pub mod get_prop_t_kit {
                     trace,
                     use_op.dupe(),
                     propref,
-                    property::type_(&p),
+                    property::property_type(&p),
                     reason_op,
                     &inst.inst_react_dro,
                 )
@@ -5555,7 +5555,7 @@ pub mod get_prop_t_kit {
         match (propref, &named_prop, dict_t) {
             (_, Some(prop), _) => {
                 // Property exists on this property map
-                let field = match property::type_(prop) {
+                let field = match property::property_type(prop) {
                     PropertyType::OrdinaryField { type_, polarity } if skip_optional => {
                         match type_.deref() {
                             TypeInner::OptionalT {

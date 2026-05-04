@@ -5987,7 +5987,7 @@ pub type UnionEnumSet = FlowOrdSet<UnionEnum>;
 pub mod property {
     use super::*;
 
-    pub fn type_(p: &Property) -> PropertyType {
+    pub fn property_type(p: &Property) -> PropertyType {
         match p.deref() {
             PropertyInner::Field(f) => PropertyType::OrdinaryField {
                 type_: f.type_.dupe(),
@@ -6058,7 +6058,7 @@ pub mod property {
     }
 
     pub fn read_t(p: &Property) -> Option<Type> {
-        read_t_of_property_type(&type_(p))
+        read_t_of_property_type(&property_type(p))
     }
 
     pub fn write_t_of_property_type(pt: &PropertyType, ctx: Option<WriteCtx>) -> Option<Type> {
@@ -6078,7 +6078,7 @@ pub mod property {
     }
 
     pub fn write_t(p: &Property) -> Option<Type> {
-        write_t_of_property_type(&type_(p), None)
+        write_t_of_property_type(&property_type(p), None)
     }
 
     pub fn read_loc(p: &Property) -> Option<ALoc> {
@@ -6290,6 +6290,50 @@ pub mod property {
             _ => panic!("Unexpected field type"),
         }
     }
+
+    pub fn is_method(p: &Property) -> bool {
+        matches!(p.deref(), PropertyInner::Method { .. })
+    }
+
+    /// Underlying type field of a Property, regardless of polarity (unlike `read_t`,
+    /// which filters by polarity). For GetSet — which carries both a get and a set
+    /// type — this returns the get type.
+    pub fn type_(p: &Property) -> &Type {
+        match p.deref() {
+            PropertyInner::Field(fd) => &fd.type_,
+            PropertyInner::Method { type_, .. }
+            | PropertyInner::Get { type_, .. }
+            | PropertyInner::Set { type_, .. } => type_,
+            PropertyInner::GetSet(gs) => &gs.get_type,
+        }
+    }
+
+    /// Return a Property with the field polarity overridden. Method/Get/Set/GetSet
+    /// have no field polarity and are returned unchanged.
+    pub fn with_polarity(p: &Property, polarity: Polarity) -> Property {
+        match p.deref() {
+            PropertyInner::Field(fd) if fd.polarity == polarity => p.dupe(),
+            PropertyInner::Field(fd) => Property::new(PropertyInner::Field(Box::new(FieldData {
+                polarity,
+                ..(**fd).clone()
+            }))),
+            _ => p.dupe(),
+        }
+    }
+
+    /// Map the underlying type of a Field. Method/Get/Set/GetSet are returned unchanged.
+    pub fn map_field_t<F>(p: &Property, f: F) -> Property
+    where
+        F: FnOnce(&Type) -> Type,
+    {
+        match p.deref() {
+            PropertyInner::Field(fd) => Property::new(PropertyInner::Field(Box::new(FieldData {
+                type_: f(&fd.type_),
+                ..(**fd).clone()
+            }))),
+            _ => p.dupe(),
+        }
+    }
 }
 
 pub mod properties {
@@ -6423,6 +6467,15 @@ pub mod properties {
     impl std::iter::FromIterator<(Name, Property)> for PropertiesMap {
         fn from_iter<I: IntoIterator<Item = (Name, Property)>>(iter: I) -> Self {
             Self(Rc::new(iter.into_iter().collect()))
+        }
+    }
+
+    impl<'a> IntoIterator for &'a PropertiesMap {
+        type Item = (&'a Name, &'a Property);
+        type IntoIter = std::collections::btree_map::Iter<'a, Name, Property>;
+
+        fn into_iter(self) -> Self::IntoIter {
+            self.0.iter()
         }
     }
 
@@ -7913,105 +7966,12 @@ pub mod object {
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct Slice {
         pub reason: Reason,
-        pub props: Props,
+        pub props: properties::PropertiesMap,
         pub flags: Flags,
         pub frozen: bool,
         pub generics: GenericSpreadId,
         pub interface: Option<(Type, InstType)>,
         pub reachable_targs: Rc<[(Type, Polarity)]>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-    pub struct Props(Rc<BTreeMap<Name, Prop>>);
-
-    impl std::hash::Hash for Props {
-        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-            for entry in self.0.iter() {
-                entry.hash(state);
-            }
-        }
-    }
-
-    impl Default for Props {
-        fn default() -> Self {
-            Self(Rc::new(BTreeMap::new()))
-        }
-    }
-
-    impl Props {
-        pub fn new() -> Self {
-            Self(Rc::new(BTreeMap::new()))
-        }
-
-        pub fn insert(&mut self, k: Name, v: Prop) -> Option<Prop> {
-            Rc::make_mut(&mut self.0).insert(k, v)
-        }
-
-        pub fn get(&self, k: &Name) -> Option<&Prop> {
-            self.0.get(k)
-        }
-
-        pub fn remove(&mut self, k: &Name) -> Option<Prop> {
-            Rc::make_mut(&mut self.0).remove(k)
-        }
-
-        pub fn iter(&self) -> impl Iterator<Item = (&Name, &Prop)> {
-            self.0.iter()
-        }
-
-        pub fn keys(&self) -> impl Iterator<Item = &Name> {
-            self.0.keys()
-        }
-
-        pub fn len(&self) -> usize {
-            self.0.len()
-        }
-
-        pub fn is_empty(&self) -> bool {
-            self.0.is_empty()
-        }
-    }
-
-    impl From<BTreeMap<Name, Prop>> for Props {
-        fn from(map: BTreeMap<Name, Prop>) -> Self {
-            Self(Rc::new(map))
-        }
-    }
-
-    impl std::iter::FromIterator<(Name, Prop)> for Props {
-        fn from_iter<I: IntoIterator<Item = (Name, Prop)>>(iter: I) -> Self {
-            Self(Rc::new(iter.into_iter().collect()))
-        }
-    }
-
-    impl IntoIterator for Props {
-        type Item = (Name, Prop);
-        type IntoIter = std::collections::btree_map::IntoIter<Name, Prop>;
-
-        fn into_iter(self) -> Self::IntoIter {
-            match Rc::try_unwrap(self.0) {
-                Ok(m) => m.into_iter(),
-                Err(rc) => (*rc).clone().into_iter(),
-            }
-        }
-    }
-
-    impl<'a> IntoIterator for &'a Props {
-        type Item = (&'a Name, &'a Prop);
-        type IntoIter = std::collections::btree_map::Iter<'a, Name, Prop>;
-
-        fn into_iter(self) -> Self::IntoIter {
-            self.0.iter()
-        }
-    }
-
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub struct Prop {
-        pub prop_t: Type,
-        pub is_own: bool,
-        pub is_method: bool,
-        pub polarity: Polarity,
-        pub key_loc: Option<ALoc>,
     }
 
     pub type Dict = Option<DictType>;

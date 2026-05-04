@@ -884,9 +884,13 @@ fn dump_use_t_<CX>(
             ObjKind::Exact | ObjKind::Inexact => {}
         }
         for (k, prop) in &s.props {
-            let opt = match &prop.prop_t.deref() {
-                TypeInner::OptionalT { .. } => "?",
-                _ => "",
+            let opt = if matches!(
+                type_::property::type_(prop).deref(),
+                TypeInner::OptionalT { .. }
+            ) {
+                "?"
+            } else {
+                ""
             };
             xs.push(format!("{}{}", k, opt));
         }
@@ -904,18 +908,17 @@ fn dump_use_t_<CX>(
         use type_::property::first_loc;
         use type_::property::read_t;
         use type_::property::write_t;
-        let props: type_::object::Props = prop_map
+        let props: type_::properties::PropertiesMap = prop_map
             .iter()
             .filter_map(|(k, p)| match (read_t(p), write_t(p)) {
                 (Some(t), _) | (_, Some(t)) => Some((
                     k.clone(),
-                    type_::object::Prop {
-                        prop_t: t,
-                        is_own: true,
-                        is_method: false,
-                        polarity: Polarity::Neutral,
+                    type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
+                        preferred_def_locs: None,
                         key_loc: first_loc(p),
-                    },
+                        type_: t,
+                        polarity: Polarity::Neutral,
+                    }))),
                 )),
                 _ => None,
             })

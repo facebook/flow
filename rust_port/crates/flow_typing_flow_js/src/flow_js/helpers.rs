@@ -337,7 +337,7 @@ pub(super) fn lookup_prop_type_direct<'cx>(
 ) -> Option<Type> {
     let name = type_util::name_of_singleton_string_type(key_type)?;
     let prop = props.get(name)?;
-    match property::type_(prop) {
+    match property::property_type(prop) {
         PropertyType::OrdinaryField { type_, polarity }
             if Polarity::compat(polarity, Polarity::Positive) =>
         {

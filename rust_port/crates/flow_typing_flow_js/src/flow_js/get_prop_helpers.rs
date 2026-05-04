@@ -239,7 +239,7 @@ pub(super) fn get_private_prop<'cx>(
                 };
                 let props = cx.find_props(field_maps);
                 match props.get(&name) {
-                    Some(p) => do_lookup(property::type_(p)),
+                    Some(p) => do_lookup(property::property_type(p)),
                     None => {
                         let method_maps = if is_static {
                             instance.class_private_static_methods.dupe()
@@ -265,7 +265,7 @@ pub(super) fn get_private_prop<'cx>(
                                         )?;
                                     }
                                 }
-                                do_lookup(property::type_(p))
+                                do_lookup(property::property_type(p))
                             }
                             None => flow_js_utils::add_output(
                                 cx,

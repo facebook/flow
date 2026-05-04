@@ -194,7 +194,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                 type_: fd.type_.dupe(),
                 polarity: Polarity::Positive,
             },
-            _ => property::type_(p),
+            _ => property::property_type(p),
         }
     };
     if let Some(dict) = inst_dict {
@@ -441,7 +441,7 @@ pub(super) fn check_super<'cx>(
     let reason_prop = lreason
         .dupe()
         .replace_desc(VirtualReasonDesc::RProperty(Some(x.dupe())));
-    let action = LookupAction::SuperProp(Box::new((use_op.dupe(), property::type_(p))));
+    let action = LookupAction::SuperProp(Box::new((use_op.dupe(), property::property_type(p))));
     let t = if flow_js_utils::is_munged_prop_name(cx, x) {
         // munge names beginning with single _
         Type::new(TypeInner::ObjProtoT(reason_of_t(t).dupe()))

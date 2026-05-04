@@ -5485,7 +5485,7 @@ fn __flow_impl<'cx>(
                     {
                         cx.test_prop_hit(*id);
                     }
-                    let property_type = property::type_(&p);
+                    let property_type = property::property_type(&p);
                     perform_lookup_action(
                         cx,
                         trace,
@@ -5668,7 +5668,7 @@ fn __flow_impl<'cx>(
                             cx,
                             trace,
                             &propref,
-                            &property::type_(p),
+                            &property::property_type(p),
                             PropertySource::PropertyMapProperty,
                             reason_c,
                             &spp_data.reason,
