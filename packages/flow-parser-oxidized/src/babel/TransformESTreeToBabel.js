@@ -1393,6 +1393,76 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       delete node.const;
       return node;
     }
+    case 'EnumBody': {
+      // The OCaml/Rust estree_translator emits a generic `EnumBody` with a
+      // string `explicitType` slot (the OCaml-aligned shape used by the
+      // OCaml parser tests). Babel's enum printer expects the upstream
+      // typed body kinds (`EnumStringBody` / `EnumNumberBody` /
+      // `EnumBigIntBody` / `EnumBooleanBody` / `EnumSymbolBody`) with
+      // `explicitType` as a boolean (or omitted for Symbol). Specialize
+      // here so the babel-print pipeline sees a node it knows how to
+      // render. The body kind is determined by the first typed member
+      // when present; defaulted-only (and empty) bodies fall back to the
+      // explicit_type sentinel, defaulting to EnumStringBody when neither
+      // is set. Symbol enums have no `init` per member so they are
+      // recognizable from `explicitType` alone.
+      const explicitTypeStr = node.explicitType;
+      let bodyType = 'EnumStringBody';
+      if (explicitTypeStr === 'symbol') {
+        bodyType = 'EnumSymbolBody';
+      } else if (Array.isArray(node.members) && node.members.length > 0) {
+        const firstMember = node.members[0];
+        if (firstMember != null) {
+          switch (firstMember.type) {
+            case 'EnumNumberMember':
+              bodyType = 'EnumNumberBody';
+              break;
+            case 'EnumBigIntMember':
+              bodyType = 'EnumBigIntBody';
+              break;
+            case 'EnumBooleanMember':
+              bodyType = 'EnumBooleanBody';
+              break;
+            case 'EnumStringMember':
+              bodyType = 'EnumStringBody';
+              break;
+            case 'EnumDefaultedMember':
+              if (explicitTypeStr === 'string') {
+                bodyType = 'EnumStringBody';
+              } else if (explicitTypeStr === 'number') {
+                bodyType = 'EnumNumberBody';
+              } else if (explicitTypeStr === 'bigint') {
+                bodyType = 'EnumBigIntBody';
+              } else if (explicitTypeStr === 'boolean') {
+                bodyType = 'EnumBooleanBody';
+              }
+              // else falls through to EnumStringBody default
+              break;
+          }
+        }
+      } else if (typeof explicitTypeStr === 'string') {
+        // Empty body with explicit type annotation
+        if (explicitTypeStr === 'string') {
+          bodyType = 'EnumStringBody';
+        } else if (explicitTypeStr === 'number') {
+          bodyType = 'EnumNumberBody';
+        } else if (explicitTypeStr === 'bigint') {
+          bodyType = 'EnumBigIntBody';
+        } else if (explicitTypeStr === 'boolean') {
+          bodyType = 'EnumBooleanBody';
+        }
+      }
+      // $FlowExpectedError[cannot-write]
+      node.type = bodyType;
+      if (bodyType === 'EnumSymbolBody') {
+        // $FlowExpectedError[cannot-write]
+        delete node.explicitType;
+      } else {
+        // $FlowExpectedError[cannot-write]
+        node.explicitType = typeof explicitTypeStr === 'string';
+      }
+      return node;
+    }
     case 'ObjectTypeMappedTypeProperty': {
       // Upstream does not emit `nameType` or `varianceOp`; the Rust
       // serializer carries those newer wire slots. When absent in source

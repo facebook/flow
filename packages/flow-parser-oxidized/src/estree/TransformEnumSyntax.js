@@ -42,8 +42,15 @@ function mapEnumDeclaration(node: EnumDeclaration, options: ParserOptions) {
     typeof getRuntime === 'function'
       ? getRuntime()
       : callExpression(ident('require'), [stringLiteral('flow-enums-runtime')]);
+  // String-typed enums (explicit `enum X of string { ... }` or implicit
+  // when no explicit type is given) where every member is a defaulted
+  // member lower to `Mirrored(['A', 'B', ...])`. The body type is the
+  // OCaml-shape generic `EnumBody`; `explicitType` carries the wire
+  // string sentinel ("string"|"number"|"bigint"|"boolean"|"symbol") or
+  // `null` when no explicit type was given. Symbol enums (`'symbol'`)
+  // use `Symbol(...)` per member instead and are NOT mirrored.
   const mirrored =
-    body.type === 'EnumStringBody' &&
+    (body.explicitType == null || body.explicitType === 'string') &&
     (!members.length || members[0].type === 'EnumDefaultedMember');
   const enumExpression = mirrored
     ? callExpression(
