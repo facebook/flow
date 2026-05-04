@@ -433,7 +433,12 @@ pub mod callee_finder {
         }
     }
 
-    pub fn get_attribute_type(cx: &Context, loc: ALoc, t: &Type, name: &Name) -> Vec<(Type, bool)> {
+    pub fn get_attribute_type(
+        cx: &Context,
+        loc: ALoc,
+        t: &Type,
+        name: &Name,
+    ) -> Result<Vec<(Type, bool)>, flow_utils_concurrency::job_error::JobError> {
         let reason = reason::mk_reason(
             reason::VirtualReasonDesc::RType(reason::Name::new("React$ElementConfig")),
             loc,
@@ -442,17 +447,15 @@ pub mod callee_finder {
             type_: reason.dupe(),
         }));
         let id = eval::Id::generate_id();
-        match flow_js::mk_type_destructor(
+        let conf = flow_js::mk_type_destructor_non_speculating(
             cx,
             use_op,
             &reason,
             t,
             &Destructor::ReactElementConfigType,
             id,
-        ) {
-            Ok(conf) => get_prop_of_obj_toplevel(cx, name, &reason, &conf),
-            Err(_) => vec![],
-        }
+        )?;
+        Ok(get_prop_of_obj_toplevel(cx, name, &reason, &conf))
     }
 
     /// find the argument whose Loc contains `loc`, or the first one past it.
@@ -798,7 +801,7 @@ pub fn find_signatures<'a>(
         }) => {
             let ts = callee_finder::get_func(cx, type_util::reason_of_t(&t), &t)?;
             let norm_options = flow_typing_ty_normalizer::env::Options::default();
-            let genv = flow_typing_ty_normalizer::no_flow::mk_genv(
+            let genv = flow_typing::ty_normalizer_flow::mk_genv(
                 norm_options,
                 cx,
                 Some(typed_ast),
@@ -807,7 +810,7 @@ pub fn find_signatures<'a>(
 
             let func_details_of_type =
                 |jsdoc: &Option<Jsdoc>, fn_t: &Type| -> Option<FuncDetailsResult> {
-                    let ty = flow_typing_ty_normalizer::no_flow::from_type(&genv, fn_t);
+                    let ty = flow_typing::ty_normalizer_flow::from_type(&genv, fn_t);
                     match ty {
                         Ok(flow_common_ty::ty::Elt::Type(ty)) => match ty.as_ref() {
                             Ty::Fun(fun) => {
@@ -890,10 +893,10 @@ pub fn find_signatures<'a>(
                 let t = type_util::maybe(key_t);
                 vec![(t, true)]
             } else {
-                callee_finder::get_attribute_type(cx, loc, &t, &Name::new(&name))
+                callee_finder::get_attribute_type(cx, loc, &t, &Name::new(&name))?
             };
             let norm_options = flow_typing_ty_normalizer::env::Options::default();
-            let genv = flow_typing_ty_normalizer::no_flow::mk_genv(
+            let genv = flow_typing::ty_normalizer_flow::mk_genv(
                 norm_options,
                 cx,
                 Some(typed_ast),
@@ -902,7 +905,7 @@ pub fn find_signatures<'a>(
             let tys = ts
                 .iter()
                 .filter_map(|(t, optional)| {
-                    match flow_typing_ty_normalizer::no_flow::from_type(&genv, t) {
+                    match flow_typing::ty_normalizer_flow::from_type(&genv, t) {
                         Ok(flow_common_ty::ty::Elt::Type(ty)) => {
                             let exact_by_default = cx.exact_by_default();
                             let ty_str =

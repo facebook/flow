@@ -395,28 +395,22 @@ fn opening_element(
     fn attributes(
         env: &mut ParserEnv,
         mut acc: Vec<jsx::OpeningAttribute<Loc, Loc>>,
-    ) -> Vec<jsx::OpeningAttribute<Loc, Loc>> {
+    ) -> Result<Vec<jsx::OpeningAttribute<Loc, Loc>>, Rollback> {
         loop {
             match peek::token(env) {
                 TokenKind::TJsxIdentifier { .. } => {
-                    if let Ok((loc, mut attr)) = attribute(env) {
-                        attr.loc = loc;
-                        acc.push(jsx::OpeningAttribute::Attribute(attr));
-                    } else {
-                        break;
-                    }
+                    let (loc, mut attr) = attribute(env)?;
+                    attr.loc = loc;
+                    acc.push(jsx::OpeningAttribute::Attribute(attr));
                 }
                 TokenKind::TLcurly => {
-                    if let Ok(spread_attr) = spread_attribute(env) {
-                        acc.push(jsx::OpeningAttribute::SpreadAttribute(spread_attr));
-                    } else {
-                        break;
-                    }
+                    let spread_attr = spread_attribute(env)?;
+                    acc.push(jsx::OpeningAttribute::SpreadAttribute(spread_attr));
                 }
                 _ => break,
             }
         }
-        acc
+        Ok(acc)
     }
 
     let (loc, mut result) = with_loc(None, env, |env| {
@@ -436,7 +430,7 @@ fn opening_element(
                 } else {
                     None
                 };
-                let attributes = attributes(env, Vec::new());
+                let attributes = attributes(env, Vec::new())?;
                 let self_closing = eat::maybe(env, TokenKind::TDiv)?;
                 let element = OpeningElementResult::Element(jsx::Opening {
                     loc: LOC_NONE,
