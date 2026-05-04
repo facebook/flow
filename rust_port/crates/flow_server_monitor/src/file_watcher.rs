@@ -515,11 +515,15 @@ pub mod watchman_file_watcher {
             let _file_options = &self.server_options.file_options;
             let watchman_expression_terms =
                 flow_server_watchman_expression_terms::make(&self.server_options);
+            let file_name_terms = Some(flow_server_watchman_expression_terms::file_name_terms(
+                &self.server_options,
+            ));
             let should_track_mergebase = self.server_options.lazy_mode;
             let settings = flow_watchman::InitSettings {
                 debug_logging: *debug,
                 defer_states: defer_states.clone(),
                 expression_terms: watchman_expression_terms,
+                file_name_terms,
                 mergebase_with: self.mergebase_with.clone(),
                 roots: flow_common::files::watched_paths(&self.server_options.file_options),
                 should_track_mergebase,

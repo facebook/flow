@@ -15,6 +15,11 @@ type init_settings = {
   debug_logging: bool;
   defer_states: string list;  (** defer notifications while these states are asserted *)
   expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
+  file_name_terms: Hh_json.json option;
+      (** Files matching by name (e.g. .flowconfig, package.json) should be
+          reported regardless of which directories are watched. When present,
+          this term is [anyof]'d with the watched-path filter so name-matched
+          files bypass the directory restriction. *)
   mergebase_with: string;  (** symbolic commit to find changes against *)
   roots: File_path.t list;
   should_track_mergebase: bool;

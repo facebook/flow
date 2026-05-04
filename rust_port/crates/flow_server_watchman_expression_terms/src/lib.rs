@@ -28,6 +28,11 @@ fn assoc_strlist(key: &str, values: &[String]) -> Value {
     Value::Array(arr)
 }
 
+pub fn file_name_terms(options: &Options) -> Value {
+    let basenames = file_watcher_spec::get_file_names(options);
+    assoc_strlist("name", &basenames)
+}
+
 pub fn make(options: &Options) -> Vec<Value> {
     let file_options = &options.file_options;
     let suffixes = file_watcher_spec::get_suffixes(file_options);

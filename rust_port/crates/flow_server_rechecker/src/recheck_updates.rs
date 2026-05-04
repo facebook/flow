@@ -82,7 +82,10 @@ fn get_updated_flowconfig(config_path: &str) -> Result<(FlowConfig, String), Err
     match flow_config::get(config_path) {
         Ok((config, _warnings, hash)) => Ok((config, hash)),
         Err(_) => Err(Error::Unrecoverable {
-            msg: "Config changed in an incompatible way".to_string(),
+            msg: format!(
+                "Failed to parse updated .flowconfig at {}; server must restart",
+                config_path
+            ),
             exit_status: FlowExitStatus::FlowconfigChanged,
         }),
     }
@@ -117,14 +120,13 @@ fn assert_compatible_flowconfig_change(options: &Options, config_path: &str) -> 
     if old_hash.as_str() == new_hash.as_str() {
         Ok(())
     } else {
-        flow_hh_logger::error!(
-            "Flowconfig hash changed from {:?} to {:?}",
-            old_hash,
-            new_hash
+        let msg = format!(
+            ".flowconfig changed (hash {} -> {}); server must restart",
+            old_hash, new_hash
         );
         assert_compatible_flowconfig_version(&new_config)?;
         Err(Error::Unrecoverable {
-            msg: "Config changed in an incompatible way".to_string(),
+            msg,
             exit_status: FlowExitStatus::FlowconfigChanged,
         })
     }

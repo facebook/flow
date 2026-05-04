@@ -100,6 +100,7 @@ type init_settings = {
   debug_logging: bool;
   defer_states: string list;  (** defer notifications while these states are asserted *)
   expression_terms: Hh_json.json list;  (** See watchman expression terms. *)
+  file_name_terms: Hh_json.json option;
   mergebase_with: string;  (** symbolic commit to find changes against *)
   roots: File_path.t list;
   should_track_mergebase: bool;
@@ -311,9 +312,11 @@ let request_json ?(extra_kv = []) ?(extra_expressions = []) watchman_command env
     in
     let expressions = extra_expressions @ env.settings.expression_terms in
     let expressions =
-      match env.watch.watched_path_expression_terms with
-      | Some terms -> terms :: expressions
-      | None -> expressions
+      match (env.watch.watched_path_expression_terms, env.settings.file_name_terms) with
+      | (Some watched_paths, Some file_names) ->
+        J.pred "anyof" [watched_paths; file_names] :: expressions
+      | (Some watched_paths, None) -> watched_paths :: expressions
+      | (None, _) -> expressions
     in
     assert (not (List.is_empty expressions));
     let extra_kv =
@@ -1137,6 +1140,7 @@ module Testing = struct
       debug_logging = false;
       defer_states = [];
       expression_terms = [];
+      file_name_terms = None;
       mergebase_with = "hash";
       roots = [File_path.dummy_path];
       should_track_mergebase = false;

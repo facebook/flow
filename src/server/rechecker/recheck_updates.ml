@@ -48,10 +48,8 @@ let get_updated_flowconfig config_path =
   match config with
   | Ok (config, _warnings) -> Ok (config, hash)
   | Error _ ->
-    Error
-      (Unrecoverable
-         { msg = "Config changed in an incompatible way"; exit_status = Exit.Flowconfig_changed }
-      )
+    let msg = spf "Failed to parse updated .flowconfig at %s; server must restart" config_path in
+    Error (Unrecoverable { msg; exit_status = Exit.Flowconfig_changed })
 
 let assert_compatible_flowconfig_version =
   let not_satisfied version_constraint =
@@ -85,12 +83,9 @@ let assert_compatible_flowconfig_change ~options config_path =
   if String.equal old_hash new_hash then
     Ok ()
   else
-    let () = Hh_logger.error "Flowconfig hash changed from %S to %S" old_hash new_hash in
+    let msg = spf ".flowconfig changed (hash %s -> %s); server must restart" old_hash new_hash in
     let%bind () = assert_compatible_flowconfig_version new_config in
-    Error
-      (Unrecoverable
-         { msg = "Config changed in an incompatible way"; exit_status = Exit.Flowconfig_changed }
-      )
+    Error (Unrecoverable { msg; exit_status = Exit.Flowconfig_changed })
 
 (** Checks whether [updates] includes the flowconfig, and if so whether the change can
     be handled incrementally (returns [Ok ()]) or we need to restart (returns [Error]) *)

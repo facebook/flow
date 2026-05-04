@@ -475,12 +475,17 @@ end = struct
         let { FlowServerMonitorOptions.debug; defer_states; sync_timeout } = watchman_options in
         let file_options = Options.file_options server_options in
         let watchman_expression_terms = Watchman_expression_terms.make ~options:server_options in
+        let file_names = File_watcher_spec.get_file_names server_options in
+        let file_name_terms =
+          Some (Hh_json_helpers.AdhocJsonHelpers.assoc_strlist "name" file_names)
+        in
         let should_track_mergebase = Options.lazy_mode server_options in
         let settings =
           {
             Watchman.debug_logging = debug;
             defer_states;
             expression_terms = watchman_expression_terms;
+            file_name_terms;
             mergebase_with;
             roots = Files.watched_paths file_options;
             should_track_mergebase;

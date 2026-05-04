@@ -127,6 +127,7 @@ pub struct InitSettings {
     pub debug_logging: bool,
     pub defer_states: Vec<String>,
     pub expression_terms: Vec<serde_json::Value>,
+    pub file_name_terms: Option<serde_json::Value>,
     pub mergebase_with: String,
     pub roots: Vec<PathBuf>,
     pub should_track_mergebase: bool,
@@ -369,13 +370,24 @@ fn request_json(
     }
     let mut expressions = extra_expressions;
     expressions.extend(env.settings.expression_terms.iter().cloned());
-    let expressions = match &env.watch.watched_path_expression_terms {
-        Some(terms) => {
-            let mut v = vec![terms.clone()];
+    let expressions = match (
+        &env.watch.watched_path_expression_terms,
+        &env.settings.file_name_terms,
+    ) {
+        (Some(watched_paths), Some(file_names)) => {
+            let mut v = vec![j::pred(
+                "anyof",
+                vec![watched_paths.clone(), file_names.clone()],
+            )];
             v.extend(expressions);
             v
         }
-        None => expressions,
+        (Some(watched_paths), None) => {
+            let mut v = vec![watched_paths.clone()];
+            v.extend(expressions);
+            v
+        }
+        (None, _) => expressions,
     };
     assert!(!expressions.is_empty());
     let mut extra_kv_full: Vec<(String, Value)> = match env.settings.sync_timeout {
@@ -1435,6 +1447,7 @@ pub mod testing {
             debug_logging: false,
             defer_states: vec![],
             expression_terms: vec![],
+            file_name_terms: None,
             mergebase_with: "hash".to_string(),
             roots: vec![PathBuf::from("/dummy")],
             should_track_mergebase: false,
