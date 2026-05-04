@@ -322,7 +322,20 @@ fn verify_flowconfig_hash(
     options: &Options,
     flowconfig_hash: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
 ) -> Result<(), InvalidReason> {
-    if !options.saved_state_skip_version_check && options.flowconfig_hash != *flowconfig_hash {
+    if options.saved_state_skip_version_check {
+        return Ok(());
+    }
+    let current_flowconfig_hash = {
+        let path = flow_server_files::server_files_js::config_file(
+            &options.flowconfig_name,
+            &options.root,
+        );
+        match flow_config::get_with_ignored_version(&path, true) {
+            Ok((_, _, hash)) => FlowSmolStr::new(hash),
+            Err(_) => return Err(InvalidReason::Flowconfig_mismatch),
+        }
+    };
+    if current_flowconfig_hash != *flowconfig_hash {
         Err(InvalidReason::Flowconfig_mismatch)
     } else {
         Ok(())

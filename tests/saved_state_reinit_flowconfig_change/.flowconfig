@@ -1,0 +1,5 @@
+[options]
+casting_syntax=as
+all=true
+lazy_mode=true
+saved_state.direct_serialization=true

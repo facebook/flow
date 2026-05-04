@@ -679,7 +679,9 @@ let verify_version =
 let verify_flowconfig_hash ~options ~flowconfig_hash =
   let current_flowconfig_hash =
     let flowconfig_name = Options.flowconfig_name options in
-    FlowConfig.get_hash @@ Server_files_js.config_file flowconfig_name @@ Options.root options
+    FlowConfig.get_hash ~allow_cache:false
+    @@ Server_files_js.config_file flowconfig_name
+    @@ Options.root options
   in
   if
     (not (Options.saved_state_skip_version_check options))
@@ -752,7 +754,9 @@ end = struct
       in
       let current_flowconfig_hash =
         let flowconfig_name = Options.flowconfig_name options in
-        FlowConfig.get_hash @@ Server_files_js.config_file flowconfig_name @@ Options.root options
+        FlowConfig.get_hash ~allow_cache:false
+        @@ Server_files_js.config_file flowconfig_name
+        @@ Options.root options
       in
       if
         (not (Options.saved_state_skip_version_check options))
