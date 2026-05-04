@@ -6,7 +6,6 @@
  */
 
 #![feature(never_type)]
-#![feature(if_let_guard)]
 #![feature(box_patterns)]
 
 pub mod abnormal;

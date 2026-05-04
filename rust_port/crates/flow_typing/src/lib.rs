@@ -7,7 +7,6 @@
 
 #![feature(box_patterns)]
 #![feature(never_type)]
-#![feature(if_let_guard)]
 
 pub mod cycles;
 pub mod env_resolution;

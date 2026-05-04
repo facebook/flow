@@ -6,7 +6,6 @@
  */
 
 #![feature(never_type)]
-#![feature(if_let_guard)]
 #![feature(unwrap_infallible)]
 
 pub mod document_symbol_provider;

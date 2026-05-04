@@ -7,7 +7,6 @@
 
 #![feature(box_patterns)]
 #![feature(never_type)]
-#![feature(if_let_guard)]
 #![allow(clippy::todo)]
 
 pub mod class_sig;

@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#![feature(if_let_guard)]
-
 pub mod check_cache;
 pub mod check_service;
 #[cfg(test)]

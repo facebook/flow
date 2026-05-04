@@ -6,7 +6,6 @@
  */
 
 #![feature(box_patterns)]
-#![feature(if_let_guard)]
 
 pub mod signature_help;
 pub mod type_info_service;

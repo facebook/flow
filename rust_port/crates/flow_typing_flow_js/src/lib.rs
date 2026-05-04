@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#![feature(if_let_guard)]
 #![feature(box_patterns)]
 pub mod default_resolve;
 pub mod flow_js;

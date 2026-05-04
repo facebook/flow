@@ -8,7 +8,6 @@
 //! Port of `services/get_def/`
 
 #![feature(box_patterns)]
-#![feature(if_let_guard)]
 #![feature(never_type)]
 
 pub mod find_refs_utils;

@@ -6,7 +6,6 @@
  */
 
 #![feature(box_patterns)]
-#![feature(if_let_guard)]
 #![feature(never_type)]
 
 pub mod autocomplete_js;
