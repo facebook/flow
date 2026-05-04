@@ -379,6 +379,7 @@ fn mk_check<'a, A>(
         reader.clone(),
         Arc::new(options.clone()),
         master_cx,
+        flow_services_references::find_refs_types::empty_request(),
         // The codemod's `post_check` normalizes the cx after `check`
         // returns and needs lazy ForcingStates to resolve to their real
         // types. Skip the eager cleanup; the cache's Drop impl will run
@@ -841,6 +842,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                 reader.clone(),
                 Arc::new(options.clone()),
                 master_cx,
+                flow_services_references::find_refs_types::empty_request(),
                 // Prepass passes the cx into `prepass_run`, which may force
                 // lazy ForcingStates on demand. Skip the eager cleanup; the
                 // cache's Drop impl runs the full cleanup once prepass is
@@ -984,7 +986,7 @@ where
         let focused_set: flow_data_structure_wrapper::ord_set::FlowOrdSet<FileKey> =
             _roots.iter().cloned().collect();
         updates.add(Some(focused_set), None, None);
-        let def_info = flow_services_get_def::get_def_types::DefInfo::NoDefinition(None);
+        let find_ref_request = flow_services_references::find_refs_types::empty_request();
         let files_to_force = flow_common_utils::checked_set::CheckedSet::empty();
         let node_modules_containers = Arc::new(std::sync::RwLock::new(BTreeMap::new()));
         let mut will_be_checked_files = flow_common_utils::checked_set::CheckedSet::empty();
@@ -993,7 +995,7 @@ where
             shared_mem,
             &options_arc,
             &updates,
-            &def_info,
+            &find_ref_request,
             files_to_force,
             false,
             None,  // changed_mergebase

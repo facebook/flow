@@ -485,6 +485,7 @@ fn update_check_results(
                 ErrorSet,
                 ErrorSuppressions,
                 flow_services_coverage::FileCoverage,
+                Result<Vec<flow_services_references::find_refs_types::SingleRef>, String>,
                 f64,
             )>,
             (ALoc, InternalError),
@@ -504,7 +505,14 @@ fn update_check_results(
     ) = acc;
     match result {
         Ok(None) => {}
-        Ok(Some((new_errors, new_warnings, new_suppressions, new_coverage, check_time))) => {
+        Ok(Some((
+            new_errors,
+            new_warnings,
+            new_suppressions,
+            new_coverage,
+            new_find_ref_results,
+            check_time,
+        ))) => {
             errors.remove(&file);
             warnings.remove(&file);
             suppressions.remove(&file);
@@ -513,6 +521,18 @@ fn update_check_results(
             update_errset(warnings, file.dupe(), new_warnings);
             suppressions.update_suppressions(new_suppressions);
             coverage.insert(file.dupe(), new_coverage);
+            *find_ref_results = match (
+                std::mem::replace(find_ref_results, Ok(Vec::new())),
+                new_find_ref_results,
+            ) {
+                (Ok(mut a), Ok(b)) => {
+                    a.extend(b);
+                    Ok(a)
+                }
+                (Err(a), Ok(_)) => Err(a),
+                (Ok(_), Err(b)) => Err(b),
+                (Err(a), Err(_)) => Err(a),
+            };
             *slow_files = update_slow_files(std::mem::take(slow_files), file, check_time);
         }
         Err(e) => {
@@ -624,6 +644,7 @@ mod check_files {
         options: Arc<Options>,
         pool: &ThreadPool,
         shared_mem: &Arc<SharedMem>,
+        find_ref_request: &flow_services_references::find_refs_types::Request,
         errors: Errors,
         updated_suppressions: ErrorSuppressions,
         coverage: BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
@@ -709,11 +730,13 @@ mod check_files {
             let mk_check: Arc<dyn Fn() -> WorkerState + Send + Sync> = {
                 let shared_mem = shared_mem.dupe();
                 let options = options.dupe();
+                let find_ref_request = find_ref_request.clone();
                 Arc::new(move || {
                     merge_service::mk_check(
                         shared_mem.dupe(),
                         options.dupe(),
                         master_cx.as_ref(),
+                        find_ref_request.clone(),
                         false,
                     )
                 })
@@ -749,6 +772,7 @@ mod check_files {
                         ErrorSet,
                         ErrorSuppressions,
                         flow_services_coverage::FileCoverage,
+                        Result<Vec<flow_services_references::find_refs_types::SingleRef>, String>,
                         f64,
                     )>,
                     (ALoc, InternalError),
@@ -1515,6 +1539,7 @@ pub(crate) mod recheck {
         pool: &ThreadPool,
         shared_mem: &Arc<SharedMem>,
         options: &Arc<Options>,
+        find_ref_request: &flow_services_references::find_refs_types::Request,
         for_find_all_refs: bool,
         will_be_checked_files: &mut CheckedSet,
         changed_mergebase: Option<bool>,
@@ -1623,6 +1648,7 @@ pub(crate) mod recheck {
             options.dupe(),
             pool,
             shared_mem,
+            find_ref_request,
             errors,
             updated_suppressions,
             env.coverage.clone(),
@@ -1732,7 +1758,7 @@ pub(crate) mod recheck {
         options: &Arc<Options>,
         node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
         updates: &CheckedSet,
-        def_info: &DefInfo,
+        find_ref_request: &flow_services_references::find_refs_types::Request,
         files_to_force: CheckedSet,
         changed_mergebase: Option<bool>,
         will_be_checked_files: &mut CheckedSet,
@@ -1747,6 +1773,7 @@ pub(crate) mod recheck {
         ),
         RecheckError,
     > {
+        let def_info = &find_ref_request.def_info;
         let (env, intermediate_values) = match recheck_parse_and_update_dependency_info(
             pool,
             shared_mem,
@@ -1762,7 +1789,7 @@ pub(crate) mod recheck {
                 return Err(handle_unexpected_file_changes(changed_files));
             }
         };
-        let for_find_all_refs = match &def_info {
+        let for_find_all_refs = match def_info {
             DefInfo::VariableDefinition(_, _) | DefInfo::PropertyDefinition(_) => true,
             DefInfo::NoDefinition(_) => false,
         };
@@ -1770,6 +1797,7 @@ pub(crate) mod recheck {
             pool,
             shared_mem,
             options,
+            find_ref_request,
             for_find_all_refs,
             will_be_checked_files,
             changed_mergebase,
@@ -1839,7 +1867,7 @@ pub(crate) fn recheck_impl(
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
     updates: &CheckedSet,
-    def_info: &DefInfo,
+    find_ref_request: &flow_services_references::find_refs_types::Request,
     files_to_force: CheckedSet,
     changed_mergebase: Option<bool>,
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
@@ -1854,7 +1882,7 @@ pub(crate) fn recheck_impl(
                 options,
                 node_modules_containers,
                 updates,
-                def_info,
+                find_ref_request,
                 files_to_force,
                 changed_mergebase,
                 will_be_checked_files,
@@ -2853,12 +2881,13 @@ pub fn handle_updates_since_saved_state(
         // have changed since the saved state was generated
         let mut will_be_checked_files = CheckedSet::empty();
         let files_to_force = CheckedSet::empty();
+        let find_ref_request = flow_services_references::find_refs_types::empty_request();
         let (_log_recheck_event, _summary_info, _find_ref_results, env) = recheck_impl(
             pool,
             shared_mem,
             options,
             updates,
-            &DefInfo::NoDefinition(None),
+            &find_ref_request,
             files_to_force,
             None,
             node_modules_containers,
@@ -3391,7 +3420,7 @@ pub fn recheck(
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
     updates: &CheckedSet,
-    def_info: &DefInfo,
+    find_ref_request: &flow_services_references::find_refs_types::Request,
     files_to_force: CheckedSet,
     incompatible_lib_change: bool,
     changed_mergebase: Option<bool>,
@@ -3475,7 +3504,7 @@ pub fn recheck(
             shared_mem,
             options,
             updates,
-            def_info,
+            find_ref_request,
             files_to_force.dupe(),
             changed_mergebase,
             node_modules_containers,
@@ -3570,6 +3599,7 @@ pub fn check_files_for_init(
             options.dupe(),
             pool,
             shared_mem,
+            &flow_services_references::find_refs_types::empty_request(),
             env_errors,
             merge_result.suppressions.clone(),
             env_coverage,

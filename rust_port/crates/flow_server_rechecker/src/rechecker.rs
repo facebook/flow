@@ -252,7 +252,7 @@ fn recheck(
         &genv.shared_mem,
         options,
         &updates,
-        &find_ref_request.def_info,
+        &find_ref_request,
         files_to_force,
         incompatible_lib_change,
         changed_mergebase,

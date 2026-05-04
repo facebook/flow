@@ -101,7 +101,7 @@ pub fn fix_signature_verification_errors<'a, 'cx>(
     >,
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
-    ast: ast::Program<Loc, Loc>,
+    ast: Arc<ast::Program<Loc, Loc>>,
     locs: &BTreeSet<Loc>,
 ) -> (ast::Program<Loc, Loc>, Vec<String>) {
     let mut remote_converter = insert_type_imports::imports_helper::RemoteConverter::new(
@@ -113,7 +113,7 @@ pub fn fix_signature_verification_errors<'a, 'cx>(
         file_key,                                 // ~file:file_key
         BTreeSet::new(),                          // ~reserved_names:SSet.empty
     );
-    let mut ast = ast;
+    let mut ast = Arc::unwrap_or_clone(ast);
     let mut it_errors = Vec::<String>::new();
     for loc in locs.iter() {
         match fix_signature_verification_error_at_loc(

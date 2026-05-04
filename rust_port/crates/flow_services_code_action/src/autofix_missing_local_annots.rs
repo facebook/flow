@@ -121,10 +121,10 @@ pub fn fix_all_missing_param_annot_errors_in_file<'a, 'cx>(
     >,
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
-    ast: ast::Program<Loc, Loc>,
+    ast: Arc<ast::Program<Loc, Loc>>,
 ) -> insert_type::InsertTypeResult<ast::Program<Loc, Loc>> {
     let fixable_locs = map_of_fixable_missing_local_params(cx);
-    let mut ast = ast;
+    let mut ast = Arc::unwrap_or_clone(ast);
     for (loc, t) in fixable_locs {
         ast = insert_type::insert_type_t(
             cx,

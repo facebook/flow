@@ -429,7 +429,7 @@ pub struct Typing<'a, 'cx: 'a> {
         Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a>,
     pub cx: &'a Context<'cx>,
     pub file_sig: Arc<FileSig>,
-    pub ast: ast::Program<Loc, Loc>,
+    pub ast: Arc<ast::Program<Loc, Loc>>,
     pub aloc_ast: ast::Program<ALoc, ALoc>,
     pub canonical: Option<&'a autocomplete_sigil::canonical::Token>,
 }
@@ -472,7 +472,7 @@ pub fn mk_typing_artifacts<'a, 'cx: 'a>(
     search_exported_types: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
     cx: &'a Context<'cx>,
     file_sig: Arc<FileSig>,
-    ast: ast::Program<Loc, Loc>,
+    ast: Arc<ast::Program<Loc, Loc>>,
     aloc_ast: ast::Program<ALoc, ALoc>,
     canonical: Option<&'a autocomplete_sigil::canonical::Token>,
 ) -> Typing<'a, 'cx> {

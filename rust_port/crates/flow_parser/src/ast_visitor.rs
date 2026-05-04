@@ -16245,17 +16245,7 @@ pub fn map_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         comments,
     } = expr;
     let object_ = visitor.map_expression(object);
-    let property_ = match property {
-        ast::expression::member::Property::PropertyIdentifier(id) => {
-            ast::expression::member::Property::PropertyIdentifier(visitor.map_identifier(id))
-        }
-        ast::expression::member::Property::PropertyPrivateName(pn) => {
-            ast::expression::member::Property::PropertyPrivateName(visitor.map_private_name(pn))
-        }
-        ast::expression::member::Property::PropertyExpression(expr) => {
-            ast::expression::member::Property::PropertyExpression(visitor.map_expression(expr))
-        }
-    };
+    let property_ = visitor.map_member_property(property);
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
     ast::expression::Member {
         object: object_,

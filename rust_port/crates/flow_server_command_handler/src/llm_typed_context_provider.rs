@@ -394,7 +394,7 @@ pub struct FileContext {
 
 pub struct TypedFileInfo<'a, 'cx> {
     pub file_key: FileKey,
-    pub ast: ast::Program<Loc, Loc>,
+    pub ast: Arc<ast::Program<Loc, Loc>>,
     pub cx: &'a Context<'cx>,
     pub typed_ast: ast::Program<ALoc, (ALoc, Type)>,
     pub shared_mem: &'a SharedMem,

@@ -55,7 +55,7 @@ type AutocompleteArtifactsCache = flow_common_utils::filename_cache::Cache<
     Result<AutocompleteArtifacts<'static>, TypeContentsError>,
 >;
 type AcResult = Option<(
-    flow_common::docblock::Docblock,
+    Arc<flow_common::docblock::Docblock>,
     Vec<(flow_parser::loc::Loc, String)>,
     Option<String>,
     Option<flow_parser::loc::Loc>,
@@ -997,8 +997,8 @@ fn type_parse_artifacts_for_ac_with_cache(
                     shared_mem.clone(),
                     master_cx.clone(),
                     file_for_result.dupe(),
-                    Arc::new(docblock.clone()),
-                    Arc::new(ast.clone()),
+                    docblock.dupe(),
+                    ast.dupe(),
                     requires,
                     file_sig.dupe(),
                     node_modules_containers,
@@ -1162,7 +1162,7 @@ fn autocomplete_on_parsed(
                 &*search_exported_types_fn,
                 &cx,
                 file_sig,
-                ast,
+                ast.dupe(),
                 aloc_ast,
                 canon_token_owned.as_ref(),
             );
@@ -5579,9 +5579,9 @@ fn find_local_references<'cx>(
     let line = pos.position.line + 1;
     let col = pos.position.character;
     let ast_info: flow_services_get_def::find_refs_utils::AstInfo = (
-        parse_artifacts.ast.clone(),
-        parse_artifacts.file_sig.clone(),
-        parse_artifacts.docblock.clone(),
+        parse_artifacts.ast.dupe(),
+        parse_artifacts.file_sig.dupe(),
+        parse_artifacts.docblock.dupe(),
     );
     let refs_results = match flow_services_references::find_refs_js::find_local_refs(
         loc_of_aloc,
@@ -5662,7 +5662,15 @@ fn map_local_find_references_results<T>(
     }
 }
 
-fn handle_global_find_references_local_only(
+type RefsToLspResult = Box<
+    dyn FnOnce(
+            Option<&Arc<flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>>>,
+            Vec<flow_services_references::find_refs_types::SingleRef>,
+        ) -> LspResult
+        + Send,
+>;
+
+fn handle_global_find_references(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
@@ -5672,24 +5680,12 @@ fn handle_global_find_references_local_only(
     >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
-    text_doc_position: &lsp_types::TextDocumentPositionParams,
-    include_declaration: bool,
     metadata: lsp_prot::Metadata,
+    kind: flow_services_references::find_refs_types::Kind,
+    include_declaration: bool,
+    refs_to_lsp_result: RefsToLspResult,
+    text_doc_position: &lsp_types::TextDocumentPositionParams,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let ref_to_location =
-        |single_ref: &flow_services_references::find_refs_types::SingleRef| -> Option<
-            lsp_types::Location,
-        > {
-            let (_, loc) = single_ref;
-            let uri = loc
-                .source
-                .as_ref()
-                .and_then(|f| lsp_types::Url::from_file_path(f.to_path_buf()).ok())?;
-            Some(lsp_types::Location {
-                uri,
-                range: loc_to_lsp_range(loc),
-            })
-        };
     let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
         options,
         env,
@@ -5699,86 +5695,159 @@ fn handle_global_find_references_local_only(
         text_doc_position,
         None,
     );
+    let error_return = |reason: String,
+                        metadata: lsp_prot::Metadata,
+                        id: lsp_prot::LspId|
+     -> (lsp_prot::Response, lsp_prot::Metadata) {
+        let metadata = with_data(
+            Some(serde_json::json!({"result": "FAILURE", "error": &reason})),
+            metadata,
+        );
+        mk_lsp_error_response(Some(id), reason, None, metadata)
+    };
     match file_artifacts_opt {
-        Err(reason) => {
-            let metadata = with_data(
-                Some(serde_json::json!({"result": "FAILURE", "error": &reason})),
-                metadata,
-            );
-            mk_lsp_error_response(Some(id), reason, None, metadata)
-        }
+        Err(reason) => error_return(reason, metadata, id),
         Ok(None) => {
             let metadata = with_data(extra_parse_data, metadata);
-            let response = LspMessage::ResponseMessage(id, LspResult::FindReferencesResult(vec![]));
+            let response = LspMessage::ResponseMessage(id, refs_to_lsp_result(None, vec![]));
             (lsp_prot::Response::LspFromServer(Some(response)), metadata)
         }
         Ok(Some((file_artifacts, file_key))) => {
+            let ast = file_artifacts.0.ast.dupe();
             let loc_of_aloc = |aloc: &flow_aloc::ALoc| shared_mem.loc_of_aloc(aloc);
             let line = text_doc_position.position.line + 1;
             let col = text_doc_position.position.character;
             let ast_info: flow_services_get_def::find_refs_utils::AstInfo = (
-                file_artifacts.0.ast.clone(),
-                file_artifacts.0.file_sig.clone(),
-                file_artifacts.0.docblock.clone(),
+                file_artifacts.0.ast.dupe(),
+                file_artifacts.0.file_sig.dupe(),
+                file_artifacts.0.docblock.dupe(),
             );
-            let inner = match flow_services_references::find_refs_js::find_local_refs(
+            let result = match flow_services_references::find_refs_js::find_local_refs(
                 &loc_of_aloc,
                 &file_key,
                 &ast_info,
                 &file_artifacts.1.cx,
                 &file_artifacts.1.typed_ast,
                 &file_artifacts.1.obj_to_obj_map,
-                flow_services_references::find_refs_types::Kind::FindReferences,
+                kind,
                 line,
                 col,
             ) {
-                Ok(inner) => inner,
+                Ok(r) => r,
                 Err(_canceled) => Err("Worker canceled".to_string()),
             };
-            match inner {
-                Err(reason) => {
-                    let metadata = with_data(
-                        Some(serde_json::json!({"result": "FAILURE", "error": &reason})),
-                        metadata,
-                    );
-                    mk_lsp_error_response(Some(id), reason, None, metadata)
-                }
-                Ok((_, flow_services_references::find_refs_types::FindRefsOk::NoDefinition(_))) => {
-                    let metadata =
-                        with_data(Some(serde_json::json!({"result": "BAD_LOC"})), metadata);
-                    let response =
-                        LspMessage::ResponseMessage(id, LspResult::FindReferencesResult(vec![]));
-                    (lsp_prot::Response::LspFromServer(Some(response)), metadata)
-                }
+            match result {
+                // If initial go-to-definition errors, we respond with error.
+                Err(reason) => error_return(reason, metadata, id),
+                // If initial go-to-definition returns no result, we respond with empty results.
                 Ok((
-                    def_info,
-                    flow_services_references::find_refs_types::FindRefsOk::FoundReferences(refs),
+                    flow_services_get_def::get_def_types::DefInfo::NoDefinition(no_def_reason),
+                    _,
                 )) => {
-                    let mut locs: Vec<lsp_types::Location> =
-                        refs.iter().filter_map(ref_to_location).collect();
-                    if !include_declaration {
-                        let def_locs =
-                            flow_services_get_def::get_def_utils::all_locs_of_def_info(&def_info);
-                        locs.retain(|loc| {
-                            !def_locs.iter().any(|dl| {
-                                let lsp_range = loc_to_lsp_range(dl);
-                                loc.range == lsp_range
-                            })
-                        });
-                    }
-                    locs.sort_by(|a, b| {
-                        a.uri
-                            .as_str()
-                            .cmp(b.uri.as_str())
-                            .then(a.range.start.line.cmp(&b.range.start.line))
-                            .then(a.range.start.character.cmp(&b.range.start.character))
+                    let extra_data = serde_json::json!({
+                        "result": "BAD_LOC",
+                        "error": no_def_reason.as_deref().unwrap_or("No reason given"),
                     });
-                    locs.dedup();
-                    let metadata =
-                        with_data(Some(serde_json::json!({"result": "SUCCESS"})), metadata);
+                    let metadata = with_data(Some(extra_data), metadata);
                     let response =
-                        LspMessage::ResponseMessage(id, LspResult::FindReferencesResult(locs));
+                        LspMessage::ResponseMessage(id, refs_to_lsp_result(Some(&ast), vec![]));
                     (lsp_prot::Response::LspFromServer(Some(response)), metadata)
+                }
+                // We directly return the already computed find-ref result for private names, 
+                // instead of wasting time scheduling another recheck.
+                Ok((
+                    flow_services_get_def::get_def_types::DefInfo::PropertyDefinition(
+                        flow_services_get_def::get_def_types::PropertyDefInfo::PrivateNameProperty {
+                            ..
+                        },
+                    ),
+                    local_refs,
+                )) => {
+                    let references = match local_refs {
+                        flow_services_references::find_refs_types::FindRefsOk::NoDefinition(_) => {
+                            vec![]
+                        }
+                        flow_services_references::find_refs_types::FindRefsOk::FoundReferences(
+                            refs,
+                        ) => refs,
+                    };
+                    let extra_data = serde_json::json!({"result": "SUCCESS"});
+                    let metadata = with_data(Some(extra_data), metadata);
+                    let response = LspMessage::ResponseMessage(
+                        id,
+                        refs_to_lsp_result(Some(&ast), references),
+                    );
+                    (lsp_prot::Response::LspFromServer(Some(response)), metadata)
+                }
+                // The most interesting path for global find refs. We schedule a recheck, and a new
+                // non-parallelizable command after the recheck to read the find ref *)
+                Ok((def_info, local_refs)) => {
+                    let def_locs =
+                        flow_services_get_def::get_def_utils::all_locs_of_def_info(&def_info);
+                    let file_key_owned = file_key.clone();
+                    let def_locs_for_closure = def_locs.clone();
+                    let references_to_lsp_response: server_monitor_listener_state::FindRefResponseTransformer =
+                        Box::new(move |result| {
+                            match result {
+                                Ok(refs) => {
+                                    // We replace all the find ref results from recheck on the current file with the ones
+                                    // from local_refs. The local ones are more fresh, since it can see unsaved changes.  
+                                    let local_part = match local_refs {
+                                        flow_services_references::find_refs_types::FindRefsOk::NoDefinition(_) => vec![],
+                                        flow_services_references::find_refs_types::FindRefsOk::FoundReferences(r) => r,
+                                    };
+                                    let mut refs_combined = local_part;
+                                    refs_combined.extend(refs.into_iter().filter(
+                                        |(_, ref_loc)| {
+                                            ref_loc.source.as_ref() != Some(&file_key_owned)
+                                        },
+                                    ));
+                                    let refs_combined = if include_declaration {
+                                        refs_combined
+                                    } else {
+                                        refs_combined
+                                            .into_iter()
+                                            .filter(|(_, ref_loc)| {
+                                                !def_locs_for_closure.iter().any(|dl| dl == ref_loc)
+                                            })
+                                            .collect::<Vec<_>>()
+                                    };
+                                    let response = LspMessage::ResponseMessage(
+                                        id,
+                                        refs_to_lsp_result(Some(&ast), refs_combined),
+                                    );
+                                    let metadata = with_data(
+                                        Some(serde_json::json!({"result": "SUCCESS"})),
+                                        metadata,
+                                    );
+                                    (lsp_prot::Response::LspFromServer(Some(response)), metadata)
+                                }
+                                Err(reason) => {
+                                    let metadata = with_data(
+                                        Some(serde_json::json!({
+                                            "result": "FAILURE",
+                                            "error": &reason,
+                                        })),
+                                        metadata,
+                                    );
+                                    mk_lsp_error_response(Some(id), reason, None, metadata)
+                                }
+                            }
+                        });
+                    let request = flow_services_references::find_refs_types::Request {
+                        def_info,
+                        kind,
+                    };
+                    server_monitor_listener_state::push_global_find_ref_request(
+                        def_locs,
+                        request,
+                        client_id,
+                        references_to_lsp_response,
+                    );
+                    (
+                        lsp_prot::Response::LspFromServer(None),
+                        lsp_prot::empty_metadata(),
+                    )
                 }
             }
         }
@@ -5798,18 +5867,47 @@ fn handle_persistent_find_references(
     params: &lsp_types::ReferenceParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let text_doc_position = &params.text_document_position;
+    let text_doc_position = params.text_document_position.clone();
     let include_declaration = params.context.include_declaration;
-    handle_global_find_references_local_only(
+    let ref_to_location =
+        |single_ref: &flow_services_references::find_refs_types::SingleRef| -> Option<
+            lsp_types::Location,
+        > {
+            let (_, loc) = single_ref;
+            let uri = loc
+                .source
+                .as_ref()
+                .and_then(|f| lsp_types::Url::from_file_path(f.to_path_buf()).ok())?;
+            Some(lsp_types::Location {
+                uri,
+                range: loc_to_lsp_range(loc),
+            })
+        };
+    let refs_to_lsp_result: RefsToLspResult = Box::new(
+        move |_current_ast: Option<
+            &Arc<flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>>,
+        >,
+              refs: Vec<flow_services_references::find_refs_types::SingleRef>| {
+            let mut refs_sorted = refs;
+            refs_sorted.sort_by(|(_, l1), (_, l2)| l1.cmp(l2));
+            refs_sorted.dedup_by(|a, b| a.1 == b.1);
+            let locs: Vec<lsp_types::Location> =
+                refs_sorted.iter().filter_map(ref_to_location).collect();
+            LspResult::FindReferencesResult(locs)
+        },
+    );
+    handle_global_find_references(
         options,
         env,
         shared_mem,
         node_modules_containers,
         client_id,
         id,
-        text_doc_position,
-        include_declaration,
         metadata,
+        flow_services_references::find_refs_types::Kind::FindReferences,
+        include_declaration,
+        refs_to_lsp_result,
+        &text_doc_position,
     )
 }
 
@@ -5926,113 +6024,92 @@ fn handle_persistent_rename(
     params: &lsp_types::RenameParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let new_name = &params.new_name;
+    let new_name = params.new_name.clone();
     let text_doc_position = lsp_types::TextDocumentPositionParams {
         text_document: params.text_document_position.text_document.clone(),
         position: params.text_document_position.position,
     };
-    let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
-        options,
-        env,
-        shared_mem.clone(),
-        node_modules_containers,
-        client_id,
-        &text_doc_position,
-        None,
-    );
-    match file_artifacts_opt {
-        Err(reason) => {
-            let metadata = with_data(
-                Some(serde_json::json!({"result": "FAILURE", "error": &reason})),
-                metadata,
-            );
-            mk_lsp_error_response(Some(id), reason, None, metadata)
-        }
-        Ok(None) => {
-            let metadata = with_data(extra_parse_data, metadata);
-            let edit = lsp_types::WorkspaceEdit {
-                changes: Some(std::collections::HashMap::new()),
-                ..Default::default()
-            };
-            let response = LspMessage::ResponseMessage(id, LspResult::RenameResult(edit));
-            (lsp_prot::Response::LspFromServer(Some(response)), metadata)
-        }
-        Ok(Some((file_artifacts, file_key))) => {
-            let loc_of_aloc = |aloc: &flow_aloc::ALoc| shared_mem.loc_of_aloc(aloc);
-            let (local_refs, extra_data) = find_local_references(
-                &loc_of_aloc,
-                &file_artifacts,
-                flow_services_references::find_refs_types::Kind::Rename,
-                &file_key,
-                &text_doc_position,
-            );
-            let metadata = with_data(extra_data, metadata);
-            match local_refs {
-                Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
-                Ok((_, flow_services_references::find_refs_types::FindRefsOk::NoDefinition(_))) => {
-                    let metadata =
-                        with_data(Some(serde_json::json!({"result": "BAD_LOC"})), metadata);
-                    let edit = lsp_types::WorkspaceEdit {
-                        changes: Some(std::collections::HashMap::new()),
-                        ..Default::default()
-                    };
-                    let response = LspMessage::ResponseMessage(id, LspResult::RenameResult(edit));
-                    (lsp_prot::Response::LspFromServer(Some(response)), metadata)
-                }
-                Ok((
-                    _,
-                    flow_services_references::find_refs_types::FindRefsOk::FoundReferences(refs),
-                )) => {
-                    let mut ref_map = std::collections::BTreeMap::new();
-                    for (ref_kind, loc) in &refs {
-                        ref_map.insert(loc.clone(), *ref_kind);
-                    }
-                    let current_ast = &file_artifacts.0.ast;
-                    let renamed_ast = flow_services_references::rename_mapper::rename(
-                        true,
-                        &ref_map,
-                        new_name,
-                        current_ast,
-                    );
-                    let all_diffs =
-                        flow_parser_utils::flow_ast_differ::program(current_ast, &renamed_ast);
-                    let opts = flow_parser_utils_output::js_layout_generator::Opts {
-                        bracket_spacing: options.format.bracket_spacing,
-                        single_quotes: options.format.single_quotes,
-                        ..flow_parser_utils_output::js_layout_generator::default_opts()
-                    };
-                    let loc_patches =
-                        flow_parser_utils_output::replacement_printer::mk_loc_patch_ast_differ(
-                            &opts, &all_diffs,
-                        );
-                    let mut changes: std::collections::HashMap<
-                        lsp_types::Url,
-                        Vec<lsp_types::TextEdit>,
-                    > = std::collections::HashMap::new();
-                    for (loc, new_text) in loc_patches {
-                        if let Some(source) = &loc.source {
-                            if let Ok(uri) = lsp_types::Url::from_file_path(source.to_path_buf()) {
-                                let edit = lsp_types::TextEdit {
-                                    range: loc_to_lsp_range(&loc),
-                                    new_text,
-                                };
-                                changes.entry(uri).or_default().push(edit);
-                            }
-                        }
-                    }
-                    let workspace_edit = lsp_types::WorkspaceEdit {
-                        changes: Some(changes),
-                        ..Default::default()
-                    };
-                    let response =
-                        LspMessage::ResponseMessage(id, LspResult::RenameResult(workspace_edit));
-                    let metadata =
-                        with_data(Some(serde_json::json!({"result": "SUCCESS"})), metadata);
-                    (lsp_prot::Response::LspFromServer(Some(response)), metadata)
+    let options_for_closure = options.clone();
+    let shared_mem_for_closure = shared_mem.dupe();
+    let refs_to_lsp_result: RefsToLspResult = Box::new(
+        move |current_ast: Option<
+            &Arc<flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>>,
+        >,
+              refs: Vec<flow_services_references::find_refs_types::SingleRef>| {
+            let mut ref_map: std::collections::BTreeMap<
+                flow_parser::loc::Loc,
+                flow_services_references::find_refs_types::RefKind,
+            > = std::collections::BTreeMap::new();
+            let mut files: std::collections::BTreeSet<flow_parser::file_key::FileKey> =
+                std::collections::BTreeSet::new();
+            for (ref_kind, loc) in &refs {
+                ref_map.insert(loc.clone(), *ref_kind);
+                if let Some(f) = &loc.source {
+                    files.insert(f.clone());
                 }
             }
-        }
-    }
+            let asts: Vec<
+                std::sync::Arc<
+                    flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>,
+                >,
+            > = files
+                .iter()
+                .filter_map(|filename| match current_ast {
+                    Some(ast) if ast.loc.source.as_ref() == Some(filename) => Some(ast.dupe()),
+                    _ => shared_mem_for_closure.get_ast(filename),
+                })
+                .collect();
+            let all_diffs: Vec<_> = asts
+                .iter()
+                .flat_map(|ast| {
+                    let renamed_ast = flow_services_references::rename_mapper::rename(
+                        true, &ref_map, &new_name, ast,
+                    );
+                    flow_parser_utils::flow_ast_differ::program(ast, &renamed_ast)
+                })
+                .collect();
+            let opts = flow_parser_utils_output::js_layout_generator::Opts {
+                bracket_spacing: options_for_closure.format.bracket_spacing,
+                single_quotes: options_for_closure.format.single_quotes,
+                ..flow_parser_utils_output::js_layout_generator::default_opts()
+            };
+            let loc_patches =
+                flow_parser_utils_output::replacement_printer::mk_loc_patch_ast_differ(
+                    &opts, &all_diffs,
+                );
+            let mut changes: std::collections::HashMap<lsp_types::Url, Vec<lsp_types::TextEdit>> =
+                std::collections::HashMap::new();
+            for (loc, new_text) in loc_patches {
+                if let Some(source) = &loc.source {
+                    if let Ok(uri) = lsp_types::Url::from_file_path(source.to_path_buf()) {
+                        let edit = lsp_types::TextEdit {
+                            range: loc_to_lsp_range(&loc),
+                            new_text,
+                        };
+                        changes.entry(uri).or_default().push(edit);
+                    }
+                }
+            }
+            let workspace_edit = lsp_types::WorkspaceEdit {
+                changes: Some(changes),
+                ..Default::default()
+            };
+            LspResult::RenameResult(workspace_edit)
+        },
+    );
+    handle_global_find_references(
+        options,
+        env,
+        shared_mem,
+        node_modules_containers,
+        client_id,
+        id,
+        metadata,
+        flow_services_references::find_refs_types::Kind::Rename,
+        true, // include_declaration
+        refs_to_lsp_result,
+        &text_doc_position,
+    )
 }
 
 fn handle_persistent_coverage(
@@ -6225,7 +6302,7 @@ fn handle_persistent_llm_context(
         .map(|((parse_artifacts, typecheck_artifacts), file_key)| {
             crate::llm_typed_context_provider::TypedFileInfo {
                 file_key: file_key.dupe(),
-                ast: parse_artifacts.ast.clone(),
+                ast: parse_artifacts.ast.dupe(),
                 cx: &typecheck_artifacts.cx,
                 typed_ast: typecheck_artifacts.typed_ast.clone(),
                 shared_mem: shared_mem.as_ref(),

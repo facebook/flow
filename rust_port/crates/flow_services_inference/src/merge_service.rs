@@ -69,6 +69,7 @@ use crate::inference_utils;
 use crate::merge_stream::Component;
 use crate::merge_stream::MergeResult;
 use crate::merge_stream::MergeStream;
+use crate::obj_to_obj_hook;
 
 pub type UnitResult<A> = Result<A, (ALoc, InternalError)>;
 
@@ -718,13 +719,21 @@ pub type CheckFileResult = (
         Arc<FileSig>,
         ast::Program<ALoc, (ALoc, Type)>,
     ),
-    (ErrorSet, ErrorSet, ErrorSuppressions, FileCoverage, f64),
+    (
+        ErrorSet,
+        ErrorSet,
+        ErrorSuppressions,
+        FileCoverage,
+        Result<Vec<flow_services_references::find_refs_types::SingleRef>, String>,
+        f64,
+    ),
 );
 
 fn mk_check_file(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
     master_cx: &MasterContext,
+    find_ref_request: flow_services_references::find_refs_types::Request,
     skip_post_check_cleanup: bool,
 ) -> (
     Box<
@@ -774,6 +783,7 @@ fn mk_check_file(
                 .map(|(specifier, module)| (specifier.dupe(), module.clone()))
                 .collect()
         };
+        let docblock_for_find_refs = docblock.dupe();
         let cx = make_cx(
             file.dupe(),
             resolved_modules,
@@ -789,8 +799,41 @@ fn mk_check_file(
         let mut mapper = flow_aloc::LocToALocMapper;
         let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast_ref);
         let metadata = cx.metadata().clone();
-        let typed_ast = check_file(&cx, &file, file_sig.dupe(), &metadata, comments, &aloc_ast)?;
+        let enabled = matches!(
+            &find_ref_request.def_info,
+            flow_services_get_def::get_def_types::DefInfo::PropertyDefinition(_)
+        );
+        let loc_of_aloc = |aloc: &ALoc| shared_mem.loc_of_aloc(aloc);
+        let (typed_ast_result, obj_to_obj_map) =
+            obj_to_obj_hook::with_obj_to_obj_hook(enabled, &loc_of_aloc, || {
+                check_file(&cx, &file, file_sig.dupe(), &metadata, comments, &aloc_ast)
+            });
+        let typed_ast = typed_ast_result?;
         drop(aloc_ast);
+        let ast_info: flow_services_get_def::find_refs_utils::AstInfo = (
+            ast_ref.dupe(),
+            file_sig.dupe(),
+            docblock_for_find_refs.dupe(),
+        );
+        let find_refs_result =
+            match flow_services_references::find_refs_js::local_refs_of_find_ref_request(
+                &loc_of_aloc,
+                &ast_info,
+                &cx,
+                &typed_ast,
+                &obj_to_obj_map,
+                &file,
+                &find_ref_request,
+            )? {
+                Ok(flow_services_references::find_refs_types::FindRefsOk::FoundReferences(
+                    refs,
+                )) => Ok(refs),
+                Ok(flow_services_references::find_refs_types::FindRefsOk::NoDefinition(_)) => {
+                    Ok(Vec::new())
+                }
+                Err(e) => Err(e),
+            };
+        drop(ast_info);
         drop(ast_ref);
         let coverage = file_coverage(&cx, &typed_ast);
         let errors = cx.errors();
@@ -850,7 +893,14 @@ fn mk_check_file(
         }
         Ok(Some((
             (cx, type_sig, file_sig, typed_ast),
-            (errors, warnings, suppressions, coverage, duration),
+            (
+                errors,
+                warnings,
+                suppressions,
+                coverage,
+                find_refs_result,
+                duration,
+            ),
         )))
     });
     (check_file_fn, cache_ref)
@@ -1120,6 +1170,7 @@ pub fn mk_check(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
     master_cx: &MasterContext,
+    find_ref_request: flow_services_references::find_refs_types::Request,
     skip_post_check_cleanup: bool,
 ) -> (
     Box<dyn FnMut(FileKey) -> CheckJobOutcome>,
@@ -1129,6 +1180,7 @@ pub fn mk_check(
         shared_mem.dupe(),
         options.dupe(),
         master_cx,
+        find_ref_request,
         skip_post_check_cleanup,
     );
     let check_fn = Box::new(move |file: FileKey| match check_file(file.dupe()) {

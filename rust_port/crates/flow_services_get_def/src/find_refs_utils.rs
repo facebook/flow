@@ -12,4 +12,4 @@ use flow_parser::ast;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
 
-pub type AstInfo = (ast::Program<Loc, Loc>, Arc<FileSig>, Docblock);
+pub type AstInfo = (Arc<ast::Program<Loc, Loc>>, Arc<FileSig>, Arc<Docblock>);

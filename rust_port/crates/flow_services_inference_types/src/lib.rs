@@ -29,9 +29,9 @@ use flow_typing_type::type_::properties;
 
 #[derive(Clone)]
 pub struct ParseArtifacts {
-    pub docblock: Docblock,
+    pub docblock: Arc<Docblock>,
     pub docblock_errors: Vec<DocblockError>,
-    pub ast: ast::Program<Loc, Loc>,
+    pub ast: Arc<ast::Program<Loc, Loc>>,
     pub requires: Vec<FlowImportSpecifier>,
     pub file_sig: Arc<FileSig>,
     pub tolerable_errors: Vec<TolerableError<Loc>>,

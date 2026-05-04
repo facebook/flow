@@ -40,7 +40,6 @@ use flow_server_env::server_socket_rpc::ServerResponse;
 use flow_server_env::server_status;
 use flow_server_files::server_files_js;
 use flow_server_rechecker::rechecker;
-use flow_services_get_def::get_def_types::DefInfo;
 use flow_services_inference::type_service;
 use flow_services_inference_types::CheckedDependenciesCanceled;
 use flow_services_inference_types::TypeContentsError;
@@ -615,7 +614,7 @@ fn do_rechecks(
             return RecheckOutcome::Ok;
         }
 
-        let def_info = DefInfo::NoDefinition(None);
+        let find_ref_request = flow_services_references::find_refs_types::empty_request();
 
         worker_cancel::resume_workers();
         will_be_checked_files.union(files_to_force.dupe());
@@ -643,7 +642,7 @@ fn do_rechecks(
             shared_mem,
             options,
             &updates,
-            &def_info,
+            &find_ref_request,
             files_to_force,
             incompatible_lib_change,
             changed_mergebase,
@@ -725,7 +724,7 @@ fn do_rechecks(
                         shared_mem,
                         options,
                         &updates,
-                        &def_info,
+                        &find_ref_request.def_info,
                         CheckedSet::empty(),
                         node_modules_containers,
                         old_env.clone(),

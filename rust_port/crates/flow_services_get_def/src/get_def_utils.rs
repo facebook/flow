@@ -108,6 +108,11 @@ mod def_kind_search {
     #[derive(Clone)]
     struct AvailablePrivateName {
         def_loc: ALoc,
+        inner: std::rc::Rc<std::cell::RefCell<AvailablePrivateNameInner>>,
+    }
+
+    #[derive(Clone)]
+    struct AvailablePrivateNameInner {
         references: Vec<ALoc>,
         has_covered_target_reference: bool,
     }
@@ -229,8 +234,10 @@ mod def_kind_search {
             ) {
                 let entry = AvailablePrivateName {
                     def_loc: name.loc.dupe(),
-                    references: Vec::new(),
-                    has_covered_target_reference: false,
+                    inner: std::rc::Rc::new(std::cell::RefCell::new(AvailablePrivateNameInner {
+                        references: Vec::new(),
+                        has_covered_target_reference: false,
+                    })),
                 };
                 all.insert(name.name.dupe(), entry);
                 new_names.push(name.name.dupe());
@@ -270,10 +277,11 @@ mod def_kind_search {
                 ast_visitor::class_body_default(self, body)?;
                 for name in &new_names {
                     if let Some(entry) = self.available_private_names.get(name) {
-                        if entry.has_covered_target_reference {
+                        let inner = entry.inner.borrow();
+                        if inner.has_covered_target_reference {
                             return Err(SearchException::Found(DefKind::PrivateName {
                                 def_loc: entry.def_loc.dupe(),
-                                references: entry.references.clone(),
+                                references: inner.references.clone(),
                                 name: name.dupe(),
                             }));
                         }
@@ -291,12 +299,13 @@ mod def_kind_search {
         ) -> Result<(), SearchException> {
             let loc = &pn.loc;
             let name = &pn.name;
-            match self.available_private_names.get_mut(name) {
+            match self.available_private_names.get(name) {
                 Some(entry) => {
-                    entry.has_covered_target_reference =
-                        entry.has_covered_target_reference || (self.covers_target)(loc);
+                    let mut inner = entry.inner.borrow_mut();
+                    inner.has_covered_target_reference =
+                        inner.has_covered_target_reference || (self.covers_target)(loc);
                     if *loc != entry.def_loc {
-                        entry.references.push(loc.dupe());
+                        inner.references.push(loc.dupe());
                     }
                 }
                 None => {}

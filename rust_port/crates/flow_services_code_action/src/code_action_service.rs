@@ -3448,7 +3448,7 @@ pub fn autofix_exports_fn<'a>(
         &*get_type_sig,
         file_sig,
         typed_ast,
-        ast.clone(),
+        ast.dupe(),
         &sv_errors,
     );
     let opts = code_action_utils::layout_options(options);
@@ -3484,7 +3484,7 @@ pub fn autofix_missing_local_annot_fn<'a>(
         get_type_sig,
         file_sig,
         typed_ast,
-        ast.clone(),
+        ast.dupe(),
     )
     .map_err(|e| format!("FailedToInsertType: {:?}", e))?;
     let opts = code_action_utils::layout_options(options);
