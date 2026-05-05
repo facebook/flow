@@ -1310,22 +1310,14 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             props,
             allow_ref_in_spread,
         } => {
-            let mut props_prime = None;
-            for (name, prop) in props.iter() {
-                let prop_prime = mapper.prop(cx, map_cx, prop.dupe());
-                if !prop.ptr_eq(&prop_prime) {
-                    props_prime
-                        .get_or_insert_with(|| props.dupe())
-                        .insert(name.dupe(), prop_prime);
-                }
-            }
-            if let Some(props_prime) = props_prime {
+            let props_prime = props.ident_map(|prop| mapper.prop(cx, map_cx, prop.dupe()));
+            if props.ptr_eq(&props_prime) {
+                t.dupe()
+            } else {
                 Rc::new(Destructor::ReactCheckComponentConfig {
                     props: props_prime,
                     allow_ref_in_spread: *allow_ref_in_spread,
                 })
-            } else {
-                t.dupe()
             }
         }
         Destructor::ReactDRO(_)
@@ -1563,18 +1555,9 @@ pub fn object_kit_spread_operand_slice_default<'cx, A, M: TypeMapper<'cx, A> + ?
     map_cx: &A,
     slice: object::spread::OperandSlice,
 ) -> object::spread::OperandSlice {
-    let mut prop_map_changed = false;
-    let prop_map_prime: properties::PropertiesMap = slice
+    let prop_map_prime = slice
         .prop_map
-        .iter()
-        .map(|(name, prop)| {
-            let prop_prime = mapper.prop(cx, map_cx, prop.dupe());
-            if !prop.ptr_eq(&prop_prime) {
-                prop_map_changed = true;
-            }
-            (name.clone(), prop_prime)
-        })
-        .collect();
+        .ident_map(|prop| mapper.prop(cx, map_cx, prop.dupe()));
     let dict_prime = option_utils::ident_map(
         |d| mapper.dict_type(cx, map_cx, d.clone()),
         |a, b| a == b,
@@ -1593,7 +1576,7 @@ pub fn object_kit_spread_operand_slice_default<'cx, A, M: TypeMapper<'cx, A> + ?
         |a, b| a.0.ptr_eq(&b.0),
         slice.reachable_targs.dupe(),
     );
-    if !prop_map_changed
+    if slice.prop_map.ptr_eq(&prop_map_prime)
         && slice.dict == dict_prime
         && Rc::ptr_eq(&slice.reachable_targs, &reachable_targs_prime)
     {

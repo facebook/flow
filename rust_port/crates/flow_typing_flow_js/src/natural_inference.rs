@@ -6,7 +6,6 @@
  */
 
 use std::cell::RefCell;
-use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -36,7 +35,6 @@ use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::FrozenKind;
-use flow_typing_type::type_::GetSetData;
 use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::NumberLiteral;
 use flow_typing_type::type_::PolyTData;
@@ -54,6 +52,7 @@ use flow_typing_type::type_::constraint;
 use flow_typing_type::type_::eval;
 use flow_typing_type::type_::exports;
 use flow_typing_type::type_::properties;
+use flow_typing_type::type_::property;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_util::mod_reason_of_t;
@@ -399,82 +398,13 @@ impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, LiteralMapCx> for Lit
         id: properties::Id,
     ) -> properties::Id {
         let props_map = cx.find_props(id.dupe());
-        let mut changed = false;
-        let mut props_map_prime = BTreeMap::new();
-        for (name, prop) in props_map.iter() {
-            let new_prop = match prop.deref() {
-                PropertyInner::Field(fd) => {
-                    let type_prime = self.type_(cx, map_cx, fd.type_.dupe());
-                    if fd.type_.ptr_eq(&type_prime) {
-                        prop.dupe()
-                    } else {
-                        changed = true;
-                        Property::new(PropertyInner::Field(Box::new(FieldData {
-                            preferred_def_locs: fd.preferred_def_locs.clone(),
-                            key_loc: fd.key_loc.dupe(),
-                            type_: type_prime,
-                            polarity: fd.polarity,
-                        })))
-                    }
-                }
-                PropertyInner::Get { key_loc, type_ } => {
-                    let type_prime = self.type_(cx, map_cx, type_.dupe());
-                    if type_.ptr_eq(&type_prime) {
-                        prop.dupe()
-                    } else {
-                        changed = true;
-                        Property::new(PropertyInner::Get {
-                            key_loc: key_loc.dupe(),
-                            type_: type_prime,
-                        })
-                    }
-                }
-                PropertyInner::Set { key_loc, type_ } => {
-                    let type_prime = self.type_(cx, map_cx, type_.dupe());
-                    if type_.ptr_eq(&type_prime) {
-                        prop.dupe()
-                    } else {
-                        changed = true;
-                        Property::new(PropertyInner::Set {
-                            key_loc: key_loc.dupe(),
-                            type_: type_prime,
-                        })
-                    }
-                }
-                PropertyInner::GetSet(gs) => {
-                    let get_type_prime = self.type_(cx, map_cx, gs.get_type.dupe());
-                    let set_type_prime = self.type_(cx, map_cx, gs.set_type.dupe());
-                    if gs.get_type.ptr_eq(&get_type_prime) && gs.set_type.ptr_eq(&set_type_prime) {
-                        prop.dupe()
-                    } else {
-                        changed = true;
-                        Property::new(PropertyInner::GetSet(Box::new(GetSetData {
-                            get_key_loc: gs.get_key_loc.dupe(),
-                            get_type: get_type_prime,
-                            set_key_loc: gs.set_key_loc.dupe(),
-                            set_type: set_type_prime,
-                        })))
-                    }
-                }
-                PropertyInner::Method { key_loc, type_ } => {
-                    let type_prime = self.type_(cx, map_cx, type_.dupe());
-                    if type_.ptr_eq(&type_prime) {
-                        prop.dupe()
-                    } else {
-                        changed = true;
-                        Property::new(PropertyInner::Method {
-                            key_loc: key_loc.dupe(),
-                            type_: type_prime,
-                        })
-                    }
-                }
-            };
-            props_map_prime.insert(name.dupe(), new_prop);
-        }
-        if !changed {
+        let props_map_prime = props_map.ident_map(|prop| {
+            property::ident_map_t(|t| self.type_(cx, map_cx, t.dupe()), prop).into_owned()
+        });
+        if props_map.ptr_eq(&props_map_prime) {
             id
         } else {
-            cx.generate_property_map(props_map_prime.into())
+            cx.generate_property_map(props_map_prime)
         }
     }
 
@@ -748,28 +678,22 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
         id: properties::Id,
     ) -> properties::Id {
         let props_map = cx.find_props(id.dupe());
-        let mut changed = false;
-        let mut props_map_prime = BTreeMap::new();
-        for (name, p) in props_map.iter() {
-            let p_prime = match p.deref() {
-                PropertyInner::Field(fd) => {
-                    let type_prime = self.type_(cx, map_cx, fd.type_.dupe());
-                    changed = true;
-                    Property::new(PropertyInner::Field(Box::new(FieldData {
-                        preferred_def_locs: fd.preferred_def_locs.clone(),
-                        key_loc: fd.key_loc.dupe(),
-                        type_: type_prime,
-                        polarity: Polarity::Positive,
-                    })))
-                }
-                _ => p.dupe(),
-            };
-            props_map_prime.insert(name.dupe(), p_prime);
-        }
-        if !changed {
+        let props_map_prime = props_map.ident_map(|p| match p.deref() {
+            PropertyInner::Field(fd) => {
+                let type_prime = self.type_(cx, map_cx, fd.type_.dupe());
+                Property::new(PropertyInner::Field(Box::new(FieldData {
+                    preferred_def_locs: fd.preferred_def_locs.clone(),
+                    key_loc: fd.key_loc.dupe(),
+                    type_: type_prime,
+                    polarity: Polarity::Positive,
+                })))
+            }
+            _ => p.dupe(),
+        });
+        if props_map.ptr_eq(&props_map_prime) {
             id
         } else {
-            cx.generate_property_map(props_map_prime.into())
+            cx.generate_property_map(props_map_prime)
         }
     }
 }

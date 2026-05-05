@@ -5368,6 +5368,10 @@ impl NamedSymbol {
             type_,
         }))
     }
+
+    pub fn ptr_eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
 }
 
 impl Dupe for NamedSymbol {}
@@ -6207,9 +6211,9 @@ pub mod property {
         }
     }
 
-    pub fn ident_map_t<F>(f: F, p: &Property) -> Cow<'_, Property>
+    pub fn ident_map_t<F>(mut f: F, p: &Property) -> Cow<'_, Property>
     where
-        F: Fn(&Type) -> Type,
+        F: FnMut(&Type) -> Type,
     {
         match p.deref() {
             PropertyInner::Field(fd) => {
@@ -6395,6 +6399,10 @@ pub mod properties {
             self.0.is_empty()
         }
 
+        pub fn ptr_eq(&self, other: &Self) -> bool {
+            Rc::ptr_eq(&self.0, &other.0)
+        }
+
         pub fn get(&self, name: &Name) -> Option<&Property> {
             self.0.get(name)
         }
@@ -6416,6 +6424,22 @@ pub mod properties {
 
         pub fn iter(&self) -> impl DoubleEndedIterator<Item = (&Name, &Property)> {
             self.0.iter()
+        }
+
+        pub fn ident_map<F>(&self, mut f: F) -> Self
+        where
+            F: FnMut(&Property) -> Property,
+        {
+            let mut map_prime = None;
+            for (name, prop) in self.iter() {
+                let prop_prime = f(prop);
+                if !prop.ptr_eq(&prop_prime) {
+                    map_prime
+                        .get_or_insert_with(|| self.dupe())
+                        .insert(name.dupe(), prop_prime);
+                }
+            }
+            map_prime.unwrap_or_else(|| self.dupe())
         }
 
         pub fn values(&self) -> impl Iterator<Item = &Property> {
@@ -6780,6 +6804,10 @@ pub mod exports {
             self.0.is_empty()
         }
 
+        pub fn ptr_eq(&self, other: &Self) -> bool {
+            Rc::ptr_eq(&self.0, &other.0)
+        }
+
         pub fn len(&self) -> usize {
             self.0.len()
         }
@@ -6803,6 +6831,22 @@ pub mod exports {
 
         pub fn iter(&self) -> std::slice::Iter<'_, (Name, NamedSymbol)> {
             self.0.iter()
+        }
+
+        pub fn ident_map<F>(&self, mut f: F) -> Self
+        where
+            F: FnMut(&NamedSymbol) -> NamedSymbol,
+        {
+            let mut map_prime = None;
+            for (name, symbol) in self.iter() {
+                let symbol_prime = f(symbol);
+                if !symbol.ptr_eq(&symbol_prime) {
+                    map_prime
+                        .get_or_insert_with(|| self.dupe())
+                        .insert(name.dupe(), symbol_prime);
+                }
+            }
+            map_prime.unwrap_or_else(|| self.dupe())
         }
 
         pub fn keys(&self) -> impl Iterator<Item = &Name> {

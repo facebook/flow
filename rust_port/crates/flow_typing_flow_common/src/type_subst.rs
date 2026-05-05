@@ -24,17 +24,14 @@ use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::DestructorConditionalTypeData;
 use flow_typing_type::type_::DestructorMappedTypeData;
-use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::GenericTData;
-use flow_typing_type::type_::GetSetData;
 use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::MappedTypeHomomorphicFlag;
+use flow_typing_type::type_::NamedSymbol;
 use flow_typing_type::type_::ObjType;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::PredicateInner;
-use flow_typing_type::type_::Property;
-use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
@@ -45,6 +42,7 @@ use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::exports;
 use flow_typing_type::type_::poly;
 use flow_typing_type::type_::properties;
+use flow_typing_type::type_::property;
 use flow_typing_type::type_util::mod_reason_of_t;
 use flow_typing_type::type_util::reason_of_t;
 use flow_typing_type::type_util::union_of_ts;
@@ -394,84 +392,17 @@ pub fn props<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
     id: properties::Id,
 ) -> properties::Id {
     let props_map = cx.find_props(id.dupe());
-    let mut props_map_prime = None;
-    for (name, prop) in props_map.iter() {
-        let new_prop = match prop.deref() {
-            PropertyInner::Field(fd) => {
-                let type_prime = mapper.type_(cx, map_cx, fd.type_.dupe());
-                if fd.type_.ptr_eq(&type_prime) {
-                    prop.dupe()
-                } else {
-                    Property::new(PropertyInner::Field(Box::new(FieldData {
-                        preferred_def_locs: fd.preferred_def_locs.clone(),
-                        key_loc: fd.key_loc.dupe(),
-                        type_: type_prime,
-                        polarity: fd.polarity,
-                    })))
-                }
-            }
-            PropertyInner::Get { key_loc, type_ } => {
-                let type_prime = mapper.type_(cx, map_cx, type_.dupe());
-                if type_.ptr_eq(&type_prime) {
-                    prop.dupe()
-                } else {
-                    Property::new(PropertyInner::Get {
-                        key_loc: key_loc.dupe(),
-                        type_: type_prime,
-                    })
-                }
-            }
-            PropertyInner::Set { key_loc, type_ } => {
-                let type_prime = mapper.type_(cx, map_cx, type_.dupe());
-                if type_.ptr_eq(&type_prime) {
-                    prop.dupe()
-                } else {
-                    Property::new(PropertyInner::Set {
-                        key_loc: key_loc.dupe(),
-                        type_: type_prime,
-                    })
-                }
-            }
-            PropertyInner::GetSet(gs) => {
-                let get_type_prime = mapper.type_(cx, map_cx, gs.get_type.dupe());
-                let set_type_prime = mapper.type_(cx, map_cx, gs.set_type.dupe());
-                if gs.get_type.ptr_eq(&get_type_prime) && gs.set_type.ptr_eq(&set_type_prime) {
-                    prop.dupe()
-                } else {
-                    Property::new(PropertyInner::GetSet(Box::new(GetSetData {
-                        get_key_loc: gs.get_key_loc.dupe(),
-                        get_type: get_type_prime,
-                        set_key_loc: gs.set_key_loc.dupe(),
-                        set_type: set_type_prime,
-                    })))
-                }
-            }
-            PropertyInner::Method { key_loc, type_ } => {
-                let type_prime = mapper.type_(cx, map_cx, type_.dupe());
-                if type_.ptr_eq(&type_prime) {
-                    prop.dupe()
-                } else {
-                    Property::new(PropertyInner::Method {
-                        key_loc: key_loc.dupe(),
-                        type_: type_prime,
-                    })
-                }
-            }
-        };
-        if !prop.ptr_eq(&new_prop) {
-            props_map_prime
-                .get_or_insert_with(|| props_map.clone())
-                .insert(name.dupe(), new_prop);
-        }
-    }
-    if let Some(props_map_prime) = props_map_prime {
+    let props_map_prime = props_map.ident_map(|prop| {
+        property::ident_map_t(|t| mapper.type_(cx, map_cx, t.dupe()), prop).into_owned()
+    });
+    if props_map.ptr_eq(&props_map_prime) {
+        id
+    } else {
         // When substitution results in a new property map, we have to use a
         // generated id, rather than a location from source. The substituted
         // object will have the same location as the generic version, meaning
         // that this location will not serve as a unique identifier.
         cx.generate_property_map(props_map_prime)
-    } else {
-        id
     }
 }
 
@@ -483,24 +414,22 @@ pub fn exports<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
 ) -> exports::Id {
     // let exps = Context.find_exports cx id in
     let exps = cx.find_exports(id);
-    let mut exps_prime = None;
-    for (name, ns) in exps.iter() {
+    let exps_prime = exps.ident_map(|ns| {
         let type_prime = mapper.type_(cx, map_cx, ns.type_.dupe());
-        if !ns.type_.ptr_eq(&type_prime) {
-            exps_prime.get_or_insert_with(|| exps.clone()).insert(
-                name.dupe(),
-                flow_typing_type::type_::NamedSymbol::new(
-                    ns.name_loc.dupe(),
-                    ns.preferred_def_locs.clone(),
-                    type_prime,
-                ),
-            );
+        if ns.type_.ptr_eq(&type_prime) {
+            ns.dupe()
+        } else {
+            NamedSymbol::new(
+                ns.name_loc.dupe(),
+                ns.preferred_def_locs.clone(),
+                type_prime,
+            )
         }
-    }
-    if let Some(exps_prime) = exps_prime {
-        cx.make_export_map(exps_prime)
-    } else {
+    });
+    if exps.ptr_eq(&exps_prime) {
         id
+    } else {
+        cx.make_export_map(exps_prime)
     }
 }
 
