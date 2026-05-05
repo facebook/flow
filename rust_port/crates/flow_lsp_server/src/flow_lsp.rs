@@ -14,15 +14,17 @@ use std::net::Shutdown;
 use std::net::TcpStream;
 use std::sync::Mutex;
 use std::sync::mpsc::Receiver;
-use std::sync::mpsc::RecvTimeoutError;
 use std::time::Duration;
 
 use flow_common_exit_status::FlowExitStatus;
 
 pub type FilePath = std::path::PathBuf;
 use flow_server_env::file_watcher_status;
+use flow_server_env::lsp;
+use flow_server_env::lsp::loc_to_lsp_range;
 use flow_server_env::lsp_connect_params;
 use flow_server_env::lsp_connect_params::ConnectParams;
+use flow_server_env::lsp_helpers;
 use flow_server_env::lsp_mapper;
 use flow_server_env::lsp_prot;
 use flow_server_env::lsp_prot::DocumentUri;
@@ -34,6 +36,8 @@ use flow_server_env::server_status;
 use flow_server_env::socket_handshake;
 use lsp_types::MessageType;
 use lsp_types::NumberOrString;
+
+use crate::lsp_writers;
 
 type RawFd = std::os::raw::c_int;
 
@@ -64,10 +68,10 @@ pub fn encode_wrapped(wrapped_id: &WrappedId) -> LspId {
 
 pub fn decode_wrapped(lsp: &LspId) -> WrappedId {
     try_decode_wrapped(lsp)
-        .unwrap_or_else(|_| panic!("Invalid message id {}", lsp_fmt_id_to_string(lsp)))
+        .unwrap_or_else(|_| panic!("Invalid message id {}", lsp_fmt::id_to_string(lsp)))
 }
 
-fn try_decode_wrapped(lsp: &LspId) -> Result<WrappedId, FlowLspError> {
+fn try_decode_wrapped(lsp: &LspId) -> Result<WrappedId, flow_server_env::lsp::error::T> {
     let s = match lsp {
         NumberOrString::Number(_) => {
             return Err(parse_error_exception("not a wrapped id"));
@@ -112,7 +116,7 @@ pub struct ServerConn {
 #[derive(Debug, Clone)]
 pub enum ShowStatusT {
     NeverShown,
-    Shown(Option<LspId>, lsp_mapper::show_status::Params),
+    Shown(Option<LspId>, lsp::show_status::Params),
 }
 
 // o_open_doc is guaranteed to be up-to-date with respect to the editor
@@ -136,8 +140,8 @@ pub struct InitializedEnv {
     pub i_server_id: i32,
     pub i_can_autostart_after_version_mismatch: bool,
     pub i_outstanding_local_handlers: HashMap<LspId, LspHandler>,
-    pub i_outstanding_local_requests: HashMap<LspId, lsp_mapper::LspRequest>,
-    pub i_outstanding_requests_from_server: WrappedMap<lsp_mapper::LspRequest>,
+    pub i_outstanding_local_requests: HashMap<LspId, lsp::LspRequest>,
+    pub i_outstanding_requests_from_server: WrappedMap<lsp::LspRequest>,
     pub i_is_connected: bool,
     pub i_status: ShowStatusT,
     pub i_open_files: UriMap<OpenFileInfo>,
@@ -218,9 +222,9 @@ pub enum FlowLspError {
     ServerFatalConnectionException(RemoteExceptionData),
     RequestLspException {
         id: LspId,
-        error: flow_server_env::lsp_mapper::lsp_error::T,
+        error: flow_server_env::lsp::error::T,
     },
-    LspException(flow_server_env::lsp_mapper::lsp_error::T),
+    LspException(flow_server_env::lsp::error::T),
     ChangedFileNotOpen(DocumentUri),
 }
 
@@ -248,6 +252,12 @@ impl fmt::Display for FlowLspError {
 
 impl std::error::Error for FlowLspError {}
 
+impl From<flow_server_env::lsp::error::T> for FlowLspError {
+    fn from(e: flow_server_env::lsp::error::T) -> Self {
+        FlowLspError::LspException(e)
+    }
+}
+
 #[derive(Clone)]
 pub enum Event {
     ServerMessage(lsp_prot::MessageFromServer),
@@ -260,160 +270,13 @@ pub use flow_config::FlowConfig;
 pub type FileOptions = flow_common::files::FileOptions;
 
 pub struct LspHandler {
-    pub on_response:
-        Box<dyn FnOnce(lsp_mapper::LspResult, &mut ServerState) -> Result<(), FlowLspError>>,
-    pub on_error: Box<
-        dyn FnOnce(lsp_mapper::lsp_error::T, String, &mut ServerState) -> Result<(), FlowLspError>,
-    >,
+    pub on_response: Box<dyn FnOnce(lsp::LspResult, &mut ServerState) -> Result<(), FlowLspError>>,
+    pub on_error:
+        Box<dyn FnOnce(lsp::error::T, String, &mut ServerState) -> Result<(), FlowLspError>>,
 }
 
-#[derive(Debug, Clone)]
-pub struct JsonrpcMessage {
-    pub id: Option<LspId>,
-    pub json: serde_json::Value,
-    pub timestamp: f64,
-    pub method_: String,
-}
-
-pub struct JsonrpcQueue {
-    receiver: Receiver<Result<JsonrpcMessage, FlowLspError>>,
-}
-
-impl JsonrpcQueue {
-    pub fn new() -> Self {
-        let (sender, receiver) = std::sync::mpsc::channel();
-        std::thread::spawn(move || {
-            use std::io::BufRead;
-            use std::io::Read;
-
-            let mut reader = std::io::BufReader::new(std::io::stdin());
-            loop {
-                let result = {
-                    let mut content_length: Option<usize> = None;
-                    loop {
-                        let mut line = String::new();
-                        match reader.read_line(&mut line) {
-                            Ok(0) => {
-                                break Err(FlowLspError::ClientFatalConnectionException(
-                                    RemoteExceptionData {
-                                        message: "End_of_file".to_string(),
-                                        stack: String::new(),
-                                    },
-                                ));
-                            }
-                            Ok(_) => {}
-                            Err(e) => {
-                                break Err(FlowLspError::ClientFatalConnectionException(
-                                    RemoteExceptionData {
-                                        message: format!("Can't read next header: {}", e),
-                                        stack: String::new(),
-                                    },
-                                ));
-                            }
-                        }
-                        let trimmed = line.trim_end_matches('\n').trim_end_matches('\r');
-                        if trimmed.is_empty() {
-                            break Ok(());
-                        }
-                        if let Some(pos) = trimmed.find(':') {
-                            let key = trimmed[..pos].to_lowercase();
-                            let value = trimmed[pos + 1..].trim();
-                            if key == "content-length" {
-                                content_length = value.parse().ok();
-                            }
-                        }
-                    }
-                    .and_then(|_| {
-                        let len = content_length.ok_or_else(|| {
-                            FlowLspError::ClientFatalConnectionException(RemoteExceptionData {
-                                message: "Missing Content-Length".to_string(),
-                                stack: String::new(),
-                            })
-                        })?;
-                        let mut body = vec![0u8; len];
-                        reader.read_exact(&mut body).map_err(|e| {
-                            FlowLspError::ClientFatalConnectionException(RemoteExceptionData {
-                                message: format!("Can't read body: {}", e),
-                                stack: String::new(),
-                            })
-                        })?;
-                        let body = String::from_utf8(body).map_err(|e| {
-                            FlowLspError::ClientFatalConnectionException(RemoteExceptionData {
-                                message: format!("Invalid UTF-8: {}", e),
-                                stack: String::new(),
-                            })
-                        })?;
-                        let timestamp = now();
-                        let json: serde_json::Value = serde_json::from_str(&body).map_err(|e| {
-                            FlowLspError::ClientRecoverableConnectionException(
-                                RemoteExceptionData {
-                                    message: format!("Syntax_error: {}", e),
-                                    stack: String::new(),
-                                },
-                            )
-                        })?;
-                        Ok(jsonrpc_parse_message(&json, timestamp))
-                    })
-                };
-                let is_fatal =
-                    matches!(result, Err(FlowLspError::ClientFatalConnectionException(_)));
-                if sender.send(result).is_err() || is_fatal {
-                    break;
-                }
-            }
-        });
-        JsonrpcQueue { receiver }
-    }
-
-    pub fn get_message(&self) -> Result<JsonrpcMessage, FlowLspError> {
-        match self.receiver.recv() {
-            Ok(result) => result,
-            Err(_) => Err(FlowLspError::ClientFatalConnectionException(
-                RemoteExceptionData {
-                    message: "End_of_file".to_string(),
-                    stack: String::new(),
-                },
-            )),
-        }
-    }
-
-    pub fn get_message_timeout(
-        &self,
-        timeout: Duration,
-    ) -> Option<Result<JsonrpcMessage, FlowLspError>> {
-        match self.receiver.recv_timeout(timeout) {
-            Ok(result) => Some(result),
-            Err(RecvTimeoutError::Timeout) => None,
-            Err(RecvTimeoutError::Disconnected) => Some(Err(
-                FlowLspError::ClientFatalConnectionException(RemoteExceptionData {
-                    message: "End_of_file".to_string(),
-                    stack: String::new(),
-                }),
-            )),
-        }
-    }
-}
-
-fn jsonrpc_parse_message(json: &serde_json::Value, timestamp: f64) -> JsonrpcMessage {
-    let id = json.get("id").and_then(|v| match v {
-        serde_json::Value::Number(n) => {
-            Some(NumberOrString::Number(n.as_i64().unwrap_or(0) as i32))
-        }
-        serde_json::Value::String(s) => Some(NumberOrString::String(s.clone())),
-        _ => None,
-    });
-    let method_ = json
-        .get("method")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
-    JsonrpcMessage {
-        id,
-        json: json.clone(),
-        timestamp,
-        method_,
-    }
-}
+use crate::jsonrpc::JsonrpcMessage;
+use crate::jsonrpc::JsonrpcQueue;
 
 fn annotate_request_parse_error(message: &JsonrpcMessage, error: FlowLspError) -> FlowLspError {
     match (message.id.clone(), message.method_.is_empty(), error) {
@@ -426,7 +289,7 @@ fn annotate_request_parse_error(message: &JsonrpcMessage, error: FlowLspError) -
 
 pub type FileInput = flow_server_utils::file_input::FileInput;
 
-pub type RageItem = lsp_mapper::rage::RageItem;
+pub type RageItem = lsp::rage::RageItem;
 
 pub struct TrackEffect {
     pub changed_live_uri: Option<DocumentUri>,
@@ -514,1264 +377,6 @@ impl fmt::Display for ConnectError {
             }
         }
     }
-}
-
-pub(crate) fn request_name_to_string(request: &lsp_mapper::LspRequest) -> &'static str {
-    match request {
-        lsp_mapper::LspRequest::ShowMessageRequestRequest(_) => "window/showMessageRequest",
-        lsp_mapper::LspRequest::ShowStatusRequest(_) => "window/showStatus",
-        lsp_mapper::LspRequest::InitializeRequest(_) => "initialize",
-        lsp_mapper::LspRequest::RegisterCapabilityRequest(_) => "client/registerCapability",
-        lsp_mapper::LspRequest::ShutdownRequest => "shutdown",
-        lsp_mapper::LspRequest::CodeLensResolveRequest(_) => "codeLens/resolve",
-        lsp_mapper::LspRequest::HoverRequest(_) => "textDocument/hover",
-        lsp_mapper::LspRequest::CodeActionRequest(_) => "textDocument/codeAction",
-        lsp_mapper::LspRequest::CompletionRequest(_) => "textDocument/completion",
-        lsp_mapper::LspRequest::CompletionItemResolveRequest(_) => "completionItem/resolve",
-        lsp_mapper::LspRequest::ConfigurationRequest(_) => "workspace/configuration",
-        lsp_mapper::LspRequest::SelectionRangeRequest(_) => "textDocument/selectionRange",
-        lsp_mapper::LspRequest::SignatureHelpRequest(_) => "textDocument/signatureHelp",
-        lsp_mapper::LspRequest::TextDocumentDiagnosticsRequest(_) => "textDocument/diagnostics",
-        lsp_mapper::LspRequest::DefinitionRequest(_) => "textDocument/definition",
-        lsp_mapper::LspRequest::TypeDefinitionRequest(_) => "textDocument/typeDefinition",
-        lsp_mapper::LspRequest::WorkspaceSymbolRequest(_) => "workspace/symbol",
-        lsp_mapper::LspRequest::DocumentSymbolRequest(_) => "textDocument/documentSymbol",
-        lsp_mapper::LspRequest::FindReferencesRequest(_) => "textDocument/references",
-        lsp_mapper::LspRequest::DocumentHighlightRequest(_) => "textDocument/documentHighlight",
-        lsp_mapper::LspRequest::TypeCoverageRequest(_) => "textDocument/typeCoverage",
-        lsp_mapper::LspRequest::DocumentFormattingRequest(_) => "textDocument/formatting",
-        lsp_mapper::LspRequest::DocumentRangeFormattingRequest(_) => "textDocument/rangeFormatting",
-        lsp_mapper::LspRequest::DocumentOnTypeFormattingRequest(_) => {
-            "textDocument/onTypeFormatting"
-        }
-        lsp_mapper::LspRequest::RageRequest => "telemetry/rage",
-        lsp_mapper::LspRequest::PingRequest => "telemetry/ping",
-        lsp_mapper::LspRequest::PrepareRenameRequest(_) => "textDocument/prepareRename",
-        lsp_mapper::LspRequest::RenameRequest(_) => "textDocument/rename",
-        lsp_mapper::LspRequest::DocumentCodeLensRequest(_) => "textDocument/codeLens",
-        lsp_mapper::LspRequest::ExecuteCommandRequest(_) => "workspace/executeCommand",
-        lsp_mapper::LspRequest::ApplyWorkspaceEditRequest(_) => "workspace/applyEdit",
-        lsp_mapper::LspRequest::AutoCloseJsxRequest(_) => "flow/autoCloseJsx",
-        lsp_mapper::LspRequest::PrepareDocumentPasteRequest(_) => "flow/prepareDocumentPaste",
-        lsp_mapper::LspRequest::ProvideDocumentPasteRequest(_) => "flow/provideDocumentPasteEdits",
-        lsp_mapper::LspRequest::LinkedEditingRangeRequest(_) => "textDocument/linkedEditingRange",
-        lsp_mapper::LspRequest::WillRenameFilesRequest(_) => "workspace/willRenameFiles",
-        lsp_mapper::LspRequest::RenameFileImportsRequest(_) => "flow/renameFileImports",
-        lsp_mapper::LspRequest::LLMContextRequest(_) => "llm/context",
-        lsp_mapper::LspRequest::UnknownRequest(_, _) => "unknown",
-    }
-}
-
-fn notification_name_to_string(notification: &lsp_mapper::LspNotification) -> &str {
-    match notification {
-        lsp_mapper::LspNotification::ExitNotification => "exit",
-        lsp_mapper::LspNotification::CancelRequestNotification(_) => "$/cancelRequest",
-        lsp_mapper::LspNotification::PublishDiagnosticsNotification(_) => {
-            "textDocument/publishDiagnostics"
-        }
-        lsp_mapper::LspNotification::DidOpenNotification(_) => "textDocument/didOpen",
-        lsp_mapper::LspNotification::DidCloseNotification(_) => "textDocument/didClose",
-        lsp_mapper::LspNotification::DidSaveNotification(_) => "textDocument/didSave",
-        lsp_mapper::LspNotification::DidChangeNotification(_) => "textDocument/didChange",
-        lsp_mapper::LspNotification::DidChangeConfigurationNotification(_) => {
-            "workspace/didChangeConfiguration"
-        }
-        lsp_mapper::LspNotification::DidChangeWatchedFilesNotification(_) => {
-            "workspace/didChangeWatchedFiles"
-        }
-        lsp_mapper::LspNotification::TelemetryNotification(_) => "telemetry/event",
-        lsp_mapper::LspNotification::LogMessageNotification(_) => "window/logMessage",
-        lsp_mapper::LspNotification::ShowMessageNotification(_) => "window/showMessage",
-        lsp_mapper::LspNotification::ConnectionStatusNotification(_) => {
-            "telemetry/connectionStatus"
-        }
-        lsp_mapper::LspNotification::InitializedNotification => "initialized",
-        lsp_mapper::LspNotification::SetTraceNotification => "$/setTraceNotification",
-        lsp_mapper::LspNotification::LogTraceNotification => "$/logTraceNotification",
-        lsp_mapper::LspNotification::UnknownNotification(method_, _) => method_,
-    }
-}
-
-fn result_name_to_string(result: &lsp_mapper::LspResult) -> &str {
-    match result {
-        lsp_mapper::LspResult::ShowMessageRequestResult(_) => "window/showMessageRequest",
-        lsp_mapper::LspResult::ShowStatusResult(_) => "window/showStatus",
-        lsp_mapper::LspResult::InitializeResult(_) => "initialize",
-        lsp_mapper::LspResult::ShutdownResult => "shutdown",
-        lsp_mapper::LspResult::CodeLensResolveResult(_) => "codeLens/resolve",
-        lsp_mapper::LspResult::HoverResult(_) => "textDocument/hover",
-        lsp_mapper::LspResult::CodeActionResult(_) => "textDocument/codeAction",
-        lsp_mapper::LspResult::CompletionResult(_) => "textDocument/completion",
-        lsp_mapper::LspResult::CompletionItemResolveResult(_) => "completionItem/resolve",
-        lsp_mapper::LspResult::ConfigurationResult(_) => "workspace/configuration",
-        lsp_mapper::LspResult::SelectionRangeResult(_) => "textDocument/selectionRange",
-        lsp_mapper::LspResult::SignatureHelpResult(_) => "textDocument/signatureHelp",
-        lsp_mapper::LspResult::TextDocumentDiagnosticsResult(_) => "textDocument/diagnostics",
-        lsp_mapper::LspResult::DefinitionResult(_) => "textDocument/definition",
-        lsp_mapper::LspResult::TypeDefinitionResult(_) => "textDocument/typeDefinition",
-        lsp_mapper::LspResult::WorkspaceSymbolResult(_) => "workspace/symbol",
-        lsp_mapper::LspResult::DocumentSymbolResult(_) => "textDocument/documentSymbol",
-        lsp_mapper::LspResult::FindReferencesResult(_) => "textDocument/references",
-        lsp_mapper::LspResult::GoToImplementationResult(_) => "textDocument/implementation",
-        lsp_mapper::LspResult::DocumentHighlightResult(_) => "textDocument/documentHighlight",
-        lsp_mapper::LspResult::TypeCoverageResult(_) => "textDocument/typeCoverage",
-        lsp_mapper::LspResult::DocumentFormattingResult(_) => "textDocument/formatting",
-        lsp_mapper::LspResult::DocumentRangeFormattingResult(_) => "textDocument/rangeFormatting",
-        lsp_mapper::LspResult::DocumentOnTypeFormattingResult(_) => "textDocument/onTypeFormatting",
-        lsp_mapper::LspResult::RageResult(_) => "telemetry/rage",
-        lsp_mapper::LspResult::PingResult(_) => "telemetry/ping",
-        lsp_mapper::LspResult::PrepareRenameResult(_) => "textDocument/prepareRename",
-        lsp_mapper::LspResult::RenameResult(_) => "textDocument/rename",
-        lsp_mapper::LspResult::DocumentCodeLensResult(_) => "textDocument/codeLens",
-        lsp_mapper::LspResult::ExecuteCommandResult(_) => "workspace/executeCommand",
-        lsp_mapper::LspResult::WillRenameFilesResult(_) => "workspace/willRenameFiles",
-        lsp_mapper::LspResult::ApplyWorkspaceEditResult(_) => "workspace/applyEdit",
-        lsp_mapper::LspResult::RegisterCapabilityResult => "client/registerCapability",
-        lsp_mapper::LspResult::AutoCloseJsxResult(_) => "flow/autoCloseJsx",
-        lsp_mapper::LspResult::PrepareDocumentPasteResult(_) => "flow/prepareDocumentPaste",
-        lsp_mapper::LspResult::ProvideDocumentPasteResult(_) => "flow/provideDocumentPasteEdits",
-        lsp_mapper::LspResult::LinkedEditingRangeResult(_) => "textDocument/linkedEditingRange",
-        lsp_mapper::LspResult::RenameFileImportsResult(_) => "flow/renameFileImports",
-        lsp_mapper::LspResult::LLMContextResult(_) => "llm/context",
-        lsp_mapper::LspResult::ErrorResult(_, _) => "unknown",
-    }
-}
-
-fn print_id(id: &LspId) -> serde_json::Value {
-    match id {
-        NumberOrString::Number(n) => serde_json::Value::Number((*n).into()),
-        NumberOrString::String(s) => serde_json::Value::String(s.clone()),
-    }
-}
-
-fn print_error(
-    include_error_stack_trace: bool,
-    error: &lsp_mapper::lsp_error::T,
-    stack: &str,
-) -> serde_json::Value {
-    use lsp_mapper::lsp_error::Code;
-    let code = match error.code {
-        Code::ParseError => -32700,
-        Code::InvalidRequest => -32600,
-        Code::MethodNotFound => -32601,
-        Code::InvalidParams => -32602,
-        Code::InternalError => -32603,
-        Code::ServerErrorStart => -32099,
-        Code::ServerErrorEnd => -32000,
-        Code::ServerNotInitialized => -32002,
-        Code::UnknownErrorCode => -32001,
-        Code::RequestCancelled => -32800,
-        Code::ContentModified => -32801,
-    };
-    let mut obj = serde_json::Map::new();
-    obj.insert("code".to_string(), serde_json::Value::Number(code.into()));
-    obj.insert(
-        "message".to_string(),
-        serde_json::Value::String(error.message.clone()),
-    );
-    let data = match (&error.data, include_error_stack_trace, stack) {
-        (None, true, s) if !s.is_empty() => Some(serde_json::json!({ "stack": s })),
-        (Some(d), true, s) if !s.is_empty() => {
-            let mut merged = serde_json::Map::new();
-            merged.insert(
-                "stack".to_string(),
-                serde_json::Value::String(s.to_string()),
-            );
-            if let serde_json::Value::Object(m) = d {
-                for (k, v) in m {
-                    merged.insert(k.clone(), v.clone());
-                }
-            }
-            Some(serde_json::Value::Object(merged))
-        }
-        (Some(d), _, _) => Some(d.clone()),
-        _ => None,
-    };
-    if let Some(d) = data {
-        obj.insert("data".to_string(), d);
-    }
-    serde_json::Value::Object(obj)
-}
-
-fn parse_error(error: &serde_json::Value) -> lsp_mapper::lsp_error::T {
-    use lsp_mapper::lsp_error::Code;
-    let code = error.get("code").and_then(|v| v.as_i64()).unwrap_or(-32603);
-    let code = match code {
-        -32700 => Code::ParseError,
-        -32600 => Code::InvalidRequest,
-        -32601 => Code::MethodNotFound,
-        -32602 => Code::InvalidParams,
-        -32603 => Code::InternalError,
-        -32099 => Code::ServerErrorStart,
-        -32000 => Code::ServerErrorEnd,
-        -32002 => Code::ServerNotInitialized,
-        -32001 => Code::UnknownErrorCode,
-        -32800 => Code::RequestCancelled,
-        -32801 => Code::ContentModified,
-        _ => Code::UnknownErrorCode,
-    };
-    let message = error
-        .get("message")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
-    let data = error.get("data").cloned();
-    lsp_mapper::lsp_error::T {
-        code,
-        message,
-        data,
-    }
-}
-
-fn to_json<T: serde::Serialize>(val: &T) -> serde_json::Value {
-    serde_json::to_value(val).unwrap_or_default()
-}
-
-fn from_json<T: serde::de::DeserializeOwned>(
-    val: Option<&serde_json::Value>,
-) -> Result<T, FlowLspError> {
-    match val {
-        Some(v) => serde_json::from_value(v.clone())
-            .map_err(|e| parse_error_exception(format!("Failed to deserialize LSP params: {}", e))),
-        None => serde_json::from_value(serde_json::Value::Null)
-            .map_err(|e| parse_error_exception(format!("Missing LSP params: {}", e))),
-    }
-}
-
-fn parse_lsp_request(
-    method_: &str,
-    params: Option<&serde_json::Value>,
-) -> Result<lsp_mapper::LspRequest, FlowLspError> {
-    Ok(match method_ {
-        "initialize" => {
-            let mut initialize_params: lsp_types::InitializeParams = from_json(params)?;
-            if let Some(status) = params
-                .and_then(|params| params.get("capabilities"))
-                .and_then(|capabilities| capabilities.get("window"))
-                .and_then(|window| window.get("status"))
-                .map(|status| status.is_object())
-            {
-                match initialize_params.capabilities.experimental.as_mut() {
-                    Some(serde_json::Value::Object(map)) => {
-                        map.insert("window/status".to_string(), serde_json::Value::Bool(status));
-                    }
-                    _ => {
-                        initialize_params.capabilities.experimental =
-                            Some(serde_json::json!({ "window/status": status }));
-                    }
-                }
-            }
-            if let Some(connection_status) = params
-                .and_then(|params| params.get("capabilities"))
-                .and_then(|capabilities| capabilities.get("telemetry"))
-                .and_then(|telemetry| telemetry.get("connectionStatus"))
-                .map(|connection_status| connection_status.is_object())
-            {
-                match initialize_params.capabilities.experimental.as_mut() {
-                    Some(serde_json::Value::Object(map)) => {
-                        map.insert(
-                            "telemetry/connectionStatus".to_string(),
-                            serde_json::Value::Bool(connection_status),
-                        );
-                    }
-                    _ => {
-                        initialize_params.capabilities.experimental = Some(serde_json::json!({
-                            "telemetry/connectionStatus": connection_status
-                        }));
-                    }
-                }
-            }
-            lsp_mapper::LspRequest::InitializeRequest(initialize_params)
-        }
-        "shutdown" => lsp_mapper::LspRequest::ShutdownRequest,
-        "codeLens/resolve" => lsp_mapper::LspRequest::CodeLensResolveRequest(from_json(params)?),
-        "textDocument/hover" => lsp_mapper::LspRequest::HoverRequest(from_json(params)?),
-        "textDocument/codeAction" => lsp_mapper::LspRequest::CodeActionRequest(from_json(params)?),
-        "textDocument/completion" => lsp_mapper::LspRequest::CompletionRequest(from_json(params)?),
-        "textDocument/definition" => lsp_mapper::LspRequest::DefinitionRequest(from_json(params)?),
-        "workspace/symbol" => lsp_mapper::LspRequest::WorkspaceSymbolRequest(from_json(params)?),
-        "textDocument/documentSymbol" => {
-            lsp_mapper::LspRequest::DocumentSymbolRequest(from_json(params)?)
-        }
-        "textDocument/references" => {
-            let mut params_obj = match params {
-                Some(serde_json::Value::Object(map)) => map.clone(),
-                _ => serde_json::Map::new(),
-            };
-            params_obj.entry("context".to_string()).or_insert_with(|| {
-                serde_json::json!({
-                    "includeDeclaration": true,
-                    "includeIndirectReferences": false,
-                })
-            });
-            let synthesized = serde_json::Value::Object(params_obj);
-            lsp_mapper::LspRequest::FindReferencesRequest(from_json(Some(&synthesized))?)
-        }
-        "textDocument/prepareRename" => {
-            lsp_mapper::LspRequest::PrepareRenameRequest(from_json(params)?)
-        }
-        "textDocument/rename" => lsp_mapper::LspRequest::RenameRequest(from_json(params)?),
-        "textDocument/documentHighlight" => {
-            lsp_mapper::LspRequest::DocumentHighlightRequest(from_json(params)?)
-        }
-        "textDocument/formatting" => {
-            lsp_mapper::LspRequest::DocumentFormattingRequest(from_json(params)?)
-        }
-        "textDocument/rangeFormatting" => {
-            lsp_mapper::LspRequest::DocumentRangeFormattingRequest(from_json(params)?)
-        }
-        "textDocument/onTypeFormatting" => {
-            lsp_mapper::LspRequest::DocumentOnTypeFormattingRequest(from_json(params)?)
-        }
-        "textDocument/codeLens" => {
-            lsp_mapper::LspRequest::DocumentCodeLensRequest(from_json(params)?)
-        }
-        "textDocument/selectionRange" => {
-            lsp_mapper::LspRequest::SelectionRangeRequest(from_json(params)?)
-        }
-        "textDocument/signatureHelp" => {
-            lsp_mapper::LspRequest::SignatureHelpRequest(from_json(params)?)
-        }
-        "textDocument/linkedEditingRange" => {
-            lsp_mapper::LspRequest::LinkedEditingRangeRequest(from_json(params)?)
-        }
-        "textDocument/typeCoverage" => {
-            lsp_mapper::LspRequest::TypeCoverageRequest(from_json(params)?)
-        }
-        "textDocument/diagnostic" => {
-            lsp_mapper::LspRequest::TextDocumentDiagnosticsRequest(from_json(params)?)
-        }
-        "flow/autoCloseJsx" => lsp_mapper::LspRequest::AutoCloseJsxRequest(from_json(params)?),
-        "flow/prepareDocumentPaste" => {
-            lsp_mapper::LspRequest::PrepareDocumentPasteRequest(from_json(params)?)
-        }
-        "flow/provideDocumentPasteEdits" => {
-            lsp_mapper::LspRequest::ProvideDocumentPasteRequest(from_json(params)?)
-        }
-        "flow/renameFileImports" => {
-            lsp_mapper::LspRequest::RenameFileImportsRequest(from_json(params)?)
-        }
-        "llm/context" => lsp_mapper::LspRequest::LLMContextRequest(from_json(params)?),
-        "workspace/willRenameFiles" => {
-            lsp_mapper::LspRequest::WillRenameFilesRequest(from_json(params)?)
-        }
-        "telemetry/rage" => lsp_mapper::LspRequest::RageRequest,
-        "telemetry/ping" => lsp_mapper::LspRequest::PingRequest,
-        "workspace/executeCommand" => {
-            let mut params: lsp_types::ExecuteCommandParams = from_json(params)?;
-            params.command = parse_command_name(&params.command);
-            lsp_mapper::LspRequest::ExecuteCommandRequest(params)
-        }
-        "textDocument/diagnostics" => {
-            lsp_mapper::LspRequest::TextDocumentDiagnosticsRequest(from_json(params)?)
-        }
-        _ => lsp_mapper::LspRequest::UnknownRequest(method_.to_string(), params.cloned()),
-    })
-}
-
-fn parse_lsp_notification(
-    method_: &str,
-    params: Option<&serde_json::Value>,
-) -> Result<lsp_mapper::LspNotification, FlowLspError> {
-    Ok(match method_ {
-        "$/cancelRequest" => {
-            lsp_mapper::LspNotification::CancelRequestNotification(from_json(params)?)
-        }
-        "$/setTraceNotification" => lsp_mapper::LspNotification::SetTraceNotification,
-        "$/logTraceNotification" => lsp_mapper::LspNotification::LogTraceNotification,
-        "initialized" => lsp_mapper::LspNotification::InitializedNotification,
-        "exit" => lsp_mapper::LspNotification::ExitNotification,
-        "textDocument/didOpen" => {
-            lsp_mapper::LspNotification::DidOpenNotification(from_json(params)?)
-        }
-        "textDocument/didClose" => {
-            lsp_mapper::LspNotification::DidCloseNotification(from_json(params)?)
-        }
-        "textDocument/didSave" => {
-            lsp_mapper::LspNotification::DidSaveNotification(from_json(params)?)
-        }
-        "textDocument/didChange" => {
-            lsp_mapper::LspNotification::DidChangeNotification(from_json(params)?)
-        }
-        "workspace/didChangeConfiguration" => {
-            lsp_mapper::LspNotification::DidChangeConfigurationNotification(from_json(params)?)
-        }
-        "workspace/didChangeWatchedFiles" => {
-            lsp_mapper::LspNotification::DidChangeWatchedFilesNotification(from_json(params)?)
-        }
-        _ => lsp_mapper::LspNotification::UnknownNotification(method_.to_string(), params.cloned()),
-    })
-}
-
-fn parse_lsp_result(
-    request: &lsp_mapper::LspRequest,
-    result: &serde_json::Value,
-) -> Result<lsp_mapper::LspResult, FlowLspError> {
-    let method_ = request_name_to_string(request);
-    Ok(match request {
-        lsp_mapper::LspRequest::ShowMessageRequestRequest(_) => {
-            lsp_mapper::LspResult::ShowMessageRequestResult(
-                result.get("title").and_then(|t| t.as_str()).map(|title| {
-                    lsp_types::MessageActionItem {
-                        title: title.to_string(),
-                        properties: Default::default(),
-                    }
-                }),
-            )
-        }
-        lsp_mapper::LspRequest::ShowStatusRequest(_) => lsp_mapper::LspResult::ShowStatusResult(
-            result.get("title").and_then(|t| t.as_str()).map(|title| {
-                lsp_types::MessageActionItem {
-                    title: title.to_string(),
-                    properties: Default::default(),
-                }
-            }),
-        ),
-        lsp_mapper::LspRequest::ApplyWorkspaceEditRequest(_) => {
-            lsp_mapper::LspResult::ApplyWorkspaceEditResult(from_json(Some(result))?)
-        }
-        lsp_mapper::LspRequest::ConfigurationRequest(_) => {
-            let items = match result {
-                serde_json::Value::Array(items) => items.clone(),
-                _ => vec![],
-            };
-            lsp_mapper::LspResult::ConfigurationResult(items)
-        }
-        lsp_mapper::LspRequest::RegisterCapabilityRequest(_) => {
-            lsp_mapper::LspResult::RegisterCapabilityResult
-        }
-        _ => {
-            return Err(parse_error_exception(format!(
-                "Don't know how to parse LSP response {}",
-                method_
-            )));
-        }
-    })
-}
-
-pub fn lsp_fmt_parse_lsp(
-    json: &serde_json::Value,
-    outstanding: &dyn Fn(&LspId) -> Result<lsp_mapper::LspRequest, FlowLspError>,
-) -> Result<lsp_prot::LspMessage, FlowLspError> {
-    let id = match json.get("id") {
-        Some(id) => Some(lsp_fmt_parse_id(id)?),
-        None => None,
-    };
-    let method_opt = json.get("method").and_then(|v| v.as_str());
-    let params = json.get("params");
-    let result = json.get("result");
-    let error = json.get("error");
-    Ok(match (id, method_opt, result, error) {
-        (None, Some(method_), _, _) => {
-            lsp_prot::LspMessage::NotificationMessage(parse_lsp_notification(method_, params)?)
-        }
-        (Some(id), Some(method_), _, _) => {
-            lsp_prot::LspMessage::RequestMessage(id, parse_lsp_request(method_, params)?)
-        }
-        (Some(id), _, Some(result), _) => {
-            let request = outstanding(&id)?;
-            lsp_prot::LspMessage::ResponseMessage(id, parse_lsp_result(&request, result)?)
-        }
-        (Some(id), _, _, Some(error)) => lsp_prot::LspMessage::ResponseMessage(
-            id,
-            lsp_mapper::LspResult::ErrorResult(parse_error(error), String::new()),
-        ),
-        _ => return Err(parse_error_exception("Not JsonRPC")),
-    })
-}
-
-fn print_position(position: &lsp_types::Position) -> serde_json::Value {
-    serde_json::json!({
-        "line": position.line,
-        "character": position.character,
-    })
-}
-
-fn print_range(range: &lsp_types::Range) -> serde_json::Value {
-    serde_json::json!({
-        "start": print_position(&range.start),
-        "end": print_position(&range.end),
-    })
-}
-
-fn text_edit_fmt_to_json(edit: &lsp_types::TextEdit) -> serde_json::Value {
-    let lsp_types::TextEdit { range, new_text } = edit;
-    serde_json::json!({
-        "range": print_range(range),
-        "newText": new_text,
-    })
-}
-
-fn insert_replace_edit_fmt_to_json(edit: &lsp_types::InsertReplaceEdit) -> serde_json::Value {
-    let lsp_types::InsertReplaceEdit {
-        new_text,
-        insert,
-        replace,
-    } = edit;
-    serde_json::json!({
-        "newText": new_text,
-        "insert": print_range(insert),
-        "replace": print_range(replace),
-    })
-}
-
-fn print_command_name(key: &str, name: &str) -> String {
-    format!("{}:{}", name, key)
-}
-
-fn parse_command_name(name: &str) -> String {
-    match name.split_once(':') {
-        Some((name, _)) => name.to_string(),
-        None => name.to_string(),
-    }
-}
-
-fn key_command(key: &str, mut command: lsp_types::Command) -> lsp_types::Command {
-    command.command = print_command_name(key, &command.command);
-    command
-}
-
-fn print_command(key: &str, command: &lsp_types::Command) -> serde_json::Value {
-    let name = print_command_name(key, &command.command);
-    serde_json::json!({
-        "title": command.title,
-        "command": name,
-        "arguments": command.arguments.clone().unwrap_or_default(),
-    })
-}
-
-fn completion_item_label_details_fmt_to_json(
-    details: &lsp_types::CompletionItemLabelDetails,
-) -> serde_json::Value {
-    let lsp_types::CompletionItemLabelDetails {
-        description,
-        detail,
-    } = details;
-    object_opt(vec![
-        (
-            "description",
-            description
-                .as_ref()
-                .map(|x| serde_json::Value::String(x.clone())),
-        ),
-        (
-            "detail",
-            detail
-                .as_ref()
-                .map(|x| serde_json::Value::String(x.clone())),
-        ),
-    ])
-}
-
-fn string_of_marked_string(acc: String, marked: &lsp_types::MarkedString) -> String {
-    match marked {
-        lsp_types::MarkedString::LanguageString(ls) => {
-            format!("{}```{}\n{}\n```\n", acc, ls.language, ls.value)
-        }
-        lsp_types::MarkedString::String(s) => format!("{}{}\n", acc, s),
-    }
-}
-
-fn object_opt(entries: Vec<(&str, Option<serde_json::Value>)>) -> serde_json::Value {
-    let mut map = serde_json::Map::new();
-    for (key, value) in entries {
-        if let Some(value) = value {
-            map.insert(key.to_string(), value);
-        }
-    }
-    serde_json::Value::Object(map)
-}
-
-pub fn lsp_fmt_completion_item_fmt_to_json(
-    key: &str,
-    item: &lsp_types::CompletionItem,
-) -> serde_json::Value {
-    object_opt(vec![
-        ("label", Some(serde_json::Value::String(item.label.clone()))),
-        (
-            "labelDetails",
-            item.label_details
-                .as_ref()
-                .map(completion_item_label_details_fmt_to_json),
-        ),
-        (
-            "kind",
-            item.kind.map(|x| {
-                serde_json::to_value(x).expect("CompletionItemKind serializes as i32 — infallible")
-            }),
-        ),
-        (
-            "detail",
-            item.detail
-                .as_ref()
-                .map(|s| serde_json::Value::String(s.clone())),
-        ),
-        (
-            "documentation",
-            item.documentation.as_ref().map(|doc| {
-                let value = match doc {
-                    lsp_types::Documentation::String(s) => string_of_marked_string(
-                        String::new(),
-                        &lsp_types::MarkedString::String(s.clone()),
-                    ),
-                    lsp_types::Documentation::MarkupContent(mc) => string_of_marked_string(
-                        String::new(),
-                        &lsp_types::MarkedString::String(mc.value.clone()),
-                    ),
-                };
-                serde_json::json!({
-                    "kind": "markdown",
-                    "value": value.trim(),
-                })
-            }),
-        ),
-        (
-            "tags",
-            item.tags.as_ref().map(|tags| {
-                serde_json::Value::Array(
-                    tags.iter()
-                        .map(|tag| {
-                            serde_json::to_value(tag)
-                                .expect("CompletionItemTag serializes as i32 — infallible")
-                        })
-                        .collect(),
-                )
-            }),
-        ),
-        (
-            "preselect",
-            if item.preselect.unwrap_or(false) {
-                Some(serde_json::Value::Bool(true))
-            } else {
-                None
-            },
-        ),
-        (
-            "sortText",
-            item.sort_text
-                .as_ref()
-                .map(|s| serde_json::Value::String(s.clone())),
-        ),
-        (
-            "filterText",
-            item.filter_text
-                .as_ref()
-                .map(|s| serde_json::Value::String(s.clone())),
-        ),
-        (
-            "insertText",
-            item.insert_text
-                .as_ref()
-                .map(|s| serde_json::Value::String(s.clone())),
-        ),
-        (
-            "insertTextFormat",
-            item.insert_text_format.map(|x| {
-                serde_json::to_value(x).expect("InsertTextFormat serializes as i32 — infallible")
-            }),
-        ),
-        (
-            "textEdit",
-            item.text_edit.as_ref().map(|te| match te {
-                lsp_types::CompletionTextEdit::Edit(edit) => text_edit_fmt_to_json(edit),
-                lsp_types::CompletionTextEdit::InsertAndReplace(edit) => {
-                    insert_replace_edit_fmt_to_json(edit)
-                }
-            }),
-        ),
-        (
-            "additionalTextEdits",
-            match item.additional_text_edits.as_deref() {
-                None | Some([]) => None,
-                Some(l) => Some(serde_json::Value::Array(
-                    l.iter().map(text_edit_fmt_to_json).collect(),
-                )),
-            },
-        ),
-        (
-            "command",
-            item.command.as_ref().map(|c| print_command(key, c)),
-        ),
-        ("data", item.data.clone()),
-    ])
-}
-
-fn normalize_diagnostic_for_wire(diag: &mut lsp_types::Diagnostic) {
-    if diag.related_information.is_none() {
-        diag.related_information = Some(vec![]);
-    }
-}
-
-fn key_code_action_or_command(
-    key: &str,
-    code_action_or_command: lsp_types::CodeActionOrCommand,
-) -> lsp_types::CodeActionOrCommand {
-    match code_action_or_command {
-        lsp_types::CodeActionOrCommand::Command(command) => {
-            lsp_types::CodeActionOrCommand::Command(key_command(key, command))
-        }
-        lsp_types::CodeActionOrCommand::CodeAction(mut code_action) => {
-            if let Some(command) = code_action.command.take() {
-                code_action.command = Some(key_command(key, command));
-            }
-            if let Some(diags) = code_action.diagnostics.as_mut() {
-                for d in diags.iter_mut() {
-                    normalize_diagnostic_for_wire(d);
-                }
-            }
-            lsp_types::CodeActionOrCommand::CodeAction(code_action)
-        }
-    }
-}
-
-pub fn lsp_fmt_print_code_action_result(
-    key: &str,
-    result: Vec<lsp_types::CodeActionOrCommand>,
-) -> serde_json::Value {
-    to_json(
-        &result
-            .into_iter()
-            .map(|item| key_code_action_or_command(key, item))
-            .collect::<Vec<_>>(),
-    )
-}
-
-fn key_completion_item(
-    key: &str,
-    mut completion_item: lsp_types::CompletionItem,
-) -> lsp_types::CompletionItem {
-    if let Some(command) = completion_item.command.take() {
-        completion_item.command = Some(key_command(key, command));
-    }
-    completion_item
-}
-
-fn key_completion_response(
-    key: &str,
-    completion_response: lsp_types::CompletionResponse,
-) -> lsp_types::CompletionResponse {
-    match completion_response {
-        lsp_types::CompletionResponse::Array(items) => lsp_types::CompletionResponse::Array(
-            items
-                .into_iter()
-                .map(|item| key_completion_item(key, item))
-                .collect(),
-        ),
-        lsp_types::CompletionResponse::List(mut completion_list) => {
-            completion_list.items = completion_list
-                .items
-                .into_iter()
-                .map(|item| key_completion_item(key, item))
-                .collect();
-            lsp_types::CompletionResponse::List(completion_list)
-        }
-    }
-}
-
-fn key_code_lens(key: &str, mut code_lens: lsp_types::CodeLens) -> lsp_types::CodeLens {
-    if let Some(command) = code_lens.command.take() {
-        code_lens.command = Some(key_command(key, command));
-    }
-    code_lens
-}
-
-fn key_initialize_result(
-    key: &str,
-    mut initialize_result: lsp_types::InitializeResult,
-) -> lsp_types::InitializeResult {
-    if let Some(execute_command_provider) = initialize_result
-        .capabilities
-        .execute_command_provider
-        .as_mut()
-    {
-        execute_command_provider.commands = execute_command_provider
-            .commands
-            .iter()
-            .map(|command| print_command_name(key, command))
-            .collect();
-    }
-    initialize_result
-}
-
-fn initialize_result_to_json(
-    key: &str,
-    initialize_result: lsp_types::InitializeResult,
-) -> serde_json::Value {
-    let mut json = to_json(&key_initialize_result(key, initialize_result));
-    if let Some(capabilities) = json.get_mut("capabilities").and_then(|v| v.as_object_mut()) {
-        capabilities.insert(
-            "typeCoverageProvider".to_string(),
-            serde_json::Value::Bool(true),
-        );
-        capabilities.insert("rageProvider".to_string(), serde_json::Value::Bool(true));
-    }
-    json
-}
-
-pub fn lsp_fmt_print_lsp_response(
-    key: &str,
-    id: &LspId,
-    result: &lsp_mapper::LspResult,
-) -> serde_json::Value {
-    let _method_ = result_name_to_string(result);
-    let json = match result {
-        lsp_mapper::LspResult::InitializeResult(r) => initialize_result_to_json(key, r.clone()),
-        lsp_mapper::LspResult::ShutdownResult => serde_json::Value::Null,
-        lsp_mapper::LspResult::CodeLensResolveResult(r) => to_json(&key_code_lens(key, r.clone())),
-        lsp_mapper::LspResult::HoverResult(r) => to_json(r),
-        lsp_mapper::LspResult::CodeActionResult(r) => {
-            lsp_fmt_print_code_action_result(key, r.clone())
-        }
-        lsp_mapper::LspResult::CompletionResult(r) => {
-            to_json(&key_completion_response(key, r.clone()))
-        }
-        lsp_mapper::LspResult::CompletionItemResolveResult(r) => {
-            to_json(&key_completion_item(key, r.clone()))
-        }
-        lsp_mapper::LspResult::ConfigurationResult(r) => to_json(r),
-        lsp_mapper::LspResult::SelectionRangeResult(r) => to_json(r),
-        lsp_mapper::LspResult::SignatureHelpResult(r) => to_json(r),
-        lsp_mapper::LspResult::TextDocumentDiagnosticsResult(r) => {
-            serde_json::json!({ "kind": "full", "items": r })
-        }
-        lsp_mapper::LspResult::DefinitionResult(r) => to_json(r),
-        lsp_mapper::LspResult::TypeDefinitionResult(r) => to_json(r),
-        lsp_mapper::LspResult::WorkspaceSymbolResult(r) => match r {
-            lsp_mapper::workspace_symbol_result::T::SymbolInformation(v) => to_json(v),
-            lsp_mapper::workspace_symbol_result::T::WorkspaceSymbolInformation(v) => {
-                let items: Vec<serde_json::Value> = v
-                    .iter()
-                    .map(|info| {
-                        let mut obj = serde_json::Map::new();
-                        obj.insert(
-                            "name".to_string(),
-                            serde_json::Value::String(info.name.clone()),
-                        );
-                        obj.insert("kind".to_string(), to_json(&info.kind));
-                        obj.insert(
-                            "location".to_string(),
-                            serde_json::json!({
-                                "uri": info.location.uri.to_string(),
-                            }),
-                        );
-                        if let Some(ref cn) = info.container_name {
-                            obj.insert(
-                                "containerName".to_string(),
-                                serde_json::Value::String(cn.clone()),
-                            );
-                        }
-                        serde_json::Value::Object(obj)
-                    })
-                    .collect();
-                serde_json::Value::Array(items)
-            }
-        },
-        lsp_mapper::LspResult::DocumentSymbolResult(r) => match r {
-            lsp_mapper::document_symbol_result::T::SymbolInformation(v) => to_json(v),
-            lsp_mapper::document_symbol_result::T::DocumentSymbol(v) => to_json(v),
-        },
-        lsp_mapper::LspResult::FindReferencesResult(r) => to_json(r),
-        lsp_mapper::LspResult::GoToImplementationResult(r) => to_json(r),
-        lsp_mapper::LspResult::DocumentHighlightResult(r) => to_json(r),
-        lsp_mapper::LspResult::TypeCoverageResult(r) => {
-            let uncovered_ranges: Vec<serde_json::Value> = r
-                .uncovered_ranges
-                .iter()
-                .map(|uncov| {
-                    let mut obj = serde_json::Map::new();
-                    obj.insert("range".to_string(), to_json(&uncov.range));
-                    if let Some(ref msg) = uncov.message {
-                        obj.insert(
-                            "message".to_string(),
-                            serde_json::Value::String(msg.clone()),
-                        );
-                    }
-                    serde_json::Value::Object(obj)
-                })
-                .collect();
-            serde_json::json!({
-                "coveredPercent": r.covered_percent,
-                "uncoveredRanges": uncovered_ranges,
-                "defaultMessage": r.default_message,
-            })
-        }
-        lsp_mapper::LspResult::DocumentFormattingResult(r) => to_json(r),
-        lsp_mapper::LspResult::DocumentRangeFormattingResult(r) => to_json(r),
-        lsp_mapper::LspResult::DocumentOnTypeFormattingResult(r) => to_json(r),
-        lsp_mapper::LspResult::RageResult(r) => {
-            let items: Vec<serde_json::Value> = r
-                .iter()
-                .map(|item| {
-                    serde_json::json!({
-                        "data": item.data,
-                        "title": match &item.title {
-                            None => serde_json::Value::Null,
-                            Some(s) => serde_json::Value::String(s.clone()),
-                        },
-                    })
-                })
-                .collect();
-            serde_json::Value::Array(items)
-        }
-        lsp_mapper::LspResult::PingResult(r) => {
-            serde_json::json!({
-                "startServerStatus": r.start_server_status,
-            })
-        }
-        lsp_mapper::LspResult::PrepareRenameResult(r) => to_json(r),
-        lsp_mapper::LspResult::RegisterCapabilityResult => {
-            panic!("Don't know how to print result RegisterCapabilityResult");
-        }
-        lsp_mapper::LspResult::RenameResult(r) => to_json(r),
-        lsp_mapper::LspResult::DocumentCodeLensResult(r) => to_json(
-            &r.clone()
-                .into_iter()
-                .map(|code_lens| key_code_lens(key, code_lens))
-                .collect::<Vec<_>>(),
-        ),
-        lsp_mapper::LspResult::ExecuteCommandResult(_) => serde_json::Value::Null,
-        lsp_mapper::LspResult::ApplyWorkspaceEditResult(r) => to_json(r),
-        lsp_mapper::LspResult::ShowMessageRequestResult(_) => {
-            panic!("Don't know how to print result ShowMessageRequestResult");
-        }
-        lsp_mapper::LspResult::ShowStatusResult(_) => {
-            panic!("Don't know how to print result ShowStatusResult");
-        }
-        lsp_mapper::LspResult::WillRenameFilesResult(r) => to_json(r),
-        lsp_mapper::LspResult::AutoCloseJsxResult(r) => to_json(r),
-        lsp_mapper::LspResult::PrepareDocumentPasteResult(r) => match r {
-            lsp_mapper::document_paste::DataTransfer::ImportMetadata { imports } => {
-                let import_items: Vec<serde_json::Value> = imports
-                    .iter()
-                    .map(|item| {
-                        let import_type = match item.import_type {
-                            lsp_mapper::document_paste::ImportType::ImportNamedValue => {
-                                "ImportNamedValue"
-                            }
-                            lsp_mapper::document_paste::ImportType::ImportValueAsNamespace => {
-                                "ImportValueAsNamespace"
-                            }
-                            lsp_mapper::document_paste::ImportType::ImportNamedType => {
-                                "ImportNamedType"
-                            }
-                            lsp_mapper::document_paste::ImportType::ImportNamedTypeOf => {
-                                "ImportNamedTypeOf"
-                            }
-                            lsp_mapper::document_paste::ImportType::ImportTypeOfAsNamespace => {
-                                "ImportTypeOfAsNamespace"
-                            }
-                        };
-                        let mut obj = serde_json::Map::new();
-                        obj.insert(
-                            "remoteName".to_string(),
-                            serde_json::Value::String(item.remote_name.clone()),
-                        );
-                        if let Some(ref local_name) = item.local_name {
-                            obj.insert(
-                                "localName".to_string(),
-                                serde_json::Value::String(local_name.clone()),
-                            );
-                        }
-                        obj.insert(
-                            "importType".to_string(),
-                            serde_json::Value::String(import_type.to_string()),
-                        );
-                        let import_source_str = if item.import_source_is_resolved {
-                            lsp_types::Url::from_file_path(&item.import_source)
-                                .map(|u| u.to_string())
-                                .unwrap_or_else(|_| item.import_source.clone())
-                        } else {
-                            item.import_source.clone()
-                        };
-                        obj.insert(
-                            "importSource".to_string(),
-                            serde_json::Value::String(import_source_str),
-                        );
-                        obj.insert(
-                            "importSourceIsResolved".to_string(),
-                            serde_json::Value::Bool(item.import_source_is_resolved),
-                        );
-                        serde_json::Value::Object(obj)
-                    })
-                    .collect();
-                serde_json::json!({ "imports": import_items })
-            }
-        },
-        lsp_mapper::LspResult::ProvideDocumentPasteResult(r) => to_json(r),
-        lsp_mapper::LspResult::LinkedEditingRangeResult(r) => to_json(r),
-        lsp_mapper::LspResult::RenameFileImportsResult(r) => to_json(r),
-        lsp_mapper::LspResult::LLMContextResult(r) => {
-            let files_processed: Vec<serde_json::Value> = r
-                .files_processed
-                .iter()
-                .map(|s| serde_json::Value::String(s.clone()))
-                .collect();
-            serde_json::json!({
-                "llmContext": r.llm_context,
-                "filesProcessed": files_processed,
-                "tokensUsed": r.tokens_used,
-                "truncated": r.truncated,
-            })
-        }
-        lsp_mapper::LspResult::ErrorResult(e, stack) => print_error(true, e, stack),
-    };
-    let result_key = match result {
-        lsp_mapper::LspResult::ErrorResult(_, _) => "error",
-        _ => "result",
-    };
-    serde_json::json!({
-        "jsonrpc": "2.0",
-        "id": print_id(id),
-        result_key: json,
-    })
-}
-
-pub fn lsp_fmt_print_lsp_notification(
-    notification: &lsp_mapper::LspNotification,
-) -> serde_json::Value {
-    let method_ = notification_name_to_string(notification);
-    let params = match notification {
-        lsp_mapper::LspNotification::CancelRequestNotification(r) => to_json(r),
-        lsp_mapper::LspNotification::PublishDiagnosticsNotification(r) => to_json(r),
-        lsp_mapper::LspNotification::TelemetryNotification(r) => to_json(r),
-        lsp_mapper::LspNotification::LogMessageNotification(r) => to_json(r),
-        lsp_mapper::LspNotification::ShowMessageNotification(r) => to_json(r),
-        lsp_mapper::LspNotification::ConnectionStatusNotification(r) => {
-            serde_json::json!({ "isConnected": r.is_connected })
-        }
-        _ => panic!("Don't know how to print notification {}", method_),
-    };
-    serde_json::json!({
-        "jsonrpc": "2.0",
-        "method": method_,
-        "params": params,
-    })
-}
-
-pub fn lsp_fmt_print_lsp(key: &str, msg: &lsp_prot::LspMessage) -> serde_json::Value {
-    match msg {
-        lsp_prot::LspMessage::RequestMessage(id, request) => {
-            let method_ = request_name_to_string(request);
-            let params = match request {
-                lsp_mapper::LspRequest::ShowMessageRequestRequest(r) => to_json(r),
-                lsp_mapper::LspRequest::ShowStatusRequest(r) => {
-                    serde_json::json!({
-                        "request": to_json(&r.request),
-                        "progress": r.progress,
-                        "total": r.total,
-                    })
-                }
-                lsp_mapper::LspRequest::ApplyWorkspaceEditRequest(r) => to_json(r),
-                lsp_mapper::LspRequest::ConfigurationRequest(r) => to_json(r),
-                lsp_mapper::LspRequest::RegisterCapabilityRequest(r) => {
-                    let registrations: Vec<serde_json::Value> = r
-                        .registrations
-                        .iter()
-                        .map(|reg| {
-                            let register_options = match &reg.register_options {
-                                lsp_mapper::register_capability::Options::DidChangeConfiguration => {
-                                    serde_json::Value::Null
-                                }
-                                lsp_mapper::register_capability::Options::DidChangeWatchedFiles(
-                                    opts,
-                                ) => to_json(opts),
-                            };
-                            serde_json::json!({
-                                "id": reg.id,
-                                "method": reg.method,
-                                "registerOptions": register_options,
-                            })
-                        })
-                        .collect();
-                    serde_json::json!({ "registrations": registrations })
-                }
-                _ => panic!("Don't know how to print request {}", method_),
-            };
-            serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": print_id(id),
-                "method": method_,
-                "params": params,
-            })
-        }
-        lsp_prot::LspMessage::ResponseMessage(id, result) => {
-            lsp_fmt_print_lsp_response(key, id, result)
-        }
-        lsp_prot::LspMessage::NotificationMessage(notification) => {
-            lsp_fmt_print_lsp_notification(notification)
-        }
-    }
-}
-
-pub fn lsp_fmt_parse_id(id: &serde_json::Value) -> Result<LspId, FlowLspError> {
-    match id {
-        serde_json::Value::Number(n) => {
-            let s = n.to_string();
-            s.parse::<i32>()
-                .map(NumberOrString::Number)
-                .map_err(|_| parse_error_exception(format!("float ids not allowed: {}", s)))
-        }
-        serde_json::Value::String(s) => Ok(NumberOrString::String(s.clone())),
-        _ => Err(parse_error_exception(format!("not an id: {}", id))),
-    }
-}
-
-pub fn lsp_fmt_denorm_message_to_string(msg: &lsp_prot::LspMessage) -> String {
-    match msg {
-        lsp_prot::LspMessage::RequestMessage(id, req) => {
-            format!("request {:?} {:?}", id, req)
-        }
-        lsp_prot::LspMessage::NotificationMessage(notif) => {
-            format!("notification {:?}", notif)
-        }
-        lsp_prot::LspMessage::ResponseMessage(id, result) => {
-            format!("result {:?} {:?}", id, result)
-        }
-    }
-}
-
-pub fn lsp_fmt_error_of_exn(
-    e: &dyn std::error::Error,
-) -> flow_server_env::lsp_mapper::lsp_error::T {
-    flow_server_env::lsp_mapper::lsp_error::T {
-        code: flow_server_env::lsp_mapper::lsp_error::Code::InternalError,
-        message: e.to_string(),
-        data: None,
-    }
-}
-
-pub fn lsp_helpers_supports_status(params: &lsp_types::InitializeParams) -> bool {
-    params
-        .capabilities
-        .experimental
-        .as_ref()
-        .and_then(|experimental| experimental.get("window/status"))
-        .and_then(|status| status.as_bool())
-        .unwrap_or(false)
-}
-
-pub fn lsp_helpers_supports_connection_status(params: &lsp_types::InitializeParams) -> bool {
-    params
-        .capabilities
-        .experimental
-        .as_ref()
-        .and_then(|experimental| experimental.get("telemetry/connectionStatus"))
-        .and_then(|status| status.as_bool())
-        .unwrap_or(false)
-}
-
-pub fn lsp_helpers_supports_code_action_kinds(params: &lsp_types::InitializeParams) -> Vec<String> {
-    params
-        .capabilities
-        .text_document
-        .as_ref()
-        .and_then(|td| td.code_action.as_ref())
-        .and_then(|ca| ca.code_action_literal_support.as_ref())
-        .map(|lit| {
-            lit.code_action_kind
-                .value_set
-                .iter()
-                .map(|k| k.as_str().to_string())
-                .collect()
-        })
-        .unwrap_or_default()
-}
-
-pub fn lsp_helpers_supports_hierarchical_document_symbol(
-    params: &lsp_types::InitializeParams,
-) -> bool {
-    params
-        .capabilities
-        .text_document
-        .as_ref()
-        .and_then(|td| td.document_symbol.as_ref())
-        .and_then(|ds| ds.hierarchical_document_symbol_support)
-        .unwrap_or(false)
-}
-
-pub fn lsp_helpers_supports_experimental_snippet_text_edit(
-    params: &lsp_types::InitializeParams,
-) -> bool {
-    params
-        .capabilities
-        .experimental
-        .as_ref()
-        .and_then(|exp| exp.get("snippetTextEdit"))
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
-fn invalid_file_url_error(uri: &DocumentUri) -> FlowLspError {
-    FlowLspError::LspException(flow_server_env::lsp_mapper::lsp_error::T {
-        code: flow_server_env::lsp_mapper::lsp_error::Code::InvalidParams,
-        message: format!("Not a valid file url '{}'", uri),
-        data: None,
-    })
-}
-
-pub fn lsp_helpers_lsp_uri_to_path(uri: &DocumentUri) -> Result<String, FlowLspError> {
-    if uri.scheme() == "file" {
-        uri.to_file_path()
-            .map(|p| p.to_string_lossy().to_string())
-            .map_err(|_| invalid_file_url_error(uri))
-    } else {
-        Err(invalid_file_url_error(uri))
-    }
-}
-
-pub fn lsp_helpers_apply_changes_unsafe(
-    text: &str,
-    changes: &[lsp_types::TextDocumentContentChangeEvent],
-) -> String {
-    use flow_server_utils::file_content;
-    let edits: Vec<file_content::TextEdit> = changes
-        .iter()
-        .map(|change| {
-            let range = change.range.map(|r| file_content::Range {
-                st: file_content::Position {
-                    line: r.start.line as usize + 1,
-                    column: r.start.character as usize + 1,
-                },
-                ed: file_content::Position {
-                    line: r.end.line as usize + 1,
-                    column: r.end.character as usize + 1,
-                },
-            });
-            file_content::TextEdit {
-                range,
-                text: change.text.clone(),
-            }
-        })
-        .collect();
-    file_content::edit_file_unsafe(text, &edits)
-}
-
-#[allow(deprecated)] // root_path is deprecated in LSP but OCaml uses it as fallback
-pub fn lsp_helpers_get_root(
-    params: &lsp_types::InitializeParams,
-) -> Result<FilePath, FlowLspError> {
-    if let Some(ref uri) = params.root_uri {
-        Ok(FilePath::from(lsp_helpers_lsp_uri_to_path(uri)?))
-    } else if let Some(ref path) = params.root_path {
-        Ok(FilePath::from(path))
-    } else {
-        Err(FlowLspError::LspException(
-            flow_server_env::lsp_mapper::lsp_error::T {
-                code: flow_server_env::lsp_mapper::lsp_error::Code::InternalError,
-                message: "Initialize params missing root".to_string(),
-                data: None,
-            },
-        ))
-    }
-}
-
-pub fn lsp_helpers_supports_configuration(params: &lsp_types::InitializeParams) -> bool {
-    params
-        .capabilities
-        .workspace
-        .as_ref()
-        .and_then(|ws| ws.configuration)
-        .unwrap_or(false)
 }
 
 pub fn server_files_js_default_temp_dir() -> FilePath {
@@ -2107,46 +712,6 @@ pub fn file_options_of_flowconfig(root: &FilePath, flowconfig: &FlowConfig) -> F
     }
 }
 
-fn jsonrpc_log_notification(method: &str, level: i32, message: &str) -> serde_json::Value {
-    serde_json::json!({
-        "jsonrpc": "2.0",
-        "method": method,
-        "params": { "type": level, "message": message }
-    })
-}
-
-pub fn lsp_writers_notify_connection_status(
-    params: &lsp_types::InitializeParams,
-    to_stdout: fn(&serde_json::Value),
-    was_connected: bool,
-    is_connected: bool,
-) -> bool {
-    if lsp_helpers_supports_connection_status(params) && was_connected != is_connected {
-        let notification = serde_json::json!({
-            "jsonrpc": "2.0",
-            "method": "telemetry/connectionStatus",
-            "params": { "isConnected": is_connected }
-        });
-        to_stdout(&notification);
-    }
-    is_connected
-}
-
-pub fn lsp_writers_log_info(to_stdout: fn(&serde_json::Value), msg: &str) {
-    let notification = jsonrpc_log_notification("window/logMessage", 3, msg);
-    to_stdout(&notification);
-}
-
-pub fn lsp_writers_telemetry_log(to_stdout: fn(&serde_json::Value), msg: &str) {
-    let notification = jsonrpc_log_notification("telemetry/event", 4, msg);
-    to_stdout(&notification);
-}
-
-pub fn lsp_writers_telemetry_error(to_stdout: fn(&serde_json::Value), msg: &str) {
-    let notification = jsonrpc_log_notification("telemetry/event", 1, msg);
-    to_stdout(&notification);
-}
-
 pub mod flow_event_logger {
     fn emit(event_name: &str, fields: serde_json::Value) {
         eprintln!(
@@ -2274,28 +839,26 @@ fn server_fatal_connection_exception(message: impl Into<String>) -> FlowLspError
 }
 
 fn make_lsp_exception(
-    code: flow_server_env::lsp_mapper::lsp_error::Code,
+    code: flow_server_env::lsp::error::Code,
     message: impl Into<String>,
 ) -> FlowLspError {
-    FlowLspError::LspException(flow_server_env::lsp_mapper::lsp_error::T {
+    FlowLspError::LspException(flow_server_env::lsp::error::T {
         code,
         message: message.into(),
         data: None,
     })
 }
 
-fn parse_error_exception(message: impl Into<String>) -> FlowLspError {
-    make_lsp_exception(
-        flow_server_env::lsp_mapper::lsp_error::Code::ParseError,
-        message,
-    )
+pub(crate) fn parse_error_exception(message: impl Into<String>) -> flow_server_env::lsp::error::T {
+    flow_server_env::lsp::error::T {
+        code: flow_server_env::lsp::error::Code::ParseError,
+        message: message.into(),
+        data: None,
+    }
 }
 
 fn internal_error_exception(message: impl Into<String>) -> FlowLspError {
-    make_lsp_exception(
-        flow_server_env::lsp_mapper::lsp_error::Code::InternalError,
-        message,
-    )
+    make_lsp_exception(flow_server_env::lsp::error::Code::InternalError, message)
 }
 
 pub fn sys_utils_select_non_intr(
@@ -2364,18 +927,9 @@ pub fn command_utils_check_version(required_version: &Option<String>) -> Result<
     }
 }
 
-fn jsonrpc_get_next_request_id() -> i32 {
-    static NEXT_ID: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
-    NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst)
-}
+use flow_lsp::lsp_fmt;
 
-pub(crate) fn lsp_fmt_id_to_string(id: &LspId) -> String {
-    match id {
-        NumberOrString::Number(n) => n.to_string(),
-        NumberOrString::String(s) => s.clone(),
-    }
-}
-
+use crate::jsonrpc::get_next_request_id;
 use crate::lsp_interaction;
 
 fn sys_utils_realpath(path: &str) -> Option<String> {
@@ -2422,7 +976,7 @@ fn json_truncate(
     }
 }
 
-fn now() -> f64 {
+pub(crate) fn now() -> f64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
@@ -2669,8 +1223,8 @@ fn selectively_omit_errors(
     request_name: &str,
     response: lsp_prot::LspMessage,
 ) -> lsp_prot::LspMessage {
-    use flow_server_env::lsp_mapper::LspMessage;
-    use flow_server_env::lsp_mapper::LspResult;
+    use flow_server_env::lsp::LspMessage;
+    use flow_server_env::lsp::LspResult;
     match &response {
         LspMessage::ResponseMessage(id, LspResult::ErrorResult(_, _)) => {
             let new_response = match request_name {
@@ -2704,10 +1258,12 @@ fn get_next_event_from_server(
     match incoming.try_recv() {
         Ok(Ok(message)) => Ok(Some(Event::ServerMessage(message))),
         Ok(Err(err)) => {
-            let msg = if err.kind() == std::io::ErrorKind::UnexpectedEof {
-                "End_of_file".to_string()
-            } else {
-                err.to_string()
+            let msg = match err.kind() {
+                std::io::ErrorKind::UnexpectedEof
+                | std::io::ErrorKind::ConnectionReset
+                | std::io::ErrorKind::ConnectionAborted
+                | std::io::ErrorKind::BrokenPipe => "End_of_file".to_string(),
+                _ => err.to_string(),
             };
             Err(server_fatal_connection_exception(msg))
         }
@@ -2782,7 +1338,7 @@ fn convert_to_client_uris(state: &State, event: Event) -> Event {
             let i_root = &ienv.i_root;
             match event {
                 Event::ServerMessage(msg) => {
-                    let client_path = lsp_helpers_get_root(i_initialize_params)
+                    let client_path = lsp_helpers::get_root(i_initialize_params)
                         .expect("initialized LSP state must have a root");
                     let client_root = format!(
                         "{}/",
@@ -2851,17 +1407,14 @@ fn convert_to_server_uris(request: lsp_prot::Request) -> lsp_prot::Request {
 fn send_request_to_client(
     ienv: &mut InitializedEnv,
     id: LspId,
-    request: lsp_mapper::LspRequest,
-    on_response: Box<
-        dyn FnOnce(lsp_mapper::LspResult, &mut ServerState) -> Result<(), FlowLspError>,
-    >,
-    on_error: Box<
-        dyn FnOnce(lsp_mapper::lsp_error::T, String, &mut ServerState) -> Result<(), FlowLspError>,
-    >,
+    request: lsp::LspRequest,
+    on_response: Box<dyn FnOnce(lsp::LspResult, &mut ServerState) -> Result<(), FlowLspError>>,
+    on_error: Box<dyn FnOnce(lsp::error::T, String, &mut ServerState) -> Result<(), FlowLspError>>,
 ) {
     let json = {
         let key = command_key_of_ienv(ienv);
-        lsp_fmt_print_lsp(
+        lsp_fmt::print_lsp(
+            true,
             &key,
             &lsp_prot::LspMessage::RequestMessage(id.clone(), request.clone()),
         )
@@ -2877,10 +1430,7 @@ fn send_request_to_client(
     ienv.i_outstanding_local_handlers.insert(id, handlers);
 }
 
-fn show_status_params_eq(
-    a: &lsp_mapper::show_status::Params,
-    b: &lsp_mapper::show_status::Params,
-) -> bool {
+fn show_status_params_eq(a: &lsp::show_status::Params, b: &lsp::show_status::Params) -> bool {
     a.request.typ == b.request.typ
         && a.request.message == b.request.message
         && a.progress == b.progress
@@ -2888,11 +1438,8 @@ fn show_status_params_eq(
         && a.short_message == b.short_message
 }
 
-fn should_send_status(
-    ienv: &InitializedEnv,
-    status: &lsp_mapper::show_status::Params,
-) -> (bool, bool) {
-    let use_status = lsp_helpers_supports_status(&ienv.i_initialize_params);
+fn should_send_status(ienv: &InitializedEnv, status: &lsp::show_status::Params) -> (bool, bool) {
+    let use_status = lsp_helpers::supports_status(&ienv.i_initialize_params);
     let (will_dismiss_old, will_show_new) = match (use_status, &ienv.i_status, status) {
         (_, ShowStatusT::Shown(_, existing_status), status)
             if show_status_params_eq(existing_status, status) =>
@@ -2927,9 +1474,9 @@ fn show_status(
     total: Option<i32>,
     titles: &[&str],
     handler: Option<Box<dyn FnOnce(&str, &mut ServerState)>>,
-    background_color: Option<lsp_mapper::show_status::ShowStatusBackgroundColor>,
+    background_color: Option<lsp::show_status::ShowStatusBackgroundColor>,
 ) -> InitializedEnv {
-    let use_status = lsp_helpers_supports_status(&ienv.i_initialize_params);
+    let use_status = lsp_helpers::supports_status(&ienv.i_initialize_params);
     let actions: Vec<lsp_types::MessageActionItem> = titles
         .iter()
         .map(|title| lsp_types::MessageActionItem {
@@ -2937,7 +1484,7 @@ fn show_status(
             properties: Default::default(),
         })
         .collect();
-    let params = lsp_mapper::show_status::Params {
+    let params = lsp::show_status::Params {
         request: lsp_types::ShowMessageRequestParams {
             typ: type_,
             message: message.to_string(),
@@ -2955,12 +1502,11 @@ fn show_status(
             let existing_params = existing_params.clone();
             let id = id.clone();
             let notification =
-                lsp_mapper::LspNotification::CancelRequestNotification(lsp_types::CancelParams {
-                    id,
-                });
+                lsp::LspNotification::CancelRequestNotification(lsp_types::CancelParams { id });
             let json = {
                 let key = command_key_of_ienv(&ienv);
-                lsp_fmt_print_lsp(
+                lsp_fmt::print_lsp(
+                    true,
                     &key,
                     &lsp_prot::LspMessage::NotificationMessage(notification),
                 )
@@ -2973,11 +1519,11 @@ fn show_status(
     if !will_show_new {
         return ienv;
     }
-    let id = NumberOrString::Number(jsonrpc_get_next_request_id());
+    let id = NumberOrString::Number(get_next_request_id());
     let request = if use_status {
-        lsp_mapper::LspRequest::ShowStatusRequest(params.clone())
+        lsp::LspRequest::ShowStatusRequest(params.clone())
     } else {
-        lsp_mapper::LspRequest::ShowMessageRequestRequest(params.request.clone())
+        lsp::LspRequest::ShowMessageRequestRequest(params.request.clone())
     };
     let mark_ienv_shown = |id: LspId, future_ienv: &mut InitializedEnv| {
         if let ShowStatusT::Shown(Some(ref future_id), ref future_params) = future_ienv.i_status {
@@ -2988,7 +1534,7 @@ fn show_status(
         }
     };
     let on_error: Box<
-        dyn FnOnce(lsp_mapper::lsp_error::T, String, &mut ServerState) -> Result<(), FlowLspError>,
+        dyn FnOnce(lsp::error::T, String, &mut ServerState) -> Result<(), FlowLspError>,
     > = {
         let id = id.clone();
         Box::new(move |_e, _msg, state| {
@@ -2996,17 +1542,13 @@ fn show_status(
             Ok(())
         })
     };
-    let on_response: Box<
-        dyn FnOnce(lsp_mapper::LspResult, &mut ServerState) -> Result<(), FlowLspError>,
-    > = {
+    let on_response: Box<dyn FnOnce(lsp::LspResult, &mut ServerState) -> Result<(), FlowLspError>> = {
         let id = id.clone();
         Box::new(move |result, state| {
             update_ienv(state, |ienv| mark_ienv_shown(id.clone(), ienv));
             let title = match &result {
-                lsp_mapper::LspResult::ShowStatusResult(r) => {
-                    r.as_ref().map(|item| item.title.clone())
-                }
-                lsp_mapper::LspResult::ShowMessageRequestResult(r) => {
+                lsp::LspResult::ShowStatusResult(r) => r.as_ref().map(|item| item.title.clone()),
+                lsp::LspResult::ShowMessageRequestResult(r) => {
                     r.as_ref().map(|item| item.title.clone())
                 }
                 _ => None,
@@ -3034,8 +1576,16 @@ fn send_to_server(
     // the canonical files, even if there are multiple clients operating on various symlinks.
     let request = convert_to_server_uris(request);
     let request_with_metadata: lsp_prot::RequestWithMetadata = (request, metadata.clone());
-    send_request_with_metadata(&env.c_conn, &request_with_metadata)
-        .map_err(|err| server_fatal_connection_exception(err.to_string()))
+    send_request_with_metadata(&env.c_conn, &request_with_metadata).map_err(|err| {
+        let msg = match err.kind() {
+            std::io::ErrorKind::UnexpectedEof
+            | std::io::ErrorKind::ConnectionReset
+            | std::io::ErrorKind::ConnectionAborted
+            | std::io::ErrorKind::BrokenPipe => "End_of_file".to_string(),
+            _ => err.to_string(),
+        };
+        server_fatal_connection_exception(msg)
+    })
 }
 
 fn send_lsp_to_server(
@@ -3051,8 +1601,8 @@ fn send_configuration_to_server(
     settings: serde_json::Value,
     cenv: &ConnectedEnv,
 ) -> Result<(), FlowLspError> {
-    use flow_server_env::lsp_mapper::LspMessage;
-    use flow_server_env::lsp_mapper::LspNotification;
+    use flow_server_env::lsp::LspMessage;
+    use flow_server_env::lsp::LspNotification;
     let metadata = Metadata {
         start_wall_time: now(),
         start_json_truncated: serde_json::json!({"method": method_name}),
@@ -3066,62 +1616,58 @@ fn send_configuration_to_server(
 }
 
 fn request_configuration(ienv: &mut InitializedEnv) {
-    let id = NumberOrString::Number(jsonrpc_get_next_request_id());
-    let request = lsp_mapper::LspRequest::ConfigurationRequest(lsp_types::ConfigurationParams {
+    let id = NumberOrString::Number(get_next_request_id());
+    let request = lsp::LspRequest::ConfigurationRequest(lsp_types::ConfigurationParams {
         items: vec![lsp_types::ConfigurationItem {
             scope_uri: None,
             section: Some("flow".to_string()),
         }],
     });
-    let on_response: Box<
-        dyn FnOnce(lsp_mapper::LspResult, &mut ServerState) -> Result<(), FlowLspError>,
-    > = Box::new(|result, state| {
-        if let lsp_mapper::LspResult::ConfigurationResult(configs) = result {
-            if configs.len() == 1 {
-                let i_config = configs.into_iter().next().unwrap();
-                let config_clone = i_config.clone();
-                update_ienv(state, |ienv| {
-                    ienv.i_config = config_clone;
-                });
-                if let ServerState::Connected(cenv) = state {
-                    send_configuration_to_server(
-                        "synthetic/didChangeConfiguration",
-                        i_config,
-                        cenv,
-                    )?;
+    let on_response: Box<dyn FnOnce(lsp::LspResult, &mut ServerState) -> Result<(), FlowLspError>> =
+        Box::new(|result, state| {
+            if let lsp::LspResult::ConfigurationResult(configs) = result {
+                if configs.len() == 1 {
+                    let i_config = configs.into_iter().next().unwrap();
+                    let config_clone = i_config.clone();
+                    update_ienv(state, |ienv| {
+                        ienv.i_config = config_clone;
+                    });
+                    if let ServerState::Connected(cenv) = state {
+                        send_configuration_to_server(
+                            "synthetic/didChangeConfiguration",
+                            i_config,
+                            cenv,
+                        )?;
+                    }
                 }
             }
-        }
-        Ok(())
-    });
+            Ok(())
+        });
     let on_error: Box<
-        dyn FnOnce(lsp_mapper::lsp_error::T, String, &mut ServerState) -> Result<(), FlowLspError>,
+        dyn FnOnce(lsp::error::T, String, &mut ServerState) -> Result<(), FlowLspError>,
     > = Box::new(|_e, _msg, _state| Ok(()));
     send_request_to_client(ienv, id, request, on_response, on_error);
 }
 
 fn subscribe_to_config_changes(ienv: &mut InitializedEnv) {
-    let id = NumberOrString::Number(jsonrpc_get_next_request_id());
-    let request = lsp_mapper::LspRequest::RegisterCapabilityRequest(
-        lsp_mapper::register_capability::Params {
-            registrations: vec![lsp_mapper::register_capability::Registration {
-                id: "didChangeConfiguration".to_string(),
-                method: "workspace/didChangeConfiguration".to_string(),
-                register_options: lsp_mapper::register_capability::Options::DidChangeConfiguration,
-            }],
-        },
-    );
-    let on_response: Box<
-        dyn FnOnce(lsp_mapper::LspResult, &mut ServerState) -> Result<(), FlowLspError>,
-    > = Box::new(|_result, _state| Ok(()));
+    let id = NumberOrString::Number(get_next_request_id());
+    let request = lsp::LspRequest::RegisterCapabilityRequest(lsp::register_capability::Params {
+        registrations: vec![lsp::register_capability::Registration {
+            id: "didChangeConfiguration".to_string(),
+            method: "workspace/didChangeConfiguration".to_string(),
+            register_options: lsp::register_capability::Options::DidChangeConfiguration,
+        }],
+    });
+    let on_response: Box<dyn FnOnce(lsp::LspResult, &mut ServerState) -> Result<(), FlowLspError>> =
+        Box::new(|_result, _state| Ok(()));
     let on_error: Box<
-        dyn FnOnce(lsp_mapper::lsp_error::T, String, &mut ServerState) -> Result<(), FlowLspError>,
+        dyn FnOnce(lsp::error::T, String, &mut ServerState) -> Result<(), FlowLspError>,
     > = Box::new(|_e, _msg, _state| Ok(()));
     send_request_to_client(ienv, id, request, on_response, on_error);
 }
 
 fn do_initialize(params: &lsp_types::InitializeParams) -> lsp_types::InitializeResult {
-    let supported_kinds = lsp_helpers_supports_code_action_kinds(params);
+    let supported_kinds = lsp_helpers::supports_code_action_kinds(params);
     let supports_quickfixes = supported_kinds.iter().any(|k| k == "quickfix");
     let supports_refactor_extract = supported_kinds.iter().any(|k| k == "refactor.extract");
     let supports_source_actions = supported_kinds.iter().any(|k| k == "source");
@@ -3163,7 +1709,7 @@ fn do_initialize(params: &lsp_types::InitializeParams) -> lsp_types::InitializeR
             )),
         },
     ));
-    let server_snippet_text_edit = lsp_helpers_supports_experimental_snippet_text_edit(params);
+    let server_snippet_text_edit = lsp_helpers::supports_experimental_snippet_text_edit(params);
     let experimental = serde_json::json!({
         "strictCompletionOrder": true,
         "autoCloseJsx": true,
@@ -3328,7 +1874,7 @@ fn show_connected_status(mut cenv: ConnectedEnv) -> ConnectedEnv {
 
 fn show_connected(mut env: ConnectedEnv) -> ServerState {
     // report that we're connected to telemetry/connectionStatus
-    let i_is_connected = lsp_writers_notify_connection_status(
+    let i_is_connected = lsp_writers::notify_connection_status(
         &env.c_ienv.i_initialize_params,
         to_stdout,
         env.c_ienv.i_is_connected,
@@ -3342,7 +1888,7 @@ fn show_connected(mut env: ConnectedEnv) -> ServerState {
 
 fn show_connecting(reason: &ConnectError, mut env: DisconnectedEnv) -> ServerState {
     if *reason == ConnectError::ServerMissing {
-        lsp_writers_log_info(to_stdout, "Starting Flow server");
+        lsp_writers::log_info(to_stdout, "Starting Flow server");
     }
     let flowconfig = env.d_ienv.i_flowconfig.clone();
     let message_with_prefix = |msg: &str| message_with_flow_and_root_name_prefix(&flowconfig, msg);
@@ -3415,7 +1961,7 @@ fn show_disconnected(
     mut env: DisconnectedEnv,
 ) -> ServerState {
     // report that we're disconnected to telemetry/connectionStatus
-    let i_is_connected = lsp_writers_notify_connection_status(
+    let i_is_connected = lsp_writers::notify_connection_status(
         &env.d_ienv.i_initialize_params,
         to_stdout,
         env.d_ienv.i_is_connected,
@@ -3453,7 +1999,7 @@ fn show_disconnected(
         None,
         &["Restart"],
         Some(handler),
-        Some(lsp_mapper::show_status::ShowStatusBackgroundColor::Error),
+        Some(lsp::show_status::ShowStatusBackgroundColor::Error),
     );
     env.d_ienv = d_ienv;
     ServerState::Disconnected(env)
@@ -3471,8 +2017,8 @@ fn track_to_server(
     state: &mut ServerState,
     c: &lsp_prot::LspMessage,
 ) -> Result<TrackEffect, FlowLspError> {
-    use flow_server_env::lsp_mapper::LspMessage;
-    use flow_server_env::lsp_mapper::LspNotification;
+    use flow_server_env::lsp::LspMessage;
+    use flow_server_env::lsp::LspNotification;
     let changed_live_uri = match c {
         LspMessage::NotificationMessage(LspNotification::DidOpenNotification(params)) => {
             let o_open_doc = params.text_document.clone();
@@ -3507,7 +2053,7 @@ fn track_to_server(
                 Some(info) => info.o_open_doc.clone(),
                 None => return Err(FlowLspError::ChangedFileNotOpen(uri)),
             };
-            let text = lsp_helpers_apply_changes_unsafe(&o_open_doc.text, &params.content_changes);
+            let text = lsp_helpers::apply_changes_unsafe(&o_open_doc.text, &params.content_changes);
             let o_open_doc = lsp_types::TextDocumentItem {
                 uri: uri.clone(),
                 language_id: o_open_doc.language_id.clone(),
@@ -3562,7 +2108,7 @@ fn track_to_server(
 }
 
 fn track_from_server(state: &mut ServerState, c: &lsp_prot::LspMessage) {
-    use flow_server_env::lsp_mapper::LspMessage;
+    use flow_server_env::lsp::LspMessage;
     match (state, c) {
         (ServerState::Connected(env), LspMessage::ResponseMessage(id, _)) => {
             env.c_outstanding_requests_to_server.remove(id);
@@ -3584,22 +2130,9 @@ fn lsp_document_item_to_flow(
     open_doc: &lsp_types::TextDocumentItem,
 ) -> Result<FileInput, FlowLspError> {
     let uri = &open_doc.uri;
-    let fn_ = lsp_helpers_lsp_uri_to_path(uri)?;
+    let fn_ = lsp_helpers::lsp_uri_to_path(uri).map_err(FlowLspError::LspException)?;
     let fn_ = sys_utils_realpath(&fn_).unwrap_or(fn_);
     Ok(FileInput::FileContent(Some(fn_), open_doc.text.clone()))
-}
-
-fn loc_to_lsp_range(loc: &flow_parser::loc::Loc) -> lsp_types::Range {
-    lsp_types::Range {
-        start: lsp_types::Position {
-            line: loc.start.line.saturating_sub(1).max(0) as u32,
-            character: loc.start.column.max(0) as u32,
-        },
-        end: lsp_types::Position {
-            line: loc.end.line.saturating_sub(1).max(0) as u32,
-            character: loc.end.column.max(0) as u32,
-        },
-    }
 }
 
 fn diagnostic_of_parse_error(
@@ -3709,7 +2242,7 @@ fn parse_and_cache(
             Ok(o_ast)
         }
         None => {
-            let fn_ = lsp_helpers_lsp_uri_to_path(uri)?;
+            let fn_ = lsp_helpers::lsp_uri_to_path(uri).map_err(FlowLspError::LspException)?;
             let fn_ = sys_utils_realpath(&fn_).unwrap_or(fn_);
             let file = FileInput::FileName(fn_);
             let (open_ast, _) = parse(&file);
@@ -3723,13 +2256,13 @@ fn do_document_symbol(
     _id: &LspId,
     params: &lsp_types::DocumentSymbolParams,
 ) -> Result<(), FlowLspError> {
-    use flow_server_env::lsp_mapper::LspMessage;
-    use flow_server_env::lsp_mapper::LspResult;
-    use flow_server_env::lsp_mapper::document_symbol_result;
+    use flow_server_env::lsp::LspMessage;
+    use flow_server_env::lsp::LspResult;
+    use flow_server_env::lsp::document_symbol_result;
     let uri = &params.text_document.uri;
     let (ast, _live_parse_errors) = parse_and_cache(state, uri)?;
     let supports_hierarchical =
-        lsp_helpers_supports_hierarchical_document_symbol(get_initialize_params(state));
+        lsp_helpers::supports_hierarchical_document_symbol(get_initialize_params(state));
     let result = if supports_hierarchical {
         document_symbol_result::T::DocumentSymbol(
             crate::document_symbol_provider::provide_document_symbols(&ast),
@@ -3742,7 +2275,7 @@ fn do_document_symbol(
     let response =
         LspMessage::ResponseMessage(_id.clone(), LspResult::DocumentSymbolResult(result));
     let key = command_key_of_server_state(state);
-    let json = lsp_fmt_print_lsp(&key, &response);
+    let json = lsp_fmt::print_lsp(true, &key, &response);
     to_stdout(&json);
     Ok(())
 }
@@ -3752,8 +2285,8 @@ fn do_selection_range(
     _id: &LspId,
     params: &lsp_types::SelectionRangeParams,
 ) -> Result<(), FlowLspError> {
-    use flow_server_env::lsp_mapper::LspMessage;
-    use flow_server_env::lsp_mapper::LspResult;
+    use flow_server_env::lsp::LspMessage;
+    use flow_server_env::lsp::LspResult;
     let uri = &params.text_document.uri;
     let positions = &params.positions;
     let (ast, _live_parse_errors) = parse_and_cache(state, uri)?;
@@ -3761,8 +2294,8 @@ fn do_selection_range(
     let lsp_result = match response {
         Ok(ranges) => LspResult::SelectionRangeResult(ranges),
         Err(msg) => LspResult::ErrorResult(
-            lsp_mapper::lsp_error::T {
-                code: lsp_mapper::lsp_error::Code::InternalError,
+            lsp::error::T {
+                code: lsp::error::Code::InternalError,
                 message: msg,
                 data: None,
             },
@@ -3771,7 +2304,7 @@ fn do_selection_range(
     };
     let outgoing = LspMessage::ResponseMessage(_id.clone(), lsp_result);
     let key = command_key_of_server_state(state);
-    let json = lsp_fmt_print_lsp(&key, &outgoing);
+    let json = lsp_fmt::print_lsp(false, &key, &outgoing);
     to_stdout(&json);
     Ok(())
 }
@@ -3831,16 +2364,21 @@ fn do_rage(flowconfig_name: &str, state: &ServerState) -> Vec<RageItem> {
 
 fn parse_json(state: &State, msg: &JsonrpcMessage) -> Result<lsp_prot::LspMessage, FlowLspError> {
     let json = &msg.json;
-    let outstanding = |id: &LspId| -> Result<lsp_mapper::LspRequest, FlowLspError> {
+    let internal_error = |message: String| flow_server_env::lsp::error::T {
+        code: flow_server_env::lsp::error::Code::InternalError,
+        message,
+        data: None,
+    };
+    let outstanding = |id: &LspId| -> Result<lsp::LspRequest, flow_server_env::lsp::error::T> {
         let ienv = match state {
             State::PreInit(_) => {
-                return Err(internal_error_exception(format!(
+                return Err(internal_error(format!(
                     "Unexpected LSP response before init: {}",
                     json
                 )));
             }
             State::PostShutdown => {
-                return Err(internal_error_exception(format!(
+                return Err(internal_error(format!(
                     "Unexpected LSP response after shutdown: {}",
                     json
                 )));
@@ -3854,12 +2392,12 @@ fn parse_json(state: &State, msg: &JsonrpcMessage) -> Result<lsp_prot::LspMessag
         if let Some(msg) = ienv.i_outstanding_requests_from_server.get(&wrapped) {
             return Ok(msg.clone());
         }
-        Err(internal_error_exception(format!(
+        Err(internal_error(format!(
             "Wasn't expecting a response to request {}",
-            lsp_fmt_id_to_string(id)
+            lsp_fmt::id_to_string(id)
         )))
     };
-    lsp_fmt_parse_lsp(json, &outstanding)
+    Ok(lsp_fmt::parse_lsp(json, &outstanding)?)
 }
 
 fn with_timer<T>(f: impl FnOnce() -> T) -> (f64, T) {
@@ -3931,13 +2469,13 @@ fn log_interaction(ux: InteractionUx, state: &ServerState, id: InteractionId) {
 fn dismiss_tracks(state: &mut ServerState) {
     let key = command_key_of_server_state(state);
     let decline_request_to_server = |id: &LspId| {
-        let e = flow_server_env::lsp_mapper::lsp_error::T {
-            code: flow_server_env::lsp_mapper::lsp_error::Code::RequestCancelled,
+        let e = flow_server_env::lsp::error::T {
+            code: flow_server_env::lsp::error::Code::RequestCancelled,
             message: "Connection to server has been lost".to_string(),
             data: None,
         };
-        let result = flow_server_env::lsp_mapper::LspResult::ErrorResult(e, String::new());
-        let json = lsp_fmt_print_lsp_response(&key, id, &result);
+        let result = flow_server_env::lsp::LspResult::ErrorResult(e, String::new());
+        let json = lsp_fmt::print_lsp_response(true, &key, id, &result);
         to_stdout(&json);
     };
     lsp_interaction::dismiss_tracks(collect_interaction_state(state));
@@ -3948,10 +2486,10 @@ fn dismiss_tracks(state: &mut ServerState) {
                 if server_id == wrapped.server_id {
                     let id = encode_wrapped(wrapped);
                     let notification =
-                        flow_server_env::lsp_mapper::LspNotification::CancelRequestNotification(
+                        flow_server_env::lsp::LspNotification::CancelRequestNotification(
                             lsp_types::CancelParams { id },
                         );
-                    let json = lsp_fmt_print_lsp_notification(&notification);
+                    let json = lsp_fmt::print_lsp_notification(&notification);
                     to_stdout(&json);
                 }
             }
@@ -3973,7 +2511,7 @@ fn do_live_diagnostics(
     metadata: &Metadata,
     uri: &DocumentUri,
 ) -> Result<(), FlowLspError> {
-    let file_path = lsp_helpers_lsp_uri_to_path(uri)?;
+    let file_path = lsp_helpers::lsp_uri_to_path(uri).map_err(FlowLspError::LspException)?;
     let (is_ignored, _) =
         flow_common::files::is_ignored(&get_ienv(state).i_file_options, &file_path);
     if is_ignored {
@@ -4015,18 +2553,18 @@ fn do_live_diagnostics(
 fn get_local_request_handler(
     ienv: &mut InitializedEnv,
     id: &LspId,
-    result: lsp_mapper::LspResult,
+    result: lsp::LspResult,
 ) -> Option<Box<dyn FnOnce(&mut ServerState) -> Result<(), FlowLspError>>> {
     if ienv.i_outstanding_local_handlers.contains_key(id) {
         let handler = ienv.i_outstanding_local_handlers.remove(id).unwrap();
         ienv.i_outstanding_local_requests.remove(id);
         match result {
-            lsp_mapper::LspResult::ErrorResult(e, msg) => {
+            lsp::LspResult::ErrorResult(e, msg) => {
                 Some(Box::new(move |state: &mut ServerState| {
                     (handler.on_error)(e, msg, state)
                 }))
             }
-            lsp_mapper::LspResult::RegisterCapabilityResult => {
+            lsp::LspResult::RegisterCapabilityResult => {
                 Some(Box::new(|_state: &mut ServerState| Ok(())))
             }
             result => Some(Box::new(move |state: &mut ServerState| {
@@ -4054,7 +2592,7 @@ fn try_connect(
             "\nVersion in flowconfig that spawned the existing flow server: {}\nVersion in flowconfig currently: {}\n",
             prev_version_str, current_version_str
         );
-        lsp_writers_telemetry_log(to_stdout, &message);
+        lsp_writers::telemetry_log(to_stdout, &message);
         lsp_exit_bad();
     }
     let _start_env_flowconfig = &flowconfig;
@@ -4131,8 +2669,8 @@ fn try_connect(
             }
             let metadata = make_metadata("synthetic/open");
             for open_file_info in new_env.c_ienv.i_open_files.values() {
-                let msg = lsp_mapper::LspMessage::NotificationMessage(
-                    lsp_mapper::LspNotification::DidOpenNotification(
+                let msg = lsp::LspMessage::NotificationMessage(
+                    lsp::LspNotification::DidOpenNotification(
                         lsp_types::DidOpenTextDocumentParams {
                             text_document: open_file_info.o_open_doc.clone(),
                         },
@@ -4390,10 +2928,10 @@ fn main_handle_initialized_unsafe(
     state: &mut ServerState,
     event: Event,
 ) -> Result<LogNeeded, Box<dyn std::error::Error>> {
-    use flow_server_env::lsp_mapper::LspMessage;
-    use flow_server_env::lsp_mapper::LspNotification;
-    use flow_server_env::lsp_mapper::LspRequest;
-    use flow_server_env::lsp_mapper::LspResult;
+    use flow_server_env::lsp::LspMessage;
+    use flow_server_env::lsp::LspNotification;
+    use flow_server_env::lsp::LspRequest;
+    use flow_server_env::lsp::LspResult;
     use lsp_prot::MessageFromServer;
     use lsp_prot::NotificationFromServer;
     use lsp_prot::Response;
@@ -4450,7 +2988,7 @@ fn main_handle_initialized_unsafe(
                     ServerState::Disconnected(_) => {
                         let msg = format!(
                             "Response {:?} has missing handler",
-                            lsp_fmt_denorm_message_to_string(&LspMessage::ResponseMessage(
+                            lsp_fmt::denorm_message_to_string(&LspMessage::ResponseMessage(
                                 id, result
                             ))
                         );
@@ -4499,7 +3037,7 @@ fn main_handle_initialized_unsafe(
             let result = do_rage(flowconfig_name, state);
             let response = LspMessage::ResponseMessage(id, LspResult::RageResult(result));
             let key = command_key_of_server_state(state);
-            let json = lsp_fmt_print_lsp(&key, &response);
+            let json = lsp_fmt::print_lsp(true, &key, &response);
             to_stdout(&json);
             Ok(LogNeeded::LogNeeded(metadata))
         }
@@ -4538,22 +3076,22 @@ fn main_handle_initialized_unsafe(
             let interaction_id = lsp_interaction::trigger_of_lsp_msg(&c)
                 .map(|trigger| start_interaction(trigger, state));
             track_to_server(state, &c)?;
-            let method_ = lsp_fmt_denorm_message_to_string(&c);
+            let method_ = lsp_fmt::denorm_message_to_string(&c);
             let err_msg = format!("Server not connected; can't handle {}", method_);
             if let Some(id) = interaction_id {
                 log_interaction(InteractionUx::Errored, state, id);
             }
             match c {
                 LspMessage::RequestMessage(id, _request) => {
-                    let e = lsp_mapper::lsp_error::T {
-                        code: lsp_mapper::lsp_error::Code::RequestCancelled,
+                    let e = lsp::error::T {
+                        code: lsp::error::Code::RequestCancelled,
                         message: err_msg.clone(),
                         data: None,
                     };
                     let outgoing =
                         LspMessage::ResponseMessage(id, LspResult::ErrorResult(e, String::new()));
                     let key = command_key_of_server_state(state);
-                    to_stdout(&lsp_fmt_print_lsp(&key, &outgoing));
+                    to_stdout(&lsp_fmt::print_lsp(false, &key, &outgoing));
                     metadata.error_info =
                         Some((lsp_prot::ErrorKind::ExpectedError, err_msg, String::new()));
                     Ok(LogNeeded::LogNeeded(metadata))
@@ -4605,7 +3143,7 @@ fn main_handle_initialized_unsafe(
                             (rage_outgoing, InteractionUx::Responded)
                         }
                         LspMessage::ResponseMessage(_, LspResult::ErrorResult(e, _)) => {
-                            let ux = if e.code == lsp_mapper::lsp_error::Code::RequestCancelled {
+                            let ux = if e.code == lsp::error::Code::RequestCancelled {
                                 InteractionUx::Canceled
                             } else {
                                 InteractionUx::Errored
@@ -4616,7 +3154,7 @@ fn main_handle_initialized_unsafe(
                     };
                     let outgoing = selectively_omit_errors(&metadata.lsp_method_name, outgoing);
                     let key = command_key_of_server_state(state);
-                    to_stdout(&lsp_fmt_print_lsp(&key, &outgoing));
+                    to_stdout(&lsp_fmt::print_lsp(false, &key, &outgoing));
                     ux
                 }
             };
@@ -4640,8 +3178,8 @@ fn main_handle_initialized_unsafe(
             ));
             let outgoing: Option<LspMessage> = match request {
                 lsp_prot::Request::LspToServer(LspMessage::RequestMessage(id, _)) => {
-                    let e = lsp_mapper::lsp_error::T {
-                        code: lsp_mapper::lsp_error::Code::UnknownErrorCode,
+                    let e = lsp::error::T {
+                        code: lsp::error::Code::UnknownErrorCode,
                         message: "Flow encountered an unexpected error while handling this request. See the Flow logs for more details.".to_string(),
                         data: None,
                     };
@@ -4651,8 +3189,8 @@ fn main_handle_initialized_unsafe(
                     ))
                 }
                 lsp_prot::Request::Subscribe | lsp_prot::Request::LspToServer(_) => {
-                    let code = lsp_mapper::lsp_error::Code::UnknownErrorCode;
-                    let text = format!("{} [{:?}]\n{}", exception_constructor, code, stack);
+                    let code = lsp::error::code_to_enum(lsp::error::Code::UnknownErrorCode);
+                    let text = format!("{} [{}]\n{}", exception_constructor, code, stack);
                     Some(LspMessage::NotificationMessage(
                         LspNotification::TelemetryNotification(lsp_types::LogMessageParams {
                             typ: lsp_types::MessageType::ERROR,
@@ -4665,7 +3203,7 @@ fn main_handle_initialized_unsafe(
             let key = command_key_of_server_state(state);
             if let Some(outgoing) = outgoing {
                 let outgoing = selectively_omit_errors(&metadata.lsp_method_name, outgoing);
-                to_stdout(&lsp_fmt_print_lsp(&key, &outgoing));
+                to_stdout(&lsp_fmt::print_lsp(false, &key, &outgoing));
             }
             if let Some(id) = metadata.interaction_tracking_id {
                 log_interaction(InteractionUx::Errored, state, id);
@@ -4921,9 +3459,9 @@ fn main_handle_unsafe(
     state: State,
     event: Event,
 ) -> Result<(State, LogNeeded), (State, Box<dyn std::error::Error>)> {
-    use flow_server_env::lsp_mapper::LspMessage;
-    use flow_server_env::lsp_mapper::LspNotification;
-    use flow_server_env::lsp_mapper::LspRequest;
+    use flow_server_env::lsp::LspMessage;
+    use flow_server_env::lsp::LspNotification;
+    use flow_server_env::lsp::LspRequest;
     let event = convert_to_client_uris(&state, event);
     match (state, event) {
         (
@@ -4934,9 +3472,9 @@ fn main_handle_unsafe(
             ),
         ) => {
             let error_state = State::PreInit(i_connect_params.clone());
-            let i_root = match lsp_helpers_get_root(&i_initialize_params) {
+            let i_root = match lsp_helpers::get_root(&i_initialize_params) {
                 Ok(i_root) => i_root,
-                Err(err) => return Err((error_state, Box::new(err))),
+                Err(err) => return Err((error_state, Box::new(FlowLspError::LspException(err)))),
             };
             flow_parser::file_key::set_project_root(&i_root.to_string_lossy());
 
@@ -4987,23 +3525,21 @@ fn main_handle_unsafe(
             if let Err(msg) = command_utils_check_version(&required_version) {
                 return Err((
                     error_state,
-                    Box::new(FlowLspError::LspException(
-                        flow_server_env::lsp_mapper::lsp_error::T {
-                            code: flow_server_env::lsp_mapper::lsp_error::Code::ServerErrorStart,
-                            message: msg,
-                            data: Some(serde_json::json!({ "retry": false })),
-                        },
-                    )),
+                    Box::new(FlowLspError::LspException(flow_server_env::lsp::error::T {
+                        code: flow_server_env::lsp::error::Code::ServerErrorStart,
+                        message: msg,
+                        data: Some(serde_json::json!({ "retry": false })),
+                    })),
                 ));
             }
 
             let result = do_initialize(&i_initialize_params);
-            let response = lsp_mapper::LspResult::InitializeResult(result);
+            let response = lsp::LspResult::InitializeResult(result);
             let key = command_key_of_ienv(&d_ienv);
-            let json = lsp_fmt_print_lsp_response(&key, &id, &response);
+            let json = lsp_fmt::print_lsp_response(true, &key, &id, &response);
             to_stdout(&json);
 
-            if lsp_helpers_supports_configuration(&i_initialize_params) {
+            if lsp_helpers::supports_configuration(&i_initialize_params) {
                 request_configuration(&mut d_ienv);
                 subscribe_to_config_changes(&mut d_ienv);
             }
@@ -5056,8 +3592,8 @@ fn main_handle_unsafe(
             }
             let key = command_key_of_state(&state);
             let response =
-                lsp_prot::LspMessage::ResponseMessage(id, lsp_mapper::LspResult::ShutdownResult);
-            let json = lsp_fmt_print_lsp(&key, &response);
+                lsp_prot::LspMessage::ResponseMessage(id, lsp::LspResult::ShutdownResult);
+            let json = lsp_fmt::print_lsp(true, &key, &response);
             to_stdout(&json);
             Ok((State::PostShutdown, LogNeeded::LogNotNeeded))
         }
@@ -5096,7 +3632,7 @@ fn main_handle_unsafe(
 
 fn main_log_command(_state: &State, metadata: &Metadata) {
     let request = serde_json::to_string(&metadata.start_json_truncated).unwrap_or_default();
-    let request_id = metadata.lsp_id.as_ref().map(lsp_fmt_id_to_string);
+    let request_id = metadata.lsp_id.as_ref().map(lsp_fmt::id_to_string);
     let persistent_delay = match _state {
         State::Initialized(ServerState::Connected(cenv)) => {
             let delays: Vec<_> = cenv
@@ -5198,7 +3734,7 @@ fn main_handle_error(
 
                 if let State::Initialized(ServerState::Connected(ref mut env)) = state {
                     close_conn(env);
-                    let i_is_connected = lsp_writers_notify_connection_status(
+                    let i_is_connected = lsp_writers::notify_connection_status(
                         &env.c_ienv.i_initialize_params,
                         to_stdout,
                         env.c_ienv.i_is_connected,
@@ -5218,7 +3754,7 @@ fn main_handle_error(
                     "Server fatal exception: [{}] {}\n{}",
                     code_str, edata.message, full_stack
                 );
-                lsp_writers_telemetry_error(to_stdout, &report);
+                lsp_writers::telemetry_error(to_stdout, &report);
 
                 if let State::Initialized(ref mut server_state) = state {
                     dismiss_tracks(server_state);
@@ -5272,7 +3808,7 @@ fn main_handle_error(
                     event.as_ref(),
                 );
                 let report = format!("Client exception: {}\n{}", edata.message, stack);
-                lsp_writers_telemetry_error(to_stdout, &report);
+                lsp_writers::telemetry_error(to_stdout, &report);
                 state
             }
             FlowLspError::ClientFatalConnectionException(edata) => {
@@ -5294,10 +3830,11 @@ fn main_handle_error(
                     event.as_ref(),
                 );
                 let key = command_key_of_state(&state);
-                let json = lsp_fmt_print_lsp_response(
+                let json = lsp_fmt::print_lsp_response(
+                    true,
                     &key,
                     &id,
-                    &lsp_mapper::LspResult::ErrorResult(error, stack),
+                    &lsp::LspResult::ErrorResult(error, stack),
                 );
                 to_stdout(&json);
                 state
@@ -5318,57 +3855,55 @@ fn main_handle_error(
                     &stack,
                     event.as_ref(),
                 );
-                let text = format!(
-                    "FlowLSP exception {} [{}]\n{}",
-                    e.message, e.code as i32, stack
-                );
+                let code = lsp::error::code_to_enum(e.code);
+                let text = format!("FlowLSP exception {} [{}]\n{}", e.message, code, stack);
                 match event.as_ref() {
                     Some(Event::ClientMessage(
                         lsp_prot::LspMessage::RequestMessage(id, _request),
                         _metadata,
                     )) => {
                         let key = command_key_of_state(&state);
-                        let json = lsp_fmt_print_lsp_response(
+                        let json = lsp_fmt::print_lsp_response(
+                            true,
                             &key,
                             id,
-                            &lsp_mapper::LspResult::ErrorResult(e, stack),
+                            &lsp::LspResult::ErrorResult(e, stack),
                         );
                         to_stdout(&json);
                     }
                     _ => {
-                        lsp_writers_telemetry_error(to_stdout, &text);
+                        lsp_writers::telemetry_error(to_stdout, &text);
                     }
                 }
                 state
             }
         },
         Err(other) => {
-            let e = lsp_fmt_error_of_exn(&*other);
+            let e = lsp_fmt::error_of_exn(&*other);
             main_log_error(
                 true,
                 &format!("[FlowLSP] {}", e.message),
                 &stack,
                 event.as_ref(),
             );
-            let text = format!(
-                "FlowLSP exception {} [{}]\n{}",
-                e.message, e.code as i32, stack
-            );
+            let code = lsp::error::code_to_enum(e.code);
+            let text = format!("FlowLSP exception {} [{}]\n{}", e.message, code, stack);
             match event.as_ref() {
                 Some(Event::ClientMessage(
                     lsp_prot::LspMessage::RequestMessage(id, _request),
                     _metadata,
                 )) => {
                     let key = command_key_of_state(&state);
-                    let json = lsp_fmt_print_lsp_response(
+                    let json = lsp_fmt::print_lsp_response(
+                        true,
                         &key,
                         id,
-                        &lsp_mapper::LspResult::ErrorResult(e, stack),
+                        &lsp::LspResult::ErrorResult(e, stack),
                     );
                     to_stdout(&json);
                 }
                 _ => {
-                    lsp_writers_telemetry_error(to_stdout, &text);
+                    lsp_writers::telemetry_error(to_stdout, &text);
                 }
             }
             state

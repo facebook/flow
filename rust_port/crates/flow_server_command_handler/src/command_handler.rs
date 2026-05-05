@@ -20,14 +20,16 @@ use flow_common_modulename::Modulename;
 use flow_common_utils::list_utils;
 use flow_parser::loc_sig::LocSig;
 use flow_server_env::flow_lsp_conversions;
+use flow_server_env::lsp;
+use flow_server_env::lsp::LspMessage;
+use flow_server_env::lsp::LspNotification;
+use flow_server_env::lsp::LspRequest;
+use flow_server_env::lsp::LspResult;
+use flow_server_env::lsp::error as lsp_error;
+use flow_server_env::lsp::loc_to_lsp_range;
+use flow_server_env::lsp::lsp_range_to_flow_loc;
 use flow_server_env::lsp_handler;
 use flow_server_env::lsp_helpers;
-use flow_server_env::lsp_mapper;
-use flow_server_env::lsp_mapper::LspMessage;
-use flow_server_env::lsp_mapper::LspNotification;
-use flow_server_env::lsp_mapper::LspRequest;
-use flow_server_env::lsp_mapper::LspResult;
-use flow_server_env::lsp_mapper::lsp_error;
 use flow_server_env::lsp_prot;
 use flow_server_env::monitor_prot;
 use flow_server_env::persistent_connection;
@@ -84,18 +86,13 @@ static URI_TO_LATEST_METADATA_MAP: LazyLock<
 > = LazyLock::new(|| Mutex::new(std::collections::BTreeMap::new()));
 
 fn lsp_uri_to_flow_path(uri: &lsp_types::Url) -> String {
-    let path = uri
-        .to_file_path()
-        .map(|path| path.to_string_lossy().to_string())
-        .unwrap_or_else(|_| uri.path().to_string());
-    match std::fs::canonicalize(&path) {
-        Ok(path) => path.to_string_lossy().to_string(),
-        Err(_) => path,
-    }
+    flow_lsp_conversions::lsp_DocumentIdentifier_to_flow_path(&lsp_types::TextDocumentIdentifier {
+        uri: uri.clone(),
+    })
 }
 
 fn lsp_document_identifier_to_flow_path(t: &lsp_types::TextDocumentIdentifier) -> String {
-    lsp_uri_to_flow_path(&t.uri)
+    flow_lsp_conversions::lsp_DocumentIdentifier_to_flow_path(t)
 }
 
 fn live_errors_mark_latest_metadata(uri: &str, metadata: &lsp_prot::Metadata) {
@@ -108,36 +105,6 @@ fn is_latest_live_errors_metadata(uri: &str, metadata: &lsp_prot::Metadata) -> b
     match map.get(uri) {
         Some(latest_metadata) => latest_metadata.start_wall_time == metadata.start_wall_time,
         None => false,
-    }
-}
-
-fn loc_to_lsp_range(loc: &flow_parser::loc::Loc) -> lsp_types::Range {
-    lsp_types::Range {
-        start: lsp_types::Position {
-            line: loc.start.line.saturating_sub(1) as u32,
-            character: loc.start.column.max(0) as u32,
-        },
-        end: lsp_types::Position {
-            line: loc.end.line.saturating_sub(1) as u32,
-            character: loc.end.column.max(0) as u32,
-        },
-    }
-}
-
-fn lsp_range_to_flow_loc(
-    source: Option<flow_parser::file_key::FileKey>,
-    range: &lsp_types::Range,
-) -> flow_parser::loc::Loc {
-    flow_parser::loc::Loc {
-        source,
-        start: flow_parser::loc::Position {
-            line: range.start.line as i32 + 1,
-            column: range.start.character as i32,
-        },
-        end: flow_parser::loc::Position {
-            line: range.end.line as i32 + 1,
-            column: range.end.character as i32,
-        },
     }
 }
 
@@ -4817,17 +4784,7 @@ fn handle_persistent_get_def(
             let default_uri = &params.text_document_position_params.text_document.uri;
             let locations: Vec<lsp_types::Location> = locs
                 .iter()
-                .map(|loc| {
-                    let uri = loc
-                        .source
-                        .as_ref()
-                        .and_then(|f| lsp_types::Url::from_file_path(f.to_path_buf()).ok())
-                        .unwrap_or_else(|| default_uri.clone());
-                    lsp_types::Location {
-                        uri,
-                        range: loc_to_lsp_range(loc),
-                    }
-                })
+                .map(|loc| flow_lsp_conversions::loc_to_lsp_with_default(loc, default_uri))
                 .collect();
             let response = LspMessage::ResponseMessage(id, LspResult::DefinitionResult(locations));
             Ok((lsp_prot::Response::LspFromServer(Some(response)), metadata))
@@ -4846,8 +4803,8 @@ fn loc_to_vscode_linked_location_in_markdown(
     match source {
         None => None,
         Some(file) => {
-            let uri = lsp_types::Url::from_file_path(file.to_path_buf())
-                .unwrap_or_else(|_| default_uri.clone());
+            // We'll use default_uri here as we don't expect this to fail
+            let location = flow_lsp_conversions::loc_to_lsp_with_default(loc, default_uri);
             let lib = if file.is_lib_file() { "(lib) " } else { "" };
             let abs = file.to_absolute();
             let basename = std::path::Path::new(&abs)
@@ -4861,7 +4818,7 @@ fn loc_to_vscode_linked_location_in_markdown(
                 basename,
                 line,
                 column,
-                uri.as_str(),
+                location.uri.as_str(),
                 fragment,
             ))
         }
@@ -5103,8 +5060,7 @@ fn handle_persistent_autocomplete_lsp(
     let is_insert_replace_supported =
         lsp_helpers::supports_completion_item_insert_replace(&lsp_init_params);
     let lsp_loc = &params.text_document_position;
-    let line = lsp_loc.position.line as i32 + 1;
-    let col = lsp_loc.position.character as i32;
+    let (line, col) = flow_lsp_conversions::position_of_document_position(lsp_loc);
     let trigger_character = params
         .context
         .as_ref()
@@ -5208,88 +5164,6 @@ fn handle_persistent_autocomplete_lsp(
     }
 }
 
-fn func_details_result_to_lsp(
-    result: &server_prot::response::FuncDetailsResult,
-) -> lsp_types::SignatureInformation {
-    let doc_opt = |doc: &Option<String>| -> Option<lsp_types::Documentation> {
-        doc.as_ref().map(|d| {
-            lsp_types::Documentation::MarkupContent(lsp_types::MarkupContent {
-                kind: lsp_types::MarkupKind::Markdown,
-                value: d.clone(),
-            })
-        })
-    };
-    match result {
-        server_prot::response::FuncDetailsResult::SigHelpFunc {
-            func_documentation,
-            param_tys,
-            return_ty,
-        } => {
-            let mut label_buf = String::from("(");
-            let parameters: Vec<lsp_types::ParameterInformation> = param_tys
-                .iter()
-                .enumerate()
-                .map(|(i, param)| {
-                    let label = format!("{}: {}", param.param_name, param.param_ty);
-                    if i > 0 {
-                        label_buf.push_str(", ");
-                    }
-                    label_buf.push_str(&label);
-                    lsp_types::ParameterInformation {
-                        label: lsp_types::ParameterLabel::Simple(label),
-                        documentation: doc_opt(&param.param_documentation),
-                    }
-                })
-                .collect();
-            label_buf.push_str("): ");
-            label_buf.push_str(return_ty);
-            lsp_types::SignatureInformation {
-                label: label_buf,
-                documentation: doc_opt(func_documentation),
-                parameters: Some(parameters),
-                active_parameter: None,
-            }
-        }
-        server_prot::response::FuncDetailsResult::SigHelpJsxAttr {
-            documentation,
-            name,
-            ty,
-            optional,
-        } => {
-            let opt_str = if *optional { "?" } else { "" };
-            let label = format!("{}{}: {}", name, opt_str, ty);
-            let label_buf = label.clone();
-            let parameters = vec![lsp_types::ParameterInformation {
-                label: lsp_types::ParameterLabel::Simple(label),
-                documentation: doc_opt(documentation),
-            }];
-            lsp_types::SignatureInformation {
-                label: label_buf,
-                documentation: None,
-                parameters: Some(parameters),
-                active_parameter: None,
-            }
-        }
-    }
-}
-
-fn flow_signature_help_to_lsp(
-    details: &Option<(Vec<server_prot::response::FuncDetailsResult>, i32)>,
-) -> Option<lsp_types::SignatureHelp> {
-    match details {
-        None => None,
-        Some((signatures, active_parameter)) => {
-            let signatures: Vec<lsp_types::SignatureInformation> =
-                signatures.iter().map(func_details_result_to_lsp).collect();
-            Some(lsp_types::SignatureHelp {
-                signatures,
-                active_signature: Some(0),
-                active_parameter: Some(*active_parameter as u32),
-            })
-        }
-    }
-}
-
 fn handle_persistent_signaturehelp_lsp(
     options: &Options,
     env: &server_env::Env,
@@ -5305,8 +5179,7 @@ fn handle_persistent_signaturehelp_lsp(
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let lsp_loc = &params.text_document_position_params;
-    let line = lsp_loc.position.line as i32 + 1;
-    let col = lsp_loc.position.character as i32;
+    let (line, col) = flow_lsp_conversions::position_of_document_position(lsp_loc);
     let file_input = match file_input {
         Some(file_input) => file_input.clone(),
         None => file_input_of_text_document_position(client_id, lsp_loc),
@@ -5383,7 +5256,8 @@ fn handle_persistent_signaturehelp_lsp(
                         };
                     match func_details {
                         Ok(details) => {
-                            let lsp_result = flow_signature_help_to_lsp(&details);
+                            let lsp_result =
+                                flow_lsp_conversions::flow_signature_help_to_lsp(&details);
                             let r = LspResult::SignatureHelpResult(lsp_result);
                             let response = LspMessage::ResponseMessage(id, r);
                             let has_any_documentation = match &details {
@@ -5478,10 +5352,9 @@ fn handle_persistent_workspace_symbol(
                             flow_services_export::export_index::Source::Global
                             | flow_services_export::export_index::Source::Builtin(_) => None,
                             flow_services_export::export_index::Source::FileKey(file) => {
-                                let path = file.to_path_buf();
-                                match lsp_types::Url::from_file_path(&path) {
+                                match flow_lsp_conversions::file_key_to_uri(Some(&file)) {
                                     Err(_) => None,
-                                    Ok(uri) => Some(lsp_mapper::workspace_symbol_information::T {
+                                    Ok(uri) => Some(lsp::workspace_symbol_information::T {
                                         name: name.to_string(),
                                         kind: lsp_types::SymbolKind::VARIABLE,
                                         location: lsp_types::TextDocumentIdentifier { uri },
@@ -5496,7 +5369,7 @@ fn handle_persistent_workspace_symbol(
         }
     };
     let r = LspResult::WorkspaceSymbolResult(
-        lsp_mapper::workspace_symbol_result::T::WorkspaceSymbolInformation(results),
+        lsp::workspace_symbol_result::T::WorkspaceSymbolInformation(results),
     );
     let response = LspMessage::ResponseMessage(id, r);
     (
@@ -5994,8 +5867,7 @@ fn handle_persistent_prepare_rename(
             (lsp_prot::Response::LspFromServer(Some(resp)), metadata)
         }
         Ok(Some((file_artifacts, file_key))) => {
-            let line = params.position.line as i32 + 1;
-            let col = params.position.character as i32;
+            let (line, col) = flow_lsp_conversions::position_of_document_position(params);
             let cursor_loc = flow_parser::loc::Loc::cursor(Some(file_key), line, col);
             let rename_loc = flow_services_references::prepare_rename_searcher::search_rename_loc(
                 &file_artifacts.0.ast,
@@ -6080,14 +5952,9 @@ fn handle_persistent_rename(
             let mut changes: std::collections::HashMap<lsp_types::Url, Vec<lsp_types::TextEdit>> =
                 std::collections::HashMap::new();
             for (loc, new_text) in loc_patches {
-                if let Some(source) = &loc.source {
-                    if let Ok(uri) = lsp_types::Url::from_file_path(source.to_path_buf()) {
-                        let edit = lsp_types::TextEdit {
-                            range: loc_to_lsp_range(&loc),
-                            new_text,
-                        };
-                        changes.entry(uri).or_default().push(edit);
-                    }
+                if let Ok(uri) = flow_lsp_conversions::file_key_to_uri(loc.source.as_ref()) {
+                    let edit = flow_lsp_conversions::flow_edit_to_textedit((&loc, new_text));
+                    changes.entry(uri).or_default().push(edit);
                 }
             }
             let workspace_edit = lsp_types::WorkspaceEdit {
@@ -6122,7 +5989,7 @@ fn handle_persistent_coverage(
     >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
-    params: &lsp_mapper::type_coverage::Params,
+    params: &lsp::type_coverage::Params,
     file_input: Option<&FileInput>,
     metadata: lsp_prot::Metadata,
 ) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled> {
@@ -6146,9 +6013,9 @@ fn handle_persistent_coverage(
                     character: 0,
                 },
             };
-            let r = LspResult::TypeCoverageResult(lsp_mapper::type_coverage::Result {
+            let r = LspResult::TypeCoverageResult(lsp::type_coverage::Result {
                 covered_percent: 0,
-                uncovered_ranges: vec![lsp_mapper::type_coverage::UncoveredRange {
+                uncovered_ranges: vec![lsp::type_coverage::UncoveredRange {
                     range,
                     message: None,
                 }],
@@ -6219,14 +6086,14 @@ fn handle_persistent_coverage(
                             singles
                         }
                     };
-                    let uncovered_ranges: Vec<lsp_mapper::type_coverage::UncoveredRange> = singles
+                    let uncovered_ranges: Vec<lsp::type_coverage::UncoveredRange> = singles
                         .iter()
-                        .map(|loc| lsp_mapper::type_coverage::UncoveredRange {
+                        .map(|loc| lsp::type_coverage::UncoveredRange {
                             range: loc_to_lsp_range(loc),
                             message: None,
                         })
                         .collect();
-                    let r = LspResult::TypeCoverageResult(lsp_mapper::type_coverage::Result {
+                    let r = LspResult::TypeCoverageResult(lsp::type_coverage::Result {
                         covered_percent,
                         uncovered_ranges,
                         default_message: "Un-type checked code. Consider adding type annotations."
@@ -6251,10 +6118,10 @@ fn handle_persistent_llm_context(
     >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
-    params: &lsp_mapper::llm_context::Params,
+    params: &lsp::llm_context::Params,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let lsp_mapper::llm_context::Params {
+    let lsp::llm_context::Params {
         edited_file_paths,
         environment_details: _,
         token_budget,
@@ -6329,7 +6196,7 @@ fn handle_persistent_rage(
     let root = genv.options.root.display().to_string();
     let items = collect_rage(&genv.options, env, genv.shared_mem.as_ref(), None)
         .into_iter()
-        .map(|(title, data)| lsp_mapper::rage::RageItem {
+        .map(|(title, data)| lsp::rage::RageItem {
             title: Some(format!("{}:{}", root, title)),
             data,
         })
@@ -6348,7 +6215,7 @@ fn handle_persistent_ping(
         .map(|status| flow_server_env::server_status::string_of_status(false, true, status));
     let response = LspMessage::ResponseMessage(
         id,
-        LspResult::PingResult(lsp_mapper::ping::Result {
+        LspResult::PingResult(lsp::ping::Result {
             start_server_status,
         }),
     );
@@ -6370,7 +6237,7 @@ fn send_workspace_edit(
     label: Option<String>,
     edit: lsp_types::WorkspaceEdit,
     on_response: Box<dyn FnOnce(lsp_types::ApplyWorkspaceEditResponse) + Send>,
-    on_error: Box<dyn FnOnce((lsp_mapper::lsp_error::T, String)) + Send>,
+    on_error: Box<dyn FnOnce((lsp::error::T, String)) + Send>,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let prefix = match &id {
         lsp_types::NumberOrString::Number(n) => n.to_string(),
@@ -6503,7 +6370,7 @@ fn handle_persistent_auto_close_jsx(
     env: &server_env::Env,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
-    params: lsp_mapper::auto_close_jsx::Params,
+    params: lsp::auto_close_jsx::Params,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let (result, extra_data) = auto_close_jsx_handler(options, env, client_id, &params);
@@ -6521,7 +6388,7 @@ fn auto_close_jsx_handler(
     options: &Options,
     env: &server_env::Env,
     client_id: lsp_prot::ClientId,
-    params: &lsp_mapper::auto_close_jsx::Params,
+    params: &lsp::auto_close_jsx::Params,
 ) -> (Result<Option<String>, String>, Option<lsp_prot::Json>) {
     let text_document = &params.text_document;
     let file_input = file_input_of_text_document_identifier(client_id, text_document);
@@ -6557,7 +6424,7 @@ fn prepare_document_paste(
         std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
     >,
     client_id: lsp_prot::ClientId,
-    params: &lsp_mapper::document_paste::PrepareParams,
+    params: &lsp::document_paste::PrepareParams,
 ) -> (
     Vec<flow_services_code_action::document_paste::ImportItem>,
     Option<lsp_prot::Json>,
@@ -6615,30 +6482,30 @@ fn prepare_document_paste(
 fn provide_document_paste(
     options: &Options,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    params: &lsp_mapper::document_paste::ProvideParams,
+    params: &lsp::document_paste::ProvideParams,
 ) -> (lsp_types::WorkspaceEdit, Option<lsp_prot::Json>) {
     let uri = &params.text_document.uri;
     let text = &params.text_document.text;
-    let lsp_mapper::document_paste::DataTransfer::ImportMetadata {
+    let lsp::document_paste::DataTransfer::ImportMetadata {
         imports: lsp_imports,
     } = &params.data_transfer;
     let imports: Vec<flow_services_code_action::document_paste::ImportItem> = lsp_imports
         .iter()
         .map(|item| {
             let import_type = match &item.import_type {
-                lsp_mapper::document_paste::ImportType::ImportNamedValue => {
+                lsp::document_paste::ImportType::ImportNamedValue => {
                     flow_services_code_action::document_paste::ImportType::ImportNamedValue
                 }
-                lsp_mapper::document_paste::ImportType::ImportValueAsNamespace => {
+                lsp::document_paste::ImportType::ImportValueAsNamespace => {
                     flow_services_code_action::document_paste::ImportType::ImportValueAsNamespace
                 }
-                lsp_mapper::document_paste::ImportType::ImportNamedType => {
+                lsp::document_paste::ImportType::ImportNamedType => {
                     flow_services_code_action::document_paste::ImportType::ImportNamedType
                 }
-                lsp_mapper::document_paste::ImportType::ImportNamedTypeOf => {
+                lsp::document_paste::ImportType::ImportNamedTypeOf => {
                     flow_services_code_action::document_paste::ImportType::ImportNamedTypeOf
                 }
-                lsp_mapper::document_paste::ImportType::ImportTypeOfAsNamespace => {
+                lsp::document_paste::ImportType::ImportTypeOfAsNamespace => {
                     flow_services_code_action::document_paste::ImportType::ImportTypeOfAsNamespace
                 }
             };
@@ -6707,7 +6574,7 @@ fn handle_persistent_prepare_document_paste(
     >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
-    params: &lsp_mapper::document_paste::PrepareParams,
+    params: &lsp::document_paste::PrepareParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let (imports, extra_data) = prepare_document_paste(
@@ -6719,27 +6586,27 @@ fn handle_persistent_prepare_document_paste(
         params,
     );
     let metadata = with_data(extra_data, metadata);
-    let imports_lsp: Vec<lsp_mapper::document_paste::ImportItem> = imports
+    let imports_lsp: Vec<lsp::document_paste::ImportItem> = imports
         .into_iter()
         .map(|item| {
             let import_type = match item.import_type {
                 flow_services_code_action::document_paste::ImportType::ImportNamedValue => {
-                    lsp_mapper::document_paste::ImportType::ImportNamedValue
+                    lsp::document_paste::ImportType::ImportNamedValue
                 }
                 flow_services_code_action::document_paste::ImportType::ImportValueAsNamespace => {
-                    lsp_mapper::document_paste::ImportType::ImportValueAsNamespace
+                    lsp::document_paste::ImportType::ImportValueAsNamespace
                 }
                 flow_services_code_action::document_paste::ImportType::ImportNamedType => {
-                    lsp_mapper::document_paste::ImportType::ImportNamedType
+                    lsp::document_paste::ImportType::ImportNamedType
                 }
                 flow_services_code_action::document_paste::ImportType::ImportNamedTypeOf => {
-                    lsp_mapper::document_paste::ImportType::ImportNamedTypeOf
+                    lsp::document_paste::ImportType::ImportNamedTypeOf
                 }
                 flow_services_code_action::document_paste::ImportType::ImportTypeOfAsNamespace => {
-                    lsp_mapper::document_paste::ImportType::ImportTypeOfAsNamespace
+                    lsp::document_paste::ImportType::ImportTypeOfAsNamespace
                 }
             };
-            lsp_mapper::document_paste::ImportItem {
+            lsp::document_paste::ImportItem {
                 remote_name: item.remote_name,
                 local_name: item.local_name,
                 import_type,
@@ -6748,7 +6615,7 @@ fn handle_persistent_prepare_document_paste(
             }
         })
         .collect();
-    let data_transfer = lsp_mapper::document_paste::DataTransfer::ImportMetadata {
+    let data_transfer = lsp::document_paste::DataTransfer::ImportMetadata {
         imports: imports_lsp,
     };
     let response =
@@ -6760,7 +6627,7 @@ fn handle_persistent_provide_document_paste_edits(
     options: &Options,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     id: lsp_prot::LspId,
-    params: &lsp_mapper::document_paste::ProvideParams,
+    params: &lsp::document_paste::ProvideParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let (workspace_edit, extra_data) = provide_document_paste(options, shared_mem, params);
@@ -6912,7 +6779,7 @@ fn handle_persistent_rename_file_imports(
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
-    params: &lsp_mapper::rename_file_imports::Params,
+    params: &lsp::rename_file_imports::Params,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let text_document_identifier = lsp_types::TextDocumentIdentifier {
@@ -6944,7 +6811,7 @@ fn handle_persistent_rename_file_imports(
                             let Some(ast) = shared_mem.get_ast(&dependent) else {
                                 continue;
                             };
-                            let Ok(uri) = lsp_types::Url::from_file_path(dependent.to_path_buf())
+                            let Ok(uri) = flow_lsp_conversions::file_key_to_uri(Some(&dependent))
                             else {
                                 continue;
                             };
@@ -7197,39 +7064,16 @@ fn live_diagnostics_of_uri(
                 .get(&live_errors_uri)
                 .cloned()
                 .unwrap_or_default();
-            for loc in &switch_to_match_eligible_locations {
-                if loc.source.is_some() {
-                    live_diagnostics.push(lsp_types::Diagnostic {
-                        range: loc_to_lsp_range(loc),
-                        severity: Some(lsp_types::DiagnosticSeverity::HINT),
-                        code: Some(lsp_types::NumberOrString::String(
-                            "switch-to-match".to_string(),
-                        )),
-                        source: Some("Flow".to_string()),
-                        message: "This switch statement can be converted to use match syntax"
-                            .to_string(),
-                        tags: None,
-                        related_information: None,
-                        data: None,
-                        code_description: None,
-                    });
-                }
-            }
-            for loc in &refined_locations {
-                if loc.source.is_some() {
-                    live_diagnostics.push(lsp_types::Diagnostic {
-                        range: loc_to_lsp_range(loc),
-                        severity: Some(lsp_types::DiagnosticSeverity::HINT),
-                        code: None,
-                        source: Some("Flow".to_string()),
-                        message: "refined-value".to_string(),
-                        tags: None,
-                        related_information: None,
-                        data: Some(serde_json::json!("RefinementInformation")),
-                        code_description: None,
-                    });
-                }
-            }
+            live_diagnostics.extend(
+                flow_lsp_conversions::synthetic_diagnostics_of_switch_to_match_eligible_locations(
+                    &switch_to_match_eligible_locations,
+                ),
+            );
+            live_diagnostics.extend(
+                flow_lsp_conversions::synthetic_diagnostics_of_refined_locations(
+                    &refined_locations,
+                ),
+            );
             (
                 Ok(lsp_prot::LiveErrorsResponse {
                     live_diagnostics,
@@ -7302,7 +7146,7 @@ fn handle_persistent_text_document_diagnostics_lsp(
     >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
-    params: &lsp_mapper::text_document_diagnostics::Params,
+    params: &lsp::text_document_diagnostics::Params,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let uri = &params.text_document.uri;
@@ -7855,7 +7699,7 @@ fn get_persistent_handler(
                     let root = options_arc.root.display().to_string();
                     let items = collect_rage(&options_arc, env, shared_mem.as_ref(), None)
                         .into_iter()
-                        .map(|(title, data)| lsp_mapper::rage::RageItem {
+                        .map(|(title, data)| lsp::rage::RageItem {
                             title: Some(format!("{}:{}", root, title)),
                             data,
                         })
@@ -8119,12 +7963,11 @@ fn get_persistent_handler(
                 _ => None,
             };
             let unhandled_str = match &unhandled {
-                lsp_prot::LspMessage::RequestMessage(
-                    _,
-                    lsp_mapper::LspRequest::UnknownRequest(m, _),
-                ) => m.clone(),
+                lsp_prot::LspMessage::RequestMessage(_, lsp::LspRequest::UnknownRequest(m, _)) => {
+                    m.clone()
+                }
                 lsp_prot::LspMessage::NotificationMessage(
-                    lsp_mapper::LspNotification::UnknownNotification(m, _),
+                    lsp::LspNotification::UnknownNotification(m, _),
                 ) => m.clone(),
                 _ => format!("{:?}", unhandled),
             };

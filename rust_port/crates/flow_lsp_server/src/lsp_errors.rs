@@ -23,10 +23,14 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
+use flow_lsp::lsp;
+use flow_lsp::lsp_fmt;
+use flow_server_env::lsp_helpers;
 use lsp_types::Diagnostic;
 use lsp_types::DiagnosticSeverity;
 use lsp_types::NumberOrString;
 use lsp_types::Position;
+use lsp_types::PublishDiagnosticsParams;
 use lsp_types::Range;
 use lsp_types::Url;
 
@@ -211,17 +215,13 @@ fn send_errors_for_file(state: &T, send_json: &mut dyn FnMut(serde_json::Value),
     let mut errors: Errors = parse_errors.clone();
     errors.extend(non_parse_errors.iter().cloned());
     let diagnostics = limit_errors(errors);
-    let params = lsp_types::PublishDiagnosticsParams {
+    let params = PublishDiagnosticsParams {
         uri: uri.clone(),
         diagnostics,
         version: None,
     };
-    let notification = serde_json::json!({
-        "jsonrpc": "2.0",
-        "method": "textDocument/publishDiagnostics",
-        "params": serde_json::to_value(&params).unwrap_or_default(),
-    });
-    send_json(notification);
+    let notification = lsp::LspNotification::PublishDiagnosticsNotification(params);
+    send_json(lsp_fmt::print_lsp_notification(&notification));
 }
 
 // For every dirty file (files for which the client likely has out-of-date errors), send the errors
@@ -454,164 +454,6 @@ pub fn clear_all_errors_and_send(send_json: &mut dyn FnMut(serde_json::Value), s
     send_all_errors(send_json, state)
 }
 
-fn pos_compare(p1: &Position, p2: &Position) -> i32 {
-    if p1.line < p2.line {
-        -1
-    } else if p1.line > p2.line {
-        1
-    } else {
-        p1.character as i32 - p2.character as i32
-    }
-}
-
-enum RangeOverlap {
-    SelectionBeforeStartOfSquiggle,
-    SelectionOverlapsStartOfSquiggle,
-    SelectionCoversWholeSquiggle,
-    SelectionInMiddleOfSquiggle,
-    SelectionOverlapsEndOfSquiggle,
-    SelectionAfterEndOfSquiggle,
-}
-
-fn get_range_overlap(selection: &Range, squiggle: &Range) -> RangeOverlap {
-    let sel_start_leq_squiggle_start = pos_compare(&selection.start, &squiggle.start) <= 0;
-    let sel_start_leq_squiggle_end = pos_compare(&selection.start, &squiggle.end) <= 0;
-    let sel_end_lt_squiggle_start = pos_compare(&selection.end, &squiggle.start) < 0;
-    let sel_end_lt_squiggle_end = pos_compare(&selection.end, &squiggle.end) < 0;
-    match (
-        sel_start_leq_squiggle_start,
-        sel_start_leq_squiggle_end,
-        sel_end_lt_squiggle_start,
-        sel_end_lt_squiggle_end,
-    ) {
-        (true, true, true, true) => RangeOverlap::SelectionBeforeStartOfSquiggle,
-        (true, true, false, true) => RangeOverlap::SelectionOverlapsStartOfSquiggle,
-        (true, true, false, false) => RangeOverlap::SelectionCoversWholeSquiggle,
-        (false, true, false, true) => RangeOverlap::SelectionInMiddleOfSquiggle,
-        (false, true, false, false) => RangeOverlap::SelectionOverlapsEndOfSquiggle,
-        (false, false, false, false) => RangeOverlap::SelectionAfterEndOfSquiggle,
-        _ => panic!("invalid range overlap"),
-    }
-}
-
-struct RangeReplace {
-    remove_range: Range,
-    insert_lines: u32,
-    insert_chars_on_final_line: u32,
-}
-
-fn update_pos_due_to_prior_replace(p: &Position, replace: &RangeReplace) -> Position {
-    if replace.remove_range.end.line < p.line {
-        let line = p.line - (replace.remove_range.end.line - replace.remove_range.start.line)
-            + replace.insert_lines;
-        Position {
-            line,
-            character: p.character,
-        }
-    } else if replace.insert_lines > 0 {
-        let line = p.line - (replace.remove_range.end.line - replace.remove_range.start.line)
-            + replace.insert_lines;
-        let character =
-            replace.insert_chars_on_final_line + (p.character - replace.remove_range.end.character);
-        Position { line, character }
-    } else {
-        let line = p.line - (replace.remove_range.end.line - replace.remove_range.start.line);
-        let character = replace.remove_range.start.character
-            + replace.insert_chars_on_final_line
-            + (p.character - replace.remove_range.end.character);
-        Position { line, character }
-    }
-}
-
-fn update_range_due_to_replace(squiggle: &Range, replace: &RangeReplace) -> Option<Range> {
-    match get_range_overlap(&replace.remove_range, squiggle) {
-        RangeOverlap::SelectionBeforeStartOfSquiggle => {
-            let start = update_pos_due_to_prior_replace(&squiggle.start, replace);
-            let end = update_pos_due_to_prior_replace(&squiggle.end, replace);
-            Some(Range { start, end })
-        }
-        RangeOverlap::SelectionOverlapsStartOfSquiggle => {
-            let line = replace.remove_range.start.line + replace.insert_lines;
-            let character = if replace.insert_lines == 0 {
-                replace.remove_range.start.character + replace.insert_chars_on_final_line
-            } else {
-                replace.insert_chars_on_final_line
-            };
-            let start = Position { line, character };
-            let end = update_pos_due_to_prior_replace(&squiggle.end, replace);
-            Some(Range { start, end })
-        }
-        RangeOverlap::SelectionCoversWholeSquiggle => None,
-        RangeOverlap::SelectionInMiddleOfSquiggle => {
-            let start = squiggle.start;
-            let end = update_pos_due_to_prior_replace(&squiggle.end, replace);
-            Some(Range { start, end })
-        }
-        RangeOverlap::SelectionOverlapsEndOfSquiggle => {
-            let start = squiggle.start;
-            let end = replace.remove_range.start;
-            Some(Range { start, end })
-        }
-        RangeOverlap::SelectionAfterEndOfSquiggle => Some(*squiggle),
-    }
-}
-
-fn update_diagnostics_due_to_change(
-    diagnostics: Errors,
-    change: &lsp_types::DidChangeTextDocumentParams,
-) -> Errors {
-    fn replace_of_change(
-        change: &lsp_types::TextDocumentContentChangeEvent,
-    ) -> Option<RangeReplace> {
-        match change.range {
-            None => None,
-            Some(remove_range) => {
-                let text = &change.text;
-                let insert_lines = text.chars().filter(|c| *c == '\n').count() as u32;
-                let insert_chars_on_final_line = text
-                    .rsplit('\n')
-                    .next()
-                    .map(|s| s.len() as u32)
-                    .unwrap_or(text.len() as u32);
-                Some(RangeReplace {
-                    remove_range,
-                    insert_lines,
-                    insert_chars_on_final_line,
-                })
-            }
-        }
-    }
-    fn apply_replace(
-        diagnostic_opt: Option<Diagnostic>,
-        replace_opt: &Option<RangeReplace>,
-    ) -> Option<Diagnostic> {
-        match (diagnostic_opt, replace_opt) {
-            (Some(diagnostic), Some(replace)) => {
-                let range = update_range_due_to_replace(&diagnostic.range, replace);
-                range.map(|range| Diagnostic {
-                    range,
-                    ..diagnostic
-                })
-            }
-            _ => None,
-        }
-    }
-    let replaces: Vec<Option<RangeReplace>> = change
-        .content_changes
-        .iter()
-        .map(replace_of_change)
-        .collect();
-    let apply_all_replaces = |diagnostic: Diagnostic| -> Option<Diagnostic> {
-        replaces.iter().try_fold(diagnostic, |diagnostic, replace| {
-            apply_replace(Some(diagnostic), replace)
-        })
-    };
-    diagnostics
-        .into_iter()
-        .filter_map(apply_all_replaces)
-        .collect()
-}
-
 // Basically a best-effort attempt to update the locations of errors after a didChange
 pub fn update_errors_due_to_change_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
@@ -628,16 +470,16 @@ pub fn update_errors_due_to_change_and_send(
         let live_parse_errors = match live_parse_errors {
             None => None,
             Some(ParseErrors(v)) if v.is_empty() => Some(ParseErrors(v)),
-            Some(ParseErrors(errs)) => {
-                Some(ParseErrors(update_diagnostics_due_to_change(errs, params)))
-            }
+            Some(ParseErrors(errs)) => Some(ParseErrors(
+                lsp_helpers::update_diagnostics_due_to_change(errs, params),
+            )),
         };
         let live_non_parse_errors = match live_non_parse_errors {
             None => None,
             Some(NonParseErrors(v)) if v.is_empty() => Some(NonParseErrors(v)),
-            Some(NonParseErrors(errs)) => Some(NonParseErrors(update_diagnostics_due_to_change(
-                errs, params,
-            ))),
+            Some(NonParseErrors(errs)) => Some(NonParseErrors(
+                lsp_helpers::update_diagnostics_due_to_change(errs, params),
+            )),
         };
         let server_errors = match server_errors {
             ServerErrors::Streamed((ParseErrors(pe), NonParseErrors(npe)))
@@ -654,8 +496,10 @@ pub fn update_errors_due_to_change_and_send(
                 ParseErrors(parse_errors),
                 NonParseErrors(non_parse_errors),
             )) => {
-                let parse_errors = update_diagnostics_due_to_change(parse_errors, params);
-                let non_parse_errors = update_diagnostics_due_to_change(non_parse_errors, params);
+                let parse_errors =
+                    lsp_helpers::update_diagnostics_due_to_change(parse_errors, params);
+                let non_parse_errors =
+                    lsp_helpers::update_diagnostics_due_to_change(non_parse_errors, params);
                 ServerErrors::Streamed((
                     ParseErrors(parse_errors),
                     NonParseErrors(non_parse_errors),
@@ -665,8 +509,10 @@ pub fn update_errors_due_to_change_and_send(
                 ParseErrors(parse_errors),
                 NonParseErrors(non_parse_errors),
             )) => {
-                let parse_errors = update_diagnostics_due_to_change(parse_errors, params);
-                let non_parse_errors = update_diagnostics_due_to_change(non_parse_errors, params);
+                let parse_errors =
+                    lsp_helpers::update_diagnostics_due_to_change(parse_errors, params);
+                let non_parse_errors =
+                    lsp_helpers::update_diagnostics_due_to_change(non_parse_errors, params);
                 ServerErrors::Finalized((
                     ParseErrors(parse_errors),
                     NonParseErrors(non_parse_errors),

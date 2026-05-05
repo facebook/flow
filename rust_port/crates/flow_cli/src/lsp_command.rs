@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use flow_lsp::flow_lsp;
+use flow_lsp_server::flow_lsp;
 use flow_server_env::lsp_connect_params::ConnectParams;
 use flow_server_env::lsp_connect_params::OnMismatchBehavior;
 use flow_server_env::lsp_connect_params::SharedMemParams;

@@ -23,7 +23,7 @@ use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::file_sig::FileSigOptions;
 use flow_parser_utils::file_sig::Require;
-use flow_server_env::lsp_mapper::llm_context;
+use flow_server_env::lsp::llm_context;
 use flow_typing::ty_normalizer_flow;
 use flow_typing_context::Context;
 use flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode;

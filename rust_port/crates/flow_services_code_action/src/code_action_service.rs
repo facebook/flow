@@ -29,13 +29,14 @@ use flow_parser::ast::types::TypeInner;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
-use flow_parser::loc::Position;
 use flow_parser::parse_error::ParseError;
 use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::flow_ast_differ;
 use flow_parser_utils_output::ast_diff_printer;
 use flow_parser_utils_output::js_layout_generator;
 use flow_parser_utils_output::replacement_printer;
+use flow_server_env::lsp::loc_to_lsp_range;
+use flow_server_env::lsp_helpers;
 use flow_server_env::server_env::Env;
 use flow_services_autocomplete::code_action_text_edits::CodeActionTextEdits;
 use flow_services_autocomplete::insert_jsdoc;
@@ -94,8 +95,6 @@ use lsp_types::CodeActionOrCommand;
 use lsp_types::Command;
 use lsp_types::Diagnostic;
 use lsp_types::NumberOrString;
-use lsp_types::Position as LspPosition;
-use lsp_types::Range as LspRange;
 use lsp_types::TextEdit;
 use lsp_types::Url;
 use lsp_types::WorkspaceEdit;
@@ -131,17 +130,6 @@ use crate::refactor_extract;
 use crate::refactor_match_discriminant;
 use crate::refactor_switch_to_match_statement;
 use crate::stub_unbound_name;
-
-fn flow_position_to_lsp_position(pos: Position) -> LspPosition {
-    LspPosition::new(pos.line.saturating_sub(1) as u32, pos.column.max(0) as u32)
-}
-
-fn loc_to_lsp_range(loc: Loc) -> LspRange {
-    LspRange::new(
-        flow_position_to_lsp_position(loc.start),
-        flow_position_to_lsp_position(loc.end),
-    )
-}
 
 fn add_missing_imports_kind() -> CodeActionKind {
     CodeActionKind::new("source.addMissingImports.flow")
@@ -184,7 +172,7 @@ fn flow_loc_patch_to_lsp_edits(patch: &[(Loc, String)]) -> Vec<TextEdit> {
     patch
         .iter()
         .map(|(loc, text)| TextEdit {
-            range: loc_to_lsp_range(loc.dupe()),
+            range: loc_to_lsp_range(loc),
             new_text: text.clone(),
         })
         .collect()
@@ -942,10 +930,6 @@ fn find_unbound_names_from_scope(
     acc
 }
 
-fn ranges_overlap(a: &LspRange, b: &LspRange) -> bool {
-    a.start <= b.end && b.start <= a.end
-}
-
 fn suggest_imports(
     cx: &Context,
     layout_options: &js_layout_generator::Opts,
@@ -967,14 +951,14 @@ fn suggest_imports(
     if files.is_empty() {
         return vec![];
     }
-    let error_range = loc_to_lsp_range(loc);
+    let error_range = loc_to_lsp_range(&loc);
     let lsp_code = ErrorCode::CannotResolveName.as_str();
     let relevant_diagnostics: Vec<Diagnostic> = diagnostics
         .iter()
         .filter(|d| {
             d.source.as_deref() == Some("Flow")
                 && d.code == Some(NumberOrString::String(lsp_code.to_string()))
-                && ranges_overlap(&d.range, &error_range)
+                && lsp_helpers::ranges_overlap(&d.range, &error_range)
         })
         .cloned()
         .collect();
@@ -2629,7 +2613,7 @@ fn code_action_for_parser_error_with_suggestion(
     new_text: &str,
 ) -> Vec<CodeActionOrCommand> {
     if Loc::intersects(&error_loc, &editor_loc) {
-        let error_range = loc_to_lsp_range(error_loc);
+        let error_range = loc_to_lsp_range(&error_loc);
         let relevant_diagnostics: Vec<Diagnostic> = diagnostics
             .iter()
             .filter(|d| d.range == error_range)
@@ -3321,8 +3305,7 @@ pub fn suggest_imports_cli(
     file_key: &FileKey,
     file_content: &str,
 ) -> Result<HashMap<String, Vec<CodeActionOrCommand>>, String> {
-    let uri = Url::from_file_path(file_key.to_path_buf())
-        .unwrap_or_else(|_| Url::parse("file:///").unwrap());
+    let uri = flow_lsp::lsp_helpers::path_to_lsp_uri(&file_key.to_absolute(), "");
     let file_path = file_key.to_absolute();
     let src_dir = std::path::Path::new(&file_path)
         .parent()

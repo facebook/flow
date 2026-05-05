@@ -8,16 +8,14 @@
 use std::path::Path;
 
 use flow_common::files;
+use flow_lsp::lsp::loc_to_lsp_range;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
-use flow_parser::loc::Position;
 use flow_parser_utils_output::js_layout_generator;
 use flow_services_export::export_index;
 use flow_typing_context::Context;
-use lsp_types::Position as LspPosition;
-use lsp_types::Range as LspRange;
 use lsp_types::TextEdit;
 
 use crate::autofix_imports;
@@ -34,17 +32,6 @@ pub fn is_available_autoimport_result(
         export_index::Source::Builtin(mref) => available_modules.contains(mref.display()),
         export_index::Source::FileKey(_) => true,
     }
-}
-
-fn flow_position_to_lsp_position(pos: Position) -> LspPosition {
-    LspPosition::new(pos.line.saturating_sub(1) as u32, pos.column.max(0) as u32)
-}
-
-fn loc_to_lsp_range(loc: Loc) -> LspRange {
-    LspRange::new(
-        flow_position_to_lsp_position(loc.start),
-        flow_position_to_lsp_position(loc.end),
-    )
 }
 
 fn main_of_package(
@@ -534,7 +521,7 @@ pub fn text_edits_of_import(
     let edits = autofix_imports::add_import(layout_options, &bindings, &from, ast)
         .into_iter()
         .map(|(loc, text)| TextEdit {
-            range: loc_to_lsp_range(loc),
+            range: loc_to_lsp_range(&loc),
             new_text: text,
         })
         .collect();

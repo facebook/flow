@@ -18,29 +18,10 @@ use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::ast_visitor::TypeParamsContext;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
+use flow_server_env::flow_lsp_conversions::selection_range_of_loc;
+use flow_server_env::lsp::lsp_position_to_flow_position;
 use lsp_types::Position as LspPosition;
-use lsp_types::Range as LspRange;
 use lsp_types::SelectionRange;
-
-fn loc_to_lsp_range(loc: &Loc) -> LspRange {
-    LspRange {
-        start: LspPosition {
-            line: loc.start.line.saturating_sub(1).max(0) as u32,
-            character: loc.start.column.max(0) as u32,
-        },
-        end: LspPosition {
-            line: loc.end.line.saturating_sub(1).max(0) as u32,
-            character: loc.end.column.max(0) as u32,
-        },
-    }
-}
-
-fn lsp_position_to_flow_position(pos: LspPosition) -> Position {
-    Position {
-        line: pos.line as i32 + 1,
-        column: pos.character as i32,
-    }
-}
 
 struct SelectionRangeFinder {
     position: Position,
@@ -919,11 +900,7 @@ fn selection_range_tree(
     let acc = finder.acc;
     let mut parent: Option<SelectionRange> = None;
     for loc in acc.into_iter().rev() {
-        let range = loc_to_lsp_range(&loc);
-        parent = Some(SelectionRange {
-            range,
-            parent: parent.map(Box::new),
-        });
+        parent = Some(selection_range_of_loc(parent.map(Box::new), &loc));
     }
     parent
 }
@@ -934,7 +911,7 @@ pub fn provide_selection_ranges(
 ) -> Result<Vec<SelectionRange>, String> {
     let mut rev_results = Vec::new();
     for lsp_position in positions {
-        let position = lsp_position_to_flow_position(*lsp_position);
+        let position = lsp_position_to_flow_position(lsp_position);
         match selection_range_tree(position, program) {
             Some(range) => rev_results.push(range),
             None => {

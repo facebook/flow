@@ -19,10 +19,9 @@ use flow_parser::ast::types;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc::Loc;
+use flow_server_env::lsp::loc_to_lsp_range;
 use lsp_types::DocumentSymbol;
 use lsp_types::Location;
-use lsp_types::Position;
-use lsp_types::Range;
 use lsp_types::SymbolInformation;
 use lsp_types::SymbolKind;
 use lsp_types::Url;
@@ -104,19 +103,6 @@ fn kind_of_property(is_method: bool) -> SymbolKind {
         SymbolKind::METHOD
     } else {
         SymbolKind::PROPERTY
-    }
-}
-
-fn loc_to_lsp_range(loc: &Loc) -> Range {
-    Range {
-        start: Position {
-            line: loc.start.line.saturating_sub(1).max(0) as u32,
-            character: loc.start.column.max(0) as u32,
-        },
-        end: Position {
-            line: loc.end.line.saturating_sub(1).max(0) as u32,
-            character: loc.end.column.max(0) as u32,
-        },
     }
 }
 

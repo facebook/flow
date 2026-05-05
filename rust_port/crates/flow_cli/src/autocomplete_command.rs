@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use flow_lsp::flow_lsp;
+use flow_lsp::lsp_fmt;
 use flow_server_env::flow_lsp_conversions;
 use flow_server_env::server_prot;
 use flow_services_autocomplete::autocomplete_sigil;
@@ -231,7 +231,7 @@ fn main(args: &arg_spec::Values) {
                                     index,
                                     item,
                                 );
-                                let json_value = flow_lsp::lsp_fmt_completion_item_fmt_to_json(
+                                let json_value = lsp_fmt::completion_item_fmt::to_json(
                                     "<PLACEHOLDER_PROJECT_URL>",
                                     &lsp_item,
                                 );

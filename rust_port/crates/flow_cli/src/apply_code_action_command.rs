@@ -7,7 +7,7 @@
 
 use std::io::Write;
 
-use flow_lsp::flow_lsp;
+use flow_lsp::lsp_fmt;
 use flow_parser_utils_output::replacement_printer;
 use flow_parser_utils_output::replacement_printer::Patch;
 use flow_server_env::server_prot;
@@ -280,9 +280,7 @@ mod suggest_imports {
         let result_json = serde_json::Value::Object(
             lsp_result
                 .into_iter()
-                .map(|(name, result)| {
-                    (name, flow_lsp::lsp_fmt_print_code_action_result("", result))
-                })
+                .map(|(name, result)| (name, lsp_fmt::print_code_action_result("", &result)))
                 .collect::<serde_json::Map<String, serde_json::Value>>(),
         );
         flow_hh_json::print_json_endline(pretty, &result_json);

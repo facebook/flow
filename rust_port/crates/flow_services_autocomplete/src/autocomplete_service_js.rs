@@ -32,12 +32,12 @@ use flow_common_ty::ty::Ty;
 use flow_common_ty::ty_printer;
 use flow_common_ty::ty_utils;
 use flow_env_builder::env_api::DefLocType;
+use flow_lsp::lsp::lsp_position_to_flow_position;
 use flow_parser::ast;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::file_key::FileKey;
 use flow_parser::js_id_unicode::string_is_valid_identifier_name;
 use flow_parser::loc::Loc;
-use flow_parser::loc::Position;
 use flow_parser_utils::ast_builder;
 use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::file_sig::RequireBindings;
@@ -72,7 +72,6 @@ use flow_typing_utils::typed_ast_utils::AvailableAst;
 use lsp_types::CompletionItemKind as LspCompletionItemKind;
 use lsp_types::CompletionItemTag as LspCompletionItemTag;
 use lsp_types::InsertTextFormat as LspInsertTextFormat;
-use lsp_types::Position as LspPosition;
 use lsp_types::TextEdit as LspTextEdit;
 
 use crate::autocomplete_js;
@@ -935,19 +934,12 @@ fn src_dir_of_loc(ac_loc: &Loc) -> Option<String> {
     })
 }
 
-fn lsp_position_to_flow_position(position: LspPosition) -> Position {
-    Position {
-        line: position.line as i32 + 1,
-        column: position.character as i32,
-    }
-}
-
 fn flow_text_edit_of_lsp_text_edit(source: Option<&FileKey>, edit: &LspTextEdit) -> (Loc, String) {
     (
         Loc {
             source: source.cloned(),
-            start: lsp_position_to_flow_position(edit.range.start),
-            end: lsp_position_to_flow_position(edit.range.end),
+            start: lsp_position_to_flow_position(&edit.range.start),
+            end: lsp_position_to_flow_position(&edit.range.end),
         },
         edit.new_text.clone(),
     )

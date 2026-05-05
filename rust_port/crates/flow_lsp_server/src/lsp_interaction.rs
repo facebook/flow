@@ -7,12 +7,12 @@
 
 use std::collections::BTreeMap;
 
-use flow_server_env::lsp_mapper::DocumentUri;
-use flow_server_env::lsp_mapper::LspId;
-use flow_server_env::lsp_mapper::LspMessage;
-use flow_server_env::lsp_mapper::LspNotification;
-use flow_server_env::lsp_mapper::LspRequest;
-use flow_server_env::lsp_mapper::LspResult;
+use flow_server_env::lsp::DocumentUri;
+use flow_server_env::lsp::LspId;
+use flow_server_env::lsp::LspMessage;
+use flow_server_env::lsp::LspNotification;
+use flow_server_env::lsp::LspRequest;
+use flow_server_env::lsp::LspResult;
 use flow_server_env::lsp_prot;
 
 pub type Id = i32;
@@ -309,7 +309,7 @@ pub fn recheck_start(start_state: State) {
 
 fn log_inner(ux: &Ux, trigger: &Trigger, start_state: &State, end_state: &State) {
     let is_timeout_ux = matches!(ux, Ux::Timeout);
-    let lsp_id = lsp_id_of_trigger(trigger).map(crate::flow_lsp::lsp_fmt_id_to_string);
+    let lsp_id = lsp_id_of_trigger(trigger).map(flow_lsp::lsp_fmt::id_to_string);
     let uri = uri_of_ux(ux).map(|u| u.as_str().to_string());
     flow_interaction_logger::interaction(
         lsp_id.as_deref(),

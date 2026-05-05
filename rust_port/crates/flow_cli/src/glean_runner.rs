@@ -30,7 +30,8 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_heap::resolved_requires::Dependency;
 use flow_heap::resolved_requires::ResolvedModule;
-use flow_lsp::document_symbol_provider;
+use flow_lsp::lsp::lsp_range_to_flow_loc;
+use flow_lsp_server::document_symbol_provider;
 use flow_parser::ast;
 use flow_parser::ast_utils;
 use flow_parser::ast_visitor;
@@ -57,7 +58,6 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_ty_normalizer::env::Options as TyNormalizerOptions;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_util;
-use lsp_types::Range as LspRange;
 use serde_json::Value;
 use serde_json::json;
 
@@ -95,20 +95,6 @@ pub(crate) struct GleanRuntimeConfig {
 }
 
 pub(crate) static GLEAN_RUNTIME_CONFIG: OnceLock<GleanRuntimeConfig> = OnceLock::new();
-
-fn lsp_range_to_flow_loc(source: Option<FileKey>, range: &LspRange) -> Loc {
-    Loc {
-        source,
-        start: flow_parser::loc::Position {
-            line: range.start.line as i32 + 1,
-            column: range.start.character as i32,
-        },
-        end: flow_parser::loc::Position {
-            line: range.end.line as i32 + 1,
-            column: range.end.character as i32,
-        },
-    }
-}
 
 #[allow(dead_code)]
 fn implementation_file(

@@ -5,12 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#![feature(never_type)]
-#![feature(unwrap_infallible)]
-
-pub mod document_symbol_provider;
-pub mod flow_lsp;
-pub mod lsp_errors;
-pub mod lsp_interaction;
-pub mod rage_print;
-pub mod selection_range_provider;
+pub mod lsp;
+pub mod lsp_fmt;
+pub mod lsp_helpers;
+pub mod lsp_mapper;

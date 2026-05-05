@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_lsp::lsp_fmt;
 use flow_server_env::file_watcher_status;
 use flow_server_env::lsp_connect_params::ConnectParams;
 use flow_server_env::lsp_prot;
@@ -87,7 +88,7 @@ pub fn string_of_show_status(show_status: &ShowStatusT) -> String {
         ShowStatusT::Shown(id_opt, params) => {
             let id_str = match id_opt {
                 None => "None".to_string(),
-                Some(id) => lsp_fmt_id_to_string(id),
+                Some(id) => lsp_fmt::id_to_string(id),
             };
             let params_json = serde_json::to_string(&serde_json::json!({
                 "type": serde_json::to_value(params.request.typ).unwrap_or_default(),
@@ -124,7 +125,7 @@ pub fn add_ienv(b: &mut String, ienv: &InitializedEnv) {
         &ienv
             .i_outstanding_local_handlers
             .keys()
-            .map(lsp_fmt_id_to_string)
+            .map(lsp_fmt::id_to_string)
             .collect::<Vec<_>>()
             .join(","),
     );
@@ -137,8 +138,8 @@ pub fn add_ienv(b: &mut String, ienv: &InitializedEnv) {
             .map(|(id, req)| {
                 format!(
                     "{}:{}",
-                    lsp_fmt_id_to_string(id),
-                    request_name_to_string(req)
+                    lsp_fmt::id_to_string(id),
+                    lsp_fmt::request_name_to_string(req)
                 )
             })
             .collect::<Vec<_>>()
@@ -154,8 +155,8 @@ pub fn add_ienv(b: &mut String, ienv: &InitializedEnv) {
                 format!(
                     "#{}:{}:{}",
                     id.server_id,
-                    lsp_fmt_id_to_string(&id.message_id),
-                    request_name_to_string(req)
+                    lsp_fmt::id_to_string(&id.message_id),
+                    lsp_fmt::request_name_to_string(req)
                 )
             })
             .collect::<Vec<_>>()
@@ -234,7 +235,7 @@ pub fn add_cenv(b: &mut String, cenv: &ConnectedEnv) {
         &cenv
             .c_outstanding_requests_to_server
             .iter()
-            .map(lsp_fmt_id_to_string)
+            .map(lsp_fmt::id_to_string)
             .collect::<Vec<_>>()
             .join(","),
     );

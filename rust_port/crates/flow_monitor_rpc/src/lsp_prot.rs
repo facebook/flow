@@ -5,13 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::collections::BTreeMap;
-
 use dupe::Dupe;
 use lsp_types::Diagnostic;
 use lsp_types::DiagnosticSeverity;
-use lsp_types::NumberOrString;
-use lsp_types::Url;
 
 use crate::file_watcher_status;
 use crate::server_status;
@@ -102,13 +98,13 @@ pub struct LoggingContext {
 
 pub type ProfilingFinished = serde_json::Value;
 
-pub type LspId = NumberOrString;
+pub type LspId = flow_lsp::lsp::LspId;
 
-pub type LspMessage = crate::lsp_mapper::LspMessage;
+pub type LspMessage = flow_lsp::lsp::LspMessage;
 
-pub type DocumentUri = Url;
+pub type DocumentUri = flow_lsp::lsp::DocumentUri;
 
-pub type UriMap<V> = BTreeMap<Url, V>;
+pub type UriMap<V> = flow_lsp::lsp::UriMap<V>;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Metadata {
@@ -349,7 +345,7 @@ pub struct MessageFromServerMapper {
 }
 
 pub fn default_message_from_server_mapper(
-    lsp_mapper: std::sync::Arc<crate::lsp_mapper::T>,
+    lsp_mapper: std::sync::Arc<flow_lsp::lsp_mapper::T>,
 ) -> MessageFromServerMapper {
     let lsp_mapper_clone1 = lsp_mapper.clone();
     let of_live_errors_failure = Box::new(

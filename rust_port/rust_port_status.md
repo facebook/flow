@@ -838,22 +838,22 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `map_userland` → `Userland::map()`
     - [x] `unwrap_userland` → `Userland::into_inner()` / `Userland::as_str()`
     - [x] `userland_specifier` → `FlowImportSpecifier::userland()`
-  - [ ] flow_lsp_conversions.ml → `flow_server_env/src/flow_lsp_conversions.rs`
-    - [ ] `markup_string`
-    - [ ] `selection_range_of_loc`
-    - [ ] `func_details_result_to_lsp`
-    - [ ] `flow_signature_help_to_lsp`
+  - [x] flow_lsp_conversions.ml → `flow_server_env/src/flow_lsp_conversions.rs`
+    - [x] `markup_string`
+    - [x] `selection_range_of_loc`
+    - [x] `func_details_result_to_lsp`
+    - [x] `flow_signature_help_to_lsp`
     - [x] `flow_completion_item_to_lsp`
     - [x] `flow_completions_to_lsp`
-    - [ ] `file_key_to_uri`
-    - [ ] `loc_to_lsp`
-    - [ ] `loc_to_lsp_with_default`
-    - [ ] `flow_edit_to_textedit`
-    - [ ] `lsp_DocumentIdentifier_to_flow_path`
-    - [ ] `position_of_document_position`
+    - [x] `file_key_to_uri`
+    - [x] `loc_to_lsp`
+    - [x] `loc_to_lsp_with_default`
+    - [x] `flow_edit_to_textedit`
+    - [x] `lsp_DocumentIdentifier_to_flow_path`
+    - [x] `position_of_document_position`
     - [x] `diagnostics_of_flow_errors`
-    - [ ] `synthetic_diagnostics_of_switch_to_match_eligible_locations`
-    - [ ] `synthetic_diagnostics_of_refined_locations`
+    - [x] `synthetic_diagnostics_of_switch_to_match_eligible_locations`
+    - [x] `synthetic_diagnostics_of_refined_locations`
   - [x] flow_projects.ml → `flow_common/src/flow_projects.rs`
     - [x] `default_options` → `ProjectsOptions::default()` (via Default trait)
     - [x] `mk_options` → `ProjectsOptions::mk()`
@@ -1126,44 +1126,80 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] __tests__/
         - [x] http_lite_test.ml (use rust crates)
       - [x] http_lite.ml → `unnecessary` (use rust crates)
-    - [ ] jsonrpc/
-      - [ ] jsonrpc.ml
+    - [x] jsonrpc/
+      - [x] jsonrpc.ml → `flow_lsp_server/src/jsonrpc.rs`
     - [ ] lsp/
       - [ ] __tests__/
         - [ ] lsp_fmt_test.ml
-      - [x] lsp.ml → `lsp_types` crate (standard LSP types) + `flow_monitor_rpc/src/lsp_prot.rs` (Flow extensions)
-      - [ ] lsp_fmt.ml
-      - [ ] lsp_helpers.ml → `flow_server_env/src/lsp_helpers.rs`
-        - [ ] `lsp_uri_to_path`
-        - [ ] `path_to_lsp_uri`
-        - [ ] `lsp_textDocumentIdentifier_to_filename`
-        - [ ] `lsp_position_to_fc`
-        - [ ] `lsp_range_to_fc`
-        - [ ] `lsp_edit_to_fc`
+      - [x] lsp.ml → `flow_lsp/src/lsp.rs` (Flow-specific extension types only; standard LSP types use `lsp_types` crate)
+        - [x] `lsp_id` type → `LspId`
+        - [x] `DocumentUri` module → `DocumentUri`
+        - [x] `UriSet` module → unnecessary (use Rust set types directly)
+        - [x] `UriMap` module → `UriMap`
+        - [x] `position` type → `lsp_types::Position`
+        - [x] `range` type → `lsp_types::Range`
+        - [x] `flow_position_to_lsp`
+        - [x] `lsp_position_to_flow`
+        - [x] `lsp_position_to_flow_position`
+        - [x] `lsp_range_to_flow_loc`
+        - [x] `loc_to_lsp_range`
+        - [x] Standard LSP protocol structures → `lsp_types` crate
+        - [x] `WorkspaceSymbolInformation` module → `workspace_symbol_information`
+        - [x] `Rage` module → `rage`
+        - [x] `Ping` module → `ping`
+        - [x] `Completion.completionItem.textEdit` union → `TextEditOrInsertReplaceEdit`
+        - [x] `TextDocumentDiagnostics` module → `text_document_diagnostics`
+        - [x] `WorkspaceSymbol.result` type → `workspace_symbol_result::T`
+        - [x] `DocumentSymbol.result` type → `document_symbol_result::T`
+        - [x] `TypeCoverage` module → `type_coverage`
+        - [x] `ShowStatus` module → `show_status`
+        - [x] `ConnectionStatus` module → `connection_status`
+        - [x] `RenameFiles` module → `rename_files`
+        - [x] `WillRenameFiles` module → `will_rename_files`
+        - [x] `Error` module → `error`
+        - [x] `Error.code_to_enum`
+        - [x] `Error.code_of_enum`
+        - [x] `RegisterCapability` module → `register_capability`
+        - [x] `AutoCloseJsx` module → `auto_close_jsx`
+        - [x] `DocumentPaste` module → `document_paste`
+        - [x] `RenameFileImports` module → `rename_file_imports`
+        - [x] `LLMContext` module → `llm_context`
+        - [x] `lsp_request` type → `LspRequest`
+        - [x] `lsp_result` type → `LspResult`
+        - [x] `lsp_notification` type → `LspNotification`
+        - [x] `lsp_message` type → `LspMessage`
+      - [x] lsp_fmt.ml → `flow_lsp/src/lsp_fmt.rs`
+      - [x] lsp_helpers.ml → `flow_lsp/src/lsp_helpers.rs`
+        - [x] `lsp_uri_to_path`
+        - [x] `path_to_lsp_uri`
+        - [x] `lsp_textDocumentIdentifier_to_filename`
+        - [x] `lsp_position_to_fc`
+        - [x] `lsp_range_to_fc`
+        - [x] `lsp_edit_to_fc`
         - [x] `apply_changes`
-        - [ ] `get_char_from_lsp_position`
-        - [ ] `apply_changes_unsafe`
-        - [ ] `pos_compare`
-        - [ ] `ranges_overlap`
-        - [ ] `get_range_overlap`
-        - [ ] `update_pos_due_to_prior_replace`
-        - [ ] `update_range_due_to_replace`
-        - [ ] `update_diagnostics_due_to_change`
-        - [ ] `get_root`
-        - [ ] `supports_codeActionKinds`
-        - [ ] `supports_experimental_snippet_text_edit`
-        - [ ] `supports_configuration`
-        - [ ] `supports_status`
+        - [x] `get_char_from_lsp_position`
+        - [x] `apply_changes_unsafe`
+        - [x] `pos_compare`
+        - [x] `ranges_overlap`
+        - [x] `get_range_overlap`
+        - [x] `update_pos_due_to_prior_replace`
+        - [x] `update_range_due_to_replace`
+        - [x] `update_diagnostics_due_to_change`
+        - [x] `get_root`
+        - [x] `supports_codeActionKinds`
+        - [x] `supports_experimental_snippet_text_edit`
+        - [x] `supports_configuration`
+        - [x] `supports_status`
         - [x] `supports_snippets`
         - [x] `supports_tags`
         - [x] `supports_preselect`
         - [x] `supports_completion_item_insert_replace`
         - [x] `supports_completion_item_label_details`
-        - [ ] `supports_hierarchical_document_symbol`
-        - [ ] `supports_connectionStatus`
-      - [x] lsp_mapper.ml → `flow_monitor_rpc/src/lsp_mapper.rs` (uses `lsp_types` crate)
-    - [ ] lsp_writers/
-      - [ ] lsp_writers.ml
+        - [x] `supports_hierarchical_document_symbol`
+        - [x] `supports_connectionStatus`
+      - [x] lsp_mapper.ml → `flow_lsp/src/lsp_mapper.rs` (uses `lsp_types` crate)
+    - [x] lsp_writers/
+      - [x] lsp_writers.ml → `flow_lsp_server/src/lsp_writers.rs`
     - [x] marshal_tools/
       - [x] marshal_tools.ml → `unnecessary` (uses `serde` and `bincode` crates)
       - [x] marshal_tools_lwt.ml → `unnecessary` (uses `serde` and `bincode` crates)
@@ -1214,9 +1250,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] workerCancel.ml → `flow_utils_concurrency/src/worker_cancel.rs`
 - [ ] lsp/
   - [x] __tests__/
-    - [x] lspErrors_test.ml → tests in `flow_lsp/src/lsp_errors.rs`
-  - [x] documentSymbolProvider.ml → `flow_lsp/src/document_symbol_provider.rs`
-  - [ ] flowLsp.ml → `flow_lsp/src/flow_lsp.rs` (persistent TCP connection to standalone server, server auto-start/kill, LSP request keying, and connected-mode event loop are now functional; shared connect params live in `flow_server_env/src/lsp_connect_params.rs`; see remaining function-level gaps)
+    - [x] lspErrors_test.ml → tests in `flow_lsp_server/src/lsp_errors.rs`
+  - [x] documentSymbolProvider.ml → `flow_lsp_server/src/document_symbol_provider.rs`
+  - [ ] flowLsp.ml → `flow_lsp_server/src/flow_lsp.rs` (`show_status` and `show_connected_status` (Nuclide `window/status` capability unported), `get_local_request_handler` (no OCaml-style mistyped-handler validation), and `run` (synchronous loop, no Lwt-based event loop or periodic tick))
     - [x] `wrapped_id` type → `WrappedId`
     - [x] `encode_wrapped`
     - [x] `decode_wrapped`
@@ -1272,17 +1308,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `get_next_event_sync` (Rust-only: synchronous event multiplexer for server + client)
     - [x] `persistent_rpc` (Rust-only: TCP-based server RPC for standalone mode)
     - [x] `try_decode_wrapped`
-    - [x] `lsp_fmt_parse_id`
-    - [x] `lsp_helpers_supports_status`
-    - [x] `lsp_helpers_supports_connection_status`
-    - [x] `lsp_helpers_lsp_uri_to_path`
-    - [x] `lsp_helpers_get_root`
-    - [x] `parse_lsp_request`
-    - [x] `lsp_fmt_print_code_action_result`
     - [x] `start_flow_server`
     - [x] `kill_stale_server`
-  - [x] lspErrors.ml → `flow_lsp/src/lsp_errors.rs`
-  - [x] lspInteraction.ml → `flow_lsp/src/lsp_interaction.rs`
+  - [x] lspErrors.ml → `flow_lsp_server/src/lsp_errors.rs`
+  - [x] lspInteraction.ml → `flow_lsp_server/src/lsp_interaction.rs`
     - [x] `id` type → `Id`
     - [x] `trigger` type → `Trigger`
     - [x] `source` type → `Source`
@@ -1309,7 +1338,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `init`
     - [x] `flush`
     - [x] `trigger_of_lsp_msg`
-  - [x] selectionRangeProvider.ml → `flow_lsp/src/selection_range_provider.rs`
+  - [x] selectionRangeProvider.ml → `flow_lsp_server/src/selection_range_provider.rs`
 - [x] monitor/
   - [x] connections/
     - [x] ephemeralConnection.ml → `flow_server_monitor/src/flow_server_monitor_connection.rs` (type alias `EphemeralConnection`)

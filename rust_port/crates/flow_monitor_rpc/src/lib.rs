@@ -6,7 +6,6 @@
  */
 
 pub mod file_watcher_status;
-pub mod lsp_mapper;
 pub mod lsp_prot;
 pub mod monitor_prot;
 pub mod monitor_rpc;
