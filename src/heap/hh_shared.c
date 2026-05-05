@@ -87,9 +87,16 @@
 // can't support that at the moment. These are shared with handle_stubs.c
 #ifdef _WIN32
 #define Val_handle(fd) (win_alloc_handle(fd))
+/* Convert an OCaml Unix.file_descr to an int fd usable with POSIX
+ * read/write/lseek. On Windows, this goes via win_CRT_fd_of_filedescr,
+ * which calls _open_osfhandle(_, O_BINARY) and caches the CRT fd in the
+ * filedescr struct so that OCaml's Unix.close properly _close()s it
+ * later (avoiding a CRT fd-slot leak). */
+#define Fd_val(fd) (win_CRT_fd_of_filedescr(fd))
 #else
 #define Handle_val(fd) (Long_val(fd))
 #define Val_handle(fd) (Val_long(fd))
+#define Fd_val(fd) (Handle_val(fd))
 #endif
 
 /****************************************************************************
@@ -2128,7 +2135,7 @@ CAMLprim value hh_save_heap(value fd_val) {
   assert_master();
   assert(info != NULL);
 
-  int fd = Handle_val(fd_val);
+  int fd = Fd_val(fd_val);
 
   /* Step 1: Null out lazy fields so GC can collect them */
   hh_prepare_saved_state();
@@ -2370,7 +2377,7 @@ CAMLprim value hh_load_heap(value fd_val) {
   CAMLparam1(fd_val);
   assert(info != NULL);
 
-  int fd = Handle_val(fd_val);
+  int fd = Fd_val(fd_val);
 
   /* Read magic to determine format — small read, keep the lock */
   uint64_t magic;
