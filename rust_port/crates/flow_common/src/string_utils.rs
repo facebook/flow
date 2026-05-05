@@ -86,3 +86,33 @@ pub fn indent(indent_size: usize, str: &str) -> String {
         .collect();
     mapped.join("\n")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_truncate_short() {
+        let s = "hello world";
+        let len = s.len();
+        let truncated = truncate(len, s);
+        assert_eq!(
+            "hello world", truncated,
+            "truncated to exact length should return the same string"
+        );
+        let len = len + 10;
+        let truncated = truncate(len, s);
+        assert_eq!(
+            "hello world", truncated,
+            "truncated with room for more should return the same string"
+        );
+    }
+
+    #[test]
+    fn test_truncate_long() {
+        let s = "hello world";
+        let len = 5;
+        let truncated = truncate(len, s);
+        assert_eq!("hello", truncated, "truncate cuts the string short");
+    }
+}

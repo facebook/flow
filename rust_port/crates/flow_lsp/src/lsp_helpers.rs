@@ -116,6 +116,7 @@ pub fn ranges_overlap(a: &Range, b: &Range) -> bool {
     !(pos_compare(&a.end, &b.start) < 0 || pos_compare(&a.start, &b.end) > 0)
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RangeOverlap {
     SelectionBeforeStartOfSquiggle,
     SelectionOverlapsStartOfSquiggle,
@@ -398,4 +399,324 @@ pub fn supports_connection_status(params: &lsp_types::InitializeParams) -> bool 
         .and_then(|experimental| experimental.get("telemetry/connectionStatus"))
         .and_then(|status| status.as_bool())
         .unwrap_or(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn p(line: u32, character: u32) -> Position {
+        Position { line, character }
+    }
+
+    fn r(start: Position, end: Position) -> Range {
+        Range { start, end }
+    }
+
+    fn replace(
+        remove_range: Range,
+        insert_lines: u32,
+        insert_chars_on_final_line: u32,
+    ) -> RangeReplace {
+        RangeReplace {
+            remove_range,
+            insert_lines,
+            insert_chars_on_final_line,
+        }
+    }
+
+    #[test]
+    fn test_pos_compare() {
+        let p1 = p(1, 3);
+        let p2 = p(2, 0);
+        let p3 = p(2, 1);
+        assert!(pos_compare(&p1, &p2) < 0, "p1 < p2");
+        assert!(pos_compare(&p2, &p1) > 0, "p2 > p1");
+        assert_eq!(0, pos_compare(&p2, &p2), "p2 = p2");
+        assert!(pos_compare(&p2, &p3) < 0, "p2 < p3");
+    }
+
+    #[test]
+    fn test_range_overlap() {
+        let p1 = p(1, 5);
+        let p2 = p(2, 3);
+        let p3 = p(2, 4);
+        let p4 = p(3, 1);
+        let p5 = p(3, 9);
+        let p6 = p(4, 5);
+        let p7 = p(4, 8);
+        let p8 = p(5, 4);
+        let sel11 = r(p1, p1);
+        let sel12 = r(p1, p2);
+        let sel13 = r(p1, p3);
+        let sel14 = r(p1, p4);
+        let sel15 = r(p1, p5);
+        let sel16 = r(p1, p6);
+        let sel17 = r(p1, p7);
+        let sel18 = r(p1, p8);
+        let sel22 = r(p2, p2);
+        let sel23 = r(p2, p3);
+        let sel24 = r(p2, p4);
+        let sel25 = r(p2, p5);
+        let sel26 = r(p2, p6);
+        let sel27 = r(p2, p7);
+        let sel28 = r(p2, p8);
+        let sel33 = r(p3, p3);
+        let sel34 = r(p3, p4);
+        let sel35 = r(p3, p5);
+        let sel36 = r(p3, p6);
+        let sel37 = r(p3, p7);
+        let sel38 = r(p3, p8);
+        let sel44 = r(p4, p4);
+        let sel45 = r(p4, p5);
+        let sel46 = r(p4, p6);
+        let sel47 = r(p4, p7);
+        let sel48 = r(p4, p8);
+        let sel55 = r(p5, p5);
+        let sel56 = r(p5, p6);
+        let sel57 = r(p5, p7);
+        let sel58 = r(p5, p8);
+        let sel66 = r(p6, p6);
+        let sel67 = r(p6, p7);
+        let sel68 = r(p6, p8);
+        let sel77 = r(p7, p7);
+        let sel78 = r(p7, p8);
+        let sel88 = r(p8, p8);
+        let squiggle = sel36;
+        let cases = [
+            (sel11, RangeOverlap::SelectionBeforeStartOfSquiggle, "sel11"),
+            (sel12, RangeOverlap::SelectionBeforeStartOfSquiggle, "sel12"),
+            (
+                sel13,
+                RangeOverlap::SelectionOverlapsStartOfSquiggle,
+                "sel13",
+            ),
+            (
+                sel14,
+                RangeOverlap::SelectionOverlapsStartOfSquiggle,
+                "sel14",
+            ),
+            (
+                sel15,
+                RangeOverlap::SelectionOverlapsStartOfSquiggle,
+                "sel15",
+            ),
+            (sel16, RangeOverlap::SelectionCoversWholeSquiggle, "sel16"),
+            (sel17, RangeOverlap::SelectionCoversWholeSquiggle, "sel17"),
+            (sel18, RangeOverlap::SelectionCoversWholeSquiggle, "sel18"),
+            (sel22, RangeOverlap::SelectionBeforeStartOfSquiggle, "sel22"),
+            (
+                sel23,
+                RangeOverlap::SelectionOverlapsStartOfSquiggle,
+                "sel23",
+            ),
+            (
+                sel24,
+                RangeOverlap::SelectionOverlapsStartOfSquiggle,
+                "sel24",
+            ),
+            (
+                sel25,
+                RangeOverlap::SelectionOverlapsStartOfSquiggle,
+                "sel25",
+            ),
+            (sel26, RangeOverlap::SelectionCoversWholeSquiggle, "sel26"),
+            (sel27, RangeOverlap::SelectionCoversWholeSquiggle, "sel27"),
+            (sel28, RangeOverlap::SelectionCoversWholeSquiggle, "sel28"),
+            (
+                sel33,
+                RangeOverlap::SelectionOverlapsStartOfSquiggle,
+                "sel33",
+            ),
+            (
+                sel34,
+                RangeOverlap::SelectionOverlapsStartOfSquiggle,
+                "sel34",
+            ),
+            (
+                sel35,
+                RangeOverlap::SelectionOverlapsStartOfSquiggle,
+                "sel35",
+            ),
+            (sel36, RangeOverlap::SelectionCoversWholeSquiggle, "sel36"),
+            (sel37, RangeOverlap::SelectionCoversWholeSquiggle, "sel37"),
+            (sel38, RangeOverlap::SelectionCoversWholeSquiggle, "sel38"),
+            (sel44, RangeOverlap::SelectionInMiddleOfSquiggle, "sel44"),
+            (sel45, RangeOverlap::SelectionInMiddleOfSquiggle, "sel45"),
+            (sel46, RangeOverlap::SelectionOverlapsEndOfSquiggle, "sel46"),
+            (sel47, RangeOverlap::SelectionOverlapsEndOfSquiggle, "sel47"),
+            (sel48, RangeOverlap::SelectionOverlapsEndOfSquiggle, "sel48"),
+            (sel55, RangeOverlap::SelectionInMiddleOfSquiggle, "sel55"),
+            (sel56, RangeOverlap::SelectionOverlapsEndOfSquiggle, "sel56"),
+            (sel57, RangeOverlap::SelectionOverlapsEndOfSquiggle, "sel57"),
+            (sel58, RangeOverlap::SelectionOverlapsEndOfSquiggle, "sel58"),
+            (sel66, RangeOverlap::SelectionOverlapsEndOfSquiggle, "sel66"),
+            (sel67, RangeOverlap::SelectionOverlapsEndOfSquiggle, "sel67"),
+            (sel68, RangeOverlap::SelectionOverlapsEndOfSquiggle, "sel68"),
+            (sel77, RangeOverlap::SelectionAfterEndOfSquiggle, "sel77"),
+            (sel78, RangeOverlap::SelectionAfterEndOfSquiggle, "sel78"),
+            (sel88, RangeOverlap::SelectionAfterEndOfSquiggle, "sel88"),
+        ];
+        for (selection, expected, msg) in cases {
+            assert_eq!(expected, get_range_overlap(&selection, &squiggle), "{msg}");
+        }
+    }
+
+    #[test]
+    fn test_update_pos_due_to_prior_replace() {
+        let remove_many = r(p(1, 6), p(3, 3));
+        let remove_line = r(p(1, 3), p(1, 6));
+        let m_m = replace(remove_many, 3, 4);
+        let m_l = replace(remove_many, 0, 4);
+        let l_m = replace(remove_line, 3, 4);
+        let l_l = replace(remove_line, 0, 4);
+        let p1 = p(1, 11);
+        let p3 = p(3, 8);
+        let p5 = p(5, 1);
+        assert_eq!(
+            p(4, 4),
+            update_pos_due_to_prior_replace(&remove_many.end, &m_m),
+            "replace multiline->multiline, point at end of removal"
+        );
+        assert_eq!(
+            p(4, 9),
+            update_pos_due_to_prior_replace(&p3, &m_m),
+            "replace multiline->multiline, point on same line"
+        );
+        assert_eq!(
+            p(6, 1),
+            update_pos_due_to_prior_replace(&p5, &m_m),
+            "replace multiline->multiline, point on later line"
+        );
+        assert_eq!(
+            p(1, 10),
+            update_pos_due_to_prior_replace(&remove_many.end, &m_l),
+            "replace multiline->one line, point at end of removal"
+        );
+        assert_eq!(
+            p(1, 15),
+            update_pos_due_to_prior_replace(&p3, &m_l),
+            "replace multiline->one line, point on same line"
+        );
+        assert_eq!(
+            p(3, 1),
+            update_pos_due_to_prior_replace(&p5, &m_l),
+            "replace multiline->one line, point on later line"
+        );
+        assert_eq!(
+            p(4, 4),
+            update_pos_due_to_prior_replace(&remove_line.end, &l_m),
+            "replace one line->multiline, point at end of removal"
+        );
+        assert_eq!(
+            p(4, 9),
+            update_pos_due_to_prior_replace(&p1, &l_m),
+            "replace one line->multiline, point on same line"
+        );
+        assert_eq!(
+            p(6, 8),
+            update_pos_due_to_prior_replace(&p3, &l_m),
+            "replace one line->multiline, point on later line"
+        );
+        assert_eq!(
+            p(1, 7),
+            update_pos_due_to_prior_replace(&remove_line.end, &l_l),
+            "replace one line->one line, point at end of removal"
+        );
+        assert_eq!(
+            p(1, 12),
+            update_pos_due_to_prior_replace(&p1, &l_l),
+            "replace one line->one line, point on same line"
+        );
+        assert_eq!(
+            p(3, 8),
+            update_pos_due_to_prior_replace(&p3, &l_l),
+            "replace one line->one line, point on later line"
+        );
+    }
+
+    #[test]
+    fn test_update_range_due_to_replace() {
+        let squiggle = r(p(2, 3), p(2, 8));
+        let cases = [
+            (
+                replace(r(p(0, 0), p(1, 0)), 0, 0),
+                Some(r(p(1, 3), p(1, 8))),
+                "delete line above squiggle",
+            ),
+            (
+                replace(r(p(0, 0), p(0, 0)), 1, 0),
+                Some(r(p(3, 3), p(3, 8))),
+                "add line above squiggle",
+            ),
+            (
+                replace(r(p(2, 2), p(2, 3)), 0, 0),
+                Some(r(p(2, 2), p(2, 7))),
+                "del char before squiggle",
+            ),
+            (
+                replace(r(p(2, 3), p(2, 3)), 0, 1),
+                Some(r(p(2, 4), p(2, 9))),
+                "add char before squiggle",
+            ),
+            (
+                replace(r(p(2, 5), p(2, 6)), 0, 0),
+                Some(r(p(2, 3), p(2, 7))),
+                "del char in squiggle",
+            ),
+            (
+                replace(r(p(2, 5), p(2, 5)), 0, 1),
+                Some(r(p(2, 3), p(2, 9))),
+                "add char in squiggle",
+            ),
+            (
+                replace(r(p(2, 8), p(3, 0)), 0, 0),
+                Some(r(p(2, 3), p(2, 8))),
+                "del line after squiggle",
+            ),
+            (
+                replace(r(p(2, 8), p(2, 8)), 1, 0),
+                Some(r(p(2, 3), p(2, 8))),
+                "add line after squiggle",
+            ),
+            (
+                replace(r(p(2, 8), p(2, 9)), 0, 0),
+                Some(r(p(2, 3), p(2, 8))),
+                "del char after squiggle",
+            ),
+            (
+                replace(r(p(2, 8), p(2, 8)), 0, 1),
+                Some(r(p(2, 3), p(2, 8))),
+                "add char after squiggle",
+            ),
+            (replace(r(p(2, 3), p(2, 8)), 0, 0), None, "del squiggle"),
+            (
+                replace(r(p(2, 0), p(3, 0)), 0, 0),
+                None,
+                "del squiggle line",
+            ),
+            (
+                replace(r(p(2, 0), p(3, 0)), 1, 10),
+                None,
+                "replace squiggle line",
+            ),
+            (
+                replace(r(p(2, 0), p(2, 5)), 0, 1),
+                Some(r(p(2, 1), p(2, 4))),
+                "replace squiggle start",
+            ),
+            (
+                replace(r(p(2, 5), p(2, 12)), 0, 4),
+                Some(r(p(2, 3), p(2, 5))),
+                "replace squiggle end",
+            ),
+        ];
+        for (replace, expected, msg) in cases {
+            assert_eq!(
+                expected,
+                update_range_due_to_replace(&squiggle, &replace),
+                "{msg}"
+            );
+        }
+    }
 }

@@ -1035,25 +1035,25 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] common/
         - [x] eventLogger.ml → `flow_event_logger_lwt/src/lib.rs` (oss stub)
         - [x] scuba.ml → `oss stub`
-  - [ ] test/
-    - [ ] facebook/
-      - [ ] logging/
-        - [ ] scribeCatTest.ml
-        - [ ] scubaTableTest.ml
+  - [x] test/
+    - [x] facebook/
+      - [x] logging/
+        - [x] scribeCatTest.ml → `facebook/flow_facebook_logging/src/scuba.rs` (inline tests)
+        - [x] scubaTableTest.ml → `facebook/flow_facebook_logging/src/scuba.rs` (inline tests)
     - [x] procs/
       - [x] procs_test_utils.ml → `not needed` (OCaml forked worker test harness; Rust uses `flow_utils_concurrency::{thread_pool,map_reduce}`)
       - [x] procs_unit_test.ml → `not needed` (tests OCaml `MultiWorkerLwt`/forked workers; Rust worker model is thread-based)
-    - [ ] unit/
+    - [x] unit/
       - [x] heap/
         - [x] test_hashtbl.ml → `not needed` (tests OCaml shared-memory C hash table semantics; Rust heap uses `LockedMap`)
         - [x] test_removed.ml → `not needed` (tests OCaml `SharedMem.SerializedHeap`; Rust heap storage is `LockedMap`/`Entity`)
-      - [ ] utils/
+      - [x] utils/
         - [x] buffered_line_reader_test.ml → `not needed` (no standalone Rust `Buffered_line_reader`; Watchman/JSON-RPC use `BufReader`)
         - [x] collections_test.ml → `not needed` (tests OCaml `WrappedMap`/`ImmQueue`; Rust uses standard map/queue types)
         - [x] file_url_test.ml → `not needed` (Rust uses `lsp_types::Url::{from_file_path,to_file_path}`)
         - [x] hh_json_test.ml → `not needed` (use `serde_json`)
-        - [ ] lsp_helpers_test.ml
-        - [ ] string_utils_test.ml
+        - [x] lsp_helpers_test.ml → `flow_lsp/src/lsp_helpers.rs` (inline tests)
+        - [x] string_utils_test.ml → `flow_common/src/string_utils.rs` (inline tests)
         - [x] timeout_test.ml → not needed (tests OCaml signal/select timeout implementation; Rust uses `tokio::time::timeout`/native timeouts)
         - [x] timer_test.ml → not needed (tests OCaml signal-based timer queue; Rust uses `tokio::time`)
       - [x] unit_test.ml → not needed (OCaml-only test runner; Rust uses native test harness/Buck-generated unittest targets)
@@ -1065,8 +1065,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] test_disk_utils.ml → not needed (helper for omitted OCaml `Disk` tests)
       - [x] tempfile/
         - [x] tempfile.ml → not needed (OCaml test helper; Rust tests should use Rust tempdir helpers)
-    - [ ] watchman/
-      - [ ] watchman_unit_test.ml → needed as Rust tests for `flow_watchman::testing::transform_asynchronous_get_changes_response`; production code is ported
+    - [x] watchman/
+      - [x] watchman_unit_test.ml → `flow_watchman/src/lib.rs` (inline tests)
   - [ ] utils/
     - [x] buffered_line_reader/
       - [x] buffered_line_reader.ml → not needed as a standalone port (Rust Watchman uses `tokio::io::BufReader`; JSON-RPC uses `std::io::BufReader`)
@@ -1208,6 +1208,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] string/
       - [x] string_utils.ml (partial → `flow_common/src/string_utils.rs`; remaining helpers covered by `String`/`str` methods and `regex` crate)
         - [x] `filename_escape`
+        - [x] `truncate`
         - [x] `split_into_lines`
         - [x] `indent`
     - [x] sys/

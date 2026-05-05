@@ -1495,3 +1495,58 @@ pub mod testing {
         super::transform_asynchronous_get_changes_response(env, json).await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn parse_state_enter_response() {
+        let json: serde_json::Value = serde_json::from_str(
+            r#"{
+  "subscription":  "mysubscriptionname",
+  "root":          "/path/to/root",
+  "state-enter":   "mystate",
+  "clock":         "c:1446410081:18462:7:137",
+  "metadata": {
+    "foo": "bar"
+  }
+  }"#,
+        )
+        .expect("state-enter response JSON should parse");
+        let mut env = testing::get_test_env().await;
+        let response = testing::transform_asynchronous_get_changes_response(&mut env, &json).await;
+        match response {
+            Ok(PushedChanges::StateEnter(state, metadata)) => {
+                assert_eq!("mystate", state);
+                assert_eq!(Some(serde_json::json!({ "foo": "bar" })), metadata);
+            }
+            other => panic!("expected StateEnter response, got {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn parse_state_leave_response() {
+        let json: serde_json::Value = serde_json::from_str(
+            r#"{
+  "subscription":  "mysubscriptionname",
+  "root":          "/path/to/root",
+  "state-leave":   "mystate",
+  "clock":         "c:1446410081:18462:7:137",
+  "metadata": {
+    "foo": "bar"
+  }
+  }"#,
+        )
+        .expect("state-leave response JSON should parse");
+        let mut env = testing::get_test_env().await;
+        let response = testing::transform_asynchronous_get_changes_response(&mut env, &json).await;
+        match response {
+            Ok(PushedChanges::StateLeave(state, metadata)) => {
+                assert_eq!("mystate", state);
+                assert_eq!(Some(serde_json::json!({ "foo": "bar" })), metadata);
+            }
+            other => panic!("expected StateLeave response, got {:?}", other),
+        }
+    }
+}
