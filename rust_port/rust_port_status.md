@@ -1655,7 +1655,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] layout_test.ml → `flow_parser_utils_output/src/layout_test.rs`
       - [x] layout_test_utils.ml → `flow_parser_utils_output/src/layout_test_utils.rs`
       - [x] parser_utils_output_tests.ml → irrelevant (OUnit runner)
-      - [ ] source_test.ml
+      - [x] source_test.ml → `flow_parser_utils_output/src/source_test.rs`
     - [x] printers/
       - [x] __tests__/
         - [x] parser_utils_output_printers_tests.ml → irrelevant (OUnit runner)

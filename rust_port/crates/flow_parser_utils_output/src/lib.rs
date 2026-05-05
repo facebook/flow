@@ -23,3 +23,5 @@ mod layout_test;
 mod layout_test_utils;
 #[cfg(test)]
 mod pretty_printer_test;
+#[cfg(test)]
+mod source_test;

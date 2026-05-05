@@ -11,6 +11,12 @@ pub struct Source {
 }
 
 impl Source {
+    pub fn create() -> Self {
+        Self {
+            buffer: String::with_capacity(127),
+        }
+    }
+
     pub fn add_string(&mut self, s: &str) -> &mut Self {
         self.buffer.push_str(s);
         self
