@@ -262,6 +262,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     | Some (loc, { Ast.Variance.kind = Ast.Variance.Writeonly; _ })
       when not (Context.allow_variance_keywords cx) ->
       Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Writeonly; loc })
+    | Some (loc, { Ast.Variance.kind = Ast.Variance.Plus; _ })
+      when Context.is_variance_sigil_deprecated cx ->
+      Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Plus; loc })
+    | Some (loc, { Ast.Variance.kind = Ast.Variance.Minus; _ })
+      when Context.is_variance_sigil_deprecated cx ->
+      Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Minus; loc })
     | _ -> ());
     Typed_ast_utils.polarity variance
 

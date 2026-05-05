@@ -416,13 +416,12 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
             _ => {}
         }
     }
-    if let Some(ast::Variance {
-        loc,
-        kind: ast::VarianceKind::Writeonly,
-        ..
-    }) = variance
-    {
-        if !cx.allow_variance_keywords() {
+    match variance {
+        Some(ast::Variance {
+            loc,
+            kind: ast::VarianceKind::Writeonly,
+            ..
+        }) if !cx.allow_variance_keywords() => {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
@@ -431,6 +430,33 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
                 })),
             );
         }
+        Some(ast::Variance {
+            loc,
+            kind: ast::VarianceKind::Plus,
+            ..
+        }) if cx.is_variance_sigil_deprecated() => {
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
+                    kind: flow_typing_errors::error_message::VarianceKeywordKind::Plus,
+                    loc: loc.dupe(),
+                })),
+            );
+        }
+        Some(ast::Variance {
+            loc,
+            kind: ast::VarianceKind::Minus,
+            ..
+        }) if cx.is_variance_sigil_deprecated() => {
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
+                    kind: flow_typing_errors::error_message::VarianceKeywordKind::Minus,
+                    loc: loc.dupe(),
+                })),
+            );
+        }
+        _ => {}
     }
     typed_ast_utils::polarity(variance)
 }
