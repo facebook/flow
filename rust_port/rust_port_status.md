@@ -570,8 +570,6 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] semver_range_test.ml → `flow_common_semver/src/semver_range.rs` (inline tests)
       - [x] semver_tests.ml → `flow_common_semver/src/semver.rs` (inline tests; OUnit aggregator dropped)
       - [x] semver_version_test.ml → `flow_common_semver/src/semver_version.rs` (inline tests)
-    - [ ] cli/
-      - [ ] main.ml
     - [x] semver.ml → `flow_common_semver/src/semver.rs`
     - [x] semver_comparator.ml → `flow_common_semver/src/semver_comparator.rs`
     - [x] semver_lexer.mll → `flow_common_semver/src/semver_lexer.rs`
