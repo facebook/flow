@@ -114,7 +114,7 @@ function for_in_post_init() {
 // for-of leaves it possibly uninitialized
 function for_of_post_init() {
   var x: number;
-  for (let p of [] as Array<mixed>) {
+  for (let p of [] as Array<unknown>) {
     x = 0;
   }
   var y: number = x; // error
@@ -148,10 +148,10 @@ function switch_post_init3(i: number): number {
 
 // reference of a let-binding is permitted in a sub-closure within the init expr
 function sub_closure_init_reference() {
-  let x: mixed = function () {
+  let x: unknown = function () {
     return x;
   };
-  const y: mixed = function () {
+  const y: unknown = function () {
     return y;
   };
 

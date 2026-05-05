@@ -10,7 +10,7 @@ type WithIndexer = {
 };
 
 
-type Mapped<O: {...} | ReadonlyArray<mixed>> = {
+type Mapped<O: {...} | ReadonlyArray<unknown>> = {
   [key in keyof O]: Box<O[key]>,
 };
 
@@ -106,7 +106,7 @@ type Mapped<O: {...} | ReadonlyArray<mixed>> = {
 
 // Optionality
 {
-  type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
+  type Partial<T: {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
   declare const partial: Partial<O>;
   partial.foo as number; // ERROR
   partial.foo as number | void; // OK

@@ -328,20 +328,20 @@ References:
            ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:85:25
+Error ---------------------------------------------------------------------------------------------------- test.js:85:27
 
 Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
 since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
 or rewriting the object as a class. [object-this-reference]
 
-   test.js:85:25
-   85|     set foo(v: mixed) { this; }, // error
-                               ^^^^
+   test.js:85:27
+   85|     set foo(v: unknown) { this; }, // error
+                                 ^^^^
 
 References:
    test.js:85:5
-   85|     set foo(v: mixed) { this; }, // error
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   85|     set foo(v: unknown) { this; }, // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:88:24

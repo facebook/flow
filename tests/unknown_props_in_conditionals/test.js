@@ -1,4 +1,4 @@
-declare var mixed: mixed;
+declare var mixed: unknown;
 declare var any: any;
 declare var myObject: Object;
 declare var myFunction: Function;

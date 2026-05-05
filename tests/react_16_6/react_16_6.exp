@@ -357,11 +357,11 @@ References:
    1064|       render: (props: Config, ref: React.RefSetter<Instance>) => Renders,
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    memo_ref.js:7:33
-      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {
+      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => unknown))) {
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    memo_ref.js:7:63
-      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {
-                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => unknown))) {
+                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ memo_ref.js:18:43

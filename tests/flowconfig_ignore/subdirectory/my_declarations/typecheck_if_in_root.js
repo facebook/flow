@@ -1,4 +1,4 @@
 //@flow
 
-var x: mixed = 42;
+var x: unknown = 42;
 x();

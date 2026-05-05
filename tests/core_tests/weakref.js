@@ -2,7 +2,7 @@ let obj: {} = {};
 let dict: {foo: string} = {foo: 'bar'};
 let promise = Promise.resolve();
 
-let mixedArray: Array<mixed> = [];
+let mixedArray: Array<unknown> = [];
 
 let wr1 = new WeakRef(obj); // OK
 let wr2 = new WeakRef(dict); // OK

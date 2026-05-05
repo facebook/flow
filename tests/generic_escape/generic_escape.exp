@@ -202,12 +202,12 @@ Cannot return `ng(...)` because `unknown` [1] is incompatible with `T` [2]. [inc
                   ^^^^^^^^^
 
 References:
-   func.js:10:36
-   10| declare function ng(value: mixed): mixed;
-                                          ^^^^^ [1]
-   func.js:12:42
-   12|   static stableCopy<T: mixed>(value: T): T {
-                                                ^ [2]
+   func.js:10:38
+   10| declare function ng(value: unknown): unknown;
+                                            ^^^^^^^ [1]
+   func.js:12:44
+   12|   static stableCopy<T: unknown>(value: T): T {
+                                                  ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- func.js:25:20

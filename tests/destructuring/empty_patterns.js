@@ -12,10 +12,10 @@ function fun_param_tests() {
   function g1([]): void {} // error: missing-local-annot
   function f2({}) { return 1 } // error: missing-local-annot
   function g2([]) { return 1 } // error: missing-local-annot
-  function f3({}: mixed): void {} // ok
-  function g3([]: mixed): void {} // ok
-  function f4({}: mixed) { return 1 } // ok
-  function g4([]: mixed) { return 1 } // ok
+  function f3({}: unknown): void {} // ok
+  function g3([]: unknown): void {} // ok
+  function f4({}: unknown) { return 1 } // ok
+  function g4([]: unknown) { return 1 } // ok
 }
 
 function var_decl_tests() {

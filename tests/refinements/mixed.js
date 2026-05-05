@@ -121,7 +121,7 @@ function arr0(x: unknown) {
 }
 
 const loop = (condition: boolean) => {
-  let node = 42 as mixed;
+  let node = 42 as unknown;
   while (condition) {
     if (Array.isArray(node)) {
       node = node[0];

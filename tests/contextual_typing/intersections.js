@@ -63,8 +63,8 @@ function test8() {
 }
 
 function test9() {
-  declare var f1: {| <T>(({| cb: T |}) => void): T |} & ((empty) => mixed);
-  declare var f2: (<T>(({| cb: T |}) => void) => T) & ((empty) => mixed);
+  declare var f1: {| <T>(({| cb: T |}) => void): T |} & ((empty) => unknown);
+  declare var f2: (<T>(({| cb: T |}) => void) => T) & ((empty) => unknown);
 
   f1(x => 0 as any) as {||};
   f2(x => 0 as any) as {||};

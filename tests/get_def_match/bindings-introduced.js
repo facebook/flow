@@ -1,4 +1,4 @@
-declare const x: mixed;
+declare const x: unknown;
 
 const e = match (x) {
   1 as foo => foo,

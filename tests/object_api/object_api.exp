@@ -400,7 +400,7 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    object_keys.js:35:20
-   35|   function(dict: {['hi']: mixed}) {
+   35|   function(dict: {['hi']: unknown}) {
                           ^^^^ [1]
    object_keys.js:37:32
    37|     Object.keys(dict) as Array<'bye'>; // error

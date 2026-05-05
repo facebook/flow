@@ -2888,7 +2888,7 @@ is incompatible with union type [3]. [incompatible-type]
 
 References:
    nested_generic_calls.js:67:17
-   67|   type Wrapper<+V> = (value: mixed) => $ReadOnly<{value: V}>;
+   67|   type Wrapper<+V> = (value: unknown) => $ReadOnly<{value: V}>;
                        ^ [1]
    nested_generic_calls.js:75:28
    75|     [K in keyof Wrappers]: MapWrapper<Wrappers[K]>,
@@ -2922,7 +2922,7 @@ Cannot cast `e` to empty because `Event` [1] is incompatible with empty [2]. [in
 
 References:
    jsx-intrinsics-mini.js:7:15
-   7|   onClick?: ?(Event) => mixed,
+   7|   onClick?: ?(Event) => unknown,
                     ^^^^^ [1]
    react.js:9:12
    9|       e as empty; // error empty ~> Event

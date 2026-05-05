@@ -2,8 +2,8 @@
 type OtherProps = {foo: number};
 
 declare function HOC<OwnProps: {...}>(
-  Component: ({...OwnProps, ...OtherProps}) => mixed,
-): OwnProps => mixed;
+  Component: ({...OwnProps, ...OtherProps}) => unknown,
+): OwnProps => unknown;
 
 const x = HOC((x: {foo: number, bar: number}) => null); // ok
 
@@ -21,7 +21,7 @@ declare function IndexedAccess1<T>(x: T['f']): T;
 IndexedAccess1(1); // Error: T under constrained.
 declare function IndexedAccess2<T>(x: T[number]): T;
 IndexedAccess2(1); // Error: T under constrained.
-declare function ConditionalType<T>(x: T extends mixed ? void : empty): T;
+declare function ConditionalType<T>(x: T extends unknown ? void : empty): T;
 ConditionalType(undefined); // Error: T under constrained.
 declare function MappedType<T>(x: {[K in keyof T]: void}): T;
 MappedType({}); // Error: T under constrained.
@@ -91,7 +91,7 @@ function spreads() {
 }
 
 function rests() {
-  declare function ArrRest<TArgs: $ReadOnlyArray<mixed>>(...x: TArgs): TArgs;
+  declare function ArrRest<TArgs: $ReadOnlyArray<unknown>>(...x: TArgs): TArgs;
   const r1 = ArrRest(...([] as Array<string>)); // ok
   const r2 = ArrRest(...([1, 2] as [1, 2])); // ok
   r1 as Array<string>; // ok
@@ -105,11 +105,11 @@ function rests() {
 }
 
 function ResolveSpreadsToMultiflowSubtypeFull() {
-  declare function f<TArguments: $ReadOnlyArray<mixed>>(
-    fn: (...TArguments) => mixed,
-  ): (...TArguments) => mixed;
-  declare function params<TArguments: $ReadOnlyArray<mixed>>(
-    fn: (...TArguments) => mixed,
+  declare function f<TArguments: $ReadOnlyArray<unknown>>(
+    fn: (...TArguments) => unknown,
+  ): (...TArguments) => unknown;
+  declare function params<TArguments: $ReadOnlyArray<unknown>>(
+    fn: (...TArguments) => unknown,
   ): TArguments;
 
   function g(x: number): void {}
@@ -131,7 +131,7 @@ function ResolveSpreadsToMultiflowSubtypeFull() {
   v1 as [number, string]; // ok
   v1 as empty; // error: tuple ~> empty
 
-  declare function funArgRest<Rest>(f: (first: empty, second: empty, ...args: Rest) => mixed): Rest;
+  declare function funArgRest<Rest>(f: (first: empty, second: empty, ...args: Rest) => unknown): Rest;
   declare function funArgRestInput(a: string, b: number, c: boolean, d: Date): void;
   const f4 = funArgRest(funArgRestInput);
   f4 as [+label1: boolean, +label2: Date]; // ok

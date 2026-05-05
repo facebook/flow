@@ -598,7 +598,7 @@ function tests_unary_negation() {
 }
 
 function test_nullish_coalesce_2() {
-  declare var map: {prop: mixed};
+  declare var map: {prop: unknown};
   declare var p: void | 'prop';
   map[p ?? 'prop']; // okay
 }

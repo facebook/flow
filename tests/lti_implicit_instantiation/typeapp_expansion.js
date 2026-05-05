@@ -7,7 +7,7 @@ type $ElementOfSet<SetType> =
 
 class Entry<+X> {}
 
-type SetOfEntries = MySet<Entry<mixed>>;
+type SetOfEntries = MySet<Entry<unknown>>;
 
 function test1() {
   type FilterEntry = $ElementOfSet<SetOfEntries>;
@@ -36,7 +36,7 @@ function test3() {
 
   declare function spreadIt<P2: {...}>(
     Component: Opaque<P2>,
-    spec: P2 => mixed
+    spec: P2 => unknown
   ): Opaque<{...P2, ...}>;
 
   // The HOCs above are basically convoluted identity functions...

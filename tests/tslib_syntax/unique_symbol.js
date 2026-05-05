@@ -50,6 +50,6 @@ x as number; // ERROR
 x as boolean; // ERROR
 
 // mixed/any behavior
-x as mixed; // OK
-declare const m: mixed;
+x as unknown; // OK
+declare const m: unknown;
 m as typeof x; // ERROR - mixed doesn't flow to unique symbol

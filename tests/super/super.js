@@ -15,7 +15,7 @@ class B extends A {
     (super.doesntExist()); // error, A doesn't have a doesntExist method
   }
 
-  g(): mixed {
+  g(): unknown {
     super.f(0);
     return super.g;
   }

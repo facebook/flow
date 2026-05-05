@@ -8751,7 +8751,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    missing-property-cond.js:58:5
-   58|     a.foo as Set<mixed>;
+   58|     a.foo as Set<unknown>;
            ^
 
 References:
@@ -8765,7 +8765,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    missing-property-cond.js:58:5
-   58|     a.foo as Set<mixed>;
+   58|     a.foo as Set<unknown>;
            ^^^^^
 
 References:
@@ -8793,7 +8793,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    missing-property-cond.js:65:5
-   65|     a.foo as $ReadOnlyArray<mixed>;
+   65|     a.foo as $ReadOnlyArray<unknown>;
            ^
 
 References:
@@ -8807,7 +8807,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    missing-property-cond.js:65:5
-   65|     a.foo as $ReadOnlyArray<mixed>;
+   65|     a.foo as $ReadOnlyArray<unknown>;
            ^^^^^
 
 References:

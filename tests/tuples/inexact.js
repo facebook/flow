@@ -115,15 +115,15 @@ type C = [0, ...A, 2]; // ERROR - element after inexact spread
   declare const n: number;
 
   x[n] as number; // ERROR - unknown elements due to inexactness
-  x[n] as mixed; // OK
+  x[n] as unknown; // OK
 
   const y = [...x];
   y[n] as number; // ERROR - unknown elements due to inexactness
-  y[n] as mixed; // OK
+  y[n] as unknown; // OK
 
   declare const z: B;
   z[n] as number; // ERROR - unknown elements due to inexactness
-  z[n] as mixed; // OK
+  z[n] as unknown; // OK
 }
 
 // Reversal of inexact tuple not allowed

@@ -9,7 +9,7 @@ Object.keys(dict).forEach(k => {
 
 {
   // Union dict
-  declare const x: {[string | number]: mixed}
+  declare const x: {[string | number]: unknown}
   Object.keys(x) as Array<string>; // OK
 }
 
@@ -32,13 +32,13 @@ Object.keys(new Bar()) as Array<'error'>; // error: bar_prop ~> error
 
 var tests = [
   // dictionary of string literals -> array of string literals
-  function(dict: {['hi']: mixed}) {
+  function(dict: {['hi']: unknown}) {
     Object.keys(dict) as Array<'hi'>;
     Object.keys(dict) as Array<'bye'>; // error
   },
 
   // dictionary of number literals -> array of generic strings (for now)
-  function(dict: {[123]: mixed}) {
+  function(dict: {[123]: unknown}) {
     Object.keys(dict) as Array<string>;
     Object.keys(dict) as Array<'123'>; // error: not supported yet
   },

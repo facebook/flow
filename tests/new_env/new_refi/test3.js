@@ -11,7 +11,7 @@ function param_annot(x: ?string): ?(() => string) {
   }
 }
 
-function rest(...x: ?Array<mixed>): ?(() => Array<mixed>) {
+function rest(...x: ?Array<unknown>): ?(() => Array<unknown>) {
   if (x != null) {
     return () => x;
   }

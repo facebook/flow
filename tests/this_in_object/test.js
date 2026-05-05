@@ -82,7 +82,7 @@ let x = {
 
 const getters_and_setters = {
     get foo() { this; }, // error
-    set foo(v: mixed) { this; }, // error
+    set foo(v: unknown) { this; }, // error
 }
 
 Object.freeze({ foo() {this} }); // error

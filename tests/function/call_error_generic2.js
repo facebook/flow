@@ -1,4 +1,4 @@
-declare function bar1<TKey: ?{+$data?: mixed, ...}>(key: TKey): void;
+declare function bar1<TKey: ?{+$data?: unknown, ...}>(key: TKey): void;
 
 function bar2(fragmentRef?: {...}) {
   bar1(fragmentRef);

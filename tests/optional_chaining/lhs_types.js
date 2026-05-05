@@ -3,7 +3,7 @@
 type Foo = {foo: number, ...};
 
 declare var x: Foo;
-declare var mixed: mixed;
+declare var mixed: unknown;
 declare var any: any;
 declare var empty: empty;
 declare var maybe: ?Foo;

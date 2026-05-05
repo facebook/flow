@@ -59,7 +59,7 @@ function numeric_sentinel() {
 
 function function_statics() {
   const f: {
-    (mixed): void,
+    (unknown): void,
     type?: void,
     ...
   } = x => {}; // okay `x` inferred as `mixed`

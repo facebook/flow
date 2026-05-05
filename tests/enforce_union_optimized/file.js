@@ -17,7 +17,7 @@ type Ok11 = $Flow$EnforceOptimized<T1 | T2>;
 type Ok12 = $Flow$EnforceOptimized<$ReadOnly<T1 | T2>>;
 type Ok13 = $Flow$EnforceOptimized<T1 | T2 | number | string>; // okay, partial
 
-type Ok14 = $Flow$EnforceOptimized<number | string | mixed>; // okay due to mixed short-circuit
+type Ok14 = $Flow$EnforceOptimized<number | string | unknown>; // okay due to unknown short-circuit
 
 // Unoptimizable cases
 

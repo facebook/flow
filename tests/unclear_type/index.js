@@ -15,5 +15,5 @@ const f: Object => Function = ({}) => function () {};
 type f2 = <T: Object>(x: T) => T;
 
 // malformed types should not also be unclear
-null as Object<mixed>;
-null as Function<mixed>;
+null as Object<unknown>;
+null as Function<unknown>;

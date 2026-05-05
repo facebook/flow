@@ -2,7 +2,7 @@
 
 declare class Set<T> {
   toArray(): T[];
-  filter(predicate: (value: T) => mixed): Set<T>;
+  filter(predicate: (value: T) => unknown): Set<T>;
 }
 
 type S = Set<number> | Set<string>;

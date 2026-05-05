@@ -32,7 +32,7 @@ function test2() {
 }
 
 function test3() {
-    declare function f<Args: $ReadOnlyArray<mixed>, Return>(
+    declare function f<Args: $ReadOnlyArray<unknown>, Return>(
         fn: () => (...Args) => Return,
     ): (...Args) => Return;
 

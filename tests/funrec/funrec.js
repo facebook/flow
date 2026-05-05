@@ -1,6 +1,6 @@
-function bar(x: mixed) { return x; }
+function bar(x: unknown) { return x; }
 function foo() {
-    return function bound(): mixed {
+    return function bound(): unknown {
         return bar(bound);
     };
 }

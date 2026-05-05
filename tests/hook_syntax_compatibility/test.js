@@ -23,9 +23,9 @@ component C(...{ useY }: { useY: () => void}) {
     useU(); // no error
     useV(); // error for calling module but no hook error
     useT(); // no error
-    useT<mixed>(); // no error
+    useT<unknown>(); // no error
     useS(); // no error
-    useS<mixed>(); // no error
+    useS<unknown>(); // no error
     bag_o_hooks.useR(); // error: unsupported hook compatibility
     return 42;
 }
@@ -36,8 +36,8 @@ declare function id<T>(x: T): T;
 
 const C1 = () => { useH() }; // no error
 const c1 = () => { useH() }; // error
-const C2 = React.forwardRef<_, mixed, _>(({}: {}, ref: mixed) => { useH() }); // no error
-const C3 = id(({}: {}, ref: mixed) => { useH() }); // error
+const C2 = React.forwardRef<_, unknown, _>(({}: {}, ref: unknown) => { useH() }); // no error
+const C3 = id(({}: {}, ref: unknown) => { useH() }); // error
 
 const myHOC = () => () => { useH() }; // no error;
 function myHOC2() {

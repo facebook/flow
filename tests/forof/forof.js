@@ -46,8 +46,8 @@ function testSet2(set: Set<any>): void {
 }
 
 declare var funky1: {@@iterator(): $Iterator<string, number, boolean>};
-declare var funky2: {@@iterator(): $Iterator<() => {}, empty, mixed>};
-declare var funky3: {@@iterator(): $Iterator<?typeof funky2, mixed, void>};
+declare var funky2: {@@iterator(): $Iterator<() => {}, empty, unknown>};
+declare var funky3: {@@iterator(): $Iterator<?typeof funky2, unknown, void>};
 declare var funky4: {@@iterator(): $Iterator<void, null, void>};
 function* funky() {
   yield 0;

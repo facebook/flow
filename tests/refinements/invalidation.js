@@ -295,11 +295,11 @@ declare var x: { b?: { ... }, ... };
 declare var f: unknown => boolean;
 declare var p: boolean;
 
-declare var y: { ... } & Iterator<mixed>;
-declare var ff: unknown => { ... } & Iterator<mixed>;
+declare var y: { ... } & Iterator<unknown>;
+declare var ff: unknown => { ... } & Iterator<unknown>;
 
 () => {
-  declare function f(x: mixed): boolean;
+  declare function f(x: unknown): boolean;
   declare const foo: ?{bar: string, ...};
 
   if (

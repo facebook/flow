@@ -1567,8 +1567,8 @@ Cannot cast `m` to `typeof x` because `unknown` [1] is incompatible with unique 
 
 References:
    unique_symbol.js:54:18
-   54| declare const m: mixed;
-                        ^^^^^ [1]
+   54| declare const m: unknown;
+                        ^^^^^^^ [1]
    unique_symbol.js:55:6
    55| m as typeof x; // ERROR - mixed doesn't flow to unique symbol
             ^^^^^^^^ [2]

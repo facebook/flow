@@ -133,8 +133,8 @@ Error --------------------------------------------------------------------------
 Cannot use `D` [1] with more than 2 type arguments. [extra-type-arg]
 
    classes.js:33:17
-   33| var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
-                       ^^^^^^^^^^^^^^^^^^^^^^^^
+   33| var d_too_many: D<unknown, string, string> = new D('hello'); // Error too many tparams
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    classes.js:28:8
@@ -151,9 +151,9 @@ Cannot cast `d_number.p` to boolean because number [1] is incompatible with bool
        ^^^^^^^^^^
 
 References:
-   classes.js:29:24
-   29| var d_number: D<mixed, number> = new D(123);
-                              ^^^^^^ [1]
+   classes.js:29:26
+   29| var d_number: D<unknown, number> = new D(123);
+                                ^^^^^^ [1]
    classes.js:35:15
    35| d_number.p as boolean; // Error number ~> boolean
                      ^^^^^^^ [2]
@@ -168,9 +168,9 @@ Cannot cast `d_void.p` to boolean because undefined [1] is incompatible with boo
        ^^^^^^^^
 
 References:
-   classes.js:30:22
-   30| var d_void: D<mixed, void> = new D();
-                            ^^^^ [1]
+   classes.js:30:24
+   30| var d_void: D<unknown, void> = new D();
+                              ^^^^ [1]
    classes.js:36:13
    36| d_void.p as boolean; // Error void ~> boolean
                    ^^^^^^^ [2]

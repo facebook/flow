@@ -2,7 +2,7 @@
 declare var x : { f : number, ...};
 declare var y : { y : string, ...};
 
-function foo(this : mixed) : void {
+function foo(this : unknown) : void {
     return this.x; // error: this is mixed
 }
 

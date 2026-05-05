@@ -12,10 +12,10 @@ o.m as () => void;
 o.n as () => void;
 
 // all ok
-bar as (this : mixed) => void;
-baz as (this : mixed) => void;
-o.m as (this : mixed) => void;
-o.n as (this : mixed) => void;
+bar as (this : unknown) => void;
+baz as (this : unknown) => void;
+o.m as (this : unknown) => void;
+o.n as (this : unknown) => void;
 
 // all ok
 bar as (this : empty) => void;
@@ -55,7 +55,7 @@ foo as typeof i.m; // method-unbinding, this type becomes any, so no more this t
 i.m as () => void; // ok
 
 //$FlowExpectedError[method-unbinding]
-i.m as (this : mixed) => void; // ok
+i.m as (this : unknown) => void; // ok
 
 //$FlowExpectedError[method-unbinding]
 i.m as (this : empty) => void; // ok

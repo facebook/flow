@@ -1,5 +1,5 @@
 //flowlint sketchy-null:error
-var x: boolean|mixed|number|string = null
+var x: boolean|unknown|number|string = null
 
 //Four errors: one for each type
 if (x){}

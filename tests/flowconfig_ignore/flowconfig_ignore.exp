@@ -50,8 +50,8 @@ Cannot call `x` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    my_declarations/typecheck_if_in_root.js:3:8
-   3| var x: mixed = 42;
-             ^^^^^ [1]
+   3| var x: unknown = 42;
+             ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------- my_ignores/actually_typecheck.js:4:1
@@ -92,8 +92,8 @@ Cannot call `x` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    my_ignores/typecheck_if_in_root.js:3:8
-   3| var x: mixed = 42;
-             ^^^^^ [1]
+   3| var x: unknown = 42;
+             ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------- my_untyped/actually_typecheck.js:4:1
@@ -134,8 +134,8 @@ Cannot call `x` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    my_untyped/typecheck_if_in_root.js:3:8
-   3| var x: mixed = 42;
-             ^^^^^ [1]
+   3| var x: unknown = 42;
+             ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------- subdirectory/my_declarations/actually_typecheck.js:4:1

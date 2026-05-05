@@ -841,9 +841,9 @@ Cannot cast `map(...)` to tuple type because in index `0`: string [1] is incompa
        ^^^^^^^^
 
 References:
-   mapped_type_on_tuple.js:18:82
-   18| declare function map<A: $ReadOnlyArray<mixed>>(o2: Promise<A>): {[K in keyof A]: A[K] extends F<infer V> ? V : empty};
-                                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   mapped_type_on_tuple.js:18:84
+   18| declare function map<A: $ReadOnlyArray<unknown>>(o2: Promise<A>): {[K in keyof A]: A[K] extends F<infer V> ? V : empty};
+                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    mapped_type_on_tuple.js:20:18
    20| map(boo) as [+v: number]; // error
                         ^^^^^^ [2]
@@ -859,9 +859,9 @@ Cannot cast `issue2674[0]` to string literal `BAR` because string literal `FOO` 
        ^^^^^^^^^^^^
 
 References:
-   mapped_type_on_tuple.js:22:56
-   22| declare const issue2674: {[K in keyof [mixed, mixed]]: 'FOO'};
-                                                              ^^^^^ [1]
+   mapped_type_on_tuple.js:22:60
+   22| declare const issue2674: {[K in keyof [unknown, unknown]]: 'FOO'};
+                                                                  ^^^^^ [1]
    mapped_type_on_tuple.js:25:17
    25| issue2674[0] as 'BAR'; // error
                        ^^^^^ [2]
@@ -877,9 +877,9 @@ Cannot assign `'BAR'` to `issue2674[0]` because string literal `BAR` [1] is inco
                       ^^^^^ [1]
 
 References:
-   mapped_type_on_tuple.js:22:56
-   22| declare const issue2674: {[K in keyof [mixed, mixed]]: 'FOO'};
-                                                              ^^^^^ [2]
+   mapped_type_on_tuple.js:22:60
+   22| declare const issue2674: {[K in keyof [unknown, unknown]]: 'FOO'};
+                                                                  ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- number-index.js:7:1
@@ -1790,13 +1790,13 @@ Error --------------------------------------------------------------------------
 Cannot spread non-tuple (array type [1]) into tuple type. [tuple-invalid-type-spread]
 
    spread.js:52:20
-   52| type ArraySpread = [...Array<mixed>]; // ERROR
-                          ^^^^^^^^^^^^^^^^^
+   52| type ArraySpread = [...Array<unknown>]; // ERROR
+                          ^^^^^^^^^^^^^^^^^^^
 
 References:
    spread.js:52:24
-   52| type ArraySpread = [...Array<mixed>]; // ERROR
-                              ^^^^^^^^^^^^ [1]
+   52| type ArraySpread = [...Array<unknown>]; // ERROR
+                              ^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- spread.js:57:22
@@ -1804,13 +1804,13 @@ Error --------------------------------------------------------------------------
 Cannot spread non-tuple (read-only array type [1]) into tuple type. [tuple-invalid-type-spread]
 
    spread.js:57:22
-   57| type ROArraySpread = [...$ReadOnlyArray<mixed>]; // ERROR
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   57| type ROArraySpread = [...$ReadOnlyArray<unknown>]; // ERROR
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    spread.js:57:26
-   57| type ROArraySpread = [...$ReadOnlyArray<mixed>]; // ERROR
-                                ^^^^^^^^^^^^^^^^^^^^^ [1]
+   57| type ROArraySpread = [...$ReadOnlyArray<unknown>]; // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:87:8

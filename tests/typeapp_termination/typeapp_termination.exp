@@ -12,8 +12,8 @@ References:
    1| type Foo<T> = { foo: T };
                ^ [1]
    soundness.js:4:14
-   4| type Bak<T = mixed> = Foo<Bar<T>>;
-                   ^^^^^ [2]
+   4| type Bak<T = unknown> = Foo<Bar<T>>;
+                   ^^^^^^^ [2]
    soundness.js:8:14
    8|     x as Bak<empty>; // error mixed <~> empty
                    ^^^^^ [3]

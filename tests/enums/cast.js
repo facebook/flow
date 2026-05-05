@@ -42,7 +42,7 @@ const yy: Y = Y.A as Y; // OK
 
 S.A as ?S; // OK
 S.A as S | B; // OK
-S.A as mixed; // OK
+S.A as unknown; // OK
 
 type T = string;
 S.A as T; // OK

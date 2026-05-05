@@ -1,1 +1,1 @@
-var x: mixed = 100;
+var x: unknown = 100;

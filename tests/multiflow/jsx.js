@@ -5,7 +5,7 @@
 
 // This one for when there are no JSX attributes
 declare function JSX<
-  Children: $ReadOnlyArray<mixed>,
+  Children: $ReadOnlyArray<unknown>,
   Elem,
   C: (props: {...}, children: Children) => Elem,
 >(
@@ -16,7 +16,7 @@ declare function JSX<
 
 // This one for when there are JSX attributes.
 declare function JSX<
-  Children: $ReadOnlyArray<mixed>,
+  Children: $ReadOnlyArray<unknown>,
   Elem,
   Props: Object,
   C: (props: Props, children: Children) => Elem,

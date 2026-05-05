@@ -1,4 +1,4 @@
-declare var bad1: mixed;
+declare var bad1: unknown;
 declare var bad2: () => {};
 declare var good1: number;
 declare var good2: {foo: string};

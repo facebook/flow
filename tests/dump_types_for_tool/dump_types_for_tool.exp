@@ -177,7 +177,7 @@
     "path":"test.js",
     "reasons":[],
     "start":10,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-85: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:87: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-86: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}}"
   },
   {
     "end":33,
@@ -192,14 +192,14 @@
     "path":"test.js",
     "reasons":[],
     "start":33,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-85: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}"
   },
   {
-    "end":83,
+    "end":85,
     "endline":7,
     "line":7,
     "loc":{
-      "end":{"column":83,"line":7,"offset":195},
+      "end":{"column":85,"line":7,"offset":197},
       "source":"test.js",
       "start":{"column":33,"line":7,"offset":144},
       "type":"SourceFile"
@@ -207,14 +207,14 @@
     "path":"test.js",
     "reasons":[],
     "start":33,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-85: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}"
   },
   {
-    "end":83,
+    "end":85,
     "endline":7,
     "line":7,
     "loc":{
-      "end":{"column":83,"line":7,"offset":195},
+      "end":{"column":85,"line":7,"offset":197},
       "source":"test.js",
       "start":{"column":36,"line":7,"offset":147},
       "type":"SourceFile"
@@ -222,7 +222,7 @@
     "path":"test.js",
     "reasons":[],
     "start":36,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-85: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}"
   },
   {
     "end":43,
@@ -390,11 +390,11 @@
     "type":"{\"expression_type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}"
   },
   {
-    "end":83,
+    "end":85,
     "endline":7,
     "line":7,
     "loc":{
-      "end":{"column":83,"line":7,"offset":195},
+      "end":{"column":85,"line":7,"offset":197},
       "source":"test.js",
       "start":{"column":79,"line":7,"offset":190},
       "type":"SourceFile"
@@ -402,61 +402,61 @@
     "path":"test.js",
     "reasons":[],
     "start":79,
-    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-85: `unknown`\"}}"
   },
   {
-    "end":84,
+    "end":86,
     "endline":7,
     "line":7,
     "loc":{
-      "end":{"column":84,"line":7,"offset":196},
+      "end":{"column":86,"line":7,"offset":198},
       "source":"test.js",
-      "start":{"column":85,"line":7,"offset":196},
+      "start":{"column":87,"line":7,"offset":198},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
-    "start":85,
-    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"}}"
+    "start":87,
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:87: undefined\"}}"
   },
   {
     "end":22,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":22,"line":8,"offset":222},
+      "end":{"column":22,"line":8,"offset":224},
       "source":"test.js",
-      "start":{"column":1,"line":8,"offset":200},
+      "start":{"column":1,"line":8,"offset":202},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
     "start":1,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-85: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:87: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-86: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-85: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:87: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-86: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}}"
   },
   {
     "end":22,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":22,"line":8,"offset":222},
+      "end":{"column":22,"line":8,"offset":224},
       "source":"test.js",
-      "start":{"column":1,"line":8,"offset":200},
+      "start":{"column":1,"line":8,"offset":202},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
     "start":1,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-84: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-85: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:87: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-86: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":{\"kind\":\"Union\",\"members\":[{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"kind\":\"Any\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:58-63: string\"}},{\"kind\":\"Maybe\",\"type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}]}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-85: `unknown`\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"kind\":\"Any\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: statics of function type\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}],\"rest_param\":null,\"return_t\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:87: undefined\"},\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:32-86: implicit `this` parameter of function\"}},\"type_guard\":null},\"kind\":\"Fun\",\"static\":{\"def\":{\"kind\":\"Obj\",\"objtype\":{\"call_t\":null,\"flags\":{\"obj_kind\":{\"kind\":\"Inexact\"}},\"props\":{},\"proto_t\":{\"kind\":\"FunProto\"}}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}}"
   },
   {
     "end":63,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":63,"line":8,"offset":263},
+      "end":{"column":63,"line":8,"offset":265},
       "source":"test.js",
-      "start":{"column":1,"line":8,"offset":200},
+      "start":{"column":1,"line":8,"offset":202},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -469,9 +469,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":62,"line":8,"offset":262},
+      "end":{"column":62,"line":8,"offset":264},
       "source":"test.js",
-      "start":{"column":24,"line":8,"offset":223},
+      "start":{"column":24,"line":8,"offset":225},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -484,9 +484,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":27,"line":8,"offset":227},
+      "end":{"column":27,"line":8,"offset":229},
       "source":"test.js",
-      "start":{"column":25,"line":8,"offset":224},
+      "start":{"column":25,"line":8,"offset":226},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -499,9 +499,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":27,"line":8,"offset":227},
+      "end":{"column":27,"line":8,"offset":229},
       "source":"test.js",
-      "start":{"column":25,"line":8,"offset":224},
+      "start":{"column":25,"line":8,"offset":226},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -514,9 +514,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":27,"line":8,"offset":227},
+      "end":{"column":27,"line":8,"offset":229},
       "source":"test.js",
-      "start":{"column":28,"line":8,"offset":227},
+      "start":{"column":28,"line":8,"offset":229},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -529,9 +529,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":28,"line":8,"offset":228},
+      "end":{"column":28,"line":8,"offset":230},
       "source":"test.js",
-      "start":{"column":29,"line":8,"offset":228},
+      "start":{"column":29,"line":8,"offset":230},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -544,9 +544,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":35,"line":8,"offset":235},
+      "end":{"column":35,"line":8,"offset":237},
       "source":"test.js",
-      "start":{"column":33,"line":8,"offset":232},
+      "start":{"column":33,"line":8,"offset":234},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -559,9 +559,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":35,"line":8,"offset":235},
+      "end":{"column":35,"line":8,"offset":237},
       "source":"test.js",
-      "start":{"column":33,"line":8,"offset":232},
+      "start":{"column":33,"line":8,"offset":234},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -574,9 +574,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":44,"line":8,"offset":244},
+      "end":{"column":44,"line":8,"offset":246},
       "source":"test.js",
-      "start":{"column":33,"line":8,"offset":232},
+      "start":{"column":33,"line":8,"offset":234},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -589,9 +589,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":62,"line":8,"offset":262},
+      "end":{"column":62,"line":8,"offset":264},
       "source":"test.js",
-      "start":{"column":33,"line":8,"offset":232},
+      "start":{"column":33,"line":8,"offset":234},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -604,9 +604,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":44,"line":8,"offset":244},
+      "end":{"column":44,"line":8,"offset":246},
       "source":"test.js",
-      "start":{"column":41,"line":8,"offset":240},
+      "start":{"column":41,"line":8,"offset":242},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -619,9 +619,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":56,"line":8,"offset":256},
+      "end":{"column":56,"line":8,"offset":258},
       "source":"test.js",
-      "start":{"column":48,"line":8,"offset":247},
+      "start":{"column":48,"line":8,"offset":249},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -634,9 +634,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":56,"line":8,"offset":256},
+      "end":{"column":56,"line":8,"offset":258},
       "source":"test.js",
-      "start":{"column":48,"line":8,"offset":247},
+      "start":{"column":48,"line":8,"offset":249},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -649,9 +649,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":62,"line":8,"offset":262},
+      "end":{"column":62,"line":8,"offset":264},
       "source":"test.js",
-      "start":{"column":60,"line":8,"offset":259},
+      "start":{"column":60,"line":8,"offset":261},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -664,9 +664,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":62,"line":8,"offset":262},
+      "end":{"column":62,"line":8,"offset":264},
       "source":"test.js",
-      "start":{"column":60,"line":8,"offset":259},
+      "start":{"column":60,"line":8,"offset":261},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -854,7 +854,7 @@
     "path":"test.js",
     "reasons":[],
     "start":10,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}}"
   },
   {
     "end":33,
@@ -869,14 +869,14 @@
     "path":"test.js",
     "reasons":[],
     "start":33,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}"
   },
   {
-    "end":83,
+    "end":85,
     "endline":7,
     "line":7,
     "loc":{
-      "end":{"column":83,"line":7,"offset":195},
+      "end":{"column":85,"line":7,"offset":197},
       "source":"test.js",
       "start":{"column":33,"line":7,"offset":144},
       "type":"SourceFile"
@@ -884,14 +884,14 @@
     "path":"test.js",
     "reasons":[],
     "start":33,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}"
   },
   {
-    "end":83,
+    "end":85,
     "endline":7,
     "line":7,
     "loc":{
-      "end":{"column":83,"line":7,"offset":195},
+      "end":{"column":85,"line":7,"offset":197},
       "source":"test.js",
       "start":{"column":36,"line":7,"offset":147},
       "type":"SourceFile"
@@ -899,7 +899,7 @@
     "path":"test.js",
     "reasons":[],
     "start":36,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:36-83: function type\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":null,\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:36-85: function type\"}}"
   },
   {
     "end":43,
@@ -1067,11 +1067,11 @@
     "type":"{\"expression_type\":{\"def\":{\"kind\":\"StrGeneral\"},\"kind\":\"Def\",\"reason\":\"test.js:7:68-73: string\"}}"
   },
   {
-    "end":83,
+    "end":85,
     "endline":7,
     "line":7,
     "loc":{
-      "end":{"column":83,"line":7,"offset":195},
+      "end":{"column":85,"line":7,"offset":197},
       "source":"test.js",
       "start":{"column":79,"line":7,"offset":190},
       "type":"SourceFile"
@@ -1079,61 +1079,61 @@
     "path":"test.js",
     "reasons":[],
     "start":79,
-    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-83: `unknown`\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Mixed\"},\"kind\":\"Def\",\"reason\":\"test.js:7:79-85: `unknown`\"}}"
   },
   {
-    "end":84,
+    "end":86,
     "endline":7,
     "line":7,
     "loc":{
-      "end":{"column":84,"line":7,"offset":196},
+      "end":{"column":86,"line":7,"offset":198},
       "source":"test.js",
-      "start":{"column":85,"line":7,"offset":196},
+      "start":{"column":87,"line":7,"offset":198},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
-    "start":85,
-    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:85: undefined\"}}"
+    "start":87,
+    "type":"{\"expression_type\":{\"def\":{\"kind\":\"Void\"},\"kind\":\"Def\",\"reason\":\"test.js:7:87: undefined\"}}"
   },
   {
     "end":22,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":22,"line":8,"offset":222},
+      "end":{"column":22,"line":8,"offset":224},
       "source":"test.js",
-      "start":{"column":1,"line":8,"offset":200},
+      "start":{"column":1,"line":8,"offset":202},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
     "start":1,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}}"
   },
   {
     "end":22,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":22,"line":8,"offset":222},
+      "end":{"column":22,"line":8,"offset":224},
       "source":"test.js",
-      "start":{"column":1,"line":8,"offset":200},
+      "start":{"column":1,"line":8,"offset":202},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
     "start":1,
-    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:1-84: function\"}}"
+    "type":"{\"expression_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:8:1-22: function\"},\"provider_type\":{\"def\":{\"funtype\":{\"effect\":{\"kind\":\"ArbitraryEffect\"},\"params\":[{\"name\":\"f\",\"type\":\"<recursion>\"}],\"rest_param\":null,\"return_t\":\"<recursion>\",\"this_t\":{\"status\":{\"kind\":\"This_Function\"},\"type\":\"<recursion>\"},\"type_guard\":null},\"kind\":\"Fun\",\"static\":\"<recursion>\"},\"kind\":\"Def\",\"reason\":\"test.js:7:1-86: function\"}}"
   },
   {
     "end":63,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":63,"line":8,"offset":263},
+      "end":{"column":63,"line":8,"offset":265},
       "source":"test.js",
-      "start":{"column":1,"line":8,"offset":200},
+      "start":{"column":1,"line":8,"offset":202},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1146,9 +1146,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":62,"line":8,"offset":262},
+      "end":{"column":62,"line":8,"offset":264},
       "source":"test.js",
-      "start":{"column":24,"line":8,"offset":223},
+      "start":{"column":24,"line":8,"offset":225},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1161,9 +1161,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":27,"line":8,"offset":227},
+      "end":{"column":27,"line":8,"offset":229},
       "source":"test.js",
-      "start":{"column":25,"line":8,"offset":224},
+      "start":{"column":25,"line":8,"offset":226},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1176,9 +1176,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":27,"line":8,"offset":227},
+      "end":{"column":27,"line":8,"offset":229},
       "source":"test.js",
-      "start":{"column":25,"line":8,"offset":224},
+      "start":{"column":25,"line":8,"offset":226},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1191,9 +1191,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":27,"line":8,"offset":227},
+      "end":{"column":27,"line":8,"offset":229},
       "source":"test.js",
-      "start":{"column":28,"line":8,"offset":227},
+      "start":{"column":28,"line":8,"offset":229},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1206,9 +1206,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":28,"line":8,"offset":228},
+      "end":{"column":28,"line":8,"offset":230},
       "source":"test.js",
-      "start":{"column":29,"line":8,"offset":228},
+      "start":{"column":29,"line":8,"offset":230},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1221,9 +1221,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":35,"line":8,"offset":235},
+      "end":{"column":35,"line":8,"offset":237},
       "source":"test.js",
-      "start":{"column":33,"line":8,"offset":232},
+      "start":{"column":33,"line":8,"offset":234},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1236,9 +1236,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":35,"line":8,"offset":235},
+      "end":{"column":35,"line":8,"offset":237},
       "source":"test.js",
-      "start":{"column":33,"line":8,"offset":232},
+      "start":{"column":33,"line":8,"offset":234},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1251,9 +1251,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":44,"line":8,"offset":244},
+      "end":{"column":44,"line":8,"offset":246},
       "source":"test.js",
-      "start":{"column":33,"line":8,"offset":232},
+      "start":{"column":33,"line":8,"offset":234},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1266,9 +1266,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":62,"line":8,"offset":262},
+      "end":{"column":62,"line":8,"offset":264},
       "source":"test.js",
-      "start":{"column":33,"line":8,"offset":232},
+      "start":{"column":33,"line":8,"offset":234},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1281,9 +1281,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":44,"line":8,"offset":244},
+      "end":{"column":44,"line":8,"offset":246},
       "source":"test.js",
-      "start":{"column":41,"line":8,"offset":240},
+      "start":{"column":41,"line":8,"offset":242},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1296,9 +1296,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":56,"line":8,"offset":256},
+      "end":{"column":56,"line":8,"offset":258},
       "source":"test.js",
-      "start":{"column":48,"line":8,"offset":247},
+      "start":{"column":48,"line":8,"offset":249},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1311,9 +1311,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":56,"line":8,"offset":256},
+      "end":{"column":56,"line":8,"offset":258},
       "source":"test.js",
-      "start":{"column":48,"line":8,"offset":247},
+      "start":{"column":48,"line":8,"offset":249},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1326,9 +1326,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":62,"line":8,"offset":262},
+      "end":{"column":62,"line":8,"offset":264},
       "source":"test.js",
-      "start":{"column":60,"line":8,"offset":259},
+      "start":{"column":60,"line":8,"offset":261},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -1341,9 +1341,9 @@
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":62,"line":8,"offset":262},
+      "end":{"column":62,"line":8,"offset":264},
       "source":"test.js",
-      "start":{"column":60,"line":8,"offset":259},
+      "start":{"column":60,"line":8,"offset":261},
       "type":"SourceFile"
     },
     "path":"test.js",

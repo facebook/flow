@@ -11,8 +11,8 @@ References:
    3| qux(0);
       ^^^^^^ [1]
    optional.js:7:41
-   7| function qux(x: number = "hello", ...y: [string, mixed]):string { foo(x); return y[0]; } // error: string ~> number
-                                              ^^^^^^^^^^^^^^^ [2]
+   7| function qux(x: number = "hello", ...y: [string, unknown]):string { foo(x); return y[0]; } // error: string ~> number
+                                              ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:1:22
@@ -169,21 +169,21 @@ References:
                                           ^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:1:39
+Error ------------------------------------------------------------------------------------------------- optional.js:1:41
 
 Cannot use operator `*` with operands undefined [1] and number [2] [unsafe-arithmetic]
 
-   optional.js:1:39
-   1| function bar(x?: number, y?: mixed) { x * 0; }
-                                            ^^^^^
+   optional.js:1:41
+   1| function bar(x?: number, y?: unknown) { x * 0; }
+                                              ^^^^^
 
 References:
    optional.js:1:18
-   1| function bar(x?: number, y?: mixed) { x * 0; }
+   1| function bar(x?: number, y?: unknown) { x * 0; }
                        ^^^^^^ [1]
-   optional.js:1:43
-   1| function bar(x?: number, y?: mixed) { x * 0; }
-                                                ^ [2]
+   optional.js:1:45
+   1| function bar(x?: number, y?: unknown) { x * 0; }
+                                                  ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:26
@@ -191,12 +191,12 @@ Error --------------------------------------------------------------------------
 Cannot assign string literal `hello` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    optional.js:7:26
-   7| function qux(x: number = "hello", ...y: [string, mixed]):string { foo(x); return y[0]; } // error: string ~> number
+   7| function qux(x: number = "hello", ...y: [string, unknown]):string { foo(x); return y[0]; } // error: string ~> number
                                ^^^^^^^ [1]
 
 References:
    optional.js:7:17
-   7| function qux(x: number = "hello", ...y: [string, mixed]):string { foo(x); return y[0]; } // error: string ~> number
+   7| function qux(x: number = "hello", ...y: [string, unknown]):string { foo(x); return y[0]; } // error: string ~> number
                       ^^^^^^ [2]
 
 
@@ -210,7 +210,7 @@ Cannot call `qux` because in index `0`: number [1] is incompatible with string [
 
 References:
    optional.js:7:42
-   7| function qux(x: number = "hello", ...y: [string, mixed]):string { foo(x); return y[0]; } // error: string ~> number
+   7| function qux(x: number = "hello", ...y: [string, unknown]):string { foo(x); return y[0]; } // error: string ~> number
                                                ^^^^^^ [2]
 
 
@@ -224,7 +224,7 @@ Cannot call `qux` because in index `0`: number [1] is incompatible with string [
 
 References:
    optional.js:7:42
-    7| function qux(x: number = "hello", ...y: [string, mixed]):string { foo(x); return y[0]; } // error: string ~> number
+    7| function qux(x: number = "hello", ...y: [string, unknown]):string { foo(x); return y[0]; } // error: string ~> number
                                                 ^^^^^^ [2]
 
 
@@ -274,18 +274,18 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ undefined.js:3:36
+Error ------------------------------------------------------------------------------------------------ undefined.js:3:38
 
 Cannot assign undefined to `bar` because undefined [1] is incompatible with object type [2]. [incompatible-type]
 
-   undefined.js:3:36
-   3| function foo(bar?: {duck: mixed} = undefined) {
-                                         ^^^^^^^^^ [1]
+   undefined.js:3:38
+   3| function foo(bar?: {duck: unknown} = undefined) {
+                                           ^^^^^^^^^ [1]
 
 References:
    undefined.js:3:20
-   3| function foo(bar?: {duck: mixed} = undefined) {
-                         ^^^^^^^^^^^^^ [2]
+   3| function foo(bar?: {duck: unknown} = undefined) {
+                         ^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:8:14
@@ -298,8 +298,8 @@ Cannot get `x.duck` because property `duck` is missing in undefined [1]. [incomp
 
 References:
    undefined2.js:3:20
-   3| function foo(bar?: {duck: mixed}) {
-                         ^^^^^^^^^^^^^ [1]
+   3| function foo(bar?: {duck: unknown}) {
+                         ^^^^^^^^^^^^^^^ [1]
 
 
 

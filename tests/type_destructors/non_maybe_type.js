@@ -12,10 +12,10 @@ function foo(x: ?string): NonNullable<?string> {
 0 as NonNullable<number | null>; // ok
 0 as NonNullable<{p?: number, ...}['p']>; // ok
 
-'str' as NonNullable<mixed>;
-0 as NonNullable<mixed>;
-null as NonNullable<mixed>;
-undefined as NonNullable<mixed>;
+'str' as NonNullable<unknown>;
+0 as NonNullable<unknown>;
+null as NonNullable<unknown>;
+undefined as NonNullable<unknown>;
 
 type Foo = NonNullable<Obj['foo']>;
 

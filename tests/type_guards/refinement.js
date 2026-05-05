@@ -38,10 +38,10 @@ function array_filter() {
   declare class ReadOnlyArray_<+T> {
     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: ReadonlyArray<T>) => value is S, thisArg?: This): Array<S>;
-    filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg : This): Array<T>;
+    filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg : This): Array<T>;
   }
 
-  declare var arr: ReadOnlyArray_<mixed>;
+  declare var arr: ReadOnlyArray_<unknown>;
 
   const arr1: Array<number> = arr.filter((x: unknown): x is number => { return typeof x === "number"; });
   const arr2: Array<string> = arr.filter((x: unknown): x is number => { return typeof x === "number"; }); // error
@@ -241,18 +241,18 @@ function one_sided(
   declare class ReadOnlyArray_<+T> {
     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg?: This): Array<S>;
-    filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg : This): Array<T>;
+    filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg : This): Array<T>;
   }
 
-  declare var arr: ReadOnlyArray_<mixed>;
+  declare var arr: ReadOnlyArray_<unknown>;
   arr.filter(fn) as Array<number>; // okay
   arr.filter(fn) as Array<string>; // error number ~> string
 
-  declare var ro_arr: ReadonlyArray<mixed>;
+  declare var ro_arr: ReadonlyArray<unknown>;
   ro_arr.filter(fn) as Array<number>; // okay
   ro_arr.filter(fn) as Array<string>; // error number ~> string
 
-  declare var rw_arr: ReadonlyArray<mixed>;
+  declare var rw_arr: ReadonlyArray<unknown>;
   rw_arr.filter(fn) as Array<number>; // okay
   rw_arr.filter(fn) as Array<string>; // error number ~> string
 }
@@ -306,13 +306,13 @@ function negation2() {
 }
 
 function negation3() {
-  declare function isFalsey(value: ?mixed): value is null | void | false | '' | 0;
+  declare function isFalsey(value: ?unknown): value is null | void | false | '' | 0;
 
-  function foo(arr: ?Array<mixed> | ReadonlyArray<mixed>): void {
+  function foo(arr: ?Array<unknown> | ReadonlyArray<unknown>): void {
     if (isFalsey(arr)) {
       return;
     }
-    arr as Array<mixed> | ReadonlyArray<mixed>; // okay
+    arr as Array<unknown> | ReadonlyArray<unknown>; // okay
   }
 
   foo([]); // triggrers union optimization

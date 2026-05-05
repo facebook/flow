@@ -3,8 +3,8 @@
 declare class Map<K, V> {
   static <K, V>(_: void): Map<K, V>;
 }
-const x1: Map<mixed, mixed> = Map<mixed, mixed>();
-const x2: Map<mixed, mixed> = Map();
+const x1: Map<unknown, unknown> = Map<unknown, unknown>();
+const x2: Map<unknown, unknown> = Map();
 
 declare class OneTarg<T> {
   static <K, V>(): OneTarg<K, V>;

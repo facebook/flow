@@ -5,7 +5,7 @@ type T = typeof C & typeof D;
 type S = { f: any } & { g: any };
 
 declare var t: T;
-declare var n: number & mixed;
+declare var n: number & unknown;
 
 // Annot_SpecializeT
 export class x1 extends (0 as any as T) {}

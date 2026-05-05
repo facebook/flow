@@ -94,7 +94,7 @@ type Obj = $ReadOnly<{
   prop9: string,
  ...}>
 
-type IDMap<+Obj: {+[string]: mixed}> = {[Key in keyof Obj]: Id<Obj[Key]>}
+type IDMap<+Obj: {+[string]: unknown}> = {[Key in keyof Obj]: Id<Obj[Key]>}
 
 declare const props: { obj: $ReadOnly<IDMap<Obj>>, ... };
 props.obj.prop0;

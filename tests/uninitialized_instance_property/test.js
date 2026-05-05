@@ -227,7 +227,7 @@ class E27 {
   }
 }
 
-function f(o: mixed) {}
+function f(o: unknown) {}
 class E28 {
   p: number;
   constructor() {
@@ -490,7 +490,7 @@ class E54 {
     this.m(this); // MethodCallBeforeEverythingInitialized, ThisBeforeEverythingInitialized
     this.p = 0;
   }
-  m(o: mixed): void {}
+  m(o: unknown): void {}
 }
 
 class E55 {
@@ -1104,11 +1104,11 @@ class P36 {
 }
 
 class P37 {
-  p: mixed;
+  p: unknown;
 }
 
 class P38 {
-  p: mixed;
+  p: unknown;
   constructor() {}
 }
 
@@ -1293,5 +1293,5 @@ class P64 {
 
 declare function P65_a<F>(b: F): F & {};
 class P65 {
-  b: mixed = P65_a(this.b);
+  b: unknown = P65_a(this.b);
 }

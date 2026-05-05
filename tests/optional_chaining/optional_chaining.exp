@@ -1073,8 +1073,8 @@ Cannot get `mixed?.foo` because property `foo` is missing in `unknown` [1]. [inc
 
 References:
    lhs_types.js:6:20
-    6| declare var mixed: mixed;
-                          ^^^^^ [1]
+    6| declare var mixed: unknown;
+                          ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- method_calls.js:9:1

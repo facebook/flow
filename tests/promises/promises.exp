@@ -105,7 +105,7 @@ Error --------------------------------------------------------------------------
 Cannot call `Promise.all` because function [1] requires another argument. [incompatible-type]
 
    all.js:22:9
-     22| Promise.all<Array<mixed>>(); // Error: expected array instead of undefined (too few arguments)
+     22| Promise.all<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
                  ^^^
 
 References:
@@ -118,19 +118,19 @@ References:
              ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- all.js:25:27
+Error ----------------------------------------------------------------------------------------------------- all.js:25:29
 
 Cannot call `Promise.all` with `0` bound to `promises` because number [1] is incompatible with array type [2].
 [incompatible-type]
 
-   all.js:25:27
-   25| Promise.all<Array<mixed>>(0); // Error: expected array instead of number
-                                 ^ [1]
+   all.js:25:29
+   25| Promise.all<Array<unknown>>(0); // Error: expected array instead of number
+                                   ^ [1]
 
 References:
    all.js:25:13
-   25| Promise.all<Array<mixed>>(0); // Error: expected array instead of number
-                   ^^^^^^^^^^^^ [2]
+   25| Promise.all<Array<unknown>>(0); // Error: expected array instead of number
+                   ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ allSettled.js:2:9
@@ -138,7 +138,7 @@ Error --------------------------------------------------------------------------
 Cannot call `Promise.allSettled` because function [1] requires another argument. [incompatible-type]
 
    allSettled.js:2:9
-      2| Promise.allSettled<Array<mixed>>(); // Error: expected $Iterable instead of undefined (too few arguments)
+      2| Promise.allSettled<Array<unknown>>(); // Error: expected $Iterable instead of undefined (too few arguments)
                  ^^^^^^^^^^
 
 References:
@@ -151,19 +151,19 @@ References:
              ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- allSettled.js:5:34
+Error ----------------------------------------------------------------------------------------------- allSettled.js:5:36
 
 Cannot call `Promise.allSettled` with `0` bound to `promises` because number [1] is incompatible with array type [2].
 [incompatible-type]
 
-   allSettled.js:5:34
-   5| Promise.allSettled<Array<mixed>>(0); // Error: expected $Iterable instead of number
-                                       ^ [1]
+   allSettled.js:5:36
+   5| Promise.allSettled<Array<unknown>>(0); // Error: expected $Iterable instead of number
+                                         ^ [1]
 
 References:
    allSettled.js:5:20
-   5| Promise.allSettled<Array<mixed>>(0); // Error: expected $Iterable instead of number
-                         ^^^^^^^^^^^^ [2]
+   5| Promise.allSettled<Array<unknown>>(0); // Error: expected $Iterable instead of number
+                         ^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- allSettled.js:34:7
@@ -203,7 +203,7 @@ Error --------------------------------------------------------------------------
 Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
 
    any.js:2:1
-      2| Promise.any<Array<mixed>>(); // Error: expected array instead of undefined (too few arguments)
+      2| Promise.any<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
          ^^^^^^^^^^^
 
 References:
@@ -217,7 +217,7 @@ Error --------------------------------------------------------------------------
 Cannot call `Promise.any` because function [1] requires another argument. [incompatible-type]
 
    any.js:2:9
-      2| Promise.any<Array<mixed>>(); // Error: expected array instead of undefined (too few arguments)
+      2| Promise.any<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
                  ^^^
 
 References:
@@ -231,7 +231,7 @@ Error --------------------------------------------------------------------------
 Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
 
    any.js:5:1
-      5| Promise.any<Array<mixed>>(0); // Error: expected array instead of number
+      5| Promise.any<Array<unknown>>(0); // Error: expected array instead of number
          ^^^^^^^^^^^
 
 References:
@@ -240,15 +240,15 @@ References:
                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ any.js:5:27
+Error ------------------------------------------------------------------------------------------------------ any.js:5:29
 
 Cannot call `Promise.any` with `0` bound to `promises` because number literal `0` [1], a primitive, cannot be used as a
 subtype of `$Iterable` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a
 subtype of an interface. [incompatible-type]
 
-   any.js:5:27
-      5| Promise.any<Array<mixed>>(0); // Error: expected array instead of number
-                                   ^ [1]
+   any.js:5:29
+      5| Promise.any<Array<unknown>>(0); // Error: expected array instead of number
+                                     ^ [1]
 
 References:
    <BUILTINS>/core.js:2375:51

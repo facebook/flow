@@ -38,7 +38,7 @@ type MapRelayProp<T> = T extends null | void ? T
 
 declare function createFragmentContainer<Props: {...}>(
   Component: React.ComponentType<Props>,
-  fragments: mixed,
+  fragments: unknown,
 ): React.ComponentType<$RelayProps<Props, RelayProp>>;
 
 /*********************************

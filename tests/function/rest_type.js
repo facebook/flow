@@ -27,5 +27,5 @@ type rest_union = (...xs: [1,2] | Array<number>) => number; // OK
 
 type rest_intersection = (...xs: { x: number, ... } & [1,2]) => number; // OK
 
-type empty_rest = <T:Array<mixed>>(...xs: T) => T; // OK
+type empty_rest = <T:Array<unknown>>(...xs: T) => T; // OK
 ((f: empty_rest) => f() as empty); // Error Array ~> empty

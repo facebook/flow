@@ -66,8 +66,8 @@ const ResultOfError = -AString;
 let UninitializedVar;
 
 class ClassMethodThisAnnotations {
-  method1(this: mixed) {
-    this as mixed;
+  method1(this: unknown) {
+    this as unknown;
   }
 }
 
@@ -91,18 +91,18 @@ function TestArrayProvider() {
 }
 
 interface InterfaceWithMethodThisAnnotation {
-  test(this: mixed): void // ok
+  test(this: unknown): void // ok
 }
 
 function anonymous_functions_this_type() {
   let foo1 = function () {}; // ok
-  let foo2 = function (this: mixed) {}; // ok
+  let foo2 = function (this: unknown) {}; // ok
   let foo3 = function () { this; }; // error: missing annot on this
-  let foo4 = function (this: mixed) { this; }; // ok
+  let foo4 = function (this: unknown) { this; }; // ok
 }
 
 function non_assigning_member_assigns() {
-  declare var foo: {[string | number]: mixed};
+  declare var foo: {[string | number]: unknown};
   foo[1 + 2] = 1; // ok
   foo['1' + 2] = 3; // ok
   (1).toString = 3; // error: toString missing in number, but no missing env entry error

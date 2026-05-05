@@ -5,7 +5,7 @@
 // with the upper tparams set to their bounds, even if it wasn't OK
 // for other possible arguments.
 {
-  (o: <T>() => mixed): (<S>() => S) => o; // should error
+  (o: <T>() => unknown): (<S>() => S) => o; // should error
 
   function coerce<A, B>(x: A): B {
     const g = (o: <T>() => A): (<S>() => S) => o; // should error
@@ -18,10 +18,10 @@
 
 // Test issue #8766, round 2.
 {
-  (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
+  (f: <T>(T) => unknown): (<S>(unknown) => S) => f; // should error
 
   function coerce<A, B>(x: A): B {
-    const g = (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
+    const g = (f: <T>(T) => unknown): (<S>(unknown) => S) => f; // should error
     return g(<T>(y: T): A => x)();
   }
 
@@ -62,8 +62,8 @@
 // Currently these don't work; see #8767.
 (f: <R, S>(R, S) => S): (<T>(T, T) => T) => f; // ok
 (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
-(f: <R>(R, mixed) => R): (<S, T>(S, T) => S) => f; // ok
-(f: <R>(R, mixed) => R): (<S, T>(S, T) => T) => f; // error
+(f: <R>(R, unknown) => R): (<S, T>(S, T) => S) => f; // ok
+(f: <R>(R, unknown) => R): (<S, T>(S, T) => T) => f; // error
 
 
 // Test subtyping where lower and upper have same number of parameters,
@@ -74,7 +74,7 @@
 
 
 // Test subtyping where only one side is polymorphic.
-(f: mixed => boolean): (<T>(T) => boolean) => f; // ok
+(f: unknown => boolean): (<T>(T) => boolean) => f; // ok
 (f: (number, number) => number): (<T>(T, T) => T) => f; // error
 (f: <T>(T, T) => T): ((number, number) => number) => f; // ok
 (f: <T>(T, T) => T): ((number, string) => number) => f; // error

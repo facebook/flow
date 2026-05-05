@@ -2,7 +2,7 @@ component Reffed() { return null }
 
 component Foo(ref: {current: typeof Reffed}) { return null };
 
-component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+component Bar(ref: ((typeof Reffed) => unknown)) { return null };
 
 
 component Baz(ref: React.RefSetter<typeof Reffed>) { return null };

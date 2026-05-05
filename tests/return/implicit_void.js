@@ -369,7 +369,7 @@ function g15(): number { // Error
 g15();
 
 function g16(): number { // Error
-  for (const x of [] as Array<mixed>) {
+  for (const x of [] as Array<unknown>) {
     invariant();
   }
 }

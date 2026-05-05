@@ -167,7 +167,7 @@ Cannot cast `str` to key set because some string with unknown value [1] is incom
 
 References:
    keys.js:24:26
-   24| type StrLitDict = {[key: 'hi']: mixed};
+   24| type StrLitDict = {[key: 'hi']: unknown};
                                 ^^^^ [2]
 
 
@@ -182,7 +182,7 @@ Cannot cast `str` to key set because some string with unknown value [1] is incom
 
 References:
    keys.js:24:26
-   24| type StrLitDict = {[key: 'hi']: mixed};
+   24| type StrLitDict = {[key: 'hi']: unknown};
                                 ^^^^ [2]
 
 
@@ -197,7 +197,7 @@ Cannot cast `'bye'` to key set because property `bye` [1] is incompatible with s
 
 References:
    keys.js:24:26
-   24| type StrLitDict = {[key: 'hi']: mixed};
+   24| type StrLitDict = {[key: 'hi']: unknown};
                                 ^^^^ [2]
 
 

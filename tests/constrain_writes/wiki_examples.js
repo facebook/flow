@@ -32,7 +32,7 @@ function ex2() {
 
   let product: number | string = Math.sqrt(x) + y;
 
-  let Component: mixed = ({prop}: Props) => { return <>{prop}</> }
+  let Component: unknown = ({prop}: Props) => { return <>{prop}</> }
   // No good type to represent this! Restructure code instead
 
   let element: React.Node = <></>

@@ -109,7 +109,7 @@ function nonObjectRHS(x: Object) {
   if (x instanceof ('bad' as any)) {
     x;
   } // ok
-  if (x instanceof ('bad' as mixed)) {
+  if (x instanceof ('bad' as unknown)) {
     x;
   } // error
 }
@@ -122,7 +122,7 @@ function not_refinement_or_val_rhs(x: Object) {
 }
 
 function class_explicit() {
-  declare var x: mixed;
+  declare var x: unknown;
 
   class B {}
 
@@ -135,7 +135,7 @@ function class_explicit() {
 }
 
 function class_util() {
-  declare var x: mixed;
+  declare var x: unknown;
 
   class B {}
 
@@ -148,7 +148,7 @@ function class_util() {
 }
 
 function class_util_chain() {
-  declare var x: mixed;
+  declare var x: unknown;
 
   class B {}
 

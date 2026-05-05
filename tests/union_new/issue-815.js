@@ -13,7 +13,7 @@ type Children = Array<Child>;
 class Thunk {}
 class VirtualNode {
   children: Child | Children;
-  constructor(type: mixed, children /*:Children*/) {
+  constructor(type: unknown, children /*:Children*/) {
     this.children = children.length === 1 ? children[0] : children;
   }
 }

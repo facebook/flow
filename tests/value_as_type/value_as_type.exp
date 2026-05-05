@@ -14,8 +14,8 @@ References:
     14|   _handleChild = (child: ?HocChild): void => {}; // Error
                                   ^^^^^^^^ [1]
    test1.js:5:48
-     5| const HocChild: component(ref: React.RefSetter<mixed>, ...PropsType) = null as any;
-                                                       ^^^^^ [2]
+     5| const HocChild: component(ref: React.RefSetter<unknown>, ...PropsType) = null as any;
+                                                       ^^^^^^^ [2]
    test1.js:14:3
     14|   _handleChild = (child: ?HocChild): void => {}; // Error
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]

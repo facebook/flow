@@ -1,6 +1,6 @@
 'use strict';
 
-declare var o: mixed;
+declare var o: unknown;
 
 with (o) { // ERROR (parse error)
 }

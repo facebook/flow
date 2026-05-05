@@ -43,13 +43,13 @@ function class_test() {
   }
 
   class D2 extends C {
-    m(x: unknown): x is mixed { // error extends
+    m(x: unknown): x is unknown { // error extends
       return true;
     }
   }
   class D3 extends C {
     m(x: unknown): x is number {
-      return true; // error mixed ~> number
+      return true; // error unknown ~> number
     }
   }
 
@@ -110,13 +110,13 @@ function declare_class_test() {
   }
 
   class D2 extends C {
-    m(x: unknown): x is mixed { // error mixed ~> number
+    m(x: unknown): x is unknown { // error unknown ~> number
       return true; // okay
     }
   }
   class D3 extends C {
     m(x: unknown): x is number {
-      return true; // error mixed ~> number
+      return true; // error unknown ~> number
     }
   }
 }

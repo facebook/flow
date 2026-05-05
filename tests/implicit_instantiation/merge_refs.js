@@ -2,7 +2,7 @@
 
 export type TRefFor<-TElement> =
   | {-current: TElement | null, ...}
-  | ((TElement | null) => mixed);
+  | ((TElement | null) => unknown);
 
 type RefType<TElement> = TRefFor<TElement>;
 

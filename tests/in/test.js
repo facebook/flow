@@ -45,7 +45,7 @@ let tests = [
   },
 
   // annotations on RHS
-  function(x: Object, y: mixed) {
+  function(x: Object, y: unknown) {
     ('foo' in x); // ok
     ('foo' in y); // error
   },

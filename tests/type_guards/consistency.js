@@ -117,7 +117,7 @@ function non_maybe_poly_2<X: {...}>(x: ?X): x is X { // okay
   return x != null;
 }
 
-function is_array(x: unknown): x is ReadonlyArray<mixed> { // okay
+function is_array(x: unknown): x is ReadonlyArray<unknown> { // okay
   return Array.isArray(x);
 }
 

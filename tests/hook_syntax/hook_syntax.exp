@@ -1291,7 +1291,7 @@ Cannot cast `useH` to function type because function [1] is a React hook but fun
 React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
 
    require_specific_suppression.js:2:1
-   2| useH as (empty) => mixed; // error
+   2| useH as (empty) => unknown; // error
       ^^^^
 
 References:
@@ -1299,8 +1299,8 @@ References:
    1| hook useH<T>(x: T): [T] { return [x];}
       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    require_specific_suppression.js:2:9
-   2| useH as (empty) => mixed; // error
-              ^^^^^^^^^^^^^^^^ [2]
+   2| useH as (empty) => unknown; // error
+              ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------ require_specific_suppression.js:5:1
@@ -1319,7 +1319,7 @@ Cannot cast `useH` to function type because function [1] is a React hook but fun
 React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
 
    require_specific_suppression.js:6:1
-   6| useH as (empty) => mixed; // error, not suppressed
+   6| useH as (empty) => unknown; // error, not suppressed
       ^^^^
 
 References:
@@ -1327,8 +1327,8 @@ References:
    1| hook useH<T>(x: T): [T] { return [x];}
       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    require_specific_suppression.js:6:9
-   6| useH as (empty) => mixed; // error, not suppressed
-              ^^^^^^^^^^^^^^^^ [2]
+   6| useH as (empty) => unknown; // error, not suppressed
+              ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- rules_of_hooks.js:74:3

@@ -1,4 +1,4 @@
-function foo(map: { [key: string]: mixed }) {
+function foo(map: { [key: string]: unknown }) {
   const first = { some: "hello" };
   const options = { some: 42  };
   // $FlowExpectedError[unsafe-object-assign]

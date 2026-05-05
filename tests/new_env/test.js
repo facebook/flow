@@ -37,11 +37,11 @@ var ya: number;
 ya as number;
 ya = 'a';
 
-function bar(y: {[key: string]: mixed}): string {
+function bar(y: {[key: string]: unknown}): string {
   return y.foo;
 }
 
-function foo(x: {[key: string]: mixed}) {
+function foo(x: {[key: string]: unknown}) {
   bar(x);
 }
 

@@ -1,10 +1,10 @@
 function test1() {
-  declare var x: (mixed) => void;
+  declare var x: (unknown) => void;
   x(y => {}); // error missing annot
 }
 
 function test2() {
-  declare var x: (?mixed) => void;
+  declare var x: (?unknown) => void;
   x(y => {}); // error missing annot
 }
 

@@ -6,7 +6,7 @@ component Foo() {
     return null;
 }
 
-function Bar(props: mixed) {
+function Bar(props: unknown) {
     const x = HookReact.useRef(null); // ok, env though this useRef is a hook and we're in a function
     return null;
 }

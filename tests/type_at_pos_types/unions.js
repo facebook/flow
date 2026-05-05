@@ -52,11 +52,11 @@ g.set_X(0 as any);
 
 // exhibits use of Ty_normalizer.simplify_unions_inters_visitor
 
-declare var top : mixed | mixed | number;
+declare var top : unknown | unknown | number;
 top;
 //^?
 
-declare var top_g : { g: mixed | mixed | number, ...};
+declare var top_g : { g: unknown | unknown | number, ...};
 top_g;
 // ^?
 

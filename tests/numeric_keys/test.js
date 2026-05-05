@@ -57,7 +57,7 @@
   }
   // Conditional types
   {
-    type GetKeys<T> = T extends {+[infer K]: mixed} ? K : empty;
+    type GetKeys<T> = T extends {+[infer K]: unknown} ? K : empty;
     declare const x: GetKeys<{'1': boolean, '2': string}>;
     x as number; // ERROR
   }

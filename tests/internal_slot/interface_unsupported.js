@@ -1,1 +1,1 @@
-interface I { [[foo]]: mixed }
+interface I { [[foo]]: unknown }

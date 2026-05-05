@@ -140,8 +140,8 @@ Error --------------------------------------------------------------------------
 
 The right-hand side of an `instanceof` expression must be an object, but got `unknown` [1]. [invalid-in-rhs]
 
-   112|   if (x instanceof ('bad' as mixed)) {
-                                     ^^^^^ [1]
+   112|   if (x instanceof ('bad' as unknown)) {
+                                     ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:132:5

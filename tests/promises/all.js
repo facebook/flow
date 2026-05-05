@@ -19,10 +19,10 @@ Promise.all([
 });
 
 // First argument is required
-Promise.all<Array<mixed>>(); // Error: expected array instead of undefined (too few arguments)
+Promise.all<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
 
 // Mis-typed arg
-Promise.all<Array<mixed>>(0); // Error: expected array instead of number
+Promise.all<Array<unknown>>(0); // Error: expected array instead of number
 
 // Promise.all is a function
 Promise.all as Function;

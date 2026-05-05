@@ -934,9 +934,9 @@ References:
    tparams.js:22:16
    22|   const {p, ...o} = a;
                       ^ [1]
-   tparams.js:21:50
-   21| function removex<A: {+p: mixed, ...}, B>(a: A): [Omit<A, 'p'>, B] {
-                                                        ^^^^^^^^^^^^ [2]
+   tparams.js:21:52
+   21| function removex<A: {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+                                                          ^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:23:14
@@ -949,11 +949,11 @@ Cannot return array literal because in index `1`: `unknown` [1] is incompatible 
 
 References:
    tparams.js:21:26
-   21| function removex<A: {+p: mixed, ...}, B>(a: A): [Omit<A, 'p'>, B] {
-                                ^^^^^ [1]
-   tparams.js:21:64
-   21| function removex<A: {+p: mixed, ...}, B>(a: A): [Omit<A, 'p'>, B] {
-                                                                      ^ [2]
+   21| function removex<A: {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+                                ^^^^^^^ [1]
+   tparams.js:21:66
+   21| function removex<A: {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+                                                                        ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:45:11

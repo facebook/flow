@@ -1,6 +1,6 @@
 hook useH<T>(x: T): [T] { return [x];}
-useH as (empty) => mixed; // error
+useH as (empty) => unknown; // error
 // $FlowFixMe[react-rule-hook-incompatible]
-useH as (empty) => mixed; // suppressed
+useH as (empty) => unknown; // suppressed
 // $FlowFixMe
-useH as (empty) => mixed; // error, not suppressed
+useH as (empty) => unknown; // error, not suppressed

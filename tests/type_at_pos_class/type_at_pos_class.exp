@@ -78,9 +78,9 @@ class-0.js:21:5 = {
   "endline":21,
   "line":21,
   "loc":{
-    "end":{"column":5,"line":21,"offset":178},
+    "end":{"column":5,"line":21,"offset":180},
     "source":"class-0.js",
-    "start":{"column":5,"line":21,"offset":177},
+    "start":{"column":5,"line":21,"offset":179},
     "type":"SourceFile"
   },
   "path":"class-0.js",
@@ -93,9 +93,9 @@ class-0.js:24:5 = {
   "endline":24,
   "line":24,
   "loc":{
-    "end":{"column":5,"line":24,"offset":226},
+    "end":{"column":5,"line":24,"offset":228},
     "source":"class-0.js",
-    "start":{"column":5,"line":24,"offset":225},
+    "start":{"column":5,"line":24,"offset":227},
     "type":"SourceFile"
   },
   "path":"class-0.js",

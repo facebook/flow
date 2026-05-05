@@ -48,4 +48,4 @@ component Poly<T>() { return null; }
 Poly(); // error
 Poly<number>(); // error
 
-Baz as component(...mixed);
+Baz as component(...unknown);

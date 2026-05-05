@@ -71,7 +71,7 @@ type WithReadOnlyOpt = [a: number, +b?: string];
 
 type InvalidReqAfterOpt = [a: number, b?: string, c: string]; // ERROR
 {
-  declare const x: mixed;
+  declare const x: unknown;
   x as InvalidReqAfterOpt; // OK - it's `any`
 }
 type InvalidReqAfterOptMultiple = [a: number, b?: string, c: string, d: boolean]; // ERROR (on first one)

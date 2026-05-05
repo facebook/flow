@@ -19,7 +19,7 @@ const useManyA = ({
 }: {
   CallableValue: CallableValue,
 }): void => {
-  CallableValue as mixed;
+  CallableValue as unknown;
 };
 
 const useManyB = ({
@@ -27,7 +27,7 @@ const useManyB = ({
 }: {
   CallableValue: CallableValue,
 }): void => {
-  CallableValue as mixed;
+  CallableValue as unknown;
 };
 
 const useManyC = ({
@@ -35,7 +35,7 @@ const useManyC = ({
 }: {
   CallableValue: CallableValue,
 }): void => {
-  CallableValue as mixed;
+  CallableValue as unknown;
 };
 
 useProperty;

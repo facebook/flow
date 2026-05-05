@@ -1,6 +1,6 @@
 //@flow
 
-type Id<T> = T extends mixed ? T : empty;
+type Id<T> = T extends unknown ? T : empty;
 
 type Union = Id<"foo" | "bar" | "baz">
 

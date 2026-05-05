@@ -23,8 +23,8 @@ function foo1(
 }
 
 function foo2(
-  x: Array<{[key: string]: mixed}>,
-): Array<{[key: string]: mixed, fooBar: string}> {
+  x: Array<{[key: string]: unknown}>,
+): Array<{[key: string]: unknown, fooBar: string}> {
   x[0].fooBar = 123; // OK, since number ~> mixed (x elem's dictionary)
   return x; // error: mixed ~> string
 }

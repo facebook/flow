@@ -1,7 +1,7 @@
-declare var a: (number) => mixed;
-declare var b: (number) => mixed;
-declare var c: (number) => mixed;
-declare var d: (number) => mixed;
+declare var a: (number) => unknown;
+declare var b: (number) => unknown;
+declare var c: (number) => unknown;
+declare var d: (number) => unknown;
 
 [a, [b, [c, {d}]]] = [
    (n) => n as empty, // error: num ~> empty
@@ -18,8 +18,8 @@ declare var d: (number) => mixed;
   b: (n) => n as empty, // error: num ~> empty
 })
 
-declare var e: $ReadOnlyArray<(number) => mixed>;
-declare var f: {[string]: (number) => mixed};
+declare var e: $ReadOnlyArray<(number) => unknown>;
+declare var f: {[string]: (number) => unknown};
 [...e] = [(n) => n as empty]; // error: num ~> empty
 ({...f} = {hello: (n) => n as empty}); // error: num ~> empty
 

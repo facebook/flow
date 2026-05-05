@@ -11,9 +11,9 @@ type G1 = (x: number) => P1;
 type G2 = <A>(x: Array<A>) => P1;
 type G3 = (x: string) => P2;
 
-type Foo = { foo: mixed };
-type Bar = { bar: mixed };
-type Baz = { baz: () => mixed };
+type Foo = { foo: unknown };
+type Bar = { bar: unknown };
+type Baz = { baz: () => unknown };
 
 function test1() {
   declare var foo: F1 & F2 & F3;
@@ -203,14 +203,14 @@ function test18() {
 }
 
 function test19() {
-  declare var error: mixed;
+  declare var error: unknown;
   error();
 // ^?
 }
 
 function test20(
   Foo1: <T>(x: T, y: T) => void,
-  Foo2: <T>(x: T, y: mixed) => void,
+  Foo2: <T>(x: T, y: unknown) => void,
   Foo3: <T: number>(x: T, y: T) => void,
   Foo4: <T, S: string>(x: T, y: S) => void,
   Bar: (typeof Foo1 | typeof Foo2) & (typeof Foo3 | typeof Foo4),
@@ -255,7 +255,7 @@ function test_24() {
   declare var C1: any
   const c1 = new C1(1);
 //           ^?
-  declare var C2: mixed;
+  declare var C2: unknown;
   const c2 = new C2(1); // error
 //           ^?
 }

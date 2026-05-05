@@ -480,8 +480,8 @@ unary minus [2]. [invalid-exported-annotation]
 
 References:
    ops_on_intersection.js:8:16
-    8| declare var n: number & mixed;
-                      ^^^^^^^^^^^^^^ [1]
+    8| declare var n: number & unknown;
+                      ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:41:20
@@ -495,8 +495,8 @@ unary not [2]. [invalid-exported-annotation]
 
 References:
    ops_on_intersection.js:8:16
-    8| declare var n: number & mixed;
-                      ^^^^^^^^^^^^^^ [1]
+    8| declare var n: number & unknown;
+                      ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:44:18

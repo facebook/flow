@@ -94,10 +94,10 @@ function test_reference() {
 }
 
 function test_rest_params() {
-  declare function f1<const T: Array<mixed>>(...args: T): T;
+  declare function f1<const T: Array<unknown>>(...args: T): T;
   const x1 = f1(...[1]); // error inferred const array is readonly which is not compatible with Array<mixed>
 
-  declare function f2<const T: $ReadOnlyArray<mixed>>(...args: T): T;
+  declare function f2<const T: $ReadOnlyArray<unknown>>(...args: T): T;
   const x2 = f2(...[1, 'a']); // okay inferred const array is readonly which is compatible with $ReadOnlyArray<mixed>
 
   declare function f3<const T: $ReadOnlyArray<1|'a'>>(...args: T): T;

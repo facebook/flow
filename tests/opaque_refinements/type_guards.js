@@ -7,10 +7,10 @@ type C<T> = B<T> | O<T>;
 
 declare function isB<T>(compute: C<T>): compute is B<T>;
 
-function test1(value: C<mixed>): void {
+function test1(value: C<unknown>): void {
   if (isB(value)) {
-    const _1 = value as B<mixed>;
-    const _2: B<mixed> = value;
+    const _1 = value as B<unknown>;
+    const _2: B<unknown> = value;
   }
 }
 

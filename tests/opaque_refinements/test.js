@@ -1,6 +1,6 @@
 //@flow strict
 
-declare opaque type T: mixed;
+declare opaque type T: unknown;
 declare var o: { p: T };
 
 // guard
@@ -14,7 +14,7 @@ if (o.p != null) {
 }
 
 
-declare opaque type TT: mixed;
+declare opaque type TT: unknown;
 
 declare let content:
 | void

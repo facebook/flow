@@ -1221,7 +1221,7 @@ Cannot assign `'c'` to `x[0]` because string literal `c` [1] is incompatible wit
 
 References:
    dictionary.js:273:28
-   273|   declare function getAKey<TKey>(x: {[key: TKey]: mixed}): Array<TKey>;
+   273|   declare function getAKey<TKey>(x: {[key: TKey]: unknown}): Array<TKey>;
                                    ^^^^ [2]
 
 
@@ -1417,17 +1417,17 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    incompatible.js:26:12
-   26|   x: Array<{[key: string]: mixed}>,
-                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   26|   x: Array<{[key: string]: unknown}>,
+                  ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    incompatible.js:27:10
-   27| ): Array<{[key: string]: mixed, fooBar: string}> {
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   27| ): Array<{[key: string]: unknown, fooBar: string}> {
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    incompatible.js:26:6
-   26|   x: Array<{[key: string]: mixed}>,
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   26|   x: Array<{[key: string]: unknown}>,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    incompatible.js:27:4
-   27| ): Array<{[key: string]: mixed, fooBar: string}> {
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   27| ): Array<{[key: string]: unknown, fooBar: string}> {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:42:10

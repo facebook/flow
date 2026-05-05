@@ -171,8 +171,8 @@ References:
    98|   const x1 = f1(...[1]); // error inferred const array is readonly which is not compatible with Array<mixed>
                     ^^^^^^^^^^ [1]
    file.js:97:32
-   97|   declare function f1<const T: Array<mixed>>(...args: T): T;
-                                      ^^^^^^^^^^^^ [2]
+   97|   declare function f1<const T: Array<unknown>>(...args: T): T;
+                                      ^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- file.js:104:21

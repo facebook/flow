@@ -58,16 +58,16 @@ Error --------------------------------------------------------------------------
 
 Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
 
-   18| null as Object<mixed>;
-               ^^^^^^^^^^^^^
+   18| null as Object<unknown>;
+               ^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- index.js:19:9
 
 Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
 
-   19| null as Function<mixed>;
-               ^^^^^^^^^^^^^^^
+   19| null as Function<unknown>;
+               ^^^^^^^^^^^^^^^^^
 
 
 

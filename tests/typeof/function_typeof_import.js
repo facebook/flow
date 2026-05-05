@@ -2,7 +2,7 @@
 
 import {f1, f2, f3, f4, poly1, poly2, poly3, r1, r2, r3, r4, r5, r6, r7, r8, r9} from './function_typeof.js';
 
-f1 as (x: mixed) => void; // ok because f1 is (x: any) => void
+f1 as (x: unknown) => void; // ok because f1 is (x: any) => void
 f2 as (x: number, y: number) => void; // ok
 f3 as (x: {f: number}, y: number) => void; // ok
 f4 as (x: {f: Array<number>}, ...y: Array<number>) => void; // ok

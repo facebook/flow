@@ -188,7 +188,7 @@ var tests =
     x as 'b'; // error (but only once, string !~> 'b'; 'a' is irrelevant)
   },
 
-  function(x: mixed) {
+  function(x: unknown) {
     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
     x as string & number;
   },

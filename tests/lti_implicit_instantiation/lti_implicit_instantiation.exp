@@ -401,7 +401,7 @@ element [2]. Either add explicit type arguments or cast the expression to your e
 
 References:
    underconstrained_react.js:9:32
-    9| function PolyFunctionComponent<T>(props: {foo: ({x: T, ...} => mixed), ...}): React.Node { return null }
+    9| function PolyFunctionComponent<T>(props: {foo: ({x: T, ...} => unknown), ...}): React.Node { return null }
                                       ^ [1]
    underconstrained_react.js:11:1
    11| <PolyFunctionComponent foo={() => {}}/>;
@@ -474,7 +474,7 @@ type arguments or cast the expression to your expected type. [underconstrained-i
 
 References:
    upper_non_t.js:24:34
-   24| declare function ConditionalType<T>(x: T extends mixed ? void : empty): T;
+   24| declare function ConditionalType<T>(x: T extends unknown ? void : empty): T;
                                         ^ [1]
    upper_non_t.js:25:1
    25| ConditionalType(undefined); // Error: T under constrained.
@@ -917,8 +917,8 @@ Cannot cast `v1` to empty because tuple type [1] is incompatible with empty [2].
 
 References:
    upper_non_t.js:112:9
-   112|     fn: (...TArguments) => mixed,
-                ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   112|     fn: (...TArguments) => unknown,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    upper_non_t.js:132:9
    132|   v1 as empty; // error: tuple ~> empty
                 ^^^^^ [2]
@@ -934,8 +934,8 @@ Cannot cast `f4` to empty because tuple type [1] is incompatible with empty [2].
 
 References:
    upper_non_t.js:134:40
-   134|   declare function funArgRest<Rest>(f: (first: empty, second: empty, ...args: Rest) => mixed): Rest;
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   134|   declare function funArgRest<Rest>(f: (first: empty, second: empty, ...args: Rest) => unknown): Rest;
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    upper_non_t.js:138:9
    138|   f4 as empty; // error: tuple ~> empty
                 ^^^^^ [2]

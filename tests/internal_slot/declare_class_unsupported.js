@@ -1,1 +1,1 @@
-declare class C { [[foo]]: mixed }
+declare class C { [[foo]]: unknown }

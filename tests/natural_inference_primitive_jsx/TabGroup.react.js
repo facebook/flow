@@ -4,7 +4,7 @@ import * as React from 'react';
 
 export type Props<TValue> = $ReadOnly<{
   children: React.ChildrenArray<?ExactReactElement_DEPRECATED<TabType<TValue>>>,
-  onChange: (value: TValue) => mixed,
+  onChange: (value: TValue) => unknown,
   value?: ?TValue,
 }>;
 

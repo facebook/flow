@@ -1,4 +1,4 @@
-function switch_scope(x: mixed) {
+function switch_scope(x: unknown) {
   let a = "";
   let b: number | string = "";
   switch (x) {

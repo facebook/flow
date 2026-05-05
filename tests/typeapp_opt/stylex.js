@@ -1,13 +1,13 @@
 // minimized from https://github.com/facebook/stylex/blob/10501b354a02776dcb55229ed1bae6aef54875c0/packages/stylex/src/StyleXTypes.js#L69-L94
 import type {StyleXClassNameFor, StyleXVar} from './opaque';
 
-export type MapNamespaces<+S: {+[string]: mixed}> = {
+export type MapNamespaces<+S: {+[string]: unknown}> = {
   +[Key in keyof S]: S[Key] extends (...args: infer Args) => infer Obj
     ? (...args: Args) => $ReadOnly<[MapNamespace<Obj>, InlineStyles]>
     : MapNamespace<S[Key]>,
 };
 
-export type MapNamespace<+CSS: {+[string]: mixed}> = {
+export type MapNamespace<+CSS: {+[string]: unknown}> = {
   +[Key in keyof CSS]: StyleXClassNameFor<Key, ComplexStyleValueType<CSS[Key]>>,
 };
 

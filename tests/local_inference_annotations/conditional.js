@@ -23,7 +23,7 @@ function test3() {
 }
 
 function test4() {
-  declare var x: mixed;
+  declare var x: unknown;
   declare function foo<U>(f: () => U): U;
   foo(() => (false ? [] : [x])); // okay, [] is contextually typed
   foo(() => (false ? [x] : [])); // okay, [] is contextually typed

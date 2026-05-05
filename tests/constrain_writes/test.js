@@ -41,7 +41,7 @@ function destruct() {
   type T = {p: string};
 }
 
-function ifs(x: mixed) {
+function ifs(x: unknown) {
   let a = '';
   if (x) {
     let a;
@@ -50,7 +50,7 @@ function ifs(x: mixed) {
   a as string; // OK
 }
 
-function switch_scope(x: mixed) {
+function switch_scope(x: unknown) {
   let a = '';
   switch (x) {
     case 'foo':

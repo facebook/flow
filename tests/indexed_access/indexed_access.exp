@@ -427,9 +427,9 @@ Cannot cast `f(...)` to boolean literal `true` because undefined [1] is incompat
        ^^^^^^^^^
 
 References:
-   optional.js:73:55
-   73| function f<K: string, T: ?{+[K]: mixed}>(t: T, k: K): T?.[K] {
-                                                             ^ [1]
+   optional.js:73:57
+   73| function f<K: string, T: ?{+[K]: unknown}>(t: T, k: K): T?.[K] {
+                                                               ^ [1]
    optional.js:79:14
    79| f(z, 'c') as true; // Error - wrong type
                     ^^^^ [2]
@@ -477,9 +477,9 @@ Cannot cast `f(...)` to boolean literal `true` because undefined [1] is incompat
        ^^^^^^^^^^
 
 References:
-   optional.js:73:55
-   73| function f<K: string, T: ?{+[K]: mixed}>(t: T, k: K): T?.[K] {
-                                                             ^ [1]
+   optional.js:73:57
+   73| function f<K: string, T: ?{+[K]: unknown}>(t: T, k: K): T?.[K] {
+                                                               ^ [1]
    optional.js:84:15
    84| f(mz, 'c') as true; // Error - wrong type
                      ^^^^ [2]

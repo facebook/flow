@@ -31,7 +31,7 @@ function test2() {
 }
 
 function test3() {
-  opaque type MediaPayload = mixed;
+  opaque type MediaPayload = unknown;
 
   type Message = {
     kind: 'Video' | 'Image',

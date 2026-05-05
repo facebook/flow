@@ -366,13 +366,13 @@ Cannot cast `FnWithoutRefProp` to component because property `ref` is extra in p
 Exact objects do not accept extra props. [incompatible-type]
 
    subtyping.js:6:1
-   6| FnWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // error, since {ref: React.RefSetter<mixed>} ~> {} should be an error
+   6| FnWithoutRefProp as component(foo: string, ref: React.RefSetter<unknown>); // error, since {ref: React.RefSetter<unknown>} ~> {} should be an error
       ^^^^^^^^^^^^^^^^
 
 References:
    subtyping.js:6:21
-   6| FnWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // error, since {ref: React.RefSetter<mixed>} ~> {} should be an error
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   6| FnWithoutRefProp as component(foo: string, ref: React.RefSetter<unknown>); // error, since {ref: React.RefSetter<unknown>} ~> {} should be an error
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    fn_components.js:1:49
    1| declare export function FnWithoutRefProp(props: {foo: string}): React.Node;
                                                       ^^^^^^^^^^^^^ [2]
@@ -420,13 +420,13 @@ Cannot cast `CompWithoutRefProp` to component because property `ref` is extra in
 props of component CompWithoutRefProp [2]. Exact objects do not accept extra props. [incompatible-type]
 
    subtyping.js:18:1
-   18| CompWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // error: React.RefSetter<mixed> ~> void
+   18| CompWithoutRefProp as component(foo: string, ref: React.RefSetter<unknown>); // error: React.RefSetter<unknown> ~> void
        ^^^^^^^^^^^^^^^^^^
 
 References:
    subtyping.js:18:23
-   18| CompWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // error: React.RefSetter<mixed> ~> void
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   18| CompWithoutRefProp as component(foo: string, ref: React.RefSetter<unknown>); // error: React.RefSetter<unknown> ~> void
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    component_syntax_components.js:1:44
     1| declare export component CompWithoutRefProp(foo: string);
                                                   ^^^^^^^^^^^^^ [2]

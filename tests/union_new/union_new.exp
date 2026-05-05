@@ -317,9 +317,9 @@ Cannot cast `ret` to empty because string [1] is incompatible with empty [2]. [i
       ^^^
 
 References:
-   test35.js:4:31
-   4| declare function f(x: mixed): string;
-                                    ^^^^^^ [1]
+   test35.js:4:33
+   4| declare function f(x: unknown): string;
+                                      ^^^^^^ [1]
    test35.js:8:8
    8| ret as empty; // err, string ~> empty (matched case 2)
              ^^^^^ [2]

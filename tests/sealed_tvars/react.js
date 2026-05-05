@@ -5,7 +5,7 @@ const RC = <T />;
 
 function T(): void {}
 
-declare function Wrap(_: {children: mixed}): React.Node;
+declare function Wrap(_: {children: unknown}): React.Node;
 
 <Wrap>
   {/* ok */ true ? <div></div> : <div></div>}

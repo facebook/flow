@@ -7,11 +7,11 @@ interface I_Method_this {
 }
 
 interface I_Function_mixed {
-    +x : (this : mixed) => void
+    +x : (this : unknown) => void
 }
 
 interface I_Method_mixed {
-    x(this : mixed) : void
+    x(this : unknown) : void
 }
 
 interface I_Function_empty {
@@ -29,11 +29,11 @@ class C_Method_this {
 }
 
 class C_Function_mixed {
-    +x : (this : mixed) => void
+    +x : (this : unknown) => void
 }
 
 class C_Method_mixed {
-    x(this : mixed) : void {}
+    x(this : unknown) : void {}
 }
 
 class C_Function_empty {

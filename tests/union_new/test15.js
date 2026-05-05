@@ -14,8 +14,8 @@ declare class EventTarget {
 declare class Event { }
 declare class KeyboardEvent { }
 
-type EventHandler = (event: Event) => mixed
-type KeyboardEventHandler = (event: KeyboardEvent) => mixed
+type EventHandler = (event: Event) => unknown
+type KeyboardEventHandler = (event: KeyboardEvent) => unknown
 
 // example where globals are not yet resolved
 

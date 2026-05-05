@@ -58,7 +58,7 @@ let tests = [
   },
 ];
 
-function callPolymorphic(this: mixed) {
+function callPolymorphic(this: unknown) {
   declare function setError<T>(error: any): T;
   const err = setError.call(this, 1); // error under-constrained T
   const fixedErr: number = setError.call(this, 1); // fixed with return annotation

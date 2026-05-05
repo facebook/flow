@@ -1,11 +1,11 @@
 //@flow
-const a: {[string]: mixed} = {};
-const b: {[string]: mixed} = {};
-const c: {[string]: mixed} = {...a, ...b}; // Ok
+const a: {[string]: unknown} = {};
+const b: {[string]: unknown} = {};
+const c: {[string]: unknown} = {...a, ...b}; // Ok
 
 const d: {} = {...null}; // {} ~> {} errors, so spreading null
-const e: {[string]: mixed} = {};
-const f: {[string]: mixed} = {...d, ...e}; // Ok
+const e: {[string]: unknown} = {};
+const f: {[string]: unknown} = {...d, ...e}; // Ok
 
 const g: {[string]: number} = {};
 const h: {[number]: string} = {};
@@ -30,9 +30,9 @@ const y: {+[string | number]: string | number} = w;
 const z: {[string | number]: string | number} = {...x, ...y}; // ok
 
 
-const a2: {[string]: mixed} = {};
-const b2: {['a' | 'b']: mixed} = {};
-const c2: {[string]: mixed} = {...a2, ...b2}; // Ok
+const a2: {[string]: unknown} = {};
+const b2: {['a' | 'b']: unknown} = {};
+const c2: {[string]: unknown} = {...a2, ...b2}; // Ok
 
 const d2: {[string]: number} = {};
 const e2: {[string]: 1} = {};

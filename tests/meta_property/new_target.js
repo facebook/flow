@@ -1,5 +1,5 @@
 function Foo() {
-  new.target as mixed; // OK
+  new.target as unknown; // OK
   new.target as boolean; // Error
 
   if (!new.target) {} // OK
@@ -7,7 +7,7 @@ function Foo() {
 
 class A {
   constructor() {
-    new.target as mixed; // OK
+    new.target as unknown; // OK
     new.target as boolean; // Error
   }
 }

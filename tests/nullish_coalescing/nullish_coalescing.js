@@ -16,13 +16,13 @@ function foo(a: ?string, b: ?number, c : boolean) {
   (d ?? "hello") as empty; // Error
 }
 
-type Bar<T = mixed> = ?boolean;
+type Bar<T = unknown> = ?boolean;
 function bar(value: Bar<>) {
   const x: boolean = value ?? true;
   const y: boolean = value as ?boolean ?? true;
 }
 
-function refinement(x: mixed): mixed {
+function refinement(x: unknown): unknown {
   const result = x ?? 0;
   if (result == null) {
     result as empty;

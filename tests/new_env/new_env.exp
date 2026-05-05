@@ -458,8 +458,8 @@ Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [inc
 
 References:
    refi.js:5:8
-    5| var z: mixed = 100;
-              ^^^^^ [1]
+    5| var z: unknown = 100;
+              ^^^^^^^ [1]
    refi.js:24:8
    24|   y as empty;
               ^^^^^ [2]
@@ -671,11 +671,11 @@ Cannot return `y.foo` because `unknown` [1] is incompatible with string [2]. [in
 
 References:
    test.js:40:33
-   40| function bar(y: {[key: string]: mixed}): string {
-                                       ^^^^^ [1]
-   test.js:40:42
-   40| function bar(y: {[key: string]: mixed}): string {
-                                                ^^^^^^ [2]
+   40| function bar(y: {[key: string]: unknown}): string {
+                                       ^^^^^^^ [1]
+   test.js:40:44
+   40| function bar(y: {[key: string]: unknown}): string {
+                                                  ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:50:6

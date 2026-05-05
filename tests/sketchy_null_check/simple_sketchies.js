@@ -62,21 +62,21 @@ declare var ww: {is?: ?({a: number} | number)};
 var {is} = ww;
 if (is && is.a) { }
 
-declare var hh: {a: mixed};
+declare var hh: {a: unknown};
 if (hh.a && hh.a.b) { }
 
-function singletonBooleanFalse(x: null | false | Array<mixed>) {
+function singletonBooleanFalse(x: null | false | Array<unknown>) {
   if (x) { /* sketchy boolean */ }
 }
 
-function singletonNum0(x: null | 0 | Array<mixed>) {
+function singletonNum0(x: null | 0 | Array<unknown>) {
   if (x) { /* sketchy num */ }
 }
 
-function singletonBooleanTrue(x: null | true | Array<mixed>) {
+function singletonBooleanTrue(x: null | true | Array<unknown>) {
   if (x) { /* NOT sketchy */ }
 }
 
-function singletonNum1(x: null | 1 | Array<mixed>) {
+function singletonNum1(x: null | 1 | Array<unknown>) {
   if (x) { /* NOT sketchy */ }
 }

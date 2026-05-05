@@ -1,4 +1,4 @@
-type KeyType<T> = T extends ReadonlyArray<mixed> ? number : string;
+type KeyType<T> = T extends ReadonlyArray<unknown> ? number : string;
 type PropType<T, K> = T extends ReadonlyArray<infer V> ? V : T[K];
 
 declare function set(): void;

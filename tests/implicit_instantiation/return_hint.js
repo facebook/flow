@@ -1,4 +1,4 @@
-type MyUnion = {+FOO: mixed} | {+BAR: mixed};
+type MyUnion = {+FOO: unknown} | {+BAR: unknown};
 declare const x: MyUnion;
 
 declare function f<T>(x: $ReadOnly<T>): T;

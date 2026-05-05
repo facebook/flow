@@ -17,12 +17,12 @@ declare var instance: C;
 declare var iface: interface {[string]: number};
 
 Object.values(dict) as Array<number>; // OK
-Object.values(iface) as Array<mixed>; // OK
-Object.values(dictWithProps) as Array<mixed>; // OK
+Object.values(iface) as Array<unknown>; // OK
+Object.values(dictWithProps) as Array<unknown>; // OK
 Object.values(dictUnion) as Array<number | boolean>; // OK
-Object.values(writeOnlyDict) as Array<mixed>; // OK
-Object.values(obj) as Array<mixed>; // OK
-Object.values(instance) as Array<mixed>; // OK
+Object.values(writeOnlyDict) as Array<unknown>; // OK
+Object.values(obj) as Array<unknown>; // OK
+Object.values(instance) as Array<unknown>; // OK
 
 Object.values(dict) as Array<empty>; // ERROR
 Object.values(iface) as Array<empty>; // ERROR

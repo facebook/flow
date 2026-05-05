@@ -15,11 +15,11 @@ type F<T> = $ReadOnly<{
   ...
 }>;
 
-declare function map<A: $ReadOnlyArray<mixed>>(o2: Promise<A>): {[K in keyof A]: A[K] extends F<infer V> ? V : empty};
+declare function map<A: $ReadOnlyArray<unknown>>(o2: Promise<A>): {[K in keyof A]: A[K] extends F<infer V> ? V : empty};
 const boo = Promise.all([{log: (f: () => string) => {}}]);
 map(boo) as [+v: number]; // error
 
-declare const issue2674: {[K in keyof [mixed, mixed]]: 'FOO'};
+declare const issue2674: {[K in keyof [unknown, unknown]]: 'FOO'};
 
 issue2674[0] as 'FOO'; // ok
 issue2674[0] as 'BAR'; // error

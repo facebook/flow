@@ -164,7 +164,7 @@ function test15() {
 function test16() {
   declare component Foo<TValue>(
     value: ReadonlyArray<TValue>,
-    onChange: (ReadonlyArray<TValue>) => mixed,
+    onChange: (ReadonlyArray<TValue>) => unknown,
   );
 
   declare const values: Array<string>;
@@ -174,7 +174,7 @@ function test16() {
 function test17() {
   declare function foo<TValue>(
     value: ReadonlyArray<TValue>,
-    onChange: (ReadonlyArray<TValue>) => mixed,
+    onChange: (ReadonlyArray<TValue>) => unknown,
   ): void;
 
   declare const values: Array<string>;
@@ -183,5 +183,5 @@ function test17() {
 
 function test18() {
   const fn = (x: unknown) => typeof x === "object" && x?.hasOwnProperty("a");
-  fn as (x: unknown) => implies x is mixed; // error non-type guard function
+  fn as (x: unknown) => implies x is unknown; // error non-type guard function
 }

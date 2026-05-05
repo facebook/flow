@@ -1067,9 +1067,9 @@ Cannot cast `o3.a` to empty because number [1] is incompatible with empty [2]. [
        ^^^^
 
 References:
-   type_mixed.js:9:29
-    9| type O3 = {...mixed, ...{a: number, b?: number}, ...};
-                                   ^^^^^^ [1]
+   type_mixed.js:9:31
+    9| type O3 = {...unknown, ...{a: number, b?: number}, ...};
+                                     ^^^^^^ [1]
    type_mixed.js:11:9
    11| o3.a as empty; // Error: number ~> empty
                ^^^^^ [2]
@@ -1084,9 +1084,9 @@ Cannot cast `o3.b` to empty because number [1] is incompatible with empty [2]. [
        ^^^^
 
 References:
-   type_mixed.js:9:41
-    9| type O3 = {...mixed, ...{a: number, b?: number}, ...};
-                                               ^^^^^^ [1]
+   type_mixed.js:9:43
+    9| type O3 = {...unknown, ...{a: number, b?: number}, ...};
+                                                 ^^^^^^ [1]
    type_mixed.js:12:9
    12| o3.b as empty; // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
                ^^^^^ [2]
@@ -1101,9 +1101,9 @@ Cannot cast `o3.b` to empty because undefined [1] is incompatible with empty [2]
        ^^^^
 
 References:
-   type_mixed.js:9:41
-    9| type O3 = {...mixed, ...{a: number, b?: number}, ...};
-                                               ^^^^^^ [1]
+   type_mixed.js:9:43
+    9| type O3 = {...unknown, ...{a: number, b?: number}, ...};
+                                                 ^^^^^^ [1]
    type_mixed.js:12:9
    12| o3.b as empty; // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
                ^^^^^ [2]

@@ -4,5 +4,5 @@
 // analysis is more complete
 
 class A {
-  p: mixed;
+  p: unknown;
 }

@@ -8,7 +8,7 @@ if (x.y) {
 
 class C {}
 
-declare var y: mixed;
+declare var y: unknown;
 var B = null;
 
 function set_b() {

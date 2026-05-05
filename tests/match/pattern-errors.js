@@ -175,7 +175,7 @@
 
 // BigInt property usage
 {
-  declare const x: mixed;
+  declare const x: unknown;
 
   const out = match (x) {
     {1n: 1, ...} => 0, // ERROR
@@ -185,7 +185,7 @@
 
 // `default` as wildcard
 {
-  declare const x: mixed;
+  declare const x: unknown;
 
   match (x) {
     default => {} // ERROR

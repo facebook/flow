@@ -16,20 +16,20 @@ References:
                      ^^^^^^^ [2]
 
 
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:3:25
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:3:27
 
 Deprecated type. Use `boolean` instead. [deprecated-type]
 
-   3| function foo(x: mixed): bool {
-                              ^^^^
+   3| function foo(x: unknown): bool {
+                                ^^^^
 
 
-Warning --------------------------------------------------------------------------------------- deprecated_types.js:6:33
+Warning --------------------------------------------------------------------------------------- deprecated_types.js:6:35
 
 Deprecated type. Use `boolean` instead. [deprecated-type]
 
-   6| declare function bar(x: mixed): bool;
-                                      ^^^^
+   6| declare function bar(x: unknown): bool;
+                                        ^^^^
 
 
 Warning ----------------------------------------------------------------------------------------- dynamic-export.js:3:23

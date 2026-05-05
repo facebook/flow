@@ -1,7 +1,7 @@
 /**
  * @flow
  */
-function foo(x: mixed): string {
+function foo(x: unknown): string {
   var a: number | string = '';
   var b: number | string = '';
 
@@ -21,7 +21,7 @@ function foo(x: mixed): string {
   return b; // error, number ~/> string
 }
 
-function baz(x: mixed): number {
+function baz(x: unknown): number {
   var a: number | string = '';
   var b: number | string = '';
 

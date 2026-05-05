@@ -60,11 +60,11 @@ function test_regression() {
   declare function union<V>(
     ...wrappers: $ReadOnlyArray<Wrapper<V>>
   ): Wrapper<V>;
-  declare function object<Wrappers: {+[key: string]: Wrapper<mixed>}>(
+  declare function object<Wrappers: {+[key: string]: Wrapper<unknown>}>(
     wrappers: Wrappers,
   ): Wrapper<$ReadOnly<MapWrapperObject<Wrappers>>>;
 
-  type Wrapper<+V> = (value: mixed) => $ReadOnly<{value: V}>;
+  type Wrapper<+V> = (value: unknown) => $ReadOnly<{value: V}>;
   type MapWrapper<C> = C extends null | void
     ? C
     : C extends Wrapper<infer T>

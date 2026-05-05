@@ -8,7 +8,7 @@ type Valid = {
 };
 
 type Indexer = {
-  readonly [string]: mixed; // OK
+  readonly [string]: unknown; // OK
 };
 
 class C {

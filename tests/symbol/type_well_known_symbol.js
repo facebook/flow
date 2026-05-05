@@ -35,7 +35,7 @@ type CovariantField = { +[Symbol.iterator]: () => Iterator<number> }; // OK
 
 // Unrecognized Symbol.XXX should error during type checking, not parsing
 type BadSymbol1 = { [Symbol.xxx](): string }; // ERROR: unsupported key
-type BadSymbol2 = { [Symbol.xxx](x: mixed): boolean }; // ERROR: unsupported key
+type BadSymbol2 = { [Symbol.xxx](x: unknown): boolean }; // ERROR: unsupported key
 
 interface IBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
 declare class DBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key

@@ -26,7 +26,7 @@ class B<X> {
 var z = 42;
 
 class C<X> {
-  s: mixed;
+  s: unknown;
   f<Y>(y: Y, x: X) {
     this.s = y;
     if (y) {
@@ -47,11 +47,11 @@ class C<X> {
 }
 
 class ObjectUtils {
-  static stableCopy<T: mixed>(value: T): T {
+  static stableCopy<T: unknown>(value: T): T {
     return ObjectUtils.stableFilteredCopy(value);
   }
 
-  static stableFilteredCopy<T: mixed>(value: T): T {
+  static stableFilteredCopy<T: unknown>(value: T): T {
     const stable = {};
     return stable as any;
   }

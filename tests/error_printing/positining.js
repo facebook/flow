@@ -28,7 +28,7 @@ declare var x: $RelayProps<Props, {}>;
 x as $RelayProps<Props>;
 
 declare class Map<V> {
-  forEach<X>(callbackfn: (map: Map<V>) => mixed): void;
+  forEach<X>(callbackfn: (map: Map<V>) => unknown): void;
   get(): V | void;
   set(value: V): Map<V>;
 }

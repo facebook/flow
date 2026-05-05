@@ -1,5 +1,5 @@
 // $ReadOnlyArray<T> is the supertype for all tuples
-function tupleLength(tup: $ReadOnlyArray<mixed>): number {
+function tupleLength(tup: $ReadOnlyArray<unknown>): number {
   // $ReadOnlyArray can use Array.prototype properties that don't mutate it
   return tup.length;
 }

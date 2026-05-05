@@ -1,8 +1,8 @@
 // First argument is required
-Promise.any<Array<mixed>>(); // Error: expected array instead of undefined (too few arguments)
+Promise.any<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
 
 // Mis-typed arg
-Promise.any<Array<mixed>>(0); // Error: expected array instead of number
+Promise.any<Array<unknown>>(0); // Error: expected array instead of number
 
 // Promise.any supports iterables
 function test(val: Iterable<Promise<number>>) {

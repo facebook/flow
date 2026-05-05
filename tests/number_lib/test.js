@@ -1,5 +1,5 @@
 {
-  declare const x: mixed;
+  declare const x: unknown;
 
   if (Number.isFinite(x)) {
     x as number; // OK

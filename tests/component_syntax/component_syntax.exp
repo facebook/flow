@@ -1267,13 +1267,13 @@ Cannot cast `Baz` to component because indexed props of component [1] is incompa
 Baz [2]. [incompatible-indexer]
 
    errors.js:51:1
-   51| Baz as component(...mixed);
+   51| Baz as component(...unknown);
        ^^^
 
 References:
    errors.js:51:8
-   51| Baz as component(...mixed);
-              ^^^^^^^^^^^^^^^^^^^ [1]
+   51| Baz as component(...unknown);
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
    errors.js:6:1
     6| component Baz() {
        ^^^^^^^^^^^^^^^ [2]
@@ -1284,8 +1284,8 @@ Error --------------------------------------------------------------------------
 Cannot use `unknown` [1] as a component rest param. Component rest params must use an object type and cannot be
 optional. [incompatible-type]
 
-   51| Baz as component(...mixed);
-                           ^^^^^ [1]
+   51| Baz as component(...unknown);
+                           ^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- exhaust.js:4:5
@@ -2657,19 +2657,19 @@ The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
     - Functions without statics are not compatible with objects.
 
    refs.js:5:15
-     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+     5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
                       ^^^
 
 References:
    refs.js:5:22
-     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+     5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
                              ^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:108:13
    108|     | ((T | null) => mixed)
                     ^^^^ [2]
    refs.js:5:21
-     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
-                            ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+     5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:107:7
    107|     | { -current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -2891,8 +2891,8 @@ References:
    15| Bar as component(ref: React.RefSetter<string>); // err
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:5:21
-    5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
-                           ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
@@ -2909,8 +2909,8 @@ References:
    15| Bar as component(ref: React.RefSetter<string>); // err
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:5:21
-    5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
-                           ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
@@ -2927,8 +2927,8 @@ References:
    15| Bar as component(ref: React.RefSetter<string>); // err
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:5:21
-    5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
-                           ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
@@ -2943,7 +2943,7 @@ Cannot cast `Bar` to component because in the first parameter of property `ref`:
 
 References:
    refs.js:5:22
-     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+     5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
                              ^^^^^^^^^^^^^ [1]
    refs.js:15:39
     15| Bar as component(ref: React.RefSetter<string>); // err

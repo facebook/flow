@@ -109,7 +109,7 @@
 
 // Mixed and variants
 {
-  declare const x: mixed;
+  declare const x: unknown;
 
   match (x) {} // ERROR
 
@@ -173,7 +173,7 @@
 
 // Deep structures with `mixed`
 {
-  declare const x: mixed;
+  declare const x: unknown;
 
   match (x) { // ERROR: missing `_`
     {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR

@@ -15,7 +15,7 @@ component C() {
     return 42;
 }
 
-function FunctionComponent(_props: mixed) {
+function FunctionComponent(_props: unknown) {
     useHook(); // Ok
     useHooklikeAnnotatedFunction(); // Ok
     useDeclaredHooklikeFunction(); // Ok
@@ -23,7 +23,7 @@ function FunctionComponent(_props: mixed) {
     useAssignedHooklikeFunctionExpression(); // Ok
 }
 
-function notAFunctionComponent(_props: mixed) {
+function notAFunctionComponent(_props: unknown) {
     useHook(); // Error
     useHooklikeAnnotatedFunction(); // Error: it's assumed to be hook
     useDeclaredHooklikeFunction(); // Error: it's assumed to be hook

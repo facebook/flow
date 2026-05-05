@@ -1,13 +1,13 @@
 /* @flow */
 
 function takesBotFunction (x : empty => empty) {}
-function takesTopFunction (x : unknown => mixed) {}
-function takesMidFunction (x : empty => mixed) {}
+function takesTopFunction (x : unknown => unknown) {}
+function takesMidFunction (x : empty => unknown) {}
 function takesMidFunction2 (x : unknown => empty) {}
-function takesHigherOrderFn (x : empty => empty => mixed) {}
-function takesHigherOrderFn2 (x : (empty => mixed) => mixed) {}
-function takesMultiArgFn (x : (empty, empty) => mixed) {}
-function takesMultiArgFn2 (x : (mixed, mixed) => mixed) {}
+function takesHigherOrderFn (x : empty => empty => unknown) {}
+function takesHigherOrderFn2 (x : (empty => unknown) => unknown) {}
+function takesMultiArgFn (x : (empty, empty) => unknown) {}
+function takesMultiArgFn2 (x : (unknown, unknown) => unknown) {}
 
 function fun(x: unknown) {
   if (typeof x === "function") {

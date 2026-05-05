@@ -490,8 +490,8 @@ Cannot use `in` because on the right-hand side, `unknown` [1] must be an object 
 
 References:
    test.js:48:26
-   48|   function(x: Object, y: mixed) {
-                                ^^^^^ [1]
+   48|   function(x: Object, y: unknown) {
+                                ^^^^^^^ [1]
 
 
 

@@ -55,13 +55,13 @@ function foo11() {
 function foo12() {
   declare var a: unknown;
   if (a != null && a.foo instanceof Set) {
-    a.foo as Set<mixed>;
+    a.foo as Set<unknown>;
   }
 }
 
 function foo13() {
   declare var a: unknown;
   if (a != null && Array.isArray(a.foo)) {
-    a.foo as $ReadOnlyArray<mixed>;
+    a.foo as $ReadOnlyArray<unknown>;
   }
 }

@@ -1,8 +1,8 @@
 // First argument is required
-Promise.allSettled<Array<mixed>>(); // Error: expected $Iterable instead of undefined (too few arguments)
+Promise.allSettled<Array<unknown>>(); // Error: expected $Iterable instead of undefined (too few arguments)
 
 // Invalid arg type
-Promise.allSettled<Array<mixed>>(0); // Error: expected $Iterable instead of number
+Promise.allSettled<Array<unknown>>(0); // Error: expected $Iterable instead of number
 
 // Promise.allSettled is a function
 Promise.allSettled as Function;

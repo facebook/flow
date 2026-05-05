@@ -7,6 +7,6 @@ export interface PromiseLike<T> {
   ): PromiseLike<TResult1 | TResult2>;
 }
 
-declare var p: PromiseLike<mixed>;
+declare var p: PromiseLike<unknown>;
 // This check exercises Flow's termination strategies
-p as RemotePromiseLike<mixed>;
+p as RemotePromiseLike<unknown>;

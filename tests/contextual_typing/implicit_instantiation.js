@@ -12,7 +12,7 @@ function test1() {
   let f2: (string) => string = (a) => a as string; // ok
   f2 = (b) => b as string; // ok
 
-  const reasonTest: (string) => mixed = (a) => a as empty; // ok
+  const reasonTest: (string) => unknown = (a) => a as empty; // ok
 }
 
 function test2() {
@@ -55,7 +55,7 @@ function test4() {
   const y: Array<number> = bar(); // OK
 
   const z1: Array<empty> = Array.of(); // ok
-  const z2: Array<mixed> = Array.of(); // ok
+  const z2: Array<unknown> = Array.of(); // ok
   const z3: Array<string> = Array.of(); // ok
   const z4: Array<string | number> = Array.of(1); // ok
   const z5: Array<string> = z3.concat(1); // Only one error on 1 ~> string
@@ -159,8 +159,8 @@ function test13() {
 
 function test14() {
   declare function magic<T>(): T;
-  const m: mixed = { foo: magic() }; // ok
-  const interfaceVar: interface {[string]: mixed} = { foo: magic() }; // ok
+  const m: unknown = { foo: magic() }; // ok
+  const interfaceVar: interface {[string]: unknown} = { foo: magic() }; // ok
 }
 
 function test15() {
@@ -204,7 +204,7 @@ function test20() {
   ) => { (...args: TArguments): TReturn };
 
   const result: (
-    value: mixed,
+    value: unknown,
     records: Record<{...}>,
   ) => any = fn((value, records) => 42); // okay
 }
@@ -223,6 +223,6 @@ function test21() {
 
 // Iterable
 {
-  declare const f: (Iterable<string => mixed>) => void;
+  declare const f: (Iterable<string => unknown>) => void;
   f([x => 1]); // OK
 }

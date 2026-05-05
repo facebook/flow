@@ -18,7 +18,7 @@ type DefaultProps = {
   b: string,
 };
 
-function connect<TProps: {...}, SProps: TProps>(): component(ref?: React.RefSetter<mixed>, ...SProps) {
+function connect<TProps: {...}, SProps: TProps>(): component(ref?: React.RefSetter<unknown>, ...SProps) {
   return class extends React.Component<TProps> {};
 }
 

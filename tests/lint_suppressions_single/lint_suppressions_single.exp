@@ -16,12 +16,12 @@ References:
                              ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- deprecated.js:1:33
+Error ----------------------------------------------------------------------------------------------- deprecated.js:1:35
 
 Deprecated type. Use `boolean` instead. [deprecated-type]
 
-   1| declare function bar(x: mixed): bool; // error
-                                      ^^^^
+   1| declare function bar(x: unknown): bool; // error
+                                        ^^^^
 
 
 Error ------------------------------------------------------------------------------------------ simple_sketchies.js:5:7

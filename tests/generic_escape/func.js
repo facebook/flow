@@ -7,9 +7,9 @@ function f1<X>(a: X): X {
   return a;
 }
 
-declare function ng(value: mixed): mixed;
+declare function ng(value: unknown): unknown;
 class ObjectUtils {
-  static stableCopy<T: mixed>(value: T): T {
+  static stableCopy<T: unknown>(value: T): T {
     return ng(value); // no escape errors
   }
 }

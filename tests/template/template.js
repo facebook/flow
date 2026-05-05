@@ -24,7 +24,7 @@
   `foo ${'bar'} ${x}`; // ERROR
 }
 {
-  declare const x: mixed;
+  declare const x: unknown;
   `foo ${x}`; // ERROR
   `${x} bar`; // ERROR
   `foo ${'bar'} ${x}`; // ERROR

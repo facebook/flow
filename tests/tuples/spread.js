@@ -49,12 +49,12 @@ type InvalidSpread2 = [1, ...Alias]; // ERROR
   declare const x: InvalidSpread2;
   x as empty; // OK
 }
-type ArraySpread = [...Array<mixed>]; // ERROR
+type ArraySpread = [...Array<unknown>]; // ERROR
 {
   declare const x: ArraySpread;
   x as empty; // OK
 }
-type ROArraySpread = [...$ReadOnlyArray<mixed>]; // ERROR
+type ROArraySpread = [...$ReadOnlyArray<unknown>]; // ERROR
 {
   declare const x: ROArraySpread;
   x as empty; // OK

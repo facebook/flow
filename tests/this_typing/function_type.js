@@ -23,8 +23,8 @@ z.bind("")() as number; // error: number incompatible with string
 /* Subtyping */
 /* this is contravariant */
 
-type TopFn = (this : empty) => mixed;
-type BotFn = (this : mixed) => empty;
+type TopFn = (this : empty) => unknown;
+type BotFn = (this : unknown) => empty;
 
 x as TopFn;
 x as BotFn; // error

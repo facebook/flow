@@ -4,7 +4,7 @@ declare class Event {}
 
 type ReactDOM$HTMLElementProps = {
   id?: ?string,
-  onClick?: ?(Event) => mixed,
+  onClick?: ?(Event) => unknown,
 };
 
 type ReactDOM$divProps = ReactDOM$HTMLElementProps;

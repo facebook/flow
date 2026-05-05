@@ -422,7 +422,7 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
 
 References:
    loc-primary-for-covariant-ops.js:10:9
-   10| type X<-T> = mixed;
+   10| type X<-T> = unknown;
                ^ [1]
    loc-primary-for-covariant-ops.js:11:37
    11| any as X<{p: number, ...}> as X<{p: string, ...}>;

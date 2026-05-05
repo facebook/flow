@@ -10,14 +10,14 @@ function foo(x: boolean) {
 }
 
 function bar(x: boolean) {
-  for (var elem of [] as Array<mixed>) {
+  for (var elem of [] as Array<unknown>) {
     return;
   }
   console.log('this is still reachable');
 }
 
 function baz(x: boolean) {
-  for (var elem of [] as Array<mixed>) {
+  for (var elem of [] as Array<unknown>) {
     continue;
   }
   console.log('this is still reachable');
@@ -35,7 +35,7 @@ function bliffl(x: boolean) {
 }
 
 function corge(x: boolean) {
-  for (var elem of [] as Array<mixed>) {
+  for (var elem of [] as Array<unknown>) {
     break;
   }
   console.log('this is still reachable');

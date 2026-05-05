@@ -1,5 +1,5 @@
 export type Props<TValue> = $ReadOnly<{
-  onActivate?: (value: TValue) => mixed,
+  onActivate?: (value: TValue) => unknown,
   value: TValue,
 }>;
 

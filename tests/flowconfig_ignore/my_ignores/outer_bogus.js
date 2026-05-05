@@ -2,4 +2,4 @@
 var x = 42;
 x();
 
-export type K = mixed;
+export type K = unknown;

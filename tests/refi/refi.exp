@@ -406,8 +406,8 @@ Cannot get `x.bar` because property `bar` is missing in `unknown` [1]. [incompat
 
 References:
    heap.js:191:15
-   191|   function(x: mixed) {
-                      ^^^^^ [1]
+   191|   function(x: unknown) {
+                      ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:193:5
@@ -420,8 +420,8 @@ Cannot cast `x` to intersection type because `unknown` [1] is incompatible with 
 
 References:
    heap.js:191:15
-   191|   function(x: mixed) {
-                      ^^^^^ [1]
+   191|   function(x: unknown) {
+                      ^^^^^^^ [1]
    heap.js:193:10
    193|     x as string & number;
                  ^^^^^^ [2]
@@ -437,8 +437,8 @@ Cannot cast `x` to intersection type because `unknown` [1] is incompatible with 
 
 References:
    heap.js:191:15
-   191|   function(x: mixed) {
-                      ^^^^^ [1]
+   191|   function(x: unknown) {
+                      ^^^^^^^ [1]
    heap.js:193:19
    193|     x as string & number;
                           ^^^^^^ [2]

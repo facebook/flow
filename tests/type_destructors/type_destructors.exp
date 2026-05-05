@@ -73,13 +73,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `null` to `NonNullable` because null [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    non_maybe_type.js:17:1
-   17| null as NonNullable<mixed>;
+   17| null as NonNullable<unknown>;
        ^^^^ [1]
 
 References:
    non_maybe_type.js:17:21
-   17| null as NonNullable<mixed>;
-                           ^^^^^ [2]
+   17| null as NonNullable<unknown>;
+                           ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:18:1
@@ -87,13 +87,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `undefined` to `NonNullable` because undefined [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    non_maybe_type.js:18:1
-   18| undefined as NonNullable<mixed>;
+   18| undefined as NonNullable<unknown>;
        ^^^^^^^^^ [1]
 
 References:
    non_maybe_type.js:18:26
-   18| undefined as NonNullable<mixed>;
-                                ^^^^^ [2]
+   18| undefined as NonNullable<unknown>;
+                                ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:49:1

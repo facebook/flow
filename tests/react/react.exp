@@ -614,8 +614,8 @@ References:
    9|       <Component />; // Error: `foo` is required.
             ^^^^^^^^^^^^^ [1]
    hoc.js:4:14
-   4|   Component: component(ref?: React.RefSetter<mixed>, foo: number, bar: number),
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   4|   Component: component(ref?: React.RefSetter<unknown>, foo: number, bar: number),
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:10:8
@@ -632,8 +632,8 @@ References:
    10|       <Component foo={42} />; // Error: `bar` is required.
              ^^^^^^^^^^^^^^^^^^^^^^ [1]
    hoc.js:4:14
-    4|   Component: component(ref?: React.RefSetter<mixed>, foo: number, bar: number),
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    4|   Component: component(ref?: React.RefSetter<unknown>, foo: number, bar: number),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc.js:33:13
@@ -649,9 +649,9 @@ References:
    hoc.js:33:49
    33| myHOC(class Empty extends React.Component<{foo: string, ...}, void> {}); // Error
                                                        ^^^^^^ [1]
-   hoc.js:4:59
-    4|   Component: component(ref?: React.RefSetter<mixed>, foo: number, bar: number),
-                                                                 ^^^^^^ [2]
+   hoc.js:4:61
+    4|   Component: component(ref?: React.RefSetter<unknown>, foo: number, bar: number),
+                                                                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:34:7
@@ -664,9 +664,9 @@ string [2]. [incompatible-type]
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc.js:4:59
-    4|   Component: component(ref?: React.RefSetter<mixed>, foo: number, bar: number),
-                                                                 ^^^^^^ [1]
+   hoc.js:4:61
+    4|   Component: component(ref?: React.RefSetter<unknown>, foo: number, bar: number),
+                                                                   ^^^^^^ [1]
    hoc.js:34:35
    34| myHOC(function Empty(props: {foo: string, ...}) {}); // Error
                                          ^^^^^^ [2]
@@ -686,8 +686,8 @@ References:
    39| <Wrapped nonsense="what" />; // Error: `foo` is required.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    hoc.js:36:16
-   36| const Wrapped: component(ref?: React.RefSetter<mixed>, foo: number) = myHOC(Unwrapped);
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   36| const Wrapped: component(ref?: React.RefSetter<unknown>, foo: number) = myHOC(Unwrapped);
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:39:2
@@ -704,8 +704,8 @@ References:
    39| <Wrapped nonsense="what" />; // Error: `foo` is required.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    hoc.js:36:16
-   36| const Wrapped: component(ref?: React.RefSetter<mixed>, foo: number) = myHOC(Unwrapped);
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   36| const Wrapped: component(ref?: React.RefSetter<unknown>, foo: number) = myHOC(Unwrapped);
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:41:2
@@ -722,8 +722,8 @@ References:
    41| <WrappedFun />; // Error: `foo` is required.
        ^^^^^^^^^^^^^^ [1]
    hoc.js:5:4
-    5| ): component(ref?: React.RefSetter<mixed>, foo: number) {
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    5| ): component(ref?: React.RefSetter<unknown>, foo: number) {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc2.js:24:2

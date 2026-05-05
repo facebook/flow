@@ -26,11 +26,11 @@ c_void.p as boolean; // Error void ~> boolean
 c_default.p as boolean; // Error string ~> boolean
 
 class D<S, T = string> extends A<T> {}
-var d_number: D<mixed, number> = new D(123);
-var d_void: D<mixed, void> = new D();
-var d_default: D<mixed> = new D('hello');
+var d_number: D<unknown, number> = new D(123);
+var d_void: D<unknown, void> = new D();
+var d_default: D<unknown> = new D('hello');
 var d_too_few_args: D<> = new D('hello'); // Error too few tparams
-var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
+var d_too_many: D<unknown, string, string> = new D('hello'); // Error too many tparams
 
 d_number.p as boolean; // Error number ~> boolean
 d_void.p as boolean; // Error void ~> boolean

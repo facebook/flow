@@ -237,7 +237,7 @@ Error --------------------------------------------------------------------------
 
 Unsupported key in object type. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
 
-   38| type BadSymbol2 = { [Symbol.xxx](x: mixed): boolean }; // ERROR: unsupported key
+   38| type BadSymbol2 = { [Symbol.xxx](x: unknown): boolean }; // ERROR: unsupported key
                            ^^^^^^^^^^^^
 
 
@@ -246,7 +246,7 @@ Error --------------------------------------------------------------------------
 Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol` [1]. [prop-missing]
 
    type_well_known_symbol.js:38:29
-    38| type BadSymbol2 = { [Symbol.xxx](x: mixed): boolean }; // ERROR: unsupported key
+    38| type BadSymbol2 = { [Symbol.xxx](x: unknown): boolean }; // ERROR: unsupported key
                                     ^^^
 
 References:

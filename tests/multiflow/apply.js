@@ -1,4 +1,4 @@
-function apply<Args: $ReadOnlyArray<mixed>, Ret>(
+function apply<Args: $ReadOnlyArray<unknown>, Ret>(
   fn: (...Args) => Ret,
   args: Args,
 ): Ret {
@@ -19,7 +19,7 @@ apply(withRest1, ['hi']); // Error - too few args
 apply(withRest1, ['hi', 123, false]); // Error - too many args
 
 // Same thing, but with types instead of functions
-declare var applyType: <Args: $ReadOnlyArray<mixed>, Ret>(
+declare var applyType: <Args: $ReadOnlyArray<unknown>, Ret>(
   fn: (...Args) => Ret,
   args: Args,
 ) => Ret;

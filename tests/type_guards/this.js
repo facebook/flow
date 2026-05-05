@@ -144,7 +144,7 @@ function test3() {
   }
 
   if (x.m2()) {
-    x as D<mixed>;
+    x as D<unknown>;
   }
 
   if (x.m2<number>()) {
@@ -166,7 +166,7 @@ function test3() {
   }
 
   if (x.m5(new D())) {
-    x as D<mixed>; // okay
+    x as D<unknown>; // okay
   }
 }
 

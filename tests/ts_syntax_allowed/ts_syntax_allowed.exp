@@ -165,7 +165,7 @@ Cannot cast `contravariant` to `Contravariant` because in type argument `T` [1]:
 `unknown` [3]. [incompatible-type]
 
    polarity.js:21:1
-   21| contravariant as Contravariant<mixed>; // error
+   21| contravariant as Contravariant<unknown>; // error
        ^^^^^^^^^^^^^
 
 References:
@@ -176,8 +176,8 @@ References:
    19| const contravariant = new Contravariant<string>;
                                                ^^^^^^ [2]
    polarity.js:21:32
-   21| contravariant as Contravariant<mixed>; // error
-                                      ^^^^^ [3]
+   21| contravariant as Contravariant<unknown>; // error
+                                      ^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:25:1
@@ -252,7 +252,7 @@ Cannot cast `imported_contravariant` to `exported.Contravariant` because in type
 incompatible with `unknown` [3]. [incompatible-type]
 
    polarity.js:42:1
-   42| imported_contravariant as exported.Contravariant<mixed>; // error
+   42| imported_contravariant as exported.Contravariant<unknown>; // error
        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -263,8 +263,8 @@ References:
    40| const imported_contravariant = new exported.Contravariant<string>;
                                                                  ^^^^^^ [2]
    polarity.js:42:50
-   42| imported_contravariant as exported.Contravariant<mixed>; // error
-                                                        ^^^^^ [3]
+   42| imported_contravariant as exported.Contravariant<unknown>; // error
+                                                        ^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:46:1

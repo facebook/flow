@@ -18,7 +18,7 @@ class JSResourceReference<+T> {
     this._moduleId = moduleId;
   }
 
-  static loadAll<I: $ReadOnlyArray<JSResourceReference<mixed>>>(
+  static loadAll<I: $ReadOnlyArray<JSResourceReference<unknown>>>(
     loaders: I,
     callback: (...modules: {[K in keyof I]: I[K] extends JSResourceReference<infer T> ? T : empty}) => void,
   ): void {

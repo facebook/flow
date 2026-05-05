@@ -1,6 +1,6 @@
 /* @flow */
 
-function foo0(x: Array<{[key: string]: mixed}>): Array<{[key: string]: mixed}> {
+function foo0(x: Array<{[key: string]: unknown}>): Array<{[key: string]: unknown}> {
   // this adds a fooBar property to the param type, which should NOT cause
   // an error in the return type because it is a dictionary.
   x[0].fooBar = 'foobar';

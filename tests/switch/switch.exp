@@ -92,9 +92,9 @@ References:
    switch_default_fallthrough.js:12:11
    12|       b = 0;
                  ^ [1]
-   switch_default_fallthrough.js:4:25
-    4| function foo(x: mixed): string {
-                               ^^^^^^ [2]
+   switch_default_fallthrough.js:4:27
+    4| function foo(x: unknown): string {
+                                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:39:3
@@ -174,9 +174,9 @@ Cannot return `a + b` because string [1] is incompatible with number [2]. [incom
                 ^^^^^ [1]
 
 References:
-   switch_default_fallthrough.js:24:25
-   24| function baz(x: mixed): number {
-                               ^^^^^^ [2]
+   switch_default_fallthrough.js:24:27
+   24| function baz(x: unknown): number {
+                                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ trailing_cases.js:23:18

@@ -44,8 +44,8 @@ class GeneratorExamples {
     yield true;
   }
 
-  *delegate_next_generator(): Generator<mixed, mixed, string> {
-    function *inner(): Generator<mixed, mixed, string> {
+  *delegate_next_generator(): Generator<unknown, unknown, string> {
+    function *inner(): Generator<unknown, unknown, string> {
       var x: number = yield; // error: string ~> number
     }
     yield *inner();

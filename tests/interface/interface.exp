@@ -1366,8 +1366,8 @@ Cannot cast `x` to interface type because `unknown` [1] is incompatible with int
 
 References:
    top.js:1:16
-   1| declare var x: mixed;
-                     ^^^^^ [1]
+   1| declare var x: unknown;
+                     ^^^^^^^ [1]
    top.js:3:6
    3| x as interface {}; // ERROR
            ^^^^^^^^^^^^ [2]

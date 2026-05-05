@@ -2,17 +2,17 @@ function invalid_pattern_object({a: b}: {a: unknown}): b is string {
   return typeof b === 'string'; // error b is in pattern
 }
 
-function invalid_pattern_array([b]: [mixed]): b is string {
+function invalid_pattern_array([b]: [unknown]): b is string {
   return typeof b === 'string'; // error b is in pattern
 }
 
-function invalid_rest(...a: Array<mixed>): a is string {
+function invalid_rest(...a: Array<unknown>): a is string {
   return typeof a === 'string';  // error a is in rest param
 }
 
-declare function invalid_rest_decl(...a: Array<mixed>): a is string;  // error a is in rest param
+declare function invalid_rest_decl(...a: Array<unknown>): a is string;  // error a is in rest param
 
-function invalid_pattern_compound({a: [b]}: {a: [mixed]}): b is string {
+function invalid_pattern_compound({a: [b]}: {a: [unknown]}): b is string {
   return typeof b === 'string'; // error b
 }
 
@@ -28,4 +28,4 @@ if (valid_pattern({a: 42}, x, 1, 2, 3)) {
   x as number; // TODO error string ~> number
 }
 
-type F = (x: unknown, ...p: Array<mixed>) => p is number; // error p is in rest param
+type F = (x: unknown, ...p: Array<unknown>) => p is number; // error p is in rest param

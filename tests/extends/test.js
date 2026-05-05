@@ -5,7 +5,7 @@ type AOrString = A | string;
 declare var C: Class<string>;
 class B extends C {}
 
-function invariant(x: mixed) {}
+function invariant(x: unknown) {}
 
 function foo(value: AOrString) {
   invariant(value instanceof B);

@@ -18,7 +18,7 @@ g.w = 1; // OK
 g.w as number; // OK
 
 declare function debounce<Args>(
-  func: (...Args) => mixed,
+  func: (...Args) => unknown,
 ): (...Args) => void;
 {
   const d = debounce((s: string, n: number): void => {});

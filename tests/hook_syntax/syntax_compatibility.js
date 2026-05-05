@@ -29,7 +29,7 @@ component C() {
     return 42;
 }
 
-function FunctionComponent(_props: mixed) {
+function FunctionComponent(_props: unknown) {
     useHook(); // Error: definitely not component, because props is not subtype of `interface {}`
     useHooklikeAnnotatedFunction(); // Ok
     useHooklikeInferredFunction(); // Ok
@@ -38,7 +38,7 @@ function FunctionComponent(_props: mixed) {
     useAssignedHooklikeFunctionExpression(); // Ok
 }
 
-function notAFunctionComponent(_props: mixed) {
+function notAFunctionComponent(_props: unknown) {
     useHook(); // Error
     useHooklikeAnnotatedFunction(); // Ok
     useHooklikeInferredFunction(); // Ok

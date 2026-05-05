@@ -21,4 +21,4 @@ function g<T>(x: T): T {
   return x;
 }
 
-g as (empty) => mixed;
+g as (empty) => unknown;

@@ -4,7 +4,7 @@ declare export function createElement<TProps: {...}>(
   Component: TProps => void,
   props: NoInfer<?TProps>,
 ): $ReadOnly<{
-  props: {[propName: string]: mixed, ...},
+  props: {[propName: string]: unknown, ...},
 }>;
 
 declare var C: (props: $ReadOnly<{foo: Array<{bar: 'BAZ'}>}>) => void;

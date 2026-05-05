@@ -29,7 +29,7 @@ function createComponentWithHook() {
 }
 
 // Valid because hooks can use hooks.
-hook useHook1(arg?: mixed) {
+hook useHook1(arg?: unknown) {
   useHook();
 }
 

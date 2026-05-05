@@ -6,7 +6,7 @@ declare function f<T>(x: (a: T) => void): T;
 f((x: string) => {}); // Ok: It will error under Pierce, but we also consider upper bounds here.
 
 // --
-declare function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
+declare function useCallback<T: (...args: $ReadOnlyArray<empty>) => unknown>(
   callback: T,
 ): T;
 

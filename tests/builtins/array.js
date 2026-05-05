@@ -9,7 +9,7 @@ function f() {
 }
 
 var Foo = require('./genericfoo');
-var foo = new Foo<mixed>();
+var foo = new Foo<unknown>();
 function g() {
     var foo1 = foo.map (function() { return "..."; });
     var x:number = foo1.get(); // error: string !~> number

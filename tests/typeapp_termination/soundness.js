@@ -1,7 +1,7 @@
 type Foo<T> = { foo: T };
 type Bar<T> = { bar: T };
 
-type Bak<T = mixed> = Foo<Bar<T>>;
+type Bak<T = unknown> = Foo<Bar<T>>;
 
 function test1() {
     declare const x: Bak<>;

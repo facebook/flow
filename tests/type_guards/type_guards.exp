@@ -191,8 +191,8 @@ Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: `u
 number [3]. [incompatible-type]
 
    classes.js:46:25
-   46|     m(x: unknown): x is mixed { // error extends
-                               ^^^^^ [2]
+   46|     m(x: unknown): x is unknown { // error extends
+                               ^^^^^^^ [2]
 
 References:
    classes.js:45:20
@@ -211,7 +211,7 @@ The type of `x` [3] at the return expression `true` [4] needs to be compatible w
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    classes.js:52:14
-   52|       return true; // error mixed ~> number
+   52|       return true; // error unknown ~> number
                     ^^^^ [4]
 
 References:
@@ -323,8 +323,8 @@ Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: `u
 number [3]. [incompatible-type]
 
    classes.js:113:25
-   113|     m(x: unknown): x is mixed { // error mixed ~> number
-                                ^^^^^ [2]
+   113|     m(x: unknown): x is unknown { // error unknown ~> number
+                                ^^^^^^^ [2]
 
 References:
    classes.js:112:20
@@ -343,7 +343,7 @@ The type of `x` [3] at the return expression `true` [4] needs to be compatible w
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    classes.js:119:14
-   119|       return true; // error mixed ~> number
+   119|       return true; // error unknown ~> number
                      ^^^^ [4]
 
 References:
@@ -1302,7 +1302,7 @@ Cannot cast `fn` to function type because function [1], a non-type-guard functio
 type [2], which is a type-guard function. [function-predicate]
 
    inferred.js:186:3
-   186|   fn as (x: unknown) => implies x is mixed; // error non-type guard function
+   186|   fn as (x: unknown) => implies x is unknown; // error non-type guard function
           ^^
 
 References:
@@ -1310,8 +1310,8 @@ References:
    185|   const fn = (x: unknown) => typeof x === "object" && x?.hasOwnProperty("a");
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    inferred.js:186:9
-   186|   fn as (x: unknown) => implies x is mixed; // error non-type guard function
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   186|   fn as (x: unknown) => implies x is unknown; // error non-type guard function
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:186:3
@@ -1320,7 +1320,7 @@ Cannot cast `fn` to function type because in the return value: undefined (result
 chain) [1] is incompatible with boolean [2]. [incompatible-type]
 
    inferred.js:186:3
-   186|   fn as (x: unknown) => implies x is mixed; // error non-type guard function
+   186|   fn as (x: unknown) => implies x is unknown; // error non-type guard function
           ^^
 
 References:
@@ -1328,8 +1328,8 @@ References:
    185|   const fn = (x: unknown) => typeof x === "object" && x?.hasOwnProperty("a");
                          ^^^^^^^ [1]
    inferred.js:186:25
-   186|   fn as (x: unknown) => implies x is mixed; // error non-type guard function
-                                ^^^^^^^^^^^^^^^^^^ [2]
+   186|   fn as (x: unknown) => implies x is unknown; // error non-type guard function
+                                ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- intersect.js:7:5
@@ -1671,59 +1671,59 @@ References:
                                           ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:5:47
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:5:49
 
 A type guard parameter `b` [1] cannot reference pattern parameter `b` [2]. [function-predicate]
 
-   patterns_and_rest.js:5:47
-   5| function invalid_pattern_array([b]: [mixed]): b is string {
-                                                    ^ [1]
+   patterns_and_rest.js:5:49
+   5| function invalid_pattern_array([b]: [unknown]): b is string {
+                                                      ^ [1]
 
 References:
    patterns_and_rest.js:5:33
-   5| function invalid_pattern_array([b]: [mixed]): b is string {
+   5| function invalid_pattern_array([b]: [unknown]): b is string {
                                       ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:9:44
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:9:46
 
 A type guard parameter `a` [1] cannot reference rest parameter `a` [2]. [function-predicate]
 
-   patterns_and_rest.js:9:44
-   9| function invalid_rest(...a: Array<mixed>): a is string {
-                                                 ^ [1]
+   patterns_and_rest.js:9:46
+   9| function invalid_rest(...a: Array<unknown>): a is string {
+                                                   ^ [1]
 
 References:
    patterns_and_rest.js:9:26
-   9| function invalid_rest(...a: Array<mixed>): a is string {
+   9| function invalid_rest(...a: Array<unknown>): a is string {
                                ^ [2]
 
 
-Error --------------------------------------------------------------------------------------- patterns_and_rest.js:13:57
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:13:59
 
 A type guard parameter `a` [1] cannot reference rest parameter `a` [2]. [function-predicate]
 
-   patterns_and_rest.js:13:57
-   13| declare function invalid_rest_decl(...a: Array<mixed>): a is string;  // error a is in rest param
-                                                               ^ [1]
+   patterns_and_rest.js:13:59
+   13| declare function invalid_rest_decl(...a: Array<unknown>): a is string;  // error a is in rest param
+                                                                 ^ [1]
 
 References:
    patterns_and_rest.js:13:39
-   13| declare function invalid_rest_decl(...a: Array<mixed>): a is string;  // error a is in rest param
+   13| declare function invalid_rest_decl(...a: Array<unknown>): a is string;  // error a is in rest param
                                              ^ [2]
 
 
-Error --------------------------------------------------------------------------------------- patterns_and_rest.js:15:60
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:15:62
 
 A type guard parameter `b` [1] cannot reference pattern parameter `b` [2]. [function-predicate]
 
-   patterns_and_rest.js:15:60
-   15| function invalid_pattern_compound({a: [b]}: {a: [mixed]}): b is string {
-                                                                  ^ [1]
+   patterns_and_rest.js:15:62
+   15| function invalid_pattern_compound({a: [b]}: {a: [unknown]}): b is string {
+                                                                    ^ [1]
 
 References:
    patterns_and_rest.js:15:40
-   15| function invalid_pattern_compound({a: [b]}: {a: [mixed]}): b is string {
+   15| function invalid_pattern_compound({a: [b]}: {a: [unknown]}): b is string {
                                               ^ [2]
 
 
@@ -1744,17 +1744,17 @@ References:
               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- patterns_and_rest.js:31:46
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:31:48
 
 A type guard parameter `p` [1] cannot reference rest parameter `p` [2]. [function-predicate]
 
-   patterns_and_rest.js:31:46
-   31| type F = (x: unknown, ...p: Array<mixed>) => p is number; // error p is in rest param
-                                                    ^ [1]
+   patterns_and_rest.js:31:48
+   31| type F = (x: unknown, ...p: Array<unknown>) => p is number; // error p is in rest param
+                                                      ^ [1]
 
 References:
    patterns_and_rest.js:31:26
-   31| type F = (x: unknown, ...p: Array<mixed>) => p is number; // error p is in rest param
+   31| type F = (x: unknown, ...p: Array<unknown>) => p is number; // error p is in rest param
                                 ^ [2]
 
 
@@ -1858,14 +1858,14 @@ References:
                                        ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinement.js:41:127
+Error --------------------------------------------------------------------------------------------- refinement.js:41:129
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   refinement.js:41:127
-   41|     filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg : This): Array<T>;
-                                                                                                                                     ^
+   refinement.js:41:129
+   41|     filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg : This): Array<T>;
+                                                                                                                                       ^
 
 References:
    refinement.js:38:33
@@ -1891,8 +1891,8 @@ References:
    47|   const arr2: Array<string> = arr.filter((x: unknown): x is number => { return typeof x === "number"; }); // error
                            ^^^^^^ [2]
    refinement.js:44:35
-   44|   declare var arr: ReadOnlyArray_<mixed>;
-                                         ^^^^^ [3]
+   44|   declare var arr: ReadOnlyArray_<unknown>;
+                                         ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:48:35
@@ -1907,8 +1907,8 @@ Cannot call `arr.filter` because: [incompatible-type]
 
 References:
    refinement.js:44:35
-   44|   declare var arr: ReadOnlyArray_<mixed>;
-                                         ^^^^^ [1]
+   44|   declare var arr: ReadOnlyArray_<unknown>;
+                                         ^^^^^^^ [1]
    refinement.js:48:21
    48|   const arr3: Array<string> = arr.filter((x: unknown) => { return typeof x === "number"; }); // error no refinement
                            ^^^^^^ [2]
@@ -2529,14 +2529,14 @@ References:
                                         ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- refinement.js:244:127
+Error -------------------------------------------------------------------------------------------- refinement.js:244:129
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   refinement.js:244:127
-   244|     filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg : This): Array<T>;
-                                                                                                                                      ^
+   refinement.js:244:129
+   244|     filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg : This): Array<T>;
+                                                                                                                                        ^
 
 References:
    refinement.js:241:33
@@ -2562,8 +2562,8 @@ References:
    249|   arr.filter(fn) as Array<string>; // error number ~> string
                                   ^^^^^^ [2]
    refinement.js:247:35
-   247|   declare var arr: ReadOnlyArray_<mixed>;
-                                          ^^^^^ [3]
+   247|   declare var arr: ReadOnlyArray_<unknown>;
+                                          ^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:253:10
@@ -2584,8 +2584,8 @@ References:
    253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
                                      ^^^^^^ [2]
    refinement.js:251:37
-   251|   declare var ro_arr: ReadonlyArray<mixed>;
-                                            ^^^^^ [3]
+   251|   declare var ro_arr: ReadonlyArray<unknown>;
+                                            ^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:257:10
@@ -2606,8 +2606,8 @@ References:
    257|   rw_arr.filter(fn) as Array<string>; // error number ~> string
                                      ^^^^^^ [2]
    refinement.js:255:37
-   255|   declare var rw_arr: ReadonlyArray<mixed>;
-                                            ^^^^^ [3]
+   255|   declare var rw_arr: ReadonlyArray<unknown>;
+                                            ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:275:7
@@ -3680,18 +3680,18 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    type_guard_compatibility.js:19:59
-   19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
-                                                                 ^^^^^ [2]
+   19| declare function error_poly_1<X>(x: Array<X>): x is Array<unknown>; // error unknown ~> X
+                                                                 ^^^^^^^ [2]
 
 References:
    type_guard_compatibility.js:19:53
-   19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
-                                                           ^^^^^^^^^^^^ [1]
+   19| declare function error_poly_1<X>(x: Array<X>): x is Array<unknown>; // error unknown ~> X
+                                                           ^^^^^^^^^^^^^^ [1]
    type_guard_compatibility.js:19:43
-   19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
+   19| declare function error_poly_1<X>(x: Array<X>): x is Array<unknown>; // error unknown ~> X
                                                  ^ [3]
    type_guard_compatibility.js:19:37
-   19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
+   19| declare function error_poly_1<X>(x: Array<X>): x is Array<unknown>; // error unknown ~> X
                                            ^^^^^^^^ [4]
 
 
@@ -3721,18 +3721,18 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    type_guard_compatibility.js:29:54
-   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
-                                                            ^^^^^ [2]
+   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<unknown>; // error unknown ~> X
+                                                            ^^^^^^^ [2]
 
 References:
    type_guard_compatibility.js:29:48
-   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
-                                                      ^^^^^^^^^^^^ [1]
+   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<unknown>; // error unknown ~> X
+                                                      ^^^^^^^^^^^^^^ [1]
    type_guard_compatibility.js:29:36
-   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<unknown>; // error unknown ~> X
                                           ^ [3]
    type_guard_compatibility.js:29:30
-   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<unknown>; // error unknown ~> X
                                     ^^^^^^^^ [4]
 
 
@@ -3747,18 +3747,18 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    type_guard_compatibility.js:30:54
-   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
-                                                            ^^^^^ [2]
+   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<unknown>; // error unknown ~> X
+                                                            ^^^^^^^ [2]
 
 References:
    type_guard_compatibility.js:30:48
-   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
-                                                      ^^^^^^^^^^^^ [1]
+   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<unknown>; // error unknown ~> X
+                                                      ^^^^^^^^^^^^^^ [1]
    type_guard_compatibility.js:30:36
-   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<unknown>; // error unknown ~> X
                                           ^ [3]
    type_guard_compatibility.js:30:30
-   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<unknown>; // error unknown ~> X
                                     ^^^^^^^^ [4]
 
 

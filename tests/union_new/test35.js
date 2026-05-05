@@ -1,7 +1,7 @@
 // @flow
 
 declare function f(x: {p: string, ...}): number;
-declare function f(x: mixed): string;
+declare function f(x: unknown): string;
 
 declare var x: {[K]: string}; // NB: `K` defined below
 var ret = f(x); // ok, should match case 2

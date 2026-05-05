@@ -1,3 +1,3 @@
-declare function bar(x: mixed): bool; // error
+declare function bar(x: unknown): bool; // error
 // $FlowFixMe[deprecated-type]
-declare function baz(x: mixed): bool; // suppressed
+declare function baz(x: unknown): bool; // suppressed

@@ -1,2 +1,2 @@
-declare const globalThis: mixed; // intentional-libdef-override
+declare const globalThis: unknown; // intentional-libdef-override
 declare function alert(): void;

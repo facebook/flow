@@ -331,8 +331,8 @@ Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to
 
 References:
    simple_sketchies.js:65:21
-   65| declare var hh: {a: mixed};
-                           ^^^^^ [1]
+   65| declare var hh: {a: unknown};
+                           ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:66:13
@@ -346,8 +346,8 @@ Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to
 
 References:
    simple_sketchies.js:65:21
-   65| declare var hh: {a: mixed};
-                           ^^^^^ [1]
+   65| declare var hh: {a: unknown};
+                           ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:69:7
@@ -361,10 +361,10 @@ Sketchy null check on boolean [1] which is potentially false. Perhaps you meant 
 
 References:
    simple_sketchies.js:68:42
-   68| function singletonBooleanFalse(x: null | false | Array<mixed>) {
+   68| function singletonBooleanFalse(x: null | false | Array<unknown>) {
                                                 ^^^^^ [1]
    simple_sketchies.js:68:35
-   68| function singletonBooleanFalse(x: null | false | Array<mixed>) {
+   68| function singletonBooleanFalse(x: null | false | Array<unknown>) {
                                          ^^^^ [2]
 
 
@@ -379,10 +379,10 @@ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to ch
 
 References:
    simple_sketchies.js:72:34
-   72| function singletonNum0(x: null | 0 | Array<mixed>) {
+   72| function singletonNum0(x: null | 0 | Array<unknown>) {
                                         ^ [1]
    simple_sketchies.js:72:27
-   72| function singletonNum0(x: null | 0 | Array<mixed>) {
+   72| function singletonNum0(x: null | 0 | Array<unknown>) {
                                  ^^^^ [2]
 
 

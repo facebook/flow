@@ -1,6 +1,6 @@
-declare function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
+declare function useCallback<T: (...args: $ReadOnlyArray<empty>) => unknown>(
   callback: T,
-  inputs: ?$ReadOnlyArray<mixed>
+  inputs: ?$ReadOnlyArray<unknown>
 ): T;
 
 type ReturnValueType<T: InputValueType> =

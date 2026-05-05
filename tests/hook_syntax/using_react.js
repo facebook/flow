@@ -6,7 +6,7 @@ component Foo() {
     return null;
 }
 
-function Bar(props: mixed) {
+function Bar(props: unknown) {
     const x = HookReact.useRef(null); // error, because this useRef is a hook and we're in a function. definitely not component, because props is not subtype of `interface {}`
     return null;
 }

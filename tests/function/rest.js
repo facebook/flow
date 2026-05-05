@@ -22,10 +22,10 @@ function rest_t<U, T: Array<U>>(...xs: T): U { // Ok, bounded targ can be rest
 
 // These are ok bounds for the rest param
 function unbound_rest_t<T>(...xs: T): void {}
-function mixed_rest_t<T: mixed>(...xs: T): void {}
-function array_rest_t<T: Array<mixed>>(...xs: T): void {}
-function roarray_rest_t<T: $ReadOnlyArray<mixed>>(...xs: T): void {}
-function iterable_rest_t<T: Iterable<mixed>>(...xs: T): void {}
+function mixed_rest_t<T: unknown>(...xs: T): void {}
+function array_rest_t<T: Array<unknown>>(...xs: T): void {}
+function roarray_rest_t<T: $ReadOnlyArray<unknown>>(...xs: T): void {}
+function iterable_rest_t<T: Iterable<unknown>>(...xs: T): void {}
 function empty_rest_t1<T: empty>(...xs: T): void {}
 function bounds_on_bounds<T>() {
   return function<U: T>(...xs: T): void {}
@@ -49,10 +49,10 @@ function rest_intersection(...xs: { x: number, ... } & [1,2]): number { // OK
   return xs[0] + xs.x;
 }
 
-function empty_rest<T:Array<mixed>>(...xs: T): T { return xs; }
+function empty_rest<T:Array<unknown>>(...xs: T): T { return xs; }
 empty_rest() as empty; // Error Array ~> empty
 
-function return_rest_param<Args:Array<mixed>>(
+function return_rest_param<Args:Array<unknown>>(
   f: (...args: Args) => void,
 ): (...args: Args) => number {
   return function(...args) {

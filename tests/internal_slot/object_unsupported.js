@@ -1,1 +1,1 @@
-type T = { [[foo]]: mixed }
+type T = { [[foo]]: unknown }

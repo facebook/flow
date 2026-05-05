@@ -8,8 +8,8 @@ Cannot cast `e` to empty because `unknown` [1] is incompatible with empty [2]. [
 
 References:
    catch-param.js:17:13
-   17| } catch (e: mixed) { // OK
-                   ^^^^^ [1]
+   17| } catch (e: unknown) { // OK
+                   ^^^^^^^ [1]
    catch-param.js:18:8
    18|   e as empty; // ERROR - is `mixed`
               ^^^^^ [2]

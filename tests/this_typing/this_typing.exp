@@ -48,8 +48,8 @@ References:
    24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
    class_interface_subtyping.js:10:18
-   10|     +x : (this : mixed) => void
-                        ^^^^^ [2]
+   10|     +x : (this : unknown) => void
+                        ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:53:1
@@ -66,8 +66,8 @@ References:
    24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
    class_interface_subtyping.js:14:14
-   14|     x(this : mixed) : void
-                    ^^^^^ [2]
+   14|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:56:1
@@ -135,11 +135,11 @@ from the context [2] where it was defined. [method-unbinding]
 
 References:
    class_interface_subtyping.js:36:5
-   36|     x(this : mixed) : void {}
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   36|     x(this : unknown) : void {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    class_interface_subtyping.js:36:14
-   36|     x(this : mixed) : void {}
-                    ^^^^^ [2]
+   36|     x(this : unknown) : void {}
+                    ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:70:1
@@ -153,11 +153,11 @@ from the context [2] where it was defined. [method-unbinding]
 
 References:
    class_interface_subtyping.js:36:5
-   36|     x(this : mixed) : void {}
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   36|     x(this : unknown) : void {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    class_interface_subtyping.js:36:14
-   36|     x(this : mixed) : void {}
-                    ^^^^^ [2]
+   36|     x(this : unknown) : void {}
+                    ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:72:1
@@ -171,11 +171,11 @@ from the context [2] where it was defined. [method-unbinding]
 
 References:
    class_interface_subtyping.js:36:5
-   36|     x(this : mixed) : void {}
-           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   36|     x(this : unknown) : void {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    class_interface_subtyping.js:36:14
-   36|     x(this : mixed) : void {}
-                    ^^^^^ [2]
+   36|     x(this : unknown) : void {}
+                    ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:74:1
@@ -228,8 +228,8 @@ References:
    40|     +x : (this : empty) => void
                         ^^^^^ [1]
    class_interface_subtyping.js:10:18
-   10|     +x : (this : mixed) => void
-                        ^^^^^ [2]
+   10|     +x : (this : unknown) => void
+                        ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:77:1
@@ -246,8 +246,8 @@ References:
    40|     +x : (this : empty) => void
                         ^^^^^ [1]
    class_interface_subtyping.js:14:14
-   14|     x(this : mixed) : void
-                    ^^^^^ [2]
+   14|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- class_method.js:6:12
@@ -645,8 +645,8 @@ References:
    24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
    declare_class_interface_subtyping.js:10:18
-   10|     +x : (this : mixed) => void
-                        ^^^^^ [2]
+   10|     +x : (this : unknown) => void
+                        ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:57:1
@@ -663,8 +663,8 @@ References:
    24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
    declare_class_interface_subtyping.js:14:14
-   14|     x(this : mixed) : void
-                    ^^^^^ [2]
+   14|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:60:1
@@ -732,11 +732,11 @@ unbound from the context [2] where it was defined. [method-unbinding]
 
 References:
    declare_class_interface_subtyping.js:36:5
-   36|     x(this : mixed) : void
-           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   36|     x(this : unknown) : void
+           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    declare_class_interface_subtyping.js:36:14
-   36|     x(this : mixed) : void
-                    ^^^^^ [2]
+   36|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:74:1
@@ -750,11 +750,11 @@ unbound from the context [2] where it was defined. [method-unbinding]
 
 References:
    declare_class_interface_subtyping.js:36:5
-   36|     x(this : mixed) : void
-           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   36|     x(this : unknown) : void
+           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    declare_class_interface_subtyping.js:36:14
-   36|     x(this : mixed) : void
-                    ^^^^^ [2]
+   36|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:76:1
@@ -768,11 +768,11 @@ unbound from the context [2] where it was defined. [method-unbinding]
 
 References:
    declare_class_interface_subtyping.js:36:5
-   36|     x(this : mixed) : void
-           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   36|     x(this : unknown) : void
+           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    declare_class_interface_subtyping.js:36:14
-   36|     x(this : mixed) : void
-                    ^^^^^ [2]
+   36|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:78:1
@@ -825,8 +825,8 @@ References:
    40|     +x : (this : empty) => void
                         ^^^^^ [1]
    declare_class_interface_subtyping.js:10:18
-   10|     +x : (this : mixed) => void
-                        ^^^^^ [2]
+   10|     +x : (this : unknown) => void
+                        ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:81:1
@@ -843,8 +843,8 @@ References:
    40|     +x : (this : empty) => void
                         ^^^^^ [1]
    declare_class_interface_subtyping.js:14:14
-   14|     x(this : mixed) : void
-                    ^^^^^ [2]
+   14|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:15:42
@@ -1314,8 +1314,8 @@ References:
     2| declare var x : (this : number) => void;
                                ^^^^^^ [1]
    function_type.js:27:22
-   27| type BotFn = (this : mixed) => empty;
-                            ^^^^^ [2]
+   27| type BotFn = (this : unknown) => empty;
+                            ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- function_type.js:30:1
@@ -1331,9 +1331,9 @@ References:
    function_type.js:2:36
     2| declare var x : (this : number) => void;
                                           ^^^^ [1]
-   function_type.js:27:32
-   27| type BotFn = (this : mixed) => empty;
-                                      ^^^^^ [2]
+   function_type.js:27:34
+   27| type BotFn = (this : unknown) => empty;
+                                        ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------- incompatible_this_param.js:3:10
@@ -1756,8 +1756,8 @@ References:
    24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
    object_interface_subtyping.js:10:18
-   10|     +x : (this : mixed) => void
-                        ^^^^^ [2]
+   10|     +x : (this : unknown) => void
+                        ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:58:1
@@ -1774,8 +1774,8 @@ References:
    24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [1]
    object_interface_subtyping.js:14:14
-   14|     x(this : mixed) : void
-                    ^^^^^ [2]
+   14|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:61:1
@@ -1853,8 +1853,8 @@ References:
    28|     x(this : C_Method_this) : void
                     ^^^^^^^^^^^^^ [1]
    object_interface_subtyping.js:10:18
-   10|     +x : (this : mixed) => void
-                        ^^^^^ [2]
+   10|     +x : (this : unknown) => void
+                        ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:64:1
@@ -1871,8 +1871,8 @@ References:
    28|     x(this : C_Method_this) : void
                     ^^^^^^^^^^^^^ [1]
    object_interface_subtyping.js:14:14
-   14|     x(this : mixed) : void
-                    ^^^^^ [2]
+   14|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:79:1
@@ -1925,8 +1925,8 @@ References:
    40|     +x : (this : empty) => void
                         ^^^^^ [1]
    object_interface_subtyping.js:10:18
-   10|     +x : (this : mixed) => void
-                        ^^^^^ [2]
+   10|     +x : (this : unknown) => void
+                        ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:82:1
@@ -1943,8 +1943,8 @@ References:
    40|     +x : (this : empty) => void
                         ^^^^^ [1]
    object_interface_subtyping.js:14:14
-   14|     x(this : mixed) : void
-                    ^^^^^ [2]
+   14|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:85:1
@@ -1997,8 +1997,8 @@ References:
    44|     +x : (this : empty) => void
                         ^^^^^ [1]
    object_interface_subtyping.js:10:18
-   10|     +x : (this : mixed) => void
-                        ^^^^^ [2]
+   10|     +x : (this : unknown) => void
+                        ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:88:1
@@ -2015,8 +2015,8 @@ References:
    44|     +x : (this : empty) => void
                         ^^^^^ [1]
    object_interface_subtyping.js:14:14
-   14|     x(this : mixed) : void
-                    ^^^^^ [2]
+   14|     x(this : unknown) : void
+                    ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:17
@@ -2029,8 +2029,8 @@ Cannot get `this.x` because property `x` is missing in `unknown` [1]. [incompati
 
 References:
    test.js:5:21
-   5| function foo(this : mixed) : void {
-                          ^^^^^ [1]
+   5| function foo(this : unknown) : void {
+                          ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:5
@@ -2043,8 +2043,8 @@ Cannot call `foo` because no arguments are expected by function [1]. [extra-arg]
 
 References:
    test.js:5:1
-   5| function foo(this : mixed) : void {
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   5| function foo(this : unknown) : void {
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:10

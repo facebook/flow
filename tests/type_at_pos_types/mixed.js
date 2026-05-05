@@ -2,12 +2,12 @@
 
 type A = {
   kind: 'A',
-  metadata: {[key: string]: mixed},
+  metadata: {[key: string]: unknown},
  ...};
 
 type B = {
   kind: 'B',
-  metadata: {[key: string]: mixed},
+  metadata: {[key: string]: unknown},
  ...};
 
 type AB = A | B;

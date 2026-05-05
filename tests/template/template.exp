@@ -181,8 +181,8 @@ Cannot coerce `x` to string because `unknown` [1] should not be coerced. [incomp
 
 References:
    template.js:27:20
-   27|   declare const x: mixed;
-                          ^^^^^ [1]
+   27|   declare const x: unknown;
+                          ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- template.js:29:6
@@ -195,8 +195,8 @@ Cannot coerce `x` to string because `unknown` [1] should not be coerced. [incomp
 
 References:
    template.js:27:20
-   27|   declare const x: mixed;
-                          ^^^^^ [1]
+   27|   declare const x: unknown;
+                          ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ template.js:30:19
@@ -209,8 +209,8 @@ Cannot coerce `x` to string because `unknown` [1] should not be coerced. [incomp
 
 References:
    template.js:27:20
-   27|   declare const x: mixed;
-                          ^^^^^ [1]
+   27|   declare const x: unknown;
+                          ^^^^^^^ [1]
 
 
 

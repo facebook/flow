@@ -5,11 +5,11 @@ hook useTakeRef(ref: React.RefObject<number>) {
     ref.current = 42; // error
 }
 
-hook useTakeAnything(x: mixed) { }
+hook useTakeAnything(x: unknown) { }
 
 function takeRef(ref: React.RefObject<number>) { }
 
-function escape(x: mixed) { }
+function escape(x: unknown) { }
 
 component H() {
     const ref = useRef(42);

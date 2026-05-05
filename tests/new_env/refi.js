@@ -2,7 +2,7 @@
 
 var x;
 
-var z: mixed = 100;
+var z: unknown = 100;
 z;
 if (z) {
   x = 'a';

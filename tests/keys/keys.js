@@ -10,7 +10,7 @@ function testKeysOfObject(str: string, lit: 'hi') {
   123 as keyof Object; // Error: number -> keys of Object
 }
 
-type StrDict = {[key: string]: mixed};
+type StrDict = {[key: string]: unknown};
 function testKeysOfStrDict(str: string, lit: 'hi') {
   str as keyof StrDict; // Any string should be fine
   if (str) {
@@ -21,7 +21,7 @@ function testKeysOfStrDict(str: string, lit: 'hi') {
   123 as keyof StrDict; // Error: number -> keys of StrDict
 }
 
-type StrLitDict = {[key: 'hi']: mixed};
+type StrLitDict = {[key: 'hi']: unknown};
 function testKeysOfStrLitDict(str: string, lit: 'hi') {
   str as keyof StrLitDict; // Error: Not all strings are allowed
   if (str) {
@@ -33,7 +33,7 @@ function testKeysOfStrLitDict(str: string, lit: 'hi') {
   123 as keyof StrLitDict; // Error: number -> keys of StrLitDict
 }
 
-type ObjLit = {hi: mixed};
+type ObjLit = {hi: unknown};
 function testKeysOfOtherObj(str: string, lit: 'hi') {
   str as keyof ObjLit; // Error: string -> keys of ObjLit
   if (str) {

@@ -4,7 +4,7 @@ enum E {}
 type T01 = {f:string};
 type T02 = number;
 type T03 = <A>(A) => void;
-type T04 = Array<mixed>;
+type T04 = Array<unknown>;
 type T05 = C;
 type T06 = empty;
 type T07 = $ReadOnly<T01>;
@@ -22,7 +22,7 @@ declare var in_08: T08;
 declare var in_09: T09;
 
 function test_01() {
-  declare function grd(x: mixed): x is T01;
+  declare function grd(x: unknown): x is T01;
   if (grd(in_01) && grd(in_02) && grd(in_03) && grd(in_04) && grd(in_05) && grd(in_06) && grd(in_07) && grd(in_08) && grd(in_09)) {
     const obj = {in_01, in_02, in_03, in_04, in_05, in_06, in_07, in_08, in_09 };
 //        ^
@@ -30,7 +30,7 @@ function test_01() {
 }
 
 function test_02() {
-  declare function grd(x: mixed): x is T02;
+  declare function grd(x: unknown): x is T02;
   if (grd(in_01) && grd(in_02) && grd(in_03) && grd(in_04) && grd(in_05) && grd(in_06) && grd(in_07) && grd(in_08) && grd(in_09)) {
     const obj = {in_01, in_02, in_03, in_04, in_05, in_06, in_07, in_08, in_09 };
 //        ^
@@ -38,7 +38,7 @@ function test_02() {
 }
 
 function test_03() {
-  declare function grd(x: mixed): x is T03;
+  declare function grd(x: unknown): x is T03;
   if (grd(in_01) && grd(in_02) && grd(in_03) && grd(in_04) && grd(in_05) && grd(in_06) && grd(in_07) && grd(in_08) && grd(in_09)) {
     const obj = {in_01, in_02, in_03, in_04, in_05, in_06, in_07, in_08, in_09 };
 //        ^
@@ -46,7 +46,7 @@ function test_03() {
 }
 
 function test_04() {
-  declare function grd(x: mixed): x is T04;
+  declare function grd(x: unknown): x is T04;
   if (grd(in_01) && grd(in_02) && grd(in_03) && grd(in_04) && grd(in_05) && grd(in_06) && grd(in_07) && grd(in_08) && grd(in_09)) {
     const obj = {in_01, in_02, in_03, in_04, in_05, in_06, in_07, in_08, in_09 };
 //        ^
@@ -54,7 +54,7 @@ function test_04() {
 }
 
 function test_05() {
-  declare function grd(x: mixed): x is T05;
+  declare function grd(x: unknown): x is T05;
   if (grd(in_01) && grd(in_02) && grd(in_03) && grd(in_04) && grd(in_05) && grd(in_06) && grd(in_07) && grd(in_08) && grd(in_09)) {
     const obj = {in_01, in_02, in_03, in_04, in_05, in_06, in_07, in_08, in_09 };
 //        ^
@@ -62,7 +62,7 @@ function test_05() {
 }
 
 function test_06() {
-  declare function grd(x: mixed): x is T06;
+  declare function grd(x: unknown): x is T06;
   if (grd(in_01) && grd(in_02) && grd(in_03) && grd(in_04) && grd(in_05) && grd(in_06) && grd(in_07) && grd(in_08) && grd(in_09)) {
     const obj = {in_01, in_02, in_03, in_04, in_05, in_06, in_07, in_08, in_09 };
 //        ^
@@ -70,7 +70,7 @@ function test_06() {
 }
 
 function test_07() {
-  declare function grd(x: mixed): x is T07;
+  declare function grd(x: unknown): x is T07;
   if (grd(in_01) && grd(in_02) && grd(in_03) && grd(in_04) && grd(in_05) && grd(in_06) && grd(in_07) && grd(in_08) && grd(in_09)) {
     const obj = {in_01, in_02, in_03, in_04, in_05, in_06, in_07, in_08, in_09 };
 //        ^
@@ -78,7 +78,7 @@ function test_07() {
 }
 
 function test_08() {
-  declare function grd(x: mixed): x is T08;
+  declare function grd(x: unknown): x is T08;
   if (grd(in_01) && grd(in_02) && grd(in_03) && grd(in_04) && grd(in_05) && grd(in_06) && grd(in_07) && grd(in_08) && grd(in_09)) {
     const obj = {in_01, in_02, in_03, in_04, in_05, in_06, in_07, in_08, in_09 };
 //        ^
@@ -86,7 +86,7 @@ function test_08() {
 }
 
 function test_09() {
-  declare function grd(x: mixed): x is T09;
+  declare function grd(x: unknown): x is T09;
   if (grd(in_01) && grd(in_02) && grd(in_03) && grd(in_04) && grd(in_05) && grd(in_06) && grd(in_07) && grd(in_08) && grd(in_09)) {
     const obj = {in_01, in_02, in_03, in_04, in_05, in_06, in_07, in_08, in_09 };
 //        ^

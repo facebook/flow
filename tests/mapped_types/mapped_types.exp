@@ -2085,9 +2085,9 @@ References:
    test.js:44:25
    44|   declare const badVal: {foo: {contents: string}};
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test.js:13:48
-                                                      v
-   13| type Mapped<O: {...} | ReadonlyArray<mixed>> = {
+   test.js:13:50
+                                                        v
+   13| type Mapped<O: {...} | ReadonlyArray<unknown>> = {
    14|   [key in keyof O]: Box<O[key]>,
    15| };
        ^ [4]
@@ -2120,9 +2120,9 @@ References:
    test.js:53:23
    53|   declare const badA: Array<{contents: string}>;
                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test.js:13:48
-                                                      v
-   13| type Mapped<O: {...} | ReadonlyArray<mixed>> = {
+   test.js:13:50
+                                                        v
+   13| type Mapped<O: {...} | ReadonlyArray<unknown>> = {
    14|   [key in keyof O]: Box<O[key]>,
    15| };
        ^ [4]
@@ -2286,9 +2286,9 @@ Cannot cast `partial.foo` to number because undefined [1] is incompatible with n
           ^^^^^^^^^^^
 
 References:
-   test.js:109:71
-   109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
-                                                                              ^^^^^^ [1]
+   test.js:109:73
+   109|   type Partial<T: {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
+                                                                                ^^^^^^ [1]
    test.js:111:18
    111|   partial.foo as number; // ERROR
                          ^^^^^^ [2]
@@ -2303,9 +2303,9 @@ Cannot cast `partialIndexer.qux` to string because undefined [1] is incompatible
           ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:109:71
-   109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
-                                                                              ^^^^^^ [1]
+   test.js:109:73
+   109|   type Partial<T: {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
+                                                                                ^^^^^^ [1]
    test.js:115:25
    115|   partialIndexer.qux as string; // ERROR
                                 ^^^^^^ [2]
@@ -2320,9 +2320,9 @@ Cannot cast `partialArr[0]` to number because undefined [1] is incompatible with
           ^^^^^^^^^^^^^
 
 References:
-   test.js:109:71
-   109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
-                                                                              ^^^^^^ [1]
+   test.js:109:73
+   109|   type Partial<T: {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
+                                                                                ^^^^^^ [1]
    test.js:119:20
    119|   partialArr[0] as number; // ERROR;
                            ^^^^^^ [2]
@@ -2337,9 +2337,9 @@ Cannot cast `partialTuple[0]` to number because undefined [1] is incompatible wi
           ^^^^^^^^^^^^^^^
 
 References:
-   test.js:109:71
-   109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
-                                                                              ^^^^^^ [1]
+   test.js:109:73
+   109|   type Partial<T: {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
+                                                                                ^^^^^^ [1]
    test.js:121:22
    121|   partialTuple[0] as number; // ERROR;
                              ^^^^^^ [2]

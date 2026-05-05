@@ -9,7 +9,7 @@ var Any: any;
 
 
 // class_t (t=Ty.Top)
-var b: Class<mixed>;
+var b: Class<unknown>;
 
 
 

@@ -1,4 +1,4 @@
-declare function expectMixed(x: mixed): void;
+declare function expectMixed(x: unknown): void;
 declare function expectAny(x: any): void;
 
 class Foo {

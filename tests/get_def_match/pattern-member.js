@@ -1,4 +1,4 @@
-declare const x: mixed;
+declare const x: unknown;
 
 declare const Obj: {bar: 1};
 

@@ -18,7 +18,7 @@ covariant.prop = 'foo'; // error
 
 const contravariant = new Contravariant<string>;
 contravariant as Contravariant<'foo'>; // ok
-contravariant as Contravariant<mixed>; // error
+contravariant as Contravariant<unknown>; // error
 contravariant.prop = 'foo'; // ok
 
 const invariant = new Invariant<'foo'>;
@@ -39,7 +39,7 @@ imported_covariant.prop = 'foo'; // error
 
 const imported_contravariant = new exported.Contravariant<string>;
 imported_contravariant as exported.Contravariant<'foo'>; // ok
-imported_contravariant as exported.Contravariant<mixed>; // error
+imported_contravariant as exported.Contravariant<unknown>; // error
 imported_contravariant.prop = 'foo'; // ok
 
 const imported_invariant = new exported.Invariant<'foo'>;

@@ -14,10 +14,10 @@ spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
 
 References:
    dict.js:1:19
-   1| function foo(map: { [key: string]: mixed }) {
-                        ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   1| function foo(map: { [key: string]: unknown }) {
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    dict.js:1:27
-   1| function foo(map: { [key: string]: mixed }) {
+   1| function foo(map: { [key: string]: unknown }) {
                                 ^^^^^^ [3]
 
 
