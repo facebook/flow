@@ -24,17 +24,17 @@ type KeysPoly<K> = keyof K;
 //   ^
 
 // $Values<T>
-type Prop$Values = $Values<Props>;
+type Prop$Values = Values<Props>;
 //   ^
 
 const frozenObject = Object.freeze({ A: "a", B: "b" });
-type ValuesOfFrozenObject = $Values<typeof frozenObject>;
+type ValuesOfFrozenObject = Values<typeof frozenObject>;
 //   ^
 
-type ValuesPoly<X> = $Values<X>;
+type ValuesPoly<X> = Values<X>;
 //   ^
 
-type ValuesPolyBound<X extends { f: number, ... }> = $Values<X>;
+type ValuesPolyBound<X extends { f: number, ... }> = Values<X>;
 //   ^
 
 // $ReadOnly<T>

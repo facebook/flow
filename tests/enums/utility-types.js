@@ -19,7 +19,7 @@ trigger as $ReadOnly<typeof E>; // Error: enum `E` is not an object
 'A' as keyof typeof E; // Error: TODO: improve error
 
 // $Values
-trigger as $Values<typeof E>; // Error
+trigger as Values<typeof E>; // Error
 
 // $Exact
 E as $Exact<typeof E>; // Error: TODO: improve error

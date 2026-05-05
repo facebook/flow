@@ -501,20 +501,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:29:1
 
-Cannot call `Values` because `T` [1] is underconstrained by call of `Values` [2]. Either add explicit type arguments or
-cast the expression to your expected type. [underconstrained-implicit-instantiation]
+Cannot call `ValuesFn` because `T` [1] is underconstrained by call of `ValuesFn` [2]. Either add explicit type arguments
+or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
    upper_non_t.js:29:1
-   29| Values(3); // Error: T under constrained.
-       ^^^^^^
+   29| ValuesFn(3); // Error: T under constrained.
+       ^^^^^^^^
 
 References:
-   upper_non_t.js:28:25
-   28| declare function Values<T>(x: $Values<T>): T;
-                               ^ [1]
+   upper_non_t.js:28:27
+   28| declare function ValuesFn<T>(x: Values<T>): T;
+                                 ^ [1]
    upper_non_t.js:29:1
-   29| Values(3); // Error: T under constrained.
-       ^^^^^^^^^ [2]
+   29| ValuesFn(3); // Error: T under constrained.
+       ^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:31:1

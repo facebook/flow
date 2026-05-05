@@ -266,7 +266,7 @@ type O = {
 };
 type Mapped = {[K in keyof O]: [O[K]]};
 {
-  declare const x: $Values<Mapped>[0];
+  declare const x: Values<Mapped>[0];
 
   match (x) { // OK
     1 => {}

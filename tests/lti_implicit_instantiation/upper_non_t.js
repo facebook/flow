@@ -25,8 +25,8 @@ declare function ConditionalType<T>(x: T extends unknown ? void : empty): T;
 ConditionalType(undefined); // Error: T under constrained.
 declare function MappedType<T>(x: {[K in keyof T]: void}): T;
 MappedType({}); // Error: T under constrained.
-declare function Values<T>(x: $Values<T>): T;
-Values(3); // Error: T under constrained.
+declare function ValuesFn<T>(x: Values<T>): T;
+ValuesFn(3); // Error: T under constrained.
 declare function ElementRef<T>(x: React.ElementRef<T>): T;
 ElementRef(1); // Error: T under constrained.
 declare function ElementConfig<T>(x: React.ElementConfig<T>): T;

@@ -15,4 +15,4 @@ const IndirectFrozenSuite = Object.freeze({
   SPADES: FrozenSuite.SPADES,
 });
 
-export type IndirectFrozenSuiteValues = $Values<typeof IndirectFrozenSuite>;
+export type IndirectFrozenSuiteValues = Values<typeof IndirectFrozenSuite>;

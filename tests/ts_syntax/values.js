@@ -1,6 +1,6 @@
 type O = {a: 1, b: 2};
 
-type T1 = $Values<O>; // OK
+type T1 = Values<O>; // OK
 
 const values = 1; // OK
 

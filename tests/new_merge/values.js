@@ -5,6 +5,6 @@ declare var obj: {
     g: 'g',
  ...};
 
-declare var k: $Values<typeof obj>;
+declare var k: Values<typeof obj>;
 
 export type T = typeof k.length;

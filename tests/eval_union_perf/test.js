@@ -81,7 +81,7 @@ type BarUnion =
   | BarFive
   | BarSix
   | BarSeven
-  | $Values<{[K in keyof Elements]: Bar<Elements[K]>}>;
+  | Values<{[K in keyof Elements]: Bar<Elements[K]>}>;
 
 type Config = {
   f: (dispatch: (BarUnion) => void) => void,
