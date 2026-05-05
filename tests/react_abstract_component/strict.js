@@ -1,11 +1,11 @@
 const React = require('react');
 
-declare var Component : React$ElementType;
+declare var Component : React.ElementType;
 const c = <Component f = {3}/>;
 c as React.MixedElement;
 
 declare function foo(a: ?React.Component<any, any>): void;
-declare var ref: ?React.ElementRef<React$ElementType>;
+declare var ref: ?React.ElementRef<React.ElementType>;
 foo(ref);
 
 class Component2 extends React.Component<{}> {};
