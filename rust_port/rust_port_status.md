@@ -2128,16 +2128,16 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] socketHandshake.ml → `flow_server_env/src/socket_handshake.rs`
     - [x] (Rust-only) `flow_server_env/src/server_socket_rpc.rs` — JSON/TCP wire protocol for server requests/responses in standalone mode
     - [x] (Rust-only) `flow_server_env/src/lsp_connect_params.rs` — shared connect params and persistent client handshake builder for LSP
-  - [ ] rechecker/
+  - [x] rechecker/
     - [x] recheck_updates.ml → `flow_server_rechecker/src/recheck_updates.rs`
-    - [ ] rechecker.ml → `flow_server_rechecker/src/rechecker.rs` (`recheck` still keeps `find_ref_command` as opaque closure)
-      - [x] `Parallelizable_workload_loop` module → `flow_server_rechecker/src/rechecker.rs` `parallelizable_workload_loop` module (uses thread + `AtomicBool` instead of Lwt)
-      - [x] `start_parallelizable_workloads` → `flow_server_rechecker/src/rechecker.rs` (spawns thread, returns real stopper closure)
+    - [x] rechecker.ml → `flow_server_rechecker/src/rechecker.rs`
+      - [x] `Parallelizable_workload_loop` module → `flow_server_rechecker/src/rechecker.rs` `parallelizable_workload_loop` module
+      - [x] `start_parallelizable_workloads` → `flow_server_rechecker/src/rechecker.rs` (spawns Tokio blocking task, returns real stopper closure)
       - [x] `get_lazy_stats`
       - [x] `process_updates`
       - [x] `send_start_recheck`
       - [x] `send_end_recheck`
-      - [ ] `recheck` (`find_ref_command` is kept as an opaque closure instead of destructuring request/client/transformer like OCaml)
+      - [x] `recheck`
       - [x] `run_but_cancel_on_file_changes`
       - [x] `recheck_outcome` type → `RecheckOutcome`
       - [x] `recheck_single`

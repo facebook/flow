@@ -8,10 +8,11 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
+use std::sync::LazyLock;
+use std::sync::Mutex;
 use std::sync::RwLock;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
-use std::thread;
 use std::time::Instant;
 
 use dupe::Dupe;
@@ -35,6 +36,13 @@ use flow_services_references::find_refs_types;
 use flow_utils_concurrency::worker_cancel;
 
 use crate::recheck_updates;
+
+static TOKIO_RUNTIME: LazyLock<tokio::runtime::Runtime> = LazyLock::new(|| {
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .expect("failed to build flow_rechecker tokio runtime")
+});
 
 pub struct ProfilingFinished {
     pub duration: f64,
@@ -77,34 +85,44 @@ mod parallelizable_workload_loop {
 fn start_parallelizable_workloads(
     _genv: &server_env::Genv,
     env: &server_env::Env,
-) -> Box<dyn FnOnce()> {
+) -> ParallelizableWorkloadsStopper {
     let wait_for_cancel = Arc::new(AtomicBool::new(false));
     let env_for_loop = env.clone();
     let wait_for_cancel_for_loop = wait_for_cancel.dupe();
-    let loop_thread = thread::Builder::new()
-        .name("parallelizable_workload_loop".to_string())
-        .spawn(move || {
-            parallelizable_workload_loop::run(&wait_for_cancel_for_loop, &env_for_loop);
-        })
-        .expect("failed to spawn parallelizable_workload_loop thread");
-    let mut already_woken = false;
-    let mut loop_thread = Some(loop_thread);
-    Box::new(move || {
-        if !already_woken {
-            wait_for_cancel.store(true, Ordering::Release);
+    let loop_task = TOKIO_RUNTIME.spawn_blocking(move || {
+        parallelizable_workload_loop::run(&wait_for_cancel_for_loop, &env_for_loop);
+    });
+    ParallelizableWorkloadsStopper {
+        wait_for_cancel,
+        loop_task: Arc::new(Mutex::new(Some(loop_task))),
+    }
+}
+
+#[derive(Clone)]
+struct ParallelizableWorkloadsStopper {
+    wait_for_cancel: Arc<AtomicBool>,
+    loop_task: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>>,
+}
+
+impl ParallelizableWorkloadsStopper {
+    fn stop(&self) {
+        if !self.wait_for_cancel.swap(true, Ordering::AcqRel) {
             server_monitor_listener_state::wake_workload_waiters();
         }
-        #[allow(unused_assignments)]
-        {
-            already_woken = true;
-        }
 
-        if let Some(handle) = loop_thread.take() {
-            if let Err(panic_payload) = handle.join() {
-                std::panic::resume_unwind(panic_payload);
+        let handle = self
+            .loop_task
+            .lock()
+            .expect("parallelizable workload loop task lock should not be poisoned")
+            .take();
+        if let Some(handle) = handle {
+            match TOKIO_RUNTIME.block_on(handle) {
+                Ok(()) => {}
+                Err(err) if err.is_panic() => std::panic::resume_unwind(err.into_panic()),
+                Err(err) => panic!("parallelizable workload loop task failed: {}", err),
             }
         }
-    })
+    }
 }
 
 pub fn get_lazy_stats(
@@ -311,80 +329,79 @@ fn recheck(
 }
 
 // Runs a function which should be canceled if we are notified about any file changes. After the
-// thread is canceled, post_cancel is called and its result returned
-fn run_but_cancel_on_file_changes<T>(
+// work is canceled, post_cancel is called and its result returned
+fn run_but_cancel_on_file_changes<T, ProcessUpdates, GetForced, F, PreCancel, PostCancel>(
     _options: &Options,
-    _shared_mem: &SharedMem,
-    _get_forced: &dyn Fn() -> CheckedSet,
-    _priority: Priority,
-    f: impl FnOnce() -> T,
-    _pre_cancel: impl FnOnce(),
-    _post_cancel: impl FnOnce() -> T,
-) -> T {
-    let cancel_monitor = spawn_recheck_cancel_monitor();
-    let ret = f();
-    cancel_monitor.stop();
-    ret
-}
-
-/// Stop handle for the recheck cancel monitor thread spawned by
-/// `spawn_recheck_cancel_monitor`. Calling `stop()` deregisters the monitor
-/// and joins its thread; safe to call after the monitor has already fired and
-/// exited.
-struct RecheckCancelMonitor {
-    stop_tx: crossbeam::channel::Sender<()>,
-    thread: Option<std::thread::JoinHandle<()>>,
-}
-
-impl RecheckCancelMonitor {
-    fn stop(mut self) {
-        // Either the monitor is still waiting on its select! (Ok(()) wakes it
-        // via the stop branch) or it already fired on a recheck-stream push
-        // and exited (Full/Disconnected — nothing to wake). All three cases
-        // mean the monitor will exit, so we can join unconditionally.
-        match self.stop_tx.try_send(()) {
-            Ok(()) => {}
-            Err(crossbeam::channel::TrySendError::Full(())) => {}
-            Err(crossbeam::channel::TrySendError::Disconnected(())) => {}
-        }
-        if let Some(handle) = self.thread.take() {
-            if let Err(panic_payload) = handle.join() {
-                std::panic::resume_unwind(panic_payload);
-            }
-        }
-    }
-}
-
-/// Spawn the recheck cancel monitor: subscribes to the recheck push channel
-/// and waits for either:
-///   1. A new force-recheck or file-watcher update (push to recheck stream)
-///      → call `worker_cancel::stop_workers()` so the in-progress recheck
-///      observes cancel and unwinds back to `recheck_single`.
-///   2. The recheck completing on its own (`RecheckCancelMonitor::stop`)
-///      → exit without signaling cancel.
-///
-/// This is the Rust port equivalent of OCaml's `cancel_thread` half of
-/// `Lwt.pick` inside `run_but_cancel_on_file_changes` (rechecker.ml:228).
-fn spawn_recheck_cancel_monitor() -> RecheckCancelMonitor {
-    let push_rx = server_monitor_listener_state::subscribe_recheck_pushes();
+    process_updates: ProcessUpdates,
+    get_forced: GetForced,
+    priority: Priority,
+    f: F,
+    pre_cancel: PreCancel,
+    post_cancel: PostCancel,
+) -> T
+where
+    ProcessUpdates: Fn(bool, &BTreeSet<String>) -> Updates + Send + 'static,
+    GetForced: Fn() -> CheckedSet + Send + 'static,
+    F: FnOnce() -> Result<T, type_service::RecheckError>,
+    PreCancel: FnOnce() + Send + 'static,
+    PostCancel: FnOnce() -> T,
+{
     let (stop_tx, stop_rx) = crossbeam::channel::bounded::<()>(1);
-    let thread = std::thread::Builder::new()
-        .name("recheck_cancel_monitor".to_string())
-        .spawn(move || {
-            crossbeam::channel::select! {
-                recv(push_rx) -> _ => {
-                    flow_hh_logger::info!(
-                        "Canceling recheck because a new force-recheck or file-watcher update arrived"
-                    );
-                    worker_cancel::stop_workers();
-                }
-                recv(stop_rx) -> _ => {}
+    let cancel_task = TOKIO_RUNTIME.spawn_blocking(move || {
+        match server_monitor_listener_state::wait_for_updates_for_recheck(
+            &process_updates,
+            &get_forced,
+            priority,
+            Some(&stop_rx),
+        ) {
+            Some(server_monitor_listener_state::WorkloadChanges {
+                num_files_to_prioritize,
+                num_files_to_force,
+                num_files_to_recheck,
+            }) => {
+                flow_hh_logger::info!(
+                    "Canceling recheck to prioritize {}, force {}, and recheck {} additional files",
+                    num_files_to_prioritize,
+                    num_files_to_force,
+                    num_files_to_recheck,
+                );
+                flow_event_logger::recheck_canceled(
+                    match priority {
+                        Priority::Priority => "true",
+                        Priority::Normal => "",
+                    },
+                    num_files_to_prioritize as i32,
+                    num_files_to_recheck as i32,
+                    num_files_to_force as i32,
+                );
+                pre_cancel();
+                worker_cancel::stop_workers();
+                true
             }
-        })
-        .expect("failed to spawn recheck_cancel_monitor thread");
-    RecheckCancelMonitor {
-        stop_tx,
-        thread: Some(thread),
+            None => false,
+        }
+    });
+
+    let ret = f();
+    match stop_tx.try_send(()) {
+        Ok(()) => {}
+        Err(crossbeam::channel::TrySendError::Full(())) => {}
+        Err(crossbeam::channel::TrySendError::Disconnected(())) => {}
+    }
+    let cancel_fired = match TOKIO_RUNTIME.block_on(cancel_task) {
+        Ok(cancel_fired) => cancel_fired,
+        Err(err) if err.is_panic() => std::panic::resume_unwind(err.into_panic()),
+        Err(err) => panic!("recheck cancel task failed: {}", err),
+    };
+    if cancel_fired && ret.is_ok() {
+        worker_cancel::resume_workers();
+    }
+    match ret {
+        Ok(ret) => ret,
+        Err(type_service::RecheckError::Canceled(_changed_files)) => post_cancel(),
+        Err(type_service::RecheckError::TooSlow) => {
+            unreachable!("TooSlow is handled inside type_service::recheck");
+        }
     }
 }
 
@@ -412,16 +429,49 @@ pub(crate) fn recheck_single(
 ) -> RecheckOutcome {
     let env = server_monitor_listener_state::update_env(env);
     let options = &genv.options;
+    let env_for_process_updates = env.clone();
     let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
-        process_updates(skip_incompatible, options, &env, shared_mem, updates)
+        process_updates(
+            skip_incompatible,
+            options,
+            &env_for_process_updates,
+            shared_mem,
+            updates,
+        )
     };
 
-    let mut will_be_checked_files = env.checked_files.clone();
+    let will_be_checked_files = Arc::new(RwLock::new(env.checked_files.clone()));
+    let get_forced = || {
+        will_be_checked_files
+            .read()
+            .expect("will_be_checked_files lock should not be poisoned")
+            .clone()
+    };
 
-    let (priority, mut workload) =
-        server_monitor_listener_state::get_and_clear_recheck_workload(&process_updates, &|| {
-            will_be_checked_files.clone()
-        });
+    let (priority, workload) = server_monitor_listener_state::get_and_clear_recheck_workload(
+        &process_updates,
+        &get_forced,
+    );
+    let options_for_cancel = options.dupe();
+    let shared_mem_for_cancel = genv.shared_mem.dupe();
+    let env_for_cancel_updates = env_for_process_updates.clone();
+    let process_updates_for_cancel =
+        move |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
+            crate::rechecker::process_updates(
+                skip_incompatible,
+                &options_for_cancel,
+                &env_for_cancel_updates,
+                &shared_mem_for_cancel,
+                updates,
+            )
+        };
+    let will_be_checked_files_for_cancel = will_be_checked_files.clone();
+    let get_forced_for_cancel = move || {
+        will_be_checked_files_for_cancel
+            .read()
+            .expect("will_be_checked_files lock should not be poisoned")
+            .clone()
+    };
 
     let did_change_mergebase = workload.metadata.changed_mergebase.unwrap_or(false);
     let missed_changes = workload.metadata.missed_changes;
@@ -447,6 +497,8 @@ pub(crate) fn recheck_single(
     }
 
     let stop_parallelizable_workloads = start_parallelizable_workloads(genv, &env);
+    let stop_parallelizable_workloads_for_cancel = stop_parallelizable_workloads.clone();
+    let stop_parallelizable_workloads_for_recheck = stop_parallelizable_workloads.clone();
     let env_for_cancel = env.clone();
 
     // The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
@@ -461,32 +513,66 @@ pub(crate) fn recheck_single(
     // the same files doesn't cause us to cancel a check that was already working on
     // files are definitely checked, so we can add them now.
     worker_cancel::resume_workers();
-    will_be_checked_files.union(workload.files_to_force.dupe());
+    will_be_checked_files
+        .write()
+        .expect("will_be_checked_files lock should not be poisoned")
+        .union(workload.files_to_force.dupe());
 
-    let f = move || match recheck(
-        genv,
-        env,
-        workload.files_to_force.dupe(),
-        &mut workload.find_ref_command,
-        incompatible_lib_change,
-        workload.metadata.changed_mergebase,
-        missed_changes,
-        &mut will_be_checked_files,
-        files_to_recheck_set,
-        node_modules_containers,
-    ) {
-        Ok((profiling, env)) => {
-            stop_parallelizable_workloads();
-            server_monitor_listener_state::requeue_deferred_parallelizable_workloads();
+    let workload_cell = std::rc::Rc::new(std::cell::RefCell::new(Some(workload)));
+    let workload_cell_for_recheck = workload_cell.clone();
+    let will_be_checked_files_for_recheck = will_be_checked_files.clone();
+    let f = move || {
+        let mut workload = workload_cell_for_recheck
+            .borrow_mut()
+            .take()
+            .expect("recheck workload should be available");
+        let mut will_be_checked_files_for_recheck = will_be_checked_files_for_recheck
+            .read()
+            .expect("will_be_checked_files lock should not be poisoned")
+            .clone();
+        match recheck(
+            genv,
+            env,
+            workload.files_to_force.dupe(),
+            &mut workload.find_ref_command,
+            incompatible_lib_change,
+            workload.metadata.changed_mergebase,
+            missed_changes,
+            &mut will_be_checked_files_for_recheck,
+            files_to_recheck_set,
+            node_modules_containers,
+        ) {
+            Ok((profiling, env)) => {
+                stop_parallelizable_workloads_for_recheck.stop();
+                server_monitor_listener_state::requeue_deferred_parallelizable_workloads();
 
-            RecheckOutcome::CompletedRecheck {
-                profiling,
-                env,
-                recheck_count,
+                Ok(RecheckOutcome::CompletedRecheck {
+                    profiling,
+                    env,
+                    recheck_count,
+                })
             }
+            Err(type_service::RecheckError::Canceled(_changed_files)) => {
+                stop_parallelizable_workloads_for_recheck.stop();
+                *workload_cell_for_recheck.borrow_mut() = Some(workload);
+                Err(type_service::RecheckError::Canceled(_changed_files))
+            }
+            Err(type_service::RecheckError::TooSlow) => Err(type_service::RecheckError::TooSlow),
         }
-        Err(type_service::RecheckError::Canceled(_changed_files)) => {
-            stop_parallelizable_workloads();
+    };
+    let workload_cell_for_cancel = workload_cell.clone();
+    run_but_cancel_on_file_changes(
+        options,
+        process_updates_for_cancel,
+        get_forced_for_cancel,
+        priority,
+        f,
+        move || stop_parallelizable_workloads_for_cancel.stop(),
+        move || {
+            let workload = workload_cell_for_cancel
+                .borrow_mut()
+                .take()
+                .expect("canceled recheck should leave workload available");
             flow_hh_logger::info!(
                 "Recheck successfully canceled. Restarting the recheck to include new file changes"
             );
@@ -499,19 +585,7 @@ pub(crate) fn recheck_single(
                 shared_mem,
                 node_modules_containers,
             )
-        }
-        Err(type_service::RecheckError::TooSlow) => {
-            unreachable!("TooSlow is handled inside type_service::recheck");
-        }
-    };
-    run_but_cancel_on_file_changes(
-        options,
-        shared_mem,
-        &|| CheckedSet::empty(),
-        priority,
-        f,
-        || {},
-        || unreachable!("post_cancel is unreachable without async cancellation support"),
+        },
     )
 }
 
@@ -526,8 +600,18 @@ pub fn recheck_loop(
     let mut profiling_list: Vec<ProfilingFinished> = Vec::new();
     let mut env = env;
     loop {
-        let _should_print_summary = genv.options.profile;
+        let should_print_summary = genv.options.profile;
+        let recheck_series_start = Instant::now();
         let recheck_result = recheck_single(1, genv, env, shared_mem, node_modules_containers);
+        let recheck_series_profiling = ProfilingFinished {
+            duration: recheck_series_start.elapsed().as_secs_f64(),
+        };
+        if should_print_summary {
+            flow_hh_logger::info!(
+                "RecheckSeries: wall duration {:.3}s",
+                recheck_series_profiling.get_profiling_duration()
+            );
+        }
         match recheck_result {
             RecheckOutcome::NothingToDo(e) => {
                 return (profiling_list, e);
@@ -537,7 +621,12 @@ pub fn recheck_loop(
                 env: e,
                 recheck_count,
             } => {
-                let _ = recheck_count;
+                flow_event_logger::recheck_series(
+                    recheck_count as i32,
+                    &serde_json::json!({
+                        "duration": recheck_series_profiling.get_profiling_duration(),
+                    }),
+                );
                 profiling_list.push(recheck_profiling);
                 env = e;
             }

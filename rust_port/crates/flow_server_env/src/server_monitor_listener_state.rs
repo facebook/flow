@@ -656,9 +656,22 @@ pub fn wait_for_updates_for_recheck(
     process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
     get_forced: &dyn Fn() -> CheckedSet,
     priority: Priority,
-) -> WorkloadChanges {
+    stop: Option<&Receiver<()>>,
+) -> Option<WorkloadChanges> {
     loop {
-        wait_for_recheck();
+        match stop {
+            Some(stop) => {
+                crossbeam::channel::select! {
+                    recv(RECHECK_NOTIFY.1) -> result => {
+                        if result.is_err() {
+                            return None;
+                        }
+                    }
+                    recv(stop) -> _ => return None,
+                }
+            }
+            None => wait_for_recheck(),
+        }
         let before_len = with_recheck_acc(|w| {
             (
                 w.files_to_prioritize.len(),
@@ -674,11 +687,11 @@ pub fn wait_for_updates_for_recheck(
                     w.files_to_force.cardinal(),
                 )
             });
-            return WorkloadChanges {
+            return Some(WorkloadChanges {
                 num_files_to_prioritize: after_len.0 - before_len.0,
                 num_files_to_recheck: after_len.1 - before_len.1,
                 num_files_to_force: after_len.2 - before_len.2,
-            };
+            });
         }
     }
 }
