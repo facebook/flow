@@ -8266,6 +8266,22 @@ where
                 code("experimental.allow_variance_keywords"),
                 text(" flowconfig option."),
             ]),
+            MessageDeprecatedVarianceSigil(sigil) => {
+                use crate::intermediate_error_types::VarianceSigilKind;
+                let (sigil_str, replacement_property, replacement_tparam) = match sigil {
+                    VarianceSigilKind::Plus => ("+", "readonly", "out"),
+                    VarianceSigilKind::Minus => ("-", "writeonly", "in"),
+                };
+                friendly::Message(vec![
+                    text("The "),
+                    code(sigil_str),
+                    text(" variance sigil is deprecated. Use "),
+                    code(replacement_property),
+                    text(" or "),
+                    code(replacement_tparam),
+                    text(" instead."),
+                ])
+            }
             MessageTSUndefinedType => friendly::Message(vec![
                 text("The equivalent of TypeScript's "),
                 code("undefined"),

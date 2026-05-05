@@ -208,6 +208,8 @@ type t = {
   opt_ts_syntax: bool;
   opt_allow_readonly_variance: bool;
   opt_allow_variance_keywords: bool;
+  opt_deprecated_variance_sigils: bool;
+  opt_deprecated_variance_sigils_excludes: Str.regexp list;
   opt_deprecated_colon_extends: string list;
   opt_deprecated_colon_extends_excludes: Str.regexp list;
   opt_tslib_syntax: bool;
@@ -458,6 +460,10 @@ let ts_syntax opts = opts.opt_ts_syntax
 let allow_readonly_variance opts = opts.opt_allow_readonly_variance
 
 let allow_variance_keywords opts = opts.opt_allow_variance_keywords
+
+let deprecated_variance_sigils opts = opts.opt_deprecated_variance_sigils
+
+let deprecated_variance_sigils_excludes opts = opts.opt_deprecated_variance_sigils_excludes
 
 let deprecated_colon_extends opts = opts.opt_deprecated_colon_extends
 

@@ -200,6 +200,8 @@ pub mod opts {
         pub ts_syntax: bool,
         pub allow_readonly_variance: bool,
         pub allow_variance_keywords: bool,
+        pub deprecated_variance_sigils: bool,
+        pub deprecated_variance_sigils_excludes: Vec<String>,
         pub ts_utility_syntax: bool,
         pub tslib_syntax: bool,
         pub typescript_library_definition_support: bool,
@@ -362,6 +364,8 @@ pub mod opts {
             ts_syntax: false,
             allow_readonly_variance: false,
             allow_variance_keywords: false,
+            deprecated_variance_sigils: false,
+            deprecated_variance_sigils_excludes: Vec::new(),
             ts_utility_syntax: true,
             tslib_syntax: false,
             typescript_library_definition_support: false,
@@ -2426,6 +2430,24 @@ pub mod opts {
                         opts.allow_variance_keywords = v;
                         Ok(())
                     },
+                    values,
+                    config,
+                )),
+                "experimental.deprecated_variance_sigils" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.deprecated_variance_sigils = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
+                "experimental.deprecated_variance_sigils.excludes" => Some(parse_string(
+                    |opts, v| {
+                        opts.deprecated_variance_sigils_excludes.push(v);
+                        Ok(())
+                    },
+                    Some(|opts| opts.deprecated_variance_sigils_excludes = Vec::new()),
+                    true,
                     values,
                     config,
                 )),

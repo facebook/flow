@@ -1713,6 +1713,12 @@ let make_options
     opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
     opt_allow_readonly_variance = FlowConfig.allow_readonly_variance flowconfig;
     opt_allow_variance_keywords = FlowConfig.allow_variance_keywords flowconfig;
+    opt_deprecated_variance_sigils = FlowConfig.deprecated_variance_sigils flowconfig;
+    opt_deprecated_variance_sigils_excludes =
+      Base.List.map
+        ~f:(fun pattern ->
+          pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
+        (FlowConfig.deprecated_variance_sigils_excludes flowconfig);
     opt_deprecated_colon_extends =
       Base.List.map
         ~f:(fun s ->

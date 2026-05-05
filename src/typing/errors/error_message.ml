@@ -772,7 +772,7 @@ and 'loc t' =
       loc: 'loc;
     }
   | EVarianceKeyword of {
-      kind: [ `Writeonly ];
+      kind: [ `Writeonly | `Plus | `Minus ];
       loc: 'loc;
     }
   | EInvalidBinaryArith of {
@@ -3820,6 +3820,8 @@ let friendly_message_of_msg = function
     | DeprecatedTypeParamColon -> Normal MessageDeprecatedTypeParamColonBound
   end
   | EVarianceKeyword { kind = `Writeonly; _ } -> Normal MessageVarianceKeywordWriteonly
+  | EVarianceKeyword { kind = (`Plus | `Minus) as sigil; _ } ->
+    Normal (MessageDeprecatedVarianceSigil sigil)
   | EInvalidBinaryArith { reason_out = _; reason_l; reason_r; kind } ->
     Normal (MessageCannotPerformBinaryArith { kind; reason_l; reason_r })
   | EInvalidMappedType { kind; _ } ->

@@ -1539,6 +1539,23 @@ pub struct MessageMatchNonExplicitEnumCheckData<L: Dupe> {
     pub unchecked_members: Vec<FlowSmolStr>,
 }
 
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum VarianceSigilKind {
+    Plus,
+    Minus,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Message<L: Dupe> {
     MessagePlainTextReservedForInternalErrorOnly(FlowSmolStr),
@@ -2156,6 +2173,7 @@ pub enum Message<L: Dupe> {
     MessageTSVarianceOut,
     MessageTSVarianceReadOnly,
     MessageVarianceKeywordWriteonly,
+    MessageDeprecatedVarianceSigil(VarianceSigilKind),
     MessageTSClassAccessibility(ast::class::ts_accessibility::Kind),
     MessageTSParameterProperty,
     MessageAbstractClass,

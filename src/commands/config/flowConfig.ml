@@ -168,6 +168,8 @@ module Opts = struct
     ts_syntax: bool;
     allow_readonly_variance: bool;
     allow_variance_keywords: bool;
+    deprecated_variance_sigils: bool;
+    deprecated_variance_sigils_excludes: string list;
     deprecated_colon_extends: string list;
     deprecated_colon_extends_excludes: string list;
     tslib_syntax: bool;
@@ -338,6 +340,8 @@ module Opts = struct
       ts_syntax = false;
       allow_readonly_variance = false;
       allow_variance_keywords = false;
+      deprecated_variance_sigils = false;
+      deprecated_variance_sigils_excludes = [];
       deprecated_colon_extends = [];
       deprecated_colon_extends_excludes = [];
       tslib_syntax = false;
@@ -1237,6 +1241,20 @@ module Opts = struct
       );
       ( "experimental.allow_variance_keywords",
         boolean (fun opts v -> Ok { opts with allow_variance_keywords = v })
+      );
+      ( "experimental.deprecated_variance_sigils",
+        boolean (fun opts v -> Ok { opts with deprecated_variance_sigils = v })
+      );
+      ( "experimental.deprecated_variance_sigils.excludes",
+        string
+          ~init:(fun opts -> { opts with deprecated_variance_sigils_excludes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok
+              {
+                opts with
+                deprecated_variance_sigils_excludes = v :: opts.deprecated_variance_sigils_excludes;
+              })
       );
       ( "experimental.deprecated_colon_extends",
         string
@@ -2259,6 +2277,10 @@ let ts_syntax c = c.options.Opts.ts_syntax
 let allow_readonly_variance c = c.options.Opts.allow_readonly_variance
 
 let allow_variance_keywords c = c.options.Opts.allow_variance_keywords
+
+let deprecated_variance_sigils c = c.options.Opts.deprecated_variance_sigils
+
+let deprecated_variance_sigils_excludes c = c.options.Opts.deprecated_variance_sigils_excludes
 
 let deprecated_colon_extends c = c.options.Opts.deprecated_colon_extends
 

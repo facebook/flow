@@ -2116,6 +2116,8 @@ pub(super) fn make_options(
                 ts_syntax,
                 allow_readonly_variance,
                 allow_variance_keywords,
+                deprecated_variance_sigils,
+                deprecated_variance_sigils_excludes,
                 ts_utility_syntax,
                 tslib_syntax,
                 typescript_library_definition_support,
@@ -2615,6 +2617,14 @@ pub(super) fn make_options(
         })
         .collect::<Vec<_>>()
         .into();
+    let deprecated_variance_sigils_excludes: Arc<[Regex]> = deprecated_variance_sigils_excludes
+        .iter()
+        .map(|s| {
+            let expanded = flow_common::files::expand_project_root_token(&root, s);
+            Regex::new(&expanded).unwrap()
+        })
+        .collect::<Vec<_>>()
+        .into();
     let saved_state_direct_serialization =
         match std::env::var("FLOW_SAVED_STATE_DIRECT_SERIALIZATION")
             .ok()
@@ -2763,6 +2773,8 @@ pub(super) fn make_options(
         ts_syntax,
         allow_readonly_variance,
         allow_variance_keywords,
+        deprecated_variance_sigils,
+        deprecated_variance_sigils_excludes,
         tslib_syntax,
         typescript_library_definition_support,
         ts_utility_syntax,

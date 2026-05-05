@@ -270,6 +270,8 @@ pub struct Options {
     pub ts_syntax: bool,
     pub allow_readonly_variance: bool,
     pub allow_variance_keywords: bool,
+    pub deprecated_variance_sigils: bool,
+    pub deprecated_variance_sigils_excludes: Arc<[Regex]>,
     pub tslib_syntax: bool,
     pub typescript_library_definition_support: bool,
     pub deprecated_colon_extends: Arc<[String]>,
