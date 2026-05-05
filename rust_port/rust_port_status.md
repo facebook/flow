@@ -1204,7 +1204,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] opaque_digest/
       - [x] opaqueDigest.ml → `md5` crate (`md5::Md5::digest`)
     - [x] procfs/
-      - [x] procFS.ml → needed by `CGroup`, but already inlined privately in `flow_server/src/cgroup.rs` (`first_cgroup_for_pid` helpers); no standalone crate needed
+      - [x] procFS.ml → `flow_procfs/src/lib.rs`
     - [x] string/
       - [x] string_utils.ml (partial → `flow_common/src/string_utils.rs`; remaining helpers covered by `String`/`str` methods and `regex` crate)
         - [x] `filename_escape`

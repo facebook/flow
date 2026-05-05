@@ -19,48 +19,6 @@ pub struct Stats {
     pub file: i64,
 }
 
-fn read_proc_file(filename: &str, pid: u32) -> Result<String, String> {
-    let file = format!("/proc/{}/{}", pid, filename);
-    std::fs::read_to_string(&file).map_err(|e| format!("{}", e))
-}
-
-fn parse_cgroup(raw_cgroup_contents: &str) -> Result<String, String> {
-    let lines: Vec<&str> = raw_cgroup_contents.split('\n').collect();
-    match lines.first() {
-        None => Err("Expected at least one cgroup in /proc/<PID>/cgroup file".to_string()),
-        Some(first_line) => {
-            let parts: Vec<&str> = first_line.split(':').collect();
-            if parts.len() == 3 {
-                Ok(parts[2].to_string())
-            } else {
-                Err(
-                    "First line of  /proc/<PID>/cgroup file was not correctly formatted"
-                        .to_string(),
-                )
-            }
-        }
-    }
-}
-
-fn assert_procfs_supported() -> Result<(), String> {
-    static RESULT: OnceLock<Result<(), String>> = OnceLock::new();
-    RESULT
-        .get_or_init(|| {
-            if cfg!(unix) && std::path::Path::new("/proc").exists() {
-                Ok(())
-            } else {
-                Err("Proc filesystem not supported".to_string())
-            }
-        })
-        .clone()
-}
-
-fn first_cgroup_for_pid(pid: u32) -> Result<String, String> {
-    assert_procfs_supported()?;
-    let contents = read_proc_file("cgroup", pid)?;
-    parse_cgroup(&contents)
-}
-
 const CGROUP_DIR: &str = "/sys/fs/cgroup";
 
 fn assert_is_using_cgroup_v2() -> Result<(), String> {
@@ -96,7 +54,7 @@ fn get_cgroup_name() -> Result<String, String> {
             return result.clone();
         }
     }
-    let result = first_cgroup_for_pid(std::process::id());
+    let result = flow_procfs::first_cgroup_for_pid(std::process::id());
     *cache = Some((now + 5.0, result.clone()));
     result
 }
