@@ -2197,7 +2197,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `new_entry_point` → `SERVER_ENTRY_NAME`
     - [x] `register_entry_point` → `entry_point` / `register`
     - [x] `daemonize`
-- [ ] services/
+- [x] services/
   - [x] autocomplete/ → `flow_services_autocomplete`
     - [x] __tests__/
       - [x] autocomplete_sigil_tests.ml → `flow_services_autocomplete/src/autocomplete_sigil_tests.rs`
@@ -2509,7 +2509,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `get_rename_order` → `get_rename_order()`
       - [x] `rename_mapper` → `RenameMapper` + `AstVisitor` impl
       - [x] `rename` → `rename()`
-    - [ ] renameModule.ml
+    - [x] renameModule.ml → `flow_services_references/src/rename_module.rs`
+      - [x] `get_dependents` → `get_dependents()`
+      - [x] `get_loc_to_replacement_map` → `get_loc_to_replacement_map()`
+      - [x] `get_edits_for_file` → `get_edits_for_file()`
+      - [x] `get_rename_edits` → `get_rename_edits()`
     - [x] variableFindRefs.ml → `flow_services_references/src/variable_find_refs.rs`
       - [x] `local_find_refs` → `local_find_refs()`
   - [x] saved_state/ → `flow_saved_state`

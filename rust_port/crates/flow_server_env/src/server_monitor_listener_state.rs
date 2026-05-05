@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::any::Any;
 use std::collections::BTreeSet;
 use std::sync::Mutex;
 
@@ -90,15 +91,11 @@ pub fn cancellation_requests() -> &'static Mutex<BTreeSet<String>> {
     &CANCELLATION_REQUESTS
 }
 
-pub type FindRefResponseTransformer = Box<
-    dyn FnOnce(
-            Result<flow_services_references::find_refs_types::FindRefsFound, String>,
-        ) -> crate::lsp_prot::ResponseWithMetadata
-        + Send,
->;
+pub type FindRefResponseTransformer =
+    Box<dyn FnOnce(Box<dyn Any + Send>) -> crate::lsp_prot::ResponseWithMetadata + Send>;
 
 pub struct FindRefCommand {
-    pub request: flow_services_references::find_refs_types::Request,
+    pub request: Box<dyn Any + Send>,
     pub client_id: crate::lsp_prot::ClientId,
     pub references_to_lsp_response: FindRefResponseTransformer,
 }
@@ -202,16 +199,27 @@ pub fn push_files_to_force_focused_and_recheck(files: BTreeSet<String>) {
     });
 }
 
-pub fn push_global_find_ref_request(
+pub fn push_global_find_ref_request<Request, FindRefsFound>(
     def_locs: Vec<Loc>,
-    request: flow_services_references::find_refs_types::Request,
+    request: Request,
     client_id: crate::lsp_prot::ClientId,
-    references_to_lsp_response: FindRefResponseTransformer,
-) {
+    references_to_lsp_response: Box<
+        dyn FnOnce(Result<FindRefsFound, String>) -> crate::lsp_prot::ResponseWithMetadata + Send,
+    >,
+) where
+    Request: Send + 'static,
+    FindRefsFound: Send + 'static,
+{
+    let references_to_lsp_response = Box::new(move |find_ref_results: Box<dyn Any + Send>| {
+        let find_ref_results = *find_ref_results
+            .downcast::<Result<FindRefsFound, String>>()
+            .expect("find ref result type should match request");
+        references_to_lsp_response(find_ref_results)
+    });
     push_recheck_msg(RecheckFiles::GlobalFindRef {
         def_locs,
         find_ref_command: FindRefCommand {
-            request,
+            request: Box::new(request),
             client_id,
             references_to_lsp_response,
         },

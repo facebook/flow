@@ -13,4 +13,5 @@ pub mod local_import_ref_searcher;
 pub mod prepare_rename_searcher;
 pub mod property_find_refs;
 pub mod rename_mapper;
+pub mod rename_module;
 pub mod variable_find_refs;

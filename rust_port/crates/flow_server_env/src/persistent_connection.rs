@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::any::Any;
+use std::any::TypeId;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
@@ -17,9 +19,6 @@ use std::sync::atomic::Ordering;
 
 use flow_common_exit_status::FlowExitStatus;
 use flow_common_utils::filename_cache;
-use flow_services_inference_types::AutocompleteArtifacts;
-use flow_services_inference_types::FileArtifacts;
-use flow_services_inference_types::TypeContentsError;
 use lsp_types::InitializeParams;
 
 use crate::file_watcher_status;
@@ -65,13 +64,38 @@ struct AutocompleteToken {
     loc: (i32, i32, Option<flow_parser::file_key::FileKey>),
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+enum CacheKind {
+    TypeParseArtifacts,
+    AutocompleteArtifacts,
+}
+
+trait AnyFilenameCache {
+    fn as_any(&self) -> &dyn Any;
+    fn clear(&self);
+    fn remove_entry(&self, key: &flow_parser::file_key::FileKey);
+}
+
+struct TypedFilenameCache<V>(filename_cache::Cache<V>);
+
+impl<V: 'static> AnyFilenameCache for TypedFilenameCache<V> {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn clear(&self) {
+        filename_cache::clear(&self.0);
+    }
+
+    fn remove_entry(&self, key: &flow_parser::file_key::FileKey) {
+        filename_cache::remove_entry(key, &self.0);
+    }
+}
+
 pub struct SingleClient {
     client_id: Prot::ClientId,
     generation: u64,
-    type_parse_artifacts_cache:
-        filename_cache::Cache<Result<FileArtifacts<'static>, TypeContentsError>>,
-    autocomplete_artifacts_cache:
-        filename_cache::Cache<Result<AutocompleteArtifacts<'static>, TypeContentsError>>,
+    filename_caches: HashMap<(CacheKind, TypeId), Box<dyn AnyFilenameCache>>,
     cache_epoch: u64,
 }
 
@@ -97,9 +121,12 @@ const MAX_PENDING_MESSAGES: usize = 1024;
 
 fn remove_cache_entry(autocomplete: bool, client: &mut SingleClient, filename: &str) {
     let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(filename);
-    filename_cache::remove_entry(&file_key, &client.type_parse_artifacts_cache);
-    if autocomplete {
-        filename_cache::remove_entry(&file_key, &client.autocomplete_artifacts_cache)
+    for ((kind, _), cache) in client.filename_caches.iter() {
+        if *kind == CacheKind::TypeParseArtifacts
+            || (autocomplete && *kind == CacheKind::AutocompleteArtifacts)
+        {
+            cache.remove_entry(&file_key);
+        }
     }
 }
 
@@ -129,8 +156,7 @@ fn make_single_client(client_id: Prot::ClientId, generation: u64) -> SingleClien
     SingleClient {
         client_id,
         generation,
-        type_parse_artifacts_cache: filename_cache::make(CACHE_MAX_SIZE),
-        autocomplete_artifacts_cache: filename_cache::make(CACHE_MAX_SIZE),
+        filename_caches: HashMap::new(),
         cache_epoch: current_cache_epoch(),
     }
 }
@@ -164,8 +190,9 @@ pub fn get_client(client_id: Prot::ClientId) -> Option<SingleClientRef> {
             let mut client = client.borrow_mut();
             let cache_epoch = current_cache_epoch();
             if client.cache_epoch != cache_epoch {
-                filename_cache::clear(&client.type_parse_artifacts_cache);
-                filename_cache::clear(&client.autocomplete_artifacts_cache);
+                for cache in client.filename_caches.values() {
+                    cache.clear();
+                }
                 client.cache_epoch = cache_epoch;
             }
         }
@@ -719,16 +746,38 @@ pub fn client_config(client: &SingleClientRef) -> client_config::T {
     with_registry(get_id(client), |entry| entry.client_config.clone()).unwrap()
 }
 
-pub fn type_parse_artifacts_cache(
+fn filename_cache_for<V: Clone + 'static>(
     client: &SingleClientRef,
-) -> filename_cache::Cache<Result<FileArtifacts<'static>, TypeContentsError>> {
-    client.borrow().type_parse_artifacts_cache.clone()
+    kind: CacheKind,
+) -> filename_cache::Cache<V> {
+    let mut client = client.borrow_mut();
+    let type_id = TypeId::of::<V>();
+    let cache = client
+        .filename_caches
+        .entry((kind, type_id))
+        .or_insert_with(|| {
+            Box::new(TypedFilenameCache(filename_cache::make::<V>(
+                CACHE_MAX_SIZE,
+            )))
+        });
+    cache
+        .as_any()
+        .downcast_ref::<TypedFilenameCache<V>>()
+        .expect("filename cache type should match TypeId")
+        .0
+        .clone()
 }
 
-pub fn autocomplete_artifacts_cache(
+pub fn type_parse_artifacts_cache<V: Clone + 'static>(
     client: &SingleClientRef,
-) -> filename_cache::Cache<Result<AutocompleteArtifacts<'static>, TypeContentsError>> {
-    client.borrow().autocomplete_artifacts_cache.clone()
+) -> filename_cache::Cache<V> {
+    filename_cache_for(client, CacheKind::TypeParseArtifacts)
+}
+
+pub fn autocomplete_artifacts_cache<V: Clone + 'static>(
+    client: &SingleClientRef,
+) -> filename_cache::Cache<V> {
+    filename_cache_for(client, CacheKind::AutocompleteArtifacts)
 }
 
 pub fn clear_type_parse_artifacts_caches() {
@@ -736,8 +785,9 @@ pub fn clear_type_parse_artifacts_caches() {
     LOCAL_CLIENTS.with(|clients| {
         for client in clients.borrow().values() {
             let mut client = client.borrow_mut();
-            filename_cache::clear(&client.type_parse_artifacts_cache);
-            filename_cache::clear(&client.autocomplete_artifacts_cache);
+            for cache in client.filename_caches.values() {
+                cache.clear();
+            }
             client.cache_epoch = current_cache_epoch();
         }
     });

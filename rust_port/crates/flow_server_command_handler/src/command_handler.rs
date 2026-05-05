@@ -5659,8 +5659,11 @@ fn handle_global_find_references(
                         flow_services_get_def::get_def_utils::all_locs_of_def_info(&def_info);
                     let file_key_owned = file_key.clone();
                     let def_locs_for_closure = def_locs.clone();
-                    let references_to_lsp_response: server_monitor_listener_state::FindRefResponseTransformer =
-                        Box::new(move |result| {
+                    let references_to_lsp_response = Box::new(
+                        move |result: Result<
+                            flow_services_references::find_refs_types::FindRefsFound,
+                            String,
+                        >| {
                             match result {
                                 Ok(refs) => {
                                     // We replace all the find ref results from recheck on the current file with the ones
@@ -5706,7 +5709,8 @@ fn handle_global_find_references(
                                     mk_lsp_error_response(Some(id), reason, None, metadata)
                                 }
                             }
-                        });
+                        },
+                    );
                     let request = flow_services_references::find_refs_types::Request {
                         def_info,
                         kind,
@@ -6705,74 +6709,6 @@ fn linked_editing_range_handler(
     }
 }
 
-fn rename_module_file_sig_options(
-    options: &Options,
-) -> flow_parser_utils::file_sig::FileSigOptions {
-    flow_parser_utils::file_sig::FileSigOptions {
-        enable_enums: options.enums,
-        enable_jest_integration: options.enable_jest_integration,
-        enable_relay_integration: options.enable_relay_integration,
-        explicit_available_platforms: None,
-        file_options: options.file_options.dupe(),
-        haste_module_ref_prefix: options.haste_module_ref_prefix.dupe(),
-        project_options: options.projects_options.dupe(),
-        relay_integration_module_prefix: options.relay_integration_module_prefix.dupe(),
-    }
-}
-
-fn rename_module_edits_for_file(
-    old_haste_name: &str,
-    new_haste_name: &str,
-    file_sig: &flow_parser_utils::file_sig::FileSig,
-) -> Vec<lsp_types::TextEdit> {
-    use flow_parser_utils::file_sig::Require;
-
-    // OCaml `RenameModule.get_edits_for_file` builds a `Loc_collections.LocMap`
-    // from the requires, then `LocMap.fold` iterates the map in ascending loc
-    // order while prepending each entry to the accumulator with `:: acc`. This
-    // means the final list is in DESCENDING loc order. We replicate by
-    // collecting in source order and then reversing.
-    let mut edits: Vec<lsp_types::TextEdit> = file_sig
-        .requires()
-        .iter()
-        .filter_map(|require| {
-            let (loc, replacement) = match require {
-                Require::Require { source, prefix, .. }
-                    if source.name().as_str() == old_haste_name =>
-                {
-                    (
-                        source.loc().clone(),
-                        match prefix {
-                            Some(prefix) => format!("{}{}", prefix, new_haste_name),
-                            None => new_haste_name.to_string(),
-                        },
-                    )
-                }
-                Require::ImportDynamic { source, .. }
-                | Require::Import0 { source }
-                | Require::Import { source, .. }
-                | Require::ExportFrom { source }
-                    if source.name().as_str() == old_haste_name =>
-                {
-                    (source.loc().clone(), new_haste_name.to_string())
-                }
-                _ => return None,
-            };
-            Some(lsp_types::TextEdit {
-                range: loc_to_lsp_range(&loc),
-                new_text: serde_json::to_string(&replacement).unwrap_or_else(|_| {
-                    format!(
-                        "\"{}\"",
-                        replacement.replace('\\', "\\\\").replace('"', "\\\"")
-                    )
-                }),
-            })
-        })
-        .collect();
-    edits.reverse();
-    edits
-}
-
 fn handle_persistent_rename_file_imports(
     options: &Options,
     env: &server_env::Env,
@@ -6804,37 +6740,13 @@ fn handle_persistent_rename_file_imports(
             );
             match (old_haste_name, new_haste_name) {
                 (Some(old_haste_info), Some(new_haste_info)) => {
-                    let mut changes = std::collections::HashMap::new();
-                    let file_sig_opts = rename_module_file_sig_options(options);
-                    if let Some(haste_module) = shared_mem.get_haste_module(&old_haste_info) {
-                        for dependent in haste_module.get_dependents() {
-                            let Some(ast) = shared_mem.get_ast(&dependent) else {
-                                continue;
-                            };
-                            let Ok(uri) = flow_lsp_conversions::file_key_to_uri(Some(&dependent))
-                            else {
-                                continue;
-                            };
-                            let dependent_file_sig =
-                                flow_parser_utils::file_sig::FileSig::from_program(
-                                    &dependent,
-                                    &ast,
-                                    &file_sig_opts,
-                                );
-                            let edits = rename_module_edits_for_file(
-                                old_haste_info.module_name().as_str(),
-                                new_haste_info.module_name().as_str(),
-                                &dependent_file_sig,
-                            );
-                            if !edits.is_empty() {
-                                changes.insert(uri, edits);
-                            }
-                        }
-                    }
-                    Ok(lsp_types::WorkspaceEdit {
-                        changes: Some(changes),
-                        ..Default::default()
-                    })
+                    flow_services_references::rename_module::get_rename_edits(
+                        shared_mem.as_ref(),
+                        options,
+                        old_haste_info.module_name().as_str(),
+                        new_haste_info.module_name().as_str(),
+                        &file_key,
+                    )
                 }
                 _ => Err("Error converting file names to Haste paths".to_string()),
             }

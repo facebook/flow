@@ -234,7 +234,10 @@ fn recheck(
     let workers = genv.workers.as_ref().unwrap();
 
     let find_ref_request = match find_ref_command.as_ref() {
-        Some(server_monitor_listener_state::FindRefCommand { request, .. }) => request.clone(),
+        Some(server_monitor_listener_state::FindRefCommand { request, .. }) => request
+            .downcast_ref::<find_refs_types::Request>()
+            .expect("find ref request type should match rechecker")
+            .clone(),
         None => find_refs_types::empty_request(),
     };
 
@@ -277,7 +280,7 @@ fn recheck(
         ..
     }) = find_ref_command.take()
     {
-        let (response, metadata) = references_to_lsp_response(find_ref_results);
+        let (response, metadata) = references_to_lsp_response(Box::new(find_ref_results));
         let metadata = lsp_prot::Metadata {
             server_logging_context: Some(persistent_server_logging_context()),
             ..metadata
