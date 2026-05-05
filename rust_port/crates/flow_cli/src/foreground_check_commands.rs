@@ -173,7 +173,7 @@ fn check_main(
     // code actions). Foreground check commands never serve those requests, so
     // skip building the export index to save time and memory.
     Arc::make_mut(&mut options).autoimports = false;
-    let _init_id = crate::random_id_short_string();
+    let _init_id = flow_common_utils::random_id::short_string();
     let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
     // initialize loggers before doing too much, especially anything that might exit
     flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
@@ -367,7 +367,7 @@ mod focus_check_command {
             };
             Arc::make_mut(&mut options).verbose = Some(opt_verbose);
         }
-        let _init_id = crate::random_id_short_string();
+        let _init_id = flow_common_utils::random_id::short_string();
         let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
         // initialize loggers before doing too much, especially anything that might exit
         flow_logging_utils::init_loggers(&options, None);

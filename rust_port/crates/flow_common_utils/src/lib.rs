@@ -12,5 +12,6 @@ pub mod graph;
 pub mod line;
 pub mod list_utils;
 pub mod option_utils;
+pub mod random_id;
 pub mod utils_js;
 pub mod utils_jsx;

@@ -1105,7 +1105,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] exception.ml → `unnecessary` (use error in `Result`)
       - [x] hh_logger.ml → `flow_hh_logger/src/lib.rs`
       - [ ] measure.ml
-      - [ ] random_id.ml
+      - [x] random_id.ml → `crates/flow_common_utils/src/random_id.rs`
       - [ ] utils.ml
     - [x] disk/
       - [x] disk.ml → `irrelevant` (use `std::fs` from Rust stdlib)

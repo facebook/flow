@@ -309,16 +309,6 @@ fn find_command(subcmd: &str) -> Option<command_spec::Command> {
         .find(|command| command.name() == subcmd)
 }
 
-pub(crate) fn random_id_short_string() -> String {
-    use std::time::SystemTime;
-
-    let nanos = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos();
-    format!("{:x}", nanos)
-}
-
 fn startup_max_workers(arguments: &[String]) -> Option<std::num::NonZeroUsize> {
     let (subcmd, rest) = arguments.split_first()?;
     let subcmd = subcmd.to_ascii_lowercase();
@@ -370,7 +360,7 @@ fn flow_shell_main() {
     };
     let command_string = command.name().to_string();
     flow_event_logger::set_command(Some(command_string));
-    let init_id = random_id_short_string();
+    let init_id = flow_common_utils::random_id::short_string();
     flow_event_logger::init_flow_command(&init_id);
     command_utils::run_command(&command, &argv);
 }

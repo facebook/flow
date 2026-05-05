@@ -84,7 +84,7 @@ fn main(
         options_flags.clone(),
         saved_state_options_flags.clone(),
     );
-    let _init_id = crate::random_id_short_string();
+    let _init_id = flow_common_utils::random_id::short_string();
     // initialize loggers before doing too much, especially anything that might exit
     flow_logging_utils::init_loggers(&options, None);
 

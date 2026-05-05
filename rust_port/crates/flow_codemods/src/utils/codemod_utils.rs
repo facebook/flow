@@ -65,30 +65,6 @@ fn make_genv(
     )
 }
 
-const ALPHANUMERIC_ALPHABET: &[u8] =
-    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-fn short_string_with_alphabet(alphabet: &[u8]) -> String {
-    use std::time::SystemTime;
-    let seed = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos() as u64;
-    let mut r = seed;
-    let mut cs = Vec::new();
-    while r > 0 {
-        let c = alphabet[(r as usize) % alphabet.len()];
-        cs.push(c as char);
-        r >>= 6;
-    }
-    cs.reverse();
-    cs.into_iter().collect()
-}
-
-fn random_id_short_string() -> String {
-    short_string_with_alphabet(ALPHANUMERIC_ALPHABET)
-}
-
 pub enum AbstractCodemodRunner<A, T> {
     Mapper(Box<dyn Fn(T) -> CodemodAstMapper<A> + Send + Sync>),
     Reducer(Box<dyn Fn(T) -> CodemodAstReducer<A> + Send + Sync>),
@@ -171,7 +147,7 @@ impl<Runner: super::codemod_runner::Runnable> MakeMain<Runner> {
         log_level: Option<flow_hh_logger::Level>,
         roots: BTreeSet<FileKey>,
     ) {
-        let init_id = random_id_short_string();
+        let init_id = flow_common_utils::random_id::short_string();
         initialize_logs(options);
         let log_level = match log_level {
             Some(level) => level,
