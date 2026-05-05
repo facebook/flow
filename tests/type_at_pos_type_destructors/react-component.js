@@ -16,6 +16,6 @@ type ReactAP<X> = React.ElementConfig<X>;
 
 // The following tests caching of EvalT result. If re-evaluated the $NonMaybeType
 // under the second EvalT would appear as empty
-declare var a: { m<T>(x: $NonMaybeType<T>): T, ... };
+declare var a: { m<T>(x: NonNullable<T>): T, ... };
 declare var b: { x: typeof a; y: typeof a; ... }
 //          ^

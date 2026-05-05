@@ -8,7 +8,7 @@ type $FragmentRef<T> = {
   $fragmentRefs: T['$refType'],
 };
 
-type X = $NonMaybeType<{|
+type X = NonNullable<{|
   +$refType: 3,
 |}>;
 

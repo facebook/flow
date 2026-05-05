@@ -1,44 +1,43 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:2:18
 
-Cannot cast `42` to `$NonMaybeType` because null [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot cast `42` to `NonNullable` because null [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    test.js:2:18
-   2|   42 as number | null as $NonMaybeType<unknown>; // error null ~> MixedT (NonMaybe)
+   2|   42 as number | null as NonNullable<unknown>; // error null ~> MixedT (NonMaybe)
                        ^^^^ [1]
 
 References:
-   test.js:2:40
-   2|   42 as number | null as $NonMaybeType<unknown>; // error null ~> MixedT (NonMaybe)
-                                             ^^^^^^^ [2]
+   test.js:2:38
+   2|   42 as number | null as NonNullable<unknown>; // error null ~> MixedT (NonMaybe)
+                                           ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:4:18
 
-Cannot cast `42` to `$NonMaybeType` because undefined [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot cast `42` to `NonNullable` because undefined [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    test.js:4:18
-   4|   42 as number | void as $NonMaybeType<unknown>; // error undefined ~> MixedT (NonMaybe)
+   4|   42 as number | void as NonNullable<unknown>; // error undefined ~> MixedT (NonMaybe)
                        ^^^^ [1]
 
 References:
-   test.js:4:40
-   4|   42 as number | void as $NonMaybeType<unknown>; // error undefined ~> MixedT (NonMaybe)
-                                             ^^^^^^^ [2]
+   test.js:4:38
+   4|   42 as number | void as NonNullable<unknown>; // error undefined ~> MixedT (NonMaybe)
+                                           ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:9
 
-Cannot cast `42` to `$NonMaybeType` because null or undefined [1] is incompatible with `unknown` [2].
-[incompatible-type]
+Cannot cast `42` to `NonNullable` because null or undefined [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    test.js:6:9
-   6|   42 as ?number as $NonMaybeType<unknown>; // error null | undefined ~> MixedT (NonMaybe)
+   6|   42 as ?number as NonNullable<unknown>; // error null | undefined ~> MixedT (NonMaybe)
               ^^^^^^^ [1]
 
 References:
-   test.js:6:34
-   6|   42 as ?number as $NonMaybeType<unknown>; // error null | undefined ~> MixedT (NonMaybe)
-                                       ^^^^^^^ [2]
+   test.js:6:32
+   6|   42 as ?number as NonNullable<unknown>; // error null | undefined ~> MixedT (NonMaybe)
+                                     ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:11:19
@@ -71,19 +70,19 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:33:3
 
-Cannot cast `obj.a` to `$NonMaybeType` because undefined [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot cast `obj.a` to `NonNullable` because undefined [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    test.js:33:3
-   33|   obj.a as $NonMaybeType<unknown>; // error undefined ~> MixedT (non-maybe)
+   33|   obj.a as NonNullable<unknown>; // error undefined ~> MixedT (non-maybe)
          ^^^^^
 
 References:
    test.js:32:34
    32| function test_optional(obj: {a?: number, ...}) {
                                         ^^^^^^ [1]
-   test.js:33:26
-   33|   obj.a as $NonMaybeType<unknown>; // error undefined ~> MixedT (non-maybe)
-                                ^^^^^^^ [2]
+   test.js:33:24
+   33|   obj.a as NonNullable<unknown>; // error undefined ~> MixedT (non-maybe)
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:34:3

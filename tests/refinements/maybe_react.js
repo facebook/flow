@@ -25,4 +25,4 @@ declare const m: MaybeFun;
 type MaybeComponent = ?(React.ComponentType<{...}>);
 
 declare const C: MaybeComponent;
-(C && <C />) as ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>; // ok
+(C && <C />) as ?ExactReactElement_DEPRECATED<NonNullable<MaybeComponent>>; // ok

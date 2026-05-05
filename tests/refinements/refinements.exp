@@ -8107,12 +8107,12 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    maybe_react.js:28:8
-   28| (C && <C />) as ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>; // ok
+   28| (C && <C />) as ?ExactReactElement_DEPRECATED<NonNullable<MaybeComponent>>; // ok
               ^
 
 References:
    maybe_react.js:28:2
-   28| (C && <C />) as ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>; // ok
+   28| (C && <C />) as ?ExactReactElement_DEPRECATED<NonNullable<MaybeComponent>>; // ok
         ^ [1]
 
 

@@ -14,7 +14,7 @@ declare function ReadOnly<T>(x: Readonly<T>): T;
 ReadOnly({foo: 3}); // ok
 declare function partial<T>(x: Partial<T>): T;
 partial({foo: 3}); // ok
-declare function NonMaybeType<T>(x: $NonMaybeType<T>): T;
+declare function NonMaybeType<T>(x: NonNullable<T>): T;
 NonMaybeType(1); // ok
 
 declare function IndexedAccess1<T>(x: T['f']): T;

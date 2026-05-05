@@ -12,7 +12,7 @@ type DeepNestedMaybes = {|
   g: null,
 |};
 
-type ExtractNonNull<T> = $NonMaybeType<T>;
+type ExtractNonNull<T> = NonNullable<T>;
 
 type G = ExtractNonNull<DeepNestedMaybes['g']>;
 

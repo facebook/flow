@@ -57,9 +57,9 @@ type ElementTypePropsPolyBoundedEmpty<K extends "phone"> = Props[K];
 //   ^
 
 // $NonMaybeType<T>
-type NonMaybeTypeNumber = $NonMaybeType<?number>;
+type NonMaybeTypeNumber = NonNullable<?number>;
 //   ^
-type NonMaybeTypeAbstract<X> = $NonMaybeType<X>;
+type NonMaybeTypeAbstract<X> = NonNullable<X>;
 //   ^
 
 // mapped types
@@ -129,7 +129,7 @@ type RecursiveTypeDestructorPoly<X> = {
 };
 
 // Nested
-type $Pick<O extends {...}, K extends keyof O> = $NonMaybeType<O>[K];
+type $Pick<O extends {...}, K extends keyof O> = NonNullable<O>[K];
 //   ^
 
 // ReadOnly+destructuring

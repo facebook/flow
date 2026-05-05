@@ -11,7 +11,7 @@ import * as React from 'react';
 
 export type PropsP<T> = {
   value: T,
-  render: (value: $NonMaybeType<T>) => React.Node,
+  render: (value: NonNullable<T>) => React.Node,
 };
 
 class Foo<T> extends React.Component<PropsP<T>> {

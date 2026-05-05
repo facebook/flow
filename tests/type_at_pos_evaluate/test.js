@@ -23,7 +23,7 @@ type T4 = Foo["bar"]["baz"]?.["qux"];
 type T5 = Foo["bar"]["baz"]?.["qux"][number];
 //   ^
 
-type T6 = $NonMaybeType<Foo["bar"]["baz"]?.["qux"][number]>;
+type T6 = NonNullable<Foo["bar"]["baz"]?.["qux"][number]>;
 //   ^
 
 type T7 = keyof Foo;

@@ -5,4 +5,4 @@ type T = ?{
     n: number,
 };
 
-export type A = $NonMaybeType<T>;
+export type A = NonNullable<T>;

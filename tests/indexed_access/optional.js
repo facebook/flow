@@ -117,7 +117,7 @@ true as C?.[number]; // OK
 'xx' as C?.['bar']; // Error
 1 as C?.['nested']['goop']; // OK
 
-type NonMaybeNumber = $NonMaybeType<Obj['foo']?.['bar']>;
+type NonMaybeNumber = NonNullable<Obj['foo']?.['bar']>;
 1 as NonMaybeNumber; // OK
 true as NonMaybeNumber; // Error
 undefined as NonMaybeNumber; // Error

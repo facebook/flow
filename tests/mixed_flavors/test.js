@@ -1,9 +1,9 @@
 function test_NonMaybe() {
-  42 as number | null as $NonMaybeType<unknown>; // error null ~> MixedT (NonMaybe)
+  42 as number | null as NonNullable<unknown>; // error null ~> MixedT (NonMaybe)
 
-  42 as number | void as $NonMaybeType<unknown>; // error undefined ~> MixedT (NonMaybe)
+  42 as number | void as NonNullable<unknown>; // error undefined ~> MixedT (NonMaybe)
 
-  42 as ?number as $NonMaybeType<unknown>; // error null | undefined ~> MixedT (NonMaybe)
+  42 as ?number as NonNullable<unknown>; // error null | undefined ~> MixedT (NonMaybe)
 }
 
 function test_function(fn: unknown) {
@@ -30,6 +30,6 @@ function test_function_implicit_call(
 }
 
 function test_optional(obj: {a?: number, ...}) {
-  obj.a as $NonMaybeType<unknown>; // error undefined ~> MixedT (non-maybe)
+  obj.a as NonNullable<unknown>; // error undefined ~> MixedT (non-maybe)
   obj.a as number; // error
 }
