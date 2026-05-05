@@ -987,7 +987,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
 - [ ] flow_dot_js.ml
 - [x] flowlib/
   - [x] flowlib.ml → `flow_flowlib/src/lib.rs`
-- [x] hack_forked/
+- [ ] hack_forked/
   - [x] dfind/
     - [x] dfindAddFile.ml → `flow_dfind/src/lib.rs`
     - [x] dfindEnv.ml → `flow_dfind/src/lib.rs`
@@ -1040,38 +1040,38 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] logging/
         - [ ] scribeCatTest.ml
         - [ ] scubaTableTest.ml
-    - [ ] procs/
-      - [ ] procs_test_utils.ml
-      - [ ] procs_unit_test.ml
+    - [x] procs/
+      - [x] procs_test_utils.ml → `not needed` (OCaml forked worker test harness; Rust uses `flow_utils_concurrency::{thread_pool,map_reduce}`)
+      - [x] procs_unit_test.ml → `not needed` (tests OCaml `MultiWorkerLwt`/forked workers; Rust worker model is thread-based)
     - [ ] unit/
-      - [ ] heap/
-        - [ ] test_hashtbl.ml
-        - [ ] test_removed.ml
+      - [x] heap/
+        - [x] test_hashtbl.ml → `not needed` (tests OCaml shared-memory C hash table semantics; Rust heap uses `LockedMap`)
+        - [x] test_removed.ml → `not needed` (tests OCaml `SharedMem.SerializedHeap`; Rust heap storage is `LockedMap`/`Entity`)
       - [ ] utils/
-        - [ ] buffered_line_reader_test.ml
-        - [ ] collections_test.ml
-        - [ ] file_url_test.ml
-        - [ ] hh_json_test.ml
+        - [x] buffered_line_reader_test.ml → `not needed` (no standalone Rust `Buffered_line_reader`; Watchman/JSON-RPC use `BufReader`)
+        - [x] collections_test.ml → `not needed` (tests OCaml `WrappedMap`/`ImmQueue`; Rust uses standard map/queue types)
+        - [x] file_url_test.ml → `not needed` (Rust uses `lsp_types::Url::{from_file_path,to_file_path}`)
+        - [x] hh_json_test.ml → `not needed` (use `serde_json`)
         - [ ] lsp_helpers_test.ml
         - [ ] string_utils_test.ml
-        - [ ] timeout_test.ml
-        - [ ] timer_test.ml
-      - [ ] unit_test.ml
-    - [ ] utils/
-      - [ ] asserter/
-        - [ ] asserter.ml
-      - [ ] disk/
-        - [ ] diskTest.ml
-        - [ ] test_disk_utils.ml
-      - [ ] tempfile/
-        - [ ] tempfile.ml
+        - [x] timeout_test.ml → not needed (tests OCaml signal/select timeout implementation; Rust uses `tokio::time::timeout`/native timeouts)
+        - [x] timer_test.ml → not needed (tests OCaml signal-based timer queue; Rust uses `tokio::time`)
+      - [x] unit_test.ml → not needed (OCaml-only test runner; Rust uses native test harness/Buck-generated unittest targets)
+    - [x] utils/
+      - [x] asserter/
+        - [x] asserter.ml → not needed (OCaml-only assertion helpers; Rust tests should use native assertions)
+      - [x] disk/
+        - [x] diskTest.ml → not needed (tests OCaml `Disk`; Rust uses `std::fs`/`tokio::fs` directly)
+        - [x] test_disk_utils.ml → not needed (helper for omitted OCaml `Disk` tests)
+      - [x] tempfile/
+        - [x] tempfile.ml → not needed (OCaml test helper; Rust tests should use Rust tempdir helpers)
     - [ ] watchman/
-      - [ ] watchman_unit_test.ml
+      - [ ] watchman_unit_test.ml → needed as Rust tests for `flow_watchman::testing::transform_asynchronous_get_changes_response`; production code is ported
   - [ ] utils/
-    - [ ] buffered_line_reader/
-      - [ ] buffered_line_reader.ml
-      - [ ] buffered_line_reader_lwt.ml
-      - [ ] buffered_line_reader_sig.ml
+    - [x] buffered_line_reader/
+      - [x] buffered_line_reader.ml → not needed as a standalone port (Rust Watchman uses `tokio::io::BufReader`; JSON-RPC uses `std::io::BufReader`)
+      - [x] buffered_line_reader_lwt.ml → not needed (async reader behavior is covered by `tokio::io::BufReader`)
+      - [x] buffered_line_reader_sig.ml → not needed (OCaml functor/signature layer has no Rust equivalent)
     - [x] build_mode/
       - [x] dev/
         - [x] build_mode.ml → `cfg(debug_assertions)`
@@ -1100,13 +1100,13 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `find_graph` → `Graph::find_graph()`
       - [x] wrappedMap.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
       - [x] wrappedMap_sig.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
-    - [x] core/
+    - [ ] core/
       - [x] build_id.ml → `crates/facebook/flow_facebook_logging/src/build_id.rs`
       - [x] exception.ml → `unnecessary` (use error in `Result`)
       - [x] hh_logger.ml → `flow_hh_logger/src/lib.rs`
       - [ ] measure.ml
       - [x] random_id.ml → `crates/flow_common_utils/src/random_id.rs`
-      - [ ] utils.ml
+      - [x] utils.ml → `not needed` (`Utils.callstack` is modeled directly as Rust `String`/`Callstack` tuple structs at use sites)
     - [x] disk/
       - [x] disk.ml → `irrelevant` (use `std::fs` from Rust stdlib)
     - [x] file_content/
@@ -1126,9 +1126,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] http_lite.ml → `unnecessary` (use rust crates)
     - [x] jsonrpc/
       - [x] jsonrpc.ml → `flow_lsp_server/src/jsonrpc.rs`
-    - [ ] lsp/
-      - [ ] __tests__/
-        - [ ] lsp_fmt_test.ml
+    - [x] lsp/
+      - [x] __tests__/
+        - [x] lsp_fmt_test.ml → not needed (single `position` roundtrip is delegated to `lsp_types` serde in Rust)
       - [x] lsp.ml → `flow_lsp/src/lsp.rs` (Flow-specific extension types only; standard LSP types use `lsp_types` crate)
         - [x] `lsp_id` type → `LspId`
         - [x] `DocumentUri` module → `DocumentUri`
@@ -1203,16 +1203,16 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] marshal_tools_lwt.ml → `unnecessary` (uses `serde` and `bincode` crates)
     - [x] opaque_digest/
       - [x] opaqueDigest.ml → `md5` crate (`md5::Md5::digest`)
-    - [ ] procfs/
-      - [ ] procFS.ml
+    - [x] procfs/
+      - [x] procFS.ml → needed by `CGroup`, but already inlined privately in `flow_server/src/cgroup.rs` (`first_cgroup_for_pid` helpers); no standalone crate needed
     - [x] string/
       - [x] string_utils.ml (partial → `flow_common/src/string_utils.rs`; remaining helpers covered by `String`/`str` methods and `regex` crate)
         - [x] `filename_escape`
         - [x] `split_into_lines`
         - [x] `indent`
-    - [ ] sys/
-      - [ ] __tests__/
-        - [ ] sys_utils_tests.ml
+    - [x] sys/
+      - [x] __tests__/
+        - [x] sys_utils_tests.ml → not needed (only tests OCaml `Sys_utils.total_ram` C stub; Rust logging currently does not expose that API)
       - [x] daemon.ml → `flow_daemon/src/daemon.rs`
       - [x] file_path.ml → `std::path::Path` (Rust stdlib)
       - [x] fork.ml → `irrelevant` (Rust uses threading, not fork)
@@ -1246,7 +1246,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] prefix.ml → `irrelevant` (Rust uses typed map keys instead of string prefix namespacing)
   - [x] sharedMem.ml → `flow_heap/src/parsing_heaps.rs` (`SharedMem`); OCaml C bindings replaced by `LockedMap`-based store
   - [x] workerCancel.ml → `flow_utils_concurrency/src/worker_cancel.rs`
-- [ ] lsp/
+- [x] lsp/
   - [x] __tests__/
     - [x] lspErrors_test.ml → tests in `flow_lsp_server/src/lsp_errors.rs`
   - [x] documentSymbolProvider.ml → `flow_lsp_server/src/document_symbol_provider.rs`
