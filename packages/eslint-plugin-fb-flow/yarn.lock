@@ -1625,7 +1625,7 @@ hasown@^2.0.2:
 
 hermes-eslint@0.36.0:
   version "0.36.0"
-  resolved "https://registry.facebook.net/hermes-eslint/-/hermes-eslint-0.36.0.tgz#d8148b7425e7c5ce02e6aa4e092fc1edb0419fa7"
+  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.36.0.tgz#d8148b7425e7c5ce02e6aa4e092fc1edb0419fa7"
   integrity sha512-oEmTrP/Onp8kA5N23/yF4kGgSKB+9KH0CsrY+zGsgq6nK4CqY0y7Atv51X+F4deBHxWngLOvYBLt32HtOps78Q==
   dependencies:
     esrecurse "^4.3.0"
@@ -1634,12 +1634,12 @@ hermes-eslint@0.36.0:
 
 hermes-estree@0.36.0:
   version "0.36.0"
-  resolved "https://registry.facebook.net/hermes-estree/-/hermes-estree-0.36.0.tgz#5b8c162e986159baf86bc4d01612cff9845ab0f7"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.36.0.tgz#5b8c162e986159baf86bc4d01612cff9845ab0f7"
   integrity sha512-A1+8zn5oss2CFP7pKsOaxorQG6FNIz1WU1VDqruLPPZl3LVgeE2C5xfFg8Ow6/Ow4mSslLLtYP1J3n38eKyW9w==
 
 hermes-parser@0.36.0:
   version "0.36.0"
-  resolved "https://registry.facebook.net/hermes-parser/-/hermes-parser-0.36.0.tgz#756d6b07301789c5ff0ac3ac7ff6bffa8be7098c"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.36.0.tgz#756d6b07301789c5ff0ac3ac7ff6bffa8be7098c"
   integrity sha512-GdpwMmH5x6IpC1cijvcvYnlPB60Mh6kTSF/NFdYV/j56gYdi+0RIakYs+eqOV+bbO0SW7mgVVGSsTJxyPQfo3w==
   dependencies:
     hermes-estree "0.36.0"
