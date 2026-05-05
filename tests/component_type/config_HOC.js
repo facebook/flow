@@ -9,7 +9,7 @@ declare var x: Config;
 type NotTheRightConfig = {+baz: number, +qux: number, ...};
 x as NotTheRightConfig; // Error, configs don't match
 
-function HOC<Config: {...}>(
+function HOC<Config extends {...}>(
   x: component(...Config),
 ): component(...Config) {
   return x;

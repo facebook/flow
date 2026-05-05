@@ -1,6 +1,6 @@
 //@flow
 
-function f<X: number, Y: ?number, Z: ?X>(
+function f<X extends number, Y extends ?number, Z extends ?X>(
   x: ?X,
   y: Y,
   z: Z,

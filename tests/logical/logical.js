@@ -148,7 +148,7 @@ function logical3c(): ?number {
  * Usage of `$Exact` on non-literal.
  * Could be falsey or not.
  */
-function logical3d<T: void | {||}>(x: $Exact<T>): $Exact<T> | string {
+function logical3d<T extends void | {||}>(x: $Exact<T>): $Exact<T> | string {
   return x && 'foo';
 }
 
@@ -601,7 +601,7 @@ function logical22() {
  */
 
 declare class RecordInstance<X> {}
-type RecordOf<T: Object> = RecordInstance<T> & T;
+type RecordOf<T extends Object> = RecordInstance<T> & T;
 type Rec = RecordOf<{f: number}>;
 
 function logical7f(a: ?Rec, b: Rec): Rec {

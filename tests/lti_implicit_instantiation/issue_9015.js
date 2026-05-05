@@ -12,7 +12,7 @@ interface Submittable {
 declare class Client {
   constructor(): void;
   query<R>(config: string): Promise<ResultSet<R>>;
-  query<Q: Submittable>(config: Q): Q;
+  query<Q extends Submittable>(config: Q): Q;
 }
 
 declare var c: Client;

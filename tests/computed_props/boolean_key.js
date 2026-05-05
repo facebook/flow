@@ -9,13 +9,13 @@ const test0 = (): Params => {
   return {...params, [true]: true}; // error true is invalid-computed-prop
 };
 
-const test1 = <T: boolean>(
+const test1 = <T extends boolean>(
   key: T,
 ): Params => {
   return {...params, [key]: true}; // error boolean is invalid-computed-prop
 };
 
-const test2 = <T: true>(
+const test2 = <T extends true>(
   key: T,
 ): Params => {
   return {...params, [key]: true}; // error true is invalid-computed-prop

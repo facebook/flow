@@ -9,14 +9,14 @@ Cannot call `createObjectFrom` because in type argument `TKey`: at least one mem
 
 References:
    union_enum_representative.js:13:35
-   13| declare function createObjectFrom<TKey: string>(
+   13| declare function createObjectFrom<TKey extends string>(
                                          ^^^^ [1]
    union_enum_representative.js:10:8
    10|   END: 35,
               ^^ [2]
-   union_enum_representative.js:13:41
-   13| declare function createObjectFrom<TKey: string>(
-                                               ^^^^^^ [3]
+   union_enum_representative.js:13:48
+   13| declare function createObjectFrom<TKey extends string>(
+                                                      ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- union_enum_representative.js:30:20
@@ -30,14 +30,14 @@ Cannot call `createObjectFrom` because in type argument `TKey`: at least one mem
 
 References:
    union_enum_representative.js:13:35
-   13| declare function createObjectFrom<TKey: string>(
+   13| declare function createObjectFrom<TKey extends string>(
                                          ^^^^ [1]
    union_enum_representative.js:10:8
    10|   END: 35,
               ^^ [2]
-   union_enum_representative.js:13:41
-   13| declare function createObjectFrom<TKey: string>(
-                                               ^^^^^^ [3]
+   union_enum_representative.js:13:48
+   13| declare function createObjectFrom<TKey extends string>(
+                                                      ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- union_enum_representative.js:35:13

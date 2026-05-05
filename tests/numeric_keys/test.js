@@ -43,7 +43,7 @@
   }
   // `number` upper bound
   {
-    declare const f: <Key: number, Value>(o: {[Key]: Value}) => Key;
+    declare const f: <Key extends number, Value>(o: {[Key]: Value}) => Key;
     const x = f(o); // ERROR
   }
   // Unrelated implicit instantiation

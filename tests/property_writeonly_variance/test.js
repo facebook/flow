@@ -42,14 +42,14 @@ w.p = 0; // ok
 
 // 8. Mapped types: +writeonly / writeonly add Negative variance
 type Src = { foo: number, bar: string };
-type AllWriteonly<T: {...}> = { +writeonly [K in keyof T]: T[K] };
+type AllWriteonly<T extends {...}> = { +writeonly [K in keyof T]: T[K] };
 declare const aw: AllWriteonly<Src>;
 aw.foo as number; // error: writeonly property is not readable
 aw.foo = 3; // ok
 
 // 9. Mapped types: -writeonly removes Negative variance
 type WriteOnlyO = { -foo: number, -bar: string };
-type RemoveWriteonly<T: {...}> = { -writeonly [K in keyof T]: T[K] };
+type RemoveWriteonly<T extends {...}> = { -writeonly [K in keyof T]: T[K] };
 declare const rw: RemoveWriteonly<WriteOnlyO>;
 rw.foo as number; // ok — writeonly was removed
 rw.foo = 3; // ok

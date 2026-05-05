@@ -1,4 +1,4 @@
-declare component Poly<T: unknown>();
+declare component Poly<T extends unknown>();
 
 declare const polyNumber: renders Poly<number>;
 polyNumber as renders Poly<number>; // OK

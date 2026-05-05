@@ -125,9 +125,9 @@ Cannot cast `x` to boolean because `EnumValue` [1] is incompatible with boolean 
          ^
 
 References:
-   abstract-enum-value.js:31:35
-   31| function g<T: string | number>(x: EnumValue<T>): T {
-                                         ^^^^^^^^^^^^ [1]
+   abstract-enum-value.js:31:42
+   31| function g<T extends string | number>(x: EnumValue<T>): T {
+                                                ^^^^^^^^^^^^ [1]
    abstract-enum-value.js:34:8
    34|   x as boolean; // ERROR
               ^^^^^^^ [2]
@@ -2901,9 +2901,9 @@ Invalid enum member check at case. The format must be dot-access of a member of 
                  ^
 
 References:
-   exhaustive-check.js:222:23
-   222| function f12<T: E>(x: T) {
-                              ^ [1]
+   exhaustive-check.js:222:30
+   222| function f12<T extends E>(x: T) {
+                                     ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- import-declared.js:6:1
@@ -4922,9 +4922,9 @@ Cannot cast `x.valueOf()` to empty because string [1] is incompatible with empty
          ^^^^^^^^^^^
 
 References:
-   value-of.js:17:25
-   17| function f<T: EnumValue<string>>(x: T) {
-                               ^^^^^^ [1]
+   value-of.js:17:32
+   17| function f<T extends EnumValue<string>>(x: T) {
+                                      ^^^^^^ [1]
    value-of.js:19:18
    19|   x.valueOf() as empty; // ERROR
                         ^^^^^ [2]

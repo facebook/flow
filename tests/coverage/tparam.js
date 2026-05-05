@@ -1,9 +1,9 @@
 //@flow
 
 
-export type RecordOf<Values: Object> = Values;
+export type RecordOf<Values extends Object> = Values;
 
-function f<X: Object>(x: X): X {
+function f<X extends Object>(x: X): X {
     var o = x;
     return o;
 }

@@ -234,12 +234,12 @@ References:
    <BUILTINS>/core.js:3187:36
    3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
                                             ^^^^^^^^^^^^^^ [1]
-   omit_inference.js:1:33
-      1| function projectWithoutA<T: {a: number, b: string}>(): Omit<T, 'a'> {
-                                         ^^^^^^ [2]
-   omit_inference.js:1:29
-      1| function projectWithoutA<T: {a: number, b: string}>(): Omit<T, 'a'> {
-                                     ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   omit_inference.js:1:40
+      1| function projectWithoutA<T extends {a: number, b: string}>(): Omit<T, 'a'> {
+                                                ^^^^^^ [2]
+   omit_inference.js:1:36
+      1| function projectWithoutA<T extends {a: number, b: string}>(): Omit<T, 'a'> {
+                                            ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- omit_inference.js:18:1

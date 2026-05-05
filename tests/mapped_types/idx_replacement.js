@@ -2,7 +2,7 @@ declare opaque type DeepRequiredArray<+T>: ReadonlyArray<
   DeepRequired<NonNullable<T>>,
 >;
 
-declare opaque type DeepRequiredObject<+T: interface {}>: Required<{
+declare opaque type DeepRequiredObject<+T extends interface {}>: Required<{
   +[K in keyof T]: DeepRequired<T[K]>,
 }>;
 

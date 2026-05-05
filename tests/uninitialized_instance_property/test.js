@@ -1112,7 +1112,7 @@ class P38 {
   constructor() {}
 }
 
-class P39<T: void> {
+class P39<T extends void> {
   p: T; // TODO spurious error
 }
 

@@ -1,6 +1,6 @@
 // @jsx createElement
 
-declare export function createElement<TProps: {...}>(
+declare export function createElement<TProps extends {...}>(
   Component: TProps => void,
   props: NoInfer<?TProps>,
 ): $ReadOnly<{

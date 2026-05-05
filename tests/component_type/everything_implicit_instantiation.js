@@ -1,4 +1,4 @@
-declare function idComponent<Props: {...}, Renders: React.Node>(
+declare function idComponent<Props extends {...}, Renders extends React.Node>(
     c: component(...Props) renders Renders,
 ): component(...Props) renders Renders;
 

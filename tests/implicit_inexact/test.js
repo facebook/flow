@@ -13,7 +13,7 @@ function test2(): {} {
 function test3<T>() {}
 test3<{}>(); // need ... in generic function type parameter
 
-class A<T: {}> {} // need ... in upper bound of generic
+class A<T extends {}> {} // need ... in upper bound of generic
 
 class B<T> {}
 new B<{}>(); // need ... in generic class type parameter
@@ -36,7 +36,7 @@ function test5(): {...} {
 function test6<T>() {}
 test6<{...}>();
 
-class C<T: {...}> {}
+class C<T extends {...}> {}
 
 class D<T> {}
 new D<{...}>(); // need ... in generic class type parameter

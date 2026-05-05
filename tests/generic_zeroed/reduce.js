@@ -1,6 +1,6 @@
 //@flow
 
-function mergeNumsError<T: number>(
+function mergeNumsError<T extends number>(
   defaultNumber: T,
   ...nums: Array<number>
 ): T {

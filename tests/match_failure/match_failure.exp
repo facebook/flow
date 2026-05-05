@@ -697,9 +697,9 @@ References:
    generics.js:3:19
    3|   if (mm.type === 'q'); // Error 'q' is not included in 's' | 'p'
                         ^^^ [2]
-   generics.js:1:39
-   1| function f1<T: 's' | 'p'>(mm: { type: T }) {
-                                            ^ [3]
+   generics.js:1:46
+   1| function f1<T extends 's' | 'p'>(mm: { type: T }) {
+                                                   ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- generics.js:12:7

@@ -18,7 +18,7 @@ function remove_anno<A>(a: A): A {
 const q: empty = remove_anno<number>(1);
 const r: empty = remove_anno(1);
 
-function removex<A: {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+function removex<A extends {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
   const {p, ...o} = a;
   return [o, p];
 }
@@ -28,21 +28,21 @@ ox as {x: string};
 px as number;
 
 function test_tparams_signature_scope() {
-  function foo<A>(): <B: A>(b: B) => void {
+  function foo<A>(): <B extends A>(b: B) => void {
     throw '';
   }
   const f = foo<number>();
   f(0);
 
   class Foo<A> {
-    method<B: A>(b: B): void {}
+    method<B extends A>(b: B): void {}
   }
   const a = new Foo<number>();
   a.method(0);
 
   class tparams_are_scoped_per_method {
     m1<A>() {}
-    m2<B: A>() {} // Error: Cannot resolve name `A`.
+    m2<B extends A>() {} // Error: Cannot resolve name `A`.
   }
 
   function tparam_in_default<X>(x: X = 42 as X) {} // Error: cannot cast 42 to X

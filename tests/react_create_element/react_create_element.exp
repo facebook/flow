@@ -37,9 +37,9 @@ References:
    lib.js:37:4
           v
    37|   (<
-   38|     Comp: React$ElementType,
-   39|     Props: {...},
-   40|     Children: ReadonlyArray<unknown> = [],
+   38|     Comp extends React$ElementType,
+   39|     Props extends {...},
+   40|     Children extends ReadonlyArray<unknown> = [],
    41|   >(
    42|     component: Comp,
    43|     props: Props,
@@ -166,16 +166,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:7
@@ -188,16 +188,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:7
@@ -210,16 +210,16 @@ object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:33:7
@@ -232,16 +232,16 @@ object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:34:7
@@ -254,16 +254,16 @@ object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:35:7
@@ -276,16 +276,16 @@ object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:8
@@ -380,16 +380,16 @@ object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:53:7
@@ -402,16 +402,16 @@ object type [1] but exist in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:65:7
@@ -460,16 +460,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:85:7
@@ -482,16 +482,16 @@ type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:86:7
@@ -504,16 +504,16 @@ type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:90:7
@@ -634,16 +634,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
              ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                v-------------------------------
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                       v-------------------------------
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
    24|     Props,
    25|     Children,
    26|   >,
          ^ [1]
-   lib.js:23:20
-   23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                          ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+   23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:98:7
@@ -728,16 +728,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:106:7
@@ -750,16 +750,16 @@ type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:107:7
@@ -772,16 +772,16 @@ type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:108:7
@@ -884,16 +884,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:118:7
@@ -942,16 +942,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:131:7
@@ -989,16 +989,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:146:7
@@ -1036,16 +1036,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:163:7
@@ -1058,16 +1058,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:174:7
@@ -1188,16 +1188,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:190:7
@@ -1228,16 +1228,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:193:7
@@ -1394,16 +1394,16 @@ type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:221:7
@@ -1416,16 +1416,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:222:7
@@ -1438,16 +1438,16 @@ type [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:223:7
@@ -1460,16 +1460,16 @@ literal [1] but exists in `ExpectedProps` [2]. [incompatible-type]
               ^^^^^^^^^^^^^
 
 References:
-   lib.js:23:42
-                                                 v-------------------------------
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+   lib.js:23:49
+                                                        v-------------------------------
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
     24|     Props,
     25|     Children,
     26|   >,
           ^ [1]
-   lib.js:23:20
-    23|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
-                           ^^^^^^^^^^^^^^^^^^^ [2]
+   lib.js:23:27
+    23|   _ValidatedProps extends ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<
+                                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:224:7

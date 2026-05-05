@@ -2,7 +2,7 @@ class Base {}
 class Middle extends Base {}
 class Child extends Middle {}
 
-class C<T: Middle = Middle> {
+class C<T extends Middle = Middle> {
   meth(a: T): T {
     return a;
   }

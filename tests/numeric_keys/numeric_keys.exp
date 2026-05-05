@@ -551,7 +551,7 @@ with number [3]. [incompatible-type]
 
 References:
    test.js:46:23
-   46|     declare const f: <Key: number, Value>(o: {[Key]: Value}) => Key;
+   46|     declare const f: <Key extends number, Value>(o: {[Key]: Value}) => Key;
                              ^^^ [1]
    test.js:32:13
                    v
@@ -560,9 +560,9 @@ References:
    34|     '2': false,
    35|   };
          ^ [2]
-   test.js:46:28
-   46|     declare const f: <Key: number, Value>(o: {[Key]: Value}) => Key;
-                                  ^^^^^^ [3]
+   test.js:46:35
+   46|     declare const f: <Key extends number, Value>(o: {[Key]: Value}) => Key;
+                                         ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:5

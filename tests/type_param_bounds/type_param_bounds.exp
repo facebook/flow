@@ -7,9 +7,9 @@ Cannot instantiate `X` because in type argument `T`: string [1] is incompatible 
                 ^^^^^^ [1]
 
 References:
-   type_param_bounds.js:1:11
-   1| type X<T: number> = boolean;
-                ^^^^^^ [2]
+   type_param_bounds.js:1:18
+   1| type X<T extends number> = boolean;
+                       ^^^^^^ [2]
 
 
 

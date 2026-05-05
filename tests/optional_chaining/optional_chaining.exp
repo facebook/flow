@@ -1920,9 +1920,9 @@ Cannot get `x.a` because property `a` is missing in null or undefined [1]. [inco
            ^
 
 References:
-   refinements.js:54:23
-   54| function f<T: any>(x: ?T) {
-                             ^^ [1]
+   refinements.js:54:30
+   54| function f<T extends any>(x: ?T) {
+                                    ^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:68:9

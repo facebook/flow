@@ -12,7 +12,7 @@ function f<X>(x: X): X {
   return x;
 }
 
-function g<X: number>(x: X): X {
+function g<X extends number>(x: X): X {
   var y: X = x;
   var z: number = x;
   var w: number = y;

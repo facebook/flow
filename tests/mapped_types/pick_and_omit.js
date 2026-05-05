@@ -3,7 +3,7 @@
   // Omit Tests
   type Exclude<T, U> = T extends U ? empty : T;
 
-  type Omit<O: {...}, Keys: keyof O> = {
+  type Omit<O extends {...}, Keys extends keyof O> = {
     [key in Exclude<keyof O, Keys>]: O[key],
   };
 
@@ -26,7 +26,7 @@
   declare const noKeysGood: Omit<O, 'foo' | 'bar' | 'baz'>;
   noKeysGood as {}; // OK!
 
-  declare function omit<O: {...}, Keys: keyof O>(
+  declare function omit<O extends {...}, Keys extends keyof O>(
     o: O,
     ...keys: ReadonlyArray<Keys>
   ): Omit<O, Keys>;
@@ -40,7 +40,7 @@
   noBarOrBaz.foo as number; // OK!
   noBarOrBaz.foo = 3; // OK!
 
-  declare function omitInput<O: {...}, Keys: keyof O>(
+  declare function omitInput<O extends {...}, Keys extends keyof O>(
     o: O,
     x: Omit<O, Keys>,
     ...keys: ReadonlyArray<Keys>
@@ -51,7 +51,7 @@
 
 {
   // Pick Tests
-  type Pick<O: {...}, Keys: keyof O> = {[key in Keys]: O[key]};
+  type Pick<O extends {...}, Keys extends keyof O> = {[key in Keys]: O[key]};
 
   type P = {
     foo: number,
@@ -66,14 +66,14 @@
   declare const fooAndBaz: Pick<P, 'foo' | 'baz'>;
   fooAndBaz as {foo: number, baz: number}; // OK!
 
-  declare function pick<O: {...}, Keys: keyof O>(
+  declare function pick<O extends {...}, Keys extends keyof O>(
     o: O,
     ...keys: ReadonlyArray<Keys>
   ): Pick<O, Keys>;
   const picked = pick({foo: 3, bar: 3}, 'foo');
   picked as {foo: number};
 
-  declare function pickInput<O: {...}, Keys: keyof O>(
+  declare function pickInput<O extends {...}, Keys extends keyof O>(
     o: O,
     x: Pick<O, Keys>,
     ...keys: ReadonlyArray<Keys>

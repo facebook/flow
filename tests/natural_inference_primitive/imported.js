@@ -226,7 +226,7 @@ function test_useState_6() {
 }
 
 function test_useState_7() {
-  declare function useStateWithBound<T: {+f:number|string}>(x: T): [T, (y: T) => void];
+  declare function useStateWithBound<T extends {+f:number|string}>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound({f: one});
   set({f: 1}); // okay
   set({f: 2}); // okay
@@ -234,7 +234,7 @@ function test_useState_7() {
 }
 
 function test_useState_8() {
-  declare function useStateWithBound<T: {f:number}>(x: T): [T, (y: T) => void];
+  declare function useStateWithBound<T extends {f:number}>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound({f: one});
   set({f: 1}); // okay
   set({f: 2}); // okay
@@ -242,7 +242,7 @@ function test_useState_8() {
 }
 
 function test_useState_9() {
-  declare function useStateWithBound<T: {+f:1|2}>(x: T): [T, (y: T) => void];
+  declare function useStateWithBound<T extends {+f:1|2}>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound({f: one}); // infer specific type due to check against bound
   set({f: "blah"}); // error "blah" ~> 1
   set({f: 1}); // okay

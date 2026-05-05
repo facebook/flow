@@ -12,11 +12,11 @@ export component Poly<T>(foo: T, bar: [T], ...props: { baz?: (T) => void}) {
 declare const x: Poly<number>;
 x as Poly<string>;
 
-component BRB<TValue: string>(foo: TValue) { return null };
+component BRB<TValue extends string>(foo: TValue) { return null };
 
-type BRBT<TValue: string> = component(foo:TValue);
+type BRBT<TValue extends string> = component(foo:TValue);
 
-component Foo<TValue: string>(setTV: TValue => void, children: React.ChildrenArray<ExactReactElement_DEPRECATED<BRBT<TValue>>>) {
+component Foo<TValue extends string>(setTV: TValue => void, children: React.ChildrenArray<ExactReactElement_DEPRECATED<BRBT<TValue>>>) {
     return null;
  }
 

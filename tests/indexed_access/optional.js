@@ -70,7 +70,7 @@ undefined as void?.['c']; // OK
 undefined as empty?.['x']; // OK
 1 as empty?.['x']; // Error
 
-function f<K: string, T: ?{+[K]: unknown}>(t: T, k: K): T?.[K] {
+function f<K extends string, T extends ?{+[K]: unknown}>(t: T, k: K): T?.[K] {
   return t?.[k];
 }
 

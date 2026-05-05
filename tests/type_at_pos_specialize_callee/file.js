@@ -211,8 +211,8 @@ function test19() {
 function test20(
   Foo1: <T>(x: T, y: T) => void,
   Foo2: <T>(x: T, y: unknown) => void,
-  Foo3: <T: number>(x: T, y: T) => void,
-  Foo4: <T, S: string>(x: T, y: S) => void,
+  Foo3: <T extends number>(x: T, y: T) => void,
+  Foo4: <T, S extends string>(x: T, y: S) => void,
   Bar: (typeof Foo1 | typeof Foo2) & (typeof Foo3 | typeof Foo4),
 ) {
   Bar("", 1); // TODO should include type of both Foo1 and Foo2

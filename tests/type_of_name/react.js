@@ -102,7 +102,7 @@ component NotificationWithDocblock(
 }
 
 // Component with constrained generic type parameter
-component ConstrainedGeneric<T: {id: string, label: string}>(items: Array<T>, selected?: T) {
+component ConstrainedGeneric<T extends {id: string, label: string}>(items: Array<T>, selected?: T) {
   return <div>{items.length}</div>;
 }
 

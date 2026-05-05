@@ -1,2 +1,2 @@
-type X<T: number> = boolean;
+type X<T extends number> = boolean;
 true as X<string>;

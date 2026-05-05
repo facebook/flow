@@ -9,7 +9,7 @@ function f1<X>(a: X): X {
 
 declare function ng(value: unknown): unknown;
 class ObjectUtils {
-  static stableCopy<T: unknown>(value: T): T {
+  static stableCopy<T extends unknown>(value: T): T {
     return ng(value); // no escape errors
   }
 }

@@ -1,11 +1,11 @@
 //@flow
 
-function f<X: {...}, Y: {...}>(x: {...X, ...}, y: {...Y, ...}, both: {...X, ...Y, ...}) {
+function f<X extends {...}, Y extends {...}>(x: {...X, ...}, y: {...Y, ...}, both: {...X, ...Y, ...}) {
   x as Omit<{...X, ...Y, ...}, keyof Y>; // nope
   y as Omit<{...X, ...Y, ...}, keyof Y>; // nope
 }
 
-function g<X: {...}, Y: {x: number, ...}>(o: {...X, ...Y, ...}) {
+function g<X extends {...}, Y extends {x: number, ...}>(o: {...X, ...Y, ...}) {
   var {x, ...rest} = o;
   rest as {...X, ...Y, ...}; //no, because x is missing
   ({...rest, x: 42}) as {...X, ...Y, ...}; // ok

@@ -193,9 +193,9 @@ Cannot cast `o` to union type because: [incompatible-type]
         ^
 
 References:
-   distributivity.js:5:51
-   5|   type Homomorphic<O: {...}> = {[key in keyof O]: O[key]};
-                                                        ^^^^^^ [1]
+   distributivity.js:5:58
+   5|   type Homomorphic<O extends {...}> = {[key in keyof O]: O[key]};
+                                                               ^^^^^^ [1]
    distributivity.js:8:29
    8|   o as {foo: empty} | {bar: empty}; // ERROR x2
                                   ^^^^^ [2]
@@ -219,9 +219,9 @@ Cannot cast `o` to union type because: [incompatible-type]
         ^
 
 References:
-   distributivity.js:5:51
-   5|   type Homomorphic<O: {...}> = {[key in keyof O]: O[key]};
-                                                        ^^^^^^ [1]
+   distributivity.js:5:58
+   5|   type Homomorphic<O extends {...}> = {[key in keyof O]: O[key]};
+                                                               ^^^^^^ [1]
    distributivity.js:8:14
    8|   o as {foo: empty} | {bar: empty}; // ERROR x2
                    ^^^^^ [2]
@@ -972,9 +972,9 @@ References:
    import.js:47:13
    47|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   export.js:7:42
-    7| export type ParameterizedId<O: {...}> = {[key in keyof O]: O[key]};
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   export.js:7:49
+    7| export type ParameterizedId<O extends {...}> = {[key in keyof O]: O[key]};
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:47:3
@@ -1881,9 +1881,9 @@ References:
    reasons.js:9:34
     9|   type FooBarObj = {foo: number, bar: number};
                                         ^^^ [2]
-   reasons.js:7:20
-    7|   type TakesFoo<T: 'foo'> = T;
-                          ^^^^^ [3]
+   reasons.js:7:27
+    7|   type TakesFoo<T extends 'foo'> = T;
+                                 ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------- semi_homomorphic.js:11:5
@@ -1954,9 +1954,9 @@ Cannot instantiate `Semi` because in type argument `Keys`: number [1] is incompa
                                    ^^^^^^ [1]
 
 References:
-   semi_homomorphic.js:1:27
-    1| type Semi<O: {...}, Keys: keyof O> = {
-                                 ^^^^^^^ [2]
+   semi_homomorphic.js:1:41
+    1| type Semi<O extends {...}, Keys extends keyof O> = {
+                                               ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:44:32
@@ -1969,9 +1969,9 @@ Cannot instantiate `Semi` because in type argument `Keys`: number [1] is incompa
                                       ^^^^^^ [1]
 
 References:
-   semi_homomorphic.js:1:27
-    1| type Semi<O: {...}, Keys: keyof O> = {
-                                 ^^^^^^^ [2]
+   semi_homomorphic.js:1:41
+    1| type Semi<O extends {...}, Keys extends keyof O> = {
+                                               ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:3
@@ -2085,9 +2085,9 @@ References:
    test.js:44:25
    44|   declare const badVal: {foo: {contents: string}};
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test.js:13:50
-                                                        v
-   13| type Mapped<O: {...} | ReadonlyArray<unknown>> = {
+   test.js:13:57
+                                                               v
+   13| type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
    14|   [key in keyof O]: Box<O[key]>,
    15| };
        ^ [4]
@@ -2120,9 +2120,9 @@ References:
    test.js:53:23
    53|   declare const badA: Array<{contents: string}>;
                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test.js:13:50
-                                                        v
-   13| type Mapped<O: {...} | ReadonlyArray<unknown>> = {
+   test.js:13:57
+                                                               v
+   13| type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
    14|   [key in keyof O]: Box<O[key]>,
    15| };
        ^ [4]
@@ -2286,9 +2286,9 @@ Cannot cast `partial.foo` to number because undefined [1] is incompatible with n
           ^^^^^^^^^^^
 
 References:
-   test.js:109:73
-   109|   type Partial<T: {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
-                                                                                ^^^^^^ [1]
+   test.js:109:80
+   109|   type Partial<T extends {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
+                                                                                       ^^^^^^ [1]
    test.js:111:18
    111|   partial.foo as number; // ERROR
                          ^^^^^^ [2]
@@ -2303,9 +2303,9 @@ Cannot cast `partialIndexer.qux` to string because undefined [1] is incompatible
           ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:109:73
-   109|   type Partial<T: {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
-                                                                                ^^^^^^ [1]
+   test.js:109:80
+   109|   type Partial<T extends {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
+                                                                                       ^^^^^^ [1]
    test.js:115:25
    115|   partialIndexer.qux as string; // ERROR
                                 ^^^^^^ [2]
@@ -2320,9 +2320,9 @@ Cannot cast `partialArr[0]` to number because undefined [1] is incompatible with
           ^^^^^^^^^^^^^
 
 References:
-   test.js:109:73
-   109|   type Partial<T: {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
-                                                                                ^^^^^^ [1]
+   test.js:109:80
+   109|   type Partial<T extends {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
+                                                                                       ^^^^^^ [1]
    test.js:119:20
    119|   partialArr[0] as number; // ERROR;
                            ^^^^^^ [2]
@@ -2337,9 +2337,9 @@ Cannot cast `partialTuple[0]` to number because undefined [1] is incompatible wi
           ^^^^^^^^^^^^^^^
 
 References:
-   test.js:109:73
-   109|   type Partial<T: {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
-                                                                                ^^^^^^ [1]
+   test.js:109:80
+   109|   type Partial<T extends {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
+                                                                                       ^^^^^^ [1]
    test.js:121:22
    121|   partialTuple[0] as number; // ERROR;
                              ^^^^^^ [2]
@@ -2366,9 +2366,9 @@ References:
    test.js:132:24
    132|   constrained as {foo: {contents: number}}; // OK
                                ^^^^^^^^^^^^^^^^^^ [2]
-   test.js:127:38
-                                             v
-   127|   type MappedConstrained<O: {...}> = {
+   test.js:127:45
+                                                    v
+   127|   type MappedConstrained<O extends {...}> = {
    128|     [key in keyof O]: ConstrainedBox<O[key]>,
    129|   };
           ^ [3]

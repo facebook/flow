@@ -8,7 +8,7 @@ type rest_ro_array = <T>(...xs: $ReadOnlyArray<T>) => T;  // Ok
 
 type rest_any = (...xs: any) => any; // Ok, any can be a rest param
 
-type rest_t = <U, T: Array<U>>(...xs: T) => U; // Ok, bounded targ can be rest
+type rest_t = <U, T extends Array<U>>(...xs: T) => U; // Ok, bounded targ can be rest
 
 type unbound_rest_t = <T>(...xs: T) => void; // Should be error but no way to check yet :(
 function test_unbound_rest(f: <T>(x: T, ...xs: T) => void) {
@@ -27,5 +27,5 @@ type rest_union = (...xs: [1,2] | Array<number>) => number; // OK
 
 type rest_intersection = (...xs: { x: number, ... } & [1,2]) => number; // OK
 
-type empty_rest = <T:Array<unknown>>(...xs: T) => T; // OK
+type empty_rest = <T extends Array<unknown>>(...xs: T) => T; // OK
 ((f: empty_rest) => f() as empty); // Error Array ~> empty

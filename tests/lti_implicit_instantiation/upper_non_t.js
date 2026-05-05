@@ -1,7 +1,7 @@
 //@flow
 type OtherProps = {foo: number};
 
-declare function HOC<OwnProps: {...}>(
+declare function HOC<OwnProps extends {...}>(
   Component: ({...OwnProps, ...OtherProps}) => unknown,
 ): OwnProps => unknown;
 
@@ -91,7 +91,7 @@ function spreads() {
 }
 
 function rests() {
-  declare function ArrRest<TArgs: $ReadOnlyArray<unknown>>(...x: TArgs): TArgs;
+  declare function ArrRest<TArgs extends $ReadOnlyArray<unknown>>(...x: TArgs): TArgs;
   const r1 = ArrRest(...([] as Array<string>)); // ok
   const r2 = ArrRest(...([1, 2] as [1, 2])); // ok
   r1 as Array<string>; // ok
@@ -105,10 +105,10 @@ function rests() {
 }
 
 function ResolveSpreadsToMultiflowSubtypeFull() {
-  declare function f<TArguments: $ReadOnlyArray<unknown>>(
+  declare function f<TArguments extends $ReadOnlyArray<unknown>>(
     fn: (...TArguments) => unknown,
   ): (...TArguments) => unknown;
-  declare function params<TArguments: $ReadOnlyArray<unknown>>(
+  declare function params<TArguments extends $ReadOnlyArray<unknown>>(
     fn: (...TArguments) => unknown,
   ): TArguments;
 
@@ -139,7 +139,7 @@ function ResolveSpreadsToMultiflowSubtypeFull() {
 }
 
 type BaseProps<T> = {v: T};
-declare function ResolveUnion<T: React$Key>(x: {
+declare function ResolveUnion<T extends React$Key>(x: {
   ...BaseProps<T>,
   foo: string,
 }): T;

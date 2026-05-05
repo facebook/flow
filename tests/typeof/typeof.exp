@@ -85,9 +85,9 @@ Cannot call `poly2` with `'a'` bound to `y` because string [1] is incompatible w
                      ^^^ [1]
 
 References:
-   function_typeof.js:11:48
-   11| export function poly2<X: {f: number}>(x: X, y: typeof x.f) {}
-                                                      ^^^^^^^^^^ [2]
+   function_typeof.js:11:55
+   11| export function poly2<X extends {f: number}>(x: X, y: typeof x.f) {}
+                                                             ^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- function_typeof.js:32:15
@@ -99,9 +99,9 @@ Cannot call `poly3` with `3` bound to `y` because number [1] is incompatible wit
                      ^ [1]
 
 References:
-   function_typeof.js:12:46
-   12| export function poly3<V, X: {f: V}>(x: X, y: typeof x.f) {}
-                                                    ^^^^^^^^^^ [2]
+   function_typeof.js:12:53
+   12| export function poly3<V, X extends {f: V}>(x: X, y: typeof x.f) {}
+                                                           ^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- function_typeof.js:33:15
@@ -113,9 +113,9 @@ Cannot call `poly3` with `'a'` bound to `y` because string [1] is incompatible w
                      ^^^ [1]
 
 References:
-   function_typeof.js:12:46
-   12| export function poly3<V, X: {f: V}>(x: X, y: typeof x.f) {}
-                                                    ^^^^^^^^^^ [2]
+   function_typeof.js:12:53
+   12| export function poly3<V, X extends {f: V}>(x: X, y: typeof x.f) {}
+                                                           ^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:46:1
@@ -207,16 +207,16 @@ Cannot cast `r6` to function type because in the return value: number [1] is inc
 [incompatible-type]
 
    function_typeof.js:60:1
-   60| r6 as <X: {f: number}>(x: X) => string; // error
+   60| r6 as <X extends {f: number}>(x: X) => string; // error
        ^^
 
 References:
-   function_typeof.js:40:43
-   40| export function r6<X: {f: number}>(x: X): typeof x.f { return x.f; }
-                                                 ^^^^^^^^^^ [1]
-   function_typeof.js:60:33
-   60| r6 as <X: {f: number}>(x: X) => string; // error
-                                       ^^^^^^ [2]
+   function_typeof.js:40:50
+   40| export function r6<X extends {f: number}>(x: X): typeof x.f { return x.f; }
+                                                        ^^^^^^^^^^ [1]
+   function_typeof.js:60:40
+   60| r6 as <X extends {f: number}>(x: X) => string; // error
+                                              ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:63:1
@@ -225,16 +225,16 @@ Cannot cast `r7` to function type because in the return value: `unknown` [1] is 
 [incompatible-type]
 
    function_typeof.js:63:1
-   63| r7 as <V, X: {f: V}>(x: X) => empty; // error
+   63| r7 as <V, X extends {f: V}>(x: X) => empty; // error
        ^^
 
 References:
-   function_typeof.js:41:41
-   41| export function r7<V, X: {f: V}>(x: X): typeof x.f { return x.f; }
-                                               ^^^^^^^^^^ [1]
-   function_typeof.js:63:31
-   63| r7 as <V, X: {f: V}>(x: X) => empty; // error
-                                     ^^^^^ [2]
+   function_typeof.js:41:48
+   41| export function r7<V, X extends {f: V}>(x: X): typeof x.f { return x.f; }
+                                                      ^^^^^^^^^^ [1]
+   function_typeof.js:63:38
+   63| r7 as <V, X extends {f: V}>(x: X) => empty; // error
+                                            ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:66:1
@@ -381,9 +381,9 @@ Cannot call `poly2` with `'a'` bound to `y` because string [1] is incompatible w
                      ^^^ [1]
 
 References:
-   function_typeof.js:11:48
-   11| export function poly2<X: {f: number}>(x: X, y: typeof x.f) {}
-                                                      ^^^^^^^^^^ [2]
+   function_typeof.js:11:55
+   11| export function poly2<X extends {f: number}>(x: X, y: typeof x.f) {}
+                                                             ^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------- function_typeof_import.js:34:15
@@ -395,9 +395,9 @@ Cannot call `poly3` with `3` bound to `y` because number [1] is incompatible wit
                      ^ [1]
 
 References:
-   function_typeof.js:12:46
-   12| export function poly3<V, X: {f: V}>(x: X, y: typeof x.f) {}
-                                                    ^^^^^^^^^^ [2]
+   function_typeof.js:12:53
+   12| export function poly3<V, X extends {f: V}>(x: X, y: typeof x.f) {}
+                                                           ^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------- function_typeof_import.js:35:15
@@ -409,9 +409,9 @@ Cannot call `poly3` with `'a'` bound to `y` because string [1] is incompatible w
                      ^^^ [1]
 
 References:
-   function_typeof.js:12:46
-   12| export function poly3<V, X: {f: V}>(x: X, y: typeof x.f) {}
-                                                    ^^^^^^^^^^ [2]
+   function_typeof.js:12:53
+   12| export function poly3<V, X extends {f: V}>(x: X, y: typeof x.f) {}
+                                                           ^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:38:1
@@ -456,16 +456,16 @@ Cannot cast `r6` to function type because in the return value: number [1] is inc
 [incompatible-type]
 
    function_typeof_import.js:52:1
-   52| r6 as <X: {f: number}>(x: X) => string; // error
+   52| r6 as <X extends {f: number}>(x: X) => string; // error
        ^^
 
 References:
-   function_typeof.js:40:43
-   40| export function r6<X: {f: number}>(x: X): typeof x.f { return x.f; }
-                                                 ^^^^^^^^^^ [1]
-   function_typeof_import.js:52:33
-   52| r6 as <X: {f: number}>(x: X) => string; // error
-                                       ^^^^^^ [2]
+   function_typeof.js:40:50
+   40| export function r6<X extends {f: number}>(x: X): typeof x.f { return x.f; }
+                                                        ^^^^^^^^^^ [1]
+   function_typeof_import.js:52:40
+   52| r6 as <X extends {f: number}>(x: X) => string; // error
+                                              ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:55:1
@@ -474,16 +474,16 @@ Cannot cast `r7` to function type because in the return value: `unknown` [1] is 
 [incompatible-type]
 
    function_typeof_import.js:55:1
-   55| r7 as <V, X: {f: V}>(x: X) => empty; // error
+   55| r7 as <V, X extends {f: V}>(x: X) => empty; // error
        ^^
 
 References:
-   function_typeof.js:41:41
-   41| export function r7<V, X: {f: V}>(x: X): typeof x.f { return x.f; }
-                                               ^^^^^^^^^^ [1]
-   function_typeof_import.js:55:31
-   55| r7 as <V, X: {f: V}>(x: X) => empty; // error
-                                     ^^^^^ [2]
+   function_typeof.js:41:48
+   41| export function r7<V, X extends {f: V}>(x: X): typeof x.f { return x.f; }
+                                                      ^^^^^^^^^^ [1]
+   function_typeof_import.js:55:38
+   55| r7 as <V, X extends {f: V}>(x: X) => empty; // error
+                                            ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:62:5

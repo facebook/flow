@@ -15,7 +15,7 @@ type F<T> = $ReadOnly<{
   ...
 }>;
 
-declare function map<A: $ReadOnlyArray<unknown>>(o2: Promise<A>): {[K in keyof A]: A[K] extends F<infer V> ? V : empty};
+declare function map<A extends $ReadOnlyArray<unknown>>(o2: Promise<A>): {[K in keyof A]: A[K] extends F<infer V> ? V : empty};
 const boo = Promise.all([{log: (f: () => string) => {}}]);
 map(boo) as [+v: number]; // error
 

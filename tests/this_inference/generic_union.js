@@ -12,7 +12,7 @@ class B {
 }
 
 
-class C<T: U> {
+class C<T extends U> {
   contents: T;
 
   m() {

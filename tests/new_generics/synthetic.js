@@ -6,7 +6,7 @@ function test2<S, T>(x: Readonly<S>): Readonly<T> {
   return x; // error S incompatible with T
 }
 
-function test3<S: { a: unknown, ... }, T: { a: unknown, ... }>(x: Pick<S, "a">): Pick<T, "a"> {
+function test3<S extends { a: unknown, ... }, T extends { a: unknown, ... }>(x: Pick<S, "a">): Pick<T, "a"> {
   return x; // error S incompatible with T
 }
 

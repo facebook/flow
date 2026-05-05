@@ -1,6 +1,6 @@
 //@flow
 
-function a<X: {...}, Y: {...}, Z: {...}>(x: X, y: Y) {
+function a<X extends {...}, Y extends {...}, Z extends {...}>(x: X, y: Y) {
   ({...x, ...y}) as {...X, ...}; // nope, which is different than old generics
   ({...y, ...x}) as {...X, ...}; // yup
   ({...x}) as {...Y, ...X, ...}; // nope
@@ -13,7 +13,7 @@ function a<X: {...}, Y: {...}, Z: {...}>(x: X, y: Y) {
 
 // interchanging between spread and basic representation
 // with an object upper bound
-function t1<X: {a: number, ...}>(x: X, sp_x: {...X, ...}) {
+function t1<X extends {a: number, ...}>(x: X, sp_x: {...X, ...}) {
   x as {...X, ...}; // ok
   sp_x as X; // ok
 }
@@ -27,29 +27,29 @@ function t2<X>(x: X, sp_x: {...X, ...}) {
 
 // all below ok exept as noted
 //(Bound _, Spread (id2, []))
-function f1<X: {...}>(x: X): {...X, ...} {
+function f1<X extends {...}>(x: X): {...X, ...} {
   return x;
 }
 
 //(Bound (_, Some id1), Spread _)
-function f2<X: {...}, Y: {...}, Z: {...X, ...Y, ...}>(z: Z): {...X, ...Y, ...} {
+function f2<X extends {...}, Y extends {...}, Z extends {...X, ...Y, ...}>(z: Z): {...X, ...Y, ...} {
   return z;
 }
 
 //(Bound (_, None), Spread _)
-function f3<X: {...}, Y: {...}>(y: Y): {...X, ...Y, ...} {
+function f3<X extends {...}, Y extends {...}>(y: Y): {...X, ...Y, ...} {
   return y; // should error
 }
 
 //(Spread ids, Bound _)
-function f4a<X: {...}, Y: {...}>(y: {...X, ...Y, ...}): Y {
+function f4a<X extends {...}, Y extends {...}>(y: {...X, ...Y, ...}): Y {
   return y;
 }
-function f4b<X: {...}, Y: {...}>(y: {...Y, ...X, ...}): Y {
+function f4b<X extends {...}, Y extends {...}>(y: {...Y, ...X, ...}): Y {
   return y; // should be an error!
 }
 
-function f<X: {...}, Y: {...}, Z: X & Y>(x: {...X, ...}, xy: {...X, ...Y, ...}, z: {...Z, ...}) {
+function f<X extends {...}, Y extends {...}, Z extends X & Y>(x: {...X, ...}, xy: {...X, ...Y, ...}, z: {...Z, ...}) {
   x as {...X & Y, ...}; // nope
   xy as {...X & Y, ...}; // ok
   z as {...X & Y, ...}; // ok

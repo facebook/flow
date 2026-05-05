@@ -22,9 +22,9 @@ References:
    required-positioning.js:8:23
     8| type Props = Required<{[string]: RecursiveProp}>;
                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   required-positioning.js:12:37
-   12| declare export function register<T: Props>(
-                                           ^^^^^ [5]
+   required-positioning.js:12:44
+   12| declare export function register<T extends Props>(
+                                                  ^^^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:2

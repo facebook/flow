@@ -34,7 +34,7 @@ type ValuesOfFrozenObject = $Values<typeof frozenObject>;
 type ValuesPoly<X> = $Values<X>;
 //   ^
 
-type ValuesPolyBound<X: { f: number, ... }> = $Values<X>;
+type ValuesPolyBound<X extends { f: number, ... }> = $Values<X>;
 //   ^
 
 // $ReadOnly<T>
@@ -51,9 +51,9 @@ type ElementTypeProps = Props["name"];
 //   ^
 type ElementTypePropsPoly<K> = Props[K];
 //   ^
-type ElementTypePropsPolyBounded<K: "name" | "age"> = Props[K];
+type ElementTypePropsPolyBounded<K extends "name" | "age"> = Props[K];
 //   ^
-type ElementTypePropsPolyBoundedEmpty<K: "phone"> = Props[K];
+type ElementTypePropsPolyBoundedEmpty<K extends "phone"> = Props[K];
 //   ^
 
 // $NonMaybeType<T>
@@ -110,9 +110,9 @@ type ExportsM = $Exports<"lib_m">;
 //   ^
 
 // Multi-params (ordering)
-declare function right_order<T: {...}, K: T>(): T[K];
+declare function right_order<T extends {...}, K extends T>(): T[K];
 //               ^
-declare function wrong_order<K: T, T: {...}>(): T[K];
+declare function wrong_order<K extends T, T extends {...}>(): T[K];
 //               ^
 
 // Recursive
@@ -129,7 +129,7 @@ type RecursiveTypeDestructorPoly<X> = {
 };
 
 // Nested
-type $Pick<O: {...}, K: $Keys<O>> = $NonMaybeType<O>[K];
+type $Pick<O extends {...}, K extends $Keys<O>> = $NonMaybeType<O>[K];
 //   ^
 
 // ReadOnly+destructuring

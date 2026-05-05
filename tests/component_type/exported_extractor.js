@@ -1,1 +1,1 @@
-declare export function extractor<Props: {...}>(foo: component(...Props)): Props;
+declare export function extractor<Props extends {...}>(foo: component(...Props)): Props;

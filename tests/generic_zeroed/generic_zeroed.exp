@@ -7,9 +7,9 @@ Cannot return `"A" + x` because string [1] is incompatible with `S` [2]. [incomp
                ^^^^^^^ [1]
 
 References:
-   add1arg.js:3:36
-   3| function corrupt<S: string>(x: S): S {
-                                         ^ [2]
+   add1arg.js:3:43
+   3| function corrupt<S extends string>(x: S): S {
+                                                ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- logic.js:3:15
@@ -21,12 +21,12 @@ Cannot return `a && b` because string [1] is incompatible with `A` [2]. [incompa
                     ^
 
 References:
-   logic.js:2:41
-   2| function f<A:string, B:string>(a: A, b: B): A {
-                                              ^ [1]
-   logic.js:2:45
-   2| function f<A:string, B:string>(a: A, b: B): A {
-                                                  ^ [2]
+   logic.js:2:57
+   2| function f<A extends string, B extends string>(a: A, b: B): A {
+                                                              ^ [1]
+   logic.js:2:61
+   2| function f<A extends string, B extends string>(a: A, b: B): A {
+                                                                  ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- logic2.js:3:15
@@ -55,9 +55,9 @@ Cannot return `a + b` because number [1] is incompatible with `A` [2]. [incompat
                ^^^^^ [1]
 
 References:
-   num.js:2:45
-   2| function f<A:number, B:number>(a: A, b: B): A {
-                                                  ^ [2]
+   num.js:2:61
+   2| function f<A extends number, B extends number>(a: A, b: B): A {
+                                                                  ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- reduce.js:7:15
@@ -94,9 +94,9 @@ Cannot return `"BAD_" + s` because string [1] is incompatible with `S` [2]. [inc
                  ^^^^^^^^^^ [1]
 
 References:
-   wc.js:5:38
-   5|   function corrupt<S: string>(s: S): S {
-                                           ^ [2]
+   wc.js:5:45
+   5|   function corrupt<S extends string>(s: S): S {
+                                                  ^ [2]
 
 
 

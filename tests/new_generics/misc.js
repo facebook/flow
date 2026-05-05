@@ -1,4 +1,4 @@
-function a<X: number>(x: X) {
+function a<X extends number>(x: X) {
   // AdderT
   x + x as X; // nope
   x + x as number;
@@ -12,7 +12,7 @@ function a<X: number>(x: X) {
   `blah ${x}` as string;
 }
 
-function b<X: number, Y: string>(x: X, y: Y) {
+function b<X extends number, Y extends string>(x: X, y: Y) {
   //EqT, StrictEqT, CompartatorT
   (x == x) as boolean;
   (x === x) as boolean;
@@ -22,7 +22,7 @@ function b<X: number, Y: string>(x: X, y: Y) {
   (x < y) as boolean; // nope
 }
 
-function c<S: string, X: {[string]: unknown}, Y: Array<number>>(
+function c<S extends string, X extends {[string]: unknown}, Y extends Array<number>>(
   s: S,
   x: X,
   y: Y,
@@ -36,7 +36,7 @@ function c<S: string, X: {[string]: unknown}, Y: Array<number>>(
 }
 
 // MatchingPropT
-function e<X: {a: 'T', ...} | {a: 'S', ...}>(x: X) {
+function e<X extends {a: 'T', ...} | {a: 'S', ...}>(x: X) {
   if (x.a === 'T') {
   }
 }
@@ -48,7 +48,7 @@ function f<X>(x: Array<X>) {
   }
 }
 
-function h<X: [number]>(x: X): {[_K in keyof X]: string} {
+function h<X extends [number]>(x: X): {[_K in keyof X]: string} {
   return ['a']; // error, mapped type doesn't have the unsoundness issue
 }
 
@@ -59,14 +59,14 @@ function gn<TType>(jsEnum: {[TType]: string, ...}) {
 
 // KeysT
 function gv<
-  TFormData: {...},
-  TValidators: {[K in keyof TFormData]: number},
+  TFormData extends {...},
+  TValidators extends {[K in keyof TFormData]: number},
 >(
   data: TFormData,
   validators: TValidators,
 ): {[K in keyof TFormData]: ?string} {
   return Object.keys(data).reduce( // error: cannot satisfy generic mapped type
-    <K: keyof TFormData>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
+    <K extends keyof TFormData>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
       // $FlowExpectedError[unsafe-object-assign]
       Object.assign(acc, {[k]: validators[k](k, data)}),
     {},
@@ -74,7 +74,7 @@ function gv<
 }
 
 // More KeysT
-function kt<TKey: keyof {a: 42, ...}>(fieldName: TKey): void {
+function kt<TKey extends keyof {a: 42, ...}>(fieldName: TKey): void {
   if (fieldName) {
     return;
   }
@@ -82,8 +82,8 @@ function kt<TKey: keyof {a: 42, ...}>(fieldName: TKey): void {
 
 // OptionalChain.run
 function oc<
-  T: Readonly<{id: ?string, ...}>,
-  L: ?Readonly<{
+  T extends Readonly<{id: ?string, ...}>,
+  L extends ?Readonly<{
     id: ?string,
     nextOneOne: ?{...},
     ...
@@ -102,14 +102,14 @@ function oc<
 }
 
 // generic of key of generic
-const cc = () => <D: {...}, K: keyof D>(key: K, data: D) => {
+const cc = () => <D extends {...}, K extends keyof D>(key: K, data: D) => {
   const [click, view] = data[key];
 };
 
 // generic refined to empty
 type ObjectKey = string | number;
 type ObjectType<TK, TV> = {[key: TK]: TV, ...};
-function ObjectFlip<TK: ObjectKey, TV: ?ObjectKey>(
+function ObjectFlip<TK extends ObjectKey, TV extends ?ObjectKey>(
   obj: ObjectType<TK, TV>,
   key: TK,
 ): {[string | number]: TK} {
@@ -127,15 +127,15 @@ type LLETT =
   | {response: {account: {...}, ...}, ...};
 
 type LLETR = LLETT['response'];
-const elementType = <T: LLETR>(data: T): T['account'] =>
+const elementType = <T extends LLETR>(data: T): T['account'] =>
   data.account;
 
-const directAccount = <T: LLETR>(data: T, otherData: LLETR): Readonly<T> =>
+const directAccount = <T extends LLETR>(data: T, otherData: LLETR): Readonly<T> =>
   otherData;
 
 type t = {a: number, ...} | {v: string, ...};
 
-class C<TConfig: t> {
+class C<TConfig extends t> {
   _config: TConfig;
   __updateConfig(updater: (config: Readonly<TConfig>) => TConfig) {
     const config = updater(this._config);
@@ -143,7 +143,7 @@ class C<TConfig: t> {
 }
 
 // Keys
-function gejses<TMapKey: string>(
+function gejses<TMapKey extends string>(
   key: keyof {[TMapKey]: $FlowFixMe, ...},
 ): null {
   if (key) {

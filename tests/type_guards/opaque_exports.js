@@ -1,4 +1,4 @@
-export type A<X: string> = {
+export type A<X extends string> = {
   data: X,
   tag: "a"
 };

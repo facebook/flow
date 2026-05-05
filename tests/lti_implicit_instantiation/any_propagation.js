@@ -29,5 +29,5 @@ declare function i<T>(x: (y: PolyObj<T>) => unknown): (PolyObj<T>) => unknown;
 i(null as any);
 
 type Foo = number;
-declare function j<X>(): <Y: X>(x: {foo: Y, ...}) => Y;
+declare function j<X>(): <Y extends X>(x: {foo: Y, ...}) => Y;
 j<Foo>()(null as any);

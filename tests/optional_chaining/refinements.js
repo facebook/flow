@@ -51,7 +51,7 @@ if (a && a.b && a.b.g) {
   a as null | void; // should fail, sanity check
 }
 
-function f<T: any>(x: ?T) {
+function f<T extends any>(x: ?T) {
   if (x?.a === null) { // constant-condition error
     return;
   }

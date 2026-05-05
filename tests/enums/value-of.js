@@ -14,7 +14,7 @@ enum E {A, B}
   x.valueOf() as string; // OK
   x.valueOf() as empty; // ERROR
 }
-function f<T: EnumValue<string>>(x: T) {
+function f<T extends EnumValue<string>>(x: T) {
   x.valueOf() as string; // OK
   x.valueOf() as empty; // ERROR
 }

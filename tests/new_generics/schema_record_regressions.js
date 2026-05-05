@@ -6,12 +6,12 @@ const schema = ListSchema.build({
 
 acceptSchema(schema) as ReadonlyArray<string> | null;
 
-declare class RecordInstance<T: interface {}> {
-  set<K: $Keys<T>>(key: K, value: T[K]): this & T;
+declare class RecordInstance<T extends interface {}> {
+  set<K extends $Keys<T>>(key: K, value: T[K]): this & T;
 }
 
-type RecordOf<T: interface {}> = RecordInstance<T> & T;
-type RecordFactory<TInput: interface {}, TRecord: interface {}> = (
+type RecordOf<T extends interface {}> = RecordInstance<T> & T;
+type RecordFactory<TInput extends interface {}, TRecord extends interface {}> = (
   value: TInput,
 ) => TRecord;
 
@@ -24,7 +24,7 @@ declare class ValueSet<T> {}
 
 declare const Immutable: {
   Map: <V>(obj: {[key: string]: V, ...}) => IndexedMap<string, V>,
-  Record: <T: interface {}>(spec: T) => RecordFactory<T, RecordOf<T>>,
+  Record: <T extends interface {}>(spec: T) => RecordFactory<T, RecordOf<T>>,
   Set: <T>(iter: Iterable<T>) => ValueSet<T>,
 };
 

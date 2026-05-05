@@ -9,7 +9,7 @@ class Component extends React.Component<{|foo: number, bar: number|}> {
   }
 }
 
-function TrivialHOC<Props: {...}>(
+function TrivialHOC<Props extends {...}>(
   x: component(...Props),
 ): component(...Props) {
   return x;
@@ -18,7 +18,7 @@ function TrivialHOC<Props: {...}>(
 const TrivialWrap = TrivialHOC(Component);
 TrivialWrap as component(ref?: React.RefSetter<Component>, bar: number, foo?: number); // All ok!
 
-function WrapInDivWithExtraProp<Props: {...}>(
+function WrapInDivWithExtraProp<Props extends {...}>(
   X: React.ComponentType<Props>,
 ): React.ComponentType<{|...$Exact<Props>, baz: number|}> {
   class C extends React.Component<{|...$Exact<Props>, baz: number|}> {
@@ -41,7 +41,7 @@ WrappedInDivWithExtraProp as React.ComponentType<
   {|foo?: number, bar: number, baz: number, ref?: React.RefSetter<Component>|},
 >;
 
-function AddPropWithDefault<Props: {...}>(
+function AddPropWithDefault<Props extends {...}>(
   X: React.ComponentType<Props>,
 ): React.ComponentType<{|...$Exact<Props>, baz?: number|}> {
   class C extends React.Component<{|...$Exact<Props>, baz?: number|}> {

@@ -58,7 +58,7 @@ component ConstrainedGeneric<T: {id: string, label: string}>(
 )
 ```
 where
-'ConstrainedGeneric' is defined at react.js:105:1-91
+'ConstrainedGeneric' is defined at react.js:105:1-98
 
 Found exact match 'InexactRest' defined at react.js:22:11,22:21 with type `component InexactRest(bar: string, foo: number)` 
 where
@@ -167,7 +167,7 @@ Found exact match 'GenericComponent' defined at react.js:17:1,17:64 with type `c
 where
 'GenericComponent' is defined at react.js:17:1-64
 
-Found exact match 'ConstrainedGeneric' defined at react.js:105:1,105:91 with type
+Found exact match 'ConstrainedGeneric' defined at react.js:105:1,105:98 with type
 ```
 component ConstrainedGeneric<T: {id: string, label: string}>(
   items: Array<T>,
@@ -175,7 +175,7 @@ component ConstrainedGeneric<T: {id: string, label: string}>(
 )
 ```
 where
-'ConstrainedGeneric' is defined at react.js:105:1-91
+'ConstrainedGeneric' is defined at react.js:105:1-98
 
 Found exact match 'InexactRest' defined at react.js:22:1,22:63 with type `component InexactRest(bar: string, foo: number)` 
 where

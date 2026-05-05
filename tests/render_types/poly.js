@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-component Fragment<T: React.Node>(children: T) renders T {
+component Fragment<T extends React.Node>(children: T) renders T {
   return children;
 }
 

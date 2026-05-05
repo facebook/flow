@@ -1,6 +1,6 @@
 // @flow
 
-declare class C<T: string> { f: T }
+declare class C<T extends string> { f: T }
 
 // $FlowExpectedError[incompatible-type]
 declare var d: C<number>;

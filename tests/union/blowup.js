@@ -15,7 +15,7 @@ export class Query {
   }
 }
 
-export class BinaryExpression<T: ArithmeticExpression, U: ArithmeticExpression> {
+export class BinaryExpression<T extends ArithmeticExpression, U extends ArithmeticExpression> {
 }
 
 export type ArithmeticExpression = PlusOp | MinusOp | MulOp | DivOp | ModOp;

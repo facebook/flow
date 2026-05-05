@@ -16,7 +16,7 @@ b_number.p as boolean; // Error number ~> boolean
 b_void.p as boolean; // Error void ~> boolean
 b_default.p as boolean; // Error string ~> boolean
 
-class C<T: ?string = string> extends A<T> {}
+class C<T extends ?string = string> extends A<T> {}
 
 var c_number: C<number> = new C(123); // Error number ~> ?string
 var c_void: C<void> = new C();
@@ -36,10 +36,10 @@ d_number.p as boolean; // Error number ~> boolean
 d_void.p as boolean; // Error void ~> boolean
 d_default.p as boolean; // Error string ~> boolean
 
-class E<S: string, T: number = S> {} // Error: string ~> number
-class F<S: string, T: S = number> {} // Error: number ~> string
+class E<S extends string, T extends number = S> {} // Error: string ~> number
+class F<S extends string, T extends S = number> {} // Error: number ~> string
 
-class G<S: string, T = S> extends A<T> {}
+class G<S extends string, T = S> extends A<T> {}
 
 var g_default: G<string> = new G('hello');
 

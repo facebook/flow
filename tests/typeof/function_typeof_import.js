@@ -8,10 +8,10 @@ f3 as (x: {f: number}, y: number) => void; // ok
 f4 as (x: {f: Array<number>}, ...y: Array<number>) => void; // ok
 
 poly1 as <X>(x: X, y: X) => void; // ok
-poly2 as <X: {f: number}>(x: X, y: number) => void; // ok
-poly2 as <X: {f: number}>(x: X, y: X['f']) => void; // ok
-poly3 as <V, X: {f: V}>(x: X, y: V) => void
-poly3 as <V, X: {f: V}>(x: X, y: X['f']) => void;
+poly2 as <X extends {f: number}>(x: X, y: number) => void; // ok
+poly2 as <X extends {f: number}>(x: X, y: X['f']) => void; // ok
+poly3 as <V, X extends {f: V}>(x: X, y: V) => void
+poly3 as <V, X extends {f: V}>(x: X, y: X['f']) => void;
 
 f1(1); // okay
 f1('a'); // okay
@@ -48,11 +48,11 @@ r4 as <X>(x: X) => empty // TODO error
 r5 as <X>(x: X) => {f: X}; // ok
 r5 as <X>(x: X) => {f: empty}; // error
 
-r6 as <X: {f: number}>(x: X) => number; // ok
-r6 as <X: {f: number}>(x: X) => string; // error
+r6 as <X extends {f: number}>(x: X) => number; // ok
+r6 as <X extends {f: number}>(x: X) => string; // error
 
-r7 as <V, X: {f: V}>(x: X) => V; // ok
-r7 as <V, X: {f: V}>(x: X) => empty; // error
+r7 as <V, X extends {f: V}>(x: X) => V; // ok
+r7 as <V, X extends {f: V}>(x: X) => empty; // error
 
 r8 as <X>(...x: Array<X>) => Array<X>; // ok
 r8 as <X>(...x: Array<X>) => Array<empty>; // TODO error

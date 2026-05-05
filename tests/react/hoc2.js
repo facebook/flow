@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-function connect<TProps: {...}>(
+function connect<TProps extends {...}>(
   Component: React.ComponentType<{...$Exact<TProps>, prop: number}>,
 ): React.ComponentType<TProps> {
   return null as any;

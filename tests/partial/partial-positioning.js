@@ -9,7 +9,7 @@ type Props = Partial<{[string]: RecursiveProp}>;
 
 type Provider<T> = () => T => null;
 
-declare export function register<T: Props>(
+declare export function register<T extends Props>(
  x: Provider<T>,
 ): void;
 

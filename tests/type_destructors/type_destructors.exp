@@ -400,9 +400,9 @@ type [2]. [incompatible-type]
                ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   tvar4.js:27:17
-   27| function fn3<T: {p: any, ...}>(a: T => void): (Omit<T, 'p'>) => void {
-                       ^^^^^^^^^^^^^ [2]
+   tvar4.js:27:24
+   27| function fn3<T extends {p: any, ...}>(a: T => void): (Omit<T, 'p'>) => void {
+                              ^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- tvar4.js:40:17
@@ -415,9 +415,9 @@ Cannot call `a` with object literal bound to the first parameter because object 
                        ^^^ [1]
 
 References:
-   tvar4.js:37:30
-   37| function fn4<T: {p: any}>(a: T => void): (T['p']) => void {
-                                    ^ [2]
+   tvar4.js:37:37
+   37| function fn4<T extends {p: any}>(a: T => void): (T['p']) => void {
+                                           ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- tvar4.js:44:29
@@ -459,9 +459,9 @@ type [2]. [incompatible-type]
                ^^ [1]
 
 References:
-   tvar4.js:37:17
-   37| function fn4<T: {p: any}>(a: T => void): (T['p']) => void {
-                       ^^^^^^^^ [2]
+   tvar4.js:37:24
+   37| function fn4<T extends {p: any}>(a: T => void): (T['p']) => void {
+                              ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- tvar5.js:5:12

@@ -5,13 +5,13 @@ declare export function compose<A, B, R>(
   f2: (b: B) => A,
 ): (B) => R;
 
-export function mapProps<InputProps: {...}, OutputProps: {...}>(
+export function mapProps<InputProps extends {...}, OutputProps extends {...}>(
   mapperFn: (InputProps) => OutputProps,
 ): (component(...OutputProps)) => component(...InputProps) {
   return Component => props => <Component {...mapperFn(props)} />;
 }
 
-export function withProps<Props: {...}, ExtraProps: {...}>(
+export function withProps<Props extends {...}, ExtraProps extends {...}>(
   extraFn: (Props) => $Exact<ExtraProps>,
 ): component(...{
   ...$Exact<Props>,

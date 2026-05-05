@@ -45,7 +45,7 @@ type Dict = {+[DataProp]: unknown};
 
 // Only string literal prefixes are allowed
 type Err = StringPrefix<string>; // ERROR
-declare function err<T: string>(x: StringPrefix<T>): void; // ERROR
+declare function err<T extends string>(x: StringPrefix<T>): void; // ERROR
 
 // Refinements works
 {
@@ -108,7 +108,7 @@ type Price = StringPrefix<'$', '1' | '2'>;
 }
 type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
 {
-  declare function stripDollar<X: string>(x: StringPrefix<'$', X>): X;
+  declare function stripDollar<X extends string>(x: StringPrefix<'$', X>): X;
   const x = stripDollar('$2');
   x as '2'; // OK
   x as '3'; // ERROR

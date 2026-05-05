@@ -1,5 +1,5 @@
 //@flow
-declare function keyMirror<T: {...}>(obj: T): $KeyMirror<T>;
+declare function keyMirror<T extends {...}>(obj: T): $KeyMirror<T>;
 
 export const a = keyMirror({['a' + 'b']: null, b: null});
 

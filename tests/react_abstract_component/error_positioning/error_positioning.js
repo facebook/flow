@@ -4,21 +4,21 @@
 const React = require('react');
 
 declare function HOC<
-  Props: {},
-  TComponent: React.ComponentType<Props>,
+  Props extends {},
+  TComponent extends React.ComponentType<Props>,
 >(
   Component: TComponent,
 ): React.ComponentType<
    Omit<React.ElementConfig<TComponent>, 'foo'>
 >;
-type MockFn<TArguments: $ReadOnlyArray<any>, TReturn> = {
+type MockFn<TArguments extends $ReadOnlyArray<any>, TReturn> = {
   (...args: TArguments): TReturn,
   mock: {
     calls: Array<TArguments>,
   }
 };
 
-declare function fn<TArguments: $ReadOnlyArray<any>, TReturn>(
+declare function fn<TArguments extends $ReadOnlyArray<any>, TReturn>(
   implementation?: (...args: TArguments) => TReturn,
 ): MockFn<TArguments, TReturn>
 

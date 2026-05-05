@@ -357,7 +357,7 @@ interface Equatable<T> {
 
 // Generic constraints
 {
-  record R<T: number | string> {
+  record R<T extends number | string> {
     value: T,
   }
 

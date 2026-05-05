@@ -2500,9 +2500,9 @@ Cannot call `c.set` because in type argument `K`: string [1] is incompatible wit
                 ^^^ [1]
 
 References:
-   local.js:441:12
-   441|     set<K: 'a'>(k: K) {}
-                   ^^^ [2]
+   local.js:441:19
+   441|     set<K extends 'a'>(k: K) {}
+                          ^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- local.js:455:11
@@ -2749,9 +2749,9 @@ Cannot call `foo` because property `prop3` (did you mean `prop1`?) is missing in
               ^^^^^^^
 
 References:
-   local.js:627:49
-   627|   declare function foo<K: string>(key: K, args: Obj[K]): void;
-                                                        ^^^ [1]
+   local.js:627:56
+   627|   declare function foo<K extends string>(key: K, args: Obj[K]): void;
+                                                               ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- local.js:658:20

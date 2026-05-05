@@ -38,12 +38,12 @@ Please add `...` to the end of the list of properties to express an inexact obje
              ^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:16:12
+Error ---------------------------------------------------------------------------------------------------- test.js:16:19
 
 Please add `...` to the end of the list of properties to express an inexact object type. [implicit-inexact-object]
 
-   16| class A<T: {}> {} // need ... in upper bound of generic
-                  ^^
+   16| class A<T extends {}> {} // need ... in upper bound of generic
+                         ^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:7

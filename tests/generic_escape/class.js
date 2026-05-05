@@ -47,11 +47,11 @@ class C<X> {
 }
 
 class ObjectUtils {
-  static stableCopy<T: unknown>(value: T): T {
+  static stableCopy<T extends unknown>(value: T): T {
     return ObjectUtils.stableFilteredCopy(value);
   }
 
-  static stableFilteredCopy<T: unknown>(value: T): T {
+  static stableFilteredCopy<T extends unknown>(value: T): T {
     const stable = {};
     return stable as any;
   }

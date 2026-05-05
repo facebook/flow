@@ -1,6 +1,6 @@
 class C {
   foo<X>(x: X): X { return x; }
-  foo_<X: number>(x: X): number { return x; }
+  foo_<X extends number>(x: X): number { return x; }
   bar<X>(x: X): X { return x; }
   qux(x: number): number { return x; }
 }

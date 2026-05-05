@@ -1,4 +1,4 @@
-declare function idComponent<Renders: React.Node>(
+declare function idComponent<Renders extends React.Node>(
     c: component() renders Renders,
 ): component() renders Renders;
 
@@ -13,6 +13,6 @@ C as component() renders A; // error: renders A ~> renders? A
 C as component() renders? A2; // error: renders? A2 ~> renders? A
 
 declare function RendersAny(): any;
-declare function extractRenders<R: React.Node>(c: component(ref?: React.RefSetter<unknown>, ...empty) renders R): R;
+declare function extractRenders<R extends React.Node>(c: component(ref?: React.RefSetter<unknown>, ...empty) renders R): R;
 const extractedAnyRender = extractRenders(RendersAny);
 extractedAnyRender as empty; // ok: any ~> empty

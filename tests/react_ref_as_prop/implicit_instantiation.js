@@ -1,7 +1,7 @@
 import {FnWithoutRefProp,FnWithOptionalRefProp,FnWithRequiredRefProp} from './fn_components';
 import {CompWithoutRefProp, CompWithOptionalRefProp, CompWithRequiredRefProp} from './component_syntax_components';
 
-declare function id<Props: {...}>(
+declare function id<Props extends {...}>(
   c: component(...Props),
 ): component(...Props);
 

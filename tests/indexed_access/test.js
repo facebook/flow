@@ -33,7 +33,7 @@ true as ObjFoo; // OK
 'hi' as Obj['baz']; // OK
 1 as Obj['baz']; // Error
 
-function f<To: Obj>(o: To): To['foo'] {
+function f<To extends Obj>(o: To): To['foo'] {
   return o.foo;
 }
 declare var o: Obj;

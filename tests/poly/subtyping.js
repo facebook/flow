@@ -34,8 +34,8 @@
 // polymorphic-subtyping literature:
 //   https://github.com/facebook/flow/pull/8767#issuecomment-949402649
 {
-  const g = (f: <S, T: S>(T) => T): <S, T>(T) => S => f; // should error
-  const coerce: <B, A>(A) => B = g(<S, T: S>(x: T): T => x);
+  const g = (f: <S, T extends S>(T) => T): <S, T>(T) => S => f; // should error
+  const coerce: <B, A>(A) => B = g(<S, T extends S>(x: T): T => x);
 }
 
 
@@ -69,8 +69,8 @@
 // Test subtyping where lower and upper have same number of parameters,
 // but they don't line up when paired off in order.  These are rejected
 // by the same approximation that causes us to reject fewer or more parameters.
-(f: <S: string, T: number>() => { a: S, b: T })
-  : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
+(f: <S extends string, T extends number>() => { a: S, b: T })
+  : <T extends number, S extends string>() => { a: S, b: T } => f; // ideally ok, known error
 
 
 // Test subtyping where only one side is polymorphic.

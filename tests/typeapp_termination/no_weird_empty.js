@@ -1,6 +1,6 @@
 import React from 'react';
 
-type Comp<Props: {...}> = component(ref: React.RefSetter<string>, ...Props);
+type Comp<Props extends {...}> = component(ref: React.RefSetter<string>, ...Props);
 
 function test1() {
   declare const Base: Comp<{}>;

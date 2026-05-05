@@ -26,7 +26,7 @@ async component AsyncWithRenders() renders AsyncBasic {
 }
 
 // Async component with type params
-async component AsyncGeneric<T: string>(value: T) {
+async component AsyncGeneric<T extends string>(value: T) {
   const _result = await Promise.resolve(value);
   return <div />;
 }
@@ -54,7 +54,7 @@ async hook useAsyncHookWithParams(foo: number): Promise<number> {
 }
 
 // Async hook with type params
-async hook useAsyncGenericHook<T: string>(value: T): Promise<T> {
+async hook useAsyncGenericHook<T extends string>(value: T): Promise<T> {
   const result = await Promise.resolve(value);
   return result;
 }

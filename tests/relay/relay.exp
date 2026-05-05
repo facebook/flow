@@ -328,9 +328,9 @@ Cannot instantiate `FragmentReference` because in type argument `T`: object type
                                          ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   more.js:13:42
-    13| declare opaque type FragmentReference<T: FragmentTypeof>;
-                                                 ^^^^^^^^^^^^^^ [2]
+   more.js:13:49
+    13| declare opaque type FragmentReference<T extends FragmentTypeof>;
+                                                        ^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:152:23
@@ -343,9 +343,9 @@ Cannot instantiate `FragmentReference` because in type argument `T`: object type
                               ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   more.js:13:42
-    13| declare opaque type FragmentReference<T: FragmentTypeof>;
-                                                 ^^^^^^^^^^^^^^ [2]
+   more.js:13:49
+    13| declare opaque type FragmentReference<T extends FragmentTypeof>;
+                                                        ^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:164:20

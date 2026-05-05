@@ -29,7 +29,7 @@ type NonPressableItem = {
 type Item = PressableItem | NonPressableItem;
 
 // Generic function accepting an item and its additionalOptions
-function mapItems<T: {...}, TKey: string>(
+function mapItems<T extends {...}, TKey extends string>(
   items: Array<T>,
   additionalOptions: {
     filter?: (item: T) => boolean,

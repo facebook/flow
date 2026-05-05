@@ -13,7 +13,7 @@ type E = $Exact<D>;
 type F = ?D;
 //   ^?
 
-type P<T: string> = { t: T, ... } | boolean;
+type P<T extends string> = { t: T, ... } | boolean;
 declare var a: P<string>;
 if (typeof a !== "boolean") {
 //         ^?

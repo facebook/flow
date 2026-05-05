@@ -310,12 +310,12 @@ References:
                   ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- poly.js:3:29
+Error ----------------------------------------------------------------------------------------------------- poly.js:3:36
 
 Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
 
-   3| function f1<T: string>(x: T) { return {[x]: x} } // ok
-                                  
+   3| function f1<T extends string>(x: T) { return {[x]: x} } // ok
+                                         
 
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:4:21

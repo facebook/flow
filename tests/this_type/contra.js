@@ -12,11 +12,11 @@ var d = new D();
 d.next as D; // sneaky
 
 class A {
-  foo<X: this>(that: X) { } // error: can't hide contravariance using a bound
+  foo<X extends this>(that: X) { } // error: can't hide contravariance using a bound
 }
 
 class B extends A {
-  foo<Y: this>(that: Y) { } // error (see above, catches hidden override)
+  foo<Y extends this>(that: Y) { } // error (see above, catches hidden override)
 }
 
 // covariance checks on this type in invariant positions

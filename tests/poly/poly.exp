@@ -109,9 +109,9 @@ Cannot call `a.meth` with `42` bound to `a` because number [1] is incompatible w
               ^^ [1]
 
 References:
-   implicit_bounded_instantiation.js:5:21
-    5| class C<T: Middle = Middle> {
-                           ^^^^^^ [2]
+   implicit_bounded_instantiation.js:5:28
+    5| class C<T extends Middle = Middle> {
+                                  ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:18:8
@@ -124,9 +124,9 @@ Cannot call `a.meth` with `new Base()` bound to `a` because `Base` [1] is incomp
               ^^^^^^^^^^ [1]
 
 References:
-   implicit_bounded_instantiation.js:5:21
-    5| class C<T: Middle = Middle> {
-                           ^^^^^^ [2]
+   implicit_bounded_instantiation.js:5:28
+    5| class C<T extends Middle = Middle> {
+                                  ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- inout.js:7:1
@@ -325,21 +325,21 @@ References:
                                                               ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:37:55
+Error ----------------------------------------------------------------------------------------------- subtyping.js:37:62
 
 Cannot return `f` because `unknown` [1] is incompatible with `S` [2]. [incompatible-type]
 
-   subtyping.js:37:55
-   37|   const g = (f: <S, T: S>(T) => T): <S, T>(T) => S => f; // should error
-                                                             ^
+   subtyping.js:37:62
+   37|   const g = (f: <S, T extends S>(T) => T): <S, T>(T) => S => f; // should error
+                                                                    ^
 
 References:
-   subtyping.js:37:41
-   37|   const g = (f: <S, T: S>(T) => T): <S, T>(T) => S => f; // should error
-                                               ^ [1]
-   subtyping.js:37:24
-   37|   const g = (f: <S, T: S>(T) => T): <S, T>(T) => S => f; // should error
-                              ^ [2]
+   subtyping.js:37:48
+   37|   const g = (f: <S, T extends S>(T) => T): <S, T>(T) => S => f; // should error
+                                                      ^ [1]
+   subtyping.js:37:31
+   37|   const g = (f: <S, T extends S>(T) => T): <S, T>(T) => S => f; // should error
+                                     ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:49:48
@@ -444,41 +444,41 @@ References:
                                           ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
+Error ----------------------------------------------------------------------------------------------- subtyping.js:73:65
 
 Cannot return `f` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   subtyping.js:73:51
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                                         ^
+   subtyping.js:73:65
+   73|   : <T extends number, S extends string>() => { a: S, b: T } => f; // ideally ok, known error
+                                                                       ^
 
 References:
-   subtyping.js:73:9
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-               ^^^^^^ [1]
-   subtyping.js:72:9
-   72| (f: <S: string, T: number>() => { a: S, b: T })
-               ^^^^^^ [2]
+   subtyping.js:73:16
+   73|   : <T extends number, S extends string>() => { a: S, b: T } => f; // ideally ok, known error
+                      ^^^^^^ [1]
+   subtyping.js:72:16
+   72| (f: <S extends string, T extends number>() => { a: S, b: T })
+                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
+Error ----------------------------------------------------------------------------------------------- subtyping.js:73:65
 
 Cannot return `f` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   subtyping.js:73:51
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                                         ^
+   subtyping.js:73:65
+   73|   : <T extends number, S extends string>() => { a: S, b: T } => f; // ideally ok, known error
+                                                                       ^
 
 References:
-   subtyping.js:73:20
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                          ^^^^^^ [1]
-   subtyping.js:72:20
-   72| (f: <S: string, T: number>() => { a: S, b: T })
-                          ^^^^^^ [2]
+   subtyping.js:73:34
+   73|   : <T extends number, S extends string>() => { a: S, b: T } => f; // ideally ok, known error
+                                        ^^^^^^ [1]
+   subtyping.js:72:34
+   72| (f: <S extends string, T extends number>() => { a: S, b: T })
+                                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
+Error ----------------------------------------------------------------------------------------------- subtyping.js:73:65
 
 Cannot return `f` because in the return value: properties `a` and `b` of `{a: S, b: T}` [1] are not exactly the same as
 those of `{a: T, b: S}` [2]. [incompatible-type]
@@ -488,17 +488,17 @@ The above-mentioned two types must be the same because properties `a` and `b` ar
 - Or make properties `a` and `b` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
-   subtyping.js:73:51
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                                         ^
+   subtyping.js:73:65
+   73|   : <T extends number, S extends string>() => { a: S, b: T } => f; // ideally ok, known error
+                                                                       ^
 
 References:
-   subtyping.js:72:33
-   72| (f: <S: string, T: number>() => { a: S, b: T })
-                                       ^^^^^^^^^^^^^^ [1]
-   subtyping.js:73:33
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                       ^^^^^^^^^^^^^^ [2]
+   subtyping.js:72:47
+   72| (f: <S extends string, T extends number>() => { a: S, b: T })
+                                                     ^^^^^^^^^^^^^^ [1]
+   subtyping.js:73:47
+   73|   : <T extends number, S extends string>() => { a: S, b: T } => f; // ideally ok, known error
+                                                     ^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:78:54

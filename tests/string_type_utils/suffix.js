@@ -29,7 +29,7 @@ type Percent = StringSuffix<'%'>;
 
 // Only string literal suffixes are allowed
 type Err = StringSuffix<string>; // ERROR
-declare function err<T: string>(x: StringSuffix<T>): void; // ERROR
+declare function err<T extends string>(x: StringSuffix<T>): void; // ERROR
 
 // Refinements works
 {
@@ -93,7 +93,7 @@ type Exclamation = StringSuffix<'!', 'woo' | 'yay'>;
 }
 type RemainderTypeErr = StringSuffix<'foo', 1>; // ERROR
 {
-  declare function unexcite<X: string>(x: StringSuffix<'!', X>): X;
+  declare function unexcite<X extends string>(x: StringSuffix<'!', X>): X;
   const x =  unexcite("yay!");
   x as "yay"; // OK
   x as "yay!"; // ERROR

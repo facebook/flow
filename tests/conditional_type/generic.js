@@ -64,8 +64,8 @@ function union_as_upper_bound() {
 
   declare function getConditionalWithoutInfer<T>(x: T): ConditionalWithoutInfer<T>;
   <T>(t:T): 'string' | 'other' =>  getConditionalWithoutInfer(t); // ok
-  <T: number>(t:T): 'string' | 'other' => getConditionalWithoutInfer(t); // ok
-  <T: string>(t:T): 'string' | 'other' => getConditionalWithoutInfer(t); // ok
+  <T extends number>(t:T): 'string' | 'other' => getConditionalWithoutInfer(t); // ok
+  <T extends string>(t:T): 'string' | 'other' => getConditionalWithoutInfer(t); // ok
 
   type ConditionalWithInfer<T> =
     T extends [infer X]

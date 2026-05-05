@@ -1,7 +1,7 @@
 //@flow
 const React = require('react');
 
-declare function HOC<Props: {...}>(
+declare function HOC<Props extends {...}>(
     x: component(...Props),
 ): component(...Props);
 

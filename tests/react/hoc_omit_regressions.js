@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-declare function connect<AllProps: {...}, ServiceProps: {...}>(
+declare function connect<AllProps extends {...}, ServiceProps extends {...}>(
   mapServicesToProps: (
     number,
     Omit<AllProps, keyof ServiceProps>,
@@ -47,21 +47,21 @@ const ConnectedBanner = wrapBanner(Banner);
 <ConnectedBanner />;
 
 type ResizeProps<
-  Props: $ReadOnly<{height?: number, width?: number, ...}>,
+  Props extends $ReadOnly<{height?: number, width?: number, ...}>,
 > = $ReadOnly<{
   ...Omit<Props, 'height' | 'width'>,
   component: React.ComponentType<Props>,
  ...}>;
 
 function injectProps<
-  Props: $ReadOnly<{height?: number, width?: number, ...}>,
+  Props extends $ReadOnly<{height?: number, width?: number, ...}>,
 >(
   Component: React.ComponentType<Props>,
 ): React.ComponentType<Omit<Props, 'height' | 'width'>> {
   return Component as any;
 }
 
-function Resize<Props: $ReadOnly<{height?: number, width?: number, ...}>>(
+function Resize<Props extends $ReadOnly<{height?: number, width?: number, ...}>>(
   props: ResizeProps<Props>,
 ): React.Node {
   const {component: Component} = props;

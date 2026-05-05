@@ -10,7 +10,7 @@
 // https://github.com/prettier/prettier/issues/13848
 // prettier-ignore
 declare opaque type FragmentTypeof;
-declare opaque type FragmentReference<T: FragmentTypeof>;
+declare opaque type FragmentReference<T extends FragmentTypeof>;
 declare opaque type BadFragmentReference<T>;
 declare opaque type RelayProp;
 
@@ -20,7 +20,7 @@ const React = require('react');
  * RelayModernTyped              *
  *********************************/
 
-type LooseOmitRelayProps<Props, K: $Keys<any>> = Pick<
+type LooseOmitRelayProps<Props, K extends $Keys<any>> = Pick<
   Props,
   Exclude<$Keys<Props>, K>,
 >;
@@ -36,7 +36,7 @@ type MapRelayProp<T> = T extends null | void ? T
     : T extends $ReadOnlyArray<?{+__typeof: FragmentTypeof, ...}>
       ? $ReadOnlyArray<MapRelayProp<T[number]>> : T;
 
-declare function createFragmentContainer<Props: {...}>(
+declare function createFragmentContainer<Props extends {...}>(
   Component: React.ComponentType<Props>,
   fragments: unknown,
 ): React.ComponentType<$RelayProps<Props, RelayProp>>;

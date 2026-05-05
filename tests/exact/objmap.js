@@ -1,6 +1,6 @@
 type ExactThing = {| a: 1 |};
 
-type Map1To2<T: 1> = 2;
+type Map1To2<T extends 1> = 2;
 type MappedThing = {[K in keyof ExactThing]: Map1To2<ExactThing[K]>};
 
 // Works as expected

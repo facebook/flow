@@ -9,14 +9,14 @@ incompatible with `B` [3]. [incompatible-type]
 
 References:
    flow-typed/libdefs.js:2:39
-   2| declare class SyntheticKeyboardEvent<+T: B = B> {}
+   2| declare class SyntheticKeyboardEvent<+T extends B = B> {}
                                             ^ [1]
    concretize.js:7:47
    7| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
                                                     ^^ [2]
-   flow-typed/libdefs.js:2:46
-   2| declare class SyntheticKeyboardEvent<+T: B = B> {}
-                                                   ^ [3]
+   flow-typed/libdefs.js:2:53
+   2| declare class SyntheticKeyboardEvent<+T extends B = B> {}
+                                                          ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- concretize.js:8:16
@@ -29,9 +29,9 @@ incompatible with `C1` [2]. [incompatible-type]
                      ^^^^^^^^^^
 
 References:
-   flow-typed/libdefs.js:2:42
-   2| declare class SyntheticKeyboardEvent<+T: B = B> {}
-                                               ^ [1]
+   flow-typed/libdefs.js:2:49
+   2| declare class SyntheticKeyboardEvent<+T extends B = B> {}
+                                                      ^ [1]
    concretize.js:7:47
    7| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
                                                     ^^ [2]
@@ -48,7 +48,7 @@ arguments or cast the expression to your expected type. [underconstrained-implic
 
 References:
    test.js:16:3
-   16|   Context: {+context: unknown, ...},
+   16|   Context extends {+context: unknown, ...},
          ^^^^^^^ [1]
    test.js:21:1
    21| <Foo x={props.t} />;
@@ -66,7 +66,7 @@ arguments or cast the expression to your expected type. [underconstrained-implic
 
 References:
    test.js:28:3
-   28|   Context: {},
+   28|   Context extends {},
          ^^^^^^^ [1]
    test.js:33:1
    33| <Bar y={props.t} />;

@@ -124,15 +124,15 @@ function test9() {
 function test10() {
   type V = {||};
   type Variables = {|+[string]: any|};
-  declare opaque type Query<-TVariables: Variables>;
+  declare opaque type Query<-TVariables extends Variables>;
   declare var q: Query<V>;
-  declare function poly<TVariables: Variables>(q: Query<TVariables>): void;
+  declare function poly<TVariables extends Variables>(q: Query<TVariables>): void;
   poly(q); // ok
 }
 
 function test11() {
   declare var jest: {
-    fn<TArguments: $ReadOnlyArray<any> = $ReadOnlyArray<any>>(): (...args: TArguments)=>void
+    fn<TArguments extends $ReadOnlyArray<any> = $ReadOnlyArray<any>>(): (...args: TArguments)=>void
   }
   declare var C1: React.ComponentType<{+f: () => void}>;
   <C1 f={jest.fn()} />; // ok
@@ -197,7 +197,7 @@ function test19() {
 }
 
 function test20() {
-  type Record<T: {...}> = { ...T, ... };
+  type Record<T extends {...}> = { ...T, ... };
 
   declare var fn: <TArguments, TReturn>(
     implementation: (...args: TArguments) => TReturn,

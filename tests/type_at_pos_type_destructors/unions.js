@@ -12,5 +12,5 @@ type ABCD = AB | CD;
 type ABCDType = ABCD["type"];
 //   ^
 
-function foo<T: ABCD>(x: T["type"]): void {}
-//                    ^
+function foo<T extends ABCD>(x: T["type"]): void {}
+//                           ^

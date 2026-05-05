@@ -4,7 +4,7 @@
 
 // Make sure the substituted SingletonStringTs have good reasons
 {
-  type TakesFoo<T: 'foo'> = T;
+  type TakesFoo<T extends 'foo'> = T;
 
   type FooBarObj = {foo: number, bar: number};
   type MappedFooBarObj = {[key in keyof FooBarObj]: TakesFoo<key>}; // ERROR

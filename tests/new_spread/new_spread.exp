@@ -38,9 +38,9 @@ interfaces do not track the own-ness of their properties. Try using an object ty
        ^^^^^^
 
 References:
-   no_interfaces.js:6:64
-    6| function spread<A: interface {}, B: interface {}>(x: A, y: B): {...A, ...B, ...} {
-                                                                      ^^^^^^^^^^^^^^^^^ [1]
+   no_interfaces.js:6:78
+    6| function spread<A extends interface {}, B extends interface {}>(x: A, y: B): {...A, ...B, ...} {
+                                                                                    ^^^^^^^^^^^^^^^^^ [1]
    no_interfaces.js:13:11
    13| spread<A, B>(a, b); // Error, can't spread interface
                  ^ [2]

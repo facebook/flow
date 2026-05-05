@@ -934,9 +934,9 @@ References:
    tparams.js:22:16
    22|   const {p, ...o} = a;
                       ^ [1]
-   tparams.js:21:52
-   21| function removex<A: {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
-                                                          ^^^^^^^^^^^^ [2]
+   tparams.js:21:59
+   21| function removex<A extends {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+                                                                 ^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:23:14
@@ -948,20 +948,20 @@ Cannot return array literal because in index `1`: `unknown` [1] is incompatible 
                     ^
 
 References:
-   tparams.js:21:26
-   21| function removex<A: {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
-                                ^^^^^^^ [1]
-   tparams.js:21:66
-   21| function removex<A: {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
-                                                                        ^ [2]
+   tparams.js:21:33
+   21| function removex<A extends {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+                                       ^^^^^^^ [1]
+   tparams.js:21:73
+   21| function removex<A extends {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+                                                                               ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- tparams.js:45:11
+Error ------------------------------------------------------------------------------------------------- tparams.js:45:18
 
 Cannot resolve name `A`. [cannot-resolve-name]
 
-   45|     m2<B: A>() {} // Error: Cannot resolve name `A`.
-                 ^
+   45|     m2<B extends A>() {} // Error: Cannot resolve name `A`.
+                        ^
 
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:48:40

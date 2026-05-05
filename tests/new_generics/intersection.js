@@ -1,6 +1,6 @@
 //@flow
 
-function f1<X: number & string, Y: X & boolean>(x: X, y: Y) {
+function f1<X extends number & string, Y extends X & boolean>(x: X, y: Y) {
   x as number & string;
   x as number;
   x as X;

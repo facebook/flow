@@ -219,7 +219,7 @@ switch (x) {
 }
 
 // Generic input
-function f12<T: E>(x: T) {
+function f12<T extends E>(x: T) {
   switch (x) { // Error
     case x: break;
   }

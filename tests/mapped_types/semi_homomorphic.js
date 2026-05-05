@@ -1,4 +1,4 @@
-type Semi<O: {...}, Keys: keyof O> = {
+type Semi<O extends {...}, Keys extends keyof O> = {
   [key in Keys]: O[key],
 }
 {

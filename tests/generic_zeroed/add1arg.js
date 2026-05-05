@@ -1,6 +1,6 @@
 //@flow
 
-function corrupt<S: string>(x: S): S {
+function corrupt<S extends string>(x: S): S {
   return "A" + x;
 }
 

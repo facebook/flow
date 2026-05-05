@@ -333,7 +333,7 @@ type Mapped = {[K in keyof O]: [O[K]]};
     match (x) {} // ERROR: missing wildcard `_`
   }
 
-  function g<T: 'foo' | 'bar'>(x: T) {
+  function g<T extends 'foo' | 'bar'>(x: T) {
     match (x) {} // ERROR
 
     match (x) { // OK

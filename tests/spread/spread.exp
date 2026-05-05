@@ -69,12 +69,12 @@ contain `foo` with a type that conflicts with `foo`'s definition in object type 
        ^^^^^^
 
 References:
-   error_positions.js:13:42
-   13| declare function spread<T: {...}>(x: T): {...T, ...{...}, ...}; // error should not appear here
-                                                ^^^^^^^^^^^^^^^^^^^^^ [1]
-   error_positions.js:13:52
-   13| declare function spread<T: {...}>(x: T): {...T, ...{...}, ...}; // error should not appear here
-                                                          ^^^^^ [2]
+   error_positions.js:13:49
+   13| declare function spread<T extends {...}>(x: T): {...T, ...{...}, ...}; // error should not appear here
+                                                       ^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_positions.js:13:59
+   13| declare function spread<T extends {...}>(x: T): {...T, ...{...}, ...}; // error should not appear here
+                                                                 ^^^^^ [2]
    error_positions.js:15:22
    15| declare var inexact: {foo: number, ...};
                             ^^^^^^^^^^^^^^^^^^ [3]

@@ -4,7 +4,7 @@ import type { ESNode } from "./ast";
 import * as Ast from "./ast";
 
 export class Visitor {
-    optional<N: ESNode>(method: N => void, node: ?N) {
+    optional<N extends ESNode>(method: N => void, node: ?N) {
       if (node != null) {
         method(node);
       }

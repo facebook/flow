@@ -37,7 +37,7 @@ import * as React from 'react';
 declare export opaque type $$TypeofFragment;
 type FragmentData = {+$$typeof: $$TypeofFragment, ...};
 
-export type Fragment<Ref, +Data: FragmentData> = Data;
+export type Fragment<Ref, +Data extends FragmentData> = Data;
 
 export type GetPropFragmentRef<O> = {
   [K in keyof O]: [+t: O[K]] extends [+t: Fragment<infer T, FragmentData>]
@@ -45,7 +45,7 @@ export type GetPropFragmentRef<O> = {
     : O[K],
 };
 
-export function createFragmentContainer<Props: {...}>(
+export function createFragmentContainer<Props extends {...}>(
   Component: React.ComponentType<Props>,
 ): React.ComponentType<GetPropFragmentRef<Props>> {
   return null as any;

@@ -2,14 +2,14 @@
 // A failure here would be trying to access a key from a branch
 // that only exists in one branch of the union.
 {
-  type Homomorphic<O: {...}> = {[key in keyof O]: O[key]};
+  type Homomorphic<O extends {...}> = {[key in keyof O]: O[key]};
   declare const o: Homomorphic<{foo: number} | {bar: number}>; // OK
   o as {foo: number} | {bar: number}; // OK
   o as {foo: empty} | {bar: empty}; // ERROR x2
 }
 
 {
-  type SemiHomomorphic<O: {...}, Keys: keyof O> = {[key in Keys]: O[key]};
+  type SemiHomomorphic<O extends {...}, Keys extends keyof O> = {[key in Keys]: O[key]};
   declare const o: SemiHomomorphic<{foo: number, bar: number} | {foo: string, baz: number}, 'foo'>;
   o as {foo: number} | {foo: string}; // OK
   o as {}; // ERROR

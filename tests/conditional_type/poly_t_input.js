@@ -1,4 +1,4 @@
-declare function f<T: string>(t: T): void;
+declare function f<T extends string>(t: T): void;
 
 declare const v1: typeof f extends (v: unknown) => void ? true : false;
 v1 as false; // ok

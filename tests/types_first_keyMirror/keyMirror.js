@@ -1,4 +1,4 @@
-function keyMirror<T: {...}>(obj: T): $KeyMirror<T> {
+function keyMirror<T extends {...}>(obj: T): $KeyMirror<T> {
   const ret: $KeyMirror<T> = {};
   for (const key in obj) {
     if (!obj.hasOwnProperty(key)) {

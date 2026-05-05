@@ -1,5 +1,5 @@
 //@flow
-function f<X: string, Y: 'lit', Z: 'prop'>(
+function f<X extends string, Y extends 'lit', Z extends 'prop'>(
   x: X,
   y: Y,
   z: Z,

@@ -2,7 +2,7 @@ function avoid_unnecessary_type_app_loop_regression_test() {
   type Obj = {+[string]: unknown};
   opaque type Opaque<+_V> = string;
 
-  type Mapped<+O: Obj> = {
+  type Mapped<+O extends Obj> = {
     +[Key in keyof O]: O[Key] extends Obj
       ? Opaque<O[Key]>
       : Opaque<O[Key]>,
@@ -14,7 +14,7 @@ function avoid_unnecessary_type_app_loop_regression_test() {
 }
 
 function no_longer_always_distribute() {
-  type Mapped<+O: {+foo: unknown, ...}> = O['foo'] extends string
+  type Mapped<+O extends {+foo: unknown, ...}> = O['foo'] extends string
     ? string
     : number
 

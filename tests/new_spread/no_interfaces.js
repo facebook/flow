@@ -3,7 +3,7 @@
 interface A {}
 interface B {}
 
-function spread<A: interface {}, B: interface {}>(x: A, y: B): {...A, ...B, ...} {
+function spread<A extends interface {}, B extends interface {}>(x: A, y: B): {...A, ...B, ...} {
   return null as any;
 }
 

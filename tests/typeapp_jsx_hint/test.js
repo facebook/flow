@@ -1,4 +1,4 @@
-type GenericComponentType<TLayoutProps: {...}> = component<
+type GenericComponentType<TLayoutProps extends {...}> = component<
   +TItem,
 >(
   children: (item: TItem) => React.Node,

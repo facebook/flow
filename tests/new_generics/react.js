@@ -7,7 +7,7 @@ type Props = Readonly<{
   ...
 }>;
 
-function a<Props: Props>() {
+function a<Props extends Props>() {
   declare var a: React.ComponentType<Props>;
   declare var b: React.Component<{+a: number, ...}>;
   a as React.ComponentType<{a: number, ...}>; // nope, contravariance
@@ -18,23 +18,23 @@ type DefaultProps = {
   b: string,
 };
 
-function connect<TProps: {...}, SProps: TProps>(): component(ref?: React.RefSetter<unknown>, ...SProps) {
+function connect<TProps extends {...}, SProps extends TProps>(): component(ref?: React.RefSetter<unknown>, ...SProps) {
   return class extends React.Component<TProps> {};
 }
 
-function hoc<Props: {...}, Component: component(...Props)>(
+function hoc<Props extends {...}, Component extends component(...Props)>(
   WrappedComponent: Component,
 ): React.ComponentType<React.ElementConfig<Component>> {
   return (props: Props) => <WrappedComponent {...props} />;
 }
 
-function HOC<Config: {...}, Instance>(
+function HOC<Config extends {...}, Instance>(
   x: component(ref: React.RefSetter<Instance>, ...Config),
 ): component(ref: React.RefSetter<Instance>, ...Config) {
   return x;
 }
 
-function WrapInDivWithExtraProp<Props: {...}>(
+function WrapInDivWithExtraProp<Props extends {...}>(
   X: component(...Props),
 ): component(...{...$Exact<Props>, baz: number}) {
   const C = ({baz, ...props}: {...$Exact<Props>, baz: number}) => (
@@ -47,7 +47,7 @@ function WrapInDivWithExtraProp<Props: {...}>(
   return C;
 }
 
-function mapProps<InputProps: {...}, SubInputProps: InputProps, OutputProps: {...}>(
+function mapProps<InputProps extends {...}, SubInputProps extends InputProps, OutputProps extends {...}>(
   mapperFn: InputProps => OutputProps,
 ): (component(...OutputProps)) => component(...SubInputProps) {
   return Component => props => <Component {...mapperFn(props)} />;
@@ -58,7 +58,7 @@ export type PCCP = {
   ...
 };
 
-export function withCommentsConfig<TProps: PCCP>(
+export function withCommentsConfig<TProps extends PCCP>(
   Component: component(...TProps),
 ): component(...Omit<TProps, keyof PCCP>) {
   return function (props) {

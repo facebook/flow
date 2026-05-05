@@ -343,19 +343,19 @@ class-poly-0.js:5:9 = {
   "start":9,
   "types":{"evaluated":null,"unevaluated":{"type":"X"}}
 }
-class-poly-0.js:10:26 = {
-  "end":26,
+class-poly-0.js:10:33 = {
+  "end":33,
   "endline":10,
   "line":10,
   "loc":{
-    "end":{"column":26,"line":10,"offset":91},
+    "end":{"column":33,"line":10,"offset":105},
     "source":"class-poly-0.js",
-    "start":{"column":26,"line":10,"offset":90},
+    "start":{"column":33,"line":10,"offset":104},
     "type":"SourceFile"
   },
   "path":"class-poly-0.js",
   "reasons":[],
-  "start":26,
+  "start":33,
   "types":{"evaluated":null,"unevaluated":{"type":"class A<X: Base>"}}
 }
 class-poly-0.js:12:7 = {
@@ -363,9 +363,9 @@ class-poly-0.js:12:7 = {
   "endline":12,
   "line":12,
   "loc":{
-    "end":{"column":9,"line":12,"offset":124},
+    "end":{"column":9,"line":12,"offset":138},
     "source":"class-poly-0.js",
-    "start":{"column":5,"line":12,"offset":119},
+    "start":{"column":5,"line":12,"offset":133},
     "type":"SourceFile"
   },
   "path":"class-poly-0.js",
@@ -378,9 +378,9 @@ class-poly-0.js:16:7 = {
   "endline":16,
   "line":16,
   "loc":{
-    "end":{"column":8,"line":16,"offset":157},
+    "end":{"column":8,"line":16,"offset":171},
     "source":"class-poly-0.js",
-    "start":{"column":5,"line":16,"offset":153},
+    "start":{"column":5,"line":16,"offset":167},
     "type":"SourceFile"
   },
   "path":"class-poly-0.js",
@@ -393,9 +393,9 @@ class-poly-0.js:16:10 = {
   "endline":16,
   "line":16,
   "loc":{
-    "end":{"column":10,"line":16,"offset":159},
+    "end":{"column":10,"line":16,"offset":173},
     "source":"class-poly-0.js",
-    "start":{"column":10,"line":16,"offset":158},
+    "start":{"column":10,"line":16,"offset":172},
     "type":"SourceFile"
   },
   "path":"class-poly-0.js",
@@ -408,9 +408,9 @@ class-poly-0.js:17:7 = {
   "endline":17,
   "line":17,
   "loc":{
-    "end":{"column":9,"line":17,"offset":170},
+    "end":{"column":9,"line":17,"offset":184},
     "source":"class-poly-0.js",
-    "start":{"column":5,"line":17,"offset":165},
+    "start":{"column":5,"line":17,"offset":179},
     "type":"SourceFile"
   },
   "path":"class-poly-0.js",

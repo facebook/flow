@@ -1106,9 +1106,9 @@ type ABCDType = ABCD["type"]
 
 unions.js:12:6,12:13
 
-unions.js:15:23
+unions.js:15:30
 Flags:
 T["type"]
 = "a" | "b" | "c" | "d"
-unions.js:15:23,15:23
+unions.js:15:30,15:30
 

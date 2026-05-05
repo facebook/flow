@@ -1,6 +1,6 @@
 // @flow
 
-class Bounds<N: number, F: () => N> {
+class Bounds<N extends number, F extends () => N> {
   foo: F;
   bar() {
     this.foo().

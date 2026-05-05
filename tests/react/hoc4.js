@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-function connect<TProps: {+prop: unknown, ...}>(
+function connect<TProps extends {+prop: unknown, ...}>(
   Component: React.ComponentType<TProps>,
 ): React.ComponentType<Omit<TProps, 'prop'>> {
   return null as any;

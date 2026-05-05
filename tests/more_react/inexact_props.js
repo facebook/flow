@@ -21,7 +21,7 @@ class B extends React.Component<Props2> {}
 
 type Props3 = { p1? : boolean, p2? : number, ... }
 
-class XComponent<XProps : Props3, XState> extends React.PureComponent<
+class XComponent<XProps extends Props3, XState> extends React.PureComponent<
   XProps,
   XState
 > {}

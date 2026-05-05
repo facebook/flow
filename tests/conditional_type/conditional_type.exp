@@ -979,9 +979,9 @@ Cannot cast `v4` to empty because string (inferred from type parameter's bound) 
        ^^
 
 References:
-   poly_t_input.js:1:23
-    1| declare function f<T: string>(t: T): void;
-                             ^^^^^^ [1]
+   poly_t_input.js:1:30
+    1| declare function f<T extends string>(t: T): void;
+                                    ^^^^^^ [1]
    poly_t_input.js:17:7
    17| v4 as empty; // error: string ~> empty
              ^^^^^ [2]

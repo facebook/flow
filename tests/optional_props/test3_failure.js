@@ -1,6 +1,6 @@
 // generalization of failure in test3.js
 
-class A<O: {x: { a: number, b?: string}}> {
+class A<O extends {x: { a: number, b?: string}}> {
   o: O;
   foo() {
     this.o.x = { a: 123 };

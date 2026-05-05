@@ -25,12 +25,12 @@ type RBad6 = component () renders ExactReactElement_DEPRECATED<typeof Baz>; // e
 component GoodComponentRenders() renders Foo {return <Foo />} // ok
 component BadComponentRenders() renders ExactReactElement_DEPRECATED<typeof Baz> {return <Baz />} // error
 
-component PermittedGenericRenders1<T: React$Node>(children: T) renders T { return children } // ok
-component PermittedGenericRenders2<T: React$Node>(children: T) renders (T | T) { return children } // ok
-component PermittedGenericRenders3<T: React$Node>(children: T) renders? T { return children } // ok
-component BannedGenericRenders1<T: Error>(children: T) renders? T { return children } // error
-component BannedGenericRenders2<T: React$Node>(children: T) renders? (T | GoodComponentRenders) { return children } // error
-type AllowedGenericRenders<T: React$Node> = renders T; // ok
+component PermittedGenericRenders1<T extends React$Node>(children: T) renders T { return children } // ok
+component PermittedGenericRenders2<T extends React$Node>(children: T) renders (T | T) { return children } // ok
+component PermittedGenericRenders3<T extends React$Node>(children: T) renders? T { return children } // ok
+component BannedGenericRenders1<T extends Error>(children: T) renders? T { return children } // error
+component BannedGenericRenders2<T extends React$Node>(children: T) renders? (T | GoodComponentRenders) { return children } // error
+type AllowedGenericRenders<T extends React$Node> = renders T; // ok
 
 type BadSpecificRenders1 = renders (false | null | void); // error
 type BadSpecificRenders2 = renders (Array<ExactReactElement_DEPRECATED<typeof Foo>>); // error
@@ -48,10 +48,10 @@ type GoodStructuralComponent = renders ExactReactElement_DEPRECATED<component() 
 // If it's not allowed everywhere, then we have to make the hook return annotation
 // to be an exact react element.
 {
-  hook useTransparent<T: React.Node>(n: T): renders T { // ok
+  hook useTransparent<T extends React.Node>(n: T): renders T { // ok
     return <>{n}</>;
   }
-  component GenericRenders<T: React.Node>(n: T) renders T {
+  component GenericRenders<T extends React.Node>(n: T) renders T {
     return useTransparent(n); // ok
   }
 }

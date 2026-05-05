@@ -10,7 +10,7 @@ type WithIndexer = {
 };
 
 
-type Mapped<O: {...} | ReadonlyArray<unknown>> = {
+type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
   [key in keyof O]: Box<O[key]>,
 };
 
@@ -86,12 +86,12 @@ type Mapped<O: {...} | ReadonlyArray<unknown>> = {
 
 // Variance
 {
-  type ReadOnly<T: {...}> = {+[key in keyof T]: T[key]};
+  type ReadOnly<T extends {...}> = {+[key in keyof T]: T[key]};
   declare const readonly: ReadOnly<O>;
   readonly.foo as number; // OK
   readonly.foo = 3; // ERROR
 
-  type WriteOnly<T: {...}> = {-[key in keyof T]: T[key]};
+  type WriteOnly<T extends {...}> = {-[key in keyof T]: T[key]};
   declare const writeonly: WriteOnly<O>;
   writeonly.foo as number; // ERROR
   writeonly.foo = 3; // OK
@@ -106,7 +106,7 @@ type Mapped<O: {...} | ReadonlyArray<unknown>> = {
 
 // Optionality
 {
-  type Partial<T: {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
+  type Partial<T extends {...} | ReadonlyArray<unknown>> = {[key in keyof T]?: T[key]};
   declare const partial: Partial<O>;
   partial.foo as number; // ERROR
   partial.foo as number | void; // OK
@@ -123,8 +123,8 @@ type Mapped<O: {...} | ReadonlyArray<unknown>> = {
 
 // Error positioning
 {
-  type ConstrainedBox<T: string> = Box<T>;
-  type MappedConstrained<O: {...}> = {
+  type ConstrainedBox<T extends string> = Box<T>;
+  type MappedConstrained<O extends {...}> = {
     [key in keyof O]: ConstrainedBox<O[key]>,
   };
 

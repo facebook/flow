@@ -205,9 +205,9 @@ References:
    func.js:10:38
    10| declare function ng(value: unknown): unknown;
                                             ^^^^^^^ [1]
-   func.js:12:44
-   12|   static stableCopy<T: unknown>(value: T): T {
-                                                  ^ [2]
+   func.js:12:51
+   12|   static stableCopy<T extends unknown>(value: T): T {
+                                                         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- func.js:25:20
@@ -738,9 +738,9 @@ different type is desired.
                 ^
 
 References:
-   misc.js:119:24
-   119| function foo<T: {}>(x: Omit<T, empty>) {
-                               ^^^^^^^^^^^^^^ [1]
+   misc.js:119:31
+   119| function foo<T extends {}>(x: Omit<T, empty>) {
+                                      ^^^^^^^^^^^^^^ [1]
    misc.js:118:11
    118| var aaa = 1;
                   ^ [2]

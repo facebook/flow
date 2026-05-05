@@ -3,8 +3,8 @@ import * as React from 'react';
 declare component Foo1<T>(x: T, y: T);
 //                ^
 declare component Foo2<T, S>(x: T, y: S);
-declare component Foo3<T: number>(x: T, y: T);
-declare component Foo4<T, S: string>(x: T, y: S);
+declare component Foo3<T extends number>(x: T, y: T);
+declare component Foo4<T, S extends string>(x: T, y: S);
 
 function test_Nominal() {
     <Foo1 x={1} y={""} />;
@@ -30,11 +30,11 @@ component Test_return_hint() {
 function test_Expose_Any_Propagation_Bug() {
     type Q = $ReadOnly<{prop: number}>;
 
-    type Props<TQuery: Q> = $ReadOnly<{
+    type Props<TQuery extends Q> = $ReadOnly<{
         f: TQuery['prop'] => void,
     }>;
 
-    declare component Foo<TQuery: Q>(...props: Props<TQuery>);
+    declare component Foo<TQuery extends Q>(...props: Props<TQuery>);
 
     component Bar() {
         // should have been an error, instead we see that we've inferred 'any'

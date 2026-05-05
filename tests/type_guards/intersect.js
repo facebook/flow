@@ -33,8 +33,8 @@ function test4() {
   type KB = K<'B'>;
   type KC = K<'C'>;
 
-  class S<X: keyof AllTypes> {}
-  class K<X: keyof AllTypes>  extends S<X> {}
+  class S<X extends keyof AllTypes> {}
+  class K<X extends keyof AllTypes>  extends S<X> {}
 
   declare function isBorC(x: ?AllClasses): implies x is KB | KC;
 

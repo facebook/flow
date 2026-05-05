@@ -101,6 +101,6 @@ export type Optional<T> = T | null | void;
  * @flowCustomError
  * @description custom desc
  */
-export type ReadonlyRecord<K: string, V> = {
+export type ReadonlyRecord<K extends string, V> = {
   +[key: K]: V,
 };

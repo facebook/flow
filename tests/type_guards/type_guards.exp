@@ -1397,7 +1397,7 @@ Cannot cast `x` to `KB` because in type argument `X` [1]: string literal `C` [2]
 
 References:
    intersect.js:37:11
-   37|   class K<X: keyof AllTypes>  extends S<X> {}
+   37|   class K<X extends keyof AllTypes>  extends S<X> {}
                  ^ [1]
    intersect.js:34:15
    34|   type KC = K<'C'>;

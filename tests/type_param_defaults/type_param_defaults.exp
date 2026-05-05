@@ -58,9 +58,9 @@ Cannot instantiate `C` because in type argument `T`: number [1] is incompatible 
                        ^^^^^^ [1]
 
 References:
-   classes.js:19:13
-   19| class C<T: ?string = string> extends A<T> {}
-                   ^^^^^^ [2]
+   classes.js:19:20
+   19| class C<T extends ?string = string> extends A<T> {}
+                          ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:21:31
@@ -75,9 +75,9 @@ References:
    classes.js:21:17
    21| var c_number: C<number> = new C(123); // Error number ~> ?string
                        ^^^^^^ [1]
-   classes.js:19:13
-   19| class C<T: ?string = string> extends A<T> {}
-                   ^^^^^^ [2]
+   classes.js:19:20
+   19| class C<T extends ?string = string> extends A<T> {}
+                          ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- classes.js:25:1
@@ -106,9 +106,9 @@ Cannot cast `c_default.p` to boolean because string [1] is incompatible with boo
        ^^^^^^^^^^^
 
 References:
-   classes.js:19:22
-   19| class C<T: ?string = string> extends A<T> {}
-                            ^^^^^^ [1]
+   classes.js:19:29
+   19| class C<T extends ?string = string> extends A<T> {}
+                                   ^^^^^^ [1]
    classes.js:26:16
    26| c_default.p as boolean; // Error string ~> boolean
                       ^^^^^^^ [2]
@@ -193,32 +193,32 @@ References:
                       ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:39:32
+Error ------------------------------------------------------------------------------------------------- classes.js:39:46
 
 string [1] is incompatible with number [2]. [incompatible-type]
 
-   classes.js:39:32
-   39| class E<S: string, T: number = S> {} // Error: string ~> number
-                                      ^ [1]
+   classes.js:39:46
+   39| class E<S extends string, T extends number = S> {} // Error: string ~> number
+                                                    ^ [1]
 
 References:
-   classes.js:39:23
-   39| class E<S: string, T: number = S> {} // Error: string ~> number
-                             ^^^^^^ [2]
+   classes.js:39:37
+   39| class E<S extends string, T extends number = S> {} // Error: string ~> number
+                                           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:40:27
+Error ------------------------------------------------------------------------------------------------- classes.js:40:41
 
 number [1] is incompatible with `S` [2]. [incompatible-type]
 
-   classes.js:40:27
-   40| class F<S: string, T: S = number> {} // Error: number ~> string
-                                 ^^^^^^ [1]
+   classes.js:40:41
+   40| class F<S extends string, T extends S = number> {} // Error: number ~> string
+                                               ^^^^^^ [1]
 
 References:
-   classes.js:40:23
-   40| class F<S: string, T: S = number> {} // Error: number ~> string
-                             ^ [2]
+   classes.js:40:37
+   40| class F<S extends string, T extends S = number> {} // Error: number ~> string
+                                           ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- classes.js:46:1

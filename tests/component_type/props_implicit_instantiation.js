@@ -1,6 +1,6 @@
 import { extractor } from "./exported_extractor";
 
-declare function idComponent<Props: {...}>(
+declare function idComponent<Props extends {...}>(
     c: component(...Props),
 ): component(...Props);
 
@@ -15,7 +15,7 @@ declare component B(foo: string, bar: number);
 const props1 = extractor(B); // ok
 props1 as {+foo: number, +bar: string}; // error: string != number
 
-declare function removeSomeProps<Props: {...}>(c: component(foo: string, ...Props)): Props;
+declare function removeSomeProps<Props extends {...}>(c: component(foo: string, ...Props)): Props;
 const props2 = removeSomeProps(B); // ok
 props2 as {+bar: number}; // ok
 props2 as empty; // error

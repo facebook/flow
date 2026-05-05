@@ -27,29 +27,29 @@ type Rec    = {o: O, ...Rec, ...};  // Rec = empty
 //   ^
 
 // Unevaluated
-type B1<T: {...}, S: {...}> = {...T, ...S, o: O, ...};
+type B1<T extends {...}, S extends {...}> = {...T, ...S, o: O, ...};
 //   ^
-type B2<T: {...}> = {...T, o: O, ...};
+type B2<T extends {...}> = {...T, o: O, ...};
 //   ^
-type B3<T: {...}> = {o: O, ...T, ...};
+type B3<T extends {...}> = {o: O, ...T, ...};
 //   ^
-type B4<T: {...}> = {o: O, ...T, oo: O, ...};
+type B4<T extends {...}> = {o: O, ...T, oo: O, ...};
 //   ^
-type B5<T: {...}> = {u: O, ...{ v: O, w: T, ... }, x: O, ...T, y: O, ...};
+type B5<T extends {...}> = {u: O, ...{ v: O, w: T, ... }, x: O, ...T, y: O, ...};
 //   ^
-type EB1<T: {...}, S: {...}> = {...T, ...S, o: O};
+type EB1<T extends {...}, S extends {...}> = {...T, ...S, o: O};
 //   ^
-type EB2<T: {...}> = {...T, o: O};
+type EB2<T extends {...}> = {...T, o: O};
 //   ^
-type EB3<T: {...}> = {o: O, ...T};
+type EB3<T extends {...}> = {o: O, ...T};
 //   ^
-type EB4<T: {...}> = {o: O, ...T, oo: O};
+type EB4<T extends {...}> = {o: O, ...T, oo: O};
 //   ^
-type EB5<T: {...}> = {u: O, ...{ v: O, w: T, ... }, x: O, ...T, y: O};
+type EB5<T extends {...}> = {u: O, ...{ v: O, w: T, ... }, x: O, ...T, y: O};
 //   ^
-type PTA1<T: {...}> = {...B2<T>, ...T, ...};
+type PTA1<T extends {...}> = {...B2<T>, ...T, ...};
 //   ^
-type PTA2<T: {...}> = {...T, ...B2<T>, ...};
+type PTA2<T extends {...}> = {...T, ...B2<T>, ...};
 //   ^
 type EP1<T> = {...P<T>, o: O};
 //   ^
@@ -61,13 +61,13 @@ type ECtor2 = {o: O, ...Ctor};
 //   ^
 type PRec<X> = {o: O, ...PRec<X>, ...};
 //   ^
-type IP1<T: {...}> = {...B1<T>, ...} & {...B2<T>, ...};
+type IP1<T extends {...}> = {...B1<T>, ...} & {...B2<T>, ...};
 //   ^
-type Nest1<T: {...}> = {...{...T, ...}, ...};
+type Nest1<T extends {...}> = {...{...T, ...}, ...};
 //   ^
-type Nest2<T: {...}> = {...{...{...T, ...}, ...}, ...};
+type Nest2<T extends {...}> = {...{...{...T, ...}, ...}, ...};
 //   ^
-type UNest<T: {...}> = {...T, ...} | {...{...T, ...}, ...} | {...{...{...T, ...}, ...}, ...};
+type UNest<T extends {...}> = {...T, ...} | {...{...T, ...}, ...} | {...{...{...T, ...}, ...}, ...};
 //   ^
 
 

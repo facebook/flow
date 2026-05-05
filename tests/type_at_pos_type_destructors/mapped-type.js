@@ -27,17 +27,17 @@ type MappedObj9 = {[key in keyof O]-?: number};
 //   ^
 
 // Unevaluated
-type Unevaluated1<T: {...}> = {[key in keyof T]: T[key]};
+type Unevaluated1<T extends {...}> = {[key in keyof T]: T[key]};
 //   ^
-type Unevaluated2<T: {...}> = {+[key in keyof T]: T[key]};
+type Unevaluated2<T extends {...}> = {+[key in keyof T]: T[key]};
 //   ^
-type Unevaluated3<T: {...}> = {-[key in keyof T]: T[key]};
+type Unevaluated3<T extends {...}> = {-[key in keyof T]: T[key]};
 //   ^
-type Unevaluated4<T: {...}> = {[key in keyof T]?: T[key]};
+type Unevaluated4<T extends {...}> = {[key in keyof T]?: T[key]};
 //   ^
-type Unevaluated5<T: {...}> = {+[key in keyof T]?: T[key]};
+type Unevaluated5<T extends {...}> = {+[key in keyof T]?: T[key]};
 //   ^
-type Unevaluated6<T: {...}> = {-[key in keyof T]?: T[key]};
+type Unevaluated6<T extends {...}> = {-[key in keyof T]?: T[key]};
 //   ^
 
 declare var x: {[key in keyof O]: O[key]};
@@ -64,7 +64,7 @@ type MappedObjNonHomomorphic7 = {-[key in Keys]?: O[key]};
 //   ^
 
 // Unevaluated
-type UnevaluatedNonHomomorphic<T: {...}> = {[key in T]: T};
+type UnevaluatedNonHomomorphic<T extends {...}> = {[key in T]: T};
 //   ^
 
 declare var y: {[key in Keys]: O[key]};
@@ -73,7 +73,7 @@ declare var y: {[key in Keys]: O[key]};
 
 // All semi-homomorphic mapped types must be unevaluated, otherwise
 // we cannot bind a tparam
-type SemiHomomorphic<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+type SemiHomomorphic<O extends {...}, Keys extends $Keys<O>> = {[key in Keys]: O[key]};
 //   ^
 declare var z: SemiHomomorphic<{foo: number, ...}, 'foo'>;
    z;
@@ -94,7 +94,7 @@ type Obj = $ReadOnly<{
   prop9: string,
  ...}>
 
-type IDMap<+Obj: {+[string]: unknown}> = {[Key in keyof Obj]: Id<Obj[Key]>}
+type IDMap<+Obj extends {+[string]: unknown}> = {[Key in keyof Obj]: Id<Obj[Key]>}
 
 declare const props: { obj: $ReadOnly<IDMap<Obj>>, ... };
 props.obj.prop0;

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-function create<P: Object>(
+function create<P extends Object>(
   Component: React.ComponentType<{...P, ...{...}, ...}>,
 ): React.ComponentType<P> {
   return Component;
@@ -10,7 +10,7 @@ export type Props = {
   x: {...},
  ...};
 
-function create1<P: Object>(
+function create1<P extends Object>(
   Component: React.ComponentType<P & Props>,
 ): React.ComponentType<P> {
   return Component;

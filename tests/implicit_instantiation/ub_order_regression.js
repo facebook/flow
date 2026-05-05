@@ -3,7 +3,7 @@
 import * as React from 'react';
 declare var Comp: (props: {}) => $FlowFixMe;
 class C<X> {}
-declare var withStore: <Props: {...}>(
+declare var withStore: <Props extends {...}>(
   C: React.ComponentType<Props>,
 ) => C<Omit<Props, empty>>;
 

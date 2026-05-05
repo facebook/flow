@@ -68,8 +68,8 @@ printf "class-poly-0.js:5:7 = "
 assert_ok "$FLOW" type-at-pos class-poly-0.js 5 7 --strip-root --pretty
 printf "class-poly-0.js:5:9 = "
 assert_ok "$FLOW" type-at-pos class-poly-0.js 5 9 --strip-root --pretty
-printf "class-poly-0.js:10:26 = "
-assert_ok "$FLOW" type-at-pos class-poly-0.js 10 26 --strip-root --pretty
+printf "class-poly-0.js:10:33 = "
+assert_ok "$FLOW" type-at-pos class-poly-0.js 10 33 --strip-root --pretty
 # TODO constructor
 # printf "class-poly-0.js:11:10 = "
 # assert_ok "$FLOW" type-at-pos class-poly-0.js 11 10 --strip-root --pretty

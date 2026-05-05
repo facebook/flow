@@ -46,12 +46,12 @@ Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-t
                           ^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- index.js:15:15
+Error --------------------------------------------------------------------------------------------------- index.js:15:22
 
 Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
 
-   15| type f2 = <T: Object>(x: T) => T;
-                     ^^^^^^
+   15| type f2 = <T extends Object>(x: T) => T;
+                            ^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- index.js:18:9

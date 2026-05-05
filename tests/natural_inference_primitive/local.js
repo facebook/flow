@@ -238,7 +238,7 @@ function test_useState_6() {
 }
 
 function test_useState_7() {
-  declare function useStateWithBound<T: {+f:number|string}>(x: T): [T, (y: T) => void];
+  declare function useStateWithBound<T extends {+f:number|string}>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound({f: one});
   set({f: 1}); // okay
   set({f: 2}); // okay the type of `one` is checked against a general bound
@@ -246,7 +246,7 @@ function test_useState_7() {
 }
 
 function test_useState_8() {
-  declare function useStateWithBound<T: {+f:number}>(x: T): [T, (y: T) => void];
+  declare function useStateWithBound<T extends {+f:number}>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound({f: one});
   set({f: 1}); // okay
   set({f: 2}); // okay
@@ -254,7 +254,7 @@ function test_useState_8() {
 }
 
 function test_useState_9() {
-  declare function useStateWithBound<T: {+f:1|2}>(x: T): [T, (y: T) => void];
+  declare function useStateWithBound<T extends {+f:1|2}>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound({f: one}); // infer specific type due to check against bound
   set({f: "blah"}); // error "blah" ~> 1
   set({f: 1}); // okay
@@ -438,7 +438,7 @@ function test_assign() {
 
 function test_class_bound() {
   class C {
-    set<K: 'a'>(k: K) {}
+    set<K extends 'a'>(k: K) {}
   }
 
   const a = 'a';
@@ -485,7 +485,7 @@ function test_computed_prop_hint_1() {
 }
 
 function test_synthesis_produced_uncacheable_result() {
-  declare function foo<X: "a" | "b">(x: X, cb: (x: X) => void): void;
+  declare function foo<X extends "a" | "b">(x: X, cb: (x: X) => void): void;
   const k = "a";
   foo(k, x => { // okay k is "a"
     x as string; // okay
@@ -521,7 +521,7 @@ function test_conditional_pass_flag() {
 
 function test_generalize_function_literal() {
   type GenericFnType<TReturn> = () => TReturn;
-  declare function memo<TReturn, Fn: GenericFnType<TReturn>>(f: Fn): Fn;
+  declare function memo<TReturn, Fn extends GenericFnType<TReturn>>(f: Fn): Fn;
   const memoized = memo(() => ({prop: 0})); // should generalize to `() => {prop: number}`
 
   const obj = memoized();
@@ -624,7 +624,7 @@ function test_generic_call_with_elem_t_bound() {
     prop2: {};
   };
 
-  declare function foo<K: string>(key: K, args: Obj[K]): void;
+  declare function foo<K extends string>(key: K, args: Obj[K]): void;
 
   foo('prop1', {}); // okay
   foo('prop3', {}); // error: prop3 is not a key of Obj
@@ -659,7 +659,7 @@ function test_contextual_typing_rest() {
 }
 
 function test_useState_12() {
-  declare function useStateWithBound<T: void|boolean>(x: T): [T, (y: T) => void];
+  declare function useStateWithBound<T extends void|boolean>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound(true);
   set(false); // okay
 }

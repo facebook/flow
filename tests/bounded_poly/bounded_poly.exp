@@ -7,9 +7,9 @@ Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [in
                           ^
 
 References:
-   test.js:1:28
-   1| function foo<T: number>(x: T): T {
-                                 ^ [1]
+   test.js:1:35
+   1| function foo<T extends number>(x: T): T {
+                                        ^ [1]
    test.js:3:12
    3|     var y: string = x; // error
                  ^^^^^^ [2]
@@ -24,12 +24,12 @@ Cannot return `x` because number [1] is incompatible with `T` [2]. [incompatible
                      ^
 
 References:
-   test.js:8:23
-   8|     bar<U: number>(x: U): T {
-                            ^ [1]
-   test.js:8:27
-   8|     bar<U: number>(x: U): T {
-                                ^ [2]
+   test.js:8:30
+   8|     bar<U extends number>(x: U): T {
+                                   ^ [1]
+   test.js:8:34
+   8|     bar<U extends number>(x: U): T {
+                                       ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:25
@@ -41,9 +41,9 @@ Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [in
                                ^
 
 References:
-   test.js:11:18
-   11|     qux<U: T>(x: U): T {
-                        ^ [1]
+   test.js:11:25
+   11|     qux<U extends T>(x: U): T {
+                               ^ [1]
    test.js:13:16
    13|         var y: string = x; // error
                       ^^^^^^ [2]
@@ -58,9 +58,9 @@ Cannot instantiate `C` because in type argument `T`: string [1] is incompatible 
                 ^^^^^^ [1]
 
 References:
-   test.js:7:12
-    7| class C<T: number> {
-                  ^^^^^^ [2]
+   test.js:7:19
+    7| class C<T extends number> {
+                         ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:24
@@ -75,9 +75,9 @@ References:
    test.js:22:10
    22| var c: C<string> = new C; // error, since T = string is incompatible with number
                 ^^^^^^ [1]
-   test.js:7:12
-    7| class C<T: number> {
-                  ^^^^^^ [2]
+   test.js:7:19
+    7| class C<T extends number> {
+                         ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:23:17

@@ -10,9 +10,9 @@ References:
    arr_spread.js:7:3
    7|   fn(...arr) as R; // nope
         ^^^^^^^^^^ [1]
-   arr_spread.js:5:41
-   5| function f<X: Array<number>, R>(fn: (...X) => R, x: X, arr: Array<number>) {
-                                              ^ [2]
+   arr_spread.js:5:48
+   5| function f<X extends Array<number>, R>(fn: (...X) => R, x: X, arr: Array<number>) {
+                                                     ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- arr_spread.js:17:12
@@ -24,9 +24,9 @@ Cannot return array literal because array literal [1] is incompatible with `X` [
                   ^^^^^^^^^^ [1]
 
 References:
-   arr_spread.js:12:37
-   12| function g<X: Array<number>>(A: X): X {
-                                           ^ [2]
+   arr_spread.js:12:44
+   12| function g<X extends Array<number>>(A: X): X {
+                                                  ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- arr_spread.js:23:14
@@ -55,9 +55,9 @@ References:
    arr_spread.js:27:3
    27|   f(...x); // nope
          ^^^^^^^ [1]
-   arr_spread.js:26:54
-   26| function w<A: [number, number]>(x: A, f: (number, ...A) => void) {
-                                                            ^ [2]
+   arr_spread.js:26:61
+   26| function w<A extends [number, number]>(x: A, f: (number, ...A) => void) {
+                                                                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:28:3
@@ -72,9 +72,9 @@ References:
    arr_spread.js:28:3
    28|   f(42, 42, 42); // nope
          ^^^^^^^^^^^^^ [1]
-   arr_spread.js:26:54
-   26| function w<A: [number, number]>(x: A, f: (number, ...A) => void) {
-                                                            ^ [2]
+   arr_spread.js:26:61
+   26| function w<A extends [number, number]>(x: A, f: (number, ...A) => void) {
+                                                                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:30:3
@@ -89,9 +89,9 @@ References:
    arr_spread.js:30:3
    30|   f(42, ...x, ...x); // nope
          ^^^^^^^^^^^^^^^^^ [1]
-   arr_spread.js:26:54
-   26| function w<A: [number, number]>(x: A, f: (number, ...A) => void) {
-                                                            ^ [2]
+   arr_spread.js:26:61
+   26| function w<A extends [number, number]>(x: A, f: (number, ...A) => void) {
+                                                                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:34:3
@@ -106,9 +106,9 @@ References:
    arr_spread.js:34:3
    34|   f(42, 42, 42); // nope
          ^^^^^^^^^^^^^ [1]
-   arr_spread.js:32:52
-   32| function w2<A: Array<number>>(x: A, f: (number, ...A) => void) {
-                                                          ^ [2]
+   arr_spread.js:32:59
+   32| function w2<A extends Array<number>>(x: A, f: (number, ...A) => void) {
+                                                                 ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:35:3
@@ -123,9 +123,9 @@ References:
    arr_spread.js:35:3
    35|   f(42, 42, 42, ...x); // should be nope
          ^^^^^^^^^^^^^^^^^^^ [1]
-   arr_spread.js:32:52
-   32| function w2<A: Array<number>>(x: A, f: (number, ...A) => void) {
-                                                          ^ [2]
+   arr_spread.js:32:59
+   32| function w2<A extends Array<number>>(x: A, f: (number, ...A) => void) {
+                                                                 ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:40:5
@@ -138,9 +138,9 @@ Cannot call `f` with array literal bound to the first parameter because array li
            ^^^^^^^^^^^^ [1]
 
 References:
-   arr_spread.js:39:40
-   39| function w3<A: Array<number>>(x: A, f: A => void) {
-                                              ^ [2]
+   arr_spread.js:39:47
+   39| function w3<A extends Array<number>>(x: A, f: A => void) {
+                                                     ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:41:5
@@ -153,9 +153,9 @@ Cannot call `f` with array literal bound to the first parameter because array li
            ^^^^^^^^^^ [1]
 
 References:
-   arr_spread.js:39:40
-   39| function w3<A: Array<number>>(x: A, f: A => void) {
-                                              ^ [2]
+   arr_spread.js:39:47
+   39| function w3<A extends Array<number>>(x: A, f: A => void) {
+                                                     ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:47:3
@@ -209,9 +209,9 @@ Cannot return array literal because array literal [1] is incompatible with `X` [
                 ^^^^^^^^^^^^ [1]
 
 References:
-   arr_spread.js:60:45
-   60| function b<X: ReadonlyArray<number>>(x: X): X {
-                                                   ^ [2]
+   arr_spread.js:60:52
+   60| function b<X extends ReadonlyArray<number>>(x: X): X {
+                                                          ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- arr_spread.js:65:10
@@ -223,9 +223,9 @@ Cannot return array literal because array literal [1] is incompatible with `X` [
                 ^^^^^^^^^^ [1]
 
 References:
-   arr_spread.js:64:45
-   64| function c<X: ReadonlyArray<number>>(x: X): X {
-                                                   ^ [2]
+   arr_spread.js:64:52
+   64| function c<X extends ReadonlyArray<number>>(x: X): X {
+                                                          ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- arr_spread.js:69:10
@@ -238,9 +238,9 @@ Cannot return array literal because array literal [1] has 4 elements but tuple t
                 ^^^^^^^^^^^^ [1]
 
 References:
-   arr_spread.js:68:40
-   68| function d<X: [number, number]>(x: X): X {
-                                              ^ [2]
+   arr_spread.js:68:47
+   68| function d<X extends [number, number]>(x: X): X {
+                                                     ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- basic_class.js:12:12
@@ -334,9 +334,9 @@ Cannot return `42` because number [1] is incompatible with `X` [2]. [incompatibl
                   ^^ [1]
 
 References:
-   basic_function.js:15:30
-   15| function g<X: number>(x: X): X {
-                                    ^ [2]
+   basic_function.js:15:37
+   15| function g<X extends number>(x: X): X {
+                                           ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ basic_function.js:31:12
@@ -515,15 +515,15 @@ subtyping relationship. If that happens, you can cast one side to the union of b
              ^^^^^^^^^
 
 References:
-   detect_literal_subtypes.js:14:21
-   14| function a1<A: 'a'>(a: A): void {
-                           ^ [1]
+   detect_literal_subtypes.js:14:28
+   14| function a1<A extends 'a'>(a: A): void {
+                                  ^ [1]
    detect_literal_subtypes.js:15:13
    15|   if (a === 'b'){ } // error 'b' not compatible with 'a'
                    ^^^ [2]
-   detect_literal_subtypes.js:14:24
-   14| function a1<A: 'a'>(a: A): void {
-                              ^ [3]
+   detect_literal_subtypes.js:14:31
+   14| function a1<A extends 'a'>(a: A): void {
+                                     ^ [3]
 
 
 Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:19:7
@@ -538,15 +538,15 @@ subtyping relationship. If that happens, you can cast one side to the union of b
              ^^^^^^^^^
 
 References:
-   detect_literal_subtypes.js:18:27
-   18| function b1<A: 'a', B: A>(b: B): void {
-                                 ^ [1]
+   detect_literal_subtypes.js:18:41
+   18| function b1<A extends 'a', B extends A>(b: B): void {
+                                               ^ [1]
    detect_literal_subtypes.js:19:13
    19|   if (b === 'b'){ } // error 'b' not compatible with 'a'
                    ^^^ [2]
-   detect_literal_subtypes.js:18:30
-   18| function b1<A: 'a', B: A>(b: B): void {
-                                    ^ [3]
+   detect_literal_subtypes.js:18:44
+   18| function b1<A extends 'a', B extends A>(b: B): void {
+                                                  ^ [3]
 
 
 Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:37:5
@@ -561,9 +561,9 @@ subtyping relationship. If that happens, you can cast one side to the union of b
            ^^^^^^^^
 
 References:
-   detect_literal_subtypes.js:31:18
-   31| function c<X: T>(x: keyof X) {
-                        ^ [1]
+   detect_literal_subtypes.js:31:25
+   31| function c<X extends T>(x: keyof X) {
+                               ^ [1]
    detect_literal_subtypes.js:37:10
    37|     case 'r': // error
                 ^^^ [2]
@@ -578,9 +578,9 @@ Cannot cast `x` to `X` because inexact object type [1] is incompatible with exac
         ^
 
 References:
-   exact.js:3:40
-   3| function f<X: {...}>(ex: $Exact<X>, x: X) {
-                                             ^ [1]
+   exact.js:3:47
+   3| function f<X extends {...}>(ex: $Exact<X>, x: X) {
+                                                    ^ [1]
    exact.js:6:8
    6|   x as $Exact<X>; // nope
              ^^^^^^^^^ [2]
@@ -612,9 +612,9 @@ Cannot cast `x` to intersection type because: [incompatible-type]
         ^
 
 References:
-   intersection.js:3:52
-   3| function f1<X: number & string, Y: X & boolean>(x: X, y: Y) {
-                                                         ^ [1]
+   intersection.js:3:66
+   3| function f1<X extends number & string, Y extends X & boolean>(x: X, y: Y) {
+                                                                       ^ [1]
    intersection.js:8:26
    8|   x as number & string & boolean; // nope
                                ^^^^^^^ [2]
@@ -977,9 +977,9 @@ Cannot cast `-x` to `X` because number [1] is incompatible with `X` [2]. [incomp
          ^
 
 References:
-   misc.js:1:26
-   1| function a<X: number>(x: X) {
-                               ^ [1]
+   misc.js:1:33
+   1| function a<X extends number>(x: X) {
+                                      ^ [1]
    misc.js:6:9
    6|   -x as X; // nope
               ^ [2]
@@ -1009,12 +1009,12 @@ using strict equality (`===` or `!==`) instead. [invalid-compare]
           ^
 
 References:
-   misc.js:15:37
-   15| function b<X: number, Y: string>(x: X, y: Y) {
-                                           ^ [1]
-   misc.js:15:43
-   15| function b<X: number, Y: string>(x: X, y: Y) {
-                                                 ^ [2]
+   misc.js:15:51
+   15| function b<X extends number, Y extends string>(x: X, y: Y) {
+                                                         ^ [1]
+   misc.js:15:57
+   15| function b<X extends number, Y extends string>(x: X, y: Y) {
+                                                               ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:20:4
@@ -1028,18 +1028,18 @@ cast one side to the union of both types to pass the flow check.  [invalid-compa
           ^^^^^^^
 
 References:
-   misc.js:15:34
-   15| function b<X: number, Y: string>(x: X, y: Y) {
-                                        ^ [1]
-   misc.js:15:40
-   15| function b<X: number, Y: string>(x: X, y: Y) {
-                                              ^ [2]
-   misc.js:15:37
-   15| function b<X: number, Y: string>(x: X, y: Y) {
-                                           ^ [3]
-   misc.js:15:43
-   15| function b<X: number, Y: string>(x: X, y: Y) {
-                                                 ^ [4]
+   misc.js:15:48
+   15| function b<X extends number, Y extends string>(x: X, y: Y) {
+                                                      ^ [1]
+   misc.js:15:54
+   15| function b<X extends number, Y extends string>(x: X, y: Y) {
+                                                            ^ [2]
+   misc.js:15:51
+   15| function b<X extends number, Y extends string>(x: X, y: Y) {
+                                                         ^ [3]
+   misc.js:15:57
+   15| function b<X extends number, Y extends string>(x: X, y: Y) {
+                                                               ^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:22:4
@@ -1051,12 +1051,12 @@ Cannot compare number [1] to string [2]. [invalid-compare]
           ^
 
 References:
-   misc.js:15:37
-   15| function b<X: number, Y: string>(x: X, y: Y) {
-                                           ^ [1]
-   misc.js:15:43
-   15| function b<X: number, Y: string>(x: X, y: Y) {
-                                                 ^ [2]
+   misc.js:15:51
+   15| function b<X extends number, Y extends string>(x: X, y: Y) {
+                                                         ^ [1]
+   misc.js:15:57
+   15| function b<X extends number, Y extends string>(x: X, y: Y) {
+                                                               ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:52:10
@@ -1069,9 +1069,9 @@ Cannot return array literal because array literal [1] is incompatible with type 
                 ^^^^^ [1]
 
 References:
-   misc.js:51:46
-   51| function h<X: [number]>(x: X): {[_K in keyof X]: string} {
-                                                    ^ [2]
+   misc.js:51:53
+   51| function h<X extends [number]>(x: X): {[_K in keyof X]: string} {
+                                                           ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:68:28
@@ -1088,9 +1088,9 @@ References:
    misc.js:72:5
      72|     {},
              ^^ [1]
-   misc.js:69:31
-     69|     <K: keyof TFormData>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   misc.js:69:38
+     69|     <K extends keyof TFormData>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1144:5
              v------
    1144|     reduce(
@@ -1108,12 +1108,12 @@ Cannot return `otherData` because object type [1] is incompatible with `$ReadOnl
           ^^^^^^^^^
 
 References:
-   misc.js:133:54
-   133| const directAccount = <T: LLETR>(data: T, otherData: LLETR): Readonly<T> =>
-                                                             ^^^^^ [1]
-   misc.js:133:71
-   133| const directAccount = <T: LLETR>(data: T, otherData: LLETR): Readonly<T> =>
-                                                                              ^ [2]
+   misc.js:133:61
+   133| const directAccount = <T extends LLETR>(data: T, otherData: LLETR): Readonly<T> =>
+                                                                    ^^^^^ [1]
+   misc.js:133:78
+   133| const directAccount = <T extends LLETR>(data: T, otherData: LLETR): Readonly<T> =>
+                                                                                     ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- misc.js:156:10
@@ -1292,9 +1292,9 @@ Cannot cast `x` to `Omit` because object type [1] is incompatible with `{ ...X, 
         ^
 
 References:
-   rest.js:3:35
-   3| function f<X: {...}, Y: {...}>(x: {...X, ...}, y: {...Y, ...}, both: {...X, ...Y, ...}) {
-                                        ^^^^^^^^^^^ [1]
+   rest.js:3:49
+   3| function f<X extends {...}, Y extends {...}>(x: {...X, ...}, y: {...Y, ...}, both: {...X, ...Y, ...}) {
+                                                      ^^^^^^^^^^^ [1]
    rest.js:4:8
    4|   x as Omit<{...X, ...Y, ...}, keyof Y>; // nope
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -1309,9 +1309,9 @@ Cannot cast `y` to `Omit` because object type [1] is incompatible with `{ ...X, 
         ^
 
 References:
-   rest.js:3:51
-   3| function f<X: {...}, Y: {...}>(x: {...X, ...}, y: {...Y, ...}, both: {...X, ...Y, ...}) {
-                                                        ^^^^^^^^^^^ [1]
+   rest.js:3:65
+   3| function f<X extends {...}, Y extends {...}>(x: {...X, ...}, y: {...Y, ...}, both: {...X, ...Y, ...}) {
+                                                                      ^^^^^^^^^^^ [1]
    rest.js:5:8
    5|   y as Omit<{...X, ...Y, ...}, keyof Y>; // nope
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -1439,12 +1439,12 @@ Cannot return `y` because object type [1] is incompatible with `{ ...X, ...Y }` 
                 ^
 
 References:
-   spreads.js:40:36
-   40| function f3<X: {...}, Y: {...}>(y: Y): {...X, ...Y, ...} {
-                                          ^ [1]
-   spreads.js:40:40
-   40| function f3<X: {...}, Y: {...}>(y: Y): {...X, ...Y, ...} {
-                                              ^^^^^^^^^^^^^^^^^ [2]
+   spreads.js:40:50
+   40| function f3<X extends {...}, Y extends {...}>(y: Y): {...X, ...Y, ...} {
+                                                        ^ [1]
+   spreads.js:40:54
+   40| function f3<X extends {...}, Y extends {...}>(y: Y): {...X, ...Y, ...} {
+                                                            ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- spreads.js:49:10
@@ -1456,12 +1456,12 @@ Cannot return `y` because object type [1] is incompatible with `Y` [2]. [incompa
                 ^
 
 References:
-   spreads.js:48:37
-   48| function f4b<X: {...}, Y: {...}>(y: {...Y, ...X, ...}): Y {
-                                           ^^^^^^^^^^^^^^^^^ [1]
-   spreads.js:48:57
-   48| function f4b<X: {...}, Y: {...}>(y: {...Y, ...X, ...}): Y {
-                                                               ^ [2]
+   spreads.js:48:51
+   48| function f4b<X extends {...}, Y extends {...}>(y: {...Y, ...X, ...}): Y {
+                                                         ^^^^^^^^^^^^^^^^^ [1]
+   spreads.js:48:71
+   48| function f4b<X extends {...}, Y extends {...}>(y: {...Y, ...X, ...}): Y {
+                                                                             ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:53:3
@@ -1473,9 +1473,9 @@ Cannot cast `x` to object type because object type [1] is incompatible with `{ .
          ^
 
 References:
-   spreads.js:52:45
-   52| function f<X: {...}, Y: {...}, Z: X & Y>(x: {...X, ...}, xy: {...X, ...Y, ...}, z: {...Z, ...}) {
-                                                   ^^^^^^^^^^^ [1]
+   spreads.js:52:66
+   52| function f<X extends {...}, Y extends {...}, Z extends X & Y>(x: {...X, ...}, xy: {...X, ...Y, ...}, z: {...Z, ...}) {
+                                                                        ^^^^^^^^^^^ [1]
    spreads.js:53:8
    53|   x as {...X & Y, ...}; // nope
               ^^^^^^^^^^^^^^^ [2]
@@ -1524,12 +1524,12 @@ Cannot return `x` because `Pick` [1] is incompatible with `Pick` [2]. [incompati
                 ^
 
 References:
-   synthetic.js:9:67
-    9| function test3<S: { a: unknown, ... }, T: { a: unknown, ... }>(x: Pick<S, "a">): Pick<T, "a"> {
-                                                                         ^^^^^^^^^^^^ [1]
-   synthetic.js:9:82
-    9| function test3<S: { a: unknown, ... }, T: { a: unknown, ... }>(x: Pick<S, "a">): Pick<T, "a"> {
-                                                                                        ^^^^^^^^^^^^ [2]
+   synthetic.js:9:81
+    9| function test3<S extends { a: unknown, ... }, T extends { a: unknown, ... }>(x: Pick<S, "a">): Pick<T, "a"> {
+                                                                                       ^^^^^^^^^^^^ [1]
+   synthetic.js:9:96
+    9| function test3<S extends { a: unknown, ... }, T extends { a: unknown, ... }>(x: Pick<S, "a">): Pick<T, "a"> {
+                                                                                                      ^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:14:10
@@ -1594,9 +1594,9 @@ Cannot cast `x` to union type because: [incompatible-type]
         ^
 
 References:
-   union.js:3:44
-   3| function f1<X: boolean, Y: X | boolean>(x: X, y: Y) {
-                                                 ^ [1]
+   union.js:3:58
+   3| function f1<X extends boolean, Y extends X | boolean>(x: X, y: Y) {
+                                                               ^ [1]
    union.js:4:8
    4|   x as number | string;
              ^^^^^^ [2]
@@ -1614,9 +1614,9 @@ Cannot cast `x` to number because boolean [1] is incompatible with number [2]. [
         ^
 
 References:
-   union.js:3:44
-   3| function f1<X: boolean, Y: X | boolean>(x: X, y: Y) {
-                                                 ^ [1]
+   union.js:3:58
+   3| function f1<X extends boolean, Y extends X | boolean>(x: X, y: Y) {
+                                                               ^ [1]
    union.js:9:8
    9|   x as number; // nope
              ^^^^^^ [2]
@@ -1631,9 +1631,9 @@ Cannot cast `y` to `X` because boolean [1] is incompatible with `X` [2]. [incomp
            ^
 
 References:
-   union.js:3:50
-    3| function f1<X: boolean, Y: X | boolean>(x: X, y: Y) {
-                                                        ^ [1]
+   union.js:3:64
+    3| function f1<X extends boolean, Y extends X | boolean>(x: X, y: Y) {
+                                                                      ^ [1]
    union.js:17:10
    17|     y as X; // nope
                 ^ [2]

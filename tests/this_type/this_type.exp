@@ -27,14 +27,14 @@ References:
             ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- contra.js:15:10
+Error -------------------------------------------------------------------------------------------------- contra.js:15:17
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   contra.js:15:10
-   15|   foo<X: this>(that: X) { } // error: can't hide contravariance using a bound
-                ^^^^
+   contra.js:15:17
+   15|   foo<X extends this>(that: X) { } // error: can't hide contravariance using a bound
+                       ^^^^
 
 References:
    contra.js:14:7
@@ -42,14 +42,14 @@ References:
              ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- contra.js:19:10
+Error -------------------------------------------------------------------------------------------------- contra.js:19:17
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   contra.js:19:10
-   19|   foo<Y: this>(that: Y) { } // error (see above, catches hidden override)
-                ^^^^
+   contra.js:19:17
+   19|   foo<Y extends this>(that: Y) { } // error (see above, catches hidden override)
+                       ^^^^
 
 References:
    contra.js:18:7

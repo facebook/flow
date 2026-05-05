@@ -44,9 +44,9 @@ Cannot create `ComponentWithBound` element because in type argument `T`: boolean
                                    ^^^^ [1]
 
 References:
-   contextual_jsx.js:17:32
-   17| function ComponentWithBound<T: number>(pprops: {a:T, ...}): React.Node {}
-                                      ^^^^^^ [2]
+   contextual_jsx.js:17:39
+   17| function ComponentWithBound<T extends number>(pprops: {a:T, ...}): React.Node {}
+                                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ contextual_jsx.js:33:42

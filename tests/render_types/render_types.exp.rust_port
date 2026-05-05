@@ -336,13 +336,13 @@ References:
                                     ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- poly_component_type.js:20:77
+Error ------------------------------------------------------------------------------------- poly_component_type.js:20:84
 
 Cannot use `T` [1] as the type argument of renders type. Generic render types are not allowed with `renders*`.
 [invalid-render]
 
-   20| declare const Poly3: component<T: React.Node = void>(children?: T) renders* T; // banned
-                                                                                   ^ [1]
+   20| declare const Poly3: component<T extends React.Node = void>(children?: T) renders* T; // banned
+                                                                                          ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- poly_no_args.js:4:10
@@ -1809,16 +1809,16 @@ References:
                                                                             ^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------- validation/validation.js:31:65
+Error ----------------------------------------------------------------------------------- validation/validation.js:31:72
 
 Render types must be a subtype of `React.Node` or a reference to a component-syntax component: [incompatible-type]
  - Either `Error` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or `Error` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in `Error` [1] but exists in `$Iterable` [4].
 
-   validation/validation.js:31:65
-   31| component BannedGenericRenders1<T: Error>(children: T) renders? T { return children } // error
-                                                                       ^ [1]
+   validation/validation.js:31:72
+   31| component BannedGenericRenders1<T extends Error>(children: T) renders? T { return children } // error
+                                                                              ^ [1]
 
 References:
    <BUILTINS>/react.js:21:5
@@ -1832,19 +1832,19 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------- validation/validation.js:32:71
+Error ----------------------------------------------------------------------------------- validation/validation.js:32:78
 
 Cannot use `T` [1] as the type argument of renders type. Generic render types are only allowed in rendering declaration
 of component syntax components, and only one or a union of generic types are permitted. [invalid-render]
 
-   validation/validation.js:32:71
-   32| component BannedGenericRenders2<T: React$Node>(children: T) renders? (T | GoodComponentRenders) { return children } // error
-                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^
+   validation/validation.js:32:78
+   32| component BannedGenericRenders2<T extends React$Node>(children: T) renders? (T | GoodComponentRenders) { return children } // error
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   validation/validation.js:32:71
-   32| component BannedGenericRenders2<T: React$Node>(children: T) renders? (T | GoodComponentRenders) { return children } // error
-                                                                             ^ [1]
+   validation/validation.js:32:78
+   32| component BannedGenericRenders2<T extends React$Node>(children: T) renders? (T | GoodComponentRenders) { return children } // error
+                                                                                    ^ [1]
 
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:35:37

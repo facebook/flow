@@ -149,7 +149,7 @@ const pairTest5: Pair<number, string> = 42; // Error: Should show custom error
  * @flowCustomError
  * @description custom desc
  */
-type Container<T: string | number> = {
+type Container<T extends string | number> = {
   items: Array<T>,
   count: number,
 };

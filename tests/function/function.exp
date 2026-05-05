@@ -651,9 +651,9 @@ References:
    call_error_generic2.js:3:29
    3| function bar2(fragmentRef?: {...}) {
                                   ^^^^^ [1]
-   call_error_generic2.js:1:30
-   1| declare function bar1<TKey: ?{+$data?: unknown, ...}>(key: TKey): void;
-                                   ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   call_error_generic2.js:1:37
+   1| declare function bar1<TKey extends ?{+$data?: unknown, ...}>(key: TKey): void;
+                                          ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- function.js:23:3
@@ -800,40 +800,40 @@ References:
                                              ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- rest.js:38:55
+Error ---------------------------------------------------------------------------------------------------- rest.js:38:62
 
 Cannot call `string_rest_t` because in type argument `T`: rest array [1] is incompatible with string [2].
 [incompatible-type]
 
-   rest.js:38:55
-   38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
-                                                             ^^^^^^^^^^^^^
+   rest.js:38:62
+   38| function string_rest_t<T extends string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
+                                                                    ^^^^^^^^^^^^^
 
 References:
-   rest.js:38:55
-   38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
-                                                             ^^^^^^^^^^^^^^^ [1]
-   rest.js:38:27
-   38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
-                                 ^^^^^^ [2]
+   rest.js:38:62
+   38| function string_rest_t<T extends string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
+                                                                    ^^^^^^^^^^^^^^^ [1]
+   rest.js:38:34
+   38| function string_rest_t<T extends string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
+                                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- rest.js:39:54
+Error ---------------------------------------------------------------------------------------------------- rest.js:39:61
 
 Cannot call `empty_rest_t2` because in type argument `T`: rest array [1] is incompatible with empty [2].
 [incompatible-type]
 
-   rest.js:39:54
-   39| function empty_rest_t2<T: empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
-                                                            ^^^^^^^^^^^^^
+   rest.js:39:61
+   39| function empty_rest_t2<T extends empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
+                                                                   ^^^^^^^^^^^^^
 
 References:
-   rest.js:39:54
-   39| function empty_rest_t2<T: empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
-                                                            ^^^^^^^^^^^^^^^ [1]
-   rest.js:39:27
-   39| function empty_rest_t2<T: empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
-                                 ^^^^^ [2]
+   rest.js:39:61
+   39| function empty_rest_t2<T extends empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
+                                                                   ^^^^^^^^^^^^^^^ [1]
+   rest.js:39:34
+   39| function empty_rest_t2<T extends empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
+                                        ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:53:1

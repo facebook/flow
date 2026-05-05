@@ -25,10 +25,10 @@ enum E {A, B}
 }
 
 // Generic representation type
-function f<TEnumValue: EnumValue<>>(x: TEnumValue) {
+function f<TEnumValue extends EnumValue<>>(x: TEnumValue) {
   x as TEnumValue; // OK
 }
-function g<T: string | number>(x: EnumValue<T>): T {
+function g<T extends string | number>(x: EnumValue<T>): T {
   x as EnumValue<string | number>; // OK
 
   x as boolean; // ERROR

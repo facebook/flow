@@ -3,8 +3,8 @@ declare var _: any;
 function test_simple() {
   declare class C<T> {}
 
-  declare function f<T: string>(literalValue: T): C<T>;
-  declare function g<T: string>(literalValue: C<T>): C<C<T>>;
+  declare function f<T extends string>(literalValue: T): C<T>;
+  declare function g<T extends string>(literalValue: C<T>): C<C<T>>;
 
   const x0: C<'a'> = f('a');
   const x1: C<string> = f('a');
@@ -56,11 +56,11 @@ function test_mapped_types() {
 }
 
 function test_regression() {
-  declare function literal<T: string>(literalValue: T): Wrapper<T>;
+  declare function literal<T extends string>(literalValue: T): Wrapper<T>;
   declare function union<V>(
     ...wrappers: $ReadOnlyArray<Wrapper<V>>
   ): Wrapper<V>;
-  declare function object<Wrappers: {+[key: string]: Wrapper<unknown>}>(
+  declare function object<Wrappers extends {+[key: string]: Wrapper<unknown>}>(
     wrappers: Wrappers,
   ): Wrapper<$ReadOnly<MapWrapperObject<Wrappers>>>;
 

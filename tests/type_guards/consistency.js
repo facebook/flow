@@ -113,7 +113,7 @@ function non_maybe_poly_1<X>(x: X): x is NonNullable<X> {
   return x != null;
 }
 
-function non_maybe_poly_2<X: {...}>(x: ?X): x is X { // okay
+function non_maybe_poly_2<X extends {...}>(x: ?X): x is X { // okay
   return x != null;
 }
 

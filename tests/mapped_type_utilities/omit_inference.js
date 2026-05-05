@@ -1,4 +1,4 @@
-function projectWithoutA<T: {a: number, b: string}>(): Omit<T, 'a'> {
+function projectWithoutA<T extends {a: number, b: string}>(): Omit<T, 'a'> {
   throw 'unimplemented';
 }
 

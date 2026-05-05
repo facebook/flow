@@ -116,9 +116,9 @@ type TreeNode<T> = {
 
 // --- Mapped types ---
 
-type MakeReadonly<T: {...}> = {+[K in keyof T]: T[K]};
-type MakeOptional<T: {...}> = {[K in keyof T]+?: T[K]};
-type Methodify<T: {...}> = {[K in keyof T]: () => T[K]};
+type MakeReadonly<T extends {...}> = {+[K in keyof T]: T[K]};
+type MakeOptional<T extends {...}> = {[K in keyof T]+?: T[K]};
+type Methodify<T extends {...}> = {[K in keyof T]: () => T[K]};
 
 // --- Conditional types ---
 
@@ -207,7 +207,7 @@ type StringifiedTuple = {[K in keyof NumberTuple]: string};
 
 // --- Validators using mapped types ---
 
-type Validators<T: {...}> = {[K in keyof T]: (value: T[K]) => boolean};
+type Validators<T extends {...}> = {[K in keyof T]: (value: T[K]) => boolean};
 
 // Exports
 export type {

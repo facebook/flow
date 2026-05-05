@@ -201,12 +201,12 @@ Cannot instantiate `R` because in type argument `T`: [incompatible-type]
                              ^^^^^^^ [1]
 
 References:
-   declaration.js:360:15
-   360|   record R<T: number | string> {
-                      ^^^^^^ [2]
-   declaration.js:360:24
-   360|   record R<T: number | string> {
-                               ^^^^^^ [3]
+   declaration.js:360:22
+   360|   record R<T extends number | string> {
+                             ^^^^^^ [2]
+   declaration.js:360:31
+   360|   record R<T extends number | string> {
+                                      ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- declaration.js:396:9

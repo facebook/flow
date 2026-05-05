@@ -38,9 +38,9 @@ References:
    partial-positioning.js:8:22
     8| type Props = Partial<{[string]: RecursiveProp}>;
                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   partial-positioning.js:12:37
-   12| declare export function register<T: Props>(
-                                           ^^^^^ [5]
+   partial-positioning.js:12:44
+   12| declare export function register<T extends Props>(
+                                                  ^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:30

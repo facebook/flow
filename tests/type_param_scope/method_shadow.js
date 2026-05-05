@@ -34,7 +34,7 @@ declare class F<T> extends E<T> {
 class G<T> {
   x:T;
   constructor(x:T) { this.x = x }
-  m<T:T>(x:T):G<T> { return new G(x) } // T-as-bound is G's T
+  m<T extends T>(x:T):G<T> { return new G(x) } // T-as-bound is G's T
 }
 
 declare var g: G<number|string>;

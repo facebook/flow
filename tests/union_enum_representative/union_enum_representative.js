@@ -10,7 +10,7 @@ const Keys = Object.freeze({
   END: 35,
 });
 
-declare function createObjectFrom<TKey: string>(
+declare function createObjectFrom<TKey extends string>(
   keys: $ReadOnlyArray<TKey>,
 ): {[key: TKey]: boolean};
 

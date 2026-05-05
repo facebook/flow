@@ -1,6 +1,6 @@
 //@flow
 
-function f<X: {...}>(ex: $Exact<X>, x: X) {
+function f<X extends {...}>(ex: $Exact<X>, x: X) {
   ex as X;
   ex as $Exact<X>;
   x as $Exact<X>; // nope

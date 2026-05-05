@@ -9,7 +9,7 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
 
 References:
    test.js:9:12
-    9| class Foo<+T: {}> {
+    9| class Foo<+T extends {}> {
                   ^ [1]
 
 
@@ -24,7 +24,7 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
 
 References:
    test.js:15:12
-   15| class Baz<-T: {}> {
+   15| class Baz<-T extends {}> {
                   ^ [1]
 
 
@@ -39,7 +39,7 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
 
 References:
    test.js:28:16
-   28|     class Foo<+T: {}> {
+   28|     class Foo<+T extends {}> {
                       ^ [1]
 
 
@@ -54,7 +54,7 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
 
 References:
    test.js:34:16
-   34|     class Baz<-T: {}> {
+   34|     class Baz<-T extends {}> {
                       ^ [1]
 
 
