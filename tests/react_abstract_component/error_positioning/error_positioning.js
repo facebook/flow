@@ -11,14 +11,14 @@ declare function HOC<
 ): React.ComponentType<
    Omit<React.ElementConfig<TComponent>, 'foo'>
 >;
-type MockFn<TArguments extends $ReadOnlyArray<any>, TReturn> = {
+type MockFn<TArguments extends ReadonlyArray<any>, TReturn> = {
   (...args: TArguments): TReturn,
   mock: {
     calls: Array<TArguments>,
   }
 };
 
-declare function fn<TArguments extends $ReadOnlyArray<any>, TReturn>(
+declare function fn<TArguments extends ReadonlyArray<any>, TReturn>(
   implementation?: (...args: TArguments) => TReturn,
 ): MockFn<TArguments, TReturn>
 

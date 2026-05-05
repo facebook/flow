@@ -27,9 +27,9 @@ Cannot cast `roArray[0]` to string because undefined [1] is incompatible with st
       ^^^^^^^^^^
 
 References:
-   error_unchecked_index.js:3:39
-   3| declare const roArray: $ReadOnlyArray<string>;
-                                            ^^^^^^ [1]
+   error_unchecked_index.js:3:38
+   3| declare const roArray: ReadonlyArray<string>;
+                                           ^^^^^^ [1]
    error_unchecked_index.js:4:15
    4| roArray[0] as string; // error when no_unchecked_indexed_access=true
                     ^^^^^^ [2]
@@ -57,9 +57,9 @@ Cannot cast `roArray[0]` to string because undefined [1] is incompatible with st
       ^^^^^^^^^^
 
 References:
-   error_unchecked_index.js:3:39
-   3| declare const roArray: $ReadOnlyArray<string>;
-                                            ^^^^^^ [1]
+   error_unchecked_index.js:3:38
+   3| declare const roArray: ReadonlyArray<string>;
+                                           ^^^^^^ [1]
    error_unchecked_index.js:4:15
    4| roArray[0] as string; // error when no_unchecked_indexed_access=true
                     ^^^^^^ [2]

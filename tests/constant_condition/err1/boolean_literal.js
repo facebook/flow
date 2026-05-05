@@ -11,7 +11,7 @@
 
 {
     function intersection(
-      arrays: $ReadOnlyArray<$ReadOnlyArray<number>>,
+      arrays: ReadonlyArray<ReadonlyArray<number>>,
     ) {
       if (!arrays.length) {
         return;

@@ -58,7 +58,7 @@ function test_mapped_types() {
 function test_regression() {
   declare function literal<T extends string>(literalValue: T): Wrapper<T>;
   declare function union<V>(
-    ...wrappers: $ReadOnlyArray<Wrapper<V>>
+    ...wrappers: ReadonlyArray<Wrapper<V>>
   ): Wrapper<V>;
   declare function object<Wrappers extends {+[key: string]: Wrapper<unknown>}>(
     wrappers: Wrappers,

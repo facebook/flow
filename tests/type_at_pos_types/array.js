@@ -2,7 +2,7 @@
 
 type NumType = Array<{+nums: number}>;
 //                ^?
-type ReadOnlyNumType = $ReadOnlyArray<{+nums: number}>;
+type ReadOnlyNumType = ReadonlyArray<{+nums: number}>;
 //                       ^?
 
 function foo(num: NumType) {

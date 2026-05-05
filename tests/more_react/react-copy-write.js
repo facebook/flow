@@ -17,7 +17,7 @@ export type Provider<T> = ComponentType<ProviderProps<T>>;
 
 type GetReturnType = <T, S>((T) => S) => S;
 
-type ConsumerProps<T, TSelect extends $ReadOnlyArray<(T) => unknown>> = {
+type ConsumerProps<T, TSelect extends ReadonlyArray<(T) => unknown>> = {
   select?: TSelect,
   children?: ConsumerRender<{[K in keyof TSelect]: ReturnType<TSelect[K]>}>,
   render?: ConsumerRender<{[K in keyof TSelect]: ReturnType<TSelect[K]>}>,
@@ -28,7 +28,7 @@ type Selector<T, R> = T => R;
 export type Store<T> = {
   +Provider: Provider<T>,
   +Consumer: {
-    <TSelect extends $ReadOnlyArray<(T) => unknown> = $ReadOnlyArray<(T) => unknown>>(
+    <TSelect extends ReadonlyArray<(T) => unknown> = ReadonlyArray<(T) => unknown>>(
       ConsumerProps<T, TSelect>,
     ): globalThis.React.Node,
     // Need the following to fake this as a functional component

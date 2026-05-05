@@ -6,7 +6,7 @@
 // when checking the spread branch below. The fixed commit accepts the file
 // with no errors, matching the intended suppression behavior.
 
-type FunctionReturning<+T> = (...args: $ReadOnlyArray<unknown>) => T;
+type FunctionReturning<+T> = (...args: ReadonlyArray<unknown>) => T;
 
 const emptyFunction: {|
   +thatReturnsNull: FunctionReturning<null>,
@@ -32,7 +32,7 @@ const CUSTOM = {
 };
 
 declare const selectedOption: ?string;
-declare const options: $ReadOnlyArray<Option>;
+declare const options: ReadonlyArray<Option>;
 
 const option =
   selectedOption !== CUSTOM.value

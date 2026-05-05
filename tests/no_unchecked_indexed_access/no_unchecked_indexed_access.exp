@@ -7,9 +7,9 @@ Cannot cast `roArray[0]` to string because undefined [1] is incompatible with st
       ^^^^^^^^^^
 
 References:
-   arr_test.js:3:39
-   3| declare const roArray: $ReadOnlyArray<string>;
-                                            ^^^^^^ [1]
+   arr_test.js:3:38
+   3| declare const roArray: ReadonlyArray<string>;
+                                           ^^^^^^ [1]
    arr_test.js:4:15
    4| roArray[0] as string; // error: void ~> string
                     ^^^^^^ [2]
@@ -24,9 +24,9 @@ Cannot cast `roArray[key]` to string because undefined [1] is incompatible with 
       ^^^^^^^^^^^^
 
 References:
-   arr_test.js:3:39
-   3| declare const roArray: $ReadOnlyArray<string>;
-                                            ^^^^^^ [1]
+   arr_test.js:3:38
+   3| declare const roArray: ReadonlyArray<string>;
+                                           ^^^^^^ [1]
    arr_test.js:5:17
    5| roArray[key] as string; // error: void ~> string
                       ^^^^^^ [2]
@@ -120,9 +120,9 @@ Cannot cast `require(...).typeTest` to empty because string [1] is incompatible 
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   arr_test.js:3:39
-   3| declare const roArray: $ReadOnlyArray<string>;
-                                            ^^^^^^ [1]
+   arr_test.js:3:38
+   3| declare const roArray: ReadonlyArray<string>;
+                                           ^^^^^^ [1]
    exported_test.js:3:35
    3| require('./arr_test').typeTest as empty; // error: sanity check
                                         ^^^^^ [2]

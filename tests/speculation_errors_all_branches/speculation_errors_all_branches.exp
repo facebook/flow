@@ -332,8 +332,8 @@ References:
    48| declare function f(x: interface {p: string}): void;
                              ^^^^^^^^^^^^^^^^^^^^^ [2]
    intersection-function.js:49:23
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   49| declare function f(x: ReadonlyArray<string>): void;
+                             ^^^^^^^^^^^^^^^^^^^^^ [3]
    intersection-function.js:50:23
    50| declare function f(x: [string, string]): void;
                              ^^^^^^^^^^^^^^^^ [4]
@@ -361,8 +361,8 @@ References:
    52| f({p: 42});
          ^^^^^^^ [3]
    intersection-function.js:49:23
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [4]
+   49| declare function f(x: ReadonlyArray<string>): void;
+                             ^^^^^^^^^^^^^^^^^^^^^ [4]
    intersection-function.js:50:23
    50| declare function f(x: [string, string]): void;
                              ^^^^^^^^^^^^^^^^ [5]
@@ -387,8 +387,8 @@ References:
    48| declare function f(x: interface {p: string}): void;
                              ^^^^^^^^^^^^^^^^^^^^^ [2]
    intersection-function.js:49:23
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   49| declare function f(x: ReadonlyArray<string>): void;
+                             ^^^^^^^^^^^^^^^^^^^^^ [3]
    intersection-function.js:50:23
    50| declare function f(x: [string, string]): void;
                              ^^^^^^^^^^^^^^^^ [4]
@@ -416,8 +416,8 @@ References:
    54| f(new Y());
          ^^^^^^^ [3]
    intersection-function.js:49:23
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [4]
+   49| declare function f(x: ReadonlyArray<string>): void;
+                             ^^^^^^^^^^^^^^^^^^^^^ [4]
    intersection-function.js:50:23
    50| declare function f(x: [string, string]): void;
                              ^^^^^^^^^^^^^^^^ [5]
@@ -442,8 +442,8 @@ References:
    48| declare function f(x: interface {p: string}): void;
                              ^^^^^^^^^^^^^^^^^^^^^ [2]
    intersection-function.js:49:23
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   49| declare function f(x: ReadonlyArray<string>): void;
+                             ^^^^^^^^^^^^^^^^^^^^^ [3]
    intersection-function.js:50:23
    50| declare function f(x: [string, string]): void;
                              ^^^^^^^^^^^^^^^^ [4]
@@ -464,9 +464,9 @@ References:
    intersection-function.js:56:11
    56| f([1] as [number]);
                  ^^^^^^ [1]
-   intersection-function.js:49:38
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                                            ^^^^^^ [2]
+   intersection-function.js:49:37
+   49| declare function f(x: ReadonlyArray<string>): void;
+                                           ^^^^^^ [2]
    intersection-function.js:56:10
    56| f([1] as [number]);
                 ^^^^^^^^ [3]
@@ -496,9 +496,9 @@ References:
    intersection-function.js:50:24
    50| declare function f(x: [string, string]): void;
                               ^^^^^^ [2]
-   intersection-function.js:49:38
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                                            ^^^^^^ [3]
+   intersection-function.js:49:37
+   49| declare function f(x: ReadonlyArray<string>): void;
+                                           ^^^^^^ [3]
    intersection-function.js:57:13
    57| f([1, 2] as [number, number]);
                    ^^^^^^^^^^^^^^^^ [4]
@@ -522,9 +522,9 @@ References:
    intersection-function.js:58:17
    58| f([1, 2, 3] as [number, number, number]);
                        ^^^^^^ [1]
-   intersection-function.js:49:38
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                                            ^^^^^^ [2]
+   intersection-function.js:49:37
+   49| declare function f(x: ReadonlyArray<string>): void;
+                                           ^^^^^^ [2]
    intersection-function.js:58:16
    58| f([1, 2, 3] as [number, number, number]);
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -554,9 +554,9 @@ References:
    intersection-function.js:59:24
    59| f(null as any as Array<number> & {p: number});
                               ^^^^^^ [1]
-   intersection-function.js:49:38
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                                            ^^^^^^ [2]
+   intersection-function.js:49:37
+   49| declare function f(x: ReadonlyArray<string>): void;
+                                           ^^^^^^ [2]
    intersection-function.js:59:38
    59| f(null as any as Array<number> & {p: number});
                                             ^^^^^^ [3]
@@ -576,8 +576,8 @@ References:
    59| f(null as any as Array<number> & {p: number});
                                         ^^^^^^^^^^^ [8]
    intersection-function.js:49:23
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [9]
+   49| declare function f(x: ReadonlyArray<string>): void;
+                             ^^^^^^^^^^^^^^^^^^^^^ [9]
 
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:63:1
@@ -1067,14 +1067,14 @@ Cannot cast `42` to `F` because: [incompatible-type]
 
 References:
    union.js:40:10
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
                 ^^^^^^^^^^^^^^^^^^^^^ [2]
    union.js:40:34
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                        ^^^^^^^^^^^^^^^^^^^^^^ [3]
-   union.js:40:59
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [4]
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                        ^^^^^^^^^^^^^^^^^^^^^ [3]
+   union.js:40:58
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                                ^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:42:2
@@ -1093,14 +1093,14 @@ References:
    42| ({p: 42}) as F;
             ^^ [1]
    union.js:40:24
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
                               ^^^^^^ [2]
    union.js:40:34
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                        ^^^^^^^^^^^^^^^^^^^^^^ [4]
-   union.js:40:59
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [5]
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                        ^^^^^^^^^^^^^^^^^^^^^ [4]
+   union.js:40:58
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                                ^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:43:2
@@ -1116,14 +1116,14 @@ Cannot cast object literal to `F` because: [incompatible-type]
 
 References:
    union.js:40:10
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
                 ^^^^^^^^^^^^^^^^^^^^^ [2]
    union.js:40:34
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                        ^^^^^^^^^^^^^^^^^^^^^^ [3]
-   union.js:40:59
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [4]
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                        ^^^^^^^^^^^^^^^^^^^^^ [3]
+   union.js:40:58
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                                ^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:44:1
@@ -1142,14 +1142,14 @@ References:
    10|   p: number;
             ^^^^^^ [1]
    union.js:40:24
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
                               ^^^^^^ [2]
    union.js:40:34
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                        ^^^^^^^^^^^^^^^^^^^^^^ [4]
-   union.js:40:59
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [5]
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                        ^^^^^^^^^^^^^^^^^^^^^ [4]
+   union.js:40:58
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                                ^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:45:1
@@ -1165,14 +1165,14 @@ Cannot cast `new Z()` to `F` because: [incompatible-type]
 
 References:
    union.js:40:10
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
                 ^^^^^^^^^^^^^^^^^^^^^ [2]
    union.js:40:34
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                        ^^^^^^^^^^^^^^^^^^^^^^ [3]
-   union.js:40:59
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [4]
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                        ^^^^^^^^^^^^^^^^^^^^^ [3]
+   union.js:40:58
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                                ^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:46:8
@@ -1190,15 +1190,15 @@ References:
    union.js:46:9
    46| [1] as [number] as F;
                ^^^^^^ [1]
-   union.js:40:49
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                       ^^^^^^ [2]
+   union.js:40:48
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                      ^^^^^^ [2]
    union.js:40:10
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
                 ^^^^^^^^^^^^^^^^^^^^^ [4]
-   union.js:40:59
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [5]
+   union.js:40:58
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                                ^^^^^^^^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- union.js:47:11
@@ -1216,14 +1216,14 @@ References:
    union.js:47:12
    47| [1, 2] as [number, number] as F;
                   ^^^^^^ [1]
-   union.js:40:60
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                  ^^^^^^ [2]
-   union.js:40:49
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                       ^^^^^^ [3]
+   union.js:40:59
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                                 ^^^^^^ [2]
+   union.js:40:48
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                      ^^^^^^ [3]
    union.js:40:10
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
                 ^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -1242,15 +1242,15 @@ References:
    union.js:48:15
    48| [1, 2, 3] as [number, number, number] as F;
                      ^^^^^^ [1]
-   union.js:40:49
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                       ^^^^^^ [2]
+   union.js:40:48
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                      ^^^^^^ [2]
    union.js:40:10
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
                 ^^^^^^^^^^^^^^^^^^^^^ [4]
-   union.js:40:59
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [5]
+   union.js:40:58
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                                ^^^^^^^^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- union.js:49:16
@@ -1271,30 +1271,30 @@ References:
    union.js:49:22
    49| null as any as Array<number> & {p: number} as F;
                             ^^^^^^ [1]
-   union.js:40:49
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                       ^^^^^^ [2]
+   union.js:40:48
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                      ^^^^^^ [2]
    union.js:49:36
    49| null as any as Array<number> & {p: number} as F;
                                           ^^^^^^ [3]
    union.js:40:24
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
                               ^^^^^^ [4]
    union.js:49:16
    49| null as any as Array<number> & {p: number} as F;
                       ^^^^^^^^^^^^^ [5]
    union.js:40:10
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
                 ^^^^^^^^^^^^^^^^^^^^^ [6]
-   union.js:40:59
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [7]
+   union.js:40:58
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                                                ^^^^^^^^^^^^^^^^ [7]
    union.js:49:32
    49| null as any as Array<number> & {p: number} as F;
                                       ^^^^^^^^^^^ [8]
    union.js:40:34
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                        ^^^^^^^^^^^^^^^^^^^^^^ [9]
+   40| type F = interface {p: string} | ReadonlyArray<string> | [string, string];
+                                        ^^^^^^^^^^^^^^^^^^^^^ [9]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:52:1

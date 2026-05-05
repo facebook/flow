@@ -11,7 +11,7 @@ const Keys = Object.freeze({
 });
 
 declare function createObjectFrom<TKey extends string>(
-  keys: $ReadOnlyArray<TKey>,
+  keys: ReadonlyArray<TKey>,
 ): {[key: TKey]: boolean};
 
 // Case 1: Array of 6 enum members

@@ -33,8 +33,8 @@ type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
 type MapRelayProp<T> = T extends null | void ? T
   : T extends {+__typeof: infer V extends FragmentTypeof, ...}
     ? {+__fragments: FragmentReference<V>, ...}
-    : T extends $ReadOnlyArray<?{+__typeof: FragmentTypeof, ...}>
-      ? $ReadOnlyArray<MapRelayProp<T[number]>> : T;
+    : T extends ReadonlyArray<?{+__typeof: FragmentTypeof, ...}>
+      ? ReadonlyArray<MapRelayProp<T[number]>> : T;
 
 declare function createFragmentContainer<Props extends {...}>(
   Component: React.ComponentType<Props>,
@@ -52,7 +52,7 @@ export type RelayModernTypedFlowtest_user = {
 };
 
 declare export opaque type RelayModernTypedFlowtest_users$reference: FragmentTypeof;
-export type RelayModernTypedFlowtest_users = $ReadOnlyArray<{
+export type RelayModernTypedFlowtest_users = ReadonlyArray<{
   +__typeof: RelayModernTypedFlowtest_users$reference,
   +name: ?string,
 }>;
@@ -95,7 +95,7 @@ declare var oneOfUsersRef: {
   ...
 };
 
-declare var usersRef: $ReadOnlyArray<{
+declare var usersRef: ReadonlyArray<{
   +__fragments: FragmentReference<RelayModernTypedFlowtest_users$reference>,
   ...
 }>;

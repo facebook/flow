@@ -20,7 +20,7 @@ declare var a: A;
 
 const z = delete a.a;
 
-declare var b: $ReadOnlyArray<number>;
+declare var b: ReadonlyArray<number>;
 delete b[0];
 
 declare var c: [number, number];

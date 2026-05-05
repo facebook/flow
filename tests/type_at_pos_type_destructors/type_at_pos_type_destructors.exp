@@ -22,7 +22,7 @@ type T3 = Array<string> extends ReadonlyArray<infer X> ? X : empty
 = string
 
 'T3' defined at conditional-types.js:7:5
-'X' defined at conditional-types.js:7:53
+'X' defined at conditional-types.js:7:52
 
 conditional-types.js:7:6,7:7
 

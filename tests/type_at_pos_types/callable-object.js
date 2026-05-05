@@ -7,36 +7,36 @@ declare opaque type O4;
 
 type Obj1 = {
 //     ^?
-  (...args: $ReadOnlyArray<unknown>): void,
+  (...args: ReadonlyArray<unknown>): void,
   f: <T>(x: T) => T
 , ...};
 
 type Obj2 = {
 //     ^?
-  $call: (...args: $ReadOnlyArray<unknown>) => void, // named prop
+  $call: (...args: ReadonlyArray<unknown>) => void, // named prop
   f: <T>(x: T) => T
 , ...};
 
 type Obj3 = {
 //     ^?
-  [[call]]: (...args: $ReadOnlyArray<unknown>) => void,
+  [[call]]: (...args: ReadonlyArray<unknown>) => void,
   f: <T>(x: T) => T
 , ...};
 
 type Obj4 = {
 //     ^?
-  (...args: $ReadOnlyArray<unknown>): O1,
-  (...args: $ReadOnlyArray<unknown>): O2,
-  $call: (...args: $ReadOnlyArray<unknown>) => O3, // named prop
-  [[call]]: (...args: $ReadOnlyArray<unknown>) => O4,
+  (...args: ReadonlyArray<unknown>): O1,
+  (...args: ReadonlyArray<unknown>): O2,
+  $call: (...args: ReadonlyArray<unknown>) => O3, // named prop
+  [[call]]: (...args: ReadonlyArray<unknown>) => O4,
   f: <T>(x: T) => T
 , ...};
 
 type Obj5 = {
 //     ^?
-  [[call]]: (...args: $ReadOnlyArray<unknown>) => O4,
-  $call: (...args: $ReadOnlyArray<unknown>) => O3, // named prop
-  (...args: $ReadOnlyArray<unknown>): O1,
-  (...args: $ReadOnlyArray<unknown>): O2,
+  [[call]]: (...args: ReadonlyArray<unknown>) => O4,
+  $call: (...args: ReadonlyArray<unknown>) => O3, // named prop
+  (...args: ReadonlyArray<unknown>): O1,
+  (...args: ReadonlyArray<unknown>): O2,
   f: <T>(x: T) => T,
  ...};

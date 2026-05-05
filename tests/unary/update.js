@@ -41,7 +41,7 @@ let tests = [
     // o.y--; // error, can't read write-only property
   },
 
-  function(xs: $ReadOnlyArray<number>) {
+  function(xs: ReadonlyArray<number>) {
     xs[0]++;
     xs[0]--;
   },

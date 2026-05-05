@@ -1,6 +1,6 @@
-declare function useCallback<T extends (...args: $ReadOnlyArray<empty>) => unknown>(
+declare function useCallback<T extends (...args: ReadonlyArray<empty>) => unknown>(
   callback: T,
-  inputs: ?$ReadOnlyArray<unknown>
+  inputs: ?ReadonlyArray<unknown>
 ): T;
 
 type ReturnValueType<T extends InputValueType> =
@@ -9,13 +9,13 @@ type ReturnValueType<T extends InputValueType> =
     : ReturnValueObjectType<T>;
 
 type InputValueType = Readonly<{[string]: InputValueType}>;
-type InputValueArrayType = $ReadOnlyArray<InputValueType>;
+type InputValueArrayType = ReadonlyArray<InputValueType>;
 
 type ReturnValueObjectType<T extends InputValueType> = Readonly<{
   [key in keyof T]: ReturnValueType<T[key]>,
 }>;
 
-type ReturnValueArrayType<T extends InputValueArrayType> = $ReadOnlyArray<
+type ReturnValueArrayType<T extends InputValueArrayType> = ReadonlyArray<
   ReturnValueType<T[0]>,
 >;
 

@@ -19,9 +19,9 @@
   }
 }
 
-// $ReadOnlyArray
+// ReadonlyArray
 {
-  declare const x: $ReadOnlyArray<number>;
+  declare const x: ReadonlyArray<number>;
 
   match (x) { // OK
     [...] => {}

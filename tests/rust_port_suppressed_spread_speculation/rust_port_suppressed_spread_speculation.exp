@@ -8,8 +8,8 @@ Cannot call `options.find` because property `find` is missing in `$ReadOnlyArray
 
 References:
    test.js:35:24
-   35| declare const options: $ReadOnlyArray<Option>;
-                              ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   35| declare const options: ReadonlyArray<Option>;
+                              ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:40:20

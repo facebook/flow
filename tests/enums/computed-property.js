@@ -24,5 +24,5 @@ const err_spread_2 = {...o, [s]: 1}; // ERROR
 
 // Object.key still results in `string`
 const k = Object.keys(o);
-k as $ReadOnlyArray<string>; // OK
-k as $ReadOnlyArray<E>; // ERROR
+k as ReadonlyArray<string>; // OK
+k as ReadonlyArray<E>; // ERROR

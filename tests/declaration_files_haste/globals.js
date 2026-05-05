@@ -4,5 +4,5 @@ declare interface Array<T> {
 }
 
 declare class Map<K, +V> {
-  constructor(iterable?: ?$ReadOnlyArray<[K, V]>): void;
+  constructor(iterable?: ?ReadonlyArray<[K, V]>): void;
 }

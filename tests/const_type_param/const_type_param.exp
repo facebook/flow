@@ -184,9 +184,9 @@ Cannot call `f3` because number [1] is incompatible with union type [2]. [incomp
                             ^ [1]
 
 References:
-   file.js:103:47
-   103|   declare function f3<const T: $ReadOnlyArray<1|'a'>>(...args: T): T;
-                                                      ^^^^^ [2]
+   file.js:103:46
+   103|   declare function f3<const T: ReadonlyArray<1|'a'>>(...args: T): T;
+                                                     ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- file.js:104:24
@@ -198,9 +198,9 @@ Cannot call `f3` because string [1] is incompatible with union type [2]. [incomp
                                ^^^ [1]
 
 References:
-   file.js:103:47
-   103|   declare function f3<const T: $ReadOnlyArray<1|'a'>>(...args: T): T;
-                                                      ^^^^^ [2]
+   file.js:103:46
+   103|   declare function f3<const T: ReadonlyArray<1|'a'>>(...args: T): T;
+                                                     ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- file.js:122:3

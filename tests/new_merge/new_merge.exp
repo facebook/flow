@@ -345,7 +345,7 @@ Error --------------------------------------------------------------------------
 
 Cannot resolve name `arr16`. [cannot-resolve-name]
 
-   65| arr16 as $ReadOnlyArray<empty>; // okay - inferred as any
+   65| arr16 as ReadonlyArray<empty>; // okay - inferred as any
        ^^^^^
 
 

@@ -5,7 +5,7 @@ function foo(x: unknown): x is number {
   return typeof x === "number";
 }
 
-function zeros(vals: $ReadOnlyArray<0 | 1>): $ReadOnlyArray<0> {
+function zeros(vals: ReadonlyArray<0 | 1>): ReadonlyArray<0> {
   return vals.filter((x): x is 0 => x === 0);
 //            ^
 }

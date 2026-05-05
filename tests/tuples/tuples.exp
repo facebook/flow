@@ -841,9 +841,9 @@ Cannot cast `map(...)` to tuple type because in index `0`: string [1] is incompa
        ^^^^^^^^
 
 References:
-   mapped_type_on_tuple.js:18:91
-   18| declare function map<A extends $ReadOnlyArray<unknown>>(o2: Promise<A>): {[K in keyof A]: A[K] extends F<infer V> ? V : empty};
-                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   mapped_type_on_tuple.js:18:90
+   18| declare function map<A extends ReadonlyArray<unknown>>(o2: Promise<A>): {[K in keyof A]: A[K] extends F<infer V> ? V : empty};
+                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    mapped_type_on_tuple.js:20:18
    20| map(boo) as [+v: number]; // error
                         ^^^^^^ [2]
@@ -1498,52 +1498,52 @@ References:
                        ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ readonly-array.js:16:76
+Error ------------------------------------------------------------------------------------------ readonly-array.js:16:74
 
 Cannot return `tup` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
 
-   readonly-array.js:16:76
-   16| const elemCheck = (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup; // error
-                                                                                  ^^^
+   readonly-array.js:16:74
+   16| const elemCheck = (tup: ReadonlyArray<number>): ReadonlyArray<string> => tup; // error
+                                                                                ^^^
 
 References:
-   readonly-array.js:16:40
-   16| const elemCheck = (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup; // error
-                                              ^^^^^^ [1]
-   readonly-array.js:16:65
-   16| const elemCheck = (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup; // error
-                                                                       ^^^^^^ [2]
+   readonly-array.js:16:39
+   16| const elemCheck = (tup: ReadonlyArray<number>): ReadonlyArray<string> => tup; // error
+                                             ^^^^^^ [1]
+   readonly-array.js:16:63
+   16| const elemCheck = (tup: ReadonlyArray<number>): ReadonlyArray<string> => tup; // error
+                                                                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ readonly-array.js:17:70
+Error ------------------------------------------------------------------------------------------ readonly-array.js:17:69
 
 Cannot return `tup` because read-only array type [1] is incompatible with array type [2]. [incompatible-type]
 
-   readonly-array.js:17:70
-   17| const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup; // error
-                                                                            ^^^
+   readonly-array.js:17:69
+   17| const tupleToArray = (tup: ReadonlyArray<number>): Array<number> => tup; // error
+                                                                           ^^^
 
 References:
    readonly-array.js:17:28
-   17| const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup; // error
-                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   readonly-array.js:17:53
-   17| const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup; // error
-                                                           ^^^^^^^^^^^^^ [2]
+   17| const tupleToArray = (tup: ReadonlyArray<number>): Array<number> => tup; // error
+                                  ^^^^^^^^^^^^^^^^^^^^^ [1]
+   readonly-array.js:17:52
+   17| const tupleToArray = (tup: ReadonlyArray<number>): Array<number> => tup; // error
+                                                          ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ readonly-array.js:18:65
+Error ------------------------------------------------------------------------------------------ readonly-array.js:18:64
 
 Cannot call `tup.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
 
-   readonly-array.js:18:65
-   18| const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123); // error
-                                                                       ^^^^
+   readonly-array.js:18:64
+   18| const arrayMethods = (tup: ReadonlyArray<number>): void => tup.push(123); // error
+                                                                      ^^^^
 
 References:
    readonly-array.js:18:28
-   18| const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123); // error
-                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   18| const arrayMethods = (tup: ReadonlyArray<number>): void => tup.push(123); // error
+                                  ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ readonly-array.js:21:42
@@ -1804,13 +1804,13 @@ Error --------------------------------------------------------------------------
 Cannot spread non-tuple (read-only array type [1]) into tuple type. [tuple-invalid-type-spread]
 
    spread.js:57:22
-   57| type ROArraySpread = [...$ReadOnlyArray<unknown>]; // ERROR
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   57| type ROArraySpread = [...ReadonlyArray<unknown>]; // ERROR
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    spread.js:57:26
-   57| type ROArraySpread = [...$ReadOnlyArray<unknown>]; // ERROR
-                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   57| type ROArraySpread = [...ReadonlyArray<unknown>]; // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:87:8

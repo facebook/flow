@@ -3,7 +3,7 @@
 type Foo = {
   bar: {
       baz: ?{
-          qux: $ReadOnlyArray<string>;
+          qux: ReadonlyArray<string>;
       }
   }
 }

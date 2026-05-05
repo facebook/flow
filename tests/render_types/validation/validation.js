@@ -34,7 +34,7 @@ type AllowedGenericRenders<T extends React$Node> = renders T; // ok
 
 type BadSpecificRenders1 = renders (false | null | void); // error
 type BadSpecificRenders2 = renders (Array<ExactReactElement_DEPRECATED<typeof Foo>>); // error
-type BadSpecificRenders3 = renders ($ReadOnlyArray<ExactReactElement_DEPRECATED<typeof Foo>>); // error
+type BadSpecificRenders3 = renders (ReadonlyArray<ExactReactElement_DEPRECATED<typeof Foo>>); // error
 type BadSpecificRenders4 = renders (Iterable<ExactReactElement_DEPRECATED<typeof Foo>>); // error
 type BadSpecificRenders5 = renders (React.ChildrenArray<ExactReactElement_DEPRECATED<typeof Foo>>); // error
 type BadSpecificRenders6 = renders (React.ChildrenArray<ExactReactElement_DEPRECATED<typeof Foo> | null>); // error

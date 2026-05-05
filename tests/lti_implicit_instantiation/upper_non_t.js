@@ -91,7 +91,7 @@ function spreads() {
 }
 
 function rests() {
-  declare function ArrRest<TArgs extends $ReadOnlyArray<unknown>>(...x: TArgs): TArgs;
+  declare function ArrRest<TArgs extends ReadonlyArray<unknown>>(...x: TArgs): TArgs;
   const r1 = ArrRest(...([] as Array<string>)); // ok
   const r2 = ArrRest(...([1, 2] as [1, 2])); // ok
   r1 as Array<string>; // ok
@@ -105,10 +105,10 @@ function rests() {
 }
 
 function ResolveSpreadsToMultiflowSubtypeFull() {
-  declare function f<TArguments extends $ReadOnlyArray<unknown>>(
+  declare function f<TArguments extends ReadonlyArray<unknown>>(
     fn: (...TArguments) => unknown,
   ): (...TArguments) => unknown;
-  declare function params<TArguments extends $ReadOnlyArray<unknown>>(
+  declare function params<TArguments extends ReadonlyArray<unknown>>(
     fn: (...TArguments) => unknown,
   ): TArguments;
 

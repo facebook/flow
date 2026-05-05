@@ -37,7 +37,7 @@ new Y() as E;
 new Z() as E;
 ({p: true}) as E;
 
-type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+type F = interface {p: string} | ReadonlyArray<string> | [string, string];
 42 as F;
 ({p: 42}) as F;
 ({}) as F;

@@ -1,6 +1,6 @@
 declare const key: number;
 
-declare const roArray: $ReadOnlyArray<string>;
+declare const roArray: ReadonlyArray<string>;
 roArray[0] as string; // error: void ~> string
 roArray[key] as string; // error: void ~> string
 declare const rwArray: Array<string>;

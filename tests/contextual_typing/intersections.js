@@ -45,10 +45,10 @@ function test6() {
 }
 
 function test7() {
-  declare function arrayFrom<A>(iter: $ReadOnlyArray<A>): Array<A>;
+  declare function arrayFrom<A>(iter: ReadonlyArray<A>): Array<A>;
   declare function arrayFrom(arrayLike: interface { length: number }): Array<void>;
 
-  declare var tags: ?$ReadOnlyArray<string>;
+  declare var tags: ?ReadonlyArray<string>;
   const tagsList = arrayFrom(tags ?? []);
   tagsList.forEach(tag => tag as number); // error: string ~> number
 }

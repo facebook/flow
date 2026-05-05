@@ -1,4 +1,4 @@
 import type {V} from './a';
 
-declare const ivs: $ReadOnlyArray<V>;
+declare const ivs: ReadonlyArray<V>;
 ivs.find(_ => true) as ?V;

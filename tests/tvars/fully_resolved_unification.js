@@ -1,5 +1,5 @@
 // This test ensures that unification does not alter the type of fully resolved tvars
-type Foo = {+foo?: $ReadOnlyArray<{|
+type Foo = {+foo?: ReadonlyArray<{|
   +bar: string,
 |}>};
 

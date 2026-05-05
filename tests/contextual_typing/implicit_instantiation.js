@@ -132,7 +132,7 @@ function test10() {
 
 function test11() {
   declare var jest: {
-    fn<TArguments extends $ReadOnlyArray<any> = $ReadOnlyArray<any>>(): (...args: TArguments)=>void
+    fn<TArguments extends ReadonlyArray<any> = ReadonlyArray<any>>(): (...args: TArguments)=>void
   }
   declare var C1: React.ComponentType<{+f: () => void}>;
   <C1 f={jest.fn()} />; // ok

@@ -81,7 +81,7 @@ type ConditionalExtractPropType = PropObj extends { prop: infer T, ... } ? T : e
 
 type NestedObj = {
   +status: ?number,
-  +data: ?$ReadOnlyArray<{
+  +data: ?ReadonlyArray<{
     +foo: ?{
       +bar: number
    }
@@ -91,7 +91,7 @@ type NestedObj = {
 // If you wanted to extract the type for `bar`, you could use conditional type:
 type ConditionalNestedObjType = NestedObj extends {
 //   ^
-  +data: ?$ReadOnlyArray<{
+  +data: ?ReadonlyArray<{
     +foo: ?{
       +bar: ?infer T
 , ...    }

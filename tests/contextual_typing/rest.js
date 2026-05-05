@@ -1,9 +1,9 @@
 function test1() {
-  declare var fn: <TArguments extends $ReadOnlyArray<unknown> = $ReadOnlyArray<any>, TReturn = any>(
+  declare var fn: <TArguments extends ReadonlyArray<unknown> = ReadonlyArray<any>, TReturn = any>(
     implementation?: (...args: TArguments) => TReturn
   ) => JestMockFn<TArguments, TReturn>
 
-  type JestMockFn<TArguments extends $ReadOnlyArray<unknown>, TReturn> = {
+  type JestMockFn<TArguments extends ReadonlyArray<unknown>, TReturn> = {
     (...args: TArguments): TReturn,
   }
 

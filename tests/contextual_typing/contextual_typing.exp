@@ -224,9 +224,9 @@ Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [inc
                         ^
 
 References:
-   destructuring_assignment.js:21:32
-   21| declare var e: $ReadOnlyArray<(number) => unknown>;
-                                      ^^^^^^ [1]
+   destructuring_assignment.js:21:31
+   21| declare var e: ReadonlyArray<(number) => unknown>;
+                                     ^^^^^^ [1]
    destructuring_assignment.js:23:23
    23| [...e] = [(n) => n as empty]; // error: num ~> empty
                              ^^^^^ [2]
@@ -680,9 +680,9 @@ Cannot cast `tag` to number because string [1] is incompatible with number [2]. 
                                  ^^^
 
 References:
-   intersections.js:51:37
-   51|   declare var tags: ?$ReadOnlyArray<string>;
-                                           ^^^^^^ [1]
+   intersections.js:51:36
+   51|   declare var tags: ?ReadonlyArray<string>;
+                                          ^^^^^^ [1]
    intersections.js:53:34
    53|   tagsList.forEach(tag => tag as number); // error: string ~> number
                                         ^^^^^^ [2]

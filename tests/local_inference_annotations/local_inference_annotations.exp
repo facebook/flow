@@ -364,16 +364,16 @@ Cannot cast `test3` to read-only array type because in array element > the first
 with string [2]. [incompatible-type]
 
    conditional.js:22:3
-   22|   test3 as $ReadOnlyArray<(string) => void>; // error should be number => void
+   22|   test3 as ReadonlyArray<(string) => void>; // error should be number => void
          ^^^^^
 
 References:
    conditional.js:20:41
    20|   const test3 = true ? [x => {}] : [(x: number) => {}];
                                                ^^^^^^ [1]
-   conditional.js:22:28
-   22|   test3 as $ReadOnlyArray<(string) => void>; // error should be number => void
-                                  ^^^^^^ [2]
+   conditional.js:22:27
+   22|   test3 as ReadonlyArray<(string) => void>; // error should be number => void
+                                 ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- conditional.js:30:22

@@ -8,7 +8,7 @@ function rest_tuple<T>(...xs: [T]): T { // Ok, tuples can be rest params
   return xs[0];
 }
 
-function rest_ro_array<T>(...xs: $ReadOnlyArray<T>): T { // Ok
+function rest_ro_array<T>(...xs: ReadonlyArray<T>): T { // Ok
   return xs[0];
 }
 
@@ -24,7 +24,7 @@ function rest_t<U, T extends Array<U>>(...xs: T): U { // Ok, bounded targ can be
 function unbound_rest_t<T>(...xs: T): void {}
 function mixed_rest_t<T extends unknown>(...xs: T): void {}
 function array_rest_t<T extends Array<unknown>>(...xs: T): void {}
-function roarray_rest_t<T extends $ReadOnlyArray<unknown>>(...xs: T): void {}
+function roarray_rest_t<T extends ReadonlyArray<unknown>>(...xs: T): void {}
 function iterable_rest_t<T extends Iterable<unknown>>(...xs: T): void {}
 function empty_rest_t1<T extends empty>(...xs: T): void {}
 function bounds_on_bounds<T>() {

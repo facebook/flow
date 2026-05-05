@@ -21,7 +21,7 @@
 {
   // raw property
   const tag = (quasis: TaggedTemplateLiteralArray, x: number) => {
-    quasis.raw as $ReadOnlyArray<string>; // OK
+    quasis.raw as ReadonlyArray<string>; // OK
     quasis.raw as empty; // ERROR
   };
   tag`foo${1}`; // OK

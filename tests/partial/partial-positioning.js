@@ -3,7 +3,7 @@ export type BaseType = boolean | number;
 type RecursiveProp =
   | BaseType
   | Partial<{[string]: RecursiveProp}>
-  | $ReadOnlyArray<RecursiveProp>;
+  | ReadonlyArray<RecursiveProp>;
 
 type Props = Partial<{[string]: RecursiveProp}>;
 

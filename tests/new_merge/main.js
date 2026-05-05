@@ -62,7 +62,7 @@ declare var t16: T16;
 t16 as empty; // okay - inferred as any
 t16.A as empty; // okay - inferred as any
 C16 as empty; // error class ~> empty
-arr16 as $ReadOnlyArray<empty>; // okay - inferred as any
+arr16 as ReadonlyArray<empty>; // okay - inferred as any
 
 declare var d16: D16;
 if (d16.kind === 'kind1') {

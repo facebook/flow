@@ -62,6 +62,6 @@ function foo12() {
 function foo13() {
   declare var a: unknown;
   if (a != null && Array.isArray(a.foo)) {
-    a.foo as $ReadOnlyArray<unknown>;
+    a.foo as ReadonlyArray<unknown>;
   }
 }

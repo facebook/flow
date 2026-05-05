@@ -4,7 +4,7 @@ type T1 = '1' extends string ? number : boolean;
 type T2 = 1 extends number ? string : boolean;
 //   ^
 
-type T3 = Array<string> extends $ReadOnlyArray<infer X> ? X : empty;
+type T3 = Array<string> extends ReadonlyArray<infer X> ? X : empty;
 //   ^
 
 // Test on nested extends

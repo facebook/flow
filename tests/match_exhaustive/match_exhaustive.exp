@@ -54,8 +54,8 @@ array type [1]. [match-not-exhaustive]
 
 References:
    arrays.js:24:20
-   24|   declare const x: $ReadOnlyArray<number>;
-                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   24|   declare const x: ReadonlyArray<number>;
+                          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:34:3
@@ -69,8 +69,8 @@ array type [1]. [match-not-exhaustive]
 
 References:
    arrays.js:24:20
-   24|   declare const x: $ReadOnlyArray<number>;
-                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   24|   declare const x: ReadonlyArray<number>;
+                          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:38:3
@@ -84,8 +84,8 @@ array type [1]. [match-not-exhaustive]
 
 References:
    arrays.js:24:20
-   24|   declare const x: $ReadOnlyArray<number>;
-                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   24|   declare const x: ReadonlyArray<number>;
+                          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:51:3

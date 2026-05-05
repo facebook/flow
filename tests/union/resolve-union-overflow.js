@@ -1,10 +1,10 @@
 //@flow
 
 class C {
-  constructor(x?: ?$ReadOnlyArray<Type>) {}
+  constructor(x?: ?ReadonlyArray<Type>) {}
 }
 
-declare const types: $ReadOnlyArray<?Type>;
+declare const types: ReadonlyArray<?Type>;
 
 let x = types.filter(Boolean);
 new C(x); // should not error!

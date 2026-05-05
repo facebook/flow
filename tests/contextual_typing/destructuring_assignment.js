@@ -18,7 +18,7 @@ declare var d: (number) => unknown;
   b: (n) => n as empty, // error: num ~> empty
 })
 
-declare var e: $ReadOnlyArray<(number) => unknown>;
+declare var e: ReadonlyArray<(number) => unknown>;
 declare var f: {[string]: (number) => unknown};
 [...e] = [(n) => n as empty]; // error: num ~> empty
 ({...f} = {hello: (n) => n as empty}); // error: num ~> empty

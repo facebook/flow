@@ -8793,7 +8793,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    missing-property-cond.js:65:5
-   65|     a.foo as $ReadOnlyArray<unknown>;
+   65|     a.foo as ReadonlyArray<unknown>;
            ^
 
 References:
@@ -8807,7 +8807,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    missing-property-cond.js:65:5
-   65|     a.foo as $ReadOnlyArray<unknown>;
+   65|     a.foo as ReadonlyArray<unknown>;
            ^^^^^
 
 References:

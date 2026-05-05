@@ -29,11 +29,11 @@ Promise.all as Function;
 
 // Promise.all supports iterables
 function test(val: Iterable<Promise<number>>) {
-  const r: Promise<$ReadOnlyArray<number>> = Promise.all(val);
+  const r: Promise<ReadonlyArray<number>> = Promise.all(val);
 }
 
 function test2(val: Map<string, Promise<number>>) {
-  const r: Promise<$ReadOnlyArray<number>> = Promise.all(val.values());
+  const r: Promise<ReadonlyArray<number>> = Promise.all(val.values());
 }
 
 function test3(val: Array<Promise<number>>) {

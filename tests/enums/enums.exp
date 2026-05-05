@@ -687,16 +687,16 @@ Cannot cast `k` to read-only array type because in array element: string [1] is 
 [incompatible-type]
 
    computed-property.js:28:1
-   28| k as $ReadOnlyArray<E>; // ERROR
+   28| k as ReadonlyArray<E>; // ERROR
        ^
 
 References:
    computed-property.js:26:11
    26| const k = Object.keys(o);
                  ^^^^^^^^^^^^^^ [1]
-   computed-property.js:28:21
-   28| k as $ReadOnlyArray<E>; // ERROR
-                           ^ [2]
+   computed-property.js:28:20
+   28| k as ReadonlyArray<E>; // ERROR
+                          ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ const-enum.js:1:7

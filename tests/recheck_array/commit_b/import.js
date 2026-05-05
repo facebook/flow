@@ -1,3 +1,3 @@
 //@flow
 
-export type Arr = $ReadOnlyArray<?number>;
+export type Arr = ReadonlyArray<?number>;

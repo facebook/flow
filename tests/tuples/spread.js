@@ -54,7 +54,7 @@ type ArraySpread = [...Array<unknown>]; // ERROR
   declare const x: ArraySpread;
   x as empty; // OK
 }
-type ROArraySpread = [...$ReadOnlyArray<unknown>]; // ERROR
+type ROArraySpread = [...ReadonlyArray<unknown>]; // ERROR
 {
   declare const x: ROArraySpread;
   x as empty; // OK

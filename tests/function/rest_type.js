@@ -4,7 +4,7 @@ type rest_array = <T>(...xs: Array<T>) => T; // Ok, arrays can be rest params
 
 type rest_tuple = <T>(...xs: [T]) => T; // Ok, tuples can be rest params
 
-type rest_ro_array = <T>(...xs: $ReadOnlyArray<T>) => T;  // Ok
+type rest_ro_array = <T>(...xs: ReadonlyArray<T>) => T;  // Ok
 
 type rest_any = (...xs: any) => any; // Ok, any can be a rest param
 

@@ -2,13 +2,13 @@ type GenericComponentType<TLayoutProps extends {...}> = component<
   +TItem,
 >(
   children: (item: TItem) => React.Node,
-  items: $ReadOnlyArray<TItem>,
+  items: ReadonlyArray<TItem>,
 );
 
 
 declare const GenericComponent: GenericComponentType<{}>;
 
-const items: $ReadOnlyArray<{title: string}> = [];
+const items: ReadonlyArray<{title: string}> = [];
 
 component EmptyListExample() {
   return (

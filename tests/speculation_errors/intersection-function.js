@@ -46,7 +46,7 @@ e(new Z());
 e({p: true});
 
 declare function f(x: interface {p: string}): void;
-declare function f(x: $ReadOnlyArray<string>): void;
+declare function f(x: ReadonlyArray<string>): void;
 declare function f(x: [string, string]): void;
 f(42);
 f({p: 42});

@@ -23,7 +23,7 @@ function baz(x: unknown) {
 
 function qux_readonlyarray(x: unknown) {
   if (x instanceof Array) {
-    x as $ReadOnlyArray<any>;
+    x as ReadonlyArray<any>;
   }
 }
 

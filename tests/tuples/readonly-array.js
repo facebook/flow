@@ -1,26 +1,26 @@
-// $ReadOnlyArray<T> is the supertype for all tuples
-function tupleLength(tup: $ReadOnlyArray<unknown>): number {
-  // $ReadOnlyArray can use Array.prototype properties that don't mutate it
+// ReadonlyArray<T> is the supertype for all tuples
+function tupleLength(tup: ReadonlyArray<unknown>): number {
+  // ReadonlyArray can use Array.prototype properties that don't mutate it
   return tup.length;
 }
-// Array literals with known types can flow to $ReadOnlyArray
+// Array literals with known types can flow to ReadonlyArray
 tupleLength([1,2,3]);
 tupleLength(["a", "b", "c"]);
-// Arrays can flow to $ReadOnlyArray
+// Arrays can flow to ReadonlyArray
 tupleLength([1, 2, 3] as Array<number>);
-// Tuple types can flow to $ReadOnlyArray
+// Tuple types can flow to ReadonlyArray
 tupleLength([1,2,3] as [1,2,3]);
-// $ReadOnlyArray can flow to $ReadOnlyArray
-tupleLength([1,2,3] as $ReadOnlyArray<number>);
+// ReadonlyArray can flow to ReadonlyArray
+tupleLength([1,2,3] as ReadonlyArray<number>);
 
-const elemCheck = (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup; // error
-const tupleToArray = (tup: $ReadOnlyArray<number>): Array<number> => tup; // error
-const arrayMethods = (tup: $ReadOnlyArray<number>): void => tup.push(123); // error
+const elemCheck = (tup: ReadonlyArray<number>): ReadonlyArray<string> => tup; // error
+const tupleToArray = (tup: ReadonlyArray<number>): Array<number> => tup; // error
+const arrayMethods = (tup: ReadonlyArray<number>): void => tup.push(123); // error
 
-// You can use the $ReadOnlyArray functions
+// You can use the ReadonlyArray functions
 function foo1(x: [1,2]): string { return x.length; } // error
 
-// The ref that $ReadOnlyArray functions provide is a $ReadOnlyArray
+// The ref that ReadonlyArray functions provide is a ReadonlyArray
 function foo2(tup: [1,2], arr: Array<number>): void {
   tup.forEach((value, index, readOnlyRef) => {
     readOnlyRef.push(123); // error

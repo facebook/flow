@@ -58,5 +58,5 @@ while (0 < 1) {
 
 type CA<+T> =
 //   ^?
-  $ReadOnlyArray<CA<T>>;
+  ReadonlyArray<CA<T>>;
 //                ^?

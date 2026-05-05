@@ -22,7 +22,7 @@ type ComplexStyleValueType<+T> =
     ? U
     : T extends string | number | null
       ? T
-      : T extends $ReadOnlyArray<infer U>
+      : T extends ReadonlyArray<infer U>
         ? ComplexStyleValueType<U>
         : T extends { +default: infer A, +[string]: infer B }
           ? ComplexStyleValueType<A> | ComplexStyleValueType<B>

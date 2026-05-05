@@ -1,7 +1,7 @@
 // @flow
 
 declare function objectEntries<TKey, TValue>(obj: { +[TKey]: TValue}): Array<[TKey, TValue]>;
-declare function groupBy<T>(array: $ReadOnlyArray<T>, keyFunc: T => string): {[key: string]: Array<T>, ...};
+declare function groupBy<T>(array: ReadonlyArray<T>, keyFunc: T => string): {[key: string]: Array<T>, ...};
 
 export type Obj = {
   a: ?number,

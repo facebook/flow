@@ -97,10 +97,10 @@ function test_rest_params() {
   declare function f1<const T: Array<unknown>>(...args: T): T;
   const x1 = f1(...[1]); // error inferred const array is readonly which is not compatible with Array<mixed>
 
-  declare function f2<const T: $ReadOnlyArray<unknown>>(...args: T): T;
-  const x2 = f2(...[1, 'a']); // okay inferred const array is readonly which is compatible with $ReadOnlyArray<mixed>
+  declare function f2<const T: ReadonlyArray<unknown>>(...args: T): T;
+  const x2 = f2(...[1, 'a']); // okay inferred const array is readonly which is compatible with ReadonlyArray<mixed>
 
-  declare function f3<const T: $ReadOnlyArray<1|'a'>>(...args: T): T;
+  declare function f3<const T: ReadonlyArray<1|'a'>>(...args: T): T;
   const x3 = f3(...[1, 'a']); // TODO okay - this still requires proper hint
                               // propagation support in rest params (D72695560)
 }
