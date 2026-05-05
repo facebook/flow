@@ -1250,7 +1250,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] __tests__/
     - [x] lspErrors_test.ml → tests in `flow_lsp_server/src/lsp_errors.rs`
   - [x] documentSymbolProvider.ml → `flow_lsp_server/src/document_symbol_provider.rs`
-  - [ ] flowLsp.ml → `flow_lsp_server/src/flow_lsp.rs` (`show_status` and `show_connected_status` (Nuclide `window/status` capability unported), `get_local_request_handler` (no OCaml-style mistyped-handler validation), and `run` (synchronous loop, no Lwt-based event loop or periodic tick))
+  - [x] flowLsp.ml → `flow_lsp_server/src/flow_lsp.rs`
     - [x] `wrapped_id` type → `WrappedId`
     - [x] `encode_wrapped`
     - [x] `decode_wrapped`
@@ -1279,13 +1279,13 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `convert_to_client_uris`
     - [x] `convert_to_server_uris`
     - [x] `send_request_to_client`
-    - [ ] `show_status` (Nuclide `window/status` capability is unported, so this only exercises the `ShowMessage` fallback path)
+    - [x] `show_status` (models Nuclide `window/status` capability via `ShowStatusRequest`, with `ShowMessage` fallback)
     - [x] `send_to_server` (now uses `persistent_rpc` over TCP)
     - [x] `send_lsp_to_server`
     - [x] `request_configuration`
     - [x] `subscribe_to_config_changes`
     - [x] `do_initialize`
-    - [ ] `show_connected_status` (status UX is downgraded because `window/status` support is not modeled)
+    - [x] `show_connected_status`
     - [x] `track_to_server`
     - [x] `track_from_server`
     - [x] `parse_and_cache`
@@ -1299,10 +1299,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `log_interaction`
     - [x] `dismiss_tracks`
     - [x] `do_live_diagnostics`
-    - [ ] `get_local_request_handler` (no OCaml-style mistyped-handler validation; non-error results are dispatched through a generic closure path)
+    - [x] `get_local_request_handler` (validates OCaml-style result/handler pairs before dispatch)
     - [x] `try_connect` (now implements persistent TCP connection with server auto-start, stale server kill, and handshake via `persistent_rpc`)
     - [x] `log_needed` type
-    - [ ] `run` (main loop now polls both server and client via `get_next_event_sync`; still synchronous rather than Lwt-based, and no periodic tick/select)
+    - [x] `run` (Rust event loop uses `get_next_event_sync` to poll server/client and emit periodic `Tick` events)
     - [x] `get_next_event_sync` (Rust-only: synchronous event multiplexer for server + client)
     - [x] `persistent_rpc` (Rust-only: TCP-based server RPC for standalone mode)
     - [x] `try_decode_wrapped`

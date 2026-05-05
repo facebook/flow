@@ -269,8 +269,34 @@ pub use flow_config::FlowConfig;
 
 pub type FileOptions = flow_common::files::FileOptions;
 
+pub enum LspResultHandler {
+    ShowMessageHandler(
+        Box<
+            dyn FnOnce(
+                Option<lsp_types::MessageActionItem>,
+                &mut ServerState,
+            ) -> Result<(), FlowLspError>,
+        >,
+    ),
+    ShowStatusHandler(
+        Box<dyn FnOnce(lsp::show_status::Result, &mut ServerState) -> Result<(), FlowLspError>>,
+    ),
+    ApplyWorkspaceEditHandler(
+        Box<
+            dyn FnOnce(
+                lsp_types::ApplyWorkspaceEditResponse,
+                &mut ServerState,
+            ) -> Result<(), FlowLspError>,
+        >,
+    ),
+    ConfigurationHandler(
+        Box<dyn FnOnce(Vec<serde_json::Value>, &mut ServerState) -> Result<(), FlowLspError>>,
+    ),
+    VoidHandler,
+}
+
 pub struct LspHandler {
-    pub on_response: Box<dyn FnOnce(lsp::LspResult, &mut ServerState) -> Result<(), FlowLspError>>,
+    pub on_response: LspResultHandler,
     pub on_error:
         Box<dyn FnOnce(lsp::error::T, String, &mut ServerState) -> Result<(), FlowLspError>>,
 }
@@ -1408,7 +1434,7 @@ fn send_request_to_client(
     ienv: &mut InitializedEnv,
     id: LspId,
     request: lsp::LspRequest,
-    on_response: Box<dyn FnOnce(lsp::LspResult, &mut ServerState) -> Result<(), FlowLspError>>,
+    on_response: LspResultHandler,
     on_error: Box<dyn FnOnce(lsp::error::T, String, &mut ServerState) -> Result<(), FlowLspError>>,
 ) {
     let json = {
@@ -1542,24 +1568,24 @@ fn show_status(
             Ok(())
         })
     };
-    let on_response: Box<dyn FnOnce(lsp::LspResult, &mut ServerState) -> Result<(), FlowLspError>> = {
+    let handle_result: Box<
+        dyn FnOnce(lsp::show_status::Result, &mut ServerState) -> Result<(), FlowLspError>,
+    > = {
         let id = id.clone();
         Box::new(move |result, state| {
             update_ienv(state, |ienv| mark_ienv_shown(id.clone(), ienv));
-            let title = match &result {
-                lsp::LspResult::ShowStatusResult(r) => r.as_ref().map(|item| item.title.clone()),
-                lsp::LspResult::ShowMessageRequestResult(r) => {
-                    r.as_ref().map(|item| item.title.clone())
-                }
-                _ => None,
-            };
-            if let Some(title) = title {
+            if let Some(title) = result.map(|item| item.title) {
                 if let Some(handler) = handler {
                     handler(&title, state);
                 }
             }
             Ok(())
         })
+    };
+    let on_response = if use_status {
+        LspResultHandler::ShowStatusHandler(handle_result)
+    } else {
+        LspResultHandler::ShowMessageHandler(handle_result)
     };
     send_request_to_client(&mut ienv, id.clone(), request, on_response, on_error);
     ienv.i_status = ShowStatusT::Shown(Some(id), params);
@@ -1623,26 +1649,24 @@ fn request_configuration(ienv: &mut InitializedEnv) {
             section: Some("flow".to_string()),
         }],
     });
-    let on_response: Box<dyn FnOnce(lsp::LspResult, &mut ServerState) -> Result<(), FlowLspError>> =
-        Box::new(|result, state| {
-            if let lsp::LspResult::ConfigurationResult(configs) = result {
-                if configs.len() == 1 {
-                    let i_config = configs.into_iter().next().unwrap();
-                    let config_clone = i_config.clone();
-                    update_ienv(state, |ienv| {
-                        ienv.i_config = config_clone;
-                    });
-                    if let ServerState::Connected(cenv) = state {
-                        send_configuration_to_server(
-                            "synthetic/didChangeConfiguration",
-                            i_config,
-                            cenv,
-                        )?;
-                    }
-                }
+    let on_response = LspResultHandler::ConfigurationHandler(Box::new(|configs, state| {
+        if configs.len() == 1 {
+            let i_config = configs
+                .into_iter()
+                .next()
+                .expect("configuration response length was checked");
+            // update the lsp process's cache
+            let config_clone = i_config.clone();
+            update_ienv(state, |ienv| {
+                ienv.i_config = config_clone;
+            });
+            // forward the notification to the server process
+            if let ServerState::Connected(cenv) = state {
+                send_configuration_to_server("synthetic/didChangeConfiguration", i_config, cenv)?;
             }
-            Ok(())
-        });
+        }
+        Ok(())
+    }));
     let on_error: Box<
         dyn FnOnce(lsp::error::T, String, &mut ServerState) -> Result<(), FlowLspError>,
     > = Box::new(|_e, _msg, _state| Ok(()));
@@ -1658,8 +1682,7 @@ fn subscribe_to_config_changes(ienv: &mut InitializedEnv) {
             register_options: lsp::register_capability::Options::DidChangeConfiguration,
         }],
     });
-    let on_response: Box<dyn FnOnce(lsp::LspResult, &mut ServerState) -> Result<(), FlowLspError>> =
-        Box::new(|_result, _state| Ok(()));
+    let on_response = LspResultHandler::VoidHandler;
     let on_error: Box<
         dyn FnOnce(lsp::error::T, String, &mut ServerState) -> Result<(), FlowLspError>,
     > = Box::new(|_e, _msg, _state| Ok(()));
@@ -2554,26 +2577,77 @@ fn get_local_request_handler(
     ienv: &mut InitializedEnv,
     id: &LspId,
     result: lsp::LspResult,
-) -> Option<Box<dyn FnOnce(&mut ServerState) -> Result<(), FlowLspError>>> {
-    if ienv.i_outstanding_local_handlers.contains_key(id) {
-        let handler = ienv.i_outstanding_local_handlers.remove(id).unwrap();
-        ienv.i_outstanding_local_requests.remove(id);
-        match result {
-            lsp::LspResult::ErrorResult(e, msg) => {
-                Some(Box::new(move |state: &mut ServerState| {
-                    (handler.on_error)(e, msg, state)
-                }))
-            }
-            lsp::LspResult::RegisterCapabilityResult => {
-                Some(Box::new(|_state: &mut ServerState| Ok(())))
-            }
-            result => Some(Box::new(move |state: &mut ServerState| {
-                (handler.on_response)(result, state)
-            })),
-        }
-    } else {
-        None
+) -> Result<Option<Box<dyn FnOnce(&mut ServerState) -> Result<(), FlowLspError>>>, FlowLspError> {
+    let Some(handler) = ienv.i_outstanding_local_handlers.get(id) else {
+        return Ok(None);
+    };
+    let is_mistyped = !matches!(
+        (&result, &handler.on_response),
+        (
+            lsp::LspResult::ShowMessageRequestResult(_),
+            LspResultHandler::ShowMessageHandler(_),
+        ) | (
+            lsp::LspResult::ShowStatusResult(_),
+            LspResultHandler::ShowStatusHandler(_),
+        ) | (
+            lsp::LspResult::ApplyWorkspaceEditResult(_),
+            LspResultHandler::ApplyWorkspaceEditHandler(_),
+        ) | (
+            lsp::LspResult::ConfigurationResult(_),
+            LspResultHandler::ConfigurationHandler(_),
+        ) | (
+            lsp::LspResult::RegisterCapabilityResult,
+            LspResultHandler::VoidHandler,
+        ) | (lsp::LspResult::ErrorResult(_, _), _)
+    );
+    if is_mistyped {
+        // | _ ->
+        return Err(internal_error_exception(format!(
+            "Response {} has mistyped handler",
+            lsp_fmt::result_name_to_string(&result)
+        )));
     }
+    let handler = ienv
+        .i_outstanding_local_handlers
+        .remove(id)
+        .expect("handler existed during typed validation");
+    ienv.i_outstanding_local_requests.remove(id);
+    let LspHandler {
+        on_response,
+        on_error,
+    } = handler;
+    let handler: Box<dyn FnOnce(&mut ServerState) -> Result<(), FlowLspError>> =
+        match (result, on_response) {
+            (
+                lsp::LspResult::ShowMessageRequestResult(result),
+                LspResultHandler::ShowMessageHandler(handle),
+            ) => Box::new(move |state| handle(result, state)),
+            (
+                lsp::LspResult::ShowStatusResult(result),
+                LspResultHandler::ShowStatusHandler(handle),
+            ) => Box::new(move |state| handle(result, state)),
+            (
+                lsp::LspResult::ApplyWorkspaceEditResult(result),
+                LspResultHandler::ApplyWorkspaceEditHandler(handle),
+            ) => Box::new(move |state| handle(result, state)),
+            (
+                lsp::LspResult::ConfigurationResult(result),
+                LspResultHandler::ConfigurationHandler(handle),
+            ) => Box::new(move |state| handle(result, state)),
+            (lsp::LspResult::RegisterCapabilityResult, LspResultHandler::VoidHandler) => {
+                Box::new(|_state| Ok(()))
+            }
+            (lsp::LspResult::ErrorResult(e, msg), _) => {
+                Box::new(move |state| on_error(e, msg, state))
+            }
+            (result, _) => {
+                return Err(internal_error_exception(format!(
+                    "Response {} has mistyped handler",
+                    lsp_fmt::result_name_to_string(&result)
+                )));
+            }
+        };
+    Ok(Some(handler))
 }
 
 fn try_connect(
@@ -2966,7 +3040,7 @@ fn main_handle_initialized_unsafe(
         }
         Event::ClientMessage(LspMessage::ResponseMessage(id, result), metadata) => {
             let ienv = get_ienv_mut(state);
-            match get_local_request_handler(ienv, &id, result.clone()) {
+            match get_local_request_handler(ienv, &id, result.clone())? {
                 Some(handler) => {
                     handler(state)?;
                     Ok(LogNeeded::LogNotNeeded)
