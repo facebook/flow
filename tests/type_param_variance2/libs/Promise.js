@@ -43,5 +43,5 @@ declare class Promise<+R> { // intentional-libdef-override
 
   static allObject<T extends Object>(
     promisesByKey: T
-  ): Promise<{[key: $Keys<T>]: any}>;
+  ): Promise<{[key: keyof T]: any}>;
 }

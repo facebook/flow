@@ -93,7 +93,7 @@ declare opaque type OpaqueKeyWithSupertype4: string | A<string>;
   Object.keys(opaqueDict)[0] as OpaqueKeyWithSupertype4; // OK
 }
 
-opaque type OpaqueKeyWithSupertypeAndLocal: $Keys<{a: number; b: number}> = 'a';
+opaque type OpaqueKeyWithSupertypeAndLocal: keyof {a: number; b: number} = 'a';
 {
   declare const opaqueDict: {[OpaqueKeyWithSupertypeAndLocal]: number};
   const x = Object.keys(opaqueDict)[0];

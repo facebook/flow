@@ -26,10 +26,10 @@ type T5 = Foo["bar"]["baz"]?.["qux"][number];
 type T6 = $NonMaybeType<Foo["bar"]["baz"]?.["qux"][number]>;
 //   ^
 
-type T7 = $Keys<Foo>;
+type T7 = keyof Foo;
 //   ^
 
-type T8 = $Keys<{foo: string, bar: number, baz: bigint}>;
+type T8 = keyof {foo: string, bar: number, baz: bigint};
 //   ^
 
 type T9 = $Omit<{foo: string, bar: number}, 'foo'>;

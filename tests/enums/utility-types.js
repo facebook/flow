@@ -16,7 +16,7 @@ trigger as (typeof E)[string]; // Error: computed access is not allowed on enums
 trigger as $ReadOnly<typeof E>; // Error: enum `E` is not an object
 
 // $Keys
-'A' as $Keys<typeof E>; // Error: TODO: improve error
+'A' as keyof typeof E; // Error: TODO: improve error
 
 // $Values
 trigger as $Values<typeof E>; // Error

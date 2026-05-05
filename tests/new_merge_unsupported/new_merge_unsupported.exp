@@ -184,8 +184,8 @@ Cannot use key set on conditional type [1] in an export position. Please provide
 set [2]. [invalid-exported-annotation]
 
    ops_on_eval_conditional.js:46:18
-   46| declare var y13: $Keys<T>;
-                        ^^^^^^^^ [2]
+   46| declare var y13: keyof T;
+                        ^^^^^^^ [2]
 
 References:
    ops_on_eval_conditional.js:1:10
@@ -318,8 +318,8 @@ Cannot use key set on object type [1] in an export position. Please provide an (
 [invalid-exported-annotation]
 
    ops_on_eval_mapped_type.js:28:18
-   28| declare var y13: $Keys<T>;
-                        ^^^^^^^^ [2]
+   28| declare var y13: keyof T;
+                        ^^^^^^^ [2]
 
 References:
    ops_on_eval_mapped_type.js:1:11
@@ -520,8 +520,8 @@ Cannot use key set on intersection type [1] in an export position. Please provid
 set [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:48:18
-   48| declare var y13: $Keys<T>;
-                        ^^^^^^^^ [2]
+   48| declare var y13: keyof T;
+                        ^^^^^^^ [2]
 
 References:
    ops_on_intersection.js:4:10
@@ -799,8 +799,8 @@ Cannot use key set on conditional type [1] in an export position. Please provide
 set [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:51:18
-   51| declare var y13: $Keys<T>;
-                        ^^^^^^^^ [2]
+   51| declare var y13: keyof T;
+                        ^^^^^^^ [2]
 
 References:
    ops_on_react_config.js:6:10

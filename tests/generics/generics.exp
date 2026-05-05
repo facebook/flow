@@ -57,7 +57,7 @@ subtyping relationship. If that happens, you can cast one side to the union of b
 
 References:
    detect_literal_subtypes.js:31:27
-   31|   function c<X extends T>(x: $Keys<X>) {
+   31|   function c<X extends T>(x: keyof X) {
                                  ^ [1]
    detect_literal_subtypes.js:37:12
    37|       case 'r': // error

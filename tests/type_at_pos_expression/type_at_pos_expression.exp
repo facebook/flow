@@ -554,9 +554,9 @@ object-resolution.js:10:2 = {
   "endline":10,
   "line":10,
   "loc":{
-    "end":{"column":4,"line":10,"offset":189},
+    "end":{"column":4,"line":10,"offset":188},
     "source":"object-resolution.js",
-    "start":{"column":1,"line":10,"offset":185},
+    "start":{"column":1,"line":10,"offset":184},
     "type":"SourceFile"
   },
   "path":"object-resolution.js",
@@ -572,9 +572,9 @@ object-resolution.js:13:5 = {
   "endline":13,
   "line":13,
   "loc":{
-    "end":{"column":10,"line":13,"offset":250},
+    "end":{"column":10,"line":13,"offset":249},
     "source":"object-resolution.js",
-    "start":{"column":5,"line":13,"offset":244},
+    "start":{"column":5,"line":13,"offset":243},
     "type":"SourceFile"
   },
   "path":"object-resolution.js",

@@ -4819,12 +4819,12 @@ Error --------------------------------------------------------------------------
 Cannot cast `'A'` to key set because property `A` is missing in enum `E` [1]. [incompatible-use]
 
    utility-types.js:19:1
-   19| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+   19| 'A' as keyof typeof E; // Error: TODO: improve error
        ^^^
 
 References:
    utility-types.js:19:14
-   19| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+   19| 'A' as keyof typeof E; // Error: TODO: improve error
                     ^^^^^^^^ [1]
 
 
@@ -4833,12 +4833,12 @@ Error --------------------------------------------------------------------------
 enum `E` [1] is not an object. [not-an-object]
 
    utility-types.js:19:8
-   19| 'A' as $Keys<typeof E>; // Error: TODO: improve error
-              ^^^^^^^^^^^^^^^
+   19| 'A' as keyof typeof E; // Error: TODO: improve error
+              ^^^^^^^^^^^^^^
 
 References:
    utility-types.js:19:14
-   19| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+   19| 'A' as keyof typeof E; // Error: TODO: improve error
                     ^^^^^^^^ [1]
 
 

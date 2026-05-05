@@ -28,7 +28,7 @@ function a<A extends 'a'>(a: A): void {
     ...S,
   |};
 
-  function c<X extends T>(x: $Keys<X>) {
+  function c<X extends T>(x: keyof X) {
     switch (x) {
       case 'p':
         break;

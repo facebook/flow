@@ -6,7 +6,7 @@ declare var obj: {
     g: string,
 };
 
-declare var k: $Keys<typeof obj>;
+declare var k: keyof typeof obj;
 
 export type T = typeof k.length;
 

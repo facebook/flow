@@ -8,17 +8,17 @@ o1.qux; // error: qux not found
 o1.toString(); // ok
 
 type R = {foo: any, bar: any};
-type Key2 = $Keys<R>; // another way to make an enum type, with unknown key set
+type Key2 = keyof R; // another way to make an enum type, with unknown key set
 var o2: {[key: Key2]: number} = { foo: 0 }; // OK to leave out bar
 o2.bar; // OK to access bar
 o2.qux; // error: qux not found
 
 class C<X> {
-  x: {[key: $Keys<X>]: any}; // object with larger key set than X's
+  x: {[key: keyof X]: any}; // object with larger key set than X's
 }
 class D extends C<{foo: number, bar: string, ...}> {
   x: { foo: number, qux: boolean, ... }; // error: qux not found
 }
 
-type AnyKey = $Keys<Object>;
+type AnyKey = keyof Object;
 var o3: {[key: AnyKey]: number} = { foo: 0 };

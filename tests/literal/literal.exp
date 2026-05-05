@@ -9,7 +9,7 @@ Cannot call `foo` with `"LOCATION"` bound to `x` because property `LOCATION` is 
 
 References:
    enum_client.js:4:23
-   4| function foo(x: $Keys<typeof APIKeys>) { }
+   4| function foo(x: keyof typeof APIKeys) { }
                             ^^^^^^^^^^^^^^ [1]
 
 
@@ -23,7 +23,7 @@ Cannot call `bar` with `APIKeys.NAME` bound to `x` because property `name` is mi
 
 References:
    enum_client.js:8:23
-    8| function bar(x: $Keys<{age: number}>) { }
+    8| function bar(x: keyof {age: number}) { }
                              ^^^^^^^^^^^^^ [1]
 
 

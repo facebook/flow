@@ -45,5 +45,5 @@ declare var y12: $KeyMirror<S>;
 export const x12 = y12.f;
 
 // Annot_GetKeysT of Reason.t
-declare var y13: $Keys<T>;
+declare var y13: keyof T;
 export const x13 = y13.length;

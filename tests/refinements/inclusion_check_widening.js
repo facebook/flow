@@ -37,7 +37,7 @@ if (y === 'val') {} // error, invalid-compare. LHS is null but RHS does not incl
 
 // Example 3
 
-type V<T extends {...}> = { key2: $Keys<T>, ... };
+type V<T extends {...}> = { key2: keyof T, ... };
 declare var column: V<{...}>;
 const {key2} = column;
 if (key2 === 'a') {} // error (key2 does not include 'a')

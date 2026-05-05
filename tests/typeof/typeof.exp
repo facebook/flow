@@ -615,7 +615,7 @@ Error --------------------------------------------------------------------------
 Cannot use `Map` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   86| var keys: $Keys<Map> = 'A'; // Error: ineligible value used in type anno
+   86| var keys: keyof Map = 'A'; // Error: ineligible value used in type anno
                        ^^^
 
 

@@ -7,7 +7,7 @@ const schema = ListSchema.build({
 acceptSchema(schema) as ReadonlyArray<string> | null;
 
 declare class RecordInstance<T extends interface {}> {
-  set<K extends $Keys<T>>(key: K, value: T[K]): this & T;
+  set<K extends keyof T>(key: K, value: T[K]): this & T;
 }
 
 type RecordOf<T extends interface {}> = RecordInstance<T> & T;

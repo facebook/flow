@@ -225,7 +225,7 @@
     bar: 0,
   };
 
-  declare const x: $Keys<typeof obj>;
+  declare const x: keyof typeof obj;
 
   match (x) { // OK
     'foo' => {}
@@ -245,7 +245,7 @@
     [string]: boolean,
   };
 
-  declare const x: $Keys<typeof obj>;
+  declare const x: keyof typeof obj;
 
   match (x) { // ERROR
     'foo' => {}

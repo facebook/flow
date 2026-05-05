@@ -73,7 +73,7 @@ declare var y: {[key in Keys]: O[key]};
 
 // All semi-homomorphic mapped types must be unevaluated, otherwise
 // we cannot bind a tparam
-type SemiHomomorphic<O extends {...}, Keys extends $Keys<O>> = {[key in Keys]: O[key]};
+type SemiHomomorphic<O extends {...}, Keys extends keyof O> = {[key in Keys]: O[key]};
 //   ^
 declare var z: SemiHomomorphic<{foo: number, ...}, 'foo'>;
    z;

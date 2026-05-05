@@ -20,9 +20,9 @@ const React = require('react');
  * RelayModernTyped              *
  *********************************/
 
-type LooseOmitRelayProps<Props, K extends $Keys<any>> = Pick<
+type LooseOmitRelayProps<Props, K extends keyof any> = Pick<
   Props,
-  Exclude<$Keys<Props>, K>,
+  Exclude<keyof Props, K>,
 >;
 export type $RelayProps<Props, _RelayPropT = RelayProp> = MapRelayProps<
   LooseOmitRelayProps<Props, 'relay'>,

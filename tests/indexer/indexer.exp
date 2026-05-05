@@ -186,8 +186,8 @@ References:
    19| class D extends C<{foo: number, bar: string, ...}> {
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:17:6
-   17|   x: {[key: $Keys<X>]: any}; // object with larger key set than X's
-            ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   17|   x: {[key: keyof X]: any}; // object with larger key set than X's
+            ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 

@@ -17,10 +17,10 @@ const countries = {
   FR: "France"
 };
 
-type Country = $Keys<typeof countries>;
+type Country = keyof typeof countries;
 //   ^
 
-type KeysPoly<K> = $Keys<K>;
+type KeysPoly<K> = keyof K;
 //   ^
 
 // $Values<T>
@@ -129,7 +129,7 @@ type RecursiveTypeDestructorPoly<X> = {
 };
 
 // Nested
-type $Pick<O extends {...}, K extends $Keys<O>> = $NonMaybeType<O>[K];
+type $Pick<O extends {...}, K extends keyof O> = $NonMaybeType<O>[K];
 //   ^
 
 // ReadOnly+destructuring

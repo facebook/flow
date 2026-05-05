@@ -34,11 +34,11 @@ Cannot call `isActive` with object literal bound to `ad` because in property `st
 References:
    enumerror.js:3:37
                                            v
-    3| function isActive(ad: {state: $Keys<{
+    3| function isActive(ad: {state: keyof {
     4|     PAUSED: string;
     5|     ACTIVE: string;
     6|     DELETED: string;
-    7| }>}): boolean {
+    7| }}): boolean {
        ^ [1]
 
 
@@ -53,7 +53,7 @@ Cannot call `isActive2` with object literal bound to `ad` because in property `s
 
 References:
    enumerror.js:17:38
-   17| function isActive2(ad: {state: $Keys<typeof MyStates>}): boolean {
+   17| function isActive2(ad: {state: keyof typeof MyStates}): boolean {
                                             ^^^^^^^^^^^^^^^ [1]
 
 

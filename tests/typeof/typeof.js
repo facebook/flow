@@ -83,7 +83,7 @@ var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense
  */
 
 var Map = {A: 'this is A', B: 'this is B', C: 'this is C'};
-var keys: $Keys<Map> = 'A'; // Error: ineligible value used in type anno
+var keys: keyof Map = 'A'; // Error: ineligible value used in type anno
 
 ////////////////////////////////////////
 // typeof <<variable declared later>> //

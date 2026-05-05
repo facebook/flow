@@ -20,10 +20,10 @@
   o as {'1': true, [number]: false}; // OK
   o as {'1': true, [number]: true}; // ERROR
 
-  '1' as $Keys<typeof o>; // OK
-  o as {[$Keys<typeof o>]: boolean}; // OK
-  '3' as $Keys<typeof o>; // ERROR
-  const x: $Keys<typeof o> = 1; // ERROR
+  '1' as keyof typeof o; // OK
+  o as {[keyof typeof o]: boolean}; // OK
+  '3' as keyof typeof o; // ERROR
+  const x: keyof typeof o = 1; // ERROR
 
   Object.keys(o) as Array<number>; // ERROR
 }
