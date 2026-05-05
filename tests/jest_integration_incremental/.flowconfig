@@ -4,4 +4,3 @@ jest.js
 [options]
 jest_integration=true
 all=true
-casting_syntax=both
