@@ -394,8 +394,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] typeOfNameCommand.ml → `flow_cli/src/type_of_name_command.rs`
   - [x] versionCommand.ml → `flow_cli/src/version_command.rs`
 - [ ] common/
-  - [ ] audit/
-    - [ ] expensive.ml
+  - [x] audit/
+    - [x] expensive.ml → `not needed`
   - [x] bitset/
     - [x] bitset.ml → `flow_common/src/bitset.rs`
       - [x] `all_one`
@@ -980,9 +980,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] rageCommand.ml → `crates/facebook/flow_facebook_rage/src/rage_command.rs` + `crates/flow_cli/src/extra_commands.rs` (CLI/spec wiring)
   - [x] saved_state/ → `crates/facebook/flow_facebook_saved_state/`
     - [x] saved_state_fb_fetcher.ml → `crates/facebook/flow_facebook_saved_state/src/saved_state_fb_fetcher.rs`
-  - [ ] tools_infra/
-    - [ ] runners/
-      - [ ] command_runner.ml
+  - [x] tools_infra/
+    - [x] runners/
+      - [x] command_runner.ml → `irrelevant` (OCaml-only Fontainebleau command wrapper)
 - [x] flow.ml → `flow_cli/src/main.rs` (+ `flow_cli/src/lib.rs`)
 - [ ] flow_dot_js.ml
 - [x] flowlib/
