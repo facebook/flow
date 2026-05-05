@@ -1,6 +1,6 @@
-type Bar = $ReadOnly<{}>;
+type Bar = Readonly<{}>;
 
-type Props = $ReadOnly<{
+type Props = Readonly<{
   ...Bar;
   children: renders* C;
 }>;

@@ -81,7 +81,7 @@ declare var z: SemiHomomorphic<{foo: number, ...}, 'foo'>;
 
 declare opaque type Id<T>;
 
-type Obj = $ReadOnly<{
+type Obj = Readonly<{
   prop0: string,
   prop1: string,
   prop2: string,
@@ -96,6 +96,6 @@ type Obj = $ReadOnly<{
 
 type IDMap<+Obj extends {+[string]: unknown}> = {[Key in keyof Obj]: Id<Obj[Key]>}
 
-declare const props: { obj: $ReadOnly<IDMap<Obj>>, ... };
+declare const props: { obj: Readonly<IDMap<Obj>>, ... };
 props.obj.prop0;
 //         ^

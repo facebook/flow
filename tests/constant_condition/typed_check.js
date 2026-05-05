@@ -241,12 +241,12 @@
 }
 
 {
-  type aa = $ReadOnly<{
+  type aa = Readonly<{
     a: '',
     ...
   }>;
 
-  type bb = $ReadOnly<{
+  type bb = Readonly<{
     b: 'fdass',
     ...
   }>;

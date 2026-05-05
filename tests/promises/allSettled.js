@@ -48,7 +48,7 @@ async function test1(): Promise<[$SettledPromiseResult<Foo>, $SettledPromiseResu
 }
 
 // Promise.allSettled() can take a mix of Promises and non-Promises.
-async function test2(): Promise<$ReadOnly<[
+async function test2(): Promise<Readonly<[
   $SettledPromiseResult<Foo>,
   $SettledPromiseResult<Bar>,
   $SettledPromiseResult<number>,

@@ -7,7 +7,7 @@ type T03 = <A>(A) => void;
 type T04 = Array<unknown>;
 type T05 = C;
 type T06 = empty;
-type T07 = $ReadOnly<T01>;
+type T07 = Readonly<T01>;
 type T08 = interface {};
 type T09 = E;
 

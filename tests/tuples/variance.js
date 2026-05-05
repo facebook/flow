@@ -52,7 +52,7 @@ declare var osw: [-foo: {a: number}];
 Object.assign({a: 1}, ...osw); // ERROR - can't read
 
 // $ReadOnly on tuple
-type ROC = $ReadOnly<C>;
+type ROC = Readonly<C>;
 declare var roc: ROC;
 roc as [+foo: string]; // OK
 roc as [-foo: string]; // ERROR
@@ -60,7 +60,7 @@ roc as [foo: string]; // ERROR
 roc[0] as string; // OK
 roc[0] = "s"; // ERROR - can't write
 
-type ROB = $ReadOnly<B>;
+type ROB = Readonly<B>;
 declare var rob: ROB;
 rob as [+foo: string]; // OK
 rob as [-foo: string]; // ERROR
@@ -68,13 +68,13 @@ rob as [foo: string]; // ERROR
 rob[0] as string; // OK
 rob[0] = "s"; // ERROR - can't write
 
-type Union = $ReadOnly<[string, number] | [string, boolean]>;
+type Union = Readonly<[string, number] | [string, boolean]>;
 declare var u: Union;
 u[0] = "s"; // ERROR - can't write
 u[0] as string; // OK
 u[1] as number | boolean; // OK
 
-type Intersection = $ReadOnly<[string, number] & [string, boolean]>;
+type Intersection = Readonly<[string, number] & [string, boolean]>;
 declare var inter: Intersection;
 inter[0] = "s"; // ERROR - can't write
 inter[0] as string; // OK

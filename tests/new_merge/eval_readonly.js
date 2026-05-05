@@ -2,13 +2,13 @@
 
 export type U = { f: number, ... } | { f: string, ... };
 
-declare var u: $ReadOnly<U>;
+declare var u: Readonly<U>;
 
 export const x = u.f;
 
 type O = { f: string, ... };
 
-export type ROE = $ReadOnly<$Exact<O>>;
+export type ROE = Readonly<$Exact<O>>;
 declare var roe: ROE;
 
 const s = { ...roe, f: 1 };

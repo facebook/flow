@@ -4,7 +4,7 @@ export type Props = {f: any} | {g: any};
 
 declare var Component: (props: Props) => React.Node;
 
-declare var props: $ReadOnly<{
+declare var props: Readonly<{
     ...React.ElementConfig<typeof Component>,
 }>;
 

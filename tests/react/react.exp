@@ -1186,9 +1186,9 @@ Cannot spread [1] an object that contains a `key` property [2] [invalid-spread-p
                     ^^^^^^^^ [1]
 
 References:
-   key.js:27:61
-   27|     declare const keyProps: $ReadOnly<{foo: number, ...} | {key: string, ...}>;
-                                                                   ^^^ [2]
+   key.js:27:60
+   27|     declare const keyProps: Readonly<{foo: number, ...} | {key: string, ...}>;
+                                                                  ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- key.js:32:14
@@ -1200,9 +1200,9 @@ Cannot spread [1] an object that contains a `key` property [2] [invalid-spread-p
                     ^^^^^^^^^^^^ [1]
 
 References:
-   key.js:31:68
-   31|     declare const keyProps: { foo: $ReadOnly<{foo: number, ...} | {key: string, ...}>, ...};
-                                                                          ^^^ [2]
+   key.js:31:67
+   31|     declare const keyProps: { foo: Readonly<{foo: number, ...} | {key: string, ...}>, ...};
+                                                                         ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- key.js:37:14

@@ -1,1 +1,1 @@
-export type V = $ReadOnly<{}>;
+export type V = Readonly<{}>;

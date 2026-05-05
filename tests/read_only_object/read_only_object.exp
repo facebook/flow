@@ -39,9 +39,9 @@ Cannot get `unionObj.q` because property `q` is missing in object type [1]. [pro
                   ^
 
 References:
-   test.js:18:33
-   18| declare var unionObj: $ReadOnly<UnionObj>;
-                                       ^^^^^^^^ [1]
+   test.js:18:32
+   18| declare var unionObj: Readonly<UnionObj>;
+                                      ^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:24:12
@@ -85,9 +85,9 @@ Cannot get `spreadUnionObj.q` because property `q` is missing in object type [1]
                         ^
 
 References:
-   test.js:32:39
-   32| declare var spreadUnionObj: $ReadOnly<SpreadUnionObj>
-                                             ^^^^^^^^^^^^^^ [1]
+   test.js:32:38
+   32| declare var spreadUnionObj: Readonly<SpreadUnionObj>
+                                            ^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:40:18
@@ -202,12 +202,12 @@ Cannot assign `42` to `writeOnlyObj.p` because property `p` is not writable. [ca
                     ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:97:30
+Error ---------------------------------------------------------------------------------------------------- test.js:97:29
 
 Cannot instantiate `Readonly` because number [1] is not an object. [not-an-object]
 
-   97| type readOnlyNum = $ReadOnly<number>;
-                                    ^^^^^^ [1]
+   97| type readOnlyNum = Readonly<number>;
+                                   ^^^^^^ [1]
 
 
 

@@ -2,12 +2,12 @@
 
 import type {PropsB} from './fileB2';
 
-export type PropsA = $ReadOnly<{
+export type PropsA = Readonly<{
   propA: Data,
   ...
 }>;
 
-export type Data = $ReadOnly<
+export type Data = Readonly<
   | { ...PropsA, ... }
   | PropsB
 >;

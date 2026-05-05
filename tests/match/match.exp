@@ -1651,16 +1651,16 @@ Cannot cast `entireTuple` to `Readonly` because in index `0`: null [1] is incomp
 [incompatible-type]
 
    smart_filtering.js:26:9
-   26|         entireTuple as $ReadOnly<[string, string]>; // error
+   26|         entireTuple as Readonly<[string, string]>; // error
                ^^^^^^^^^^^
 
 References:
    smart_filtering.js:18:27
    18|     return match ([a.x ?? null, b.x ?? null]) {
                                  ^^^^ [1]
-   smart_filtering.js:26:35
-   26|         entireTuple as $ReadOnly<[string, string]>; // error
-                                         ^^^^^^ [2]
+   smart_filtering.js:26:34
+   26|         entireTuple as Readonly<[string, string]>; // error
+                                        ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ smart_filtering.js:26:9
@@ -1669,16 +1669,16 @@ Cannot cast `entireTuple` to `Readonly` because in index `1`: null [1] is incomp
 [incompatible-type]
 
    smart_filtering.js:26:9
-   26|         entireTuple as $ReadOnly<[string, string]>; // error
+   26|         entireTuple as Readonly<[string, string]>; // error
                ^^^^^^^^^^^
 
 References:
    smart_filtering.js:18:40
    18|     return match ([a.x ?? null, b.x ?? null]) {
                                               ^^^^ [1]
-   smart_filtering.js:26:43
-   26|         entireTuple as $ReadOnly<[string, string]>; // error
-                                                 ^^^^^^ [2]
+   smart_filtering.js:26:42
+   26|         entireTuple as Readonly<[string, string]>; // error
+                                                ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ statement.js:22:3

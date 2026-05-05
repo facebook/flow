@@ -1,4 +1,4 @@
-export type Props<TValue> = $ReadOnly<{
+export type Props<TValue> = Readonly<{
   onActivate?: (value: TValue) => unknown,
   value: TValue,
 }>;

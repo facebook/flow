@@ -2,10 +2,10 @@
 {
   declare const x: [1, 2];
   const y = [0, ...x, 3] as const;
-  y as $ReadOnly<[0, 1, 2, 3]>; // OK
-  y as $ReadOnly<[0, 1, 2]>; // ERROR
-  y as $ReadOnly<[0, 1, 2, 3, 4]>; // ERROR
-  y as $ReadOnly<[0, 1, 2, 999]>; // ERROR
+  y as Readonly<[0, 1, 2, 3]>; // OK
+  y as Readonly<[0, 1, 2]>; // ERROR
+  y as Readonly<[0, 1, 2, 3, 4]>; // ERROR
+  y as Readonly<[0, 1, 2, 999]>; // ERROR
 }
 
 // Optional members
@@ -14,14 +14,14 @@
   const y = [0, ...x] as const; // OK
   y as [1, 2]; // ERROR
   const z = [0, ...x, 3];
-  z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
+  z as Readonly<[0, 1, 2, 3]>; // ERROR
   z as $ReadOnlyArray<number | void>; // OK
 }
 {
   declare const x: [b: 0, c?: 1];
   declare const y: [2, 3];
   const z = [...x, ...y] as const;
-  z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
+  z as Readonly<[0, 1, 2, 3]>; // ERROR
   z as $ReadOnlyArray<number | void>; // OK
 }
 {

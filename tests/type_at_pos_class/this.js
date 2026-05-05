@@ -1,7 +1,7 @@
 class Foo2 {
   bar(
-    baz: $ReadOnly<this>,
-  ): $ReadOnly<this> {
+    baz: Readonly<this>,
+  ): Readonly<this> {
     baz.bar(baz);
     return this
   }

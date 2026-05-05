@@ -185,7 +185,7 @@ function test_conditional() {
   declare var cond: boolean;
   const x: 'abc' | 'def' = cond ? abc : def; // okay
   const y = cond ? abc : def;
-  ({y} as $ReadOnly<{y: 'abc'|'def'}>); // okay
+  ({y} as Readonly<{y: 'abc'|'def'}>); // okay
 }
 
 declare function useState<T>(x: T): [T, (y: T) => void];

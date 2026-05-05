@@ -27,15 +27,15 @@ this type with a simpler alternative. [union-unoptimizable]
    file.js:31:15
                      v--------------------------------------------------------
    31| type Error3 = $Flow$EnforceOptimized< // error unsupported form (EvalT)
-   32|   | $ReadOnly<{ f: 1 }>
-   33|   | $ReadOnly<{ f: 2 }>
+   32|   | Readonly<{ f: 1 }>
+   33|   | Readonly<{ f: 2 }>
    34| >;
        ^
 
 References:
    file.js:32:5
-   32|   | $ReadOnly<{ f: 1 }>
-           ^^^^^^^^^^^^^^^^^^^ [1]
+   32|   | Readonly<{ f: 1 }>
+           ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- file.js:37:15

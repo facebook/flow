@@ -47,21 +47,21 @@ const ConnectedBanner = wrapBanner(Banner);
 <ConnectedBanner />;
 
 type ResizeProps<
-  Props extends $ReadOnly<{height?: number, width?: number, ...}>,
-> = $ReadOnly<{
+  Props extends Readonly<{height?: number, width?: number, ...}>,
+> = Readonly<{
   ...Omit<Props, 'height' | 'width'>,
   component: React.ComponentType<Props>,
  ...}>;
 
 function injectProps<
-  Props extends $ReadOnly<{height?: number, width?: number, ...}>,
+  Props extends Readonly<{height?: number, width?: number, ...}>,
 >(
   Component: React.ComponentType<Props>,
 ): React.ComponentType<Omit<Props, 'height' | 'width'>> {
   return Component as any;
 }
 
-function Resize<Props extends $ReadOnly<{height?: number, width?: number, ...}>>(
+function Resize<Props extends Readonly<{height?: number, width?: number, ...}>>(
   props: ResizeProps<Props>,
 ): React.Node {
   const {component: Component} = props;

@@ -12,9 +12,9 @@ type T1 = {f: 1} | {f: 2};
 type T2 = {f: 3} | {f: 4};
 
 type Ok9 = $Flow$EnforceOptimized<T1>;
-type Ok10 = $Flow$EnforceOptimized<$ReadOnly<T1>>;
+type Ok10 = $Flow$EnforceOptimized<Readonly<T1>>;
 type Ok11 = $Flow$EnforceOptimized<T1 | T2>;
-type Ok12 = $Flow$EnforceOptimized<$ReadOnly<T1 | T2>>;
+type Ok12 = $Flow$EnforceOptimized<Readonly<T1 | T2>>;
 type Ok13 = $Flow$EnforceOptimized<T1 | T2 | number | string>; // okay, partial
 
 type Ok14 = $Flow$EnforceOptimized<number | string | unknown>; // okay due to unknown short-circuit
@@ -29,8 +29,8 @@ type Error2 = $Flow$EnforceOptimized< // error no common keys
 >;
 
 type Error3 = $Flow$EnforceOptimized< // error unsupported form (EvalT)
-  | $ReadOnly<{ f: 1 }>
-  | $ReadOnly<{ f: 2 }>
+  | Readonly<{ f: 1 }>
+  | Readonly<{ f: 2 }>
 >;
 
 type Foo<X, Y> = { x: X, y: Y };

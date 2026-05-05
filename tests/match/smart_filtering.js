@@ -23,7 +23,7 @@ function test2() {
       [const v0, const v1] if (v0 === v1) => `${v0} === ${v1}`,
       const entireTuple => (() => {
         // We cannot filter out the entire tuple type. That will be unsound
-        entireTuple as $ReadOnly<[string, string]>; // error
+        entireTuple as Readonly<[string, string]>; // error
         return ''
       })(),
     }

@@ -384,9 +384,9 @@ Cannot get `x[true]` because boolean [1] is incompatible with `Keys` [2]. [incom
             ^^^^ [1]
 
 References:
-   indexer.js:175:42
-   175|   declare const x: $ReadOnly<interface {[Keys]: number}>;
-                                                 ^^^^ [2]
+   indexer.js:175:41
+   175|   declare const x: Readonly<interface {[Keys]: number}>;
+                                                ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- inline.js:5:6
@@ -1386,16 +1386,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `b` to `Readonly` because property `qux` is missing in `B` [1] but exists in `K` [2]. [incompatible-type]
 
    utility.js:33:1
-   33| b as $ReadOnly<K>; // error
+   33| b as Readonly<K>; // error
        ^
 
 References:
    utility.js:19:9
    19| let b = new B();
                ^^^^^^^ [1]
-   utility.js:33:16
-   33| b as $ReadOnly<K>; // error
-                      ^ [2]
+   utility.js:33:15
+   33| b as Readonly<K>; // error
+                     ^ [2]
 
 
 

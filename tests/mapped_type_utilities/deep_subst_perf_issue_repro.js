@@ -2,7 +2,7 @@
 // This test times out quite reliably without the OpenT indirection in
 // Flow_js_utils.Instantiation_kit.mk_distributive_tparam_subst_fn
 
-type BaseProps = $ReadOnly<{
+type BaseProps = Readonly<{
   'aria-00'?: string,
   'aria-01'?: string,
   'aria-02'?: string,
@@ -107,11 +107,11 @@ type BaseProps = $ReadOnly<{
   abc: string,
 }>;
 
-type Omit1 = $ReadOnly<{
+type Omit1 = Readonly<{
   ...Omit<BaseProps, 'element'>,
 }>;
 
-type Omit2 = $ReadOnly<{
+type Omit2 = Readonly<{
   ...Omit<Omit1, 'abc'>,
   moreStuff?: string,
 }>;

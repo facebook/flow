@@ -3,7 +3,7 @@ var React = require("react");
 
 import type {ComponentType} from 'react';
 
-export type Recipe<T> = (draft: T, state: $ReadOnly<T>) => void;
+export type Recipe<T> = (draft: T, state: Readonly<T>) => void;
 export type Mutate<T> = (recipe: Recipe<T>) => void;
 
 type ConsumerRender<S> = (...S) => globalThis.React.Node;

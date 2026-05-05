@@ -10,7 +10,7 @@ declare function useCallback<T extends (...args: $ReadOnlyArray<empty>) => unkno
   callback: T,
 ): T;
 
-type Props = $ReadOnly<{
+type Props = Readonly<{
   fn: (...$ReadOnlyArray<empty>) => void,
  ...}>;
 

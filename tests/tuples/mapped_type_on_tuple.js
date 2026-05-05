@@ -10,7 +10,7 @@ function foo2(arr: [number, number]): MappedTypeOnTuple {
   return arr; // error
 }
 
-type F<T> = $ReadOnly<{
+type F<T> = Readonly<{
   log: (() => T) => void,
   ...
 }>;

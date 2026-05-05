@@ -4806,12 +4806,12 @@ References:
                    ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:16:22
+Error ------------------------------------------------------------------------------------------- utility-types.js:16:21
 
 Cannot instantiate `Readonly` because enum `E` [1] is not an object. [not-an-object]
 
-   16| trigger as $ReadOnly<typeof E>; // Error: enum `E` is not an object
-                            ^^^^^^^^ [1]
+   16| trigger as Readonly<typeof E>; // Error: enum `E` is not an object
+                           ^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- utility-types.js:19:1

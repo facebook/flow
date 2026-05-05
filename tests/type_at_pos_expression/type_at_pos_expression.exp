@@ -539,9 +539,9 @@ object-resolution.js:5:2 = {
   "endline":5,
   "line":5,
   "loc":{
-    "end":{"column":2,"line":5,"offset":64},
+    "end":{"column":2,"line":5,"offset":63},
     "source":"object-resolution.js",
-    "start":{"column":1,"line":5,"offset":62},
+    "start":{"column":1,"line":5,"offset":61},
     "type":"SourceFile"
   },
   "path":"object-resolution.js",
@@ -554,9 +554,9 @@ object-resolution.js:10:2 = {
   "endline":10,
   "line":10,
   "loc":{
-    "end":{"column":4,"line":10,"offset":188},
+    "end":{"column":4,"line":10,"offset":187},
     "source":"object-resolution.js",
-    "start":{"column":1,"line":10,"offset":184},
+    "start":{"column":1,"line":10,"offset":183},
     "type":"SourceFile"
   },
   "path":"object-resolution.js",
@@ -572,9 +572,9 @@ object-resolution.js:13:5 = {
   "endline":13,
   "line":13,
   "loc":{
-    "end":{"column":10,"line":13,"offset":249},
+    "end":{"column":10,"line":13,"offset":248},
     "source":"object-resolution.js",
-    "start":{"column":5,"line":13,"offset":243},
+    "start":{"column":5,"line":13,"offset":242},
     "type":"SourceFile"
   },
   "path":"object-resolution.js",

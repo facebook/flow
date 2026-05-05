@@ -9,7 +9,7 @@ let f = () => {
 }
 
 f = () => {
-  declare const Comp: React.ComponentType<$ReadOnly<SourceObj>>;
+  declare const Comp: React.ComponentType<Readonly<SourceObj>>;
   <Comp foo={''} bar={3} />;
 //       ^
 }
@@ -32,7 +32,7 @@ f = () => {
 }
 
 f = () => {
-  type MapType<T> = $ReadOnly<T>
+  type MapType<T> = Readonly<T>
   declare const Comp: React.ComponentType<MapType<SourceObj>>;
   <Comp foo={''} bar={3} />;
 //       ^

@@ -15,7 +15,7 @@
 {
   type StrCb = string => void;
   type NumCb = number => void;
-  type Cb = $ReadOnly<{cb?: ?(NumCb | StrCb)}>;
+  type Cb = Readonly<{cb?: ?(NumCb | StrCb)}>;
   declare var fn: (config: Cb) => {};
   fn({
     cb: x => {

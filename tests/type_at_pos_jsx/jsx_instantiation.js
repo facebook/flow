@@ -22,15 +22,15 @@ function test_Nominal_error() {
 }
 
 component Test_return_hint() {
-    declare component Bar<T>(...props: $ReadOnly<{ n: T }>);
+    declare component Bar<T>(...props: Readonly<{ n: T }>);
     return <Bar n={1} />; // TODO(T225771252)
 //          ^
 }
 
 function test_Expose_Any_Propagation_Bug() {
-    type Q = $ReadOnly<{prop: number}>;
+    type Q = Readonly<{prop: number}>;
 
-    type Props<TQuery extends Q> = $ReadOnly<{
+    type Props<TQuery extends Q> = Readonly<{
         f: TQuery['prop'] => void,
     }>;
 
@@ -99,7 +99,7 @@ function test_Nominal_inter_of_union(
 }
 
 function test_func() {
-    type Props<T> = $ReadOnly<{ x: T, y: T }>;
+    type Props<T> = Readonly<{ x: T, y: T }>;
     declare function Foo<T>(props: Props<T>): React.Node;
 
     <Foo x={1} y={""} />;

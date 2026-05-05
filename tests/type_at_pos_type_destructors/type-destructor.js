@@ -37,8 +37,8 @@ type ValuesPoly<X> = Values<X>;
 type ValuesPolyBound<X extends { f: number, ... }> = Values<X>;
 //   ^
 
-// $ReadOnly<T>
-type ReadOnlyObj = $ReadOnly<{
+// Readonly<T>
+type ReadOnlyObj = Readonly<{
 //   ^
   key: any
 , ...}>;
@@ -139,12 +139,12 @@ function f({ x }: { x: ReadOnlyObj, ... }) {}
 
 // Non-evaluated due to alias
 function non_evaluated() {
-  type T = $ReadOnly<{
+  type T = Readonly<{
     prop: R,
     ...
   }>;
 
-  type R = $ReadOnly<{
+  type R = Readonly<{
     ...T,
     type: 'blah',
     ...

@@ -41,7 +41,7 @@ function test_poly_types_2() {
 }
 
 function test_mapped_types() {
-  declare function f<T>(literalValue: T): $ReadOnly<{[key in keyof T]: T[key]}>;
+  declare function f<T>(literalValue: T): Readonly<{[key in keyof T]: T[key]}>;
   declare function g<T>(literalValue: T): {f: T};
 
   const x1 = f({f: 1, g: 2});
@@ -62,9 +62,9 @@ function test_regression() {
   ): Wrapper<V>;
   declare function object<Wrappers extends {+[key: string]: Wrapper<unknown>}>(
     wrappers: Wrappers,
-  ): Wrapper<$ReadOnly<MapWrapperObject<Wrappers>>>;
+  ): Wrapper<Readonly<MapWrapperObject<Wrappers>>>;
 
-  type Wrapper<+V> = (value: unknown) => $ReadOnly<{value: V}>;
+  type Wrapper<+V> = (value: unknown) => Readonly<{value: V}>;
   type MapWrapper<C> = C extends null | void
     ? C
     : C extends Wrapper<infer T>
@@ -78,7 +78,7 @@ function test_regression() {
   const example0 = object({format: literal('A')});
   const example1: Wrapper<{+format: 'A'}> = object({format: literal('A')}); // okay
 
-  type Params = $ReadOnly<{format: 'A' | 'B'}>;
+  type Params = Readonly<{format: 'A' | 'B'}>;
   const example2: Wrapper<Params> = object({ // okay
     format: union(literal('A'), literal('B')),
   });

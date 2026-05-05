@@ -7,7 +7,7 @@ export type PropsA = {
   ...
 };
 
-export type Data = $ReadOnly<
+export type Data = Readonly<
   | { ...PropsA, ... }
   | PropsB
 >;

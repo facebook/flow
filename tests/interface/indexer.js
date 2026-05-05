@@ -172,12 +172,12 @@ interface M2 extends M {
 
 // $ReadOnly type util
 {
-  declare const x: $ReadOnly<interface {[Keys]: number}>;
+  declare const x: Readonly<interface {[Keys]: number}>;
   declare const s: string;
   x['a']; // OK
   x['a'] = 1; // ERROR
   x[true]; // ERROR
 
   declare const y: {+a: number};
-  y as $ReadOnly<interface {[string]: number}>; // OK
+  y as Readonly<interface {[string]: number}>; // OK
 }

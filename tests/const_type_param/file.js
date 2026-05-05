@@ -5,7 +5,7 @@ function test_basic() {
   2 as typeof x1; // error 2 ~> 1
 
   const x2 = f({ a: 1, b: "c", d: ["e", 2, true, { f: "g" }] });
-  x2 as {+a: 1, +b: "c", +d: $ReadOnly<["e", 2, true, {+f: "g"}]>}; // okay
+  x2 as {+a: 1, +b: "c", +d: Readonly<["e", 2, true, {+f: "g"}]>}; // okay
 
   const x3 = f({f: 1});
   x3 as {+f: 1}; // okay
@@ -37,7 +37,7 @@ function test_complex_input() {
 }
 
 function test_tparam_deeper_in_type() {
-  type A<T> = $ReadOnly<{f: {g: T}}>;
+  type A<T> = Readonly<{f: {g: T}}>;
   declare function f1<const X>(x: A<X>): X;
   const x1 = f1({f: {g: {h: 1}}});
   x1 as {+h: 1}; // okay
@@ -108,7 +108,7 @@ function test_rest_params() {
 function test_inferred_union() {
   declare function f<const T>(obj: { x: T, y: T }): T;
   const x = f({ x: [1, 'x'], y: [2, 'y'] });
-  x as $ReadOnly<[1, "x"]> | $ReadOnly<[2, "y"]>; // okay
+  x as Readonly<[1, "x"]> | Readonly<[2, "y"]>; // okay
 }
 
 function test_subtyping() {

@@ -4,7 +4,7 @@ export const op: Op = 'special';
 
 const obj = {[op]: 'abc'};
 
-obj as $ReadOnly<{[Op]: string}>;
+obj as Readonly<{[Op]: string}>;
 obj as {[Op]: string};
 
 obj as {[string]: string};

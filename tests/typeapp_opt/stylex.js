@@ -3,7 +3,7 @@ import type {StyleXClassNameFor, StyleXVar} from './opaque';
 
 export type MapNamespaces<+S extends {+[string]: unknown}> = {
   +[Key in keyof S]: S[Key] extends (...args: infer Args) => infer Obj
-    ? (...args: Args) => $ReadOnly<[MapNamespace<Obj>, InlineStyles]>
+    ? (...args: Args) => Readonly<[MapNamespace<Obj>, InlineStyles]>
     : MapNamespace<S[Key]>,
 };
 
@@ -11,7 +11,7 @@ export type MapNamespace<+CSS extends {+[string]: unknown}> = {
   +[Key in keyof CSS]: StyleXClassNameFor<Key, ComplexStyleValueType<CSS[Key]>>,
 };
 
-export type InlineStyles = $ReadOnly<{
+export type InlineStyles = Readonly<{
   // $$css?: void,
   $$inline: true,
   [key: string]: string | number,
@@ -26,7 +26,7 @@ type ComplexStyleValueType<+T> =
         ? ComplexStyleValueType<U>
         : T extends { +default: infer A, +[string]: infer B }
           ? ComplexStyleValueType<A> | ComplexStyleValueType<B>
-          : $ReadOnly<T>;
+          : Readonly<T>;
 
 
 declare const x: MapNamespaces<{+item: {+hover: {+backgroundColor: '#f9f2ec'}}}>;

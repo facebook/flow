@@ -180,7 +180,7 @@ function test_conditional_1() {
   declare var cond: boolean;
   const x: 'abc'|'def' = cond ? abc : def; // okay
   const y = cond ? abc : def;
-  ({y} as $ReadOnly<{y: 'abc'|'def'}>); // okay
+  ({y} as Readonly<{y: 'abc'|'def'}>); // okay
 }
 
 function test_conditional_2() {
@@ -389,7 +389,7 @@ function test_synthesis_literals_2() {
 
 function test_synthesis_literals_3() {
   declare var cp: {bar: number};
-  declare function optional<P>(x: $ReadOnly<{|cp: P, ...P|}>): P;
+  declare function optional<P>(x: Readonly<{|cp: P, ...P|}>): P;
   const o = optional({cp, bar: 3}); // ok
 }
 
@@ -480,8 +480,8 @@ function test_destructure_computed() {
 function test_computed_prop_hint_1() {
   type Name = 'a'| 'b' | 'c';
   const KeyName = 'a';
-  ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'a'}>); // okay
-  ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
+  ({[KeyName]: KeyName} as Readonly<{[Name]: 'a'}>); // okay
+  ({[KeyName]: KeyName} as Readonly<{[Name]: 'b'}>); // error 'a' ~> 'b'
 }
 
 function test_synthesis_produced_uncacheable_result() {

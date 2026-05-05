@@ -74,16 +74,16 @@ Cannot cast `arr` to `Readonly` because const array literal [1] has 3 elements b
 [invalid-tuple-arity]
 
    array.js:13:3
-   13|   arr as $ReadOnly<[1,2]>; // error
+   13|   arr as Readonly<[1,2]>; // error
          ^^^
 
 References:
    array.js:11:15
    11|   const arr = [1,2,3] as const;
                      ^^^^^^^ [1]
-   array.js:13:20
-   13|   arr as $ReadOnly<[1,2]>; // error
-                          ^^^^^ [2]
+   array.js:13:19
+   13|   arr as Readonly<[1,2]>; // error
+                         ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- array.js:14:3
@@ -92,16 +92,16 @@ Cannot cast `arr` to `Readonly` because const array literal [1] has 3 elements b
 [invalid-tuple-arity]
 
    array.js:14:3
-   14|   arr as $ReadOnly<[1,2,3,4]>; // error
+   14|   arr as Readonly<[1,2,3,4]>; // error
          ^^^
 
 References:
    array.js:11:15
    11|   const arr = [1,2,3] as const;
                      ^^^^^^^ [1]
-   array.js:14:20
-   14|   arr as $ReadOnly<[1,2,3,4]>; // error
-                          ^^^^^^^^^ [2]
+   array.js:14:19
+   14|   arr as Readonly<[1,2,3,4]>; // error
+                         ^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- array.js:21:62
@@ -2157,16 +2157,16 @@ Cannot cast `y` to `Readonly` because const array literal [1] has 4 elements but
 [invalid-tuple-arity]
 
    value-spread.js:6:3
-   6|   y as $ReadOnly<[0, 1, 2]>; // ERROR
+   6|   y as Readonly<[0, 1, 2]>; // ERROR
         ^
 
 References:
    value-spread.js:4:13
    4|   const y = [0, ...x, 3] as const;
                   ^^^^^^^^^^^^ [1]
-   value-spread.js:6:18
-   6|   y as $ReadOnly<[0, 1, 2]>; // ERROR
-                       ^^^^^^^^^ [2]
+   value-spread.js:6:17
+   6|   y as Readonly<[0, 1, 2]>; // ERROR
+                      ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- value-spread.js:7:3
@@ -2175,16 +2175,16 @@ Cannot cast `y` to `Readonly` because const array literal [1] has 4 elements but
 [invalid-tuple-arity]
 
    value-spread.js:7:3
-   7|   y as $ReadOnly<[0, 1, 2, 3, 4]>; // ERROR
+   7|   y as Readonly<[0, 1, 2, 3, 4]>; // ERROR
         ^
 
 References:
    value-spread.js:4:13
    4|   const y = [0, ...x, 3] as const;
                   ^^^^^^^^^^^^ [1]
-   value-spread.js:7:18
-   7|   y as $ReadOnly<[0, 1, 2, 3, 4]>; // ERROR
-                       ^^^^^^^^^^^^^^^ [2]
+   value-spread.js:7:17
+   7|   y as Readonly<[0, 1, 2, 3, 4]>; // ERROR
+                      ^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- value-spread.js:8:3
@@ -2193,16 +2193,16 @@ Cannot cast `y` to `Readonly` because in index `3`: number literal `3` [1] is in
 `999` [2]. [incompatible-type]
 
    value-spread.js:8:3
-   8|   y as $ReadOnly<[0, 1, 2, 999]>; // ERROR
+   8|   y as Readonly<[0, 1, 2, 999]>; // ERROR
         ^
 
 References:
    value-spread.js:4:23
    4|   const y = [0, ...x, 3] as const;
                             ^ [1]
-   value-spread.js:8:28
-   8|   y as $ReadOnly<[0, 1, 2, 999]>; // ERROR
-                                 ^^^ [2]
+   value-spread.js:8:27
+   8|   y as Readonly<[0, 1, 2, 999]>; // ERROR
+                                ^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- value-spread.js:15:3
@@ -2229,16 +2229,16 @@ Cannot cast `z` to `Readonly` because array literal [1] has an unknown number of
 type [2]. [invalid-tuple-arity]
 
    value-spread.js:17:3
-   17|   z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
+   17|   z as Readonly<[0, 1, 2, 3]>; // ERROR
          ^
 
 References:
    value-spread.js:16:13
    16|   const z = [0, ...x, 3];
                    ^^^^^^^^^^^^ [1]
-   value-spread.js:17:18
-   17|   z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
-                        ^^^^^^^^^^^^ [2]
+   value-spread.js:17:17
+   17|   z as Readonly<[0, 1, 2, 3]>; // ERROR
+                       ^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- value-spread.js:24:3
@@ -2246,16 +2246,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `z` to `Readonly` because const array literal [1] is incompatible with tuple type [2]. [incompatible-type]
 
    value-spread.js:24:3
-   24|   z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
+   24|   z as Readonly<[0, 1, 2, 3]>; // ERROR
          ^
 
 References:
    value-spread.js:23:13
    23|   const z = [...x, ...y] as const;
                    ^^^^^^^^^^^^ [1]
-   value-spread.js:24:18
-   24|   z as $ReadOnly<[0, 1, 2, 3]>; // ERROR
-                        ^^^^^^^^^^^^ [2]
+   value-spread.js:24:17
+   24|   z as Readonly<[0, 1, 2, 3]>; // ERROR
+                       ^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- value-spread.js:31:3

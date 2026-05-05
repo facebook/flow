@@ -10,7 +10,7 @@ const x = HOC((x: {foo: number, bar: number}) => null); // ok
 declare function ReposLowerTRegressionTest<T>(x: {o?: T, ...}): T;
 ReposLowerTRegressionTest({}); // Error: T under constrained.
 
-declare function ReadOnly<T>(x: $ReadOnly<T>): T;
+declare function ReadOnly<T>(x: Readonly<T>): T;
 ReadOnly({foo: 3}); // ok
 declare function partial<T>(x: Partial<T>): T;
 partial({foo: 3}); // ok
@@ -76,14 +76,14 @@ function spreads() {
   s6.bar; // error
   s6.baz; // error
 
-  declare function spread_and_readonly<Props>(x: $ReadOnly<{...Props, ...}>): Props;
+  declare function spread_and_readonly<Props>(x: Readonly<{...Props, ...}>): Props;
   const sr = spread_and_readonly({foo: 1, bar: ''});
   sr.foo as number;
   sr.bar as string;
   sr.bad; // error
 
   declare var cp: {bar: number};
-  declare function optional<P>(x: $ReadOnly<{cp: P, foo?: string, ...P}>): P;
+  declare function optional<P>(x: Readonly<{cp: P, foo?: string, ...P}>): P;
   const o = optional({cp, foo: '', bar: 3}); // ok
   o.cp; // error
   o.foo; // error

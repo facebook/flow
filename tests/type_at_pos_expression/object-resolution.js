@@ -1,7 +1,7 @@
 // @flow
 
 type O = {p: number};
-declare var ro: $ReadOnly<O>;
+declare var ro: Readonly<O>;
 ro.p as number;
 
 type O1 = {p: number, ...};

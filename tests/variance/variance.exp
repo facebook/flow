@@ -984,9 +984,9 @@ writable in mapped type [2], property `f4` is read-only in mapped type [1] but w
           ^^
 
 References:
-   test.js:229:29
-   229|   declare var x1: $ReadOnly<T1>;
-                                    ^^ [1]
+   test.js:229:28
+   229|   declare var x1: Readonly<T1>;
+                                   ^^ [1]
    test.js:230:9
    230|   x1 as T1; // error f1...f5 incompatible
                 ^^ [2]
@@ -1004,9 +1004,9 @@ properties are incompatible. [incompatible-variance]
           ^^
 
 References:
-   test.js:234:29
-   234|   declare var x2: $ReadOnly<T2>;
-                                    ^^ [1]
+   test.js:234:28
+   234|   declare var x2: Readonly<T2>;
+                                   ^^ [1]
    test.js:235:9
    235|   x2 as T2; // error f1...f4 and others incompatible
                 ^^ [2]
@@ -1998,9 +1998,9 @@ writable in mapped type [2], property `f4` is read-only in mapped type [1] but w
           ^^
 
 References:
-   test_keyword.js:224:29
-   224|   declare var x1: $ReadOnly<T1>;
-                                    ^^ [1]
+   test_keyword.js:224:28
+   224|   declare var x1: Readonly<T1>;
+                                   ^^ [1]
    test_keyword.js:225:9
    225|   x1 as T1; // error f1...f5 incompatible
                 ^^ [2]
@@ -2018,9 +2018,9 @@ properties are incompatible. [incompatible-variance]
           ^^
 
 References:
-   test_keyword.js:229:29
-   229|   declare var x2: $ReadOnly<T2>;
-                                    ^^ [1]
+   test_keyword.js:229:28
+   229|   declare var x2: Readonly<T2>;
+                                   ^^ [1]
    test_keyword.js:230:9
    230|   x2 as T2; // error f1...f4 and others incompatible
                 ^^ [2]

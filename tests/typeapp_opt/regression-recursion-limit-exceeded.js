@@ -8,10 +8,10 @@ type ReturnValueType<T extends InputValueType> =
     ? ReturnValueArrayType<T>
     : ReturnValueObjectType<T>;
 
-type InputValueType = $ReadOnly<{[string]: InputValueType}>;
+type InputValueType = Readonly<{[string]: InputValueType}>;
 type InputValueArrayType = $ReadOnlyArray<InputValueType>;
 
-type ReturnValueObjectType<T extends InputValueType> = $ReadOnly<{
+type ReturnValueObjectType<T extends InputValueType> = Readonly<{
   [key in keyof T]: ReturnValueType<T[key]>,
 }>;
 

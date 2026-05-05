@@ -1,5 +1,5 @@
-export type T = $ReadOnly<{
-    prop: ?$ReadOnly<{
+export type T = Readonly<{
+    prop: ?Readonly<{
       mode: 'TAG',
   }>,
 }>;

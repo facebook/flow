@@ -1215,9 +1215,9 @@ incompatible with string literal `BAZ` [2]. [incompatible-type]
                                  ^^^^^ [1]
 
 References:
-   jsx_pragma.js:10:52
-   10| declare var C: (props: $ReadOnly<{foo: Array<{bar: 'BAZ'}>}>) => void;
-                                                          ^^^^^ [2]
+   jsx_pragma.js:10:51
+   10| declare var C: (props: Readonly<{foo: Array<{bar: 'BAZ'}>}>) => void;
+                                                         ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- local.js:37:3
@@ -2592,16 +2592,16 @@ Cannot cast object literal to `Readonly` because in property `a`: string literal
 literal `b` [2]. [incompatible-type]
 
    local.js:484:16
-   484|   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
+   484|   ({[KeyName]: KeyName} as Readonly<{[Name]: 'b'}>); // error 'a' ~> 'b'
                        ^^^^^^^
 
 References:
    local.js:482:19
    482|   const KeyName = 'a';
                           ^^^ [1]
-   local.js:484:47
-   484|   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
-                                                      ^^^ [2]
+   local.js:484:46
+   484|   ({[KeyName]: KeyName} as Readonly<{[Name]: 'b'}>); // error 'a' ~> 'b'
+                                                     ^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:493:5
@@ -2888,14 +2888,14 @@ is incompatible with union type [3]. [incompatible-type]
 
 References:
    nested_generic_calls.js:67:17
-   67|   type Wrapper<+V> = (value: unknown) => $ReadOnly<{value: V}>;
+   67|   type Wrapper<+V> = (value: unknown) => Readonly<{value: V}>;
                        ^ [1]
    nested_generic_calls.js:75:28
    75|     [K in keyof Wrappers]: MapWrapper<Wrappers[K]>,
                                   ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   nested_generic_calls.js:81:36
-   81|   type Params = $ReadOnly<{format: 'A' | 'B'}>;
-                                          ^^^^^^^^^ [3]
+   nested_generic_calls.js:81:35
+   81|   type Params = Readonly<{format: 'A' | 'B'}>;
+                                         ^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- react.js:7:9

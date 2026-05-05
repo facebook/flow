@@ -1,7 +1,7 @@
 type SourceObj = { foo: string, bar: number };
 
 {
-  declare const obj: $ReadOnly<SourceObj>;
+  declare const obj: Readonly<SourceObj>;
   obj.foo;
 //     ^
 }

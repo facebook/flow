@@ -76,7 +76,7 @@ React.cloneElement(exact, {foo: 1}); // OK
 React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
 
 // Clone typeof element
-type CompProps = $ReadOnly<{
+type CompProps = Readonly<{
   foo: string,
   bar: string,
 }>;

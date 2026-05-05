@@ -24,11 +24,11 @@ class FooExact extends React.Component<{}, void> {}
     <Foo {...keyProps} />; // error
 }
 {
-    declare const keyProps: $ReadOnly<{foo: number, ...} | {key: string, ...}>;
+    declare const keyProps: Readonly<{foo: number, ...} | {key: string, ...}>;
     <Foo {...keyProps} />; // error
 }
 {
-    declare const keyProps: { foo: $ReadOnly<{foo: number, ...} | {key: string, ...}>, ...};
+    declare const keyProps: { foo: Readonly<{foo: number, ...} | {key: string, ...}>, ...};
     <Foo {...keyProps.foo} />; // error
 }
 {
