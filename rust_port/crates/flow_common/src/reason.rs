@@ -1024,6 +1024,9 @@ impl<L: Dupe> VirtualReason<L> {
 impl<L: Dupe + PartialEq> VirtualReason<L> {
     /// Replace loc, but keep def_loc
     pub fn reposition(self, loc: L) -> VirtualReason<L> {
+        if loc == self.loc {
+            return self;
+        }
         let def_loc_opt = {
             let def_loc = self.def_loc();
             if loc == *def_loc {
@@ -1041,9 +1044,12 @@ impl<L: Dupe + PartialEq> VirtualReason<L> {
     }
 }
 
-impl<L: Dupe> VirtualReason<L> {
+impl<L: Dupe + PartialEq> VirtualReason<L> {
     /// Add / replace annot_loc, but keep loc and def_loc
     pub fn annotate(self, annot_loc: L) -> VirtualReason<L> {
+        if self.annot_loc_opt.as_ref() == Some(&annot_loc) {
+            return self;
+        }
         VirtualReason::new_with(
             self.desc.clone(),
             self.loc.dupe(),

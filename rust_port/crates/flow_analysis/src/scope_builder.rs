@@ -90,6 +90,19 @@ pub fn pattern_with_toplevel_annot_removed<Loc: Default + Dupe>(
     }
 }
 
+fn pattern_toplevel_annot<Loc: Default + Dupe>(
+    pattern: &ast::pattern::Pattern<Loc, Loc>,
+) -> ast::types::AnnotationOrHint<Loc, Loc> {
+    match pattern {
+        ast::pattern::Pattern::Object { inner, .. } => inner.annot.clone(),
+        ast::pattern::Pattern::Array { inner, .. } => inner.annot.clone(),
+        ast::pattern::Pattern::Identifier { inner, .. } => inner.annot.clone(),
+        ast::pattern::Pattern::Expression { .. } => {
+            ast::types::AnnotationOrHint::Missing(Loc::default())
+        }
+    }
+}
+
 struct RemoveDefaultVisitor;
 
 impl<Loc: Dupe + PartialEq> AstVisitor<'_, Loc> for RemoveDefaultVisitor {
@@ -1134,10 +1147,23 @@ where
             visitor.expression(default)?;
         }
     }
+    for param in params.params.iter() {
+        let annot = pattern_toplevel_annot(&param.local);
+        visitor.type_annotation_hint(&annot)?;
+    }
+    if let Some(rest) = &params.rest {
+        let annot = pattern_toplevel_annot(&rest.argument);
+        visitor.type_annotation_hint(&annot)?;
+    }
+    let bindings = {
+        let mut hoist = Hoister::new(enable_enums, with_types);
+        let Ok(()) = hoist.component_params(params);
+        let Ok(()) = hoist.component_body(body);
+        hoist.into_bindings()
+    };
     let mut params_without_annots_and_defaults = Vec::new();
     for param in params.params.iter() {
-        let (annot, local) = pattern_with_toplevel_annot_removed(&param.local);
-        visitor.type_annotation_hint(&annot)?;
+        let (_, local) = pattern_with_toplevel_annot_removed(&param.local);
         let new_param = ast::statement::component_params::Param {
             loc: param.loc.dupe(),
             name: param.name.clone(),
@@ -1148,8 +1174,7 @@ where
         params_without_annots_and_defaults.push(new_param);
     }
     let rest_param_without_annots_and_defaults = if let Some(rest) = &params.rest {
-        let (annot, argument) = pattern_with_toplevel_annot_removed(&rest.argument);
-        visitor.type_annotation_hint(&annot)?;
+        let (_, argument) = pattern_with_toplevel_annot_removed(&rest.argument);
         Some(ast::statement::component_params::RestParam {
             loc: rest.loc.dupe(),
             argument,
@@ -1163,12 +1188,6 @@ where
         params: params_without_annots_and_defaults.into(),
         rest: rest_param_without_annots_and_defaults,
         comments: params.comments.dupe(),
-    };
-    let bindings = {
-        let mut hoist = Hoister::new(enable_enums, with_types);
-        let Ok(()) = hoist.component_params(params);
-        let Ok(()) = hoist.component_body(body);
-        hoist.into_bindings()
     };
     visitor.with_bindings(false, body.0.dupe(), bindings, |this| {
         // Visit params to ensure they are declared
@@ -1262,11 +1281,11 @@ where
         &|this| {
             // Visit type annotations without creating bindings, same as regular components
             for param in params.params.iter() {
-                let (annot, _local) = pattern_with_toplevel_annot_removed(&param.local);
+                let annot = pattern_toplevel_annot(&param.local);
                 this.type_annotation_hint(&annot)?;
             }
             if let Some(rest) = &params.rest {
-                let (annot, _argument) = pattern_with_toplevel_annot_removed(&rest.argument);
+                let annot = pattern_toplevel_annot(&rest.argument);
                 this.type_annotation_hint(&annot)?;
             }
             hoist_annotations(this, &mut |this2| {

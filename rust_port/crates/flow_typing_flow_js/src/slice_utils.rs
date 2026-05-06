@@ -290,6 +290,17 @@ pub fn mk_slice_prop(
 pub fn read_prop(r: &Reason, _flags: &Flags, x: &Name, p: &Property) -> Property {
     // Extract the read-side type (Mixed if absent — write-only Field, Set-only GetSet)
     // and project into a slice-shape Field/Method.
+    match p.deref() {
+        PropertyInner::Field(fd) => {
+            let is_readable_field = fd.preferred_def_locs.is_none()
+                && Polarity::compat(fd.polarity, Polarity::Positive);
+            if is_readable_field {
+                return p.dupe();
+            }
+        }
+        PropertyInner::Method { .. } => return p.dupe(),
+        _ => {}
+    }
     let t = property::read_t(p).unwrap_or_else(|| {
         let reason = r
             .dupe()
@@ -1841,7 +1852,7 @@ pub fn resolved<'cx, A>(
                             // Concatenate all Vec1<Slice> into one Vec1<Slice>
                             let mut items: Vec<object::Slice> = Vec::new();
                             for r in all_resolved {
-                                items.extend(r.into_iter());
+                                items.extend(r);
                             }
                             Vec1::try_from_vec(items).unwrap()
                         }

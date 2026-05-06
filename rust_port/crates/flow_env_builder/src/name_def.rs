@@ -865,10 +865,10 @@ fn obj_this_write_locs(obj: &ast::expression::Object<ALoc, ALoc>) -> EnvSet<ALoc
                         ExpressionInner::ArrowFunction { .. } => {
                             // Arrow functions don't bind `this`.
                         }
-                        ExpressionInner::Function { loc: f_loc, inner } => {
-                            if inner.params.this_.is_none() {
-                                acc.insert(EnvKey::new(DefLocType::FunctionThisLoc, f_loc.dupe()));
-                            }
+                        ExpressionInner::Function { loc: f_loc, inner }
+                            if inner.params.this_.is_none() =>
+                        {
+                            acc.insert(EnvKey::new(DefLocType::FunctionThisLoc, f_loc.dupe()));
                         }
                         _ => {
                             // Everything else is impossible due to obj_properties_synthesizable check.
@@ -4497,7 +4497,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         use flow_parser::ast_utils::hoist_function_and_component_declarations;
 
         // Function statics
-        let stmts = hoist_function_and_component_declarations(stmts.to_vec());
+        let stmts = hoist_function_and_component_declarations(stmts);
 
         // Pre-scan for declare namespace names. Only classes/declare classes whose
         // name matches a declare namespace should be deferred for merging. Deferring
@@ -4665,7 +4665,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             None
         }
 
-        for stmt in &stmts {
+        for stmt in stmts.iter() {
             // f.a = <e>;
             if let Some((assign_loc, member_loc, left, obj_id, prop_id, init)) =
                 extract_func_static_assign(stmt)

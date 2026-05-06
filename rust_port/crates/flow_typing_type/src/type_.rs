@@ -6182,32 +6182,66 @@ pub mod property {
         F: Fn(&Type) -> Type,
     {
         match p.deref() {
-            PropertyInner::Field(fd) => Property::new(PropertyInner::Field(Box::new(FieldData {
-                preferred_def_locs: fd.preferred_def_locs.clone(),
-                key_loc: fd.key_loc.dupe(),
-                type_: f(&fd.type_),
-                polarity: fd.polarity,
-            }))),
-            PropertyInner::Get { key_loc, type_ } => Property::new(PropertyInner::Get {
-                key_loc: key_loc.dupe(),
-                type_: f(type_),
-            }),
-            PropertyInner::Set { key_loc, type_ } => Property::new(PropertyInner::Set {
-                key_loc: key_loc.dupe(),
-                type_: f(type_),
-            }),
-            PropertyInner::GetSet(gs) => {
-                Property::new(PropertyInner::GetSet(Box::new(GetSetData {
-                    get_key_loc: gs.get_key_loc.dupe(),
-                    get_type: f(&gs.get_type),
-                    set_key_loc: gs.set_key_loc.dupe(),
-                    set_type: f(&gs.set_type),
-                })))
+            PropertyInner::Field(fd) => {
+                let type_prime = f(&fd.type_);
+                if fd.type_.ptr_eq(&type_prime) {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: fd.preferred_def_locs.clone(),
+                        key_loc: fd.key_loc.dupe(),
+                        type_: type_prime,
+                        polarity: fd.polarity,
+                    })))
+                }
             }
-            PropertyInner::Method { key_loc, type_ } => Property::new(PropertyInner::Method {
-                key_loc: key_loc.dupe(),
-                type_: f(type_),
-            }),
+            PropertyInner::Get { key_loc, type_ } => {
+                let type_prime = f(type_);
+                if type_.ptr_eq(&type_prime) {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Get {
+                        key_loc: key_loc.dupe(),
+                        type_: type_prime,
+                    })
+                }
+            }
+            PropertyInner::Set { key_loc, type_ } => {
+                let type_prime = f(type_);
+                if type_.ptr_eq(&type_prime) {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Set {
+                        key_loc: key_loc.dupe(),
+                        type_: type_prime,
+                    })
+                }
+            }
+            PropertyInner::GetSet(gs) => {
+                let get_type_prime = f(&gs.get_type);
+                let set_type_prime = f(&gs.set_type);
+                if gs.get_type.ptr_eq(&get_type_prime) && gs.set_type.ptr_eq(&set_type_prime) {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::GetSet(Box::new(GetSetData {
+                        get_key_loc: gs.get_key_loc.dupe(),
+                        get_type: get_type_prime,
+                        set_key_loc: gs.set_key_loc.dupe(),
+                        set_type: set_type_prime,
+                    })))
+                }
+            }
+            PropertyInner::Method { key_loc, type_ } => {
+                let type_prime = f(type_);
+                if type_.ptr_eq(&type_prime) {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Method {
+                        key_loc: key_loc.dupe(),
+                        type_: type_prime,
+                    })
+                }
+            }
         }
     }
 
@@ -6331,10 +6365,17 @@ pub mod property {
         F: FnOnce(&Type) -> Type,
     {
         match p.deref() {
-            PropertyInner::Field(fd) => Property::new(PropertyInner::Field(Box::new(FieldData {
-                type_: f(&fd.type_),
-                ..(**fd).clone()
-            }))),
+            PropertyInner::Field(fd) => {
+                let type_prime = f(&fd.type_);
+                if fd.type_.ptr_eq(&type_prime) {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        type_: type_prime,
+                        ..(**fd).clone()
+                    })))
+                }
+            }
             _ => p.dupe(),
         }
     }

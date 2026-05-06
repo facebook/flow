@@ -159,13 +159,11 @@ pub fn statement_list<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     mapper: &mut impl LocMapper<M, T, N, U, E>,
     stmts: &[ast::statement::Statement<M, T>],
 ) -> Result<Vec<ast::statement::Statement<N, U>>, E> {
-    Ok(stmts
-        .iter()
-        .map(|s| statement_fork_point(mapper, s))
-        .collect::<Result<Vec<_>, E>>()?
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>())
+    let mut result = Vec::with_capacity(stmts.len());
+    for stmt in stmts {
+        result.extend(statement_fork_point(mapper, stmt)?);
+    }
+    Ok(result)
 }
 
 pub fn statement_fork_point<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(

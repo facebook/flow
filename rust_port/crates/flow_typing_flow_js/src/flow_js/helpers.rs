@@ -1653,10 +1653,9 @@ pub(super) fn reposition<'cx>(
     use flow_typing_type::type_util::reason_of_t;
 
     let mod_reason = |reason: Reason| -> Reason {
-        let reason = reason.reposition(loc.dupe()).opt_annotate(annot_loc.dupe());
         match desc {
-            Some(d) => reason.replace_desc_new(d.clone()),
-            None => reason,
+            Some(d) => Reason::new(d.clone(), loc.dupe()),
+            None => reason.reposition(loc.dupe()).opt_annotate(annot_loc.dupe()),
         }
     };
 

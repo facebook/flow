@@ -536,7 +536,12 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
     }
 
     fn call_prop(&mut self, cx: &Context<'cx>, map_cx: &MapCx<'cx>, id: i32) -> i32 {
-        call_prop(self, cx, map_cx, id)
+        let (map, _, _, _, _) = map_cx;
+        if map.is_empty() {
+            id
+        } else {
+            call_prop(self, cx, map_cx, id)
+        }
     }
 
     fn props(
@@ -545,11 +550,21 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
         map_cx: &MapCx<'cx>,
         id: properties::Id,
     ) -> properties::Id {
-        props(self, cx, map_cx, id)
+        let (map, _, _, _, _) = map_cx;
+        if map.is_empty() {
+            id
+        } else {
+            props(self, cx, map_cx, id)
+        }
     }
 
     fn exports(&mut self, cx: &Context<'cx>, map_cx: &MapCx<'cx>, id: exports::Id) -> exports::Id {
-        exports(self, cx, map_cx, id)
+        let (map, _, _, _, _) = map_cx;
+        if map.is_empty() {
+            id
+        } else {
+            exports(self, cx, map_cx, id)
+        }
     }
 
     fn type_(&mut self, cx: &Context<'cx>, map_cx: &MapCx<'cx>, t: Type) -> Type {

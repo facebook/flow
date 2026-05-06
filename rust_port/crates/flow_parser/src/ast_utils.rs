@@ -251,8 +251,8 @@ pub fn partition_directives<M: Dupe, T: Dupe>(
 }
 
 pub fn hoist_function_and_component_declarations<M: Dupe, T: Dupe>(
-    statements: Vec<statement::Statement<M, T>>,
-) -> Vec<statement::Statement<M, T>> {
+    statements: &[statement::Statement<M, T>],
+) -> Cow<'_, [statement::Statement<M, T>]> {
     fn should_hoist<M: Dupe, T: Dupe>(statement: &statement::Statement<M, T>) -> bool {
         match statement.deref() {
             // function f() {} / component F() {}
@@ -306,11 +306,15 @@ pub fn hoist_function_and_component_declarations<M: Dupe, T: Dupe>(
         }
     }
 
+    if !statements.iter().any(should_hoist) {
+        return Cow::Borrowed(statements);
+    }
+
     let (function_and_component_declarations, mut other_stmts): (Vec<_>, Vec<_>) =
-        statements.into_iter().partition(should_hoist);
+        statements.iter().cloned().partition(should_hoist);
     let mut all = function_and_component_declarations;
     all.append(&mut other_stmts);
-    all
+    Cow::Owned(all)
 }
 
 fn negate_raw_lit(raw: FlowSmolStr) -> String {

@@ -681,12 +681,16 @@ impl<'cx> TypeMapper<'cx, LiteralMapCx> for ConvertLiteralTypeToConstMapper {
         let props_map_prime = props_map.ident_map(|p| match p.deref() {
             PropertyInner::Field(fd) => {
                 let type_prime = self.type_(cx, map_cx, fd.type_.dupe());
-                Property::new(PropertyInner::Field(Box::new(FieldData {
-                    preferred_def_locs: fd.preferred_def_locs.clone(),
-                    key_loc: fd.key_loc.dupe(),
-                    type_: type_prime,
-                    polarity: Polarity::Positive,
-                })))
+                if fd.type_.ptr_eq(&type_prime) && fd.polarity == Polarity::Positive {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: fd.preferred_def_locs.clone(),
+                        key_loc: fd.key_loc.dupe(),
+                        type_: type_prime,
+                        polarity: Polarity::Positive,
+                    })))
+                }
             }
             _ => p.dupe(),
         });

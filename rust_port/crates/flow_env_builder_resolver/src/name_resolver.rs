@@ -10612,7 +10612,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         // Function declarations are hoisted to the top of a block, so that they may be considered
         // initialized before they are read.
         let stmts_hoisted =
-            flow_parser::ast_utils::hoist_function_and_component_declarations(stmts.to_vec());
+            flow_parser::ast_utils::hoist_function_and_component_declarations(stmts);
         // If there is any abnormal control flow, add errors on any statements that are
         // lexically after the place where abnormal control was raised.
         let abrupt_completion = stmts_hoisted.iter().fold(None, |abrupt_completion, stmt| {
