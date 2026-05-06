@@ -11,6 +11,7 @@ pub mod filename_cache;
 pub mod graph;
 pub mod line;
 pub mod list_utils;
+pub mod measure;
 pub mod option_utils;
 pub mod random_id;
 pub mod utils_js;

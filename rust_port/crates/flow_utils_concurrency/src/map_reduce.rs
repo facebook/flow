@@ -13,9 +13,15 @@
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
+use std::time::Instant;
 
 use crossbeam::channel;
 use dupe::Dupe;
+use flow_common_utils::measure;
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd"))]
+use nix::sys::resource;
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd"))]
+use nix::sys::time::TimeValLike;
 
 use crate::lock::Condvar;
 use crate::lock::Mutex;
@@ -88,6 +94,116 @@ pub trait Next<W>: Send + Sync {
     fn next(&self) -> Bucket<W>;
 }
 
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd"))]
+fn thread_times() -> (f64, f64) {
+    match resource::getrusage(resource::UsageWho::RUSAGE_THREAD) {
+        Ok(usage) => (
+            usage.user_time().num_microseconds() as f64 / 1_000_000.0,
+            usage.system_time().num_microseconds() as f64 / 1_000_000.0,
+        ),
+        Err(_) => (0.0, 0.0),
+    }
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd")))]
+fn thread_times() -> (f64, f64) {
+    (0.0, 0.0)
+}
+
+fn sample_worker_run<T>(f: impl FnOnce() -> T) -> T {
+    if !measure::is_enabled() {
+        return f();
+    }
+    let wall_start = Instant::now();
+    let (user_start, system_start) = thread_times();
+    let ret = f();
+    let (user_end, system_end) = thread_times();
+    measure::sample(
+        None,
+        None,
+        "worker_user_time",
+        (user_end - user_start).max(0.0),
+    );
+    measure::sample(
+        None,
+        None,
+        "worker_system_time",
+        (system_end - system_start).max(0.0),
+    );
+    measure::sample(
+        None,
+        None,
+        "worker_wall_time",
+        wall_start.elapsed().as_secs_f64(),
+    );
+    ret
+}
+
+fn sample_worker_read_request<T>(f: impl FnOnce() -> T) -> T {
+    if !measure::is_enabled() {
+        return f();
+    }
+    let start = Instant::now();
+    let ret = f();
+    measure::sample(
+        None,
+        None,
+        "worker_read_request",
+        start.elapsed().as_secs_f64(),
+    );
+    ret
+}
+
+fn sample_worker_send_response<T>(f: impl FnOnce() -> T) -> T {
+    if !measure::is_enabled() {
+        return f();
+    }
+    let start = Instant::now();
+    let ret = f();
+    measure::sample(
+        None,
+        None,
+        "worker_send_response",
+        start.elapsed().as_secs_f64(),
+    );
+    ret
+}
+
+fn sample_worker_idle<T>(f: impl FnOnce() -> T) -> T {
+    if !measure::is_enabled() {
+        return f();
+    }
+    let start = Instant::now();
+    let ret = f();
+    measure::sample(None, None, "worker_idle", start.elapsed().as_secs_f64());
+    ret
+}
+
+fn sample_worker_done(done_start_times: &Arc<Mutex<Vec<Instant>>>) {
+    // OCaml:
+    // let%lwt idle_start_times = LwtUtils.all worker_threads in
+    // let idle_end_wall_time = Unix.gettimeofday () in
+    // List.iter
+    //   (fun idle_start_wall_time ->
+    //     Measure.sample "worker_done" (idle_end_wall_time -. idle_start_wall_time))
+    //   idle_start_times;
+    if !measure::is_enabled() {
+        return;
+    }
+    let idle_end_wall_time = Instant::now();
+    let done_start_times = done_start_times.lock();
+    for done_start_time in done_start_times.iter() {
+        measure::sample(
+            None,
+            None,
+            "worker_done",
+            idle_end_wall_time
+                .duration_since(*done_start_time)
+                .as_secs_f64(),
+        );
+    }
+}
+
 /// Parallel map-reduce over a collection of work items.
 ///
 /// # Type Parameters
@@ -148,6 +264,7 @@ where
     let results_mutex = Arc::new(Mutex::new(Default::default()));
     let job = Arc::new(job);
     let merge = Arc::new(merge);
+    let done_start_times = Arc::new(Mutex::new(Vec::new()));
 
     for item in work_items {
         sender.send(item).unwrap();
@@ -160,15 +277,24 @@ where
         let results_mutex = results_mutex.dupe();
         let job = job.dupe();
         let merge = merge.dupe();
+        let done_start_times = done_start_times.dupe();
         let mut local_acc = Default::default();
-        while let Ok(work_item) = receiver.recv() {
-            job(&mut local_acc, &work_item);
-            let mut results = results_mutex.lock();
-            let acc_to_merge = std::mem::take(&mut local_acc);
-            merge(&mut *results, acc_to_merge);
-            drop(results);
+        while let Ok(work_item) = sample_worker_read_request(|| receiver.recv()) {
+            sample_worker_run(|| {
+                job(&mut local_acc, &work_item);
+            });
+            sample_worker_send_response(|| {
+                let mut results = results_mutex.lock();
+                let acc_to_merge = std::mem::take(&mut local_acc);
+                merge(&mut *results, acc_to_merge);
+                drop(results);
+            });
+        }
+        if measure::is_enabled() {
+            done_start_times.lock().push(Instant::now());
         }
     });
+    sample_worker_done(&done_start_times);
 
     drop(receiver);
     Arc::try_unwrap(results_mutex)
@@ -265,6 +391,7 @@ where
     let done = Arc::new(AtomicBool::new(false));
     let wait_signal = Arc::new(Condvar::new());
     let wait_mutex = Arc::new(Mutex::new(()));
+    let done_start_times = Arc::new(Mutex::new(Vec::new()));
 
     // Producer thread: calls next() and sends batches to workers
     let done_producer = done.dupe();
@@ -307,20 +434,25 @@ where
         let done = done.dupe();
         let wait_signal = wait_signal.dupe();
         let wait_mutex = wait_mutex.dupe();
+        let done_start_times = done_start_times.dupe();
 
         // Each worker has a local accumulator (created once per worker thread)
         let mut local_acc = Default::default();
 
         loop {
-            match receiver.try_recv() {
+            match sample_worker_read_request(|| receiver.try_recv()) {
                 Ok(batch) => {
-                    job(&mut local_acc, batch);
+                    sample_worker_run(|| {
+                        job(&mut local_acc, batch);
+                    });
 
                     // Merge local accumulator into global, then reset local
-                    let mut results = results_mutex.lock();
-                    let acc_to_merge = std::mem::take(&mut local_acc);
-                    merge(&mut *results, acc_to_merge);
-                    drop(results);
+                    sample_worker_send_response(|| {
+                        let mut results = results_mutex.lock();
+                        let acc_to_merge = std::mem::take(&mut local_acc);
+                        merge(&mut *results, acc_to_merge);
+                        drop(results);
+                    });
 
                     // Notify producer in case it's waiting
                     wait_signal.notify_all();
@@ -332,14 +464,20 @@ where
                     }
                     // Wait for producer to signal new work or completion
                     let guard = wait_mutex.lock();
-                    let _ = wait_signal.wait_timeout(guard, std::time::Duration::from_millis(10));
+                    sample_worker_idle(|| {
+                        drop(wait_signal.wait_timeout(guard, std::time::Duration::from_millis(10)));
+                    });
                 }
                 Err(channel::TryRecvError::Disconnected) => {
                     break;
                 }
             }
         }
+        if measure::is_enabled() {
+            done_start_times.lock().push(Instant::now());
+        }
     });
+    sample_worker_done(&done_start_times);
 
     drop(sender);
     drop(receiver);
@@ -384,6 +522,7 @@ where
     let done = Arc::new(AtomicBool::new(false));
     let wait_signal = Arc::new(Condvar::new());
     let wait_mutex = Arc::new(Mutex::new(()));
+    let done_start_times = Arc::new(Mutex::new(Vec::new()));
 
     // Producer thread: calls next() and sends batches to workers
     let done_producer = done.dupe();
@@ -427,32 +566,39 @@ where
         let done = done.dupe();
         let wait_signal = wait_signal.dupe();
         let wait_mutex = wait_mutex.dupe();
+        let done_start_times = done_start_times.dupe();
 
         // Each worker has a local accumulator (created once per worker thread)
         let mut local_acc = Default::default();
 
         loop {
-            match receiver.try_recv() {
+            match sample_worker_read_request(|| receiver.try_recv()) {
                 Ok(batch) => {
-                    job(&mut local_acc, batch);
+                    sample_worker_run(|| {
+                        job(&mut local_acc, batch);
+                    });
 
                     // Merge local accumulator into global, then reset local
-                    let mut results = results_mutex.lock();
-                    let acc_to_merge = std::mem::take(&mut local_acc);
-                    merge(&mut *results, acc_to_merge);
-                    drop(results);
+                    sample_worker_send_response(|| {
+                        let mut results = results_mutex.lock();
+                        let acc_to_merge = std::mem::take(&mut local_acc);
+                        merge(&mut *results, acc_to_merge);
+                        drop(results);
+                    });
 
                     // Notify producer in case it's waiting
                     wait_signal.notify_all();
                 }
                 Err(channel::TryRecvError::Empty) => {
                     // Try stealing before waiting
-                    if steal(&mut local_acc) {
+                    if sample_worker_run(|| steal(&mut local_acc)) {
                         // Did useful work — merge and loop back
-                        let mut results = results_mutex.lock();
-                        let acc_to_merge = std::mem::take(&mut local_acc);
-                        merge(&mut *results, acc_to_merge);
-                        drop(results);
+                        sample_worker_send_response(|| {
+                            let mut results = results_mutex.lock();
+                            let acc_to_merge = std::mem::take(&mut local_acc);
+                            merge(&mut *results, acc_to_merge);
+                            drop(results);
+                        });
 
                         wait_signal.notify_all();
                         continue;
@@ -463,14 +609,20 @@ where
                     }
                     // Wait for producer to signal new work or completion
                     let guard = wait_mutex.lock();
-                    let _ = wait_signal.wait_timeout(guard, std::time::Duration::from_millis(10));
+                    sample_worker_idle(|| {
+                        drop(wait_signal.wait_timeout(guard, std::time::Duration::from_millis(10)));
+                    });
                 }
                 Err(channel::TryRecvError::Disconnected) => {
                     break;
                 }
             }
         }
+        if measure::is_enabled() {
+            done_start_times.lock().push(Instant::now());
+        }
     });
+    sample_worker_done(&done_start_times);
 
     drop(sender);
     drop(receiver);

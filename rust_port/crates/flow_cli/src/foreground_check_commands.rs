@@ -207,16 +207,43 @@ fn check_main(
         std::num::NonZeroUsize::new(options.max_workers as usize)
             .expect("max_workers should be positive"),
     ));
+    let profiling = flow_profiling::profiling_js::Running::new("Init");
     let (errors, warnings, suppressed_errors) =
-        type_service::check_once(options.dupe(), &pool, &shared_mem, root.as_path(), None);
-    let format_errors = format_errors(
-        &printer,
-        client_include_warnings,
-        offset_kind,
-        &options,
-        (&errors, &warnings, &suppressed_errors),
-    );
-    format_errors(None);
+        flow_profiling::profiling_js::with_current(&profiling, || {
+            flow_profiling::memory_utils::with_shared_mem(shared_mem.dupe(), || {
+                let result = type_service::check_once(
+                    options.dupe(),
+                    &pool,
+                    &shared_mem,
+                    root.as_path(),
+                    None,
+                );
+                flow_profiling::memory_utils::sample_init_memory(&profiling);
+                result
+            })
+        });
+    let format_errors = flow_profiling::profiling_js::with_current(&profiling, || {
+        profiling.with_timer(false, "FormatErrors", || {
+            format_errors(
+                &printer,
+                client_include_warnings,
+                offset_kind,
+                &options,
+                (&errors, &warnings, &suppressed_errors),
+            )
+        })
+    });
+    let finished_profile = profiling.finish();
+    let should_print_summary = options.profile && !options.quiet;
+    if should_print_summary {
+        flow_profiling::profiling_js::print_summary(&finished_profile);
+    }
+    let profiling_props = if options.profile {
+        Some(finished_profile.to_json_properties())
+    } else {
+        None
+    };
+    format_errors(profiling_props);
     flow_common_exit_status::exit(command_utils::get_check_or_status_exit_code(
         &errors,
         &warnings,
@@ -415,21 +442,43 @@ mod focus_check_command {
             std::num::NonZeroUsize::new(options.max_workers as usize)
                 .expect("max_workers should be positive"),
         ));
-        let (errors, warnings, suppressed_errors) = type_service::check_once(
-            options.dupe(),
-            &pool,
-            &shared_mem,
-            root.as_path(),
-            Some(focus_targets),
-        );
-        let format_errors = format_errors(
-            &printer,
-            client_include_warnings,
-            offset_kind,
-            &options,
-            (&errors, &warnings, &suppressed_errors),
-        );
-        format_errors(None);
+        let profiling = flow_profiling::profiling_js::Running::new("Init");
+        let (errors, warnings, suppressed_errors) =
+            flow_profiling::profiling_js::with_current(&profiling, || {
+                flow_profiling::memory_utils::with_shared_mem(shared_mem.dupe(), || {
+                    let result = type_service::check_once(
+                        options.dupe(),
+                        &pool,
+                        &shared_mem,
+                        root.as_path(),
+                        Some(focus_targets),
+                    );
+                    flow_profiling::memory_utils::sample_init_memory(&profiling);
+                    result
+                })
+            });
+        let format_errors = flow_profiling::profiling_js::with_current(&profiling, || {
+            profiling.with_timer(false, "FormatErrors", || {
+                format_errors(
+                    &printer,
+                    client_include_warnings,
+                    offset_kind,
+                    &options,
+                    (&errors, &warnings, &suppressed_errors),
+                )
+            })
+        });
+        let finished_profile = profiling.finish();
+        let should_print_summary = options.profile && !options.quiet;
+        if should_print_summary {
+            flow_profiling::profiling_js::print_summary(&finished_profile);
+        }
+        let profiling_props = if options.profile {
+            Some(finished_profile.to_json_properties())
+        } else {
+            None
+        };
+        format_errors(profiling_props);
         flow_common_exit_status::exit(command_utils::get_check_or_status_exit_code(
             &errors,
             &warnings,

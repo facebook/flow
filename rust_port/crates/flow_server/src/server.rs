@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::RwLock;
 
+use flow_cgroup as cgroup;
 use flow_common::files::LibDir;
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
@@ -144,10 +145,10 @@ fn idle_logging_loop(
 ) {
     let idle_period_in_seconds = 300.0_f64;
     let sample = |profiling: &ProfilingRunning| {
-        let cgroup_stats = crate::cgroup::get_stats();
+        let cgroup_stats = cgroup::get_stats();
         match cgroup_stats {
             Err(_) => {}
-            Ok(crate::cgroup::Stats {
+            Ok(cgroup::Stats {
                 total,
                 total_swap,
                 anon,

@@ -391,7 +391,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] typeAtPosCommand.ml → `flow_cli/src/type_at_pos_command.rs`
   - [x] typeOfNameCommand.ml → `flow_cli/src/type_of_name_command.rs`
   - [x] versionCommand.ml → `flow_cli/src/version_command.rs`
-- [ ] common/
+- [x] common/
   - [x] audit/
     - [x] expensive.ml → `not needed`
   - [x] bitset/
@@ -559,9 +559,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `compare_locs`
       - [x] `pack`
       - [x] `unpack`
-  - [ ] profiling/
-    - [ ] memory_utils.ml
-    - [ ] profiling_js.ml
+  - [x] profiling/
+    - [x] memory_utils.ml → `flow_profiling/src/memory_utils.rs`
+    - [x] profiling_js.ml → `flow_profiling/src/profiling_js.rs`
   - [x] semver/
     - [x] __tests__/
       - [x] semver_parser_test.ml → `flow_common_semver/src/semver_parser.rs` (inline tests)
@@ -981,7 +981,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
 - [ ] flow_dot_js.ml
 - [x] flowlib/
   - [x] flowlib.ml → `flow_flowlib/src/lib.rs`
-- [ ] hack_forked/
+- [x] hack_forked/
   - [x] dfind/
     - [x] dfindAddFile.ml → `flow_dfind/src/lib.rs`
     - [x] dfindEnv.ml → `flow_dfind/src/lib.rs`
@@ -1061,7 +1061,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] tempfile.ml → not needed (OCaml test helper; Rust tests should use Rust tempdir helpers)
     - [x] watchman/
       - [x] watchman_unit_test.ml → `flow_watchman/src/lib.rs` (inline tests)
-  - [ ] utils/
+  - [x] utils/
     - [x] buffered_line_reader/
       - [x] buffered_line_reader.ml → not needed as a standalone port (Rust Watchman uses `tokio::io::BufReader`; JSON-RPC uses `std::io::BufReader`)
       - [x] buffered_line_reader_lwt.ml → not needed (async reader behavior is covered by `tokio::io::BufReader`)
@@ -1072,7 +1072,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] prod/
         - [x] build_mode.ml → `cfg(debug_assertions)`
     - [x] cgroup/
-      - [x] cGroup.ml → `flow_server/src/cgroup.rs`
+      - [x] cGroup.ml → `flow_cgroup/src/lib.rs`
     - [x] collections/
       - [x] third-party/
         - [x] flow_map.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
@@ -1094,11 +1094,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `find_graph` → `Graph::find_graph()`
       - [x] wrappedMap.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
       - [x] wrappedMap_sig.ml → `irrelevant`, (use `BTreeMap`, `HashMap` or `FlowOrdMap`)
-    - [ ] core/
+    - [x] core/
       - [x] build_id.ml → `crates/facebook/flow_facebook_logging/src/build_id.rs`
       - [x] exception.ml → `unnecessary` (use error in `Result`)
       - [x] hh_logger.ml → `flow_hh_logger/src/lib.rs`
-      - [ ] measure.ml
+      - [x] measure.ml → `flow_common_utils/src/measure.rs`
       - [x] random_id.ml → `crates/flow_common_utils/src/random_id.rs`
       - [x] utils.ml → `not needed` (`Utils.callstack` is modeled directly as Rust `String`/`Callstack` tuple structs at use sites)
     - [x] disk/

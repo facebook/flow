@@ -83,13 +83,14 @@ pub enum RecheckError {
 }
 
 fn with_memory_timer<T>(options: &Options, timer: &str, f: impl FnOnce() -> T) -> T {
-    let should_print = options.profile;
-    let start = Instant::now();
-    let result = f();
-    if should_print {
-        eprintln!("[{}] {:.3}s", timer, start.elapsed().as_secs_f64());
+    flow_profiling::memory_utils::with_memory_timer(options.profile && !options.quiet, timer, f)
+}
+
+fn with_timer<T>(options: &Options, timer: &str, f: impl FnOnce() -> T) -> T {
+    match flow_profiling::profiling_js::current() {
+        Some(profiling) => profiling.with_timer(options.profile && !options.quiet, timer, f),
+        None => f(),
     }
-    result
 }
 
 pub(crate) fn clear_errors(files: &FlowOrdSet<FileKey>, mut errors: Errors) -> Errors {
@@ -621,6 +622,15 @@ fn merge(
         recheck_set,
         suppressions,
     );
+
+    if options.profile && !options.quiet {
+        // OCaml:
+        // if Options.should_profile options then
+        //   with_memory_timer_lwt ~options "PrintGCStats" profiling (fun () ->
+        //       Lwt.return (Gc.print_stat stderr)
+        //   )
+        with_memory_timer(options, "PrintGCStats", || {});
+    }
 
     if !options.quiet {
         flow_hh_logger::info!("Merging Done");
@@ -3159,26 +3169,41 @@ pub fn load_saved_state(
     options: &Arc<Options>,
 ) -> Result<(LoadedSavedState, CheckedSet), String> {
     // Does a best-effort job to load a saved state. If it fails, returns None
-    let fetch_result = match options.saved_state_fetcher {
-        SavedStateFetcher::DummyFetcher => {
-            flow_saved_state_fetcher::saved_state_dummy_fetcher::fetch(options)
-        }
-        SavedStateFetcher::LocalFetcher => {
-            flow_saved_state_fetcher::saved_state_local_fetcher::fetch(options)
-        }
-        SavedStateFetcher::ScmFetcher => {
-            flow_saved_state_fetcher::saved_state_scm_fetcher::fetch(options)
-        }
-        SavedStateFetcher::FbFetcher => {
-            #[cfg(fbcode_build)]
-            {
-                flow_facebook_saved_state::saved_state_fb_fetcher::fetch(options)
+    // OCaml:
+    // let%lwt (fetch_profiling, fetch_result) =
+    //   match Options.saved_state_fetcher options with
+    //   | Options.Dummy_fetcher -> Saved_state_dummy_fetcher.fetch ~options
+    //   | Options.Local_fetcher -> Saved_state_local_fetcher.fetch ~options
+    //   | Options.Scm_fetcher -> Saved_state_scm_fetcher.fetch ~options
+    //   | Options.Fb_fetcher -> Saved_state_fb_fetcher.fetch ~options
+    // in
+    // Profiling_js.merge ~from:fetch_profiling ~into:profiling;
+    let (fetch_profiling, fetch_result) =
+        flow_profiling::profiling_js::with_profiling_sync("FetchSavedState", false, |_| {
+            match options.saved_state_fetcher {
+                SavedStateFetcher::DummyFetcher => {
+                    flow_saved_state_fetcher::saved_state_dummy_fetcher::fetch(options)
+                }
+                SavedStateFetcher::LocalFetcher => {
+                    flow_saved_state_fetcher::saved_state_local_fetcher::fetch(options)
+                }
+                SavedStateFetcher::ScmFetcher => {
+                    flow_saved_state_fetcher::saved_state_scm_fetcher::fetch(options)
+                }
+                SavedStateFetcher::FbFetcher => {
+                    #[cfg(fbcode_build)]
+                    {
+                        flow_facebook_saved_state::saved_state_fb_fetcher::fetch(options)
+                    }
+                    #[cfg(not(fbcode_build))]
+                    {
+                        flow_saved_state_fetcher::saved_state_dummy_fetcher::fetch(options)
+                    }
+                }
             }
-            #[cfg(not(fbcode_build))]
-            {
-                flow_saved_state_fetcher::saved_state_dummy_fetcher::fetch(options)
-            }
-        }
+        });
+    if let Some(profiling) = flow_profiling::profiling_js::current() {
+        profiling.merge(&fetch_profiling);
     };
     match fetch_result {
         FetchResult::No_saved_state => Err("No saved state available".to_string()),
@@ -3666,7 +3691,7 @@ pub fn check_files_for_init(
 
         // Update collated errors
         let mut collated_errors = env_collated_errors;
-        {
+        with_timer(options, "CollateErrors", || {
             let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
             let shared_mem_for_ast = shared_mem.dupe();
             let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
@@ -3682,7 +3707,7 @@ pub fn check_files_for_init(
                 &mut collated_errors,
             );
             error_collator::update_error_state_timestamps(&mut collated_errors);
-        }
+        });
         let env = Env {
             files: env_files,
             dependency_info,
@@ -3768,6 +3793,10 @@ pub fn check_once(
 ) {
     let total_start = Instant::now();
 
+    // OCaml full-check still routes through the dummy saved-state fetcher, whose
+    // fetch function contributes a `FetchSavedState` child profile.
+    with_timer(&options, "FetchSavedState", || {});
+
     let (env, libs_ok, _node_modules_containers) =
         init_from_scratch(&options, pool, shared_mem, root);
     let env = if libs_ok {
@@ -3780,7 +3809,7 @@ pub fn check_once(
     };
 
     let total_time = total_start.elapsed();
-    if !options.quiet {
+    if !options.quiet && !options.profile {
         eprintln!("Total:              {:6.2}s", total_time.as_secs_f64());
     }
 
