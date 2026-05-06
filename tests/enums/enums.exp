@@ -1544,6 +1544,20 @@ References:
                 ^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- error-coercion.js:34:6
+
+Cannot call `test` because in type argument `T`: `E` [1] is incompatible with string [2]. [incompatible-type]
+
+   error-coercion.js:34:6
+   34| test<E>(); // Error, no suggestion (cast syntax invalid in type arg position)
+            ^ [1]
+
+References:
+   error-coercion.js:33:18
+   33| function test<T: string>() {}
+                        ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------ error-duplicate-values.js:6:7
 
 Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
@@ -4943,4 +4957,4 @@ References:
 
 
 
-Found 291 errors
+Found 292 errors

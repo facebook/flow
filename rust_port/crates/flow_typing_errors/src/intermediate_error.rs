@@ -3666,17 +3666,42 @@ where
         ) => {
             use super::error_message::EnumKind;
 
-            let additional_explanation = match (&enum_kind, &representation_type) {
-                (EnumKind::ConcreteEnumKind, Some(repr_type)) => {
-                    Some(Explanation::ExplanationConcreteEnumCasting {
-                        representation_type: repr_type.to_string().into(),
-                        casting_syntax,
-                    })
+            let in_type_arg_position = {
+                fn loop_<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+                    use_op: &VirtualUseOp<L>,
+                ) -> bool {
+                    match use_op {
+                        VirtualUseOp::Op(_) => false,
+                        VirtualUseOp::Frame(frame, _)
+                            if matches!(
+                                frame.as_ref(),
+                                VirtualFrameUseOp::TypeArgCompatibility(_)
+                                    | VirtualFrameUseOp::TypeParamBound { .. }
+                            ) =>
+                        {
+                            true
+                        }
+                        VirtualUseOp::Frame(_, parent) => loop_(parent),
+                    }
                 }
-                (EnumKind::AbstractEnumKind, _) => {
-                    Some(Explanation::ExplanationAbstractEnumCasting)
+                loop_(&use_op)
+            };
+
+            let additional_explanation = if in_type_arg_position {
+                None
+            } else {
+                match (&enum_kind, &representation_type) {
+                    (EnumKind::ConcreteEnumKind, Some(repr_type)) => {
+                        Some(Explanation::ExplanationConcreteEnumCasting {
+                            representation_type: repr_type.to_string().into(),
+                            casting_syntax,
+                        })
+                    }
+                    (EnumKind::AbstractEnumKind, _) => {
+                        Some(Explanation::ExplanationAbstractEnumCasting)
+                    }
+                    _ => None,
                 }
-                _ => None,
             };
             mk_incompatible_error(additional_explanation, reason_lower, reason_upper, use_op)
         }

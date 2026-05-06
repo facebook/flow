@@ -1584,12 +1584,25 @@ let rec make_intermediate_error :
         IncompatibleEnum
           { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax }
       ) ->
+      let in_type_arg_position =
+        let rec loop = function
+          | Op _ -> false
+          | Frame (TypeArgCompatibility _, _)
+          | Frame (TypeParamBound _, _) ->
+            true
+          | Frame (_, parent) -> loop parent
+        in
+        loop use_op
+      in
       let additional_explanation =
-        match (enum_kind, representation_type) with
-        | (ConcreteEnumKind, Some representation_type) ->
-          Some (ExplanationConcreteEnumCasting { representation_type; casting_syntax })
-        | (AbstractEnumKind, _) -> Some ExplanationAbstractEnumCasting
-        | _ -> None
+        if in_type_arg_position then
+          None
+        else
+          match (enum_kind, representation_type) with
+          | (ConcreteEnumKind, Some representation_type) ->
+            Some (ExplanationConcreteEnumCasting { representation_type; casting_syntax })
+          | (AbstractEnumKind, _) -> Some ExplanationAbstractEnumCasting
+          | _ -> None
       in
       mk_incompatible_error ?additional_explanation reason_lower reason_upper use_op
     | (None, Error_message.Speculation { loc; use_op; branches }) ->
