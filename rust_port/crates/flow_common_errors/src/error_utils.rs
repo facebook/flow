@@ -3867,9 +3867,7 @@ pub mod cli_output {
                     // Print every line by appending the line number and appropriate
                     // gutter width.
                     let mut styled_code_block_lines: Vec<(tty::Style, String)> = Vec::new();
-                    let mut n = loc.start.line;
-
-                    for line in &line_list {
+                    for (n, line) in (loc.start.line..).zip(line_list.iter()) {
                         // If we show more lines then some upper limit omit any extra code.
                         if n >= loc.start.line + OMIT_AFTER_LINES
                             && n <= loc.end.line - OMIT_AFTER_LINES
@@ -3959,7 +3957,6 @@ pub mod cli_output {
 
                             styled_code_block_lines.push(default_style("\n"));
                         }
-                        n += 1;
                     }
                     // Get our gutter space for the underline and overline.
                     let gutter_space = " ".repeat(gutter_width + 2);

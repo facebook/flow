@@ -99,8 +99,9 @@ pub(super) fn multiflow_full<'cx>(
         arglist,
         parlist,
     )?;
-    let mut n = (parlist_len as i32) - (unused_parameters.len() as i32) + 1;
-    for (_, param) in &unused_parameters {
+    for (n, (_, param)) in ((parlist_len as i32) - (unused_parameters.len() as i32) + 1..)
+        .zip(unused_parameters.iter())
+    {
         let use_op = VirtualUseOp::Frame(
             Arc::new(VirtualFrameUseOp::FunMissingArg(Box::new(
                 FunMissingArgData {
@@ -119,7 +120,6 @@ pub(super) fn multiflow_full<'cx>(
                 &UseT::new(UseTInner::UseT(use_op, param.dupe())),
             ),
         )?;
-        n += 1;
     }
     Ok(())
 }
