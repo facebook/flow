@@ -42,16 +42,6 @@ pub enum UseMode {
 pub mod modules {
     use super::*;
 
-    pub fn paths() -> BTreeMap<String, String> {
-        crate::hardcoded_module_fixes::FILES_TO_MODULES.iter().fold(
-            BTreeMap::new(),
-            |mut acc, (k, v)| {
-                acc.insert((*k).to_string(), (*v).to_string());
-                acc
-            },
-        )
-    }
-
     pub fn resolve(
         file_options: &flow_common::files::FileOptions,
         file: &FileKey,
@@ -71,10 +61,6 @@ pub mod modules {
                     .file_name()
                     .map_or("", |f| f.to_str().unwrap_or(""))
                     .to_string();
-                let paths = paths();
-                if let Some(fixed) = paths.get(&local_file) {
-                    return fixed.clone();
-                }
                 let dep_folder = std::path::Path::new(&f_str)
                     .parent()
                     .map_or(".", |p| p.to_str().unwrap_or("."))

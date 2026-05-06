@@ -73,8 +73,6 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] codemod_annotator.ml → `flow_codemods/src/utils/codemod_annotator.rs`
       - [x] `Queries` module → `queries`
       - [x] `ty_or_type_ast` type → `TyOrTypeAst`
-      - [x] `NSpecSet` type → `NSpecSet`
-      - [x] `HardCodedImportMap` module → `HardCodedImportMap`
       - [x] `validate_ty`
       - [x] `get_ty`
       - [x] `get_validated_ty`
@@ -962,13 +960,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] slow_to_check_logging.ml → `flow_common/src/slow_to_check_logging.rs`
   - [x] subst_name.ml → `flow_common/src/subst_name.rs`
   - [x] verbose.ml → `flow_common/src/verbose.rs`
-- [ ] facebook/
+- [x] facebook/
   - [x] http/
     - [x] flow_http_client.ml → `unnecessary` (use rust crates)
-  - [ ] codemods/
-    - [ ] annotate_exports_hardcoded/
-      - [ ] annotate_exports_hardcoded_expr_fixes.ml
-      - [ ] hardcoded_module_fixes.ml
   - [x] logging/
     - [x] user/
       - [x] fb_whoami.ml → `facebook/flow_facebook_logging/src/fb_whoami.rs`
@@ -2632,12 +2626,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] mutator_state_reader.ml → `unnecessary`
     - [x] state_reader.ml → `unnecessary`
 - [x] stubs/
-  - [x] annotate_exports_hardcoded_expr_fixes.ml → `flow_codemods/src/utils/codemod_annotator.rs` (oss stub, inlined)
   - [x] eventLoggerLwt.ml → `flow_event_logger_lwt/src/lib.rs` (oss stub)
   - [x] extra_commands.ml → `flow_cli/src/extra_commands.rs` (oss stub)
   - [x] flowEventLogger.ml → `flow_event_logger/src/lib.rs` (oss stub)
   - [x] flowInteractionLogger.ml → `flow_interaction_logger/src/lib.rs` (oss stub)
-  - [x] hardcoded_module_fixes.ml → `flow_services_code_action/src/hardcoded_module_fixes.rs` (oss stub)
   - [x] saved_state_fb_fetcher.ml → `flow_services_inference/src/type_service.rs` `cfg(not(fbcode_build))` arm of `load_saved_state`'s `SavedStateFetcher::FbFetcher` match (delegates to `flow_saved_state_fetcher::saved_state_dummy_fetcher::fetch`, mirroring OCaml `include Saved_state_dummy_fetcher`)
   - [x] startup_initializer.ml → `flow_server_monitor/src/startup_initializer.rs` (oss stub)
 - [x] third-party/

@@ -106,27 +106,6 @@ fn hardcoded_ty_fixes_run<Extra: BaseStats>(
     (acc_ref.into_inner(), t_double_prime)
 }
 
-type ImportSpecifier = (
-    (Loc, ast::StringLiteral<Loc>),
-    ast::statement::import_declaration::NamedSpecifier<Loc, Loc>,
-);
-
-pub(crate) struct HardCodedTypeAst {
-    tast_type: ast::types::Type<Loc, Loc>,
-    tast_imports: Vec<ImportSpecifier>,
-}
-
-#[allow(dead_code)]
-fn expr_to_type_ast(_expr: &ast::expression::Expression<Loc, Loc>) -> Option<HardCodedTypeAst> {
-    None
-}
-
-fn process_hardcoded_type_ast(
-    hard_coded: HardCodedTypeAst,
-) -> (ast::types::Type<Loc, Loc>, Vec<ImportSpecifier>) {
-    (hard_coded.tast_type, hard_coded.tast_imports)
-}
-
 const TYPE_SIZE_WARNING_THRESHOLD: usize = 30;
 
 pub mod queries {
@@ -197,54 +176,6 @@ pub mod queries {
 
 pub(crate) enum TyOrTypeAst {
     Ty_(ALocTy),
-    TypeAst(HardCodedTypeAst),
-}
-
-pub type NSpecSet = BTreeSet<ast::statement::import_declaration::NamedSpecifier<Loc, Loc>>;
-
-pub struct HardCodedImportMap {
-    inner: BTreeMap<(Loc, ast::StringLiteral<Loc>), NSpecSet>,
-}
-
-impl HardCodedImportMap {
-    pub fn empty() -> Self {
-        HardCodedImportMap {
-            inner: BTreeMap::new(),
-        }
-    }
-
-    pub fn add_with_union(
-        &mut self,
-        source: (Loc, ast::StringLiteral<Loc>),
-        nspec: ast::statement::import_declaration::NamedSpecifier<Loc, Loc>,
-    ) {
-        let entry = self.inner.entry(source).or_insert_with(NSpecSet::new);
-        entry.insert(nspec);
-    }
-
-    pub fn to_import_stmts(&self) -> Vec<ast::statement::Statement<Loc, Loc>> {
-        self.inner
-            .iter()
-            .map(|(source, nspecs)| {
-                let nspecs: Vec<_> = nspecs.iter().cloned().collect();
-                ast::statement::Statement::new(ast::statement::StatementInner::ImportDeclaration {
-                    loc: Loc::none(),
-                    inner: std::sync::Arc::new(ast::statement::ImportDeclaration {
-                        import_kind: ast::statement::ImportKind::ImportType,
-                        source: source.clone(),
-                        default: None,
-                        specifiers: Some(
-                            ast::statement::import_declaration::Specifier::ImportNamedSpecifiers(
-                                nspecs,
-                            ),
-                        ),
-                        attributes: None,
-                        comments: None,
-                    }),
-                })
-            })
-            .collect()
-    }
 }
 
 #[allow(unreachable_code)]
@@ -303,7 +234,6 @@ pub struct Mapper<'a, 'cx, Extra: BaseStats> {
     pub remote_converter: Option<
         flow_services_code_action::insert_type_imports::imports_helper::RemoteConverter<'cx>,
     >,
-    pub hardcoded_imports: HardCodedImportMap,
 
     pub cctx: &'a codemod_context::typed::TypedCodemodContext<'cx>,
     pub default_any: bool,
@@ -414,18 +344,6 @@ impl<'a, 'cx, Extra: BaseStats> Mapper<'a, 'cx, Extra> {
                     }
                 }
             }
-            TyOrTypeAst::TypeAst(_hard_coded) => {
-                let size = Some(1);
-                self.added_annotations_locmap.insert(loc, size);
-                let (t, tast_imports) = process_hardcoded_type_ast(_hard_coded);
-                for (source, nspec) in tast_imports {
-                    self.hardcoded_imports.add_with_union(source, nspec);
-                }
-                Ok(f(ast::types::Annotation {
-                    loc: Loc::none(),
-                    annotation: t,
-                }))
-            }
         }
     }
 
@@ -459,21 +377,13 @@ impl<'a, 'cx, Extra: BaseStats> Mapper<'a, 'cx, Extra> {
         &mut self,
         f: impl Fn(Loc, &A, &TyOrTypeAst) -> Result<A, error::Kind> + Copy,
         error_fn: impl Fn(&A) -> A + Copy,
-        expr: Option<ast::expression::Expression<Loc, Loc>>,
+        _expr: Option<ast::expression::Expression<Loc, Loc>>,
         loc: Loc,
         ty_entry: Result<ALocTy, Vec<error::Kind>>,
         x: A,
     ) -> A {
-        let hard_coded_ast_type: Option<HardCodedTypeAst> = match expr {
-            Some(expr) => expr_to_type_ast(&expr),
-            None => None,
-        };
-        match (hard_coded_ast_type, ty_entry) {
-            (Some(type_ast), _) => {
-                let ty = TyOrTypeAst::TypeAst(type_ast);
-                self.opt_annotate_inferred_type(f, error_fn, loc, &ty, x)
-            }
-            (None, Err(errs)) => {
+        match ty_entry {
+            Err(errs) => {
                 for err in &errs {
                     self.acc.error(&loc, err);
                 }
@@ -487,7 +397,7 @@ impl<'a, 'cx, Extra: BaseStats> Mapper<'a, 'cx, Extra> {
                     x
                 }
             }
-            (None, Ok(ty)) => {
+            Ok(ty) => {
                 let ty = TyOrTypeAst::Ty_(ty);
                 self.opt_annotate_inferred_type(f, error_fn, loc, &ty, x)
             }
@@ -635,10 +545,7 @@ impl<'a, 'cx, Extra: BaseStats> Mapper<'a, 'cx, Extra> {
         };
         flow_hh_logger::info!("{} file stats: {}", file.as_str(), stats.serialize());
         self.acc.stats = stats;
-        let hardcoded_imports = self.hardcoded_imports.to_import_stmts();
-        let inferred_imports = self.get_remote_converter().to_import_stmts();
-        let mut generated_imports = hardcoded_imports;
-        generated_imports.extend(inferred_imports);
+        let generated_imports = self.get_remote_converter().to_import_stmts();
         let stmts: Vec<ast::statement::Statement<Loc, Loc>> =
             flow_services_code_action::insert_type::add_statement_after_directive_and_type_imports(
                 &stmts,

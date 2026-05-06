@@ -56,41 +56,7 @@ module Queries = struct
     !idents
 end
 
-type ty_or_type_ast =
-  | Ty_ of Ty.t
-  | Type_ast of Annotate_exports_hardcoded_expr_fixes.hard_coded_type_ast
-
-module NSpecSet = Flow_set.Make (struct
-  type t = (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier
-
-  let compare = Stdlib.compare
-end)
-
-module HardCodedImportMap = struct
-  include WrappedMap.Make (struct
-    type t = Loc.t * Loc.t Ast.StringLiteral.t
-
-    let compare = Stdlib.compare
-  end)
-
-  let to_import_stmts m =
-    bindings m
-    |> Base.List.map ~f:(fun (source, nspecs) ->
-           let nspecs = NSpecSet.elements nspecs in
-           ( Loc.none,
-             Ast.Statement.ImportDeclaration
-               {
-                 Ast.Statement.ImportDeclaration.import_kind =
-                   Ast.Statement.ImportDeclaration.ImportType;
-                 source;
-                 default = None;
-                 specifiers = Some (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers nspecs);
-                 attributes = None;
-                 comments = None;
-               }
-           )
-       )
-end
+type ty_or_type_ast = Ty_ of Ty.t
 
 let validate_ty cctx ~max_type_size ty =
   let reader = cctx.Codemod_context.Typed.reader in
@@ -144,8 +110,6 @@ module Make (Extra : BASE_STATS) = struct
       val mutable codemod_error_locs = LSet.empty
 
       val mutable remote_converter = None
-
-      val mutable hardcoded_imports = HardCodedImportMap.empty
 
       method private get_remote_converter = Base.Option.value_exn remote_converter
 
@@ -229,19 +193,6 @@ module Make (Extra : BASE_STATS) = struct
               codemod_error_locs <- LSet.add loc codemod_error_locs;
               Error e
           end
-          | Type_ast { Annotate_exports_hardcoded_expr_fixes.tast_type = t; tast_imports } ->
-            let size = Some 1 (* TODO *) in
-            added_annotations_locmap <- LMap.add loc size added_annotations_locmap;
-            List.iter
-              (fun (source, nspec) ->
-                hardcoded_imports <-
-                  HardCodedImportMap.add
-                    ~combine:NSpecSet.union
-                    source
-                    (NSpecSet.singleton nspec)
-                    hardcoded_imports)
-              tast_imports;
-            Ok (f (Loc.none, t))
 
       method private opt_annotate_inferred_type
           : 'a.
@@ -264,9 +215,7 @@ module Make (Extra : BASE_STATS) = struct
             error x
           | Error _ -> x
 
-      (* - expr: used for hard-coding type annotations on expressions matching
-       *   annotate_exports_hardcoded_expr_fixes.expr_to_type_ast.
-       * - error: used when "default-any" has been set to true. *)
+      (* - error: used when "default-any" has been set to true. *)
       method private opt_annotate
           : 'a.
             f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) ->
@@ -276,16 +225,9 @@ module Make (Extra : BASE_STATS) = struct
             (Ty.t, Error.kind list) result ->
             'a ->
             'a =
-        fun ~f ~error ~expr loc ty_entry x ->
-          let hard_coded_ast_type =
-            match expr with
-            | Some expr -> Annotate_exports_hardcoded_expr_fixes.expr_to_type_ast expr
-            | None -> None
-          in
-          match (hard_coded_ast_type, ty_entry) with
-          | (Some type_ast, _) ->
-            this#opt_annotate_inferred_type ~f ~error loc (Type_ast type_ast) x
-          | (None, Error errs) ->
+        fun ~f ~error ~expr:_ loc ty_entry x ->
+          match ty_entry with
+          | Error errs ->
             List.iter (fun err -> this#update_acc (fun acc -> Acc.error acc loc err)) errs;
             codemod_error_locs <- LSet.add loc codemod_error_locs;
             if default_any then (
@@ -293,7 +235,7 @@ module Make (Extra : BASE_STATS) = struct
               this#opt_annotate_inferred_type ~f ~error loc (Ty_ Ty.explicit_any) x
             ) else
               x
-          | (None, Ok ty) -> this#opt_annotate_inferred_type ~f ~error loc (Ty_ ty) x
+          | Ok ty -> this#opt_annotate_inferred_type ~f ~error loc (Ty_ ty) x
 
       (* Useful to annotate expressions with a typecast. Skips arrow functions *)
       method private annotate_expr loc expression ty =
@@ -394,9 +336,7 @@ module Make (Extra : BASE_STATS) = struct
         in
         Hh_logger.info "%s file stats: %s" (File_key.to_string file) (Stats.serialize stats);
         this#update_acc (fun acc -> { acc with Acc.stats });
-        let hardcoded_imports = HardCodedImportMap.to_import_stmts hardcoded_imports in
-        let inferred_imports = this#get_remote_converter#to_import_stmts () in
-        let generated_imports = hardcoded_imports @ inferred_imports in
+        let generated_imports = this#get_remote_converter#to_import_stmts () in
         let stmts =
           Insert_type.add_statement_after_directive_and_type_imports stmts generated_imports
         in

@@ -261,7 +261,6 @@ impl<'a, 'cx> AnnotateExportsMapper<'a, 'cx> {
                 wont_annotate_locs: BTreeSet::new(),
                 codemod_error_locs: BTreeSet::new(),
                 remote_converter: None,
-                hardcoded_imports: codemod_annotator::HardCodedImportMap::empty(),
                 cctx,
                 default_any,
                 generalize_maybe: true,

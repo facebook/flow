@@ -2,7 +2,6 @@
  (name flow_service_type_info)
  (wrapped false)
  (libraries
-  codemod_annotate_exports_hardcoded
   flow_common
   flow_index
   flow_parser
