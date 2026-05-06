@@ -1579,13 +1579,13 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] token_translator.ml → absorbed into `flow_parser_wasm/src/serializer.rs`
   - [x] translator_intf.ml → absorbed into `flow_parser_wasm/src/serializer.rs`
   - [x] type_parser.ml → `flow_parser/src/type_parser.rs` (3286 lines, 100% complete)
-- [ ] parser_utils/
-  - [ ] __tests__/
+- [x] parser_utils/
+  - [x] __tests__/
     - [x] file_sig_test.ml → `flow_parser_utils/src/file_sig_tests.rs`
-    - [ ] flow_ast_differ_test.ml
-    - [ ] flow_polymorphic_ast_mapper_test.ml
-    - [ ] parser_utils_tests.ml
-    - [ ] test_utils.ml
+    - [x] flow_ast_differ_test.ml → `flow_parser_utils/src/flow_ast_differ_tests.rs`
+    - [x] flow_polymorphic_ast_mapper_test.ml → `flow_parser/src/flow_polymorphic_ast_mapper_test.rs`
+    - [x] parser_utils_tests.ml → irrelevant (OUnit runner)
+    - [x] test_utils.ml → `flow_parser_utils/src/test_utils.rs`
   - [x] aloc/
     - [x] __tests__/
       - [x] aloc_tests.ml → `flow_aloc/src/lib.rs`

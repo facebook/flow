@@ -21,6 +21,8 @@ mod expression_parser;
 pub mod file_key;
 mod flow_ast_mapper_test;
 pub mod flow_lexer;
+#[cfg(test)]
+mod flow_polymorphic_ast_mapper_test;
 pub mod js_id_unicode;
 pub mod jsdoc;
 mod jsdoc_test;

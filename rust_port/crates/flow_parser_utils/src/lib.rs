@@ -24,3 +24,5 @@ pub mod this_finder;
 
 #[cfg(test)]
 mod file_sig_tests;
+#[cfg(test)]
+pub mod test_utils;
