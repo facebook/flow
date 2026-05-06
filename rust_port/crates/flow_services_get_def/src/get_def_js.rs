@@ -53,6 +53,7 @@ fn extract_member_def<'cx>(
     let extract_result = flow_typing::ty_members::extract(
         force_instance,
         Some(vec![Name::new(name.dupe())]),
+        None,
         cx,
         typed_ast_opt,
         file_sig.dupe(),

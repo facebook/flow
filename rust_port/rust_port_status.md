@@ -210,9 +210,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] extra/
     - [x] facebook/
       - [x] extra_commands.ml → `registered toplevel`
-  - [ ] glean/
+  - [x] glean/
     - [x] gleanCommand.ml → `flow_cli/src/glean_command.rs`
-    - [ ] gleanRunner.ml → `flow_cli/src/glean_runner.rs`
+    - [x] gleanRunner.ml → `flow_cli/src/glean_runner.rs`
       - [x] `module DocumentationFullspanMap` → `mod documentation_fullspan_map`
         - [x] `doc_span` type → `DocSpan`
         - [x] `combine`
@@ -3113,6 +3113,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `expand_members`
     - [x] `expand_literal_union`
     - [x] `mk_genv`
+    - [x] `mk_genv_with_imported_names`
     - [x] `debug_string_of_t`
   - [x] ty_normalizer_imports.ml → `flow_typing/src/ty_normalizer_imports.rs`
   - [x] ty_normalizer_no_flow.ml → `flow_typing_ty_normalizer/src/no_flow.rs`

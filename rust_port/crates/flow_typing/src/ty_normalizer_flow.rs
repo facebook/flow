@@ -25,6 +25,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js::flow_js;
 use flow_typing_ty_normalizer::env::Env;
 use flow_typing_ty_normalizer::env::Genv;
+use flow_typing_ty_normalizer::env::ImportedNamesMap;
 use flow_typing_ty_normalizer::env::Options;
 use flow_typing_ty_normalizer::normalizer::Error;
 use flow_typing_ty_normalizer::normalizer::Normalizer;
@@ -41,6 +42,7 @@ use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::eval;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
+use flow_utils_concurrency::job_error::JobError;
 
 use crate::ty_normalizer_imports;
 
@@ -170,6 +172,14 @@ impl NormalizerInput for FlowInput {
 
 type FlowNormalizer = Normalizer<FlowInput>;
 
+pub type ImportedNames<'a, 'cx> = Rc<
+    Lazy<
+        Context<'cx>,
+        Result<ImportedNamesMap, JobError>,
+        Box<dyn FnOnce(&Context<'cx>) -> Result<ImportedNamesMap, JobError> + 'a>,
+    >,
+>;
+
 // Exposed API
 
 fn print_normalizer_banner(genv: &Genv<'_, '_>) {
@@ -270,6 +280,23 @@ pub fn mk_genv<'a, 'cx>(
     })
         as Box<dyn FnOnce(&Context<'cx>) -> _ + 'a>));
 
+    Genv {
+        options,
+        cx,
+        typed_ast_opt,
+        file_sig,
+        imported_names,
+        ref_type_bodies: None,
+    }
+}
+
+pub fn mk_genv_with_imported_names<'a, 'cx>(
+    options: Options,
+    cx: &'a Context<'cx>,
+    typed_ast_opt: Option<&'a ast::Program<ALoc, (ALoc, Type)>>,
+    file_sig: Arc<FileSig>,
+    imported_names: ImportedNames<'a, 'cx>,
+) -> Genv<'a, 'cx> {
     Genv {
         options,
         cx,

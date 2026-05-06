@@ -26,7 +26,6 @@ use flow_common::options::Options;
 use flow_common_modulename::Modulename;
 use flow_common_ty::ty_printer;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
-use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_heap::resolved_requires::Dependency;
 use flow_heap::resolved_requires::ResolvedModule;
@@ -698,10 +697,10 @@ fn type_declaration_references(
         .collect()
 }
 
-fn extract_member_def(
-    _imported_names: &BTreeMap<FlowSmolStr, bool>,
-    cx: &Context<'_>,
-    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+fn extract_member_def<'a, 'cx>(
+    imported_names: &ty_normalizer_flow::ImportedNames<'a, 'cx>,
+    cx: &'a Context<'cx>,
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     file_sig: &Arc<FileSig>,
     scheme: &Type,
     name: &str,
@@ -709,6 +708,7 @@ fn extract_member_def(
     match flow_typing::ty_members::extract(
         false,
         Some(vec![flow_common::reason::Name::new(name)]),
+        Some(imported_names.dupe()),
         cx,
         Some(typed_ast),
         file_sig.clone(),
@@ -723,13 +723,13 @@ fn extract_member_def(
     }
 }
 
-fn member_declaration_references(
-    imported_names: &BTreeMap<FlowSmolStr, bool>,
+fn member_declaration_references<'a, 'cx>(
+    imported_names: &ty_normalizer_flow::ImportedNames<'a, 'cx>,
     root: &str,
     write_root: &str,
     reader: &SharedMem,
-    cx: &Context<'_>,
-    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+    cx: &'a Context<'cx>,
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     file_sig: &Arc<FileSig>,
     offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
 ) -> Vec<Value> {
@@ -1579,17 +1579,17 @@ where
     }
 }
 
-fn declaration_infos(
-    _imported_names: &BTreeMap<FlowSmolStr, bool>,
+fn declaration_infos<'a, 'cx>(
+    imported_names: &ty_normalizer_flow::ImportedNames<'a, 'cx>,
     root: &str,
     write_root: &str,
     glean_log: bool,
     scope_info: &scope_api::ScopeInfo<Loc>,
     file: &FileKey,
     file_sig: &Arc<FileSig>,
-    cx: &Context<'_>,
+    cx: &'a Context<'cx>,
     reader: &SharedMem,
-    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     ast: &ast::Program<Loc, Loc>,
     offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
 ) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
@@ -1623,7 +1623,13 @@ fn declaration_infos(
     let infos = infos.into_inner();
 
     let options = TyNormalizerOptions::default();
-    let genv = ty_normalizer_flow::mk_genv(options, cx, Some(typed_ast), file_sig.clone());
+    let genv = ty_normalizer_flow::mk_genv_with_imported_names(
+        options,
+        cx,
+        Some(typed_ast),
+        file_sig.clone(),
+        imported_names.dupe(),
+    );
     let exact_by_default = cx.exact_by_default();
     let docs_and_spans = documentation_fullspan_map::create(ast, Some(file));
     let printer_opts = ty_printer::PrinterOptions {
@@ -1734,12 +1740,17 @@ fn file_liness(root: &str, write_root: &str, file_key: &FileKey) -> Vec<Value> {
         Some(info) => info,
         None => return vec![],
     };
-    let lengths: Vec<i32> = info
+    let mut lengths: Vec<i32> = info
         .offsets
         .line_lengths()
         .iter()
         .map(|&l| l as i32)
         .collect();
+    // Rust's offset table keeps an extra exclusive newline lookup slot for parser ranges.
+    // OCaml FileLines lengths are based on newline-start offsets.
+    if let Some(first) = lengths.first_mut() {
+        *first -= 1;
+    }
     let has_unicode_or_tabs = info.offsets.contains_multibyte_character();
     let ends_in_newline = match crate::offset_cache::ends_in_newline_of_file_key(file_key) {
         Some(v) => v,
@@ -1840,7 +1851,16 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                     eprintln!("{}: {}", msg, file.to_absolute());
                 }
             };
-            let _imported_names: BTreeMap<FlowSmolStr, bool> = BTreeMap::new();
+            let imported_names = {
+                let options = TyNormalizerOptions::default();
+                let genv = ty_normalizer_flow::mk_genv(
+                    options,
+                    &cctx.cx,
+                    Some(&cctx.typed_ast),
+                    file_sig.clone(),
+                );
+                genv.imported_names.dupe()
+            };
             log("scope info");
             let scope_info = scope_builder::program(options.enums, false, ast);
             log("module documentations");
@@ -1859,7 +1879,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
             log("declaration info");
             let (declaration_info, member_declaration_info, type_declaration_info) =
                 declaration_infos(
-                    &_imported_names,
+                    &imported_names,
                     root,
                     &config.write_root,
                     config.glean_log,
@@ -1919,7 +1939,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
             );
             log("member declaration reference");
             let member_declaration_reference = member_declaration_references(
-                &_imported_names,
+                &imported_names,
                 root,
                 &config.write_root,
                 reader.as_ref(),
@@ -2059,7 +2079,38 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                 json_filenames,
             }
         };
-        f()
+        if config.glean_timeout > 0 {
+            let (timeout_canceller, timeout_receiver) = std::sync::mpsc::channel::<()>();
+            let timeout = config.glean_timeout;
+            let file = file.to_absolute();
+            let timeout_thread = std::thread::Builder::new()
+                .name("glean_runner_visit_timeout".to_string())
+                .spawn(move || {
+                    match timeout_receiver
+                        .recv_timeout(std::time::Duration::from_secs(timeout as u64))
+                    {
+                        Ok(()) | Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {}
+                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                            let msg = format!("Timed out visiting: {}", file);
+                            flow_common_exit_status::exit_with_msg(
+                                flow_common_exit_status::FlowExitStatus::UnknownError,
+                                &msg,
+                            );
+                        }
+                    }
+                })
+                .expect("failed to spawn glean_runner_visit_timeout thread");
+            let ret = f();
+            match timeout_canceller.send(()) {
+                Ok(()) | Err(_) => {}
+            }
+            timeout_thread
+                .join()
+                .expect("glean_runner_visit_timeout thread panicked");
+            ret
+        } else {
+            f()
+        }
     }
 }
 

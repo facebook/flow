@@ -496,11 +496,12 @@ pub struct TyMembers {
     pub errors: Vec<String>,
 }
 
-pub fn extract<'a>(
+pub fn extract<'a, 'cx>(
     force_instance: bool,
     allowed_prop_names: Option<Vec<Name>>,
-    cx: &Context<'a>,
-    typed_ast_opt: Option<&flow_parser::ast::Program<ALoc, (ALoc, Type)>>,
+    imported_names: Option<ty_normalizer_flow::ImportedNames<'a, 'cx>>,
+    cx: &'a Context<'cx>,
+    typed_ast_opt: Option<&'a flow_parser::ast::Program<ALoc, (ALoc, Type)>>,
     file_sig: std::sync::Arc<FileSig>,
     scheme: &Type,
 ) -> Result<TyMembers, String> {
@@ -515,7 +516,16 @@ pub fn extract<'a>(
         max_depth: Some(40),
         toplevel_is_type_identifier_reference: false,
     };
-    let genv = ty_normalizer_flow::mk_genv(options, cx, typed_ast_opt, file_sig);
+    let genv = match imported_names {
+        Some(imported_names) => ty_normalizer_flow::mk_genv_with_imported_names(
+            options,
+            cx,
+            typed_ast_opt,
+            file_sig,
+            imported_names,
+        ),
+        None => ty_normalizer_flow::mk_genv(options, cx, typed_ast_opt, file_sig),
+    };
     match ty_normalizer_flow::expand_members(force_instance, allowed_prop_names, &genv, scheme) {
         Err(error) => Err(error.to_string()),
         Ok(ref this_ty) if matches!(this_ty.as_ref(), Ty::Any(_)) => {

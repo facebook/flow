@@ -513,6 +513,7 @@ fn type_of_name_member<'a, 'cx: 'a>(
                     match ty_members::extract(
                         true,
                         Some(vec![reason::Name::new(member_name)]),
+                        None,
                         cx,
                         Some(typed_ast),
                         file_sig.dupe(),

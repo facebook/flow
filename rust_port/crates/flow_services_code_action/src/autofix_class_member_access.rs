@@ -195,6 +195,7 @@ fn is_member(
     match ty_members::extract(
         true,
         Some(vec![Name::new(name)]),
+        None,
         cx,
         Some(typed_ast),
         file_sig,

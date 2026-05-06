@@ -607,6 +607,7 @@ fn members_of_type(
     let ty_members = ty_members::extract(
         force_instance,
         None::<Vec<Name>>,
+        None,
         typing.cx,
         None,
         typing.file_sig.dupe(),
@@ -1151,7 +1152,7 @@ fn filter_by_token_and_sort(
                 fuzzy_path::fuzzy_score(true, false, before, &item.name).map(|score| (score, item))
             })
             .collect();
-        scored.sort_by(|a, b| a.0.cmp(&b.0));
+        scored.sort_by_key(|a| a.0);
         scored.into_iter().map(|(_, item)| item).rev().collect()
     }
 }
@@ -1176,7 +1177,7 @@ fn filter_by_token_and_sort_rev(
                     .map(|score| (score, item))
             })
             .collect();
-        scored.sort_by(|a, b| b.0.cmp(&a.0));
+        scored.sort_by_key(|b| std::cmp::Reverse(b.0));
         scored.into_iter().map(|(_, item)| item).rev().collect()
     }
 }
