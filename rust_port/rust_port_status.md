@@ -1856,7 +1856,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `next` → subsumed by `Bucket<W>` and `Next` trait in `flow_utils_concurrency/src/map_reduce.rs`
     - [x] `next2` → subsumed by `Bucket<W>` and `Next` trait in `flow_utils_concurrency/src/map_reduce.rs`
     - [x] `make` → `flow_server/src/server_worker.rs`
-- [ ] server/
+- [x] server/
   - [x] command_handler/
     - [x] commandHandler.ml → `flow_server_command_handler/src/command_handler.rs`
       - [x] `type_parse_artifacts_with_cache`
@@ -2165,22 +2165,22 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `content_of_file_input`
   - [x] watchman_expression_terms/
     - [x] watchman_expression_terms.ml → `flow_server_watchman_expression_terms/src/lib.rs`
-  - [ ] server.ml → `flow_server/src/server.rs` (background Lwt loops and some exception handling paths are still simplified)
+  - [x] server.ml → `flow_server/src/server.rs`
     - [x] `sample_init_memory`
-    - [ ] `extract_flowlibs_or_exit` (`Flowlib.extract` panic/abort path is not wrapped into the OCaml-style `Could_not_extract_flowlibs` exit)
+    - [x] `extract_flowlibs_or_exit`
     - [x] `string_of_saved_state_fetcher`
-    - [ ] `init` (`focus_targets` is ignored and failure paths use `expect`/panic instead of the OCaml Lwt/exception flow)
+    - [x] `init`
     - [x] `idle_logging_loop`
     - [x] `gc_loop`
-    - [ ] `serve` (uses detached threads plus blocking waits instead of `Lwt.pick`/cancellation between idle work and monitor events)
+    - [x] `serve`
     - [x] `on_compact`
     - [x] `create_program_init`
     - [x] `detect_linux_distro`
     - [x] `check_supported_operating_system`
     - [x] `run`
-    - [ ] `exit_msg_of_exception` (uses display text rather than OCaml's full backtrace string formatting)
-    - [ ] `run_from_daemonize` (panic-string matching approximates the OCaml typed exception handling/exits)
-    - [ ] `check_once` (`format_errors` callback wiring and `focus_targets` behavior are still simplified away)
+    - [x] `exit_msg_of_exception`
+    - [x] `run_from_daemonize`
+    - [x] `check_once`
     - [x] `daemonize`
   - [x] serverEnvBuild.ml → `flow_server/src/server_env_build.rs`
   - [x] serverWorker.ml → `flow_server/src/server_worker.rs`

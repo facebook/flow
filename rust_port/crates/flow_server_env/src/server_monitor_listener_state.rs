@@ -37,15 +37,23 @@ static ENV_UPDATE_NOTIFY: std::sync::LazyLock<(Sender<()>, Receiver<()>)> =
     std::sync::LazyLock::new(crossbeam::channel::unbounded);
 static RECHECK_NOTIFY: std::sync::LazyLock<(Sender<()>, Receiver<()>)> =
     std::sync::LazyLock::new(crossbeam::channel::unbounded);
+static WORKLOAD_ASYNC_NOTIFY: std::sync::LazyLock<tokio::sync::Notify> =
+    std::sync::LazyLock::new(tokio::sync::Notify::new);
+static ENV_UPDATE_ASYNC_NOTIFY: std::sync::LazyLock<tokio::sync::Notify> =
+    std::sync::LazyLock::new(tokio::sync::Notify::new);
+static RECHECK_ASYNC_NOTIFY: std::sync::LazyLock<tokio::sync::Notify> =
+    std::sync::LazyLock::new(tokio::sync::Notify::new);
 
 pub fn push_new_workload(name: &str, workload: Workload) {
     WORKLOAD_STREAM.push(name, workload);
     WORKLOAD_NOTIFY.0.send(()).unwrap();
+    WORKLOAD_ASYNC_NOTIFY.notify_one();
 }
 
 pub fn push_new_parallelizable_workload(name: &str, workload: ParallelizableWorkload) {
     WORKLOAD_STREAM.push_parallelizable(name, workload);
     WORKLOAD_NOTIFY.0.send(()).unwrap();
+    WORKLOAD_ASYNC_NOTIFY.notify_one();
 }
 
 static DEFERRED_PARALLELIZABLE_WORKLOADS: Mutex<Vec<(String, ParallelizableWorkload)>> =
@@ -65,6 +73,7 @@ pub fn requeue_deferred_parallelizable_workloads() {
         WORKLOAD_STREAM.requeue_parallelizable(&name, workload);
     }
     WORKLOAD_NOTIFY.0.send(()).unwrap();
+    WORKLOAD_ASYNC_NOTIFY.notify_one();
 }
 
 static ENV_UPDATE_STREAM: Mutex<Vec<EnvUpdate>> = Mutex::new(Vec::new());
@@ -72,6 +81,7 @@ static ENV_UPDATE_STREAM: Mutex<Vec<EnvUpdate>> = Mutex::new(Vec::new());
 pub fn push_new_env_update(env_update: EnvUpdate) {
     ENV_UPDATE_STREAM.lock().unwrap().push(env_update);
     ENV_UPDATE_NOTIFY.0.send(()).unwrap();
+    ENV_UPDATE_ASYNC_NOTIFY.notify_one();
 }
 
 // Outstanding cancellation requests are lodged here as soon as they arrive
@@ -145,6 +155,7 @@ fn push_recheck_msg_with_metadata(metadata: Option<FileWatcherMetadata>, files: 
         files,
     });
     RECHECK_NOTIFY.0.send(()).unwrap();
+    RECHECK_ASYNC_NOTIFY.notify_one();
     notify_recheck_push_subscribers();
 }
 
@@ -710,6 +721,47 @@ pub fn wait_for_anything(
                     return;
                 }
             }
+        }
+    }
+}
+
+/// Cancellable Tokio equivalent of `wait_for_anything`.
+///
+/// The synchronous notification channels are still drained so the legacy
+/// blocking waiters do not see stale wakeups after this async waiter handles a
+/// message.
+pub async fn wait_for_anything_async(
+    process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
+    get_forced: &dyn Fn() -> CheckedSet,
+) {
+    let drain_notify = |receiver: &Receiver<()>| {
+        while receiver.try_recv().is_ok() {}
+    };
+
+    loop {
+        if WORKLOAD_STREAM.has_workload() {
+            drain_notify(&WORKLOAD_NOTIFY.1);
+            return;
+        }
+
+        if !ENV_UPDATE_STREAM.lock().unwrap().is_empty() {
+            drain_notify(&ENV_UPDATE_NOTIFY.1);
+            return;
+        }
+
+        if recheck_fetch(process_updates, get_forced, Priority::Normal) {
+            drain_notify(&RECHECK_NOTIFY.1);
+            return;
+        }
+
+        drain_notify(&WORKLOAD_NOTIFY.1);
+        drain_notify(&ENV_UPDATE_NOTIFY.1);
+        drain_notify(&RECHECK_NOTIFY.1);
+
+        tokio::select! {
+            _ = WORKLOAD_ASYNC_NOTIFY.notified() => {}
+            _ = ENV_UPDATE_ASYNC_NOTIFY.notified() => {}
+            _ = RECHECK_ASYNC_NOTIFY.notified() => {}
         }
     }
 }

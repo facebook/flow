@@ -289,7 +289,10 @@ impl FlowServer {
                         ),
                     );
                     let (mut env, init_nmc, _first_internal_error) =
-                        type_service::init(&init_options, &pool, &init_shared_mem);
+                        match type_service::init(&init_options, &pool, &init_shared_mem, None) {
+                            Ok(result) => result,
+                            Err(error) => panic!("init failed: {:?}", error),
+                        };
                     env = server_monitor_listener_state::update_env(env);
                     let init_duration = init_start.elapsed().as_secs_f64();
                     let finishing_up_status = server_status::Status::Typechecking(

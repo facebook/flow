@@ -204,6 +204,14 @@ impl WorkloadStream {
         })
     }
 
+    // Check whether there's a workload in the stream.
+    pub fn has_workload(&self) -> bool {
+        let inner = self.inner.lock().unwrap();
+        !inner.requeued_parallelizable.is_empty()
+            || !inner.parallelizable.is_empty()
+            || !inner.nonparallelizable.is_empty()
+    }
+
     // Wait until there's a workload in the stream
     pub fn wait_for_workload(&self) {
         let mut inner = self.inner.lock().unwrap();

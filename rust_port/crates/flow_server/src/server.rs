@@ -9,16 +9,23 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::RwLock;
+use std::time::Duration;
 
 use flow_cgroup as cgroup;
 use flow_common::files::LibDir;
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
 use flow_common::options::SupportedOs;
+use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
+use flow_common_errors::error_utils::PrintableError;
 use flow_common_exit_status::FlowExitStatus;
+use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_flowlib;
+use flow_parser::ast::Program;
 use flow_parser::file_key;
+use flow_parser::file_key::FileKey;
+use flow_parser::loc::Loc;
 use flow_server_env::error_collator;
 use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
@@ -26,18 +33,26 @@ use flow_server_env::server_env::Env;
 use flow_server_env::server_env::Genv;
 use flow_server_env::server_monitor_listener_state;
 use flow_server_env::server_status;
+use flow_services_inference::type_service::RecheckError;
 use flow_typing_errors::intermediate_error::to_printable_error;
 
 use crate::server_daemon;
 use crate::server_env_build;
 
 type NodeModulesContainers = Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>;
+pub type CheckOnceSuppressedErrors = Vec<(PrintableError<Loc>, BTreeSet<Loc>)>;
+pub type CheckOnceCollatedErrors<'a> = (
+    &'a ConcreteLocPrintableErrorSet,
+    &'a ConcreteLocPrintableErrorSet,
+    CheckOnceSuppressedErrors,
+);
+pub type CheckOncePrintErrors<'a> = Box<dyn FnOnce(&ProfilingFinished) + 'a>;
 
 struct ProfilingRunning {
     start: std::time::Instant,
 }
 
-struct ProfilingFinished {
+pub struct ProfilingFinished {
     duration: f64,
 }
 
@@ -52,6 +67,13 @@ impl ProfilingRunning {
 
     fn sample_memory(&self, _metric: &str, _value: f64) {}
 
+    fn with_timer<F, R>(&self, _timer: &str, f: F) -> R
+    where
+        F: FnOnce() -> R,
+    {
+        f()
+    }
+
     fn finish(self) -> ProfilingFinished {
         ProfilingFinished {
             duration: self.start.elapsed().as_secs_f64(),
@@ -60,7 +82,7 @@ impl ProfilingRunning {
 }
 
 impl ProfilingFinished {
-    fn get_profiling_duration(&self) -> f64 {
+    pub fn get_profiling_duration(&self) -> f64 {
         self.duration
     }
 }
@@ -138,13 +160,70 @@ fn string_of_saved_state_fetcher(options: &Options) -> &'static str {
     }
 }
 
-fn idle_logging_loop(
-    _options: &Options,
-    _start_time: f64,
-    stop_flag: &std::sync::Arc<std::sync::atomic::AtomicBool>,
-) {
+fn exit_on_recheck_error(error: RecheckError) -> ! {
+    let msg = match error {
+        RecheckError::TooSlow => "Unhandled exception: recheck was too slow".to_string(),
+        RecheckError::Canceled(files) => {
+            format!(
+                "Unhandled exception: recheck canceled for files: {:?}",
+                files
+            )
+        }
+    };
+    flow_common_exit_status::exit_with_msg(FlowExitStatus::UnknownError, &msg);
+}
+
+fn init(
+    profiling: &ProfilingRunning,
+    focus_targets: Option<FlowOrdSet<FileKey>>,
+    genv: &Genv,
+) -> Result<(Env, NodeModulesContainers, Option<String>), RecheckError> {
+    // write binary path and version to server log
+    flow_hh_logger::info!(
+        "executable={}",
+        std::env::current_exe()
+            .map(|p| p.display().to_string())
+            .unwrap_or_default()
+    );
+    flow_hh_logger::info!("version={}", flow_common::flow_version::VERSION);
+
+    let Some(workers) = genv.workers.as_ref() else {
+        flow_common_exit_status::exit_with_msg(
+            FlowExitStatus::UnknownError,
+            "Unhandled exception: workers are not initialized",
+        );
+    };
+    let options = &genv.options;
+    crate::multi_worker::set_report_canceled_callback(|total, finished| {
+        flow_hh_logger::info!("Canceling progress {}/{}", finished, total);
+        monitor_rpc::status_update(server_status::Event::CancelingProgress(
+            server_status::Progress {
+                total: Some(total),
+                finished,
+            },
+        ));
+    });
+
+    monitor_rpc::status_update(server_status::Event::InitStart);
+
+    extract_flowlibs_or_exit(options);
+
+    let (env, node_modules_containers, first_internal_error) =
+        flow_services_inference::type_service::init(
+            options,
+            workers,
+            &genv.shared_mem,
+            focus_targets,
+        )?;
+
+    sample_init_memory(profiling, &genv.shared_mem);
+    flow_event_logger::sharedmem_init_done(genv.shared_mem.heap_size() as u64);
+    Ok((env, node_modules_containers, first_internal_error))
+}
+
+async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
     let idle_period_in_seconds = 300.0_f64;
-    let sample = |profiling: &ProfilingRunning| {
+    async fn sample(profiling: &ProfilingRunning) {
         let cgroup_stats = cgroup::get_stats();
         match cgroup_stats {
             Err(_) => {}
@@ -162,25 +241,26 @@ fn idle_logging_loop(
                 profiling.sample_memory("cgroup_file", file as f64);
             }
         }
-    };
+    }
 
     let should_print_summary = _options.profile;
-    while !stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
-        let (_profiling, completed_idle_period) =
-            with_profiling("Idle", should_print_summary, |profiling| {
-                let iterations = idle_period_in_seconds as u64;
-                for _ in 0..iterations {
-                    if stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
-                        return false;
-                    }
-                    sample(profiling);
-                    std::thread::park_timeout(std::time::Duration::from_secs(1));
+    loop {
+        let profiling = ProfilingRunning::new();
+        tokio::select! {
+            _ = async {
+                loop {
+                    tokio::join!(sample(&profiling), tokio::time::sleep(Duration::from_secs(1)));
                 }
-                true
-            });
+            } => {}
+            _ = tokio::time::sleep(Duration::from_secs_f64(idle_period_in_seconds)) => {}
+        }
 
-        if !completed_idle_period {
-            break;
+        let profiling = profiling.finish();
+        if should_print_summary {
+            flow_hh_logger::info!(
+                "Idle: wall duration {:.3}s",
+                profiling.get_profiling_duration()
+            );
         }
 
         let idle_time = std::time::SystemTime::now()
@@ -193,12 +273,9 @@ fn idle_logging_loop(
     }
 }
 
-fn gc_loop(
-    shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
-    stop_flag: &std::sync::Arc<std::sync::atomic::AtomicBool>,
-) {
-    while !stop_flag.load(std::sync::atomic::Ordering::Relaxed) {
-        std::thread::sleep(std::time::Duration::from_millis(10));
+async fn gc_loop(shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>) {
+    loop {
+        tokio::task::yield_now().await;
         let done = shared_mem.collect_slice(10000);
         if done {
             break;
@@ -212,6 +289,10 @@ fn serve(
     shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
     node_modules_containers: &NodeModulesContainers,
 ) {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("Failed to create tokio runtime");
     loop {
         monitor_rpc::status_update(server_status::Event::Ready);
 
@@ -221,24 +302,14 @@ fn serve(
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs_f64();
-        let stop_flag = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let idle_handle = std::thread::spawn({
-            let options = _options.clone();
-            let start_time = _start_time;
-            let stop = stop_flag.clone();
-            move || {
-                if !stop.load(std::sync::atomic::Ordering::Relaxed) {
-                    idle_logging_loop(&options, start_time, &stop);
-                }
-            }
-        });
-        let gc_handle = std::thread::spawn({
-            let shared_mem = shared_mem.clone();
-            let stop = stop_flag.clone();
-            move || gc_loop(&shared_mem, &stop)
-        });
-        server_monitor_listener_state::wait_for_anything(
-            &|skip_incompatible, updates| {
+        runtime.block_on(async {
+            let idle_thread = async {
+                tokio::join!(
+                    idle_logging_loop(Arc::clone(_options), _start_time),
+                    gc_loop(Arc::clone(shared_mem)),
+                );
+            };
+            let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| {
                 flow_server_rechecker::rechecker::process_updates(
                     skip_incompatible,
                     _options,
@@ -246,14 +317,18 @@ fn serve(
                     shared_mem,
                     updates,
                 )
-            },
-            &|| _env.checked_files.clone(),
-        );
-
-        stop_flag.store(true, std::sync::atomic::Ordering::Relaxed);
-        idle_handle.thread().unpark();
-        let _ = idle_handle.join();
-        let _ = gc_handle.join();
+            };
+            let get_forced = || _env.checked_files.clone();
+            let wait_thread = server_monitor_listener_state::wait_for_anything_async(
+                &process_updates,
+                &get_forced,
+            );
+            tokio::select! {
+                biased;
+                _ = wait_thread => {}
+                _ = idle_thread => {}
+            }
+        });
 
         let (_profiling, new_env) = flow_server_rechecker::rechecker::recheck_loop(
             _genv,
@@ -399,47 +474,14 @@ fn run(_init_id: &str, _options: Arc<Options>, monitor_channels: Option<monitor_
         .as_secs_f64();
     flow_hh_logger::info!("Initializing Server (This might take some time)");
 
-    flow_hh_logger::info!(
-        "executable={}",
-        std::env::current_exe()
-            .map(|p| p.display().to_string())
-            .unwrap_or_default()
-    );
-    flow_hh_logger::info!("version={}", flow_common::flow_version::VERSION);
-
-    crate::multi_worker::set_report_canceled_callback(|total, finished| {
-        flow_hh_logger::info!("Canceling progress {}/{}", finished, total);
-        monitor_rpc::status_update(server_status::Event::CancelingProgress(
-            server_status::Progress {
-                total: Some(total),
-                finished,
-            },
-        ));
-    });
-
-    monitor_rpc::status_update(server_status::Event::InitStart);
-
-    extract_flowlibs_or_exit(&genv_arc.options);
-
     let should_print_summary = _options.profile;
-    let pool = genv_arc
-        .workers
-        .as_ref()
-        .expect("workers must be initialized");
-    let (profiling, (env, node_modules_containers, first_internal_error)) =
-        with_profiling("Init", should_print_summary, |profiling| {
-            let (env, node_modules_containers, first_internal_error) =
-                flow_services_inference::type_service::init(
-                    &genv_arc.options,
-                    pool,
-                    &genv_arc.shared_mem,
-                );
-            sample_init_memory(profiling, &genv_arc.shared_mem);
-
-            flow_event_logger::sharedmem_init_done(genv_arc.shared_mem.heap_size() as u64);
-
-            (env, node_modules_containers, first_internal_error)
-        });
+    let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
+        init(profiling, None, &genv_arc)
+    });
+    let (env, node_modules_containers, first_internal_error) = match init_result {
+        Ok(result) => result,
+        Err(error) => exit_on_recheck_error(error),
+    };
     let init_duration = profiling.get_profiling_duration();
 
     monitor_rpc::send_telemetry(
@@ -483,12 +525,12 @@ fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {
 }
 
 pub fn run_from_daemonize(
-    _init_id: &str,
-    _options: Arc<Options>,
+    init_id: &str,
+    options: Arc<Options>,
     monitor_channels: Option<monitor_rpc::Channels>,
 ) {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        run(_init_id, _options, monitor_channels);
+        run(init_id, options, monitor_channels);
     }));
     match result {
         Ok(()) => {}
@@ -527,62 +569,41 @@ pub fn run_from_daemonize(
     }
 }
 
-pub fn check_once(_init_id: &str, _options: Arc<Options>) {
+pub fn check_once<'a, FormatErrors>(
+    init_id: &str,
+    options: Arc<Options>,
+    format_errors: FormatErrors,
+    focus_targets: Option<FlowOrdSet<FileKey>>,
+) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet)
+where
+    FormatErrors: for<'b> FnOnce(CheckOnceCollatedErrors<'b>) -> CheckOncePrintErrors<'a>,
+{
+    flow_daemon::pid_log::disable();
     monitor_rpc::disable();
 
-    let _genv = create_program_init(_init_id, _options.clone());
+    flow_event_logger::set_eden(Some(flow_common_vcs::eden::is_eden(&options.root)));
+    flow_logging_utils::set_server_options(&options);
 
-    flow_hh_logger::info!(
-        "executable={}",
-        std::env::current_exe()
-            .map(|p| p.display().to_string())
-            .unwrap_or_default()
-    );
-    flow_hh_logger::info!("version={}", flow_common::flow_version::VERSION);
+    let genv = create_program_init(init_id, Arc::clone(&options));
+    let should_print_summary = options.profile;
 
-    crate::multi_worker::set_report_canceled_callback(|total, finished| {
-        flow_hh_logger::info!("Canceling progress {}/{}", finished, total);
-        monitor_rpc::status_update(server_status::Event::CancelingProgress(
-            server_status::Progress {
-                total: Some(total),
-                finished,
-            },
-        ));
-    });
+    let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
+        let (env, _node_modules_containers, first_internal_error) =
+            init(profiling, focus_targets, &genv)?;
+        let (errors, warnings, suppressed_errors) = error_collator::get(&env);
 
-    monitor_rpc::status_update(server_status::Event::InitStart);
-
-    extract_flowlibs_or_exit(&_genv.options);
-
-    let should_print_summary = _options.profile;
-    let pool = _genv.workers.as_ref().expect("workers must be initialized");
-
-    let (profiling, (_errors, _warnings, _first_internal_error)) =
-        with_profiling("Init", should_print_summary, |profiling| {
-            let (env, _node_modules_containers, first_internal_error) =
-                flow_services_inference::type_service::init(
-                    &_genv.options,
-                    pool,
-                    &_genv.shared_mem,
-                );
-            sample_init_memory(profiling, &_genv.shared_mem);
-
-            flow_event_logger::sharedmem_init_done(_genv.shared_mem.heap_size() as u64);
-
-            let (errors, warnings, suppressed_errors) = error_collator::get(&env);
-
-            let shared_mem = &_genv.shared_mem;
-            let loc_of_aloc =
-                |aloc: &flow_aloc::ALoc| -> flow_parser::loc::Loc { shared_mem.loc_of_aloc(aloc) };
-            let get_ast = |file: &flow_parser::file_key::FileKey| -> Option<
-                Arc<flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>>,
-            > { shared_mem.get_ast(file) };
-            let strip_root = if _options.strip_root {
-                Some(_options.root.as_path())
+        let print_errors = profiling.with_timer("FormatErrors", || {
+            let shared_mem = &genv.shared_mem;
+            let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> Loc { shared_mem.loc_of_aloc(aloc) };
+            let get_ast =
+                |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> { shared_mem.get_ast(file) };
+            let strip_root = if options.strip_root {
+                Some(options.root.as_path())
             } else {
                 None
             };
-            let _suppressed_errors: Vec<_> = if _options.include_suppressions {
+
+            let suppressed_errors = if options.include_suppressions {
                 suppressed_errors
                     .into_iter()
                     .map(|(e, loc_set)| {
@@ -595,8 +616,17 @@ pub fn check_once(_init_id: &str, _options: Arc<Options>) {
             } else {
                 vec![]
             };
-            (errors, warnings, first_internal_error)
+            let collated_errors = (&errors, &warnings, suppressed_errors);
+            format_errors(collated_errors)
         });
+        Ok((print_errors, errors, warnings, first_internal_error))
+    });
+    let (print_errors, errors, warnings, first_internal_error) = match init_result {
+        Ok(result) => result,
+        Err(error) => exit_on_recheck_error(error),
+    };
+
+    print_errors(&profiling);
 
     monitor_rpc::send_telemetry(
         flow_server_env::lsp_prot::TelemetryFromServer::InitSummary {
@@ -605,13 +635,15 @@ pub fn check_once(_init_id: &str, _options: Arc<Options>) {
     );
     monitor_rpc::status_update(server_status::Event::FinishingUp);
 
-    let saved_state_fetcher = string_of_saved_state_fetcher(&_options);
+    let saved_state_fetcher = string_of_saved_state_fetcher(&options);
 
     flow_event_logger::init_done(
-        _first_internal_error.as_deref(),
+        first_internal_error.as_deref(),
         saved_state_fetcher,
         &serde_json::json!({ "duration": profiling.get_profiling_duration() }),
     );
+
+    (errors, warnings)
 }
 
 pub fn daemonize(

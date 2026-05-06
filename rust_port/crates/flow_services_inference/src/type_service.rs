@@ -3260,11 +3260,15 @@ pub fn init(
     options: &Arc<Options>,
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
-) -> (
-    Env,
-    Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
-    Option<String>,
-) {
+    focus_targets: Option<FlowOrdSet<FileKey>>,
+) -> Result<
+    (
+        Env,
+        Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
+        Option<String>,
+    ),
+    RecheckError,
+> {
     let start_time = Instant::now();
     let (env, libs_ok, node_modules_containers) = match load_saved_state(pool, shared_mem, options)
     {
@@ -3296,14 +3300,12 @@ pub fn init(
     let (env, first_internal_error): (Env, Option<String>) = if !libs_ok {
         (env, None)
     } else if options.lazy_mode {
-        libdef_check_for_lazy_init(options, pool, shared_mem, env)
-            .expect("libdef_check_for_lazy_init failed")
+        libdef_check_for_lazy_init(options, pool, shared_mem, env)?
     } else {
-        full_check_for_init(options, pool, shared_mem, None, env)
-            .expect("full_check_for_init failed")
+        full_check_for_init(options, pool, shared_mem, focus_targets, env)?
     };
 
-    (env, node_modules_containers, first_internal_error)
+    Ok((env, node_modules_containers, first_internal_error))
 }
 
 #[allow(clippy::too_many_arguments)]
