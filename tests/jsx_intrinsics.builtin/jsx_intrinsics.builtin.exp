@@ -25,6 +25,9 @@ Cannot assign `<CustomComponent />` to `b` because in property `ref` of type arg
  - Either in the first parameter: `CustomComponentNope` [2] is incompatible with `CustomComponent` [3].
  - Or in the first parameter: `CustomComponentNope` [2] is incompatible with null [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    main.js:9:4
      9|   <CustomComponent prop="asdf" />; // Error: Bad class type
            ^^^^^^^^^^^^^^^
@@ -49,6 +52,9 @@ Error --------------------------------------------------------------------------
 Cannot assign `<CustomComponent />` to `b` because in property `ref` of type argument `P` [1]: [incompatible-type]
  - Either in property `current`: `CustomComponentNope` [2] is incompatible with `CustomComponent` [3].
  - Or in property `current`: `CustomComponentNope` [2] is incompatible with null [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    main.js:9:4
      9|   <CustomComponent prop="asdf" />; // Error: Bad class type
@@ -144,6 +150,9 @@ Cannot assign `<CustomComponent />` to `c` because in property `ref` of type arg
  - Either in the first parameter: `Component` [2] is incompatible with `CustomComponent` [3].
  - Or in the first parameter: `Component` [2] is incompatible with null [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    main.js:11:4
     11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
            ^^^^^^^^^^^^^^^
@@ -169,6 +178,9 @@ Cannot assign `<CustomComponent />` to `c` because in property `ref` of type arg
  - Either in property `current`: `Component` [2] is incompatible with `CustomComponent` [3].
  - Or in property `current`: `Component` [2] is incompatible with null [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    main.js:11:4
     11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
            ^^^^^^^^^^^^^^^
@@ -190,6 +202,3 @@ References:
 
 
 Found 8 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

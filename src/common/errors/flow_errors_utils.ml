@@ -406,6 +406,7 @@ module Friendly = struct
         ~show_root
         ~show_code
         ~show_all_branches
+        ~hidden_branches_advice
         ~hidden_branches
         ~error_code
         ~error_kind
@@ -571,6 +572,7 @@ module Friendly = struct
           loop
             ~show_root
             ~show_all_branches
+            ~hidden_branches_advice
             ~in_speculation
             ~hidden_branches
             ~error_code
@@ -643,6 +645,7 @@ module Friendly = struct
                     ~show_root:true
                     ~show_code:false
                     ~show_all_branches
+                    ~hidden_branches_advice
                     ~in_speculation:true
                     ~unicode
                     ~hidden_branches
@@ -669,28 +672,60 @@ module Friendly = struct
               group_message_list
           in
           let (group_message_list, group_message_post) =
-            if (not show_all_branches) && List.length group_message_list > 50 then
-              let group_message_post =
-                let explanations =
-                  if List.length explanations > 0 then
-                    text "\n\n" :: explanations
-                  else
-                    explanations
-                in
+            let truncated_to_50 = (not show_all_branches) && List.length group_message_list > 50 in
+            let group_message_list =
+              if truncated_to_50 then
+                Base.List.take group_message_list 50
+              else
+                group_message_list
+            in
+            let see_all_branches_advice =
+              match hidden_branches_advice with
+              | `Cli -> "To see all branches, re-run Flow with --show-all-branches."
+              | `Lsp_detailed -> "Click \"Click for full error\" to see all branches."
+            in
+            let truncation_note =
+              if truncated_to_50 then
+                Some ("Only showing the first 50 branches. " ^ see_all_branches_advice)
+              else
+                None
+            in
+            let hidden_branches_note =
+              if
+                (not truncated_to_50)
+                && (not show_all_branches)
+                && Base.Option.is_some hidden_branches
+              then
                 Some
-                  (message_of_string
-                     "\nOnly showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches."
-                  @ explanations
+                  ("Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are not shown. "
+                  ^ see_all_branches_advice
                   )
-              in
-              (Base.List.take group_message_list 50, group_message_post)
-            else
-              ( group_message_list,
-                if List.length explanations > 0 then
-                  Some (text "\n" :: explanations)
-                else
-                  None
-              )
+              else
+                None
+            in
+            let parts =
+              Base.List.filter_opt
+                [
+                  Base.Option.map truncation_note ~f:message_of_string;
+                  ( if List.length explanations > 0 then
+                    Some explanations
+                  else
+                    None
+                  );
+                  Base.Option.map hidden_branches_note ~f:message_of_string;
+                ]
+            in
+            let group_message_post =
+              match parts with
+              | [] -> None
+              | first :: rest ->
+                Some
+                  (Base.List.fold rest ~init:(text "\n" :: first) ~f:(fun acc msg ->
+                       acc @ (text "\n\n" :: msg)
+                   )
+                  )
+            in
+            (group_message_list, group_message_post)
           in
           ( hidden_branches,
             error.loc,
@@ -702,8 +737,9 @@ module Friendly = struct
           ))
     in
     (* Partially apply loop with the state it needs. Have fun! *)
-    fun ~error_kind error ->
+    fun ~error_kind ~hidden_branches_advice error ->
       loop
+        ~hidden_branches_advice
         ~hidden_branches:None
         ~in_speculation:false
         ~error_code:error.code
@@ -862,6 +898,7 @@ module Friendly = struct
         ~show_root:true
         ~show_code:true
         ~unicode:false (* Not super important for legacy error format *)
+        ~hidden_branches_advice:`Cli
         ~error_kind
         error
     in
@@ -2951,28 +2988,24 @@ module Cli_output = struct
         ]
     )
 
-  let get_pretty_printed_error
-      ~flags ~stdin_file ~strip_root ~severity ~show_all_branches ~on_hidden_branches group =
-    let check (hidden_branches, a, b) =
-      if hidden_branches then on_hidden_branches ();
-      (a, b)
-    in
+  let get_pretty_printed_error ~flags ~stdin_file ~strip_root ~severity ~show_all_branches group =
     let (error_kind, error) = group in
 
     (* Singleton errors concatenate the optional error root with the error
      * message and render a single message. *)
     Friendly.(
       let (primary_loc, { group_message; group_message_nested; group_message_post }) =
-        let (hidden_branches, loc, err) =
+        let (_hidden_branches, loc, err) =
           message_group_of_error
             ~show_all_branches
             ~show_root:true
             ~show_code:true
             ~unicode:flags.unicode
+            ~hidden_branches_advice:`Cli
             ~error_kind
             error
         in
-        check (Option.is_some hidden_branches, loc, err)
+        (loc, err)
       in
       get_pretty_printed_friendly_error_group
         ~stdin_file
@@ -3014,7 +3047,6 @@ module Cli_output = struct
       ~strip_root
       ~severity
       ~show_all_branches:true
-      ~on_hidden_branches:ignore
       error
 
   let format_errors =
@@ -3065,7 +3097,6 @@ module Cli_output = struct
           warnings
       in
       let total_count = err_count + warn_count in
-      let hidden_branches = ref false in
       let () =
         let iter_group ~severity group =
           let styles =
@@ -3074,8 +3105,7 @@ module Cli_output = struct
               ~stdin_file
               ~strip_root
               ~severity
-              ~show_all_branches:flags.show_all_branches (* Feels like React... *)
-              ~on_hidden_branches:(fun () -> hidden_branches := true)
+              ~show_all_branches:flags.show_all_branches
               group
           in
           print_styles ~out_channel ~flags styles
@@ -3083,7 +3113,6 @@ module Cli_output = struct
         List.iter (iter_group ~severity:Err) (List.rev errors);
         List.iter (iter_group ~severity:Warn) (List.rev warnings)
       in
-      let hidden_branches = !hidden_branches in
       if total_count > 0 then print_newline ();
       if truncate && total_count > 50 then (
         let (remaining_errs, remaining_warns) =
@@ -3101,10 +3130,6 @@ module Cli_output = struct
         flush out_channel
       ) else
         Printf.fprintf out_channel "Found %s\n" (render_counts ~err_count ~warn_count " ");
-      if hidden_branches then
-        Printf.fprintf
-          out_channel
-          "\nOnly showing the most relevant union/intersection branches.\nTo see all branches, re-run Flow with --show-all-branches\n";
       Base.Option.iter lazy_msg ~f:(Printf.fprintf out_channel "\n%s\n");
       ()
 
@@ -3371,6 +3396,7 @@ module Json_output = struct
             ~show_root:true
             ~show_code:true
             ~unicode:false (* Not super important for json APIs *)
+            ~hidden_branches_advice:`Cli
             ~error_kind
             error
         in
@@ -3690,12 +3716,19 @@ module Lsp_output = struct
     (* will produce LSP message "Error about `code` in type `foo` [1]" *)
     (* and the LSP related location will have message "[1]: `foo`"      *)
     let (kind, friendly) = error in
-    let (hidden_branch, loc, group) =
+    let hidden_branches_advice =
+      if has_detailed_diagnostics then
+        `Lsp_detailed
+      else
+        `Cli
+    in
+    let (_hidden_branch, loc, group) =
       Friendly.message_group_of_error
         ~show_all_branches:false
         ~show_root:true
         ~show_code:false
         ~unicode:true
+        ~hidden_branches_advice
         ~error_kind:kind
         friendly
     in
@@ -3716,14 +3749,6 @@ module Lsp_output = struct
         (message, (ref_loc, ref_message) :: relatedLocations)
     in
     let (message, relatedLocations) = List.fold_left f ("", []) features in
-    let message =
-      if has_detailed_diagnostics && Base.Option.is_some hidden_branch then
-        message
-        ^ "\n\nOnly showing the most relevant union/intersection branches."
-        ^ "\nClick \"Click for full error\" to see the full error message."
-      else
-        message
-    in
     {
       loc;
       message = String.trim message;

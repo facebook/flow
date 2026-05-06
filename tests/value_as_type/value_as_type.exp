@@ -5,6 +5,9 @@ Cannot create `HocChild` element because in property `ref`: [incompatible-type]
  - Or property `_handleChild` [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test1.js:13:45
     13|   render = (): React.Node => <HocChild ref={this._handleChild} />;
                                                     ^^^^^^^^^^^^^^^^^
@@ -98,6 +101,3 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 
 Found 9 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

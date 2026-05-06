@@ -53,6 +53,9 @@ Cannot assign array literal to `s2` because: [incompatible-type]
  - Either in array element > array element: string [1] is incompatible with number [2].
  - Or in array element > array element: string [1] is incompatible with array type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    namespace.js:15:15
    15| var s2: Seq = [['']];
                      ^^^^^^
@@ -85,6 +88,3 @@ References:
 
 
 Found 5 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

@@ -1054,6 +1054,9 @@ The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either number [1] is incompatible with object type [2].
  - Or number [1] is incompatible with function type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    declared.js:50:29
     50| declare component InlineRef(ref: number); // error
                                     ^^^
@@ -2037,6 +2040,9 @@ The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either string [1] is incompatible with object type [2].
  - Or string [1] is incompatible with function type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    names.js:22:24
     22| export component NoRef(ref: string) { return <div /> }; // Error
                                ^^^
@@ -2546,6 +2552,9 @@ Cannot create `meta` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: `MetaInstance` [1] is incompatible with `AInstance` [2].
  - Or in the first parameter: `MetaInstance` [1] is incompatible with null [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    propsof.js:28:22
     28|   let b = <meta ref={ref} />; // error
                              ^^^
@@ -2567,6 +2576,9 @@ Error --------------------------------------------------------------------------
 Cannot create `meta` element because in property `ref`: [incompatible-type]
  - Either in property `current`: `MetaInstance` [1] is incompatible with `AInstance` [2].
  - Or in property `current`: `MetaInstance` [1] is incompatible with null [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    propsof.js:28:22
     28|   let b = <meta ref={ref} />; // error
@@ -2630,6 +2642,9 @@ The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either in property `current`: null [1] is incompatible with component Reffed [2].
  - Or object type [3] is incompatible with function type [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refs.js:3:15
      3| component Foo(ref: {current: typeof Reffed}) { return null };
                       ^^^
@@ -2655,6 +2670,9 @@ The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either in the first parameter: component Reffed [1] is incompatible with null [2].
  - Or function type [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refs.js:5:15
      5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
@@ -2770,6 +2788,9 @@ Error --------------------------------------------------------------------------
 Cannot cast `Foo` to component because in property `ref.current`: [incompatible-type]
  - Either component Reffed [1] is incompatible with string [2].
  - Or component Reffed [1] is incompatible with null [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refs.js:12:1
     12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2937,6 +2958,9 @@ Cannot cast `Bar` to component because in the first parameter of property `ref`:
  - Either component Reffed [1] is incompatible with string [2].
  - Or component Reffed [1] is incompatible with null [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refs.js:15:1
     15| Bar as component(ref: React.RefSetter<string>); // err
         ^^^
@@ -2980,6 +3004,9 @@ Cannot create `MyNestedInput` element because in property `ref`: [incompatible-t
  - Either in the first parameter: `CommonInstance` [1] is incompatible with nullable `InputInstance` [2].
  - Or in the first parameter: `CommonInstance` [1] is incompatible with `InputInstance` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refs.js:64:53
    64|                 <MyNestedInput {...otherProps} ref={ref} />
                                                            ^^^
@@ -3002,6 +3029,9 @@ Cannot create `MyNestedInput` element because in property `ref`: [incompatible-t
  - Either in property `current`: `CommonInstance` [1] is incompatible with nullable `InputInstance` [2].
  - Or in property `current`: `CommonInstance` [1] is incompatible with `InputInstance` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refs.js:64:53
    64|                 <MyNestedInput {...otherProps} ref={ref} />
                                                            ^^^
@@ -3023,6 +3053,9 @@ Error --------------------------------------------------------------------------
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either in the first parameter > property `bar`: number [1] is incompatible with boolean [2].
  - Or in the first parameter: object type [3] is incompatible with null [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refs.js:92:13
     92|   <Foo ref={badRef} />; // error
@@ -3049,6 +3082,9 @@ Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either in property `current` > property `bar`: number [1] is incompatible with boolean [2].
  - Or in property `current`: object type [3] is incompatible with null [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refs.js:92:13
     92|   <Foo ref={badRef} />; // error
                     ^^^^^^
@@ -3074,6 +3110,9 @@ Cannot create `GenericRef1` element because in property `ref`: [incompatible-typ
  - Either number [1] is incompatible with object type [2].
  - Or number [1] is incompatible with function type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refs.js:105:23
    105|     <GenericRef1 ref={1} />; // error
                               ^ [1]
@@ -3092,6 +3131,9 @@ Error --------------------------------------------------------------------------
 Cannot create `GenericRef2` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: array type [1] is incompatible with string [2].
  - Or in the first parameter: array type [1] is incompatible with null [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refs.js:108:23
    108|     <GenericRef2 ref={(r: string | null) => {}} />; // error
@@ -3614,6 +3656,3 @@ Strict mode function may not have duplicate parameter names [ParseError]
 
 
 Found 235 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

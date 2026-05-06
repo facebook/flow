@@ -57,6 +57,9 @@ Cannot call `record.set` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or string literal `count` [3] is incompatible with string literal `label` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    record_operations.js:19:8
    19| record.set('count', 'bad'); // ERROR
               ^^^
@@ -96,6 +99,9 @@ Cannot call `overridden.set` because: [incompatible-type]
  - Either string literal `label` [1] is incompatible with string literal `note` [2].
  - Or null [3] is incompatible with string [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    record_operations.js:37:12
    37| overridden.set('label', null); // ERROR
                   ^^^
@@ -134,6 +140,3 @@ References:
 
 
 Found 7 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

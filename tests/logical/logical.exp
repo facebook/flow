@@ -846,6 +846,9 @@ Cannot assign `1` to `n_` because: [incompatible-type]
 All writes to `n_` must be compatible with the type of its initializer [4]. Add an annotation to `n_` [4] if a different
 type is desired.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    logical.js:628:8
    628|   n_ = 1; // error number ~> 1
                ^ [1]
@@ -870,6 +873,9 @@ Cannot assign `"1"` to `s_` because: [incompatible-type]
 
 All writes to `s_` must be compatible with the type of its initializer [4]. Add an annotation to `s_` [4] if a different
 type is desired.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    logical.js:629:8
    629|   s_ = "1"; // error "1" ~> ""
@@ -896,6 +902,9 @@ Cannot assign `true` to `b_` because: [incompatible-type]
 All writes to `b_` must be compatible with the type of its initializer [4]. Add an annotation to `b_` [4] if a different
 type is desired.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    logical.js:630:8
    630|   b_ = true; // error true ~> false
                ^^^^ [1]
@@ -914,6 +923,3 @@ References:
 
 
 Found 62 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

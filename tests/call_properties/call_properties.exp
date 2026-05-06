@@ -205,6 +205,9 @@ Cannot return `x` because: [incompatible-type]
  - Either in the return value: string [1] is incompatible with number [2].
  - Or function type [3] requires another argument from function type [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    D.js:21:10
    21|   return x;
                 ^
@@ -448,6 +451,3 @@ References:
 
 
 Found 28 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

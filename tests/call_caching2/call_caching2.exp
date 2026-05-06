@@ -4,6 +4,9 @@ Cannot call `MyIterable` because: [incompatible-type]
  - Either `MyIterable` [1] is incompatible with `Array` [2].
  - Or empty array literal [3] is incompatible with `MyIterable` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:2:3
    2|   MyIterable(items || []).size;
         ^^^^^^^^^^
@@ -25,6 +28,3 @@ References:
 
 
 Found 1 error
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

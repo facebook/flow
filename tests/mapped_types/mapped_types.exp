@@ -188,6 +188,9 @@ Cannot cast `o` to union type because: [incompatible-type]
  - Or property `bar` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
    props.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    distributivity.js:8:3
    8|   o as {foo: empty} | {bar: empty}; // ERROR x2
         ^
@@ -213,6 +216,9 @@ Cannot cast `o` to union type because: [incompatible-type]
  - Either in property `foo`: number [1] is incompatible with empty [2].
  - Or property `foo` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
    props.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    distributivity.js:8:3
    8|   o as {foo: empty} | {bar: empty}; // ERROR x2
@@ -1089,6 +1095,9 @@ Cannot cast `semi` to union type because: [incompatible-type]
  - Either in property `foo`: number [1] is incompatible with string [2].
  - Or property `foo` is read-only in object type [3] but writable in object type [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    import.js:85:3
    85|   semi as {foo: number} | {foo: string}; // ERROR 2x
          ^^^^
@@ -1113,6 +1122,9 @@ Error --------------------------------------------------------------------------
 Cannot cast `semi` to union type because: [incompatible-type]
  - Either in property `foo`: string [1] is incompatible with number [2].
  - Or property `foo` is read-only in object type [3] but writable in object type [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    import.js:85:3
    85|   semi as {foo: number} | {foo: string}; // ERROR 2x
@@ -2452,6 +2464,3 @@ References:
 
 
 Found 150 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

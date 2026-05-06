@@ -126,6 +126,9 @@ Cannot instantiate React element because in type argument `ElementType`: [incomp
  - Either class `D` [1] is incompatible with string [2].
  - Or `D` [1] is incompatible with `Component` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    subclassComponent.js:29:2
     29| <D></D>; // error
          ^
@@ -178,6 +181,9 @@ Error --------------------------------------------------------------------------
 Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
  - Either class `E` [1] is incompatible with string [2].
  - Or `E` [1] is incompatible with `Component` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    subclassComponent.js:30:2
     30| <E></E>; // error
@@ -232,6 +238,9 @@ Cannot instantiate React element because in type argument `ElementType`: [incomp
  - Either class `F` [1] is incompatible with string [2].
  - Or `F` [1] is incompatible with `Component` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    subclassComponent.js:31:2
     31| <F></F>; // error
          ^
@@ -267,6 +276,3 @@ References:
 
 
 Found 15 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

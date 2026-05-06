@@ -50,6 +50,9 @@ Cannot instantiate React element because in type argument `ElementType`: [incomp
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with component [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:17:2
    17| <Z />; // error, expected React component
         ^
@@ -68,6 +71,3 @@ References:
 
 
 Found 4 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

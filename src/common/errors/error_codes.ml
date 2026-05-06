@@ -150,7 +150,6 @@ type error_code =
   | SketchyNullString
   | SketchyNullBigInt
   | SketchyNumberAnd
-  | Speculation
   | ThisInExportedFunction
   | TupleInvalidTypeSpread
   | TupleRequiredAfterOptional
@@ -370,7 +369,6 @@ let string_of_code : error_code -> string = function
   | SketchyNullBigInt -> "sketchy-null-bigint"
   | SketchyNullString -> "sketchy-null-string"
   | SketchyNumberAnd -> "sketchy-number-and"
-  | Speculation -> "speculation"
   | ThisInExportedFunction -> "this-in-exported-function"
   | TupleInvalidTypeSpread -> "tuple-invalid-type-spread"
   | TupleRequiredAfterOptional -> "tuple-required-after-optional"

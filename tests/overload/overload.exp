@@ -57,6 +57,9 @@ Cannot call `"".match` with `0` bound to `regexp` because: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `RegExp` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    overload.js:7:27
       7| var x1: number = "".match(0)[0];
                                    ^ [1]
@@ -168,6 +171,9 @@ Cannot call `a.bar` because: [incompatible-type]
  - Either in property `a`: boolean [1] is incompatible with number [2].
  - Or in property `a`: boolean [1] is incompatible with string [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    overload.js:32:3
    32| a.bar(x); // error with nested intersection info (outer for bar, inner for x)
          ^^^
@@ -232,6 +238,9 @@ Cannot call `g` because: [incompatible-type]
  - Either null or undefined [1] is incompatible with null [2].
  - Or null or undefined [1] is incompatible with undefined [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test3.js:15:1
    15| g(x_g); // ok
        ^
@@ -272,6 +281,3 @@ References:
 
 
 Found 14 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

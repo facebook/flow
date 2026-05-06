@@ -124,6 +124,9 @@ Cannot assign `a` to `p3` because: [incompatible-type]
       https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or `Foo` [2] is incompatible with null or undefined [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:25:17
    25| let p3 : PFoo = a; // error
                        ^
@@ -145,6 +148,9 @@ Error --------------------------------------------------------------------------
 Cannot assign `3` to `p6` because: [incompatible-type]
  - Either number [1] is incompatible with `Foo` [2].
  - Or number [1] is incompatible with null or undefined [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:28:17
    28| let p6 : PFoo = 3; // error
@@ -260,6 +266,3 @@ Cannot get `x.w` because property `w` is not readable. [cannot-read]
 
 
 Found 18 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

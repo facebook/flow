@@ -4,6 +4,9 @@ Cannot call `x.filter` because: [incompatible-type]
  - Either in the first parameter: property `bar` is missing in `Foo` [1] but exists in `FooPlus` [2].
  - Or function type [3] is incompatible with class `Boolean` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    no_source.js:16:7
      16|     x.filter(this.z);
                ^^^^^^
@@ -25,6 +28,3 @@ References:
 
 
 Found 1 error
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

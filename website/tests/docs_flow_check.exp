@@ -2412,6 +2412,9 @@ Cannot return `new Object()` because: [incompatible-type]
  - Or `Object` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in `Object` [1] but exists in `$Iterable` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    -:5:10
     5|   return new Object(); // ERROR: Value does not match `React.Node` type
                 ^^^^^^^^^^^^ [1]
@@ -2467,9 +2470,6 @@ References:
 
 
 Found 4 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
 
 === react/component-types.md block 1 ===
 No errors!
@@ -5004,6 +5004,9 @@ Cannot call `acceptsNull` because: [incompatible-type]
  - Either undefined [1] is incompatible with null [2].
  - Or undefined [1] is incompatible with number [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    -:8:1
    8| acceptsNull();     // Error! Argument is required.
       ^^^^^^^^^^^
@@ -5022,9 +5025,6 @@ References:
 
 
 Found 1 error
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
 
 === types/maybe.md block 3 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:18
@@ -7169,6 +7169,9 @@ Cannot call `prettyPrint` because: [incompatible-type]
  - Either in index `0`: string literal `currency` [1] is incompatible with string literal `choice` [2].
  - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    -:17:1
    17| prettyPrint("currency", 1); // ERROR - missing arg
        ^^^^^^^^^^^
@@ -7194,6 +7197,9 @@ Cannot call `prettyPrint` because: [incompatible-type]
  - Either in index `0`: string literal `currency` [1] is incompatible with string literal `choice` [2].
  - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    -:18:1
    18| prettyPrint("currency", true); // ERROR - wrong type arg
        ^^^^^^^^^^^
@@ -7215,9 +7221,6 @@ References:
 
 
 Found 2 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
 
 === types/unknown.md block 1 ===
 No errors!

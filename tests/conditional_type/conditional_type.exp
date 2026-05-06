@@ -756,6 +756,9 @@ Cannot return `getConditionalWithInfer(...)` because: [incompatible-type]
  - Either conditional type [1] is incompatible with indexed access [2].
  - Or conditional type [1] is incompatible with string literal `other` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    generic.js:76:31
    76|   <T>(t:T): T[0] | 'other' => getConditionalWithInfer(t); // error
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1129,6 +1132,3 @@ References:
 
 
 Found 75 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

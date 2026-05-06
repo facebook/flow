@@ -527,7 +527,7 @@ Cannot assign `"hello"` to `y` because: [incompatible-type]
  - Or string literal `hello` [1] is incompatible with string literal `a49` [50].
  - Or string literal `hello` [1] is incompatible with string literal `a50` [51].
 
-Only showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.
+Only showing the first 50 branches. To see all branches, re-run Flow with --show-all-branches.
 
 All writes to `y` must be compatible with the type of its initializer [52]. Add an annotation to `y` [52] if a different
 type is desired.
@@ -702,6 +702,3 @@ Unreachable code. [unreachable-code]
 
 
 Found 27 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

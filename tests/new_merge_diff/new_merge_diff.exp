@@ -38,6 +38,9 @@ Cannot cast `0` to `S4` because: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `R` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    main.js:32:1
    32| 0 as S4; // error number ~> string
        ^ [1]
@@ -175,6 +178,3 @@ Invalid trivially recursive definition of object type.  [recursive-definition]
 
 
 Found 16 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

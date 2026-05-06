@@ -33,6 +33,9 @@ Cannot create `div` element because in array element: [incompatible-type]
  - Either number [1] is incompatible with boolean [2].
  - Or number [1] is incompatible with nullable boolean [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:17:6
    17| <div sx={[42]} />; // ERROR
             ^^
@@ -54,6 +57,9 @@ Error --------------------------------------------------------------------------
 Cannot create `div` element because in array element: [incompatible-type]
  - Either string [1] is incompatible with boolean [2].
  - Or string [1] is incompatible with nullable boolean [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:18:6
    18| <div sx={["not-a-style"]} />; // ERROR
@@ -106,6 +112,3 @@ References:
 
 
 Found 6 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

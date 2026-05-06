@@ -258,6 +258,9 @@ Cannot call `str_arr.filter` because: [incompatible-type]
  - Either in the return value: number [1] is incompatible with boolean [2].
  - Or in array element: string [3] is incompatible with boolean [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    filter_error_msg_quality_test.js:3:9
       3| str_arr.filter(s => s.length) as Array<boolean>;
                  ^^^^^^
@@ -282,6 +285,9 @@ Error --------------------------------------------------------------------------
 Cannot call `nullable_str_arr.filter` because: [incompatible-type]
  - Either in array element: null or undefined [1] is incompatible with string [2].
  - Or function [3] is incompatible with class `Boolean` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    filter_error_msg_quality_test.js:7:18
       7| nullable_str_arr.filter(s => !!s) as Array<string>;
@@ -574,6 +580,3 @@ Cannot assign `7` to `t.length` because property `length` is not writable. [cann
 
 
 Found 27 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

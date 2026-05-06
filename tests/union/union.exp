@@ -35,6 +35,9 @@ Cannot assign `barstr` to `foostr` because: [incompatible-type]
  - Either `Bar` [1] is incompatible with `Foo` [2].
  - Or `Bar` [1] is incompatible with string [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    issue-324.js:8:10
    8| foostr = barstr;
                ^^^^^^
@@ -275,6 +278,9 @@ Cannot call `bar` with `0` bound to `x` because: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `Document` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    union.js:2:5
    2| bar(0);
           ^ [1]
@@ -313,6 +319,3 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 
 Found 18 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

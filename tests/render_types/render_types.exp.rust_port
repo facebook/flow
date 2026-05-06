@@ -185,6 +185,9 @@ Cannot return `Bar` because: [incompatible-type]
  - Or class `Bar` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `Bar` [1] but exists in `$Iterable` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    no_any_with_renders_react_node.js:5:10
     5|   return Bar; // ERROR
                 ^^^
@@ -1816,6 +1819,9 @@ Render types must be a subtype of `React.Node` or a reference to a component-syn
  - Or `Error` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in `Error` [1] but exists in `$Iterable` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    validation/validation.js:31:72
    31| component BannedGenericRenders1<T extends Error>(children: T) renders? T { return children } // error
                                                                               ^ [1]
@@ -1960,6 +1966,3 @@ Cannot use number [1] as the type argument of renders type. [invalid-render]
 
 
 Found 144 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

@@ -77,6 +77,9 @@ Cannot call `foo` with function bound to `x` because: [incompatible-type]
  - Either in the return value: boolean [1] is incompatible with string [2].
  - Or in the return value: string [3] is incompatible with boolean [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test16.js:11:5
    11| foo(() => qux());
            ^^^^^^^^^^^
@@ -101,6 +104,9 @@ Error --------------------------------------------------------------------------
 Cannot call `bar` with function bound to `x` because: [incompatible-type]
  - Either in the return value: boolean [1] is incompatible with string [2].
  - Or in the return value: string [3] is incompatible with boolean [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test16.js:14:5
    14| bar(() => qux());
@@ -255,6 +261,9 @@ Cannot call `(new Record()).set` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or string literal `foo` [3] is incompatible with string literal `bar` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test26.js:20:14
    20| new Record().set('foo', '42');
                     ^^^
@@ -379,6 +388,3 @@ References:
 
 
 Found 20 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

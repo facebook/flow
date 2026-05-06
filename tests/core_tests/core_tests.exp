@@ -222,6 +222,9 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
    `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or boolean [1] is incompatible with read-only array type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    weakref.js:17:23
      17| let wr5 = new WeakRef(true); // error, must be objects
                                ^^^^ [1]
@@ -241,6 +244,9 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with read-only array type [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    weakref.js:18:23
      18| let wr6 = new WeakRef(123); // error, must be objects
@@ -262,6 +268,9 @@ Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
    `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or string [1] is incompatible with read-only array type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    weakref.js:19:23
      19| let wr7 = new WeakRef('not an object'); // error, must be objects
                                ^^^^^^^^^^^^^^^ [1]
@@ -281,6 +290,9 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with read-only array type [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    weakset.js:14:24
      14| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -302,6 +314,9 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with read-only array type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    weakset.js:14:27
      14| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                    ^ [1]
@@ -321,6 +336,9 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with read-only array type [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    weakset.js:14:30
      14| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -342,6 +360,9 @@ Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with read-only array type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    weakset.js:31:15
      31| let ws5 = new WeakSet(numbers()); // error, must be objects
                        ^^^^^^^
@@ -360,6 +381,3 @@ References:
 
 
 Found 17 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

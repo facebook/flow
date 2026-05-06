@@ -22,6 +22,9 @@ Cannot call `f` with `null` bound to `x` because: [incompatible-type]
  - Either null [1] is incompatible with undefined [2].
  - Or null [1] is incompatible with number [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    cycle_C.js:7:25
    7| const resNull: void = f(null);
                               ^^^^ [1]
@@ -388,6 +391,3 @@ References:
 
 
 Found 23 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

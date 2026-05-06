@@ -1130,6 +1130,9 @@
 [0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mb[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
 [0m[0m • [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m • [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
+[0m[0m[0m[0m
+[0m[0m[0m[0mFlow[0m[0m [0m[0mis[0m[0m [0m[0mshowing[0m[0m [0m[0mthe[0m[0m [0m[0munion/intersection[0m[0m [0m[0mbranches[0m[0m [0m[0mthat[0m[0m [0m[0mgot[0m[0m [0m[0mclosest[0m[0m [0m[0mto[0m[0m [0m[0mpassing.[0m[0m [0m[0mOther[0m[0m [0m[0mbranches[0m[0m [0m[0mwere[0m[0m [0m[0mless[0m[0m [0m[0mcompatible[0m[0m [0m[0mand[0m[0m [0m[0mare[0m[0m
+[0m[0mnot[0m[0m [0m[0mshown.[0m[0m [0m[0mTo[0m[0m [0m[0msee[0m[0m [0m[0mall[0m[0m [0m[0mbranches,[0m[0m [0m[0mre-run[0m[0m [0m[0mFlow[0m[0m [0m[0mwith[0m[0m [0m[0m--show-all-branches.[0m[0m
 [0m[0m
 [0m[0m        [0m[0m [0m[0;2m5[0m[0;2m│[0m[0;2m[0m[0m
 [0m[0m        [0m[0m [0m[0;2m6[0m[0;2m│[0m[0m [0m[0;2m({[0m[0m
@@ -1147,6 +1150,9 @@
 [0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mc[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
 [0m[0m • [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m • [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
+[0m[0m[0m[0m
+[0m[0m[0m[0mFlow[0m[0m [0m[0mis[0m[0m [0m[0mshowing[0m[0m [0m[0mthe[0m[0m [0m[0munion/intersection[0m[0m [0m[0mbranches[0m[0m [0m[0mthat[0m[0m [0m[0mgot[0m[0m [0m[0mclosest[0m[0m [0m[0mto[0m[0m [0m[0mpassing.[0m[0m [0m[0mOther[0m[0m [0m[0mbranches[0m[0m [0m[0mwere[0m[0m [0m[0mless[0m[0m [0m[0mcompatible[0m[0m [0m[0mand[0m[0m [0m[0mare[0m[0m
+[0m[0mnot[0m[0m [0m[0mshown.[0m[0m [0m[0mTo[0m[0m [0m[0msee[0m[0m [0m[0mall[0m[0m [0m[0mbranches,[0m[0m [0m[0mre-run[0m[0m [0m[0mFlow[0m[0m [0m[0mwith[0m[0m [0m[0m--show-all-branches.[0m[0m
 [0m[0m
 [0m[0m        [0m[0m [0m[0;2m6[0m[0;2m│[0m[0m [0m[0;2m({[0m[0m
 [0m[0m        [0m[0m [0m[0;2m7[0m[0;2m│[0m[0m [0m[0;2m  a: true, // Error: should be grouped[0m[0m
@@ -1164,6 +1170,9 @@
 [0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m [0m[0m[0m[0min[0m[0m [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1md[0m[0m:[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-type[0m[0m][0m[0m
 [0m[0m • [0m[0mEither[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m.[0m[0m
 [0m[0m • [0m[0mOr[0m[0m[0m[0m [0m[0m[0m[0;4mboolean[0m[0m [0m[0;2m[[0m[31m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m3[0m[0;2m][0m[0m.[0m[0m
+[0m[0m[0m[0m
+[0m[0m[0m[0mFlow[0m[0m [0m[0mis[0m[0m [0m[0mshowing[0m[0m [0m[0mthe[0m[0m [0m[0munion/intersection[0m[0m [0m[0mbranches[0m[0m [0m[0mthat[0m[0m [0m[0mgot[0m[0m [0m[0mclosest[0m[0m [0m[0mto[0m[0m [0m[0mpassing.[0m[0m [0m[0mOther[0m[0m [0m[0mbranches[0m[0m [0m[0mwere[0m[0m [0m[0mless[0m[0m [0m[0mcompatible[0m[0m [0m[0mand[0m[0m [0m[0mare[0m[0m
+[0m[0mnot[0m[0m [0m[0mshown.[0m[0m [0m[0mTo[0m[0m [0m[0msee[0m[0m [0m[0mall[0m[0m [0m[0mbranches,[0m[0m [0m[0mre-run[0m[0m [0m[0mFlow[0m[0m [0m[0mwith[0m[0m [0m[0m--show-all-branches.[0m[0m
 [0m[0m
 [0m[0m        [0m[0m [0m[0;2m7[0m[0;2m│[0m[0m [0m[0;2m  a: true, // Error: should be grouped[0m[0m
 [0m[0m        [0m[0m [0m[0;2m8[0m[0;2m│[0m[0m [0m[0;2m  b: true, // Error: should be grouped, should not show the {} branch[0m[0m
@@ -1208,6 +1217,3 @@
 [0m[0m
 [0m
 Found 80 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

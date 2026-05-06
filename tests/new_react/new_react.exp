@@ -165,6 +165,9 @@ Cannot assign `<Foo />` to `foo` because in type argument `ElementType`: [incomp
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with component [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    classes.js:39:25
    39| var foo: $jsx<number> = <Foo/>;
                                ^^^^^^
@@ -352,6 +355,9 @@ Cannot call `this.setState` with function bound to `partialState` because: [inco
  - Either in the return value > property `bar`: string [1] is incompatible with number [2].
  - Or function [3] is incompatible with nullable `Readonly` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    state6.js:27:19
                           v-------------------------------------------
     27|     this.setState(() => ({ // Error: `bar` should be a number.
@@ -405,6 +411,9 @@ Cannot call `this.setState` with `any` bound to `partialState` because: [incompa
  - Either in the first parameter: number [1] is incompatible with `State` [2].
  - Or `StateUpdater3` [3] is incompatible with nullable `Readonly` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    state6.js:39:26
     39|     this.setState(any as StateUpdater3); // Error: It has the wrong signature
                                  ^^^^^^^^^^^^^ [3]
@@ -438,6 +447,3 @@ References:
 
 
 Found 26 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

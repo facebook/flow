@@ -66,6 +66,9 @@ Cannot call `nums.reduce` because: [incompatible-type]
  - Either in the return value: number [1] is incompatible with `T` [2].
  - Or cannot call non-polymorphic function type [3] with type arguments.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    reduce.js:7:15
       7|   return nums.reduce<T>(
                        ^^^^^^
@@ -101,6 +104,3 @@ References:
 
 
 Found 6 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

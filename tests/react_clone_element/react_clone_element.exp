@@ -137,6 +137,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Or property `bar` is extra in object literal [4] but missing in object type [5]. Exact objects do not accept extra
    props.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:31:7
      31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
                ^^^^^^^^^^^^
@@ -164,6 +167,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: statics of `A` [2] is incompatible with string [3].
  - Or in property `foo`: string [4] is incompatible with number [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:32:7
      32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
@@ -193,6 +199,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: statics of `B` [2] is incompatible with string [3].
  - Or in property `foo`: string [4] is incompatible with number [5].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:38:7
      38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
                ^^^^^^^^^^^^
@@ -221,6 +230,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: statics of `C` [2] is incompatible with string [3].
  - Or in property `children`: string [4] is incompatible with number [5].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:44:7
      44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
                ^^^^^^^^^^^^
@@ -248,6 +260,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: statics of `C` [2] is incompatible with string [3].
  - Or no more than 2 arguments are expected by function type [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:48:7
      48| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
@@ -278,6 +293,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: statics of `C` [2] is incompatible with key set [3].
  - Or no more than 2 arguments are expected by function type [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:49:7
     49| React.cloneElement(c, undefined, 1, 2, 3); // Error: `children` is not an array.
               ^^^^^^^^^^^^
@@ -306,6 +324,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: statics of `C` [2] is incompatible with key set [3].
  - Or no more than 2 arguments are expected by function type [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:50:7
     50| React.cloneElement(c, null, 1, 2, 3); // Error: `children` is not an array.
@@ -336,6 +357,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: statics of `D` [2] is incompatible with string [3].
  - Or in property `children`: number [4] is incompatible with array type [5].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:54:7
      54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
                ^^^^^^^^^^^^
@@ -363,6 +387,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: statics of `D` [2] is incompatible with string [3].
  - Or number [4] is incompatible with array type [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:56:7
      56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
@@ -392,6 +419,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: statics of `D` [2] is incompatible with key set [3].
  - Or number [4] is incompatible with array type [5].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:57:7
     57| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
               ^^^^^^^^^^^^
@@ -419,6 +449,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: statics of `D` [2] is incompatible with key set [3].
  - Or number [4] is incompatible with array type [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:58:7
     58| React.cloneElement(d, null, 42); // Error: `children` is an array.
@@ -448,6 +481,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: function [2] is incompatible with string [3].
  - Or in property `p`: string [4] is incompatible with number [5].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:70:7
      70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
                ^^^^^^^^^^^^
@@ -476,6 +512,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: function type [2] is incompatible with string [3].
  - Or property `bar` is extra in object literal [4] but missing in object type [5]. Exact objects do not accept extra
    props.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:76:7
      76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
@@ -627,6 +666,3 @@ References:
 
 
 Found 21 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

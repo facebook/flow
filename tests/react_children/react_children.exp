@@ -266,6 +266,9 @@ Cannot create `builtin` element because in property `children`: [incompatible-ty
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    builtin_intrinsic.js:25:4
    25|   {{a: 1, b: 2, c: 3}}
           ^^^^^^^^^^^^^^^^^^ [1]
@@ -342,6 +345,9 @@ Cannot create `MyComponent` element because in property `children`: [incompatibl
  - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    component.js:41:4
    41|   {{a: 1, b: 2, c: 3}}
@@ -790,6 +796,9 @@ Cannot create `FunArray` element because in property `children`: [incompatible-t
  - Either in array element: array literal [1] is incompatible with `Fn` [2].
  - Or children array [3] is incompatible with `Fn` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    fun.js:116:11
                   v
    116| <FunArray>
@@ -815,6 +824,9 @@ Error --------------------------------------------------------------------------
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
  - Either in array element: array literal [1] is incompatible with `Fn` [2].
  - Or children array [3] is incompatible with `Fn` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    fun.js:122:11
                   v
@@ -992,6 +1004,9 @@ Cannot create `FunArray` element because in property `children`: [incompatible-t
  - Either React element [1] is incompatible with `Fn` [2].
  - Or React element [1] is incompatible with array type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    fun.js:149:3
    149|   <intrinsic />
           ^^^^^^^^^^^^^ [1]
@@ -1037,6 +1052,9 @@ Cannot create `TabBar` element because in property `children`: [incompatible-typ
  - Either in array element: string [1] is incompatible with boolean [2].
  - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    tabs.js:30:9
    30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
                ^^^^^^^^^^^^^^
@@ -1058,6 +1076,9 @@ Error --------------------------------------------------------------------------
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either in array element: string [1] is incompatible with boolean [2].
  - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    tabs.js:31:9
    31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
@@ -1081,6 +1102,9 @@ Cannot create `TabBar` element because in property `children`: [incompatible-typ
  - Either in array element: string [1] is incompatible with boolean [2].
  - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    tabs.js:32:9
    32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
                ^^^^^^^^^^^^^^
@@ -1102,6 +1126,9 @@ Error --------------------------------------------------------------------------
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either in type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
  - Or React element [4] is incompatible with boolean [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    tabs.js:67:9
    67| <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1127,6 +1154,9 @@ Error --------------------------------------------------------------------------
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either in array element > type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
  - Or in array element: React element [4] is incompatible with boolean [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    tabs.js:68:9
    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1155,6 +1185,9 @@ Error --------------------------------------------------------------------------
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either in array element > type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
  - Or in array element: React element [4] is incompatible with boolean [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    tabs.js:71:9
                v
@@ -1643,6 +1676,9 @@ Cannot create `View` element because in property `children`: [incompatible-type]
  - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or object literal [1] is incompatible with boolean [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    view.js:32:4
    32|   {{a: 1, b: 2, c: 3}}
           ^^^^^^^^^^^^^^^^^^ [1]
@@ -1661,6 +1697,9 @@ Error --------------------------------------------------------------------------
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either string [1] is incompatible with boolean [2].
  - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    view.js:35:7
    35| <View>Hello, world!</View>; // Error: Strings are not allowed as children.
@@ -1681,6 +1720,9 @@ Cannot create `View` element because in property `children`: [incompatible-type]
  - Either string [1] is incompatible with boolean [2].
  - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    view.js:36:8
    36| <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
               ^^^^^^^^^^^^^^^ [1]
@@ -1700,6 +1742,9 @@ Cannot create `View` element because in property `children`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2].
  - Or number [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    view.js:37:8
    37| <View>{42}</View>; // Error: Numbers are not allowed as children.
               ^^ [1]
@@ -1718,6 +1763,9 @@ Error --------------------------------------------------------------------------
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either in array element: number [1] is incompatible with boolean [2].
  - Or in array element: number [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    view.js:38:7
    38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
@@ -1741,6 +1789,9 @@ Cannot create `View` element because in property `children`: [incompatible-type]
  - Either in array element: string [1] is incompatible with boolean [2].
  - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    view.js:39:8
    39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
               ^^^^^^^^^^^^^^^
@@ -1763,6 +1814,9 @@ Cannot create `View` element because in property `children`: [incompatible-type]
  - Either in array element: number [1] is incompatible with boolean [2].
  - Or in array element: number [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    view.js:40:8
    40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.
               ^^^^^^^^^
@@ -1781,6 +1835,3 @@ References:
 
 
 Found 101 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

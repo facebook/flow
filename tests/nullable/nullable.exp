@@ -74,6 +74,9 @@ Cannot cast `any` to union type because: [incompatible-type]
  - Either null or undefined [1] is incompatible with null [2].
  - Or null or undefined [1] is incompatible with number [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    error.js:16:8
    16| any as ?number as number | null;
               ^^^^^^^ [1]
@@ -92,6 +95,9 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to union type because: [incompatible-type]
  - Either null or undefined [1] is incompatible with undefined [2].
  - Or null or undefined [1] is incompatible with number [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    error.js:17:8
    17| any as ?number as number | void;
@@ -167,6 +173,3 @@ References:
 
 
 Found 11 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

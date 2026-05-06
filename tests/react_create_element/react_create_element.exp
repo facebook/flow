@@ -54,6 +54,9 @@ Cannot call `React.createElement` because: [incompatible-type]
  - Either in the first argument: number [1] is incompatible with string [2].
  - Or in the first argument: number [1] is incompatible with component [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:7:7
     7| React.createElement(42); // Error: Number is not a valid component type.
              ^^^^^^^^^^^^^
@@ -75,6 +78,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.createElement` because: [incompatible-type]
  - Either in the second argument: object literal [1] is incompatible with union type [2].
  - Or in the first argument: number [3] is incompatible with string [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:9:7
     9| React.createElement(42, {}); // Error: Number is not a valid component type.
@@ -100,6 +106,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.createElement` because: [incompatible-type]
  - Either in the second argument: object literal [1] is incompatible with union type [2].
  - Or in the first argument: object literal [3] is incompatible with component [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:10:7
    10| React.createElement({}, {}); // Error: Object is not a valid component type.
@@ -295,6 +304,9 @@ Cannot call `React.createElement` because: [incompatible-type]
  - Or cannot instantiate `ExactReactElement_DEPRECATED` because property `ref` is extra in props of class `A` [3] but
    missing in object type [4]. Exact objects do not accept extra props.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:42:8
    42| (React.createElement(A, {foo: 1, bar: 2}) as ExactReactElement_DEPRECATED<
               ^^^^^^^^^^^^^
@@ -320,6 +332,9 @@ Cannot call `React.createElement` because: [incompatible-type]
  - Either in the second argument: object literal [1] is incompatible with union type [2].
  - Or cannot instantiate `ExactReactElement_DEPRECATED` because in property `foo`: number [3] is incompatible with
    boolean [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:46:8
    46| (React.createElement(B, {foo: 1, bar: 2}) as ExactReactElement_DEPRECATED<
@@ -960,6 +975,9 @@ Cannot call `React.createElement` because in property `children` of type argumen
  - Either in array element: array literal [1] is incompatible with number [2].
  - Or rest array [3] is incompatible with number [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:131:7
    131| React.createElement(G, {}, [1, 2], [3, 4]); // Error
               ^^^^^^^^^^^^^
@@ -1006,6 +1024,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.createElement` because in property `children` of type argument `_ValidatedProps`: [incompatible-type]
  - Either in array element: array literal [1] is incompatible with number [2].
  - Or rest array [3] is incompatible with number [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:146:7
    146| React.createElement(G2, {}, [1, 2], [3, 4]); // Error
@@ -1654,6 +1675,3 @@ References:
 
 
 Found 83 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

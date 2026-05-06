@@ -5,6 +5,9 @@ Cannot create `Suspense` element because in property `fallback`: [incompatible-t
  - Or function [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in function [1] but exists in `$Iterable` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    Suspense.js:10:23
    10|   <Suspense fallback={Loading} /> // Error: function is incompatible with exact React.Element
                              ^^^^^^^
@@ -380,6 +383,3 @@ References:
 
 
 Found 20 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

@@ -2136,6 +2136,9 @@ Cannot cast `o3.f` to union type because: [incompatible-type]
  - Either in property `a`: string [1] is incompatible with string literal `a` [2].
  - Or object literal [3] is incompatible with string literal `foo` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    local.js:200:3
    200|   o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
           ^^^^
@@ -2931,6 +2934,3 @@ References:
 
 
 Found 167 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

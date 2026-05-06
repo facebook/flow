@@ -760,6 +760,9 @@ Cannot cast `yu` to union type because: [incompatible-type]
  - Either null or undefined [1] is incompatible with undefined [2].
  - Or null or undefined [1] is incompatible with number [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    maybe.js:59:3
    59|   yu as void | number; // nope
          ^^
@@ -915,6 +918,9 @@ Error --------------------------------------------------------------------------
 Cannot cast `b.x` to union type because: [incompatible-type]
  - Either number [1] is incompatible with `Y` [2].
  - Or number [1] is incompatible with undefined [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    maybe.js:88:3
    88|   b.x as Y | void; //nope
@@ -1079,6 +1085,9 @@ Error --------------------------------------------------------------------------
 Cannot call `Object.keys(...).reduce` because: [incompatible-type]
  - Either object literal [1] is incompatible with mapped type [2].
  - Or no more than 1 argument is expected by function type [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    misc.js:68:28
      68|   return Object.keys(data).reduce( // error: cannot satisfy generic mapped type
@@ -1641,6 +1650,3 @@ References:
 
 
 Found 93 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

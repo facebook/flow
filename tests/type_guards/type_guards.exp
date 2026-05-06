@@ -1879,6 +1879,9 @@ Cannot call `arr.filter` because: [incompatible-type]
  - Either in array element: number [1] is incompatible with string [2].
  - Or in array element: `unknown` [3] is incompatible with string [2].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refinement.js:47:35
    47|   const arr2: Array<string> = arr.filter((x: unknown): x is number => { return typeof x === "number"; }); // error
                                          ^^^^^^
@@ -1900,6 +1903,9 @@ Error --------------------------------------------------------------------------
 Cannot call `arr.filter` because: [incompatible-type]
  - Either in array element: `unknown` [1] is incompatible with string [2].
  - Or function [3] is incompatible with class `Boolean` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refinement.js:48:35
    48|   const arr3: Array<string> = arr.filter((x: unknown) => { return typeof x === "number"; }); // error no refinement
@@ -1953,6 +1959,9 @@ Cannot cast `x` to `A` because: [incompatible-type]
  - Either in property `foo`: string [1] is incompatible with number [2].
  - Or inexact object type [3] is incompatible with exact `A` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refinement.js:72:7
    72|       x as A; // error B & {tag_: 'A',...} ~> A
              ^
@@ -1977,6 +1986,9 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to `B` because: [incompatible-type]
  - Either in property `foo`: number [1] is incompatible with string [2].
  - Or inexact object type [3] is incompatible with exact `B` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refinement.js:73:7
    73|       x as B; // error A & {tag_: 'A',...} ~> B
@@ -2038,6 +2050,9 @@ Cannot cast `x` to `A` because: [incompatible-type]
  - Either in property `foo`: string [1] is incompatible with number [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refinement.js:97:7
    97|       x as A; // error B & {+tag_: 'A',...} ~> A
              ^
@@ -2062,6 +2077,9 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to `B` because: [incompatible-type]
  - Either in property `foo`: number [1] is incompatible with string [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refinement.js:98:7
    98|       x as B; // error A & {+tag_: 'A',...} ~> B
@@ -2088,6 +2106,9 @@ Cannot cast `x` to `A` because: [incompatible-type]
  - Either in property `foo`: string [1] is incompatible with number [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refinement.js:110:7
    110|       x as A; // error B & {+tag: 'C', ...} ~> A
               ^
@@ -2112,6 +2133,9 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to `B` because: [incompatible-type]
  - Either in property `foo`: number [1] is incompatible with string [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refinement.js:111:7
    111|       x as B; // error A & {+tag: 'C', ...} ~> B
@@ -2430,6 +2454,9 @@ Cannot cast `x` to `OpaqueOrString` because: [incompatible-type]
  - Either string [1] is incompatible with `OpaqueT` [2].
  - Or `OpaqueT` [1] is incompatible with string [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refinement.js:214:5
    214|     x as OpaqueOrString; // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
             ^
@@ -2550,6 +2577,9 @@ Cannot call `arr.filter` because: [incompatible-type]
  - Either in the type predicate: number [1] is incompatible with string [2].
  - Or in array element: `unknown` [3] is incompatible with string [2].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refinement.js:249:7
    249|   arr.filter(fn) as Array<string>; // error number ~> string
               ^^^^^^
@@ -2572,6 +2602,9 @@ Cannot call `ro_arr.filter` because: [incompatible-type]
  - Either in the type predicate: number [1] is incompatible with string [2].
  - Or in array element: `unknown` [3] is incompatible with string [2].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refinement.js:253:10
    253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
                  ^^^^^^
@@ -2593,6 +2626,9 @@ Error --------------------------------------------------------------------------
 Cannot call `rw_arr.filter` because: [incompatible-type]
  - Either in the type predicate: number [1] is incompatible with string [2].
  - Or in array element: `unknown` [3] is incompatible with string [2].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refinement.js:257:10
    257|   rw_arr.filter(fn) as Array<string>; // error number ~> string
@@ -3804,6 +3840,3 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 Found 224 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

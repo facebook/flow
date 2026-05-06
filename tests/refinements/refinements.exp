@@ -7951,6 +7951,9 @@ Cannot yield object literal because: [incompatible-type]
  - Or property `value` is extra in object literal [3] but missing in object type [4]. Exact objects do not accept extra
    props.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    issue-7105.js:9:15
    9|         yield { type: "DONE", value: (box as empty).value }; // TODO(T225770374)
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -11952,6 +11955,9 @@ Cannot assign `false` to `x` because: [incompatible-type]
 All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
 type is desired.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    refinements.js:5:13
    5|         x = false; // Constrain writes error
                   ^^^^^ [1]
@@ -12044,6 +12050,9 @@ Cannot assign `false` to `x` because: [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
 type is desired.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refinements.js:14:13
    14|         x = false; // Constrain writes error
@@ -12143,6 +12152,9 @@ Cannot assign `false` to `x` because: [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
 type is desired.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refinements.js:42:14
    42|          x = false) {
@@ -15394,6 +15406,9 @@ Cannot call `calc` because: [incompatible-type]
  - Either in index `0`: string literal `abs` [1] is incompatible with string literal `add` [2].
  - Or rest array [3] has 3 elements but tuple type [4] has 2 elements.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    tuple_union.js:44:1
    44| calc('abs', -2, 1); // ERROR
        ^^^^
@@ -15418,6 +15433,9 @@ Error --------------------------------------------------------------------------
 Cannot call `calc` because: [incompatible-type]
  - Either in index `0`: string literal `add` [1] is incompatible with string literal `abs` [2].
  - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    tuple_union.js:47:1
    47| calc('add', 999); // ERROR
@@ -17513,6 +17531,3 @@ References:
 
 
 Found 1180 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

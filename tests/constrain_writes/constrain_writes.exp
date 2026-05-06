@@ -50,6 +50,9 @@ Cannot assign `'a'` to `w` because: [incompatible-type]
 All writes to `w` must be compatible with the type of one of its initial assignments [4], [5]. Add an annotation to
 `w` [4] if a different type is desired.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:19:5
    19| w = 'a';
            ^^^ [1]
@@ -393,6 +396,3 @@ References:
 
 
 Found 20 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

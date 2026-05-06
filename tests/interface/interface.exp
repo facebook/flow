@@ -4,6 +4,9 @@ Cannot cast `a` to interface type because in the return value of property `pop`:
  - Either number [1] is incompatible with boolean [2].
  - Or number [1] is incompatible with undefined [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    array.js:4:1
    4| a as interface {pop(): boolean | void}; // ERROR
       ^
@@ -1288,6 +1291,9 @@ Cannot call `(new C()).bar` because: [incompatible-type]
  - Either in the first parameter: string [1] is incompatible with number [2].
  - Or property `foo` is missing in function [3] but exists in `I` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test4.js:9:9
    9| new C().bar((x: string) => { }); // error, number ~/~> string
               ^^^
@@ -1400,6 +1406,3 @@ References:
 
 
 Found 83 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

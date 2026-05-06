@@ -151,6 +151,9 @@ Cannot cast object literal to required of nullable `A` because: [incompatible-ty
  - Either properties `x` and `y` are missing in object literal [1] but exist in `A` [2].
  - Or object literal [1] is incompatible with null or undefined [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:26:2
    26| ({}) as Required<?A>; // ERROR
         ^^ [1]
@@ -169,6 +172,9 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to required of nullable `A` because: [incompatible-type]
  - Either property `y` is missing in object literal [1] but exists in `A` [2].
  - Or object literal [1] is incompatible with null or undefined [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:27:2
    27| ({x: 1}) as Required<?A>; // ERROR
@@ -189,6 +195,9 @@ Cannot cast object literal to required of nullable `A` because: [incompatible-ty
  - Either property `x` is missing in object literal [1] but exists in `A` [2].
  - Or object literal [1] is incompatible with null or undefined [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:28:2
    28| ({y: 1}) as Required<?A>; // ERROR
         ^^^^^^ [1]
@@ -207,6 +216,9 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to required of nullable `A` because: [incompatible-type]
  - Either in property `x`: undefined [1] is incompatible with number [2].
  - Or object literal [3] is incompatible with null or undefined [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:29:2
    29| ({x: undefined, y: undefined}) as Required<?A>; // ERROR
@@ -415,6 +427,3 @@ Cannot get `x.w` because property `w` is not readable. [cannot-read]
 
 
 Found 27 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

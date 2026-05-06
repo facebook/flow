@@ -136,6 +136,14 @@ pub mod friendly {
 
     use super::*;
 
+    /// How to advise the user to view all branches when some have been hidden
+    /// by score-based filtering.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub(super) enum HiddenBranchesAdvice {
+        Cli,
+        LspDetailed,
+    }
+
     /// The error message format is designed to render well in all the environments
     /// which a Flow error message appears. This includes:
     ///
@@ -697,6 +705,7 @@ pub mod friendly {
         show_code: bool,
         show_all_branches: bool,
         unicode: bool,
+        hidden_branches_advice: HiddenBranchesAdvice,
         error_kind: super::ErrorKind,
         error: FriendlyGeneric<Loc>,
     ) -> (Option<(i32, FriendlyGeneric<Loc>)>, Loc, MessageGroup<Loc>) {
@@ -789,6 +798,7 @@ pub mod friendly {
             show_root: bool,
             show_code: bool,
             show_all_branches: bool,
+            hidden_branches_advice: HiddenBranchesAdvice,
             hidden_branches: Option<(i32, FriendlyGeneric<Loc>)>,
             error_code: Option<crate::error_codes::ErrorCode>,
             error_kind: super::ErrorKind,
@@ -1016,6 +1026,7 @@ pub mod friendly {
                             show_root,
                             show_code,
                             show_all_branches,
+                            hidden_branches_advice,
                             hidden_branches,
                             error_code,
                             error_kind,
@@ -1100,6 +1111,7 @@ pub mod friendly {
                             true,
                             false,
                             show_all_branches,
+                            hidden_branches_advice,
                             hidden_branches,
                             error_code,
                             error_kind,
@@ -1126,29 +1138,66 @@ pub mod friendly {
                         })
                         .collect();
 
-                    // Handle truncation for large branch counts
-                    let (group_message_list, group_message_post) = if !show_all_branches
-                        && group_message_list.len() > 50
-                    {
-                        let truncated: Vec<MessageGroup<Loc>> =
-                            group_message_list.into_iter().take(50).collect();
-                        let mut post: Message<Loc> = message_of_string(
-                            "\nOnly showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.",
-                        );
-                        if !explanations_msg.is_empty() {
-                            post.push(text("\n\n"));
-                            post.extend(explanations_msg);
-                        }
-                        (truncated, Some(post))
-                    } else {
-                        let post = if !explanations_msg.is_empty() {
-                            let mut p = Message(vec![text("\n")]);
-                            p.extend(explanations_msg);
-                            Some(p)
+                    let (group_message_list, group_message_post) = {
+                        let truncated_to_50 = !show_all_branches && group_message_list.len() > 50;
+                        let group_message_list = if truncated_to_50 {
+                            group_message_list.into_iter().take(50).collect()
+                        } else {
+                            group_message_list
+                        };
+                        let see_all_branches_advice = match hidden_branches_advice {
+                            HiddenBranchesAdvice::Cli => {
+                                "To see all branches, re-run Flow with --show-all-branches."
+                            }
+                            HiddenBranchesAdvice::LspDetailed => {
+                                "Click \"Click for full error\" to see all branches."
+                            }
+                        };
+                        let truncation_note: Option<String> = if truncated_to_50 {
+                            Some(format!(
+                                "Only showing the first 50 branches. {}",
+                                see_all_branches_advice
+                            ))
                         } else {
                             None
                         };
-                        (group_message_list, post)
+                        let hidden_branches_note: Option<String> = if !truncated_to_50
+                            && !show_all_branches
+                            && hidden_branches.is_some()
+                        {
+                            Some(format!(
+                                "Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are not shown. {}",
+                                see_all_branches_advice
+                            ))
+                        } else {
+                            None
+                        };
+                        let parts: Vec<Message<Loc>> = [
+                            truncation_note.as_deref().map(message_of_string),
+                            if !explanations_msg.is_empty() {
+                                Some(explanations_msg)
+                            } else {
+                                None
+                            },
+                            hidden_branches_note.as_deref().map(message_of_string),
+                        ]
+                        .into_iter()
+                        .flatten()
+                        .collect();
+                        let mut parts_iter = parts.into_iter();
+                        let group_message_post = match parts_iter.next() {
+                            None => None,
+                            Some(first) => {
+                                let mut acc: Message<Loc> = Message(vec![text("\n")]);
+                                acc.extend(first);
+                                for msg in parts_iter {
+                                    acc.push(text("\n\n"));
+                                    acc.extend(msg);
+                                }
+                                Some(acc)
+                            }
+                        };
+                        (group_message_list, group_message_post)
                     };
 
                     (
@@ -1171,6 +1220,7 @@ pub mod friendly {
             show_root,
             show_code,
             show_all_branches,
+            hidden_branches_advice,
             None,
             error_code,
             error_kind,
@@ -1431,8 +1481,12 @@ pub mod friendly {
     ) -> super::ClassicError<Loc> {
         let error_code = error.code;
         let (_, loc, message) = message_group_of_error(
-            true, true, false,
-            /* unicode: Not super important for legacy error format */ false, error_kind,
+            true,
+            true,
+            false,
+            /* unicode: Not super important for legacy error format */ false,
+            HiddenBranchesAdvice::Cli,
+            error_kind,
             error,
         );
         // Extract the references from the message.
@@ -4305,20 +4359,20 @@ pub mod cli_output {
         severity: Severity,
         show_all_branches: bool,
         err: PrintableError<flow_parser::loc::Loc>,
-    ) -> (bool, Vec<(tty::Style, String)>) {
+    ) -> Vec<(tty::Style, String)> {
         use flow_parser::loc::Loc;
         let PrintableError(error_kind, error) = err;
         // Singleton errors concatenate the optional error root with the error
         // message and render a single message.
-        let (hidden_branches, primary_loc, message_group) = friendly::message_group_of_error(
+        let (_hidden_branches, primary_loc, message_group) = friendly::message_group_of_error(
             true,
             true,
             show_all_branches,
             flags.unicode,
+            friendly::HiddenBranchesAdvice::Cli,
             error_kind,
             error,
         );
-        let had_hidden_branches = hidden_branches.is_some();
         let mut primary_locs = std::collections::BTreeSet::<Loc>::new();
         primary_locs.insert(primary_loc);
         let message_group = friendly::MessageGroup {
@@ -4326,15 +4380,14 @@ pub mod cli_output {
             group_message_nested: message_group.group_message_nested,
             group_message_post: message_group.group_message_post,
         };
-        let result = get_pretty_printed_friendly_error_group(
+        get_pretty_printed_friendly_error_group(
             stdin_file,
             strip_root,
             flags,
             severity,
             &primary_locs,
             message_group,
-        );
-        (had_hidden_branches, result)
+        )
     }
 
     fn print_styles<W: std::io::Write>(
@@ -4369,9 +4422,7 @@ pub mod cli_output {
             unicode: true,
             message_width: 80,
         };
-        let (_, styles) =
-            get_pretty_printed_error(unsaved_content, strip_root, &flags, severity, true, error);
-        styles
+        get_pretty_printed_error(unsaved_content, strip_root, &flags, severity, true, error)
     }
 
     pub fn format_errors<W: std::io::Write>(
@@ -4414,11 +4465,10 @@ pub mod cli_output {
         );
 
         let total_count = err_count + warn_count;
-        let mut hidden_branches = false;
 
         for (kind, friendly_err) in error_groups {
             let err = PrintableError(kind, friendly_err);
-            let (had_hidden, styles) = get_pretty_printed_error(
+            let styles = get_pretty_printed_error(
                 stdin_file,
                 strip_root,
                 flags,
@@ -4426,16 +4476,13 @@ pub mod cli_output {
                 flags.show_all_branches,
                 err,
             );
-            if had_hidden {
-                hidden_branches = true;
-            }
             print_styles(out, flags, styles)?;
         }
 
         // Print warnings
         for (kind, friendly_err) in warning_groups {
             let err = PrintableError(kind, friendly_err);
-            let (had_hidden, styles) = get_pretty_printed_error(
+            let styles = get_pretty_printed_error(
                 stdin_file,
                 strip_root,
                 flags,
@@ -4443,9 +4490,6 @@ pub mod cli_output {
                 flags.show_all_branches,
                 err,
             );
-            if had_hidden {
-                hidden_branches = true;
-            }
             print_styles(out, flags, styles)?;
         }
         if total_count > 0 {
@@ -4467,12 +4511,6 @@ pub mod cli_output {
             out.flush()?;
         } else {
             writeln!(out, "Found {}", render_counts(err_count, warn_count, " "))?;
-        }
-        if hidden_branches {
-            writeln!(
-                out,
-                "\nOnly showing the most relevant union/intersection branches.\nTo see all branches, re-run Flow with --show-all-branches"
-            )?;
         }
         if let Some(msg) = lazy_msg {
             writeln!(out, "\n{}", msg)?;
@@ -4943,6 +4981,7 @@ pub mod json_output {
             true,
             false, // Not super important for json APIs
             false,
+            friendly::HiddenBranchesAdvice::Cli,
             error_kind,
             error.clone(),
         );
@@ -5376,11 +5415,18 @@ pub mod lsp_output {
         // and the LSP related location will have message "[1]: `foo`"
         let PrintableError(kind, friendly_generic) = error;
 
-        let (hidden_branch, loc, group) = friendly::message_group_of_error(
+        let hidden_branches_advice = if has_detailed_diagnostics {
+            friendly::HiddenBranchesAdvice::LspDetailed
+        } else {
+            friendly::HiddenBranchesAdvice::Cli
+        };
+
+        let (_hidden_branch, loc, group) = friendly::message_group_of_error(
             true,
             false,
             true,
             false,
+            hidden_branches_advice,
             *kind,
             friendly_generic.clone(),
         );
@@ -5407,11 +5453,6 @@ pub mod lsp_output {
                     }
                 }
             }
-        }
-
-        if has_detailed_diagnostics && hidden_branch.is_some() {
-            message.push_str("\n\nOnly showing the most relevant union/intersection branches.");
-            message.push_str("\nClick \"Click for full error\" to see the full error message.");
         }
 
         LspDiagnostic {

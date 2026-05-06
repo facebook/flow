@@ -3647,6 +3647,9 @@ Cannot assign `a?.a` to `b` because: [incompatible-type]
  - Either undefined (result of null short-circuiting an optional chain) [1] is incompatible with null [2].
  - Or undefined (result of null short-circuiting an optional chain) [1] is incompatible with string [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    static_members.js:36:26
    36| const b: string | null = a?.a;
                                 ^
@@ -3668,6 +3671,9 @@ Error --------------------------------------------------------------------------
 Cannot assign `c?.c` to `d` because: [incompatible-type]
  - Either null or undefined [1] is incompatible with null [2].
  - Or null or undefined [1] is incompatible with string [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    static_members.js:38:26
    38| const d: string | null = c?.c;
@@ -3718,6 +3724,3 @@ References:
 
 
 Found 232 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

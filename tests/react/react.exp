@@ -84,6 +84,9 @@ Cannot assign `this.divRef.current` to `image` because: [incompatible-type]
  - Either `DivInstance` [1] is incompatible with `ImgInstance` [2].
  - Or `DivInstance` [1] is incompatible with null [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    createContext.js:31:39
    31|       var image: null | ImgInstance = this.divRef.current; // Error: DivInstance is incompatible with ImgInstance
                                              ^^^^^^^^^^^^^^^^^^^
@@ -1074,6 +1077,9 @@ Cannot create `MyComponent` element because: [incompatible-use]
  - Either property `foo` is missing in props [1] but exists in object type [2].
  - Or object type [3] is not a React component.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    intersection_component_error.js:13:2
    13| <MyComponent />;
         ^^^^^^^^^^^
@@ -1283,6 +1289,9 @@ Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either string [1] is incompatible with object type [2].
  - Or string [1] is incompatible with function type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    ref.js:7:10
      7| <Foo ref="foo" />; // Error: string ref is banned
                  ^^^^^ [1]
@@ -1302,6 +1311,9 @@ Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: number [1] is incompatible with `Foo` [2].
  - Or function [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    ref.js:10:11
     10| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
@@ -1342,6 +1354,9 @@ Cannot cast `foo` to union type because: [incompatible-type]
  - Either `Foo` [1] is incompatible with `Bar` [2].
  - Or `Foo` [1] is incompatible with null [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    ref.js:13:18
    13| <Foo ref={foo => foo as Bar | null} />; // Error: `Foo` is not `Bar`.
                         ^^^
@@ -1364,6 +1379,9 @@ Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either string [1] is incompatible with object type [2].
  - Or string [1] is incompatible with function type [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    ref.js:18:15
     18| <FooExact ref="foo" />; // Error: string ref is banned
                       ^^^^^ [1]
@@ -1383,6 +1401,9 @@ Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: number [1] is incompatible with `FooExact` [2].
  - Or function [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    ref.js:21:16
     21| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
@@ -1407,6 +1428,9 @@ Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Or function [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    ref.js:22:16
     22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
                        ^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -1428,6 +1452,9 @@ Error --------------------------------------------------------------------------
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: `FooExact` [1] is incompatible with `Bar` [2].
  - Or in the first parameter: `FooExact` [1] is incompatible with null [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    ref.js:24:16
    24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
@@ -1722,6 +1749,9 @@ Cannot call `React.useEffect` with async function bound to `create` because in t
  - Either `Promise` [1] is incompatible with function type [2].
  - Or `Promise` [1] is incompatible with undefined [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    useEffect_hook.js:22:30
     22|   React.useEffect(async () => {}) // Error: promise is incompatible with function return type
                                      ^ [1]
@@ -1740,6 +1770,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.useEffect` with function bound to `create` because in the return value: [incompatible-type]
  - Either in the return value: number [1] is incompatible with undefined [2].
  - Or function [3] is incompatible with undefined [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    useEffect_hook.js:23:25
     23|   React.useEffect(() => () => 123) // Error: cleanup function should not return a value
@@ -1782,6 +1815,9 @@ Cannot call `React.useImperativeHandle` with `ref` bound to `ref` because: [inco
  - Either in property `current`: property `focus` is missing in object literal [1] but exists in `Interface` [2].
  - Or in property `current`: object literal [1] is incompatible with null [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    useImperativeHandle_hook.js:29:29
    29|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
                                    ^^^
@@ -1803,6 +1839,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.useImperativeHandle` with `refSetter` bound to `ref` because: [incompatible-type]
  - Either in the first parameter: property `focus` is missing in object literal [1] but exists in `Interface` [2].
  - Or in the first parameter: object literal [1] is incompatible with null [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    useImperativeHandle_hook.js:32:29
    32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -1875,6 +1914,9 @@ Cannot call `React.useLayoutEffect` with async function bound to `create` becaus
  - Either `Promise` [1] is incompatible with function type [2].
  - Or `Promise` [1] is incompatible with undefined [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    useLayoutEffect_hook.js:22:36
     22|   React.useLayoutEffect(async () => {}) // Error: promise is incompatible with function return type
                                            ^ [1]
@@ -1893,6 +1935,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.useLayoutEffect` with function bound to `create` because in the return value: [incompatible-type]
  - Either in the return value: number [1] is incompatible with undefined [2].
  - Or function [3] is incompatible with undefined [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    useLayoutEffect_hook.js:23:31
     23|   React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value
@@ -2211,6 +2256,9 @@ Cannot call `React.useRef` with `123` bound to `initialValue` because: [incompat
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with null [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    useRef_hook.js:14:67
    14|   const stringValue: {current: string | null, ...} = React.useRef(123); // Error: number is incompatible with string in property current
                                                                          ^^^ [1]
@@ -2229,6 +2277,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.useRef` with `"abc"` bound to `initialValue` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or string [1] is incompatible with null [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    useRef_hook.js:15:67
    15|   const numberValue: {current: number | null, ...} = React.useRef("abc"); // Error: string is incompatible with number in property current
@@ -2264,6 +2315,9 @@ Cannot assign `123` to `stringValue.current` because: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with null [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    useRef_hook.js:22:25
    22|   stringValue.current = 123; // Error: number is incompatible with string in property current
                                ^^^ [1]
@@ -2282,6 +2336,9 @@ Error --------------------------------------------------------------------------
 Cannot call `React.useRef` with `new Bar(...)` bound to `initialValue` because: [incompatible-type]
  - Either `Bar` [1] is incompatible with `Foo` [2].
  - Or `Bar` [1] is incompatible with null [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    useRef_hook.js:30:56
    30|   const foo: {current: Foo | null, ...} = React.useRef(new Bar({})); // Error: Bar is incompatible with Foo in property current
@@ -2318,6 +2375,9 @@ Error --------------------------------------------------------------------------
 Cannot call `setCount` with `true` bound to the first parameter because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with function type [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    useState_hook.js:11:10
      11| setCount(true); // Error: boolean is incompatible with number
@@ -2431,6 +2491,9 @@ Cannot call `use` with `0` bound to `usable` because: [incompatible-type]
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with `Context` [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    use_hook.js:26:7
     26|   use(0);
               ^ [1]
@@ -2465,6 +2528,3 @@ References:
 
 
 Found 143 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

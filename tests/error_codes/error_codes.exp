@@ -475,6 +475,9 @@ Cannot cast `any` to object type because: [incompatible-type]
  - Either property `bar` is missing in object type [1] but exists in object type [2].
  - Or number [3] is incompatible with object type [2].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:119:1
    119| any as {} & number as {bar:string}; // error
         ^^^^^^^^^^^^^^^^^^
@@ -505,6 +508,9 @@ Cannot cast `any` to object type because: [incompatible-type]
  - Either property `bar` is missing in object type [1] but exists in object type [2].
  - Or number [3] is incompatible with object type [2].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    test.js:122:1
    122| any as {} & number as {bar:string};  // error not suppressed, missing code
         ^^^^^^^^^^^^^^^^^^
@@ -526,6 +532,9 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to object type because: [incompatible-type]
  - Either property `bar` is missing in object type [1] but exists in object type [2].
  - Or number [3] is incompatible with object type [2].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:131:1
    131| any as {} & number as {bar:string};  // error + unused suppression
@@ -841,6 +850,3 @@ Unused suppression comment. [InferError]
 
 
 Found 53 errors and 16 warnings
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

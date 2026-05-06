@@ -23,6 +23,9 @@ Cannot cast object literal to `Node` because: [incompatible-type]
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    commonjs.js:6:2
     6| ({} as React.Node); // Error
         ^^ [1]
@@ -77,6 +80,9 @@ Cannot cast object literal to `Node` because: [incompatible-type]
  - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    es-default.js:6:2
     6| ({} as React.Node); // Error.
@@ -133,6 +139,9 @@ Cannot cast object literal to `Node` because: [incompatible-type]
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    es-namespace.js:6:2
     6| ({} as React.Node); // Error
         ^^ [1]
@@ -170,6 +179,9 @@ Cannot cast object literal to `Node` because: [incompatible-type]
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    use_type_without_import.js:2:2
     2| ({}) as React.Node; // error
         ^^ [1]
@@ -188,6 +200,3 @@ References:
 
 
 Found 10 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

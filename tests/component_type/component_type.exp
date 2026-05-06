@@ -40,6 +40,9 @@ Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
  - Either in the first parameter: `Foo` [1] is incompatible with string [2].
  - Or in the first parameter: `Foo` [1] is incompatible with null [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    class_to_component_type.js:9:1
      9| Foo as component( // error: Foo ~> string
         ^^^
@@ -62,6 +65,9 @@ Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
  - Either in property `current`: `Foo` [1] is incompatible with string [2].
  - Or in property `current`: `Foo` [1] is incompatible with null [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    class_to_component_type.js:9:1
      9| Foo as component( // error: Foo ~> string
         ^^^
@@ -83,6 +89,9 @@ Error --------------------------------------------------------------------------
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
  - Either `ImNotARefSetter` [1] is incompatible with function type [2].
  - Or `ImNotARefSetter` [1] is incompatible with null [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    class_to_component_type.js:13:1
     13| Foo as component( // error again due to bad ref
@@ -160,6 +169,9 @@ Cannot cast `ComponentNarrower` to component because in property `ref`: [incompa
  - Either in the first parameter: `ComponentNarrower` [1] is incompatible with `Component` [2].
  - Or in the first parameter: `ComponentNarrower` [1] is incompatible with null [3].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    classes_lower.js:19:1
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
         ^^^^^^^^^^^^^^^^^
@@ -181,6 +193,9 @@ Error --------------------------------------------------------------------------
 Cannot cast `ComponentNarrower` to component because in property `ref`: [incompatible-type]
  - Either in property `current`: `ComponentNarrower` [1] is incompatible with `Component` [2].
  - Or in property `current`: `ComponentNarrower` [1] is incompatible with null [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    classes_lower.js:19:1
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
@@ -314,6 +329,9 @@ Error --------------------------------------------------------------------------
 Cannot create `C` element because in property `ref`: [incompatible-type]
  - Either in property `current`: number [1] is incompatible with string [2].
  - Or in property `current`: number [1] is incompatible with null [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    create_element.js:22:41
     22| const _f = <C bar="string" baz={4} ref={refBad} />; // Error bad ref
@@ -516,6 +534,9 @@ All branches are incompatible: [incompatible-type]
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
    function_lower.js:17:10
    17|   return NotAComponent; // Error, not a component
                 ^^^^^^^^^^^^^
@@ -541,6 +562,9 @@ Cannot cast `NotAFunctionComponent` to component because: [incompatible-type]
  - Either class `NotAComponent` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    function_lower.js:20:1
    20| NotAFunctionComponent as component(...Props);
@@ -1030,6 +1054,3 @@ expression. [signature-verification-failure]
 
 
 Found 55 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
