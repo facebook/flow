@@ -1,3 +1,14 @@
+### 0.313.0
+
+Likely to cause new Flow errors:
+* Flow has changed its casting syntax from `(x: T)` to `x as T`. The default value of the option `casting_syntax` is now `as`, and Flow will error on the old syntax. If you want to preserve the old defualt value, add `casting_syntax=both` to your `.flowconfig`. You can use the npm package `flow-upgrade` to upgade: `yarn run flow-codemod typeCastToAsExpression`. Read the [docs](https://flow.org/en/docs/types/casting/) for more.
+
+New Features:
+* Exported class setters no longer require an explicit type annotation: `void` is used if omitted
+
+Parser:
+* The flow-parser estree output now aligns more with hermes-parser: `ArrayExpression` gains a `trailingComma` field, optional chaining is wrapped in a `ChainExpression`, `AssertNonnull` (`expr!`) emits a `NonNullExpression` instead of an optional node, type-position `this` emits `ThisTypeAnnotation`, and `TypeParameter.bound` is now a bare type node without the `TypeAnnotation` wrapper.
+
 ### 0.312.1
 
 * Fix in saved state checks after a rebase
