@@ -319,7 +319,7 @@ type Row = {kind: 'row', cols: number};
 type Grid = {kind: 'grid', rows: number, cols: number};
 type Layout = Row | Grid;
 
-function updateLayout<T: Layout>(
+function updateLayout<T extends Layout>(
   layout: T,
   setLayout: (value: T) => void,
 ): void {

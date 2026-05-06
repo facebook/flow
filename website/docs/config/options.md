@@ -609,7 +609,7 @@ if (item != null) {
 
 This option affects the following indexed access patterns:
 
-**Arrays** — accessing elements by index on `Array<T>` or `$ReadOnlyArray<T>`
+**Arrays** — accessing elements by index on `Array<T>` or `ReadonlyArray<T>`
 returns `T | void` instead of `T`:
 
 ```js
@@ -693,22 +693,22 @@ declare type React$CustomJSXFactory = (
   component: any,
   props: any,
   ...children: Array<any>
-) => React$MixedElement;
+) => React.MixedElement;
 ```
 
 A more restrictive definition that enforces specific types:
 
 ```js
 declare type React$CustomJSXFactory = (
-  component: React$ElementType,
+  component: React.ElementType,
   props: {name: string},
   child1: number,
   child2: string,
-) => React$MixedElement;
+) => React.MixedElement;
 ```
 
 With the restrictive definition above, Flow checks that JSX elements match the
-exact parameter types -- the component must be a `React$ElementType`, props must
+exact parameter types -- the component must be a `React.ElementType`, props must
 have a `name` property of type `string`, and exactly two children of types
 `number` and `string` must be provided.
 
@@ -751,7 +751,7 @@ declare type React$CustomJSXFactory = (
   component: any,
   props: any,
   ...children: Array<any>
-) => React$MixedElement;
+) => React.MixedElement;
 ```
 
 The default value for `react.custom_jsx_typing` is `false`.
