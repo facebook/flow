@@ -1449,9 +1449,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] loc_test.ml
     - [x] offset_utils_test.ml
     - [x] parser_tests.ml
-  - [ ] test/
+  - [x] test/
     - [x] file_utils.ml
-    - [ ] parse_test262.ml
+    - [x] parse_test262.ml → `flow_parser/src/bin/parse_test262.rs`
     - [x] run_tests.ml
   - [x] comment_attachment.ml → `flow_parser/src/comment_attachment.rs`
   - [x] comment_utils.ml → `flow_parser/src/comment_utils.rs`
