@@ -9,7 +9,9 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashSet;
 use std::io::BufRead;
+use std::io::IsTerminal;
 use std::io::Read;
+use std::io::Write;
 use std::path::Path;
 use std::process::Command as ProcessCommand;
 use std::process::Stdio;
@@ -32,7 +34,9 @@ use flow_config::LazyMode;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_flowlib::LibDir as FlowlibDir;
 use flow_monitor_rpc::monitor_prot::MonitorToClientMessage;
+use flow_server_env::file_watcher_status;
 use flow_server_env::server_prot;
+use flow_server_env::server_status;
 use flow_server_monitor::FlowServerMonitorOptions;
 use flow_server_utils::file_input::FileInput;
 use regex::Regex;
@@ -3071,12 +3075,31 @@ fn connect_and_make_request_inner(
         Ok(())
     }
 
+    fn eprintf_with_spinner(msg: &str) {
+        let stderr = std::io::stderr();
+        let mut stderr = stderr.lock();
+        if stderr.is_terminal() {
+            if flow_utils_tty::spinner_used() {
+                flow_utils_tty::print_clear_line(&mut stderr)
+                    .expect("failed to clear spinner line");
+            }
+            write!(stderr, "{}: {}", msg, flow_utils_tty::spinner(false))
+                .expect("failed to write spinner status");
+            stderr.flush().expect("failed to flush spinner status");
+        } else {
+            writeln!(stderr, "{}", msg).expect("failed to write spinner status");
+            stderr.flush().expect("failed to flush spinner status");
+        }
+    }
+
     // Waits for a response over the socket. If the connection dies, this will throw an exception
     fn wait_for_response(
         stream: &mut std::net::TcpStream,
-        _quiet: bool,
+        quiet: bool,
+        emoji: bool,
         _root: &std::path::Path,
     ) -> Result<server_prot::response::Response, ()> {
+        let use_emoji = flow_utils_tty::supports_emoji() && emoji;
         stream.set_read_timeout(None).map_err(|_| ())?;
         loop {
             let response: Result<MonitorToClientMessage, _> =
@@ -3097,18 +3120,66 @@ fn connect_and_make_request_inner(
                             | std::io::ErrorKind::UnexpectedEof
                     ) =>
                 {
+                    if !quiet && flow_utils_tty::spinner_used() {
+                        let stderr = std::io::stderr();
+                        let mut stderr = stderr.lock();
+                        flow_utils_tty::print_clear_line(&mut stderr)
+                            .expect("failed to clear spinner line");
+                    }
                     return Err(());
                 }
-                Err(e) => panic!("Unknown exception reading from the server: {}", e),
+                Err(e) => {
+                    if !quiet && flow_utils_tty::spinner_used() {
+                        let stderr = std::io::stderr();
+                        let mut stderr = stderr.lock();
+                        flow_utils_tty::print_clear_line(&mut stderr)
+                            .expect("failed to clear spinner line");
+                    }
+                    panic!("Unknown exception reading from the server: {}", e)
+                }
             };
             match response {
-                MonitorToClientMessage::PleaseHold(..) => {
+                MonitorToClientMessage::PleaseHold(server_status, watcher_status) => {
+                    let status_string = {
+                        if server_status::is_free(&server_status) {
+                            // Let's ignore messages from the server that it is free.
+                            // It's a confusing message for the user
+                            if watcher_status.1 == file_watcher_status::StatusKind::Ready {
+                                None
+                            } else {
+                                Some(file_watcher_status::string_of_status(&watcher_status))
+                            }
+                        } else {
+                            Some(server_status::string_of_status(
+                                use_emoji,
+                                false,
+                                &server_status,
+                            ))
+                        }
+                    };
+                    if let Some(status_string) = status_string {
+                        if !quiet {
+                            eprintf_with_spinner(&format!("Please wait. {}", status_string));
+                        }
+                    }
                     continue;
                 }
                 MonitorToClientMessage::Data(response) => {
+                    if !quiet && flow_utils_tty::spinner_used() {
+                        let stderr = std::io::stderr();
+                        let mut stderr = stderr.lock();
+                        flow_utils_tty::print_clear_line(&mut stderr)
+                            .expect("failed to clear spinner line");
+                    }
                     return Ok(response);
                 }
                 MonitorToClientMessage::ServerException(exn_str) => {
+                    if flow_utils_tty::spinner_used() {
+                        let stderr = std::io::stderr();
+                        let mut stderr = stderr.lock();
+                        flow_utils_tty::print_clear_line(&mut stderr)
+                            .expect("failed to clear spinner line");
+                    }
                     let msg = format!("Server threw an exception: {}", exn_str);
                     flow_common_exit_status::exit_with_msg(
                         flow_common_exit_status::FlowExitStatus::UnknownError,
@@ -3177,20 +3248,39 @@ fn connect_and_make_request_inner(
     let (sockaddr, mut stream) =
         flow_commands_connect::command_connect::connect(&env, &client_handshake);
 
-    if let Err(e) = send_command(&mut stream, request) {
-        panic!("Error sending command to server: {}", e);
-    }
+    let response = match send_command(&mut stream, request) {
+        Ok(()) => wait_for_response(&mut stream, quiet, env.emoji, root),
+        Err(bincode::error::EncodeError::Io { inner, .. })
+            if matches!(
+                inner.kind(),
+                std::io::ErrorKind::BrokenPipe
+                    | std::io::ErrorKind::ConnectionReset
+                    | std::io::ErrorKind::UnexpectedEof
+            ) =>
+        {
+            if !quiet && flow_utils_tty::spinner_used() {
+                let stderr = std::io::stderr();
+                let mut stderr = stderr.lock();
+                flow_utils_tty::print_clear_line(&mut stderr)
+                    .expect("failed to clear spinner line");
+            }
+            Err(())
+        }
+        Err(e) => {
+            panic!("Error sending command to server: {}", e);
+        }
+    };
 
-    match wait_for_response(&mut stream, quiet, root) {
+    match response {
         Ok(response) => response,
         Err(()) => {
             flow_commands_connect::command_connect_simple::close_connection(sockaddr);
             if !quiet {
-                eprintln!(
+                eprintf_with_spinner(&format!(
                     "Lost connection to the flow server ({} {} remaining)",
                     retries,
                     if retries == 1 { "retry" } else { "retries" },
-                );
+                ));
             }
             connect_and_make_request_inner(
                 flowconfig_name,

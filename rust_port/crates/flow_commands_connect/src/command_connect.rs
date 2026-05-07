@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::io::Write;
 use std::net::SocketAddr;
 use std::net::TcpStream;
 use std::path::Path;
@@ -195,6 +196,11 @@ fn connect_rec(
     retries.last_connect_time = Instant::now();
 
     let conn = CCS::connect_once(env.flowconfig_name, client_handshake, env.tmp_dir, env.root);
+    if flow_utils_tty::spinner_used() {
+        let stderr = std::io::stderr();
+        let mut stderr = stderr.lock();
+        flow_utils_tty::print_clear_line(&mut stderr).expect("failed to clear spinner line");
+    }
 
     reset_retries_if_necessary(retries, &conn);
 
@@ -213,16 +219,19 @@ fn connect_rec(
             };
             if !env.quiet {
                 eprint!(
-                    "The flow server {} [{}] ({} {} remaining): ...",
+                    "The flow server {} ({} {} remaining): {}",
                     busy_reason_str,
-                    CCS::busy_reason_to_string(&busy_reason),
                     retries.retries_remaining,
                     if retries.retries_remaining == 1 {
                         "retry"
                     } else {
                         "retries"
                     },
+                    flow_utils_tty::spinner(false),
                 );
+                std::io::stderr()
+                    .flush()
+                    .expect("failed to flush spinner status");
             }
             consume_retry(retries);
             connect_rec(env, client_handshake, retries)
@@ -327,20 +336,30 @@ fn handle_missing_server(
         match start_flow_server(env) {
             Ok(()) => {
                 if !env.quiet {
-                    eprint!("Started a new flow server: ...");
+                    eprint!(
+                        "Started a new flow server: {}",
+                        flow_utils_tty::spinner(false)
+                    );
+                    std::io::stderr()
+                        .flush()
+                        .expect("failed to flush spinner status");
                 }
             }
             Err((_, flow_common_exit_status::FlowExitStatus::LockStolen)) => {
                 if !env.quiet {
                     eprint!(
-                        "Failed to start a new flow server ({} {} remaining): ...",
+                        "Failed to start a new flow server ({} {} remaining): {}",
                         retries.retries_remaining,
                         if retries.retries_remaining == 1 {
                             "retry"
                         } else {
                             "retries"
                         },
+                        flow_utils_tty::spinner(false),
                     );
+                    std::io::stderr()
+                        .flush()
+                        .expect("failed to flush spinner status");
                 }
                 consume_retry(retries);
             }

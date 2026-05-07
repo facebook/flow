@@ -12,6 +12,8 @@
 use std::io::IsTerminal;
 use std::io::Write;
 use std::process::Command;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering;
 
 /// Raw terminal colors
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -146,6 +148,41 @@ pub fn cprint<W: Write>(
 ) -> std::io::Result<()> {
     for (style, text) in styles {
         write!(writer, "{}", apply_color(*style, text, color_mode))?;
+    }
+    Ok(())
+}
+
+static SPINNER_STATE: AtomicUsize = AtomicUsize::new(0);
+const ASCII_SPINNER: [&str; 4] = ["-", "\\", "|", "/"];
+
+// Some terminals display the emoji using only one column, even though they
+// may take up two columns, and put the cursor immediately after it in an
+// illegible manner. Add an extra space to separate the cursor from the emoji.
+const EMOJI_SPINNER: [&str; 4] = ["\u{1F621} ", "\u{1F602} ", "\u{1F914} ", "\u{1F4AF} "];
+
+/// Return the next string in the four-state spinner.
+pub fn spinner(angery_reaccs_only: bool) -> &'static str {
+    let spinner = if angery_reaccs_only {
+        &EMOJI_SPINNER
+    } else {
+        &ASCII_SPINNER
+    };
+    let state = SPINNER_STATE.fetch_add(1, Ordering::SeqCst);
+    spinner[state % 4]
+}
+
+pub fn spinner_used() -> bool {
+    SPINNER_STATE.load(Ordering::SeqCst) != 0
+}
+
+/// ANSI escape sequence to clear whole line  
+const CLEAR_LINE_SEQ: &str = "\r\x1b[0K";
+
+/// Output a "clear current line" escape sequence if the writer is a TTY.
+pub fn print_clear_line<W: Write + IsTerminal>(writer: &mut W) -> std::io::Result<()> {
+    if writer.is_terminal() {
+        write!(writer, "{}", CLEAR_LINE_SEQ)?;
+        writer.flush()?;
     }
     Ok(())
 }
