@@ -14,7 +14,7 @@ function foo3(o: { x: number, ... }) {
   o.p3.x; // usual error outside conditional
 }
 
-function foo4(o: $Exact<{ x: number, ... }>) {
+function foo4(o: { x: number }) {
   if (o.p4) { // Error, testing for unknown property
     o.p4.x; // currently OK, should be unreachable
   } else {

@@ -1,7 +1,7 @@
 // @flow
 
 
-export type ROE = Readonly<$Exact<{ f: string, ... }>>;
+export type ROE = Readonly<{ f: string }>;
 declare var roe: ROE;
 
 export const x = { ...roe, f: 1 };

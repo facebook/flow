@@ -29,11 +29,11 @@ class XComponent<XProps extends Props3, XState> extends React.PureComponent<
 declare var cond : boolean;
 const BaseComponent = cond ? React.Component : XComponent;
 
-type Props4 = $Exact<{
+type Props4 = {
   p1? : boolean,
   p2? : number,
   p3? : string,
- ...}>;
+};
 
 class YComponent extends BaseComponent<Props4, void> {
   props : Props4;
