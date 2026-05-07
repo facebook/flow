@@ -1,9 +1,9 @@
 //@flow
 
-declare var obj1: {f: number};
+declare const obj1: {f: number};
 delete obj1.f; // error, f is required
 
-declare var obj2: {f?: number};
+declare const obj2: {f?: number};
 delete obj2.f; //fine
 
 var x: number | void = 42;
@@ -16,14 +16,14 @@ delete y;
 
 type A = {-a?: string};
 
-declare var a: A;
+declare const a: A;
 
 const z = delete a.a;
 
-declare var b: ReadonlyArray<number>;
+declare const b: ReadonlyArray<number>;
 delete b[0];
 
-declare var c: [number, number];
+declare const c: [number, number];
 delete c[1];
 delete c[2];
 
@@ -37,14 +37,14 @@ w2.a as void;
 const obj4 = Object.freeze({f: 1});
 delete obj4.f; // error, just like when writing to frozen object
 
-declare var obj5: {+f?: number};
+declare const obj5: {+f?: number};
 delete obj5.f; // error, just like when writing to read-only object
 
 class C {
   x: void;
   m() {}
 }
-declare var obj6: C;
+declare const obj6: C;
 delete obj6.x;
 delete obj6.m; // warn, m is not own (delete only has effect
 // on own-properties)
@@ -53,10 +53,10 @@ delete 1;
 delete C;
 delete (() => 42);
 
-declare var f: Array<string>;
+declare const f: Array<string>;
 delete f[0];
 
-declare var index: {[string]: number, a: boolean};
+declare const index: {[string]: number, a: boolean};
 delete index.a;
 delete index['a'];
 delete index.b;

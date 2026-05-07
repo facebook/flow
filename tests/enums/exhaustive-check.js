@@ -47,7 +47,7 @@ enum Five {
   Date,
   Elderberry,
 }
-declare var five: Five;
+declare const five: Five;
 switch (five) {} // Error
 
 enum Six {
@@ -58,7 +58,7 @@ enum Six {
   Elderberry,
   Fig,
 }
-declare var six: Six;
+declare const six: Six;
 switch (six) {} // Error
 switch (six) { // Error
   case Six.Date: break;
@@ -110,7 +110,7 @@ switch (x)  { // Error
   case F.B: break;
 }
 
-declare var s: string;
+declare const s: string;
 switch (s)  {
   case E.A: break; // Error
   case E.B: break; // Error

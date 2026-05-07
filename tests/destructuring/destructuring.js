@@ -1,6 +1,6 @@
-declare var a:string;
-declare var b:string;
-declare var c:string;
+declare let a:string;
+declare let b:string;
+declare let c:string;
 [{a1:a, b},c] = [{a1:0, b:1},2];
 
 var {m} = {m:0};

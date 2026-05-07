@@ -8,7 +8,7 @@ enum B of boolean {
   B = false,
 }
 
-declare var bVoidable: void | B;
+declare const bVoidable: void | B;
 
 if (typeof bVoidable === "undefined") {
   bVoidable as void; // Valid
@@ -40,7 +40,7 @@ if (bVoidable !== undefined) {
   bVoidable as B; // Valid
 }
 
-declare var bMaybe: ?B;
+declare const bMaybe: ?B;
 
 if (bMaybe == null) {
   bMaybe as null | void; // Valid
@@ -64,7 +64,7 @@ if (bMaybe !== null && bMaybe !== undefined) {
   bMaybe as B; // Valid
 }
 
-declare var bBoolVoid: B | boolean | void;
+declare const bBoolVoid: B | boolean | void;
 
 if (typeof bBoolVoid === "boolean") {
   bBoolVoid as void; // Error
@@ -92,7 +92,7 @@ if (!bVoidable) {
 }
 
 enum BEmpty {}
-declare var bEmpty: BEmpty | void;
+declare const bEmpty: BEmpty | void;
 
 if (bEmpty) {
   bEmpty as void; // Error
@@ -107,7 +107,7 @@ if (!bEmpty) {
 enum BTrue {
   A = true,
 }
-declare var bTrue: BTrue | void;
+declare const bTrue: BTrue | void;
 
 if (bTrue) {
   bTrue as void; // Error
@@ -122,7 +122,7 @@ if (!bTrue) {
 enum BFalse {
   A = false,
 }
-declare var bFalse: BFalse | true;
+declare const bFalse: BFalse | true;
 
 if (bFalse) {
   bFalse as true; // Valid
@@ -142,7 +142,7 @@ enum N of number {
   B = 1,
 }
 
-declare var nVoidable: void | N;
+declare const nVoidable: void | N;
 
 if (typeof nVoidable === "undefined") {
   nVoidable as void; // Valid
@@ -164,7 +164,7 @@ if (typeof nVoidable !== "number") {
   nVoidable as N; // Error
 }
 
-declare var nMaybe: ?N;
+declare const nMaybe: ?N;
 
 if (nMaybe == null) {
   nMaybe as null | void; // Valid
@@ -177,7 +177,7 @@ if (nMaybe != null) {
   nMaybe as N; // Valid
 }
 
-declare var nNumVoid: N | number | void;
+declare const nNumVoid: N | number | void;
 
 if (typeof nNumVoid === "number") {
   nNumVoid as void; // Error
@@ -208,7 +208,7 @@ enum NTruthy {
   A = 1,
   B = 2,
 }
-declare var nTruthy: NTruthy | void;
+declare const nTruthy: NTruthy | void;
 
 if (nTruthy) {
   nTruthy as void; // Error
@@ -228,7 +228,7 @@ enum S of string {
   B = "B",
 }
 
-declare var sVoidable: void | S;
+declare const sVoidable: void | S;
 
 if (typeof sVoidable === "undefined") {
   sVoidable as void; // Valid
@@ -250,7 +250,7 @@ if (typeof sVoidable !== "string") {
   sVoidable as S; // Error
 }
 
-declare var sMaybe: ?S;
+declare const sMaybe: ?S;
 
 if (sMaybe == null) {
   sMaybe as null | void; // Valid
@@ -263,7 +263,7 @@ if (sMaybe != null) {
   sMaybe as S; // Valid
 }
 
-declare var sStrVoid: S | string | void;
+declare const sStrVoid: S | string | void;
 
 if (typeof sStrVoid === "string") {
   sStrVoid as void; // Error
@@ -294,7 +294,7 @@ enum STruthy {
   A,
   B,
 }
-declare var sTruthy: STruthy | void;
+declare const sTruthy: STruthy | void;
 
 if (sTruthy) {
   sTruthy as void; // Error
@@ -309,7 +309,7 @@ if (!sTruthy) {
 //////////////
 // multiple //
 //////////////
-declare var bn: B | N;
+declare const bn: B | N;
 
 if (typeof bn == "boolean") {
   bn as B; // Valid
@@ -354,7 +354,7 @@ enum Big of bigint {
   B = 1n,
 }
 
-declare var bigVoidable: void | Big;
+declare const bigVoidable: void | Big;
 
 if (typeof bigVoidable === "undefined") {
   bigVoidable as void; // Valid
@@ -376,7 +376,7 @@ if (typeof bigVoidable !== "bigint") {
   bigVoidable as Big; // Error
 }
 
-declare var bigMaybe: ?Big;
+declare const bigMaybe: ?Big;
 
 if (bigMaybe == null) {
   bigMaybe as null | void; // Valid
@@ -389,7 +389,7 @@ if (bigMaybe != null) {
   bigMaybe as Big; // Valid
 }
 
-declare var bigBigintVoid: Big | bigint | void;
+declare const bigBigintVoid: Big | bigint | void;
 
 if (typeof bigBigintVoid === "bigint") {
   bigBigintVoid as void; // Error
@@ -420,7 +420,7 @@ enum BigTruthy {
   A = 1n,
   B = 2n,
 }
-declare var bigTruthy: BigTruthy | void;
+declare const bigTruthy: BigTruthy | void;
 
 if (bigTruthy) {
   bigTruthy as void; // Error

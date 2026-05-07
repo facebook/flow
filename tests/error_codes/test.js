@@ -115,7 +115,7 @@ foo(3, 4); // one error
 
 /* complex multi-codes */
 
-declare var any: any;
+declare const any: any;
 any as {} & number as {bar:string}; // error
 
 // $FlowFixMe

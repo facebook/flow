@@ -2,7 +2,7 @@ declare class A {}
 
 type AOrString = A | string;
 
-declare var C: Class<string>;
+declare const C: Class<string>;
 class B extends C {}
 
 function invariant(x: unknown) {}
@@ -16,7 +16,7 @@ function more_tests() {
   class B extends A { }
   class C { }
 
-  declare var invariant: any;
+  declare const invariant: any;
 
   function f(a: A, b: B, c: C) {
     invariant(a instanceof B);
@@ -26,5 +26,5 @@ function more_tests() {
   }
 }
 
-declare var obj: {};
+declare const obj: {};
 class D extends obj {}

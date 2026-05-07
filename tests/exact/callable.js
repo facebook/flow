@@ -13,5 +13,5 @@
  * a function.
  */
 
-declare var f: {| (): void, x: string |};
+declare const f: {| (): void, x: string |};
 var g: {| x: string |} = f; // error: callable signature in f missing in g

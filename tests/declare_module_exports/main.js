@@ -41,7 +41,7 @@ new BDefaultValue() as BDefault; // ok
 import type {CT} from "C";
 import type {DT} from "D"
 {
-  declare var cVal: CT;
+  declare const cVal: CT;
   const dVal = {C: cVal};
   cVal as CT; // ok
   cVal.D as DT; // ok

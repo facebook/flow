@@ -363,15 +363,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
       ^
 
 References:
-   indexer-key-compatibility.js:6:21
-   6| declare var o: {[k: number]: any};
-                          ^^^^^^ [1]
+   indexer-key-compatibility.js:6:23
+   6| declare const o: {[k: number]: any};
+                            ^^^^^^ [1]
    indexer-key-compatibility.js:7:11
    7| o as {[k: string]: any};
                 ^^^^^^ [2]
-   indexer-key-compatibility.js:6:16
-   6| declare var o: {[k: number]: any};
-                     ^^^^^^^^^^^^^^^^^^ [3]
+   indexer-key-compatibility.js:6:18
+   6| declare const o: {[k: number]: any};
+                       ^^^^^^^^^^^^^^^^^^ [3]
    indexer-key-compatibility.js:7:6
    7| o as {[k: string]: any};
            ^^^^^^^^^^^^^^^^^^ [4]
@@ -453,15 +453,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
       ^^
 
 References:
-   loc-primary.js:7:21
-   7| declare var a1: {p: number, ...};
-                          ^^^^^^ [1]
+   loc-primary.js:7:23
+   7| declare const a1: {p: number, ...};
+                            ^^^^^^ [1]
    loc-primary.js:6:14
    6| type A = {p: string, ...};
                    ^^^^^^ [2]
-   loc-primary.js:7:17
-   7| declare var a1: {p: number, ...};
-                      ^^^^^^^^^^^^^^^^ [3]
+   loc-primary.js:7:19
+   7| declare const a1: {p: number, ...};
+                        ^^^^^^^^^^^^^^^^ [3]
    loc-primary.js:6:10
    6| type A = {p: string, ...};
                ^^^^^^^^^^^^^^^^ [4]
@@ -480,9 +480,9 @@ Cannot cast object literal to `A` because in property `p`: number [1] is incompa
             ^^
 
 References:
-   loc-primary.js:9:17
-    9| declare var a2: number;
-                       ^^^^^^ [1]
+   loc-primary.js:9:19
+    9| declare const a2: number;
+                         ^^^^^^ [1]
    loc-primary.js:6:14
     6| type A = {p: string, ...};
                     ^^^^^^ [2]
@@ -518,15 +518,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^
 
 References:
-   loc-primary.js:14:21
-   14| declare var b1: {a: {b: number, ...}, ...};
-                           ^^^^^^^^^^^^^^^^ [1]
+   loc-primary.js:14:23
+   14| declare const b1: {a: {b: number, ...}, ...};
+                             ^^^^^^^^^^^^^^^^ [1]
    loc-primary.js:13:14
    13| type B = {a: {b: string, ...}, ...};
                     ^^^^^^^^^^^^^^^^ [2]
-   loc-primary.js:14:17
-   14| declare var b1: {a: {b: number, ...}, ...};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   loc-primary.js:14:19
+   14| declare const b1: {a: {b: number, ...}, ...};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    loc-primary.js:13:10
    13| type B = {a: {b: string, ...}, ...};
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -550,15 +550,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
             ^^
 
 References:
-   loc-primary.js:16:21
-   16| declare var b2: {b: number, ...};
-                           ^^^^^^ [1]
+   loc-primary.js:16:23
+   16| declare const b2: {b: number, ...};
+                             ^^^^^^ [1]
    loc-primary.js:13:18
    13| type B = {a: {b: string, ...}, ...};
                         ^^^^^^ [2]
-   loc-primary.js:16:17
-   16| declare var b2: {b: number, ...};
-                       ^^^^^^^^^^^^^^^^ [3]
+   loc-primary.js:16:19
+   16| declare const b2: {b: number, ...};
+                         ^^^^^^^^^^^^^^^^ [3]
    loc-primary.js:13:14
    13| type B = {a: {b: string, ...}, ...};
                     ^^^^^^^^^^^^^^^^ [4]
@@ -574,9 +574,9 @@ Cannot cast object literal to `B` because in property `a.b`: number [1] is incom
                 ^^
 
 References:
-   loc-primary.js:18:17
-   18| declare var b3: number;
-                       ^^^^^^ [1]
+   loc-primary.js:18:19
+   18| declare const b3: number;
+                         ^^^^^^ [1]
    loc-primary.js:13:18
    13| type B = {a: {b: string, ...}, ...};
                         ^^^^^^ [2]
@@ -612,15 +612,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^
 
 References:
-   loc-primary.js:23:21
-   23| declare var c1: {a: {b: {c: number, ...}, ...}, ...};
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   loc-primary.js:23:23
+   23| declare const c1: {a: {b: {c: number, ...}, ...}, ...};
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    loc-primary.js:22:14
    22| type C = {a: {b: {c: string, ...}, ...}, ...};
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   loc-primary.js:23:17
-   23| declare var c1: {a: {b: {c: number, ...}, ...}, ...};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   loc-primary.js:23:19
+   23| declare const c1: {a: {b: {c: number, ...}, ...}, ...};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    loc-primary.js:22:10
    22| type C = {a: {b: {c: string, ...}, ...}, ...};
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -644,15 +644,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
             ^^
 
 References:
-   loc-primary.js:25:21
-   25| declare var c2: {b: {c: number, ...}, ...};
-                           ^^^^^^^^^^^^^^^^ [1]
+   loc-primary.js:25:23
+   25| declare const c2: {b: {c: number, ...}, ...};
+                             ^^^^^^^^^^^^^^^^ [1]
    loc-primary.js:22:18
    22| type C = {a: {b: {c: string, ...}, ...}, ...};
                         ^^^^^^^^^^^^^^^^ [2]
-   loc-primary.js:25:17
-   25| declare var c2: {b: {c: number, ...}, ...};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   loc-primary.js:25:19
+   25| declare const c2: {b: {c: number, ...}, ...};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    loc-primary.js:22:14
    22| type C = {a: {b: {c: string, ...}, ...}, ...};
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -673,15 +673,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                 ^^
 
 References:
-   loc-primary.js:27:21
-   27| declare var c3: {c: number, ...};
-                           ^^^^^^ [1]
+   loc-primary.js:27:23
+   27| declare const c3: {c: number, ...};
+                             ^^^^^^ [1]
    loc-primary.js:22:22
    22| type C = {a: {b: {c: string, ...}, ...}, ...};
                             ^^^^^^ [2]
-   loc-primary.js:27:17
-   27| declare var c3: {c: number, ...};
-                       ^^^^^^^^^^^^^^^^ [3]
+   loc-primary.js:27:19
+   27| declare const c3: {c: number, ...};
+                         ^^^^^^^^^^^^^^^^ [3]
    loc-primary.js:22:18
    22| type C = {a: {b: {c: string, ...}, ...}, ...};
                         ^^^^^^^^^^^^^^^^ [4]
@@ -697,9 +697,9 @@ Cannot cast object literal to `C` because in property `a.b.c`: number [1] is inc
                     ^^
 
 References:
-   loc-primary.js:29:17
-   29| declare var c4: number;
-                       ^^^^^^ [1]
+   loc-primary.js:29:19
+   29| declare const c4: number;
+                         ^^^^^^ [1]
    loc-primary.js:22:22
    22| type C = {a: {b: {c: string, ...}, ...}, ...};
                             ^^^^^^ [2]
@@ -735,15 +735,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^
 
 References:
-   loc-primary.js:34:21
-   34| declare var d1: {a: {b: {c: {d: number, ...}, ...}, ...}, ...};
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   loc-primary.js:34:23
+   34| declare const d1: {a: {b: {c: {d: number, ...}, ...}, ...}, ...};
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    loc-primary.js:33:14
    33| type D = {a: {b: {c: {d: string, ...}, ...}, ...}, ...};
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   loc-primary.js:34:17
-   34| declare var d1: {a: {b: {c: {d: number, ...}, ...}, ...}, ...};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   loc-primary.js:34:19
+   34| declare const d1: {a: {b: {c: {d: number, ...}, ...}, ...}, ...};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    loc-primary.js:33:10
    33| type D = {a: {b: {c: {d: string, ...}, ...}, ...}, ...};
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -767,15 +767,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
             ^^
 
 References:
-   loc-primary.js:36:21
-   36| declare var d2: {b: {c: {d: number, ...}, ...}, ...};
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   loc-primary.js:36:23
+   36| declare const d2: {b: {c: {d: number, ...}, ...}, ...};
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    loc-primary.js:33:18
    33| type D = {a: {b: {c: {d: string, ...}, ...}, ...}, ...};
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   loc-primary.js:36:17
-   36| declare var d2: {b: {c: {d: number, ...}, ...}, ...};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   loc-primary.js:36:19
+   36| declare const d2: {b: {c: {d: number, ...}, ...}, ...};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    loc-primary.js:33:14
    33| type D = {a: {b: {c: {d: string, ...}, ...}, ...}, ...};
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -796,15 +796,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                 ^^
 
 References:
-   loc-primary.js:38:21
-   38| declare var d3: {c: {d: number, ...}, ...};
-                           ^^^^^^^^^^^^^^^^ [1]
+   loc-primary.js:38:23
+   38| declare const d3: {c: {d: number, ...}, ...};
+                             ^^^^^^^^^^^^^^^^ [1]
    loc-primary.js:33:22
    33| type D = {a: {b: {c: {d: string, ...}, ...}, ...}, ...};
                             ^^^^^^^^^^^^^^^^ [2]
-   loc-primary.js:38:17
-   38| declare var d3: {c: {d: number, ...}, ...};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   loc-primary.js:38:19
+   38| declare const d3: {c: {d: number, ...}, ...};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    loc-primary.js:33:18
    33| type D = {a: {b: {c: {d: string, ...}, ...}, ...}, ...};
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -825,15 +825,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                     ^^
 
 References:
-   loc-primary.js:40:21
-   40| declare var d4: {d: number, ...};
-                           ^^^^^^ [1]
+   loc-primary.js:40:23
+   40| declare const d4: {d: number, ...};
+                             ^^^^^^ [1]
    loc-primary.js:33:26
    33| type D = {a: {b: {c: {d: string, ...}, ...}, ...}, ...};
                                 ^^^^^^ [2]
-   loc-primary.js:40:17
-   40| declare var d4: {d: number, ...};
-                       ^^^^^^^^^^^^^^^^ [3]
+   loc-primary.js:40:19
+   40| declare const d4: {d: number, ...};
+                         ^^^^^^^^^^^^^^^^ [3]
    loc-primary.js:33:22
    33| type D = {a: {b: {c: {d: string, ...}, ...}, ...}, ...};
                             ^^^^^^^^^^^^^^^^ [4]
@@ -849,9 +849,9 @@ Cannot cast object literal to `D` because in property `a.b.c.d`: number [1] is i
                         ^^
 
 References:
-   loc-primary.js:42:17
-   42| declare var d5: number;
-                       ^^^^^^ [1]
+   loc-primary.js:42:19
+   42| declare const d5: number;
+                         ^^^^^^ [1]
    loc-primary.js:33:26
    33| type D = {a: {b: {c: {d: string, ...}, ...}, ...}, ...};
                                 ^^^^^^ [2]
@@ -1147,9 +1147,9 @@ Cannot access object type [1] with computed property using boolean literal `true
         ^^^^ [2]
 
 References:
-   misc-incompatibles.js:7:16
-   7| declare var o: {...};
-                     ^^^^^ [1]
+   misc-incompatibles.js:7:18
+   7| declare const o: {...};
+                       ^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- misc-incompatibles.js:9:3

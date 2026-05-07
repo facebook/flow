@@ -4,7 +4,7 @@ declare module "declare_module_exports" {
 
 declare module "declare_m_e_with_other_value_declares" {
   declare module.exports: number;
-  declare var str: string;
+  declare const str: string;
 }
 
 declare module "declare_m_e_with_other_type_declares" {

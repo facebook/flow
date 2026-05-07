@@ -93,9 +93,9 @@ Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmet
                      ^^^^^^
 
 References:
-   forof.js:48:46
-   48| declare var funky1: {@@iterator(): $Iterator<string, number, boolean>};
-                                                    ^^^^^^ [1]
+   forof.js:48:48
+   48| declare const funky1: {@@iterator(): $Iterator<string, number, boolean>};
+                                                      ^^^^^^ [1]
    forof.js:59:20
    59|   const x1_ = x1 * 3; // error
                           ^ [2]

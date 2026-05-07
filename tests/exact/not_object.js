@@ -7,10 +7,10 @@ let z: {||} = true;
 let c: {||} = new (class {})();
 let f: {||} = () => {};
 
-declare var u: {||} | {};
+declare const u: {||} | {};
 u as {||};
 
-declare var v: number | {};
+declare const v: number | {};
 v as {||};
 
 class A {}

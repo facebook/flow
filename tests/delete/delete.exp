@@ -10,9 +10,9 @@ References:
    delete.js:4:1
    4| delete obj1.f; // error, f is required
       ^^^^^^^^^^^^^ [1]
-   delete.js:3:23
-   3| declare var obj1: {f: number};
-                            ^^^^^^ [2]
+   delete.js:3:25
+   3| declare const obj1: {f: number};
+                              ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- delete.js:11:1
@@ -69,9 +69,9 @@ References:
    delete.js:27:1
    27| delete c[1];
        ^^^^^^^^^^^ [1]
-   delete.js:26:25
-   26| declare var c: [number, number];
-                               ^^^^^^ [2]
+   delete.js:26:27
+   26| declare const c: [number, number];
+                                 ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- delete.js:28:8
@@ -83,9 +83,9 @@ Cannot delete `c[2]` because tuple type [1] only has 2 elements, so index 2 is o
               ^^^^
 
 References:
-   delete.js:26:16
-   26| declare var c: [number, number];
-                      ^^^^^^^^^^^^^^^^ [1]
+   delete.js:26:18
+   26| declare const c: [number, number];
+                        ^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- delete.js:31:1
@@ -189,9 +189,9 @@ References:
    delete.js:60:1
    60| delete index.a;
        ^^^^^^^^^^^^^^ [1]
-   delete.js:59:42
-   59| declare var index: {[string]: number, a: boolean};
-                                                ^^^^^^^ [2]
+   delete.js:59:44
+   59| declare const index: {[string]: number, a: boolean};
+                                                  ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- delete.js:61:8
@@ -206,9 +206,9 @@ References:
    delete.js:61:1
    61| delete index['a'];
        ^^^^^^^^^^^^^^^^^ [1]
-   delete.js:59:42
-   59| declare var index: {[string]: number, a: boolean};
-                                                ^^^^^^^ [2]
+   delete.js:59:44
+   59| declare const index: {[string]: number, a: boolean};
+                                                  ^^^^^^^ [2]
 
 
 

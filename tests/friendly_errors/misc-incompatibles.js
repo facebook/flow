@@ -4,7 +4,7 @@ declare class X mixins Y {}
 type A = number;
 interface B extends A {}
 
-declare var o: {...};
+declare const o: {...};
 o[true];
 o[true] = 42;
 

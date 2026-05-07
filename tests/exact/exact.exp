@@ -11,9 +11,9 @@ References:
    callable.js:17:8
    17| var g: {| x: string |} = f; // error: callable signature in f missing in g
               ^^^^^^^^^^^^^^^ [1]
-   callable.js:16:16
-   16| declare var f: {| (): void, x: string |};
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   callable.js:16:18
+   16| declare const f: {| (): void, x: string |};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- error_continues.js:3:8
@@ -422,9 +422,9 @@ Cannot cast `u` to object type because inexact object type [1] is incompatible w
        ^
 
 References:
-   not_object.js:10:23
-   10| declare var u: {||} | {};
-                             ^^ [1]
+   not_object.js:10:25
+   10| declare const u: {||} | {};
+                               ^^ [1]
    not_object.js:11:6
    11| u as {||};
             ^^^^ [2]
@@ -439,9 +439,9 @@ Cannot cast `v` to object type because number [1] is incompatible with object ty
        ^
 
 References:
-   not_object.js:13:16
-   13| declare var v: number | {};
-                      ^^^^^^ [1]
+   not_object.js:13:18
+   13| declare const v: number | {};
+                        ^^^^^^ [1]
    not_object.js:14:6
    14| v as {||};
             ^^^^ [2]
@@ -457,9 +457,9 @@ Cannot cast `v` to object type because inexact object type [1] is incompatible w
        ^
 
 References:
-   not_object.js:13:25
-   13| declare var v: number | {};
-                               ^^ [1]
+   not_object.js:13:27
+   13| declare const v: number | {};
+                                 ^^ [1]
    not_object.js:14:6
    14| v as {||};
             ^^^^ [2]
@@ -702,15 +702,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                                     ^
 
 References:
-   use_ops.js:1:21
-   1| declare var a: { p: { q: null } };
-                          ^^^^^^^^^^^ [1]
+   use_ops.js:1:23
+   1| declare const a: { p: { q: null } };
+                            ^^^^^^^^^^^ [1]
    use_ops.js:2:13
    2| var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
                   ^^^^^^^^^^^^^ [2]
-   use_ops.js:1:16
-   1| declare var a: { p: { q: null } };
-                     ^^^^^^^^^^^^^^^^^^ [3]
+   use_ops.js:1:18
+   1| declare const a: { p: { q: null } };
+                       ^^^^^^^^^^^^^^^^^^ [3]
    use_ops.js:2:8
    2| var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
              ^^^^^^^^^^^^^^^^^^^^ [4]
@@ -726,9 +726,9 @@ Cannot call `f` with `o` bound to `o` because inexact object type [1] is incompa
         ^
 
 References:
-   use_ops.js:5:16
-   5| declare var o: { p: null };
-                     ^^^^^^^^^^^ [1]
+   use_ops.js:5:18
+   5| declare const o: { p: null };
+                       ^^^^^^^^^^^ [1]
    use_ops.js:4:15
    4| function f(o: {| p: null |}) {}
                     ^^^^^^^^^^^^^ [2]

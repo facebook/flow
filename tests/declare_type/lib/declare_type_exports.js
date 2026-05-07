@@ -5,7 +5,7 @@ declare module 'foo' {
         toz : number
     }
 
-    declare var n : string;
+    declare const n : string;
 
     declare type Foo = typeof n;
     declare type Bar = A;

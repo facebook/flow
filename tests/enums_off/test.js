@@ -3,4 +3,4 @@ enum E { // Error: enums are off
   B,
 }
 
-declare var x: E; // Error: can't resolve name `E`
+declare const x: E; // Error: can't resolve name `E`

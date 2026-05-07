@@ -5,5 +5,5 @@ import type C from './export-commonjs-default.js';
 import type D from './export.js';
 import type {E, F} from './export.js';
 
-declare var b: B;
+declare const b: B;
 b as C; // Error

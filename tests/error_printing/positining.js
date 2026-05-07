@@ -23,7 +23,7 @@ type Props = {
   selectedValue: X,
 };
 
-declare var x: $RelayProps<Props, {}>;
+declare const x: $RelayProps<Props, {}>;
 
 x as $RelayProps<Props>;
 

@@ -3,7 +3,7 @@
  * @flow
  */
 
-declare var any: any;
+declare const any: any;
 
 any as (x: {p: number, ...}) => void as (x: {p: string, ...}) => void;
 

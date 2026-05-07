@@ -170,12 +170,12 @@ using strict equality (`===` or `!==`) instead. [invalid-compare]
        ^^
 
 References:
-   test.js:23:17
-   23| declare var x1: number | string;
-                       ^^^^^^ [1]
-   test.js:24:26
-   24| declare var y1: number | string;
-                                ^^^^^^ [2]
+   test.js:23:19
+   23| declare const x1: number | string;
+                         ^^^^^^ [1]
+   test.js:24:28
+   24| declare const y1: number | string;
+                                  ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:25:1
@@ -188,12 +188,12 @@ using strict equality (`===` or `!==`) instead. [invalid-compare]
        ^^
 
 References:
-   test.js:23:26
-   23| declare var x1: number | string;
-                                ^^^^^^ [1]
-   test.js:24:17
-   24| declare var y1: number | string;
-                       ^^^^^^ [2]
+   test.js:23:28
+   23| declare const x1: number | string;
+                                  ^^^^^^ [1]
+   test.js:24:19
+   24| declare const y1: number | string;
+                         ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:29:1

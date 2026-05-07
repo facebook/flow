@@ -6,7 +6,7 @@ enum E {
   C,
 }
 
-declare var e: E;
+declare const e: E;
 
 // flowlint-next-line require-explicit-enum-switch-cases:error
 switch (e) { // OK
@@ -28,7 +28,7 @@ enum U {
   ...
 }
 
-declare var u: U;
+declare const u: U;
 
 // flowlint-next-line require-explicit-enum-switch-cases:error
 switch (u) { // OK

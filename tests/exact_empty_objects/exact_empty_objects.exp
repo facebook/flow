@@ -8,9 +8,9 @@ Cannot cast `a` to boolean literal `true` because number [1] is incompatible wit
          ^
 
 References:
-   defaulting.js:1:24
-    1| declare var o: ?{prop: number};
-                              ^^^^^^ [1]
+   defaulting.js:1:26
+    1| declare const o: ?{prop: number};
+                                ^^^^^^ [1]
    defaulting.js:10:8
    10|   a as true; // ERROR
               ^^^^ [2]
@@ -61,9 +61,9 @@ Cannot cast `a` to undefined because number [1] is incompatible with undefined [
          ^
 
 References:
-   defaulting.js:1:24
-    1| declare var o: ?{prop: number};
-                              ^^^^^^ [1]
+   defaulting.js:1:26
+    1| declare const o: ?{prop: number};
+                                ^^^^^^ [1]
    defaulting.js:12:8
    12|   a as void; // ERROR
               ^^^^ [2]
@@ -111,9 +111,9 @@ Cannot cast `a` to boolean literal `true` because number [1] is incompatible wit
          ^
 
 References:
-   defaulting.js:1:24
-    1| declare var o: ?{prop: number};
-                              ^^^^^^ [1]
+   defaulting.js:1:26
+    1| declare const o: ?{prop: number};
+                                ^^^^^^ [1]
    defaulting.js:28:8
    28|   a as true; // ERROR
               ^^^^ [2]
@@ -164,9 +164,9 @@ Cannot cast `a` to undefined because number [1] is incompatible with undefined [
          ^
 
 References:
-   defaulting.js:1:24
-    1| declare var o: ?{prop: number};
-                              ^^^^^^ [1]
+   defaulting.js:1:26
+    1| declare const o: ?{prop: number};
+                                ^^^^^^ [1]
    defaulting.js:30:8
    30|   a as void; // ERROR
               ^^^^ [2]
@@ -214,9 +214,9 @@ Cannot cast `a` to boolean literal `true` because number [1] is incompatible wit
          ^
 
 References:
-   defaulting.js:1:24
-    1| declare var o: ?{prop: number};
-                              ^^^^^^ [1]
+   defaulting.js:1:26
+    1| declare const o: ?{prop: number};
+                                ^^^^^^ [1]
    defaulting.js:46:8
    46|   a as true; // ERROR
               ^^^^ [2]
@@ -267,9 +267,9 @@ Cannot cast `a` to undefined because number [1] is incompatible with undefined [
          ^
 
 References:
-   defaulting.js:1:24
-    1| declare var o: ?{prop: number};
-                              ^^^^^^ [1]
+   defaulting.js:1:26
+    1| declare const o: ?{prop: number};
+                                ^^^^^^ [1]
    defaulting.js:48:8
    48|   a as void; // ERROR
               ^^^^ [2]
@@ -284,9 +284,9 @@ Cannot get `x.XXX` because property `XXX` is missing in object type [1]. [prop-m
             ^^^
 
 References:
-   defaulting.js:1:17
-    1| declare var o: ?{prop: number};
-                       ^^^^^^^^^^^^^^ [1]
+   defaulting.js:1:19
+    1| declare const o: ?{prop: number};
+                         ^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- defaulting.js:54:3
@@ -387,9 +387,9 @@ Cannot get `x.XXX` because property `XXX` is missing in object type [1]. [prop-m
             ^^^
 
 References:
-   defaulting.js:58:17
-                       v
-   58| declare var n: ?{
+   defaulting.js:58:19
+                         v
+   58| declare const n: ?{
    59|   prop: number,
    60|   ...
    61| };
@@ -508,9 +508,9 @@ Cannot get `x.XXX` because property `XXX` is missing in `C` [1]. [prop-missing]
             ^^^
 
 References:
-   defaulting.js:85:17
-   85| declare var c: ?C;
-                       ^ [1]
+   defaulting.js:85:19
+   85| declare const c: ?C;
+                         ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- defaulting.js:97:6

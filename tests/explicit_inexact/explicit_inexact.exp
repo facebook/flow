@@ -7,9 +7,9 @@ Cannot cast `x` to object type because inexact `U` [1] is incompatible with exac
       ^
 
 References:
-   test.js:5:16
-   5| declare var x: U;
-                     ^ [1]
+   test.js:5:18
+   5| declare const x: U;
+                       ^ [1]
    test.js:8:6
    8| x as {||}; // Error, inexact vs. exact
            ^^^^ [2]
@@ -25,9 +25,9 @@ do not accept extra props. [incompatible-type]
       ^
 
 References:
-   test.js:5:16
-   5| declare var x: U;
-                     ^ [1]
+   test.js:5:18
+   5| declare const x: U;
+                       ^ [1]
    test.js:8:6
    8| x as {||}; // Error, inexact vs. exact
            ^^^^ [2]

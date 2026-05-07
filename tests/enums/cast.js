@@ -53,18 +53,18 @@ N.A as boolean; // Error
 Y.A as boolean; // Error
 X.A as string; // Error
 
-declare var BB: typeof B | typeof B2;
+declare const BB: typeof B | typeof B2;
 const bba: B | B2 = BB.A;
 BB.A as boolean; // OK
 
-declare var bs: B | B2;
+declare const bs: B | B2;
 bs as boolean; // OK
 
-declare var BS: typeof B | typeof S;
+declare const BS: typeof B | typeof S;
 const bsa: B | S = BS.A;
 BS.A as string | boolean; // Error
 
-declare var sb: S | B;
+declare const sb: S | B;
 sb as string | boolean; // Error
 
 S.A as interface {}; // Error

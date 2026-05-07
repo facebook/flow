@@ -3,7 +3,7 @@
  * @flow
  */
 
-declare var any: any;
+declare const any: any;
 declare opaque type T;
 
 any as {p: T, ...} as {p: T, ...}; // Ok

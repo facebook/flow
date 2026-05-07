@@ -1,4 +1,4 @@
-declare var some: ?{
+declare const some: ?{
   x: string;
  ...}
 

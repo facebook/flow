@@ -16,12 +16,12 @@ function foo2 (o1 : A, o2 : B) {
   }
 }
 
-declare var cond : boolean;
+declare const cond : boolean;
 const i = cond ? 1 : -1;
 if (i >= 0) {} // ok
 
-declare var x1: number | string;
-declare var y1: number | string;
+declare const x1: number | string;
+declare const y1: number | string;
 x1 != y1; // error
 
 const x2 = 1 as ?number || "";

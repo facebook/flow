@@ -222,10 +222,10 @@ References:
    16| [...arr] = [true]; // error boolean ~> number|string
                    ^^^^ [1]
    array_rest.js:14:21
-   14| declare var arr :  [number|string];
+   14| declare let arr :  [number|string];
                            ^^^^^^ [2]
    array_rest.js:14:28
-   14| declare var arr :  [number|string];
+   14| declare let arr :  [number|string];
                                   ^^^^^^ [3]
 
 
@@ -721,7 +721,7 @@ References:
    4| [{a1:a, b},c] = [{a1:0, b:1},2];
                            ^ [1]
    destructuring.js:1:15
-   1| declare var a:string;
+   1| declare let a:string;
                     ^^^^^^ [2]
 
 
@@ -738,7 +738,7 @@ References:
    4| [{a1:a, b},c] = [{a1:0, b:1},2];
                                 ^ [1]
    destructuring.js:2:15
-   2| declare var b:string;
+   2| declare let b:string;
                     ^^^^^^ [2]
 
 
@@ -755,7 +755,7 @@ References:
    4| [{a1:a, b},c] = [{a1:0, b:1},2];
                                    ^ [1]
    destructuring.js:3:15
-   3| declare var c:string;
+   3| declare let c:string;
                     ^^^^^^ [2]
 
 
@@ -796,7 +796,7 @@ References:
    13| function foo({p, z:[r]}: {p: number, z: Array<number>}) {
                                     ^^^^^^ [1]
    destructuring.js:1:15
-    1| declare var a:string;
+    1| declare let a:string;
                      ^^^^^^ [2]
 
 
@@ -821,7 +821,7 @@ References:
    13| function foo({p, z:[r]}: {p: number, z: Array<number>}) {
                                                      ^^^^^^ [1]
    destructuring.js:3:15
-    3| declare var c:string;
+    3| declare let c:string;
                      ^^^^^^ [2]
 
 
@@ -838,7 +838,7 @@ References:
    20| [a,,b,...c] = [0,1,true,3];
                       ^ [1]
    destructuring.js:1:15
-    1| declare var a:string;
+    1| declare let a:string;
                      ^^^^^^ [2]
 
 
@@ -855,7 +855,7 @@ References:
    20| [a,,b,...c] = [0,1,true,3];
                           ^^^^ [1]
    destructuring.js:2:15
-    2| declare var b:string;
+    2| declare let b:string;
                      ^^^^^^ [2]
 
 
@@ -873,7 +873,7 @@ References:
    20| [a,,b,...c] = [0,1,true,3];
                 ^ [1]
    destructuring.js:3:15
-    3| declare var c:string;
+    3| declare let c:string;
                      ^^^^^^ [2]
 
 
@@ -1157,9 +1157,9 @@ Property `nonExistent` is missing in object type [1]. [prop-missing]
            ^^^^^^^^^^^
 
 References:
-   destructuring_missing_props.js:2:16
-   2| declare var x: {foo: string};
-                     ^^^^^^^^^^^^^ [1]
+   destructuring_missing_props.js:2:18
+   2| declare const x: {foo: string};
+                       ^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:3:30
@@ -1185,9 +1185,9 @@ Cannot assign number literal `3` to `foo` because number [1] is incompatible wit
                                                ^ [1]
 
 References:
-   destructuring_missing_props.js:2:22
-   2| declare var x: {foo: string};
-                           ^^^^^^ [2]
+   destructuring_missing_props.js:2:24
+   2| declare const x: {foo: string};
+                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- destructuring_missing_props.js:5:1
@@ -1199,9 +1199,9 @@ Cannot cast `foo` to number because string [1] is incompatible with number [2]. 
       ^^^
 
 References:
-   destructuring_missing_props.js:2:22
-   2| declare var x: {foo: string};
-                           ^^^^^^ [1]
+   destructuring_missing_props.js:2:24
+   2| declare const x: {foo: string};
+                             ^^^^^^ [1]
    destructuring_missing_props.js:5:8
    5| foo as number; // Error, number | string
              ^^^^^^ [2]
@@ -1216,9 +1216,9 @@ Property `nonExistent2` is missing in object type [1]. [prop-missing]
            ^^^^^^^^^^^^
 
 References:
-   destructuring_missing_props.js:8:16
-   8| declare var y: {bar: string};
-                     ^^^^^^^^^^^^^ [1]
+   destructuring_missing_props.js:8:18
+   8| declare const y: {bar: string};
+                       ^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:9:32
@@ -1244,9 +1244,9 @@ Cannot assign number literal `3` to `bar` because number [1] is incompatible wit
                                                  ^ [1]
 
 References:
-   destructuring_missing_props.js:8:22
-   8| declare var y: {bar: string};
-                           ^^^^^^ [2]
+   destructuring_missing_props.js:8:24
+   8| declare const y: {bar: string};
+                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:14:6
@@ -1272,9 +1272,9 @@ Property `grunt` is missing in object type [1]. [prop-missing]
             ^^^^^
 
 References:
-   destructuring_missing_props.js:16:16
-   16| declare var z: {thud: string, ...};
-                      ^^^^^^^^^^^^^^^^^^^ [1]
+   destructuring_missing_props.js:16:18
+   16| declare const z: {thud: string, ...};
+                        ^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:21:6

@@ -1,7 +1,7 @@
 declare class _C {
   foo(): number;
 }
-declare var _module: {
+declare const _module: {
   C: Class<_C>;
   ...
 }

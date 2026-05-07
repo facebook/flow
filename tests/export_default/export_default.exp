@@ -15,9 +15,9 @@ Cannot call `M` with `N.x` bound to `x` because number [1] is incompatible with 
               ^^^
 
 References:
-   lib/lib.js:5:20
-   5|     declare var x: number;
-                         ^^^^^^ [1]
+   lib/lib.js:5:22
+   5|     declare const x: number;
+                           ^^^^^^ [1]
    lib/lib.js:2:33
    2|     declare module.exports: (x: string) => string;
                                       ^^^^^^ [2]
@@ -40,9 +40,9 @@ Cannot call `P` with `N.y` bound to `x` because number [1] is incompatible with 
               ^^^
 
 References:
-   lib/lib.js:6:20
-   6|     declare var y: number;
-                         ^^^^^^ [1]
+   lib/lib.js:6:22
+   6|     declare const y: number;
+                           ^^^^^^ [1]
    lib/lib.js:2:33
    2|     declare module.exports: (x: string) => string;
                                       ^^^^^^ [2]
@@ -65,9 +65,9 @@ Cannot call `Q` with `N.z` bound to `x` because number [1] is incompatible with 
               ^^^
 
 References:
-   lib/lib.js:7:20
-   7|     declare var z: number;
-                         ^^^^^^ [1]
+   lib/lib.js:7:22
+   7|     declare const z: number;
+                           ^^^^^^ [1]
    lib/lib.js:2:33
    2|     declare module.exports: (x: string) => string;
                                       ^^^^^^ [2]

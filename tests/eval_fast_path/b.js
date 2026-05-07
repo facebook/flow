@@ -2,6 +2,6 @@
 
 import type {Bar} from './a.js';
 
-declare var bar: Bar;
+declare const bar: Bar;
 
 module.exports = bar;

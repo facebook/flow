@@ -7,9 +7,9 @@ Cannot cast `num1` to string because number [1] is incompatible with string [2].
       ^^^^
 
 References:
-   flow-typed/declares.js:2:21
-   2|   declare var num1: number;
-                          ^^^^^^ [1]
+   flow-typed/declares.js:2:23
+   2|   declare const num1: number;
+                            ^^^^^^ [1]
    es_declare_module.js:4:9
    4| num1 as string; // Error: number ~> string
               ^^^^^^ [2]
@@ -24,9 +24,9 @@ Cannot cast `str1` to number because string [1] is incompatible with number [2].
       ^^^^
 
 References:
-   flow-typed/declares.js:3:21
-   3|   declare var str1: string;
-                          ^^^^^^ [1]
+   flow-typed/declares.js:3:23
+   3|   declare const str1: string;
+                            ^^^^^^ [1]
    es_declare_module.js:6:9
    6| str1 as number; // Error: string ~> number
               ^^^^^^ [2]
@@ -124,9 +124,9 @@ Cannot cast `str3` to number because string [1] is incompatible with number [2].
        ^^^^
 
 References:
-   flow-typed/declares.js:16:26
-   16|   declare var strHidden: string;
-                                ^^^^^^ [1]
+   flow-typed/declares.js:16:28
+   16|   declare const strHidden: string;
+                                  ^^^^^^ [1]
    es_declare_module.js:21:9
    21| str3 as number; // Error: string ~> number
                ^^^^^^ [2]
@@ -141,9 +141,9 @@ Cannot cast `num3` to string because number [1] is incompatible with string [2].
        ^^^^
 
 References:
-   flow-typed/declares.js:18:28
-   18|   declare export var num3: number;
-                                  ^^^^^^ [1]
+   flow-typed/declares.js:18:30
+   18|   declare export const num3: number;
+                                    ^^^^^^ [1]
    es_declare_module.js:25:9
    25| num3 as string; // Error: number ~> string
                ^^^^^^ [2]

@@ -1,5 +1,5 @@
 //@flow
 
 type A = {|[string]: number|};
-declare var a: A;
+declare const a: A;
 a as $Exact<A>;

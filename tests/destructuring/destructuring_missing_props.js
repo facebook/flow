@@ -1,11 +1,11 @@
 //@flow
-declare var x: {foo: string};
+declare const x: {foo: string};
 var {nonExistent, defaults = 'hi', foo = 3} = x; // Error, missing nonExistent
 defaults as string;
 foo as number; // Error, number | string
 foo as number | string;
 
-declare var y: {bar: string};
+declare const y: {bar: string};
 var {nonExistent2, defaults2 = 'hi', bar = 3} = y; // Error, missing nonExistent2
 defaults2 as string;
 bar as string; // Error, number | string
@@ -13,7 +13,7 @@ bar as number | string;
 
 var {baz = 15150} = null; // Error, baz is missing in null (you can't destructure null)
 
-declare var z: {thud: string, ...};
+declare const z: {thud: string, ...};
 var {grunt = 15210} = z; // Error, grunt missing in inexact object type
 
 const proto: {foo: number} = {foo: 3};

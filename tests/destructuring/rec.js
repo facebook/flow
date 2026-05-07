@@ -14,12 +14,12 @@ foo = (i: number) => {
 
 // Also make sure that the following doesn't loop
 
-declare var o: empty;
+declare let o: empty;
 ({ x: o } = o);
 
 // this also must not loop
 
-declare var _x:  {...};
+declare const _x:  {...};
 
 let x = _x;
 

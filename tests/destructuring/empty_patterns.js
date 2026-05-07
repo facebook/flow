@@ -1,5 +1,5 @@
 function assignment_tests() {
-  declare var m: any;
+  declare const m: any;
   [] = 1; // ok
   ({} = 1); // ok
   [m.foo] = 1 as any; // only unsupported syntax error

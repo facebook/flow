@@ -6,6 +6,6 @@ class C {
   x : string
 }
 
-declare var x : C;
+declare const x : C;
 
 x as T;

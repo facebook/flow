@@ -9,7 +9,7 @@ enum E {
 // Valid //
 ///////////
 const a: void | E = E.cast('A');
-declare var maybeString: ?string;
+declare const maybeString: ?string;
 E.cast(maybeString);
 const b: Iterable<E> = E.members();
 const c: boolean = E.isValid('A'); // OK

@@ -24,7 +24,7 @@ f.c = 1; // ERROR
 g.w = 1; // OK
 g.w as number; // OK
 
-declare var b: boolean;
+declare const b: boolean;
 if (b) {
   f.xxx = 1; // ERROR
 }

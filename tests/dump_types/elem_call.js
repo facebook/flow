@@ -1,17 +1,17 @@
 declare opaque type T;
-declare var key: string;
-declare var dict0: { [key: string]: () => T, ... };
+declare const key: string;
+declare const dict0: { [key: string]: () => T, ... };
 dict0[key]();
 
-declare var dict1: ?{ [key: string]: () => T, ... };
+declare const dict1: ?{ [key: string]: () => T, ... };
 dict1?.[key]();
 
-declare var dict2: ?{ [key: string]: () => T, ... };
+declare const dict2: ?{ [key: string]: () => T, ... };
 dict2?.[key]?.();
 
-declare var dict3: { [key: string]: <T>(T) => T, ... };
+declare const dict3: { [key: string]: <T>(T) => T, ... };
 dict3[key]("");
 
-declare var dict4: { [key: 'a' ]: () => {...} } | void;
-declare var b: 'b';
+declare const dict4: { [key: 'a' ]: () => {...} } | void;
+declare const b: 'b';
 dict4[b]();

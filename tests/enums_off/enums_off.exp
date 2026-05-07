@@ -37,12 +37,12 @@ Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true
       ^
 
 
-Error ------------------------------------------------------------------------------------------------- declared.js:6:16
+Error ------------------------------------------------------------------------------------------------- declared.js:6:18
 
 Cannot resolve name `E`. [cannot-resolve-name]
 
-   6| declare var e: E; // ERROR: can't resolve name `E`
-                     ^
+   6| declare const e: E; // ERROR: can't resolve name `E`
+                       ^
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:1:1
@@ -58,12 +58,12 @@ Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true
       ^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:6:16
+Error ----------------------------------------------------------------------------------------------------- test.js:6:18
 
 Cannot resolve name `E`. [cannot-resolve-name]
 
-   6| declare var x: E; // Error: can't resolve name `E`
-                     ^
+   6| declare const x: E; // Error: can't resolve name `E`
+                       ^
 
 
 

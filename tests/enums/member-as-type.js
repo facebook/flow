@@ -5,7 +5,7 @@ enum E {
   B,
 }
 
-declare var x: E.A;
+declare const x: E.A;
 
 function f(x: E.A) {
 }

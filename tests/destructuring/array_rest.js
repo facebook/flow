@@ -11,6 +11,6 @@ d as void; // error: number|string|boolean ~> void
 
 let [...e] = 0;
 
-declare var arr :  [number|string];
+declare let arr :  [number|string];
 [...arr] = [1]; // okay
 [...arr] = [true]; // error boolean ~> number|string

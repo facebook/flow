@@ -1,4 +1,4 @@
-declare var o: ?{prop: number};
+declare const o: ?{prop: number};
 
 // ??
 {
@@ -55,7 +55,7 @@ declare var o: ?{prop: number};
 }
 
 // With non-exact hit
-declare var n: ?{
+declare const n: ?{
   prop: number,
   ...
 };
@@ -82,7 +82,7 @@ declare var n: ?{
 class C {
   prop: number;
 }
-declare var c: ?C;
+declare const c: ?C;
 
 // ??
 {
@@ -103,7 +103,7 @@ declare var c: ?C;
 }
 
 // any
-declare var a: ?any;
+declare const a: ?any;
 {
   const {x} = a ?? {}; // OK
   const {y} = a || {}; // OK
