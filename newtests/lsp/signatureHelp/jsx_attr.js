@@ -2,16 +2,16 @@
 
 import * as React from "react";
 
-type PropsA = $ReadOnly<{ foo: number, bar?: string, ... }>;
-type PropsB = $ReadOnly<{ foo: boolean, baz?: string, ... }>;
-type PropsC = $ReadOnly<{ foo?: string, baz?: string, ... }>;
+type PropsA = Readonly<{ foo: number, bar?: string, ... }>;
+type PropsB = Readonly<{ foo: boolean, baz?: string, ... }>;
+type PropsC = Readonly<{ foo?: string, baz?: string, ... }>;
 
-type PropsPoly<P> = $ReadOnly<{ foo: P, bar?: P, ... }>;
+type PropsPoly<P> = Readonly<{ foo: P, bar?: P, ... }>;
 
-type PropsOmit = $ReadOnly<Omit<PropsA, 'bar'>>;
-type PropsMapped = $ReadOnly<{[key in keyof PropsA]: () => PropsA[key]}>;
+type PropsOmit = Readonly<Omit<PropsA, 'bar'>>;
+type PropsMapped = Readonly<{[key in keyof PropsA]: () => PropsA[key]}>;
 
-type PropsSpread = $ReadOnly<{...PropsA, ...PropsC, ...}>;
+type PropsSpread = Readonly<{...PropsA, ...PropsC, ...}>;
 
 function test1(Foo: React.ComponentType<PropsA>) {;
     return <Foo foo={/* here */} />;

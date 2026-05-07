@@ -1,3 +1,3 @@
 // @flow
 
-type ValuesPoly<X> = $Values<X>
+type ValuesPoly<X> = Values<X>

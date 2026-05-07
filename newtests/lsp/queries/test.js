@@ -187,7 +187,7 @@ module.exports = suite(
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/cached_hover.js'},
-        position: {line: 2, character: 10}, // over $ValuesPoly
+        position: {line: 2, character: 10}, // over ValuesPoly
       }).verifyAllLSPMessagesInStep(
         [
           {
@@ -217,7 +217,7 @@ module.exports = suite(
       ),
       lspRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/cached_hover.js'},
-        position: {line: 2, character: 10}, // over $ValuesPoly again, sohuld be the same
+        position: {line: 2, character: 10}, // over ValuesPoly again, sohuld be the same
       }).verifyAllLSPMessagesInStep(
         [
           {

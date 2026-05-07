@@ -4,13 +4,13 @@ Error --------------------------------------------------------------------------
 null or undefined [1] is not an object. [not-an-object]
 
    a.js:8:17
-   8| export type A = $Values<T>;
-                      ^^^^^^^^^^
+   8| export type A = Values<T>;
+                      ^^^^^^^^^
 
 References:
-   a.js:8:25
-   8| export type A = $Values<T>;
-                              ^ [1]
+   a.js:8:24
+   8| export type A = Values<T>;
+                             ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------------- b.js:6:2

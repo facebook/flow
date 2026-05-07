@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-export type Props1 = $ReadOnly<{
+export type Props1 = Readonly<{
     /**
      * This is documentation for Props1.foo property
      */
@@ -13,7 +13,7 @@ export type Props1 = $ReadOnly<{
     bar?: string, ...
 }>;
 
-type Props2 = $ReadOnly<{
+type Props2 = Readonly<{
     /**
      * This is documentation for Props2.foo property
      */
