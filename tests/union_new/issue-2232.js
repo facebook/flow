@@ -8,7 +8,7 @@ declare type Entity<T> = {
 declare type StringEntity = Entity<string>;
 
 declare type Foo = StringEntity & {
-  bars: Object,
+  bars: any,
   kind: 1,
  ...};
 declare type EmptyFoo = StringEntity & {

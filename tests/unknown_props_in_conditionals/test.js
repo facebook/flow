@@ -1,6 +1,6 @@
 declare var mixed: unknown;
 declare var any: any;
-declare var myObject: Object;
+declare var myObject: any;
 declare var myFunction: Function;
 
 declare var inexactObject: { x: string };

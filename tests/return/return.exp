@@ -197,13 +197,13 @@ undefined. [incompatible-type]
                         ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ implicit_void.js:378:26
+Error ------------------------------------------------------------------------------------------ implicit_void.js:378:23
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
 undefined. [incompatible-type]
 
-   378| function g17(x: Object): number { // Error
-                                 ^^^^^^ [1]
+   378| function g17(x: any): number { // Error
+                              ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ implicit_void.js:386:35

@@ -1,5 +1,5 @@
 let ws = new WeakSet<any>();
-let obj: Object = {};
+let obj: any = {};
 let dict: {foo: string} = {foo: 'bar'};
 
 ws.add(obj);

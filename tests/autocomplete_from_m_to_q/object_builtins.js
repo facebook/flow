@@ -1,6 +1,6 @@
 /* @flow */
 
-function foo(o: Object) {
+function foo(o: any) {
   o.
 //  ^
 }

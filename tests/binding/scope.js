@@ -66,12 +66,12 @@ function for_scope_var() {
   for (var a = "" /* error: banned redeclaration */ ;;) {}
 }
 
-function for_in_scope_let(o: Object) {
+function for_in_scope_let(o: any) {
   let a: number = 0;
   for (let a /* ok: local to init */ in o) {}
 }
 
-function for_in_scope_var(o: Object) {
+function for_in_scope_var(o: any) {
   var a: number = 0;
   for (var a /* error: banned redeclaration */ in o) {}
 }

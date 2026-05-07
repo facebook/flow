@@ -79,7 +79,7 @@ function test(arr: [1] | [2, 3]): [1, 10] | [2, 3, 10] {
 
 // Spreading Object
 {
-  function test(iter: Object): string {
+  function test(iter: any): string {
     return [...iter]; // ok
   }
 }

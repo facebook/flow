@@ -27,7 +27,7 @@ let tests = [
   },
 
   function () {
-    type T = {foo: Object, bar: string, ...} | {baz: string, quux: string, ...};
+    type T = {foo: {...}, bar: string, ...} | {baz: string, quux: string, ...};
 
     function testAlwaysTruthyProp(t: T) {
       if (t.foo) {

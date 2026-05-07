@@ -3,7 +3,7 @@
 function takesABool(x: boolean) {}
 function takesAString(x: string) {}
 function takesANumber(x: number) {}
-function takesAnObject(x: Object) {}
+function takesAnObject(x: any) {}
 
 class Foo {}
 
@@ -160,5 +160,5 @@ takesAString(y.toLocaleString());
 // constructor
 //
 
-var k : Object = a.constructor;
+var k : any = a.constructor;
 (123).constructor;

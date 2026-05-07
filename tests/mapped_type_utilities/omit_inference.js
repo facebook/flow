@@ -5,7 +5,7 @@ function projectWithoutA<T extends {a: number, b: string}>(): Omit<T, 'a'> {
 projectWithoutA() as {b: string}; // ERROR
 
 function actionWithDefaults<
-  TArgs extends Object,
+  TArgs extends any,
   TDefaults extends Partial<TArgs>,
   TResult,
 >(
@@ -21,7 +21,7 @@ actionWithDefaults(
 ) as ({b: string}) => string; // ERROR
 
 function selectProvidedKey<
-  TArgs extends Object,
+  TArgs extends any,
   TDefaults extends Partial<TArgs>,
 >(
   defaults: TDefaults,
@@ -33,7 +33,7 @@ function selectProvidedKey<
 selectProvidedKey({a: 1}, 'a') as 'a';
 
 function actionWithoutLiteralKey<
-  TArgs extends Object,
+  TArgs extends any,
   TResult,
 >(
   create: (args: TArgs) => TResult,

@@ -19,7 +19,7 @@ declare class C {
 declare class D extends C {
   listen(port: number, hostname?: string, backlog?: number, callback?: Function): D;
   listen(path: string, callback?: Function): D;
-  listen(handle: Object, callback?: Function): D;
+  listen(handle: any, callback?: Function): D;
   close(callback?: Function): D;
   address(): number;
   connections: number;

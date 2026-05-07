@@ -1,3 +1,3 @@
 declare class A {
-  static prototype: Object; // error
+  static prototype: any; // error
 }

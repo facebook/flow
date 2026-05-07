@@ -75,7 +75,7 @@ declare function idx<T1, T2>(
   // Weird edge cases
   // Using an annotation obscures the type wrapper mechanism that idx() uses
   // around the parameter it passes to the callback
-  idx({}, (obj: Object) => obj.a.b.c) as ?number; // ok
+  idx({}, (obj: any) => obj.a.b.c) as ?number; // ok
   // Can't do anything with the callback parameter other than get elements and properties off of it
   idx({}, obj => obj()); // error
 }

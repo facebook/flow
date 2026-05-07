@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Classes may not have static fields named `constructor`. [ParseError]
 
-   2|   static constructor: Object; // error
+   2|   static constructor: any; // error
                ^^^^^^^^^^^
 
 
@@ -10,7 +10,7 @@ Error --------------------------------------------------------------------------
 
 Classes may not have static fields named `prototype`. [ParseError]
 
-   2|   static prototype: Object; // error
+   2|   static prototype: any; // error
                ^^^^^^^^^
 
 
@@ -18,7 +18,7 @@ Error ------------------------------------------------------------------------ d
 
 Classes may not have static fields named `constructor`. [ParseError]
 
-   2|   static constructor: Object; // error
+   2|   static constructor: any; // error
                ^^^^^^^^^^^
 
 
@@ -26,7 +26,7 @@ Error --------------------------------------------------------------------------
 
 Classes may not have static fields named `prototype`. [ParseError]
 
-   2|   static prototype: Object; // error
+   2|   static prototype: any; // error
                ^^^^^^^^^
 
 

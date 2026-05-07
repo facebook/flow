@@ -34,7 +34,7 @@ function param_anno(n:number):void {
 // another error on param UB, more typical of www (mis)use-cases
 // this one cribbed from API.atlas.js
 function param_anno2(
-    batchRequests: Array<{method: string; path: string; params: ?Object, ...}>,
+    batchRequests: Array<{method: string; path: string; params: any, ...}>,
   ): void {
 
     // error below, since we're assigning elements to batchRequests

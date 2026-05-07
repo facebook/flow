@@ -13,6 +13,6 @@ var decl_export_: {foo: any, bar: any} = Object.assign(
   export_,
 );
 
-let anyObj: Object = {};
+let anyObj: any = {};
 // $FlowExpectedError[unsafe-object-assign]
 Object.assign(anyObj, anyObj); // makes sure this terminates

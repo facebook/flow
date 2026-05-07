@@ -37,7 +37,7 @@ function for_scope() {
   b as string; // error: number ~> string
 }
 
-function for_in_scope(o: Object) {
+function for_in_scope(o: any) {
   let a = 0;
   let b: number | string = 0;
   for (let a in o) {

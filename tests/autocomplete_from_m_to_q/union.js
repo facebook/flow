@@ -1,6 +1,6 @@
 /* @flow */
 
-function foo(a: boolean, x: { bar: string }, y: Object) {
+function foo(a: boolean, x: { bar: string }, y: any) {
   var z;
   if (a) {
     z = x;

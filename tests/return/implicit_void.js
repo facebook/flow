@@ -375,7 +375,7 @@ function g16(): number { // Error
 }
 g16();
 
-function g17(x: Object): number { // Error
+function g17(x: any): number { // Error
   switch (x.foo) {
     case "bar": break;
     case "baz": break;

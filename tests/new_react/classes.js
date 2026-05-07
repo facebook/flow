@@ -27,7 +27,7 @@ class Foo extends React.Component<Props, State> {
   }
 
   componentWillReceiveProps(
-    nextProps: Object,
+    nextProps: any,
     nextContext: any
   ): void {
     this.qux();

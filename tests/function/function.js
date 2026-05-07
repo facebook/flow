@@ -16,7 +16,7 @@ class C {}
 var c: Function = C;
 
 function good(x: Function, MyThing: Function): number {
-  var o: Object = x; // Function is an Object
+  var o: any = x; // Function is an Object
   x.foo = 123;
   x['foo'] = 456;
   x();
@@ -28,7 +28,7 @@ function good(x: Function, MyThing: Function): number {
   return x.bar + x['bar'] + x.lala();
 }
 
-function bad(x: Function, y: Object): void {
+function bad(x: Function, y: any): void {
   var a: number = x; // Error
   var b: string = x; // Error
   var c: Function = y; // Object is not a Function

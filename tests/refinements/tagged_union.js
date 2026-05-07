@@ -105,7 +105,7 @@ let tests = [
   // non-objects on LHS
   function(
     x: Array<string>, y: string, z: number, q: boolean,
-    r: Object, s: Function, t: () => void
+    r: any, s: Function, t: () => void
   ) {
     if (x.length === 0) {}
     if (x.legnth === 0) { // Error, typos

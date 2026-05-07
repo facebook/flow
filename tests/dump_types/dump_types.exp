@@ -345,11 +345,11 @@
     "type":"(?any | string) => mixed"
   },
   {
-    "end":85,
+    "end":77,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":85,"line":8,"offset":217},
+      "end":{"column":77,"line":8,"offset":209},
       "source":"test.js",
       "start":{"column":33,"line":8,"offset":164},
       "type":"SourceFile"
@@ -360,11 +360,11 @@
     "type":"(?any | string) => mixed"
   },
   {
-    "end":85,
+    "end":77,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":85,"line":8,"offset":217},
+      "end":{"column":77,"line":8,"offset":209},
       "source":"test.js",
       "start":{"column":36,"line":8,"offset":167},
       "type":"SourceFile"
@@ -375,11 +375,11 @@
     "type":"(?any | string) => mixed"
   },
   {
-    "end":43,
+    "end":39,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":43,"line":8,"offset":175},
+      "end":{"column":39,"line":8,"offset":171},
       "source":"test.js",
       "start":{"column":37,"line":8,"offset":168},
       "type":"SourceFile"
@@ -387,14 +387,14 @@
     "path":"test.js",
     "reasons":[],
     "start":37,
-    "type":"?any"
+    "type":"any (explicit)"
   },
   {
-    "end":73,
+    "end":65,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":73,"line":8,"offset":205},
+      "end":{"column":65,"line":8,"offset":197},
       "source":"test.js",
       "start":{"column":37,"line":8,"offset":168},
       "type":"SourceFile"
@@ -405,146 +405,101 @@
     "type":"?any | string"
   },
   {
-    "end":43,
+    "end":45,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":43,"line":8,"offset":175},
+      "end":{"column":45,"line":8,"offset":177},
       "source":"test.js",
-      "start":{"column":38,"line":8,"offset":169},
+      "start":{"column":43,"line":8,"offset":174},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
-    "start":38,
+    "start":43,
     "type":"any (explicit)"
   },
   {
-    "end":43,
+    "end":55,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":43,"line":8,"offset":175},
+      "end":{"column":55,"line":8,"offset":187},
       "source":"test.js",
-      "start":{"column":38,"line":8,"offset":169},
+      "start":{"column":49,"line":8,"offset":180},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
-    "start":38,
-    "type":"any (explicit)"
-  },
-  {
-    "end":53,
-    "endline":8,
-    "line":8,
-    "loc":{
-      "end":{"column":53,"line":8,"offset":185},
-      "source":"test.js",
-      "start":{"column":47,"line":8,"offset":178},
-      "type":"SourceFile"
-    },
-    "path":"test.js",
-    "reasons":[],
-    "start":47,
-    "type":"?any"
-  },
-  {
-    "end":53,
-    "endline":8,
-    "line":8,
-    "loc":{
-      "end":{"column":53,"line":8,"offset":185},
-      "source":"test.js",
-      "start":{"column":48,"line":8,"offset":179},
-      "type":"SourceFile"
-    },
-    "path":"test.js",
-    "reasons":[],
-    "start":48,
-    "type":"any (explicit)"
-  },
-  {
-    "end":53,
-    "endline":8,
-    "line":8,
-    "loc":{
-      "end":{"column":53,"line":8,"offset":185},
-      "source":"test.js",
-      "start":{"column":48,"line":8,"offset":179},
-      "type":"SourceFile"
-    },
-    "path":"test.js",
-    "reasons":[],
-    "start":48,
-    "type":"any (explicit)"
-  },
-  {
-    "end":63,
-    "endline":8,
-    "line":8,
-    "loc":{
-      "end":{"column":63,"line":8,"offset":195},
-      "source":"test.js",
-      "start":{"column":57,"line":8,"offset":188},
-      "type":"SourceFile"
-    },
-    "path":"test.js",
-    "reasons":[],
-    "start":57,
+    "start":49,
     "type":"?string"
   },
   {
-    "end":63,
+    "end":55,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":63,"line":8,"offset":195},
+      "end":{"column":55,"line":8,"offset":187},
       "source":"test.js",
-      "start":{"column":58,"line":8,"offset":189},
+      "start":{"column":50,"line":8,"offset":181},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
-    "start":58,
+    "start":50,
     "type":"string"
   },
   {
-    "end":73,
+    "end":65,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":73,"line":8,"offset":205},
+      "end":{"column":65,"line":8,"offset":197},
       "source":"test.js",
-      "start":{"column":67,"line":8,"offset":198},
+      "start":{"column":59,"line":8,"offset":190},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
-    "start":67,
+    "start":59,
     "type":"?string"
   },
   {
-    "end":73,
+    "end":65,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":73,"line":8,"offset":205},
+      "end":{"column":65,"line":8,"offset":197},
       "source":"test.js",
-      "start":{"column":68,"line":8,"offset":199},
+      "start":{"column":60,"line":8,"offset":191},
       "type":"SourceFile"
     },
     "path":"test.js",
     "reasons":[],
-    "start":68,
+    "start":60,
     "type":"string"
   },
   {
-    "end":85,
+    "end":77,
     "endline":8,
     "line":8,
     "loc":{
-      "end":{"column":85,"line":8,"offset":217},
+      "end":{"column":77,"line":8,"offset":209},
+      "source":"test.js",
+      "start":{"column":71,"line":8,"offset":202},
+      "type":"SourceFile"
+    },
+    "path":"test.js",
+    "reasons":[],
+    "start":71,
+    "type":"mixed"
+  },
+  {
+    "end":78,
+    "endline":8,
+    "line":8,
+    "loc":{
+      "end":{"column":78,"line":8,"offset":210},
       "source":"test.js",
       "start":{"column":79,"line":8,"offset":210},
       "type":"SourceFile"
@@ -552,21 +507,6 @@
     "path":"test.js",
     "reasons":[],
     "start":79,
-    "type":"mixed"
-  },
-  {
-    "end":86,
-    "endline":8,
-    "line":8,
-    "loc":{
-      "end":{"column":86,"line":8,"offset":218},
-      "source":"test.js",
-      "start":{"column":87,"line":8,"offset":218},
-      "type":"SourceFile"
-    },
-    "path":"test.js",
-    "reasons":[],
-    "start":87,
     "type":"void"
   },
   {
@@ -574,9 +514,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":22,"line":9,"offset":244},
+      "end":{"column":22,"line":9,"offset":236},
       "source":"test.js",
-      "start":{"column":1,"line":9,"offset":222},
+      "start":{"column":1,"line":9,"offset":214},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -589,9 +529,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":22,"line":9,"offset":244},
+      "end":{"column":22,"line":9,"offset":236},
       "source":"test.js",
-      "start":{"column":1,"line":9,"offset":222},
+      "start":{"column":1,"line":9,"offset":214},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -604,9 +544,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":63,"line":9,"offset":285},
+      "end":{"column":63,"line":9,"offset":277},
       "source":"test.js",
-      "start":{"column":1,"line":9,"offset":222},
+      "start":{"column":1,"line":9,"offset":214},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -619,9 +559,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":62,"line":9,"offset":284},
+      "end":{"column":62,"line":9,"offset":276},
       "source":"test.js",
-      "start":{"column":24,"line":9,"offset":245},
+      "start":{"column":24,"line":9,"offset":237},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -634,9 +574,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":27,"line":9,"offset":249},
+      "end":{"column":27,"line":9,"offset":241},
       "source":"test.js",
-      "start":{"column":25,"line":9,"offset":246},
+      "start":{"column":25,"line":9,"offset":238},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -649,9 +589,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":27,"line":9,"offset":249},
+      "end":{"column":27,"line":9,"offset":241},
       "source":"test.js",
-      "start":{"column":25,"line":9,"offset":246},
+      "start":{"column":25,"line":9,"offset":238},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -664,9 +604,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":27,"line":9,"offset":249},
+      "end":{"column":27,"line":9,"offset":241},
       "source":"test.js",
-      "start":{"column":28,"line":9,"offset":249},
+      "start":{"column":28,"line":9,"offset":241},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -679,9 +619,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":28,"line":9,"offset":250},
+      "end":{"column":28,"line":9,"offset":242},
       "source":"test.js",
-      "start":{"column":29,"line":9,"offset":250},
+      "start":{"column":29,"line":9,"offset":242},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -694,9 +634,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":35,"line":9,"offset":257},
+      "end":{"column":35,"line":9,"offset":249},
       "source":"test.js",
-      "start":{"column":33,"line":9,"offset":254},
+      "start":{"column":33,"line":9,"offset":246},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -709,9 +649,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":35,"line":9,"offset":257},
+      "end":{"column":35,"line":9,"offset":249},
       "source":"test.js",
-      "start":{"column":33,"line":9,"offset":254},
+      "start":{"column":33,"line":9,"offset":246},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -724,9 +664,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":44,"line":9,"offset":266},
+      "end":{"column":44,"line":9,"offset":258},
       "source":"test.js",
-      "start":{"column":33,"line":9,"offset":254},
+      "start":{"column":33,"line":9,"offset":246},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -739,9 +679,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":62,"line":9,"offset":284},
+      "end":{"column":62,"line":9,"offset":276},
       "source":"test.js",
-      "start":{"column":33,"line":9,"offset":254},
+      "start":{"column":33,"line":9,"offset":246},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -754,9 +694,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":44,"line":9,"offset":266},
+      "end":{"column":44,"line":9,"offset":258},
       "source":"test.js",
-      "start":{"column":41,"line":9,"offset":262},
+      "start":{"column":41,"line":9,"offset":254},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -769,9 +709,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":56,"line":9,"offset":278},
+      "end":{"column":56,"line":9,"offset":270},
       "source":"test.js",
-      "start":{"column":48,"line":9,"offset":269},
+      "start":{"column":48,"line":9,"offset":261},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -784,9 +724,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":56,"line":9,"offset":278},
+      "end":{"column":56,"line":9,"offset":270},
       "source":"test.js",
-      "start":{"column":48,"line":9,"offset":269},
+      "start":{"column":48,"line":9,"offset":261},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -799,9 +739,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":62,"line":9,"offset":284},
+      "end":{"column":62,"line":9,"offset":276},
       "source":"test.js",
-      "start":{"column":60,"line":9,"offset":281},
+      "start":{"column":60,"line":9,"offset":273},
       "type":"SourceFile"
     },
     "path":"test.js",
@@ -814,9 +754,9 @@
     "endline":9,
     "line":9,
     "loc":{
-      "end":{"column":62,"line":9,"offset":284},
+      "end":{"column":62,"line":9,"offset":276},
       "source":"test.js",
-      "start":{"column":60,"line":9,"offset":281},
+      "start":{"column":60,"line":9,"offset":273},
       "type":"SourceFile"
     },
     "path":"test.js",

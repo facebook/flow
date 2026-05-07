@@ -18,7 +18,7 @@ declare function JSX<
 declare function JSX<
   Children: ReadonlyArray<unknown>,
   Elem,
-  Props: Object,
+  Props: any,
   C: (props: Props, children: Children) => Elem,
 >(
   component: C,

@@ -18,4 +18,4 @@ var g: { (x: empty): void, ... } = (x: number) => { x * 2 } // param type (empty
 
 // A function can be an object
 var y : {...} = (x: unknown) => "hi"
-var z : Object = (x) => "hi"
+var z : any = (x) => "hi"

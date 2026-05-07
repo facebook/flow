@@ -31,7 +31,7 @@ function _for(n: number) {
   f(); // error, possibly undefined
 }
 
-function _for_in(obj: Object) {
+function _for_in(obj: any) {
   for (var p in obj) {
     var f = function () {};
   }

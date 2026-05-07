@@ -34,7 +34,7 @@ let tests = [
   function (x: Function) {
     !x as false; // ok, functions are always truthy
   },
-  function (x: Object) {
+  function (x: {...}) {
     !x as false; // ok, objects are always truthy
   },
   function (x: string) {

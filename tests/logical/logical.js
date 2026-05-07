@@ -77,7 +77,7 @@ function logical2h(x: {a: number}): string {
 /**
  * A literal on the left side of &&
  */
-function logical2i(x: Object): string {
+function logical2i(x: any): string {
   return x && 'foo';
 }
 
@@ -601,7 +601,7 @@ function logical22() {
  */
 
 declare class RecordInstance<X> {}
-type RecordOf<T extends Object> = RecordInstance<T> & T;
+type RecordOf<T extends any> = RecordInstance<T> & T;
 type Rec = RecordOf<{f: number}>;
 
 function logical7f(a: ?Rec, b: Rec): Rec {

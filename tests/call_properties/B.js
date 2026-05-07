@@ -17,4 +17,4 @@ var g: { (x: string): void, ... } = function(x: unknown) { } // param type
 
 // A function can be an object
 var y : {...} = function (x: number): string { return "hi"; };
-var z : Object = function (x: number): string { return "hi"; };
+var z : any = function (x: number): string { return "hi"; };

@@ -1,3 +1,3 @@
 class A {
-  static constructor: Object; // error
+  static constructor: any; // error
 }

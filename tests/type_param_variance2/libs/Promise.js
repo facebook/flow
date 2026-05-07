@@ -41,7 +41,7 @@ declare class Promise<+R> { // intentional-libdef-override
   ): Promise<Array<T>>;
   static race<T>(promises: Array<Promise<T>>): Promise<T>;
 
-  static allObject<T extends Object>(
+  static allObject<T extends any>(
     promisesByKey: T
   ): Promise<{[key: keyof T]: any}>;
 }

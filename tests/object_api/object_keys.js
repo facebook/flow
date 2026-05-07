@@ -13,7 +13,7 @@ Object.keys(dict).forEach(k => {
   Object.keys(x) as Array<string>; // OK
 }
 
-var any: Object = {};
+var any: any = {};
 Object.keys(any) as Array<number>; // error, Array<string>
 
 class Foo {

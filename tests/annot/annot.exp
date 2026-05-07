@@ -138,8 +138,8 @@ missing in object literal [1] but exists in object type [2]. [incompatible-type]
 
 References:
    annot.js:37:26
-   37|     batchRequests: Array<{method: string; path: string; params: ?Object, ...}>,
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   37|     batchRequests: Array<{method: string; path: string; params: any, ...}>,
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- annot.js:55:18

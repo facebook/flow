@@ -5,5 +5,5 @@ foo(0);
 var a:string = num;
 
 // test deduping of inferred types
-function nullToUndefinedWrapper(f: (?Object | ?Object | ?string | ?string) => unknown) {}
+function nullToUndefinedWrapper(f: (any | any | ?string | ?string) => unknown) {}
 nullToUndefinedWrapper((val) => val === null ? undefined : val);

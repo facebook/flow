@@ -9,7 +9,7 @@ class BooleanLiteralArrayFields {
     this.#enabled = enabled;
   }
 
-  getFields(xs: Array<string>): Array<Object> {
+  getFields(xs: Array<string>): Array<any> {
     const fields = xs.map(() => {
       if (this.#enabled) {
         const nested = () => callInNestedFunction();

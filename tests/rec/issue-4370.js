@@ -1,4 +1,4 @@
-export const checkComponent = (obj: any[]): Object[] =>
+export const checkComponent = (obj: any[]): any[] =>
   obj.reduce((acc, x) => {
     if (x === undefined) {
       return [...acc, {}];

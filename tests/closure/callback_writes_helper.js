@@ -1,5 +1,5 @@
 export function withDefaults<
-  TArgs extends Object,
+  TArgs extends any,
   TDefaults extends Partial<TArgs>,
   TResult,
 >(

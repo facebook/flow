@@ -10,9 +10,9 @@ function foo(this: This): boolean {
 }
 
 class Bar {
-  q: ?Object;
+  q: any;
 
-  baz(o: Object): void {
+  baz(o: any): void {
     if (!this.q) {
       // There was a bug that make new-env read the cached type `This` from the `foo` function above.
       this.q = o;
