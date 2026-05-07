@@ -58,9 +58,9 @@ Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [in
       ^^
 
 References:
-   test_interface_import.js:6:17
-   6| declare var o1: MyType;
-                      ^^^^^^ [1]
+   test_interface_import.js:6:19
+   6| declare const o1: MyType;
+                        ^^^^^^ [1]
    test_interface_import.js:8:7
    8| o1 as empty; // error
             ^^^^^ [2]

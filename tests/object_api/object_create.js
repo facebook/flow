@@ -15,7 +15,7 @@ Object.create(new C()) as C;
 
 // error, object types don't structurally match instances
 type O = {foo: string};
-declare var o: O;
+declare const o: O;
 o as C;
 
 Object.create({} as Object) as C; // OK: AnyT might be C, who knows

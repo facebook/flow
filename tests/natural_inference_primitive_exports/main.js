@@ -5,7 +5,7 @@ import default_ from './es6_default';
 import cjs_prim from './cjs_primitive';
 import cjs_obj from './cjs_obj';
 
-declare var _: any;
+declare const _: any;
 
 function test_default(x: typeof default_) {
   x as "abc"; // error string ~> "abc"

@@ -344,9 +344,9 @@ because interfaces do not track the own-ness of their properties. Try using an o
                 ^^^^^^ [1]
 
 References:
-   test.js:27:17
-   27| declare var i : I;
-                       ^ [2]
+   test.js:27:19
+   27| declare const i : I;
+                         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:84:10
@@ -360,9 +360,9 @@ because interfaces do not track the own-ness of their properties. Try using an o
                 ^^^^^^ [1]
 
 References:
-   test.js:28:17
-   28| declare var j : J;
-                       ^ [2]
+   test.js:28:19
+   28| declare const j : J;
+                         ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:87:7

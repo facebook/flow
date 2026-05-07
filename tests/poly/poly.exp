@@ -141,9 +141,9 @@ References:
    inout.js:4:16
    4| class C<+Out, -In: Out = Out> {}
                      ^^ [1]
-   inout.js:6:18
-   6| declare var x: C<B>;
-                       ^ [2]
+   inout.js:6:20
+   6| declare const x: C<B>;
+                         ^ [2]
    inout.js:7:8
    7| x as C<A>; // error: A ~> B in default-expanded type
              ^ [3]

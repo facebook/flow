@@ -1,5 +1,5 @@
 type O = {...empty, ...};
-declare var o: O;
+declare const o: O;
 42 as O; // Error: number ~> empty
 o as empty; // OK: empty ~> empty
 

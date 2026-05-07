@@ -30,7 +30,7 @@ export type ObjWithTypeofAbc = { f: typeof abc };
 
 // Local checks
 
-declare var _: any;
+declare const _: any;
 
 function test_string() {
   abc as "abc"; // okay
@@ -161,7 +161,7 @@ function test_objlit_as_const() {
 }
 
 function test_objlit_nullish() {
-  declare var n0: ?1;
+  declare const n0: ?1;
 
   const obj1 = { f: n0 ?? one };
   obj1 as {f: 1}; // error number ~> 1
@@ -177,15 +177,15 @@ function test_objlit_nullish() {
 }
 
 function test_conditional_1() {
-  declare var cond: boolean;
+  declare const cond: boolean;
   const x: 'abc'|'def' = cond ? abc : def; // okay
   const y = cond ? abc : def;
   ({y} as Readonly<{y: 'abc'|'def'}>); // okay
 }
 
 function test_conditional_2() {
-  declare var cond: boolean;
-  declare var foo: () => "foo";
+  declare const cond: boolean;
+  declare const foo: () => "foo";
 
   const x1 = cond ? "a" : "b";
   const o1 = {f: x1};
@@ -224,14 +224,14 @@ function test_useState_4() {
 }
 
 function test_useState_5() {
-  declare var x: typeof one;
+  declare const x: typeof one;
   const [x_, set] = useState(x);
   x_ as 1; // okay
   set(2); // error 2 ~> 1
 }
 
 function test_useState_6() {
-  declare var x: typeof one;
+  declare const x: typeof one;
   const [o, set] = useState({f: x});
   set({f: 1}); // okay
   set({f: 2}); // error
@@ -284,7 +284,7 @@ function test_apply() {
 }
 
 function test_switch_case() {
-  declare var x: number;
+  declare const x: number;
   switch (x) {
     case one:
       x as 1; // okay
@@ -292,20 +292,20 @@ function test_switch_case() {
 }
 
 function test_eq_refinement() {
-  declare var x: number;
+  declare const x: number;
   if (x === one) {
     x as 1; // okay
   }
 }
 
 function test_nullish_coalesce() {
-  declare var n0: ?number;
+  declare const n0: ?number;
   const n1 = n0 ?? one;
   n1 as number; // okay
 }
 
 function test_computed_prop_1() {
-  declare var x: {
+  declare const x: {
     prop1: number,
     prop2: number,
     prop3: () => void,
@@ -325,7 +325,7 @@ function test_computed_prop_2() {
 }
 
 function test_sent_refinement() {
-  declare var x: {tag: 'abc'; hi: 'hi'} | {tag: 'bye'};
+  declare const x: {tag: 'abc'; hi: 'hi'} | {tag: 'bye'};
   if (x.tag === abc) {
       x.hi as string; // okay
   }
@@ -346,7 +346,7 @@ function test_logical() {
   x2 = 5; // okay
   x2 as 5; // TODO(?)  error number ~> 5 (for now we use the local type)
 
-  declare var maybeOne: ?1;
+  declare const maybeOne: ?1;
   const two = 2;
 
   const nullish = maybeOne ?? two;
@@ -388,7 +388,7 @@ function test_synthesis_literals_2() {
 }
 
 function test_synthesis_literals_3() {
-  declare var cp: {bar: number};
+  declare const cp: {bar: number};
   declare function optional<P>(x: Readonly<{cp: P, ...P}>): P;
   const o = optional({cp, bar: 3}); // ok
 }
@@ -406,7 +406,7 @@ function test_hint_passes_through_array() {
 }
 
 function test_pattern_match() {
-  declare var n: number;
+  declare const n: number;
   const m1 = match (n) {
     1 => 'a',
     _ => 'b',
@@ -449,7 +449,7 @@ function test_class_bound() {
 }
 
 function test_reduce() {
-  declare var arr: Array<void>;
+  declare const arr: Array<void>;
   const x1 = arr.reduce((acc, _) => acc, [0]);
   x1[0] = 1; // okay x1 inferred as Array<number>
   x1[0] = "a"; // error string ~> number
@@ -463,7 +463,7 @@ function test_reduce() {
 }
 
 function test_logical_instantiation() {
-  declare var zerOrOne: 0|1;
+  declare const zerOrOne: 0|1;
   const x = zerOrOne || 2;
 
   const [arr, _] = useState([x]);
@@ -514,7 +514,7 @@ function test_conditional_pass_flag() {
   const prop = 'prop';
   const obj = { prop: {} };
 
-  declare var cond: boolean;
+  declare const cond: boolean;
   obj[cond ? prop : 'prop']; // okay access of prop
   obj[cond ? 'prop' : prop]; // okay access of prop
 }
@@ -541,7 +541,7 @@ function test_async() {
 
 function test_logical_nullish() {
   declare const x: ?('a' | 'b');
-  declare var arr: Array<void>;
+  declare const arr: Array<void>;
   const mappedArr = arr.map(_ => ({
     prop: x ?? 'c',
   }));
@@ -598,8 +598,8 @@ function tests_unary_negation() {
 }
 
 function test_nullish_coalesce_2() {
-  declare var map: {prop: unknown};
-  declare var p: void | 'prop';
+  declare const map: {prop: unknown};
+  declare const p: void | 'prop';
   map[p ?? 'prop']; // okay
 }
 
@@ -642,14 +642,14 @@ function test_type_guard_context() {
   };
   const isA_inferred = (value: Union) => value.valueType === 'A';
 
-  declare var x: Union;
+  declare const x: Union;
   if (isA_inferred(x)) {
     x as A; // okay
   }
 }
 
 function test_contextual_typing_rest() {
-  declare var fn: (
+  declare const fn: (
     fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
   ) => void;
 
@@ -665,7 +665,7 @@ function test_useState_12() {
 }
 
 function test_call_enclosing_context() {
-  declare var obj: {a: number, b: string};
+  declare const obj: {a: number, b: string};
   declare function getKey<T>(key: T): T;
   obj[getKey('a')]; // okay
   obj[getKey('c')]; // error 'c' is missing in obj

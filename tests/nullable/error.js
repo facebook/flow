@@ -3,7 +3,7 @@
  * @flow
  */
 
-declare var any: any;
+declare const any: any;
 
 any as ?number as number;
 any as ?number as null;

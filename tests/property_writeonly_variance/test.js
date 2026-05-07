@@ -3,8 +3,8 @@
 // 1. Object types — writeonly equivalent to -
 type Wo = { writeonly p: number };
 type Mn = { -p: number };
-declare var wo: Wo;
-declare var mn: Mn;
+declare const wo: Wo;
+declare const mn: Mn;
 wo as Mn; // ok
 mn as Wo; // ok
 
@@ -24,7 +24,7 @@ interface I {
 // 4. Indexer
 type Idx = { writeonly [string]: number };
 type IdxMinus = { -[string]: number };
-declare var ix: Idx;
+declare const ix: Idx;
 ix as IdxMinus; // ok
 
 // 5. Tuples
@@ -36,7 +36,7 @@ type R = { writeonly: string };
 
 // 7. writeonly property: reads error, writes succeed
 type W = { writeonly p: number };
-declare var w: W;
+declare const w: W;
 w.p as number; // error: write-only
 w.p = 0; // ok
 

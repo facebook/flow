@@ -1,5 +1,5 @@
 import typeof T from './nested_frozen_object';
-declare var o: T;
+declare const o: T;
 
 o.a as number;
 

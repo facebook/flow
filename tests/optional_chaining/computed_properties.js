@@ -3,11 +3,11 @@
 type X = {foo: number, ...};
 type Y = {bar: X, baz: ?X, ...};
 
-declare var x1: ?X;
-declare var x2: X;
+declare const x1: ?X;
+declare const x2: X;
 
-declare var y1: ?Y;
-declare var y2: Y;
+declare const y1: ?Y;
+declare const y2: Y;
 
 x1?.['foo'] as empty;
 x2?.['foo'] as empty;

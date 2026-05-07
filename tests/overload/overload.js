@@ -27,7 +27,7 @@ a.bar({ a: 0 }); // ok
 a.bar({ a: "hey" }); // ok
 a.bar({ a: true }); // error, function cannot be called on intersection type
 
-declare var x: { a: boolean; } & { b: string };
+declare const x: { a: boolean; } & { b: string };
 
 a.bar(x); // error with nested intersection info (outer for bar, inner for x)
 

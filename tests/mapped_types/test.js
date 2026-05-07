@@ -74,13 +74,13 @@ type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
 // Mapped types with indexers
 {
   type MappedIndexer = Mapped<WithIndexer>;
-  declare var mappedIndexer: MappedIndexer;
+  declare const mappedIndexer: MappedIndexer;
 
   mappedIndexer.foo as number; // ERROR
   mappedIndexer.bar as string; // ERROR
   mappedIndexer as {foo: Box<number>, [string]: Box<string>}; // OK
 
-  declare var indexer: {foo: Box<number>, [string]: Box<string>};
+  declare const indexer: {foo: Box<number>, [string]: Box<string>};
   indexer as MappedIndexer; // OK
 }
 
@@ -128,7 +128,7 @@ type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
     [key in keyof O]: ConstrainedBox<O[key]>,
   };
 
-  declare var constrained: MappedConstrained<O>; // ERROR HERE, NOT IN DEFINITION OF MAPPEDCONSTRAINED
+  declare const constrained: MappedConstrained<O>; // ERROR HERE, NOT IN DEFINITION OF MAPPEDCONSTRAINED
   constrained as {foo: {contents: number}}; // OK
 }
 

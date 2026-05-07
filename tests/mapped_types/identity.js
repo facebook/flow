@@ -1,8 +1,8 @@
-declare var any: any;
+declare const any: any;
 
 type IdentityMap<O> = {[K in keyof O]: O[K]};
 type Foo = IdentityMap<{ a: number, b: number }>;
-declare var foo: Foo;
+declare const foo: Foo;
 
 ({
   a: 42, // OK

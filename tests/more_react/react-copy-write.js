@@ -40,5 +40,5 @@ export type Store<T> = {
   createSelector<R>(Selector<T, R>): Selector<T, R>,
  ...};
 
-declare var store : Store<number>;
+declare const store : Store<number>;
 <store.Consumer></store.Consumer>

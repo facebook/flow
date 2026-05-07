@@ -1,6 +1,6 @@
 //@flow
 
-declare var str: string;
+declare const str: string;
 
 const x0 = []; // error
 

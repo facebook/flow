@@ -1,5 +1,5 @@
-declare var pstr: Promise<string>;
-declare var pnum: Promise<number>;
+declare const pstr: Promise<string>;
+declare const pnum: Promise<number>;
 
 Promise.all([
   pstr,

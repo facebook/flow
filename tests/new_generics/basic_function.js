@@ -1,6 +1,6 @@
 //@flow
 
-declare var condition: number;
+declare const condition: number;
 
 function f<X>(x: X): X {
   var y: X = x;

@@ -8,7 +8,7 @@ type ObjectComponent = {
   (props: {foo?: number, bar: number}): React.Node,
  ...};
 
-declare var Component: ObjectComponent;
+declare const Component: ObjectComponent;
 
 const _a = <Component />; // Error, missing bar
 const _b = <Component bar={3} />; // Ok

@@ -1,5 +1,5 @@
 // @flow
 
-declare var x: any;
+declare const x: any;
 
 module.exports = { ...x };

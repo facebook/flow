@@ -144,9 +144,9 @@ Cannot cast object literal to `O1` because in property `p`: `U` [1] is incompati
            ^
 
 References:
-   type.js:5:16
-    5| declare var y: U;
-                      ^ [1]
+   type.js:5:18
+    5| declare const y: U;
+                        ^ [1]
    type.js:10:18
    10| type O1 = {...{p:T, ...}, ...};
                         ^ [2]
@@ -190,9 +190,9 @@ Cannot cast object literal to `O2` because in property `p`: `U` [1] is incompati
            ^
 
 References:
-   type.js:5:16
-    5| declare var y: U;
-                      ^ [1]
+   type.js:5:18
+    5| declare const y: U;
+                        ^ [1]
    type.js:20:19
    20| type O2 = {...{p?:T, ...}, ...};
                          ^ [2]
@@ -222,9 +222,9 @@ Cannot cast `o4` to object type because inexact object type [1] is incompatible 
        ^^
 
 References:
-   type.js:34:17
-   34| declare var o4: O4;
-                       ^^ [1]
+   type.js:34:19
+   34| declare const o4: O4;
+                         ^^ [1]
    type.js:36:7
    36| o4 as {p:T}; // error: not exact
              ^^^^^ [2]
@@ -254,9 +254,9 @@ Cannot cast object literal to `O4` because in property `p`: `U` [1] is incompati
            ^
 
 References:
-   type.js:5:16
-    5| declare var y: U;
-                      ^ [1]
+   type.js:5:18
+    5| declare const y: U;
+                        ^ [1]
    type.js:33:18
    33| type O4 = {...{p:T}, ...};
                         ^ [2]
@@ -272,9 +272,9 @@ Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but
        ^^^
 
 References:
-   type.js:7:18
-    7| declare var nil: {};
-                        ^^ [1]
+   type.js:7:20
+    7| declare const nil: {};
+                          ^^ [1]
    type.js:47:8
    47| nil as O5; // error: property `p` not found
               ^^ [2]
@@ -289,9 +289,9 @@ Cannot cast object literal to `O5` because in property `p`: `U` [1] is incompati
            ^
 
 References:
-   type.js:5:16
-    5| declare var y: U;
-                      ^ [1]
+   type.js:5:18
+    5| declare const y: U;
+                        ^ [1]
    type.js:43:18
    43| type O5 = {...{p:T}};
                         ^ [2]
@@ -336,9 +336,9 @@ Cannot cast object literal to `O6` because in property `p`: `T` [1] is incompati
            ^
 
 References:
-   type.js:2:16
-    2| declare var x: T;
-                      ^ [1]
+   type.js:2:18
+    2| declare const x: T;
+                        ^ [1]
    type.js:53:32
    53| type O6 = {...{p:T, ...},...{p:U}, ...};
                                       ^ [2]
@@ -478,9 +478,9 @@ Cannot cast object literal to `O14` because in property `p`: `U` [1] is incompat
             ^
 
 References:
-   type.js:5:16
-     5| declare var y: U;
-                       ^ [1]
+   type.js:5:18
+     5| declare const y: U;
+                         ^ [1]
    type.js:99:23
     99| type O14 = {...{...{p:T}, ...}, ...};
                               ^ [2]
@@ -637,26 +637,26 @@ References:
                ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_dict.js:4:17
+Error ------------------------------------------------------------------------------------------------ type_dict.js:4:19
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact and may have a property key that conflicts
 with string [3] or a property value that conflicts with `T` [4]. Try making object type [2] exact.
 [cannot-spread-inexact]
 
-   type_dict.js:4:17
-   4| declare var o1: {...{[string]:T},...{p:U, ...}, ...}; // Error, can't spread because inexact may clash with T
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_dict.js:4:19
+   4| declare const o1: {...{[string]:T},...{p:U, ...}, ...}; // Error, can't spread because inexact may clash with T
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   type_dict.js:4:37
-   4| declare var o1: {...{[string]:T},...{p:U, ...}, ...}; // Error, can't spread because inexact may clash with T
-                                          ^^^^^^^^^^ [2]
-   type_dict.js:4:23
-   4| declare var o1: {...{[string]:T},...{p:U, ...}, ...}; // Error, can't spread because inexact may clash with T
-                            ^^^^^^ [3]
-   type_dict.js:4:31
-   4| declare var o1: {...{[string]:T},...{p:U, ...}, ...}; // Error, can't spread because inexact may clash with T
-                                    ^ [4]
+   type_dict.js:4:39
+   4| declare const o1: {...{[string]:T},...{p:U, ...}, ...}; // Error, can't spread because inexact may clash with T
+                                            ^^^^^^^^^^ [2]
+   type_dict.js:4:25
+   4| declare const o1: {...{[string]:T},...{p:U, ...}, ...}; // Error, can't spread because inexact may clash with T
+                              ^^^^^^ [3]
+   type_dict.js:4:33
+   4| declare const o1: {...{[string]:T},...{p:U, ...}, ...}; // Error, can't spread because inexact may clash with T
+                                      ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ type_empty.js:3:1
@@ -842,9 +842,9 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
       ^^
 
 References:
-   type_intersection_optional.js:4:17
-   4| declare var o1: {...{p:T, ...}&{p:U, ...}, ...};
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_intersection_optional.js:4:19
+   4| declare const o1: {...{p:T, ...}&{p:U, ...}, ...};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    type_intersection_optional.js:5:11
    5| o1 as {p?:T&U, ...}; // ok
                 ^^^ [2]
@@ -868,9 +868,9 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
       ^^
 
 References:
-   type_intersection_optional.js:7:17
-   7| declare var o2: {...{p?:T, ...}&{p:U, ...}, ...};
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_intersection_optional.js:7:19
+   7| declare const o2: {...{p?:T, ...}&{p:U, ...}, ...};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    type_intersection_optional.js:8:11
    8| o2 as {p?:T&U, ...}; // ok
                 ^^^ [2]
@@ -894,9 +894,9 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^
 
 References:
-   type_intersection_optional.js:10:17
-   10| declare var o3: {...{p:T, ...}&{p?:U, ...}, ...};
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_intersection_optional.js:10:19
+   10| declare const o3: {...{p:T, ...}&{p?:U, ...}, ...};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    type_intersection_optional.js:11:11
    11| o3 as {p?:T&U, ...}; // ok
                  ^^^ [2]
@@ -923,9 +923,9 @@ References:
    type_intersection_optional.js:53:8
    53| o17 as {p?:T,q?:U, ...}; // ok
               ^^^^^^^^^^^^^^^^ [2]
-   type_intersection_optional.js:52:18
-   52| declare var o17: {...{p:T, ...}&{q:U, ...}, ...};
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   type_intersection_optional.js:52:20
+   52| declare const o17: {...{p:T, ...}&{q:U, ...}, ...};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:56:1
@@ -943,15 +943,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^^
 
 References:
-   type_intersection_optional.js:55:37
-   55| declare var o18: {...{p?:T, ...}&{q:U, ...}, ...};
-                                           ^ [1]
+   type_intersection_optional.js:55:39
+   55| declare const o18: {...{p?:T, ...}&{q:U, ...}, ...};
+                                             ^ [1]
    type_intersection_optional.js:56:17
    56| o18 as {p?:T,q?:U, ...}; // ok
                        ^ [2]
-   type_intersection_optional.js:55:18
-   55| declare var o18: {...{p?:T, ...}&{q:U, ...}, ...};
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   type_intersection_optional.js:55:20
+   55| declare const o18: {...{p?:T, ...}&{q:U, ...}, ...};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    type_intersection_optional.js:56:8
    56| o18 as {p?:T,q?:U, ...}; // ok
               ^^^^^^^^^^^^^^^^ [4]
@@ -972,15 +972,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^^
 
 References:
-   type_intersection_optional.js:58:25
-   58| declare var o19: {...{p:T, ...}&{q?:U, ...}, ...};
-                               ^ [1]
+   type_intersection_optional.js:58:27
+   58| declare const o19: {...{p:T, ...}&{q?:U, ...}, ...};
+                                 ^ [1]
    type_intersection_optional.js:59:12
    59| o19 as {p?:T,q?:U, ...}; // ok
                   ^ [2]
-   type_intersection_optional.js:58:18
-   58| declare var o19: {...{p:T, ...}&{q?:U, ...}, ...};
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   type_intersection_optional.js:58:20
+   58| declare const o19: {...{p:T, ...}&{q?:U, ...}, ...};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    type_intersection_optional.js:59:8
    59| o19 as {p?:T,q?:U, ...}; // ok
               ^^^^^^^^^^^^^^^^ [4]
@@ -1001,15 +1001,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^^
 
 References:
-   type_intersection_optional.js:64:31
-   64| declare var o21: {...{p:T}&{q:U, ...}, ...};
-                                     ^ [1]
+   type_intersection_optional.js:64:33
+   64| declare const o21: {...{p:T}&{q:U, ...}, ...};
+                                       ^ [1]
    type_intersection_optional.js:65:16
    65| o21 as {p:T,q?:U, ...}; // ok
                       ^ [2]
-   type_intersection_optional.js:64:18
-   64| declare var o21: {...{p:T}&{q:U, ...}, ...};
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   type_intersection_optional.js:64:20
+   64| declare const o21: {...{p:T}&{q:U, ...}, ...};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    type_intersection_optional.js:65:8
    65| o21 as {p:T,q?:U, ...}; // ok
               ^^^^^^^^^^^^^^^ [4]
@@ -1024,9 +1024,9 @@ Cannot get `o1.someProp` because property `someProp` is missing in object type [
          ^^^^^^^^
 
 References:
-   type_mixed.js:2:17
-   2| declare var o1: O1;
-                      ^^ [1]
+   type_mixed.js:2:19
+   2| declare const o1: O1;
+                        ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:7:1
@@ -1053,9 +1053,9 @@ Cannot get `o2.someProp` because property `someProp` is missing in object type [
          ^^^^^^^^
 
 References:
-   type_mixed.js:6:17
-   6| declare var o2: O2;
-                      ^^ [1]
+   type_mixed.js:6:19
+   6| declare const o2: O2;
+                        ^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:11:1
@@ -1118,9 +1118,9 @@ Cannot get `o3.c` because property `c` is missing in object type [1]. [prop-miss
           ^
 
 References:
-   type_mixed.js:10:17
-   10| declare var o3: O3;
-                       ^^ [1]
+   type_mixed.js:10:19
+   10| declare const o3: O3;
+                         ^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:16:7
@@ -1200,9 +1200,9 @@ References:
    type_union.js:7:29
    7| type O1 = {...{p:T, ...}|{q:U, ...}, ...};
                                   ^ [2]
-   type_union.js:8:17
-   8| declare var o1: O1;
-                      ^^ [3]
+   type_union.js:8:19
+   8| declare const o1: O1;
+                        ^^ [3]
    type_union.js:9:7
    9| o1 as {p?:T, ...}|{q?:U, ...}; // ok
             ^^^^^^^^^^^ [4]
@@ -1237,9 +1237,9 @@ References:
    type_union.js:7:18
    7| type O1 = {...{p:T, ...}|{q:U, ...}, ...};
                        ^ [2]
-   type_union.js:8:17
-   8| declare var o1: O1;
-                      ^^ [3]
+   type_union.js:8:19
+   8| declare const o1: O1;
+                        ^^ [3]
    type_union.js:9:19
    9| o1 as {p?:T, ...}|{q?:U, ...}; // ok
                         ^^^^^^^^^^^ [4]
@@ -1248,41 +1248,41 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:14:17
+Error ---------------------------------------------------------------------------------------------- type_union.js:14:19
 
 Flow cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer number [3] may
 overwrite properties with explicit keys in a way that Flow cannot track. Try spreading object type [2] first or remove
 the indexer. [cannot-spread-indexer]
 
-   type_union.js:14:17
-   14| declare var x1: {...Union1, ...Union2, ...}; // Error, indexer on right
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_union.js:14:19
+   14| declare const x1: {...Union1, ...Union2, ...}; // Error, indexer on right
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   type_union.js:14:32
-   14| declare var x1: {...Union1, ...Union2, ...}; // Error, indexer on right
-                                      ^^^^^^ [2]
+   type_union.js:14:34
+   14| declare const x1: {...Union1, ...Union2, ...}; // Error, indexer on right
+                                        ^^^^^^ [2]
    type_union.js:12:33
    12| type Union2 = {bar: number} | {[number]: string};
                                        ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:17:17
+Error ---------------------------------------------------------------------------------------------- type_union.js:17:19
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `foo` with a type that
 conflicts with `foo`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   type_union.js:17:17
-   17| declare var x5: {...Union1, ...{...}, ...} // Error, spreading {} overwrites indexer
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_union.js:17:19
+   17| declare const x5: {...Union1, ...{...}, ...} // Error, spreading {} overwrites indexer
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   type_union.js:17:32
-   17| declare var x5: {...Union1, ...{...}, ...} // Error, spreading {} overwrites indexer
-                                      ^^^^^ [2]
-   type_union.js:17:21
-   17| declare var x5: {...Union1, ...{...}, ...} // Error, spreading {} overwrites indexer
-                           ^^^^^^ [3]
+   type_union.js:17:34
+   17| declare const x5: {...Union1, ...{...}, ...} // Error, spreading {} overwrites indexer
+                                        ^^^^^ [2]
+   type_union.js:17:23
+   17| declare const x5: {...Union1, ...{...}, ...} // Error, spreading {} overwrites indexer
+                             ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:20:5
@@ -1295,23 +1295,23 @@ Cannot assign object literal to `y` because object literal [1] is incompatible w
 
 References:
    type_union.js:5:16
-    5| declare var y: U;
+    5| declare let y: U;
                       ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- type_union.js:37:17
+Error ---------------------------------------------------------------------------------------------- type_union.js:37:19
 
 Flow cannot determine a type for object type [1]. `I1` [2] cannot be spread because interfaces do not track the own-ness
 of their properties. Try using an object type instead. [cannot-spread-interface]
 
-   type_union.js:37:17
-   37| declare var x4: {...Union5, ...};  // Error, cannot spread interface
-                       ^^^^^^^^^^^^^^^^ [1]
+   type_union.js:37:19
+   37| declare const x4: {...Union5, ...};  // Error, cannot spread interface
+                         ^^^^^^^^^^^^^^^^ [1]
 
 References:
-   type_union.js:37:21
-   37| declare var x4: {...Union5, ...};  // Error, cannot spread interface
-                           ^^^^^^ [2]
+   type_union.js:37:23
+   37| declare const x4: {...Union5, ...};  // Error, cannot spread interface
+                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:10:1
@@ -1324,9 +1324,9 @@ Cannot cast `o1` to object type because inexact object type [1] is incompatible 
        ^^
 
 References:
-   type_void.js:8:17
-    8| declare var o1: O1;
-                       ^^ [1]
+   type_void.js:8:19
+    8| declare const o1: O1;
+                         ^^ [1]
    type_void.js:10:7
    10| o1 as {}; // error
              ^^ [2]
@@ -1342,9 +1342,9 @@ Cannot cast `o1` to object type because property `p` is missing in object type [
        ^^
 
 References:
-   type_void.js:8:17
-    8| declare var o1: O1;
-                       ^^ [1]
+   type_void.js:8:19
+    8| declare const o1: O1;
+                         ^^ [1]
    type_void.js:11:7
    11| o1 as {p:T, ...}; // error
              ^^^^^^^^^^ [2]
@@ -1360,9 +1360,9 @@ Cannot cast `o2` to object type because property `p` is missing in object type [
        ^^
 
 References:
-   type_void.js:16:17
-   16| declare var o2: O2;
-                       ^^ [1]
+   type_void.js:16:19
+   16| declare const o2: O2;
+                         ^^ [1]
    type_void.js:19:7
    19| o2 as {p:T, ...}; // error
              ^^^^^^^^^^ [2]
@@ -1393,9 +1393,9 @@ Cannot cast `o3` to object type because inexact object type [1] is incompatible 
        ^^
 
 References:
-   type_void.js:24:17
-   24| declare var o3: O3;
-                       ^^ [1]
+   type_void.js:24:19
+   24| declare const o3: O3;
+                         ^^ [1]
    type_void.js:26:7
    26| o3 as {}; // error
              ^^ [2]
@@ -1411,9 +1411,9 @@ Cannot cast `o3` to object type because property `p` is missing in object type [
        ^^
 
 References:
-   type_void.js:24:17
-   24| declare var o3: O3;
-                       ^^ [1]
+   type_void.js:24:19
+   24| declare const o3: O3;
+                         ^^ [1]
    type_void.js:27:7
    27| o3 as {p:T, ...}; // error
              ^^^^^^^^^^ [2]
@@ -1429,9 +1429,9 @@ Cannot cast `o4` to object type because property `p` is missing in object type [
        ^^
 
 References:
-   type_void.js:32:17
-   32| declare var o4: O4;
-                       ^^ [1]
+   type_void.js:32:19
+   32| declare const o4: O4;
+                         ^^ [1]
    type_void.js:35:7
    35| o4 as {p:T, ...}; // error
              ^^^^^^^^^^ [2]
@@ -1505,9 +1505,9 @@ Cannot cast object literal to `O5` because in property `p`: `U` [1] is incompati
            ^
 
 References:
-   type_void.js:5:16
-    5| declare var y: U;
-                      ^ [1]
+   type_void.js:5:18
+    5| declare const y: U;
+                        ^ [1]
    type_void.js:39:27
    39| type O5 = {...void, ...{p:T, ...}, ...};
                                  ^ [2]
@@ -1566,9 +1566,9 @@ Cannot cast object literal to `O6` because in property `p`: `U` [1] is incompati
            ^
 
 References:
-   type_void.js:5:16
-    5| declare var y: U;
-                      ^ [1]
+   type_void.js:5:18
+    5| declare const y: U;
+                        ^ [1]
    type_void.js:48:18
    48| type O6 = {...{p:T, ...}, ...void, ...};
                         ^ [2]

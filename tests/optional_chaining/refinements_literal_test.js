@@ -1,7 +1,7 @@
 // @flow
 
 type S = ?{type: 'foo', ...};
-declare var x: S;
+declare const x: S;
 
 if (x?.type === 'foo') {
   x.type as 'foo';

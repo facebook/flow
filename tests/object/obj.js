@@ -2,7 +2,7 @@
 
 type PropertyDescriptor<T> = number;
 
-declare var y: {a: number, b: number};
+declare const y: {a: number, b: number};
 
 Object.defineProperty(y, 'a', {writable: false});
 Object.defineProperty(y, 'a', {value: "a"});

@@ -26,7 +26,7 @@ class XComponent<XProps extends Props3, XState> extends React.PureComponent<
   XState
 > {}
 
-declare var cond : boolean;
+declare const cond : boolean;
 const BaseComponent = cond ? React.Component : XComponent;
 
 type Props4 = {
@@ -39,6 +39,6 @@ class YComponent extends BaseComponent<Props4, void> {
   props : Props4;
 }
 
-declare var s : ?string;
+declare const s : ?string;
 
 <YComponent p1={true} p2={3} p3={s}></YComponent>

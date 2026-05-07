@@ -2,14 +2,14 @@
 
 
 export type ROE = Readonly<{ f: string }>;
-declare var roe: ROE;
+declare const roe: ROE;
 
 export const x = { ...roe, f: 1 };
 
-declare var t: null | { a: number, ... };
+declare const t: null | { a: number, ... };
 export const y = { ...t };
 
-declare var o: { f: string, ... } | {...};
+declare const o: { f: string, ... } | {...};
 
 export const z = {
   // $FlowExpectedError[exponential-spread]

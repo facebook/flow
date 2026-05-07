@@ -27,12 +27,12 @@ spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
                 ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   exact_indexer.js:2:21
-   2| declare var x: {x?: {[string]: number}, ...};
-                          ^^^^^^^^^^^^^^^^^^ [2]
    exact_indexer.js:2:23
-   2| declare var x: {x?: {[string]: number}, ...};
-                            ^^^^^^ [3]
+   2| declare const x: {x?: {[string]: number}, ...};
+                            ^^^^^^^^^^^^^^^^^^ [2]
+   exact_indexer.js:2:25
+   2| declare const x: {x?: {[string]: number}, ...};
+                              ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- intersection.js:5:24

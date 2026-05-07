@@ -6,8 +6,8 @@ interface J {
     m() : void
 }
 
-declare var a : I & J;
-declare var b : I | J;
+declare const a : I & J;
+declare const b : I | J;
 
 a.m; // err
 b.m; // err
@@ -18,9 +18,9 @@ interface K {
     m : () => void
 }
 
-declare var c : I & K;
-declare var c2 : K & I;
-declare var d : I | K;
+declare const c : I & K;
+declare const c2 : K & I;
+declare const d : I | K;
 
 c.m; // error -- picking I.m
 c2.m; // ok

@@ -1,6 +1,6 @@
 //@flow
 
-declare var c: boolean;
+declare const c: boolean;
 
 var x = c ? 42 : "a'";
 

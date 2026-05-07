@@ -141,9 +141,9 @@ Cannot cast `o` to `A` because: [incompatible-type]
       ^
 
 References:
-   distribute.js:7:16
-   7| declare var o: O;
-                     ^ [1]
+   distribute.js:7:18
+   7| declare const o: O;
+                       ^ [1]
    distribute.js:9:8
    9| o as A<number>; // error
              ^^^^^^ [2]
@@ -163,9 +163,9 @@ Cannot cast `o` to `A` because: [incompatible-type]
       ^
 
 References:
-   distribute.js:7:16
-   7| declare var o: O;
-                     ^ [1]
+   distribute.js:7:18
+   7| declare const o: O;
+                       ^ [1]
    distribute.js:3:21
    3| type A<T> = { +tag: 1, value: T } | { +tag: 2, value: T };
                           ^ [2]

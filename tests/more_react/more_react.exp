@@ -98,9 +98,9 @@ Cannot create `YComponent` element because in property `p3`: null or undefined [
                                         ^
 
 References:
-   inexact_props.js:42:17
-   42| declare var s : ?string;
-                       ^^^^^^^ [1]
+   inexact_props.js:42:19
+   42| declare const s : ?string;
+                         ^^^^^^^ [1]
    inexact_props.js:35:9
    35|   p3? : string,
                ^^^^^^ [2]

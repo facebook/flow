@@ -82,13 +82,13 @@ function f<X extends number, Y extends ?number, Z extends ?X>(
   }
 
   // FilterOptionalT
-  declare var a: {x?: X, ...};
+  declare const a: {x?: X, ...};
   var b = {...a};
   b.x as X | void;
   b.x as Y | void; //nope
 
   //FilterMaybeT
-  declare var c: NonNullable<X>;
+  declare const c: NonNullable<X>;
   c as X;
   c as number;
   c as null | void; // nope

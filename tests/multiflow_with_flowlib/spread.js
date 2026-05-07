@@ -1,4 +1,4 @@
-declare var iterableOf123: Iterable<123>;
+declare const iterableOf123: Iterable<123>;
 function fun(x: 'hi', y: 123) {}
 fun('hi', ...iterableOf123); // No error - ignore the fact iterableOf123 could be empty
 

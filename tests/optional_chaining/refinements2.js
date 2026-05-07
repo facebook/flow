@@ -1,7 +1,7 @@
 //@flow
 
 type T = {a: null | number, ...};
-declare var t: ?T;
+declare const t: ?T;
 if (t?.a === null) {
   t as T; // yes
   t.a as null; // yes
@@ -18,7 +18,7 @@ if (t?.a !== null) {
 }
 
 type S = {a: ?number, ...};
-declare var s: ?S;
+declare const s: ?S;
 if (s?.a == null) {
   s as S; // no, may be nulled
   s.a as null | void; // no for two reasons
@@ -50,7 +50,7 @@ if (s?.a == undefined) {
 }
 
 type W = {a: number, ...};
-declare var w: ?W;
+declare const w: ?W;
 
 if (w?.a === 42) {
   w as W;
@@ -60,7 +60,7 @@ if (w?.a === 42) {
   w.a; // no
 }
 
-declare var a: ?{b: number | string, ...};
+declare const a: ?{b: number | string, ...};
 if (typeof a?.b === 'number') {
   a.b as number;
   a as {...};
@@ -69,7 +69,7 @@ if (typeof a?.b === 'number') {
   a as null | void; // nope
 }
 
-declare var b: ?{a?: number, ...};
+declare const b: ?{a?: number, ...};
 if (typeof b?.a === 'undefined') {
   b.a; //nope
   b as null | void; // nope
@@ -86,7 +86,7 @@ if (b?.a instanceof Object) {
   b as null | void; // nope
 }
 
-declare var c: ?{d?: Array<number>, ...};
+declare const c: ?{d?: Array<number>, ...};
 if (Array.isArray(c?.d)) {
   c.d[0] as number;
   c as {...};
@@ -96,8 +96,8 @@ if (Array.isArray(c?.d)) {
 }
 
 // should not cause refinement with current model
-declare var b1: ?{a?: number, ...};
-declare var c1: number;
+declare const b1: ?{a?: number, ...};
+declare const c1: number;
 if (b1?.a === c1) {
   b1.a as number; // b1.a may not exist and may not be number
 }

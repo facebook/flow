@@ -945,9 +945,9 @@ Cannot call `set` with `2` bound to `y` because number literal `2` [1] is incomp
               ^ [1]
 
 References:
-   imported.js:215:18
-   215|   declare var x: typeof one;
-                         ^^^^^^^^^^ [2]
+   imported.js:215:20
+   215|   declare const x: typeof one;
+                           ^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- imported.js:225:11
@@ -960,9 +960,9 @@ number literal `1` [2]. [incompatible-type]
                   ^ [1]
 
 References:
-   imported.js:222:18
-   222|   declare var x: typeof one;
-                         ^^^^^^^^^^ [2]
+   imported.js:222:20
+   222|   declare const x: typeof one;
+                           ^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- imported.js:233:11
@@ -1215,9 +1215,9 @@ incompatible with string literal `BAZ` [2]. [incompatible-type]
                                  ^^^^^ [1]
 
 References:
-   jsx_pragma.js:10:51
-   10| declare var C: (props: Readonly<{foo: Array<{bar: 'BAZ'}>}>) => void;
-                                                         ^^^^^ [2]
+   jsx_pragma.js:10:53
+   10| declare const C: (props: Readonly<{foo: Array<{bar: 'BAZ'}>}>) => void;
+                                                           ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- local.js:37:3
@@ -2201,9 +2201,9 @@ Cannot call `set` with `2` bound to `y` because number literal `2` [1] is incomp
               ^ [1]
 
 References:
-   local.js:227:18
-   227|   declare var x: typeof one;
-                         ^^^^^^^^^^ [2]
+   local.js:227:20
+   227|   declare const x: typeof one;
+                           ^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- local.js:237:11
@@ -2216,9 +2216,9 @@ number literal `1` [2]. [incompatible-type]
                   ^ [1]
 
 References:
-   local.js:234:18
-   234|   declare var x: typeof one;
-                         ^^^^^^^^^^ [2]
+   local.js:234:20
+   234|   declare const x: typeof one;
+                           ^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- local.js:245:11
@@ -2792,9 +2792,9 @@ Cannot get `obj[getKey(...)]` because property `c` is missing in object type [1]
               ^^^^^^^^^^^
 
 References:
-   local.js:668:20
-   668|   declare var obj: {a: number, b: string};
-                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   local.js:668:22
+   668|   declare const obj: {a: number, b: string};
+                             ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:673:7
@@ -2806,9 +2806,9 @@ Cannot assign `1` to `obj[getKey(...)]` because property `c` is missing in objec
               ^^^^^^^^^^^
 
 References:
-   local.js:668:20
-   668|   declare var obj: {a: number, b: string};
-                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   local.js:668:22
+   668|   declare const obj: {a: number, b: string};
+                             ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:15:24

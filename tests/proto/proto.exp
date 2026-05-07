@@ -86,9 +86,9 @@ Cannot get `o_optional.q` because property `q` is missing in `O_optional` [1]. [
                   ^
 
 References:
-   annot.js:14:25
-   14| declare var o_optional: O_optional;
-                               ^^^^^^^^^^ [1]
+   annot.js:14:27
+   14| declare const o_optional: O_optional;
+                                 ^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:16:1
@@ -134,9 +134,9 @@ Cannot get `o_variance.q` because property `q` is missing in `O_variance` [1]. [
                   ^
 
 References:
-   annot.js:20:25
-   20| declare var o_variance: O_variance;
-                               ^^^^^^^^^^ [1]
+   annot.js:20:27
+   20| declare const o_variance: O_variance;
+                                 ^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:22:1
@@ -173,9 +173,9 @@ Cannot get `o_callable.q` because property `q` is missing in `O_callable` [1]. [
                   ^
 
 References:
-   annot.js:26:25
-   26| declare var o_callable: O_callable;
-                               ^^^^^^^^^^ [1]
+   annot.js:26:27
+   26| declare const o_callable: O_callable;
+                                 ^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:28:1
@@ -476,9 +476,9 @@ Cannot get `o_nonstrict.p` because property `p` is missing in object type [1]. [
                        ^
 
 References:
-   null.js:12:26
-   12| declare var o_nonstrict: { __proto__: null, ... };
-                                ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   null.js:12:28
+   12| declare const o_nonstrict: { __proto__: null, ... };
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- null.js:14:3

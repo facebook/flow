@@ -1,10 +1,10 @@
 // @flow
 
-declare var obj: {
+declare const obj: {
     f: 'f',
     g: 'g',
  ...};
 
-declare var k: Values<typeof obj>;
+declare const k: Values<typeof obj>;
 
 export type T = typeof k.length;

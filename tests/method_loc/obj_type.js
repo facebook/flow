@@ -1,3 +1,3 @@
-declare var o: { m(): void };
+declare const o: { m(): void };
 o.m as empty; // err
 module.exports = o;

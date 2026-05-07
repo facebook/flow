@@ -3,9 +3,9 @@
 declare class C { f: number }
 declare class D extends C {}
 
-declare var d: D;
+declare const d: D;
 
-declare export var x: typeof d.f;
+declare export const x: typeof d.f;
 
 declare class B { static f: number; }
 declare class A extends B { static f: number; }
@@ -23,7 +23,7 @@ export type T = {
   f: Q.f,
  ...};
 
-declare var Any: any;
+declare const Any: any;
 declare class W extends Any {}
 // $FlowExpectedError[value-as-type]
 export type R = W.f;

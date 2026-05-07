@@ -10,7 +10,7 @@ function test() {
 
   let si = new Set<empty>();
   (function () {
-    declare var x: ?string;
+    declare const x: ?string;
     si = si.add(x);
   })(); // error
 

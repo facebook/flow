@@ -9,7 +9,7 @@ var P = {
     bar: bar
 }
 
-declare var Q: {
+declare const Q: {
     bar<S>(foo:Foo<S>,y:S):Foo<S>;
 }
 

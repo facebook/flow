@@ -45,9 +45,9 @@ var tests = [
 ];
 
 // Interfaces
-declare var iface: interface {a: number, b: string};
-declare var ifaceDict: interface {['x' | 'y']: boolean};
-declare var ifaceBoth: interface {['x' | 'y']: boolean, z: number};
+declare const iface: interface {a: number, b: string};
+declare const ifaceDict: interface {['x' | 'y']: boolean};
+declare const ifaceBoth: interface {['x' | 'y']: boolean, z: number};
 
 Object.keys(iface) as Array<'a' | 'b'>; // OK
 Object.keys(ifaceDict) as Array<'x' | 'y'>; // OK

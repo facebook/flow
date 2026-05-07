@@ -1,6 +1,6 @@
 // @jsx customJsx
 
-declare var Foo: any;
+declare const Foo: any;
 declare function customJsx(c: any, props: {foo: "a", bar: 42}, children: 42): void;
 
 const foo = "a";

@@ -441,7 +441,7 @@ Cannot cast `a` to string because null [1] is incompatible with string [2]. [inc
 
 References:
    loops.js:16:25
-   16| declare var a: string | null;
+   16| declare let a: string | null;
                                ^^^^ [1]
    loops.js:24:10
    24|     a as string; // Error

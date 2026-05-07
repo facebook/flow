@@ -1,12 +1,12 @@
 //@flow
 
 type P = {c?: () => void, b?: {c?: {d: number, ...}, ...}, ...};
-declare var cc: P;
+declare const cc: P;
 if (cc.b?.c) {
   var xxx: number = cc.b.c.d;
 }
 
-declare var a: ?{
+declare const a: ?{
   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
  ...};
 
@@ -102,7 +102,7 @@ if (a?.b?.g) {
   a as null | void; // should fail, sanity check
 }
 type Z = {a: 'hello ', value: number} | {b: 'goodbye', value: string};
-declare var b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
+declare const b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
 
 if (b?.x) {
   b.x as true; // ok
@@ -134,7 +134,7 @@ if (b?.y) {
   b.y as false; // nope
 }
 
-declare var c: Array<?Array<{a: number, b: {c: {d: string, ...}, ...}, ...}>>;
+declare const c: Array<?Array<{a: number, b: {c: {d: string, ...}, ...}, ...}>>;
 if (c[0]?.[0].b.c) {
   c[0][0].a as number; //yes
   c[0][0].b as {...}; //yes
@@ -142,17 +142,17 @@ if (c[0]?.[0].b.c) {
   c[0][1].a as number; // yes
 }
 
-declare var d: ?{a?: () => {b?: {c: number, ...}, ...}, d: number, ...};
+declare let d: ?{a?: () => {b?: {c: number, ...}, ...}, d: number, ...};
 if (d?.a?.().b) {
   d.a().b.c as number; // nope, never was a refinement in the first place
 }
 
-declare var a11: ?({a: string, ...} | {...});
-declare var b11: ?{...};
+declare const a11: ?({a: string, ...} | {...});
+declare const b11: ?{...};
 // No error on looking up a11?.a, but that's consistent with non-optional behavior
 var x11: empty = a11?.a || b11?.a;
 
-declare var e: ?string;
+declare const e: ?string;
 if (e?.length) {
 }
 

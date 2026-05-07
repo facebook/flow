@@ -35,7 +35,7 @@ import type {
 
 // Local checks
 
-declare var _: any;
+declare const _: any;
 
 function test_string() {
   abc as "abc"; // okay
@@ -166,7 +166,7 @@ function test_objlit_as_const() {
 }
 
 function test_objlit_nullish() {
-  declare var n0: ?1;
+  declare const n0: ?1;
 
   const obj1 = { f: n0 ?? one };
   obj1 as {f: 1}; // error number ~> 1
@@ -182,7 +182,7 @@ function test_objlit_nullish() {
 }
 
 function test_conditional() {
-  declare var cond: boolean;
+  declare const cond: boolean;
   const x: 'abc' | 'def' = cond ? abc : def; // okay
   const y = cond ? abc : def;
   ({y} as Readonly<{y: 'abc'|'def'}>); // okay
@@ -212,14 +212,14 @@ function test_useState_4() {
 }
 
 function test_useState_5() {
-  declare var x: typeof one;
+  declare const x: typeof one;
   const [x_, set] = useState(x);
   x_ as 1; // okay
   set(2); // error 2 ~> 1
 }
 
 function test_useState_6() {
-  declare var x: typeof one;
+  declare const x: typeof one;
   const [o, set] = useState({f: x});
   set({f: 1}); // okay
   set({f: 2}); // error
@@ -272,7 +272,7 @@ function test_apply() {
 }
 
 function test_switch_case() {
-  declare var x: number;
+  declare const x: number;
   switch (x) {
     case one:
       x as 1; // okay
@@ -280,20 +280,20 @@ function test_switch_case() {
 }
 
 function test_eq_refinement() {
-  declare var x: number;
+  declare const x: number;
   if (x === one) {
     x as 1; // okay
   }
 }
 
 function test_nullish_coalesce() {
-  declare var n0: ?number;
+  declare const n0: ?number;
   const n1 = n0 ?? one;
   n1 as number; // okay
 }
 
 function test_computed_prop_1() {
-  declare var x: {
+  declare const x: {
     prop1: number,
     prop2: number,
     prop3: () => void,
@@ -313,7 +313,7 @@ function test_computed_prop_2() {
 }
 
 function test_sent_refinement() {
-  declare var x: {tag: 'abc'; hi: 'hi'} | {tag: 'bye'};
+  declare const x: {tag: 'abc'; hi: 'hi'} | {tag: 'bye'};
   if (x.tag === abc) {
       x.hi as string; // okay
   }
@@ -348,7 +348,7 @@ function test_hint_passes_through_array() {
 }
 
 function test_pattern_match() {
-  declare var n: number;
+  declare const n: number;
   const m = match (n) {
     1 => abc,
     _ => def,
@@ -371,7 +371,7 @@ function test_assign() {
 }
 
 function test_reduce() {
-  declare var arr: Array<void>;
+  declare const arr: Array<void>;
   const x1 = arr.reduce((acc, _) => acc, [0]);
   x1[0] = 1; // okay x1 inferred as Array<number>
   x1[0] = "a"; // error string ~> number

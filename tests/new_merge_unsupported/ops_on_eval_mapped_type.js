@@ -1,5 +1,5 @@
 type T = {[_K in keyof { f: number }]: string};
-declare var t: T;
+declare const t: T;
 
 // Annot_GetPropT
 export const x2 = t.f;
@@ -11,19 +11,19 @@ export const x3 = t['' as string]; // error: unsafe string key access
 export const x4 = { ...t };
 
 // Annot_MakeExactT
-declare var y5: $Exact<T>;
+declare const y5: $Exact<T>;
 export const x5 = y5.f;
 
 // Annot_ObjTestProtoT
-declare export var x8: { __proto__: T };
+declare export const x8: { __proto__: T };
 
 // Annot_NotT
 export const x11 = !t;
 
 // Annot_ObjKeyMirror
-declare var y12: $KeyMirror<T>;
+declare const y12: $KeyMirror<T>;
 export const x12 = y12.f;
 
 // Annot_GetKeysT of Reason.t
-declare var y13: keyof T;
+declare const y13: keyof T;
 export const x13 = y13.length;

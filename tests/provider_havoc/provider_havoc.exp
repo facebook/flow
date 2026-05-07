@@ -14,9 +14,9 @@ References:
    empty.js:67:20
    67| declare class Set<+T> {
                           ^ [1]
-   empty.js:13:20
-   13|     declare var x: ?string;
-                          ^^^^^^^ [2]
+   empty.js:13:22
+   13|     declare const x: ?string;
+                            ^^^^^^^ [2]
    empty.js:11:20
    11|   let si = new Set<empty>();
                           ^^^^^ [3]
@@ -41,9 +41,9 @@ References:
    empty.js:67:20
    67| declare class Set<+T> {
                           ^ [1]
-   empty.js:13:21
-   13|     declare var x: ?string;
-                           ^^^^^^ [2]
+   empty.js:13:23
+   13|     declare const x: ?string;
+                             ^^^^^^ [2]
    empty.js:11:20
    11|   let si = new Set<empty>();
                           ^^^^^ [3]

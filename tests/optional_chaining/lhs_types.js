@@ -2,12 +2,12 @@
 
 type Foo = {foo: number, ...};
 
-declare var x: Foo;
-declare var mixed: unknown;
-declare var any: any;
-declare var empty: empty;
-declare var maybe: ?Foo;
-declare var union: Foo | null | void;
+declare const x: Foo;
+declare const mixed: unknown;
+declare const any: any;
+declare const empty: empty;
+declare const maybe: ?Foo;
+declare const union: Foo | null | void;
 
 x?.foo as ?number; // no error, lint
 mixed?.foo as ?number; // error, no lint

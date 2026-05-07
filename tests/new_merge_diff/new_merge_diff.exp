@@ -7,9 +7,9 @@ Cannot cast `x1` to empty because number [1] is incompatible with empty [2]. [in
        ^^
 
 References:
-   get_prop_union.js:13:23
-   13| declare export var x: typeof c.f;
-                             ^^^^^^^^^^ [1]
+   get_prop_union.js:13:25
+   13| declare export const x: typeof c.f;
+                               ^^^^^^^^^^ [1]
    main.js:4:7
     4| x1 as empty;
              ^^^^^ [2]
@@ -24,9 +24,9 @@ Cannot cast `x1` to empty because string [1] is incompatible with empty [2]. [in
        ^^
 
 References:
-   get_prop_union.js:13:23
-   13| declare export var x: typeof c.f;
-                             ^^^^^^^^^^ [1]
+   get_prop_union.js:13:25
+   13| declare export const x: typeof c.f;
+                               ^^^^^^^^^^ [1]
    main.js:4:7
     4| x1 as empty;
              ^^^^^ [2]

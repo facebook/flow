@@ -55,7 +55,7 @@ function branch_error() {
   const f1 = (y: empty) => 42; // error, x has number as LB
   const f2 = (y: empty) => 42; // error, x has number as LB
 
-  declare var f: typeof f1 & typeof f2;
+  declare const f: typeof f1 & typeof f2;
 
   function fn() {
     let fn = (x: number) => 42;

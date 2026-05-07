@@ -9,7 +9,7 @@ declare type Box<T> = {
   map5<U>(f: (x: T) => U): Box<U>;
 }
 
-declare var boolean: Box<boolean>;
+declare const boolean: Box<boolean>;
 
 declare function unbox<A>(box: Box<A>): A
 

@@ -13,8 +13,8 @@ import {x as x3} from './lookup';
 import type {T as T3, S as S3, R as R3} from './lookup';
 x3 as number;
 x3 as empty; // error number ~> empty
-declare var t3: T3;
-declare var s3: S3;
+declare const t3: T3;
+declare const s3: S3;
 t3.f as empty; // okay - this is already an error at the definition site
 s3.f as empty; // okay - this is already an error at the definition site
 0 as R3; // okay
@@ -30,7 +30,7 @@ y5 as empty; // error function type ~> empty
 
 import type {T as T6} from './mk_instance_annot';
 1 as T6; // error number ~> class
-declare var x6: T6;
+declare const x6: T6;
 x6 as empty; // error C ~> empty
 
 import {Foo as Foo8, C as C8} from './mixins';
@@ -46,7 +46,7 @@ x9.f.g as empty; // okay
 import C10 from './mk_instance_obj';
 import type {S as S10} from './mk_instance_obj';
 C10 as empty; // error anonymous class ~> empty
-declare var s10: S10;
+declare const s10: S10;
 s10.errors as empty; // okay - error reported at definition
 
 import B11 from './qualified_typeapp';
@@ -59,14 +59,14 @@ const z14: Array<B14 /* tvar 3 */> = x14; // okay
 import {f as f15} from './async_void_return';
 f15() as empty;
 
-declare var t16: T16;
+declare const t16: T16;
 1 as S16; // error number ~> string
 t16 as empty; // okay - inferred as any
 t16.A as empty; // okay - inferred as any
 C16 as empty; // error class ~> empty
 arr16 as ReadonlyArray<empty>; // okay - inferred as any
 
-declare var d16: D16;
+declare const d16: D16;
 if (d16.kind === 'kind1') {
   d16.items[0] as null;
 }
@@ -94,7 +94,7 @@ y19 as {a: number, ...}; // error undefined ~> number
 z19 as empty; // okay any ~> empty (error on def site)
 
 import type {T as T21} from './mk_instance_poly';
-declare var t21: T21;
+declare const t21: T21;
 t21.c as empty; // okay - this is already an error at the definition site
 
 import {
@@ -132,7 +132,7 @@ p3_22 as {f: string, g: string};
 p4_22 as {f: string, g: string};
 
 import type {T as T24} from './keys';
-declare var t24: T24;
+declare const t24: T24;
 t24 as empty; // error number (length) ~> empty
 
 import {x as x25} from './obj_rest';
@@ -147,10 +147,10 @@ type FrozenSuiteValues =
   | 'Spades'
   | 'Extra Suite';
 
-declare var frozenSuitevalues: FrozenSuiteValues;
+declare const frozenSuitevalues: FrozenSuiteValues;
 frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
 
-declare var indirectFrozenSuitevalues: IndirectFrozenSuiteValues;
+declare const indirectFrozenSuitevalues: IndirectFrozenSuiteValues;
 indirectFrozenSuitevalues as FrozenSuiteValues; // okay
 
 import S26 from './type_of_typeapp';
@@ -165,7 +165,7 @@ x27.q as number;
 x27.q as string; // error
 
 import type {T as T28} from './values';
-declare var t28: T28;
+declare const t28: T28;
 t28 as empty; // error number (length) ~> empty
 
 import {instance_named, instance_computed} from './get_prop_instance';

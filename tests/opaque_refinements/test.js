@@ -1,7 +1,7 @@
 //@flow strict
 
 declare opaque type T: unknown;
-declare var o: { p: T };
+declare const o: { p: T };
 
 // guard
 if (o.p) {

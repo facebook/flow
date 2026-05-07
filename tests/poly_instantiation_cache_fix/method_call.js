@@ -7,6 +7,6 @@ declare class Set<T> {
 
 type S = Set<number> | Set<string>;
 
-declare var set: S;
+declare const set: S;
 const arr = set.filter(_ => true).toArray();
 arr as Array<number> | Array<string>;

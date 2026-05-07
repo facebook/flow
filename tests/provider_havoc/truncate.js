@@ -101,6 +101,6 @@ type T =
   | 'a100'
   | () => void;
 
-declare var x: T;
+declare const x: T;
 var y = x;
 y = "hello"; // error;

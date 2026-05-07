@@ -4,7 +4,7 @@ type Props = {f?: number, g: number};
 type DefaultProps = {f: number};
 
 type T = {f?: number, g: number} extends (infer O) ? O : empty;
-declare var t: T;
+declare const t: T;
 
 // Annot_SpecializeT
 export class x1 extends (0 as any as T) {}
@@ -19,20 +19,20 @@ export const x3 = t['' as string];
 export const x4 = { ...t };
 
 // Annot_MakeExactT
-declare var y5: $Exact<T>;
+declare const y5: $Exact<T>;
 export const x5 = y5.f;
 
 // Annot_GetStaticsT
-declare var y6: Class<T>;
+declare const y6: Class<T>;
 export const x6 = y6.f;
 
 // Annot_LookupT
 export class c7 extends (0 as any as Class<T>) {}
-declare var y7: c7;
+declare const y7: c7;
 export const x7 = y7.f;
 
 // Annot_ObjTestProtoT
-declare export var x8: { __proto__: T };
+declare export const x8: { __proto__: T };
 
 // Annot_MixinT
 declare export class x9 mixins t {}
@@ -44,9 +44,9 @@ export const x10 = -t;
 export const x11 = !t;
 
 // Annot_ObjKeyMirror
-declare var y12: $KeyMirror<T>;
+declare const y12: $KeyMirror<T>;
 export const x12 = y12.f;
 
 // Annot_GetKeysT of Reason.t
-declare var y13: keyof T;
+declare const y13: keyof T;
 export const x13 = y13.length;

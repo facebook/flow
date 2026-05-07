@@ -5,7 +5,7 @@ fun(...['hi' as const], ...[], ...[123 as const]); // No error
 fun(...['hi' as const], ...[], ...[123 as const], ...[true as const]); // Error - true is unused
 fun(...['hi' as const], ...[true as const], ...[123 as const]); // Error: true ~> 123 and 123 is unused
 
-declare var arrOf123: Array<123>;
+declare const arrOf123: Array<123>;
 fun('hi', ...arrOf123); // No error - ignore the fact arrOf123 could be empty
 
 

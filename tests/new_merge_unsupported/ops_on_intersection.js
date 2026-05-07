@@ -4,8 +4,8 @@ class D { static f: any; g: any }
 type T = typeof C & typeof D;
 type S = { f: any } & { g: any };
 
-declare var t: T;
-declare var n: number & unknown;
+declare const t: T;
+declare const n: number & unknown;
 
 // Annot_SpecializeT
 export class x1 extends (0 as any as T) {}
@@ -20,16 +20,16 @@ export const x3 = t['' as string];
 export const x4 = { ...t };
 
 // Annot_GetStaticsT
-declare var y6: Class<C & D>;
+declare const y6: Class<C & D>;
 export const x6 = y6.f;
 
 // Annot_LookupT
 export class c7 extends (0 as any as T) {}
-declare var y7: c7;
+declare const y7: c7;
 export const x7 = y7.g;
 
 // Annot_ObjTestProtoT
-declare export var x8: { __proto__: T };
+declare export const x8: { __proto__: T };
 
 // Annot_MixinT
 declare export class x9 mixins t {}
@@ -41,9 +41,9 @@ export const x10 = -n;
 export const x11 = !n;
 
 // Annot_ObjKeyMirror
-declare var y12: $KeyMirror<S>;
+declare const y12: $KeyMirror<S>;
 export const x12 = y12.f;
 
 // Annot_GetKeysT of Reason.t
-declare var y13: keyof T;
+declare const y13: keyof T;
 export const x13 = y13.length;

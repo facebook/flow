@@ -1,6 +1,6 @@
 interface I {
   m(): void,
 }
-declare var o: I;
+declare const o: I;
 o.m as empty; // err
 module.exports = o;

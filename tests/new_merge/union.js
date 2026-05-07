@@ -8,6 +8,6 @@ declare class C2 {
   f: string;
 }
 
-declare var c: C1 | C2;
+declare const c: C1 | C2;
 
-declare export var x: c; // error: value-as-type
+declare export const x: c; // error: value-as-type

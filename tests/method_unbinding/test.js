@@ -24,9 +24,9 @@ type O = {
 
 let a = new A();
 let b = new B();
-declare var i : I;
-declare var j : J;
-declare var o  : O;
+declare const i : I;
+declare const j : J;
+declare const o  : O;
 
 /* tests */
 

@@ -1,6 +1,6 @@
 //@flow
 
-declare var invariant: any;
+declare const invariant: any;
 
 let aa: string | number = 42;
 let havoc = function () {

@@ -1,4 +1,4 @@
-declare var _: any;
+declare const _: any;
 
 function test_simple() {
   declare class C<T> {}

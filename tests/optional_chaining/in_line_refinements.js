@@ -1,6 +1,6 @@
 // @flow
 
-declare var x: ?{
+declare let x: ?{
   a: number,
   f: number => string,
   i: Array<number>,

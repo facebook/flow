@@ -13,7 +13,7 @@ function foo(b: boolean) {
   var w: number = z; // 2 errors: ?string !~> number
 }
 
-declare var a: string | null;
+declare let a: string | null;
 function havoc() {
   a = null;
 }

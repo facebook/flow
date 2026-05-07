@@ -13,13 +13,13 @@ References:
                      ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- intersection.js:13:23
+Error -------------------------------------------------------------------------------------------- intersection.js:13:25
 
 Cannot use `c` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   13| declare export var x: c; // error: value-as-type
-                             ^
+   13| declare export const x: c; // error: value-as-type
+                               ^
 
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:15:1
@@ -31,9 +31,9 @@ Cannot cast `f` to empty because string [1] is incompatible with empty [2]. [inc
        ^
 
 References:
-   keys.js:13:45
-   13| declare var exact_intersection: $Exact<{ f: string, ... } & { g: number, ... }>;
-                                                   ^^^^^^ [1]
+   keys.js:13:47
+   13| declare const exact_intersection: $Exact<{ f: string, ... } & { g: number, ... }>;
+                                                     ^^^^^^ [1]
    keys.js:15:6
    15| f as empty; // error
             ^^^^^ [2]
@@ -62,9 +62,9 @@ Cannot cast `x3` to empty because number [1] is incompatible with empty [2]. [in
        ^^
 
 References:
-   lookup.js:8:23
-    8| declare export var x: typeof d.f;
-                             ^^^^^^^^^^ [1]
+   lookup.js:8:25
+    8| declare export const x: typeof d.f;
+                               ^^^^^^^^^^ [1]
    main.js:15:7
    15| x3 as empty; // error number ~> empty
              ^^^^^ [2]
@@ -79,9 +79,9 @@ Cannot cast `x4` to empty because number [1] is incompatible with empty [2]. [in
        ^^
 
 References:
-   get_prop_instantiation.js:8:23
-    8| declare export var x: typeof d.f;
-                             ^^^^^^^^^^ [1]
+   get_prop_instantiation.js:8:25
+    8| declare export const x: typeof d.f;
+                               ^^^^^^^^^^ [1]
    main.js:24:7
    24| x4 as empty; // error number ~> empty
              ^^^^^ [2]
@@ -144,9 +144,9 @@ Cannot cast `x6` to empty because `C` [1] is incompatible with empty [2]. [incom
        ^^
 
 References:
-   main.js:33:17
-   33| declare var x6: T6;
-                       ^^ [1]
+   main.js:33:19
+   33| declare const x6: T6;
+                         ^^ [1]
    main.js:34:7
    34| x6 as empty; // error C ~> empty
              ^^^^^ [2]
@@ -317,12 +317,12 @@ References:
                   ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:62:18
+Error ---------------------------------------------------------------------------------------------------- main.js:62:20
 
 Cannot resolve name `T16`. [cannot-resolve-name]
 
-   62| declare var t16: T16;
-                        ^^^
+   62| declare const t16: T16;
+                          ^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:63:6
@@ -349,12 +349,12 @@ Cannot resolve name `arr16`. [cannot-resolve-name]
        ^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:69:18
+Error ---------------------------------------------------------------------------------------------------- main.js:69:20
 
 Cannot resolve name `D16`. [cannot-resolve-name]
 
-   69| declare var d16: D16;
-                        ^^^
+   69| declare const d16: D16;
+                          ^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:75:1
@@ -706,9 +706,9 @@ Cannot cast `t24` to empty because number [1] is incompatible with empty [2]. [i
         ^^^
 
 References:
-   main.js:135:18
-   135| declare var t24: T24;
-                         ^^^ [1]
+   main.js:135:20
+   135| declare const t24: T24;
+                           ^^^ [1]
    main.js:136:8
    136| t24 as empty; // error number (length) ~> empty
                ^^^^^ [2]
@@ -744,9 +744,9 @@ Type `FrozenSuiteValues` [1] includes members `Extra Suite` that are not include
         ^^^^^^^^^^^^^^^^^
 
 References:
-   main.js:150:32
-   150| declare var frozenSuitevalues: FrozenSuiteValues;
-                                       ^^^^^^^^^^^^^^^^^ [1]
+   main.js:150:34
+   150| declare const frozenSuitevalues: FrozenSuiteValues;
+                                         ^^^^^^^^^^^^^^^^^ [1]
    main.js:151:22
    151| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -812,9 +812,9 @@ Cannot cast `t28` to empty because number [1] is incompatible with empty [2]. [i
         ^^^
 
 References:
-   main.js:168:18
-   168| declare var t28: T28;
-                         ^^^ [1]
+   main.js:168:20
+   168| declare const t28: T28;
+                           ^^^ [1]
    main.js:169:8
    169| t28 as empty; // error number (length) ~> empty
                ^^^^^ [2]
@@ -837,13 +837,13 @@ References:
                           ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- union.js:13:23
+Error --------------------------------------------------------------------------------------------------- union.js:13:25
 
 Cannot use `c` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
 definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
-   13| declare export var x: c; // error: value-as-type
-                             ^
+   13| declare export const x: c; // error: value-as-type
+                               ^
 
 
 

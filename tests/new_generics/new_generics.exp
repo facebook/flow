@@ -927,9 +927,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
          ^^^
 
 References:
-   maybe.js:85:23
-   85|   declare var a: {x?: X, ...};
-                             ^ [1]
+   maybe.js:85:25
+   85|   declare const a: {x?: X, ...};
+                               ^ [1]
    maybe.js:88:10
    88|   b.x as Y | void; //nope
                 ^ [2]
@@ -949,9 +949,9 @@ Cannot cast `c` to union type because: [incompatible-type]
          ^
 
 References:
-   maybe.js:91:30
-   91|   declare var c: NonNullable<X>;
-                                    ^ [1]
+   maybe.js:91:32
+   91|   declare const c: NonNullable<X>;
+                                      ^ [1]
    maybe.js:94:8
    94|   c as null | void; // nope
               ^^^^ [2]
@@ -1172,9 +1172,9 @@ References:
    <BUILTINS>/react.js:422:38
    422|   declare export type ComponentType<-P: {...}> = component(...P);
                                              ^ [1]
-   react.js:11:38
-    11|   declare var a: React.ComponentType<Props>;
-                                             ^^^^^ [2]
+   react.js:11:40
+    11|   declare const a: React.ComponentType<Props>;
+                                               ^^^^^ [2]
    react.js:13:28
     13|   a as React.ComponentType<{a: number, ...}>; // nope, contravariance
                                    ^^^^^^^^^^^^^^^^ [3]
@@ -1193,9 +1193,9 @@ References:
    <BUILTINS>/react.js:968:29
    968|     declare class Component<Props, State = void> {
                                     ^^^^^ [1]
-   react.js:12:34
-    12|   declare var b: React.Component<{+a: number, ...}>;
-                                         ^^^^^^^^^^^^^^^^^ [2]
+   react.js:12:36
+    12|   declare const b: React.Component<{+a: number, ...}>;
+                                           ^^^^^^^^^^^^^^^^^ [2]
    react.js:14:24
     14|   b as React.Component<Props>; // nope
                                ^^^^^ [3]

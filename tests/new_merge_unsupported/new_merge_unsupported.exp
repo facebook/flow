@@ -58,14 +58,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:17:17
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:17:19
 
 Cannot use exact on conditional type [1] in an export position. Please provide an (alternative) annotation for
 exact [2]. [invalid-exported-annotation]
 
-   ops_on_eval_conditional.js:17:17
-   17| declare var y5: $Exact<T>;
-                       ^^^^^^^^^ [2]
+   ops_on_eval_conditional.js:17:19
+   17| declare const y5: $Exact<T>;
+                         ^^^^^^^^^ [2]
 
 References:
    ops_on_eval_conditional.js:1:10
@@ -73,14 +73,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:21:17
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:21:19
 
 Cannot use statics on conditional type [1] in an export position. Please provide an (alternative) annotation for
 statics [2]. [invalid-exported-annotation]
 
-   ops_on_eval_conditional.js:21:17
-   21| declare var y6: Class<T>;
-                       ^^^^^^^^ [2]
+   ops_on_eval_conditional.js:21:19
+   21| declare const y6: Class<T>;
+                         ^^^^^^^^ [2]
 
 References:
    ops_on_eval_conditional.js:1:10
@@ -103,14 +103,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:30:37
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:30:39
 
 Cannot use prototype on conditional type [1] in an export position. Please provide an (alternative) annotation for
 prototype [2]. [invalid-exported-annotation]
 
-   ops_on_eval_conditional.js:30:37
-   30| declare export var x8: { __proto__: T };
-                                           ^ [2]
+   ops_on_eval_conditional.js:30:39
+   30| declare export const x8: { __proto__: T };
+                                             ^ [2]
 
 References:
    ops_on_eval_conditional.js:1:10
@@ -163,14 +163,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:42:18
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:42:20
 
 Cannot use `$KeyMirror` on conditional type [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
-   ops_on_eval_conditional.js:42:18
-   42| declare var y12: $KeyMirror<T>;
-                        ^^^^^^^^^^^^^ [2]
+   ops_on_eval_conditional.js:42:20
+   42| declare const y12: $KeyMirror<T>;
+                          ^^^^^^^^^^^^^ [2]
 
 References:
    ops_on_eval_conditional.js:1:10
@@ -178,14 +178,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:46:18
+Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:46:20
 
 Cannot use key set on conditional type [1] in an export position. Please provide an (alternative) annotation for key
 set [2]. [invalid-exported-annotation]
 
-   ops_on_eval_conditional.js:46:18
-   46| declare var y13: keyof T;
-                        ^^^^^^^ [2]
+   ops_on_eval_conditional.js:46:20
+   46| declare const y13: keyof T;
+                          ^^^^^^^ [2]
 
 References:
    ops_on_eval_conditional.js:1:10
@@ -232,9 +232,9 @@ Cannot access mapped type [1] with computed property using string [2]. [invalid-
                                 ^^^^^^ [2]
 
 References:
-   ops_on_eval_mapped_type.js:2:16
-   2| declare var t: T;
-                     ^ [1]
+   ops_on_eval_mapped_type.js:2:18
+   2| declare const t: T;
+                       ^ [1]
 
 
 Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:11:19
@@ -252,14 +252,14 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:14:17
+Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:14:19
 
 Cannot use exact on object type [1] in an export position. Please provide an (alternative) annotation for exact [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_mapped_type.js:14:17
-   14| declare var y5: $Exact<T>;
-                       ^^^^^^^^^ [2]
+   ops_on_eval_mapped_type.js:14:19
+   14| declare const y5: $Exact<T>;
+                         ^^^^^^^^^ [2]
 
 References:
    ops_on_eval_mapped_type.js:1:11
@@ -267,14 +267,14 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:18:37
+Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:18:39
 
 Cannot use prototype on object type [1] in an export position. Please provide an (alternative) annotation for
 prototype [2]. [invalid-exported-annotation]
 
-   ops_on_eval_mapped_type.js:18:37
-   18| declare export var x8: { __proto__: T };
-                                           ^ [2]
+   ops_on_eval_mapped_type.js:18:39
+   18| declare export const x8: { __proto__: T };
+                                             ^ [2]
 
 References:
    ops_on_eval_mapped_type.js:1:11
@@ -297,14 +297,14 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:24:18
+Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:24:20
 
 Cannot use `$KeyMirror` on object type [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
-   ops_on_eval_mapped_type.js:24:18
-   24| declare var y12: $KeyMirror<T>;
-                        ^^^^^^^^^^^^^ [2]
+   ops_on_eval_mapped_type.js:24:20
+   24| declare const y12: $KeyMirror<T>;
+                          ^^^^^^^^^^^^^ [2]
 
 References:
    ops_on_eval_mapped_type.js:1:11
@@ -312,14 +312,14 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:28:18
+Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:28:20
 
 Cannot use key set on object type [1] in an export position. Please provide an (alternative) annotation for key set [2].
 [invalid-exported-annotation]
 
-   ops_on_eval_mapped_type.js:28:18
-   28| declare var y13: keyof T;
-                        ^^^^^^^ [2]
+   ops_on_eval_mapped_type.js:28:20
+   28| declare const y13: keyof T;
+                          ^^^^^^^ [2]
 
 References:
    ops_on_eval_mapped_type.js:1:11
@@ -409,19 +409,19 @@ References:
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:23:17
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:23:19
 
 Cannot use statics on intersection type [1] in an export position. Please provide an (alternative) annotation for
 statics [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:23:17
-   23| declare var y6: Class<C & D>;
-                       ^^^^^^^^^^^^ [2]
+   ops_on_intersection.js:23:19
+   23| declare const y6: Class<C & D>;
+                         ^^^^^^^^^^^^ [2]
 
 References:
-   ops_on_intersection.js:23:23
-   23| declare var y6: Class<C & D>;
-                             ^^^^^ [1]
+   ops_on_intersection.js:23:25
+   23| declare const y6: Class<C & D>;
+                               ^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:27:25
@@ -439,14 +439,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:32:37
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:32:39
 
 Cannot use prototype on intersection type [1] in an export position. Please provide an (alternative) annotation for
 prototype [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:32:37
-   32| declare export var x8: { __proto__: T };
-                                           ^ [2]
+   ops_on_intersection.js:32:39
+   32| declare export const x8: { __proto__: T };
+                                             ^ [2]
 
 References:
    ops_on_intersection.js:4:10
@@ -479,9 +479,9 @@ unary minus [2]. [invalid-exported-annotation]
                           ^^ [2]
 
 References:
-   ops_on_intersection.js:8:16
-    8| declare var n: number & unknown;
-                      ^^^^^^^^^^^^^^^^ [1]
+   ops_on_intersection.js:8:18
+    8| declare const n: number & unknown;
+                        ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:41:20
@@ -494,19 +494,19 @@ unary not [2]. [invalid-exported-annotation]
                           ^^ [2]
 
 References:
-   ops_on_intersection.js:8:16
-    8| declare var n: number & unknown;
-                      ^^^^^^^^^^^^^^^^ [1]
+   ops_on_intersection.js:8:18
+    8| declare const n: number & unknown;
+                        ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:44:18
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:44:20
 
 Cannot use `$KeyMirror` on intersection type [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:44:18
-   44| declare var y12: $KeyMirror<S>;
-                        ^^^^^^^^^^^^^ [2]
+   ops_on_intersection.js:44:20
+   44| declare const y12: $KeyMirror<S>;
+                          ^^^^^^^^^^^^^ [2]
 
 References:
    ops_on_intersection.js:5:10
@@ -514,14 +514,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_intersection.js:48:18
+Error ------------------------------------------------------------------------------------- ops_on_intersection.js:48:20
 
 Cannot use key set on intersection type [1] in an export position. Please provide an (alternative) annotation for key
 set [2]. [invalid-exported-annotation]
 
-   ops_on_intersection.js:48:18
-   48| declare var y13: keyof T;
-                        ^^^^^^^ [2]
+   ops_on_intersection.js:48:20
+   48| declare const y13: keyof T;
+                          ^^^^^^^ [2]
 
 References:
    ops_on_intersection.js:4:10
@@ -597,9 +597,9 @@ Cannot access object type [1] with computed property using string [2]. [invalid-
                                  ^^^^^^ [2]
 
 References:
-   ops_on_react_config.js:7:16
-    7| declare var t: T;
-                      ^ [1]
+   ops_on_react_config.js:7:18
+    7| declare const t: T;
+                        ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:19:19
@@ -617,14 +617,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:22:17
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:22:19
 
 Cannot use exact on conditional type [1] in an export position. Please provide an (alternative) annotation for
 exact [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:22:17
-   22| declare var y5: $Exact<T>;
-                       ^^^^^^^^^ [2]
+   ops_on_react_config.js:22:19
+   22| declare const y5: $Exact<T>;
+                         ^^^^^^^^^ [2]
 
 References:
    ops_on_react_config.js:6:10
@@ -632,14 +632,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:26:17
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:26:19
 
 Cannot use statics on conditional type [1] in an export position. Please provide an (alternative) annotation for
 statics [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:26:17
-   26| declare var y6: Class<T>;
-                       ^^^^^^^^ [2]
+   ops_on_react_config.js:26:19
+   26| declare const y6: Class<T>;
+                         ^^^^^^^^ [2]
 
 References:
    ops_on_react_config.js:6:10
@@ -656,9 +656,9 @@ object type [1] is not an instance type. [incompatible-use]
                          ^^
 
 References:
-   ops_on_react_config.js:26:23
-   26| declare var y6: Class<T>;
-                             ^ [1]
+   ops_on_react_config.js:26:25
+   26| declare const y6: Class<T>;
+                               ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:30:14
@@ -690,14 +690,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:35:37
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:35:39
 
 Cannot use prototype on conditional type [1] in an export position. Please provide an (alternative) annotation for
 prototype [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:35:37
-   35| declare export var x8: { __proto__: T };
-                                           ^ [2]
+   ops_on_react_config.js:35:39
+   35| declare export const x8: { __proto__: T };
+                                             ^ [2]
 
 References:
    ops_on_react_config.js:6:10
@@ -729,9 +729,9 @@ object type [1] is not a class. [not-a-class]
                                       ^
 
 References:
-   ops_on_react_config.js:7:16
-    7| declare var t: T;
-                      ^ [1]
+   ops_on_react_config.js:7:18
+    7| declare const t: T;
+                        ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:41:20
@@ -758,9 +758,9 @@ Cannot perform arithmetic operation because object type [1] is not a number or b
                            ^
 
 References:
-   ops_on_react_config.js:7:16
-    7| declare var t: T;
-                      ^ [1]
+   ops_on_react_config.js:7:18
+    7| declare const t: T;
+                        ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:44:20
@@ -778,14 +778,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:47:18
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:47:20
 
 Cannot use `$KeyMirror` on conditional type [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:47:18
-   47| declare var y12: $KeyMirror<T>;
-                        ^^^^^^^^^^^^^ [2]
+   ops_on_react_config.js:47:20
+   47| declare const y12: $KeyMirror<T>;
+                          ^^^^^^^^^^^^^ [2]
 
 References:
    ops_on_react_config.js:6:10
@@ -793,14 +793,14 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- ops_on_react_config.js:51:18
+Error ------------------------------------------------------------------------------------- ops_on_react_config.js:51:20
 
 Cannot use key set on conditional type [1] in an export position. Please provide an (alternative) annotation for key
 set [2]. [invalid-exported-annotation]
 
-   ops_on_react_config.js:51:18
-   51| declare var y13: keyof T;
-                        ^^^^^^^ [2]
+   ops_on_react_config.js:51:20
+   51| declare const y13: keyof T;
+                          ^^^^^^^ [2]
 
 References:
    ops_on_react_config.js:6:10
