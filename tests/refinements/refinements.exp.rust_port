@@ -13780,9 +13780,9 @@ Cannot get `t.calll` because property `calll` is missing in statics of function 
                   ^^^^^
 
 References:
-   tagged_union.js:108:29
-   108|     r: any, s: Function, t: () => void
-                                    ^^^^^^^^^^ [1]
+   tagged_union.js:108:24
+   108|     r: any, s: any, t: () => void
+                               ^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:139:7

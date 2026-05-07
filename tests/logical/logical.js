@@ -91,7 +91,7 @@ function logical2j(x: (a: number) => number): string {
 /**
  * A literal on the left side of &&
  */
-function logical2k(x: Function): string {
+function logical2k(x: any): string {
   return x && 'foo';
 }
 
