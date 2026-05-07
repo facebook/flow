@@ -4,7 +4,8 @@ import * as Types from "./type-exports.js"; // module with a type and non-type e
 let Typologies = Types; // module through assignment
 
 // mixed non-type and type imports
-import { Typhoons, type Typesafety as Typesafe } from "./type-exports.js"
+import { Typhoons } from "./type-exports.js";
+import type { Typesafety as Typesafe } from "./type-exports.js";
 
 // typeof specifier import
 import typeof { Typhoon } from "./type-exports.js";

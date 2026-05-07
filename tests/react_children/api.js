@@ -1,6 +1,7 @@
 // @flow
 
-import {Children, type ChildrenArray} from 'react';
+import {Children} from 'react';
+import type {ChildrenArray} from 'react';
 
 const a: ChildrenArray<?number> = [
   1,

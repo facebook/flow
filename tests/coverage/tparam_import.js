@@ -1,6 +1,6 @@
 // @flow
 
-import { type RecordOf } from "./tparam";
+import type { RecordOf } from "./tparam";
 
 export type Point = {
   x: number,

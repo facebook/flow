@@ -1,4 +1,4 @@
-import {type Box, type Container} from './test';
+import type {Box, Container} from './test';
 
 
 function test1(x : Box<string>) : Box<number> { // Error: string ~> number

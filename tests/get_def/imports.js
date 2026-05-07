@@ -32,18 +32,18 @@ import typeof * as things_ns from "./helpers/exports_named.js";
 ({}) as things_ns;
 
 import {
-  type X as _barrel_X1,
   x as _barrel_x1,
   y as _barrel_y1,
   z as _barrel_z1,
   foo as _barrel_foo1,
   bar as _barrel_bar1,
 } from "./helpers/barrel_export_level1.js";
+import type {X as _barrel_X1} from "./helpers/barrel_export_level1.js";
 import {
-  type X as _barrel_X2,
   x as _barrel_x2,
   y as _barrel_y2,
   z as _barrel_z2,
   foo as _barrel_foo2,
   bar as _barrel_bar2,
 } from "./helpers/barrel_export_level2.js";
+import type {X as _barrel_X2} from "./helpers/barrel_export_level2.js";

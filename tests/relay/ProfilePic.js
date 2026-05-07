@@ -4,7 +4,8 @@
  */
 
 import * as React from 'react';
-import {createFragmentContainer, type GetPropFragmentRef} from './Relay';
+import {createFragmentContainer} from './Relay';
+import type {GetPropFragmentRef} from './Relay';
 
 import type {ProfilePic_image} from './ProfilePic.graphql';
 

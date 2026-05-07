@@ -11,7 +11,7 @@ class myClass {};
 /** this is myInterface */
 interface myInterface {};
 import type {ExportFoo, ExportBar, ExportOpaque, ExportClass, ExportInterface, ExportEnum} from './type-exports';
-import { typeof exportValue } from './type-exports';
+import typeof { exportValue } from './type-exports';
 
 (x : myFoo) => {};
 //    ^

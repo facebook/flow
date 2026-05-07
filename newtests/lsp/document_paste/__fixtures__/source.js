@@ -1,7 +1,8 @@
 // @flow
 
 import type {A} from './import_source';
-import foo, {type A as B} from './import_source';
+import type {A as B} from './import_source';
+import foo from './import_source';
 import {bar, Foo} from './import_source';
 import * as NS from './import_source';
 import typeof * as NST from './import_source';

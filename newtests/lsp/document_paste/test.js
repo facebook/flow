@@ -79,15 +79,15 @@ module.exports = suite(
         // When user selects all the non-imports, then we should get metadata of all
         // imported names.
         snapshotForPrepare('prepare_on_all_non_imports.json', {
-          start: {line: 12, character: 0},
+          start: {line: 13, character: 0},
           end: {line: 1000, character: 0},
         }),
         snapshotForPrepare('prepare_on_all_toplevel_non_imports.json', {
-          start: {line: 12, character: 0},
-          end: {line: 21, character: 0},
+          start: {line: 13, character: 0},
+          end: {line: 22, character: 0},
         }),
         snapshotForPrepare('prepare_on_nested.json', {
-          start: {line: 21, character: 0},
+          start: {line: 22, character: 0},
           end: {line: 1000, character: 0},
         }),
       ]),

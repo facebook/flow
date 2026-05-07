@@ -1,14 +1,14 @@
-Error ---------------------------------------------------------------------------------------------- testimport.js:57:31
+Error ---------------------------------------------------------------------------------------------- testimport.js:58:31
 
 Cannot access string literal `__type` on `C` because property `__type` is missing in `C` [1]. [incompatible-use]
 
-   testimport.js:57:31
-   57| function t(applicationType: C['__type']): number {
+   testimport.js:58:31
+   58| function t(applicationType: C['__type']): number {
                                      ^^^^^^^^
 
 References:
-   testimport.js:57:29
-   57| function t(applicationType: C['__type']): number {
+   testimport.js:58:29
+   58| function t(applicationType: C['__type']): number {
                                    ^ [1]
 
 

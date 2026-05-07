@@ -6,20 +6,20 @@ Invalid trivially recursive definition of `Values`.  [recursive-definition]
                        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- eval_values.js:11:1
+Error ---------------------------------------------------------------------------------------------- eval_values.js:12:1
 
 Cannot cast `options.foo` to empty because `Value` [1] is incompatible with empty [2]. [incompatible-type]
 
-   eval_values.js:11:1
-   11| options.foo as empty; // error
+   eval_values.js:12:1
+   12| options.foo as empty; // error
        ^^^^^^^^^^^
 
 References:
    exported_eval_values.js:1:42
     1| declare export const options: {[string]: Value};
                                                 ^^^^^ [1]
-   eval_values.js:11:16
-   11| options.foo as empty; // error
+   eval_values.js:12:16
+   12| options.foo as empty; // error
                       ^^^^^ [2]
 
 

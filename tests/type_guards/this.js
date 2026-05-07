@@ -7,8 +7,8 @@ import {
   D as DImported,
   E as EImported,
   F as FImported,
-  type I as IImported,
 } from './this_exports';
+import type {I as IImported} from './this_exports';
 
 function test1() {
   declare class A {

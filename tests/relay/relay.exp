@@ -1,78 +1,78 @@
-Error -------------------------------------------------------------------------------------------------- Profile.js:24:5
+Error -------------------------------------------------------------------------------------------------- Profile.js:21:5
 
 Cannot cast `this.props.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   Profile.js:24:5
-   24|     this.props.foo as empty; // Error: number ~> empty
+   Profile.js:21:5
+   21|     this.props.foo as empty; // Error: number ~> empty
            ^^^^^^^^^^^^^^
 
 References:
-   Profile.js:18:8
-   18|   foo: number,
+   Profile.js:15:8
+   15|   foo: number,
               ^^^^^^ [1]
-   Profile.js:24:23
-   24|     this.props.foo as empty; // Error: number ~> empty
+   Profile.js:21:23
+   21|     this.props.foo as empty; // Error: number ~> empty
                              ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Profile.js:25:5
+Error -------------------------------------------------------------------------------------------------- Profile.js:22:5
 
 Cannot cast `this.props.user.id` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   Profile.js:25:5
-   25|     this.props.user.id as empty; // Error: string ~> empty
+   Profile.js:22:5
+   22|     this.props.user.id as empty; // Error: string ~> empty
            ^^^^^^^^^^^^^^^^^^
 
 References:
    Profile.graphql.js:15:10
    15|     +id: string,
                 ^^^^^^ [1]
-   Profile.js:25:27
-   25|     this.props.user.id as empty; // Error: string ~> empty
+   Profile.js:22:27
+   22|     this.props.user.id as empty; // Error: string ~> empty
                                  ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Profile.js:26:5
+Error -------------------------------------------------------------------------------------------------- Profile.js:23:5
 
 Cannot cast `this.props.user.name` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   Profile.js:26:5
-   26|     this.props.user.name as empty; // Error: string ~> empty
+   Profile.js:23:5
+   23|     this.props.user.name as empty; // Error: string ~> empty
            ^^^^^^^^^^^^^^^^^^^^
 
 References:
    Profile.graphql.js:16:12
    16|     +name: string,
                   ^^^^^^ [1]
-   Profile.js:26:29
-   26|     this.props.user.name as empty; // Error: string ~> empty
+   Profile.js:23:29
+   23|     this.props.user.name as empty; // Error: string ~> empty
                                    ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- Profile.js:27:5
+Error -------------------------------------------------------------------------------------------------- Profile.js:24:5
 
 Cannot cast `this.props.user.pic.id` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   Profile.js:27:5
-   27|     this.props.user.pic.id as empty; // Error: string ~> empty
+   Profile.js:24:5
+   24|     this.props.user.pic.id as empty; // Error: string ~> empty
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    Profile.graphql.js:18:12
    18|       +id: string,
                   ^^^^^^ [1]
-   Profile.js:27:31
-   27|     this.props.user.pic.id as empty; // Error: string ~> empty
+   Profile.js:24:31
+   24|     this.props.user.pic.id as empty; // Error: string ~> empty
                                      ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Profile.js:28:24
+Error ------------------------------------------------------------------------------------------------- Profile.js:25:24
 
 Cannot create `ProfilePic` element because in property `image`: object literal [1] is incompatible with
 `ProfilePic_imageRef` [2]. [incompatible-type]
 
-   Profile.js:28:24
-   28|     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
+   Profile.js:25:24
+   25|     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -81,20 +81,20 @@ References:
          ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- ProfilePic.js:18:5
+Error ----------------------------------------------------------------------------------------------- ProfilePic.js:19:5
 
 Cannot cast `this.props.image.url` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   ProfilePic.js:18:5
-   18|     this.props.image.url as empty; // Error: string ~> empty
+   ProfilePic.js:19:5
+   19|     this.props.image.url as empty; // Error: string ~> empty
            ^^^^^^^^^^^^^^^^^^^^
 
 References:
    ProfilePic.graphql.js:14:11
    14|     +url: string,
                  ^^^^^^ [1]
-   ProfilePic.js:18:29
-   18|     this.props.image.url as empty; // Error: string ~> empty
+   ProfilePic.js:19:29
+   19|     this.props.image.url as empty; // Error: string ~> empty
                                    ^^^^^ [2]
 
 
@@ -111,8 +111,8 @@ References:
    main.js:15:1
    15| <Profile user={userRef} />; // Error: Missing foo
        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   Profile.js:42:6
-   42|   ...GetPropFragmentRef<Props>
+   Profile.js:39:6
+   39|   ...GetPropFragmentRef<Props>
             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -129,8 +129,8 @@ References:
    main.js:16:1
    16| <Profile foo={42} />; // Error: Missing user
        ^^^^^^^^^^^^^^^^^^^^ [1]
-   Profile.js:42:6
-   42|   ...GetPropFragmentRef<Props>
+   Profile.js:39:6
+   39|   ...GetPropFragmentRef<Props>
             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -144,8 +144,8 @@ Cannot create `Profile` element because in property `foo`: string [1] is incompa
                                    ^^^^^ [1]
 
 References:
-   Profile.js:18:8
-   18|   foo: number,
+   Profile.js:15:8
+   15|   foo: number,
               ^^^^^^ [2]
 
 
@@ -162,8 +162,8 @@ References:
    main.js:18:1
    18| <Profile />; // Error: Missing user and foo
        ^^^^^^^^^^^ [1]
-   Profile.js:42:6
-   42|   ...GetPropFragmentRef<Props>
+   Profile.js:39:6
+   39|   ...GetPropFragmentRef<Props>
             ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -213,8 +213,8 @@ Cannot create `Profile` element because in property `foo`: string [1] is incompa
                                 ^^^^^ [1]
 
 References:
-   Profile.js:18:8
-   18|   foo: number,
+   Profile.js:15:8
+   15|   foo: number,
               ^^^^^^ [2]
 
 
@@ -243,8 +243,8 @@ Cannot create `Profile` element because in property `foo`: `unknown` [1] is inco
                                                     ^^^^^^^ [1]
 
 References:
-   Profile.js:18:8
-   18|   foo: number,
+   Profile.js:15:8
+   15|   foo: number,
               ^^^^^^ [2]
 
 

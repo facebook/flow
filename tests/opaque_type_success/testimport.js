@@ -1,7 +1,8 @@
 //
 import * as Test from './test';
-import {hide, type ID, type TransparentMyNum} from './test';
-import {type C} from './test2';
+import {hide} from './test';
+import type {ID, TransparentMyNum} from './test';
+import type {C} from './test2';
 
 var hideCJS = require('./test').hide;
 

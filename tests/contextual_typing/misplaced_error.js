@@ -1,4 +1,5 @@
-import { type CommitTemplate, wrapCommitTemplateWithState } from "./misplaced_error_exports";
+import { wrapCommitTemplateWithState } from "./misplaced_error_exports";
+import type { CommitTemplate } from "./misplaced_error_exports";
 
 const EMPTY_TEMPLATE: CommitTemplate<{...}> = {
   title: '',

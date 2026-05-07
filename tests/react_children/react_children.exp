@@ -1,4 +1,4 @@
-Error ------------------------------------------------------------------------------------------------------ api.js:14:4
+Error ------------------------------------------------------------------------------------------------------ api.js:15:4
 
 Cannot call `na` with `Children.map(...)` bound to `x` because in array element: `NonNullable<string>` [1] is not
 exactly the same as `number` [2]. [incompatible-type]
@@ -8,56 +8,56 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   api.js:14:4
-     14| na(Children.map(a, (x: string) => x as string)); // Error
+   api.js:15:4
+     15| na(Children.map(a, (x: string) => x as string)); // Error
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:1091:16
    1091|       ): Array<$NonMaybeType<U>>,
                         ^^^^^^^^^^^^^^^^ [1]
-   api.js:33:22
-     33| function na(x: Array<number>) {}
+   api.js:34:22
+     34| function na(x: Array<number>) {}
                               ^^^^^^ [2]
    <BUILTINS>/react.js:1091:10
    1091|       ): Array<$NonMaybeType<U>>,
                   ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   api.js:33:16
-     33| function na(x: Array<number>) {}
+   api.js:34:16
+     34| function na(x: Array<number>) {}
                         ^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- api.js:14:24
+Error ----------------------------------------------------------------------------------------------------- api.js:15:24
 
 Cannot call `Children.map` with function bound to `fn` because in the first parameter: string [1] is incompatible with
 number [2]. [incompatible-type]
 
-   api.js:14:24
-   14| na(Children.map(a, (x: string) => x as string)); // Error
+   api.js:15:24
+   15| na(Children.map(a, (x: string) => x as string)); // Error
                               ^^^^^^ [1]
 
 References:
-   api.js:5:10
-    5| const a: ChildrenArray<?number> = [
+   api.js:6:10
+    6| const a: ChildrenArray<?number> = [
                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- api.js:14:24
+Error ----------------------------------------------------------------------------------------------------- api.js:15:24
 
 Cannot call `Children.map` with function bound to `fn` because in the first parameter: string [1] is incompatible with
 number [2]. [incompatible-type]
 
-   api.js:14:24
-   14| na(Children.map(a, (x: string) => x as string)); // Error
+   api.js:15:24
+   15| na(Children.map(a, (x: string) => x as string)); // Error
                               ^^^^^^ [1]
 
 References:
-   api.js:5:25
-    5| const a: ChildrenArray<?number> = [
+   api.js:6:25
+    6| const a: ChildrenArray<?number> = [
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ api.js:15:4
+Error ------------------------------------------------------------------------------------------------------ api.js:16:4
 
 Cannot call `sa` with `Children.map(...)` bound to `x` because in array element: `NonNullable<number>` [1] is not
 exactly the same as `string` [2]. [incompatible-type]
@@ -67,170 +67,170 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   api.js:15:4
-     15| sa(Children.map(a, (x: number) => x as number)); // Error
+   api.js:16:4
+     16| sa(Children.map(a, (x: number) => x as number)); // Error
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:1091:16
    1091|       ): Array<$NonMaybeType<U>>,
                         ^^^^^^^^^^^^^^^^ [1]
-   api.js:34:22
-     34| function sa(x: Array<string>) {}
+   api.js:35:22
+     35| function sa(x: Array<string>) {}
                               ^^^^^^ [2]
    <BUILTINS>/react.js:1091:10
    1091|       ): Array<$NonMaybeType<U>>,
                   ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   api.js:34:16
-     34| function sa(x: Array<string>) {}
+   api.js:35:16
+     35| function sa(x: Array<string>) {}
                         ^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- api.js:17:25
+Error ----------------------------------------------------------------------------------------------------- api.js:18:25
 
 Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: number [1] is incompatible
 with nullable number [2]. [incompatible-type]
 
-   api.js:17:25
-   17| Children.forEach(a, (x: number) => {}); // Error
+   api.js:18:25
+   18| Children.forEach(a, (x: number) => {}); // Error
                                ^^^^^^ [1]
 
 References:
-   api.js:5:10
-    5| const a: ChildrenArray<?number> = [
+   api.js:6:10
+    6| const a: ChildrenArray<?number> = [
                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- api.js:17:25
+Error ----------------------------------------------------------------------------------------------------- api.js:18:25
 
 Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: number [1] is incompatible
 with null or undefined [2]. [incompatible-type]
 
-   api.js:17:25
-   17| Children.forEach(a, (x: number) => {}); // Error
+   api.js:18:25
+   18| Children.forEach(a, (x: number) => {}); // Error
                                ^^^^^^ [1]
 
 References:
-   api.js:5:24
-    5| const a: ChildrenArray<?number> = [
+   api.js:6:24
+    6| const a: ChildrenArray<?number> = [
                               ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- api.js:19:25
+Error ----------------------------------------------------------------------------------------------------- api.js:20:25
 
 Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
 with nullable number [2]. [incompatible-type]
 
-   api.js:19:25
-   19| Children.forEach(a, (x: string) => {}); // Error
+   api.js:20:25
+   20| Children.forEach(a, (x: string) => {}); // Error
                                ^^^^^^ [1]
 
 References:
-   api.js:5:10
-    5| const a: ChildrenArray<?number> = [
+   api.js:6:10
+    6| const a: ChildrenArray<?number> = [
                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- api.js:19:25
+Error ----------------------------------------------------------------------------------------------------- api.js:20:25
 
 Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
 with number [2]. [incompatible-type]
 
-   api.js:19:25
-   19| Children.forEach(a, (x: string) => {}); // Error
+   api.js:20:25
+   20| Children.forEach(a, (x: string) => {}); // Error
                                ^^^^^^ [1]
 
 References:
-   api.js:5:10
-    5| const a: ChildrenArray<?number> = [
+   api.js:6:10
+    6| const a: ChildrenArray<?number> = [
                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- api.js:19:25
+Error ----------------------------------------------------------------------------------------------------- api.js:20:25
 
 Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
 with null or undefined [2]. [incompatible-type]
 
-   api.js:19:25
-   19| Children.forEach(a, (x: string) => {}); // Error
+   api.js:20:25
+   20| Children.forEach(a, (x: string) => {}); // Error
                                ^^^^^^ [1]
 
 References:
-   api.js:5:24
-    5| const a: ChildrenArray<?number> = [
+   api.js:6:24
+    6| const a: ChildrenArray<?number> = [
                               ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- api.js:19:25
+Error ----------------------------------------------------------------------------------------------------- api.js:20:25
 
 Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
 with number [2]. [incompatible-type]
 
-   api.js:19:25
-   19| Children.forEach(a, (x: string) => {}); // Error
+   api.js:20:25
+   20| Children.forEach(a, (x: string) => {}); // Error
                                ^^^^^^ [1]
 
 References:
-   api.js:5:25
-    5| const a: ChildrenArray<?number> = [
+   api.js:6:25
+    6| const a: ChildrenArray<?number> = [
                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ api.js:22:3
+Error ------------------------------------------------------------------------------------------------------ api.js:23:3
 
 Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is incompatible with string [2].
 [incompatible-type]
 
-   api.js:22:3
-     22| s(Children.count(a)); // Error
+   api.js:23:3
+     23| s(Children.count(a)); // Error
            ^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:1097:44
    1097|       count(children: ChildrenArray<any>): number,
                                                     ^^^^^^ [1]
-   api.js:32:15
-     32| function s(x: string) {}
+   api.js:33:15
+     33| function s(x: string) {}
                        ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ api.js:25:3
+Error ------------------------------------------------------------------------------------------------------ api.js:26:3
 
 Cannot call `s` with `Children.only(...)` bound to `x` because number [1] is incompatible with string [2].
 [incompatible-type]
 
-   api.js:25:3
-   25| s(Children.only(a)); // Error
+   api.js:26:3
+   26| s(Children.only(a)); // Error
          ^^^^^^^^^^^^^^^^
 
 References:
-   api.js:5:10
-    5| const a: ChildrenArray<?number> = [
+   api.js:6:10
+    6| const a: ChildrenArray<?number> = [
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   api.js:32:15
-   32| function s(x: string) {}
+   api.js:33:15
+   33| function s(x: string) {}
                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ api.js:25:3
+Error ------------------------------------------------------------------------------------------------------ api.js:26:3
 
 Cannot call `s` with `Children.only(...)` bound to `x` because number [1] is incompatible with string [2].
 [incompatible-type]
 
-   api.js:25:3
-   25| s(Children.only(a)); // Error
+   api.js:26:3
+   26| s(Children.only(a)); // Error
          ^^^^^^^^^^^^^^^^
 
 References:
-   api.js:5:25
-    5| const a: ChildrenArray<?number> = [
+   api.js:6:25
+    6| const a: ChildrenArray<?number> = [
                                ^^^^^^ [1]
-   api.js:32:15
-   32| function s(x: string) {}
+   api.js:33:15
+   33| function s(x: string) {}
                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ api.js:28:4
+Error ------------------------------------------------------------------------------------------------------ api.js:29:4
 
 Cannot call `sa` with `Children.toArray(...)` bound to `x` because in array element: `NonNullable<?number>` [1] is not
 exactly the same as `string` [2]. [incompatible-type]
@@ -240,22 +240,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   api.js:28:4
-     28| sa(Children.toArray(a)); // Error
+   api.js:29:4
+     29| sa(Children.toArray(a)); // Error
             ^^^^^^^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:1099:53
    1099|       toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
                                                              ^^^^^^^^^^^^^^^^ [1]
-   api.js:34:22
-     34| function sa(x: Array<string>) {}
+   api.js:35:22
+     35| function sa(x: Array<string>) {}
                               ^^^^^^ [2]
    <BUILTINS>/react.js:1099:47
    1099|       toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   api.js:34:16
-     34| function sa(x: Array<string>) {}
+   api.js:35:16
+     35| function sa(x: Array<string>) {}
                         ^^^^^^^^^^^^^ [4]
 
 

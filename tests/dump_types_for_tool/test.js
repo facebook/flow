@@ -1,5 +1,5 @@
 //@flow
-import {type Foo} from './exp';
+import type {Foo} from './exp';
 function foo(x: number) { }
 foo(0);
 

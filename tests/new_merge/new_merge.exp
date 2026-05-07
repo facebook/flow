@@ -39,159 +39,125 @@ References:
             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ main.js:6:1
+Error ------------------------------------------------------------------------------------------------------ main.js:7:1
 
 Cannot cast empty string to `T1` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   main.js:6:1
-   6| '' as T1; // error string ~> nunber
+   main.js:7:1
+   7| '' as T1; // error string ~> nunber
       ^^ [1]
 
 References:
-   main.js:6:7
-   6| '' as T1; // error string ~> nunber
+   main.js:7:7
+   7| '' as T1; // error string ~> nunber
             ^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:13:1
+Error ----------------------------------------------------------------------------------------------------- main.js:15:1
 
 Cannot cast `x3` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:13:1
-   13| x3 as empty; // error number ~> empty
+   main.js:15:1
+   15| x3 as empty; // error number ~> empty
        ^^
 
 References:
    lookup.js:8:23
     8| declare export var x: typeof d.f;
                              ^^^^^^^^^^ [1]
-   main.js:13:7
-   13| x3 as empty; // error number ~> empty
+   main.js:15:7
+   15| x3 as empty; // error number ~> empty
              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:22:1
+Error ----------------------------------------------------------------------------------------------------- main.js:24:1
 
 Cannot cast `x4` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:22:1
-   22| x4 as empty; // error number ~> empty
+   main.js:24:1
+   24| x4 as empty; // error number ~> empty
        ^^
 
 References:
    get_prop_instantiation.js:8:23
     8| declare export var x: typeof d.f;
                              ^^^^^^^^^^ [1]
-   main.js:22:7
-   22| x4 as empty; // error number ~> empty
+   main.js:24:7
+   24| x4 as empty; // error number ~> empty
              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:26:1
+Error ----------------------------------------------------------------------------------------------------- main.js:28:1
 
 Cannot cast `x5` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:26:1
-   26| x5 as empty; // error number ~> empty
+   main.js:28:1
+   28| x5 as empty; // error number ~> empty
        ^^
 
 References:
    get_prop_class.js:4:13
     4|   static s: number;
                    ^^^^^^ [1]
-   main.js:26:7
-   26| x5 as empty; // error number ~> empty
+   main.js:28:7
+   28| x5 as empty; // error number ~> empty
              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:27:1
+Error ----------------------------------------------------------------------------------------------------- main.js:29:1
 
 Cannot cast `y5` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:27:1
-   27| y5 as empty; // error function type ~> empty
+   main.js:29:1
+   29| y5 as empty; // error function type ~> empty
        ^^
 
 References:
    get_prop_class.js:10:3
    10|   static m(): void {}
          ^^^^^^^^^^^^^^^^^^^ [1]
-   main.js:27:7
-   27| y5 as empty; // error function type ~> empty
+   main.js:29:7
+   29| y5 as empty; // error function type ~> empty
              ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- main.js:30:1
-
-Cannot cast `1` to `T6` because number [1] is incompatible with `C` [2]. [incompatible-type]
-
-   main.js:30:1
-   30| 1 as T6; // error number ~> class
-       ^ [1]
-
-References:
-   main.js:30:6
-   30| 1 as T6; // error number ~> class
-            ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:32:1
 
-Cannot cast `x6` to empty because `C` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `1` to `T6` because number [1] is incompatible with `C` [2]. [incompatible-type]
 
    main.js:32:1
-   32| x6 as empty; // error C ~> empty
+   32| 1 as T6; // error number ~> class
+       ^ [1]
+
+References:
+   main.js:32:6
+   32| 1 as T6; // error number ~> class
+            ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:34:1
+
+Cannot cast `x6` to empty because `C` [1] is incompatible with empty [2]. [incompatible-type]
+
+   main.js:34:1
+   34| x6 as empty; // error C ~> empty
        ^^
 
 References:
-   main.js:31:17
-   31| declare var x6: T6;
+   main.js:33:17
+   33| declare var x6: T6;
                        ^^ [1]
-   main.js:32:7
-   32| x6 as empty; // error C ~> empty
+   main.js:34:7
+   34| x6 as empty; // error C ~> empty
              ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- main.js:35:1
-
-Cannot cast `(new Foo8()).x` to number because string [1] is incompatible with number [2]. [incompatible-type]
-
-   main.js:35:1
-   35| new Foo8().x as number; // error: Qux wins
-       ^^^^^^^^^^^^
-
-References:
-   mixins.js:5:38
-    5| declare export class Foo extends Qux<string> mixins Bar<number> {
-                                            ^^^^^^ [1]
-   main.js:35:17
-   35| new Foo8().x as number; // error: Qux wins
-                       ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- main.js:36:1
-
-Cannot cast `(new Foo8()).y` to string because number [1] is incompatible with string [2]. [incompatible-type]
-
-   main.js:36:1
-   36| new Foo8().y as string; // error: Bar wins
-       ^^^^^^^^^^^^
-
-References:
-   mixins.js:5:57
-    5| declare export class Foo extends Qux<string> mixins Bar<number> {
-                                                               ^^^^^^ [1]
-   main.js:36:17
-   36| new Foo8().y as string; // error: Bar wins
-                       ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:37:1
 
-Cannot cast `(new Foo8()).z` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `(new Foo8()).x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    main.js:37:1
-   37| new Foo8().z as number; // error: Qux wins
+   37| new Foo8().x as number; // error: Qux wins
        ^^^^^^^^^^^^
 
 References:
@@ -199,49 +165,83 @@ References:
     5| declare export class Foo extends Qux<string> mixins Bar<number> {
                                             ^^^^^^ [1]
    main.js:37:17
-   37| new Foo8().z as number; // error: Qux wins
+   37| new Foo8().x as number; // error: Qux wins
                        ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:38:1
 
-Cannot cast `C8` to empty because class `C` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `(new Foo8()).y` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    main.js:38:1
-   38| C8 as empty; // error class ~> empty
+   38| new Foo8().y as string; // error: Bar wins
+       ^^^^^^^^^^^^
+
+References:
+   mixins.js:5:57
+    5| declare export class Foo extends Qux<string> mixins Bar<number> {
+                                                               ^^^^^^ [1]
+   main.js:38:17
+   38| new Foo8().y as string; // error: Bar wins
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:39:1
+
+Cannot cast `(new Foo8()).z` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   main.js:39:1
+   39| new Foo8().z as number; // error: Qux wins
+       ^^^^^^^^^^^^
+
+References:
+   mixins.js:5:38
+    5| declare export class Foo extends Qux<string> mixins Bar<number> {
+                                            ^^^^^^ [1]
+   main.js:39:17
+   39| new Foo8().z as number; // error: Qux wins
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:40:1
+
+Cannot cast `C8` to empty because class `C` [1] is incompatible with empty [2]. [incompatible-type]
+
+   main.js:40:1
+   40| C8 as empty; // error class ~> empty
        ^^
 
 References:
    mixins.js:26:22
    26| declare export class C mixins O1, O2, Number {}
                             ^ [1]
-   main.js:38:7
-   38| C8 as empty; // error class ~> empty
+   main.js:40:7
+   40| C8 as empty; // error class ~> empty
              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:41:1
+Error ----------------------------------------------------------------------------------------------------- main.js:43:1
 
 Cannot cast `x9` to empty because module `./export_named_any` [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:41:1
-   41| x9 as empty; // error module ~> empty
+   main.js:43:1
+   43| x9 as empty; // error module ~> empty
        ^^
 
 References:
    export_named_any.js
    ^^^^^^^^^^^^^^^^^^^ [1]
-   main.js:41:7
-   41| x9 as empty; // error module ~> empty
+   main.js:43:7
+   43| x9 as empty; // error module ~> empty
              ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:46:1
+Error ----------------------------------------------------------------------------------------------------- main.js:48:1
 
 Cannot cast `C10` to empty because class `<<anonymous class>>` [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:46:1
-   46| C10 as empty; // error anonymous class ~> empty
+   main.js:48:1
+   48| C10 as empty; // error anonymous class ~> empty
        ^^^
 
 References:
@@ -252,17 +252,17 @@ References:
     7|   p: T;
     8| }
        ^ [1]
-   main.js:46:8
-   46| C10 as empty; // error anonymous class ~> empty
+   main.js:48:8
+   48| C10 as empty; // error anonymous class ~> empty
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:51:1
+Error ----------------------------------------------------------------------------------------------------- main.js:53:1
 
 Cannot use `A.B` [1] with fewer than 1 type argument. [missing-type-arg]
 
-   main.js:51:1
-   51| B11.x;
+   main.js:53:1
+   53| B11.x;
        ^^^
 
 References:
@@ -271,7 +271,7 @@ References:
               ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:54:38
+Error ---------------------------------------------------------------------------------------------------- main.js:56:38
 
 Cannot assign `x14` to `y14` because in array element: `B14` [1] is not exactly the same as `A14` [2].
 [incompatible-type]
@@ -281,122 +281,122 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   main.js:54:38
-   54| const y14: Array<A14 /* tvar 2 */> = x14; // unify 1(B) = 2(A), update 1 goto 2, expected error
+   main.js:56:38
+   56| const y14: Array<A14 /* tvar 2 */> = x14; // unify 1(B) = 2(A), update 1 goto 2, expected error
                                             ^^^
 
 References:
    unification.js:6:29
     6| declare export var x: Array<B/* tvar 1 */>;
                                    ^ [1]
-   main.js:54:18
-   54| const y14: Array<A14 /* tvar 2 */> = x14; // unify 1(B) = 2(A), update 1 goto 2, expected error
+   main.js:56:18
+   56| const y14: Array<A14 /* tvar 2 */> = x14; // unify 1(B) = 2(A), update 1 goto 2, expected error
                         ^^^ [2]
    unification.js:6:23
     6| declare export var x: Array<B/* tvar 1 */>;
                              ^^^^^^^^^^^^^^^^^^^^ [3]
-   main.js:54:12
-   54| const y14: Array<A14 /* tvar 2 */> = x14; // unify 1(B) = 2(A), update 1 goto 2, expected error
+   main.js:56:12
+   56| const y14: Array<A14 /* tvar 2 */> = x14; // unify 1(B) = 2(A), update 1 goto 2, expected error
                   ^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:58:1
+Error ----------------------------------------------------------------------------------------------------- main.js:60:1
 
 Cannot cast `f15()` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:58:1
-     58| f15() as empty;
+   main.js:60:1
+     60| f15() as empty;
          ^^^^^
 
 References:
    <BUILTINS>/core.js:2285:15
    2285| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
-   main.js:58:10
-     58| f15() as empty;
+   main.js:60:10
+     60| f15() as empty;
                   ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:60:18
+Error ---------------------------------------------------------------------------------------------------- main.js:62:18
 
 Cannot resolve name `T16`. [cannot-resolve-name]
 
-   60| declare var t16: T16;
+   62| declare var t16: T16;
                         ^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:61:6
+Error ----------------------------------------------------------------------------------------------------- main.js:63:6
 
 Cannot resolve name `S16`. [cannot-resolve-name]
 
-   61| 1 as S16; // error number ~> string
+   63| 1 as S16; // error number ~> string
             ^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:64:1
+Error ----------------------------------------------------------------------------------------------------- main.js:66:1
 
 Cannot resolve name `C16`. [cannot-resolve-name]
 
-   64| C16 as empty; // error class ~> empty
+   66| C16 as empty; // error class ~> empty
        ^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:65:1
+Error ----------------------------------------------------------------------------------------------------- main.js:67:1
 
 Cannot resolve name `arr16`. [cannot-resolve-name]
 
-   65| arr16 as ReadonlyArray<empty>; // okay - inferred as any
+   67| arr16 as ReadonlyArray<empty>; // okay - inferred as any
        ^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:67:18
+Error ---------------------------------------------------------------------------------------------------- main.js:69:18
 
 Cannot resolve name `D16`. [cannot-resolve-name]
 
-   67| declare var d16: D16;
+   69| declare var d16: D16;
                         ^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:73:1
+Error ----------------------------------------------------------------------------------------------------- main.js:75:1
 
 Cannot cast `E17` to empty because enum `E` [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:73:1
-   73| E17 as empty; // error enum ~> empty
+   main.js:75:1
+   75| E17 as empty; // error enum ~> empty
        ^^^
 
 References:
    enums.js:3:13
     3| export enum E {
                    ^ [1]
-   main.js:73:8
-   73| E17 as empty; // error enum ~> empty
+   main.js:75:8
+   75| E17 as empty; // error enum ~> empty
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:74:1
+Error ----------------------------------------------------------------------------------------------------- main.js:76:1
 
 Cannot cast `E17.A` to empty because `E` [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:74:1
-   74| E17.A as empty; // error enum ~> empty
+   main.js:76:1
+   76| E17.A as empty; // error enum ~> empty
        ^^^^^
 
 References:
    enums.js:3:13
     3| export enum E {
                    ^ [1]
-   main.js:74:10
-   74| E17.A as empty; // error enum ~> empty
+   main.js:76:10
+   76| E17.A as empty; // error enum ~> empty
                 ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:75:5
+Error ----------------------------------------------------------------------------------------------------- main.js:77:5
 
 Cannot access `C` because `C` is not a member of enum `E` [1]. [invalid-enum-access]
 
-   main.js:75:5
-   75| E17.C as empty; // error - not a member
+   main.js:77:5
+   77| E17.C as empty; // error - not a member
            ^
 
 References:
@@ -405,234 +405,200 @@ References:
                    ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:80:1
+Error ----------------------------------------------------------------------------------------------------- main.js:82:1
 
 Cannot cast `x18` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:80:1
-   80| x18 as empty; // error number, string ~> empty
+   main.js:82:1
+   82| x18 as empty; // error number, string ~> empty
        ^^^
 
 References:
    eval_readonly.js:3:22
     3| export type U = { f: number, ... } | { f: string, ... };
                             ^^^^^^ [1]
-   main.js:80:8
-   80| x18 as empty; // error number, string ~> empty
+   main.js:82:8
+   82| x18 as empty; // error number, string ~> empty
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:80:1
+Error ----------------------------------------------------------------------------------------------------- main.js:82:1
 
 Cannot cast `x18` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:80:1
-   80| x18 as empty; // error number, string ~> empty
+   main.js:82:1
+   82| x18 as empty; // error number, string ~> empty
        ^^^
 
 References:
    eval_readonly.js:3:43
     3| export type U = { f: number, ... } | { f: string, ... };
                                                  ^^^^^^ [1]
-   main.js:80:8
-   80| x18 as empty; // error number, string ~> empty
+   main.js:82:8
+   82| x18 as empty; // error number, string ~> empty
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:81:1
+Error ----------------------------------------------------------------------------------------------------- main.js:83:1
 
 Cannot cast `y18` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:81:1
-   81| y18 as empty; // error number ~> empty
+   main.js:83:1
+   83| y18 as empty; // error number ~> empty
        ^^^
 
 References:
    eval_readonly.js:14:24
    14| const s = { ...roe, f: 1 };
                               ^ [1]
-   main.js:81:8
-   81| y18 as empty; // error number ~> empty
+   main.js:83:8
+   83| y18 as empty; // error number ~> empty
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:82:1
+Error ----------------------------------------------------------------------------------------------------- main.js:84:1
 
 Cannot cast `z18` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:82:1
-   82| z18 as empty; // error string ~> empty
+   main.js:84:1
+   84| z18 as empty; // error string ~> empty
        ^^^
 
 References:
    eval_readonly.js:9:15
     9| type O = { f: string, ... };
                      ^^^^^^ [1]
-   main.js:82:8
-   82| z18 as empty; // error string ~> empty
+   main.js:84:8
+   84| z18 as empty; // error string ~> empty
               ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:85:1
+Error ----------------------------------------------------------------------------------------------------- main.js:87:1
 
 Cannot cast `baz01` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:85:1
-   85| baz01 as empty; // error number ~> empty
+   main.js:87:1
+   87| baz01 as empty; // error number ~> empty
        ^^^^^
 
 References:
    eval_indexed_access.js:3:31
     3| type Foo1 = {foo: {bar: {baz: number, ...}, ...}, ...};
                                      ^^^^^^ [1]
-   main.js:85:10
-   85| baz01 as empty; // error number ~> empty
+   main.js:87:10
+   87| baz01 as empty; // error number ~> empty
                 ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:86:1
+Error ----------------------------------------------------------------------------------------------------- main.js:88:1
 
 Cannot cast `baz02` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:86:1
-   86| baz02 as empty; // error number ~> empty
+   main.js:88:1
+   88| baz02 as empty; // error number ~> empty
        ^^^^^
 
 References:
    eval_indexed_access.js:7:46
     7| type Foo2 = {[string]: {[string]: {[string]: number}}};
                                                     ^^^^^^ [1]
-   main.js:86:10
-   86| baz02 as empty; // error number ~> empty
+   main.js:88:10
+   88| baz02 as empty; // error number ~> empty
                 ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- main.js:91:1
+Error ----------------------------------------------------------------------------------------------------- main.js:93:1
 
 Cannot cast `y19` to object type because property `a` is missing in object literal [1] but exists in object type [2].
 [incompatible-type]
 
-   main.js:91:1
-   91| y19 as {a: number, ...}; // error undefined ~> number
+   main.js:93:1
+   93| y19 as {a: number, ...}; // error undefined ~> number
        ^^^
 
 References:
    spread.js:10:18
    10| export const y = { ...t };
                         ^^^^^^^^ [1]
-   main.js:91:8
-   91| y19 as {a: number, ...}; // error undefined ~> number
+   main.js:93:8
+   93| y19 as {a: number, ...}; // error undefined ~> number
               ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:113:1
+Error ---------------------------------------------------------------------------------------------------- main.js:115:1
 
 Cannot cast `p1_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:113:1
-   113| p1_f_22 as empty; // error string ~> empty
+   main.js:115:1
+   115| p1_f_22 as empty; // error string ~> empty
         ^^^^^^^
 
 References:
    eval_spread.js:6:23
      6| type P1 = { ...O1, f: string, ... };
                               ^^^^^^ [1]
-   main.js:113:12
-   113| p1_f_22 as empty; // error string ~> empty
+   main.js:115:12
+   115| p1_f_22 as empty; // error string ~> empty
                    ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:114:1
+Error ---------------------------------------------------------------------------------------------------- main.js:116:1
 
 Cannot cast `p2_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:114:1
-   114| p2_f_22 as empty; // error string ~> empty
+   main.js:116:1
+   116| p2_f_22 as empty; // error string ~> empty
         ^^^^^^^
 
 References:
    eval_spread.js:7:23
      7| type P2 = { ...O2, f: string, ... };
                               ^^^^^^ [1]
-   main.js:114:12
-   114| p2_f_22 as empty; // error string ~> empty
+   main.js:116:12
+   116| p2_f_22 as empty; // error string ~> empty
                    ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:115:1
+Error ---------------------------------------------------------------------------------------------------- main.js:117:1
 
 Cannot cast `p3_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:115:1
-   115| p3_f_22 as empty; // error string ~> empty
+   main.js:117:1
+   117| p3_f_22 as empty; // error string ~> empty
         ^^^^^^^
 
 References:
    eval_spread.js:9:22
      9| type P3 = {...O1, f: string};
                              ^^^^^^ [1]
-   main.js:115:12
-   115| p3_f_22 as empty; // error string ~> empty
+   main.js:117:12
+   117| p3_f_22 as empty; // error string ~> empty
                    ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:116:1
+Error ---------------------------------------------------------------------------------------------------- main.js:118:1
 
 Cannot cast `p4_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:116:1
-   116| p4_f_22 as empty; // error string ~> empty
+   main.js:118:1
+   118| p4_f_22 as empty; // error string ~> empty
         ^^^^^^^
 
 References:
    eval_spread.js:10:22
     10| type P4 = {...O2, f: string};
                              ^^^^^^ [1]
-   main.js:116:12
-   116| p4_f_22 as empty; // error string ~> empty
-                   ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- main.js:117:1
-
-Cannot cast `p1_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
-
-   main.js:117:1
-   117| p1_g_22 as empty; // error string ~> empty
-        ^^^^^^^
-
-References:
-   eval_spread.js:3:27
-     3| type O1 = { f: number, g: string, ... };
-                                  ^^^^^^ [1]
-   main.js:117:12
-   117| p1_g_22 as empty; // error string ~> empty
-                   ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- main.js:118:1
-
-Cannot cast `p2_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
-
-   main.js:118:1
-   118| p2_g_22 as empty; // error string ~> empty
-        ^^^^^^^
-
-References:
-   eval_spread.js:4:26
-     4| type O2 = {f: number, g: string};
-                                 ^^^^^^ [1]
    main.js:118:12
-   118| p2_g_22 as empty; // error string ~> empty
+   118| p4_f_22 as empty; // error string ~> empty
                    ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- main.js:119:1
 
-Cannot cast `p3_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `p1_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:119:1
-   119| p3_g_22 as empty; // error string ~> empty
+   119| p1_g_22 as empty; // error string ~> empty
         ^^^^^^^
 
 References:
@@ -640,16 +606,16 @@ References:
      3| type O1 = { f: number, g: string, ... };
                                   ^^^^^^ [1]
    main.js:119:12
-   119| p3_g_22 as empty; // error string ~> empty
+   119| p1_g_22 as empty; // error string ~> empty
                    ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- main.js:120:1
 
-Cannot cast `p4_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `p2_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:120:1
-   120| p4_g_22 as empty; // error string ~> empty
+   120| p2_g_22 as empty; // error string ~> empty
         ^^^^^^^
 
 References:
@@ -657,81 +623,115 @@ References:
      4| type O2 = {f: number, g: string};
                                  ^^^^^^ [1]
    main.js:120:12
-   120| p4_g_22 as empty; // error string ~> empty
+   120| p2_g_22 as empty; // error string ~> empty
                    ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:127:1
+Error ---------------------------------------------------------------------------------------------------- main.js:121:1
+
+Cannot cast `p3_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   main.js:121:1
+   121| p3_g_22 as empty; // error string ~> empty
+        ^^^^^^^
+
+References:
+   eval_spread.js:3:27
+     3| type O1 = { f: number, g: string, ... };
+                                  ^^^^^^ [1]
+   main.js:121:12
+   121| p3_g_22 as empty; // error string ~> empty
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:122:1
+
+Cannot cast `p4_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   main.js:122:1
+   122| p4_g_22 as empty; // error string ~> empty
+        ^^^^^^^
+
+References:
+   eval_spread.js:4:26
+     4| type O2 = {f: number, g: string};
+                                 ^^^^^^ [1]
+   main.js:122:12
+   122| p4_g_22 as empty; // error string ~> empty
+                   ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:129:1
 
 Cannot cast `p1_22` to object type because inexact `P1` [1] is incompatible with exact object type [2].
 [incompatible-exact]
 
-   main.js:127:1
-   127| p1_22 as {f: string, g: string}; // error incompatible exact
+   main.js:129:1
+   129| p1_22 as {f: string, g: string}; // error incompatible exact
         ^^^^^
 
 References:
    eval_spread.js:12:24
     12| declare export var p1: P1;
                                ^^ [1]
-   main.js:127:10
-   127| p1_22 as {f: string, g: string}; // error incompatible exact
+   main.js:129:10
+   129| p1_22 as {f: string, g: string}; // error incompatible exact
                  ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:128:1
+Error ---------------------------------------------------------------------------------------------------- main.js:130:1
 
 Cannot cast `p2_22` to object type because inexact `P2` [1] is incompatible with exact object type [2].
 [incompatible-exact]
 
-   main.js:128:1
-   128| p2_22 as {f: string, g: string}; // error incompatible exact
+   main.js:130:1
+   130| p2_22 as {f: string, g: string}; // error incompatible exact
         ^^^^^
 
 References:
    eval_spread.js:13:24
     13| declare export var p2: P2;
                                ^^ [1]
-   main.js:128:10
-   128| p2_22 as {f: string, g: string}; // error incompatible exact
+   main.js:130:10
+   130| p2_22 as {f: string, g: string}; // error incompatible exact
                  ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:134:1
+Error ---------------------------------------------------------------------------------------------------- main.js:136:1
 
 Cannot cast `t24` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:134:1
-   134| t24 as empty; // error number (length) ~> empty
+   main.js:136:1
+   136| t24 as empty; // error number (length) ~> empty
         ^^^
 
 References:
-   main.js:133:18
-   133| declare var t24: T24;
+   main.js:135:18
+   135| declare var t24: T24;
                          ^^^ [1]
-   main.js:134:8
-   134| t24 as empty; // error number (length) ~> empty
+   main.js:136:8
+   136| t24 as empty; // error number (length) ~> empty
                ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:137:1
+Error ---------------------------------------------------------------------------------------------------- main.js:139:1
 
 Cannot cast `x25` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:137:1
-   137| x25 as empty; // error number ~> empty
+   main.js:139:1
+   139| x25 as empty; // error number ~> empty
         ^^^
 
 References:
    obj_rest.js:3:18
      3| const obj = { f: 1 };
                          ^ [1]
-   main.js:137:8
-   137| x25 as empty; // error number ~> empty
+   main.js:139:8
+   139| x25 as empty; // error number ~> empty
                ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:149:1
+Error ---------------------------------------------------------------------------------------------------- main.js:151:1
 
 Cannot cast `frozenSuitevalues` to `IndirectFrozenSuiteValues` because `FrozenSuiteValues` [1] is incompatible with
 `IndirectFrozenSuiteValues` [2]. [incompatible-type]
@@ -739,101 +739,101 @@ Cannot cast `frozenSuitevalues` to `IndirectFrozenSuiteValues` because `FrozenSu
 Type `FrozenSuiteValues` [1] includes members `Extra Suite` that are not included in type
 `IndirectFrozenSuiteValues` [2].
 
-   main.js:149:1
-   149| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
+   main.js:151:1
+   151| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
         ^^^^^^^^^^^^^^^^^
 
 References:
-   main.js:148:32
-   148| declare var frozenSuitevalues: FrozenSuiteValues;
+   main.js:150:32
+   150| declare var frozenSuitevalues: FrozenSuiteValues;
                                        ^^^^^^^^^^^^^^^^^ [1]
-   main.js:149:22
-   149| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
+   main.js:151:22
+   151| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:155:1
+Error ---------------------------------------------------------------------------------------------------- main.js:157:1
 
 Cannot cast `S26.getState()` to empty because `RecordInstance` [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:155:1
-   155| S26.getState() as empty; // error RecordInstance ~> empty
+   main.js:157:1
+   157| S26.getState() as empty; // error RecordInstance ~> empty
         ^^^^^^^^^^^^^^
 
 References:
    type_of_typeapp.js:11:31
     11| class Store extends BaseStore<State> {}
                                       ^^^^^ [1]
-   main.js:155:19
-   155| S26.getState() as empty; // error RecordInstance ~> empty
+   main.js:157:19
+   157| S26.getState() as empty; // error RecordInstance ~> empty
                           ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:161:1
+Error ---------------------------------------------------------------------------------------------------- main.js:163:1
 
 Cannot cast `C27.Q` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   main.js:161:1
-   161| C27.Q as string; // error
+   main.js:163:1
+   163| C27.Q as string; // error
         ^^^^^
 
 References:
    recursive.js:8:13
      8|   static Q: typeof (C.P);
                     ^^^^^^^^^^^^ [1]
-   main.js:161:10
-   161| C27.Q as string; // error
+   main.js:163:10
+   163| C27.Q as string; // error
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:163:1
+Error ---------------------------------------------------------------------------------------------------- main.js:165:1
 
 Cannot cast `x27.q` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
-   main.js:163:1
-   163| x27.q as string; // error
+   main.js:165:1
+   165| x27.q as string; // error
         ^^^^^
 
 References:
    recursive.js:13:6
     13|   q: typeof (x.p);
              ^^^^^^^^^^^^ [1]
-   main.js:163:10
-   163| x27.q as string; // error
+   main.js:165:10
+   165| x27.q as string; // error
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:167:1
+Error ---------------------------------------------------------------------------------------------------- main.js:169:1
 
 Cannot cast `t28` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:167:1
-   167| t28 as empty; // error number (length) ~> empty
+   main.js:169:1
+   169| t28 as empty; // error number (length) ~> empty
         ^^^
 
 References:
-   main.js:166:18
-   166| declare var t28: T28;
+   main.js:168:18
+   168| declare var t28: T28;
                          ^^^ [1]
-   main.js:167:8
-   167| t28 as empty; // error number (length) ~> empty
+   main.js:169:8
+   169| t28 as empty; // error number (length) ~> empty
                ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:171:1
+Error ---------------------------------------------------------------------------------------------------- main.js:173:1
 
 Cannot cast `instance_named` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   main.js:171:1
-   171| instance_named as empty; // ERROR
+   main.js:173:1
+   173| instance_named as empty; // ERROR
         ^^^^^^^^^^^^^^
 
 References:
    get_prop_instance.js:5:6
      5|   s: number;
              ^^^^^^ [1]
-   main.js:171:19
-   171| instance_named as empty; // ERROR
+   main.js:173:19
+   173| instance_named as empty; // ERROR
                           ^^^^^ [2]
 
 

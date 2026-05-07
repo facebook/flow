@@ -6844,7 +6844,7 @@ b.te
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL>/unqualified-type-annotation.js',
         },
-        position: {line: 27, character: 18},
+        position: {line: 28, character: 18},
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
@@ -6880,11 +6880,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -6916,11 +6916,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -6952,11 +6952,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -6988,11 +6988,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7024,11 +7024,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7060,11 +7060,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7096,11 +7096,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7132,11 +7132,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7168,11 +7168,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7204,11 +7204,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7240,11 +7240,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7281,11 +7281,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7322,11 +7322,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7363,11 +7363,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7404,11 +7404,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7445,11 +7445,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7481,11 +7481,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7517,11 +7517,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7553,11 +7553,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7589,11 +7589,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7625,11 +7625,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7661,11 +7661,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7697,11 +7697,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7733,11 +7733,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7769,11 +7769,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7805,11 +7805,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7841,11 +7841,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7877,11 +7877,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7913,11 +7913,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7949,11 +7949,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -7985,11 +7985,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8021,11 +8021,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8057,11 +8057,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8093,11 +8093,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8129,11 +8129,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8165,11 +8165,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8201,11 +8201,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8237,11 +8237,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8273,11 +8273,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8309,11 +8309,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8345,11 +8345,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8381,11 +8381,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8417,11 +8417,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8453,11 +8453,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },
@@ -8489,11 +8489,11 @@ b.te
                     range: {
                       end: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                       start: {
                         character: 18,
-                        line: 27,
+                        line: 28,
                       },
                     },
                   },

@@ -1,4 +1,4 @@
-import {type Counter, type OtherCounter, type SuperOpaque, type PolyFoo, type PolyBar, type PolyGood, type ID} from './test';
+import type {Counter, OtherCounter, SuperOpaque, PolyFoo, PolyBar, PolyGood, ID} from './test';
 import type {SuperType} from './super';
 
 function test1 (y: SuperType) : SuperOpaque { // Error: number ~> SuperOpaque

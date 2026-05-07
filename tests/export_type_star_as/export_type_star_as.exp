@@ -29,39 +29,39 @@ Cannot import `aNum` because there is no `aNum` export in `./forward_only`. Did 
               ^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:9
+Error ----------------------------------------------------------------------------------------------------- test.js:15:9
 
 Cannot import `aNum` because there is no `aNum` export in `./forward_with_exports`. [missing-export]
 
-   13| import {aNum as ignore} from "./forward_with_exports"; // error
+   15| import {aNum as ignore} from "./forward_with_exports"; // error
                ^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:18:1
+Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
 Cannot cast `"asdf"` to `aType1` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:18:1
-   18| "asdf" as aType1; // error
+   test.js:20:1
+   20| "asdf" as aType1; // error
        ^^^^^^ [1]
 
 References:
-   test.js:18:11
-   18| "asdf" as aType1; // error
+   test.js:20:11
+   20| "asdf" as aType1; // error
                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:23:1
+Error ----------------------------------------------------------------------------------------------------- test.js:25:1
 
 Cannot cast `"asdf"` to `aType2` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test.js:23:1
-   23| "asdf" as aType2; // error
+   test.js:25:1
+   25| "asdf" as aType2; // error
        ^^^^^^ [1]
 
 References:
-   test.js:23:11
-   23| "asdf" as aType2; // error
+   test.js:25:11
+   25| "asdf" as aType2; // error
                  ^^^^^^ [2]
 
 

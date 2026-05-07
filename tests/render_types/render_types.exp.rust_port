@@ -392,12 +392,12 @@ References:
                            ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- poly_no_args_import.js:4:10
+Error -------------------------------------------------------------------------------------- poly_no_args_import.js:5:10
 
 Cannot use component Poly [1] without 1 type argument. [missing-type-arg]
 
-   poly_no_args_import.js:4:10
-   4| type T = Poly; // ERROR
+   poly_no_args_import.js:5:10
+   5| type T = Poly; // ERROR
                ^^^^
 
 References:
@@ -406,42 +406,42 @@ References:
                            ^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- poly_no_args_import.js:13:17
+Error ------------------------------------------------------------------------------------- poly_no_args_import.js:14:17
 
 Cannot assign `<NotPoly />` to `bad1` because `NotPoly` element [1] does not render `Poly` [2]. [incompatible-type]
 
-   poly_no_args_import.js:13:17
-   13| const bad1: U = <NotPoly />; // ERROR
+   poly_no_args_import.js:14:17
+   14| const bad1: U = <NotPoly />; // ERROR
                        ^^^^^^^^^^^ [1]
 
 References:
-   poly_no_args_import.js:13:13
-   13| const bad1: U = <NotPoly />; // ERROR
+   poly_no_args_import.js:14:13
+   14| const bad1: U = <NotPoly />; // ERROR
                    ^ [2]
 
 
-Error ------------------------------------------------------------------------------------- poly_no_args_import.js:14:18
+Error ------------------------------------------------------------------------------------- poly_no_args_import.js:15:18
 
 Cannot assign `<NotPoly />` to `bad2` because `NotPoly` element [1] does not render `Poly` [2]. [incompatible-type]
 
-   poly_no_args_import.js:14:18
-   14| const bad2: U2 = <NotPoly />; // ERROR
+   poly_no_args_import.js:15:18
+   15| const bad2: U2 = <NotPoly />; // ERROR
                         ^^^^^^^^^^^ [1]
 
 References:
-   poly_no_args_import.js:14:13
-   14| const bad2: U2 = <NotPoly />; // ERROR
+   poly_no_args_import.js:15:13
+   15| const bad2: U2 = <NotPoly />; // ERROR
                    ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- poly_no_args_import.js:15:21
+Error ------------------------------------------------------------------------------------- poly_no_args_import.js:16:21
 
 Cannot assign `<NotPoly />` to `bad3` because: [incompatible-type]
  - Either `NotPoly` element [1] does not render `Poly` [2].
  - Or `NotPoly` element [1] does not render `Poly2` [2].
 
-   poly_no_args_import.js:15:21
-   15| const bad3: Multi = <NotPoly />; // ERROR
+   poly_no_args_import.js:16:21
+   16| const bad3: Multi = <NotPoly />; // ERROR
                            ^^^^^^^^^^^ [1]
 
 References:

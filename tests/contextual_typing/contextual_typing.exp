@@ -773,12 +773,12 @@ References:
                                    ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ misplaced_error.js:9:31
+Error ----------------------------------------------------------------------------------------- misplaced_error.js:10:31
 
 An annotation on destructuring is required because Flow cannot infer its type from local context. [missing-local-annot]
 
-   9|   {...EMPTY_TEMPLATE, title: ({a}) => `${a}`}, // missing-local-annot due to inexact ~> exact
-                                    ^^^
+   10|   {...EMPTY_TEMPLATE, title: ({a}) => `${a}`}, // missing-local-annot due to inexact ~> exact
+                                     ^^^
 
 
 Error -------------------------------------------------------------------------------------------- param_default.js:2:19

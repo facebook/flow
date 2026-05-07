@@ -1,6 +1,7 @@
 // @flow
 
-import {x as x1, type T as T1} from './primitive';
+import {x as x1} from './primitive';
+import type {T as T1} from './primitive';
 1 as T1;
 x1 as T1;
 '' as T1; // error string ~> nunber
@@ -8,7 +9,8 @@ x1 as T1;
 import {x as x2} from './intersection';
 x2 as empty; // okay - this is already an error at the definition site
 
-import {x as x3, type T as T3, type S as S3, type R as R3} from './lookup';
+import {x as x3} from './lookup';
+import type {T as T3, S as S3, R as R3} from './lookup';
 x3 as number;
 x3 as empty; // error number ~> empty
 declare var t3: T3;
@@ -26,7 +28,7 @@ x5 as number;
 x5 as empty; // error number ~> empty
 y5 as empty; // error function type ~> empty
 
-import {type T as T6} from './mk_instance_annot';
+import type {T as T6} from './mk_instance_annot';
 1 as T6; // error number ~> class
 declare var x6: T6;
 x6 as empty; // error C ~> empty
@@ -91,7 +93,7 @@ y19 as {+a?: number, ...}; // okay
 y19 as {a: number, ...}; // error undefined ~> number
 z19 as empty; // okay any ~> empty (error on def site)
 
-import {type T as T21} from './mk_instance_poly';
+import type {T as T21} from './mk_instance_poly';
 declare var t21: T21;
 t21.c as empty; // okay - this is already an error at the definition site
 

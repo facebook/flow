@@ -1,6 +1,7 @@
 /* @flow */
 
-import { type integer, floor } from "./Integer"
+import { floor } from "./Integer"
+import type { integer } from "./Integer";
 declare function parseInt(x: string): number;
 
 export const parseInteger = (input: string): ?integer => {

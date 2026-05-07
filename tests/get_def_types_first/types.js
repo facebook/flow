@@ -5,7 +5,7 @@ type myBar<T> = ?T;
 class myClass {};
 interface myInterface {};
 import type {ExportFoo, ExportBar, ExportClass, ExportInterface, ExportEnum} from './type-exports';
-import { typeof exportValue } from './type-exports';
+import typeof { exportValue } from './type-exports';
 
 (x : myFoo) => {};
 //    ^

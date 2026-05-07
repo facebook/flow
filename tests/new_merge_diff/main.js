@@ -18,9 +18,11 @@ import {
   y as y4,
   z as z4,
   C as C4,
-  type T as T4,
-  type S as S4,
-  type R as R4,
+} from './recursive_types';
+import type {
+  T as T4,
+  S as S4,
+  R as R4,
 } from './recursive_types';
 
 x4 as any;

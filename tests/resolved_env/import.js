@@ -1,6 +1,7 @@
 //@flow
 
-import {x as y, type T} from './export';
+import {x as y} from './export';
+import type {T} from './export';
 import X from './export';
 import * as Y from './export';
 

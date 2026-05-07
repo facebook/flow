@@ -1,4 +1,5 @@
-import {Poly, type U, type Multi} from './poly_no_args';
+import {Poly} from './poly_no_args';
+import type {U, Multi} from './poly_no_args';
 import * as React from 'react';
 
 type T = Poly; // ERROR

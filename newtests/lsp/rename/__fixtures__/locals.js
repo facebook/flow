@@ -22,8 +22,8 @@ let { [x]: y } = { };
 import { wut3 } from 'wutland';
 import type { wut4 } from 'wutland';
 wut3 as wut4;
-import { type wut5 } from 'wutland';
-import { type wut6 as wutLocal } from 'wutland';
+import type { wut5 } from 'wutland';
+import type { wut6 as wutLocal } from 'wutland';
 wut as wut5;
 wut as wutLocal;
 

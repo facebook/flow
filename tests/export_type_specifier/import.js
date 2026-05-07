@@ -1,5 +1,6 @@
-import {type T, type R, type RenamedT, value} from './test.js';
-import {type S} from './test.js';
+import {value} from './test.js';
+import type {T, R, RenamedT} from './test.js';
+import type {S} from './test.js';
 
 // Value export is usable as a value
 value as string; // OK
