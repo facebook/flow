@@ -33,15 +33,15 @@ References:
    D.js:2:6
    2|   x: { foo: string }
            ^^^^^^^^^^^^^^^ [2]
-   D.js:4:16
-                     v
-   4| declare var y: {
+   D.js:4:18
+                       v
+   4| declare const y: {
    5|   x: { bar: number }
    6| };
       ^ [3]
    D.js:1:16
                      v
-   1| declare var x: {
+   1| declare let x: {
    2|   x: { foo: string }
    3| };
       ^ [4]

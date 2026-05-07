@@ -12,7 +12,7 @@ type Props = {
   title?: ?number | Node,
 };
 
-declare var x : Props;
+declare const x : Props;
 const {title} = x;
 
 (title != null ? title.toString() : '') as string

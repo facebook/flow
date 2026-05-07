@@ -2,14 +2,14 @@ type T = 'A' | 'B';
 
 const E = {A: 'A', B: 'B'} as const;
 
-declare var x: T;
+declare const x: T;
 
 if (x === E.A) {
   E.A as T; // OK
   E.A as number; // Error expected
 }
 
-declare var Enum: {
+declare const Enum: {
   A: 'A',
   B: 'B',
 }
@@ -19,7 +19,7 @@ function foo(e: 'A' | 'B') {
     }
 }
 
-declare var Enum2 :{
+declare const Enum2 :{
   A: 1,
   B: 1,
 }
@@ -29,7 +29,7 @@ function foo2(e: 1 | 2) {
     }
 }
 
-declare var Enum3 :{
+declare const Enum3 :{
   A: true,
   B: false,
 }

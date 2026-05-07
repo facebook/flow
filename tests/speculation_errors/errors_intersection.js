@@ -3,7 +3,7 @@
  * @flow
  */
 
-declare var any: any;
+declare const any: any;
 declare opaque type A;
 declare opaque type B;
 declare opaque type C;
@@ -111,11 +111,11 @@ any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
 // Error: union inside union fun, but thanks to scoring we only show one.
 any as {} & [[null, C] & {}] as [[null, number]];
 
-declare var f1: A | B;
+declare const f1: A | B;
 f1(); // Error
 
-declare var f2: A | (B | C);
+declare const f2: A | (B | C);
 f2(); // Error
 
-declare var f3: A | (B | (C | D));
+declare const f3: A | (B | (C | D));
 f3(); // Error

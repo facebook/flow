@@ -5,7 +5,7 @@
 
 import * as React from 'react';
 
-declare var MyComponent: React.ComponentType<{foo: number, ...}> & {
+declare const MyComponent: React.ComponentType<{foo: number, ...}> & {
   someStatic: boolean,
   ...
 };

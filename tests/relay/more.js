@@ -85,22 +85,22 @@ const PluralTest = createFragmentContainer(
   'fragments go here',
 );
 
-declare var aUserRef: {
+declare const aUserRef: {
   +__fragments: FragmentReference<RelayModernTypedFlowtest_user$reference>,
   ...
 };
 
-declare var oneOfUsersRef: {
+declare const oneOfUsersRef: {
   +__fragments: FragmentReference<RelayModernTypedFlowtest_users$reference>,
   ...
 };
 
-declare var usersRef: ReadonlyArray<{
+declare const usersRef: ReadonlyArray<{
   +__fragments: FragmentReference<RelayModernTypedFlowtest_users$reference>,
   ...
 }>;
 
-declare var nonUserRef: {
+declare const nonUserRef: {
   +__fragments: BadFragmentReference<{thing: true, ...}>,
   ...
 };
@@ -146,7 +146,7 @@ function cb(): void {}
 />;
 
 // OK
-declare var aComplexUserRef: {
+declare const aComplexUserRef: {
   __fragments: FragmentReference<{thing1: true, ...}> &
     FragmentReference<RelayModernTypedFlowtest_user$reference> &
     FragmentReference<{thing2: true, ...}>,

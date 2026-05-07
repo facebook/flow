@@ -82,15 +82,15 @@ References:
    error_examples.js:7:5
    7| if (values.greeting === values) {} // constant-condition error
           ^^^^^^^^^^^^^^^ [1]
-   error_examples.js:3:13
-   3| declare var values: {
-                  ^^^^^^ [2]
+   error_examples.js:3:15
+   3| declare const values: {
+                    ^^^^^^ [2]
    error_examples.js:4:15
    4|     greeting: string,
                     ^^^^^^ [3]
-   error_examples.js:3:21
-                          v
-   3| declare var values: {
+   error_examples.js:3:23
+                            v
+   3| declare const values: {
    4|     greeting: string,
    5| };
       ^ [4]
@@ -314,12 +314,12 @@ Error --------------------------------------------------------------------------
                       ^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:61:30
+Error ---------------------------------------------------------------------------------------- regression_tests.js:61:32
 
 Cannot resolve name `ModScope2`. [cannot-resolve-name]
 
-   61| declare var NonexistentType: ModScope2;
-                                    ^^^^^^^^^
+   61| declare const NonexistentType: ModScope2;
+                                      ^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:64:24
@@ -331,9 +331,9 @@ Cannot perform arithmetic operation because string [1] is not a number or bigint
                               ^^^^^^^
 
 References:
-   regression_tests.js:63:22
-   63| declare var AString: string;
-                            ^^^^^^ [1]
+   regression_tests.js:63:24
+   63| declare const AString: string;
+                              ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:78:30
@@ -355,13 +355,13 @@ References:
                                    ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- regression_tests.js:90:18
+Error ---------------------------------------------------------------------------------------- regression_tests.js:90:20
 
 Cannot use `MyClass` [1] without 1 type argument. [missing-type-arg]
 
-   regression_tests.js:90:18
-   90|   declare var c: MyClass;
-                        ^^^^^^^
+   regression_tests.js:90:20
+   90|   declare const c: MyClass;
+                          ^^^^^^^
 
 References:
    regression_tests.js:87:16
@@ -442,15 +442,15 @@ References:
    regression_tests.js:147:7
    147|   if (values.greeting === values) {  // constant-condition error
               ^^^^^^^^^^^^^^^ [1]
-   regression_tests.js:143:15
-   143|   declare var values: {
-                      ^^^^^^ [2]
+   regression_tests.js:143:17
+   143|   declare const values: {
+                        ^^^^^^ [2]
    regression_tests.js:144:15
    144|     greeting: string,
                       ^^^^^^ [3]
-   regression_tests.js:143:23
-                              v
-   143|   declare var values: {
+   regression_tests.js:143:25
+                                v
+   143|   declare const values: {
    144|     greeting: string,
    145|   };
           ^ [4]

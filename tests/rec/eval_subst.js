@@ -1,6 +1,6 @@
 type State = {pointers: Array<{ id?: number, ... }>};
 
-declare var state: State;
+declare const state: State;
 
 const partialState = { pointers: state.pointers };
 partialState.pointers = partialState.pointers.filter(Boolean);

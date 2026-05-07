@@ -1,5 +1,5 @@
 function no_missing_env_entry_for_delete() {
-  declare var foo: {bar: string | void};
+  declare const foo: {bar: string | void};
   delete foo.bar; // ok
   foo.bar as void; // ok
 }
@@ -58,9 +58,9 @@ declare module DeclaredModule2 {
   declare type DependsOnModScope2 = ModScope2
 }
 
-declare var NonexistentType: ModScope2;
+declare const NonexistentType: ModScope2;
 
-declare var AString: string;
+declare const AString: string;
 const ResultOfError = -AString;
 
 let UninitializedVar;
@@ -87,7 +87,7 @@ function TestArrayProvider() {
   class MyClass<T> {
   }
 
-  declare var c: MyClass;
+  declare const c: MyClass;
 }
 
 interface InterfaceWithMethodThisAnnotation {
@@ -102,11 +102,11 @@ function anonymous_functions_this_type() {
 }
 
 function non_assigning_member_assigns() {
-  declare var foo: {[string | number]: unknown};
+  declare const foo: {[string | number]: unknown};
   foo[1 + 2] = 1; // ok
   foo['1' + 2] = 3; // ok
   (1).toString = 3; // error: toString missing in number, but no missing env entry error
-  declare var bar: {baz: number};
+  declare const bar: {baz: number};
   bar.baz += 1; // ok
   bar.baz++; // ok
   bar.baz as number; // ok
@@ -133,14 +133,14 @@ function non_assigning_member_assigns() {
 }
 
 {
-  declare var rule: {title_label: string};
+  declare const rule: {title_label: string};
   const titlesAdlabels = [];
   rule.title_label = "a";
   titlesAdlabels.push(rule.title_label);
 }
 
 {
-  declare var values: {
+  declare const values: {
     greeting: string,
   };
 
@@ -167,9 +167,9 @@ function non_assigning_member_assigns() {
     poly(v => v, [foo1, foo2.bar, (v: number) => v, {foo: 3, bar: foo2.bar}, foo1 = '', 1 + 2]); // ok
     poly(v => v, foo3()); // ok
   };
-  declare var foo1: string;
-  declare var foo2: {bar: string};
-  declare var foo3: () => string;
+  declare let foo1: string;
+  declare const foo2: {bar: string};
+  declare const foo3: () => string;
 }
 
 {
@@ -189,7 +189,7 @@ function non_assigning_member_assigns() {
 }
 
 {
-  declare var array_non_maybe_any: Array<NonNullable<any>>;
+  declare const array_non_maybe_any: Array<NonNullable<any>>;
   const non_maybe_any = array_non_maybe_any[0];
   type Non_maybe_any = typeof non_maybe_any;
   1 as Non_maybe_any; // okay 1 ~> any

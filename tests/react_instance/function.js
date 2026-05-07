@@ -1,4 +1,4 @@
-declare var any: any;
+declare const any: any;
 
 function Foo(props: {}) {}
 

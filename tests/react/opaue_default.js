@@ -8,7 +8,7 @@
 const React = require("react");
 
 declare opaque type T: string;
-declare var x: T;
+declare const x: T;
 
 type Props = { foo: T, ... }
 

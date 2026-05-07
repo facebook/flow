@@ -1,4 +1,4 @@
-declare var foo: {
+declare const foo: {
   @@iterator: Iterator<number>,
 };
 

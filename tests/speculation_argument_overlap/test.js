@@ -5,4 +5,4 @@ declare function overload(key: boolean): number;
   const a = overload(key);
 }
 
-declare var key: boolean;
+declare const key: boolean;

@@ -122,9 +122,9 @@ References:
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
-   test.js:13:51
-   13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
-                                                         ^ [2]
+   test.js:13:53
+   13| declare const a: ExactReactElement_DEPRECATED<Class<A>>;
+                                                           ^ [2]
    test.js:25:61
    25| React.cloneElement(a) as ExactReactElement_DEPRECATED<Class<B>>; // Error: A ~> B
                                                                    ^ [3]
@@ -148,9 +148,9 @@ References:
    <BUILTINS>/react.js:58:51
      58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [1]
-   test.js:13:45
-     13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
-                                                     ^^^^^^^^ [2]
+   test.js:13:47
+     13| declare const a: ExactReactElement_DEPRECATED<Class<A>>;
+                                                       ^^^^^^^^ [2]
    <BUILTINS>/react.js:1547:4
    1547|   [string]: {
             ^^^^^^ [3]
@@ -179,9 +179,9 @@ References:
    <BUILTINS>/react.js:58:51
      58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [1]
-   test.js:13:45
-     13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
-                                                     ^^^^^^^^ [2]
+   test.js:13:47
+     13| declare const a: ExactReactElement_DEPRECATED<Class<A>>;
+                                                       ^^^^^^^^ [2]
    <BUILTINS>/react.js:1547:4
    1547|   [string]: {
             ^^^^^^ [3]
@@ -210,9 +210,9 @@ References:
    <BUILTINS>/react.js:58:51
      58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [1]
-   test.js:14:45
-     14| declare var b: ExactReactElement_DEPRECATED<Class<B>>;
-                                                     ^^^^^^^^ [2]
+   test.js:14:47
+     14| declare const b: ExactReactElement_DEPRECATED<Class<B>>;
+                                                       ^^^^^^^^ [2]
    <BUILTINS>/react.js:1547:4
    1547|   [string]: {
             ^^^^^^ [3]
@@ -241,9 +241,9 @@ References:
    <BUILTINS>/react.js:58:51
      58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [1]
-   test.js:15:45
-     15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
-                                                     ^^^^^^^^ [2]
+   test.js:15:47
+     15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
+                                                       ^^^^^^^^ [2]
    <BUILTINS>/react.js:1547:4
    1547|   [string]: {
             ^^^^^^ [3]
@@ -272,9 +272,9 @@ References:
    <BUILTINS>/react.js:58:51
      58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [1]
-   test.js:15:45
-     15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
-                                                     ^^^^^^^^ [2]
+   test.js:15:47
+     15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
+                                                       ^^^^^^^^ [2]
    <BUILTINS>/react.js:1547:4
    1547|   [string]: {
             ^^^^^^ [3]
@@ -304,9 +304,9 @@ References:
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [1]
-   test.js:15:45
-    15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
-                                                    ^^^^^^^^ [2]
+   test.js:15:47
+    15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
+                                                      ^^^^^^^^ [2]
    <BUILTINS>/react.js:321:10
    321|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -336,9 +336,9 @@ References:
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [1]
-   test.js:15:45
-    15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
-                                                    ^^^^^^^^ [2]
+   test.js:15:47
+    15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
+                                                      ^^^^^^^^ [2]
    <BUILTINS>/react.js:321:10
    321|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -368,9 +368,9 @@ References:
    <BUILTINS>/react.js:58:51
      58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [1]
-   test.js:16:45
-     16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
-                                                     ^^^^^^^^ [2]
+   test.js:16:47
+     16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
+                                                       ^^^^^^^^ [2]
    <BUILTINS>/react.js:1547:4
    1547|   [string]: {
             ^^^^^^ [3]
@@ -399,9 +399,9 @@ References:
    <BUILTINS>/react.js:58:51
      58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [1]
-   test.js:16:45
-     16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
-                                                     ^^^^^^^^ [2]
+   test.js:16:47
+     16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
+                                                       ^^^^^^^^ [2]
    <BUILTINS>/react.js:1547:4
    1547|   [string]: {
             ^^^^^^ [3]
@@ -430,9 +430,9 @@ References:
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [1]
-   test.js:16:45
-    16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
-                                                    ^^^^^^^^ [2]
+   test.js:16:47
+    16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
+                                                      ^^^^^^^^ [2]
    <BUILTINS>/react.js:321:10
    321|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -461,9 +461,9 @@ References:
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [1]
-   test.js:16:45
-    16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
-                                                    ^^^^^^^^ [2]
+   test.js:16:47
+    16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
+                                                      ^^^^^^^^ [2]
    <BUILTINS>/react.js:321:10
    321|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [3]

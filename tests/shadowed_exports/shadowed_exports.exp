@@ -24,9 +24,9 @@ Cannot assign `42` to `module.exports` because property `exports` is missing in 
              ^^^^^^^
 
 References:
-   shadow_exports.js:3:21
-   3| declare var module: number => string;
-                          ^^^^^^^^^^^^^^^^ [1]
+   shadow_exports.js:3:23
+   3| declare const module: number => string;
+                            ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ shadow_exports_lookup.js:4:17
@@ -38,9 +38,9 @@ Cannot assign `module.exports` to `y` because string [1] is incompatible with nu
                       ^^^^^^^^^^^^^^
 
 References:
-   shadow_exports_lookup.js:3:31
-   3| declare var module: {exports: string};
-                                    ^^^^^^ [1]
+   shadow_exports_lookup.js:3:33
+   3| declare const module: {exports: string};
+                                      ^^^^^^ [1]
    shadow_exports_lookup.js:4:8
    4| var y: number = module.exports;
              ^^^^^^ [2]

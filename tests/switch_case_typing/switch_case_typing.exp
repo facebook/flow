@@ -314,15 +314,15 @@ lack a subtyping relationship. If that happens, you can cast one side to the uni
               ^^^^^^^^
 
 References:
-   test.js:113:15
-   113|   declare var st: string;
-                      ^^ [1]
+   test.js:113:17
+   113|   declare const st: string;
+                        ^^ [1]
    test.js:114:14
    114|   if (st === 1 || st === 2) {} // error
                      ^ [2]
-   test.js:113:19
-   113|   declare var st: string;
-                          ^^^^^^ [3]
+   test.js:113:21
+   113|   declare const st: string;
+                            ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:114:19
@@ -337,15 +337,15 @@ lack a subtyping relationship. If that happens, you can cast one side to the uni
                           ^^^^^^^^
 
 References:
-   test.js:113:15
-   113|   declare var st: string;
-                      ^^ [1]
+   test.js:113:17
+   113|   declare const st: string;
+                        ^^ [1]
    test.js:114:26
    114|   if (st === 1 || st === 2) {} // error
                                  ^ [2]
-   test.js:113:19
-   113|   declare var st: string;
-                          ^^^^^^ [3]
+   test.js:113:21
+   113|   declare const st: string;
+                            ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:115:7
@@ -360,15 +360,15 @@ lack a subtyping relationship. If that happens, you can cast one side to the uni
               ^^^^^^^^
 
 References:
-   test.js:113:15
-   113|   declare var st: string;
-                      ^^ [1]
+   test.js:113:17
+   113|   declare const st: string;
+                        ^^ [1]
    test.js:115:14
    115|   if (st === 1 && st === 2) {} // error
                      ^ [2]
-   test.js:113:19
-   113|   declare var st: string;
-                          ^^^^^^ [3]
+   test.js:113:21
+   113|   declare const st: string;
+                            ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:115:19

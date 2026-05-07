@@ -16,7 +16,7 @@ declare class C extends D {
   m(): this;
 }
 
-declare var a: A;
+declare const a: A;
 a.foo.w() as empty; // err
 
 var c = new C();

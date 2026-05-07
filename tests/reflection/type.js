@@ -1,4 +1,4 @@
-declare var a: number;
+declare const a: number;
 var b: typeof a = "...";
 var c: typeof a = "...";
 

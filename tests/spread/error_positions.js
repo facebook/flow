@@ -12,5 +12,5 @@ foo(bar(C)) as F<typeof C>; // error on call
 
 declare function spread<T extends {...}>(x: T): {...T, ...{...}, ...}; // error should not appear here
 
-declare var inexact: {foo: number, ...};
+declare const inexact: {foo: number, ...};
 spread(inexact); // error on call

@@ -2,7 +2,7 @@
  * resolved before the spread resolves to a result. */
 
 type O = A & B;
-declare var o: O;
+declare const o: O;
 ({...o}) as {p: number, q: string, ...}; // OK
 ({...o}) as {p: number, q: number, ...}; // error: string ~> number (prop q)
 ({...o}) as {p: string, q: string, ...}; // error: number ~> string (prop p)

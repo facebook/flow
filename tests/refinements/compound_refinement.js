@@ -6,7 +6,7 @@ type U = {
   b: unknown;
  ...};
 
-declare var x: U;
+declare const x: U;
 
 if (x.type === 'a' && x.a.type === 'b') {
   x.a.b; // okay

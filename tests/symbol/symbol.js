@@ -1,4 +1,4 @@
-declare var s: symbol;
+declare const s: symbol;
 
 // Creation
 {

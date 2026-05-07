@@ -1,3 +1,3 @@
-declare var React: {createElement: React$CreateElement};
+declare const React: {createElement: React$CreateElement};
 
 <div />;

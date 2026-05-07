@@ -4,7 +4,7 @@ function whatsup() {
   type U = {
     customPolygonData: ?{x: number, ...},
  ...  };
-  declare var item: U;
+  declare const item: U;
   if (item.customPolygonData == null) {
     return null;
   }

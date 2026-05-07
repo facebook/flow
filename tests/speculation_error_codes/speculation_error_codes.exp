@@ -31,12 +31,12 @@ Cannot call `x` because: [incompatible-type]
       ^
 
 References:
-   test.js:5:16
-   5| declare var x: null & 3;
-                     ^^^^ [1]
-   test.js:5:23
-   5| declare var x: null & 3;
-                            ^ [2]
+   test.js:5:18
+   5| declare const x: null & 3;
+                       ^^^^ [1]
+   test.js:5:25
+   5| declare const x: null & 3;
+                              ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
@@ -56,12 +56,12 @@ References:
    test.js:10:3
    10| f(true); // incompatible-type
          ^^^^ [1]
-   test.js:9:24
-    9| declare var f: null & (number => void);
-                              ^^^^^^ [2]
-   test.js:9:16
-    9| declare var f: null & (number => void);
-                      ^^^^ [3]
+   test.js:9:26
+    9| declare const f: null & (number => void);
+                                ^^^^^^ [2]
+   test.js:9:18
+    9| declare const f: null & (number => void);
+                        ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:1
@@ -75,15 +75,15 @@ Cannot cast `y` to boolean because: [incompatible-type]
        ^
 
 References:
-   test.js:12:17
-   12| declare var y : number & string;
-                       ^^^^^^ [1]
+   test.js:12:19
+   12| declare const y : number & string;
+                         ^^^^^^ [1]
    test.js:13:6
    13| y as boolean // incompatible-type
             ^^^^^^^ [2]
-   test.js:12:26
-   12| declare var y : number & string;
-                                ^^^^^^ [3]
+   test.js:12:28
+   12| declare const y : number & string;
+                                  ^^^^^^ [3]
 
 
 

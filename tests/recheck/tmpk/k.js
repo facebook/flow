@@ -1,4 +1,4 @@
 /* @flow */
 
-declare var x: LibK;
+declare const x: LibK;
 x.p as string;

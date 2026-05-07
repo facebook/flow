@@ -1,4 +1,4 @@
-declare var foo: {
+declare const foo: {
   @@dispose: void,
   @@asyncDispose: Promise<void>,
 };

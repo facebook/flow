@@ -3,7 +3,7 @@
  * @flow
  */
 
-declare var any: any;
+declare const any: any;
 declare opaque type A;
 declare opaque type B;
 declare opaque type C;

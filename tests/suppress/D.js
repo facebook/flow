@@ -1,7 +1,7 @@
-declare var x: {
+declare let x: {
   x: { foo: string }
 };
-declare var y: {
+declare const y: {
   x: { bar: number }
 };
 x = y;

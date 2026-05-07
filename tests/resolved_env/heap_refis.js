@@ -1,6 +1,6 @@
 //@flow
 
-declare var x: {y?: {z: number, ...}, ...};
+declare const x: {y?: {z: number, ...}, ...};
 
 if (x.y) {
   x.y.z as empty; //err num
@@ -8,7 +8,7 @@ if (x.y) {
 
 class C {}
 
-declare var y: unknown;
+declare const y: unknown;
 var B = null;
 
 function set_b() {

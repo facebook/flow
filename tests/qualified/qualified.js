@@ -5,7 +5,7 @@ var x:M.C = 0;
 
 type foo = {bar: number};
 
-declare var of_type_foo: foo;
+declare const of_type_foo: foo;
 type bar = typeof of_type_foo.bar;
 
 var a: bar = 42;

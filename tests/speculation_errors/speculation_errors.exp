@@ -1298,9 +1298,9 @@ Cannot call `f1` because `A` [1] is not a function. [not-a-function]
         ^^
 
 References:
-   errors_intersection.js:114:17
-   114| declare var f1: A | B;
-                        ^ [1]
+   errors_intersection.js:114:19
+   114| declare const f1: A | B;
+                          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:115:1
@@ -1312,9 +1312,9 @@ Cannot call `f1` because `B` [1] is not a function. [not-a-function]
         ^^
 
 References:
-   errors_intersection.js:114:21
-   114| declare var f1: A | B;
-                            ^ [1]
+   errors_intersection.js:114:23
+   114| declare const f1: A | B;
+                              ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:118:1
@@ -1326,9 +1326,9 @@ Cannot call `f2` because `A` [1] is not a function. [not-a-function]
         ^^
 
 References:
-   errors_intersection.js:117:17
-   117| declare var f2: A | (B | C);
-                        ^ [1]
+   errors_intersection.js:117:19
+   117| declare const f2: A | (B | C);
+                          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:118:1
@@ -1340,9 +1340,9 @@ Cannot call `f2` because `B` [1] is not a function. [not-a-function]
         ^^
 
 References:
-   errors_intersection.js:117:22
-   117| declare var f2: A | (B | C);
-                             ^ [1]
+   errors_intersection.js:117:24
+   117| declare const f2: A | (B | C);
+                               ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:118:1
@@ -1354,9 +1354,9 @@ Cannot call `f2` because `C` [1] is not a function. [not-a-function]
         ^^
 
 References:
-   errors_intersection.js:117:26
-   117| declare var f2: A | (B | C);
-                                 ^ [1]
+   errors_intersection.js:117:28
+   117| declare const f2: A | (B | C);
+                                   ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:121:1
@@ -1368,9 +1368,9 @@ Cannot call `f3` because `A` [1] is not a function. [not-a-function]
         ^^
 
 References:
-   errors_intersection.js:120:17
-   120| declare var f3: A | (B | (C | D));
-                        ^ [1]
+   errors_intersection.js:120:19
+   120| declare const f3: A | (B | (C | D));
+                          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:121:1
@@ -1382,9 +1382,9 @@ Cannot call `f3` because `B` [1] is not a function. [not-a-function]
         ^^
 
 References:
-   errors_intersection.js:120:22
-   120| declare var f3: A | (B | (C | D));
-                             ^ [1]
+   errors_intersection.js:120:24
+   120| declare const f3: A | (B | (C | D));
+                               ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:121:1
@@ -1396,9 +1396,9 @@ Cannot call `f3` because `C` [1] is not a function. [not-a-function]
         ^^
 
 References:
-   errors_intersection.js:120:27
-   120| declare var f3: A | (B | (C | D));
-                                  ^ [1]
+   errors_intersection.js:120:29
+   120| declare const f3: A | (B | (C | D));
+                                    ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:121:1
@@ -1410,9 +1410,9 @@ Cannot call `f3` because `D` [1] is not a function. [not-a-function]
         ^^
 
 References:
-   errors_intersection.js:120:31
-   120| declare var f3: A | (B | (C | D));
-                                      ^ [1]
+   errors_intersection.js:120:33
+   120| declare const f3: A | (B | (C | D));
+                                        ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- errors_union.js:13:6

@@ -1,6 +1,6 @@
 //@flow
 
-declare var values: {
+declare const values: {
     greeting: string,
 };
 

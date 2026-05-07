@@ -5,7 +5,7 @@
 
 import * as React from 'react';
 
-declare var exactEmptyObject: {};
+declare const exactEmptyObject: {};
 
 class A extends React.Component<{p: ?number, ...}> {
   static defaultProps: {p: ?number, ...} = {p: 42}; // OK

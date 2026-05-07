@@ -58,11 +58,11 @@ var alwaysTrue = true || value; /* NOT sketchy */
 var sketchyFalse = value && false; /* sketchy */
 var sketchyTrue = value || true; /* sketchy */
 
-declare var ww: {is?: ?({a: number} | number)};
+declare const ww: {is?: ?({a: number} | number)};
 var {is} = ww;
 if (is && is.a) { }
 
-declare var hh: {a: unknown};
+declare const hh: {a: unknown};
 if (hh.a && hh.a.b) { }
 
 function singletonBooleanFalse(x: null | false | Array<unknown>) {

@@ -9,5 +9,5 @@ const x: X = {a: null, b: {c: null}};
 const y: Y = {a: null, b: {c: null}};
 
 function test(x: X): void {}
-declare var a: Y;
+declare const a: Y;
 test(a);

@@ -75,9 +75,9 @@ References:
    error_positions.js:13:59
    13| declare function spread<T extends {...}>(x: T): {...T, ...{...}, ...}; // error should not appear here
                                                                  ^^^^^ [2]
-   error_positions.js:15:22
-   15| declare var inexact: {foo: number, ...};
-                            ^^^^^^^^^^^^^^^^^^ [3]
+   error_positions.js:15:24
+   15| declare const inexact: {foo: number, ...};
+                              ^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- exact.js:12:35
@@ -125,12 +125,12 @@ exact. [cannot-spread-inexact]
        ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   nested_unions.js:3:21
-   3| declare var works1: {...} | void;
-                          ^^^^^ [2]
-   nested_unions.js:1:18
-   1| declare var OBJ: {a: string, ...};
-                       ^^^^^^^^^^^^^^^^ [3]
+   nested_unions.js:3:23
+   3| declare const works1: {...} | void;
+                            ^^^^^ [2]
+   nested_unions.js:1:20
+   1| declare const OBJ: {a: string, ...};
+                         ^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- nested_unions.js:8:2
@@ -144,12 +144,12 @@ exact. [cannot-spread-inexact]
        ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   nested_unions.js:4:21
-   4| declare var works2: {...} | void | void;
-                          ^^^^^ [2]
-   nested_unions.js:1:18
-   1| declare var OBJ: {a: string, ...};
-                       ^^^^^^^^^^^^^^^^ [3]
+   nested_unions.js:4:23
+   4| declare const works2: {...} | void | void;
+                            ^^^^^ [2]
+   nested_unions.js:1:20
+   1| declare const OBJ: {a: string, ...};
+                         ^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- nested_unions.js:9:2
@@ -163,12 +163,12 @@ exact. [cannot-spread-inexact]
        ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   nested_unions.js:5:21
-   5| declare var works3: {...} | (void | void);
-                          ^^^^^ [2]
-   nested_unions.js:1:18
-   1| declare var OBJ: {a: string, ...};
-                       ^^^^^^^^^^^^^^^^ [3]
+   nested_unions.js:5:23
+   5| declare const works3: {...} | (void | void);
+                            ^^^^^ [2]
+   nested_unions.js:1:20
+   1| declare const OBJ: {a: string, ...};
+                         ^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- nested_unions.js:17:16
@@ -376,9 +376,9 @@ because interfaces do not track the own-ness of their properties. Try using an o
        ^^^^^^^^^^^ [1]
 
 References:
-   test9.js:4:21
-   4| declare var o_call: I_call;
-                          ^^^^^^ [2]
+   test9.js:4:23
+   4| declare const o_call: I_call;
+                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test9.js:11:2
@@ -392,9 +392,9 @@ because interfaces do not track the own-ness of their properties. Try using an o
         ^^^^^^^^^^^^ [1]
 
 References:
-   test9.js:10:22
-   10| declare var o_index: I_index;
-                            ^^^^^^^ [2]
+   test9.js:10:24
+   10| declare const o_index: I_index;
+                              ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test9.js:12:2
@@ -408,9 +408,9 @@ because interfaces do not track the own-ness of their properties. Try using an o
         ^^^^^^^^^^^^ [1]
 
 References:
-   test9.js:10:22
-   10| declare var o_index: I_index;
-                            ^^^^^^^ [2]
+   test9.js:10:24
+   10| declare const o_index: I_index;
+                              ^^^^^^^ [2]
 
 
 

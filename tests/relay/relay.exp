@@ -177,9 +177,9 @@ Cannot create `Profile` element because in property `user`: object type [1] is i
                       ^^^^
 
 References:
-   main.js:11:19
-   11| declare var user: Profile_user;
-                         ^^^^^^^^^^^^ [1]
+   main.js:11:21
+   11| declare const user: Profile_user;
+                           ^^^^^^^^^^^^ [1]
    Profile.graphql.js:12:3
    12|   Profile_userRef,
          ^^^^^^^^^^^^^^^ [2]
@@ -195,9 +195,9 @@ Cannot create `Profile` element because in property `user`: object type [1] is i
                       ^^^^
 
 References:
-   main.js:11:19
-   11| declare var user: Profile_user;
-                         ^^^^^^^^^^^^ [1]
+   main.js:11:21
+   11| declare const user: Profile_user;
+                           ^^^^^^^^^^^^ [1]
    Profile.graphql.js:12:3
    12|   Profile_userRef,
          ^^^^^^^^^^^^^^^ [2]

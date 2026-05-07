@@ -1088,12 +1088,12 @@ References:
    intersection_component_error.js:13:1
    13| <MyComponent />;
        ^^^^^^^^^^^^^^^ [1]
-   intersection_component_error.js:8:46
-    8| declare var MyComponent: React.ComponentType<{foo: number, ...}> & {
-                                                    ^^^^^^^^^^^^^^^^^^ [2]
-   intersection_component_error.js:8:68
-                                                                          v
-    8| declare var MyComponent: React.ComponentType<{foo: number, ...}> & {
+   intersection_component_error.js:8:48
+    8| declare const MyComponent: React.ComponentType<{foo: number, ...}> & {
+                                                      ^^^^^^^^^^^^^^^^^^ [2]
+   intersection_component_error.js:8:70
+                                                                            v
+    8| declare const MyComponent: React.ComponentType<{foo: number, ...}> & {
     9|   someStatic: boolean,
    10|   ...
    11| };
@@ -1260,9 +1260,9 @@ Cannot get `ref.props` because property `props` is missing in null [1]. [incompa
              ^^^^^
 
 References:
-   react_util_types_monomorphization.js:11:20
-   11|   declare var ref: React.ElementRef<typeof PolyComponent>; // T instantiated to mixed
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   react_util_types_monomorphization.js:11:22
+   11|   declare const ref: React.ElementRef<typeof PolyComponent>; // T instantiated to mixed
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------ react_util_types_monomorphization.js:12:3

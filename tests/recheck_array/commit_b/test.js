@@ -2,5 +2,5 @@
 
 import type {Arr} from './import';
 
-declare var x: Array<number>;
+declare const x: Array<number>;
 x as Arr;

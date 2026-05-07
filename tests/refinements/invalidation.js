@@ -231,7 +231,7 @@ type A = {b?: {c: boolean, ...}, ...};
 
 // Heap refinements, again on `a.b` where `a` is local,
 // invalidated by a write to property `b` on some other heap object.
-declare var x: { b?: { ... }, ... };
+declare const x: { b?: { ... }, ... };
 (a: A) => {
   // Here's an error, a refinement that fixes it,
   // and a write correctly invalidating the refinement.
@@ -292,11 +292,11 @@ declare var x: { b?: { ... }, ... };
   // continue, break, return, and labelled break and continue.
 }
 
-declare var f: unknown => boolean;
-declare var p: boolean;
+declare const f: unknown => boolean;
+declare const p: boolean;
 
-declare var y: { ... } & Iterator<unknown>;
-declare var ff: unknown => { ... } & Iterator<unknown>;
+declare const y: { ... } & Iterator<unknown>;
+declare const ff: unknown => { ... } & Iterator<unknown>;
 
 () => {
   declare function f(x: unknown): boolean;

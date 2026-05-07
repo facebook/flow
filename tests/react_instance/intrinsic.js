@@ -1,4 +1,4 @@
-declare var any: any;
+declare const any: any;
 
 (any as React.ElementRef<'foo'>).yep1; // OK
 (any as React.ElementRef<'foo'>).yep2; // Error

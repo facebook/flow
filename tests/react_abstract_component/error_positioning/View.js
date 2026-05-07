@@ -3,6 +3,6 @@ const React = require('react');
 
 type ViewNativeComponentType = Class<React.Component<{}>>;
 
-declare var View: ViewNativeComponentType;
+declare const View: ViewNativeComponentType;
 
 module.exports = View;

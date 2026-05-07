@@ -1,6 +1,6 @@
-declare var keyStringPrefix: StringPrefix<'abc'>;
-declare var keyStringSuffix: StringSuffix<'xyz'>;
-declare var empty: empty;
+declare const keyStringPrefix: StringPrefix<'abc'>;
+declare const keyStringSuffix: StringSuffix<'xyz'>;
+declare const empty: empty;
 
 {
     const x = {def: 0, [keyStringPrefix]: 0}; // okay no overlap

@@ -36,6 +36,6 @@ class ContraBaz<-T> {
   }
 }
 
-declare var x: ReadonlyArray<number>;
+declare const x: ReadonlyArray<number>;
 x[0] = 42;
 x[0 as any] = 42;

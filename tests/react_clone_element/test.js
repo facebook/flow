@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-declare var any: any;
+declare const any: any;
 
 class A extends React.Component<{foo: number, ...}, void> {}
 class B extends React.Component<{foo: number, bar: number, ...}, void> {}
@@ -10,11 +10,11 @@ class E extends React.Component<{foo: number, bar: number, ...}, void> {
   static defaultProps: {bar: number, ...} = {bar: 42};
 }
 
-declare var a: ExactReactElement_DEPRECATED<Class<A>>;
-declare var b: ExactReactElement_DEPRECATED<Class<B>>;
-declare var c: ExactReactElement_DEPRECATED<Class<C>>;
-declare var d: ExactReactElement_DEPRECATED<Class<D>>;
-declare var e: ExactReactElement_DEPRECATED<Class<E>>;
+declare const a: ExactReactElement_DEPRECATED<Class<A>>;
+declare const b: ExactReactElement_DEPRECATED<Class<B>>;
+declare const c: ExactReactElement_DEPRECATED<Class<C>>;
+declare const d: ExactReactElement_DEPRECATED<Class<D>>;
+declare const e: ExactReactElement_DEPRECATED<Class<E>>;
 
 React.cloneElement(); // Error: Needs a minimum of two arguments.
 React.cloneElement('nope'); // Error: Not a valid element type.
@@ -105,7 +105,7 @@ function cloneUnionElement() {
   declare class A extends React.Component<{foo: number, ...}, void> {}
   declare component B(...props: { foo: number, ... });
 
-  declare var element:
+  declare const element:
     | ExactReactElement_DEPRECATED<Class<A>>
     | ExactReactElement_DEPRECATED<typeof B>;
 
@@ -114,7 +114,7 @@ function cloneUnionElement() {
 
   type Wrap<T> = { f: T, ... }['f'];
 
-  declare var wrappedElement: Wrap<
+  declare const wrappedElement: Wrap<
     | ExactReactElement_DEPRECATED<Class<A>>
     | ExactReactElement_DEPRECATED<typeof B>
   >;

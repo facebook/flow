@@ -1,3 +1,3 @@
 // $FlowFixMe[libdef-override]
-declare var foo: string;
-declare var foo: string;
+declare const foo: string;
+declare const foo: string;

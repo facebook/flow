@@ -6,13 +6,13 @@
 const React = require('react');
 class Component extends React.Component<{...}> {}
 
-declare var a: ExactReactElement_DEPRECATED<Class<Component>>;
+declare const a: ExactReactElement_DEPRECATED<Class<Component>>;
 a as ExactReactElement_DEPRECATED<React.ElementType>;
 
 const b = <Component />;
 b as ExactReactElement_DEPRECATED<React.ElementType>;
 
-declare var c: ExactReactElement_DEPRECATED<Class<Component>>;
+declare const c: ExactReactElement_DEPRECATED<Class<Component>>;
 c as ExactReactElement_DEPRECATED<React$ElementType>;
 
 const d = <Component />;

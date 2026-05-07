@@ -110,14 +110,14 @@ type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
 }
 
 {
-  declare var st: string;
+  declare const st: string;
   if (st === 1 || st === 2) {} // error
   if (st === 1 && st === 2) {} // error
 }
 
 {
   type Obj = { field : string };
-  declare var obj: Obj;
+  declare const obj: Obj;
   if (obj.field === 1 || obj.field === 2) {} // error
   if (obj.field === 1 && obj.field === 2) {} // error
 }

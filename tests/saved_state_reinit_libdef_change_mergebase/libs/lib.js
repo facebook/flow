@@ -1,2 +1,2 @@
 // @flow
-declare var myGlobal: string;
+declare const myGlobal: string;

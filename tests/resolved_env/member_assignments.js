@@ -2,7 +2,7 @@
 
 function member_assignment_simple() {
   type Foo = {bar: string, ...};
-  declare var foo: Foo;
+  declare const foo: Foo;
 
   foo.bar as string; // ok
   foo.bar as number; // error: string is incompatible with number
@@ -13,7 +13,7 @@ function member_assignment_simple() {
 
 function member_assignment_contravariant() {
   type Foo = {-bar: string, ...};
-  declare var foo: Foo;
+  declare const foo: Foo;
 
   foo.bar; // error: not readable
   foo.bar = ''; // ok

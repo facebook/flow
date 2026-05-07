@@ -1004,5 +1004,5 @@ type A =
   | A499
   | A500;
 
-declare var a: {...A, ...A, ...{}};
+declare const a: {...A, ...A, ...{}};
 a as typeof a;

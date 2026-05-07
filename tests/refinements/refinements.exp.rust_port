@@ -3839,9 +3839,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                           ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:96:54
@@ -3898,9 +3898,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                           ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:97:54
@@ -3957,9 +3957,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                           ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:98:54
@@ -4142,9 +4142,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                                          ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:104:54
@@ -4201,9 +4201,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                                          ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:105:54
@@ -4288,9 +4288,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                      ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:107:61
@@ -4369,9 +4369,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                            ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:110:54
@@ -4442,9 +4442,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                            ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:111:54
@@ -4501,9 +4501,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                            ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:112:54
@@ -4560,9 +4560,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                         ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:113:54
@@ -4619,9 +4619,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                         ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:114:54
@@ -4678,9 +4678,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                         ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:115:54
@@ -4821,9 +4821,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                        ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:119:54
@@ -4880,9 +4880,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                        ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:120:54
@@ -4939,9 +4939,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                                        ^
 
 References:
-   invalidation.js:296:16
-   296| declare var p: boolean;
-                       ^^^^^^^ [1]
+   invalidation.js:296:18
+   296| declare const p: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:121:54
@@ -15717,9 +15717,9 @@ Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function
              ^^^^^
 
 References:
-   lib.js:3:27
-    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
-                                 ^^^^^^^^^^^^^^^^^^^ [1]
+   lib.js:3:29
+    3| declare const BAZ: {stuff?: (x: number) => void, ...} | void;
+                                   ^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:22:7
@@ -15731,9 +15731,9 @@ Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1]. [i
              ^^^^^
 
 References:
-   lib.js:3:55
-    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
-                                                             ^^^^ [1]
+   lib.js:3:57
+    3| declare const BAZ: {stuff?: (x: number) => void, ...} | void;
+                                                               ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:25:7
@@ -15745,9 +15745,9 @@ Cannot get `BAZ.stuff` because property `stuff` is missing in undefined [1]. [in
              ^^^^^
 
 References:
-   lib.js:3:55
-    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
-                                                             ^^^^ [1]
+   lib.js:3:57
+    3| declare const BAZ: {stuff?: (x: number) => void, ...} | void;
+                                                               ^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:26:44
@@ -15801,9 +15801,9 @@ Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function
                ^^^^^
 
 References:
-   lib.js:3:27
-    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
-                                 ^^^^^^^^^^^^^^^^^^^ [1]
+   lib.js:3:29
+    3| declare const BAZ: {stuff?: (x: number) => void, ...} | void;
+                                   ^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:28:9
@@ -15815,9 +15815,9 @@ Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1]. [i
                ^^^^^
 
 References:
-   lib.js:3:55
-    3| declare var BAZ: {stuff?: (x: number) => void, ...} | void;
-                                                             ^^^^ [1]
+   lib.js:3:57
+    3| declare const BAZ: {stuff?: (x: number) => void, ...} | void;
+                                                               ^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:36:10

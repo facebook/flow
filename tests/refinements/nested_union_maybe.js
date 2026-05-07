@@ -1,6 +1,6 @@
 declare function foo(x : number) : ?string;
 
-declare var x : number;
+declare const x : number;
 const y = true
     ? foo // error: foo is always truthy
         ? foo(x)

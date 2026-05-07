@@ -261,7 +261,7 @@ var tests =
 
   function () {
     type O = {a: number, b: string};
-    declare var obj: {prop: ?() => O};
+    declare const obj: {prop: ?() => O};
     if (obj.prop) {
       // A naive implementation of synthesizing member expressions for recording refinements on a, b
       // might visit obj.prop() and invalidate heap refinements multiple times.

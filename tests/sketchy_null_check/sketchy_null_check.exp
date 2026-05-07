@@ -276,9 +276,9 @@ choose an explicit default instead. [sketchy-number-and]
            ^^
 
 References:
-   simple_sketchies.js:61:39
-   61| declare var ww: {is?: ?({a: number} | number)};
-                                             ^^^^^^ [1]
+   simple_sketchies.js:61:41
+   61| declare const ww: {is?: ?({a: number} | number)};
+                                               ^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:63:5
@@ -291,12 +291,12 @@ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to ch
            ^^
 
 References:
-   simple_sketchies.js:61:39
-   61| declare var ww: {is?: ?({a: number} | number)};
-                                             ^^^^^^ [1]
-   simple_sketchies.js:61:23
-   61| declare var ww: {is?: ?({a: number} | number)};
-                             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   simple_sketchies.js:61:41
+   61| declare const ww: {is?: ?({a: number} | number)};
+                                               ^^^^^^ [1]
+   simple_sketchies.js:61:25
+   61| declare const ww: {is?: ?({a: number} | number)};
+                               ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:63:11
@@ -309,9 +309,9 @@ Sketchy null check on number [1] which is potentially 0. Perhaps you meant to ch
                  ^^^^ [2]
 
 References:
-   simple_sketchies.js:61:29
-   61| declare var ww: {is?: ?({a: number} | number)};
-                                   ^^^^^^ [1]
+   simple_sketchies.js:61:31
+   61| declare const ww: {is?: ?({a: number} | number)};
+                                     ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:63:11
@@ -333,9 +333,9 @@ Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to
            ^^^^
 
 References:
-   simple_sketchies.js:65:21
-   65| declare var hh: {a: unknown};
-                           ^^^^^^^ [1]
+   simple_sketchies.js:65:23
+   65| declare const hh: {a: unknown};
+                             ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:66:13
@@ -348,9 +348,9 @@ Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to
                    ^^^^^^
 
 References:
-   simple_sketchies.js:65:21
-   65| declare var hh: {a: unknown};
-                           ^^^^^^^ [1]
+   simple_sketchies.js:65:23
+   65| declare const hh: {a: unknown};
+                             ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:69:7

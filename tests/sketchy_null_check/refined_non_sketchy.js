@@ -1,5 +1,5 @@
-declare var x: ?boolean;
-declare var o: {p: ?boolean};
+declare const x: ?boolean;
+declare const o: {p: ?boolean};
 
 function f1() {
     if (x == null) return;

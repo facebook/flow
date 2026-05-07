@@ -48,19 +48,19 @@ function foo10() {
 
 function foo11() {
   declare function invariant(a: unknown): void;
-  declare var b: unknown;
+  declare const b: unknown;
   invariant(b != null && b.foo != null); // ok
 }
 
 function foo12() {
-  declare var a: unknown;
+  declare const a: unknown;
   if (a != null && a.foo instanceof Set) {
     a.foo as Set<unknown>;
   }
 }
 
 function foo13() {
-  declare var a: unknown;
+  declare const a: unknown;
   if (a != null && Array.isArray(a.foo)) {
     a.foo as ReadonlyArray<unknown>;
   }

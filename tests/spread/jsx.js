@@ -1,7 +1,7 @@
 const React = require('react');
 
 type Props = Readonly<{bar: string, baz: number}>;
-declare var TestComponent: React.ComponentType<Props>;
+declare const TestComponent: React.ComponentType<Props>;
 const props: Props = {bar: '', baz: 0};
 
 <TestComponent {...props} />; //breaks

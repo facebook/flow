@@ -37,11 +37,11 @@ function alwaysFalsy(x: boolean): false {
 }
 
 function triv () : true {
-  declare var x : false | false;
+  declare const x : false | false;
   return !x;
 }
 
 function triv2 () : false {
-  declare var x : true | {};
+  declare const x : true | {};
   return !x;
 }

@@ -488,9 +488,9 @@ Cannot cast `x.y.z` to empty because number [1] is incompatible with empty [2]. 
         ^^^^^
 
 References:
-   heap_refis.js:3:25
-   3| declare var x: {y?: {z: number, ...}, ...};
-                              ^^^^^^ [1]
+   heap_refis.js:3:27
+   3| declare const x: {y?: {z: number, ...}, ...};
+                                ^^^^^^ [1]
    heap_refis.js:6:12
    6|   x.y.z as empty; //err num
                  ^^^^^ [2]

@@ -16,7 +16,7 @@
 
 declare function useState<S>(state: (() => S) | S): [S, ((S => S) | S) => void];
 const [value, setter] = useState<string | null>(null);
-declare var Enum: {A: 'A', B: 'B', ...};
+declare const Enum: {A: 'A', B: 'B', ...};
 
 // The conditional below may be seen as a refinement on `Enum`. In that case, we
 // make sure that `value` is a valid type for `Enum.A` (see matching prop).
@@ -38,7 +38,7 @@ if (y === 'val') {} // error, invalid-compare. LHS is null but RHS does not incl
 // Example 3
 
 type V<T extends {...}> = { key2: keyof T, ... };
-declare var column: V<{...}>;
+declare const column: V<{...}>;
 const {key2} = column;
 if (key2 === 'a') {} // error (key2 does not include 'a')
 

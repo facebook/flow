@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-declare var any: any;
+declare const any: any;
 
 React.createElement(); // Error: Needs a minimum of two arguments.
 React.createElement('div'); // OK

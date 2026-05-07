@@ -30,7 +30,7 @@ x as empty; // err
 }
 
 {
-  declare var invariant: any;
+  declare const invariant: any;
   // Flow does not understand LHS's nullability/truthiness/falseyness and the statement always throws.
   class A {}
   let x: null = null;

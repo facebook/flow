@@ -2,9 +2,9 @@ import * as React from 'react';
 
 export type Props = {f: any} | {g: any};
 
-declare var Component: (props: Props) => React.Node;
+declare const Component: (props: Props) => React.Node;
 
-declare var props: Readonly<{
+declare const props: Readonly<{
     ...React.ElementConfig<typeof Component>,
 }>;
 

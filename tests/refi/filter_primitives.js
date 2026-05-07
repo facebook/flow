@@ -1,7 +1,7 @@
-declare var maybeStr: ?'a';
-declare var maybeNum: ?1;
-declare var maybeBool: ?true;
-declare var maybeBigInt: ?1n;
+declare const maybeStr: ?'a';
+declare const maybeNum: ?1;
+declare const maybeBool: ?true;
+declare const maybeBigInt: ?1n;
 
 if (maybeStr != null) {
     'a' as typeof maybeStr; // ok

@@ -367,9 +367,9 @@ Cannot get `x.p` because property `p` is missing in `LibK` [1]. [prop-missing]
         ^
 
 References:
-   k.js:3:16
-   3| declare var x: LibK;
-                     ^^^^ [1]
+   k.js:3:18
+   3| declare const x: LibK;
+                       ^^^^ [1]
 
 
 
@@ -400,9 +400,9 @@ Cannot get `x.p` because property `p` is missing in `LibK` [1]. [prop-missing]
         ^
 
 References:
-   k.js:3:16
-   3| declare var x: LibK;
-                     ^^^^ [1]
+   k.js:3:18
+   3| declare const x: LibK;
+                       ^^^^ [1]
 
 
 

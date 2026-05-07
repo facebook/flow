@@ -12,5 +12,5 @@ export type Data = Readonly<
   | PropsB
 >;
 
-declare var data: Data;
+declare const data: Data;
 data.propA as empty; // error obj ~> empty
