@@ -18,7 +18,7 @@ module.exports = (suite(
   }) => {
     let requestSelectionRange = function (
       uri: string,
-      positions: Array<{|line: number, character: number|}>,
+      positions: Array<{line: number, character: number}>,
     ) {
       return lspRequestAndWaitUntilResponse('textDocument/selectionRange', {
         textDocument: {uri: uri},

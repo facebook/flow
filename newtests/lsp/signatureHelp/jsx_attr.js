@@ -2,16 +2,16 @@
 
 import * as React from "react";
 
-type PropsA = $ReadOnly<{ foo: number, bar?: string }>;
-type PropsB = $ReadOnly<{ foo: boolean, baz?: string }>;
-type PropsC = $ReadOnly<{ foo?: string, baz?: string }>;
+type PropsA = $ReadOnly<{ foo: number, bar?: string, ... }>;
+type PropsB = $ReadOnly<{ foo: boolean, baz?: string, ... }>;
+type PropsC = $ReadOnly<{ foo?: string, baz?: string, ... }>;
 
-type PropsPoly<P> = $ReadOnly<{ foo: P, bar?: P }>;
+type PropsPoly<P> = $ReadOnly<{ foo: P, bar?: P, ... }>;
 
 type PropsOmit = $ReadOnly<Omit<PropsA, 'bar'>>;
 type PropsMapped = $ReadOnly<{[key in keyof PropsA]: () => PropsA[key]}>;
 
-type PropsSpread = $ReadOnly<{...PropsA, ...PropsC}>;
+type PropsSpread = $ReadOnly<{...PropsA, ...PropsC, ...}>;
 
 function test1(Foo: React.ComponentType<PropsA>) {;
     return <Foo foo={/* here */} />;
@@ -21,7 +21,7 @@ function test2(Foo: component (foo: number, bar?: string)) {
     return <Foo foo={/* here */} />;
 }
 
-function test3(Foo: component(...props: {...PropsA})) {
+function test3(Foo: component(...props: {...PropsA, ...})) {
     return <Foo foo={/* here */} />;
 }
 
@@ -38,7 +38,7 @@ function test6<P>(Foo: React.ComponentType<PropsPoly<P>>): any {
     return <Foo foo={/* here */} />;
 }
 
-function test7<P>(Foo: React.ComponentType<{...PropsA, ...PropsPoly<P>}>): any {
+function test7<P>(Foo: React.ComponentType<{...PropsA, ...PropsPoly<P>, ...}>): any {
     return <Foo foo={/* here */} />;
 }
 

@@ -1,11 +1,11 @@
 // @flow
 
 type Foo = {
-  bar: Bar
+  bar: Bar, ...
 }
 
 type Bar = {
-  baz: number
+  baz: number, ...
 }
 
 const foo: ?Foo = {

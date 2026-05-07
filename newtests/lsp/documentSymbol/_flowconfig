@@ -1,4 +1,3 @@
 [options]
 component_syntax=true
-exact_by_default=false
 enums=true

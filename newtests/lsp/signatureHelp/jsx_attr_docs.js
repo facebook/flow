@@ -10,7 +10,7 @@ export type Props1 = $ReadOnly<{
     /**
      * This is documentation for Props1.bar property
      */
-    bar?: string,
+    bar?: string, ...
 }>;
 
 type Props2 = $ReadOnly<{
@@ -21,7 +21,7 @@ type Props2 = $ReadOnly<{
     /**
      * This is documentation for Props2.bar property
      */
-    bar?: string,
+    bar?: string, ...
 }>;
 
 function test1(Foo: React.ComponentType<Props1>): any {

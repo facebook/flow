@@ -1233,7 +1233,7 @@ module.exports = (suite(
                     name: 'bar',
                     range: {
                       end: {
-                        character: 22,
+                        character: 27,
                         line: 80,
                       },
                       start: {
@@ -1357,7 +1357,7 @@ module.exports = (suite(
                     name: 'bar',
                     range: {
                       end: {
-                        character: 22,
+                        character: 27,
                         line: 87,
                       },
                       start: {
@@ -1655,7 +1655,7 @@ module.exports = (suite(
                 name: 'decl1',
                 range: {
                   end: {
-                    character: 35,
+                    character: 40,
                     line: 107,
                   },
                   start: {
@@ -1705,7 +1705,7 @@ module.exports = (suite(
                 name: 'decl2',
                 range: {
                   end: {
-                    character: 42,
+                    character: 47,
                     line: 109,
                   },
                   start: {
@@ -2990,7 +2990,7 @@ module.exports = (suite(
                 location: {
                   range: {
                     end: {
-                      character: 22,
+                      character: 27,
                       line: 80,
                     },
                     start: {
@@ -3079,7 +3079,7 @@ module.exports = (suite(
                 location: {
                   range: {
                     end: {
-                      character: 22,
+                      character: 27,
                       line: 87,
                     },
                     start: {
@@ -3272,7 +3272,7 @@ module.exports = (suite(
                 location: {
                   range: {
                     end: {
-                      character: 35,
+                      character: 40,
                       line: 107,
                     },
                     start: {
@@ -3307,7 +3307,7 @@ module.exports = (suite(
                 location: {
                   range: {
                     end: {
-                      character: 42,
+                      character: 47,
                       line: 109,
                     },
                     start: {

@@ -13,7 +13,7 @@ function x1(f: F | void) {
   f?.(/* here */)
 }
 
-function x2(f: ?{ m: F }) {
+function x2(f: ?{ m: F, ... }) {
   f?.m(/* here */)
 }
 
@@ -21,15 +21,15 @@ function x3(f: ?{ [key: string]: F }) {
   f?.["abc"](/* here */)
 }
 
-function x4(f: ?{ m: { n: F } }) {
+function x4(f: ?{ m: { n: F, ... }, ... }) {
   f?.m.n(/* here */)
 }
 
-function x5(f: { m: ?F }) {
+function x5(f: { m: ?F, ... }) {
   f.m?.(/* here */)
 }
 
-function x6(g: ?{ f: F }) {
+function x6(g: ?{ f: F, ... }) {
   if (g != null) {
     g.f(/* here */)
   }
@@ -53,7 +53,7 @@ function y1(f: H | void) {
   f?.(/* here */)
 }
 
-function y2(f: ?{ m: H }) {
+function y2(f: ?{ m: H, ... }) {
   f?.m(/* here */)
 }
 
@@ -61,15 +61,15 @@ function y3(f: ?{ [key: string]: H }) {
   f?.["abc"](/* here */)
 }
 
-function y4(f: ?{ m: { n: H } }) {
+function y4(f: ?{ m: { n: H, ... }, ... }) {
   f?.m.n(/* here */)
 }
 
-function y5(f: { m: ?H }) {
+function y5(f: { m: ?H, ... }) {
   f.m?.(/* here */)
 }
 
-function y6(g: ?{ f: H }) {
+function y6(g: ?{ f: H, ... }) {
   if (g != null) {
     g.f(/* here */)
   }

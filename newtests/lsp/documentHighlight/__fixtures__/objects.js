@@ -2,7 +2,7 @@
 
 type Alias = {
   foo(): void,
-  bar: string,
+  bar: string, ...
 };
 
 const a: Alias = { foo() {}, bar: ''};
@@ -16,7 +16,7 @@ b.bar;
 b.bar;
 
 type Spreaded = {
-  ...Alias,
+  ...Alias, ...
 };
 
 const f: Spreaded = { foo() {}, bar: '', baz: 5 };
@@ -24,7 +24,7 @@ if (f.foo != null) { f.foo() };
 
 type Alias2 = {
   foo(): void,
-  bar: string,
+  bar: string, ...
 };
 
 const g = { foo() {}, bar: ''};

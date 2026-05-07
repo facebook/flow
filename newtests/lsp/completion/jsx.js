@@ -2,7 +2,7 @@
 
 var React = require('react');
 
-type Props = {a :number}
+type Props = {a :number, ...}
 
 class C extends React.Component<Props> {
 }

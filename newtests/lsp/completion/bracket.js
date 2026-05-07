@@ -5,10 +5,10 @@ const o = {
   b: 'hi',
 };
 
-type T = {|
+type T = {
   foo: boolean,
   bar: string,
-|};
+};
 
 const a = o[];
 //         ^

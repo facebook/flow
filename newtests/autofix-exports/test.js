@@ -189,7 +189,7 @@ module.exports = (suite(
                     '<PLACEHOLDER_PROJECT_URL>/error1.js': [
                       {
                         newText:
-                          ': {| a: number, b: (a: any, b: string) => number |}',
+                          ': {a: number, b: (a: any, b: string) => number }',
                         range: {
                           end: {
                             character: 17,

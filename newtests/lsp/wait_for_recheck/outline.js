@@ -9,11 +9,11 @@ type State =
   | 'Starting';
 
 type Preferences = {
-  pref1?: Map<string, any>,
+  pref1?: Map<string, any>, ...
 };
 
 export type EPrefs = {
-  pref2: number;
+  pref2: number; ...
 }
 
 class MyClass1 {

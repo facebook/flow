@@ -1,4 +1,4 @@
 // @thisWillBeFlowInTest
 
-type H = {}
+type H = {...}
 interface I extends H {}

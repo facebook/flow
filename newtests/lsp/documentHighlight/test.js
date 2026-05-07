@@ -223,7 +223,7 @@ module.exports = (suite(
         addFiles(...fixtures),
         lspStartAndConnect(),
         snapshot('unions.js', 6, 3, 'unions_1.json'),
-        snapshot('unions.js', 9, 30, 'unions_2.json'),
+        snapshot('unions.js', 9, 35, 'unions_2.json'),
         snapshot('unions.js', 16, 10, 'unions_3.json'),
       ]),
       test('Unsaved', [

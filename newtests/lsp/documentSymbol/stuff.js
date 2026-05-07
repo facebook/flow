@@ -78,14 +78,14 @@ export function f6() {
 
 type T1 = {
   foo(): void;
-  bar: { baz: string };
+  bar: { baz: string, ... };
   [key: string]: string;
-  [[call]]: void;
+  [[call]]: void; ...
 }
 
 interface I1 {
   foo(): void;
-  bar: { baz: string };
+  bar: { baz: string, ... };
   [key: string]: string;
 }
 
@@ -98,18 +98,18 @@ type I3 = interface {
 }
 
 opaque type I4 = {
-  foo: string;
+  foo: string; ...
 }
 
 declare opaque type I5: {
-  foo: string;
+  foo: string; ...
 }
 
-declare var decl1: { foo: string };
+declare var decl1: { foo: string, ... };
 
-declare export var decl2: { foo: string };
+declare export var decl2: { foo: string, ... };
 
-declare export default { foo: string };
+declare export default { foo: string, ... };
 
 export default {
   foo: 123,

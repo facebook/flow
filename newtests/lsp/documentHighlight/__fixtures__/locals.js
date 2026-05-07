@@ -47,7 +47,7 @@ wut2;
 // JSX
 var React = require('react');
 class Fancy extends React.Component {
-  props: { x: number };
+  props: { x: number, ... };
 }
 <Fancy x={0}/>;
 

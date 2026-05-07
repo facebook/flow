@@ -49,10 +49,10 @@
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/add-annotation-for-invariant-subtyping-error.js": [
             {
-              "newText": "Readonly<{ v?: string }>",
+              "newText": "Readonly<{ v?: string, ... }>",
               "range": {
                 "end": {
-                  "character": 21,
+                  "character": 26,
                   "line": 14
                 },
                 "start": {

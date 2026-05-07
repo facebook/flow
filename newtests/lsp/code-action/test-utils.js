@@ -20,6 +20,7 @@ function generateSimpleTests(
     lspIgnoreStatusAndCancellation: TestStepFirstStage['lspIgnoreStatusAndCancellation'],
     lspStartAndConnect: TestStepFirstStage['lspStartAndConnect'],
     lspRequestAndWaitUntilResponse: TestStepFirstStage['lspRequestAndWaitUntilResponse'],
+    ...
   },
   testDir: string,
   filename: string,

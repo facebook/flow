@@ -1,5 +1,5 @@
 //@flow
 
-declare var x : { facebook: string };
+declare var x : { facebook: string, ... };
 x.faceboy;
 //    ^

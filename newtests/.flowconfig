@@ -13,6 +13,5 @@
 !.*/newtests/Tester.js
 
 [options]
-exact_by_default=false
 emoji=true
 component_syntax=true

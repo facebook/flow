@@ -8,7 +8,7 @@ function foo(_ : { x : number, ...}) {}
 
 foo(new A());
 //  ^
-function bar(_ : { i : {x: number, ...} }) {}
+function bar(_ : { i : {x: number, ...}, ... }) {}
 
 bar({i : new A()})
 //        ^
