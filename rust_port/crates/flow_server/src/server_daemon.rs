@@ -123,6 +123,7 @@ pub struct ServerEntryParam {
     pub file_watcher_pid: Option<u32>,
     pub parent_pid: u32,
     pub logging_context: LoggingContext,
+    pub start_cause: flow_server_env::server_status::StartCause,
 }
 
 pub fn entry_point(build: ServerOptionsBuilder) -> &'static Entry<ServerEntryParam, (), ()> {
@@ -153,6 +154,7 @@ fn server_entry_handler(param: ServerEntryParam, pair: ChannelPair<(), ()>) {
         file_watcher_pid,
         parent_pid,
         logging_context,
+        start_cause,
     } = param;
     let ChannelPair(in_chan, out_chan) = pair;
 
@@ -193,7 +195,7 @@ fn server_entry_handler(param: ServerEntryParam, pair: ChannelPair<(), ()>) {
     let out_stream = flow_daemon::into_out_stream(out_chan);
     let channels: flow_server_env::monitor_rpc::Channels = (in_stream, out_stream);
 
-    crate::server::run_from_daemonize(&init_id, options, Some(channels));
+    crate::server::run_from_daemonize(&init_id, options, Some(channels), start_cause);
 }
 
 pub fn dump_server_options(options: &Options) {
@@ -255,6 +257,7 @@ pub fn daemonize(
     ignore_version: bool,
     options: Arc<Options>,
     file_watcher_pid: Option<u32>,
+    start_cause: flow_server_env::server_status::StartCause,
     cli_overrides: &CliOverrides,
 ) -> Result<Handle<(), ()>, String> {
     let entry = registered_entry_point();
@@ -286,6 +289,7 @@ pub fn daemonize(
         file_watcher_pid,
         parent_pid: std::process::id(),
         logging_context: flow_event_logger::get_context(),
+        start_cause,
     };
 
     let stdio = (

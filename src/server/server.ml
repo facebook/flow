@@ -312,7 +312,24 @@ let check_supported_operating_system options =
     in
     Exit.(exit ~msg Invalid_flowconfig)
 
-let run ~monitor_channels ~init_id ~shared_mem_config options =
+(* Maps monitor/user startup cause to the [init_trigger] Scuba column on INIT_END.
+
+   [Monitor_restart None] includes monitor-driven restarts without a specific
+   reason (EdenFS watcher retry, non-fatal signaled exit, kill_by_monitor that
+   doesn't take down the monitor).
+
+   [Monitor_restart (Some Out_of_shared_memory)] is currently unreachable: the
+   monitor exits on OOM rather than restarting (see process_server_exit in
+   flowServerMonitorServer.ml). The arm is kept for type exhaustiveness in case
+   the policy changes. *)
+let string_of_init_trigger = function
+  | ServerStatus.User_initiated -> "user_initiated"
+  | ServerStatus.Monitor_restart None -> "monitor_restart"
+  | ServerStatus.Monitor_restart (Some ServerStatus.Server_out_of_date) -> "server_out_of_date"
+  | ServerStatus.Monitor_restart (Some ServerStatus.Out_of_shared_memory) -> "out_of_shared_memory"
+  | ServerStatus.Monitor_restart (Some ServerStatus.Restart) -> "restart_on_reinit"
+
+let run ~monitor_channels ~init_id ~shared_mem_config ~start_cause options =
   (* Check if the current operating system is supported *)
   check_supported_operating_system options;
 
@@ -335,8 +352,9 @@ let run ~monitor_channels ~init_id ~shared_mem_config options =
       MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
 
       let saved_state_fetcher = string_of_saved_state_fetcher options in
+      let init_trigger = string_of_init_trigger start_cause in
 
-      FlowEventLogger.init_done ?first_internal_error ~saved_state_fetcher profiling;
+      FlowEventLogger.init_done ?first_internal_error ~init_trigger ~saved_state_fetcher profiling;
 
       Hh_logger.info "Server is READY";
 
@@ -361,8 +379,8 @@ let exit_msg_of_exception exn msg =
       ":\n" ^ bt
     )
 
-let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config options =
-  try run ~monitor_channels ~shared_mem_config ~init_id options with
+let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config ~start_cause options =
+  try run ~monitor_channels ~shared_mem_config ~init_id ~start_cause options with
   | SharedMem.Out_of_shared_memory as exn ->
     let exn = Exception.wrap exn in
     let msg = exit_msg_of_exception exn "Out of shared memory" in
@@ -430,8 +448,10 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
     MonitorRPC.status_update ~event:ServerStatus.Finishing_up;
 
     let saved_state_fetcher = string_of_saved_state_fetcher options in
+    (* [check_once] backs `flow full-check`; it's always invoked by the user. *)
+    let init_trigger = string_of_init_trigger ServerStatus.User_initiated in
 
-    FlowEventLogger.init_done ?first_internal_error ~saved_state_fetcher profiling;
+    FlowEventLogger.init_done ?first_internal_error ~init_trigger ~saved_state_fetcher profiling;
 
     Lwt.return (errors, warnings)
   in
@@ -439,7 +459,7 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
 
 let daemonize =
   let entry = Server_daemon.register_entry_point run_from_daemonize in
-  fun ~init_id ~log_file ~shared_mem_config ~argv ~file_watcher_pid options ->
+  fun ~init_id ~log_file ~shared_mem_config ~argv ~file_watcher_pid ~start_cause options ->
     Server_daemon.daemonize
       ~init_id
       ~log_file
@@ -447,4 +467,5 @@ let daemonize =
       ~argv
       ~options
       ~file_watcher_pid
+      ~start_cause
       entry

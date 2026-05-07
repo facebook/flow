@@ -97,6 +97,24 @@ pub enum RestartReason {
     Restart,
 }
 
+/// Why the monitor is starting this server. The very first iteration of the
+/// keep-alive loop uses [`StartCause::UserInitiated`]; every subsequent
+/// iteration uses [`StartCause::MonitorRestart`], with the inner
+/// [`RestartReason`] when the monitor knows it.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum StartCause {
+    UserInitiated,
+    MonitorRestart(Option<RestartReason>),
+}
+
 #[derive(
     Debug,
     Clone,

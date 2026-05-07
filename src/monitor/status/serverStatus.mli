@@ -46,6 +46,10 @@ type restart_reason =
   | Out_of_shared_memory
   | Restart
 
+type start_cause =
+  | User_initiated
+  | Monitor_restart of restart_reason option
+
 val initial_status : status
 
 val update : event:event -> status:status -> status

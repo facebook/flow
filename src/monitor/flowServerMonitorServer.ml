@@ -117,7 +117,7 @@ let (command_stream, push_to_command_stream) = Lwt_stream.create ()
 module ServerInstance : sig
   type t
 
-  val start : FlowServerMonitorOptions.t -> ServerStatus.restart_reason option -> t Lwt.t
+  val start : FlowServerMonitorOptions.t -> ServerStatus.start_cause -> t Lwt.t
 
   val cleanup : t -> unit Lwt.t
 
@@ -387,8 +387,13 @@ end = struct
   let server_num = ref 0
 
   (* Spawn a brand new Flow server *)
-  let start monitor_options restart_reason =
+  let start monitor_options start_cause =
     Logger.info "Creating a new Flow server";
+    let restart_reason =
+      match start_cause with
+      | ServerStatus.User_initiated -> None
+      | ServerStatus.Monitor_restart restart_reason -> restart_reason
+    in
     let {
       FlowServerMonitorOptions.shared_mem_config;
       server_options;
@@ -460,7 +465,14 @@ end = struct
     );
     let handle =
       let init_id = Random_id.short_string () in
-      Server.daemonize ~init_id ~log_file ~shared_mem_config ~argv ~file_watcher_pid server_options
+      Server.daemonize
+        ~init_id
+        ~log_file
+        ~shared_mem_config
+        ~argv
+        ~file_watcher_pid
+        ~start_cause
+        server_options
     in
     let (ic, oc) = handle.Daemon.channels in
     (* we explicitly want to let Lwt determine the blocking mode here.
@@ -575,7 +587,7 @@ let max_edenfs_watcher_retries = 3
 
 (* A loop who's job is to start a server and then wait for it to die *)
 module KeepAliveLoop = LwtLoop.Make (struct
-  type acc = monitor_state * ServerStatus.restart_reason option
+  type acc = monitor_state * ServerStatus.start_cause
 
   let should_pause = ref true
 
@@ -745,7 +757,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
                   edenfs_watcher_retries = monitor_state.edenfs_watcher_retries + 1;
                 }
               in
-              Lwt.return (new_state, None)
+              Lwt.return (new_state, ServerStatus.Monitor_restart None)
             end else begin
               Logger.error "EdenFS watcher died %d times. Giving up." max_edenfs_watcher_retries;
               exit ~msg:"EdenFS watcher failed too many times" exit_type
@@ -754,7 +766,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
             exit ~msg:"Dying along with server" exit_type
           else
             let%lwt () = killall_persistent_connections exit_type in
-            Lwt.return (monitor_state, restart_reason)
+            Lwt.return (monitor_state, ServerStatus.Monitor_restart restart_reason)
       end
     | Unix.WSIGNALED signal ->
       Logger.error
@@ -765,7 +777,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       if should_monitor_exit_with_signaled_server signal then
         exit ~msg:"Dying along with signaled server" Exit.Interrupted
       else
-        Lwt.return (monitor_state, None)
+        Lwt.return (monitor_state, ServerStatus.Monitor_restart None)
     | Unix.WSTOPPED signal ->
       (* If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
          * could try to signal it to resume. Or we could wait for it to start up again. But killing
@@ -777,7 +789,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
       (* kill is not a blocking system call, which is likely why it is missing from Lwt_unix *)
       Unix.kill pid Sys.sigkill;
-      Lwt.return (monitor_state, None)
+      Lwt.return (monitor_state, ServerStatus.Monitor_restart None)
 
   (* The RequestMap will contain all the requests which have been sent to the server but never
    * received a response. If we're starting up a new server, we can resend all these requests to
@@ -789,11 +801,11 @@ module KeepAliveLoop = LwtLoop.Make (struct
         Lwt.return (push_to_command_stream (Some (Write_ephemeral_request { request; client }))))
       requests
 
-  let main (monitor_state, restart_reason) =
+  let main (monitor_state, start_cause) =
     let%lwt () = requeue_stalled_requests () in
-    let%lwt server = ServerInstance.start monitor_state.options restart_reason in
-    let%lwt (new_state, restart_reason) = wait_for_server_to_die monitor_state server in
-    Lwt.return (new_state, restart_reason)
+    let%lwt server = ServerInstance.start monitor_state.options start_cause in
+    let%lwt (new_state, start_cause) = wait_for_server_to_die monitor_state server in
+    Lwt.return (new_state, start_cause)
 
   let catch _ exn =
     Logger.error ~exn:(Exception.to_exn exn) "Exception in KeepAliveLoop";
@@ -825,7 +837,7 @@ let start monitor_options =
   Lwt.async Doomsday.start_clock;
   setup_signal_handlers ();
   let initial_state = { options = monitor_options; edenfs_watcher_retries = 0 } in
-  KeepAliveLoop.run ~cancel_condition:ExitSignal.signal (initial_state, None)
+  KeepAliveLoop.run ~cancel_condition:ExitSignal.signal (initial_state, ServerStatus.User_initiated)
 
 let send_request ~client ~request =
   Logger.debug

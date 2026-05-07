@@ -71,6 +71,10 @@ type restart_reason =
   | Out_of_shared_memory
   | Restart
 
+type start_cause =
+  | User_initiated
+  | Monitor_restart of restart_reason option
+
 type typecheck_mode =
   | Initializing  (** Flow is busy starting up *)
   | Rechecking  (** Flow is busy rechecking *)

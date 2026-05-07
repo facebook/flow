@@ -17,6 +17,7 @@ type args = {
   parent_pid: int;
   parent_logger_pid: int option;
   file_watcher_pid: int option;
+  start_cause: ServerStatus.start_cause;
 }
 
 type entry_point =
@@ -54,6 +55,7 @@ let register_entry_point
       init_id:string ->
       monitor_channels:MonitorRPC.channels ->
       shared_mem_config:SharedMem.config ->
+      start_cause:ServerStatus.start_cause ->
       Options.t ->
       unit
       ) : entry_point =
@@ -67,6 +69,7 @@ let register_entry_point
         parent_pid;
         parent_logger_pid;
         file_watcher_pid;
+        start_cause;
       } =
         args
       in
@@ -92,10 +95,11 @@ let register_entry_point
       PidLog.log ~reason:"main" (Unix.getpid ());
       Base.Option.iter (EventLogger.logger_pid ()) ~f:(PidLog.log ~reason:"main_logger");
 
-      main ~init_id ~monitor_channels ~shared_mem_config options
+      main ~init_id ~monitor_channels ~shared_mem_config ~start_cause options
   )
 
-let daemonize ~init_id ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid main_entry =
+let daemonize
+    ~init_id ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid ~start_cause main_entry =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root options in
   let tmp_dir = Options.temp_dir options in
@@ -146,4 +150,5 @@ let daemonize ~init_id ~log_file ~shared_mem_config ~argv ~options ~file_watcher
       parent_pid = Unix.getpid ();
       parent_logger_pid = EventLogger.logger_pid ();
       file_watcher_pid;
+      start_cause;
     }

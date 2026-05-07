@@ -430,6 +430,7 @@ mod stub {
 
     pub fn init_done(
         _first_internal_error: Option<&str>,
+        _init_trigger: &str,
         _saved_state_fetcher: &str,
         _profiling: &serde_json::Value,
     ) {
@@ -1022,11 +1023,13 @@ mod fb_facade {
     // FB-internal signature. Argument order and remaining types align.
     pub fn init_done(
         first_internal_error: Option<&str>,
+        init_trigger: &str,
         saved_state_fetcher: &str,
         profiling: &serde_json::Value,
     ) {
         fb::init_done(
             first_internal_error.map(|s| s.to_string()),
+            init_trigger,
             saved_state_fetcher,
             profiling,
         );

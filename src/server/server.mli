@@ -30,5 +30,6 @@ val daemonize :
   shared_mem_config:SharedMem.config ->
   argv:string array ->
   file_watcher_pid:int option ->
+  start_cause:ServerStatus.start_cause ->
   Options.t ->
   (MonitorProt.server_to_monitor_message, MonitorProt.monitor_to_server_message) Daemon.handle

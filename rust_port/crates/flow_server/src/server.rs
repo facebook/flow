@@ -441,7 +441,37 @@ pub fn check_supported_operating_system(options: &Options) {
     }
 }
 
-fn run(_init_id: &str, _options: Arc<Options>, monitor_channels: Option<monitor_rpc::Channels>) {
+/// Maps the monitor/user startup cause to the `init_trigger` Scuba column on
+/// `INIT_END`.
+///
+/// `MonitorRestart(None)` includes monitor-driven restarts without a specific
+/// reason (EdenFS watcher retry, non-fatal signaled exit, kill_by_monitor that
+/// doesn't take down the monitor).
+///
+/// `MonitorRestart(Some(OutOfSharedMemory))` is currently unreachable: the
+/// monitor exits on OOM rather than restarting (see `process_server_exit` in
+/// flow_server_monitor_server.rs). The arm is kept for type exhaustiveness in
+/// case the policy changes.
+fn string_of_init_trigger(start_cause: server_status::StartCause) -> &'static str {
+    use server_status::RestartReason;
+    use server_status::StartCause;
+    match start_cause {
+        StartCause::UserInitiated => "user_initiated",
+        StartCause::MonitorRestart(None) => "monitor_restart",
+        StartCause::MonitorRestart(Some(RestartReason::ServerOutOfDate)) => "server_out_of_date",
+        StartCause::MonitorRestart(Some(RestartReason::OutOfSharedMemory)) => {
+            "out_of_shared_memory"
+        }
+        StartCause::MonitorRestart(Some(RestartReason::Restart)) => "restart_on_reinit",
+    }
+}
+
+fn run(
+    _init_id: &str,
+    _options: Arc<Options>,
+    monitor_channels: Option<monitor_rpc::Channels>,
+    start_cause: server_status::StartCause,
+) {
     // Check if the current operating system is supported
     check_supported_operating_system(&_options);
 
@@ -492,9 +522,11 @@ fn run(_init_id: &str, _options: Arc<Options>, monitor_channels: Option<monitor_
     monitor_rpc::status_update(server_status::Event::FinishingUp);
 
     let saved_state_fetcher = string_of_saved_state_fetcher(&_options);
+    let init_trigger = string_of_init_trigger(start_cause);
 
     flow_event_logger::init_done(
         first_internal_error.as_deref(),
+        init_trigger,
         saved_state_fetcher,
         &serde_json::json!({ "duration": init_duration }),
     );
@@ -528,9 +560,10 @@ pub fn run_from_daemonize(
     init_id: &str,
     options: Arc<Options>,
     monitor_channels: Option<monitor_rpc::Channels>,
+    start_cause: server_status::StartCause,
 ) {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        run(init_id, options, monitor_channels);
+        run(init_id, options, monitor_channels, start_cause);
     }));
     match result {
         Ok(()) => {}
@@ -636,9 +669,12 @@ where
     monitor_rpc::status_update(server_status::Event::FinishingUp);
 
     let saved_state_fetcher = string_of_saved_state_fetcher(&options);
+    // `check_once` backs `flow full-check`; it's always invoked by the user.
+    let init_trigger = string_of_init_trigger(server_status::StartCause::UserInitiated);
 
     flow_event_logger::init_done(
         first_internal_error.as_deref(),
+        init_trigger,
         saved_state_fetcher,
         &serde_json::json!({ "duration": profiling.get_profiling_duration() }),
     );
@@ -654,6 +690,7 @@ pub fn daemonize(
     no_flowlib: bool,
     ignore_version: bool,
     file_watcher_pid: Option<u32>,
+    start_cause: server_status::StartCause,
     options: Arc<Options>,
     cli_overrides: &flow_common::cli_overrides::CliOverrides,
 ) -> Result<flow_daemon::Handle<(), ()>, String> {
@@ -666,6 +703,7 @@ pub fn daemonize(
         ignore_version,
         options,
         file_watcher_pid,
+        start_cause,
         cli_overrides,
     )
 }

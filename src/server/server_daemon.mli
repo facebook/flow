@@ -11,6 +11,7 @@ val register_entry_point :
   (init_id:string ->
   monitor_channels:MonitorRPC.channels ->
   shared_mem_config:SharedMem.config ->
+  start_cause:ServerStatus.start_cause ->
   Options.t ->
   unit
   ) ->
@@ -25,5 +26,6 @@ val daemonize :
   argv:string array ->
   options:Options.t ->
   file_watcher_pid:int option ->
+  start_cause:ServerStatus.start_cause ->
   entry_point ->
   (MonitorProt.server_to_monitor_message, MonitorProt.monitor_to_server_message) Daemon.handle

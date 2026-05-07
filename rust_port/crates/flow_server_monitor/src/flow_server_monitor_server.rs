@@ -556,7 +556,7 @@ pub mod server_instance {
     #[cfg(not(unix))]
     pub fn start(
         _monitor_options: &crate::flow_server_monitor_options::MonitorOptions,
-        _restart_reason: Option<flow_server_env::server_status::RestartReason>,
+        _start_cause: flow_server_env::server_status::StartCause,
     ) -> ServerInstance {
         panic!("Flow server monitor server spawn is not supported on this platform");
     }
@@ -564,9 +564,15 @@ pub mod server_instance {
     #[cfg(unix)]
     pub fn start(
         monitor_options: &crate::flow_server_monitor_options::MonitorOptions,
-        restart_reason: Option<flow_server_env::server_status::RestartReason>,
+        start_cause: flow_server_env::server_status::StartCause,
     ) -> ServerInstance {
         flow_hh_logger::info!("Creating a new Flow server");
+        let restart_reason = match start_cause {
+            flow_server_env::server_status::StartCause::UserInitiated => None,
+            flow_server_env::server_status::StartCause::MonitorRestart(restart_reason) => {
+                restart_reason
+            }
+        };
         let crate::flow_server_monitor_options::MonitorOptions {
             shared_mem_config: _shared_mem_config,
             server_options: _server_options,
@@ -677,6 +683,7 @@ pub mod server_instance {
             *no_flowlib,
             *ignore_version,
             file_watcher_pid.map(|p| p as u32),
+            start_cause,
             server_options_arc,
             &monitor_options.cli_overrides,
         )
@@ -1111,10 +1118,7 @@ mod keep_alive_loop {
     pub(super) fn wait_for_server_to_die(
         _monitor_state: MonitorState,
         _server: &mut server_instance::ServerInstance,
-    ) -> (
-        MonitorState,
-        Option<flow_server_env::server_status::RestartReason>,
-    ) {
+    ) -> (MonitorState, flow_server_env::server_status::StartCause) {
         panic!("wait_for_server_to_die is not supported on this platform")
     }
 
@@ -1122,10 +1126,8 @@ mod keep_alive_loop {
     pub(super) fn wait_for_server_to_die(
         monitor_state: MonitorState,
         server: &mut server_instance::ServerInstance,
-    ) -> (
-        MonitorState,
-        Option<flow_server_env::server_status::RestartReason>,
-    ) {
+    ) -> (MonitorState, flow_server_env::server_status::StartCause) {
+        use flow_server_env::server_status::StartCause;
         let pid = server_instance::pid_of(server);
         let daemon_handle = {
             let mut guard = match server.daemon_handle.lock() {
@@ -1150,7 +1152,7 @@ mod keep_alive_loop {
                                     "wait_for_server_to_die: unknown wait status for pid {}",
                                     pid
                                 );
-                                return (monitor_state, None);
+                                return (monitor_state, StartCause::MonitorRestart(None));
                             }
                         }
                     }
@@ -1161,7 +1163,7 @@ mod keep_alive_loop {
                         pid,
                         e
                     );
-                    return (monitor_state, None);
+                    return (monitor_state, StartCause::MonitorRestart(None));
                 }
             },
             None => {
@@ -1169,7 +1171,7 @@ mod keep_alive_loop {
                     "wait_for_server_to_die: daemon_handle was None for pid {}",
                     pid
                 );
-                return (monitor_state, None);
+                return (monitor_state, StartCause::MonitorRestart(None));
             }
         };
         server_instance::cleanup(server);
@@ -1213,7 +1215,7 @@ mod keep_alive_loop {
                                         + 1,
                                     ..monitor_state
                                 };
-                                (new_state, None)
+                                (new_state, StartCause::MonitorRestart(None))
                             } else {
                                 flow_hh_logger::error!(
                                     "EdenFS watcher died {} times. Giving up.",
@@ -1229,7 +1231,7 @@ mod keep_alive_loop {
                             super::exit(None, "Dying along with server", exit_type);
                         } else {
                             killall_persistent_connections(exit_type);
-                            (monitor_state, restart_reason)
+                            (monitor_state, StartCause::MonitorRestart(restart_reason))
                         }
                     }
                 }
@@ -1247,7 +1249,7 @@ mod keep_alive_loop {
                         flow_common_exit_status::FlowExitStatus::Interrupted,
                     );
                 } else {
-                    (monitor_state, None)
+                    (monitor_state, StartCause::MonitorRestart(None))
                 }
             }
             server_instance::WaitStatus::Stopped(signal) => {
@@ -1271,7 +1273,7 @@ mod keep_alive_loop {
                         e
                     );
                 }
-                (monitor_state, None)
+                (monitor_state, StartCause::MonitorRestart(None))
             }
         }
     }
@@ -1291,15 +1293,11 @@ mod keep_alive_loop {
 
     pub(super) fn keep_alive_loop_main(
         monitor_state: MonitorState,
-        restart_reason: Option<flow_server_env::server_status::RestartReason>,
-    ) -> (
-        MonitorState,
-        Option<flow_server_env::server_status::RestartReason>,
-    ) {
+        start_cause: flow_server_env::server_status::StartCause,
+    ) -> (MonitorState, flow_server_env::server_status::StartCause) {
         requeue_stalled_requests();
-        let mut server = server_instance::start(&monitor_state.options, restart_reason);
-        let (new_state, restart_reason) = wait_for_server_to_die(monitor_state, &mut server);
-        (new_state, restart_reason)
+        let mut server = server_instance::start(&monitor_state.options, start_cause);
+        wait_for_server_to_die(monitor_state, &mut server)
     }
 }
 
@@ -1348,15 +1346,15 @@ pub fn start(monitor_options: crate::flow_server_monitor_options::MonitorOptions
         edenfs_watcher_retries: 0,
     };
     let mut state = initial_state;
-    let mut restart_reason = None;
+    let mut start_cause = flow_server_env::server_status::StartCause::UserInitiated;
     loop {
         if EXITING.load(Ordering::SeqCst) {
             break;
         }
-        let (new_state, new_restart_reason) =
-            keep_alive_loop::keep_alive_loop_main(state, restart_reason);
+        let (new_state, new_start_cause) =
+            keep_alive_loop::keep_alive_loop_main(state, start_cause);
         state = new_state;
-        restart_reason = new_restart_reason;
+        start_cause = new_start_cause;
     }
 }
 

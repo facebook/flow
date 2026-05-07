@@ -75,7 +75,7 @@ let set_server_options
 
 let status_response ~num_errors:_ = ()
 
-let init_done ?first_internal_error:_ ~saved_state_fetcher:_ _profiling = ()
+let init_done ?first_internal_error:_ ~init_trigger:_ ~saved_state_fetcher:_ _profiling = ()
 
 let init_flow_command ~init_id:_ = ()
 
