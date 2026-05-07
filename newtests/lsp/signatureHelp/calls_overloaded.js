@@ -96,11 +96,11 @@ function test_overloaded_bound() {
   type T1 = (x: 1) => 1;
   type T2 = (x: 2) => 2;
 
-  function test1<T: T1 & T2>(fn: T) {
+  function test1<T extends T1 & T2>(fn: T) {
     fn(/* here */);
   }
 
-  function test2<X1: T1, X2: T2>(fn: X1 & X2) {
+  function test2<X1 extends T1, X2 extends T2>(fn: X1 & X2) {
     fn(/* here */);
   }
 }
@@ -117,8 +117,8 @@ function overloaded_coercion() {
 }
 
 function overloaded_coercion_poly() {
-  declare class C1 { <X: 1>(x: X): void; }
-  declare class C2 { <X: 2>(x: X): void; }
+  declare class C1 { <X extends 1>(x: X): void; }
+  declare class C2 { <X extends 2>(x: X): void; }
 
   function test4(fn: C1 & C2) {
     fn(/* here */); // TODO drop generic

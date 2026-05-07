@@ -40,11 +40,11 @@ function test7<P>(Foo: React.ComponentType<{...Props1, ...Props3<P>}>): any {
     return <Foo />;
 }
 
-function test8<P: React.ComponentType<Props1>>(Foo: P): any {
+function test8<P extends React.ComponentType<Props1>>(Foo: P): any {
     return <Foo />;
 }
 
-function test9<P: Props1>(Foo: React.ComponentType<P>): any {
+function test9<P extends Props1>(Foo: React.ComponentType<P>): any {
     return <Foo />;
 }
 

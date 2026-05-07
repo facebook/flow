@@ -42,11 +42,11 @@ function test7<P>(Foo: React.ComponentType<{...PropsA, ...PropsPoly<P>, ...}>): 
     return <Foo foo={/* here */} />;
 }
 
-function test8<P: React.ComponentType<PropsA>>(Foo: P): any {
+function test8<P extends React.ComponentType<PropsA>>(Foo: P): any {
     return <Foo foo={/* here */} />;
 }
 
-function test9<P: PropsA>(Foo: React.ComponentType<P>): any {
+function test9<P extends PropsA>(Foo: React.ComponentType<P>): any {
     return <Foo foo={/* here */} />;
 }
 
