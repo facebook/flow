@@ -5586,7 +5586,10 @@ fn prop_map_of_object<'a>(
     CheckExprError,
 > {
     let (acc, prop_asts) = props.iter().try_fold::<_, _, Result<_, CheckExprError>>(
-        (ObjectExpressionAcc::empty(), vec![]),
+        (
+            ObjectExpressionAcc::empty(),
+            Vec::with_capacity(props.len()),
+        ),
         |(map, mut prop_asts), prop| {
             let (map, typed_prop) = object_prop(
                 cx,
@@ -5860,7 +5863,10 @@ fn object_<'a>(
         ))
     };
     let (acc, prop_asts) = props.iter().try_fold(
-        (ObjectExpressionAcc::empty(), vec![]),
+        (
+            ObjectExpressionAcc::empty(),
+            Vec::with_capacity(props.len()),
+        ),
         |(acc, mut prop_asts), prop| -> Result<_, CheckExprError> {
             match prop {
                 Property::SpreadProperty(SpreadProperty {
@@ -6259,10 +6265,13 @@ fn array_elements<'a>(
     CheckExprError,
 > {
     use ast::expression::ArrayElement;
-    let results: Vec<(type_::UnresolvedParam, ArrayElement<ALoc, (ALoc, Type)>)> = elements
-        .iter()
-        .map(|e| -> Result<_, CheckExprError> {
-            match e {
+    let (unresolved_vec, elements_vec) = elements.iter().try_fold(
+        (
+            Vec::with_capacity(elements.len()),
+            Vec::with_capacity(elements.len()),
+        ),
+        |(mut unresolved_vec, mut elements_vec), e| -> Result<_, CheckExprError> {
+            let (unresolved, element) = match e {
                 ArrayElement::Expression(e) => {
                     let e_prime = expression_inner(
                         None,
@@ -6278,23 +6287,23 @@ fn array_elements<'a>(
                     let t = t.dupe();
                     let reason = mk_reason(VirtualReasonDesc::RArrayElement, loc);
                     let elem = mk_tuple_element(reason, t.dupe(), None, false, Polarity::Neutral);
-                    Ok((
+                    (
                         type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
                             elem, None,
                         ))),
                         ArrayElement::Expression(e_prime),
-                    ))
+                    )
                 }
                 ArrayElement::Hole(loc) => {
                     let t = type_::void::make(mk_reason(VirtualReasonDesc::RArrayHole, loc.dupe()));
                     let reason = mk_reason(VirtualReasonDesc::RArrayElement, loc.dupe());
                     let elem = mk_tuple_element(reason, t, None, false, Polarity::Neutral);
-                    Ok((
+                    (
                         type_::UnresolvedParam::UnresolvedArg(Box::new(type_::UnresolvedArgData(
                             elem, None,
                         ))),
                         ArrayElement::Hole(loc.dupe()),
-                    ))
+                    )
                 }
                 ArrayElement::Spread(expression::SpreadElement {
                     loc: spread_loc,
@@ -6312,19 +6321,21 @@ fn array_elements<'a>(
                     )?;
                     let (_, t) = argument.loc();
                     let t = t.dupe();
-                    Ok((
+                    (
                         type_::UnresolvedParam::UnresolvedSpreadArg(t),
                         ArrayElement::Spread(expression::SpreadElement {
                             loc: spread_loc.dupe(),
                             argument,
                             comments: comments.clone(),
                         }),
-                    ))
+                    )
                 }
-            }
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    let (unresolved_vec, elements_vec): (Vec<_>, Vec<_>) = results.into_iter().unzip();
+            };
+            unresolved_vec.push(unresolved);
+            elements_vec.push(element);
+            Ok((unresolved_vec, elements_vec))
+        },
+    )?;
     Ok((unresolved_vec.into_iter().collect(), elements_vec))
 }
 
