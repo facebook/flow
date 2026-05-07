@@ -207,18 +207,14 @@ Importantly, props with defaults are optional in the resulting type.
 
 For example,
 
-```js
+```js flow-check
 import * as React from 'react';
 
-class MyComponent extends React.Component<{foo: number}> {
-  static defaultProps = {foo: 42};
-
-  render() {
-    return this.props.foo;
-  }
+component MyComponent(foo: number = 42) {
+  return foo;
 }
 
-// `React.ElementConfig<>` does not require `foo` since it has a `defaultProp`.
+// `React.ElementConfig<>` does not require `foo` since it has a default value.
 ({}) as React.ElementConfig<typeof MyComponent>;
 ```
 
