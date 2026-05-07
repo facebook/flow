@@ -27,7 +27,6 @@ end = struct
       CoverageCommand.command;
       BatchCoverageCommand.command;
       CycleCommand.command;
-      DumpImplDepsCommand.command;
       EnvBuilderDebugCommand.command;
       GraphCommand.command;
       DumpTypesCommand.command;

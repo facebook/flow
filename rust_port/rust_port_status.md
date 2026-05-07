@@ -370,7 +370,6 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] configCommand.ml → `flow_cli/src/config_command.rs`
   - [x] coverageCommand.ml → `flow_cli/src/coverage_command.rs`
   - [x] cycleCommand.ml → `flow_cli/src/cycle_command.rs`
-  - [x] dumpImplDepsCommand.ml → `flow_cli/src/dump_impl_deps_command.rs`
   - [x] dumpTypesCommand.ml → `flow_cli/src/dump_types_command.rs`
   - [x] envBuilderDebugCommand.ml → `flow_cli/src/env_builder_debug_command.rs`
   - [x] findModuleCommand.ml → `flow_cli/src/find_module_command.rs`
