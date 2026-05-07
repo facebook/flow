@@ -219,15 +219,15 @@ Cannot call `foo` because: [incompatible-type]
       ^^^
 
 References:
-   test26.js:6:25
-   6| declare var x: number | string;
-                              ^^^^^^ [1]
+   test26.js:6:27
+   6| declare const x: number | string;
+                                ^^^^^^ [1]
    test26.js:3:25
    3| declare function foo(x: number): number;
                               ^^^^^^ [2]
-   test26.js:6:16
-   6| declare var x: number | string;
-                     ^^^^^^ [3]
+   test26.js:6:18
+   6| declare const x: number | string;
+                       ^^^^^^ [3]
    test26.js:4:25
    4| declare function foo(x: string): string;
                               ^^^^^^ [4]
@@ -244,9 +244,9 @@ Cannot call `foo` because: [incompatible-type]
        ^^^
 
 References:
-   test26.js:11:16
-   11| declare var y: T;
-                      ^ [1]
+   test26.js:11:18
+   11| declare const y: T;
+                        ^ [1]
    test26.js:3:25
     3| declare function foo(x: number): number;
                                ^^^^^^ [2]
@@ -343,9 +343,9 @@ Cannot cast `x` to array type because in array element: string [1] is incompatib
         ^
 
 References:
-   test36.js:3:27
-   3|   declare var args: Array<string> | Array<string>;
-                                ^^^^^^ [1]
+   test36.js:3:29
+   3|   declare const args: Array<string> | Array<string>;
+                                  ^^^^^^ [1]
    test36.js:6:14
    6|   x as Array<number>; // ERROR string ~> number (no Unsoundness.Any)
                    ^^^^^^ [2]
@@ -360,9 +360,9 @@ Cannot cast `x` to array type because in array element: string [1] is incompatib
         ^
 
 References:
-   test36.js:3:43
-   3|   declare var args: Array<string> | Array<string>;
-                                                ^^^^^^ [1]
+   test36.js:3:45
+   3|   declare const args: Array<string> | Array<string>;
+                                                  ^^^^^^ [1]
    test36.js:6:14
    6|   x as Array<number>; // ERROR string ~> number (no Unsoundness.Any)
                    ^^^^^^ [2]

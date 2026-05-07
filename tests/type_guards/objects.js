@@ -1,6 +1,6 @@
 function object_test() {
 
-  declare var x: unknown;
+  declare const x: unknown;
 
   const obj = {
     m(x: unknown): x is number {

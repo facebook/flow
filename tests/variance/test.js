@@ -10,13 +10,13 @@ type RWB = {p: B}
 type ROB = {+p: B}
 type WOB = {-p: B}
 
-declare var rwA: RWA;
-declare var roA: ROA;
-declare var woA: WOA;
+declare const rwA: RWA;
+declare const roA: ROA;
+declare const woA: WOA;
 
-declare var rwB: RWB;
-declare var roB: ROB;
-declare var woB: WOB;
+declare const rwB: RWB;
+declare const roB: ROB;
+declare const woB: WOB;
 
 // dictionaries
 
@@ -27,13 +27,13 @@ type dRWB = {[string]: B};
 type dROB = {+[string]: B};
 type dWOB = {-[string]: B};
 
-declare var drwA: dRWA;
-declare var droA: dROA;
-declare var dwoA: dWOA;
+declare const drwA: dRWA;
+declare const droA: dROA;
+declare const dwoA: dWOA;
 
-declare var drwB: dRWB;
-declare var droB: dROB;
-declare var dwoB: dWOB;
+declare const drwB: dRWB;
+declare const droB: dROB;
+declare const dwoB: dWOB;
 
 // X ~> A
 {
@@ -226,11 +226,11 @@ declare var dwoB: dWOB;
 {
   type T1 = {[k in 'f1'|'f2'|'f3'|'f4'|'f5']: number};
 
-  declare var x1: Readonly<T1>;
+  declare const x1: Readonly<T1>;
   x1 as T1; // error f1...f5 incompatible
 
   type T2 = {...T1, f6: number};
 
-  declare var x2: Readonly<T2>;
+  declare const x2: Readonly<T2>;
   x2 as T2; // error f1...f4 and others incompatible
 }

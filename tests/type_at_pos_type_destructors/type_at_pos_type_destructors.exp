@@ -115,29 +115,29 @@ type B = $Exact<A>
 
 exact.js:4:6,4:6
 
-exact.js:6:13
+exact.js:6:15
 Flags:
 $Exact<A>
 = {x: number}
 
 'A' defined at exact.js:3:5
 
-exact.js:6:13,6:13
+exact.js:6:15,6:15
 
-exact.js:8:13
+exact.js:8:15
 Flags:
 $Exact<B>
 = {x: number}
 
 'B' defined at exact.js:4:5
 
-exact.js:8:13,8:13
+exact.js:8:15,8:15
 
-exact.js:10:13
+exact.js:10:15
 Flags:
 $Exact<{p: number, ...}>
 = {p: number}
-exact.js:10:13,10:13
+exact.js:10:15,10:15
 
 exact.js:13:17
 Flags:
@@ -149,23 +149,23 @@ Flags:
 $Exact<X>
 exact.js:15:7,15:7
 
-exact.js:19:13
+exact.js:19:15
 Flags:
 $Exact<$Exact<A>>
 = {x: number}
 
 'A' defined at exact.js:3:5
 
-exact.js:19:13,19:13
+exact.js:19:15,19:15
 
-exact.js:23:13
+exact.js:23:15
 Flags:
 $Exact<Class<C>>
 = {name: string}
 
 'C' defined at exact.js:22:6
 
-exact.js:23:13,23:13
+exact.js:23:15,23:15
 
 exact.js:26:6
 Flags:
@@ -213,7 +213,7 @@ type ReactAP<X> = ElementConfig<X>
 
 react-component.js:14:6,14:12
 
-react-component.js:20:13
+react-component.js:20:15
 Flags:
 {
   x: {m<T>(x: NonNullable<T>): T, ...},
@@ -221,7 +221,7 @@ Flags:
   ...
 }
 = {x: {m<T>(x: T): T, ...}, y: {m<T>(x: T): T, ...}, ...}
-react-component.js:20:13,20:13
+react-component.js:20:15,20:15
 
 spread.js:12:6
 Flags:

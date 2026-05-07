@@ -3,5 +3,5 @@
  * instantiation in the first arm of the union, then T=number in the second. */
 
 declare class C<T> { m(): T }
-declare var x: C<string> | C<number>;
+declare const x: C<string> | C<number>;
 x.m() as empty; // error: string ~> empty, number ~> empty

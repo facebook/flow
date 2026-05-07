@@ -8,9 +8,9 @@ Cannot cast `roA` to `RWA` because property `p` is read-only in `ROA` [1] but wr
          ^^^
 
 References:
-   test.js:14:18
-   14| declare var roA: ROA;
-                        ^^^ [1]
+   test.js:14:20
+   14| declare const roA: ROA;
+                          ^^^ [1]
    test.js:49:10
    49|   roA as RWA; // error
                 ^^^ [2]
@@ -26,9 +26,9 @@ Cannot cast `droA` to `dRWA` because an index signature declaring the expected k
          ^^^^
 
 References:
-   test.js:31:19
-   31| declare var droA: dROA;
-                         ^^^^ [1]
+   test.js:31:21
+   31| declare const droA: dROA;
+                           ^^^^ [1]
    test.js:50:11
    50|   droA as dRWA; // error
                  ^^^^ [2]
@@ -44,9 +44,9 @@ Cannot cast `woA` to `RWA` because property `p` is write-only in `WOA` [1] but r
          ^^^
 
 References:
-   test.js:15:18
-   15| declare var woA: WOA;
-                        ^^^ [1]
+   test.js:15:20
+   15| declare const woA: WOA;
+                          ^^^ [1]
    test.js:53:10
    53|   woA as RWA; // error
                 ^^^ [2]
@@ -62,9 +62,9 @@ Cannot cast `dwoA` to `dRWA` because an index signature declaring the expected k
          ^^^^
 
 References:
-   test.js:32:19
-   32| declare var dwoA: dWOA;
-                         ^^^^ [1]
+   test.js:32:21
+   32| declare const dwoA: dWOA;
+                           ^^^^ [1]
    test.js:54:11
    54|   dwoA as dRWA; // error
                  ^^^^ [2]
@@ -143,9 +143,9 @@ Cannot cast `roB` to `RWA` because property `p` is read-only in `ROB` [1] but wr
          ^^^
 
 References:
-   test.js:18:18
-   18| declare var roB: ROB;
-                        ^^^ [1]
+   test.js:18:20
+   18| declare const roB: ROB;
+                          ^^^ [1]
    test.js:65:10
    65|   roB as RWA; // error
                 ^^^ [2]
@@ -161,9 +161,9 @@ Cannot cast `droB` to `dRWA` because an index signature declaring the expected k
          ^^^^
 
 References:
-   test.js:35:19
-   35| declare var droB: dROB;
-                         ^^^^ [1]
+   test.js:35:21
+   35| declare const droB: dROB;
+                           ^^^^ [1]
    test.js:66:11
    66|   droB as dRWA; // error
                  ^^^^ [2]
@@ -179,9 +179,9 @@ Cannot cast `woB` to `RWA` because property `p` is write-only in `WOB` [1] but r
          ^^^
 
 References:
-   test.js:19:18
-   19| declare var woB: WOB;
-                        ^^^ [1]
+   test.js:19:20
+   19| declare const woB: WOB;
+                          ^^^ [1]
    test.js:69:10
    69|   woB as RWA; // error
                 ^^^ [2]
@@ -214,9 +214,9 @@ Cannot cast `dwoB` to `dRWA` because an index signature declaring the expected k
          ^^^^
 
 References:
-   test.js:36:19
-   36| declare var dwoB: dWOB;
-                         ^^^^ [1]
+   test.js:36:21
+   36| declare const dwoB: dWOB;
+                           ^^^^ [1]
    test.js:70:11
    70|   dwoB as dRWA; // error
                  ^^^^ [2]
@@ -249,9 +249,9 @@ Cannot cast `woA` to `ROA` because property `p` is write-only in `WOA` [1] but r
          ^^^
 
 References:
-   test.js:15:18
-   15| declare var woA: WOA;
-                        ^^^ [1]
+   test.js:15:20
+   15| declare const woA: WOA;
+                          ^^^ [1]
    test.js:88:10
    88|   woA as ROA; // error
                 ^^^ [2]
@@ -267,9 +267,9 @@ Cannot cast `dwoA` to `dROA` because an index signature declaring the expected k
          ^^^^
 
 References:
-   test.js:32:19
-   32| declare var dwoA: dWOA;
-                         ^^^^ [1]
+   test.js:32:21
+   32| declare const dwoA: dWOA;
+                           ^^^^ [1]
    test.js:89:11
    89|   dwoA as dROA; // error
                  ^^^^ [2]
@@ -285,9 +285,9 @@ Cannot cast `woB` to `ROA` because property `p` is write-only in `WOB` [1] but r
           ^^^
 
 References:
-   test.js:19:18
-    19| declare var woB: WOB;
-                         ^^^ [1]
+   test.js:19:20
+    19| declare const woB: WOB;
+                           ^^^ [1]
    test.js:104:10
    104|   woB as ROA; // error
                  ^^^ [2]
@@ -303,9 +303,9 @@ Cannot cast `dwoB` to `dROA` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test.js:36:19
-    36| declare var dwoB: dWOB;
-                          ^^^^ [1]
+   test.js:36:21
+    36| declare const dwoB: dWOB;
+                            ^^^^ [1]
    test.js:105:11
    105|   dwoB as dROA; // error
                   ^^^^ [2]
@@ -321,9 +321,9 @@ Cannot cast `roA` to `WOA` because property `p` is read-only in `ROA` [1] but wr
           ^^^
 
 References:
-   test.js:14:18
-    14| declare var roA: ROA;
-                         ^^^ [1]
+   test.js:14:20
+    14| declare const roA: ROA;
+                           ^^^ [1]
    test.js:119:10
    119|   roA as WOA; // error
                  ^^^ [2]
@@ -339,9 +339,9 @@ Cannot cast `droA` to `dWOA` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test.js:31:19
-    31| declare var droA: dROA;
-                          ^^^^ [1]
+   test.js:31:21
+    31| declare const droA: dROA;
+                            ^^^^ [1]
    test.js:120:11
    120|   droA as dWOA; // error
                   ^^^^ [2]
@@ -391,9 +391,9 @@ Cannot cast `roB` to `WOA` because property `p` is read-only in `ROB` [1] but wr
           ^^^
 
 References:
-   test.js:18:18
-    18| declare var roB: ROB;
-                         ^^^ [1]
+   test.js:18:20
+    18| declare const roB: ROB;
+                           ^^^ [1]
    test.js:135:10
    135|   roB as WOA; // error
                  ^^^ [2]
@@ -409,9 +409,9 @@ Cannot cast `droB` to `dWOA` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test.js:35:19
-    35| declare var droB: dROB;
-                          ^^^^ [1]
+   test.js:35:21
+    35| declare const droB: dROB;
+                            ^^^^ [1]
    test.js:136:11
    136|   droB as dWOA; // error
                   ^^^^ [2]
@@ -552,9 +552,9 @@ Cannot cast `roA` to `RWB` because property `p` is read-only in `ROA` [1] but wr
           ^^^
 
 References:
-   test.js:14:18
-    14| declare var roA: ROA;
-                         ^^^ [1]
+   test.js:14:20
+    14| declare const roA: ROA;
+                           ^^^ [1]
    test.js:154:10
    154|   roA as RWB; // error
                  ^^^ [2]
@@ -587,9 +587,9 @@ Cannot cast `droA` to `dRWB` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test.js:31:19
-    31| declare var droA: dROA;
-                          ^^^^ [1]
+   test.js:31:21
+    31| declare const droA: dROA;
+                            ^^^^ [1]
    test.js:155:11
    155|   droA as dRWB; // error
                   ^^^^ [2]
@@ -622,9 +622,9 @@ Cannot cast `woA` to `RWB` because property `p` is write-only in `WOA` [1] but r
           ^^^
 
 References:
-   test.js:15:18
-    15| declare var woA: WOA;
-                         ^^^ [1]
+   test.js:15:20
+    15| declare const woA: WOA;
+                           ^^^ [1]
    test.js:158:10
    158|   woA as RWB; // error
                  ^^^ [2]
@@ -640,9 +640,9 @@ Cannot cast `dwoA` to `dRWB` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test.js:32:19
-    32| declare var dwoA: dWOA;
-                          ^^^^ [1]
+   test.js:32:21
+    32| declare const dwoA: dWOA;
+                            ^^^^ [1]
    test.js:159:11
    159|   dwoA as dRWB; // error
                   ^^^^ [2]
@@ -754,9 +754,9 @@ Cannot cast `woA` to `ROB` because property `p` is write-only in `WOA` [1] but r
           ^^^
 
 References:
-   test.js:15:18
-    15| declare var woA: WOA;
-                         ^^^ [1]
+   test.js:15:20
+    15| declare const woA: WOA;
+                           ^^^ [1]
    test.js:177:10
    177|   woA as ROB; // error
                  ^^^ [2]
@@ -772,9 +772,9 @@ Cannot cast `dwoA` to `dROB` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test.js:32:19
-    32| declare var dwoA: dWOA;
-                          ^^^^ [1]
+   test.js:32:21
+    32| declare const dwoA: dWOA;
+                            ^^^^ [1]
    test.js:178:11
    178|   dwoA as dROB; // error
                   ^^^^ [2]
@@ -790,9 +790,9 @@ Cannot cast `roA` to `WOB` because property `p` is read-only in `ROA` [1] but wr
           ^^^
 
 References:
-   test.js:14:18
-    14| declare var roA: ROA;
-                         ^^^ [1]
+   test.js:14:20
+    14| declare const roA: ROA;
+                           ^^^ [1]
    test.js:192:10
    192|   roA as WOB; // error
                  ^^^ [2]
@@ -808,9 +808,9 @@ Cannot cast `droA` to `dWOB` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test.js:31:19
-    31| declare var droA: dROA;
-                          ^^^^ [1]
+   test.js:31:21
+    31| declare const droA: dROA;
+                            ^^^^ [1]
    test.js:193:11
    193|   droA as dWOB; // error
                   ^^^^ [2]
@@ -984,9 +984,9 @@ writable in mapped type [2], property `f4` is read-only in mapped type [1] but w
           ^^
 
 References:
-   test.js:229:28
-   229|   declare var x1: Readonly<T1>;
-                                   ^^ [1]
+   test.js:229:30
+   229|   declare const x1: Readonly<T1>;
+                                     ^^ [1]
    test.js:230:9
    230|   x1 as T1; // error f1...f5 incompatible
                 ^^ [2]
@@ -1004,9 +1004,9 @@ properties are incompatible. [incompatible-variance]
           ^^
 
 References:
-   test.js:234:28
-   234|   declare var x2: Readonly<T2>;
-                                   ^^ [1]
+   test.js:234:30
+   234|   declare const x2: Readonly<T2>;
+                                     ^^ [1]
    test.js:235:9
    235|   x2 as T2; // error f1...f4 and others incompatible
                 ^^ [2]
@@ -1022,9 +1022,9 @@ Cannot cast `roA` to `RWA` because property `p` is read-only in `ROA` [1] but wr
          ^^^
 
 References:
-   test_keyword.js:14:18
-   14| declare var roA: ROA;
-                        ^^^ [1]
+   test_keyword.js:14:20
+   14| declare const roA: ROA;
+                          ^^^ [1]
    test_keyword.js:49:10
    49|   roA as RWA; // error
                 ^^^ [2]
@@ -1040,9 +1040,9 @@ Cannot cast `droA` to `dRWA` because an index signature declaring the expected k
          ^^^^
 
 References:
-   test_keyword.js:31:19
-   31| declare var droA: dROA;
-                         ^^^^ [1]
+   test_keyword.js:31:21
+   31| declare const droA: dROA;
+                           ^^^^ [1]
    test_keyword.js:50:11
    50|   droA as dRWA; // error
                  ^^^^ [2]
@@ -1058,9 +1058,9 @@ Cannot cast `woA` to `RWA` because property `p` is write-only in `WOA` [1] but r
          ^^^
 
 References:
-   test_keyword.js:15:18
-   15| declare var woA: WOA;
-                        ^^^ [1]
+   test_keyword.js:15:20
+   15| declare const woA: WOA;
+                          ^^^ [1]
    test_keyword.js:53:10
    53|   woA as RWA; // error
                 ^^^ [2]
@@ -1076,9 +1076,9 @@ Cannot cast `dwoA` to `dRWA` because an index signature declaring the expected k
          ^^^^
 
 References:
-   test_keyword.js:32:19
-   32| declare var dwoA: dWOA;
-                         ^^^^ [1]
+   test_keyword.js:32:21
+   32| declare const dwoA: dWOA;
+                           ^^^^ [1]
    test_keyword.js:54:11
    54|   dwoA as dRWA; // error
                  ^^^^ [2]
@@ -1157,9 +1157,9 @@ Cannot cast `roB` to `RWA` because property `p` is read-only in `ROB` [1] but wr
          ^^^
 
 References:
-   test_keyword.js:18:18
-   18| declare var roB: ROB;
-                        ^^^ [1]
+   test_keyword.js:18:20
+   18| declare const roB: ROB;
+                          ^^^ [1]
    test_keyword.js:65:10
    65|   roB as RWA; // error
                 ^^^ [2]
@@ -1175,9 +1175,9 @@ Cannot cast `droB` to `dRWA` because an index signature declaring the expected k
          ^^^^
 
 References:
-   test_keyword.js:35:19
-   35| declare var droB: dROB;
-                         ^^^^ [1]
+   test_keyword.js:35:21
+   35| declare const droB: dROB;
+                           ^^^^ [1]
    test_keyword.js:66:11
    66|   droB as dRWA; // error
                  ^^^^ [2]
@@ -1193,9 +1193,9 @@ Cannot cast `woB` to `RWA` because property `p` is write-only in `WOB` [1] but r
          ^^^
 
 References:
-   test_keyword.js:19:18
-   19| declare var woB: WOB;
-                        ^^^ [1]
+   test_keyword.js:19:20
+   19| declare const woB: WOB;
+                          ^^^ [1]
    test_keyword.js:69:10
    69|   woB as RWA; // error
                 ^^^ [2]
@@ -1228,9 +1228,9 @@ Cannot cast `dwoB` to `dRWA` because an index signature declaring the expected k
          ^^^^
 
 References:
-   test_keyword.js:36:19
-   36| declare var dwoB: dWOB;
-                         ^^^^ [1]
+   test_keyword.js:36:21
+   36| declare const dwoB: dWOB;
+                           ^^^^ [1]
    test_keyword.js:70:11
    70|   dwoB as dRWA; // error
                  ^^^^ [2]
@@ -1263,9 +1263,9 @@ Cannot cast `woA` to `ROA` because property `p` is write-only in `WOA` [1] but r
          ^^^
 
 References:
-   test_keyword.js:15:18
-   15| declare var woA: WOA;
-                        ^^^ [1]
+   test_keyword.js:15:20
+   15| declare const woA: WOA;
+                          ^^^ [1]
    test_keyword.js:88:10
    88|   woA as ROA; // error
                 ^^^ [2]
@@ -1281,9 +1281,9 @@ Cannot cast `dwoA` to `dROA` because an index signature declaring the expected k
          ^^^^
 
 References:
-   test_keyword.js:32:19
-   32| declare var dwoA: dWOA;
-                         ^^^^ [1]
+   test_keyword.js:32:21
+   32| declare const dwoA: dWOA;
+                           ^^^^ [1]
    test_keyword.js:89:11
    89|   dwoA as dROA; // error
                  ^^^^ [2]
@@ -1299,9 +1299,9 @@ Cannot cast `woB` to `ROA` because property `p` is write-only in `WOB` [1] but r
           ^^^
 
 References:
-   test_keyword.js:19:18
-    19| declare var woB: WOB;
-                         ^^^ [1]
+   test_keyword.js:19:20
+    19| declare const woB: WOB;
+                           ^^^ [1]
    test_keyword.js:104:10
    104|   woB as ROA; // error
                  ^^^ [2]
@@ -1317,9 +1317,9 @@ Cannot cast `dwoB` to `dROA` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test_keyword.js:36:19
-    36| declare var dwoB: dWOB;
-                          ^^^^ [1]
+   test_keyword.js:36:21
+    36| declare const dwoB: dWOB;
+                            ^^^^ [1]
    test_keyword.js:105:11
    105|   dwoB as dROA; // error
                   ^^^^ [2]
@@ -1335,9 +1335,9 @@ Cannot cast `roA` to `WOA` because property `p` is read-only in `ROA` [1] but wr
           ^^^
 
 References:
-   test_keyword.js:14:18
-    14| declare var roA: ROA;
-                         ^^^ [1]
+   test_keyword.js:14:20
+    14| declare const roA: ROA;
+                           ^^^ [1]
    test_keyword.js:119:10
    119|   roA as WOA; // error
                  ^^^ [2]
@@ -1353,9 +1353,9 @@ Cannot cast `droA` to `dWOA` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test_keyword.js:31:19
-    31| declare var droA: dROA;
-                          ^^^^ [1]
+   test_keyword.js:31:21
+    31| declare const droA: dROA;
+                            ^^^^ [1]
    test_keyword.js:120:11
    120|   droA as dWOA; // error
                   ^^^^ [2]
@@ -1405,9 +1405,9 @@ Cannot cast `roB` to `WOA` because property `p` is read-only in `ROB` [1] but wr
           ^^^
 
 References:
-   test_keyword.js:18:18
-    18| declare var roB: ROB;
-                         ^^^ [1]
+   test_keyword.js:18:20
+    18| declare const roB: ROB;
+                           ^^^ [1]
    test_keyword.js:135:10
    135|   roB as WOA; // error
                  ^^^ [2]
@@ -1423,9 +1423,9 @@ Cannot cast `droB` to `dWOA` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test_keyword.js:35:19
-    35| declare var droB: dROB;
-                          ^^^^ [1]
+   test_keyword.js:35:21
+    35| declare const droB: dROB;
+                            ^^^^ [1]
    test_keyword.js:136:11
    136|   droB as dWOA; // error
                   ^^^^ [2]
@@ -1566,9 +1566,9 @@ Cannot cast `roA` to `RWB` because property `p` is read-only in `ROA` [1] but wr
           ^^^
 
 References:
-   test_keyword.js:14:18
-    14| declare var roA: ROA;
-                         ^^^ [1]
+   test_keyword.js:14:20
+    14| declare const roA: ROA;
+                           ^^^ [1]
    test_keyword.js:154:10
    154|   roA as RWB; // error
                  ^^^ [2]
@@ -1601,9 +1601,9 @@ Cannot cast `droA` to `dRWB` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test_keyword.js:31:19
-    31| declare var droA: dROA;
-                          ^^^^ [1]
+   test_keyword.js:31:21
+    31| declare const droA: dROA;
+                            ^^^^ [1]
    test_keyword.js:155:11
    155|   droA as dRWB; // error
                   ^^^^ [2]
@@ -1636,9 +1636,9 @@ Cannot cast `woA` to `RWB` because property `p` is write-only in `WOA` [1] but r
           ^^^
 
 References:
-   test_keyword.js:15:18
-    15| declare var woA: WOA;
-                         ^^^ [1]
+   test_keyword.js:15:20
+    15| declare const woA: WOA;
+                           ^^^ [1]
    test_keyword.js:158:10
    158|   woA as RWB; // error
                  ^^^ [2]
@@ -1654,9 +1654,9 @@ Cannot cast `dwoA` to `dRWB` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test_keyword.js:32:19
-    32| declare var dwoA: dWOA;
-                          ^^^^ [1]
+   test_keyword.js:32:21
+    32| declare const dwoA: dWOA;
+                            ^^^^ [1]
    test_keyword.js:159:11
    159|   dwoA as dRWB; // error
                   ^^^^ [2]
@@ -1768,9 +1768,9 @@ Cannot cast `woA` to `ROB` because property `p` is write-only in `WOA` [1] but r
           ^^^
 
 References:
-   test_keyword.js:15:18
-    15| declare var woA: WOA;
-                         ^^^ [1]
+   test_keyword.js:15:20
+    15| declare const woA: WOA;
+                           ^^^ [1]
    test_keyword.js:177:10
    177|   woA as ROB; // error
                  ^^^ [2]
@@ -1786,9 +1786,9 @@ Cannot cast `dwoA` to `dROB` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test_keyword.js:32:19
-    32| declare var dwoA: dWOA;
-                          ^^^^ [1]
+   test_keyword.js:32:21
+    32| declare const dwoA: dWOA;
+                            ^^^^ [1]
    test_keyword.js:178:11
    178|   dwoA as dROB; // error
                   ^^^^ [2]
@@ -1804,9 +1804,9 @@ Cannot cast `roA` to `WOB` because property `p` is read-only in `ROA` [1] but wr
           ^^^
 
 References:
-   test_keyword.js:14:18
-    14| declare var roA: ROA;
-                         ^^^ [1]
+   test_keyword.js:14:20
+    14| declare const roA: ROA;
+                           ^^^ [1]
    test_keyword.js:192:10
    192|   roA as WOB; // error
                  ^^^ [2]
@@ -1822,9 +1822,9 @@ Cannot cast `droA` to `dWOB` because an index signature declaring the expected k
           ^^^^
 
 References:
-   test_keyword.js:31:19
-    31| declare var droA: dROA;
-                          ^^^^ [1]
+   test_keyword.js:31:21
+    31| declare const droA: dROA;
+                            ^^^^ [1]
    test_keyword.js:193:11
    193|   droA as dWOB; // error
                   ^^^^ [2]
@@ -1998,9 +1998,9 @@ writable in mapped type [2], property `f4` is read-only in mapped type [1] but w
           ^^
 
 References:
-   test_keyword.js:224:28
-   224|   declare var x1: Readonly<T1>;
-                                   ^^ [1]
+   test_keyword.js:224:30
+   224|   declare const x1: Readonly<T1>;
+                                     ^^ [1]
    test_keyword.js:225:9
    225|   x1 as T1; // error f1...f5 incompatible
                 ^^ [2]
@@ -2018,9 +2018,9 @@ properties are incompatible. [incompatible-variance]
           ^^
 
 References:
-   test_keyword.js:229:28
-   229|   declare var x2: Readonly<T2>;
-                                   ^^ [1]
+   test_keyword.js:229:30
+   229|   declare const x2: Readonly<T2>;
+                                     ^^ [1]
    test_keyword.js:230:9
    230|   x2 as T2; // error f1...f4 and others incompatible
                 ^^ [2]

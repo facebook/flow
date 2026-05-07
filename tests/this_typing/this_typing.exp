@@ -1227,9 +1227,9 @@ Cannot call `x.bind` because string [1] is incompatible with number [2]. [incomp
               ^^ [1]
 
 References:
-   function_type.js:2:25
-   2| declare var x : (this : number) => void;
-                              ^^^^^^ [2]
+   function_type.js:2:27
+   2| declare const x : (this : number) => void;
+                                ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- function_type.js:12:8
@@ -1241,9 +1241,9 @@ Cannot call `y.bind` because string [1] is incompatible with number [2]. [incomp
               ^^ [1]
 
 References:
-   function_type.js:10:19
-   10| declare var y : F<number>;
-                         ^^^^^^ [2]
+   function_type.js:10:21
+   10| declare const y : F<number>;
+                           ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- function_type.js:15:1
@@ -1258,9 +1258,9 @@ References:
    function_type.js:8:8
     8| type F<T> = (this : T) => void;
               ^ [1]
-   function_type.js:10:19
-   10| declare var y : F<number>;
-                         ^^^^^^ [2]
+   function_type.js:10:21
+   10| declare const y : F<number>;
+                           ^^^^^^ [2]
    function_type.js:15:8
    15| y as F<string>; // error: number incompatible with string
               ^^^^^^ [3]
@@ -1310,9 +1310,9 @@ Cannot cast `x` to `BotFn` because in the `this` parameter: number [1] is incomp
        ^
 
 References:
-   function_type.js:2:25
-    2| declare var x : (this : number) => void;
-                               ^^^^^^ [1]
+   function_type.js:2:27
+    2| declare const x : (this : number) => void;
+                                 ^^^^^^ [1]
    function_type.js:27:22
    27| type BotFn = (this : unknown) => empty;
                             ^^^^^^^ [2]
@@ -1328,9 +1328,9 @@ Cannot cast `x` to `BotFn` because in the return value: undefined [1] is incompa
        ^
 
 References:
-   function_type.js:2:36
-    2| declare var x : (this : number) => void;
-                                          ^^^^ [1]
+   function_type.js:2:38
+    2| declare const x : (this : number) => void;
+                                            ^^^^ [1]
    function_type.js:27:34
    27| type BotFn = (this : unknown) => empty;
                                         ^^^^^ [2]
@@ -2071,9 +2071,9 @@ Cannot call `bar.bind` because property `f` is missing in object type [1] but ex
                 ^
 
 References:
-   test.js:3:17
-    3| declare var y : { y : string, ...};
-                       ^^^^^^^^^^^^^^^^^^ [1]
+   test.js:3:19
+    3| declare const y : { y : string, ...};
+                         ^^^^^^^^^^^^^^^^^^ [1]
    test.js:12:22
    12| function bar (this : {f : number, ...}) : number {
                             ^^^^^^^^^^^^^^^^^ [2]

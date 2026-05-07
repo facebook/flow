@@ -1,6 +1,6 @@
 // @flow
 
-declare var o1: typeof o2;
+declare const o1: typeof o2;
 const o2 = {
   x: 0,
   y: o1,

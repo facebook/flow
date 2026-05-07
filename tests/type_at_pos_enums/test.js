@@ -17,31 +17,31 @@ type T = Class<E>;
 
 import type {F} from './export.js';
 //           ^
-declare var f: F;
-//          ^
-declare var f2: F;
-//              ^
+declare const f: F;
+//            ^
+declare const f2: F;
+//                ^
 
 import type G from './export.js';
 //          ^
-declare var g: G;
-//          ^
-declare var g2: G;
-//              ^
+declare const g: G;
+//            ^
+declare const g2: G;
+//                ^
 
 import H from './export.js';
 //     ^
-declare var h: H;
-//          ^
-declare var h2: H;
-//              ^
+declare const h: H;
+//            ^
+declare const h2: H;
+//                ^
 
 import type {FType} from './export.js';
 //           ^
-declare var i: FType;
-//          ^
-declare var i2: FType;
-//              ^
+declare const i: FType;
+//            ^
+declare const i2: FType;
+//                ^
 
 const j = E.cast('A') ?? E.A;
 //    ^

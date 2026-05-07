@@ -3,57 +3,57 @@
 export opaque type Foo = number;
 //                 ^?
 
-declare var foo: Foo;
-//                ^?
+declare const foo: Foo;
+//                  ^?
 foo;
 //^?
 
 declare opaque type Bar: number;
 //                   ^?
 
-declare var bar: Bar;
-//               ^?
+declare const bar: Bar;
+//                 ^?
 bar;
 //^?
 
 declare opaque type Baz;
 //                   ^?
 
-declare var baz: Baz;
-//               ^?
+declare const baz: Baz;
+//                 ^?
 baz;
 //^?
 
 opaque type Bak<A> = number | A;
 //           ^?
 
-declare var bak: Bak<string>;
-//                ^?
+declare const bak: Bak<string>;
+//                  ^?
 bak;
 //^?
 
 declare opaque type Bam<A>
 //                   ^?
 
-declare var bam: Bam<string>;
-//                ^?
+declare const bam: Bam<string>;
+//                  ^?
 bam;
 //^?
 
 import type { Opaque, PolyTransparent, PolyOpaque } from './opaque-lib';
 
-declare var opaque: Opaque;
-//                   ^?
+declare const opaque: Opaque;
+//                     ^?
 opaque;
 // ^?
 
-declare var polyTransparent: PolyTransparent<string>;
-//                               ^?
+declare const polyTransparent: PolyTransparent<string>;
+//                                 ^?
 polyTransparent;
 // ^?
 
-declare var polyOpaque: PolyOpaque<string>;
-//                        ^?
+declare const polyOpaque: PolyOpaque<string>;
+//                          ^?
 polyOpaque;
 // ^?
 

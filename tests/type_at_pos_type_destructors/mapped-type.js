@@ -40,7 +40,7 @@ type Unevaluated5<T extends {...}> = {+[key in keyof T]?: T[key]};
 type Unevaluated6<T extends {...}> = {-[key in keyof T]?: T[key]};
 //   ^
 
-declare var x: {[key in keyof O]: O[key]};
+declare const x: {[key in keyof O]: O[key]};
    x;
 // ^
 
@@ -67,7 +67,7 @@ type MappedObjNonHomomorphic7 = {-[key in Keys]?: O[key]};
 type UnevaluatedNonHomomorphic<T extends {...}> = {[key in T]: T};
 //   ^
 
-declare var y: {[key in Keys]: O[key]};
+declare const y: {[key in Keys]: O[key]};
    x;
 // ^
 
@@ -75,7 +75,7 @@ declare var y: {[key in Keys]: O[key]};
 // we cannot bind a tparam
 type SemiHomomorphic<O extends {...}, Keys extends keyof O> = {[key in Keys]: O[key]};
 //   ^
-declare var z: SemiHomomorphic<{foo: number, ...}, 'foo'>;
+declare const z: SemiHomomorphic<{foo: number, ...}, 'foo'>;
    z;
 // ^
 

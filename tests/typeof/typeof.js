@@ -89,13 +89,13 @@ var keys: keyof Map = 'A'; // Error: ineligible value used in type anno
 // typeof <<variable declared later>> //
 ////////////////////////////////////////
 
-declare var g: typeof h;
+declare const g: typeof h;
 const h = 1;
 
 g as string; // error
 g as number;
 
-declare var i: typeof j;
+declare const i: typeof j;
 const j = {p: 1};
 
 i.p as string; // error

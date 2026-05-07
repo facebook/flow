@@ -23,5 +23,5 @@ new B3<string>().bar() as B3<string> as A2<number>; // error
 
 import Export from './export';
 
-declare var a4: Export.A4;
+declare const a4: Export.A4;
 let _ = a4.foo();

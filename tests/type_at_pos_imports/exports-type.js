@@ -7,4 +7,4 @@ export type MyPolyType<T> = { f: T };
 declare export function foo(): MyUnionType;
 
 const f = foo();
-declare var x: MyUnionType;
+declare const x: MyUnionType;

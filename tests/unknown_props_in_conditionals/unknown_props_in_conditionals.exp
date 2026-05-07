@@ -50,9 +50,9 @@ Cannot get `mixed.thisPropDoesNotExist` because property `thisPropDoesNotExist` 
                  ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:1:20
-    1| declare var mixed: unknown;
-                          ^^^^^^^ [1]
+   test.js:1:22
+    1| declare const mixed: unknown;
+                            ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:27:19
@@ -65,9 +65,9 @@ Cannot get `inexactObject.thisPropDoesNotExist` because property `thisPropDoesNo
                          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:6:28
-    6| declare var inexactObject: { x: string };
-                                  ^^^^^^^^^^^^^ [1]
+   test.js:6:30
+    6| declare const inexactObject: { x: string };
+                                    ^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:30:17
@@ -80,9 +80,9 @@ Cannot get `exactObject.thisPropDoesNotExist` because property `thisPropDoesNotE
                        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:7:26
-    7| declare var exactObject: { x: string };
-                                ^^^^^^^^^^^^^ [1]
+   test.js:7:28
+    7| declare const exactObject: { x: string };
+                                  ^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:33:20
@@ -95,9 +95,9 @@ Cannot get `unionOfObjects.thisPropDoesNotExist` because property `thisPropDoesN
                           ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:9:29
-    9| declare var unionOfObjects: { x: string } | { y: string };
-                                   ^^^^^^^^^^^^^ [1]
+   test.js:9:31
+    9| declare const unionOfObjects: { x: string } | { y: string };
+                                     ^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:5
@@ -111,12 +111,12 @@ Cannot get `intersectionOfObjects.thisPropDoesNotExist` because: [incompatible-u
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:10:36
-   10| declare var intersectionOfObjects: { x: string } & { y: string };
-                                          ^^^^^^^^^^^^^ [1]
-   test.js:10:52
-   10| declare var intersectionOfObjects: { x: string } & { y: string };
-                                                          ^^^^^^^^^^^^^ [2]
+   test.js:10:38
+   10| declare const intersectionOfObjects: { x: string } & { y: string };
+                                            ^^^^^^^^^^^^^ [1]
+   test.js:10:54
+   10| declare const intersectionOfObjects: { x: string } & { y: string };
+                                                            ^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:43:13
@@ -144,9 +144,9 @@ Cannot get `instance.thisPropDoesNotExist` because property `thisPropDoesNotExis
                     ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:13:23
-   13| declare var instance: myClass;
-                             ^^^^^^^ [1]
+   test.js:13:25
+   13| declare const instance: myClass;
+                               ^^^^^^^ [1]
 
 
 

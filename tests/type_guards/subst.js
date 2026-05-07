@@ -9,7 +9,7 @@ declare function funB<T>(p1: (p1: unknown) => p1 is T, p2: unknown): p2 is T;
 const x1: A = funA(isA); // okay
 const x2: B = funA(isA); // error A ~> B
 
-declare var input: unknown;
+declare const input: unknown;
 if (funB(isA, input)) {
   input as A; // okay
   input as B; // error A ~> B

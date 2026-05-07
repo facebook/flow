@@ -9,6 +9,6 @@ function test1() {
 }
 
 function test2() {
-    declare var x: Bak<boolean>;
+    declare const x: Bak<boolean>;
     x as Bak<number> | Bak<string>; // error Bak<boolean> ~/~> Bak<number> | Bak<string>
 }

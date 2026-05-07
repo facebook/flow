@@ -1,16 +1,16 @@
-annot_t.js:9:21 = {
-  "end":24,
+annot_t.js:9:23 = {
+  "end":26,
   "endline":9,
   "line":9,
   "loc":{
-    "end":{"column":24,"line":9,"offset":158},
+    "end":{"column":26,"line":9,"offset":160},
     "source":"annot_t.js",
-    "start":{"column":20,"line":9,"offset":153},
+    "start":{"column":22,"line":9,"offset":155},
     "type":"SourceFile"
   },
   "path":"annot_t.js",
   "reasons":[],
-  "start":20,
+  "start":22,
   "types":{"evaluated":null,"unevaluated":{"type":"class KeyedSeq<K, +V>"}}
 }
 class-0.js:3:7 = {
@@ -423,9 +423,9 @@ class-poly-1.js:9:5 = {
   "endline":9,
   "line":9,
   "loc":{
-    "end":{"column":5,"line":9,"offset":100},
+    "end":{"column":5,"line":9,"offset":102},
     "source":"class-poly-1.js",
-    "start":{"column":5,"line":9,"offset":99},
+    "start":{"column":5,"line":9,"offset":101},
     "type":"SourceFile"
   },
   "path":"class-poly-1.js",
@@ -438,9 +438,9 @@ class-poly-1.js:9:11 = {
   "endline":9,
   "line":9,
   "loc":{
-    "end":{"column":11,"line":9,"offset":106},
+    "end":{"column":11,"line":9,"offset":108},
     "source":"class-poly-1.js",
-    "start":{"column":11,"line":9,"offset":105},
+    "start":{"column":11,"line":9,"offset":107},
     "type":"SourceFile"
   },
   "path":"class-poly-1.js",
@@ -668,9 +668,9 @@ FluxStore.js:14:5 = {
   "endline":14,
   "line":14,
   "loc":{
-    "end":{"column":9,"line":14,"offset":232},
+    "end":{"column":9,"line":14,"offset":234},
     "source":"FluxStore.js",
-    "start":{"column":5,"line":14,"offset":227},
+    "start":{"column":5,"line":14,"offset":229},
     "type":"SourceFile"
   },
   "path":"FluxStore.js",
@@ -708,19 +708,19 @@ multi-inheritance.js:6:7 = {
   "start":7,
   "types":{"evaluated":null,"unevaluated":{"type":"Class<A> | Class<B>"}}
 }
-type-utils.js:5:13 {
-  "end":20,
+type-utils.js:5:15 {
+  "end":22,
   "endline":5,
   "line":5,
   "loc":{
-    "end":{"column":20,"line":5,"offset":54},
+    "end":{"column":22,"line":5,"offset":56},
     "source":"type-utils.js",
-    "start":{"column":13,"line":5,"offset":46},
+    "start":{"column":15,"line":5,"offset":48},
     "type":"SourceFile"
   },
   "path":"type-utils.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -733,19 +733,19 @@ type-utils.js:5:13 {
     }
   }
 }
-type-utils.js:6:13 {
-  "end":29,
+type-utils.js:6:15 {
+  "end":31,
   "endline":6,
   "line":6,
   "loc":{
-    "end":{"column":29,"line":6,"offset":95},
+    "end":{"column":31,"line":6,"offset":99},
     "source":"type-utils.js",
-    "start":{"column":13,"line":6,"offset":78},
+    "start":{"column":15,"line":6,"offset":82},
     "type":"SourceFile"
   },
   "path":"type-utils.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -765,49 +765,49 @@ type-utils.js:6:13 {
     }
   }
 }
-type-utils.js:10:13 {
-  "end":19,
+type-utils.js:10:15 {
+  "end":21,
   "endline":10,
   "line":10,
   "loc":{
-    "end":{"column":19,"line":10,"offset":156},
+    "end":{"column":21,"line":10,"offset":162},
     "source":"type-utils.js",
-    "start":{"column":13,"line":10,"offset":149},
+    "start":{"column":15,"line":10,"offset":155},
     "type":"SourceFile"
   },
   "path":"type-utils.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"Class<A>"}}
 }
-type-utils.js:11:13 {
-  "end":25,
+type-utils.js:11:15 {
+  "end":27,
   "endline":11,
   "line":11,
   "loc":{
-    "end":{"column":25,"line":11,"offset":193},
+    "end":{"column":27,"line":11,"offset":201},
     "source":"type-utils.js",
-    "start":{"column":13,"line":11,"offset":180},
+    "start":{"column":15,"line":11,"offset":188},
     "type":"SourceFile"
   },
   "path":"type-utils.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"Class<Class<A>>"}}
 }
-type-utils.js:12:13 {
-  "end":31,
+type-utils.js:12:15 {
+  "end":33,
   "endline":12,
   "line":12,
   "loc":{
-    "end":{"column":31,"line":12,"offset":243},
+    "end":{"column":33,"line":12,"offset":253},
     "source":"type-utils.js",
-    "start":{"column":13,"line":12,"offset":224},
+    "start":{"column":15,"line":12,"offset":234},
     "type":"SourceFile"
   },
   "path":"type-utils.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"Class<Class<Class<A>>>"}}
 }
 default.js:4:17 {

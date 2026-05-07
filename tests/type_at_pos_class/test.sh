@@ -5,8 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 
 # annot_t.js
-printf "annot_t.js:9:21 = "
-assert_ok "$FLOW" type-at-pos annot_t.js 9 21 --strip-root --pretty
+printf "annot_t.js:9:23 = "
+assert_ok "$FLOW" type-at-pos annot_t.js 9 23 --strip-root --pretty
 
 # class-0.js
 printf "class-0.js:3:7 = "
@@ -143,16 +143,16 @@ printf "multi-inheritance.js:6:7 = "
 assert_ok "$FLOW" type-at-pos multi-inheritance.js 6 7 --strip-root --pretty
 
 # type-utils.js
-printf "type-utils.js:5:13 "
-assert_ok "$FLOW" type-at-pos type-utils.js 5 13 --strip-root --pretty --expand-json-output
-printf "type-utils.js:6:13 "
-assert_ok "$FLOW" type-at-pos type-utils.js 6 13 --strip-root --pretty --expand-json-output
-printf "type-utils.js:10:13 "
-assert_ok "$FLOW" type-at-pos type-utils.js 10 13 --strip-root --pretty
-printf "type-utils.js:11:13 "
-assert_ok "$FLOW" type-at-pos type-utils.js 11 13 --strip-root --pretty
-printf "type-utils.js:12:13 "
-assert_ok "$FLOW" type-at-pos type-utils.js 12 13 --strip-root --pretty
+printf "type-utils.js:5:15 "
+assert_ok "$FLOW" type-at-pos type-utils.js 5 15 --strip-root --pretty --expand-json-output
+printf "type-utils.js:6:15 "
+assert_ok "$FLOW" type-at-pos type-utils.js 6 15 --strip-root --pretty --expand-json-output
+printf "type-utils.js:10:15 "
+assert_ok "$FLOW" type-at-pos type-utils.js 10 15 --strip-root --pretty
+printf "type-utils.js:11:15 "
+assert_ok "$FLOW" type-at-pos type-utils.js 11 15 --strip-root --pretty
+printf "type-utils.js:12:15 "
+assert_ok "$FLOW" type-at-pos type-utils.js 12 15 --strip-root --pretty
 
 # default.js
 printf "default.js:4:17 "

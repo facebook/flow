@@ -22,7 +22,7 @@ function valid_pattern({a}: {a: unknown}, x: unknown, ...r: Array<number>): x is
   return typeof x === 'string'; // this is okay, pattern/rest does not affect predicate param
 }
 
-declare var x: unknown;
+declare const x: unknown;
 if (valid_pattern({a: 42}, x, 1, 2, 3)) {
   x as string; // TODO okay
   x as number; // TODO error string ~> number

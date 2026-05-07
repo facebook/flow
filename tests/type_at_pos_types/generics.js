@@ -32,8 +32,8 @@ type Mono = C<void>;
  * $FlowFixMe
  */
 type Empty = empty;
-declare var a: Empty.T<number>;
-//          ^?
+declare const a: Empty.T<number>;
+//            ^?
 
 
 function f<X>(x: X) {

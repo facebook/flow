@@ -2285,9 +2285,9 @@ type [2]. [incompatible-variance]
       ^
 
 References:
-   variance.js:3:16
-   3| declare var a: A;
-                     ^ [1]
+   variance.js:3:18
+   3| declare const a: A;
+                       ^ [1]
    variance.js:5:6
    5| a as [-foo: string]; // ERROR
            ^^^^^^^^^^^^^^ [2]
@@ -2303,9 +2303,9 @@ Cannot cast `a` to tuple type because tuple element at index `0` is read-only in
       ^
 
 References:
-   variance.js:3:16
-   3| declare var a: A;
-                     ^ [1]
+   variance.js:3:18
+   3| declare const a: A;
+                       ^ [1]
    variance.js:6:6
    6| a as [foo: string]; // ERROR
            ^^^^^^^^^^^^^ [2]
@@ -2329,9 +2329,9 @@ type [2]. [incompatible-variance]
        ^
 
 References:
-   variance.js:13:16
-   13| declare var b: B;
-                      ^ [1]
+   variance.js:13:18
+   13| declare const b: B;
+                        ^ [1]
    variance.js:15:6
    15| b as [+foo: string]; // ERROR
             ^^^^^^^^^^^^^^ [2]
@@ -2347,9 +2347,9 @@ type [2]. [incompatible-variance]
        ^
 
 References:
-   variance.js:13:16
-   13| declare var b: B;
-                      ^ [1]
+   variance.js:13:18
+   13| declare const b: B;
+                        ^ [1]
    variance.js:16:6
    16| b as [foo: string]; // ERROR
             ^^^^^^^^^^^^^ [2]
@@ -2406,9 +2406,9 @@ Cannot cast `d` to tuple type because in index `0`: undefined [1] is incompatibl
        ^
 
 References:
-   variance.js:31:26
-   31| declare var d: [string | void];
-                                ^^^^ [1]
+   variance.js:31:28
+   31| declare const d: [string | void];
+                                  ^^^^ [1]
    variance.js:32:12
    32| d as [foo: string]; // ERROR
                   ^^^^^^ [2]
@@ -2427,9 +2427,9 @@ References:
    variance.js:35:17
    35| declare class K<T> {}
                        ^ [1]
-   variance.js:36:18
-   36| declare var m: K<[+foo: string]>;
-                        ^^^^^^^^^^^^^^ [2]
+   variance.js:36:20
+   36| declare const m: K<[+foo: string]>;
+                          ^^^^^^^^^^^^^^ [2]
    variance.js:38:8
    38| m as K<[string]>; // ERROR
               ^^^^^^^^ [3]
@@ -2450,15 +2450,15 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                      ^
 
 References:
-   variance.js:42:22
-   42| declare var n: Array<[+n: number]>;
-                            ^^^^^^^^^^^^ [1]
+   variance.js:42:24
+   42| declare const n: Array<[+n: number]>;
+                              ^^^^^^^^^^^^ [1]
    variance.js:41:32
    41| declare function f<K>(x: Array<[K]>): K;
                                       ^^^ [2]
-   variance.js:42:16
-   42| declare var n: Array<[+n: number]>;
-                      ^^^^^^^^^^^^^^^^^^^ [3]
+   variance.js:42:18
+   42| declare const n: Array<[+n: number]>;
+                        ^^^^^^^^^^^^^^^^^^^ [3]
    variance.js:41:26
    41| declare function f<K>(x: Array<[K]>): K;
                                 ^^^^^^^^^^ [4]
@@ -2473,9 +2473,9 @@ Cannot cast `res` to empty because number [1] is incompatible with empty [2]. [i
        ^^^
 
 References:
-   variance.js:42:27
-   42| declare var n: Array<[+n: number]>;
-                                 ^^^^^^ [1]
+   variance.js:42:29
+   42| declare const n: Array<[+n: number]>;
+                                   ^^^^^^ [1]
    variance.js:45:8
    45| res as empty; // ERROR
               ^^^^^ [2]
@@ -2491,9 +2491,9 @@ Incorrect arguments passed to `Object.assign` because tuple element at index `0`
                                 ^^^
 
 References:
-   variance.js:50:18
-   50| declare var osw: [-foo: {a: number}];
-                        ^^^^^^^^^^^^^^^^^^^ [1]
+   variance.js:50:20
+   50| declare const osw: [-foo: {a: number}];
+                          ^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:58:1
@@ -2506,9 +2506,9 @@ type [2]. [incompatible-variance]
        ^^^
 
 References:
-   variance.js:56:18
-   56| declare var roc: ROC;
-                        ^^^ [1]
+   variance.js:56:20
+   56| declare const roc: ROC;
+                          ^^^ [1]
    variance.js:58:8
    58| roc as [-foo: string]; // ERROR
               ^^^^^^^^^^^^^^ [2]
@@ -2524,9 +2524,9 @@ type [2]. [incompatible-variance]
        ^^^
 
 References:
-   variance.js:56:18
-   56| declare var roc: ROC;
-                        ^^^ [1]
+   variance.js:56:20
+   56| declare const roc: ROC;
+                          ^^^ [1]
    variance.js:59:8
    59| roc as [foo: string]; // ERROR
               ^^^^^^^^^^^^^ [2]
@@ -2550,9 +2550,9 @@ type [2]. [incompatible-variance]
        ^^^
 
 References:
-   variance.js:64:18
-   64| declare var rob: ROB;
-                        ^^^ [1]
+   variance.js:64:20
+   64| declare const rob: ROB;
+                          ^^^ [1]
    variance.js:66:8
    66| rob as [-foo: string]; // ERROR
               ^^^^^^^^^^^^^^ [2]
@@ -2568,9 +2568,9 @@ type [2]. [incompatible-variance]
        ^^^
 
 References:
-   variance.js:64:18
-   64| declare var rob: ROB;
-                        ^^^ [1]
+   variance.js:64:20
+   64| declare const rob: ROB;
+                          ^^^ [1]
    variance.js:67:8
    67| rob as [foo: string]; // ERROR
               ^^^^^^^^^^^^^ [2]

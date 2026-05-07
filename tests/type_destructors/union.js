@@ -5,7 +5,7 @@ var x3: ({p:number, ...}|{p:string, ...})["p"] = true; // err, boolean ~> number
 
 // annots
 type P2 = T['p']; // NB: T is not resolved yet
-declare var p2: P2;
+declare const p2: P2;
 0 as P2; // ok, number ~> string|number
 null as P2; // err, null ~> string|number
 type T = {p: string, ...} | {p: number, ...}; // NB: T resolved here

@@ -53,7 +53,7 @@ declare const strs: "a" | "b" | "c";
 type A = 'a1' | 'a2' | 'a3';
 type B = 'b1' | 'b2' | 'b3';
 declare function needsNumber(x: number): void;
-declare var combined: A | B;
+declare const combined: A | B;
 needsNumber(combined);
 
 // Case 8: Enum union through the catch-all (UnionT, _) dispatch path.

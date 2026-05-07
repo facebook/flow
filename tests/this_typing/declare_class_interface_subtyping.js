@@ -45,11 +45,11 @@ declare class C_Method_empty {
 }
 
 
-declare var cft : C_Function_this;
-declare var cmt : C_Method_this;
-declare var cfm : C_Function_mixed;
-declare var cmm : C_Method_mixed;
-declare var cfe : C_Function_empty;
+declare const cft : C_Function_this;
+declare const cmt : C_Method_this;
+declare const cfm : C_Function_mixed;
+declare const cmm : C_Method_mixed;
+declare const cfe : C_Function_empty;
 
 cft as I_Function_this; // error, contravariant
 cft as I_Method_this; // error, contravariant

@@ -586,9 +586,9 @@ number [2]. [incompatible-type-guard]
                               ^^^^^^ [1]
 
 References:
-   consistency.js:69:27
-   69|   declare var arr: Array<?number>;
-                                 ^^^^^^ [2]
+   consistency.js:69:29
+   69|   declare const arr: Array<?number>;
+                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- consistency.js:72:5
@@ -603,9 +603,9 @@ The type of `x` [3] at the return expression `x != null` [4] needs to be compati
            ^^^^^^^^^ [4]
 
 References:
-   consistency.js:69:27
-   69|   declare var arr: Array<?number>;
-                                 ^^^^^^ [1]
+   consistency.js:69:29
+   69|   declare const arr: Array<?number>;
+                                   ^^^^^^ [1]
    consistency.js:71:24
    71|   arr.filter((x): x is string => ( // error on string because string ~/> ?number
                               ^^^^^^ [2]
@@ -626,9 +626,9 @@ The type of `x` [3] at the return expression `x !== null` [4] needs to be compat
            ^^^^^^^^^^ [4]
 
 References:
-   consistency.js:69:26
-   69|   declare var arr: Array<?number>;
-                                ^^^^^^^ [1]
+   consistency.js:69:28
+   69|   declare const arr: Array<?number>;
+                                  ^^^^^^^ [1]
    consistency.js:75:24
    75|   arr.filter((x): x is number => (
                               ^^^^^^ [2]
@@ -1016,9 +1016,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
            ^
 
 References:
-   inferred.js:44:18
-   44|   declare var x: number | string;
-                        ^^^^^^ [1]
+   inferred.js:44:20
+   44|   declare const x: number | string;
+                          ^^^^^^ [1]
    inferred.js:48:10
    48|     x as string; // error number ~> string
                 ^^^^^^ [2]
@@ -1033,9 +1033,9 @@ Cannot cast `x` to number because string [1] is incompatible with number [2]. [i
            ^
 
 References:
-   inferred.js:44:27
-   44|   declare var x: number | string;
-                                 ^^^^^^ [1]
+   inferred.js:44:29
+   44|   declare const x: number | string;
+                                   ^^^^^^ [1]
    inferred.js:50:10
    50|     x as number; // error no refinement due to one-sided type guard
                 ^^^^^^ [2]
@@ -1050,9 +1050,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
            ^
 
 References:
-   inferred.js:44:18
-   44|   declare var x: number | string;
-                        ^^^^^^ [1]
+   inferred.js:44:20
+   44|   declare const x: number | string;
+                          ^^^^^^ [1]
    inferred.js:51:10
    51|     x as string; // error no refinement due to one-sided type guard
                 ^^^^^^ [2]
@@ -1121,9 +1121,9 @@ Cannot cast `u` to number because string [1] is incompatible with number [2]. [i
          ^
 
 References:
-   inferred.js:67:23
-   67|   declare var value: ?string;
-                             ^^^^^^ [1]
+   inferred.js:67:25
+   67|   declare const value: ?string;
+                               ^^^^^^ [1]
    inferred.js:70:8
    70|   u as number; // error string ~> number
               ^^^^^^ [2]
@@ -1211,9 +1211,9 @@ Cannot cast `u2` to number literal `4` because number [1] is incompatible with n
          ^^
 
 References:
-   inferred.js:90:22
-   90|   declare var value: number;
-                            ^^^^^^ [1]
+   inferred.js:90:24
+   90|   declare const value: number;
+                              ^^^^^^ [1]
    inferred.js:99:9
    99|   u2 as 4; // error number ~> 4
                ^ [2]
@@ -1252,9 +1252,9 @@ boolean [2]. [incompatible-type]
                    ^
 
 References:
-   inferred.js:140:18
-   140|   declare var x: number;
-                         ^^^^^^ [1]
+   inferred.js:140:20
+   140|   declare const x: number;
+                           ^^^^^^ [1]
    inferred.js:138:58
    138|   declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
                                                                  ^^^^^^^^^^^^^^ [2]
@@ -1288,9 +1288,9 @@ Cannot cast `fn1` to `typeof fn` because in the type predicate: null or undefine
           ^^^
 
 References:
-   inferred.js:160:42
-   160|   declare var fn1 : (x: ?number) => x is ?number;
-                                                 ^^^^^^^ [1]
+   inferred.js:160:44
+   160|   declare const fn1 : (x: ?number) => x is ?number;
+                                                   ^^^^^^^ [1]
    inferred.js:155:19
    155|   const fn = (x: ?number)=> x != null;
                           ^^^^^^ [2]
@@ -1342,9 +1342,9 @@ Cannot cast `x` to string literal `b` because string literal `a` [1] is incompat
           ^
 
 References:
-   intersect.js:4:18
-   4|   declare var x: 'a'|'c';
-                       ^^^ [1]
+   intersect.js:4:20
+   4|   declare const x: 'a'|'c';
+                         ^^^ [1]
    intersect.js:7:10
    7|     x as 'b'; // error 'a' ~> 'b'
                ^^^ [2]
@@ -1360,9 +1360,9 @@ Cannot cast `x` to string literal `c` because string literal `a` [1] is incompat
           ^
 
 References:
-   intersect.js:4:18
-   4|   declare var x: 'a'|'c';
-                       ^^^ [1]
+   intersect.js:4:20
+   4|   declare const x: 'a'|'c';
+                         ^^^ [1]
    intersect.js:8:10
    8|     x as 'c'; // error 'a' ~> 'c'
                ^^^ [2]
@@ -1523,9 +1523,9 @@ Cannot cast `x` to number because `unknown` [1] is incompatible with number [2].
          ^
 
 References:
-   invalid.js:23:16
-   23| declare var x: unknown;
-                      ^^^^^^^ [1]
+   invalid.js:23:18
+   23| declare const x: unknown;
+                        ^^^^^^^ [1]
    invalid.js:25:8
    25|   x as number; // error no refining effect
               ^^^^^^ [2]
@@ -1893,9 +1893,9 @@ References:
    refinement.js:47:21
    47|   const arr2: Array<string> = arr.filter((x: unknown): x is number => { return typeof x === "number"; }); // error
                            ^^^^^^ [2]
-   refinement.js:44:35
-   44|   declare var arr: ReadOnlyArray_<unknown>;
-                                         ^^^^^^^ [3]
+   refinement.js:44:37
+   44|   declare const arr: ReadOnlyArray_<unknown>;
+                                           ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:48:35
@@ -1912,9 +1912,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                          ^^^^^^
 
 References:
-   refinement.js:44:35
-   44|   declare var arr: ReadOnlyArray_<unknown>;
-                                         ^^^^^^^ [1]
+   refinement.js:44:37
+   44|   declare const arr: ReadOnlyArray_<unknown>;
+                                           ^^^^^^^ [1]
    refinement.js:48:21
    48|   const arr3: Array<string> = arr.filter((x: unknown) => { return typeof x === "number"; }); // error no refinement
                            ^^^^^^ [2]
@@ -2270,9 +2270,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
             ^
 
 References:
-   refinement.js:132:18
-   132|   declare var x: number | string;
-                         ^^^^^^ [1]
+   refinement.js:132:20
+   132|   declare const x: number | string;
+                           ^^^^^^ [1]
    refinement.js:136:10
    136|     x as string; // error number ~> string
                  ^^^^^^ [2]
@@ -2287,9 +2287,9 @@ Cannot cast `x` to number because string [1] is incompatible with number [2]. [i
             ^
 
 References:
-   refinement.js:132:27
-   132|   declare var x: number | string;
-                                  ^^^^^^ [1]
+   refinement.js:132:29
+   132|   declare const x: number | string;
+                                    ^^^^^^ [1]
    refinement.js:139:10
    139|     x as number; // error string ~> number
                  ^^^^^^ [2]
@@ -2304,9 +2304,9 @@ Cannot cast `x` to number because string [1] is incompatible with number [2]. [i
             ^
 
 References:
-   refinement.js:132:27
-   132|   declare var x: number | string;
-                                  ^^^^^^ [1]
+   refinement.js:132:29
+   132|   declare const x: number | string;
+                                    ^^^^^^ [1]
    refinement.js:144:10
    144|     x as number; // error string ~> number
                  ^^^^^^ [2]
@@ -2321,9 +2321,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
             ^
 
 References:
-   refinement.js:132:18
-   132|   declare var x: number | string;
-                         ^^^^^^ [1]
+   refinement.js:132:20
+   132|   declare const x: number | string;
+                           ^^^^^^ [1]
    refinement.js:146:10
    146|     x as string; // error string ~> number
                  ^^^^^^ [2]
@@ -2338,9 +2338,9 @@ Cannot cast `x` to number because string [1] is incompatible with number [2]. [i
             ^
 
 References:
-   refinement.js:132:27
-   132|   declare var x: number | string;
-                                  ^^^^^^ [1]
+   refinement.js:132:29
+   132|   declare const x: number | string;
+                                    ^^^^^^ [1]
    refinement.js:151:10
    151|     x as number; // error string ~> number
                  ^^^^^^ [2]
@@ -2355,9 +2355,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
             ^
 
 References:
-   refinement.js:132:18
-   132|   declare var x: number | string;
-                         ^^^^^^ [1]
+   refinement.js:132:20
+   132|   declare const x: number | string;
+                           ^^^^^^ [1]
    refinement.js:152:10
    152|     x as string; // error number ~> string
                  ^^^^^^ [2]
@@ -2372,9 +2372,9 @@ Cannot cast `maybeNumber` to empty because number [1] is incompatible with empty
             ^^^^^^^^^^^
 
 References:
-   refinement.js:172:28
-   172|   declare var maybeNumber: number;
-                                   ^^^^^^ [1]
+   refinement.js:172:30
+   172|   declare const maybeNumber: number;
+                                     ^^^^^^ [1]
    refinement.js:175:20
    175|     maybeNumber as empty; // error number ~> empty
                            ^^^^^ [2]
@@ -2406,9 +2406,9 @@ Cannot cast `x` to empty because `$FbtResultBase` [1] is incompatible with empty
             ^
 
 References:
-   refinement.js:198:25
-   198|   declare var x: void | Fbt;
-                                ^^^ [1]
+   refinement.js:198:27
+   198|   declare const x: void | Fbt;
+                                  ^^^ [1]
    refinement.js:202:10
    202|     x as empty; // error Fbt ~> empty
                  ^^^^^ [2]
@@ -2423,9 +2423,9 @@ Cannot cast `x` to empty because `FbtString` [1] is incompatible with empty [2].
             ^
 
 References:
-   refinement.js:198:25
-   198|   declare var x: void | Fbt;
-                                ^^^ [1]
+   refinement.js:198:27
+   198|   declare const x: void | Fbt;
+                                  ^^^ [1]
    refinement.js:202:10
    202|     x as empty; // error Fbt ~> empty
                  ^^^^^ [2]
@@ -2440,9 +2440,9 @@ Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [inc
             ^
 
 References:
-   refinement.js:198:25
-   198|   declare var x: void | Fbt;
-                                ^^^ [1]
+   refinement.js:198:27
+   198|   declare const x: void | Fbt;
+                                  ^^^ [1]
    refinement.js:202:10
    202|     x as empty; // error Fbt ~> empty
                  ^^^^^ [2]
@@ -2462,9 +2462,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
             ^
 
 References:
-   refinement.js:211:25
-   211|   declare var x: void | OpaqueOrString;
-                                ^^^^^^^^^^^^^^ [1]
+   refinement.js:211:27
+   211|   declare const x: void | OpaqueOrString;
+                                  ^^^^^^^^^^^^^^ [1]
    opaque_exports.js:17:30
     17| export type OpaqueOrString = OpaqueT | string;
                                      ^^^^^^^ [2]
@@ -2482,9 +2482,9 @@ Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [inc
             ^
 
 References:
-   refinement.js:221:25
-   221|   declare var x: void | string | any;
-                                ^^^^^^ [1]
+   refinement.js:221:27
+   221|   declare const x: void | string | any;
+                                  ^^^^^^ [1]
    refinement.js:225:10
    225|     x as empty; // error string ~> empty
                  ^^^^^ [2]
@@ -2591,9 +2591,9 @@ References:
    refinement.js:249:27
    249|   arr.filter(fn) as Array<string>; // error number ~> string
                                   ^^^^^^ [2]
-   refinement.js:247:35
-   247|   declare var arr: ReadOnlyArray_<unknown>;
-                                          ^^^^^^^ [3]
+   refinement.js:247:37
+   247|   declare const arr: ReadOnlyArray_<unknown>;
+                                            ^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:253:10
@@ -2616,9 +2616,9 @@ References:
    refinement.js:253:30
    253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
                                      ^^^^^^ [2]
-   refinement.js:251:37
-   251|   declare var ro_arr: ReadonlyArray<unknown>;
-                                            ^^^^^^^ [3]
+   refinement.js:251:39
+   251|   declare const ro_arr: ReadonlyArray<unknown>;
+                                              ^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:257:10
@@ -2641,9 +2641,9 @@ References:
    refinement.js:257:30
    257|   rw_arr.filter(fn) as Array<string>; // error number ~> string
                                      ^^^^^^ [2]
-   refinement.js:255:37
-   255|   declare var rw_arr: ReadonlyArray<unknown>;
-                                            ^^^^^^^ [3]
+   refinement.js:255:39
+   255|   declare const rw_arr: ReadonlyArray<unknown>;
+                                              ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:275:7
@@ -3114,9 +3114,9 @@ Cannot cast `a` to `B` because `A` [1] is incompatible with `B` [2]. [incompatib
            ^
 
 References:
-   this.js:36:18
-   36|   declare var a: A;
-                        ^ [1]
+   this.js:36:20
+   36|   declare const a: A;
+                          ^ [1]
    this.js:41:10
    41|     a as B; // error
                 ^ [2]
@@ -3131,9 +3131,9 @@ Cannot cast `b` to empty because `B` [1] is incompatible with empty [2]. [incomp
            ^
 
 References:
-   this.js:47:18
-   47|   declare var b: B;
-                        ^ [1]
+   this.js:47:20
+   47|   declare const b: B;
+                          ^ [1]
    this.js:59:10
    59|     b as empty; // error - not refining else branch
                 ^^^^^ [2]
@@ -3148,9 +3148,9 @@ Cannot cast `b` to `D` because `B` [1] is incompatible with `D` [2]. [incompatib
            ^
 
 References:
-   this.js:47:18
-   47|   declare var b: B;
-                        ^ [1]
+   this.js:47:20
+   47|   declare const b: B;
+                          ^ [1]
    this.js:65:10
    65|     b as D; // error
                 ^ [2]
@@ -3182,9 +3182,9 @@ Cannot cast `i` to `B` because `I` [1] is incompatible with `B` [2]. [incompatib
            ^
 
 References:
-   this.js:82:18
-   82|   declare var i: I;
-                        ^ [1]
+   this.js:82:20
+   82|   declare const i: I;
+                          ^ [1]
    this.js:86:10
    86|     i as B; // error
                 ^ [2]
@@ -3267,9 +3267,9 @@ Cannot cast `x` to `C` because `T4` [1] is incompatible with `C` [2]. [incompati
             ^
 
 References:
-   this.js:109:18
-   109|   declare var x: T4;
-                         ^^ [1]
+   this.js:109:20
+   109|   declare const x: T4;
+                           ^^ [1]
    this.js:111:10
    111|     x as C; // error should not refine
                  ^ [2]
@@ -3346,9 +3346,9 @@ References:
    this.js:137:20
    137|   declare class D<+X> extends C<X> {}
                            ^ [1]
-   this.js:139:20
-   139|   declare var x: C<number>;
-                           ^^^^^^ [2]
+   this.js:139:22
+   139|   declare const x: C<number>;
+                             ^^^^^^ [2]
    this.js:143:12
    143|     x as D<string>; // error number ~> string
                    ^^^^^^ [3]
@@ -3442,9 +3442,9 @@ Cannot cast `a` to `BImported` because `A` [1] is incompatible with `B` [2]. [in
             ^
 
 References:
-   this.js:190:18
-   190|   declare var a: AImported;
-                         ^^^^^^^^^ [1]
+   this.js:190:20
+   190|   declare const a: AImported;
+                           ^^^^^^^^^ [1]
    this.js:195:10
    195|     a as BImported; // error
                  ^^^^^^^^^ [2]
@@ -3459,9 +3459,9 @@ Cannot cast `b` to empty because `B` [1] is incompatible with empty [2]. [incomp
             ^
 
 References:
-   this.js:201:18
-   201|   declare var b: BImported;
-                         ^^^^^^^^^ [1]
+   this.js:201:20
+   201|   declare const b: BImported;
+                           ^^^^^^^^^ [1]
    this.js:213:10
    213|     b as empty; // error - not refining else branch
                  ^^^^^ [2]
@@ -3476,9 +3476,9 @@ Cannot cast `b` to `DImported` because `B` [1] is incompatible with `D` [2]. [in
             ^
 
 References:
-   this.js:201:18
-   201|   declare var b: BImported;
-                         ^^^^^^^^^ [1]
+   this.js:201:20
+   201|   declare const b: BImported;
+                           ^^^^^^^^^ [1]
    this.js:219:10
    219|     b as DImported; // error
                  ^^^^^^^^^ [2]
@@ -3525,9 +3525,9 @@ Cannot cast `e` to `FImported` because `E` [1] is incompatible with `F` [2]. [in
             ^
 
 References:
-   this.js:241:18
-   241|   declare var e: EImported;
-                         ^^^^^^^^^ [1]
+   this.js:241:20
+   241|   declare const e: EImported;
+                           ^^^^^^^^^ [1]
    this.js:246:10
    246|     e as FImported; // error
                  ^^^^^^^^^ [2]
@@ -3542,9 +3542,9 @@ Cannot cast `i` to `BImported` because `I` [1] is incompatible with `B` [2]. [in
             ^
 
 References:
-   this.js:249:18
-   249|   declare var i: IImported;
-                         ^^^^^^^^^ [1]
+   this.js:249:20
+   249|   declare const i: IImported;
+                           ^^^^^^^^^ [1]
    this.js:253:10
    253|     i as BImported; // error
                  ^^^^^^^^^ [2]
@@ -3559,9 +3559,9 @@ Cannot cast `x` to `B` because `A` [1] is incompatible with `B` [2]. [incompatib
             ^
 
 References:
-   this.js:270:18
-   270|   declare var x: A;
-                         ^ [1]
+   this.js:270:20
+   270|   declare const x: A;
+                           ^ [1]
    this.js:274:10
    274|     x as B; // TODO okay (relax this limitation)
                  ^ [2]

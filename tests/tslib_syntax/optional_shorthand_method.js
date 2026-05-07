@@ -4,7 +4,7 @@ type T = {
   baz?(prop: string): boolean; // OK
 };
 
-declare var t: T;
+declare const t: T;
 // Calling an optional method requires a check
 if (t.foo) {
   t.foo(); // OK

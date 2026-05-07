@@ -10,7 +10,7 @@ var b: B = {foo: 3};
 // Cannot spread with indexer on right
 type D = {[string]: number};
 type E = {foo: number, ...D, ...}; // Error
-declare var z: {...};
+declare const z: {...};
 z as E;
 
 // Case 1: O1 exact, O2 exact
@@ -19,8 +19,8 @@ type B1 = {p?: string};
 type C1 = {...A1, ...B1, ...};
 type D1 = {p?: number | string, ...};
 
-declare var X1: D1;
-declare var Y1: C1;
+declare const X1: D1;
+declare const Y1: C1;
 X1 as C1;
 Y1 as D1;
 
@@ -30,8 +30,8 @@ type B2 = {p: string};
 type C2 = {...A2, ...B2, ...};
 type D2 = {p: string, ...};
 
-declare var X2: D2;
-declare var Y2: C2;
+declare const X2: D2;
+declare const Y2: C2;
 X2 as C2;
 Y2 as D2;
 
@@ -41,8 +41,8 @@ type B3 = {};
 type C3 = {...A3, ...B3, ...};
 type D3 = {p?: number, ...};
 
-declare var X3: D3;
-declare var Y3: C3;
+declare const X3: D3;
+declare const Y3: C3;
 
 X3 as C3;
 Y3 as D3;
@@ -53,8 +53,8 @@ type B4 = {p?: string};
 type C4 = {...A4, ...B4, ...};
 type D4 = {p: number | string, ...};
 
-declare var X4: D4;
-declare var Y4: C4;
+declare const X4: D4;
+declare const Y4: C4;
 X4 as C4;
 Y4 as D4;
 
@@ -64,8 +64,8 @@ type B5 = {p: string};
 type C5 = {...A5, ...B5, ...};
 type D5 = {p: string, ...};
 
-declare var X5: D5;
-declare var Y5: C5;
+declare const X5: D5;
+declare const Y5: C5;
 X5 as C5;
 Y5 as D5;
 
@@ -75,8 +75,8 @@ type B6 = {};
 type C6 = {...A6, ...B6, ...};
 type D6 = {p: number, ...};
 
-declare var X6: D6;
-declare var Y6: C6;
+declare const X6: D6;
+declare const Y6: C6;
 
 X6 as C6;
 Y6 as D6;
@@ -87,8 +87,8 @@ type B7 = {p?: string};
 type C7 = {...A7, ...B7, ...}; // Error, A7 has an indexer and p? is optional
 type D7 = {[string]: number, p?: string | number};
 
-declare var X7: D7;
-declare var Y7: C7;
+declare const X7: D7;
+declare const Y7: C7;
 
 X7 as C7;
 Y7 as D7;
@@ -99,8 +99,8 @@ type B8 = {p?: number};
 type C8 = {...A8, ...B8, ...};
 type D8 = {p?: number, ...};
 
-declare var X8: D8;
-declare var Y8: C8;
+declare const X8: D8;
+declare const Y8: C8;
 
 X8 as C8;
 Y8 as D8;
@@ -111,8 +111,8 @@ type B9 = {p?: string};
 type C9 = {...A9, ...B9, ...};
 type D9 = {p?: number | string, ...};
 
-declare var X9: D9;
-declare var Y9: C9;
+declare const X9: D9;
+declare const Y9: C9;
 X9 as C9;
 Y9 as D9;
 
@@ -122,8 +122,8 @@ type B10 = {p: string};
 type C10 = {...A10, ...B10, ...};
 type D10 = {p: string, ...};
 
-declare var X10: D10;
-declare var Y10: C10;
+declare const X10: D10;
+declare const Y10: C10;
 X10 as C10;
 Y10 as D10;
 
@@ -133,8 +133,8 @@ type B11 = {};
 type C11 = {...A11, ...B11, ...};
 type D11 = {p?: number, ...};
 
-declare var X11: D11;
-declare var Y11: C11;
+declare const X11: D11;
+declare const Y11: C11;
 X11 as C11;
 Y11 as D11;
 
@@ -144,8 +144,8 @@ type B12 = {p?: string};
 type C12 = {...A12, ...B12, ...};
 type D12 = {p: number | string, ...};
 
-declare var X12: D12;
-declare var Y12: C12;
+declare const X12: D12;
+declare const Y12: C12;
 X12 as C12;
 Y12 as D12;
 
@@ -155,8 +155,8 @@ type B13 = {p: string};
 type C13 = {...A13, ...B13, ...};
 type D13 = {p: string, ...};
 
-declare var X13: D13;
-declare var Y13: C13;
+declare const X13: D13;
+declare const Y13: C13;
 X13 as C13;
 Y13 as D13;
 
@@ -166,8 +166,8 @@ type B14 = {};
 type C14 = {...A14, ...B14, ...};
 type D14 = {p: number, ...};
 
-declare var X14: D14;
-declare var Y14: C14;
+declare const X14: D14;
+declare const Y14: C14;
 X14 as C14;
 Y14 as D14;
 
@@ -177,8 +177,8 @@ type B15 = {p?: string};
 type C15 = {...A15, ...B15, ...}; // Error, A15 has an indexer and p? is optional
 type D15 = {[string]: number, p?: string | number};
 
-declare var X15: D15;
-declare var Y15: C15;
+declare const X15: D15;
+declare const Y15: C15;
 X15 as C15;
 Y15 as D15;
 
@@ -188,8 +188,8 @@ type B16 = {p?: string};
 type C16 = {...A16, ...B16, ...}; // Error, A16 might include p with an unknown type
 type D16 = {[string]: number, p?: string | number};
 
-declare var X16: D16;
-declare var Y16: C16;
+declare const X16: D16;
+declare const Y16: C16;
 X16 as C16;
 Y16 as D16;
 
@@ -199,8 +199,8 @@ type B17 = {p?: string, ...};
 type C17 = {...A17, ...B17, ...};
 type D17 = {p?: number | string, ...};
 
-declare var X17: D17;
-declare var Y17: C17;
+declare const X17: D17;
+declare const Y17: C17;
 X17 as C17;
 Y17 as D17;
 
@@ -210,8 +210,8 @@ type B18 = {p: string, ...};
 type C18 = {...A18, ...B18, ...};
 type D18 = {p: string, ...};
 
-declare var X18: D18;
-declare var Y18: C18;
+declare const X18: D18;
+declare const Y18: C18;
 X18 as C18;
 Y18 as D18;
 
@@ -221,8 +221,8 @@ type B19 = {...};
 type C19 = {...A19, ...B19, ...}; // Error
 type D19 = {p?: number, ...};
 
-declare var X19: D19;
-declare var Y19: C19;
+declare const X19: D19;
+declare const Y19: C19;
 
 X19 as C19;
 Y19 as D19;
@@ -233,8 +233,8 @@ type B20 = {p?: string, ...};
 type C20 = {...A20, ...B20, ...};
 type D20 = {p: number | string, ...};
 
-declare var X20: D20;
-declare var Y20: C20;
+declare const X20: D20;
+declare const Y20: C20;
 X20 as C20;
 Y20 as D20;
 
@@ -244,8 +244,8 @@ type B21 = {p: string, ...};
 type C21 = {...A21, ...B21, ...};
 type D21 = {p: string, ...};
 
-declare var X21: D21;
-declare var Y21: C21;
+declare const X21: D21;
+declare const Y21: C21;
 X21 as C21;
 Y21 as D21;
 
@@ -255,8 +255,8 @@ type B22 = {...};
 type C22 = {...A22, ...B22, ...}; // Error
 type D22 = {p: number, ...};
 
-declare var X22: D22;
-declare var Y22: C22;
+declare const X22: D22;
+declare const Y22: C22;
 
 X22 as C22;
 Y22 as D22;
@@ -267,8 +267,8 @@ type B23 = {p?: string, ...};
 type C23 = {...A23, ...B23, ...}; // Error inexact B23 may have properties that conflict with A23's indexer
 type D23 = {[string]: number, p?: string | number};
 
-declare var X23: D23;
-declare var Y23: C23;
+declare const X23: D23;
+declare const Y23: C23;
 
 X23 as C23;
 Y23 as D23;
@@ -279,8 +279,8 @@ type B24 = {p?: number, ...};
 type C24 = {...A24, ...B24, ...};
 type D24 = {p?: number, ...};
 
-declare var X24: D24;
-declare var Y24: C24;
+declare const X24: D24;
+declare const Y24: C24;
 
 X24 as C24;
 Y24 as D24;
@@ -291,8 +291,8 @@ type B25 = {p?: string, ...};
 type C25 = {...A25, ...B25, ...};
 type D25 = {p?: number | string, ...};
 
-declare var X25: D25;
-declare var Y25: C25;
+declare const X25: D25;
+declare const Y25: C25;
 X25 as C25;
 Y25 as D25;
 
@@ -302,8 +302,8 @@ type B26 = {p: string, ...};
 type C26 = {...A26, ...B26, ...};
 type D26 = {p: string, ...};
 
-declare var X26: D26;
-declare var Y26: C26;
+declare const X26: D26;
+declare const Y26: C26;
 X26 as C26;
 Y26 as D26;
 
@@ -313,8 +313,8 @@ type B27 = {...};
 type C27 = {...A27, ...B27, ...}; // Error
 type D27 = {p?: number, ...};
 
-declare var X27: D27;
-declare var Y27: C27;
+declare const X27: D27;
+declare const Y27: C27;
 
 X27 as C27;
 Y27 as D27;
@@ -325,8 +325,8 @@ type B28 = {p?: string, ...};
 type C28 = {...A28, ...B28, ...};
 type D28 = {p: number | string, ...};
 
-declare var X28: D28;
-declare var Y28: C28;
+declare const X28: D28;
+declare const Y28: C28;
 X28 as C28;
 Y28 as D28;
 
@@ -336,8 +336,8 @@ type B29 = {p: string, ...};
 type C29 = {...A29, ...B29, ...};
 type D29 = {p: string, ...};
 
-declare var X29: D29;
-declare var Y29: C29;
+declare const X29: D29;
+declare const Y29: C29;
 X29 as C29;
 Y29 as D29;
 
@@ -347,8 +347,8 @@ type B30 = {...};
 type C30 = {...A30, ...B30, ...}; // Error
 type D30 = {p: number, ...};
 
-declare var X30: D30;
-declare var Y30: C30;
+declare const X30: D30;
+declare const Y30: C30;
 
 X30 as C30;
 Y30 as D30;
@@ -359,8 +359,8 @@ type B31 = {p?: string, ...};
 type C31 = {...A31, ...B31, ...}; // Error B31 may have props that conflict with A31's indexer
 type D31 = {[string]: number, p?: string | number};
 
-declare var X31: D31;
-declare var Y31: C31;
+declare const X31: D31;
+declare const Y31: C31;
 
 X31 as C31;
 Y31 as D31;
@@ -371,8 +371,8 @@ type B32 = {p?: number, ...};
 type C32 = {...A32, ...B32, ...}; // Error, unknown type for p
 type D32 = {p?: number, ...};
 
-declare var X32: D32;
-declare var Y32: C32;
+declare const X32: D32;
+declare const Y32: C32;
 
 X32 as C32;
 Y32 as D32;

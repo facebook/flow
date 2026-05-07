@@ -1,11 +1,11 @@
 // @flow
 
 declare opaque type O;
-declare var o: O;
+declare const o: O;
 
-declare var c2: O;
-declare var d2: O;
-declare var e: string;
+declare const c2: O;
+declare const d2: O;
+declare const e: string;
 
 var {
   a,

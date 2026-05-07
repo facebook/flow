@@ -628,9 +628,9 @@ Cannot cast `g` to string because number [1] is incompatible with string [2]. [i
        ^
 
 References:
-   typeof.js:92:16
-   92| declare var g: typeof h;
-                      ^^^^^^^^ [1]
+   typeof.js:92:18
+   92| declare const g: typeof h;
+                        ^^^^^^^^ [1]
    typeof.js:95:6
    95| g as string; // error
             ^^^^^^ [2]

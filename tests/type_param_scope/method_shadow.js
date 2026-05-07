@@ -37,7 +37,7 @@ class G<T> {
   m<T extends T>(x:T):G<T> { return new G(x) } // T-as-bound is G's T
 }
 
-declare var g: G<number|string>;
+declare const g: G<number|string>;
 g.m(0); // ok
 g.m(true); // err, boolean ~> number|string
 g.m("") as G<number>; // err, string ~> number

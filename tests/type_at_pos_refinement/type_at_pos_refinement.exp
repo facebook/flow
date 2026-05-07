@@ -198,9 +198,9 @@ refinement.js:7:25 = {
   "endline":7,
   "line":7,
   "loc":{
-    "end":{"column":26,"line":7,"offset":81},
+    "end":{"column":26,"line":7,"offset":83},
     "source":"refinement.js",
-    "start":{"column":24,"line":7,"offset":78},
+    "start":{"column":24,"line":7,"offset":80},
     "type":"SourceFile"
   },
   "path":"refinement.js",
@@ -213,9 +213,9 @@ refinement.js:8:25 = {
   "endline":8,
   "line":8,
   "loc":{
-    "end":{"column":26,"line":8,"offset":111},
+    "end":{"column":26,"line":8,"offset":113},
     "source":"refinement.js",
-    "start":{"column":24,"line":8,"offset":108},
+    "start":{"column":24,"line":8,"offset":110},
     "type":"SourceFile"
   },
   "path":"refinement.js",

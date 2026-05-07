@@ -6,4 +6,4 @@ declare class Seq<K, +V> {
 declare class KeyedSeq<K, +V> extends Seq<K, V> {
   key: K;
 }
-declare var a: Seq.Keyed<number, number>
+declare const a: Seq.Keyed<number, number>

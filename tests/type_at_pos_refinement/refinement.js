@@ -1,6 +1,6 @@
 // @flow
 
-declare var a: {
+declare const a: {
   foo?: () => void,
  ...};
 

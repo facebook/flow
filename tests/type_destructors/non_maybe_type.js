@@ -38,7 +38,7 @@ declare function mkA<T>(x: T): A<T>;
 
 declare function bar(): Node;
 
-declare var props: {s: string, ...};
+declare const props: {s: string, ...};
 
 function f(this: {props: typeof props, ...}) {
   let x = this.props.s === 'S' ? mkA(bar()) : mkA();

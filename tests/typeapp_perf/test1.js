@@ -15,6 +15,6 @@ type B<T> = A & {
   +i: () => B<T>;
 };
 
-declare var b: B<any>;
+declare const b: B<any>;
 
 b as B<any>;

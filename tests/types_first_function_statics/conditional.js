@@ -1,5 +1,5 @@
-declare var b: boolean;
-declare var n: number;
+declare const b: boolean;
+declare const n: number;
 
 // Function declaration
 export function f() {}

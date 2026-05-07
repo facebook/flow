@@ -1,6 +1,6 @@
 // @flow
 
-declare var x: string;
+declare let x: string;
 
 class A {
   get x(): string {

@@ -59,9 +59,9 @@ Only showing the first 50 branches. To see all branches, re-run Flow with --show
         ^
 
 References:
-   file.js:106:16
-   106| declare var x: string;
-                       ^^^^^^ [1]
+   file.js:106:18
+   106| declare const x: string;
+                         ^^^^^^ [1]
    file.js:4:5
      4|   | 'a1'
             ^^^^ [2]
@@ -326,9 +326,9 @@ Cannot cast `x` to `T` because: [incompatible-type]
         ^
 
 References:
-   file.js:106:16
-   106| declare var x: string;
-                       ^^^^^^ [1]
+   file.js:106:18
+   106| declare const x: string;
+                         ^^^^^^ [1]
    file.js:4:5
      4|   | 'a1'
             ^^^^ [2]

@@ -1,7 +1,7 @@
 function test1() {
   declare function isAorB(x: 'a'|'b'|'c'): x is 'a' | 'b';
 
-  declare var x: 'a'|'c';
+  declare const x: 'a'|'c';
   if (isAorB(x)) {
     x as 'a'; // okay
     x as 'b'; // error 'a' ~> 'b'
@@ -38,7 +38,7 @@ function test4() {
 
   declare function isBorC(x: ?AllClasses): implies x is KB | KC;
 
-  declare var x: AllClasses;
+  declare const x: AllClasses;
   if (isBorC(x)) {
     x as KB; // error KC ~> KB
     x as KB | KC; // okay
@@ -51,7 +51,7 @@ function test_renders() {
   declare component Component();
   declare opaque type T: string | C;
 
-  declare var x: T | renders Component;
+  declare const x: T | renders Component;
   declare function isT(node: unknown): implies node is string | C;
 
   if (isT(x)) {

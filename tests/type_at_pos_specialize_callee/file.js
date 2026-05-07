@@ -16,7 +16,7 @@ type Bar = { bar: unknown };
 type Baz = { baz: () => unknown };
 
 function test1() {
-  declare var foo: F1 & F2 & F3;
+  declare const foo: F1 & F2 & F3;
   const x1 = foo(1);
 //           ^?
   const x2 = foo([""]);
@@ -28,7 +28,7 @@ function test1() {
 }
 
 function test2() {
-  declare var foo: F1 & (F2 & F3);
+  declare const foo: F1 & (F2 & F3);
 
   const x1 = foo(1);
 //           ^?
@@ -41,7 +41,7 @@ function test2() {
 }
 
 function test3() {
-  declare var foo: (F1 & F2) & F3;
+  declare const foo: (F1 & F2) & F3;
 
   const x1 = foo(1);
 //           ^?
@@ -54,13 +54,13 @@ function test3() {
 }
 
 function test4() {
-  declare var foo: F1 | G1;
+  declare const foo: F1 | G1;
   const x = foo(1);
 //          ^?
 }
 
 function test5() {
-  declare var foo: (F1 | G1) & F2;
+  declare const foo: (F1 | G1) & F2;
 
   const x1 = foo(1);
 //           ^?
@@ -79,13 +79,13 @@ function test6() {
 }
 
 function test7() {
-  declare var foo: ?(<X>(x: X) => X);
+  declare const foo: ?(<X>(x: X) => X);
   const x = foo?.(1);
 //          ^?
 }
 
 function test8() {
-  declare var foo:
+  declare const foo:
     | ((F1 & F2) & F3)
     | ((G1 & G2) & G3);
 
@@ -106,7 +106,7 @@ function test9() {
     foo(x: string): O2;
   }
 
-  declare var a: A;
+  declare const a: A;
   const x1 = a.foo(1);
 //             ^?
   const x2 = a.foo([""]);
@@ -135,7 +135,7 @@ function test10() {
 }
 
 function test11() {
-  declare var obj: { foo?: ?<X>(x: X) => X } ;
+  declare const obj: { foo?: ?<X>(x: X) => X } ;
   const x1 = obj.foo?.(1);
 //           ^?
   const x2 = obj.foo?.(1);
@@ -143,7 +143,7 @@ function test11() {
 }
 
 function test12() {
-  declare var obj: {
+  declare const obj: {
     foo?: F1 & F2 & F3;
   };
   const x = obj.foo?.(1);
@@ -151,15 +151,15 @@ function test12() {
 }
 
 function test13() {
-  declare var obj: any | { f: <V>(x: V) => V };
+  declare const obj: any | { f: <V>(x: V) => V };
 
   const x1 = obj.f(1);
 //               ^?
 }
 
 function test14() {
-  declare var o1: any & { f: <V>(x: V) => V };
-  declare var o2: { f: <V>(x: V) => V } & any;
+  declare const o1: any & { f: <V>(x: V) => V };
+  declare const o2: { f: <V>(x: V) => V } & any;
 
   const x1 = o1.f(1); // any
 //              ^?
@@ -168,8 +168,8 @@ function test14() {
 }
 
 function test15() {
-  declare var o1: any & ?{ f: <V>(x: V) => V };
-  declare var o2: ?{ f: <V>(x: V) => V } & any;
+  declare const o1: any & ?{ f: <V>(x: V) => V };
+  declare const o2: ?{ f: <V>(x: V) => V } & any;
 
   const x1 = o1?.f(1); // any
 //               ^?
@@ -178,7 +178,7 @@ function test15() {
 }
 
 function test16() {
-  declare var x: { f: () => {} } | void;
+  declare const x: { f: () => {} } | void;
   x.f(); // (() => void) | any
 //  ^?
 }
@@ -197,13 +197,13 @@ function test17() {
 }
 
 function test18() {
-  declare var x: (Foo & Bar) & Baz;
+  declare const x: (Foo & Bar) & Baz;
   x.baz(); // () => mixed
 //  ^?
 }
 
 function test19() {
-  declare var error: unknown;
+  declare const error: unknown;
   error();
 // ^?
 }
@@ -252,10 +252,10 @@ function test_23() {
 }
 
 function test_24() {
-  declare var C1: any
+  declare const C1: any
   const c1 = new C1(1);
 //           ^?
-  declare var C2: unknown;
+  declare const C2: unknown;
   const c2 = new C2(1); // error
 //           ^?
 }

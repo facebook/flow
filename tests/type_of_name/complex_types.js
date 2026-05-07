@@ -191,7 +191,7 @@ type CacheTTL = DeepConfig['cache']['ttl'];
 
 // --- Typeof ---
 
-declare var sampleConfig: DeepConfig;
+declare const sampleConfig: DeepConfig;
 type ConfigType = typeof sampleConfig;
 
 // --- StringPrefix and StringSuffix ---

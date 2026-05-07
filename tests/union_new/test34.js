@@ -2,7 +2,7 @@
 
 type T = {type: 'A', ...A, ...} | {type: 'B', ...B, ...};
 
-declare var x: T;
+declare const x: T;
 switch (x.type) {
   case 'A':
     x.foo as empty; // error: string ~> empty

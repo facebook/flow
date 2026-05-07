@@ -41,7 +41,7 @@ function test3() {
 
 function test4() {
   const fn = (value: unknown) => typeof value === "number"; // infers: (value: unknown) => implies value is number
-  declare var x: number | string;
+  declare const x: number | string;
 
   if (fn(x)) {
     x as number; // okay
@@ -64,7 +64,7 @@ function test5() {
 function test6() {
   declare function takesSynthesizablePolyGuard<T, S: T>(input: T, callbackfn: (value: T) => implies value is S): S;
 
-  declare var value: ?string;
+  declare const value: ?string;
   const u = takesSynthesizablePolyGuard(value, x => x != null);
   u as string; // okay
   u as number; // error string ~> number
@@ -87,7 +87,7 @@ function test8() {
   declare function takesOverloadedPolyGuard<T, U: T>(value: T, guard: (x: T) => implies x is U): [T, U];
   declare function takesOverloadedPolyGuard<T>(value: T, guard: (x: T) => boolean): [T, T];
 
-  declare var value: number;
+  declare const value: number;
   const [t1, u1] = takesOverloadedPolyGuard(value, x => x === 4); // picks the first overload
   t1 as number; // okay
   u1 as 4; // TODO(T225771563) okay
@@ -104,7 +104,7 @@ function test9() {
   declare function takesOverloadedPolyGuard<T, U: T>(guard: (x: T) => implies x is U): [T, U];
   declare function takesOverloadedPolyGuard<T>(guard: (x: T) => boolean): [T, T];
 
-  declare var value: number;
+  declare const value: number;
   const [t1, u1] = takesOverloadedPolyGuard(x => x === 4); // error missing-local-annot
   const [t2, u2] = takesOverloadedPolyGuard((x: unknown) => x === 4); // okay
 }
@@ -115,7 +115,7 @@ function test10() {
 }
 
 function test11() {
-  declare var arr: Array<?string>;
+  declare const arr: Array<?string>;
 
   const x1 = arr.filter((s) => s != null);
   x1 as Array<string>; // okay
@@ -137,7 +137,7 @@ function test12() {
 function test13() {
   declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
 
-  declare var x: number;
+  declare const x: number;
   const [t, u] = takesGuard(
     (z) => z, // error non type guard function
     x,
@@ -157,7 +157,7 @@ function test15() {
   fn as (x: ?number) => boolean;
   fn as (x: ?number) => x is number; // error inferred type guard is one-sided
 
-  declare var fn1 : (x: ?number) => x is ?number;
+  declare const fn1 : (x: ?number) => x is ?number;
   fn1 as typeof fn; // error ?number ~> number
 }
 

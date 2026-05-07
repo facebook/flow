@@ -220,191 +220,191 @@ References:
                                ^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------- error_messages.js:4:16
+Error ------------------------------------------------------------------------------------------- error_messages.js:4:18
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
 conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:4:16
-   4| declare var w: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:4:18
+   4| declare const w: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:4:20
-   4| declare var w: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
-                         ^^^^^^^^^^^^^^^^ [2]
-   error_messages.js:4:57
-   4| declare var w: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
-                                                              ^^^^^^^^^^^^ [3]
+   error_messages.js:4:22
+   4| declare const w: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
+                           ^^^^^^^^^^^^^^^^ [2]
+   error_messages.js:4:59
+   4| declare const w: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
+                                                                ^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------- error_messages.js:8:16
+Error ------------------------------------------------------------------------------------------- error_messages.js:8:18
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
 conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:8:16
-   8| declare var x: {...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:8:18
+   8| declare const x: {...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:8:20
-   8| declare var x: {...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
-                         ^^^^^^^^^^^^^^^^ [2]
-   error_messages.js:8:52
-   8| declare var x: {...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
-                                                         ^^^^^^^^^^^^ [3]
+   error_messages.js:8:22
+   8| declare const x: {...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
+                           ^^^^^^^^^^^^^^^^ [2]
+   error_messages.js:8:54
+   8| declare const x: {...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
+                                                           ^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:12:16
+Error ------------------------------------------------------------------------------------------ error_messages.js:12:18
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
 conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:12:16
-   12| declare var y: {...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:12:18
+   12| declare const y: {...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:12:36
-   12| declare var y: {...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
-                                          ^^^^^^^^^^^^^^^^ [2]
-   error_messages.js:12:57
-   12| declare var y: {...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
-                                                               ^^^^^^^^^^^^ [3]
+   error_messages.js:12:38
+   12| declare const y: {...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
+                                            ^^^^^^^^^^^^^^^^ [2]
+   error_messages.js:12:59
+   12| declare const y: {...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
+                                                                 ^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:16:16
+Error ------------------------------------------------------------------------------------------ error_messages.js:16:18
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
 conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:16:16
-   16| declare var z: {...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:16:18
+   16| declare const z: {...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:16:41
-   16| declare var z: {...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
-                                               ^^^^^^^^^^^^^^^^ [2]
-   error_messages.js:16:62
-   16| declare var z: {...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
-                                                                    ^^^^^^^^^^^^ [3]
+   error_messages.js:16:43
+   16| declare const z: {...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
+                                                 ^^^^^^^^^^^^^^^^ [2]
+   error_messages.js:16:64
+   16| declare const z: {...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
+                                                                      ^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:22:16
+Error ------------------------------------------------------------------------------------------ error_messages.js:22:18
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
 conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:22:16
-   22| declare var a: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:22:18
+   22| declare const a: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:22:20
-   22| declare var a: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
-                          ^^^^^^^^^^^^^^^^ [2]
-   error_messages.js:22:57
-   22| declare var a: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
-                                                               ^^^^^^^^^^^^ [3]
+   error_messages.js:22:22
+   22| declare const a: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
+                            ^^^^^^^^^^^^^^^^ [2]
+   error_messages.js:22:59
+   22| declare const a: {...{a: number, ...}, ...{c: number}, ...{b?: number}, ...}; // Error
+                                                                 ^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:26:16
+Error ------------------------------------------------------------------------------------------ error_messages.js:26:18
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
 conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:26:16
-   26| declare var b: {a: number, ...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:26:18
+   26| declare const b: {a: number, ...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:26:31
-   26| declare var b: {a: number, ...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
-                                     ^^^^^^^^^^^^^^^^ [2]
-   error_messages.js:26:63
-   26| declare var b: {a: number, ...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
-                                                                     ^^^^^^^^^^^^ [3]
+   error_messages.js:26:33
+   26| declare const b: {a: number, ...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
+                                       ^^^^^^^^^^^^^^^^ [2]
+   error_messages.js:26:65
+   26| declare const b: {a: number, ...{a: number, ...}, c: number, ...{b?: number}, ...}; // Error
+                                                                       ^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:30:16
+Error ------------------------------------------------------------------------------------------ error_messages.js:30:18
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
 conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:30:16
-   30| declare var c: {a: number, ...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:30:18
+   30| declare const c: {a: number, ...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:30:47
-   30| declare var c: {a: number, ...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
-                                                     ^^^^^^^^^^^^^^^^ [2]
-   error_messages.js:30:68
-   30| declare var c: {a: number, ...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
-                                                                          ^^^^^^^^^^^^ [3]
+   error_messages.js:30:49
+   30| declare const c: {a: number, ...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
+                                                       ^^^^^^^^^^^^^^^^ [2]
+   error_messages.js:30:70
+   30| declare const c: {a: number, ...{a: number}, ...{a: number, ...}, ...{b?: number}, ...}; // Error
+                                                                            ^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:34:16
+Error ------------------------------------------------------------------------------------------ error_messages.js:34:18
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `b` with a type that
 conflicts with `b`'s definition in object type [3]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:34:16
-   34| declare var d: {a: number, ...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:34:18
+   34| declare const d: {a: number, ...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:34:52
-   34| declare var d: {a: number, ...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
-                                                          ^^^^^^^^^^^^^^^^ [2]
-   error_messages.js:34:73
-   34| declare var d: {a: number, ...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
-                                                                               ^^^^^^^^^^^^ [3]
+   error_messages.js:34:54
+   34| declare const d: {a: number, ...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
+                                                            ^^^^^^^^^^^^^^^^ [2]
+   error_messages.js:34:75
+   34| declare const d: {a: number, ...{a: number, ...}, ...{a: string, ...}, ...{b?: number}, ...}; // Error
+                                                                                 ^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:40:17
+Error ------------------------------------------------------------------------------------------ error_messages.js:40:19
 
 Flow cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `c` with a type that conflicts
 with `c`'s definition in object type [1]. Try making `B` [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:40:17
-   40| declare var x2: {a: number, ...A, c: number, ...B, ...}; // Error
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:40:19
+   40| declare const x2: {a: number, ...A, c: number, ...B, ...}; // Error
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:40:49
-   40| declare var x2: {a: number, ...A, c: number, ...B, ...}; // Error
-                                                       ^ [2]
+   error_messages.js:40:51
+   40| declare const x2: {a: number, ...A, c: number, ...B, ...}; // Error
+                                                         ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:46:17
+Error ------------------------------------------------------------------------------------------ error_messages.js:46:19
 
 Flow cannot determine a type for object type [1]. `C` [2] is inexact, so it may contain `b` with a type that conflicts
 with `b`'s definition in `D` [3]. Try making `C` [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:46:17
-   46| declare var y2: {...C, c: number, d: number, ...D, ...}; // Error
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:46:19
+   46| declare const y2: {...C, c: number, d: number, ...D, ...}; // Error
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:46:21
-   46| declare var y2: {...C, c: number, d: number, ...D, ...}; // Error
-                           ^ [2]
-   error_messages.js:46:49
-   46| declare var y2: {...C, c: number, d: number, ...D, ...}; // Error
-                                                       ^ [3]
+   error_messages.js:46:23
+   46| declare const y2: {...C, c: number, d: number, ...D, ...}; // Error
+                             ^ [2]
+   error_messages.js:46:51
+   46| declare const y2: {...C, c: number, d: number, ...D, ...}; // Error
+                                                         ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:49:17
+Error ------------------------------------------------------------------------------------------ error_messages.js:49:19
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `d` with a type that
 conflicts with `d`'s definition in object type [1]. Try making object type [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:49:17
-                       v
-   49| declare var x3: {
+   error_messages.js:49:19
+                         v
+   49| declare const x3: {
    50|   // Error, but message could use improvement.
    51|   ...{a: number, ...},
    52|   d: number,
@@ -421,37 +421,37 @@ References:
             ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:60:17
+Error ------------------------------------------------------------------------------------------ error_messages.js:60:19
 
 Flow cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `b` with a type that conflicts
 with `b`'s definition in `A` [3]. Try making `B` [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:60:17
-   60| declare var x4: {...A, ...B, ...C, ...D, ...}; // Error, representative of common case
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:60:19
+   60| declare const x4: {...A, ...B, ...C, ...D, ...}; // Error, representative of common case
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:60:27
-   60| declare var x4: {...A, ...B, ...C, ...D, ...}; // Error, representative of common case
-                                 ^ [2]
-   error_messages.js:60:21
-   60| declare var x4: {...A, ...B, ...C, ...D, ...}; // Error, representative of common case
-                           ^ [3]
+   error_messages.js:60:29
+   60| declare const x4: {...A, ...B, ...C, ...D, ...}; // Error, representative of common case
+                                   ^ [2]
+   error_messages.js:60:23
+   60| declare const x4: {...A, ...B, ...C, ...D, ...}; // Error, representative of common case
+                             ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------ error_messages.js:63:17
+Error ------------------------------------------------------------------------------------------ error_messages.js:63:19
 
 Flow cannot determine a type for object type [1]. `B` [2] is inexact, so it may contain `foo` with a type that conflicts
 with `foo`'s definition in object type [1]. Try making `B` [2] exact. [cannot-spread-inexact]
 
-   error_messages.js:63:17
-   63| declare var x5: {foo: number, bar: number, ...B, ...}; // Error, representative of common case
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_messages.js:63:19
+   63| declare const x5: {foo: number, bar: number, ...B, ...}; // Error, representative of common case
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   error_messages.js:63:47
-   63| declare var x5: {foo: number, bar: number, ...B, ...}; // Error, representative of common case
-                                                     ^ [2]
+   error_messages.js:63:49
+   63| declare const x5: {foo: number, bar: number, ...B, ...}; // Error, representative of common case
+                                                       ^ [2]
 
 
 

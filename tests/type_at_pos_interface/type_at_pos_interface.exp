@@ -6,13 +6,13 @@ interface IA
 
 interface.js:3:11,3:12
 
-interface.js:10:13
+interface.js:10:15
 Flags:
 IA
 
 'IA' defined at interface.js:3:10
 
-interface.js:10:13,10:15
+interface.js:10:15,10:17
 
 interface.js:12:5
 Flags:
@@ -55,11 +55,11 @@ Flags:
 
 interface.js:31:11,31:13
 
-interface.js:43:13
+interface.js:43:15
 Flags:
 PolyAnonAlias<number>
 
 'PolyAnonAlias' defined at interface.js:39:5
 
-interface.js:43:13,43:25
+interface.js:43:15,43:27
 

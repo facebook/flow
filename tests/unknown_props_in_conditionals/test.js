@@ -1,16 +1,16 @@
-declare var mixed: unknown;
-declare var any: any;
-declare var myObject: any;
-declare var myFunction: any;
+declare const mixed: unknown;
+declare const any: any;
+declare const myObject: any;
+declare const myFunction: any;
 
-declare var inexactObject: { x: string };
-declare var exactObject: { x: string };
+declare const inexactObject: { x: string };
+declare const exactObject: { x: string };
 
-declare var unionOfObjects: { x: string } | { y: string };
-declare var intersectionOfObjects: { x: string } & { y: string };
+declare const unionOfObjects: { x: string } | { y: string };
+declare const intersectionOfObjects: { x: string } & { y: string };
 
 class myClass {}
-declare var instance: myClass;
+declare const instance: myClass;
 
 // We disallow accessing properties on mixed
 if (mixed.thisPropDoesNotExist) {} // Error

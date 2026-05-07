@@ -12,5 +12,5 @@ class Baz {
   qux: number
 }
 
-declare var foo: ?Foo;
+declare const foo: ?Foo;
 const n = foo?.bar.baz.qux;

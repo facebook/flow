@@ -105,7 +105,7 @@ function test_func() {
     <Foo x={1} y={""} />;
 //   ^
 
-    declare var Indirection: {f: typeof Foo}['f'];
+    declare const Indirection: {f: typeof Foo}['f'];
     <Indirection x={1} y={""} />;
 //   ^
 }

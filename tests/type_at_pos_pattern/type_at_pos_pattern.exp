@@ -3,9 +3,9 @@ object.js:11:3 = {
   "endline":11,
   "line":11,
   "loc":{
-    "end":{"column":3,"line":11,"offset":123},
+    "end":{"column":3,"line":11,"offset":131},
     "source":"object.js",
-    "start":{"column":3,"line":11,"offset":122},
+    "start":{"column":3,"line":11,"offset":130},
     "type":"SourceFile"
   },
   "path":"object.js",
@@ -18,9 +18,9 @@ object.js:12:3 = {
   "endline":12,
   "line":12,
   "loc":{
-    "end":{"column":3,"line":12,"offset":128},
+    "end":{"column":3,"line":12,"offset":136},
     "source":"object.js",
-    "start":{"column":3,"line":12,"offset":127},
+    "start":{"column":3,"line":12,"offset":135},
     "type":"SourceFile"
   },
   "path":"object.js",
@@ -33,9 +33,9 @@ object.js:13:3 = {
   "endline":13,
   "line":13,
   "loc":{
-    "end":{"column":3,"line":13,"offset":137},
+    "end":{"column":3,"line":13,"offset":145},
     "source":"object.js",
-    "start":{"column":3,"line":13,"offset":136},
+    "start":{"column":3,"line":13,"offset":144},
     "type":"SourceFile"
   },
   "path":"object.js",
@@ -48,9 +48,9 @@ object.js:14:3 = {
   "endline":14,
   "line":14,
   "loc":{
-    "end":{"column":3,"line":14,"offset":147},
+    "end":{"column":3,"line":14,"offset":155},
     "source":"object.js",
-    "start":{"column":3,"line":14,"offset":146},
+    "start":{"column":3,"line":14,"offset":154},
     "type":"SourceFile"
   },
   "path":"object.js",
@@ -63,9 +63,9 @@ object.js:15:4 = {
   "endline":15,
   "line":15,
   "loc":{
-    "end":{"column":4,"line":15,"offset":162},
+    "end":{"column":4,"line":15,"offset":170},
     "source":"object.js",
-    "start":{"column":4,"line":15,"offset":161},
+    "start":{"column":4,"line":15,"offset":169},
     "type":"SourceFile"
   },
   "path":"object.js",

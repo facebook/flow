@@ -1,8 +1,8 @@
 import type {SUIButtonUniform} from './SUIButtonUniform';
 import type {SUIActionMenuUniform} from './SUIActionMenuUniform';
 
-declare var SUIActionMenuUniformValue: SUIActionMenuUniform;
-declare var SUIButtonUniformValue: SUIButtonUniform;
+declare const SUIActionMenuUniformValue: SUIActionMenuUniform;
+declare const SUIButtonUniformValue: SUIButtonUniform;
 
 const SUIBusinessThemeComponents = {
   SUIActionMenu: SUIActionMenuUniformValue,

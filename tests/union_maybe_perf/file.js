@@ -17,5 +17,5 @@ type Props2 = {
   ...
 };
 
-declare var props: Props1;
+declare const props: Props1;
 props as Props2;

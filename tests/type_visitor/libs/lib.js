@@ -1,3 +1,3 @@
 declare module "foo" {
-  declare var F_OK: number;
+  declare const F_OK: number;
 }

@@ -16,5 +16,5 @@ export default class A {
 }
 
 /* Simpler repro */
-declare var x: boolean & (number | string);
+declare const x: boolean & (number | string);
 x as number | string;

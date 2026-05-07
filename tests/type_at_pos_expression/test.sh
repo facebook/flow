@@ -91,16 +91,16 @@ printf "object-resolution.js:13:5 = "
 assert_ok "$FLOW" type-at-pos object-resolution.js 13 5 --strip-root --pretty
 
 # object.js
-printf "object.js:3:15 = "
-assert_ok "$FLOW" type-at-pos object.js 3 15 --strip-root --pretty
-printf "object.js:3:19 = "
-assert_ok "$FLOW" type-at-pos object.js 3 19 --strip-root --pretty
-printf "object.js:3:24 = "
-assert_ok "$FLOW" type-at-pos object.js 3 24 --strip-root --pretty
-printf "object.js:3:29 = "
-assert_ok "$FLOW" type-at-pos object.js 3 29 --strip-root --pretty
-printf "object.js:3:40 = "
-assert_ok "$FLOW" type-at-pos object.js 3 40 --strip-root --pretty
+printf "object.js:3:17 = "
+assert_ok "$FLOW" type-at-pos object.js 3 17 --strip-root --pretty
+printf "object.js:3:21 = "
+assert_ok "$FLOW" type-at-pos object.js 3 21 --strip-root --pretty
+printf "object.js:3:26 = "
+assert_ok "$FLOW" type-at-pos object.js 3 26 --strip-root --pretty
+printf "object.js:3:31 = "
+assert_ok "$FLOW" type-at-pos object.js 3 31 --strip-root --pretty
+printf "object.js:3:42 = "
+assert_ok "$FLOW" type-at-pos object.js 3 42 --strip-root --pretty
 printf "object.js:6:5 = "
 assert_ok "$FLOW" type-at-pos object.js 6 5 --strip-root --pretty
 printf "object.js:6:7 = " # TODO can we do better with duplication?

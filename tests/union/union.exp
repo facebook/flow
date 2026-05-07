@@ -116,9 +116,9 @@ Type `T1` [1] includes members `a1`, `b1`, `c1` that are not included in type `T
               ^^
 
 References:
-   short_enum_error.js:9:21
-    9|     declare var t1: T1;
-                           ^^ [1]
+   short_enum_error.js:9:23
+    9|     declare const t1: T1;
+                             ^^ [1]
    short_enum_error.js:10:28
    10|     declare function t2(x: T2): void;
                                   ^^ [2]
@@ -135,9 +135,9 @@ Type `T1` [1] includes members `a1`, `b1`, `c1` that are not included in type `T
            ^^
 
 References:
-   short_enum_error.js:9:21
-    9|     declare var t1: T1;
-                           ^^ [1]
+   short_enum_error.js:9:23
+    9|     declare const t1: T1;
+                             ^^ [1]
    short_enum_error.js:12:11
    12|     t1 as T2; // error (cast)
                  ^^ [2]

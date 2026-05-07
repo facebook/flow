@@ -1,6 +1,6 @@
 // @flow
 
-declare var rand: number;
+declare const rand: number;
 
 // Infered literal types
 const s = "A";

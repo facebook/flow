@@ -5,5 +5,5 @@ export class A<T> {
   m(): T { return this.x; }
 }
 
-declare var a: A<number>;
+declare const a: A<number>;
 var x = a.m();

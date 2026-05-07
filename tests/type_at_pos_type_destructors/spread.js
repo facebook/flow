@@ -1,7 +1,7 @@
 // @flow
 
 declare opaque type O;
-declare var o: O;
+declare const o: O;
 type C = {f: O;}
 class P<X> { p: X }
 class D { g: O; }
@@ -71,15 +71,15 @@ type UNest<T extends {...}> = {...T, ...} | {...{...T, ...}, ...} | {...{...{...
 //   ^
 
 
-declare var eobj2: EObj2; eobj2.z;
+declare const eobj2: EObj2; eobj2.z;
 
-declare var c1: C1; c1.o;
-declare var c2: C2; c2.o;
-declare var ec1: EC1; ec1.o;
-declare var ec2: EC2; ec2.o;
-declare var ctor1: Ctor1; ctor1.o;
+declare const c1: C1; c1.o;
+declare const c2: C2; c2.o;
+declare const ec1: EC1; ec1.o;
+declare const ec2: EC2; ec2.o;
+declare const ctor1: Ctor1; ctor1.o;
 
-declare var p1_num: P1<number>; p1_num.o;
+declare const p1_num: P1<number>; p1_num.o;
 
 
-declare var rec: Rec; rec.o;
+declare const rec: Rec; rec.o;

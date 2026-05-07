@@ -1,6 +1,6 @@
 // @flow
 
-declare var obj: {a?: {b: ?{c: null | {d: number, ...}, ...}, ...}, ...};
+declare const obj: {a?: {b: ?{c: null | {d: number, ...}, ...}, ...}, ...};
 
 let _ =
   obj.a ?
@@ -21,7 +21,7 @@ myobj.m("a");
 myobj.n;
 myobj.n(1);
 
-declare var litobj: {
+declare const litobj: {
   f: "ff";
   g: "g\"g";
   h: 'h"h';

@@ -7,8 +7,8 @@ interface IA {
   mf : ((x: number) => number) & ((x: string) => string);
 }
 
-declare var i_a:
-//          ^
+declare const i_a:
+//            ^
     IA;
 //  ^
 
@@ -40,5 +40,5 @@ type PolyAnonAlias<X> = interface {
   f: X;
 }
 
-declare var polyAnonAlias: PolyAnonAlias<number>;
-//          ^
+declare const polyAnonAlias: PolyAnonAlias<number>;
+//            ^

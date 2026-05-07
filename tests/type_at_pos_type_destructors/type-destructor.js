@@ -150,7 +150,7 @@ function non_evaluated() {
     ...
   }>;
 
-  declare var obj: R;
+  declare const obj: R;
 
   const spread = {...obj};
 //      ^

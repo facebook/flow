@@ -9,5 +9,5 @@ type B<+T> = {
   m<U>(f: T => U): B<U>,
 }
 
-declare var a: A<number>;
+declare const a: A<number>;
 var b: B<number> = a;

@@ -1,6 +1,6 @@
 /*************** Basic functions ******************/
-declare var x : { f : number, ...};
-declare var y : { y : string, ...};
+declare const x : { f : number, ...};
+declare const y : { y : string, ...};
 
 function foo(this : unknown) : void {
     return this.x; // error: this is mixed

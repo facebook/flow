@@ -3,12 +3,12 @@
 declare function foo(x: number): number;
 declare function foo(x: string): string;
 
-declare var x: number | string;
+declare const x: number | string;
 
 foo(x) as number | string;
 
 type T = number | string;
-declare var y: T;
+declare const y: T;
 
 foo(y) as T;
 

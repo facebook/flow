@@ -41,7 +41,7 @@ function array_filter() {
     filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg : This): Array<T>;
   }
 
-  declare var arr: ReadOnlyArray_<unknown>;
+  declare const arr: ReadOnlyArray_<unknown>;
 
   const arr1: Array<number> = arr.filter((x: unknown): x is number => { return typeof x === "number"; });
   const arr2: Array<string> = arr.filter((x: unknown): x is number => { return typeof x === "number"; }); // error
@@ -53,7 +53,7 @@ function sentinel_simple() {
   type A = { tag: 'A', foo: number };
   type B = { tag: 'B', foo: string };
 
-  declare var x: A | B;
+  declare const x: A | B;
 
   declare function sentinel_A(x: unknown): x is {tag: 'A', ...};
   if (sentinel_A(x)) {
@@ -78,7 +78,7 @@ function sentinel_readonly() {
   type A = Readonly<{ tag: 'A', foo: number }>;
   type B = Readonly<{ tag: 'B', foo: string }>;
 
-  declare var x: A | B;
+  declare const x: A | B;
 
   declare function sentinel_A(x: unknown): x is Readonly<{tag: 'A', ...}>;
   if (sentinel_A(x)) {
@@ -103,7 +103,7 @@ function sentinel_multi_tag() {
   type A = Readonly<{ tag1: 'A', tag2: 1, foo: number }>;
   type B = Readonly<{ tag1: 'B', tag2: 1, foo: string }>;
 
-  declare var x: A | B;
+  declare const x: A | B;
 
   declare function unknown_sentinel(x: unknown): x is Readonly<{tag: 'C', ...}>;
   if (unknown_sentinel(x)) {
@@ -129,7 +129,7 @@ function negation1() {
   declare function isNumber(x: unknown): x is number;
   declare function isString(x: unknown): x is string;
 
-  declare var x: number | string;
+  declare const x: number | string;
 
   if (isNumber(x)) {
     x as number; // okay
@@ -159,7 +159,7 @@ function negation1() {
 function any_input() {
   declare function isNotMaybe<T>(value: ?T): value is T;
 
-  declare var maybeAny: ?any;
+  declare const maybeAny: ?any;
 
   if (isNotMaybe(maybeAny)) {
     maybeAny as empty; // okay, we're filtering null and undefined
@@ -169,7 +169,7 @@ function any_input() {
 function any_filter() {
   declare function isAny(value: unknown): value is any;
 
-  declare var maybeNumber: number;
+  declare const maybeNumber: number;
 
   if (isAny(maybeNumber)) {
     maybeNumber as empty; // error number ~> empty
@@ -179,7 +179,7 @@ function any_filter() {
 function refine_any_to_type() {
   declare function isNumber(value: unknown): value is number;
 
-  declare var anyVal: any;
+  declare const anyVal: any;
 
   if (isNumber(anyVal)) {
     anyVal as empty; // error number ~> empty
@@ -195,7 +195,7 @@ function opaque_types() {
   declare type FbtWithoutString = FbtString | FbtElement;
   declare type Fbt = string | FbtWithoutString;
 
-  declare var x: void | Fbt;
+  declare const x: void | Fbt;
 
   if (isTruthy(x)) {
     x as Fbt; // okay
@@ -208,7 +208,7 @@ import type {OpaqueOrString} from './opaque_exports';
 function opaque_types_imported() {
   declare function isTruthy<A>(value: ?A): value is A;
 
-  declare var x: void | OpaqueOrString;
+  declare const x: void | OpaqueOrString;
 
   if (isTruthy(x)) {
     x as OpaqueOrString; // TODO okay, currently imported opaque type is not filtered because it's underlying type is opaque to type-guard filtering
@@ -218,7 +218,7 @@ function opaque_types_imported() {
 function union_with_any() {
   declare function isTruthy<A>(value: ?A): value is A;
 
-  declare var x: void | string | any;
+  declare const x: void | string | any;
 
   if (isTruthy(x)) {
     x as string; // okay, type guard filters out void
@@ -244,15 +244,15 @@ function one_sided(
     filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg : This): Array<T>;
   }
 
-  declare var arr: ReadOnlyArray_<unknown>;
+  declare const arr: ReadOnlyArray_<unknown>;
   arr.filter(fn) as Array<number>; // okay
   arr.filter(fn) as Array<string>; // error number ~> string
 
-  declare var ro_arr: ReadonlyArray<unknown>;
+  declare const ro_arr: ReadonlyArray<unknown>;
   ro_arr.filter(fn) as Array<number>; // okay
   ro_arr.filter(fn) as Array<string>; // error number ~> string
 
-  declare var rw_arr: ReadonlyArray<unknown>;
+  declare const rw_arr: ReadonlyArray<unknown>;
   rw_arr.filter(fn) as Array<number>; // okay
   rw_arr.filter(fn) as Array<string>; // error number ~> string
 }
@@ -298,8 +298,8 @@ function getRaccoon(s: string): ?Raccoon {
 }
 
 function negation2() {
-  declare var isA: (x: unknown) => x is 'a';
-  declare var x: 'a' | 'c';
+  declare const isA: (x: unknown) => x is 'a';
+  declare const x: 'a' | 'c';
 
   if (isA(x)) { return; }
   x as 'c'; // okay

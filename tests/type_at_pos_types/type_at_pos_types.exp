@@ -1,7 +1,7 @@
 any.js
-At any.js:3:14
+At any.js:3:16
 any (explicit)
-any.js:3:13,3:15
+any.js:3:15,3:17
 
 At any.js:5:3
 any (explicit)
@@ -107,9 +107,9 @@ O<number>
 
 generics.js:26:5,26:6
 
-At generics.js:35:13
+At generics.js:35:15
 any (implicit)
-generics.js:35:13,35:13
+generics.js:35:15,35:15
 
 At generics.js:40:5
 X
@@ -409,12 +409,12 @@ type Foo = number
 
 opaque.js:3:20,3:22
 
-At opaque.js:6:19
+At opaque.js:6:21
 type Foo = number
 
 'Foo' defined at opaque.js:3:19
 
-opaque.js:6:18,6:20
+opaque.js:6:20,6:22
 
 At opaque.js:8:3
 Foo
@@ -430,12 +430,12 @@ type Bar = number
 
 opaque.js:11:21,11:23
 
-At opaque.js:14:18
+At opaque.js:14:20
 type Bar = number
 
 'Bar' defined at opaque.js:11:20
 
-opaque.js:14:18,14:20
+opaque.js:14:20,14:22
 
 At opaque.js:16:3
 Bar
@@ -451,12 +451,12 @@ type Baz
 
 opaque.js:19:21,19:23
 
-At opaque.js:22:18
+At opaque.js:22:20
 type Baz
 
 'Baz' defined at opaque.js:19:20
 
-opaque.js:22:18,22:20
+opaque.js:22:20,22:22
 
 At opaque.js:24:3
 Baz
@@ -472,12 +472,12 @@ type Bak<A> = number | A
 
 opaque.js:27:13,27:15
 
-At opaque.js:30:19
+At opaque.js:30:21
 type Bak<A> = number | A
 
 'Bak' defined at opaque.js:27:12
 
-opaque.js:30:18,30:20
+opaque.js:30:20,30:22
 
 At opaque.js:32:3
 Bak<string>
@@ -493,12 +493,12 @@ type Bam<A>
 
 opaque.js:35:21,35:23
 
-At opaque.js:38:19
+At opaque.js:38:21
 type Bam<A>
 
 'Bam' defined at opaque.js:35:20
 
-opaque.js:38:18,38:20
+opaque.js:38:20,38:22
 
 At opaque.js:40:3
 Bam<string>
@@ -507,12 +507,12 @@ Bam<string>
 
 opaque.js:40:1,40:3
 
-At opaque.js:45:22
+At opaque.js:45:24
 type Opaque
 
 'Opaque' defined at opaque-lib.js:6:19
 
-opaque.js:45:21,45:26
+opaque.js:45:23,45:28
 
 At opaque.js:47:4
 Opaque
@@ -521,13 +521,13 @@ Opaque
 
 opaque.js:47:1,47:6
 
-At opaque.js:50:34
+At opaque.js:50:36
 type PolyTransparent<A> = Poly$Opaque<A>
 
 'Poly$Opaque' defined at opaque-lib.js:3:20
 'PolyTransparent' defined at opaque-lib.js:5:12
 
-opaque.js:50:30,50:44
+opaque.js:50:32,50:46
 
 At opaque.js:52:4
 PolyTransparent<string>
@@ -536,12 +536,12 @@ PolyTransparent<string>
 
 opaque.js:52:1,52:15
 
-At opaque.js:55:27
+At opaque.js:55:29
 type PolyOpaque<A>
 
 'PolyOpaque' defined at opaque-lib.js:7:19
 
-opaque.js:55:25,55:34
+opaque.js:55:27,55:36
 
 At opaque.js:57:4
 PolyOpaque<string>
@@ -951,9 +951,9 @@ At unions.js:66:5
 {f: number}
 unions.js:66:5,66:5
 
-At unions.js:69:13
+At unions.js:69:15
 void | null
-unions.js:69:13,69:23
+unions.js:69:15,69:25
 
 At unions.js:78:4
 K | L

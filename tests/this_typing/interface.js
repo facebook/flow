@@ -6,7 +6,7 @@ interface A {
   propUnboundNonMethod: (this: interface {prop: number}) => string;
 }
 
-declare var AImpl: A;
+declare const AImpl: A;
 
 // All ok - {prop: 123} is a subtype of {prop: number}
 let _1 = {prop : 123, method : AImpl.method }.method();

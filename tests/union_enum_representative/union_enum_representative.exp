@@ -164,9 +164,9 @@ Cannot call `needsNumber` with `combined` bound to `x` because at least one memb
                    ^^^^^^^^
 
 References:
-   union_enum_representative.js:56:23
-   56| declare var combined: A | B;
-                             ^ [1]
+   union_enum_representative.js:56:25
+   56| declare const combined: A | B;
+                               ^ [1]
    union_enum_representative.js:55:33
    55| declare function needsNumber(x: number): void;
                                        ^^^^^^ [2]

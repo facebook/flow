@@ -7,9 +7,9 @@ Cannot assign `dep.INSPECT_MAX_BYTES` to `b` because number [1] is incompatible 
                        ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   lib.js:2:34
-   2|   declare var INSPECT_MAX_BYTES: number;
-                                       ^^^^^^ [1]
+   lib.js:2:36
+   2|   declare const INSPECT_MAX_BYTES: number;
+                                         ^^^^^^ [1]
    dep2.js:4:8
    4| var b: boolean = dep.INSPECT_MAX_BYTES; // error, number ~/> boolean
              ^^^^^^^ [2]
@@ -24,9 +24,9 @@ Cannot assign `buffer.INSPECT_MAX_BYTES` to `b` because number [1] is incompatib
                         ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   lib.js:2:34
-    2|   declare var INSPECT_MAX_BYTES: number;
-                                        ^^^^^^ [1]
+   lib.js:2:36
+    2|   declare const INSPECT_MAX_BYTES: number;
+                                          ^^^^^^ [1]
    test.js:12:8
    12| var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
               ^^^^^^^ [2]

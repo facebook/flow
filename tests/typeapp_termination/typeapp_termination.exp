@@ -30,9 +30,9 @@ Cannot cast `x` to union type because: [incompatible-type]
            ^
 
 References:
-   soundness.js:12:24
-   12|     declare var x: Bak<boolean>;
-                              ^^^^^^^ [1]
+   soundness.js:12:26
+   12|     declare const x: Bak<boolean>;
+                                ^^^^^^^ [1]
    soundness.js:13:14
    13|     x as Bak<number> | Bak<string>; // error Bak<boolean> ~/~> Bak<number> | Bak<string>
                     ^^^^^^ [2]

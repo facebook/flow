@@ -1,5 +1,5 @@
 /* simple */
-declare var x : (this : number) => void;
+declare const x : (this : number) => void;
 
 (x.bind(3)());
 (x.bind("")()); // error: number incompatible with string
@@ -7,14 +7,14 @@ declare var x : (this : number) => void;
 /* generics */
 type F<T> = (this : T) => void;
 
-declare var y : F<number>;
+declare const y : F<number>;
 y.bind(3);
 y.bind(""); // error: number incompatible with string
 
 x as F<number>;
 y as F<string>; // error: number incompatible with string
 
-declare var z : <T>(this : T) => T;
+declare const z : <T>(this : T) => T;
 z.bind(3)() as number;
 z.bind("")() as string;
 z.bind(3)() as string; // error: number incompatible with string

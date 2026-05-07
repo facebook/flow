@@ -217,9 +217,9 @@ Cannot call `f4` because property `p` is missing in object type [1]. [prop-missi
        ^^
 
 References:
-   errors2.js:21:16
-   21| declare var o: {};
-                      ^^ [1]
+   errors2.js:21:18
+   21| declare const o: {};
+                        ^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- errors2.js:26:1
@@ -231,9 +231,9 @@ Cannot call `f5` because property `p` is missing in object type [1]. [prop-missi
        ^^
 
 References:
-   errors2.js:21:16
-   21| declare var o: {};
-                      ^^ [1]
+   errors2.js:21:18
+   21| declare const o: {};
+                        ^^ [1]
 
 
 

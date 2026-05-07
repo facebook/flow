@@ -1,4 +1,4 @@
-declare var o: unknown;
+declare const o: unknown;
 
 with (o) { // ERROR
 }

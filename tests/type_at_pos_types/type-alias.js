@@ -14,7 +14,7 @@ type F = ?D;
 //   ^?
 
 type P<T extends string> = { t: T, ... } | boolean;
-declare var a: P<string>;
+declare const a: P<string>;
 if (typeof a !== "boolean") {
 //         ^?
      a;

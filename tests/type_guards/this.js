@@ -33,7 +33,7 @@ function test1() {
     isB(): this is B; // okay
   }
 
-  declare var a: A;
+  declare const a: A;
   if (a.isB()) {
     a as B;
   } else {
@@ -44,7 +44,7 @@ function test1() {
     a as B; // okay
   }
 
-  declare var b: B;
+  declare const b: B;
   if (b.isB()) {
     b as B;
   } else {
@@ -68,7 +68,7 @@ function test1() {
     B as B; // error class B ~> B
   }
 
-  declare var c: C;
+  declare const c: C;
   if (c.isB()) {
     c as B;
     c as C; // okay
@@ -79,7 +79,7 @@ function test1() {
     c as B;
   }
 
-  declare var i: I;
+  declare const i: I;
   if (i.isB()) {
     i as B; // okay
   } else {
@@ -106,7 +106,7 @@ function test2() {
     f: () => this is C; // error only on declare classes/interfaces
   };
 
-  declare var x: T4;
+  declare const x: T4;
   if (x.m()) {
     x as C; // error should not refine
   }
@@ -136,7 +136,7 @@ function test3() {
 
   declare class D<+X> extends C<X> {}
 
-  declare var x: C<number>;
+  declare const x: C<number>;
   if (x.m1()) {
     x as C<number>; // okay
     x as D<number>; // okay
@@ -187,7 +187,7 @@ function test5() {
     isBImplies(): implies this is CImported; // okay type guard is in covariant position
   }
 
-  declare var a: AImported;
+  declare const a: AImported;
   if (a.isB()) {
     a as BImported;
   } else {
@@ -198,7 +198,7 @@ function test5() {
     a as BImported; // okay
   }
 
-  declare var b: BImported;
+  declare const b: BImported;
   if (b.isB()) {
     b as BImported;
   } else {
@@ -222,7 +222,7 @@ function test5() {
     BImported as BImported; // error class B ~> B
   }
 
-  declare var c: CImported;
+  declare const c: CImported;
   if (c.isB()) {
     c as BImported;
     c as CImported; // okay
@@ -238,7 +238,7 @@ function test5() {
     isB as () => boolean; // okay (isB still shows as a type guard)
   }
 
-  declare var e: EImported;
+  declare const e: EImported;
   if (e.isF()) {
     e as FImported; // okay this type guard is still recorded in regular class
   } else {
@@ -246,7 +246,7 @@ function test5() {
     e as FImported; // error
   }
 
-  declare var i: IImported;
+  declare const i: IImported;
   if (i.isB()) {
     i as BImported; // okay
   } else {
@@ -267,7 +267,7 @@ function test6() {
   }
   declare class B extends A {}
 
-  declare var x: A;
+  declare const x: A;
 
   if (x.f(x)) {
     x as A
@@ -278,7 +278,7 @@ function test6() {
     f(x: unknown): x is B;
   }
 
-  declare var y: C;
+  declare const y: C;
 
   if (y.f(y)) {
     y as A

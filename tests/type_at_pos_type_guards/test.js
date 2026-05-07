@@ -11,15 +11,15 @@ type T07 = Readonly<T01>;
 type T08 = interface {};
 type T09 = E;
 
-declare var in_01: T01;
-declare var in_02: T02;
-declare var in_03: T03;
-declare var in_04: T04;
-declare var in_05: T05;
-declare var in_06: T06;
-declare var in_07: T07;
-declare var in_08: T08;
-declare var in_09: T09;
+declare const in_01: T01;
+declare const in_02: T02;
+declare const in_03: T03;
+declare const in_04: T04;
+declare const in_05: T05;
+declare const in_06: T06;
+declare const in_07: T07;
+declare const in_08: T08;
+declare const in_09: T09;
 
 function test_01() {
   declare function grd(x: unknown): x is T01;

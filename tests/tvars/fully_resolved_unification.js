@@ -7,7 +7,7 @@ declare function useState<S>(
   initialState: (() => S) | S,
 ): S => void;
 
-declare var v: Foo;
+declare const v: Foo;
 
 const setState = useState(
   v?.foo ?? []

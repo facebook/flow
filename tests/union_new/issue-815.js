@@ -1,7 +1,7 @@
 /* @flow */
 type T = A | B;
 class U {}
-declare var children: U;
+declare const children: U;
 children as T | U;
 class A {}
 class B {}

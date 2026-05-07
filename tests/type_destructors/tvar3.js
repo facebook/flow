@@ -3,9 +3,9 @@
 declare opaque type A;
 declare opaque type B;
 declare opaque type C;
-declare var a: A;
-declare var b: B;
-declare var c: C;
+declare const a: A;
+declare const b: B;
+declare const c: C;
 
 declare function fn1<T>(x: T): T;
 declare function fn2<T>(x: (T) => void): T => void;

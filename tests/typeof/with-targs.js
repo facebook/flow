@@ -18,7 +18,7 @@ type Invalid4 = typeof FooClassStringExported<string>; // error
 type Invalid5 = typeof bar<string, string>;
 type Invalid6 = typeof Foo<string, string>;
 
-declare var emptyValue: empty;
+declare const emptyValue: empty;
 emptyValue as Invalid1;
 emptyValue as Invalid2;
 emptyValue as Invalid3;

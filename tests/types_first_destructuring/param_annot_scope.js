@@ -5,7 +5,7 @@
 // trivially-recursive-definition error.
 import typeof Foo from './Foo';
 
-declare var FooClass: Foo;
+declare const FooClass: Foo;
 
 export const useFoo = ({Foo}: {Foo: Foo}): void => {};
 useFoo({Foo: FooClass});

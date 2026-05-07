@@ -220,75 +220,75 @@ Flags: --pretty --expand-json-output
   }
 }
 
-import-class-as-type.js:8:13
+import-class-as-type.js:8:15
 Flags: --pretty
 {
-  "end":13,
+  "end":15,
   "endline":8,
   "line":8,
   "loc":{
-    "end":{"column":13,"line":8,"offset":222},
+    "end":{"column":15,"line":8,"offset":224},
     "source":"import-class-as-type.js",
-    "start":{"column":13,"line":8,"offset":221},
+    "start":{"column":15,"line":8,"offset":223},
     "type":"SourceFile"
   },
   "path":"import-class-as-type.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"C"}}
 }
 
-import-class-as-type.js:10:13
+import-class-as-type.js:10:15
 Flags: --pretty
 {
-  "end":13,
+  "end":15,
   "endline":10,
   "line":10,
   "loc":{
-    "end":{"column":13,"line":10,"offset":263},
+    "end":{"column":15,"line":10,"offset":269},
     "source":"import-class-as-type.js",
-    "start":{"column":13,"line":10,"offset":262},
+    "start":{"column":15,"line":10,"offset":268},
     "type":"SourceFile"
   },
   "path":"import-class-as-type.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"P<number>"}}
 }
 
-import-class-as-type.js:12:13
+import-class-as-type.js:12:15
 Flags: --pretty
 {
-  "end":14,
+  "end":16,
   "endline":12,
   "line":12,
   "loc":{
-    "end":{"column":14,"line":12,"offset":313},
+    "end":{"column":16,"line":12,"offset":323},
     "source":"import-class-as-type.js",
-    "start":{"column":13,"line":12,"offset":311},
+    "start":{"column":15,"line":12,"offset":321},
     "type":"SourceFile"
   },
   "path":"import-class-as-type.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"C"}}
 }
 
-import-class-as-type.js:14:13
+import-class-as-type.js:14:15
 Flags: --pretty
 {
-  "end":14,
+  "end":16,
   "endline":14,
   "line":14,
   "loc":{
-    "end":{"column":14,"line":14,"offset":360},
+    "end":{"column":16,"line":14,"offset":374},
     "source":"import-class-as-type.js",
-    "start":{"column":13,"line":14,"offset":358},
+    "start":{"column":15,"line":14,"offset":372},
     "type":"SourceFile"
   },
   "path":"import-class-as-type.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"P<number>"}}
 }
 
@@ -374,21 +374,21 @@ Flags: --pretty --expand-json-output
   }
 }
 
-import-class_of_poly_instance-es6.js:9:13
+import-class_of_poly_instance-es6.js:9:15
 Flags: --pretty --expand-json-output
 {
-  "end":13,
+  "end":15,
   "endline":9,
   "line":9,
   "loc":{
-    "end":{"column":13,"line":9,"offset":279},
+    "end":{"column":15,"line":9,"offset":281},
     "source":"import-class_of_poly_instance-es6.js",
-    "start":{"column":13,"line":9,"offset":278},
+    "start":{"column":15,"line":9,"offset":280},
     "type":"SourceFile"
   },
   "path":"import-class_of_poly_instance-es6.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -415,21 +415,21 @@ Flags: --pretty --expand-json-output
   }
 }
 
-import-class_of_poly_instance-es6.js:11:13
+import-class_of_poly_instance-es6.js:11:15
 Flags: --pretty --expand-json-output
 {
-  "end":15,
+  "end":17,
   "endline":11,
   "line":11,
   "loc":{
-    "end":{"column":15,"line":11,"offset":351},
+    "end":{"column":17,"line":11,"offset":357},
     "source":"import-class_of_poly_instance-es6.js",
-    "start":{"column":13,"line":11,"offset":348},
+    "start":{"column":15,"line":11,"offset":354},
     "type":"SourceFile"
   },
   "path":"import-class_of_poly_instance-es6.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -526,21 +526,21 @@ Flags: --pretty --expand-json-output
   }
 }
 
-import-class_of_poly_instance-cjs.js:8:13
+import-class_of_poly_instance-cjs.js:8:15
 Flags: --pretty --expand-json-output
 {
-  "end":13,
+  "end":15,
   "endline":8,
   "line":8,
   "loc":{
-    "end":{"column":13,"line":8,"offset":223},
+    "end":{"column":15,"line":8,"offset":225},
     "source":"import-class_of_poly_instance-cjs.js",
-    "start":{"column":13,"line":8,"offset":222},
+    "start":{"column":15,"line":8,"offset":224},
     "type":"SourceFile"
   },
   "path":"import-class_of_poly_instance-cjs.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -564,21 +564,21 @@ Flags: --pretty --expand-json-output
   }
 }
 
-import-class_of_poly_instance-cjs.js:10:13
+import-class_of_poly_instance-cjs.js:10:15
 Flags: --pretty --expand-json-output
 {
-  "end":15,
+  "end":17,
   "endline":10,
   "line":10,
   "loc":{
-    "end":{"column":15,"line":10,"offset":295},
+    "end":{"column":17,"line":10,"offset":301},
     "source":"import-class_of_poly_instance-cjs.js",
-    "start":{"column":13,"line":10,"offset":292},
+    "start":{"column":15,"line":10,"offset":298},
     "type":"SourceFile"
   },
   "path":"import-class_of_poly_instance-cjs.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -596,156 +596,156 @@ Flags: --pretty --expand-json-output
   }
 }
 
-import-default.js:16:13
+import-default.js:16:15
 Flags: --pretty
 {
-  "end":14,
+  "end":16,
   "endline":16,
   "line":16,
   "loc":{
-    "end":{"column":14,"line":16,"offset":880},
+    "end":{"column":16,"line":16,"offset":882},
     "source":"import-default.js",
-    "start":{"column":13,"line":16,"offset":878},
+    "start":{"column":15,"line":16,"offset":880},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"A"}}
 }
 
-import-default.js:18:13
+import-default.js:18:15
 Flags: --pretty
 {
-  "end":14,
+  "end":16,
   "endline":18,
   "line":18,
   "loc":{
-    "end":{"column":14,"line":18,"offset":958},
+    "end":{"column":16,"line":18,"offset":964},
     "source":"import-default.js",
-    "start":{"column":13,"line":18,"offset":956},
+    "start":{"column":15,"line":18,"offset":962},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"P<number>"}}
 }
 
-import-default.js:20:13
+import-default.js:20:15
 Flags: --pretty
 {
-  "end":14,
+  "end":16,
   "endline":20,
   "line":20,
   "loc":{
-    "end":{"column":14,"line":20,"offset":1048},
+    "end":{"column":16,"line":20,"offset":1058},
     "source":"import-default.js",
-    "start":{"column":13,"line":20,"offset":1046},
+    "start":{"column":15,"line":20,"offset":1056},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"ImportedTypeDefaultClass"}}
 }
 
-import-default.js:22:13
+import-default.js:22:15
 Flags: --pretty
 {
-  "end":14,
+  "end":16,
   "endline":22,
   "line":22,
   "loc":{
-    "end":{"column":14,"line":22,"offset":1141},
+    "end":{"column":16,"line":22,"offset":1155},
     "source":"import-default.js",
-    "start":{"column":13,"line":22,"offset":1139},
+    "start":{"column":15,"line":22,"offset":1153},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{"type":"ImportedTypeDefaultPolyClass<number>"}
   }
 }
 
-import-default.js:24:13
+import-default.js:24:15
 Flags: --pretty
 {
-  "end":14,
+  "end":16,
   "endline":24,
   "line":24,
   "loc":{
-    "end":{"column":14,"line":24,"offset":1258},
+    "end":{"column":16,"line":24,"offset":1276},
     "source":"import-default.js",
-    "start":{"column":13,"line":24,"offset":1256},
+    "start":{"column":15,"line":24,"offset":1274},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"class ImportedTypeDefaultClass"}}
 }
 
-import-default.js:26:13
+import-default.js:26:15
 Flags: --pretty
 {
-  "end":14,
+  "end":16,
   "endline":26,
   "line":26,
   "loc":{
-    "end":{"column":14,"line":26,"offset":1355},
+    "end":{"column":16,"line":26,"offset":1377},
     "source":"import-default.js",
-    "start":{"column":13,"line":26,"offset":1353},
+    "start":{"column":15,"line":26,"offset":1375},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{"type":"class ImportedTypeDefaultPolyClass<X>"}
   }
 }
 
-import-default.js:28:13
+import-default.js:28:15
 Flags: --pretty
 {
-  "end":14,
+  "end":16,
   "endline":28,
   "line":28,
   "loc":{
-    "end":{"column":14,"line":28,"offset":1468},
+    "end":{"column":16,"line":28,"offset":1494},
     "source":"import-default.js",
-    "start":{"column":13,"line":28,"offset":1466},
+    "start":{"column":15,"line":28,"offset":1492},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{"type":"class ImportedTypeofDefaultClassFuncall"}
   }
 }
 
-import-default.js:30:13
+import-default.js:30:15
 Flags: --pretty
 {
-  "end":14,
+  "end":16,
   "endline":30,
   "line":30,
   "loc":{
-    "end":{"column":14,"line":30,"offset":1579},
+    "end":{"column":16,"line":30,"offset":1609},
     "source":"import-default.js",
-    "start":{"column":13,"line":30,"offset":1577},
+    "start":{"column":15,"line":30,"offset":1607},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"ImportedValueDefaultClassFuncall"}}
 }
 
@@ -756,9 +756,9 @@ Flags: --pretty --expand-json-output
   "endline":34,
   "line":34,
   "loc":{
-    "end":{"column":8,"line":34,"offset":1742},
+    "end":{"column":8,"line":34,"offset":1774},
     "source":"import-default.js",
-    "start":{"column":7,"line":34,"offset":1740},
+    "start":{"column":7,"line":34,"offset":1772},
     "type":"SourceFile"
   },
   "path":"import-default.js",
@@ -837,21 +837,21 @@ Flags: --pretty
   "types":{"evaluated":null,"unevaluated":{"type":"module \"./exports-type\""}}
 }
 
-import-typeof-class.js:6:16
+import-typeof-class.js:6:18
 Flags: --pretty --expand-json-output
 {
-  "end":16,
+  "end":18,
   "endline":6,
   "line":6,
   "loc":{
-    "end":{"column":16,"line":6,"offset":120},
+    "end":{"column":18,"line":6,"offset":122},
     "source":"import-typeof-class.js",
-    "start":{"column":16,"line":6,"offset":119},
+    "start":{"column":18,"line":6,"offset":121},
     "type":"SourceFile"
   },
   "path":"import-typeof-class.js",
   "reasons":[],
-  "start":16,
+  "start":18,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -872,21 +872,21 @@ Flags: --pretty --expand-json-output
   }
 }
 
-import-typeof-class.js:8:16
+import-typeof-class.js:8:18
 Flags: --pretty --expand-json-output
 {
-  "end":16,
+  "end":18,
   "endline":8,
   "line":8,
   "loc":{
-    "end":{"column":16,"line":8,"offset":185},
+    "end":{"column":18,"line":8,"offset":191},
     "source":"import-typeof-class.js",
-    "start":{"column":16,"line":8,"offset":184},
+    "start":{"column":18,"line":8,"offset":190},
     "type":"SourceFile"
   },
   "path":"import-typeof-class.js",
   "reasons":[],
-  "start":16,
+  "start":18,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -1033,21 +1033,21 @@ Flags: --pretty
   "types":{"evaluated":null,"unevaluated":{"type":"module \"./module-export-0\""}}
 }
 
-require-class.js:5:16
+require-class.js:5:18
 Flags: --pretty --expand-json-output
 {
-  "end":16,
+  "end":18,
   "endline":5,
   "line":5,
   "loc":{
-    "end":{"column":16,"line":5,"offset":75},
+    "end":{"column":18,"line":5,"offset":77},
     "source":"require-class.js",
-    "start":{"column":16,"line":5,"offset":74},
+    "start":{"column":18,"line":5,"offset":76},
     "type":"SourceFile"
   },
   "path":"require-class.js",
   "reasons":[],
-  "start":16,
+  "start":18,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -1064,21 +1064,21 @@ Flags: --pretty --expand-json-output
   }
 }
 
-require-class.js:7:16
+require-class.js:7:18
 Flags: --pretty --expand-json-output
 {
-  "end":16,
+  "end":18,
   "endline":7,
   "line":7,
   "loc":{
-    "end":{"column":16,"line":7,"offset":140},
+    "end":{"column":18,"line":7,"offset":146},
     "source":"require-class.js",
-    "start":{"column":16,"line":7,"offset":139},
+    "start":{"column":18,"line":7,"offset":145},
     "type":"SourceFile"
   },
   "path":"require-class.js",
   "reasons":[],
-  "start":16,
+  "start":18,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -1147,21 +1147,21 @@ Flags: --pretty --expand-json-output
   }
 }
 
-rtype-main.js:4:13
+rtype-main.js:4:15
 Flags: --pretty --expand-json-output
 {
-  "end":13,
+  "end":15,
   "endline":4,
   "line":4,
   "loc":{
-    "end":{"column":13,"line":4,"offset":63},
+    "end":{"column":15,"line":4,"offset":65},
     "source":"rtype-main.js",
-    "start":{"column":13,"line":4,"offset":62},
+    "start":{"column":15,"line":4,"offset":64},
     "type":"SourceFile"
   },
   "path":"rtype-main.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -1176,13 +1176,13 @@ Flags: --pretty --expand-json-output
   }
 }
 
-import-hooklike-regression.js:5:16
+import-hooklike-regression.js:5:18
 Flags:
 type useA = {}
 
 'useA' defined at exports-hooklike-regresssion.js:3:12
 
-import-hooklike-regression.js:5:16,5:19
+import-hooklike-regression.js:5:18,5:21
 
 exports-class-cjs.js:3:23
 Flags: --do_not_use_typed_AST_for_imports --pretty
@@ -1406,75 +1406,75 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   }
 }
 
-import-class-as-type.js:8:13
+import-class-as-type.js:8:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":13,
+  "end":15,
   "endline":8,
   "line":8,
   "loc":{
-    "end":{"column":13,"line":8,"offset":222},
+    "end":{"column":15,"line":8,"offset":224},
     "source":"import-class-as-type.js",
-    "start":{"column":13,"line":8,"offset":221},
+    "start":{"column":15,"line":8,"offset":223},
     "type":"SourceFile"
   },
   "path":"import-class-as-type.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"C"}}
 }
 
-import-class-as-type.js:10:13
+import-class-as-type.js:10:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":13,
+  "end":15,
   "endline":10,
   "line":10,
   "loc":{
-    "end":{"column":13,"line":10,"offset":263},
+    "end":{"column":15,"line":10,"offset":269},
     "source":"import-class-as-type.js",
-    "start":{"column":13,"line":10,"offset":262},
+    "start":{"column":15,"line":10,"offset":268},
     "type":"SourceFile"
   },
   "path":"import-class-as-type.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"P<number>"}}
 }
 
-import-class-as-type.js:12:13
+import-class-as-type.js:12:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":14,
+  "end":16,
   "endline":12,
   "line":12,
   "loc":{
-    "end":{"column":14,"line":12,"offset":313},
+    "end":{"column":16,"line":12,"offset":323},
     "source":"import-class-as-type.js",
-    "start":{"column":13,"line":12,"offset":311},
+    "start":{"column":15,"line":12,"offset":321},
     "type":"SourceFile"
   },
   "path":"import-class-as-type.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"C"}}
 }
 
-import-class-as-type.js:14:13
+import-class-as-type.js:14:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":14,
+  "end":16,
   "endline":14,
   "line":14,
   "loc":{
-    "end":{"column":14,"line":14,"offset":360},
+    "end":{"column":16,"line":14,"offset":374},
     "source":"import-class-as-type.js",
-    "start":{"column":13,"line":14,"offset":358},
+    "start":{"column":15,"line":14,"offset":372},
     "type":"SourceFile"
   },
   "path":"import-class-as-type.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"P<number>"}}
 }
 
@@ -1560,21 +1560,21 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   }
 }
 
-import-class_of_poly_instance-es6.js:9:13
+import-class_of_poly_instance-es6.js:9:15
 Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 {
-  "end":13,
+  "end":15,
   "endline":9,
   "line":9,
   "loc":{
-    "end":{"column":13,"line":9,"offset":279},
+    "end":{"column":15,"line":9,"offset":281},
     "source":"import-class_of_poly_instance-es6.js",
-    "start":{"column":13,"line":9,"offset":278},
+    "start":{"column":15,"line":9,"offset":280},
     "type":"SourceFile"
   },
   "path":"import-class_of_poly_instance-es6.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -1601,21 +1601,21 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   }
 }
 
-import-class_of_poly_instance-es6.js:11:13
+import-class_of_poly_instance-es6.js:11:15
 Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 {
-  "end":15,
+  "end":17,
   "endline":11,
   "line":11,
   "loc":{
-    "end":{"column":15,"line":11,"offset":351},
+    "end":{"column":17,"line":11,"offset":357},
     "source":"import-class_of_poly_instance-es6.js",
-    "start":{"column":13,"line":11,"offset":348},
+    "start":{"column":15,"line":11,"offset":354},
     "type":"SourceFile"
   },
   "path":"import-class_of_poly_instance-es6.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -1712,21 +1712,21 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   }
 }
 
-import-class_of_poly_instance-cjs.js:8:13
+import-class_of_poly_instance-cjs.js:8:15
 Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 {
-  "end":13,
+  "end":15,
   "endline":8,
   "line":8,
   "loc":{
-    "end":{"column":13,"line":8,"offset":223},
+    "end":{"column":15,"line":8,"offset":225},
     "source":"import-class_of_poly_instance-cjs.js",
-    "start":{"column":13,"line":8,"offset":222},
+    "start":{"column":15,"line":8,"offset":224},
     "type":"SourceFile"
   },
   "path":"import-class_of_poly_instance-cjs.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -1750,21 +1750,21 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   }
 }
 
-import-class_of_poly_instance-cjs.js:10:13
+import-class_of_poly_instance-cjs.js:10:15
 Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 {
-  "end":15,
+  "end":17,
   "endline":10,
   "line":10,
   "loc":{
-    "end":{"column":15,"line":10,"offset":295},
+    "end":{"column":17,"line":10,"offset":301},
     "source":"import-class_of_poly_instance-cjs.js",
-    "start":{"column":13,"line":10,"offset":292},
+    "start":{"column":15,"line":10,"offset":298},
     "type":"SourceFile"
   },
   "path":"import-class_of_poly_instance-cjs.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -1782,156 +1782,156 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   }
 }
 
-import-default.js:16:13
+import-default.js:16:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":14,
+  "end":16,
   "endline":16,
   "line":16,
   "loc":{
-    "end":{"column":14,"line":16,"offset":880},
+    "end":{"column":16,"line":16,"offset":882},
     "source":"import-default.js",
-    "start":{"column":13,"line":16,"offset":878},
+    "start":{"column":15,"line":16,"offset":880},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"A"}}
 }
 
-import-default.js:18:13
+import-default.js:18:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":14,
+  "end":16,
   "endline":18,
   "line":18,
   "loc":{
-    "end":{"column":14,"line":18,"offset":958},
+    "end":{"column":16,"line":18,"offset":964},
     "source":"import-default.js",
-    "start":{"column":13,"line":18,"offset":956},
+    "start":{"column":15,"line":18,"offset":962},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"P<number>"}}
 }
 
-import-default.js:20:13
+import-default.js:20:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":14,
+  "end":16,
   "endline":20,
   "line":20,
   "loc":{
-    "end":{"column":14,"line":20,"offset":1048},
+    "end":{"column":16,"line":20,"offset":1058},
     "source":"import-default.js",
-    "start":{"column":13,"line":20,"offset":1046},
+    "start":{"column":15,"line":20,"offset":1056},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"ImportedTypeDefaultClass"}}
 }
 
-import-default.js:22:13
+import-default.js:22:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":14,
+  "end":16,
   "endline":22,
   "line":22,
   "loc":{
-    "end":{"column":14,"line":22,"offset":1141},
+    "end":{"column":16,"line":22,"offset":1155},
     "source":"import-default.js",
-    "start":{"column":13,"line":22,"offset":1139},
+    "start":{"column":15,"line":22,"offset":1153},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{"type":"ImportedTypeDefaultPolyClass<number>"}
   }
 }
 
-import-default.js:24:13
+import-default.js:24:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":14,
+  "end":16,
   "endline":24,
   "line":24,
   "loc":{
-    "end":{"column":14,"line":24,"offset":1258},
+    "end":{"column":16,"line":24,"offset":1276},
     "source":"import-default.js",
-    "start":{"column":13,"line":24,"offset":1256},
+    "start":{"column":15,"line":24,"offset":1274},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"class ImportedTypeDefaultClass"}}
 }
 
-import-default.js:26:13
+import-default.js:26:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":14,
+  "end":16,
   "endline":26,
   "line":26,
   "loc":{
-    "end":{"column":14,"line":26,"offset":1355},
+    "end":{"column":16,"line":26,"offset":1377},
     "source":"import-default.js",
-    "start":{"column":13,"line":26,"offset":1353},
+    "start":{"column":15,"line":26,"offset":1375},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{"type":"class ImportedTypeDefaultPolyClass<X>"}
   }
 }
 
-import-default.js:28:13
+import-default.js:28:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":14,
+  "end":16,
   "endline":28,
   "line":28,
   "loc":{
-    "end":{"column":14,"line":28,"offset":1468},
+    "end":{"column":16,"line":28,"offset":1494},
     "source":"import-default.js",
-    "start":{"column":13,"line":28,"offset":1466},
+    "start":{"column":15,"line":28,"offset":1492},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{"type":"class ImportedTypeofDefaultClassFuncall"}
   }
 }
 
-import-default.js:30:13
+import-default.js:30:15
 Flags: --do_not_use_typed_AST_for_imports --pretty
 {
-  "end":14,
+  "end":16,
   "endline":30,
   "line":30,
   "loc":{
-    "end":{"column":14,"line":30,"offset":1579},
+    "end":{"column":16,"line":30,"offset":1609},
     "source":"import-default.js",
-    "start":{"column":13,"line":30,"offset":1577},
+    "start":{"column":15,"line":30,"offset":1607},
     "type":"SourceFile"
   },
   "path":"import-default.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{"evaluated":null,"unevaluated":{"type":"ImportedValueDefaultClassFuncall"}}
 }
 
@@ -1942,9 +1942,9 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   "endline":34,
   "line":34,
   "loc":{
-    "end":{"column":8,"line":34,"offset":1742},
+    "end":{"column":8,"line":34,"offset":1774},
     "source":"import-default.js",
-    "start":{"column":7,"line":34,"offset":1740},
+    "start":{"column":7,"line":34,"offset":1772},
     "type":"SourceFile"
   },
   "path":"import-default.js",
@@ -2023,21 +2023,21 @@ Flags: --do_not_use_typed_AST_for_imports --pretty
   "types":{"evaluated":null,"unevaluated":{"type":"module \"./exports-type\""}}
 }
 
-import-typeof-class.js:6:16
+import-typeof-class.js:6:18
 Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 {
-  "end":16,
+  "end":18,
   "endline":6,
   "line":6,
   "loc":{
-    "end":{"column":16,"line":6,"offset":120},
+    "end":{"column":18,"line":6,"offset":122},
     "source":"import-typeof-class.js",
-    "start":{"column":16,"line":6,"offset":119},
+    "start":{"column":18,"line":6,"offset":121},
     "type":"SourceFile"
   },
   "path":"import-typeof-class.js",
   "reasons":[],
-  "start":16,
+  "start":18,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -2058,21 +2058,21 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   }
 }
 
-import-typeof-class.js:8:16
+import-typeof-class.js:8:18
 Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 {
-  "end":16,
+  "end":18,
   "endline":8,
   "line":8,
   "loc":{
-    "end":{"column":16,"line":8,"offset":185},
+    "end":{"column":18,"line":8,"offset":191},
     "source":"import-typeof-class.js",
-    "start":{"column":16,"line":8,"offset":184},
+    "start":{"column":18,"line":8,"offset":190},
     "type":"SourceFile"
   },
   "path":"import-typeof-class.js",
   "reasons":[],
-  "start":16,
+  "start":18,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -2219,21 +2219,21 @@ Flags: --do_not_use_typed_AST_for_imports --pretty
   "types":{"evaluated":null,"unevaluated":{"type":"module \"./module-export-0\""}}
 }
 
-require-class.js:5:16
+require-class.js:5:18
 Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 {
-  "end":16,
+  "end":18,
   "endline":5,
   "line":5,
   "loc":{
-    "end":{"column":16,"line":5,"offset":75},
+    "end":{"column":18,"line":5,"offset":77},
     "source":"require-class.js",
-    "start":{"column":16,"line":5,"offset":74},
+    "start":{"column":18,"line":5,"offset":76},
     "type":"SourceFile"
   },
   "path":"require-class.js",
   "reasons":[],
-  "start":16,
+  "start":18,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -2250,21 +2250,21 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   }
 }
 
-require-class.js:7:16
+require-class.js:7:18
 Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 {
-  "end":16,
+  "end":18,
   "endline":7,
   "line":7,
   "loc":{
-    "end":{"column":16,"line":7,"offset":140},
+    "end":{"column":18,"line":7,"offset":146},
     "source":"require-class.js",
-    "start":{"column":16,"line":7,"offset":139},
+    "start":{"column":18,"line":7,"offset":145},
     "type":"SourceFile"
   },
   "path":"require-class.js",
   "reasons":[],
-  "start":16,
+  "start":18,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -2333,21 +2333,21 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   }
 }
 
-rtype-main.js:4:13
+rtype-main.js:4:15
 Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 {
-  "end":13,
+  "end":15,
   "endline":4,
   "line":4,
   "loc":{
-    "end":{"column":13,"line":4,"offset":63},
+    "end":{"column":15,"line":4,"offset":65},
     "source":"rtype-main.js",
-    "start":{"column":13,"line":4,"offset":62},
+    "start":{"column":15,"line":4,"offset":64},
     "type":"SourceFile"
   },
   "path":"rtype-main.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":null,
     "unevaluated":{
@@ -2362,11 +2362,11 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
   }
 }
 
-import-hooklike-regression.js:5:16
+import-hooklike-regression.js:5:18
 Flags: --do_not_use_typed_AST_for_imports
 type useA = {}
 
 'useA' defined at exports-hooklike-regresssion.js:3:12
 
-import-hooklike-regression.js:5:16,5:19
+import-hooklike-regression.js:5:18,5:21
 

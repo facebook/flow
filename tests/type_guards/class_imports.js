@@ -1,6 +1,6 @@
 import {C, D} from './class_exports';
 
-declare var x: unknown;
+declare const x: unknown;
 
 const c = new C();
 if (c.m(x)) {

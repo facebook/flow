@@ -18,7 +18,7 @@ declare function f3<O>(o: O): B<{}>; // Error should point here.
 declare function f4<O>(o: O): O['p'];
 declare function f5<O>(o: O): B<O>;
 
-declare var o: {};
+declare const o: {};
 f1(o) as empty;
 f2(o) as empty;
 f3(o) as empty;

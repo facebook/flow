@@ -16,8 +16,8 @@ if (random()) {
 bar;
 //^?
 
-declare var numObj: { +f: number, ... };
-declare var strObj: { +f: string, ... };
+declare const numObj: { +f: number, ... };
+declare const strObj: { +f: string, ... };
 
 let obj;
 if (random()) {
@@ -52,11 +52,11 @@ g.set_X(0 as any);
 
 // exhibits use of Ty_normalizer.simplify_unions_inters_visitor
 
-declare var top : unknown | unknown | number;
+declare const top : unknown | unknown | number;
 top;
 //^?
 
-declare var top_g : { g: unknown | unknown | number, ...};
+declare const top_g : { g: unknown | unknown | number, ...};
 top_g;
 // ^?
 
@@ -66,8 +66,8 @@ var a2 = { f: 2 };
 var a = (0<1) ? a1 : a2;
 //  ^?
 
-declare var maybe_empty: ?empty;
-//          ^?
+declare const maybe_empty: ?empty;
+//            ^?
 
 declare opaque type Poly<X>;
 declare opaque type K;

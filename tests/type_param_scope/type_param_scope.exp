@@ -57,12 +57,12 @@ Cannot call `g.m` because in type argument `T`: [incompatible-type]
            ^^^^ [1]
 
 References:
-   method_shadow.js:40:18
-   40| declare var g: G<number|string>;
-                        ^^^^^^ [2]
-   method_shadow.js:40:25
-   40| declare var g: G<number|string>;
-                               ^^^^^^ [3]
+   method_shadow.js:40:20
+   40| declare const g: G<number|string>;
+                          ^^^^^^ [2]
+   method_shadow.js:40:27
+   40| declare const g: G<number|string>;
+                                 ^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- method_shadow.js:43:5

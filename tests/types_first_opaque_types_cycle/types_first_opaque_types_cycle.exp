@@ -7,9 +7,9 @@ Cannot cast `x` to number because `O` [1] is incompatible with number [2]. [inco
       ^
 
 References:
-   a.js:2:16
-   2| declare var x: O;
-                     ^ [1]
+   a.js:2:18
+   2| declare const x: O;
+                       ^ [1]
    a.js:3:6
    3| x as number; // error O ~> number
            ^^^^^^ [2]

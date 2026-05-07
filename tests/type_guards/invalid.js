@@ -20,7 +20,7 @@ function *generator(x: unknown): x is number { // error
   return typeof x == "number";
 }
 
-declare var x: unknown;
+declare const x: unknown;
 if (generator(x)) {
   x as number; // error no refining effect
 }

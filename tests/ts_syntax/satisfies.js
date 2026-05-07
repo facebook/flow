@@ -1,4 +1,4 @@
 type T = unknown;
-declare var m: unknown;
+declare const m: unknown;
 
 export const a = m satisfies T; // ERROR

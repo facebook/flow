@@ -5,7 +5,7 @@ class FluxStore<TPayload> {
   p: string;
 }
 
-declare var FluxStoreClass: Class<FluxStore<any>>;
+declare const FluxStoreClass: Class<FluxStore<any>>;
 
 class Dispatcher {}
 

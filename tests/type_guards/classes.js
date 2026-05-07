@@ -1,5 +1,5 @@
 function class_test() {
-  declare var x: unknown;
+  declare const x: unknown;
 
   class C {
     m(x: unknown): x is number {
@@ -85,7 +85,7 @@ function class_test() {
 }
 
 function declare_class_test() {
-  declare var x: unknown;
+  declare const x: unknown;
 
   declare class C {
     m(x: unknown): x is number;
@@ -122,7 +122,7 @@ function declare_class_test() {
 }
 
 function poly_class_test() {
-  declare var x: unknown;
+  declare const x: unknown;
 
   declare class P<X> {
     m(x: unknown): x is X;

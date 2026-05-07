@@ -47,7 +47,7 @@ interface I {
     m() : void;
 }
 
-declare var i : I;
+declare const i : I;
 
 foo as typeof i.m; // method-unbinding, this type becomes any, so no more this typing errors
 

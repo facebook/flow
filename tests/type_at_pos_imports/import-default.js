@@ -13,22 +13,22 @@ import typeof ImportedTypeofDefaultPolyClass from "./exports-default-poly-class"
 import typeof ImportedTypeofDefaultClassFuncall from "./exports-default-class-funcall-a";
 import ImportedValueDefaultClassFuncall from "./exports-default-class-funcall-b";
 
-declare var f1: ImportedDefaultInstance; // (Remote) A
-//          ^ --pretty
-declare var f2: ImportedDefaultPolyInstance; // (Remote) P<number>
-//          ^ --pretty
-declare var f3: ImportedTypeDefaultClass; // ImportedTypeDefaultClass
-//          ^ --pretty
-declare var f4: ImportedTypeDefaultPolyClass<number>; // ImportedTypeDefaultPolyClass<number>
-//          ^ --pretty
-declare var f5: ImportedTypeofDefaultClass; // ImportedTypeofDefaultClass
-//          ^ --pretty
-declare var f6: ImportedTypeofDefaultPolyClass; // ImportedTypeofDefaultPolyClass<number>
-//          ^ --pretty
-declare var f7: ImportedTypeofDefaultClassFuncall; // ImportedTypeofDefaultClassFuncall
-//          ^ --pretty
-declare var f8: ImportedValueDefaultClassFuncall; // ImportedValueDefaultClassFuncall
-//          ^ --pretty
+declare const f1: ImportedDefaultInstance; // (Remote) A
+//            ^ --pretty
+declare const f2: ImportedDefaultPolyInstance; // (Remote) P<number>
+//            ^ --pretty
+declare const f3: ImportedTypeDefaultClass; // ImportedTypeDefaultClass
+//            ^ --pretty
+declare const f4: ImportedTypeDefaultPolyClass<number>; // ImportedTypeDefaultPolyClass<number>
+//            ^ --pretty
+declare const f5: ImportedTypeofDefaultClass; // ImportedTypeofDefaultClass
+//            ^ --pretty
+declare const f6: ImportedTypeofDefaultPolyClass; // ImportedTypeofDefaultPolyClass<number>
+//            ^ --pretty
+declare const f7: ImportedTypeofDefaultClassFuncall; // ImportedTypeofDefaultClassFuncall
+//            ^ --pretty
+declare const f8: ImportedValueDefaultClassFuncall; // ImportedValueDefaultClassFuncall
+//            ^ --pretty
 
 declare function f7_(): ImportedTypeofDefaultClassFuncall;
 const r7 = f7_();

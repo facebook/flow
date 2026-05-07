@@ -131,19 +131,19 @@ react_component.js:31:7 = {
     }
   }
 }
-react_component.js:32:13 = {
-  "end":20,
+react_component.js:32:15 = {
+  "end":22,
   "endline":32,
   "line":32,
   "loc":{
-    "end":{"column":20,"line":32,"offset":479},
+    "end":{"column":22,"line":32,"offset":481},
     "source":"react_component.js",
-    "start":{"column":13,"line":32,"offset":471},
+    "start":{"column":15,"line":32,"offset":473},
     "type":"SourceFile"
   },
   "path":"react_component.js",
   "reasons":[],
-  "start":13,
+  "start":15,
   "types":{
     "evaluated":{
       "expanded":{
@@ -163,7 +163,7 @@ react_component.js:32:13 = {
     }
   }
 }
-react_component.js:32:29 = {
+react_component.js:32:31 = {
   "end":0,
   "endline":0,
   "line":0,

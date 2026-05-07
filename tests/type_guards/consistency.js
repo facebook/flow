@@ -66,7 +66,7 @@ function null_checking() {
 }
 
 function contextual() {
-  declare var arr: Array<?number>;
+  declare const arr: Array<?number>;
 
   arr.filter((x): x is string => ( // error on string because string ~/> ?number
     x != null // error number ~> string
@@ -82,7 +82,7 @@ function contextual() {
 
   type Foo = {type: 'foo', a: string};
   type Bar = {type: 'bar', b: number};
-  declare var fooBarArr: Array<Foo | Bar>;
+  declare const fooBarArr: Array<Foo | Bar>;
 
   const mappedArr = fooBarArr.filter((x): x is Foo => (
     x.type === 'foo'
