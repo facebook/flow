@@ -68,7 +68,7 @@ function test(x: AorB) {
 ```
 In the then-branch of the conditional `if (isA(x))`, `x` will have the type `A`.
 
-### One-sided Type Guards
+### One-sided Type Guards {#toc-one-sided-type-guards}
 
 **Note:** This feature is available as of v0.237.0 when option `one_sided_type_guards=true` is set in the flowconfig. It is enabled by default as of v0.239.0.
 
