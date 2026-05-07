@@ -1,6 +1,6 @@
 declare module 'LibA' {
-  declare export var foo: string;
+  declare export const foo: string;
 }
 
-declare var bar: string;
-declare var far: string;
+declare const bar: string;
+declare const far: string;

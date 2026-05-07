@@ -26,5 +26,5 @@ class Typewriter {}; // class type
 let Typography = Typewriter; // class through assignment
 
 function f<Typaram>() {
-  declare var x :  // <-- AUTOCOMPLETE REQUEST HERE
+  declare const x :  // <-- AUTOCOMPLETE REQUEST HERE
 }

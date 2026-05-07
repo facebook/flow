@@ -6844,7 +6844,7 @@ b.te
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL>/unqualified-type-annotation.js',
         },
-        position: {line: 28, character: 18},
+        position: {line: 28, character: 20},
         context: {triggerKind: 1},
       }).verifyAllLSPMessagesInStep(
         [
@@ -6879,11 +6879,11 @@ b.te
                     newText: 'Tympanic',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -6915,11 +6915,11 @@ b.te
                     newText: 'Typaram',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -6951,11 +6951,11 @@ b.te
                     newText: 'Types.',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -6987,11 +6987,11 @@ b.te
                     newText: 'Typesafe',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7023,11 +7023,11 @@ b.te
                     newText: 'Typeset',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7059,11 +7059,11 @@ b.te
                     newText: 'Typewriter',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7095,11 +7095,11 @@ b.te
                     newText: 'Typhoon',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7131,11 +7131,11 @@ b.te
                     newText: 'Typnotism',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7167,11 +7167,11 @@ b.te
                     newText: 'Typography',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7203,11 +7203,11 @@ b.te
                     newText: 'Typologies.',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7239,11 +7239,11 @@ b.te
                     newText: 'Tyrant',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7280,11 +7280,11 @@ b.te
                     newText: 'component($1)',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7321,11 +7321,11 @@ b.te
                     newText: 'hook ',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7362,11 +7362,11 @@ b.te
                     newText: 'renders ',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7403,11 +7403,11 @@ b.te
                     newText: 'renders* ',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7444,11 +7444,11 @@ b.te
                     newText: 'renders? ',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7480,11 +7480,11 @@ b.te
                     newText: 'any',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7516,11 +7516,11 @@ b.te
                     newText: 'bigint',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7552,11 +7552,11 @@ b.te
                     newText: 'boolean',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7588,11 +7588,11 @@ b.te
                     newText: 'empty',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7624,11 +7624,11 @@ b.te
                     newText: 'false',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7660,11 +7660,11 @@ b.te
                     newText: 'mixed',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7696,11 +7696,11 @@ b.te
                     newText: 'null',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7732,11 +7732,11 @@ b.te
                     newText: 'number',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7768,11 +7768,11 @@ b.te
                     newText: 'string',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7804,11 +7804,11 @@ b.te
                     newText: 'symbol',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7840,11 +7840,11 @@ b.te
                     newText: 'true',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7876,11 +7876,11 @@ b.te
                     newText: 'unknown',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7912,11 +7912,11 @@ b.te
                     newText: 'void',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7948,11 +7948,11 @@ b.te
                     newText: '$Exact',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -7984,11 +7984,11 @@ b.te
                     newText: '$Exports',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8020,11 +8020,11 @@ b.te
                     newText: '$KeyMirror',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8056,11 +8056,11 @@ b.te
                     newText: '$Keys',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8092,11 +8092,11 @@ b.te
                     newText: '$NonMaybeType',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8128,11 +8128,11 @@ b.te
                     newText: '$ReadOnly',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8164,11 +8164,11 @@ b.te
                     newText: '$Values',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8200,11 +8200,11 @@ b.te
                     newText: 'Class',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8236,11 +8236,11 @@ b.te
                     newText: 'keyof',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8272,11 +8272,11 @@ b.te
                     newText: 'NonNullable',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8308,11 +8308,11 @@ b.te
                     newText: 'Partial',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8344,11 +8344,11 @@ b.te
                     newText: 'Readonly',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8380,11 +8380,11 @@ b.te
                     newText: 'Required',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8416,11 +8416,11 @@ b.te
                     newText: 'StringPrefix',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8452,11 +8452,11 @@ b.te
                     newText: 'StringSuffix',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },
@@ -8488,11 +8488,11 @@ b.te
                     newText: 'Values',
                     range: {
                       end: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                       start: {
-                        character: 18,
+                        character: 20,
                         line: 28,
                       },
                     },

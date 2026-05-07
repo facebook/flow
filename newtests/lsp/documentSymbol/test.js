@@ -1631,21 +1631,21 @@ module.exports = suite(
                     name: 'foo',
                     range: {
                       end: {
-                        character: 32,
+                        character: 34,
                         line: 107,
                       },
                       start: {
-                        character: 21,
+                        character: 23,
                         line: 107,
                       },
                     },
                     selectionRange: {
                       end: {
-                        character: 24,
+                        character: 26,
                         line: 107,
                       },
                       start: {
-                        character: 21,
+                        character: 23,
                         line: 107,
                       },
                     },
@@ -1655,7 +1655,7 @@ module.exports = suite(
                 name: 'decl1',
                 range: {
                   end: {
-                    character: 40,
+                    character: 42,
                     line: 107,
                   },
                   start: {
@@ -1665,11 +1665,11 @@ module.exports = suite(
                 },
                 selectionRange: {
                   end: {
-                    character: 17,
+                    character: 19,
                     line: 107,
                   },
                   start: {
-                    character: 12,
+                    character: 14,
                     line: 107,
                   },
                 },
@@ -1681,21 +1681,21 @@ module.exports = suite(
                     name: 'foo',
                     range: {
                       end: {
-                        character: 39,
+                        character: 41,
                         line: 109,
                       },
                       start: {
-                        character: 28,
+                        character: 30,
                         line: 109,
                       },
                     },
                     selectionRange: {
                       end: {
-                        character: 31,
+                        character: 33,
                         line: 109,
                       },
                       start: {
-                        character: 28,
+                        character: 30,
                         line: 109,
                       },
                     },
@@ -1705,7 +1705,7 @@ module.exports = suite(
                 name: 'decl2',
                 range: {
                   end: {
-                    character: 47,
+                    character: 49,
                     line: 109,
                   },
                   start: {
@@ -1715,11 +1715,11 @@ module.exports = suite(
                 },
                 selectionRange: {
                   end: {
-                    character: 24,
+                    character: 26,
                     line: 109,
                   },
                   start: {
-                    character: 19,
+                    character: 21,
                     line: 109,
                   },
                 },
@@ -3272,7 +3272,7 @@ module.exports = suite(
                 location: {
                   range: {
                     end: {
-                      character: 40,
+                      character: 42,
                       line: 107,
                     },
                     start: {
@@ -3290,11 +3290,11 @@ module.exports = suite(
                 location: {
                   range: {
                     end: {
-                      character: 32,
+                      character: 34,
                       line: 107,
                     },
                     start: {
-                      character: 21,
+                      character: 23,
                       line: 107,
                     },
                   },
@@ -3307,7 +3307,7 @@ module.exports = suite(
                 location: {
                   range: {
                     end: {
-                      character: 47,
+                      character: 49,
                       line: 109,
                     },
                     start: {
@@ -3325,11 +3325,11 @@ module.exports = suite(
                 location: {
                   range: {
                     end: {
-                      character: 39,
+                      character: 41,
                       line: 109,
                     },
                     start: {
-                      character: 28,
+                      character: 30,
                       line: 109,
                     },
                   },

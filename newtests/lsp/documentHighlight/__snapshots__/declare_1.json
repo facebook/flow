@@ -5,11 +5,11 @@
       "kind": 1,
       "range": {
         "end": {
-          "character": 15,
+          "character": 17,
           "line": 2
         },
         "start": {
-          "character": 12,
+          "character": 14,
           "line": 2
         }
       }

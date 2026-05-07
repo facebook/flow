@@ -105,9 +105,9 @@ declare opaque type I5: {
   foo: string; ...
 }
 
-declare var decl1: { foo: string, ... };
+declare const decl1: { foo: string, ... };
 
-declare export var decl2: { foo: string, ... };
+declare export const decl2: { foo: string, ... };
 
 declare export default { foo: string, ... };
 

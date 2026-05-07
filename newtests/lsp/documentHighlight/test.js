@@ -199,7 +199,7 @@ module.exports = suite(
       test('Declare', [
         addFiles(...fixtures),
         lspStartAndConnect(),
-        snapshot('declare.js', 2, 13, 'declare_1.json'),
+        snapshot('declare.js', 2, 15, 'declare_1.json'),
       ]),
       test('Import Star', [
         addFiles(...fixtures),

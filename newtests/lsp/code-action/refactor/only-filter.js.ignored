@@ -1,4 +1,4 @@
 //@flow
 
-declare var foo: {bar: number, ...} | void;
+declare const foo: {bar: number, ...} | void;
 foo.bar;
