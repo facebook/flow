@@ -31,8 +31,8 @@ Cannot assign `_a` to `_b` because property `q` is missing in object type [1] bu
 
 References:
    still_badly_positioned.js:10:19
-   10|   declare var _a: {|x: number|};
-                         ^^^^^^^^^^^^^ [1]
+   10|   declare var _a: {x: number};
+                         ^^^^^^^^^^^ [1]
    still_badly_positioned.js:11:13
    11|   const _b: A = _a; // `q` is missing in object type
                    ^ [2]

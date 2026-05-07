@@ -1,8 +1,8 @@
-type Obj = {|
-  foo?: {|
+type Obj = {
+  foo?: {
     bar: number,
-  |},
-|};
+  },
+};
 
 
 1 as Obj['foo']?.['xxx']; // Error - wrong prop
@@ -14,8 +14,8 @@ type T = Obj['foo']?.['bar'];
 1 as T; // OK
 true as T; // Error - wrong type
 
-type Z = {|c: number|};
-type Y = {|a: ?{|b: Z, opt_b: ?Z|}|};
+type Z = {c: number};
+type Y = {a: ?{b: Z, opt_b: ?Z}};
 
 1 as Y["a"]["b"]?.["c"]; // Error - access `b` on undefined
 1 as Y["a"]?.["opt_b"]["c"]; // Error - access `c` on undefined
@@ -39,7 +39,7 @@ true as Y["a"]?.["opt_b"]?.["c"]; // Error - wrong type
 true as Z?.['c']; // Error - wrong type
 undefined as Z?.['c']; // OK - this behaviour does not match optional chaining at the value level, if in the future this changes to be an error that would be fine
 
-type U = {|a: void | {|b: Z, opt_b: null | Z|}|};
+type U = {a: void | {b: Z, opt_b: null | Z}};
 
 1 as U["a"]?.["b"]["c"]; // OK
 undefined as U["a"]?.["b"]["c"]; // OK

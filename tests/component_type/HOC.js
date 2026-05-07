@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 
-class Component extends React.Component<{|foo: number, bar: number|}> {
-  static defaultProps: {|foo: number|} = {foo: 3};
+class Component extends React.Component<{foo: number, bar: number}> {
+  static defaultProps: {foo: number} = {foo: 3};
   render(): number {
     return 3;
   }
@@ -20,8 +20,8 @@ TrivialWrap as component(ref?: React.RefSetter<Component>, bar: number, foo?: nu
 
 function WrapInDivWithExtraProp<Props extends {...}>(
   X: React.ComponentType<Props>,
-): React.ComponentType<{|...$Exact<Props>, baz: number|}> {
-  class C extends React.Component<{|...$Exact<Props>, baz: number|}> {
+): React.ComponentType<{...$Exact<Props>, baz: number}> {
+  class C extends React.Component<{...$Exact<Props>, baz: number}> {
     static defaultProps: {} = {};
     render(): React.Node {
       const props = this.props;
@@ -38,13 +38,13 @@ function WrapInDivWithExtraProp<Props extends {...}>(
 
 const WrappedInDivWithExtraProp = WrapInDivWithExtraProp(Component); // Note, we lose instance type here
 WrappedInDivWithExtraProp as React.ComponentType<
-  {|foo?: number, bar: number, baz: number, ref?: React.RefSetter<Component>|},
+  {foo?: number, bar: number, baz: number, ref?: React.RefSetter<Component>},
 >;
 
 function AddPropWithDefault<Props extends {...}>(
   X: React.ComponentType<Props>,
-): React.ComponentType<{|...$Exact<Props>, baz?: number|}> {
-  class C extends React.Component<{|...$Exact<Props>, baz?: number|}> {
+): React.ComponentType<{...$Exact<Props>, baz?: number}> {
+  class C extends React.Component<{...$Exact<Props>, baz?: number}> {
     static defaultProps: {baz: 3} = {baz: 3};
     render(): React.Node {
       const props = this.props;
@@ -61,5 +61,5 @@ function AddPropWithDefault<Props extends {...}>(
 
 const WrappedAddPropWithDefault = AddPropWithDefault(Component);
 WrappedAddPropWithDefault as React.ComponentType<
-  {|foo?: number, bar: number, baz?: number, ref?: React.RefSetter<Component>|},
+  {foo?: number, bar: number, baz?: number, ref?: React.RefSetter<Component>},
 >;

@@ -2,10 +2,10 @@ declare function foo<TArguments extends ReadonlyArray<{foo: 'a'}>, TReturn>(
     implementation?: (...args: TArguments) => TReturn,
   ): (...args: TArguments) => TReturn
 
-type Config<Return> = {|
+type Config<Return> = {
   +control:  () => {foo: 'a'},
   +areEqual: (control: Return, test: Return) => boolean,
-|};
+};
 
 declare function bar(config: Config<{foo: 'a'}>) : void
 

@@ -8,24 +8,24 @@
 
 type FunctionReturning<+T> = (...args: ReadonlyArray<unknown>) => T;
 
-const emptyFunction: {|
+const emptyFunction: {
   +thatReturnsNull: FunctionReturning<null>,
-|} = {
+} = {
   thatReturnsNull() {
     return null;
   },
 };
 
 type LocalDate = number;
-type LocalDateInterval = {|
+type LocalDateInterval = {
   +start: number,
   +end: number,
-|};
+};
 
-type Option = {|
+type Option = {
   +value: string,
   +calculateInterval: LocalDate => LocalDateInterval,
-|};
+};
 
 const CUSTOM = {
   value: 'custom',

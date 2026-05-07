@@ -8,9 +8,9 @@ type $FragmentRef<T> = {
   $fragmentRefs: T['$refType'],
 };
 
-type X = NonNullable<{|
+type X = NonNullable<{
   +$refType: 3,
-|}>;
+}>;
 
 type $RelayProps<Props, RelayPropT = {}> = MapProps<
   Props,

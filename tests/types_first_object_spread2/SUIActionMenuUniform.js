@@ -1,4 +1,4 @@
-export type SUIActionMenuUniform = {|
+export type SUIActionMenuUniform = {
   backgroundColor: string,
   borderColor: string,
   borderRadius?: ?number | string,
@@ -11,4 +11,4 @@ export type SUIActionMenuUniform = {|
   itemColor: string,
   itemIconWidth: number,
   itemHeight: number,
-|};
+};

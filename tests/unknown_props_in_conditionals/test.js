@@ -4,7 +4,7 @@ declare var myObject: Object;
 declare var myFunction: Function;
 
 declare var inexactObject: { x: string };
-declare var exactObject: {| x: string |};
+declare var exactObject: { x: string };
 
 declare var unionOfObjects: { x: string } | { y: string };
 declare var intersectionOfObjects: { x: string } & { y: string };

@@ -10,10 +10,10 @@ type Foo = {};
 // use to assign ids to object property maps assigns Bar the same id in both
 // merge and check, rather than computing a new one unnecessarily each time. 
 
-export type Bar = {|
+export type Bar = {
   bar: () => {
     foo?: Foo => Foo,
   },
-|};
+};
 
 bar as Bar;

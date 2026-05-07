@@ -14,4 +14,4 @@ b2.x as string; // Error number ~> string
 b2.z as string; // Error number ~> string
 
 const b3 = require('./test3');
-b3 as {| |}; // Error inexact -> exact
+b3 as { }; // Error inexact -> exact

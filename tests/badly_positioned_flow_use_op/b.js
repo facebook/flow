@@ -1,6 +1,6 @@
 //@flow
 
-type Data = {| x: number |}
+type Data = { x: number }
 
 declare function foo(data: Data): void;
 

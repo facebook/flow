@@ -1,4 +1,4 @@
-function switchOnTypeAllReturn(action: {|type: 1|} | {|type: 2|}): void {
+function switchOnTypeAllReturn(action: {type: 1} | {type: 2}): void {
   switch (action.type) {
     case 1:
       return;

@@ -109,8 +109,8 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
 
 References:
    test3_exact_annot.js:4:10
-   4| const a: {| a: number |} = { a: 1 };
-               ^^^^^^^^^^^^^^^ [1]
+   4| const a: { a: number } = { a: 1 };
+               ^^^^^^^^^^^^^ [1]
    test3_exact_annot.js:5:10
    5| const b: { a: number, b?: number } = a; // error: property `b` not found
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -141,8 +141,8 @@ Cannot get `a.b` because property `b` is missing in object type [1]. [prop-missi
 
 References:
    test3_exact_annot.js:4:10
-   4| const a: {| a: number |} = { a: 1 };
-               ^^^^^^^^^^^^^^^ [1]
+   4| const a: { a: number } = { a: 1 };
+               ^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- test3_failure.js:7:14

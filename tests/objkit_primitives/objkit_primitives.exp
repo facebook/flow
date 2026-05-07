@@ -1,33 +1,33 @@
-Error ---------------------------------------------------------------------------------------------------- test.js:20:21
+Error ---------------------------------------------------------------------------------------------------- test.js:20:19
 
 Cannot spread object literal because number literal `3` [1] is not an object. [not-an-object]
 
-   20| const a: {||} = {...3}; // ERROR
-                           ^ [1]
+   20| const a: {} = {...3}; // ERROR
+                         ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:21:27
+Error ---------------------------------------------------------------------------------------------------- test.js:21:25
 
 Cannot spread object literal because number literal `3` [1] is not an object. [not-an-object]
 
-   21| const b: {||} = {...(3 as 3)}; // ERROR
-                                 ^ [1]
+   21| const b: {} = {...(3 as 3)}; // ERROR
+                               ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:22:21
-
-Cannot spread object literal because empty string [1] is not an object. [not-an-object]
-
-   22| const c: {||} = {...''}; // ERROR
-                           ^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:23:28
+Error ---------------------------------------------------------------------------------------------------- test.js:22:19
 
 Cannot spread object literal because empty string [1] is not an object. [not-an-object]
 
-   23| const d: {||} = {...('' as '')}; // ERROR
-                                  ^^ [1]
+   22| const c: {} = {...''}; // ERROR
+                         ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:23:26
+
+Cannot spread object literal because empty string [1] is not an object. [not-an-object]
+
+   23| const d: {} = {...('' as '')}; // ERROR
+                                ^^ [1]
 
 
 

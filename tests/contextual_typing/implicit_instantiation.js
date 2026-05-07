@@ -118,12 +118,12 @@ function test9() {
   declare function id<T>(x: T): T;
   // A regression test for an earlier bug where the overload is incorrectly selected, and causes
   // an incompatibility.
-  const _: M<{| num: number |}> = {num: id(true)}; // ok
+  const _: M<{ num: number }> = {num: id(true)}; // ok
 }
 
 function test10() {
-  type V = {||};
-  type Variables = {|+[string]: any|};
+  type V = {};
+  type Variables = {+[string]: any};
   declare opaque type Query<-TVariables extends Variables>;
   declare var q: Query<V>;
   declare function poly<TVariables extends Variables>(q: Query<TVariables>): void;
@@ -184,7 +184,7 @@ function test17() {
 }
 
 function test18() {
-  declare function foo(x: {||}): void;
+  declare function foo(x: {}): void;
   foo({bar: new Set([''])}); // error: there should be only one prop-missing error
 }
 

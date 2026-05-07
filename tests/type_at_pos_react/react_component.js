@@ -2,13 +2,13 @@
 
 const React = require('react');
 
-type Props = {|
+type Props = {
   name: string
-|};
+};
 
-type State = {|
+type State = {
   enabled: boolean
-|}
+}
 
 class Welcome extends React.Component<Props, State> {
   state: State = {

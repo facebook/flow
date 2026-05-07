@@ -167,7 +167,7 @@ type DeepConfig = {
 
 // --- Exact vs inexact object ---
 
-type ExactObj = {|name: string, age: number|};
+type ExactObj = {name: string, age: number};
 type InexactObj = {name: string, age: number, ...};
 
 // --- Component using complex types ---

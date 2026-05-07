@@ -1,16 +1,16 @@
-export type Fragment = {|
+export type Fragment = {
   type: 'ONE_CONFIG',
-|};
+};
 
-export type One = {|
+export type One = {
   ...Fragment,
   config: null,
-|};
+};
 
-export type Two = {|
+export type Two = {
   type: 'TWO_CONFIG',
   config: null,
-|};
+};
 
 export type Union =
   | One

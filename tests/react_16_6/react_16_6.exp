@@ -173,9 +173,9 @@ Cannot create `LazyFunctionComponent` element because in property `foo`: string 
                                              ^^^^^^^^ [1]
 
 References:
-   lazy.js:5:22
-    5| type Props = {| foo: number |};
-                            ^^^^^^ [2]
+   lazy.js:5:21
+    5| type Props = { foo: number };
+                           ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:28:13
@@ -224,9 +224,9 @@ Cannot create `LazyClassComponent` element because in property `foo`: string [1]
                                           ^^^^^^^^ [1]
 
 References:
-   lazy.js:5:22
-    5| type Props = {| foo: number |};
-                            ^^^^^^ [2]
+   lazy.js:5:21
+    5| type Props = { foo: number };
+                           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ lazy_ref.js:22:40
@@ -289,9 +289,9 @@ Cannot create `MemoComponent` element because in property `foo`: string [1] is i
                                      ^^^^^^^^ [1]
 
 References:
-   memo.js:5:22
-    5| type Props = {| foo: number |};
-                            ^^^^^^ [2]
+   memo.js:5:21
+    5| type Props = { foo: number };
+                           ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:19:13
@@ -340,9 +340,9 @@ Cannot create `MemoComponentWithEqual` element because in property `foo`: string
                                               ^^^^^^^^ [1]
 
 References:
-   memo.js:5:22
-    5| type Props = {| foo: number |};
-                            ^^^^^^ [2]
+   memo.js:5:21
+    5| type Props = { foo: number };
+                           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ memo_ref.js:14:42

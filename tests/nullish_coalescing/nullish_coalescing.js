@@ -38,6 +38,6 @@ function h(x: {}): {} {
   return x ?? 1;
 }
 
-function i(x: {||}): {||} {
+function i(x: {}): {} {
   return x ?? 1;
 }

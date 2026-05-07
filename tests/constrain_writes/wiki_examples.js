@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 function ex1() {
-  type Props = {| prop: string |};
+  type Props = { prop: string };
 
   declare var x: number;
   declare var y: number;
@@ -14,7 +14,7 @@ function ex1() {
   let element = <Component {...props} />
   // `element` has type `ExactReactElement_DEPRECATED<React.ComponentType<Props>>`
 
-  type OtherProps = {| other_prop: string |};
+  type OtherProps = { other_prop: string };
   declare var OtherComponent: (OtherProps) => React.Node;
   declare var other_props: OtherProps
 
@@ -24,7 +24,7 @@ function ex1() {
 }
 
 function ex2() {
-  type Props = {| prop: string |};
+  type Props = { prop: string };
 
   declare var x: number;
   declare var y: number;
@@ -38,7 +38,7 @@ function ex2() {
   let element: React.Node = <></>
 
 
-  type OtherProps = {| other_prop: string |};
+  type OtherProps = { other_prop: string };
   declare var OtherComponent: (OtherProps) => React.Node;
   declare var other_props: OtherProps
 

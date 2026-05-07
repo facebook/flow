@@ -389,7 +389,7 @@ function test_synthesis_literals_2() {
 
 function test_synthesis_literals_3() {
   declare var cp: {bar: number};
-  declare function optional<P>(x: Readonly<{|cp: P, ...P|}>): P;
+  declare function optional<P>(x: Readonly<{cp: P, ...P}>): P;
   const o = optional({cp, bar: 3}); // ok
 }
 

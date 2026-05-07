@@ -1,3 +1,3 @@
 //@flow
 
-export type X = {| ...{||}, foo: number |}; 
+export type X = { ...{}, foo: number }; 

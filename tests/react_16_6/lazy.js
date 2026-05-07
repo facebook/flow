@@ -2,7 +2,7 @@
 
 const React = require('react');
 
-type Props = {| foo: number |};
+type Props = { foo: number };
 function FunctionComponent(x: Props): React.Node { return null }
 class ClassComponent extends React.Component<Props> {}
 

@@ -250,7 +250,7 @@ var tests =
   },
 
   function() {
-    type Disjoint = {| type: "a", payload: number|} | {| type: "b", payload: string|};
+    type Disjoint = { type: "a", payload: number} | { type: "b", payload: string};
     const obj: {d: Disjoint} = null as any;
 
     if (obj.d.type === "a") {

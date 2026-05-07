@@ -1,8 +1,8 @@
 //@flow
 
-type Props<TValue> = Readonly<{||}>;
+type Props<TValue> = Readonly<{}>;
 
-type Props2<TValue> = Readonly<{|x?: any|}>;
+type Props2<TValue> = Readonly<{x?: any}>;
 
 declare function foo<TValue>(props: Props<TValue>): null;
 

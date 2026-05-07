@@ -1,7 +1,7 @@
 function coerce<T, U>(t: T): U {
   type Fruit<T> =
-    | {| +type: "APPLE", +value: T |}
-    | {| +type: "BAD_APPLE", +value: empty |};
+    | { +type: "APPLE", +value: T }
+    | { +type: "BAD_APPLE", +value: empty };
   function corrupt<S extends string>(s: S): S {
     return "BAD_" + s;
   }

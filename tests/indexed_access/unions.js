@@ -30,7 +30,7 @@ w as M['a']; // error
 declare export function useState<S>(
   initialState: (() => S) | S,
 ): [S, ((S => S) | S) => void];
-declare export function useRef<T>(initialValue: T): {|current: T|};
+declare export function useRef<T>(initialValue: T): {current: T};
 declare var NUM: number;
 const [state, setState] = useState(1);
 useRef([] as Array<number>).current[state];

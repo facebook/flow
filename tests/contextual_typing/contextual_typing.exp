@@ -565,8 +565,8 @@ object type [2]. Exact objects do not accept extra props. [incompatible-type]
 
 References:
    implicit_instantiation.js:187:27
-   187|   declare function foo(x: {||}): void;
-                                  ^^^^ [2]
+   187|   declare function foo(x: {}): void;
+                                  ^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- intersections.js:7:23

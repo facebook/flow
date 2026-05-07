@@ -6,24 +6,24 @@
 
 const InputNode = require('./test1');
 
-type DefaultInputParameters<TValue> = {|
+type DefaultInputParameters<TValue> = {
   currentValue: TValue,
-|};
+};
 
-export type SubFormDefinition = {|
+export type SubFormDefinition = {
   type: 'sub_form',
   ...DefaultInputParameters<InputDefinition>,
-|};
+};
 
-export type VectorFormDefinition = {|
+export type VectorFormDefinition = {
   type: 'vector',
   ...DefaultInputParameters<InputDefinition>,
-|};
+};
 
-export type MapFormDefinition = {|
+export type MapFormDefinition = {
   type: 'map',
   ...DefaultInputParameters<InputDefinition>,
-|};
+};
 
 export type InputDefinition =
   | SubFormDefinition

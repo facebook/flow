@@ -4,14 +4,14 @@ type PropsFromPropsArgAndChildrenArg<
 > = ChildrenArg extends []
   ? PropsArg
   : ChildrenArg extends [+onlyChild: infer OnlyChild]
-    ? {|...$Exact<PropsArg>, children: OnlyChild|}
-    : {|...$Exact<PropsArg>, children: ChildrenArg|};
+    ? {...$Exact<PropsArg>, children: OnlyChild}
+    : {...$Exact<PropsArg>, children: ChildrenArg};
 
-type ExpectedProps<Comp extends React$ElementType> = Readonly<{|
+type ExpectedProps<Comp extends React$ElementType> = Readonly<{
   ...$Exact<React$ElementConfig<Comp>>,
   key?: React$Key,
   ref?: ?React.RefSetter<React.ElementRef<Comp>>,
-|}>;
+}>;
 
 type CheckedReactElement<
   Comp extends React$ElementType,
@@ -33,7 +33,7 @@ declare opaque type React$CreateElement: (< // intentional-libdef-override
   component: Comp,
   props?: null | void,
   ...children: Children
-) => CheckedReactElement<Comp, {||}, Children>) &
+) => CheckedReactElement<Comp, {}, Children>) &
   (<
     Comp extends React$ElementType,
     Props extends {...},

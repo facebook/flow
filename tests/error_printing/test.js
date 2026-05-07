@@ -2,7 +2,7 @@
 
 const React = require('react');
 
-type Props = {|
+type Props = {
   +a: boolean,
   +b: boolean,
   +c: boolean,
@@ -11,7 +11,7 @@ type Props = {|
   +f: boolean,
   +g: boolean,
   +h: boolean,
-|};
+};
 declare function Foo(props: Props): React.Node;
 
 <Foo

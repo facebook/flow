@@ -89,11 +89,11 @@ Cannot access string literal `xxx` on indexed access because property `xxx` is m
 
 References:
    optional.js:2:9
-              v-
-   2|   foo?: {|
+              v
+   2|   foo?: {
    3|     bar: number,
-   4|   |},
-        -^ [1]
+   4|   },
+        ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ optional.js:10:21
@@ -188,9 +188,9 @@ Cannot access string literal `xxx` on indexed access because property `xxx` is m
                      ^^^^^
 
 References:
-   optional.js:18:16
-   18| type Y = {|a: ?{|b: Z, opt_b: ?Z|}|};
-                      ^^^^^^^^^^^^^^^^^^^ [1]
+   optional.js:18:15
+   18| type Y = {a: ?{b: Z, opt_b: ?Z}};
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:24:1
@@ -207,9 +207,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional.js:24:9
    24| true as Z?.['c']; // Error - wrong type
                ^ [3]
@@ -229,9 +229,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional.js:28:9
    28| true as Y["a"]?.["b"]["c"]; // Error - wrong type
                ^^^^^^^^^^^^^ [3]
@@ -251,9 +251,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional.js:32:9
    32| true as Y["a"]?.["b"]?.["c"]; // Error - wrong type
                ^^^^^^^^^^^^^ [3]
@@ -273,9 +273,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional.js:36:9
    36| true as Y["a"]?.["opt_b"]?.["c"]; // Error - wrong type
                ^^^^^^^^^^^^^^^^^ [3]
@@ -295,9 +295,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional.js:39:9
    39| true as Z?.['c']; // Error - wrong type
                ^ [3]
@@ -317,9 +317,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional.js:46:9
    46| true as U["a"]?.["b"]["c"]; // Error - wrong type
                ^^^^^^^^^^^^^ [3]
@@ -339,9 +339,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional.js:50:9
    50| true as U["a"]?.["b"]?.["c"]; // Error - wrong type
                ^^^^^^^^^^^^^ [3]
@@ -361,9 +361,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional.js:54:9
    54| true as U["a"]?.["opt_b"]?.["c"]; // Error - wrong type
                ^^^^^^^^^^^^^^^^^ [3]
@@ -383,9 +383,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional.js:59:9
    59| true as MaybeZ?.['c']; // Error - wrong type
                ^^^^^^ [3]
@@ -405,9 +405,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional.js:64:9
    64| true as VoidZ?.['c']; // Error - wrong type
                ^^^^^ [3]
@@ -451,9 +451,9 @@ Cannot cast `f(...)` to boolean literal `true` because number [1] is incompatibl
        ^^^^^^^^^
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [1]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [1]
    optional.js:79:14
    79| f(z, 'c') as true; // Error - wrong type
                     ^^^^ [2]
@@ -501,9 +501,9 @@ Cannot cast `f(...)` to boolean literal `true` because number [1] is incompatibl
        ^^^^^^^^^^
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [1]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [1]
    optional.js:84:15
    84| f(mz, 'c') as true; // Error - wrong type
                      ^^^^ [2]
@@ -649,9 +649,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^^^^ [1]
 
 References:
-   optional.js:17:15
-   17| type Z = {|c: number|};
-                     ^^^^^^ [2]
+   optional.js:17:14
+   17| type Z = {c: number};
+                    ^^^^^^ [2]
    optional_import.js:5:9
     5| true as MaybeZ?.['c']; // Error - wrong type
                ^^^^^^ [3]

@@ -8,6 +8,6 @@ export function wrapCommitTemplateWithState<
   TCommitStateEntry,
   TCommitStateResult,
 >(
-  commitTemplate: CommitTemplate<{|...TCommitStateResult, ...TCommitStateEntry|}>,
+  commitTemplate: CommitTemplate<{...TCommitStateResult, ...TCommitStateEntry}>,
   commitState: TCommitStateEntry,
 ): CommitTemplate<TCommitStateResult> {throw ''}

@@ -1,12 +1,12 @@
 //@flow
-type A = {|foo: number|} | {|bar: number|};
+type A = {foo: number} | {bar: number};
 
 // Just having two spreads is not enough due to how spread_ids
 // are assigned. A union Flowing to an EvalT pushes the EvalT down
 // into the members of the union instead to avoid issues with speculation.
 // Because of that, each member of the union becomes its own "spread computation"
 // with its own spread_id.
-declare var a: {...A, ...A, ...{|baz: number|}}; // Error
+declare var a: {...A, ...A, ...{baz: number}}; // Error
 a as null;
 
 var x: {a?: ?{[string]: number}} = {};
@@ -27,7 +27,7 @@ if (true) {
   x.a = {qux: 3};
 }
 
-declare function Poly<T, U>(): {|...T, ...U, ...{|baz: number|}|};
+declare function Poly<T, U>(): {...T, ...U, ...{baz: number}};
 
 var c = Poly<A, A>();
 
@@ -35,11 +35,11 @@ var c = Poly<A, A>();
 // spread_id . Using a different function here because
 // if we continued to use Poly and this invariant broke then this
 // test would still pass.
-declare function Poly2<T, U>(): {|...T, ...U, ...{|baz: number|}|};
+declare function Poly2<T, U>(): {...T, ...U, ...{baz: number}};
 
-var d = Poly2<{||}, {||}>();
-var e = Poly2<{|foo: number|}, {|foo: number|}>();
-var f = Poly2<{|bar: number|}, {|bar: number|}>();
+var d = Poly2<{}, {}>();
+var e = Poly2<{foo: number}, {foo: number}>();
+var f = Poly2<{bar: number}, {bar: number}>();
 
 declare var g: {
   ...A,
@@ -53,9 +53,9 @@ declare var g: {
 g as null;
 
 declare var h: {
-  ...{|foo: number|} | {|bar: number|},
-  ...{|foo: number|} | {|bar: number|},
-  ...{|baz: number|},
+  ...{foo: number} | {bar: number},
+  ...{foo: number} | {bar: number},
+  ...{baz: number},
 }; // Error
 h as null;
 
@@ -64,7 +64,7 @@ declare function poly<T>(x: T, y: T): {...T, ...T, ...T, ...T, ...T};
 const i = poly({foo: 3}, {bar: 3}); // Error, T has multiple lower bounds
 
 // Union error messages should point to the unions!
-type U = {|foo: 3|} | {|bar: 3|};
+type U = {foo: 3} | {bar: 3};
 declare var j: {...U, ...U, ...U};
 j as any;
 
@@ -75,14 +75,14 @@ declare function poly2<T, U>(x: T, y: U, z: T): {...T, ...U, ...U};
 // Note the bad error message-- this is because ObjectWiden splits the union into its members
 const l = poly2({foo: 3}, {foo: 3} as U, {bar: 3}); // Error two unions
 
-export type State = {||} | {||};
+export type State = {} | {};
 
-type M = {|...$Exact<{||}>, ...$Exact<State>|}; // No error, one union
+type M = {...$Exact<{}>, ...$Exact<State>}; // No error, one union
 declare var m: M;
 m as any;
 
 // Notice in this error message that we get an inferred union. That's because
 // ExactT does not distribute through unions.
-type N = {|...$Exact<State>, ...$Exact<{||}>, ...$Exact<State>|}; // Error, two unions
+type N = {...$Exact<State>, ...$Exact<{}>, ...$Exact<State>}; // Error, two unions
 declare var n: N;
 n as any;

@@ -53,9 +53,9 @@ Cannot assign object literal to `b7` because in property `x`: null [1] is incomp
                                    ^^^^ [1]
 
 References:
-   test.js:1:19
-   1| type Foo = {| x : string, y : string |};
-                        ^^^^^^ [2]
+   test.js:1:18
+   1| type Foo = { x : string, y : string };
+                       ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:10:30
@@ -68,9 +68,9 @@ Cannot assign object literal to `b8` because in property `x`: number [1] is inco
                                     ^ [1]
 
 References:
-   test.js:1:19
-    1| type Foo = {| x : string, y : string |};
-                         ^^^^^^ [2]
+   test.js:1:18
+    1| type Foo = { x : string, y : string };
+                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:11:25
@@ -132,9 +132,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                        ^
 
 References:
-   test.js:1:19
-    1| type Foo = {| x : string, y : string |};
-                         ^^^^^^ [1]
+   test.js:1:18
+    1| type Foo = { x : string, y : string };
+                        ^^^^^^ [1]
    test.js:2:9
     2| let a : Foo = {x : "", y : ""};
                ^^^ [2]

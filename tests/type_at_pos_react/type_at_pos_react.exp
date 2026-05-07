@@ -46,9 +46,9 @@ react_component.js:31:7 = {
   "endline":31,
   "line":31,
   "loc":{
-    "end":{"column":14,"line":31,"offset":462},
+    "end":{"column":14,"line":31,"offset":458},
     "source":"react_component.js",
-    "start":{"column":7,"line":31,"offset":454},
+    "start":{"column":7,"line":31,"offset":450},
     "type":"SourceFile"
   },
   "path":"react_component.js",
@@ -136,9 +136,9 @@ react_component.js:32:13 = {
   "endline":32,
   "line":32,
   "loc":{
-    "end":{"column":20,"line":32,"offset":483},
+    "end":{"column":20,"line":32,"offset":479},
     "source":"react_component.js",
-    "start":{"column":13,"line":32,"offset":475},
+    "start":{"column":13,"line":32,"offset":471},
     "type":"SourceFile"
   },
   "path":"react_component.js",

@@ -19,14 +19,14 @@ function a<A extends 'a'>(a: A): void {
     if (b === 'b'){ } // error 'b' not compatible with 'a'
   }
 
-  export type S = {|
+  export type S = {
     p: number,
-  |};
+  };
 
-  export type T = {|
+  export type T = {
     q: string,
     ...S,
-  |};
+  };
 
   function c<X extends T>(x: keyof X) {
     switch (x) {

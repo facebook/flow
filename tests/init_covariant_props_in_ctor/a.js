@@ -48,7 +48,7 @@ class E {
     function g(this: {prop: string}) {
       this.prop = "";         // OK: this is bound to this annotation
     };
-    const t: {|n(): void, prop: number|} = {
+    const t: {n(): void, prop: number} = {
       prop: 1,
       n() { t.prop = 1; }  // OK
     };

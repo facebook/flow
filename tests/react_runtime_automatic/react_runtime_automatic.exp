@@ -51,8 +51,8 @@ References:
     4| function Component(props: Props): React.Node { return null }
                                  ^^^^^ [2]
    test.js:5:28
-    5| function Component2(props: {| bar: number |}): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^^^ [3]
+    5| function Component2(props: { bar: number }): React.Node { return null }
+                                  ^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:60
@@ -72,8 +72,8 @@ References:
     4| function Component(props: Props): React.Node { return null }
                                  ^^^^^ [2]
    test.js:5:28
-    5| function Component2(props: {| bar: number |}): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^^^ [3]
+    5| function Component2(props: { bar: number }): React.Node { return null }
+                                  ^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
@@ -90,8 +90,8 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    test.js:5:28
-    5| function Component2(props: {| bar: number |}): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^^^ [2]
+    5| function Component2(props: { bar: number }): React.Node { return null }
+                                  ^^^^^^^^^^^^^^^ [2]
    test.js:4:27
     4| function Component(props: Props): React.Node { return null }
                                  ^^^^^ [3]
@@ -111,8 +111,8 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    test.js:5:28
-    5| function Component2(props: {| bar: number |}): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^^^ [2]
+    5| function Component2(props: { bar: number }): React.Node { return null }
+                                  ^^^^^^^^^^^^^^^ [2]
    test.js:4:27
     4| function Component(props: Props): React.Node { return null }
                                  ^^^^^ [3]
@@ -168,8 +168,8 @@ References:
    14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
                            ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:5:28
-    5| function Component2(props: {| bar: number |}): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^^^ [2]
+    5| function Component2(props: { bar: number }): React.Node { return null }
+                                  ^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:14:22
@@ -186,8 +186,8 @@ References:
    14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
                            ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:5:28
-    5| function Component2(props: {| bar: number |}): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^^^ [2]
+    5| function Component2(props: { bar: number }): React.Node { return null }
+                                  ^^^^^^^^^^^^^^^ [2]
 
 
 

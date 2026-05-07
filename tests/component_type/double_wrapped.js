@@ -1,7 +1,7 @@
 //@flow
 import * as React from 'react';
 
-class MyComponent extends React.Component<{| foo: number |}> {
+class MyComponent extends React.Component<{ foo: number }> {
   render(): React.Node {
     return this.props.foo;
   }

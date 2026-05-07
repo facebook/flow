@@ -1,6 +1,6 @@
-type ReturnType = {|
+type ReturnType = {
   a: string
-|};
+};
 
 // works
 const a = [].reduce(

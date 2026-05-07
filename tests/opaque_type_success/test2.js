@@ -1,12 +1,12 @@
 //@flow
 
-type CA = {|
+type CA = {
   __type: 'A',
-|};
+};
 
-type CB = {|
+type CB = {
   __type: 'B',
-|};
+};
 
 export opaque type C = CA | CB;
 

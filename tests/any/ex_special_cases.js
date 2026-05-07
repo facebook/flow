@@ -21,7 +21,7 @@ var obj_proto_any: any = Object.prototype;
 
 // objectlike ~> any
 var c_from_any: C = a;
-var c_from_obj: {| |} = a;
+var c_from_obj: { } = a;
 var obj_proto_from_any: typeof Object.prototype = a;
 
 // any ~> get/method

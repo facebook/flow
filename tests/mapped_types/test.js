@@ -1,4 +1,4 @@
-type O = {| foo: number |}
+type O = { foo: number }
 type Arr = Array<number>;
 type ROArr = ReadonlyArray<number>;
 type Tuple = [a: number, +b?: string];

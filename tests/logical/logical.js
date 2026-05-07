@@ -105,7 +105,7 @@ function logical2l(x: {}): string {
 /**
  * A literal on the left side of &&
  */
-function logical2m(x: {||}): string {
+function logical2m(x: {}): string {
   return x && 'foo';
 }
 
@@ -148,7 +148,7 @@ function logical3c(): ?number {
  * Usage of `$Exact` on non-literal.
  * Could be falsey or not.
  */
-function logical3d<T extends void | {||}>(x: $Exact<T>): $Exact<T> | string {
+function logical3d<T extends void | {}>(x: $Exact<T>): $Exact<T> | string {
   return x && 'foo';
 }
 
@@ -238,7 +238,7 @@ function logical6g(x: {}): {} {
 /**
  * A literal on the left side of ||
  */
-function logical6h(x: {||}): {||} {
+function logical6h(x: {}): {} {
   return x || 'foo';
 }
 

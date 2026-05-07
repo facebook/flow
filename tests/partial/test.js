@@ -1,4 +1,4 @@
-type Foo = {| x : string, y : string |};
+type Foo = { x : string, y : string };
 let a : Foo = {x : "", y : ""};
 let b1 : Partial<Foo> = {x : ""};
 let b2 : Partial<Foo> = {y : ""};

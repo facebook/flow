@@ -14,8 +14,8 @@ function area(shape: Shape): number {
 }
 
 type ExactShape =
-  {|type: 'rectangle', width: number, height: number|} |
-  {|type: 'circle', radius: number|};
+  {type: 'rectangle', width: number, height: number} |
+  {type: 'circle', radius: number};
 
 function area2(shape: ExactShape): number {
   if (shape.type === 'square') { // error

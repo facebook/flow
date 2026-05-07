@@ -3,7 +3,7 @@
  */
 
 /* standard functions may rebind this */
-function f1(this: typeof Object.prototype | {|x: number|} | {|x: string|}) : number {
+function f1(this: typeof Object.prototype | {x: number} | {x: string}) : number {
   return this.x // error: x not in Object, string not compatible with number
 }
 
@@ -22,7 +22,7 @@ var a1 = () => {
 var ax = a1();
 
 /* nested arrows bind enclosing this (which may itself rebind) */
-function f2(this: typeof Object.prototype | {|x: number|} | {|x: string|}) : number {
+function f2(this: typeof Object.prototype | {x: number} | {x: string}) : number {
     var a2 = () => { return this.x }; // error: x not in Object
     return a2() // error: string not compatible with number
 }

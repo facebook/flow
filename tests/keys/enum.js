@@ -9,10 +9,10 @@ function foo(r: keyof typeof R): boolean {
   }
 }
 
-const R: {|
+const R: {
   A: 'A',
   B: 'B',
-|} = {
+} = {
   A: 'A',
   B: 'B',
 };
