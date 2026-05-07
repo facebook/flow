@@ -204,6 +204,11 @@ module.exports = {
           label: 'Library Definitions',
           items: ['libdefs/index', 'libdefs/creation'],
         },
+        {
+          type: 'doc',
+          id: 'glossary',
+          label: 'Glossary',
+        },
       ],
     },
   ],
