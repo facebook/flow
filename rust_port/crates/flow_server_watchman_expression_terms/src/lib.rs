@@ -21,11 +21,10 @@ fn pred(name: &str, terms: Vec<Value>) -> Value {
 }
 
 fn assoc_strlist(key: &str, values: &[String]) -> Value {
-    let mut arr: Vec<Value> = vec![json!(key)];
-    for v in values {
-        arr.push(json!(v));
-    }
-    Value::Array(arr)
+    Value::Array(vec![
+        json!(key),
+        Value::Array(values.iter().map(|v| json!(v)).collect()),
+    ])
 }
 
 pub fn file_name_terms(options: &Options) -> Value {
@@ -57,4 +56,19 @@ pub fn make(options: &Options) -> Vec<Value> {
             )],
         ),
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn assoc_strlist_nests_values() {
+        let values = vec!["package.json".to_string(), ".flowconfig".to_string()];
+
+        assert_eq!(
+            assoc_strlist("name", &values),
+            json!(["name", ["package.json", ".flowconfig"]])
+        );
+    }
 }
