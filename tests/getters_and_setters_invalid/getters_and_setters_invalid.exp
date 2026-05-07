@@ -71,9 +71,9 @@ Flags: --pretty
   "endline":6,
   "line":6,
   "loc":{
-    "end":{"column":5,"line":6,"offset":58},
+    "end":{"column":5,"line":6,"offset":60},
     "source":"setter_interface_missing_param.js",
-    "start":{"column":3,"line":6,"offset":55},
+    "start":{"column":3,"line":6,"offset":57},
     "type":"SourceFile"
   },
   "path":"setter_interface_missing_param.js",
@@ -99,9 +99,9 @@ Flags: --pretty
   "endline":6,
   "line":6,
   "loc":{
-    "end":{"column":5,"line":6,"offset":78},
+    "end":{"column":5,"line":6,"offset":80},
     "source":"setter_interface_multiple_params.js",
-    "start":{"column":3,"line":6,"offset":75},
+    "start":{"column":3,"line":6,"offset":77},
     "type":"SourceFile"
   },
   "path":"setter_interface_multiple_params.js",
@@ -183,9 +183,9 @@ Flags: --pretty
   "endline":6,
   "line":6,
   "loc":{
-    "end":{"column":5,"line":6,"offset":55},
+    "end":{"column":5,"line":6,"offset":57},
     "source":"setter_type_missing_param.js",
-    "start":{"column":3,"line":6,"offset":52},
+    "start":{"column":3,"line":6,"offset":54},
     "type":"SourceFile"
   },
   "path":"setter_type_missing_param.js",
@@ -211,9 +211,9 @@ Flags: --pretty
   "endline":6,
   "line":6,
   "loc":{
-    "end":{"column":5,"line":6,"offset":75},
+    "end":{"column":5,"line":6,"offset":77},
     "source":"setter_type_multiple_params.js",
-    "start":{"column":3,"line":6,"offset":72},
+    "start":{"column":3,"line":6,"offset":74},
     "type":"SourceFile"
   },
   "path":"setter_type_multiple_params.js",

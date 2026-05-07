@@ -6,6 +6,6 @@
  * @noflow
  */
 
-declare var x: ObjAssignT;
+declare const x: ObjAssignT;
 
 let y: ObjAssignT = { ...x }; // should be fine

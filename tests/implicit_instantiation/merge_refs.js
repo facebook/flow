@@ -6,8 +6,8 @@ export type TRefFor<-TElement> =
 
 type RefType<TElement> = TRefFor<TElement>;
 
-declare var ref1: { current: {...} | null };
-declare var ref2: TRefFor<{...}>;
+declare const ref1: { current: {...} | null };
+declare const ref2: TRefFor<{...}>;
 
 declare function mergeRefs<TElement>(
   ref1: RefType<TElement>,

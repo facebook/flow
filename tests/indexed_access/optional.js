@@ -74,12 +74,12 @@ function f<K extends string, T extends ?{+[K]: unknown}>(t: T, k: K): T?.[K] {
   return t?.[k];
 }
 
-declare var z: Z;
+declare const z: Z;
 f(z, 'c') as number | void; // OK
 f(z, 'c') as true; // Error - wrong type
 f(z, 'xxx'); // Error - non-existent prop
 
-declare var mz: MaybeZ;
+declare const mz: MaybeZ;
 f(mz, 'c') as number | void; // OK
 f(mz, 'c') as true; // Error - wrong type
 f(mz, 'xxx'); // Error - non-existent prop

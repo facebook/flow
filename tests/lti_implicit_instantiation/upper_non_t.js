@@ -82,7 +82,7 @@ function spreads() {
   sr.bar as string;
   sr.bad; // error
 
-  declare var cp: {bar: number};
+  declare const cp: {bar: number};
   declare function optional<P>(x: Readonly<{cp: P, foo?: string, ...P}>): P;
   const o = optional({cp, foo: '', bar: 3}); // ok
   o.cp; // error

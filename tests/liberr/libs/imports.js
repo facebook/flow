@@ -14,7 +14,7 @@ declare module 'b' {
 
     import typeof {A as a$A} from 'a';
 
-    declare var A: a$A;
+    declare const A: a$A;
 
     declare export class D extends A {
         m(): number; // error number <: string

@@ -1,26 +1,26 @@
 declare function invariant(): void;
 
-declare var a: true;
+declare const a: true;
 invariant(a); // constant-condition error
 
-declare var b: false;
+declare const b: false;
 invariant(b); // constant-condition error
 
-declare var c: boolean;
+declare const c: boolean;
 invariant(c);
 c ? invariant(c) : invariant(c); // constant-condition error
 
-declare var d: 0;
+declare const d: 0;
 invariant(d);
 
-declare var e: 1;
+declare const e: 1;
 invariant(e);
 
-declare var f: number;
+declare const f: number;
 invariant(f);
 
-declare var g: false & true;
+declare const g: false & true;
 invariant(g); // constant-condition error
 
-declare var h: false | true;
+declare const h: false | true;
 invariant(h);

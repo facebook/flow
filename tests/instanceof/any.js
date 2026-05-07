@@ -4,7 +4,7 @@ class P<X> {
   x: X;
 }
 
-declare var a: any;
+declare const a: any;
 
 if (a instanceof A) {
     a as empty; // error A ~> empty

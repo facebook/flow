@@ -585,13 +585,13 @@ function logical21(x: {y: string} & {}): void {
 function logical22() {
   type indirection1 = ?number;
   type indirection2 = ?string;
-  declare var a: indirection1 | indirection2;
+  declare const a: indirection1 | indirection2;
 
   (a ?? false) as empty; // should error on `a` and `false`
 
   type indirection3 = 0;
   type indirection4 = '';
-  declare var b: indirection3 | indirection4;
+  declare const b: indirection3 | indirection4;
 
   (b && false) as empty; // should only error on `b`
 }
@@ -616,9 +616,9 @@ function logicalWithTypeApp() {
 }
 
 function not_truhty() {
-  declare var n: number;
-  declare var s: string;
-  declare var b: boolean;
+  declare const n: number;
+  declare const s: string;
+  declare const b: boolean;
   let n_ = n && {};
   let s_ = s && {};
   let b_ = b && {};

@@ -15,7 +15,7 @@ declare class Client {
   query<Q extends Submittable>(config: Q): Q;
 }
 
-declare var c: Client;
+declare const c: Client;
 
 c.query('SELECT 1');
 c.query({submit: () => undefined});

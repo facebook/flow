@@ -1,9 +1,9 @@
 // @flow
 
 import * as React from 'react';
-declare var Comp: (props: {}) => $FlowFixMe;
+declare const Comp: (props: {}) => $FlowFixMe;
 class C<X> {}
-declare var withStore: <Props extends {...}>(
+declare const withStore: <Props extends {...}>(
   C: React.ComponentType<Props>,
 ) => C<Omit<Props, empty>>;
 

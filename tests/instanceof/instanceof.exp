@@ -187,9 +187,9 @@ The right-hand side of an `instanceof` expression must be an object, but got nul
                            ^
 
 References:
-   instanceof.js:155:18
-   155|   declare var A: ?{B: Class<B>};
-                         ^^^^^^^^^^^^^^ [1]
+   instanceof.js:155:20
+   155|   declare const A: ?{B: Class<B>};
+                           ^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:159:5

@@ -1,3 +1,3 @@
-declare var x: unknown;
+declare const x: unknown;
 
 x as interface {}; // ERROR

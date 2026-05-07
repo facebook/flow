@@ -486,9 +486,9 @@ Cannot call `f` because property `xxx` is missing in `Z` [1]. [prop-missing]
             ^^^^^
 
 References:
-   optional.js:77:16
-   77| declare var z: Z;
-                      ^ [1]
+   optional.js:77:18
+   77| declare const z: Z;
+                        ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:84:1
@@ -536,9 +536,9 @@ Cannot call `f` because property `xxx` is missing in `Z` [1]. [prop-missing]
              ^^^^^
 
 References:
-   optional.js:82:17
-   82| declare var mz: MaybeZ;
-                       ^^^^^^ [1]
+   optional.js:82:19
+   82| declare const mz: MaybeZ;
+                         ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:88:1
@@ -930,9 +930,9 @@ Cannot cast `w` to indexed access because string [1] is incompatible with number
        ^
 
 References:
-   unions.js:19:16
-   19| declare var w: W;
-                      ^ [1]
+   unions.js:19:18
+   19| declare const w: W;
+                        ^ [1]
    unions.js:2:6
     2|   a: number,
             ^^^^^^ [2]

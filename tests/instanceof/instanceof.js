@@ -122,7 +122,7 @@ function not_refinement_or_val_rhs(x: any) {
 }
 
 function class_explicit() {
-  declare var x: unknown;
+  declare const x: unknown;
 
   class B {}
 
@@ -135,11 +135,11 @@ function class_explicit() {
 }
 
 function class_util() {
-  declare var x: unknown;
+  declare const x: unknown;
 
   class B {}
 
-  declare var A: {B: Class<B>};
+  declare const A: {B: Class<B>};
 
   if (x instanceof A.B) {
     x as empty; //error
@@ -148,11 +148,11 @@ function class_util() {
 }
 
 function class_util_chain() {
-  declare var x: unknown;
+  declare const x: unknown;
 
   class B {}
 
-  declare var A: ?{B: Class<B>};
+  declare const A: ?{B: Class<B>};
 
   if (x instanceof A?.B) {
     //error

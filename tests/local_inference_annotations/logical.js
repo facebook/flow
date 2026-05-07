@@ -1,6 +1,6 @@
 // @flow
 
-declare var f: (x: string) => void;
+declare let f: (x: string) => void;
 
 f = (x => {}) || (y => {});
 f = (x => {}) || (y => {}) || (z => {});

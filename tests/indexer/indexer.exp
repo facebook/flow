@@ -71,9 +71,9 @@ Cannot cast `y` to object type because object type [1] is incompatible with func
       ^
 
 References:
-   call.js:1:16
-   1| declare var y: {[string]: boolean};
-                     ^^^^^^^^^^^^^^^^^^^ [1]
+   call.js:1:18
+   1| declare const y: {[string]: boolean};
+                       ^^^^^^^^^^^^^^^^^^^ [1]
    call.js:2:6
    2| y as {(number): string, ...};
            ^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -89,9 +89,9 @@ object type [1] but exists in object type [2]. [incompatible-type]
       ^
 
 References:
-   call.js:1:16
-   1| declare var y: {[string]: boolean};
-                     ^^^^^^^^^^^^^^^^^^^ [1]
+   call.js:1:18
+   1| declare const y: {[string]: boolean};
+                       ^^^^^^^^^^^^^^^^^^^ [1]
    call.js:2:6
    2| y as {(number): string, ...};
            ^^^^^^^^^^^^^^^^^^^^^^^ [2]

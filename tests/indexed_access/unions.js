@@ -3,7 +3,7 @@ type M = {
   b: string,
 }
 
-declare var v: M['a' | 'b'];
+declare let v: M['a' | 'b'];
 v as string; // error
 v as number; // error
 v as number | string; // ok
@@ -12,11 +12,11 @@ v = 3;
 v = "";
 v = true; // error
 
-declare var union: number | string;
+declare const union: number | string;
 union as M['a' | 'b'];
 
 type W = M['a' | 'b'];
-declare var w: W;
+declare const w: W;
 w as W;
 w as M['a']; // error
 
@@ -31,7 +31,7 @@ declare export function useState<S>(
   initialState: (() => S) | S,
 ): [S, ((S => S) | S) => void];
 declare export function useRef<T>(initialValue: T): {current: T};
-declare var NUM: number;
+declare const NUM: number;
 const [state, setState] = useState(1);
 useRef([] as Array<number>).current[state];
 setState(st => st === NUM ? st : st);

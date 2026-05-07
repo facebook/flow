@@ -3,6 +3,6 @@ type X = {
   [string]: number,
 };
 
-declare var x: {foo: number, ...};
+declare const x: {foo: number, ...};
 
 x as X; // Error, inexact objects are incompatible with indexed objects

@@ -36,7 +36,7 @@ true as ObjFoo; // OK
 function f<To extends Obj>(o: To): To['foo'] {
   return o.foo;
 }
-declare var o: Obj;
+declare const o: Obj;
 f(o) as boolean; // OK
 f({foo: true, baz: 'hi', bort: 1}) as boolean; // OK
 f(o) as string; // Error

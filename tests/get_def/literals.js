@@ -9,7 +9,7 @@
 `foo`;
 // ^
 
-declare var bar: string;
+declare const bar: string;
 `foo ${bar}`;
 //      ^
 

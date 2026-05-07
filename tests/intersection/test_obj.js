@@ -17,11 +17,11 @@
 // free to flow downstream and satisfy impossible constraints.
 
 // intersection of object types satisfies union of properties
-declare var a: A;
+declare const a: A;
 var b: B = a;
 
 // intersection of dictionary types:
-declare var c: C;
+declare const c: C;
 var d: D = c; // ok
 
 // dict type mismatch

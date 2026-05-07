@@ -736,9 +736,9 @@ Cannot cast `a ?? false` to empty because number [1] is incompatible with empty 
            ^
 
 References:
-   logical.js:588:18
-   588|   declare var a: indirection1 | indirection2;
-                         ^^^^^^^^^^^^ [1]
+   logical.js:588:20
+   588|   declare const a: indirection1 | indirection2;
+                           ^^^^^^^^^^^^ [1]
    logical.js:590:19
    590|   (a ?? false) as empty; // should error on `a` and `false`
                           ^^^^^ [2]
@@ -753,9 +753,9 @@ Cannot cast `a ?? false` to empty because string [1] is incompatible with empty 
            ^
 
 References:
-   logical.js:588:33
-   588|   declare var a: indirection1 | indirection2;
-                                        ^^^^^^^^^^^^ [1]
+   logical.js:588:35
+   588|   declare const a: indirection1 | indirection2;
+                                          ^^^^^^^^^^^^ [1]
    logical.js:590:19
    590|   (a ?? false) as empty; // should error on `a` and `false`
                           ^^^^^ [2]
@@ -795,9 +795,9 @@ Cannot cast `b && false` to empty because number literal `0` [1] is incompatible
            ^
 
 References:
-   logical.js:594:18
-   594|   declare var b: indirection3 | indirection4;
-                         ^^^^^^^^^^^^ [1]
+   logical.js:594:20
+   594|   declare const b: indirection3 | indirection4;
+                           ^^^^^^^^^^^^ [1]
    logical.js:596:19
    596|   (b && false) as empty; // should only error on `b`
                           ^^^^^ [2]
@@ -812,9 +812,9 @@ Cannot cast `b && false` to empty because empty string [1] is incompatible with 
            ^
 
 References:
-   logical.js:594:33
-   594|   declare var b: indirection3 | indirection4;
-                                        ^^^^^^^^^^^^ [1]
+   logical.js:594:35
+   594|   declare const b: indirection3 | indirection4;
+                                          ^^^^^^^^^^^^ [1]
    logical.js:596:19
    596|   (b && false) as empty; // should only error on `b`
                           ^^^^^ [2]
@@ -854,9 +854,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^ [1]
 
 References:
-   logical.js:619:18
-   619|   declare var n: number;
-                         ^^^^^^ [2]
+   logical.js:619:20
+   619|   declare const n: number;
+                           ^^^^^^ [2]
    logical.js:622:17
    622|   let n_ = n && {};
                         ^^ [3]
@@ -882,9 +882,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^ [1]
 
 References:
-   logical.js:620:18
-   620|   declare var s: string;
-                         ^^^^^^ [2]
+   logical.js:620:20
+   620|   declare const s: string;
+                           ^^^^^^ [2]
    logical.js:623:17
    623|   let s_ = s && {};
                         ^^ [3]
@@ -910,9 +910,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^ [1]
 
 References:
-   logical.js:621:18
-   621|   declare var b: boolean;
-                         ^^^^^^^ [2]
+   logical.js:621:20
+   621|   declare const b: boolean;
+                           ^^^^^^^ [2]
    logical.js:624:17
    624|   let b_ = b && {};
                         ^^ [3]

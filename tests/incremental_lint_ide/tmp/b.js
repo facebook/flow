@@ -2,7 +2,7 @@
 
 import type {Fn} from "./a";
 
-declare var f: Fn;
+declare const f: Fn;
 
 f(x => {
   if (x) {}

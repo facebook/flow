@@ -25,5 +25,5 @@ export type SpreadKeyMirroredProps = Readonly<{
 // properties.
 ({b: 'b'} as SpreadKeyMirroredProps);
 
-declare var badKeyMirror: $KeyMirror<1>;
+declare const badKeyMirror: $KeyMirror<1>;
 badKeyMirror.f; // error

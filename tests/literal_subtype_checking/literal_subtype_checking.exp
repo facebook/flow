@@ -150,15 +150,15 @@ types to pass the flow check.  [invalid-compare]
         ^^^^^^^^^^
 
 References:
-   test.js:2:13
-   2| declare var x: Literal;
-                  ^ [1]
+   test.js:2:15
+   2| declare const x: Literal;
+                    ^ [1]
    test.js:7:8
    7|   case 'bar': // Error
              ^^^^^ [2]
-   test.js:2:16
-   2| declare var x: Literal;
-                     ^^^^^^^ [3]
+   test.js:2:18
+   2| declare const x: Literal;
+                       ^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
@@ -173,15 +173,15 @@ to pass the flow check.  [invalid-compare]
         ^^^^^^
 
 References:
-   test.js:2:13
-   2| declare var x: Literal;
-                  ^ [1]
+   test.js:2:15
+   2| declare const x: Literal;
+                    ^ [1]
    test.js:8:8
    8|   case 1: // Error
              ^ [2]
-   test.js:2:16
-   2| declare var x: Literal;
-                     ^^^^^^^ [3]
+   test.js:2:18
+   2| declare const x: Literal;
+                       ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:3
@@ -202,9 +202,9 @@ References:
    test.js:14:8
    14|   case 'bar': // Error
               ^^^^^ [2]
-   test.js:3:20
-    3| declare var o: {p: Literal}
-                          ^^^^^^^ [3]
+   test.js:3:22
+    3| declare const o: {p: Literal}
+                            ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:3
@@ -225,9 +225,9 @@ References:
    test.js:15:8
    15|   case 1: // Error
               ^ [2]
-   test.js:3:20
-    3| declare var o: {p: Literal}
-                          ^^^^^^^ [3]
+   test.js:3:22
+    3| declare const o: {p: Literal}
+                            ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:7
@@ -242,15 +242,15 @@ types to pass the flow check.  [invalid-compare]
              ^^^^^^^^^^^
 
 References:
-   test.js:2:13
-    2| declare var x: Literal;
-                   ^ [1]
+   test.js:2:15
+    2| declare const x: Literal;
+                     ^ [1]
    test.js:21:13
    21|   if (x === 'bar') {} // Error
                    ^^^^^ [2]
-   test.js:2:16
-    2| declare var x: Literal;
-                      ^^^^^^^ [3]
+   test.js:2:18
+    2| declare const x: Literal;
+                        ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:22:7
@@ -265,15 +265,15 @@ to pass the flow check.  [invalid-compare]
              ^^^^^^^
 
 References:
-   test.js:2:13
-    2| declare var x: Literal;
-                   ^ [1]
+   test.js:2:15
+    2| declare const x: Literal;
+                     ^ [1]
    test.js:22:13
    22|   if (x === 1) {} // Error
                    ^ [2]
-   test.js:2:16
-    2| declare var x: Literal;
-                      ^^^^^^^ [3]
+   test.js:2:18
+    2| declare const x: Literal;
+                        ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:25:7
@@ -294,9 +294,9 @@ References:
    test.js:25:15
    25|   if (o.p === 'bar') {} // Error
                      ^^^^^ [2]
-   test.js:3:20
-    3| declare var o: {p: Literal}
-                          ^^^^^^^ [3]
+   test.js:3:22
+    3| declare const o: {p: Literal}
+                            ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:7
@@ -317,9 +317,9 @@ References:
    test.js:26:15
    26|   if (o.p === 1) {} // Error
                      ^ [2]
-   test.js:3:20
-    3| declare var o: {p: Literal}
-                          ^^^^^^^ [3]
+   test.js:3:22
+    3| declare const o: {p: Literal}
+                            ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:7
@@ -337,12 +337,12 @@ References:
    test.js:31:7
    31|   if ('bar' === x) {} // Error
              ^^^^^ [1]
-   test.js:2:13
-    2| declare var x: Literal;
-                   ^ [2]
-   test.js:2:16
-    2| declare var x: Literal;
-                      ^^^^^^^ [3]
+   test.js:2:15
+    2| declare const x: Literal;
+                     ^ [2]
+   test.js:2:18
+    2| declare const x: Literal;
+                        ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:7
@@ -360,12 +360,12 @@ References:
    test.js:32:7
    32|   if (1 === x) {} // Error
              ^ [1]
-   test.js:2:13
-    2| declare var x: Literal;
-                   ^ [2]
-   test.js:2:16
-    2| declare var x: Literal;
-                      ^^^^^^^ [3]
+   test.js:2:15
+    2| declare const x: Literal;
+                     ^ [2]
+   test.js:2:18
+    2| declare const x: Literal;
+                        ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:35:7
@@ -386,9 +386,9 @@ References:
    test.js:35:17
    35|   if ('bar' === o.p) {} // Error
                        ^^^ [2]
-   test.js:3:20
-    3| declare var o: {p: Literal}
-                          ^^^^^^^ [3]
+   test.js:3:22
+    3| declare const o: {p: Literal}
+                            ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:36:7
@@ -409,9 +409,9 @@ References:
    test.js:36:13
    36|   if (1 === o.p) {} // Error
                    ^^^ [2]
-   test.js:3:20
-    3| declare var o: {p: Literal}
-                          ^^^^^^^ [3]
+   test.js:3:22
+    3| declare const o: {p: Literal}
+                            ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:40:23
@@ -432,9 +432,9 @@ References:
    test.js:40:29
    40| if (true && (false || x === 'bar')) {} // Error
                                    ^^^^^ [2]
-   test.js:2:16
-    2| declare var x: Literal;
-                      ^^^^^^^ [3]
+   test.js:2:18
+    2| declare const x: Literal;
+                        ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:41:23
@@ -455,9 +455,9 @@ References:
    test.js:41:31
    41| if (true && (false || o.p === 'bar')) {} // Error
                                      ^^^^^ [2]
-   test.js:3:20
-    3| declare var o: {p: Literal}
-                          ^^^^^^^ [3]
+   test.js:3:22
+    3| declare const o: {p: Literal}
+                            ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:42:23
@@ -478,9 +478,9 @@ References:
    test.js:42:29
    42| if (true && (false || x === 1)) {} // Error
                                    ^ [2]
-   test.js:2:16
-    2| declare var x: Literal;
-                      ^^^^^^^ [3]
+   test.js:2:18
+    2| declare const x: Literal;
+                        ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:43:23
@@ -501,9 +501,9 @@ References:
    test.js:43:31
    43| if (true && (false || o.p === 1)) {} // Error
                                      ^ [2]
-   test.js:3:20
-    3| declare var o: {p: Literal}
-                          ^^^^^^^ [3]
+   test.js:3:22
+    3| declare const o: {p: Literal}
+                            ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:51:5
@@ -518,9 +518,9 @@ to pass the flow check.  [invalid-compare]
            ^^^^^^^^^^
 
 References:
-   test.js:45:13
-   45| declare var nullableX: ?Literal;
-                   ^^^^^^^^^ [1]
+   test.js:45:15
+   45| declare const nullableX: ?Literal;
+                     ^^^^^^^^^ [1]
    test.js:51:10
    51|     case 'bar': // Error
                 ^^^^^ [2]
@@ -538,9 +538,9 @@ to pass the flow check.  [invalid-compare]
            ^^^^^^
 
 References:
-   test.js:45:13
-   45| declare var nullableX: ?Literal;
-                   ^^^^^^^^^ [1]
+   test.js:45:15
+   45| declare const nullableX: ?Literal;
+                     ^^^^^^^^^ [1]
    test.js:52:10
    52|     case 1: // Error
                 ^ [2]
@@ -598,9 +598,9 @@ to pass the flow check.  [invalid-compare]
              ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:45:13
-   45| declare var nullableX: ?Literal;
-                   ^^^^^^^^^ [1]
+   test.js:45:15
+   45| declare const nullableX: ?Literal;
+                     ^^^^^^^^^ [1]
    test.js:66:21
    66|   if (nullableX === 'bar') {} // Error
                            ^^^^^ [2]
@@ -618,9 +618,9 @@ to pass the flow check.  [invalid-compare]
              ^^^^^^^^^^^^^^^
 
 References:
-   test.js:45:13
-   45| declare var nullableX: ?Literal;
-                   ^^^^^^^^^ [1]
+   test.js:45:15
+   45| declare const nullableX: ?Literal;
+                     ^^^^^^^^^ [1]
    test.js:67:21
    67|   if (nullableX === 1) {} // Error
                            ^ [2]
@@ -678,9 +678,9 @@ to pass the flow check.  [invalid-compare]
                                ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:45:13
-   45| declare var nullableX: ?Literal;
-                   ^^^^^^^^^ [1]
+   test.js:45:15
+   45| declare const nullableX: ?Literal;
+                     ^^^^^^^^^ [1]
    test.js:76:39
    76|   if (true && (false || nullableX === 'bar')) {} // Error
                                              ^^^^^ [2]
@@ -718,9 +718,9 @@ to pass the flow check.  [invalid-compare]
                                ^^^^^^^^^^^^^^^
 
 References:
-   test.js:45:13
-   45| declare var nullableX: ?Literal;
-                   ^^^^^^^^^ [1]
+   test.js:45:15
+   45| declare const nullableX: ?Literal;
+                     ^^^^^^^^^ [1]
    test.js:78:39
    78|   if (true && (false || nullableX === 1)) {} // Error
                                              ^ [2]

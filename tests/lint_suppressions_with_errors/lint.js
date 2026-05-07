@@ -13,7 +13,7 @@ class Class {
   }
 }
 
-declare var x : unknown;
+declare const x : unknown;
 //$FlowFixMe[sketchy-null-mixed] should suppress
 if(x) {
 

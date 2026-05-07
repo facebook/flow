@@ -12,9 +12,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
       ^
 
 References:
-   array.js:1:22
-   1| declare var a: Array<number>;
-                           ^^^^^^ [1]
+   array.js:1:24
+   1| declare const a: Array<number>;
+                             ^^^^^^ [1]
    array.js:4:24
    4| a as interface {pop(): boolean | void}; // ERROR
                              ^^^^^^^ [2]
@@ -654,9 +654,9 @@ Cannot cast `o2["b"]` to boolean because number [1] is incompatible with boolean
        ^^^^^^^
 
 References:
-   interface.js:36:40
-   36| declare var o2 : interface {[string] : number};
-                                              ^^^^^^ [1]
+   interface.js:36:42
+   36| declare const o2 : interface {[string] : number};
+                                                ^^^^^^ [1]
    interface.js:38:12
    38| o2["b"] as boolean; // error
                   ^^^^^^^ [2]
@@ -677,15 +677,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^
 
 References:
-   interface.js:41:30
-   41| declare var o3 : {[string] : number};
-                                    ^^^^^^ [1]
+   interface.js:41:32
+   41| declare const o3 : {[string] : number};
+                                      ^^^^^^ [1]
    interface.js:43:29
    43| o3 as interface {[string] : boolean}; // error
                                    ^^^^^^^ [2]
-   interface.js:41:18
-   41| declare var o3 : {[string] : number};
-                        ^^^^^^^^^^^^^^^^^^^ [3]
+   interface.js:41:20
+   41| declare const o3 : {[string] : number};
+                          ^^^^^^^^^^^^^^^^^^^ [3]
    interface.js:43:7
    43| o3 as interface {[string] : boolean}; // error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -721,15 +721,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^
 
 References:
-   interface.js:41:20
-   41| declare var o3 : {[string] : number};
-                          ^^^^^^ [1]
+   interface.js:41:22
+   41| declare const o3 : {[string] : number};
+                            ^^^^^^ [1]
    interface.js:46:19
    46| o3 as interface {[number] : number}; // error
                          ^^^^^^ [2]
-   interface.js:41:18
-   41| declare var o3 : {[string] : number};
-                        ^^^^^^^^^^^^^^^^^^^ [3]
+   interface.js:41:20
+   41| declare const o3 : {[string] : number};
+                          ^^^^^^^^^^^^^^^^^^^ [3]
    interface.js:46:7
    46| o3 as interface {[number] : number}; // error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -769,15 +769,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^
 
 References:
-   interface.js:49:20
-   49| declare var o4 : {["asdf"] : number};
-                          ^^^^^^ [1]
+   interface.js:49:22
+   49| declare const o4 : {["asdf"] : number};
+                            ^^^^^^ [1]
    interface.js:51:19
    51| o4 as interface {[string] : number}; // error
                          ^^^^^^ [2]
-   interface.js:49:18
-   49| declare var o4 : {["asdf"] : number};
-                        ^^^^^^^^^^^^^^^^^^^ [3]
+   interface.js:49:20
+   49| declare const o4 : {["asdf"] : number};
+                          ^^^^^^^^^^^^^^^^^^^ [3]
    interface.js:51:7
    51| o4 as interface {[string] : number}; // error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -798,15 +798,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^
 
 References:
-   interface.js:57:20
-   57| declare var o6 : {[string] : number};
-                          ^^^^^^ [1]
+   interface.js:57:22
+   57| declare const o6 : {[string] : number};
+                            ^^^^^^ [1]
    interface.js:59:19
    59| o6 as interface {["asdf"] : number}; // error
                          ^^^^^^ [2]
-   interface.js:57:18
-   57| declare var o6 : {[string] : number};
-                        ^^^^^^^^^^^^^^^^^^^ [3]
+   interface.js:57:20
+   57| declare const o6 : {[string] : number};
+                          ^^^^^^^^^^^^^^^^^^^ [3]
    interface.js:59:7
    59| o6 as interface {["asdf"] : number}; // error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -1371,9 +1371,9 @@ Cannot cast `x` to interface type because `unknown` [1] is incompatible with int
       ^
 
 References:
-   top.js:1:16
-   1| declare var x: unknown;
-                     ^^^^^^^ [1]
+   top.js:1:18
+   1| declare const x: unknown;
+                       ^^^^^^^ [1]
    top.js:3:6
    3| x as interface {}; // ERROR
            ^^^^^^^^^^^^ [2]

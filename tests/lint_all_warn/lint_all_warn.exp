@@ -8,12 +8,12 @@ undefined [2]? [sketchy-null-string]
           ^
 
 References:
-   sketchy_null.js:3:17
-   3| declare var x: ?string;
-                      ^^^^^^ [1]
-   sketchy_null.js:3:16
-   3| declare var x: ?string;
-                     ^^^^^^^ [2]
+   sketchy_null.js:3:19
+   3| declare const x: ?string;
+                        ^^^^^^ [1]
+   sketchy_null.js:3:18
+   3| declare const x: ?string;
+                       ^^^^^^^ [2]
 
 
 Warning --------------------------------------------------------------------------------------- deprecated_types.js:3:27
@@ -50,12 +50,12 @@ undefined [2]? [sketchy-null-string]
           ^
 
 References:
-   sketchy_null.js:3:17
-   3| declare var x: ?string;
-                      ^^^^^^ [1]
-   sketchy_null.js:3:16
-   3| declare var x: ?string;
-                     ^^^^^^^ [2]
+   sketchy_null.js:3:19
+   3| declare const x: ?string;
+                        ^^^^^^ [1]
+   sketchy_null.js:3:18
+   3| declare const x: ?string;
+                       ^^^^^^^ [2]
 
 
 

@@ -12,14 +12,14 @@ type SetOfEntries = MySet<Entry<unknown>>;
 function test1() {
   type FilterEntry = $ElementOfSet<SetOfEntries>;
 
-  declare var x: MySet<FilterEntry>;
+  declare const x: MySet<FilterEntry>;
   x as SetOfEntries; // no error
 }
 
 function test2() {
   type FilterEntry = $ElementOfSet<SetOfEntries>;
 
-  declare var y: SetOfEntries;
+  declare const y: SetOfEntries;
   y as MySet<FilterEntry>; // no error
 }
 
@@ -42,7 +42,7 @@ function test3() {
   // The HOCs above are basically convoluted identity functions...
 
   type Foo = {+foo: string, ...};
-  declare var OriginalComponent: Opaque<Foo>;
+  declare const OriginalComponent: Opaque<Foo>;
 
   const IdWrapped = wrapWithId(OriginalComponent);
 

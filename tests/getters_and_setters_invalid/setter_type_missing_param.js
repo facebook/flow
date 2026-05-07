@@ -2,6 +2,6 @@ type O = {
   set foo(): void
 }
 
-declare var o: O;
+declare const o: O;
 o.foo = 1;
 // ^

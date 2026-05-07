@@ -22,9 +22,9 @@ Cannot cast `a` to object type because number [1] is incompatible with object ty
        ^
 
 References:
-   b.js:5:16
-   5| declare var a: A;
-                     ^ [1]
+   b.js:5:18
+   5| declare const a: A;
+                       ^ [1]
    b.js:6:7
             v
    6| (a as {

@@ -13,7 +13,7 @@ interface WithBoth {
   method(): void; // non-own and ignored
 }
 
-declare var xy: 'x' | 'y';
+declare const xy: 'x' | 'y';
 
 xy as keyof WithDict; // OK
 'xxx' as keyof WithDict; // ERROR

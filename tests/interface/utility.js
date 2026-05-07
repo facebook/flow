@@ -6,7 +6,7 @@ let a = new A();
 
 a as Readonly<interface {foo : number}>;
 
-declare var x : Readonly<interface {foo : number}>;
+declare const x : Readonly<interface {foo : number}>;
 x.foo = 3; // error as expected
 
 

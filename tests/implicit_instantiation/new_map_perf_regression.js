@@ -24,7 +24,7 @@ declare class Map<K, V> extends $CustomReadOnlyMap<K, V> {
   constructor(iterable: Iterable_<[K, V]>): void;
 }
 
-declare var n: number;
+declare const n: number;
 
 const m0 = new Map([[n, '123']]);
 const m1 = new Map([[n, m0]]);

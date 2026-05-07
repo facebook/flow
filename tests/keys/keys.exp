@@ -8,9 +8,9 @@ incompatible with string literal `c` [3]. [incompatible-type]
       ^ [2]
 
 References:
-   errors.js:8:16
-   8| declare var k: K;
-                     ^ [1]
+   errors.js:8:18
+   8| declare const k: K;
+                       ^ [1]
    errors.js:9:6
    9| k as 'c';
            ^^^ [3]

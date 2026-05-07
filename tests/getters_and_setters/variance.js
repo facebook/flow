@@ -4,9 +4,9 @@ class A {}
 class B extends A {}
 class C extends B {}
 
-declare var a: A;
-declare var b: B;
-declare var c: C;
+declare const a: A;
+declare const b: B;
+declare const c: C;
 
 class Base {
   x: B;

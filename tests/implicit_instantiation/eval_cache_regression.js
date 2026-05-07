@@ -18,7 +18,7 @@ class Foo<T> extends React.Component<PropsP<T>> {
   static defaultProps: Partial<PropsP<T>> = {};
 }
 
-declare var id: ?string;
+declare const id: ?string;
 
 function foo() {
   return (

@@ -16,19 +16,19 @@ References:
                ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:28:27
+Error ---------------------------------------------------------------------------------------------------- test.js:28:29
 
 Cannot instantiate `$KeyMirror` because number literal `1` [1] is not a valid argument of `$KeyMirror` [2].
 [incompatible-use]
 
-   test.js:28:27
-   28| declare var badKeyMirror: $KeyMirror<1>;
-                                 ^^^^^^^^^^^^^ [2]
+   test.js:28:29
+   28| declare const badKeyMirror: $KeyMirror<1>;
+                                   ^^^^^^^^^^^^^ [2]
 
 References:
-   test.js:28:38
-   28| declare var badKeyMirror: $KeyMirror<1>;
-                                            ^ [1]
+   test.js:28:40
+   28| declare const badKeyMirror: $KeyMirror<1>;
+                                              ^ [1]
 
 
 

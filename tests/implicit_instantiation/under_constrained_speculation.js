@@ -9,7 +9,7 @@ declare export class C<K, +V> {
 declare function foo<K, V>(_: void): C<K, V>;
 declare function foo<K, V>(iter: Array<[K, V]>): C<K, V>;
 
-declare var any_: any;
+declare const any_: any;
 
 C(any_); // okay, we infer C<any, any>
 C(undefined); // error branches are under-constrained for the first overload,

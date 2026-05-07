@@ -1,6 +1,6 @@
 type Literal = 'foo';
-declare var x: Literal;
-declare var o: {p: Literal}
+declare const x: Literal;
+declare const o: {p: Literal}
 
 switch (x) {
   case 'foo':
@@ -42,8 +42,8 @@ if (true && (false || o.p === 'bar')) {} // Error
 if (true && (false || x === 1)) {} // Error
 if (true && (false || o.p === 1)) {} // Error
 
-declare var nullableX: ?Literal;
-declare var nullableO: ?{p: Literal}
+declare const nullableX: ?Literal;
+declare const nullableO: ?{p: Literal}
 
 function switch_optional_chaining_test() {} {
   switch (nullableX) {

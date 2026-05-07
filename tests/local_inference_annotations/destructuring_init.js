@@ -11,8 +11,8 @@ const {x: b, y: c}: number => void = (x) => { // This x has an annot available
   const c = (x) => 3; // Neither does this one
 };
 
-declare var mixed: unknown;
-declare var func_tuple : [
+declare let mixed: unknown;
+declare let func_tuple : [
     (x: number) => number,
     (x: string) => number,
     (x: boolean) => number

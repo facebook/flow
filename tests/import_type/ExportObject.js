@@ -1,2 +1,2 @@
-declare var obj: { f: number }
+declare const obj: { f: number }
 module.exports = obj;

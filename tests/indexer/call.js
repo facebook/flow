@@ -1,2 +1,2 @@
-declare var y: {[string]: boolean};
+declare const y: {[string]: boolean};
 y as {(number): string, ...};

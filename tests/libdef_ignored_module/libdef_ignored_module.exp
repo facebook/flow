@@ -7,9 +7,9 @@ Cannot cast `foo.bar` to string because number [1] is incompatible with string [
       ^^^^^^^
 
 References:
-   lib/foo.js:2:20
-   2|   declare var bar: number;
-                         ^^^^^^ [1]
+   lib/foo.js:2:22
+   2|   declare const bar: number;
+                           ^^^^^^ [1]
    test.js:5:12
    5| foo.bar as string; // error number ~> string
                  ^^^^^^ [2]

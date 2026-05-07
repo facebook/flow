@@ -2,9 +2,9 @@
 
 import {A, B, C, Base} from './variance';
 
-declare var a: A;
-declare var b: B;
-declare var c: C;
+declare const a: A;
+declare const b: B;
+declare const c: C;
 
 (class extends Base {
   // error: getter incompatible with read/write property
