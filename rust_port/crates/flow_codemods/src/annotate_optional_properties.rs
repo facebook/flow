@@ -605,7 +605,7 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
             |file: &flow_parser::file_key::FileKey| -> Option<Arc<ast::Program<Loc, Loc>>> {
                 reader.get_ast(file)
             };
-        let suppressions = cx.error_suppressions().clone();
+        let suppressions = self.cctx.error_suppressions.clone();
         let root = &self.cctx.options.root;
         let error_is_suppressed =
             |error: &flow_typing_errors::flow_error::FlowError<flow_aloc::ALoc>| -> bool {

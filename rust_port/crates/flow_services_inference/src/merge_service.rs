@@ -712,29 +712,62 @@ fn merge_component(
     (diff, Some((suppressions, duration)))
 }
 
-pub type CheckFileResult = (
-    (
-        Context<'static>,
-        Arc<flow_type_sig::packed_type_sig::Module<Loc>>,
-        Arc<FileSig>,
-        ast::Program<ALoc, (ALoc, Type)>,
-    ),
-    (
-        ErrorSet,
-        ErrorSet,
-        ErrorSuppressions,
-        FileCoverage,
-        Result<Vec<flow_services_references::find_refs_types::SingleRef>, String>,
-        f64,
-    ),
+pub type CheckFileArtifacts = (
+    Context<'static>,
+    Arc<flow_type_sig::packed_type_sig::Module<Loc>>,
+    Arc<FileSig>,
+    ast::Program<ALoc, (ALoc, Type)>,
 );
+
+pub type CheckFileAccs = (
+    ErrorSet,
+    ErrorSet,
+    ErrorSuppressions,
+    FileCoverage,
+    Result<Vec<flow_services_references::find_refs_types::SingleRef>, String>,
+    f64,
+);
+
+pub type CheckFileResult = (CheckFileArtifacts, CheckFileAccs);
+
+pub type CheckCacheRef = Rc<std::cell::RefCell<CheckCache<'static>>>;
+
+pub fn cleanup_check_context(file: &FileKey, cx: &Context<'_>) {
+    cx.post_inference_cleanup();
+    #[cfg(debug_assertions)]
+    {
+        let count = cx.strong_count();
+        if count > 2 {
+            eprintln!(
+                "[LEAK-DEBUG] Context for {} has strong_count={} after cleanup (expected <=2)",
+                file.as_str(),
+                count
+            );
+        }
+    }
+}
+
+fn cleanup_check_error(file: &FileKey, cx: &Context<'_>) {
+    cleanup_check_context(file, cx);
+}
+
+pub fn finish_check_file<R>(
+    result: CheckFileResult,
+    f: impl FnOnce(CheckFileArtifacts, CheckFileAccs) -> R,
+) -> R {
+    let (artifacts, accs) = result;
+    let file = artifacts.0.file().dupe();
+    let cleanup_cx = artifacts.0.clone();
+    let result = f(artifacts, accs);
+    cleanup_check_context(&file, &cleanup_cx);
+    result
+}
 
 fn mk_check_file(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
     master_cx: &MasterContext,
     find_ref_request: flow_services_references::find_refs_types::Request,
-    skip_post_check_cleanup: bool,
 ) -> (
     Box<
         dyn FnMut(
@@ -750,7 +783,7 @@ fn mk_check_file(
         mut make_cx,
         mut check_file,
         compute_env: _,
-    } = check_service::mk_check_file(shared_mem.dupe(), options, master_cx, cache);
+    } = check_service::mk_check_file(shared_mem.dupe(), options.dupe(), master_cx, cache);
 
     let check_file_fn = Box::new(move |file: FileKey| {
         let start_time = Instant::now();
@@ -807,47 +840,56 @@ fn mk_check_file(
             obj_to_obj_hook::with_obj_to_obj_hook(enabled, &loc_of_aloc, || {
                 check_file(&cx, &file, file_sig.dupe(), &metadata, comments, aloc_ast)
             });
-        let typed_ast = typed_ast_result?;
-        let ast_info: flow_services_get_def::find_refs_utils::AstInfo = (
-            ast_ref.dupe(),
-            file_sig.dupe(),
-            docblock_for_find_refs.dupe(),
-        );
-        let find_refs_result =
-            match flow_services_references::find_refs_js::local_refs_of_find_ref_request(
-                &loc_of_aloc,
-                &ast_info,
-                &cx,
-                &typed_ast,
-                &obj_to_obj_map,
-                &file,
-                &find_ref_request,
-            )? {
-                Ok(flow_services_references::find_refs_types::FindRefsOk::FoundReferences(
-                    refs,
-                )) => Ok(refs),
-                Ok(flow_services_references::find_refs_types::FindRefsOk::NoDefinition(_)) => {
-                    Ok(Vec::new())
+        let typed_ast = match typed_ast_result {
+            Ok(typed_ast) => typed_ast,
+            Err(e) => {
+                cleanup_check_error(&file, &cx);
+                return Err(e);
+            }
+        };
+        let find_refs_result = match &find_ref_request.def_info {
+            flow_services_get_def::get_def_types::DefInfo::NoDefinition(_) => Ok(Vec::new()),
+            _ => {
+                let ast_info: flow_services_get_def::find_refs_utils::AstInfo = (
+                    ast_ref.dupe(),
+                    file_sig.dupe(),
+                    docblock_for_find_refs.dupe(),
+                );
+                let result =
+                    match flow_services_references::find_refs_js::local_refs_of_find_ref_request(
+                        &loc_of_aloc,
+                        &ast_info,
+                        &cx,
+                        &typed_ast,
+                        &obj_to_obj_map,
+                        &file,
+                        &find_ref_request,
+                    ) {
+                        Ok(result) => result,
+                        Err(e) => {
+                            drop(typed_ast);
+                            cleanup_check_error(&file, &cx);
+                            return Err(e);
+                        }
+                    };
+                match result {
+                    Ok(flow_services_references::find_refs_types::FindRefsOk::FoundReferences(
+                        refs,
+                    )) => Ok(refs),
+                    Ok(flow_services_references::find_refs_types::FindRefsOk::NoDefinition(_)) => {
+                        Ok(Vec::new())
+                    }
+                    Err(e) => Err(e),
                 }
-                Err(e) => Err(e),
-            };
-        drop(ast_info);
+            }
+        };
         drop(ast_ref);
         let coverage = file_coverage(&cx, &typed_ast);
         let errors = cx.errors();
         let tolerable_error_set =
             inference_utils::set_of_file_sig_tolerable_errors(file.dupe(), &tolerable_errors);
         let errors = errors.union(&tolerable_error_set);
-        // For codemod paths (`skip_post_check_cleanup = true`), the cx is reused
-        // by the codemod which calls `cx.error_suppressions()` later, so we must
-        // leave the suppressions intact and clone. For the regular check path,
-        // the cx is dropped after this function and we can take ownership to
-        // avoid a deep BTreeMap clone.
-        let mut suppressions = if skip_post_check_cleanup {
-            cx.error_suppressions().clone()
-        } else {
-            cx.take_error_suppressions()
-        };
+        let mut suppressions = cx.take_error_suppressions();
         let severity_cover = cx.severity_cover().dupe();
         let include_suppressions = cx.include_suppressions();
         let aloc_tables_ref = cx.aloc_tables();
@@ -858,33 +900,6 @@ fn mk_check_file(
             &severity_cover,
         );
         drop(aloc_tables_ref);
-        // Break Rc cycles eagerly to bound peak memory: without this, every
-        // checked file's full type graph stays alive in the cache until the
-        // cache itself is dropped (which only happens at the end of a long
-        // run). Codemod consumers must opt out via `skip_post_check_cleanup`,
-        // because `drop_lazy_forcing_states` forcibly resolves every unforced
-        // ForcingState in the shared sig_cx graph to `AnyT(RAnyImplicit)`,
-        // and the codemod runner's `post_check` normalizes the cx after this
-        // function returns and needs those still-lazy states to resolve to
-        // their real types (otherwise legitimate annotations like
-        // `$ArrayLike<mixed>` turn into `any`). For codemods, the full
-        // cleanup runs later when the CheckCache evicts the entry or is
-        // dropped (see `CheckCache::drop_least_recently_used` and its `Drop`
-        // impl).
-        if !skip_post_check_cleanup {
-            cx.post_inference_cleanup();
-            #[cfg(debug_assertions)]
-            {
-                let count = cx.strong_count();
-                if count > 2 {
-                    eprintln!(
-                        "[LEAK-DEBUG] Context for {} has strong_count={} after cleanup (expected <=2)",
-                        file.as_str(),
-                        count
-                    );
-                }
-            }
-        }
         let duration = start_time.elapsed().as_secs_f64();
         if duration > 5.0 {
             eprintln!("[SLOW-CHECK] {:>8.3}s  {}", duration, file.as_str());
@@ -1166,7 +1181,6 @@ pub fn mk_check(
     options: Arc<Options>,
     master_cx: &MasterContext,
     find_ref_request: flow_services_references::find_refs_types::Request,
-    skip_post_check_cleanup: bool,
 ) -> (
     Box<dyn FnMut(FileKey) -> CheckJobOutcome>,
     Rc<std::cell::RefCell<CheckCache<'static>>>,
@@ -1176,7 +1190,6 @@ pub fn mk_check(
         options.dupe(),
         master_cx,
         find_ref_request,
-        skip_post_check_cleanup,
     );
     let check_fn = Box::new(move |file: FileKey| match check_file(file.dupe()) {
         Ok(opt) => CheckJobOutcome::Ok(opt),

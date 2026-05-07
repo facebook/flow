@@ -464,6 +464,18 @@ fn update_slow_files(
 
 type FindRefResults = Result<FindRefsFound, String>;
 
+type CheckResult = Result<
+    Option<(
+        ErrorSet,
+        ErrorSet,
+        ErrorSuppressions,
+        flow_services_coverage::FileCoverage,
+        Result<Vec<flow_services_references::find_refs_types::SingleRef>, String>,
+        f64,
+    )>,
+    (ALoc, InternalError),
+>;
+
 type CheckAcc = (
     (
         BTreeMap<FileKey, ErrorSet>,
@@ -476,23 +488,7 @@ type CheckAcc = (
     (i32, f64, Option<FileKey>),
 );
 
-fn update_check_results(
-    mut acc: CheckAcc,
-    (file, result): (
-        FileKey,
-        Result<
-            Option<(
-                ErrorSet,
-                ErrorSet,
-                ErrorSuppressions,
-                flow_services_coverage::FileCoverage,
-                Result<Vec<flow_services_references::find_refs_types::SingleRef>, String>,
-                f64,
-            )>,
-            (ALoc, InternalError),
-        >,
-    ),
-) -> CheckAcc {
+fn update_check_results(mut acc: CheckAcc, (file, result): (FileKey, CheckResult)) -> CheckAcc {
     let (
         (
             ref mut errors,
@@ -747,7 +743,6 @@ mod check_files {
                         options.dupe(),
                         master_cx.as_ref(),
                         find_ref_request.clone(),
-                        false,
                     )
                 })
             };
@@ -774,20 +769,7 @@ mod check_files {
             let mk_check_for_steal = mk_check.dupe();
             let stealers_for_steal = stealers.dupe();
 
-            type StealItem = (
-                FileKey,
-                Result<
-                    Option<(
-                        ErrorSet,
-                        ErrorSet,
-                        ErrorSuppressions,
-                        flow_services_coverage::FileCoverage,
-                        Result<Vec<flow_services_references::find_refs_types::SingleRef>, String>,
-                        f64,
-                    )>,
-                    (ALoc, InternalError),
-                >,
-            );
+            type StealItem = (FileKey, CheckResult);
             #[derive(Debug)]
             struct StealAcc(
                 Result<Vec<StealItem>, flow_utils_concurrency::worker_cancel::WorkerCanceled>,
@@ -798,6 +780,7 @@ mod check_files {
                 }
             }
 
+            let options_for_job = options.dupe();
             let ret = flow_utils_concurrency::map_reduce::call_with_stealing(
                 pool,
                 next,
@@ -827,8 +810,8 @@ mod check_files {
 
                             match job_utils::mk_job_stealing(
                                 &mut **check,
-                                |(_, r)| r,
-                                &options,
+                                move |result| merge_service::finish_check_file(result, |_, r| r),
+                                &options_for_job,
                                 deque,
                             ) {
                                 Ok(results) => {
@@ -840,7 +823,6 @@ mod check_files {
                                 }
                             }
                         });
-
                         cache.borrow_mut().clear();
                     });
                 },
@@ -866,7 +848,8 @@ mod check_files {
                                 }
                                 let (check, _cache) = opt.as_mut().unwrap();
                                 match check(file.dupe()) {
-                                    merge_service::CheckJobOutcome::Ok(Some((_, r))) => {
+                                    merge_service::CheckJobOutcome::Ok(Some(result)) => {
+                                        let r = merge_service::finish_check_file(result, |_, r| r);
                                         acc.0.as_mut().unwrap().push((file, Ok(Some(r))));
                                     }
                                     merge_service::CheckJobOutcome::Ok(None) => {

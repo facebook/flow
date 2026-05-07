@@ -162,7 +162,7 @@ impl<'a, 'cx> AnnotateLiteralDeclarationsMapper<'a, 'cx> {
                 reader.get_haste_module_info(file)
             };
         let include_suppressions = cx.include_suppressions();
-        let mut suppressions = cx.error_suppressions().clone();
+        let mut suppressions = self.cctx.error_suppressions.clone();
         let (errors, _warnings) = suppressions.filter_lints(
             cx.errors(),
             &cx.aloc_tables(),

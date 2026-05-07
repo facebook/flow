@@ -23,6 +23,7 @@ use flow_typing::ty_normalizer_flow;
 use flow_typing::typed_ast_finder;
 use flow_typing_context::Context;
 use flow_typing_context::Metadata;
+use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_ty_normalizer::normalizer::Error as NormalizerError;
 use flow_typing_type::type_::Type;
 
@@ -36,6 +37,7 @@ pub mod typed {
         pub metadata: Metadata,
         pub options: Options,
         pub cx: Context<'cx>,
+        pub error_suppressions: ErrorSuppressions,
         pub typed_ast: ast::Program<ALoc, (ALoc, Type)>,
         pub docblock: Docblock,
         pub iteration: i32,
@@ -86,6 +88,10 @@ pub mod typed {
 
     pub fn context<'a, 'cx>(ccx: &'a TypedCodemodContext<'cx>) -> &'a Context<'cx> {
         &ccx.cx
+    }
+
+    pub fn error_suppressions<'a>(ccx: &'a TypedCodemodContext<'_>) -> &'a ErrorSuppressions {
+        &ccx.error_suppressions
     }
 
     pub fn typed_ast<'a>(ccx: &'a TypedCodemodContext<'_>) -> &'a ast::Program<ALoc, (ALoc, Type)> {

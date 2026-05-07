@@ -336,24 +336,28 @@ fn post_check<A>(
     match _result {
         Ok(None) => Ok(None),
         Err(e) => Err(e),
-        Ok(Some(((cx, type_sig, file_sig, typed_ast), _accs))) => {
-            let ast = _reader.get_ast_unsafe(_file);
-            let docblock = _reader.get_docblock_unsafe(_file);
-            let ccx = codemod_context::typed::TypedCodemodContext {
-                file: _file.clone(),
-                type_sig,
-                file_sig,
-                metadata: _metadata.clone(),
-                options: _options.clone(),
-                cx,
-                typed_ast,
-                docblock: (*docblock).clone(),
-                iteration: _iteration,
-                reader: _reader.clone(),
-            };
-            let result = _visit(_options, &ast, ccx);
-            Ok(Some(((), result)))
-        }
+        Ok(Some(result)) => flow_services_inference::merge_service::finish_check_file(
+            result,
+            |(cx, type_sig, file_sig, typed_ast), (_, _, error_suppressions, _, _, _)| {
+                let ast = _reader.get_ast_unsafe(_file);
+                let docblock = _reader.get_docblock_unsafe(_file);
+                let ccx = codemod_context::typed::TypedCodemodContext {
+                    file: _file.clone(),
+                    type_sig,
+                    file_sig,
+                    metadata: _metadata.clone(),
+                    options: _options.clone(),
+                    cx,
+                    error_suppressions,
+                    typed_ast,
+                    docblock: (*docblock).clone(),
+                    iteration: _iteration,
+                    reader: _reader.clone(),
+                };
+                let result = _visit(_options, &ast, ccx);
+                Ok(Some(((), result)))
+            },
+        ),
     }
 }
 
@@ -380,11 +384,6 @@ fn mk_check<'a, A>(
         Arc::new(options.clone()),
         master_cx,
         flow_services_references::find_refs_types::empty_request(),
-        // The codemod's `post_check` normalizes the cx after `check`
-        // returns and needs lazy ForcingStates to resolve to their real
-        // types. Skip the eager cleanup; the cache's Drop impl will run
-        // the full cleanup once the codemod is done with the cx.
-        true,
     );
     move |file: FileKey| {
         let result = match check(file.clone()) {
@@ -843,29 +842,26 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                 Arc::new(options.clone()),
                 master_cx,
                 flow_services_references::find_refs_types::empty_request(),
-                // Prepass passes the cx into `prepass_run`, which may force
-                // lazy ForcingStates on demand. Skip the eager cleanup; the
-                // cache's Drop impl runs the full cleanup once prepass is
-                // done with the cx.
-                true,
             );
             let mut acc: BTreeMap<FileKey, UnitResult<C::PrepassResult>> = BTreeMap::new();
             let files_to_check_list: Vec<FileKey> = files_to_check.iter().cloned().collect();
             for file in files_to_check_list {
                 match check(file.clone()) {
                     flow_services_inference::merge_service::CheckJobOutcome::Ok(None) => {}
-                    flow_services_inference::merge_service::CheckJobOutcome::Ok(Some((
-                        (cx, _type_sig, file_sig, typed_ast),
-                        _,
-                    ))) => {
-                        let result = C::prepass_run(
-                            cx,
-                            &state,
-                            file.clone(),
-                            &options.file_options,
-                            &reader,
-                            &file_sig,
-                            &typed_ast,
+                    flow_services_inference::merge_service::CheckJobOutcome::Ok(Some(result)) => {
+                        let result = flow_services_inference::merge_service::finish_check_file(
+                            result,
+                            |(cx, _type_sig, file_sig, typed_ast), _| {
+                                C::prepass_run(
+                                    cx,
+                                    &state,
+                                    file.clone(),
+                                    &options.file_options,
+                                    &reader,
+                                    &file_sig,
+                                    &typed_ast,
+                                )
+                            },
                         );
                         acc.insert(file, Ok(result));
                     }
