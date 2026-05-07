@@ -8,7 +8,7 @@ const {readFileSync, readdirSync} = require('fs');
 const {join} = require('path');
 const {suite, test} = require('../../Tester');
 
-module.exports = (suite(
+module.exports = suite(
   ({
     lspNotification,
     lspStartAndConnect,
@@ -153,7 +153,7 @@ module.exports = (suite(
         // Definition of a method in a parameterized class
         snapshot('classInheritance.js', 25, 3, 'class_inheritance_5.json'),
         // Call of an instance method on an upcasted class
-        snapshot('classInheritance.js', 31, 15, 'class_inheritance_6.json'),
+        snapshot('classInheritance.js', 31, 17, 'class_inheritance_6.json'),
 
         // TODO it would be nice if the results included the use of the inherited class property.
         // Definition of a static class property
@@ -289,4 +289,4 @@ x.foo;
       ]),
     ];
   },
-): SuiteType);
+) as SuiteType;

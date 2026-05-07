@@ -29,7 +29,7 @@ new Foo().bar();
 
 // Even though this is a `C1` instance at runtime, and so it calls `C1`'s `bar` implementation, it
 // is typed as an `A` instance so other uses of `C1`'s `bar` are not returned.
-(new C1(): A).bar();
+(new C1() as A).bar();
 
 class HasNoBar { }
 // $FlowFixMe

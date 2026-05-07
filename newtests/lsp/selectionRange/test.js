@@ -7,7 +7,7 @@ import type LSPMessage from 'flow-dev-tools/src/test/lsp';
 import type {SuiteType} from '../../Tester';
 const {suite, test} = require('../../Tester');
 
-module.exports = (suite(
+module.exports = suite(
   ({
     addFile,
     addFiles,
@@ -2235,4 +2235,4 @@ module.exports = (suite(
       ]),
     ];
   },
-): SuiteType);
+) as SuiteType;

@@ -6,7 +6,7 @@
 import type {SuiteType} from '../../Tester';
 const {suite, test} = require('../../Tester');
 
-module.exports = (suite(
+module.exports = suite(
   ({
     startFlowServer,
     lspStart,
@@ -238,4 +238,4 @@ jones();
       ),
     ]),
   ],
-): SuiteType);
+) as SuiteType;

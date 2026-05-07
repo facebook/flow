@@ -30,7 +30,7 @@ if (nullable != null) {
   console.log(nullable.length);
   nullable = null;
 }
-(nullable: null);
+nullable as null;
 
 // Destructuring
 let { x, y } = { x: 0, y: 0 };
@@ -54,10 +54,10 @@ class Fancy extends React.Component {
 // Imports
 import { wut3 } from 'wutland';
 import type { wut4 } from 'wutland';
-(wut3: wut4);
+wut3 as wut4;
 
 // Qualified types
-(null: React.Component);
+null as React.Component;
 
 // Exports
 export const exportedConst = 5;

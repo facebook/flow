@@ -8,7 +8,7 @@ const path = require('path');
 const {suite, test} = require('../../../../Tester');
 const {generateSimpleTests} = require('../../test-utils');
 
-module.exports = (suite(
+module.exports = suite(
   ({
     lspStartAndConnect,
     lspStart,
@@ -600,4 +600,4 @@ module.exports = (suite(
       ),
     ]),
   ],
-): SuiteType);
+) as SuiteType;

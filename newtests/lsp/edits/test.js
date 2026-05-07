@@ -6,7 +6,7 @@
 import type {SuiteType} from '../../Tester';
 const {suite, test} = require('../../Tester');
 
-module.exports = (suite(
+module.exports = suite(
   ({
     lspStartAndConnect,
     lspRequestAndWaitUntilResponse,
@@ -69,4 +69,4 @@ wilbur();
       ),
     ]),
   ],
-): SuiteType);
+) as SuiteType;

@@ -7,7 +7,7 @@ import type {SuiteType} from '../../../Tester';
 const path = require('path');
 const {suite, test} = require('../../../Tester');
 
-module.exports = (suite(
+module.exports = suite(
   ({
     lspStartAndConnect,
     lspStart,
@@ -586,4 +586,4 @@ module.exports = (suite(
       ],
     ).flowConfig('_flowconfig_match'),
   ],
-): SuiteType);
+) as SuiteType;

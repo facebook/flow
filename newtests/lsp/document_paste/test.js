@@ -8,7 +8,7 @@ const {readFileSync, readdirSync} = require('fs');
 const {join} = require('path');
 const {suite, test} = require('../../Tester');
 
-module.exports = (suite(
+module.exports = suite(
   ({
     lspNotification,
     lspStartAndConnect,
@@ -127,4 +127,4 @@ module.exports = (suite(
       ]),
     ];
   },
-): SuiteType);
+) as SuiteType;

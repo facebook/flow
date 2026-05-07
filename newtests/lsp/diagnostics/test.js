@@ -6,7 +6,7 @@
 import type {SuiteType} from '../../Tester';
 const {suite, test} = require('../../Tester');
 
-module.exports = (suite(
+module.exports = suite(
   ({
     lspStartAndConnect,
     lspRequestAndWaitUntilResponse,
@@ -522,7 +522,7 @@ function broken(): number {return 1+;}
           version: 1,
           text: `// @flow
           import value from './importme';
-          (value: boolean); // This will error
+          value as boolean; // This will error
           `,
         },
       })
@@ -608,4 +608,4 @@ function broken(): number {return 1+;}
         ),
     ]),
   ],
-): SuiteType);
+) as SuiteType;

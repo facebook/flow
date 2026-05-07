@@ -15,7 +15,7 @@ const {suite, test} = require('../../Tester');
  * These tests sanity check that a local rename works and test that destructured/shorthand
  * renames are handled correctly.
  */
-module.exports = (suite(
+module.exports = suite(
   ({
     lspNotification,
     lspStartAndConnect,
@@ -108,4 +108,4 @@ module.exports = (suite(
       ]),
     ];
   },
-): SuiteType);
+) as SuiteType;

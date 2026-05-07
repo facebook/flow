@@ -6,7 +6,7 @@
 import type {SuiteType} from '../../Tester';
 const {suite, test} = require('../../Tester');
 
-module.exports = (suite(
+module.exports = suite(
   ({
     lspStartAndConnect,
     lspStart,
@@ -10194,4 +10194,4 @@ b.te
       ),
     ]),
   ],
-): SuiteType);
+) as SuiteType;

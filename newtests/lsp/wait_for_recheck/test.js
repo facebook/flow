@@ -13,7 +13,7 @@ const {suite, test} = require('../../Tester');
  * parallel with a recheck will return a response. Those that don't will
  * timeout
  */
-module.exports = (suite(
+module.exports = suite(
   ({
     lspStartAndConnect,
     lspNotification,
@@ -325,4 +325,4 @@ module.exports = (suite(
         .timeout(10000),
     ]).waitForRecheck(false),
   ],
-): SuiteType);
+) as SuiteType;

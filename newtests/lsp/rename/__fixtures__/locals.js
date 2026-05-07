@@ -21,11 +21,11 @@ let { [x]: y } = { };
 // Imports
 import { wut3 } from 'wutland';
 import type { wut4 } from 'wutland';
-(wut3: wut4);
+wut3 as wut4;
 import { type wut5 } from 'wutland';
 import { type wut6 as wutLocal } from 'wutland';
-(wut: wut5);
-(wut: wutLocal);
+wut as wut5;
+wut as wutLocal;
 
 // Exports
 const localVar = 1;

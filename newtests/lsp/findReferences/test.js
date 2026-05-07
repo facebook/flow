@@ -13,7 +13,7 @@ const {suite, test} = require('../../Tester');
  * much more comprehensive and covers the more complex behaviors of findReferences. Rather than
  * duplicate the test suites, this test just sanity checks that findReferences is working end-to-end
  */
-module.exports = (suite(
+module.exports = suite(
   ({
     lspNotification,
     lspStartAndConnect,
@@ -96,4 +96,4 @@ module.exports = (suite(
       ]).flowConfig('_flowconfig_match'),
     ];
   },
-): SuiteType);
+) as SuiteType;

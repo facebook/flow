@@ -20,11 +20,11 @@
           "newText": "NEW_NAME",
           "range": {
             "end": {
-              "character": 11,
+              "character": 12,
               "line": 23
             },
             "start": {
-              "character": 7,
+              "character": 8,
               "line": 23
             }
           }

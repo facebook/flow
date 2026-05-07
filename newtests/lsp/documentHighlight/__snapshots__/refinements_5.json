@@ -57,11 +57,11 @@
       "kind": 1,
       "range": {
         "end": {
-          "character": 9,
+          "character": 8,
           "line": 32
         },
         "start": {
-          "character": 1,
+          "character": 0,
           "line": 32
         }
       }
