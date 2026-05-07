@@ -3,7 +3,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `e` to empty because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
    catch-param.js:18:3
-   18|   e as empty; // ERROR - is `mixed`
+   18|   e as empty; // ERROR - is `unknown`
          ^
 
 References:
@@ -11,7 +11,7 @@ References:
    17| } catch (e: unknown) { // OK
                    ^^^^^^^ [1]
    catch-param.js:18:8
-   18|   e as empty; // ERROR - is `mixed`
+   18|   e as empty; // ERROR - is `unknown`
               ^^^^^ [2]
 
 

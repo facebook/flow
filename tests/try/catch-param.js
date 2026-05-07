@@ -12,11 +12,11 @@ try {
   e as unknown; // OK - is `any`
 }
 
-// `mixed` annotation
+// `unknown` annotation
 try {
 } catch (e: unknown) { // OK
-  e as empty; // ERROR - is `mixed`
-  e as unknown; // OK - is `mixed`
+  e as empty; // ERROR - is `unknown`
+  e as unknown; // OK - is `unknown`
 
   if (e instanceof Error) { // OK
     e as Error; // OK
