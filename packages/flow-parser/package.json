@@ -14,7 +14,8 @@
   "main": "flow_parser.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/facebook/flow.git"
+    "url": "git+https://github.com/facebook/flow.git",
+    "directory": "packages/flow-parser"
   },
   "scripts": {
     "test": "node test/run_tests.js",

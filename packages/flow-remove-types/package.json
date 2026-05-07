@@ -29,7 +29,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/facebook/flow.git"
+    "url": "git+https://github.com/facebook/flow.git",
+    "directory": "packages/flow-remove-types"
   },
   "scripts": {
     "test": "./test.sh",

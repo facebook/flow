@@ -12,6 +12,11 @@
     "flowtype"
   ],
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/flow.git",
+    "directory": "packages/eslint-plugin-fb-flow"
+  },
   "scripts": {
     "test": "jest"
   },

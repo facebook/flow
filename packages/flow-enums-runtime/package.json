@@ -9,7 +9,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facebook/flow.git"
+    "url": "git+https://github.com/facebook/flow.git",
+    "directory": "packages/flow-enums-runtime"
   },
   "devDependencies": {
     "jest": "^27.4.3"

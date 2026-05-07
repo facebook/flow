@@ -9,7 +9,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facebook/flow.git"
+    "url": "git+https://github.com/facebook/flow.git",
+    "directory": "packages/babel-plugin-transform-flow-enums"
   },
   "dependencies": {
     "@babel/plugin-syntax-flow": "^7.12.1"

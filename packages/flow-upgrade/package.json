@@ -22,7 +22,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facebook/flow.git"
+    "url": "git+https://github.com/facebook/flow.git",
+    "directory": "packages/flow-upgrade"
   },
   "bugs": {
     "url": "https://github.com/facebook/flow/issues"
