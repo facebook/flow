@@ -7,13 +7,13 @@ class MyComponent extends React.Component<{ foo: number }> {
   }
 }
 
-function wrapper<TProps extends {...}, TRenders extends React$Node>(
+function wrapper<TProps extends {...}, TRenders extends React.Node>(
   base: component(...TProps) renders TRenders,
 ): component(...TProps) renders TRenders {
   return base;
 }
 
-function wrapper2<TProps extends {...}, TInstance, TRenders extends React$Node>(
+function wrapper2<TProps extends {...}, TInstance, TRenders extends React.Node>(
   base: component(...TProps) renders TRenders,
 ): component(...TProps) renders TRenders {
   return base;

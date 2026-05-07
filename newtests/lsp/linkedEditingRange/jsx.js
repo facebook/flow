@@ -1,6 +1,6 @@
 // @flow
 
-declare function Foo(): React$Node;
+declare function Foo(): React.Node;
 
 {
   <Foo>

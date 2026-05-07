@@ -3,7 +3,7 @@
 import * as React from 'react';
 
 component Foo() {return 0}
-declare function Bar(): React$Node;
+declare function Bar(): React.Node;
 
 type RBad0 = renders React.Node; // no fix
 type RBad1 = renders ExactReactElement_DEPRECATED<typeof Bar>; // no fix

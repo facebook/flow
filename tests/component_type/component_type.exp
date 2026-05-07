@@ -523,7 +523,7 @@ References:
    9| Component as component(...{...}); // Error, missing foo
                    ^^^^^^^^^^^^^^^^^^^ [1]
    function_lower.js:4:23
-   4| function Component(x: Props): React$Node {
+   4| function Component(x: Props): React.Node {
                             ^^^^^ [2]
 
 

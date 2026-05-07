@@ -9,23 +9,23 @@ type $JSXIntrinsics = {
     instance: CommonInstance,
   },
   a: {
-    props: {children?: React$Node, ...},
+    props: {children?: React.Node, ...},
     instance: AInstance,
   },
   div: {
-    props: {children?: React$Node, ...},
+    props: {children?: React.Node, ...},
     instance: CommonInstance,
   },
   span: {
-    props: {children?: React$Node, ...},
+    props: {children?: React.Node, ...},
     instance: CommonInstance,
   },
   input: {
-    props: {children?: React$Node, ...},
+    props: {children?: React.Node, ...},
     instance: InputInstance,
   },
   meta: {
-    props: {children?: React$Node, [StringPrefix<'data-'>]: string | number},
+    props: {children?: React.Node, [StringPrefix<'data-'>]: string | number},
     instance: MetaInstance,
   },
 }

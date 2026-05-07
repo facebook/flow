@@ -2404,7 +2404,7 @@ Cannot cast `intrinsicProp.children` to empty because `$Iterable` [1] is incompa
 
 References:
    flow-typed/jsx.js:16:24
-   16|     props: {children?: React$Node, ...},
+   16|     props: {children?: React.Node, ...},
                               ^^^^^^^^^^ [1]
    propsof.js:14:27
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2422,7 +2422,7 @@ Cannot cast `intrinsicProp.children` to empty because `ExactReactElement_DEPRECA
 
 References:
    flow-typed/jsx.js:16:24
-   16|     props: {children?: React$Node, ...},
+   16|     props: {children?: React.Node, ...},
                               ^^^^^^^^^^ [1]
    propsof.js:14:27
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2440,7 +2440,7 @@ Cannot cast `intrinsicProp.children` to empty because `React.Portal` [1] is inco
 
 References:
    flow-typed/jsx.js:16:24
-   16|     props: {children?: React$Node, ...},
+   16|     props: {children?: React.Node, ...},
                               ^^^^^^^^^^ [1]
    propsof.js:14:27
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2457,7 +2457,7 @@ Cannot cast `intrinsicProp.children` to empty because boolean [1] is incompatibl
 
 References:
    flow-typed/jsx.js:16:24
-   16|     props: {children?: React$Node, ...},
+   16|     props: {children?: React.Node, ...},
                               ^^^^^^^^^^ [1]
    propsof.js:14:27
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2474,7 +2474,7 @@ Cannot cast `intrinsicProp.children` to empty because null [1] is incompatible w
 
 References:
    flow-typed/jsx.js:16:24
-   16|     props: {children?: React$Node, ...},
+   16|     props: {children?: React.Node, ...},
                               ^^^^^^^^^^ [1]
    propsof.js:14:27
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2491,7 +2491,7 @@ Cannot cast `intrinsicProp.children` to empty because number [1] is incompatible
 
 References:
    flow-typed/jsx.js:16:24
-   16|     props: {children?: React$Node, ...},
+   16|     props: {children?: React.Node, ...},
                               ^^^^^^^^^^ [1]
    propsof.js:14:27
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2508,7 +2508,7 @@ Cannot cast `intrinsicProp.children` to empty because string [1] is incompatible
 
 References:
    flow-typed/jsx.js:16:24
-   16|     props: {children?: React$Node, ...},
+   16|     props: {children?: React.Node, ...},
                               ^^^^^^^^^^ [1]
    propsof.js:14:27
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2525,7 +2525,7 @@ Cannot cast `intrinsicProp.children` to empty because undefined [1] is incompati
 
 References:
    flow-typed/jsx.js:16:24
-   16|     props: {children?: React$Node, ...},
+   16|     props: {children?: React.Node, ...},
                               ^^^^^^^^^^ [1]
    propsof.js:14:27
    14| intrinsicProp.children as empty; // children is ?React.Node

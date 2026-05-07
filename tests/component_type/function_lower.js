@@ -1,7 +1,7 @@
 //@flow
 
 type Props = {+foo: number, ...};
-function Component(x: Props): React$Node {
+function Component(x: Props): React.Node {
   return null;
 }
 

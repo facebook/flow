@@ -6,7 +6,7 @@ type $JSXIntrinsics = {
     instance: CommonInstance,
   },
   div: {
-    props: {children?: React$Node, ...},
+    props: {children?: React.Node, ...},
     instance: CommonInstance,
   },
 }

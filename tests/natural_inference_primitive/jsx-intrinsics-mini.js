@@ -24,7 +24,7 @@ type ReactDOM$HTMLElementJSXIntrinsic = {
   instance: HTMLElement,
   props: {
     +[key: string]: any,
-    +children?: React$Node,
+    +children?: React.Node,
     ...
   },
   ...

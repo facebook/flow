@@ -2,7 +2,7 @@
 component FooBad() renders null { /* invalid-render */ return null; }
 component Foo() { return null; }
 
-component BarBad() renders React$Node { /* invalid-render */ return null; }
+component BarBad() renders React.Node { /* invalid-render */ return null; }
 component Bar() {  return null; }
 
 component Baz() renders Foo {
@@ -17,7 +17,7 @@ component Qux() renders (
 
 declare const rendersFoo: renders Foo;
 declare const rendersBaz: renders Baz;
-declare const rendersNode: renders React$Node; // invalid-render
+declare const rendersNode: renders React.Node; // invalid-render
 declare const rendersFooOrBar: renders (
   | Foo
   | Bar
@@ -33,8 +33,8 @@ declare const rendersBazOrBaz: renders (
 
 /* Renders ~> Union */
 {
-  rendersNode as React$Node; // OK
-  rendersNode as renders React$Node; // type checks, but invalid-render
+  rendersNode as React.Node; // OK
+  rendersNode as renders React.Node; // type checks, but invalid-render
   rendersFooOrBar as typeof rendersFooOrRendersBar; // ERROR
   rendersFooOrRendersBar as typeof rendersFooOrBar; // OK
 }
@@ -100,7 +100,7 @@ declare const rendersBazOrBaz: renders (
   null as renders null; // type checks, but invalid-render
   Foo as renders Foo; // ERROR
   3 as renders (null | number); // type checks, but invalid-render
-  declare const x: ExactReactElement_DEPRECATED<() => React$Node>;
+  declare const x: ExactReactElement_DEPRECATED<() => React.Node>;
   x as renders typeof x; // type checks, but invalid-render
   declare const mixedElement: React.MixedElement;
   // The test below ensures repositioning does not hit unsoundness in speculation
@@ -116,10 +116,10 @@ declare const rendersBazOrBaz: renders (
 {
   rendersFooOrBar as React.MixedElement; // OK
   rendersFooOrBar as empty; // ERROR
-  rendersFooOrBar as React$Node; // OK
-  rendersFooOrBar as React$Node; // OK
+  rendersFooOrBar as React.Node; // OK
+  rendersFooOrBar as React.Node; // OK
   rendersNode as React.MixedElement; // invalid-render of rendersNode makes LHS any
-  rendersNode as React$Node; // OK
+  rendersNode as React.Node; // OK
   declare const rendersNullOrNull: renders (null | null); // invalid-render
   rendersNullOrNull as null; // invalid-render of rendersNullOrNull makes LHS any
   rendersFooOrBar.props; // ERROR

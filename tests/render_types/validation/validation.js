@@ -2,7 +2,7 @@ import * as React from 'react';
 
 declare component Foo();
 component Bar<T>() {return 0}
-declare function Baz(): React$Node;
+declare function Baz(): React.Node;
 declare class Boz extends React.Component<{}> {}
 
 type ReactElementAlias<T> = ExactReactElement_DEPRECATED<T>;
@@ -18,19 +18,19 @@ type RBad0 = renders ExactReactElement_DEPRECATED<'svg'>; // error
 type RBad1 = renders ExactReactElement_DEPRECATED<typeof Baz>; // error
 type RBad2 = renders ExactReactElement_DEPRECATED<typeof Boz>; // error
 type RBad3 = renders 1; // error
-type RBad4 = renders React$Node; // error
+type RBad4 = renders React.Node; // error
 type RBad5 = renders Error; // error
 type RBad6 = component () renders ExactReactElement_DEPRECATED<typeof Baz>; // error
 
 component GoodComponentRenders() renders Foo {return <Foo />} // ok
 component BadComponentRenders() renders ExactReactElement_DEPRECATED<typeof Baz> {return <Baz />} // error
 
-component PermittedGenericRenders1<T extends React$Node>(children: T) renders T { return children } // ok
-component PermittedGenericRenders2<T extends React$Node>(children: T) renders (T | T) { return children } // ok
-component PermittedGenericRenders3<T extends React$Node>(children: T) renders? T { return children } // ok
+component PermittedGenericRenders1<T extends React.Node>(children: T) renders T { return children } // ok
+component PermittedGenericRenders2<T extends React.Node>(children: T) renders (T | T) { return children } // ok
+component PermittedGenericRenders3<T extends React.Node>(children: T) renders? T { return children } // ok
 component BannedGenericRenders1<T extends Error>(children: T) renders? T { return children } // error
-component BannedGenericRenders2<T extends React$Node>(children: T) renders? (T | GoodComponentRenders) { return children } // error
-type AllowedGenericRenders<T extends React$Node> = renders T; // ok
+component BannedGenericRenders2<T extends React.Node>(children: T) renders? (T | GoodComponentRenders) { return children } // error
+type AllowedGenericRenders<T extends React.Node> = renders T; // ok
 
 type BadSpecificRenders1 = renders (false | null | void); // error
 type BadSpecificRenders2 = renders (Array<ExactReactElement_DEPRECATED<typeof Foo>>); // error

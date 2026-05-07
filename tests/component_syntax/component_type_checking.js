@@ -39,7 +39,7 @@ component Defaults(
 }
 
 component ReactNodeDefaultReturn() {
-  declare const node: React$Node;
+  declare const node: React.Node;
   return node; // OK!
 }
 

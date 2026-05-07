@@ -139,7 +139,7 @@ function ResolveSpreadsToMultiflowSubtypeFull() {
 }
 
 type BaseProps<T> = {v: T};
-declare function ResolveUnion<T extends React$Key>(x: {
+declare function ResolveUnion<T extends React.Key>(x: {
   ...BaseProps<T>,
   foo: string,
 }): T;
