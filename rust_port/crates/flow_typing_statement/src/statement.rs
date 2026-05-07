@@ -6481,7 +6481,6 @@ fn expression_<'a>(
         has_hint,
     } = &syntactic_flags;
     let encl_ctx = encl_ctx.dupe();
-    let ex = e.dupe();
     use ast::expression::ExpressionInner;
     Ok(match e.deref() {
         ExpressionInner::StringLiteral { inner, .. } => {
@@ -6710,7 +6709,7 @@ fn expression_<'a>(
                 );
                 {
                     let Ok(v) =
-                        polymorphic_ast_mapper::expression(&mut typed_ast_utils::ErrorMapper, &ex);
+                        polymorphic_ast_mapper::expression(&mut typed_ast_utils::ErrorMapper, e);
                     v
                 }
             } else {
@@ -6812,7 +6811,7 @@ fn expression_<'a>(
             }
         }
         ExpressionInner::Member { .. } | ExpressionInner::OptionalMember { .. } => {
-            subscript(encl_ctx, cx, &ex)?
+            subscript(encl_ctx, cx, e)?
         }
         ExpressionInner::Object { inner, .. } => {
             let as_const = *as_const;
@@ -6845,7 +6844,7 @@ fn expression_<'a>(
                 );
                 {
                     let Ok(v) =
-                        polymorphic_ast_mapper::expression(&mut typed_ast_utils::ErrorMapper, &ex);
+                        polymorphic_ast_mapper::expression(&mut typed_ast_utils::ErrorMapper, e);
                     v
                 }
             } else {
@@ -6867,7 +6866,7 @@ fn expression_<'a>(
                 );
                 let use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::RecordCreate(Box::new(
                     RecordCreateData {
-                        op: mk_expression_reason(&ex),
+                        op: mk_expression_reason(e),
                         constructor: mk_expression_reason(&inner.constructor),
                         properties: props_loc.dupe(),
                     },
@@ -7281,7 +7280,7 @@ fn expression_<'a>(
                     {
                         let Ok(v) = polymorphic_ast_mapper::expression(
                             &mut typed_ast_utils::ErrorMapper,
-                            &ex,
+                            e,
                         );
                         v
                     }
@@ -7305,7 +7304,7 @@ fn expression_<'a>(
                 loc.dupe(),
             );
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
-                op: mk_expression_reason(&ex),
+                op: mk_expression_reason(e),
                 fn_: mk_expression_reason(&inner.callee),
                 args: args_reasons.into(),
                 local: true,
@@ -7382,9 +7381,9 @@ fn expression_<'a>(
         }
         ExpressionInner::Call { .. } => {
             cx.set_enclosing_context_for_call(loc.dupe(), encl_ctx.dupe());
-            subscript(encl_ctx, cx, &ex)?
+            subscript(encl_ctx, cx, e)?
         }
-        ExpressionInner::OptionalCall { .. } => subscript(encl_ctx, cx, &ex)?,
+        ExpressionInner::OptionalCall { .. } => subscript(encl_ctx, cx, e)?,
         ExpressionInner::Conditional { inner, .. } => {
             let has_hint: LazyBool<'a> = {
                 let old_has_hint = has_hint.dupe();
@@ -7664,7 +7663,7 @@ fn expression_<'a>(
             );
             {
                 let Ok(v) =
-                    polymorphic_ast_mapper::expression(&mut typed_ast_utils::ErrorMapper, &ex);
+                    polymorphic_ast_mapper::expression(&mut typed_ast_utils::ErrorMapper, e);
                 v
             }
         }
@@ -7700,7 +7699,7 @@ fn expression_<'a>(
                 ret_tvar.dupe(),
             );
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall(Box::new(FunCallData {
-                op: mk_expression_reason(&ex),
+                op: mk_expression_reason(e),
                 fn_: mk_expression_reason(&inner.tag),
                 args: vec![].into(),
                 local: true,
@@ -7996,7 +7995,7 @@ fn expression_<'a>(
             );
             {
                 let Ok(v) =
-                    polymorphic_ast_mapper::expression(&mut typed_ast_utils::ErrorMapper, &ex);
+                    polymorphic_ast_mapper::expression(&mut typed_ast_utils::ErrorMapper, e);
                 v
             }
         }
@@ -8113,7 +8112,7 @@ fn expression_<'a>(
                         {
                             let Ok(v) = polymorphic_ast_mapper::expression(
                                 &mut typed_ast_utils::ErrorMapper,
-                                &ex,
+                                e,
                             );
                             v
                         }
@@ -8121,7 +8120,7 @@ fn expression_<'a>(
                         {
                             let Ok(v) = polymorphic_ast_mapper::expression(
                                 &mut typed_ast_utils::UncheckedMapper,
-                                &ex,
+                                e,
                             );
                             v
                         }
