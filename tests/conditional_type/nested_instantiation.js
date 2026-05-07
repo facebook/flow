@@ -11,6 +11,6 @@
 {
   declare function id<T>(x: Array<T>): Array<T>;
   type Id<T> = T extends Array<infer E> ? Array<E> : T;
-  declare var a: Id<Array<string>>;
+  declare const a: Id<Array<string>>;
   id(a); // ok
 }

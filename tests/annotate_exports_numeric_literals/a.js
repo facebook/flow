@@ -1,5 +1,5 @@
 // @flow
 
-declare var cond: boolean;
+declare const cond: boolean;
 
 module.exports = () => (cond ? 0 : 1);

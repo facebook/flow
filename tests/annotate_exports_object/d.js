@@ -11,7 +11,7 @@ function foo() {
 
 export const foo_ = foo();
 
-declare var b: {
+declare const b: {
   '-': 1,
   '': 2,
   '\u{1F60A}': 3,

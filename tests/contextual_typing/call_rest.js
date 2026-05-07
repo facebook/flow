@@ -13,7 +13,7 @@ function test0() {
 
 // Regression tests from support post
 function test1() {
-    declare var arrayBuffer: ArrayBuffer;
+    declare const arrayBuffer: ArrayBuffer;
     String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))); // okay - correct overload of Array.from selected
 }
 

@@ -76,7 +76,7 @@ function classexp() {
 }
 
 function decl() {
-  declare var x: number;
+  declare let x: number;
   declare function f(): void;
 
   x = 'hi';

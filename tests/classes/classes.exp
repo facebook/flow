@@ -289,9 +289,9 @@ Cannot cast `o` to statics of `C` because object type [1] is incompatible with s
        ^
 
 References:
-   statics.js:12:16
-   12| declare var o: {p: number, ...};
-                      ^^^^^^^^^^^^^^^^ [1]
+   statics.js:12:18
+   12| declare const o: {p: number, ...};
+                        ^^^^^^^^^^^^^^^^ [1]
    statics.js:13:6
    13| o as Class<C>; // error, object type incompatible with class type
             ^^^^^^^^ [2]

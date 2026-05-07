@@ -14,10 +14,10 @@ type T = interface {
     x : string
 }
 
-declare var a : A;
-declare var o : O;
-declare var i : I;
-declare var t : T;
+declare const a : A;
+declare const o : O;
+declare const i : I;
+declare const t : T;
 
 a as O; // error
 a as I;

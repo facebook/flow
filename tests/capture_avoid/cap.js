@@ -38,7 +38,7 @@ export default class L {
    change that one would like to be a no-op) we would suddenly
    have capture. */
 function f<X>(): X {
-  declare var a: <Y>() => <X>() => Y;
+  declare const a: <Y>() => <X>() => Y;
   var b = a<X>();
   var c = b<number>();
   return c;

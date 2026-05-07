@@ -14,7 +14,7 @@ export const arr6 = [{f: 1}] as const;            // readonly [{+f: 1}]
 const arr7 = [...[1, ...[2, 3]]] as const; // readonly [1, 2, 3]
 export const arr8 = [] as const;           // []
 
-declare var _: any;
+declare const _: any;
 
 // Tests
 

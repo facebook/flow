@@ -45,10 +45,10 @@ function recursive_awaited_type() {
   // but we still exercise the recursive conditional type behavior.
   type Awaited<T> = T extends Promise<infer F> ? Awaited<F> : T;
 
-  declare var awaited_null: Awaited<null>;
-  declare var awaited_n1: Awaited<number>;
-  declare var awaited_n2: Awaited<Promise<number>>;
-  declare var awaited_n3: Awaited<Promise<Promise<Promise<Promise<number>>>>>;
+  declare const awaited_null: Awaited<null>;
+  declare const awaited_n1: Awaited<number>;
+  declare const awaited_n2: Awaited<Promise<number>>;
+  declare const awaited_n3: Awaited<Promise<Promise<Promise<Promise<number>>>>>;
   awaited_null as empty; // error: null ~> empty
   awaited_n1 as empty; // error: number ~> empty
   awaited_n2 as empty; // error: number ~> empty

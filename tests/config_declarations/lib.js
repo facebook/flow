@@ -1,1 +1,1 @@
-declare var library_num: number;
+declare const library_num: number;

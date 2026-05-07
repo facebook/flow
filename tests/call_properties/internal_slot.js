@@ -19,10 +19,10 @@ declare class C1 {
 }
 C1() as empty; // error: void ~> empty
 
-declare var mixed_callable: { [[call]]: unknown, ... };
+declare const mixed_callable: { [[call]]: unknown, ... };
 mixed_callable();
 
-declare var annot_callable: { [[call]]: Fn, ... }
+declare const annot_callable: { [[call]]: Fn, ... }
 type Fn = string => number;
 annot_callable("foo") as number; // OK
 annot_callable(0); // error: number ~> string

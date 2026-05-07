@@ -2,5 +2,5 @@
 
 const React = require('react');
 
-declare var div: ExactReactElement_DEPRECATED<'div'>;
+declare const div: ExactReactElement_DEPRECATED<'div'>;
 module.exports = () => div;

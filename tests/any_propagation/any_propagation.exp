@@ -16,15 +16,15 @@ References:
    <BUILTINS>/core.js:1064:47
    1064|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
                                                        ^^^^^^^^^^^^^^^^ [1]
-   arrays.js:3:35
-      3| declare var noop : <T>(arr: Array<Array<T>>) => void;
-                                           ^^^^^^^^ [2]
+   arrays.js:3:37
+      3| declare const noop : <T>(arr: Array<Array<T>>) => void;
+                                             ^^^^^^^^ [2]
    <BUILTINS>/core.js:1064:41
    1064|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
                                                  ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   arrays.js:3:29
-      3| declare var noop : <T>(arr: Array<Array<T>>) => void;
-                                     ^^^^^^^^^^^^^^^ [4]
+   arrays.js:3:31
+      3| declare const noop : <T>(arr: Array<Array<T>>) => void;
+                                       ^^^^^^^^^^^^^^^ [4]
 
 
 

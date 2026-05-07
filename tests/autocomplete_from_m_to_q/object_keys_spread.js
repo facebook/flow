@@ -1,6 +1,6 @@
 //@flow
 
-declare var f : {
+declare const f : {
   a: number,
   b: number,
   c: number,

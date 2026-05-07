@@ -10,6 +10,6 @@ declare export class Map<K, +V> {
   static <K extends string, V>(object: { +[k: K]: V, ... }): Map<K, V>;
 }
 
-declare var unused_var: unbound_type; // sanity check: should surface this error
+declare const unused_var: unbound_type; // sanity check: should surface this error
 
 List([Map({name: "abc"})]); // no error

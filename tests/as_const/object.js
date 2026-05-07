@@ -15,7 +15,7 @@ export const obj8 = {f: {g: 1}} as const; // {+f: {+g: 1}}
 export const obj9 = {...{f: {...{g: {...{h: 1}}}}}} as const; // {+f: {+g: {+h: 1}}}
 export const obj10 = Object.freeze({f: 1, g: {h:1}} as const); // {+f: 1, +g: {+h: 1}}
 
-declare var _: any;
+declare const _: any;
 
 // Tests
 

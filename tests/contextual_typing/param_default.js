@@ -1,4 +1,4 @@
-declare var context: (a?: number) => void;
+declare let context: (a?: number) => void;
 context = (a) => {a as number}; // error: number | void ~> number
 context = (a?) => {a as number}; // error: number | void ~> number
 context = (a = 1) => {a as number}; // ok

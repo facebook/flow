@@ -585,7 +585,7 @@ poly_no_args.js:5:3
 Flags: --pretty
 {"result":[{"name":"x","type":"number"}]}
 
-qualified-type-annotation.js:5:23
+qualified-type-annotation.js:5:25
 Flags: --pretty
 {
   "result":[
@@ -595,7 +595,7 @@ Flags: --pretty
   ]
 }
 
-qualified-type-annotation-require.js:5:23
+qualified-type-annotation-require.js:5:25
 Flags: --pretty
 {
   "result":[

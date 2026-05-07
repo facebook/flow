@@ -2,7 +2,7 @@
 // when there are placeholders in the final solution.
 
 declare function id<T>(x: T): T;
-declare var str: string;
+declare const str: string;
 
 // Decomp_FuncParam
 id((item) => 1); // error

@@ -1,6 +1,6 @@
 type t = [ Set<string> | Array<string> ];
 
-declare var p: t;
+declare const p: t;
 const x: t =
 [ [
     ...Array.from(p[0]), // No error

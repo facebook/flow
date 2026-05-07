@@ -1,8 +1,8 @@
 // @flow
 
-declare var cond: boolean;
-declare var cond2: boolean;
-declare var cond3: boolean;
+declare const cond: boolean;
+declare const cond2: boolean;
+declare const cond3: boolean;
 
 module.exports = {
   b1: () =>

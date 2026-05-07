@@ -23,7 +23,7 @@ class Baz extends Bar<any> {
   };
 
   foo() {
-    declare var z :  { +x: number, ... };
+    declare const z :  { +x: number, ... };
     this.setState({ z });
   }
 }

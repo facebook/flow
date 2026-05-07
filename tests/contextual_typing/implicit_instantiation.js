@@ -19,7 +19,7 @@ function test2() {
   declare class Foo {
     bar<T>(f: (string) => T): T
   }
-  declare var foo: Foo;
+  declare const foo: Foo;
 
   const c = foo.bar((a) => a);
   c as string;
@@ -48,7 +48,7 @@ function test3() {
 
 function test4() {
   declare function foo<T>(x: T): Array<T>;
-  declare var n: number;
+  declare const n: number;
   const x: Array<?number> = foo(n); // OK
 
   declare function bar<T>(x?: T): Array<T>;
@@ -125,19 +125,19 @@ function test10() {
   type V = {};
   type Variables = {+[string]: any};
   declare opaque type Query<-TVariables extends Variables>;
-  declare var q: Query<V>;
+  declare const q: Query<V>;
   declare function poly<TVariables extends Variables>(q: Query<TVariables>): void;
   poly(q); // ok
 }
 
 function test11() {
-  declare var jest: {
+  declare const jest: {
     fn<TArguments extends ReadonlyArray<any> = ReadonlyArray<any>>(): (...args: TArguments)=>void
   }
-  declare var C1: React.ComponentType<{+f: () => void}>;
+  declare const C1: React.ComponentType<{+f: () => void}>;
   <C1 f={jest.fn()} />; // ok
 
-  declare var C2: React.ComponentType<{f1: () => void, f2: () => void}>
+  declare const C2: React.ComponentType<{f1: () => void, f2: () => void}>
   <C2 f1={jest.fn()} f2={jest.fn()} />; // ok
 }
 
@@ -189,7 +189,7 @@ function test18() {
 }
 
 function test19() {
-  declare var xs: Array<any>;
+  declare const xs: Array<any>;
 
   async function foo() {
     const imageHashes: Array<string> = await Promise.all(xs); // ok
@@ -199,7 +199,7 @@ function test19() {
 function test20() {
   type Record<T extends {...}> = { ...T, ... };
 
-  declare var fn: <TArguments, TReturn>(
+  declare const fn: <TArguments, TReturn>(
     implementation: (...args: TArguments) => TReturn,
   ) => { (...args: TArguments): TReturn };
 
@@ -210,7 +210,7 @@ function test20() {
 }
 
 function test21() {
-  declare var a: Array<number>;
+  declare const a: Array<number>;
 
   function F(): React.MixedElement {
     return (

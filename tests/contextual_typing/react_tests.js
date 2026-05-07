@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 function ref_tests() {
-  declare var Component1: component(ref: React.RefSetter<string>);
+  declare const Component1: component(ref: React.RefSetter<string>);
   <Component1 ref={(s) => s as string | null} />;
   declare class Component2 extends React.Component<{}> {}
   <Component2 ref={(s) => s as Component2 | null} />;

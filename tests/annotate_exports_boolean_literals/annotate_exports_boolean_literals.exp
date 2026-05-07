@@ -4,7 +4,7 @@
 >>> ./a.js
 // @flow
 
-declare var cond: boolean;
+declare const cond: boolean;
 
 module.exports = (): boolean => (cond ? true : false);
 
@@ -40,7 +40,7 @@ Warnings:
 >>> ./a.js
 // @flow
 
-declare var cond: boolean;
+declare const cond: boolean;
 
 module.exports = (): boolean => (cond ? true : false);
 

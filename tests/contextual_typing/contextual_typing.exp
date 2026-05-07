@@ -123,7 +123,7 @@ Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [inc
 
 References:
    destructuring_assignment.js:1:17
-   1| declare var a: (number) => unknown;
+   1| declare let a: (number) => unknown;
                       ^^^^^^ [1]
    destructuring_assignment.js:7:16
    7|    (n) => n as empty, // error: num ~> empty
@@ -140,7 +140,7 @@ Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [inc
 
 References:
    destructuring_assignment.js:2:17
-   2| declare var b: (number) => unknown;
+   2| declare let b: (number) => unknown;
                       ^^^^^^ [1]
    destructuring_assignment.js:9:19
    9|       (n) => n as empty, // error: num ~> empty
@@ -157,7 +157,7 @@ Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [inc
 
 References:
    destructuring_assignment.js:3:17
-    3| declare var c: (number) => unknown;
+    3| declare let c: (number) => unknown;
                        ^^^^^^ [1]
    destructuring_assignment.js:11:21
    11|         (n) => n as empty, // error: num ~> empty
@@ -174,7 +174,7 @@ Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [inc
 
 References:
    destructuring_assignment.js:4:17
-    4| declare var d: (number) => unknown;
+    4| declare let d: (number) => unknown;
                        ^^^^^^ [1]
    destructuring_assignment.js:12:25
    12|         {d: (n) => n as empty} // error: num ~> empty
@@ -191,7 +191,7 @@ Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [inc
 
 References:
    destructuring_assignment.js:1:17
-    1| declare var a: (number) => unknown;
+    1| declare let a: (number) => unknown;
                        ^^^^^^ [1]
    destructuring_assignment.js:17:18
    17|   a: (n) => n as empty, // error: num ~> empty
@@ -208,7 +208,7 @@ Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [inc
 
 References:
    destructuring_assignment.js:2:17
-    2| declare var b: (number) => unknown;
+    2| declare let b: (number) => unknown;
                        ^^^^^^ [1]
    destructuring_assignment.js:18:18
    18|   b: (n) => n as empty, // error: num ~> empty
@@ -225,7 +225,7 @@ Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [inc
 
 References:
    destructuring_assignment.js:21:31
-   21| declare var e: ReadonlyArray<(number) => unknown>;
+   21| declare let e: ReadonlyArray<(number) => unknown>;
                                      ^^^^^^ [1]
    destructuring_assignment.js:23:23
    23| [...e] = [(n) => n as empty]; // error: num ~> empty
@@ -242,7 +242,7 @@ Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [inc
 
 References:
    destructuring_assignment.js:22:28
-   22| declare var f: {[string]: (number) => unknown};
+   22| declare let f: {[string]: (number) => unknown};
                                   ^^^^^^ [1]
    destructuring_assignment.js:24:31
    24| ({...f} = {hello: (n) => n as empty}); // error: num ~> empty
@@ -680,9 +680,9 @@ Cannot cast `tag` to number because string [1] is incompatible with number [2]. 
                                  ^^^
 
 References:
-   intersections.js:51:36
-   51|   declare var tags: ?ReadonlyArray<string>;
-                                          ^^^^^^ [1]
+   intersections.js:51:38
+   51|   declare const tags: ?ReadonlyArray<string>;
+                                            ^^^^^^ [1]
    intersections.js:53:34
    53|   tagsList.forEach(tag => tag as number); // error: string ~> number
                                         ^^^^^^ [2]
@@ -705,9 +705,9 @@ References:
    intersections.js:57:32
    57|   declare function overload(a: string, b: (string) => void): void;
                                       ^^^^^^ [2]
-   intersections.js:60:21
-   60|   declare var foo: ?string;
-                           ^^^^^^ [3]
+   intersections.js:60:23
+   60|   declare const foo: ?string;
+                             ^^^^^^ [3]
    intersections.js:58:32
    58|   declare function overload(a: number, b: (number) => void): void;
                                       ^^^^^^ [4]
@@ -791,7 +791,7 @@ Cannot cast `a` to number because undefined [1] is incompatible with number [2].
 
 References:
    param_default.js:1:27
-   1| declare var context: (a?: number) => void;
+   1| declare let context: (a?: number) => void;
                                 ^^^^^^ [1]
    param_default.js:2:24
    2| context = (a) => {a as number}; // error: number | void ~> number
@@ -808,7 +808,7 @@ Cannot cast `a` to number because undefined [1] is incompatible with number [2].
 
 References:
    param_default.js:1:27
-   1| declare var context: (a?: number) => void;
+   1| declare let context: (a?: number) => void;
                                 ^^^^^^ [1]
    param_default.js:3:25
    3| context = (a?) => {a as number}; // error: number | void ~> number
@@ -842,16 +842,16 @@ Cannot assign undefined to `a` because undefined [1] is incompatible with number
 
 References:
    param_default.js:1:27
-   1| declare var context: (a?: number) => void;
+   1| declare let context: (a?: number) => void;
                                 ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------- poly_class_static_sanity_test.js:13:25
+Error --------------------------------------------------------------------------- poly_class_static_sanity_test.js:13:27
 
 Cannot resolve name `unbound_type`. [cannot-resolve-name]
 
-   13| declare var unused_var: unbound_type; // sanity check: should surface this error
-                               ^^^^^^^^^^^^
+   13| declare const unused_var: unbound_type; // sanity check: should surface this error
+                                 ^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------- react_tests.js:19:5
@@ -897,9 +897,9 @@ Cannot cast `u` to string because number [1] is incompatible with string [2]. [i
                           ^
 
 References:
-   refinements.js:4:33
-   4|   declare var x: { m?: (cb: (n: number) => void) => void };
-                                      ^^^^^^ [1]
+   refinements.js:4:35
+   4|   declare const x: { m?: (cb: (n: number) => void) => void };
+                                        ^^^^^^ [1]
    refinements.js:6:26
    6|   x.m && x.m(u => { u as string; }); // error number ~> string
                                ^^^^^^ [2]
@@ -914,9 +914,9 @@ Cannot call `x.m` because undefined [1] is not a function. [not-a-function]
              ^
 
 References:
-   refinements.js:4:24
-    4|   declare var x: { m?: (cb: (n: number) => void) => void };
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinements.js:4:26
+    4|   declare const x: { m?: (cb: (n: number) => void) => void };
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:10:9
@@ -936,9 +936,9 @@ Cannot cast `u` to string because number [1] is incompatible with string [2]. [i
                       ^
 
 References:
-   refinements.js:4:33
-    4|   declare var x: { m?: (cb: (n: number) => void) => void };
-                                       ^^^^^^ [1]
+   refinements.js:4:35
+    4|   declare const x: { m?: (cb: (n: number) => void) => void };
+                                         ^^^^^^ [1]
    refinements.js:18:21
    18|     x.m(u => { u as string; }); // error number ~> string
                            ^^^^^^ [2]
@@ -953,9 +953,9 @@ Cannot cast `u` to string because number [1] is incompatible with string [2]. [i
                              ^
 
 References:
-   refinements.js:23:34
-   23|   declare var x: ?{ m?: (cb: (n: number) => void) => void };
-                                        ^^^^^^ [1]
+   refinements.js:23:36
+   23|   declare const x: ?{ m?: (cb: (n: number) => void) => void };
+                                          ^^^^^^ [1]
    refinements.js:25:28
    25|   x?.m && x?.m(u => { u as string; }); // error number ~> string
                                   ^^^^^^ [2]
@@ -970,9 +970,9 @@ Cannot call `x?.m` because undefined [1] is not a function. [not-a-function]
               ^
 
 References:
-   refinements.js:23:25
-   23|   declare var x: ?{ m?: (cb: (n: number) => void) => void };
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinements.js:23:27
+   23|   declare const x: ?{ m?: (cb: (n: number) => void) => void };
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinements.js:29:10
@@ -992,9 +992,9 @@ Cannot cast `u` to string because number [1] is incompatible with string [2]. [i
                        ^
 
 References:
-   refinements.js:23:34
-   23|   declare var x: ?{ m?: (cb: (n: number) => void) => void };
-                                        ^^^^^^ [1]
+   refinements.js:23:36
+   23|   declare const x: ?{ m?: (cb: (n: number) => void) => void };
+                                          ^^^^^^ [1]
    refinements.js:37:22
    37|     x?.m(u => { u as string; }); // error number ~> string
                             ^^^^^^ [2]
@@ -1212,9 +1212,9 @@ Cannot cast `elem` to empty because string [1] is incompatible with empty [2]. [
            ^^^^
 
 References:
-   unions.js:46:34
-   46|   declare var mixedArray1: Array<string> | Array<number>;
-                                        ^^^^^^ [1]
+   unions.js:46:36
+   46|   declare const mixedArray1: Array<string> | Array<number>;
+                                          ^^^^^^ [1]
    unions.js:49:13
    49|     elem as empty; // error number ~> empty
                    ^^^^^ [2]
@@ -1229,9 +1229,9 @@ Cannot cast `elem` to empty because number [1] is incompatible with empty [2]. [
            ^^^^
 
 References:
-   unions.js:46:50
-   46|   declare var mixedArray1: Array<string> | Array<number>;
-                                                        ^^^^^^ [1]
+   unions.js:46:52
+   46|   declare const mixedArray1: Array<string> | Array<number>;
+                                                          ^^^^^^ [1]
    unions.js:49:13
    49|     elem as empty; // error number ~> empty
                    ^^^^^ [2]
@@ -1246,9 +1246,9 @@ Cannot cast `elem` to empty because number [1] is incompatible with empty [2]. [
            ^^^^
 
 References:
-   unions.js:53:49
-   53|   declare var mixedArray2: Array<empty> | Array<number>;
-                                                       ^^^^^^ [1]
+   unions.js:53:51
+   53|   declare const mixedArray2: Array<empty> | Array<number>;
+                                                         ^^^^^^ [1]
    unions.js:56:13
    56|     elem as empty; // error number ~> empty
                    ^^^^^ [2]
@@ -1263,9 +1263,9 @@ Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [inc
            ^
 
 References:
-   unions.js:60:34
-   60|   declare var mixedArray3: Array<number> | Array<empty>;
-                                        ^^^^^^ [1]
+   unions.js:60:36
+   60|   declare const mixedArray3: Array<number> | Array<empty>;
+                                          ^^^^^^ [1]
    unions.js:62:10
    62|     x as empty; // error number ~> empty
                 ^^^^^ [2]

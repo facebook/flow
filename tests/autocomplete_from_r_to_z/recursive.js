@@ -1,6 +1,6 @@
 // @flow
 
-declare var Foo: React.ComponentType<Props>;
+declare const Foo: React.ComponentType<Props>;
 
 type Props = Readonly<{
   children?: typeof Foo,

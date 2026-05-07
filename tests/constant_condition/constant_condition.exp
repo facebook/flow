@@ -10,9 +10,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                   ^
 
 References:
-   err1/boolean_literal.js:2:20
-   2|     declare var x: boolean;
-                         ^^^^^^^ [1]
+   err1/boolean_literal.js:2:22
+   2|     declare const x: boolean;
+                           ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- err1/boolean_literal.js:8:13
@@ -27,9 +27,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                   ^
 
 References:
-   err1/boolean_literal.js:2:20
-   2|     declare var x: boolean;
-                         ^^^^^^^ [1]
+   err1/boolean_literal.js:2:22
+   2|     declare const x: boolean;
+                           ^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- err1/function.js:3:9
@@ -242,9 +242,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                   ^
 
 References:
-   err2/boolean_literal.js:2:20
-   2|     declare var x: boolean;
-                         ^^^^^^^ [1]
+   err2/boolean_literal.js:2:22
+   2|     declare const x: boolean;
+                           ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- err2/boolean_literal.js:8:13
@@ -259,9 +259,9 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
                   ^
 
 References:
-   err2/boolean_literal.js:2:20
-   2|     declare var x: boolean;
-                         ^^^^^^^ [1]
+   err2/boolean_literal.js:2:22
+   2|     declare const x: boolean;
+                           ^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- err2/function.js:3:9

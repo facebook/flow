@@ -63,7 +63,7 @@ function test_class() {
   c1 as C<{f:number}>; // okay
   c2 as C<2>; // error 1 ~> {f:number}
 
-  declare var c: C<{f:number}>;
+  declare const c: C<{f:number}>;
   const x1 = c.m({f:1})
   x1 as {+f:1}; // error number ~> 1, const has no effect
 
@@ -116,8 +116,8 @@ function test_subtyping() {
   type PolyFnWithConst = <const X>(x: X) => X;
   type PolyFnWithConst2 = <const Y>(x: Y) => Y;
 
-  declare var polyFn: PolyFn;
-  declare var polyFnWithConst: PolyFnWithConst;
+  declare const polyFn: PolyFn;
+  declare const polyFnWithConst: PolyFnWithConst;
 
   polyFn as PolyFnWithConst; // error const incompatible
   polyFnWithConst as PolyFn; // error const incompatible

@@ -1,6 +1,6 @@
 //@flow
 
 type t = Readonly<{a: number}>;
-declare var x: t;
+declare const x: t;
 x.
 //^

@@ -1,6 +1,6 @@
 //@flow
 
-declare var deviceThumbnailsToShow: ?Array<unknown>;
+declare const deviceThumbnailsToShow: ?Array<unknown>;
 
 const thumbnails = true
   ? deviceThumbnailsToShow

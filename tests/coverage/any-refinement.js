@@ -1,6 +1,6 @@
 // @flow
 
-declare var a: any;
+declare const a: any;
 
 if (typeof a === "string") {
   a; // covered

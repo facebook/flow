@@ -1,6 +1,6 @@
 //@flow
 
-declare var obj : { /** @deprecated */ foo: number, bar ?: string }
+declare const obj : { /** @deprecated */ foo: number, bar ?: string }
 
 obj[
 //  ^

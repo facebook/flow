@@ -1,7 +1,7 @@
 type Map = Readonly<{[string]: string}>;
 
 function Component<TMap extends Map>() {
-  declare var map: TMap;
+  declare const map: TMap;
 
   function addToMap<TKey extends keyof TMap>(key: TKey, value: TMap[TKey]): TMap {
     return {

@@ -1,4 +1,4 @@
-declare var x: ?{
+declare const x: ?{
   a: ReadonlyArray<number>,
 };
 

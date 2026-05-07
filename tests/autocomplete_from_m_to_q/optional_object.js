@@ -1,4 +1,4 @@
 // @flow
-declare var x: {y?: {z: number}};
+declare const x: {y?: {z: number}};
 x.y.
 //  ^

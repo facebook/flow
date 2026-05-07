@@ -1,5 +1,5 @@
 {
-    declare var x: ?{};
+    declare const x: ?{};
     if (!x) {
         if (x) {} // error, x is refined to `null | void`
     }

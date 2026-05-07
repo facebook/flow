@@ -1,6 +1,6 @@
 //@flow
 
-declare var obj : ?{
+declare const obj : ?{
   foo : number,
   'foo.bar.baz' : number,
 }

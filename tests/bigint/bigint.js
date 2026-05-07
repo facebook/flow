@@ -19,14 +19,14 @@ BigInt(3n) as bigint; // ok
 
 BigInt(null); // error
 
-declare var foo: unknown;
+declare const foo: unknown;
 if (typeof foo === "bigint") {
     foo as bigint;
     foo as empty; // error
 }
 
 type U = { x: 0n, a: "foo" } | { x: 1n, a: "bar" };
-declare var bar: U;
+declare const bar: U;
 if (bar.x === 0n) {
     bar.a as "foo";
 } else {
@@ -36,7 +36,7 @@ if (bar.x === 0n) {
 0n < 0n as boolean; // ok
 (0n > ""); // error
 
-declare var b: ?bigint;
+declare const b: ?bigint;
 if (b) {} // error
 
 // Singleton type subtyping

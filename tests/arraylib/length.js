@@ -1,10 +1,10 @@
 /* @flow */
 
-declare var a: Array<number>;
+declare const a: Array<number>;
 a.length = 5;
 
-declare var r: ReadonlyArray<number>;
+declare const r: ReadonlyArray<number>;
 r.length = 6; //ng
 
-declare var t: [number];
+declare const t: [number];
 t.length = 7; //ng

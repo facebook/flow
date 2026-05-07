@@ -1,6 +1,6 @@
-declare var x: string;
-declare var y: string;
-declare var z: string;
+declare const x: string;
+declare const y: string;
+declare const z: string;
 
 declare const v1: 1;
 declare const v2: 2;
@@ -51,7 +51,7 @@ function partial_hints() {
     ...
   }>;
 
-  declare var key: 'a'|'b';
+  declare const key: 'a'|'b';
   declare function updater(x: Partial<T>): void;
   updater({[key]: 1}); // okay
 }
@@ -61,9 +61,9 @@ function regression_todo() {
     | {[string]: boolean, ...}
     | {[string]: number, ...}
 
-  declare var x: string;
-  declare var y: string;
-  declare var b: boolean;
+  declare const x: string;
+  declare const y: string;
+  declare const b: boolean;
 
   declare function foo(o: T): void;
 

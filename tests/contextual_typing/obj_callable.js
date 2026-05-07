@@ -1,6 +1,6 @@
 //@flow
 
-declare var c: {
+declare const c: {
     <T>(T, (T) => void): void,
     (): void,
 }

@@ -50,4 +50,4 @@ import { Poly } from "./poly.js";
 
 import typeof { Poly as PolyType } from "./poly.js";
 type InstType = PolyType<number>;
-declare var Inst: InstType;
+declare const Inst: InstType;

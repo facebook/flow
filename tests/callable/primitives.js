@@ -8,7 +8,7 @@ dict(); // error, callable signature not found
 interface ICall {
   (x: string): void;
 }
-declare var icall: ICall;
+declare const icall: ICall;
 icall(0); // error, number ~> string
 icall.call(null, 0); // error, number ~> string
 
@@ -16,6 +16,6 @@ type Callable = {
   (x: string): void;
 }
 
-declare var callable: Callable;
+declare const callable: Callable;
 callable(0); // error, number ~> string
 callable.call(null, 0); // error, number ~> string

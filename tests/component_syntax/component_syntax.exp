@@ -11,9 +11,9 @@ References:
    annotation.js:5:1
    5| <Basic foo={42} /> // error
       ^^^^^^^^^^^^^^^^^^ [1]
-   annotation.js:3:20
-   3| declare var Basic: component();
-                         ^^^^^^^^^^^ [2]
+   annotation.js:3:22
+   3| declare const Basic: component();
+                           ^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:13:39
@@ -136,30 +136,30 @@ References:
                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- annotation.js:45:48
+Error ---------------------------------------------------------------------------------------------- annotation.js:45:50
 
 Component property `x` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
 a component. [invalid-component-prop]
 
-   annotation.js:45:48
-   45| declare var Duplicate: component(x: number, ...{x: number}); // error
-                                                      ^^^^^^^^^^^ [3]
+   annotation.js:45:50
+   45| declare const Duplicate: component(x: number, ...{x: number}); // error
+                                                        ^^^^^^^^^^^ [3]
 
 References:
-   annotation.js:45:34
-   45| declare var Duplicate: component(x: number, ...{x: number}); // error
-                                        ^ [1]
-   annotation.js:45:49
-   45| declare var Duplicate: component(x: number, ...{x: number}); // error
-                                                       ^ [2]
+   annotation.js:45:36
+   45| declare const Duplicate: component(x: number, ...{x: number}); // error
+                                          ^ [1]
+   annotation.js:45:51
+   45| declare const Duplicate: component(x: number, ...{x: number}); // error
+                                                         ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- annotation.js:54:57
+Error ---------------------------------------------------------------------------------------------- annotation.js:54:59
 
 Cannot use number [1] as the type argument of renders type. [invalid-render]
 
-   54| declare export var Export: component(x: number) renders number; // invalid-render
-                                                               ^^^^^^ [1]
+   54| declare export const Export: component(x: number) renders number; // invalid-render
+                                                                 ^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- annotation.js:59:2
@@ -175,9 +175,9 @@ References:
    annotation.js:59:1
    59| <Export />; // error
        ^^^^^^^^^^ [1]
-   annotation.js:54:28
-   54| declare export var Export: component(x: number) renders number; // invalid-render
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   annotation.js:54:30
+   54| declare export const Export: component(x: number) renders number; // invalid-render
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:60:19
@@ -190,9 +190,9 @@ Cannot create `DefaultExport` element because in property `x`: string [1] is inc
                          ^^^ [1]
 
 References:
-   annotation.js:56:41
-   56| declare var DefaultExport: component(x: number);
-                                               ^^^^^^ [2]
+   annotation.js:56:43
+   56| declare const DefaultExport: component(x: number);
+                                                 ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- binding_rules.js:6:1
@@ -1756,9 +1756,9 @@ References:
    import.js:42:1
    42| <ExportType />; // error
        ^^^^^^^^^^^^^^ [1]
-   annotation.js:54:37
-   54| declare export var Export: component(x: number) renders number; // invalid-render
-                                           ^^^^^^^^^^^ [2]
+   annotation.js:54:39
+   54| declare export const Export: component(x: number) renders number; // invalid-render
+                                             ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:43:23
@@ -1771,9 +1771,9 @@ Cannot create `DefaultExportType` element because in property `x`: string [1] is
                              ^^^ [1]
 
 References:
-   annotation.js:56:41
-   56| declare var DefaultExport: component(x: number);
-                                               ^^^^^^ [2]
+   annotation.js:56:43
+   56| declare const DefaultExport: component(x: number);
+                                                 ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:49:34

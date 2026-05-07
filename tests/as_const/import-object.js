@@ -2,7 +2,7 @@
 
 import {obj1, obj2, obj3, obj4, obj5, obj6, obj7, obj8, obj9, obj10} from './object';
 
-declare var _: any;
+declare const _: any;
 
 // Tests
 

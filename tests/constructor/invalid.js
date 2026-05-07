@@ -5,5 +5,5 @@ function C(this: {a: number}, a: number) {
 const c = new C(1); // ERROR
 
 // `any` is allowed
-declare var A: any;
+declare const A: any;
 const a = new A(1); // OK

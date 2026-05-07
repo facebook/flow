@@ -1,1 +1,1 @@
-declare var x: string;
+declare const x: string;

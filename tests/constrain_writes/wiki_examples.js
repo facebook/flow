@@ -3,9 +3,9 @@ import * as React from 'react';
 function ex1() {
   type Props = { prop: string };
 
-  declare var x: number;
-  declare var y: number;
-  declare var props: Props;
+  declare const x: number;
+  declare const y: number;
+  declare const props: Props;
 
   let product = Math.sqrt(x) + y;
   // `product` has type `number`
@@ -15,8 +15,8 @@ function ex1() {
   // `element` has type `ExactReactElement_DEPRECATED<React.ComponentType<Props>>`
 
   type OtherProps = { other_prop: string };
-  declare var OtherComponent: (OtherProps) => React.Node;
-  declare var other_props: OtherProps
+  declare const OtherComponent: (OtherProps) => React.Node;
+  declare const other_props: OtherProps
 
   product = "Our new product is..."; // Error
   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> }; // Error
@@ -26,9 +26,9 @@ function ex1() {
 function ex2() {
   type Props = { prop: string };
 
-  declare var x: number;
-  declare var y: number;
-  declare var props: Props;
+  declare const x: number;
+  declare const y: number;
+  declare const props: Props;
 
   let product: number | string = Math.sqrt(x) + y;
 
@@ -39,8 +39,8 @@ function ex2() {
 
 
   type OtherProps = { other_prop: string };
-  declare var OtherComponent: (OtherProps) => React.Node;
-  declare var other_props: OtherProps
+  declare const OtherComponent: (OtherProps) => React.Node;
+  declare const other_props: OtherProps
 
   product = "Our new product is...";
   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> };
@@ -59,7 +59,7 @@ function ex3() {
 }
 
 function ex4() {
-  declare var condition: boolean;
+  declare const condition: boolean;
 
   let myNumberOrString;
 
@@ -75,7 +75,7 @@ function ex4() {
 }
 
 function ex5() {
-  declare var condition: boolean;
+  declare const condition: boolean;
 
   let oneBranchAssigned;
 

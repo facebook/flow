@@ -1,10 +1,10 @@
 //@flow
 
-declare var foo : { @@iterator: Iterator<number> };
+declare const foo : { @@iterator: Iterator<number> };
 foo[ ]
 //  ^
 
-declare var bar : { @@asyncIterator: AsyncIterator<number> };
+declare const bar : { @@asyncIterator: AsyncIterator<number> };
 bar[ ]
 //  ^
 

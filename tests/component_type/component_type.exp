@@ -262,9 +262,9 @@ Cannot cast `x` to `NotTheRightConfig` because properties `baz` and `qux` are mi
        ^
 
 References:
-   config_HOC.js:7:16
-    7| declare var x: Config;
-                      ^^^^^^ [1]
+   config_HOC.js:7:18
+    7| declare const x: Config;
+                        ^^^^^^ [1]
    config_HOC.js:10:6
    10| x as NotTheRightConfig; // Error, configs don't match
             ^^^^^^^^^^^^^^^^^ [2]
@@ -381,9 +381,9 @@ References:
    destructors.js:9:12
    9| const _b = <C baz={3} />; // Error, bar missing
                  ^^^^^^^^^^^^^ [1]
-   destructors.js:5:85
-   5| declare var C: component(bar: number, foo?: number, ref?: React.RefSetter<void>, ...{...});
-                                                                                          ^^^^^ [2]
+   destructors.js:5:87
+   5| declare const C: component(bar: number, foo?: number, ref?: React.RefSetter<void>, ...{...});
+                                                                                            ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:14:1
@@ -703,9 +703,9 @@ References:
    31|   ...
    32| };
        ^ [1]
-   get_set_elem.js:4:16
-    4| declare var y: string;
-                      ^^^^^^ [2]
+   get_set_elem.js:4:18
+    4| declare const y: string;
+                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- get_set_elem.js:6:3

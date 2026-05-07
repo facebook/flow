@@ -262,9 +262,9 @@ Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [inc
       ^
 
 References:
-   empty_propagation.js:2:16
-   2| declare var x: F<empty | number>;
-                     ^^^^^^^^^^^^^^^^^ [1]
+   empty_propagation.js:2:18
+   2| declare const x: F<empty | number>;
+                       ^^^^^^^^^^^^^^^^^ [1]
    empty_propagation.js:3:6
    3| x as empty; // error: number ~> empty;
            ^^^^^ [2]
@@ -449,9 +449,9 @@ Cannot cast `awaited_null` to empty because null [1] is incompatible with empty 
          ^^^^^^^^^^^^
 
 References:
-   extraction.js:48:29
-   48|   declare var awaited_null: Awaited<null>;
-                                   ^^^^^^^^^^^^^ [1]
+   extraction.js:48:31
+   48|   declare const awaited_null: Awaited<null>;
+                                     ^^^^^^^^^^^^^ [1]
    extraction.js:52:19
    52|   awaited_null as empty; // error: null ~> empty
                          ^^^^^ [2]
@@ -466,9 +466,9 @@ Cannot cast `awaited_n1` to empty because number [1] is incompatible with empty 
          ^^^^^^^^^^
 
 References:
-   extraction.js:49:27
-   49|   declare var awaited_n1: Awaited<number>;
-                                 ^^^^^^^^^^^^^^^ [1]
+   extraction.js:49:29
+   49|   declare const awaited_n1: Awaited<number>;
+                                   ^^^^^^^^^^^^^^^ [1]
    extraction.js:53:17
    53|   awaited_n1 as empty; // error: number ~> empty
                        ^^^^^ [2]
@@ -483,9 +483,9 @@ Cannot cast `awaited_n2` to empty because number [1] is incompatible with empty 
          ^^^^^^^^^^
 
 References:
-   extraction.js:50:27
-   50|   declare var awaited_n2: Awaited<Promise<number>>;
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   extraction.js:50:29
+   50|   declare const awaited_n2: Awaited<Promise<number>>;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    extraction.js:54:17
    54|   awaited_n2 as empty; // error: number ~> empty
                        ^^^^^ [2]
@@ -500,9 +500,9 @@ Cannot cast `awaited_n3` to empty because number [1] is incompatible with empty 
          ^^^^^^^^^^
 
 References:
-   extraction.js:51:27
-   51|   declare var awaited_n3: Awaited<Promise<Promise<Promise<Promise<number>>>>>;
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   extraction.js:51:29
+   51|   declare const awaited_n3: Awaited<Promise<Promise<Promise<Promise<number>>>>>;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    extraction.js:55:17
    55|   awaited_n3 as empty; // error: number ~> empty
                        ^^^^^ [2]

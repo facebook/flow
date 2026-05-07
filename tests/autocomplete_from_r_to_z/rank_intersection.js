@@ -4,6 +4,6 @@ class Foo {
     toString : number
 }
 
-declare var x : Foo & {};
+declare const x : Foo & {};
 x.
 //^

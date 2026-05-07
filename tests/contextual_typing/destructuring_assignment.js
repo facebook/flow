@@ -1,7 +1,7 @@
-declare var a: (number) => unknown;
-declare var b: (number) => unknown;
-declare var c: (number) => unknown;
-declare var d: (number) => unknown;
+declare let a: (number) => unknown;
+declare let b: (number) => unknown;
+declare let c: (number) => unknown;
+declare let d: (number) => unknown;
 
 [a, [b, [c, {d}]]] = [
    (n) => n as empty, // error: num ~> empty
@@ -18,8 +18,8 @@ declare var d: (number) => unknown;
   b: (n) => n as empty, // error: num ~> empty
 })
 
-declare var e: ReadonlyArray<(number) => unknown>;
-declare var f: {[string]: (number) => unknown};
+declare let e: ReadonlyArray<(number) => unknown>;
+declare let f: {[string]: (number) => unknown};
 [...e] = [(n) => n as empty]; // error: num ~> empty
 ({...f} = {hello: (n) => n as empty}); // error: num ~> empty
 

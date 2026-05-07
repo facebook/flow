@@ -164,7 +164,7 @@ Cannot assign `'hi'` to `x` because string [1] is incompatible with number [2]. 
 
 References:
    test.js:79:18
-   79|   declare var x: number;
+   79|   declare let x: number;
                         ^^^^^^ [2]
 
 

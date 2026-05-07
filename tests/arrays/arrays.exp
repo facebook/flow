@@ -22,9 +22,9 @@ Cannot call `[...].includes` with `x` bound to `searchElement` because number [1
                                                            ^
 
 References:
-   includes.js:1:16
-   1| declare var x: number;
-                     ^^^^^^ [1]
+   includes.js:1:18
+   1| declare const x: number;
+                       ^^^^^^ [1]
    includes.js:3:33
    3| if (([1, 2, 3] as ReadonlyArray<1 | 2 | 3>).includes(x)) {
                                       ^^^^^^^^^ [2]

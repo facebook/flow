@@ -1,7 +1,7 @@
 //@flow
 type key = 'a' | 'b' | 'c';
 
-declare var k: key;
+declare const k: key;
 const a = {[k]: 3}; // multiple lower bounds okay
 a as {}; // error
 
@@ -16,13 +16,13 @@ if (true) {
 
 const b = {[x]: 3} // multiple lower bounds okay
 
-declare var maybe: ?string;
+declare const maybe: ?string;
 const c = {[maybe]: 3}; // ERROR
 
-declare var several: ?string | key;
+declare const several: ?string | key;
 const d = {[several]: 3}; // ERROR
 
-declare var str: string;
+declare const str: string;
 const nested = {
   [str]: {
     [several]: 3, // ERROR

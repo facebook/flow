@@ -26,6 +26,6 @@ class Typewriter {}; // class type
 let Typography = Typewriter; // class through assignment
 
 function f<Typaram>() {
-  declare var x :
-//               ^
+  declare const x :
+//                 ^
 }

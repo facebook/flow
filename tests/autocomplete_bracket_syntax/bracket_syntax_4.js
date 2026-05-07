@@ -1,6 +1,6 @@
 //@flow
 
-declare var obj : { foo: number, bar : number }
+declare const obj : { foo: number, bar : number }
 
 let x = obj?.[
 //            ^

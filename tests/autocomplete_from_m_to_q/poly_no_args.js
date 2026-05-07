@@ -1,6 +1,6 @@
 //@flow
 
 type T<S=number> = {x: S};
-declare var a: T<>;
+declare const a: T<>;
 a.
 //^

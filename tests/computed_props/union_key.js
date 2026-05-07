@@ -3,7 +3,7 @@ type Params = Readonly<{
   'b': boolean,
 }>;
 
-declare var params: Params;
+declare const params: Params;
 
 const test1 = <T extends keyof typeof params>(
   key: T,

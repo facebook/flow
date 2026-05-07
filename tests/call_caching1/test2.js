@@ -9,8 +9,8 @@ declare function foo<U>(
   callbackfn: (previousValue: U) => U
 ): U;
 
-declare var items: Bar<string>;
-declare var updater: (value: Bar<string>) => Bar<string>;
+declare const items: Bar<string>;
+declare const updater: (value: Bar<string>) => Bar<string>;
 
 foo(
   items,

@@ -7,5 +7,5 @@
 import type {K} from "./a";
 const A = require("./a");
 var o = {[A.FOO]: null};
-declare var k: K;
+declare const k: K;
 o[k] as empty; // error: null ~> empty

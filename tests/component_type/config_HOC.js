@@ -4,7 +4,7 @@ type Props = {foo: number, bar: number, ...};
 type DefaultProps = {foo: number, ...};
 type Config = {+foo?: number, +bar: number, ...};
 
-declare var x: Config;
+declare const x: Config;
 
 type NotTheRightConfig = {+baz: number, +qux: number, ...};
 x as NotTheRightConfig; // Error, configs don't match

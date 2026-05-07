@@ -6,7 +6,7 @@
 
 import type LibA1 from "./libA1";
 
-declare var x: LibA1;
+declare const x: LibA1;
 
 module.exports = (): LibA1 => x;
 
@@ -15,7 +15,7 @@ module.exports = (): LibA1 => x;
 
 import type LibA2 from "./libA2";
 
-declare var x: LibA2;
+declare const x: LibA2;
 
 module.exports = (): LibA2 => x;
 
@@ -24,7 +24,7 @@ module.exports = (): LibA2 => x;
 
 import type { B2 } from "./libB2";import type LibB2 from "./libB2";
 
-declare var x: LibB2;
+declare const x: LibB2;
 
 module.exports = (): B2<any> => x;
 
@@ -62,7 +62,7 @@ Warnings:
 
 import type LibA1 from "./libA1";
 
-declare var x: LibA1;
+declare const x: LibA1;
 
 module.exports = (): LibA1 => x;
 
@@ -71,7 +71,7 @@ module.exports = (): LibA1 => x;
 
 import type LibA2 from "./libA2";
 
-declare var x: LibA2;
+declare const x: LibA2;
 
 module.exports = (): LibA2 => x;
 
@@ -80,7 +80,7 @@ module.exports = (): LibA2 => x;
 
 import type LibB1 from "./libB1";
 
-declare var x: LibB1;
+declare const x: LibB1;
 
 module.exports = (): B1<any> => x;
 
@@ -89,7 +89,7 @@ module.exports = (): B1<any> => x;
 
 import type { B2 } from "./libB2";import type LibB2 from "./libB2";
 
-declare var x: LibB2;
+declare const x: LibB2;
 
 module.exports = (): B2<any> => x;
 

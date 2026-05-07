@@ -7,6 +7,6 @@ declare function set<K1>(
   prop2: KeyType<PropType<ReadonlyArray<{}>, K1>>,
 ): void;
 
-declare var index: number;
-declare var key: string;
+declare const index: number;
+declare const key: string;
 set(index, key); // ok

@@ -1,7 +1,7 @@
 // @flow
 
 declare function foo(): Promise<string>;
-declare var b: boolean;
+declare const b: boolean;
 
 // The return hint `number` passed to the generic call causes a SpeculativeError exception
 // We should be able to recover from this exception and redo the implicit instantiation

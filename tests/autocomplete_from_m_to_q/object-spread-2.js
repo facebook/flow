@@ -5,6 +5,6 @@ type B = string
 type C = string
 
 type Foo = {foo: A, bar: B};
-declare var y : {...Foo, bar: C};
+declare const y : {...Foo, bar: C};
 y.
 //^

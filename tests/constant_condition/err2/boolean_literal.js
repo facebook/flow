@@ -1,5 +1,5 @@
 {
-    declare var x: boolean;
+    declare const x: boolean;
     if (x) {
         if (x) {} // error, x is refined to `true`
     }

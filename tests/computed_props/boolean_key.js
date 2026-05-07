@@ -3,7 +3,7 @@ type Params = Readonly<{
   'b': boolean,
 }>;
 
-declare var params: Params;
+declare const params: Params;
 
 const test0 = (): Params => {
   return {...params, [true]: true}; // error true is invalid-computed-prop

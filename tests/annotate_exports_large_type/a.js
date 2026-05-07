@@ -1,6 +1,6 @@
 // @flow
 
-declare var cond: boolean;
+declare const cond: boolean;
 
 declare function foo(): {
   f0: void,

@@ -863,9 +863,9 @@ Cannot get `React.Fragment` because property `Fragment` is missing in object typ
          ^^^^^^^^
 
 References:
-   expression.js:12:20
-   12| declare var React: {createElement: React$CreateElement, ...};
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   expression.js:12:22
+   12| declare const React: {createElement: React$CreateElement, ...};
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:41:1

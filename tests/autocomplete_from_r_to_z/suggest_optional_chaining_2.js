@@ -1,5 +1,5 @@
 //@flow
 
-declare var x : ?{foo : string, bar : number} & {foo : string};
+declare const x : ?{foo : string, bar : number} & {foo : string};
 x.
 //^

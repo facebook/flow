@@ -1,6 +1,6 @@
 //@flow
 
-declare var f : {
+declare const f : {
   red: number,
   orange: number,
   yellow: number,

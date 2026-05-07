@@ -163,7 +163,7 @@ import React from "react";
 }
 
 {
-  declare var cond: boolean;
+  declare const cond: boolean;
   let v;
   const x1 = (cond ? [] : null) ?? 'A'; // OK, [] is truthy, null is falsy
   const x2 = (cond ? [] as Array<number> : null) ?? 'A'; // OK, [] is truthy, null is falsy, testing recursing into the arg of `AsExpression`

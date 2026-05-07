@@ -1,4 +1,4 @@
 // @flow
 
-declare var foo: string;
+declare const foo: string;
 

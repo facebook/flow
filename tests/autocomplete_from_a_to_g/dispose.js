@@ -1,9 +1,9 @@
 //@flow
 
-declare var foo : { @@dispose: void };
+declare const foo : { @@dispose: void };
 foo[ ]
 //  ^
 
-declare var bar : { @@asyncDispose: Promise<void> };
+declare const bar : { @@asyncDispose: Promise<void> };
 bar[ ]
 //  ^

@@ -24,9 +24,9 @@ Cannot assign `array[receiver.name]` to `test1` because number [1] is incompatib
                            ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ex_special_cases.js:29:26
-   29| declare var array: Array<number>;
-                                ^^^^^^ [1]
+   ex_special_cases.js:29:28
+   29| declare const array: Array<number>;
+                                  ^^^^^^ [1]
    ex_special_cases.js:30:12
    30| var test1: string = array[receiver.name]; // if result of receiver.getprop is any, this will fail, but no error if it's empty.
                   ^^^^^^ [2]
@@ -42,9 +42,9 @@ Cannot assign `array[receiver.name()]` to `test2` because number [1] is incompat
                            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ex_special_cases.js:29:26
-   29| declare var array: Array<number>;
-                                ^^^^^^ [1]
+   ex_special_cases.js:29:28
+   29| declare const array: Array<number>;
+                                  ^^^^^^ [1]
    ex_special_cases.js:31:12
    31| var test2: string = array[receiver.name()] // likewise
                   ^^^^^^ [2]

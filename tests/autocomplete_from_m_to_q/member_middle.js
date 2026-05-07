@@ -1,6 +1,6 @@
 // @flow
 
-declare var x : { foobar: string, ... };
+declare const x : { foobar: string, ... };
 
 x.foo
 // ^

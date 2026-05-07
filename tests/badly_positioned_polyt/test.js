@@ -2,7 +2,7 @@ import * as React from 'react';
 
 declare opaque type T;
 type Props = {t: T};
-declare var props: Props;
+declare const props: Props;
 
 type D<Context extends {+context: unknown, ...}, Props> = Omit<
   Props,

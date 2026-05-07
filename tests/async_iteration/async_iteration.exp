@@ -79,9 +79,9 @@ Cannot cast `result.value` to undefined because string [1] is incompatible with 
         ^^^^^^^^^^^^
 
 References:
-   return.js:1:38
-   1| declare var gen: AsyncGenerator<void,string,void>;
-                                           ^^^^^^ [1]
+   return.js:1:40
+   1| declare const gen: AsyncGenerator<void,string,void>;
+                                             ^^^^^^ [1]
    return.js:6:19
    6|   result.value as void; // error: string | number ~> void
                         ^^^^ [2]

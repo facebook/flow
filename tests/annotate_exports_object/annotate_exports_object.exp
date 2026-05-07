@@ -57,7 +57,7 @@ function foo() {
 
 export const foo_: { "": number, "-": number, "1": number, "\ud83d\ude0a": number } = foo();
 
-declare var b: {
+declare const b: {
   '-': 1,
   '': 2,
   '\u{1F60A}': 3,
@@ -154,7 +154,7 @@ function foo() {
 
 export const foo_: { "": number, "-": number, "1": number, "\ud83d\ude0a": number } = foo();
 
-declare var b: {
+declare const b: {
   '-': 1,
   '': 2,
   '\u{1F60A}': 3,

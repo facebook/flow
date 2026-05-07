@@ -20,8 +20,8 @@ function generic_in_extends_type<T>(x: T): [string] extends [T] ? boolean : numb
   }
 }
 
-declare var s: string;
-declare var n: number;
+declare const s: string;
+declare const n: number;
 
 generic_in_extends_type(s) as boolean; // ok
 generic_in_extends_type(n) as number; // ok

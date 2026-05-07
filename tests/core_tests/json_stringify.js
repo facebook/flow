@@ -1,7 +1,7 @@
-declare var bad1: unknown;
-declare var bad2: () => {};
-declare var good1: number;
-declare var good2: {foo: string};
+declare const bad1: unknown;
+declare const bad2: () => {};
+declare const good1: number;
+declare const good2: {foo: string};
 
 // error: undefined is not compatible with string
 JSON.stringify(bad1) as string;

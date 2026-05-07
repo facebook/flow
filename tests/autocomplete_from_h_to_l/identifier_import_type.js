@@ -8,7 +8,7 @@ import typeof TypeofDefault from './type-exports';
 
 import typeof { Typhoon } from './type-exports';
 
-declare var ThisIsAValue: string;
+declare const ThisIsAValue: string;
 
 // should not suggest types
   T

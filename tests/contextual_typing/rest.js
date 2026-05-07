@@ -1,5 +1,5 @@
 function test1() {
-  declare var fn: <TArguments extends ReadonlyArray<unknown> = ReadonlyArray<any>, TReturn = any>(
+  declare const fn: <TArguments extends ReadonlyArray<unknown> = ReadonlyArray<any>, TReturn = any>(
     implementation?: (...args: TArguments) => TReturn
   ) => JestMockFn<TArguments, TReturn>
 

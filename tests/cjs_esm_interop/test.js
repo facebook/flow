@@ -3,7 +3,7 @@ CJS_NS.Foo; // ok: read of value
 
 // Type exports will be forwarded to the CJS module type after `require(<module with type exports>)`
 import type {Bar} from './cjs_require_default_exported_with_types';
-declare var bar: Bar;
+declare const bar: Bar;
 bar as string; // error: number ~> string
 
 // Spreading a namespace import with type exports will downgrade the namespace to the value part,

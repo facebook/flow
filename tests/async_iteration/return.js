@@ -1,4 +1,4 @@
-declare var gen: AsyncGenerator<void,string,void>;
+declare const gen: AsyncGenerator<void,string,void>;
 
 // You can pass whatever you like to return, it doesn't need to be related to
 // the AsyncGenerator's return type

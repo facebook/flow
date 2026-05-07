@@ -1,6 +1,6 @@
 // @flow
 
-declare var cond: boolean;
+declare const cond: boolean;
 
 module.exports = {
   f1: () => (cond ? "0" : "1"),

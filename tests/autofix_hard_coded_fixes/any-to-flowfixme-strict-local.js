@@ -1,4 +1,4 @@
 // @flow strict-local
 
-declare var x1: { f: number } | any;
+declare const x1: { f: number } | any;
 module.exports = () => x1;

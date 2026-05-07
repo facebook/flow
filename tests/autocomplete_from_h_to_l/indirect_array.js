@@ -1,12 +1,12 @@
 //@flow
 
-declare var y: ?Array<number>;
+declare const y: ?Array<number>;
 
 y.
 //^
 
 opaque type t: Array<number> = Array<number>;
-declare var z: t;
+declare const z: t;
 
 z.
 //^

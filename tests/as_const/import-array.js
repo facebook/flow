@@ -1,6 +1,6 @@
 import {arr1, arr2, arr6, arr8} from './array';
 
-declare var _: any;
+declare const _: any;
 
 // Tests
 

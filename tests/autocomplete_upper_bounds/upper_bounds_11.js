@@ -7,7 +7,7 @@ type Union =
 | 'bar'
 | Id<'baz'>
 
-declare var f : Union => void
+declare const f : Union => void
 
 f(
 //^

@@ -1,7 +1,7 @@
 declare function havoc(): void;
 
 function test_member() {
-  declare var x: { m?: (cb: (n: number) => void) => void };
+  declare const x: { m?: (cb: (n: number) => void) => void };
 
   x.m && x.m(u => { u as string; }); // error number ~> string
 
@@ -20,7 +20,7 @@ function test_member() {
 }
 
 function test_optional_member() {
-  declare var x: ?{ m?: (cb: (n: number) => void) => void };
+  declare const x: ?{ m?: (cb: (n: number) => void) => void };
 
   x?.m && x?.m(u => { u as string; }); // error number ~> string
 

@@ -91,12 +91,12 @@ Sketchy null check on bigint [1] which is potentially 0n. Perhaps you meant to c
            ^
 
 References:
-   bigint.js:39:17
-   39| declare var b: ?bigint;
-                       ^^^^^^ [1]
-   bigint.js:39:16
-   39| declare var b: ?bigint;
-                      ^^^^^^^ [2]
+   bigint.js:39:19
+   39| declare const b: ?bigint;
+                         ^^^^^^ [1]
+   bigint.js:39:18
+   39| declare const b: ?bigint;
+                        ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:47:3

@@ -1,9 +1,9 @@
 // @flow
 
 declare component Foo();
-declare var rendersFoo: renders Foo;
-declare var rendersFooMaybe: renders? Foo;
-declare var rendersFooStar: renders* Foo;
+declare const rendersFoo: renders Foo;
+declare const rendersFooMaybe: renders? Foo;
+declare const rendersFooStar: renders* Foo;
 
 export function foo() {
     return {
