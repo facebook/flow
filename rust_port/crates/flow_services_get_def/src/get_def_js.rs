@@ -225,7 +225,7 @@ pub fn get_def<'cx>(
     file_sig: &std::sync::Arc<FileSig>,
     file_content: Option<&str>,
     ast: &ast::Program<Loc, Loc>,
-    available_ast: AvailableAst,
+    available_ast: AvailableAst<'_>,
     purpose: &Purpose,
     requested_loc: &Loc,
 ) -> Result<GetDefResult, flow_utils_concurrency::job_error::JobError> {
@@ -245,7 +245,7 @@ pub fn get_def<'cx>(
     };
 
     let typed_ast_opt = match &available_ast {
-        AvailableAst::TypedAst(tast) => Some(tast),
+        AvailableAst::TypedAst(tast) => Some(*tast),
         AvailableAst::ALocAst(_) => None,
     };
 
@@ -256,7 +256,7 @@ pub fn get_def<'cx>(
         typed_ast_opt: Option<&ast::Program<ALoc, (ALoc, Type)>>,
         file_sig: &std::sync::Arc<FileSig>,
         scope_info: &scope_api::ScopeInfo<Loc>,
-        available_ast: &AvailableAst,
+        available_ast: &AvailableAst<'_>,
         file_content: Option<&str>,
         is_local_use: &dyn Fn(&ALoc) -> bool,
         purpose: &Purpose,

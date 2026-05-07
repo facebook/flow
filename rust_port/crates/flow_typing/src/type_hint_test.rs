@@ -17,7 +17,6 @@ mod tests {
     use flow_aloc::ALoc;
     use flow_aloc::ALocTable;
     use flow_aloc::LazyALocTable;
-    use flow_aloc::LocToALocMapper;
     use flow_common::flow_import_specifier::FlowImportSpecifier;
     use flow_common::hint::Hint;
     use flow_common::hint::HintDecompositionInner::*;
@@ -43,7 +42,6 @@ mod tests {
     use flow_parser::file_key::FileKeyInner;
     use flow_parser::loc::Loc;
     use flow_parser::loc_sig::LocSig;
-    use flow_parser::polymorphic_ast_mapper;
     use flow_parser_utils::file_sig::FileSig;
     use flow_type_sig::type_sig_options::TypeSigOptions;
     use flow_typing_builtins::builtins::Builtins;
@@ -179,8 +177,7 @@ mod tests {
                 &content,
             );
             assert!(errs.is_empty());
-            let Ok(t) = polymorphic_ast_mapper::type_annotation(&mut LocToALocMapper, &t);
-            t
+            flow_aloc::loc_to_aloc_type_annotation_owned(t)
         }
 
         pub fn parse<'cx>(cx: &Context<'cx>, content: &str) -> Type {
@@ -320,7 +317,7 @@ mod tests {
         fn get_typed_ast(cx: &Context, content: &str) -> ast::Program<ALoc, (ALoc, Type)> {
             let metadata = loader_metadata();
             let ast = parse_content(&dummy_filename(), content);
-            let Ok(aloc_ast) = polymorphic_ast_mapper::program(&mut LocToALocMapper, &ast);
+            let aloc_ast = flow_aloc::loc_to_aloc_ast(&ast);
             let lint_severities = merge::get_lint_severities(
                 &metadata,
                 &StrictModeSettings::empty(),
@@ -333,7 +330,7 @@ mod tests {
                 Arc::new(FileSig::empty()),
                 &metadata,
                 &ast.all_comments,
-                &aloc_ast,
+                aloc_ast,
             )
             .expect("infer_ast should not be canceled in test")
         }

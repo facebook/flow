@@ -9,7 +9,6 @@ use std::io::Read;
 use std::path::Path;
 
 use flow_aloc::ALoc;
-use flow_aloc::LocToALocMapper;
 use flow_common::options::JsxMode;
 use flow_common::options::ReactRuntime;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -28,7 +27,6 @@ use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::parse_error::ParseError;
-use flow_parser::polymorphic_ast_mapper;
 use flow_server_utils::file_input::FileInput;
 use flow_typing_errors::error_message::ErrorMessage;
 
@@ -149,8 +147,7 @@ pub fn main(path: Option<String>, filename: Option<String>) {
         }
         None => flow_parser::parse_program_without_file(false, None, parse_options, Ok(&content)),
     };
-    let mut mapper = LocToALocMapper;
-    let Ok(ast) = polymorphic_ast_mapper::program(&mut mapper, &ast);
+    let ast = flow_aloc::loc_to_aloc_ast(&ast);
 
     if errors.is_empty() {
         // Compute read -> write edges
@@ -158,13 +155,13 @@ pub fn main(path: Option<String>, filename: Option<String>) {
             &TestCx,
             false,
             FlowOrdSet::new(),
-            &ast,
+            ast,
         );
         let env = env.to_env_info();
         // Compute write -> read edges
         let autocomplete_hooks = autocomplete_hooks();
         let (inits, _) =
-            name_def::find_defs(&autocomplete_hooks, true, &env, ScopeKind::Module, &ast);
+            name_def::find_defs(&autocomplete_hooks, true, &env, ScopeKind::Module, ast);
 
         // Connect read -> write edges and write -> read edges to form a graph
         let Ok(graph) = name_def_ordering::build_graph::<_, _, TestCx, TestFlow>(

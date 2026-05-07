@@ -1135,7 +1135,7 @@ pub fn get_def_info<'cx>(
         None => {
             let (ast, file_sig, _) = ast_info;
             let available_ast =
-                flow_typing_utils::typed_ast_utils::AvailableAst::TypedAst(typed_ast.clone());
+                flow_typing_utils::typed_ast_utils::AvailableAst::TypedAst(typed_ast);
             let result = crate::get_def_js::get_def(
                 loc_of_aloc,
                 cx,

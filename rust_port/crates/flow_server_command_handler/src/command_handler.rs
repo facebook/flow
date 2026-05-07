@@ -958,29 +958,28 @@ fn type_parse_artifacts_for_ac_with_cache(
                 tolerable_errors: _,
                 parse_errors: _,
             } = parse_artifacts;
-            let (cx, aloc_ast) =
-                match flow_services_inference::type_contents::compute_env_of_contents(
-                    options,
-                    shared_mem.clone(),
-                    master_cx.clone(),
-                    file_for_result.dupe(),
-                    docblock.dupe(),
-                    ast.dupe(),
-                    requires,
-                    file_sig.dupe(),
-                    node_modules_containers,
-                ) {
-                    Ok(Ok(v)) => v,
-                    Ok(Err(_)) | Err(_) => {
-                        return Err(TypeContentsError::CheckedDependenciesCanceled);
-                    }
-                };
-            Ok((contents.clone(), parse_artifacts, cx, aloc_ast))
+            let cx = match flow_services_inference::type_contents::compute_env_of_contents(
+                options,
+                shared_mem.clone(),
+                master_cx.clone(),
+                file_for_result.dupe(),
+                docblock.dupe(),
+                ast.dupe(),
+                requires,
+                file_sig.dupe(),
+                node_modules_containers,
+            ) {
+                Ok(Ok(v)) => v,
+                Ok(Err(_)) | Err(_) => {
+                    return Err(TypeContentsError::CheckedDependenciesCanceled);
+                }
+            };
+            Ok((contents.clone(), parse_artifacts, cx))
         }
     };
     let cond = |result: &AcArtifactsResult<'static>| match result {
         Err(_) => false,
-        Ok((contents_prime, _, _, _)) => contents == *contents_prime,
+        Ok((contents_prime, _, _)) => contents == *contents_prime,
     };
     match type_parse_artifacts_cache {
         Some(cache) => {
@@ -1057,7 +1056,7 @@ fn autocomplete_on_parsed(
     let initial_json_props = add_cache_hit_data_to_json(initial_json_props, did_hit);
     let ac_typing_artifacts = match file_artifacts_result {
         Err(_) => None,
-        Ok((_contents, parse_artifacts, cx, aloc_ast)) => {
+        Ok((_contents, parse_artifacts, cx)) => {
             let ParseArtifacts {
                 docblock: _info,
                 docblock_errors: _,
@@ -1067,12 +1066,12 @@ fn autocomplete_on_parsed(
                 tolerable_errors: _,
                 parse_errors: _parse_errors,
             } = parse_artifacts;
-            Some((_info, file_sig, ast, _parse_errors, cx, aloc_ast))
+            Some((_info, file_sig, ast, _parse_errors, cx))
         }
     };
     let ac_result = match ac_typing_artifacts {
         None => None,
-        Some((info, file_sig, ast, parse_errors, cx, aloc_ast)) => {
+        Some((info, file_sig, ast, parse_errors, cx)) => {
             let search_exported_values_fn: Box<
                 dyn Fn(
                     &flow_services_autocomplete::autocomplete_service_js::AcOptions,
@@ -1130,7 +1129,6 @@ fn autocomplete_on_parsed(
                 &cx,
                 file_sig,
                 ast.dupe(),
-                aloc_ast,
                 canon_token_owned.as_ref(),
             );
             let ac_options = flow_services_autocomplete::autocomplete_service_js::AcOptions {
@@ -1470,9 +1468,7 @@ fn get_def_of_check_result(
         &parse_artifacts.file_sig,
         file_content,
         &parse_artifacts.ast,
-        flow_typing_utils::typed_ast_utils::AvailableAst::TypedAst(
-            typecheck_artifacts.typed_ast.clone(),
-        ),
+        flow_typing_utils::typed_ast_utils::AvailableAst::TypedAst(&typecheck_artifacts.typed_ast),
         purpose,
         &loc,
     ) {

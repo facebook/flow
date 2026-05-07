@@ -118,7 +118,7 @@ pub fn search<'cx>(
             file_sig,
             None,
             ast,
-            AvailableAst::TypedAst(typed_ast.clone()),
+            AvailableAst::TypedAst(typed_ast),
             &Purpose::FindReferences,
             remote_loc,
         )?;

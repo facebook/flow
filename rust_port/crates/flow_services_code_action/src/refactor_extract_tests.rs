@@ -12,7 +12,6 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_aloc::LazyALocTable;
-use flow_aloc::LocToALocMapper;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -24,7 +23,6 @@ use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser::loc_sig::LocSig;
-use flow_parser::polymorphic_ast_mapper;
 use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::file_sig::FileSigOptions;
 use flow_parser_utils_output::js_layout_generator;
@@ -190,7 +188,7 @@ fn typed_ast_of_ast(
     ast: &ast::Program<Loc, Loc>,
 ) -> ast::Program<ALoc, (ALoc, Type)> {
     let comments = &ast.all_comments;
-    let Ok(aloc_ast) = polymorphic_ast_mapper::program(&mut LocToALocMapper, ast);
+    let aloc_ast = flow_aloc::loc_to_aloc_ast(ast);
     type_inference::infer_ast(
         &LintSettings::<Severity>::empty_severities(),
         cx,
@@ -198,7 +196,7 @@ fn typed_ast_of_ast(
         Arc::new(FileSig::empty()),
         cx.metadata(),
         comments,
-        &aloc_ast,
+        aloc_ast,
     )
     .expect("infer_ast should not be canceled in test")
 }

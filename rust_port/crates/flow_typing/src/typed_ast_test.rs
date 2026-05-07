@@ -69,16 +69,10 @@ fn parse_content(file: FileKey, content: &str) -> ast::Program<Loc, Loc> {
     ast
 }
 
-fn before_and_after_stmts(
-    file_name: &str,
-) -> (
-    Vec<ast::statement::Statement<ALoc, ALoc>>,
-    Vec<ast::statement::Statement<ALoc, (ALoc, Type)>>,
-) {
+fn check_before_and_after_stmts(relative_path: &str, file_name: &str) {
     let content = String::from_utf8_lossy(&std::fs::read(file_name).unwrap()).into_owned();
     let file_key = FileKey::new(FileKeyInner::SourceFile(file_name.to_string()));
     let ast = parse_content(file_key.dupe(), &content);
-    let stmts = &ast.statements;
     // Loading the entire libdefs here would be overkill, but the typed_ast tests do use Object
     // in a few tests. In order to avoid EBuiltinLookupFailed errors with an empty source location,
     // we manually add "Object" -> Any into the builtins map. We use the UnresolvedName any type
@@ -136,9 +130,7 @@ fn before_and_after_stmts(
         mk_builtins,
         flow_utils_concurrency::check_budget::CheckBudget::new(None),
     );
-    let Ok(aloc_stmts) =
-        polymorphic_ast_mapper::toplevel_statement_list(&mut flow_aloc::LocToALocMapper, stmts);
-    let Ok(aloc_ast) = polymorphic_ast_mapper::program(&mut flow_aloc::LocToALocMapper, &ast);
+    let aloc_ast = flow_aloc::loc_to_aloc_ast(&ast);
     let typed_ast = type_inference::infer_ast(
         &LintSettings::<Severity>::empty_severities(),
         &cx,
@@ -146,11 +138,11 @@ fn before_and_after_stmts(
         Arc::new(FileSig::empty()),
         &md,
         &[],
-        &aloc_ast,
+        aloc_ast,
     )
     .expect("infer_ast should not be canceled in test");
-    let t_stmts: Vec<_> = typed_ast.statements.to_vec();
-    (aloc_stmts, t_stmts)
+    let aloc_stmts = flow_aloc::loc_to_aloc_statement_list(&ast.statements);
+    check_structural_equality(relative_path, file_name, aloc_stmts, &typed_ast.statements);
 }
 
 struct LocNoneMapper;
@@ -303,8 +295,7 @@ fn check_structural_equality(
 }
 
 fn test_case(relative_path: &str, file_name: &str) {
-    let (s, s_prime) = before_and_after_stmts(file_name);
-    check_structural_equality(relative_path, file_name, &s, &s_prime);
+    check_before_and_after_stmts(relative_path, file_name);
 }
 
 // This list includes files for which the produced Typed AST differs in structure

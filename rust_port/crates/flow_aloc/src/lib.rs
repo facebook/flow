@@ -11,10 +11,14 @@ use std::cell::LazyCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
+use std::mem::align_of;
+use std::mem::size_of;
+use std::mem::transmute;
 use std::rc::Rc;
 
 use dupe::Dupe;
 use flow_packed_locs::packed_locs;
+use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
@@ -34,6 +38,106 @@ impl LocMapper<Loc, Loc, ALoc, ALoc> for LocToALocMapper {
 
     fn on_type_annot(&mut self, annot: &Loc) -> Result<ALoc, !> {
         Ok(ALoc::of_loc(annot.dupe()))
+    }
+}
+
+fn debug_assert_same_layout<From, To>() {
+    debug_assert_eq!(size_of::<From>(), size_of::<To>());
+    debug_assert_eq!(align_of::<From>(), align_of::<To>());
+}
+
+pub fn loc_to_aloc_ast(program: &ast::Program<Loc, Loc>) -> &ast::Program<ALoc, ALoc> {
+    debug_assert_same_layout::<ast::Program<Loc, Loc>, ast::Program<ALoc, ALoc>>();
+    // SAFETY: `ALoc` is `repr(transparent)` over `Loc`, so a parser-produced `Loc` is a valid
+    // concrete `ALoc`. Flow AST nodes are parametric over their location annotations and store no
+    // type-specific metadata; this changes only the annotation type of the borrowed view and ties
+    // the output lifetime to the input reference.
+    unsafe { transmute::<&ast::Program<Loc, Loc>, &ast::Program<ALoc, ALoc>>(program) }
+}
+
+pub fn loc_to_aloc_ast_owned(program: ast::Program<Loc, Loc>) -> ast::Program<ALoc, ALoc> {
+    debug_assert_same_layout::<ast::Program<Loc, Loc>, ast::Program<ALoc, ALoc>>();
+    // SAFETY: `ALoc` is `repr(transparent)` over `Loc`, so a parser-produced `Loc` is a valid
+    // concrete `ALoc`. Flow AST nodes are parametric over their location annotations and store no
+    // type-specific metadata; this changes only the annotation type while preserving the same owned
+    // representation and equivalent drop behavior.
+    unsafe { transmute::<ast::Program<Loc, Loc>, ast::Program<ALoc, ALoc>>(program) }
+}
+
+pub fn loc_to_aloc_statement_list(
+    stmts: &[ast::statement::Statement<Loc, Loc>],
+) -> &[ast::statement::Statement<ALoc, ALoc>] {
+    debug_assert_same_layout::<
+        ast::statement::Statement<Loc, Loc>,
+        ast::statement::Statement<ALoc, ALoc>,
+    >();
+    // SAFETY: `ALoc` is `repr(transparent)` over `Loc`, and statement nodes are parametric over
+    // their location annotations. Slice metadata is unchanged; only the element type of the borrowed
+    // view changes, and the output lifetime is tied to the input slice.
+    unsafe {
+        transmute::<&[ast::statement::Statement<Loc, Loc>], &[ast::statement::Statement<ALoc, ALoc>]>(
+            stmts,
+        )
+    }
+}
+
+pub fn loc_to_aloc_expression(
+    expr: &ast::expression::Expression<Loc, Loc>,
+) -> &ast::expression::Expression<ALoc, ALoc> {
+    debug_assert_same_layout::<
+        ast::expression::Expression<Loc, Loc>,
+        ast::expression::Expression<ALoc, ALoc>,
+    >();
+    // SAFETY: `ALoc` is `repr(transparent)` over `Loc`, and expression nodes are parametric over
+    // their location annotations. `Expression` is an `Arc` wrapper; this changes only the
+    // annotation type of the borrowed view and ties the output lifetime to the input reference.
+    unsafe {
+        transmute::<&ast::expression::Expression<Loc, Loc>, &ast::expression::Expression<ALoc, ALoc>>(
+            expr,
+        )
+    }
+}
+
+pub fn loc_to_aloc_expression_owned(
+    expr: ast::expression::Expression<Loc, Loc>,
+) -> ast::expression::Expression<ALoc, ALoc> {
+    debug_assert_same_layout::<
+        ast::expression::Expression<Loc, Loc>,
+        ast::expression::Expression<ALoc, ALoc>,
+    >();
+    // SAFETY: `ALoc` is `repr(transparent)` over `Loc`, and expression nodes are parametric over
+    // their location annotations. `Expression` is an `Arc` wrapper, so this preserves the same
+    // allocation with equivalent drop behavior.
+    unsafe {
+        transmute::<ast::expression::Expression<Loc, Loc>, ast::expression::Expression<ALoc, ALoc>>(
+            expr,
+        )
+    }
+}
+
+pub fn loc_to_aloc_type_annotation(
+    annot: &ast::types::Annotation<Loc, Loc>,
+) -> &ast::types::Annotation<ALoc, ALoc> {
+    debug_assert_same_layout::<ast::types::Annotation<Loc, Loc>, ast::types::Annotation<ALoc, ALoc>>(
+    );
+    // SAFETY: `ALoc` is `repr(transparent)` over `Loc`, and type annotations are parametric over
+    // their location annotations. This changes only the annotation type of the borrowed view and
+    // ties the output lifetime to the input reference.
+    unsafe {
+        transmute::<&ast::types::Annotation<Loc, Loc>, &ast::types::Annotation<ALoc, ALoc>>(annot)
+    }
+}
+
+pub fn loc_to_aloc_type_annotation_owned(
+    annot: ast::types::Annotation<Loc, Loc>,
+) -> ast::types::Annotation<ALoc, ALoc> {
+    debug_assert_same_layout::<ast::types::Annotation<Loc, Loc>, ast::types::Annotation<ALoc, ALoc>>(
+    );
+    // SAFETY: `ALoc` is `repr(transparent)` over `Loc`, and type annotations are parametric over
+    // their location annotations. This changes only the annotation type while preserving the same
+    // owned representation and equivalent drop behavior.
+    unsafe {
+        transmute::<ast::types::Annotation<Loc, Loc>, ast::types::Annotation<ALoc, ALoc>>(annot)
     }
 }
 
@@ -84,6 +188,7 @@ const KEYED_SENTINEL: i32 = i32::MIN;
 ///
 /// For keyed ALocs: `start.line` holds the key (as i32), `start.column == KEYED_SENTINEL`,
 /// `end` is zeroed. For concrete ALocs: normal `Loc` data. For none: `LOC_NONE`.
+#[repr(transparent)]
 #[derive(Clone, Dupe)]
 pub struct ALoc(Loc);
 
@@ -888,7 +993,33 @@ mod tests {
             std::mem::size_of::<Loc>(),
             "ALoc should be the same size as Loc (24 bytes)"
         );
+        assert_eq!(
+            std::mem::align_of::<ALoc>(),
+            std::mem::align_of::<Loc>(),
+            "ALoc should have the same alignment as Loc"
+        );
         assert_eq!(std::mem::size_of::<ALoc>(), 24);
+    }
+
+    #[test]
+    fn loc_to_aloc_ast_matches_polymorphic_mapper() {
+        let parse_options = Some(flow_parser::ParseOptions {
+            enums: true,
+            components: true,
+            pattern_matching: true,
+            records: true,
+            ..Default::default()
+        });
+        let (loc_ast, _errors) = flow_parser::parse_program_without_file(
+            false,
+            None,
+            parse_options,
+            Ok("const x: number = 1;"),
+        );
+        let mut mapper = LocToALocMapper;
+        let Ok(mapped_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &loc_ast);
+        let transmuted_ast = loc_to_aloc_ast(&loc_ast);
+        assert_eq!(transmuted_ast, &mapped_ast);
     }
 
     fn test_file_key() -> FileKey {

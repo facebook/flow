@@ -502,14 +502,12 @@ mod collect_function_method_inserting_points_tests {
     use flow_aloc::ALoc;
     use flow_aloc::ALocTable;
     use flow_aloc::LazyALocTable;
-    use flow_aloc::LocToALocMapper;
     use flow_common::reason::VirtualReasonDesc;
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_lint_settings::lint_settings::LintSettings;
     use flow_lint_settings::severity::Severity;
     use flow_parser::loc_sig::LocSig;
-    use flow_parser::polymorphic_ast_mapper;
     use flow_parser_utils::file_sig::FileSig;
     use flow_typing::type_inference;
     use flow_typing_builtins::builtins::Builtins;
@@ -629,7 +627,7 @@ mod collect_function_method_inserting_points_tests {
         ast: &ast::Program<Loc, Loc>,
     ) -> ast::Program<ALoc, (ALoc, Type)> {
         let comments = &ast.all_comments;
-        let Ok(aloc_ast) = polymorphic_ast_mapper::program(&mut LocToALocMapper, ast);
+        let aloc_ast = flow_aloc::loc_to_aloc_ast(ast);
         // Type_inference_js.infer_ast
         //   cx dummy_filename File_sig.empty (Context.metadata cx) comments aloc_ast
         type_inference::infer_ast(
@@ -639,7 +637,7 @@ mod collect_function_method_inserting_points_tests {
             Arc::new(FileSig::empty()),
             cx.metadata(),
             comments,
-            &aloc_ast,
+            aloc_ast,
         )
         .expect("infer_ast should not be canceled in test")
     }
@@ -760,14 +758,12 @@ mod find_closest_enclosing_class_tests {
     use flow_aloc::ALoc;
     use flow_aloc::ALocTable;
     use flow_aloc::LazyALocTable;
-    use flow_aloc::LocToALocMapper;
     use flow_common::reason::VirtualReasonDesc;
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_lint_settings::lint_settings::LintSettings;
     use flow_lint_settings::severity::Severity;
     use flow_parser::loc_sig::LocSig;
-    use flow_parser::polymorphic_ast_mapper;
     use flow_parser_utils::file_sig::FileSig;
     use flow_typing::type_inference;
     use flow_typing_builtins::builtins::Builtins;
@@ -886,7 +882,7 @@ mod find_closest_enclosing_class_tests {
         ast: &ast::Program<Loc, Loc>,
     ) -> ast::Program<ALoc, (ALoc, Type)> {
         let comments = &ast.all_comments;
-        let Ok(aloc_ast) = polymorphic_ast_mapper::program(&mut LocToALocMapper, ast);
+        let aloc_ast = flow_aloc::loc_to_aloc_ast(ast);
         type_inference::infer_ast(
             &LintSettings::<Severity>::empty_severities(),
             cx,
@@ -894,7 +890,7 @@ mod find_closest_enclosing_class_tests {
             Arc::new(FileSig::empty()),
             cx.metadata(),
             comments,
-            &aloc_ast,
+            aloc_ast,
         )
         .expect("infer_ast should not be canceled in test")
     }
@@ -1379,14 +1375,12 @@ mod type_synthesizer_tests {
     use flow_aloc::ALoc;
     use flow_aloc::ALocTable;
     use flow_aloc::LazyALocTable;
-    use flow_aloc::LocToALocMapper;
     use flow_common::reason::VirtualReasonDesc;
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_lint_settings::lint_settings::LintSettings;
     use flow_lint_settings::severity::Severity;
     use flow_parser::loc_sig::LocSig;
-    use flow_parser::polymorphic_ast_mapper;
     use flow_parser_utils::file_sig::FileSig;
     use flow_parser_utils::file_sig::FileSigOptions;
     use flow_parser_utils_output::js_layout_generator;
@@ -1508,7 +1502,7 @@ mod type_synthesizer_tests {
         ast: &ast::Program<Loc, Loc>,
     ) -> ast::Program<ALoc, (ALoc, Type)> {
         let comments = &ast.all_comments;
-        let Ok(aloc_ast) = polymorphic_ast_mapper::program(&mut LocToALocMapper, ast);
+        let aloc_ast = flow_aloc::loc_to_aloc_ast(ast);
         type_inference::infer_ast(
             &LintSettings::<Severity>::empty_severities(),
             cx,
@@ -1516,7 +1510,7 @@ mod type_synthesizer_tests {
             Arc::new(FileSig::empty()),
             cx.metadata(),
             comments,
-            &aloc_ast,
+            aloc_ast,
         )
         .expect("infer_ast should not be canceled in test")
     }

@@ -429,11 +429,14 @@ pub struct Typing<'a, 'cx: 'a> {
     pub cx: &'a Context<'cx>,
     pub file_sig: Arc<FileSig>,
     pub ast: Arc<ast::Program<Loc, Loc>>,
-    pub aloc_ast: ast::Program<ALoc, ALoc>,
     pub canonical: Option<&'a autocomplete_sigil::canonical::Token>,
 }
 
 impl<'a, 'cx: 'a> Typing<'a, 'cx> {
+    fn aloc_ast(&self) -> &ast::Program<ALoc, ALoc> {
+        flow_aloc::loc_to_aloc_ast(self.ast.as_ref())
+    }
+
     fn norm_genv(&self) -> flow_typing_ty_normalizer::env::Genv<'_, 'cx> {
         ty_normalizer_flow::mk_genv(ty_normalizer_options(), self.cx, None, self.file_sig.dupe())
     }
@@ -472,7 +475,6 @@ pub fn mk_typing_artifacts<'a, 'cx: 'a>(
     cx: &'a Context<'cx>,
     file_sig: Arc<FileSig>,
     ast: Arc<ast::Program<Loc, Loc>>,
-    aloc_ast: ast::Program<ALoc, ALoc>,
     canonical: Option<&'a autocomplete_sigil::canonical::Token>,
 ) -> Typing<'a, 'cx> {
     Typing {
@@ -488,7 +490,6 @@ pub fn mk_typing_artifacts<'a, 'cx: 'a>(
         cx,
         file_sig,
         ast,
-        aloc_ast,
         canonical,
     }
 }
@@ -531,7 +532,7 @@ fn jsdoc_of_loc(
         &typing.file_sig,
         None,
         &typing.ast,
-        AvailableAst::ALocAst(typing.aloc_ast.clone()),
+        AvailableAst::ALocAst(typing.aloc_ast()),
         &get_def_types::Purpose::JSDoc,
         loc,
     )?;
@@ -1888,7 +1889,7 @@ fn local_type_identifiers(
     flow_utils_concurrency::job_error::JobError,
 > {
     let mut search = LocalTypeIdentifiersAstSearcher::new(typing.cx);
-    search.program(&typing.aloc_ast)?;
+    search.program(typing.aloc_ast())?;
     let ids = search
         .rev_ids
         .into_iter()
@@ -3096,7 +3097,7 @@ pub fn autocomplete_get_results(
         typing.file_sig.dupe(),
         trigger_character,
         &canon_cursor,
-        &typing.aloc_ast,
+        typing.aloc_ast(),
     )? {
         Err(err) => Ok((
             None,

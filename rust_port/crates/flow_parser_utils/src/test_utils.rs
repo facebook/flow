@@ -10,9 +10,6 @@ use flow_parser::ParseOptions;
 use flow_parser::ast;
 use flow_parser::loc::Loc;
 use flow_parser::parse_program_without_file;
-use flow_parser::polymorphic_ast_mapper;
-
-use crate::ast_loc_utils::LocToALocMapper;
 
 pub fn parse(contents: &str) -> ast::Program<Loc, Loc> {
     let parse_options = Some(ParseOptions {
@@ -41,7 +38,5 @@ pub fn eq<T>(printer: impl Fn(&T) -> String, v1: &T, v2: &T) -> bool {
 
 pub fn parse_with_alocs(contents: &str) -> ast::Program<ALoc, ALoc> {
     let loc_ast = parse(contents);
-    let mut loc_to_aloc_mapper = LocToALocMapper;
-    let Ok(aloc_ast) = polymorphic_ast_mapper::program(&mut loc_to_aloc_mapper, &loc_ast);
-    aloc_ast
+    flow_aloc::loc_to_aloc_ast_owned(loc_ast)
 }

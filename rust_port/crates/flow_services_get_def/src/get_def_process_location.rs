@@ -1650,7 +1650,7 @@ fn search<T: Dupe + PartialEq, C: SearcherCallback<T>>(
 
 pub fn process_location<'cx>(
     cx: &Context<'cx>,
-    available_ast: &AvailableAst,
+    available_ast: &AvailableAst<'_>,
     is_local_use: &dyn Fn(&ALoc) -> bool,
     is_legit_require: &dyn Fn(&ALoc) -> bool,
     purpose: Purpose,

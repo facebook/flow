@@ -384,7 +384,7 @@ pub fn compute_env_of_contents(
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> Result<
-    Result<(Context<'static>, ast::Program<ALoc, ALoc>), CheckedDependenciesCanceled>,
+    Result<Context<'static>, CheckedDependenciesCanceled>,
     flow_utils_concurrency::job_error::JobError,
 > {
     type_inference_hooks_js::with_for_ide(true, || {

@@ -6,7 +6,6 @@
  */
 
 use flow_aloc::ALoc;
-use flow_aloc::LocToALocMapper;
 use flow_analysis::test_utils::parse_with_alocs;
 use flow_common::options::JsxMode;
 use flow_common::options::ReactRuntime;
@@ -22,7 +21,6 @@ use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::parse_jsx_pragma_expression;
-use flow_parser::polymorphic_ast_mapper;
 
 use crate::dependency_sigs::Context;
 use crate::dependency_sigs::Flow;
@@ -225,8 +223,7 @@ fn print_order_test(
         None => {}
         Some(s) => {
             let (ast, _errors) = parse_jsx_pragma_expression::<()>(None, s).unwrap();
-            let mut mapper = LocToALocMapper;
-            let Ok(aloc_ast) = polymorphic_ast_mapper::expression(&mut mapper, &ast);
+            let aloc_ast = flow_aloc::loc_to_aloc_expression_owned(ast);
             cx.jsx_mode = JsxMode::JsxPragma(s.to_string(), aloc_ast);
         }
     }

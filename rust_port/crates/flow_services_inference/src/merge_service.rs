@@ -796,8 +796,7 @@ fn mk_check_file(
             all_comments: comments,
             ..
         } = ast_ref.as_ref();
-        let mut mapper = flow_aloc::LocToALocMapper;
-        let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast_ref);
+        let aloc_ast = flow_aloc::loc_to_aloc_ast(ast_ref.as_ref());
         let metadata = cx.metadata().clone();
         let enabled = matches!(
             &find_ref_request.def_info,
@@ -806,10 +805,9 @@ fn mk_check_file(
         let loc_of_aloc = |aloc: &ALoc| shared_mem.loc_of_aloc(aloc);
         let (typed_ast_result, obj_to_obj_map) =
             obj_to_obj_hook::with_obj_to_obj_hook(enabled, &loc_of_aloc, || {
-                check_file(&cx, &file, file_sig.dupe(), &metadata, comments, &aloc_ast)
+                check_file(&cx, &file, file_sig.dupe(), &metadata, comments, aloc_ast)
             });
         let typed_ast = typed_ast_result?;
-        drop(aloc_ast);
         let ast_info: flow_services_get_def::find_refs_utils::AstInfo = (
             ast_ref.dupe(),
             file_sig.dupe(),
@@ -978,10 +976,9 @@ pub fn check_contents_context(
         all_comments: comments,
         ..
     } = ast_ref.as_ref();
-    let mut mapper = flow_aloc::LocToALocMapper;
-    let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast_ref);
+    let aloc_ast = flow_aloc::loc_to_aloc_ast(ast_ref.as_ref());
     let metadata = cx.metadata().clone();
-    let typed_ast = check_file(&cx, &file, file_sig, &metadata, comments, &aloc_ast)?;
+    let typed_ast = check_file(&cx, &file, file_sig, &metadata, comments, aloc_ast)?;
     Ok((cx, typed_ast))
 }
 
@@ -994,8 +991,7 @@ pub fn compute_env_of_contents(
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> Result<(Context<'static>, ast::Program<ALoc, ALoc>), flow_utils_concurrency::job_error::JobError>
-{
+) -> Result<Context<'static>, flow_utils_concurrency::job_error::JobError> {
     let aloc_table: flow_aloc::LazyALocTable = {
         let file_for_aloc = file.dupe();
         let shared_mem_for_aloc = shared_mem.dupe();
@@ -1041,10 +1037,9 @@ pub fn compute_env_of_contents(
         docblock,
         aloc_table,
     );
-    let mut mapper = flow_aloc::LocToALocMapper;
-    let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast);
-    compute_env(&cx, &aloc_ast)?;
-    Ok((cx, aloc_ast))
+    let aloc_ast = flow_aloc::loc_to_aloc_ast(ast.as_ref());
+    compute_env(&cx, aloc_ast)?;
+    Ok(cx)
 }
 
 fn merge_job<A, F>(

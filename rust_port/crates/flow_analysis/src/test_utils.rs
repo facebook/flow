@@ -6,13 +6,11 @@
  */
 
 use flow_aloc::ALoc;
-use flow_aloc::LocToALocMapper;
 use flow_parser::ParseOptions;
 use flow_parser::ast;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser::parse_program_without_file;
-use flow_parser::polymorphic_ast_mapper;
 
 pub fn parse(contents: &str) -> ast::Program<Loc, Loc> {
     let parse_options = Some(ParseOptions {
@@ -61,7 +59,5 @@ where
 
 pub fn parse_with_alocs(contents: &str) -> ast::Program<ALoc, ALoc> {
     let loc_ast = parse(contents);
-    let mut mapper = LocToALocMapper;
-    let Ok(result) = polymorphic_ast_mapper::program(&mut mapper, &loc_ast);
-    result
+    flow_aloc::loc_to_aloc_ast_owned(loc_ast)
 }

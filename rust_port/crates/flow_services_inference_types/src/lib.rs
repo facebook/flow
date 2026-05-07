@@ -56,12 +56,7 @@ pub enum TypeContentsError {
     CheckedDependenciesCanceled,
 }
 
-pub type AutocompleteArtifacts<'cx> = (
-    String,
-    ParseArtifacts,
-    Context<'cx>,
-    ast::Program<ALoc, ALoc>,
-);
+pub type AutocompleteArtifacts<'cx> = (String, ParseArtifacts, Context<'cx>);
 
 pub type Duration = f64;
 

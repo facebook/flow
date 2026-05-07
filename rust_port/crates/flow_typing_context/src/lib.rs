@@ -27,7 +27,6 @@ use flow_aloc::ALocId;
 use flow_aloc::ALocMap;
 use flow_aloc::ALocSet;
 use flow_aloc::LazyALocTable;
-use flow_aloc::LocToALocMapper;
 use flow_analysis::property_assignment::Errors as PropertyAssignmentErrors;
 use flow_common::docblock::Docblock;
 use flow_common::docblock::FlowMode;
@@ -66,7 +65,6 @@ use flow_env_builder::name_def_types::ScopeKind;
 use flow_lint_settings::lint_severity_cover::LintSeverityCover;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
-use flow_parser::polymorphic_ast_mapper;
 use flow_type_sig::compact_table;
 use flow_typing_builtins::Builtins;
 use flow_typing_builtins::LazyModuleType;
@@ -692,9 +690,7 @@ pub fn docblock_overrides(
 ) -> Metadata {
     let jsx = match docblock_info.jsx() {
         Some(jsx_pragma) => {
-            let mut mapper = LocToALocMapper;
-            let Ok(jsx_expr) =
-                polymorphic_ast_mapper::expression(&mut mapper, &jsx_pragma.expression);
+            let jsx_expr = flow_aloc::loc_to_aloc_expression_owned(jsx_pragma.expression.dupe());
             JsxMode::JsxPragma(jsx_pragma.raw.clone(), jsx_expr)
         }
         None => JsxMode::JsxReact,
@@ -2416,8 +2412,8 @@ impl<'cx> Context<'cx> {
             .ccx
             .test_prop_hits_and_misses
             .borrow()
-            .iter()
-            .filter_map(|(_, hit_or_miss)| match hit_or_miss {
+            .values()
+            .filter_map(|hit_or_miss| match hit_or_miss {
                 TestPropHitOrMiss::Hit => None,
                 TestPropHitOrMiss::Miss {
                     name,

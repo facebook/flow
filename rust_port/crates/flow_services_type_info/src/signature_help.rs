@@ -839,9 +839,7 @@ pub fn find_signatures<'a>(
                         &file_sig,
                         None,
                         ast,
-                        flow_typing_utils::typed_ast_utils::AvailableAst::TypedAst(
-                            typed_ast.clone(),
-                        ),
+                        flow_typing_utils::typed_ast_utils::AvailableAst::TypedAst(typed_ast),
                         &flow_services_get_def::get_def_types::Purpose::JSDoc,
                         &loc_of_aloc(&callee_loc),
                     )? {

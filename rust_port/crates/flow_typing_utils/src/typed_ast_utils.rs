@@ -21,12 +21,14 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UnsoundnessKind;
 use flow_typing_type::type_::any_t;
 
-pub enum AvailableAst {
-    TypedAst(ast::Program<ALoc, (ALoc, Type)>),
-    ALocAst(ast::Program<ALoc, ALoc>),
+pub enum AvailableAst<'a> {
+    TypedAst(&'a ast::Program<ALoc, (ALoc, Type)>),
+    ALocAst(&'a ast::Program<ALoc, ALoc>),
 }
 
-pub fn typed_ast_of_available_ast(ast: AvailableAst) -> Option<ast::Program<ALoc, (ALoc, Type)>> {
+pub fn typed_ast_of_available_ast(
+    ast: AvailableAst<'_>,
+) -> Option<&ast::Program<ALoc, (ALoc, Type)>> {
     match ast {
         AvailableAst::TypedAst(tast) => Some(tast),
         AvailableAst::ALocAst(_) => None,
