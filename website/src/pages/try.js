@@ -17,7 +17,7 @@ const TryFlow = React.lazy(() => import('../try-flow/TryFlow'));
 
 export default component TryFlowPage() {
   const context = useDocusaurusContext();
-  const {siteConfig = ({}: any)} = context;
+  const {siteConfig = {} as any} = context;
   return (
     <Layout
       // $FlowFixMe[prop-missing]

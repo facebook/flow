@@ -16,67 +16,74 @@ const flowJSPath = process.argv[2];
 global.process = undefined;
 const flow = require(flowJSPath);
 
-const libFile = 'lib.js';
-flow.registerFile(libFile, `declare var MyGlobal: string;`);
-flow.initBuiltins([libFile]);
+async function main() {
+  if (flow.ready != null) {
+    await flow.ready;
+  }
 
-const config = {
-  'react.runtime': 'classic',
-  exact_by_default: true,
-};
+  const libFile = 'lib.js';
+  flow.registerFile(libFile, `declare var MyGlobal: string;`);
+  flow.initBuiltins([libFile]);
 
-// Regression test for invalid configSchema literal
-try {
-  JSON.parse(flow.configSchema);
-} catch (e) {
-  throw 'configSchema literal is not valid JSON: ' + e?.message;
-}
+  const config = {
+    'react.runtime': 'classic',
+    exact_by_default: true,
+  };
 
-// Regression test for https://github.com/facebook/flow/issues/9024
-if (
-  JSON.stringify(flow.parse('#!/usr/bin/env node\n', {tokens: true}).tokens) !==
-  JSON.stringify([
-    {
-      type: 'T_INTERPRETER',
-      context: 'normal',
-      loc: {start: {line: 1, column: 0}, end: {line: 1, column: 19}},
-      range: [0, 19],
-      value: '/usr/bin/env node',
-    },
-  ])
-) {
-  throw 'Incorrect parse result';
-}
+  // Regression test for invalid configSchema literal
+  try {
+    JSON.parse(flow.configSchema);
+  } catch (e) {
+    throw 'configSchema literal is not valid JSON: ' + e?.message;
+  }
 
-if (flow.checkContent('test.js', 'MyGlobal;', config).length > 0) {
-  throw 'There should be no errors if the library is correctly registered.';
-}
-if (
-  flow.checkContent('test.js', 'MyGloba;', config)[0].message[0].descr !==
-  'Cannot resolve name `MyGloba`. [cannot-resolve-name]'
-) {
-  throw 'Referring to non-existent global should be an error.';
-}
-if (
-  flow.checkContent(
-    'test.js',
-    `// @jsx Foo
+  // Regression test for https://github.com/facebook/flow/issues/9024
+  if (
+    JSON.stringify(
+      flow.parse('#!/usr/bin/env node\n', {tokens: true}).tokens,
+    ) !==
+    JSON.stringify([
+      {
+        type: 'T_INTERPRETER',
+        context: 'normal',
+        loc: {start: {line: 1, column: 0}, end: {line: 1, column: 19}},
+        range: [0, 19],
+        value: '/usr/bin/env node',
+      },
+    ])
+  ) {
+    throw 'Incorrect parse result';
+  }
+
+  if (flow.checkContent('test.js', 'MyGlobal;', config).length > 0) {
+    throw 'There should be no errors if the library is correctly registered.';
+  }
+  if (
+    flow.checkContent('test.js', 'MyGloba;', config)[0].message[0].descr !==
+    'Cannot resolve name `MyGloba`. [cannot-resolve-name]'
+  ) {
+    throw 'Referring to non-existent global should be an error.';
+  }
+  if (
+    flow.checkContent(
+      'test.js',
+      `// @jsx Foo
 const Bar = '123';
 function Foo(x: string) {}
 <Bar />; // ok`,
-    config,
-  ).length > 0
-) {
-  throw 'There should be no errors if jsx pragma is correctly parsed.';
-}
+      config,
+    ).length > 0
+  ) {
+    throw 'There should be no errors if jsx pragma is correctly parsed.';
+  }
 
-if (
-  JSON.stringify(
-    flow.getDef('test.js', 'const foo = 1;\nfoo', 2, 1, config),
-    undefined,
-    2,
-  ) !==
-  `[
+  if (
+    JSON.stringify(
+      flow.getDef('test.js', 'const foo = 1;\nfoo', 2, 1, config),
+      undefined,
+      2,
+    ) !==
+    `[
   {
     "source": "test.js",
     "type": "SourceFile",
@@ -90,19 +97,19 @@ if (
     }
   }
 ]`
-) {
-  throw 'Incorrect get-def result';
-}
-const got = flow.autocomplete(
-  'test.js',
-  'const foo = 1;\nconst bar = "foo";\nfo',
-  3,
-  2,
-  config,
-);
-if (
-  JSON.stringify(got, undefined, 2) !==
-  `{
+  ) {
+    throw 'Incorrect get-def result';
+  }
+  const got = flow.autocomplete(
+    'test.js',
+    'const foo = 1;\nconst bar = "foo";\nfo',
+    3,
+    2,
+    config,
+  );
+  if (
+    JSON.stringify(got, undefined, 2) !==
+    `{
   "incomplete": false,
   "suggestions": [
     {
@@ -168,8 +175,15 @@ if (
     }
   ]
 }`
-) {
-  throw (
-    'Invalid autocomplete result. Got: ' + JSON.stringify(got, undefined, 2)
-  );
+  ) {
+    throw (
+      'Invalid autocomplete result. Got: ' + JSON.stringify(got, undefined, 2)
+    );
+  }
 }
+
+main().catch(error => {
+  setTimeout(() => {
+    throw error;
+  }, 0);
+});

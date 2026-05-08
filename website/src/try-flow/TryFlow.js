@@ -120,15 +120,19 @@ export default component TryFlow(
     useState<?{lineNumber: number, column: number}>(null);
   const [ast, setAST] = useState<interface {} | string>({});
   const [loading, setLoading] = useState(true);
-  const [flowService, setFlowService] = useState((null: ?FlowJsServices));
+  const [flowService, setFlowService] = useState(null as ?FlowJsServices);
   const [activeToolbarTab, setActiveToolbarTab] = useState(
-    ('code': 'code' | 'config'),
+    'code' as 'code' | 'config',
   );
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     FlowJsServices.init(withBaseUrl, flowVersion)
       .then(f => {
+        if (cancelled) {
+          return;
+        }
         setFlowService(existing =>
           existing == null
             ? // Only the initial init will use the config encoded in the starting URI
@@ -139,9 +143,15 @@ export default component TryFlow(
         setInternalError('');
       })
       .catch(e => {
+        if (cancelled) {
+          return;
+        }
         setLoading(false);
         setInternalError(JSON.stringify(e));
       });
+    return () => {
+      cancelled = true;
+    };
   }, [flowVersion]);
 
   useEffect(() => {

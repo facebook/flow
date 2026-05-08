@@ -92,7 +92,7 @@ function shouldCollapse(cursorPosition: Position, json: mixed): boolean {
     json != null &&
     typeof json.loc === 'object'
   ) {
-    const loc: {start: Position, end: Position} = (json.loc: any);
+    const loc: {start: Position, end: Position} = json.loc as any;
     if (
       comparePosition(loc.start, cursorPosition) <= 0 &&
       comparePosition(cursorPosition, loc.end) <= 0

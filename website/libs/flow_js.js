@@ -65,7 +65,10 @@ declare type FlowJsConfigSchema = Array<
 
 declare type FlowJs = {
   flowVersion: string,
+  ready?: Promise<mixed>,
   configSchema?: string,
+  registerFile(filename: string, body: string): mixed,
+  initBuiltins(filenames: $ReadOnlyArray<string>): mixed,
   checkContent(
     filename: string,
     body: string,

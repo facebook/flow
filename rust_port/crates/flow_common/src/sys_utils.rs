@@ -29,7 +29,7 @@ pub fn temp_dir_name() -> PathBuf {
 }
 
 pub fn with_umask<R>(umask: u32, f: impl FnOnce() -> R) -> R {
-    #[cfg(unix)]
+    #[cfg(all(unix, not(target_arch = "wasm32")))]
     {
         let old = unix_umask::set(umask);
         struct Restore(u32);
@@ -41,14 +41,14 @@ pub fn with_umask<R>(umask: u32, f: impl FnOnce() -> R) -> R {
         let _restore = Restore(old);
         f()
     }
-    #[cfg(not(unix))]
+    #[cfg(any(not(unix), target_arch = "wasm32"))]
     {
         let _umask = umask;
         f()
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_arch = "wasm32")))]
 mod unix_umask {
     use nix::sys::stat::Mode;
     use nix::sys::stat::umask;

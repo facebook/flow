@@ -69,6 +69,52 @@ function versionedUnpkgComUrl(version: string): string {
   return `https://unpkg.com/try-flow-website-js@${version}`;
 }
 
+function isFlowJs(value: mixed): boolean {
+  return (
+    value != null &&
+    typeof (value as any).checkContent === 'function' &&
+    typeof (value as any).registerFile === 'function' &&
+    typeof (value as any).initBuiltins === 'function'
+  );
+}
+
+function getGlobalFlow(): ?FlowJs {
+  const globalObject =
+    typeof self !== 'undefined'
+      ? self
+      : typeof window !== 'undefined'
+        ? window
+        : typeof globalThis !== 'undefined'
+          ? globalThis
+          : null;
+  if (globalObject == null || !isFlowJs((globalObject as any).flow)) {
+    return null;
+  }
+  return (globalObject as any).flow;
+}
+
+function getLoadedFlow(flowModule: mixed): FlowJs {
+  if (isFlowJs(flowModule)) {
+    return flowModule as any;
+  }
+  const globalFlow = getGlobalFlow();
+  if (globalFlow != null) {
+    return globalFlow;
+  }
+  if (flowModule != null && isFlowJs((flowModule as any).default)) {
+    return (flowModule as any).default;
+  }
+  throw new Error('flow.js loaded without exposing a Flow API');
+}
+
+function waitForReady(flow: FlowJs): Promise<FlowJs> {
+  const ready = flow.ready;
+  if (ready == null) {
+    return Promise.resolve(flow);
+  }
+  return Promise.resolve(ready).then(() => flow);
+}
+
 export function load(
   withBaseUrl: string => string,
   version: string,
@@ -94,29 +140,32 @@ export function load(
             `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
             `${versionedUnpkgComUrl(version)}/flowlib/intl.js`,
           ];
-  const flowLoader = new Promise<[string, string]>(resolve => {
+  const flowLoader = new Promise<FlowJs>((resolve, reject) => {
     requirejs(
       [
         version === 'master'
           ? withBaseUrl('/flow/master/flow.js')
           : `${versionedUnpkgComUrl(version)}/flow.js`,
       ],
-      resolve,
+      flowModule => {
+        try {
+          resolve(getLoadedFlow(flowModule));
+        } catch (error) {
+          reject(error);
+        }
+      },
     );
   });
-  return Promise.all([flowLoader, ...libs.map(get)]).then(
-    ([_flow, ...contents]) => {
-      contents.forEach(nameAndContent => {
-        self.flow.registerFile(nameAndContent[0], nameAndContent[1]);
-      });
-      self.flow.registerFile('try-lib.js', TRY_LIB_CONTENTS);
-      self.flow.initBuiltins([
-        ...libs.map(normalizeUrlForFilename),
-        'try-lib.js',
-      ]);
-      versionCache.set(version, self.flow);
-      // $FlowFixMe[cannot-resolve-name]
-      return flow;
-    },
-  );
+  return Promise.all([
+    flowLoader.then(waitForReady),
+    ...libs.map(get),
+  ] as any).then(([flow, ...contents]) => {
+    contents.forEach(nameAndContent => {
+      flow.registerFile(nameAndContent[0], nameAndContent[1]);
+    });
+    flow.registerFile('try-lib.js', TRY_LIB_CONTENTS);
+    flow.initBuiltins([...libs.map(normalizeUrlForFilename), 'try-lib.js']);
+    versionCache.set(version, flow);
+    return flow;
+  });
 }

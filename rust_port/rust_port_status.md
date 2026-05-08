@@ -977,7 +977,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] runners/
       - [x] command_runner.ml → `irrelevant` (OCaml-only Fontainebleau command wrapper)
 - [x] flow.ml → `flow_cli/src/main.rs` (+ `flow_cli/src/lib.rs`)
-- [ ] flow_dot_js.ml
+- [x] flow_dot_js.ml → `flow_dot_js_wasm/src/lib.rs`
 - [x] flowlib/
   - [x] flowlib.ml → `flow_flowlib/src/lib.rs`
 - [x] hack_forked/
