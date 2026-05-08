@@ -8,6 +8,7 @@
 use std::cell::LazyCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::collections::btree_map::Entry;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -32,7 +33,7 @@ use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::package_json::PackageJson;
 use flow_type_sig::packed_type_sig::Module as TypeSigModule;
 use flow_type_sig::signature_error::TolerableError;
-use flow_utils_concurrency::locked_map::LockedMap;
+use parking_lot::Mutex;
 
 use crate::entity::Dependency;
 use crate::entity::ResolvedRequires;
@@ -43,18 +44,139 @@ use crate::parse::Parse;
 use crate::parse::TypedParse;
 
 pub struct SharedMem {
-    file_heap: LockedMap<FileKey, FileEntry>,
-    pub haste_module_heap: LockedMap<HasteModuleInfo, HasteModule>,
+    file_heap: GcMap<FileKey, FileEntry>,
+    pub haste_module_heap: GcMap<HasteModuleInfo, HasteModule>,
     reader_cache: ReaderCache,
     configured_heap_size: Option<u64>,
     configured_hash_table_pow: Option<u32>,
     on_compact: RwLock<Option<Arc<dyn Fn() -> Box<dyn FnOnce() + Send> + Send + Sync>>>,
+    gc_state: Mutex<GcState>,
 }
 
 pub struct HashStats {
     pub nonempty_slots: i32,
     pub used_slots: i32,
     pub slots: i32,
+}
+
+#[derive(Debug)]
+pub struct GcMap<K, V> {
+    map: parking_lot::RwLock<BTreeMap<K, V>>,
+}
+
+impl<K, V> Default for GcMap<K, V> {
+    fn default() -> Self {
+        Self {
+            map: parking_lot::RwLock::new(BTreeMap::new()),
+        }
+    }
+}
+
+impl<K: Ord, V: Dupe> GcMap<K, V> {
+    fn new() -> Self {
+        Self::default()
+    }
+
+    fn len(&self) -> usize {
+        self.map.read().len()
+    }
+
+    fn get(&self, key: &K) -> Option<V> {
+        self.map.read().get(key).map(|value| value.dupe())
+    }
+
+    fn insert(&self, key: K, value: V) -> Option<V> {
+        let mut map = self.map.write();
+        match map.entry(key) {
+            Entry::Vacant(entry) => {
+                entry.insert(value);
+                None
+            }
+            Entry::Occupied(_) => Some(value),
+        }
+    }
+
+    fn ensure(&self, key: &K, value: impl FnOnce() -> V) -> (V, bool)
+    where
+        K: Dupe,
+    {
+        let mut map = self.map.write();
+        match map.entry(key.dupe()) {
+            Entry::Vacant(entry) => (entry.insert(value()).dupe(), true),
+            Entry::Occupied(entry) => (entry.get().dupe(), false),
+        }
+    }
+
+    fn remove_if(&self, key: &K, predicate: impl FnOnce(&V) -> bool) -> Option<V> {
+        let mut map = self.map.write();
+        if map.get(key).is_some_and(predicate) {
+            map.remove(key)
+        } else {
+            None
+        }
+    }
+
+    fn keys(&self) -> Vec<K>
+    where
+        K: Dupe,
+    {
+        self.map.read().keys().map(|key| key.dupe()).collect()
+    }
+
+    fn values(&self) -> Vec<V> {
+        self.map.read().values().map(|value| value.dupe()).collect()
+    }
+
+    fn iter_unordered(&self) -> Vec<(K, V)>
+    where
+        K: Dupe,
+    {
+        self.map
+            .read()
+            .iter()
+            .map(|(key, value)| (key.dupe(), value.dupe()))
+            .collect()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum GcPhase {
+    Idle,
+    Mark,
+    Sweep,
+}
+
+#[derive(Debug)]
+struct GcState {
+    phase: GcPhase,
+    files: Vec<FileKey>,
+    haste_modules: Vec<HasteModuleInfo>,
+    free_files: Vec<FileKey>,
+    free_haste_modules: Vec<HasteModuleInfo>,
+    mark_index: usize,
+    sweep_file_index: usize,
+    sweep_haste_index: usize,
+    new_alloc_size: usize,
+    scanned_size: usize,
+    free_size: usize,
+}
+
+impl Default for GcState {
+    fn default() -> Self {
+        Self {
+            phase: GcPhase::Idle,
+            files: Vec::new(),
+            haste_modules: Vec::new(),
+            free_files: Vec::new(),
+            free_haste_modules: Vec::new(),
+            mark_index: 0,
+            sweep_file_index: 0,
+            sweep_haste_index: 0,
+            new_alloc_size: 0,
+            scanned_size: 0,
+            free_size: 0,
+        }
+    }
 }
 
 impl SharedMem {
@@ -67,12 +189,13 @@ impl SharedMem {
         configured_hash_table_pow: Option<u32>,
     ) -> Self {
         Self {
-            file_heap: LockedMap::new(),
-            haste_module_heap: LockedMap::new(),
+            file_heap: GcMap::new(),
+            haste_module_heap: GcMap::new(),
             reader_cache: ReaderCache::new(),
             configured_heap_size,
             configured_hash_table_pow,
             on_compact: RwLock::new(None),
+            gc_state: Mutex::new(GcState::default()),
         }
     }
 
@@ -587,9 +710,13 @@ impl SharedMem {
     }
 
     pub fn get_or_create_haste_module(&self, info: HasteModuleInfo) -> HasteModule {
-        self.haste_module_heap
-            .ensure(&info, || HasteModule::new(info.clone()))
-            .dupe()
+        let (module, inserted) = self
+            .haste_module_heap
+            .ensure(&info, || HasteModule::new(info.clone()));
+        if inserted {
+            self.note_alloc();
+        }
+        module.dupe()
     }
 
     fn calc_dirty_modules(
@@ -700,7 +827,7 @@ impl SharedMem {
             if let Some(info) = haste_module_info {
                 existing_entry.haste_info_entity().set(info);
             }
-            self.calc_dirty_modules(&file, existing_entry)
+            self.calc_dirty_modules(&file, &existing_entry)
         } else {
             let typed_parse = TypedParse::new(
                 file_hash,
@@ -725,11 +852,14 @@ impl SharedMem {
                 has_dependents,
             );
             match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
-                None => self.calc_dirty_modules(&file, &file_entry),
+                None => {
+                    self.note_alloc();
+                    self.calc_dirty_modules(&file, &file_entry)
+                }
                 Some(_rejected) => {
                     let in_map_entry = self.file_heap.get(&file).expect(
-                        "LockedMap::insert returned Some(_) but get(&file) is None; \
-                         file_heap has no per-key removal so this should be unreachable",
+                        "GcMap::insert returned Some(_) but get(&file) is None; \
+                         insert and get are guarded by the same map lock",
                     );
                     match in_map_entry.parse_latest() {
                         None => {
@@ -737,7 +867,7 @@ impl SharedMem {
                             if let Some(info) = haste_module_info {
                                 in_map_entry.haste_info_entity().set(info);
                             }
-                            self.calc_dirty_modules(&file, in_map_entry)
+                            self.calc_dirty_modules(&file, &in_map_entry)
                         }
                         // Two threads raced to add this file and the other thread
                         // won. We don't need to mark any files as dirty; the other
@@ -776,7 +906,7 @@ impl SharedMem {
             if let Some(info) = haste_module_info {
                 existing_entry.haste_info_entity().set(info);
             }
-            self.calc_dirty_modules(&file, existing_entry)
+            self.calc_dirty_modules(&file, &existing_entry)
         } else {
             let untyped_parse = UntypedParse::new(file_hash);
             let file_entry = FileEntry::new(
@@ -785,11 +915,14 @@ impl SharedMem {
                 has_dependents,
             );
             match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
-                None => self.calc_dirty_modules(&file, &file_entry),
+                None => {
+                    self.note_alloc();
+                    self.calc_dirty_modules(&file, &file_entry)
+                }
                 Some(_rejected) => {
                     let in_map_entry = self.file_heap.get(&file).expect(
-                        "LockedMap::insert returned Some(_) but get(&file) is None; \
-                         file_heap has no per-key removal so this should be unreachable",
+                        "GcMap::insert returned Some(_) but get(&file) is None; \
+                         insert and get are guarded by the same map lock",
                     );
                     match in_map_entry.parse_latest() {
                         None => {
@@ -797,7 +930,7 @@ impl SharedMem {
                             if let Some(info) = haste_module_info {
                                 in_map_entry.haste_info_entity().set(info);
                             }
-                            self.calc_dirty_modules(&file, in_map_entry)
+                            self.calc_dirty_modules(&file, &in_map_entry)
                         }
                         Some(_) => BTreeSet::new(),
                     }
@@ -866,7 +999,7 @@ impl SharedMem {
             if let Some(info) = haste_module_info {
                 existing_entry.haste_info_entity().set(info);
             }
-            self.calc_dirty_modules(&file, existing_entry)
+            self.calc_dirty_modules(&file, &existing_entry)
         } else {
             let package_parse = PackageParse::new(file_hash, package_info);
             let file_entry = FileEntry::new(
@@ -875,11 +1008,14 @@ impl SharedMem {
                 has_dependents,
             );
             match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
-                None => self.calc_dirty_modules(&file, &file_entry),
+                None => {
+                    self.note_alloc();
+                    self.calc_dirty_modules(&file, &file_entry)
+                }
                 Some(_rejected) => {
                     let in_map_entry = self.file_heap.get(&file).expect(
-                        "LockedMap::insert returned Some(_) but get(&file) is None; \
-                         file_heap has no per-key removal so this should be unreachable",
+                        "GcMap::insert returned Some(_) but get(&file) is None; \
+                         insert and get are guarded by the same map lock",
                     );
                     match in_map_entry.parse_latest() {
                         None => {
@@ -887,7 +1023,7 @@ impl SharedMem {
                             if let Some(info) = haste_module_info {
                                 in_map_entry.haste_info_entity().set(info);
                             }
-                            self.calc_dirty_modules(&file, in_map_entry)
+                            self.calc_dirty_modules(&file, &in_map_entry)
                         }
                         Some(_) => BTreeSet::new(),
                     }
@@ -954,7 +1090,10 @@ impl SharedMem {
             }
             Dependency::HasteModule(Modulename::Filename(dep_file))
             | Dependency::File(dep_file) => {
-                let dep_entry = self.file_heap.ensure(dep_file, FileEntry::new_phantom);
+                let (dep_entry, inserted) = self.file_heap.ensure(dep_file, FileEntry::new_phantom);
+                if inserted {
+                    self.note_alloc();
+                }
                 dep_entry.add_dependent(file.dupe());
             }
         }
@@ -1059,25 +1198,248 @@ impl SharedMem {
         }
     }
 
-    pub fn compact_parse(&self, file: &FileKey) {
-        let _ = file;
+    fn note_alloc(&self) {
+        let mut gc_state = self.gc_state.lock();
+        gc_state.new_alloc_size = gc_state.new_alloc_size.saturating_add(1);
     }
 
-    pub fn collect_slice(&self, _work: usize) -> bool {
+    // GC will attempt to keep the overhead of garbage to no more than 20%. Before
+    // we actually mark and sweep, however, we don't know how much garbage there is,
+    // so we estimate.
+    //
+    // To estimate the amount of garbage, we consider all "new" allocations --
+    // allocations since the previous mark+sweep -- to be garbage. We add that
+    // number to the known free space. If that is at least 20% of the total space,
+    // we will kick of a new mark and sweep pass.
+    fn should_collect(&self, gc_state: &GcState) -> bool {
+        let estimated_garbage = gc_state.free_size.saturating_add(gc_state.new_alloc_size);
+        estimated_garbage.saturating_mul(5) >= self.heap_size().max(0) as usize
+    }
+
+    // After a full mark and sweep, we want to compact the heap if the amount of
+    // free space is 20% of the scanned heap.
+    fn should_compact(&self, gc_state: &GcState) -> bool {
+        let scanned_size =
+            (self.heap_size().max(0) as usize).saturating_sub(gc_state.new_alloc_size);
+        gc_state.free_size.saturating_mul(5) >= scanned_size
+    }
+
+    fn start_cycle(&self, gc_state: &mut GcState) {
+        gc_state.files = self.file_heap.keys();
+        gc_state.haste_modules = self.haste_module_heap.keys();
+        gc_state.free_files.clear();
+        gc_state.free_haste_modules.clear();
+        gc_state.mark_index = 0;
+        gc_state.sweep_file_index = 0;
+        gc_state.sweep_haste_index = 0;
+        gc_state.scanned_size = gc_state.files.len() + gc_state.haste_modules.len();
+        gc_state.new_alloc_size = 0;
+        gc_state.free_size = 0;
+        gc_state.phase = GcPhase::Mark;
+    }
+
+    fn mark_slice(gc_state: &mut GcState, work: usize) -> usize {
+        // work := mark_slice !work
+        let remaining = gc_state.scanned_size.saturating_sub(gc_state.mark_index);
+        let used = remaining.min(work);
+        gc_state.mark_index += used;
+        if gc_state.mark_index == gc_state.scanned_size {
+            gc_state.phase = GcPhase::Sweep;
+        }
+        work - used
+    }
+
+    fn file_entry_is_free(file_entry: &FileEntry) -> bool {
+        file_entry.parse_latest().is_none()
+            && file_entry.parse_committed().is_none()
+            && file_entry.haste_info_entity().read_latest_clone().is_none()
+            && file_entry
+                .haste_info_entity()
+                .read_committed_clone()
+                .is_none()
+            && !file_entry.has_dependents()
+            && file_entry.get_alternate_file().is_none()
+    }
+
+    fn haste_module_is_free(haste_module: &HasteModule) -> bool {
+        haste_module.get_provider().is_none()
+            && haste_module.get_provider_committed().is_none()
+            && !haste_module.has_dependents()
+            && !haste_module.has_providers()
+    }
+
+    fn sweep_slice(&self, gc_state: &mut GcState, work: usize) -> usize {
+        let mut work = work;
+        while work > 0 && gc_state.sweep_file_index < gc_state.files.len() {
+            let file = gc_state.files[gc_state.sweep_file_index].dupe();
+            if let Some(file_entry) = self.file_heap.get(&file)
+                && Self::file_entry_is_free(&file_entry)
+            {
+                gc_state.free_size = gc_state.free_size.saturating_add(1);
+                gc_state.free_files.push(file.dupe());
+            }
+            self.compact_parse(&file);
+            gc_state.sweep_file_index += 1;
+            work -= 1;
+        }
+        while work > 0 && gc_state.sweep_haste_index < gc_state.haste_modules.len() {
+            let haste_info = gc_state.haste_modules[gc_state.sweep_haste_index].dupe();
+            if let Some(haste_module) = self.haste_module_heap.get(&haste_info)
+                && Self::haste_module_is_free(&haste_module)
+            {
+                gc_state.free_size = gc_state.free_size.saturating_add(1);
+                gc_state.free_haste_modules.push(haste_info.dupe());
+            }
+            gc_state.sweep_haste_index += 1;
+            work -= 1;
+        }
+        if gc_state.sweep_file_index == gc_state.files.len()
+            && gc_state.sweep_haste_index == gc_state.haste_modules.len()
+        {
+            // Done sweeping, transition to idle.
+            gc_state.phase = GcPhase::Idle;
+            gc_state.files.clear();
+            gc_state.haste_modules.clear();
+            gc_state.mark_index = 0;
+            gc_state.sweep_file_index = 0;
+            gc_state.sweep_haste_index = 0;
+        }
+        work
+    }
+
+    fn compact_helper(&self, free_files: Vec<FileKey>, free_haste_modules: Vec<HasteModuleInfo>) {
         let finish_compaction = self
             .on_compact
             .read()
             .unwrap()
             .as_ref()
             .map(|on_compact| on_compact());
-        for (file, _) in self.file_heap.iter_unordered() {
-            self.compact_parse(file);
+        for file in free_files {
+            self.file_heap.remove_if(&file, Self::file_entry_is_free);
+        }
+        for haste_info in free_haste_modules {
+            self.haste_module_heap
+                .remove_if(&haste_info, Self::haste_module_is_free);
         }
         self.clear_reader_cache();
+        {
+            let mut gc_state = self.gc_state.lock();
+            gc_state.free_size = 0;
+            gc_state.new_alloc_size = 0;
+            gc_state.scanned_size = self.heap_size().max(0) as usize;
+            gc_state.free_files.clear();
+            gc_state.free_haste_modules.clear();
+        }
         if let Some(finish_compaction) = finish_compaction {
             finish_compaction();
         }
-        true
+    }
+
+    pub fn compact_parse(&self, file: &FileKey) {
+        self.reader_cache.remove(file);
+    }
+
+    // Perform an incremental "slice" of GC work. The caller can control the amount
+    // of work performed by passing in a smaller or larger "work" budget. This
+    // function returns `true` when the GC phase was completed, and `false` if there
+    // is still more work to do.
+    pub fn collect_slice(&self, work: usize) -> bool {
+        self.collect_slice_with_force(false, work)
+    }
+
+    fn collect_slice_with_force(&self, force: bool, work: usize) -> bool {
+        let mut work = work;
+        while work > 0 {
+            let mut gc_state = self.gc_state.lock();
+            match gc_state.phase {
+                GcPhase::Idle => {
+                    if force || self.should_collect(&gc_state) {
+                        self.start_cycle(&mut gc_state);
+                    } else {
+                        work = 0;
+                    }
+                }
+                GcPhase::Mark => work = Self::mark_slice(&mut gc_state, work),
+                GcPhase::Sweep => {
+                    Self::sweep_slice(self, &mut gc_state, work);
+                    work = 0;
+                }
+            }
+        }
+        let (is_idle, should_compact, compact_files, compact_haste_modules) = {
+            let mut gc_state = self.gc_state.lock();
+            let is_idle = gc_state.phase == GcPhase::Idle;
+            let should_compact = is_idle && self.should_compact(&gc_state);
+            let compact_files = if should_compact {
+                std::mem::take(&mut gc_state.free_files)
+            } else {
+                Vec::new()
+            };
+            let compact_haste_modules = if should_compact {
+                std::mem::take(&mut gc_state.free_haste_modules)
+            } else {
+                Vec::new()
+            };
+            (
+                is_idle,
+                should_compact,
+                compact_files,
+                compact_haste_modules,
+            )
+        };
+        // The GC will be in idle phase under two conditions: (1) we started in idle
+        // and did not start a new collect cycle, or (2) we just finished a sweep. In
+        // condition (1) should_compact should return false, so we will only possibly
+        // compact in condition (2), assuming 20% of the scanned heap is free.
+        if should_compact {
+            self.compact_helper(compact_files, compact_haste_modules);
+        }
+        is_idle
+    }
+
+    // Perform a full GC pass, or complete an in-progress GC pass. This call
+    // bypasses the `should_collect` heuristic and will instead always trigger a new
+    // mark and sweep pass if the GC is currently idle.
+    pub fn collect_full(&self) {
+        while !self.collect_slice_with_force(true, usize::MAX) {}
+    }
+
+    fn finish_cycle(&self) {
+        loop {
+            let mut gc_state = self.gc_state.lock();
+            if gc_state.phase != GcPhase::Mark {
+                break;
+            }
+            Self::mark_slice(&mut gc_state, usize::MAX);
+        }
+        loop {
+            let mut gc_state = self.gc_state.lock();
+            if gc_state.phase != GcPhase::Sweep {
+                break;
+            }
+            Self::sweep_slice(self, &mut gc_state, usize::MAX);
+        }
+    }
+
+    // Perform a full compaction of shared memory, such that no heap space is
+    // wasted. We finish the current cycle, if one is in progress, then perform a
+    // full mark and sweep pass before collecting. This ensures that any "floating
+    // garbage" from a previous GC pass is also collected.
+    pub fn compact(&self) {
+        self.finish_cycle();
+        {
+            let mut gc_state = self.gc_state.lock();
+            self.start_cycle(&mut gc_state);
+        }
+        self.finish_cycle();
+        let (compact_files, compact_haste_modules) = {
+            let mut gc_state = self.gc_state.lock();
+            (
+                std::mem::take(&mut gc_state.free_files),
+                std::mem::take(&mut gc_state.free_haste_modules),
+            )
+        };
+        self.compact_helper(compact_files, compact_haste_modules);
     }
 
     pub fn commit_entities(&self) {
@@ -1097,11 +1459,84 @@ impl SharedMem {
 
     pub fn rollback_entities(&self) {
         for (file_key, entry) in self.file_heap.iter_unordered() {
-            self.rollback_file(file_key, entry);
+            self.rollback_file(&file_key, &entry);
         }
         for module in self.haste_module_heap.values() {
             module.rollback_provider();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use dupe::Dupe;
+    use flow_parser::file_key::FileKeyInner;
+
+    use super::*;
+
+    fn source_file(name: &str) -> FileKey {
+        FileKey::new(FileKeyInner::SourceFile(name.to_string()))
+    }
+
+    #[test]
+    fn compact_removes_committed_deleted_file() {
+        let shared_mem = SharedMem::new();
+        let file = source_file("a.js");
+
+        shared_mem.add_unparsed(file.dupe(), 1, None);
+        shared_mem.commit_entities();
+        assert_eq!(shared_mem.heap_size(), 1);
+
+        shared_mem.clear_file(file.dupe(), None);
+        shared_mem.commit_entities();
+        shared_mem.compact();
+
+        assert_eq!(shared_mem.heap_size(), 0);
+    }
+
+    #[test]
+    fn compact_revalidates_free_file_before_removing() {
+        let shared_mem = SharedMem::new();
+        let file = source_file("a.js");
+
+        shared_mem.add_unparsed(file.dupe(), 1, None);
+        shared_mem.commit_entities();
+        shared_mem.clear_file(file.dupe(), None);
+        shared_mem.commit_entities();
+
+        {
+            let mut gc_state = shared_mem.gc_state.lock();
+            shared_mem.start_cycle(&mut gc_state);
+            SharedMem::mark_slice(&mut gc_state, usize::MAX);
+            SharedMem::sweep_slice(&shared_mem, &mut gc_state, usize::MAX);
+        }
+
+        shared_mem.add_unparsed(file.dupe(), 2, None);
+        let (free_files, free_haste_modules) = {
+            let mut gc_state = shared_mem.gc_state.lock();
+            (
+                std::mem::take(&mut gc_state.free_files),
+                std::mem::take(&mut gc_state.free_haste_modules),
+            )
+        };
+        shared_mem.compact_helper(free_files, free_haste_modules);
+
+        assert!(matches!(
+            shared_mem.get_parse(&file),
+            Some(Parse::Untyped(_))
+        ));
+        assert_eq!(shared_mem.heap_size(), 1);
+    }
+
+    #[test]
+    fn collect_slice_uses_new_allocations_to_start_cycle() {
+        let shared_mem = SharedMem::new();
+        let file = source_file("a.js");
+
+        shared_mem.add_unparsed(file, 1, None);
+
+        assert!(!shared_mem.collect_slice(1));
+        assert_eq!(shared_mem.gc_state.lock().phase, GcPhase::Sweep);
     }
 }
 

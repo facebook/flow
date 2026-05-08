@@ -73,7 +73,6 @@ enum CacheKind {
 trait AnyFilenameCache {
     fn as_any(&self) -> &dyn Any;
     fn clear(&self);
-    fn remove_entry(&self, key: &flow_parser::file_key::FileKey);
 }
 
 struct TypedFilenameCache<V>(filename_cache::Cache<V>);
@@ -85,10 +84,6 @@ impl<V: 'static> AnyFilenameCache for TypedFilenameCache<V> {
 
     fn clear(&self) {
         filename_cache::clear(&self.0);
-    }
-
-    fn remove_entry(&self, key: &flow_parser::file_key::FileKey) {
-        filename_cache::remove_entry(key, &self.0);
     }
 }
 
@@ -119,17 +114,6 @@ pub struct PersistentConnection(pub Vec<Prot::ClientId>);
 const CACHE_MAX_SIZE: usize = 10;
 const MAX_PENDING_MESSAGES: usize = 1024;
 
-fn remove_cache_entry(autocomplete: bool, client: &mut SingleClient, filename: &str) {
-    let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(filename);
-    for ((kind, _), cache) in client.filename_caches.iter() {
-        if *kind == CacheKind::TypeParseArtifacts
-            || (autocomplete && *kind == CacheKind::AutocompleteArtifacts)
-        {
-            cache.remove_entry(&file_key);
-        }
-    }
-}
-
 static ACTIVE_CLIENTS: LazyLock<Mutex<BTreeMap<Prot::ClientId, RegistryEntry>>> =
     LazyLock::new(|| Mutex::new(BTreeMap::new()));
 static CACHE_CLEAR_EPOCH: AtomicU64 = AtomicU64::new(0);
@@ -158,6 +142,22 @@ fn make_single_client(client_id: Prot::ClientId, generation: u64) -> SingleClien
         generation,
         filename_caches: HashMap::new(),
         cache_epoch: current_cache_epoch(),
+    }
+}
+
+fn invalidate_client_caches(client_id: Prot::ClientId) {
+    // Filename caches are stored in thread-local SingleClient values. Bumping
+    // the generation makes every worker discard this client's stale caches on
+    // its next lookup.
+    let generation = CLIENT_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
+    if with_registry_mut(client_id, |entry| {
+        entry.generation = generation;
+    })
+    .is_some()
+    {
+        LOCAL_CLIENTS.with(|clients| {
+            clients.borrow_mut().remove(&client_id);
+        });
     }
 }
 
@@ -590,15 +590,13 @@ pub fn subscribe_client(
 pub fn client_did_open(client: &SingleClientRef, files: &[(String, String)]) -> bool {
     let client_id = get_id(client);
     {
-        let mut client = client.borrow_mut();
+        let client = client.borrow();
         match files.len() {
             1 => flow_hh_logger::info!("Client #{} opened {}", client.client_id, files[0].0),
             len => flow_hh_logger::info!("Client #{} opened {} files", client.client_id, len),
         }
-        for (filename, _content) in files {
-            remove_cache_entry(true, &mut client, filename);
-        }
     }
+    invalidate_client_caches(client_id);
     with_registry_mut(client_id, |entry| {
         let mut changed = false;
         for (filename, content) in files {
@@ -620,10 +618,7 @@ pub fn client_did_change(
     filename: &str,
     changes: &[lsp_types::TextDocumentContentChangeEvent],
 ) -> Result<(), (String, String)> {
-    {
-        let mut client = client.borrow_mut();
-        remove_cache_entry(false, &mut client, filename);
-    }
+    invalidate_client_caches(get_id(client));
     let Some(content) = with_registry(get_id(client), |entry| {
         entry.opened_files.get(filename).cloned()
     })
@@ -647,15 +642,13 @@ pub fn client_did_change(
 pub fn client_did_close(client: &SingleClientRef, filenames: &[String]) -> bool {
     let client_id = get_id(client);
     {
-        let mut client = client.borrow_mut();
+        let client = client.borrow();
         match filenames.len() {
             1 => flow_hh_logger::info!("Client #{} closed {}", client.client_id, filenames[0]),
             len => flow_hh_logger::info!("Client #{} closed {} files", client.client_id, len),
         }
-        for filename in filenames {
-            remove_cache_entry(true, &mut client, filename);
-        }
     }
+    invalidate_client_caches(client_id);
     with_registry_mut(client_id, |entry| {
         let mut changed = false;
         for filename in filenames {

@@ -81,6 +81,10 @@ impl HasteModule {
         self.all_providers.read().iter().duped().collect()
     }
 
+    pub fn has_providers(&self) -> bool {
+        !self.all_providers.read().is_empty()
+    }
+
     pub fn add_dependent(&self, file: FileKey) {
         self.dependents.insert(file);
     }

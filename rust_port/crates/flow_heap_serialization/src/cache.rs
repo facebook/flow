@@ -108,6 +108,11 @@ impl ReaderCache {
         }
     }
 
+    pub fn remove(&self, key: &FileKey) {
+        self.ast_cache.lock().remove(key);
+        self.aloc_table_cache.lock().remove(key);
+    }
+
     pub fn clear(&self) {
         self.ast_cache.lock().clear();
         self.aloc_table_cache.lock().clear();

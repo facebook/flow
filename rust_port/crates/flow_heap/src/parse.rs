@@ -122,6 +122,12 @@ impl FileEntry {
         self.dependents.as_ref().map(|deps| deps.iter().collect())
     }
 
+    pub(crate) fn has_dependents(&self) -> bool {
+        self.dependents
+            .as_ref()
+            .is_some_and(|deps| !deps.is_empty())
+    }
+
     pub(crate) fn get_alternate_file(&self) -> Option<FileKey> {
         self.alternate_file.read().clone()
     }
