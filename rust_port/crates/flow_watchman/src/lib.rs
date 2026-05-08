@@ -685,6 +685,32 @@ async fn read_line_with_timeout(timeout: f64, conn: &Conn) -> Result<String, Err
     }
 }
 
+async fn wait_read(conn: &Conn) -> Result<(), ErrorKind> {
+    let mut reader = conn.reader.lock().await;
+    match reader.fill_buf().await {
+        Ok(buf) if !buf.is_empty() => Ok(()),
+        Ok(_) => {
+            let msg = "Connection closed (end of file)".to_string();
+            Err(ErrorKind::SocketUnavailable { msg })
+        }
+        Err(e) => match e.kind() {
+            std::io::ErrorKind::ConnectionReset => {
+                let msg = "Connection closed (connection reset)".to_string();
+                Err(ErrorKind::SocketUnavailable { msg })
+            }
+            _ => {
+                let raw = e.raw_os_error().unwrap_or(0);
+                let msg = if raw == libc_ebadf() {
+                    "Connection closed (bad file descriptor)".to_string()
+                } else {
+                    format!("Connection closed: {}", e)
+                };
+                Err(ErrorKind::SocketUnavailable { msg })
+            }
+        },
+    }
+}
+
 fn request<'a>(
     debug_logging: bool,
     conn: Option<Arc<Conn>>,
@@ -722,7 +748,16 @@ fn request<'a>(
 }
 
 async fn blocking_read(debug_logging: bool, conn: &Conn) -> Result<serde_json::Value, ErrorKind> {
-    let response = read_line_with_timeout(40.0, conn).await?;
+    blocking_read_with_timeout(debug_logging, conn, 40.0).await
+}
+
+async fn blocking_read_with_timeout(
+    debug_logging: bool,
+    conn: &Conn,
+    timeout: f64,
+) -> Result<serde_json::Value, ErrorKind> {
+    wait_read(conn).await?;
+    let response = read_line_with_timeout(timeout, conn).await?;
     match parse_response(debug_logging, &response) {
         Ok(v) => Ok(v),
         Err(msg) => Err(ErrorKind::ResponseError {
@@ -1500,6 +1535,16 @@ pub mod testing {
 mod tests {
     use super::*;
 
+    fn test_conn(
+        read_half: impl AsyncRead + Unpin + Send + 'static,
+        write_half: impl AsyncWrite + Unpin + Send + 'static,
+    ) -> Conn {
+        Conn {
+            reader: Mutex::new(BufReader::new(Box::new(read_half))),
+            writer: Mutex::new(Box::new(write_half)),
+        }
+    }
+
     #[tokio::test]
     async fn parse_state_enter_response() {
         let json: serde_json::Value = serde_json::from_str(
@@ -1548,5 +1593,30 @@ mod tests {
             }
             other => panic!("expected StateLeave response, got {:?}", other),
         }
+    }
+
+    #[tokio::test]
+    async fn blocking_read_timeout_starts_after_payload_is_readable() {
+        let (client, mut server) = tokio::io::duplex(256);
+        let (read_half, write_half) = tokio::io::split(client);
+        let conn = test_conn(read_half, write_half);
+
+        let writer = tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_millis(25)).await;
+            server
+                .write_all(br#"{"clock":"c:1","files":[]}"#)
+                .await
+                .expect("test watchman payload should write");
+            server
+                .write_all(b"\n")
+                .await
+                .expect("test watchman payload newline should write");
+        });
+
+        let response = blocking_read_with_timeout(false, &conn, 0.001)
+            .await
+            .expect("blocking_read should not time out while the subscription is idle");
+        assert_eq!(Some("c:1"), response.get("clock").and_then(|v| v.as_str()));
+        writer.await.expect("writer task should not panic");
     }
 }
