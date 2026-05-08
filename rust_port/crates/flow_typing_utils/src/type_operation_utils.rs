@@ -1309,11 +1309,12 @@ pub mod promise {
     pub fn await_<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Type {
         // await distributes over union: await (Promise<T> | void) = T | void
         let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason, t).unwrap();
-        let results: Vec<Type> = ts
-            .iter()
-            .map(|t| FlowJs::run_await(cx, flow_typing_type::type_::unknown_use(), reason, t))
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap();
+        let mut results = Vec::with_capacity(ts.len());
+        for t in ts.iter() {
+            results.push(
+                FlowJs::run_await(cx, flow_typing_type::type_::unknown_use(), reason, t).unwrap(),
+            );
+        }
         match results.as_slice() {
             [] => type_::empty_t::why(reason.dupe()),
             [t] => t.dupe(),

@@ -3282,7 +3282,7 @@ pub fn mk_non_generic_render_type<'cx>(
                 collector: c.clone(),
             }),
         );
-        Ok(c.collect().into_iter().collect())
+        Ok(c.collect_to_vec())
     };
     let is_iterable_for_better_error =
         |_cx: &Context<'cx>,

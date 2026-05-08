@@ -549,42 +549,38 @@ pub fn array_elements<'a>(
     acc: &mut State,
     elements: &[pattern::array::Element<ALoc, ALoc>],
 ) -> Result<Vec<pattern::array::Element<ALoc, (ALoc, Type)>>, CheckExprError> {
-    elements
-        .iter()
-        .enumerate()
-        .map(|(i, elem)| -> Result<_, CheckExprError> {
-            match elem {
-                pattern::array::Element::Hole(loc) => Ok(pattern::array::Element::Hole(loc.dupe())),
-                pattern::array::Element::NormalElement(ne) => {
-                    let loc = ne.loc.dupe();
-                    let p = &ne.argument;
-                    let d = &ne.default;
-                    let mut elem_acc = array_element(cx, acc, i as i32, loc.dupe())?;
-                    let typed_d = pattern_default(cx, &mut elem_acc, d.as_ref())?;
-                    let typed_p = pattern(cx, f, &mut elem_acc, p)?;
-                    Ok(pattern::array::Element::NormalElement(
-                        pattern::array::NormalElement {
-                            loc,
-                            argument: typed_p,
-                            default: typed_d,
-                        },
-                    ))
-                }
-                pattern::array::Element::RestElement(re) => {
-                    let loc = re.loc.dupe();
-                    let p = &re.argument;
-                    let arg_loc = p.loc().dupe();
-                    let mut rest_acc = array_rest_element(acc, i as i32, arg_loc);
-                    let typed_p = pattern(cx, f, &mut rest_acc, p)?;
-                    Ok(pattern::array::Element::RestElement(pattern::RestElement {
-                        loc,
-                        argument: typed_p,
-                        comments: re.comments.dupe(),
-                    }))
-                }
+    let mut result = Vec::with_capacity(elements.len());
+    for (i, elem) in elements.iter().enumerate() {
+        result.push(match elem {
+            pattern::array::Element::Hole(loc) => pattern::array::Element::Hole(loc.dupe()),
+            pattern::array::Element::NormalElement(ne) => {
+                let loc = ne.loc.dupe();
+                let p = &ne.argument;
+                let d = &ne.default;
+                let mut elem_acc = array_element(cx, acc, i as i32, loc.dupe())?;
+                let typed_d = pattern_default(cx, &mut elem_acc, d.as_ref())?;
+                let typed_p = pattern(cx, f, &mut elem_acc, p)?;
+                pattern::array::Element::NormalElement(pattern::array::NormalElement {
+                    loc,
+                    argument: typed_p,
+                    default: typed_d,
+                })
             }
-        })
-        .collect::<Result<Vec<_>, _>>()
+            pattern::array::Element::RestElement(re) => {
+                let loc = re.loc.dupe();
+                let p = &re.argument;
+                let arg_loc = p.loc().dupe();
+                let mut rest_acc = array_rest_element(acc, i as i32, arg_loc);
+                let typed_p = pattern(cx, f, &mut rest_acc, p)?;
+                pattern::array::Element::RestElement(pattern::RestElement {
+                    loc,
+                    argument: typed_p,
+                    comments: re.comments.dupe(),
+                })
+            }
+        });
+    }
+    Ok(result)
 }
 
 pub fn object_properties<'a>(

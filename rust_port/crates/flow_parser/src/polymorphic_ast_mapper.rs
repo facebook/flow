@@ -17,6 +17,14 @@ pub trait LocMapper<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E = !> {
     fn on_type_annot(&mut self, annot: &T) -> Result<U, E>;
 }
 
+fn try_map_vec<T, U, E>(items: &[T], mut f: impl FnMut(&T) -> Result<U, E>) -> Result<Vec<U>, E> {
+    let mut result = Vec::with_capacity(items.len());
+    for item in items {
+        result.push(f(item)?);
+    }
+    Ok(result)
+}
+
 pub fn program<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     mapper: &mut impl LocMapper<M, T, N, U, E>,
     program: &ast::Program<M, T>,
@@ -35,11 +43,7 @@ pub fn program<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         .map(|i| interpreter_directive(mapper, i))
         .transpose()?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
-    let all_comments_ = all_comments
-        .iter()
-        .map(|c| comment(mapper, c))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let all_comments_ = try_map_vec(all_comments, |c| comment(mapper, c))?.into();
     Ok(ast::Program {
         loc: annot_,
         statements: statements_.into(),
@@ -84,16 +88,8 @@ pub fn syntax<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E, Internal: Dupe>(
         trailing,
         internal,
     } = attached;
-    let leading_ = leading
-        .iter()
-        .map(|c| comment(mapper, c))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
-    let trailing_ = trailing
-        .iter()
-        .map(|c| comment(mapper, c))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let leading_ = try_map_vec(leading, |c| comment(mapper, c))?.into();
+    let trailing_ = try_map_vec(trailing, |c| comment(mapper, c))?.into();
     Ok(ast::Syntax {
         leading: leading_,
         trailing: trailing_,
@@ -117,21 +113,9 @@ pub fn syntax_with_internal<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         trailing,
         internal,
     } = comments;
-    let leading_: Arc<[ast::Comment<N>]> = leading
-        .iter()
-        .map(|c| comment(mapper, c))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
-    let trailing_: Arc<[ast::Comment<N>]> = trailing
-        .iter()
-        .map(|c| comment(mapper, c))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
-    let internal_: Arc<[ast::Comment<N>]> = internal
-        .iter()
-        .map(|c| comment(mapper, c))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let leading_: Arc<[ast::Comment<N>]> = try_map_vec(leading, |c| comment(mapper, c))?.into();
+    let trailing_: Arc<[ast::Comment<N>]> = try_map_vec(trailing, |c| comment(mapper, c))?.into();
+    let internal_: Arc<[ast::Comment<N>]> = try_map_vec(internal, |c| comment(mapper, c))?.into();
     Ok(ast::Syntax {
         leading: leading_,
         trailing: trailing_,
@@ -878,11 +862,7 @@ pub fn array<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         trailing_comma,
         comments,
     } = expr;
-    let elements_ = elements
-        .iter()
-        .map(|e| array_element(mapper, e))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let elements_ = try_map_vec(elements, |e| array_element(mapper, e))?.into();
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
     Ok(ast::expression::Array {
         elements: elements_,
@@ -1047,11 +1027,7 @@ pub fn call_type_args<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = targs;
     let loc_ = mapper.on_type_annot(loc)?;
-    let arguments_ = arguments
-        .iter()
-        .map(|a| call_type_arg(mapper, a))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let arguments_ = try_map_vec(arguments, |a| call_type_arg(mapper, a))?.into();
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
     Ok(ast::expression::CallTypeArgs {
         loc: loc_,
@@ -1095,10 +1071,7 @@ pub fn arg_list<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = args;
     let loc_ = mapper.on_loc_annot(loc)?;
-    let arguments_ = arguments
-        .iter()
-        .map(|a| expression_or_spread(mapper, a))
-        .collect::<Result<Vec<_>, E>>()?;
+    let arguments_ = try_map_vec(arguments, |a| expression_or_spread(mapper, a))?;
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
     Ok(ast::expression::ArgList {
         loc: loc_,
@@ -1244,10 +1217,7 @@ pub fn jsx_opening_element<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         .as_ref()
         .map(|t| call_type_args(mapper, t))
         .transpose()?;
-    let attributes_ = attributes
-        .iter()
-        .map(|a| jsx_opening_attribute(mapper, a))
-        .collect::<Result<Vec<_>, E>>()?;
+    let attributes_ = try_map_vec(attributes, |a| jsx_opening_attribute(mapper, a))?;
     Ok(ast::jsx::Opening {
         loc: mapper.on_loc_annot(loc)?,
         name: name_,
@@ -1391,10 +1361,7 @@ pub fn jsx_children<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let (annot, children_list) = children;
     Ok((
         mapper.on_loc_annot(annot)?,
-        children_list
-            .iter()
-            .map(|c| jsx_child(mapper, c))
-            .collect::<Result<Vec<_>, E>>()?,
+        try_map_vec(children_list, |c| jsx_child(mapper, c))?,
     ))
 }
 
@@ -1735,10 +1702,7 @@ pub fn match_expression<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = expr;
     let arg_ = expression(mapper, arg)?;
-    let cases_ = cases
-        .iter()
-        .map(|case| match_expression_case(mapper, case))
-        .collect::<Result<Vec<_>, E>>()?;
+    let cases_ = try_map_vec(cases, |case| match_expression_case(mapper, case))?;
     let match_keyword_loc_ = mapper.on_loc_annot(match_keyword_loc)?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::match_::Match {
@@ -2049,10 +2013,7 @@ pub fn match_object_pattern<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         rest,
         comments,
     } = x;
-    let properties_ = properties
-        .iter()
-        .map(|p| match_object_pattern_property(mapper, p))
-        .collect::<Result<Vec<_>, E>>()?;
+    let properties_ = try_map_vec(properties, |p| match_object_pattern_property(mapper, p))?;
     let rest_ = rest
         .as_ref()
         .map(|r| match_rest_pattern(mapper, r))
@@ -2166,10 +2127,7 @@ pub fn match_array_pattern<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         rest,
         comments,
     } = x;
-    let elements_ = elements
-        .iter()
-        .map(|e| match_pattern_array_element(mapper, e))
-        .collect::<Result<Vec<_>, E>>()?;
+    let elements_ = try_map_vec(elements, |e| match_pattern_array_element(mapper, e))?;
     let rest_ = rest
         .as_ref()
         .map(|r| match_rest_pattern(mapper, r))
@@ -2200,11 +2158,7 @@ pub fn match_or_pattern<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     x: &ast::match_pattern::OrPattern<M, T>,
 ) -> Result<ast::match_pattern::OrPattern<N, U>, E> {
     let ast::match_pattern::OrPattern { patterns, comments } = x;
-    let patterns_ = patterns
-        .iter()
-        .map(|p| match_pattern(mapper, p))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let patterns_ = try_map_vec(patterns, |p| match_pattern(mapper, p))?.into();
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::match_pattern::OrPattern {
         patterns: patterns_,
@@ -2376,10 +2330,9 @@ pub fn object_<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = expr;
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
-    let properties_ = properties
-        .iter()
-        .map(|p| object_property_or_spread_property(mapper, p))
-        .collect::<Result<Vec<_>, E>>()?;
+    let properties_ = try_map_vec(properties, |p| {
+        object_property_or_spread_property(mapper, p)
+    })?;
     Ok(ast::expression::Object {
         properties: properties_.into(),
         comments: comments_,
@@ -2595,11 +2548,7 @@ pub fn sequence<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         expressions,
         comments,
     } = expr;
-    let expressions_ = expressions
-        .iter()
-        .map(|e| expression(mapper, e))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let expressions_ = try_map_vec(expressions, |e| expression(mapper, e))?.into();
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::expression::Sequence {
         expressions: expressions_,
@@ -2658,15 +2607,8 @@ pub fn template_literal<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         expressions,
         comments,
     } = expr;
-    let quasis_ = quasis
-        .iter()
-        .map(|q| template_literal_element(mapper, q))
-        .collect::<Result<Vec<_>, E>>()?;
-    let expressions_ = expressions
-        .iter()
-        .map(|e| expression(mapper, e))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let quasis_ = try_map_vec(quasis, |q| template_literal_element(mapper, q))?;
+    let expressions_ = try_map_vec(expressions, |e| expression(mapper, e))?.into();
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::expression::TemplateLiteral {
         quasis: quasis_.into(),
@@ -2869,10 +2811,7 @@ pub fn class_<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         .as_ref()
         .map(|i| class_implements(mapper, i))
         .transpose()?;
-    let class_decorators_ = class_decorators
-        .iter()
-        .map(|d| class_decorator(mapper, d))
-        .collect::<Result<Vec<_>, E>>()?;
+    let class_decorators_ = try_map_vec(class_decorators, |d| class_decorator(mapper, d))?;
     Ok(ast::class::Class {
         id: id_,
         body: body_,
@@ -2939,11 +2878,7 @@ fn class_body<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = body;
     let loc_ = mapper.on_loc_annot(loc)?;
-    let body_ = elements
-        .iter()
-        .map(|e| class_element(mapper, e))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let body_ = try_map_vec(elements, |e| class_element(mapper, e))?.into();
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::class::Body {
         loc: loc_,
@@ -3031,10 +2966,7 @@ fn class_method<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
             })
         })
         .transpose()?;
-    let decorators_ = decorators
-        .iter()
-        .map(|d| class_decorator(mapper, d))
-        .collect::<Result<Vec<_>, E>>()?;
+    let decorators_ = try_map_vec(decorators, |d| class_decorator(mapper, d))?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::class::Method {
         loc: loc_,
@@ -3177,10 +3109,7 @@ pub fn class_property<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let key_ = class_property_key(mapper, key)?;
     let value_ = class_property_value(mapper, value)?;
     let annot_ = type_annotation_hint(mapper, annot)?;
-    let decorators_ = decorators
-        .iter()
-        .map(|d| class_decorator(mapper, d))
-        .collect::<Result<Vec<_>, E>>()?;
+    let decorators_ = try_map_vec(decorators, |d| class_decorator(mapper, d))?;
     let variance_ = var.as_ref().map(|v| variance(mapper, v)).transpose()?;
     let ts_accessibility_ = ts_accessibility
         .as_ref()
@@ -3239,10 +3168,7 @@ fn class_private_field<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let key_ = private_name(mapper, key)?;
     let value_ = class_property_value(mapper, value)?;
     let annot_ = type_annotation_hint(mapper, annot)?;
-    let decorators_ = decorators
-        .iter()
-        .map(|d| class_decorator(mapper, d))
-        .collect::<Result<Vec<_>, E>>()?;
+    let decorators_ = try_map_vec(decorators, |d| class_decorator(mapper, d))?;
     let variance_ = var.as_ref().map(|v| variance(mapper, v)).transpose()?;
     let ts_accessibility_ = ts_accessibility
         .as_ref()
@@ -3297,10 +3223,7 @@ fn class_implements<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = implements;
     let loc_ = mapper.on_loc_annot(loc)?;
-    let interfaces_ = interfaces
-        .iter()
-        .map(|i| class_implements_interface(mapper, i))
-        .collect::<Result<Vec<_>, E>>()?;
+    let interfaces_ = try_map_vec(interfaces, |i| class_implements_interface(mapper, i))?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::class::Implements {
         loc: loc_,
@@ -3377,10 +3300,7 @@ pub fn component_params<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         rest,
         comments,
     } = params;
-    let params_list_ = params_list
-        .iter()
-        .map(|p| component_param(mapper, p))
-        .collect::<Result<Vec<_>, E>>()?;
+    let params_list_ = try_map_vec(params_list, |p| component_param(mapper, p))?;
     let rest_ = rest
         .as_ref()
         .map(|r| component_rest_param(mapper, r))
@@ -3483,11 +3403,10 @@ pub fn declare_class<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
             ))
         })
         .transpose()?;
-    let mixins_ = mixins
-        .iter()
-        .map(|(a, gt)| Ok((mapper.on_loc_annot(a)?, generic_type(mapper, gt)?)))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let mixins_ = try_map_vec(mixins, |(a, gt)| {
+        Ok((mapper.on_loc_annot(a)?, generic_type(mapper, gt)?))
+    })?
+    .into();
     let implements_ = implements
         .as_ref()
         .map(|i| class_implements(mapper, i))
@@ -3878,10 +3797,7 @@ pub fn enum_body<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = body;
     let loc_ = mapper.on_loc_annot(loc)?;
-    let members_ = members
-        .iter()
-        .map(|m| enum_member(mapper, m))
-        .collect::<Result<Vec<_>, E>>()?;
+    let members_ = try_map_vec(members, |m| enum_member(mapper, m))?;
     let explicit_type_ = explicit_type
         .as_ref()
         .map(|(loc, t)| Ok((mapper.on_loc_annot(loc)?, *t)))
@@ -4129,12 +4045,10 @@ pub fn export_named_specifier<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
 ) -> Result<ast::statement::export_named_declaration::Specifier<N, U>, E> {
     Ok(match spec {
         ast::statement::export_named_declaration::Specifier::ExportSpecifiers(specs) => {
-            ast::statement::export_named_declaration::Specifier::ExportSpecifiers(
-                specs
-                    .iter()
-                    .map(|s| export_named_declaration_specifier(mapper, s))
-                    .collect::<Result<Vec<_>, E>>()?,
-            )
+            ast::statement::export_named_declaration::Specifier::ExportSpecifiers(try_map_vec(
+                specs,
+                |s| export_named_declaration_specifier(mapper, s),
+            )?)
         }
         ast::statement::export_named_declaration::Specifier::ExportBatchSpecifier(batch) => {
             ast::statement::export_named_declaration::Specifier::ExportBatchSpecifier(
@@ -4359,10 +4273,7 @@ fn pattern_object<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         optional,
         comments,
     } = obj;
-    let properties_ = properties
-        .iter()
-        .map(|p| pattern_object_p(mapper, kind, p))
-        .collect::<Result<Vec<_>, E>>()?;
+    let properties_ = try_map_vec(properties, |p| pattern_object_p(mapper, kind, p))?;
     let annot_ = type_annotation_hint(mapper, annot)?;
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
     Ok(ast::pattern::Object {
@@ -4545,10 +4456,7 @@ fn pattern_array<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         optional,
         comments,
     } = arr;
-    let elements_ = elements
-        .iter()
-        .map(|e| pattern_array_e(mapper, kind, e))
-        .collect::<Result<Vec<_>, E>>()?;
+    let elements_ = try_map_vec(elements, |e| pattern_array_e(mapper, kind, e))?;
     let annot_ = type_annotation_hint(mapper, annot)?;
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
     Ok(ast::pattern::Array {
@@ -4804,10 +4712,7 @@ pub fn function_params<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         this_,
         comments,
     } = params;
-    let params_list_ = params_list
-        .iter()
-        .map(|p| function_param(mapper, p))
-        .collect::<Result<Vec<_>, E>>()?;
+    let params_list_ = try_map_vec(params_list, |p| function_param(mapper, p))?;
     let rest_ = rest
         .as_ref()
         .map(|r| function_rest_param(mapper, r))
@@ -5008,10 +4913,7 @@ pub fn import_declaration<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         .as_ref()
         .map(|(annot, attrs)| {
             let annot_ = mapper.on_loc_annot(annot)?;
-            let attrs_ = attrs
-                .iter()
-                .map(|attr| import_attribute(mapper, attr))
-                .collect::<Result<Vec<_>, E>>()?;
+            let attrs_ = try_map_vec(attrs, |attr| import_attribute(mapper, attr))?;
             Ok((annot_, attrs_))
         })
         .transpose()?;
@@ -5123,10 +5025,9 @@ fn import_specifier<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
 ) -> Result<ast::statement::import_declaration::Specifier<N, U>, E> {
     Ok(match specifier {
         ast::statement::import_declaration::Specifier::ImportNamedSpecifiers(named_specifiers) => {
-            let named_specifiers_ = named_specifiers
-                .iter()
-                .map(|s| import_named_specifier(mapper, import_kind, s))
-                .collect::<Result<Vec<_>, E>>()?;
+            let named_specifiers_ = try_map_vec(named_specifiers, |s| {
+                import_named_specifier(mapper, import_kind, s)
+            })?;
             ast::statement::import_declaration::Specifier::ImportNamedSpecifiers(named_specifiers_)
         }
         ast::statement::import_declaration::Specifier::ImportNamespaceSpecifier((annot, ident)) => {
@@ -5231,11 +5132,10 @@ fn interface<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         .as_ref()
         .map(|tp| type_params(mapper, tp))
         .transpose()?;
-    let extends_ = extends
-        .iter()
-        .map(|(loc, gt)| Ok((mapper.on_loc_annot(loc)?, generic_type(mapper, gt)?)))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let extends_ = try_map_vec(extends, |(loc, gt)| {
+        Ok((mapper.on_loc_annot(loc)?, generic_type(mapper, gt)?))
+    })?
+    .into();
     let body_ = {
         let (loc, obj) = body;
         (mapper.on_loc_annot(loc)?, object_type(mapper, obj)?)
@@ -5288,10 +5188,7 @@ pub fn match_statement<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = stmt;
     let arg_ = expression(mapper, arg)?;
-    let cases_ = cases
-        .iter()
-        .map(|case| match_statement_case(mapper, case))
-        .collect::<Result<Vec<_>, E>>()?;
+    let cases_ = try_map_vec(cases, |case| match_statement_case(mapper, case))?;
     let match_keyword_loc_ = mapper.on_loc_annot(match_keyword_loc)?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::match_::Match {
@@ -5428,11 +5325,7 @@ fn record_body<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = body;
     let loc_ = mapper.on_loc_annot(loc)?;
-    let body_ = body
-        .iter()
-        .map(|e| record_element(mapper, e))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let body_ = try_map_vec(body, |e| record_element(mapper, e))?.into();
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::statement::record_declaration::Body {
         loc: loc_,
@@ -5585,11 +5478,7 @@ pub fn switch<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     } = stmt;
     let exhaustive_out_ = mapper.on_type_annot(exhaustive_out)?;
     let discriminant_ = expression(mapper, discriminant)?;
-    let cases_ = cases
-        .iter()
-        .map(|case| switch_case(mapper, case))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let cases_ = try_map_vec(cases, |case| switch_case(mapper, case))?.into();
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::statement::Switch {
         discriminant: discriminant_,
@@ -5726,10 +5615,7 @@ pub fn variable_declaration<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         kind,
         comments,
     } = decl;
-    let decls_ = declarations
-        .iter()
-        .map(|d| variable_declarator(mapper, *kind, d))
-        .collect::<Result<Vec<_>, E>>()?;
+    let decls_ = try_map_vec(declarations, |d| variable_declarator(mapper, *kind, d))?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::statement::VariableDeclaration {
         declarations: decls_.into(),
@@ -5808,11 +5694,7 @@ pub fn type_params<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = tparams;
     let loc_ = mapper.on_loc_annot(loc)?;
-    let params_ = params
-        .iter()
-        .map(|tp| type_param(mapper, tp))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let params_ = try_map_vec(params, |tp| type_param(mapper, tp))?.into();
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
     Ok(ast::types::TypeParams {
         loc: loc_,
@@ -5831,11 +5713,7 @@ pub fn type_args<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         comments,
     } = targs;
     let loc_ = mapper.on_loc_annot(loc)?;
-    let arguments_ = arguments
-        .iter()
-        .map(|t| type_(mapper, t))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let arguments_ = try_map_vec(arguments, |t| type_(mapper, t))?.into();
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
     Ok(ast::types::TypeArgs {
         loc: loc_,
@@ -6065,11 +5943,7 @@ fn function_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         .as_ref()
         .map(|t| function_this_param_type(mapper, t))
         .transpose()?;
-    let ps_ = ps
-        .iter()
-        .map(|p| function_param_type(mapper, p))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let ps_ = try_map_vec(ps, |p| function_param_type(mapper, p))?.into();
     let rpo_ = rpo
         .as_ref()
         .map(|r| function_rest_param_type(mapper, r))
@@ -6174,10 +6048,7 @@ fn component_type_params<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         rest,
         comments,
     } = params;
-    let params_list_ = params_list
-        .iter()
-        .map(|p| component_type_param(mapper, p))
-        .collect::<Result<Vec<_>, E>>()?;
+    let params_list_ = try_map_vec(params_list, |p| component_type_param(mapper, p))?;
     let rest_ = rest
         .as_ref()
         .map(|r| component_type_rest_param(mapper, r))
@@ -6394,10 +6265,7 @@ fn object_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         properties,
         comments,
     } = ot;
-    let properties_ = properties
-        .iter()
-        .map(|p| object_type_property(mapper, p))
-        .collect::<Result<Vec<_>, E>>()?;
+    let properties_ = try_map_vec(properties, |p| object_type_property(mapper, p))?;
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
     Ok(ast::types::Object {
         exact: *exact,
@@ -6477,11 +6345,10 @@ fn interface_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         extends,
         comments,
     } = i;
-    let extends_ = extends
-        .iter()
-        .map(|(annot, gt)| Ok((mapper.on_loc_annot(annot)?, generic_type(mapper, gt)?)))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let extends_ = try_map_vec(extends, |(annot, gt)| {
+        Ok((mapper.on_loc_annot(annot)?, generic_type(mapper, gt)?))
+    })?
+    .into();
     let body_ = (
         mapper.on_loc_annot(body_annot)?,
         object_type(mapper, body_obj)?,
@@ -6685,10 +6552,7 @@ pub fn union_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let (t0, t1, ts) = types;
     let t0_ = type_(mapper, t0)?;
     let t1_ = type_(mapper, t1)?;
-    let ts_ = ts
-        .iter()
-        .map(|ty| type_(mapper, ty))
-        .collect::<Result<Vec<_>, E>>()?;
+    let ts_ = try_map_vec(ts, |ty| type_(mapper, ty))?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::types::Union {
         types: (t0_, t1_, ts_),
@@ -6704,10 +6568,7 @@ pub fn intersection_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let (t0, t1, ts) = types;
     let t0_ = type_(mapper, t0)?;
     let t1_ = type_(mapper, t1)?;
-    let ts_ = ts
-        .iter()
-        .map(|ty| type_(mapper, ty))
-        .collect::<Result<Vec<_>, E>>()?;
+    let ts_ = try_map_vec(ts, |ty| type_(mapper, ty))?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::types::Intersection {
         types: (t0_, t1_, ts_),
@@ -6724,11 +6585,7 @@ pub fn tuple_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         inexact,
         comments,
     } = t;
-    let elements_ = elements
-        .iter()
-        .map(|e| tuple_element(mapper, e))
-        .collect::<Result<Vec<_>, E>>()?
-        .into();
+    let elements_ = try_map_vec(elements, |e| tuple_element(mapper, e))?.into();
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::types::Tuple {
         elements: elements_,

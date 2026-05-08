@@ -899,11 +899,11 @@ fn __flow_impl<'cx>(
             };
             let ft0 = f(t0)?;
             let ft1 = f(t1)?;
-            let fts: Rc<[Type]> = ts
-                .iter()
-                .map(|t| f(t))
-                .collect::<Result<Vec<_>, _>>()?
-                .into();
+            let mut fts_vec = Vec::with_capacity(ts.len());
+            for t in ts.iter() {
+                fts_vec.push(f(t)?);
+            }
+            let fts: Rc<[Type]> = fts_vec.into();
             let rep = union_rep::make(None, union_rep::UnionKind::UnknownKind, ft0, ft1, fts);
             rec_unify(
                 cx,
@@ -2834,7 +2834,11 @@ fn __flow_impl<'cx>(
                 };
                 let ft0 = f(t0)?;
                 let ft1 = f(t1)?;
-                let fts: Rc<[_]> = ts.iter().map(f).collect::<Result<Vec<_>, _>>()?.into();
+                let mut fts_vec = Vec::with_capacity(ts.len());
+                for t in ts.iter() {
+                    fts_vec.push(f(t)?);
+                }
+                let fts: Rc<[_]> = fts_vec.into();
                 let new_rep =
                     union_rep::make(None, union_rep::UnionKind::UnknownKind, ft0, ft1, fts);
                 let union_t = Type::new(TypeInner::UnionT(reason, new_rep));

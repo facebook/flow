@@ -522,10 +522,8 @@ pub fn update_lit_type_from_annot<'cx>(cx: &Context<'cx>, t: &Type) {
                 from_annot: false,
                 value: _,
                 ..
-            } => {
-                if cx.in_implicit_instantiation() {
-                    cx.record_primitive_literal_check(r.loc().dupe());
-                }
+            } if cx.in_implicit_instantiation() => {
+                cx.record_primitive_literal_check(r.loc().dupe());
             }
             DefTInner::SingletonNumT {
                 from_annot: false, ..
@@ -535,10 +533,8 @@ pub fn update_lit_type_from_annot<'cx>(cx: &Context<'cx>, t: &Type) {
             }
             | DefTInner::SingletonBigIntT {
                 from_annot: false, ..
-            } => {
-                if cx.in_implicit_instantiation() {
-                    cx.record_primitive_literal_check(r.loc().dupe());
-                }
+            } if cx.in_implicit_instantiation() => {
+                cx.record_primitive_literal_check(r.loc().dupe());
             }
             _ => {}
         },
@@ -7506,9 +7502,8 @@ pub mod render_types {
         for e in error_acc.normal_errors {
             add_output_non_speculating(cx, e.clone());
         }
-        let collected = normalization_cx.type_collector.collect();
-        let renders_structural_type =
-            union_of_ts(reason.dupe(), collected.into_iter().collect(), None);
+        let collected = normalization_cx.type_collector.collect_to_vec();
+        let renders_structural_type = union_of_ts(reason.dupe(), collected, None);
         Ok(Type::new(TypeInner::DefT(
             reason,
             DefT::new(DefTInner::RendersT(Rc::new(

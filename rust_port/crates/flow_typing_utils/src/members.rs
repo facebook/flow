@@ -100,23 +100,24 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                 let params = if ft1.params.len() != ft2.params.len() {
                     None
                 } else {
-                    let params: Vec<(Option<Name>, Type)> = ft1
-                        .params
-                        .iter()
-                        .zip(ft2.params.iter())
-                        .map(|(FunParam(name1, p_t1), FunParam(name2, p_t2))| {
-                            // (* TODO: How to merge param names? *)
-                            let name = match (name1, name2) {
-                                (None, None) => None,
-                                (Some(name), _) | (_, Some(name)) => Some(Name::new(name.clone())),
-                            };
-                            (name, merge_type(cx, (p_t1.dupe(), p_t2.dupe())))
-                        })
-                        .collect();
+                    let mut params_names = Vec::with_capacity(ft1.params.len());
+                    let mut tins = Vec::with_capacity(ft1.params.len());
+                    for (FunParam(name1, p_t1), FunParam(name2, p_t2)) in
+                        ft1.params.iter().zip(ft2.params.iter())
+                    {
+                        // (* TODO: How to merge param names? *)
+                        params_names.push(match (name1, name2) {
+                            (None, None) => None,
+                            (Some(name), _) | (_, Some(name)) => Some(Name::new(name.clone())),
+                        });
+                        tins.push(merge_type(cx, (p_t1.dupe(), p_t2.dupe())));
+                    }
                     match (&ft1.rest_param, &ft2.rest_param) {
                         (None, Some(_)) | (Some(_), None) => None,
-                        (None, None) => Some((params, None)),
-                        (Some(r1), Some(r2)) => Some((params, Some((r1.clone(), r2.clone())))),
+                        (None, None) => Some((params_names, tins, None)),
+                        (Some(r1), Some(r2)) => {
+                            Some((params_names, tins, Some((r1.clone(), r2.clone()))))
+                        }
                     }
                 };
                 match params {
@@ -127,8 +128,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                         t2,
                         Rc::from([]),
                     )),
-                    Some((params, rest_params)) => {
-                        let (params_names, tins): (Vec<_>, Vec<_>) = params.into_iter().unzip();
+                    Some((params_names, tins, rest_params)) => {
                         let rest_param = match rest_params {
                             None => None,
                             Some((

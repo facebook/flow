@@ -118,6 +118,41 @@ use crate::type_annotation;
 // * Utilities *
 // *************
 
+fn try_map_vec<T, U, E>(items: &[T], mut f: impl FnMut(&T) -> Result<U, E>) -> Result<Vec<U>, E> {
+    let mut result = Vec::with_capacity(items.len());
+    for item in items {
+        result.push(f(item)?);
+    }
+    Ok(result)
+}
+
+fn try_map_pair_vecs<T, U, V, E>(
+    items: &[T],
+    mut f: impl FnMut(&T) -> Result<(U, V), E>,
+) -> Result<(Vec<U>, Vec<V>), E> {
+    let mut left = Vec::with_capacity(items.len());
+    let mut right = Vec::with_capacity(items.len());
+    for item in items {
+        let (l, r) = f(item)?;
+        left.push(l);
+        right.push(r);
+    }
+    Ok((left, right))
+}
+
+fn try_filter_map_btree_map<T, K: Ord, V, E>(
+    items: &[T],
+    mut f: impl FnMut(&T) -> Result<Option<(K, V)>, E>,
+) -> Result<BTreeMap<K, V>, E> {
+    let mut result = BTreeMap::new();
+    for item in items {
+        if let Some((k, v)) = f(item)? {
+            result.insert(k, v);
+        }
+    }
+    Ok(result)
+}
+
 mod optional_chain {
     use flow_common::reason::Reason;
     use flow_typing_context::Context;
@@ -1681,14 +1716,12 @@ fn check_const_assertion<'a>(cx: &Context<'a>, expr: &expression::Expression<ALo
         | ExpressionInner::Array { .. }
         | ExpressionInner::Object { .. }
         | ExpressionInner::TemplateLiteral { .. } => false,
-        ExpressionInner::Unary { inner, .. } => {
-            if inner.operator == expression::UnaryOperator::Minus {
-                match inner.argument.deref() {
-                    ExpressionInner::NumberLiteral { .. } => false,
-                    _ => true,
-                }
-            } else {
-                true
+        ExpressionInner::Unary { inner, .. }
+            if inner.operator == expression::UnaryOperator::Minus =>
+        {
+            match inner.argument.deref() {
+                ExpressionInner::NumberLiteral { .. } => false,
+                _ => true,
             }
         }
         ExpressionInner::Identifier { loc, .. } => {
@@ -1947,33 +1980,23 @@ fn export_specifiers<'a>(
                         Some(type_env::LocalExportBinding {
                             def_loc: Some(def_loc),
                             val_kind: flow_env_builder::env_api::ValKind::TsImport,
-                        }) => {
-                            if flow_js_utils::import_export_utils::is_ts_import_type_only(
-                                cx, &def_loc,
-                            ) {
-                                let t = type_env::var_ref(
-                                    Some(type_env::LookupMode::ForType),
-                                    cx,
-                                    None,
-                                    local_name.dupe(),
-                                    loc,
-                                )?;
-                                (
-                                    None,
-                                    type_operation_utils::type_assertions::assert_export_is_type(
-                                        cx, local_name, &t,
-                                    ),
-                                )
-                            } else {
-                                let t = type_env::var_ref(
-                                    Some(type_env::LookupMode::ForValue),
-                                    cx,
-                                    None,
-                                    local_name.dupe(),
-                                    loc,
-                                )?;
-                                (None, t)
-                            }
+                        }) if flow_js_utils::import_export_utils::is_ts_import_type_only(
+                            cx, &def_loc,
+                        ) =>
+                        {
+                            let t = type_env::var_ref(
+                                Some(type_env::LookupMode::ForType),
+                                cx,
+                                None,
+                                local_name.dupe(),
+                                loc,
+                            )?;
+                            (
+                                None,
+                                type_operation_utils::type_assertions::assert_export_is_type(
+                                    cx, local_name, &t,
+                                ),
+                            )
                         }
                         _ => {
                             let t = type_env::var_ref(
@@ -2084,28 +2107,22 @@ fn export_specifiers<'a>(
                 Some((source_module, _, source_literal)) => {
                     let module_name =
                         flow_import_specifier::Userland::from_smol_str(source_literal.value.dupe());
-                    specifiers
-                        .iter()
-                        .map(|spec| {
-                            export_specifier(
-                                &|kind, loc, local_name| {
-                                    export_from(
-                                        kind,
-                                        module_name.dupe(),
-                                        source_module,
-                                        loc,
-                                        local_name,
-                                    )
-                                },
-                                spec,
-                            )
-                        })
-                        .collect::<Result<Vec<_>, _>>()?
+                    try_map_vec(specifiers, |spec| {
+                        export_specifier(
+                            &|kind, loc, local_name| {
+                                export_from(
+                                    kind,
+                                    module_name.dupe(),
+                                    source_module,
+                                    loc,
+                                    local_name,
+                                )
+                            },
+                            spec,
+                        )
+                    })?
                 }
-                None => specifiers
-                    .iter()
-                    .map(|spec| export_specifier(&export_ref, spec))
-                    .collect::<Result<Vec<_>, _>>()?,
+                None => try_map_vec(specifiers, |spec| export_specifier(&export_ref, spec))?,
             };
             Ok(statement::export_named_declaration::Specifier::ExportSpecifiers(specifiers))
         }
@@ -2220,10 +2237,8 @@ fn statement_<'a>(
         CheckExprError,
     > {
         let kind = decls.kind;
-        let declarations: Vec<_> = decls
-            .declarations
-            .iter()
-            .map(|decl| {
+        let declarations: Vec<_> =
+            try_map_vec(&decls.declarations, |decl| -> Result<_, CheckExprError> {
                 if kind == ast::VariableKind::Const && decl.init.is_none() && !cx.tslib_syntax() {
                     flow_js::add_output_non_speculating(
                         cx,
@@ -2241,8 +2256,7 @@ fn statement_<'a>(
                     id,
                     init,
                 })
-            })
-            .collect::<Result<Vec<_>, CheckExprError>>()?;
+            })?;
         Ok(statement::VariableDeclaration {
             declarations: declarations.into(),
             kind,
@@ -4160,9 +4174,8 @@ fn statement_<'a>(
                         statement::import_declaration::Specifier::ImportNamedSpecifiers(
                             named_specifiers,
                         ) => {
-                            let named_specifiers_ast: Vec<_> = named_specifiers
-                                .iter()
-                                .map(|spec| -> Result<_, CheckExprError> {
+                            let named_specifiers_ast: Vec<_> =
+                                try_map_vec(named_specifiers, |spec| -> Result<_, CheckExprError> {
                                     let remote = &spec.remote;
                                     let remote_name_loc = remote.loc.dupe();
                                     let remote_name = &remote.name;
@@ -4227,8 +4240,7 @@ fn statement_<'a>(
                                         kind: spec.kind,
                                         kind_loc: spec.kind_loc.dupe(),
                                     })
-                                })
-                                .collect::<Result<Vec<_>, CheckExprError>>()?;
+                                })?;
                             statement::import_declaration::Specifier::ImportNamedSpecifiers(
                                 named_specifiers_ast,
                             )
@@ -4736,145 +4748,141 @@ fn declare_variable<'a>(
             }
         }
     }
-    let declarations: Vec<_> = declarations
-        .iter()
-        .map(|d| -> Result<_, CheckExprError> {
-            let decl_loc = d.loc.dupe();
-            let id = &d.id;
-            let init = &d.init;
-            match id {
-                ast::pattern::Pattern::Identifier {
-                    loc: pat_loc,
-                    inner: pat_id,
-                } => {
-                    let id_loc = &pat_id.name.loc;
-                    let id_name = &pat_id.name;
-                    let annot = &pat_id.annot;
-                    match (annot, init) {
-                        (ast::types::AnnotationOrHint::Available(annot), None) => {
-                            let (t, annot_ast): (Type, ast::types::Annotation<ALoc, (ALoc, Type)>) =
-                                type_annotation::mk_type_available_annotation(
+    let declarations: Vec<_> = try_map_vec(declarations, |d| -> Result<_, CheckExprError> {
+        let decl_loc = d.loc.dupe();
+        let id = &d.id;
+        let init = &d.init;
+        match id {
+            ast::pattern::Pattern::Identifier {
+                loc: pat_loc,
+                inner: pat_id,
+            } => {
+                let id_loc = &pat_id.name.loc;
+                let id_name = &pat_id.name;
+                let annot = &pat_id.annot;
+                match (annot, init) {
+                    (ast::types::AnnotationOrHint::Available(annot), None) => {
+                        let (t, annot_ast): (Type, ast::types::Annotation<ALoc, (ALoc, Type)>) =
+                            type_annotation::mk_type_available_annotation(
+                                cx,
+                                Default::default(),
+                                annot,
+                            )?;
+                        let typed_id = ast::pattern::Pattern::Identifier {
+                            loc: (pat_loc.dupe(), t.dupe()),
+                            inner: ast::pattern::Identifier {
+                                name: ast::Identifier::new(ast::IdentifierInner {
+                                    loc: (id_loc.dupe(), t.dupe()),
+                                    name: id_name.name.dupe(),
+                                    comments: id_name.comments.clone(),
+                                }),
+                                annot: ast::types::AnnotationOrHint::Available(annot_ast),
+                                optional: false,
+                            }
+                            .into(),
+                        };
+                        Ok(ast::statement::variable::Declarator {
+                            loc: decl_loc,
+                            id: typed_id,
+                            init: None,
+                        })
+                    }
+                    (ast::types::AnnotationOrHint::Missing(missing_loc), Some(init_expr)) => {
+                        match &**init_expr {
+                            ast::expression::ExpressionInner::StringLiteral { .. }
+                            | ast::expression::ExpressionInner::NumberLiteral { .. }
+                            | ast::expression::ExpressionInner::BigIntLiteral { .. }
+                            | ast::expression::ExpressionInner::BooleanLiteral { .. } => {
+                                let init_ast = expression(None, None, Some(true), cx, init_expr)?;
+                                let t = init_ast.loc().1.dupe();
+                                let typed_id = ast::pattern::Pattern::Identifier {
+                                    loc: (pat_loc.dupe(), t.dupe()),
+                                    inner: ast::pattern::Identifier {
+                                        name: ast::Identifier::new(ast::IdentifierInner {
+                                            loc: (id_loc.dupe(), t.dupe()),
+                                            name: id_name.name.dupe(),
+                                            comments: id_name.comments.clone(),
+                                        }),
+                                        annot: ast::types::AnnotationOrHint::Missing((
+                                            missing_loc.dupe(),
+                                            t.dupe(),
+                                        )),
+                                        optional: false,
+                                    }
+                                    .into(),
+                                };
+                                Ok(ast::statement::variable::Declarator {
+                                    loc: decl_loc,
+                                    id: typed_id,
+                                    init: Some(init_ast),
+                                })
+                            }
+                            _ => {
+                                flow_js::add_output_non_speculating(
                                     cx,
-                                    Default::default(),
-                                    annot,
-                                )?;
-                            let typed_id = ast::pattern::Pattern::Identifier {
-                                loc: (pat_loc.dupe(), t.dupe()),
-                                inner: ast::pattern::Identifier {
-                                    name: ast::Identifier::new(ast::IdentifierInner {
-                                        loc: (id_loc.dupe(), t.dupe()),
-                                        name: id_name.name.dupe(),
-                                        comments: id_name.comments.clone(),
-                                    }),
-                                    annot: ast::types::AnnotationOrHint::Available(annot_ast),
-                                    optional: false,
-                                }
-                                .into(),
-                            };
-                            Ok(ast::statement::variable::Declarator {
-                                loc: decl_loc,
-                                id: typed_id,
-                                init: None,
-                            })
-                        }
-                        (ast::types::AnnotationOrHint::Missing(missing_loc), Some(init_expr)) => {
-                            match &**init_expr {
-                                ast::expression::ExpressionInner::StringLiteral { .. }
-                                | ast::expression::ExpressionInner::NumberLiteral { .. }
-                                | ast::expression::ExpressionInner::BigIntLiteral { .. }
-                                | ast::expression::ExpressionInner::BooleanLiteral { .. } => {
-                                    let init_ast =
-                                        expression(None, None, Some(true), cx, init_expr)?;
-                                    let t = init_ast.loc().1.dupe();
-                                    let typed_id = ast::pattern::Pattern::Identifier {
-                                        loc: (pat_loc.dupe(), t.dupe()),
-                                        inner: ast::pattern::Identifier {
-                                            name: ast::Identifier::new(ast::IdentifierInner {
-                                                loc: (id_loc.dupe(), t.dupe()),
-                                                name: id_name.name.dupe(),
-                                                comments: id_name.comments.clone(),
-                                            }),
-                                            annot: ast::types::AnnotationOrHint::Missing((
-                                                missing_loc.dupe(),
-                                                t.dupe(),
-                                            )),
-                                            optional: false,
-                                        }
-                                        .into(),
-                                    };
-                                    Ok(ast::statement::variable::Declarator {
-                                        loc: decl_loc,
-                                        id: typed_id,
-                                        init: Some(init_ast),
-                                    })
-                                }
-                                _ => {
-                                    flow_js::add_output_non_speculating(
-                                        cx,
-                                        ErrorMessage::EUnsupportedSyntax(Box::new((
-                                            init_expr.loc().dupe(),
-                                            UnsupportedSyntax::DeclareVariableNonLiteralInit,
-                                        ))),
-                                    );
-                                    let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
-                                        &mut typed_ast_utils::ErrorMapper,
-                                        *kind,
-                                        d,
-                                    );
-                                    Ok(v)
-                                }
+                                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                                        init_expr.loc().dupe(),
+                                        UnsupportedSyntax::DeclareVariableNonLiteralInit,
+                                    ))),
+                                );
+                                let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
+                                    &mut typed_ast_utils::ErrorMapper,
+                                    *kind,
+                                    d,
+                                );
+                                Ok(v)
                             }
                         }
-                        (ast::types::AnnotationOrHint::Available(_), Some(init_expr)) => {
-                            flow_js::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EUnsupportedSyntax(Box::new((
-                                    init_expr.loc().dupe(),
-                                    UnsupportedSyntax::DeclareVariableAnnotationAndInit,
-                                ))),
-                            );
-                            let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
-                                &mut typed_ast_utils::ErrorMapper,
-                                *kind,
-                                d,
-                            );
-                            Ok(v)
-                        }
-                        (ast::types::AnnotationOrHint::Missing(_), None) => {
-                            flow_js::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EUnsupportedSyntax(Box::new((
-                                    id_loc.dupe(),
-                                    UnsupportedSyntax::DeclareVariableMissingAnnotationOrInit,
-                                ))),
-                            );
-                            let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
-                                &mut typed_ast_utils::ErrorMapper,
-                                *kind,
-                                d,
-                            );
-                            Ok(v)
-                        }
+                    }
+                    (ast::types::AnnotationOrHint::Available(_), Some(init_expr)) => {
+                        flow_js::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
+                                init_expr.loc().dupe(),
+                                UnsupportedSyntax::DeclareVariableAnnotationAndInit,
+                            ))),
+                        );
+                        let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
+                            &mut typed_ast_utils::ErrorMapper,
+                            *kind,
+                            d,
+                        );
+                        Ok(v)
+                    }
+                    (ast::types::AnnotationOrHint::Missing(_), None) => {
+                        flow_js::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
+                                id_loc.dupe(),
+                                UnsupportedSyntax::DeclareVariableMissingAnnotationOrInit,
+                            ))),
+                        );
+                        let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
+                            &mut typed_ast_utils::ErrorMapper,
+                            *kind,
+                            d,
+                        );
+                        Ok(v)
                     }
                 }
-                _ => {
-                    flow_js::add_output_non_speculating(
-                        cx,
-                        ErrorMessage::EUnsupportedSyntax(Box::new((
-                            id.loc().dupe(),
-                            UnsupportedSyntax::DeclareVariableDestructuring,
-                        ))),
-                    );
-                    let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
-                        &mut typed_ast_utils::ErrorMapper,
-                        *kind,
-                        d,
-                    );
-                    Ok(v)
-                }
             }
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+            _ => {
+                flow_js::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                        id.loc().dupe(),
+                        UnsupportedSyntax::DeclareVariableDestructuring,
+                    ))),
+                );
+                let Ok(v) = polymorphic_ast_mapper::declare_variable_declarator(
+                    &mut typed_ast_utils::ErrorMapper,
+                    *kind,
+                    d,
+                );
+                Ok(v)
+            }
+        }
+    })?;
     Ok(statement::DeclareVariable {
         declarations: declarations.into(),
         kind: *kind,
@@ -10492,13 +10500,7 @@ fn arg_list<'a>(
     let (argts, arg_asts): (
         Vec<CallArg>,
         Vec<expression::ExpressionOrSpread<ALoc, (ALoc, Type)>>,
-    ) = arg_list
-        .arguments
-        .iter()
-        .map(|arg| expression_or_spread(cx, arg))
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .unzip();
+    ) = try_map_pair_vecs(&arg_list.arguments, |arg| expression_or_spread(cx, arg))?;
     Ok((
         argts,
         expression::ArgList {
@@ -14081,11 +14083,8 @@ fn static_method_call_object<'a>(
         }
         ("assign", None, [first_arg, rest_args @ ..]) => {
             let (first_arg_t, first_arg_typed) = expression_or_spread(cx, first_arg)?;
-            let rest_args_with_ts: Vec<_> = rest_args
-                .iter()
-                .map(|a| expression_or_spread(cx, a))
-                .collect::<Result<Vec<_>, _>>()?;
-            let (rest_arg_ts, rest_args): (Vec<_>, Vec<_>) = rest_args_with_ts.into_iter().unzip();
+            let (rest_arg_ts, rest_args): (Vec<_>, Vec<_>) =
+                try_map_pair_vecs(rest_args, |a| expression_or_spread(cx, a))?;
             let target_t = match &*first_arg_t {
                 CallArgInner::Arg(t) => t.dupe(),
                 CallArgInner::SpreadArg(arr) => {
@@ -15504,9 +15503,8 @@ pub fn mk_class_sig<'a>(
                             let implements_loc = &impl_.loc;
                             let interfaces = &impl_.interfaces;
                             let impl_comments = &impl_.comments;
-                            let (implements_list, interfaces_ast): (Vec<_>, Vec<_>) = interfaces
-                                .iter()
-                                .map(|i| -> Result<_, CheckExprError> {
+                            let (implements_list, interfaces_ast): (Vec<_>, Vec<_>) =
+                                try_map_pair_vecs(interfaces, |i| -> Result<_, CheckExprError> {
                                     let loc = &i.loc;
                                     let id = &i.id;
                                     let targs = &i.targs;
@@ -15560,10 +15558,7 @@ pub fn mk_class_sig<'a>(
                                             targs: targs_ast,
                                         },
                                     ))
-                                })
-                                .collect::<Result<Vec<_>, _>>()?
-                                .into_iter()
-                                .unzip();
+                                })?;
                             (
                                 implements_list,
                                 Some(ast::class::Implements {
@@ -15613,9 +15608,9 @@ pub fn mk_class_sig<'a>(
                         flow_utils_concurrency::job_error::JobError,
                     > {
                         // Build an object type with properties for each instance field.
-                        let props: properties::PropertiesMap = elements
-                            .iter()
-                            .map(
+                        let props =
+                            properties::PropertiesMap::from_btree_map(try_filter_map_btree_map(
+                                elements,
                                 |elem| -> Result<
                                     Option<_>,
                                     flow_utils_concurrency::job_error::JobError,
@@ -15687,11 +15682,7 @@ pub fn mk_class_sig<'a>(
                                         _ => None,
                                     })
                                 },
-                            )
-                            .collect::<Result<Vec<Option<_>>, _>>()?
-                            .into_iter()
-                            .flatten()
-                            .collect();
+                            )?);
                         let record_reason = mk_reason(
                             VirtualReasonDesc::RRecordType(record_name.dupe()),
                             name_loc.dupe(),
@@ -17127,12 +17118,13 @@ pub fn mk_record_sig<'a>(
                                 let implements_loc = impl_node.loc.dupe();
                                 let interfaces = &impl_node.interfaces;
                                 let impl_comments = &impl_node.comments;
-                                let (implements, interfaces_ast): (Vec<_>, Vec<_>) = interfaces
-                                    .iter()
-                                    .map(|i| -> Result<_, CheckExprError> {
-                                        let loc = i.loc.dupe();
-                                        let id = &i.id;
-                                        match id {
+                                let (implements, interfaces_ast): (Vec<_>, Vec<_>) =
+                                    try_map_pair_vecs(
+                                        interfaces,
+                                        |i| -> Result<_, CheckExprError> {
+                                            let loc = i.loc.dupe();
+                                            let id = &i.id;
+                                            match id {
                                             ast::types::generic::Identifier::Qualified(_)
                                             | ast::types::generic::Identifier::ImportTypeAnnot(_)
                                                 if !cx.tslib_syntax() =>
@@ -17149,51 +17141,49 @@ pub fn mk_record_sig<'a>(
                                             }
                                             _ => {}
                                         }
-                                        let (c, id) = type_annotation::convert_qualification(
-                                            cx,
-                                            "implements",
-                                            id,
-                                        )?;
-                                        let (typeapp, targs_ast) = match &i.targs {
-                                            None => ((loc.dupe(), c.dupe(), None), None),
-                                            Some(targs_node) => {
-                                                let targs_loc = targs_node.loc.dupe();
-                                                let targs_arguments = &targs_node.arguments;
-                                                let targs_comments = &targs_node.comments;
-                                                let (ts, targs_ast) =
-                                                    type_annotation::convert_list(
-                                                        cx,
-                                                        tparams_map
-                                                            .iter()
-                                                            .map(|(k, v)| (k.dupe(), v.dupe()))
-                                                            .collect(),
-                                                        targs_arguments,
-                                                    )?;
-                                                (
-                                                    (loc.dupe(), c.dupe(), Some(ts)),
-                                                    Some(ast::types::TypeArgs::<
-                                                        ALoc,
-                                                        (ALoc, Type),
-                                                    > {
-                                                        loc: targs_loc,
-                                                        arguments: targs_ast.into(),
-                                                        comments: targs_comments.clone(),
-                                                    }),
-                                                )
-                                            }
-                                        };
-                                        Ok((
-                                            typeapp,
-                                            ast::class::implements::Interface {
-                                                loc: loc.dupe(),
+                                            let (c, id) = type_annotation::convert_qualification(
+                                                cx,
+                                                "implements",
                                                 id,
-                                                targs: targs_ast,
-                                            },
-                                        ))
-                                    })
-                                    .collect::<Result<Vec<_>, _>>()?
-                                    .into_iter()
-                                    .unzip();
+                                            )?;
+                                            let (typeapp, targs_ast) = match &i.targs {
+                                                None => ((loc.dupe(), c.dupe(), None), None),
+                                                Some(targs_node) => {
+                                                    let targs_loc = targs_node.loc.dupe();
+                                                    let targs_arguments = &targs_node.arguments;
+                                                    let targs_comments = &targs_node.comments;
+                                                    let (ts, targs_ast) =
+                                                        type_annotation::convert_list(
+                                                            cx,
+                                                            tparams_map
+                                                                .iter()
+                                                                .map(|(k, v)| (k.dupe(), v.dupe()))
+                                                                .collect(),
+                                                            targs_arguments,
+                                                        )?;
+                                                    (
+                                                        (loc.dupe(), c.dupe(), Some(ts)),
+                                                        Some(ast::types::TypeArgs::<
+                                                            ALoc,
+                                                            (ALoc, Type),
+                                                        > {
+                                                            loc: targs_loc,
+                                                            arguments: targs_ast.into(),
+                                                            comments: targs_comments.clone(),
+                                                        }),
+                                                    )
+                                                }
+                                            };
+                                            Ok((
+                                                typeapp,
+                                                ast::class::implements::Interface {
+                                                    loc: loc.dupe(),
+                                                    id,
+                                                    targs: targs_ast,
+                                                },
+                                            ))
+                                        },
+                                    )?;
                                 (
                                     implements,
                                     Some(ast::class::Implements {
@@ -17239,62 +17229,65 @@ pub fn mk_record_sig<'a>(
                         func::Func<StmtConfigTypes>,
                         flow_utils_concurrency::job_error::JobError,
                     > {
-                        let props: properties::PropertiesMap = elements
-                            .iter()
-                            .map(|elem| -> Result<Option<_>, flow_utils_concurrency::job_error::JobError> {
-                                Ok(match elem {
-                                    statement::record_declaration::BodyElement::Property(prop) => {
-                                        let key = &prop.key;
-                                        let annot = &prop.annot;
-                                        let (annot_t, _) =
-                                            type_annotation::mk_type_available_annotation(
-                                                cx,
-                                                tparams_map_with_this
-                                                    .iter()
-                                                    .map(|(k, v)| (k.dupe(), v.dupe()))
-                                                    .collect(),
-                                                annot,
-                                            )?;
-                                        let (key_loc, name) =
+                        let props = properties::PropertiesMap::from_btree_map(
+                            try_filter_map_btree_map(
+                                elements,
+                                |elem| -> Result<_, flow_utils_concurrency::job_error::JobError> {
+                                    Ok(match elem {
+                                        statement::record_declaration::BodyElement::Property(
+                                            prop,
+                                        ) => {
+                                            let key = &prop.key;
+                                            let annot = &prop.annot;
+                                            let (annot_t, _) =
+                                                type_annotation::mk_type_available_annotation(
+                                                    cx,
+                                                    tparams_map_with_this
+                                                        .iter()
+                                                        .map(|(k, v)| (k.dupe(), v.dupe()))
+                                                        .collect(),
+                                                    annot,
+                                                )?;
+                                            let (key_loc, name) =
                                             flow_parser_utils::record_utils::loc_and_string_of_property_key(key)
                                                 .expect("Record property must have a valid key");
-                                        let prop_t = if defaulted_props.contains(&name) {
-                                            let field_reason = mk_reason(
-                                                VirtualReasonDesc::RProperty(Some(Name::new(
-                                                    name.dupe(),
-                                                ))),
-                                                key_loc.dupe(),
-                                            );
-                                            Type::new(TypeInner::OptionalT {
-                                                reason: mk_reason(
-                                                    VirtualReasonDesc::ROptional(Arc::new(
-                                                        field_reason.desc(true).clone(),
-                                                    )),
+                                            let prop_t = if defaulted_props.contains(&name) {
+                                                let field_reason = mk_reason(
+                                                    VirtualReasonDesc::RProperty(Some(Name::new(
+                                                        name.dupe(),
+                                                    ))),
                                                     key_loc.dupe(),
-                                                ),
-                                                type_: annot_t,
-                                                use_desc: false,
-                                            })
-                                        } else {
-                                            annot_t
-                                        };
-                                        Some((
-                                            Name::new(name),
-                                            type_::Property::new(type_::PropertyInner::Field(Box::new(FieldData {
-                                                preferred_def_locs: None,
-                                                key_loc: Some(key_loc),
-                                                type_: prop_t,
-                                                polarity: Polarity::Positive,
-                                            }))),
-                                        ))
-                                    }
-                                    _ => None,
-                                })
-                            })
-                            .collect::<Result<Vec<Option<_>>, _>>()?
-                            .into_iter()
-                            .flatten()
-                            .collect();
+                                                );
+                                                Type::new(TypeInner::OptionalT {
+                                                    reason: mk_reason(
+                                                        VirtualReasonDesc::ROptional(Arc::new(
+                                                            field_reason.desc(true).clone(),
+                                                        )),
+                                                        key_loc.dupe(),
+                                                    ),
+                                                    type_: annot_t,
+                                                    use_desc: false,
+                                                })
+                                            } else {
+                                                annot_t
+                                            };
+                                            Some((
+                                                Name::new(name),
+                                                type_::Property::new(type_::PropertyInner::Field(
+                                                    Box::new(FieldData {
+                                                        preferred_def_locs: None,
+                                                        key_loc: Some(key_loc),
+                                                        type_: prop_t,
+                                                        polarity: Polarity::Positive,
+                                                    }),
+                                                )),
+                                            ))
+                                        }
+                                        _ => None,
+                                    })
+                                },
+                            )?,
+                        );
                         let record_reason = mk_reason(
                             VirtualReasonDesc::RRecordType(record_name_str.dupe()),
                             name_loc.dupe(),

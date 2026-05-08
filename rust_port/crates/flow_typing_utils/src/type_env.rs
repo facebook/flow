@@ -946,14 +946,9 @@ fn possibly_refined_write_state_of_state<'cx>(
         };
 
         let compute_state = || {
-            let mapped: Vec<PossiblyRefinedWriteState> = states
-                .iter()
-                .map(
-                    |entry| -> Result<
-                        PossiblyRefinedWriteState,
-                        flow_utils_concurrency::job_error::JobError,
-                    > {
-                        Ok(match (entry, lookup_mode) {
+            let mut mapped = Vec::with_capacity(states.len());
+            for entry in states {
+                let mapped_entry = match (entry, lookup_mode) {
                     (WriteLoc::Undefined(r) | WriteLoc::Uninitialized(r), _) => {
                         base(flow_typing_type::type_::void::make(r.dupe()), vec![])
                     }
@@ -1160,10 +1155,9 @@ fn possibly_refined_write_state_of_state<'cx>(
                         checked_find_loc_env_write(cx, DefLocType::OrdinaryNameLoc, ploc.dupe()),
                         vec![],
                     ),
-                })
-                    },
-                )
-                .collect::<Result<Vec<_>, _>>()?;
+                };
+                mapped.push(mapped_entry);
+            }
             phi(cx, reason.dupe(), mapped)
         };
 

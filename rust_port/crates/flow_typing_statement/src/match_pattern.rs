@@ -64,6 +64,14 @@ pub type OnBinding<'a> = dyn Fn(
     ) -> Result<Type, flow_utils_concurrency::job_error::JobError>
     + 'a;
 
+fn try_map_vec<T, U, E>(items: &[T], mut f: impl FnMut(&T) -> Result<U, E>) -> Result<Vec<U>, E> {
+    let mut result = Vec::with_capacity(items.len());
+    for item in items {
+        result.push(f(item)?);
+    }
+    Ok(result)
+}
+
 fn array_element(
     acc: &expression::Expression<ALoc, ALoc>,
     i: i32,
@@ -541,11 +549,9 @@ fn pattern_<'a>(
             }
         }
         match_pattern::MatchPattern::OrPattern { loc, inner } => {
-            let typed_patterns: Vec<_> = inner
-                .patterns
-                .iter()
-                .map(|pat| pattern_(cx, on_identifier, on_expression, on_binding, true, acc, pat))
-                .collect::<Result<Vec<_>, _>>()?;
+            let typed_patterns: Vec<_> = try_map_vec(&inner.patterns, |pat| {
+                pattern_(cx, on_identifier, on_expression, on_binding, true, acc, pat)
+            })?;
             match_pattern::MatchPattern::OrPattern {
                 loc: loc.dupe(),
                 inner: match_pattern::OrPattern {

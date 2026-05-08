@@ -309,7 +309,7 @@ fn predicate_no_concretization<'cx>(
             if *changed.borrow() {
                 report_changes_to_input(result_collector);
             }
-            let collected = intermediate_result_collector.collector.collect();
+            let collected = intermediate_result_collector.collector.collect_to_vec();
             let p2_clone = p2.dupe();
             for t in collected.iter() {
                 concretize_and_run_predicate(
@@ -1475,11 +1475,7 @@ fn has_prop<'cx>(
     key: &Name,
     obj: &Type,
 ) -> Result<Option<bool>, FlowJsException> {
-    fn all_have_prop(xs: Vec<Option<bool>>) -> Option<bool> {
-        xs.into_iter().try_fold(true, |acc, x| x.map(|b| acc && b))
-    }
-
-    fn some_has_prop(xs: Vec<Option<bool>>) -> Option<bool> {
+    fn some_has_prop(xs: impl IntoIterator<Item = Option<bool>>) -> Option<bool> {
         let mut acc = Some(false);
         for x in xs {
             acc = match (acc, x) {
@@ -1491,6 +1487,35 @@ fn has_prop<'cx>(
         acc
     }
 
+    fn try_all_have_prop<T, E>(
+        xs: impl IntoIterator<Item = T>,
+        mut f: impl FnMut(T) -> Result<Option<bool>, E>,
+    ) -> Result<Option<bool>, E> {
+        let mut acc = true;
+        for x in xs {
+            match f(x)? {
+                Some(b) => acc = acc && b,
+                None => return Ok(None),
+            }
+        }
+        Ok(Some(acc))
+    }
+
+    fn try_some_has_prop<T, E>(
+        xs: impl IntoIterator<Item = T>,
+        mut f: impl FnMut(T) -> Result<Option<bool>, E>,
+    ) -> Result<Option<bool>, E> {
+        let mut acc = Some(false);
+        for x in xs {
+            acc = match (acc, f(x)?) {
+                (Some(true), None) | (None, Some(true)) => Some(true),
+                (_, None) | (None, _) => None,
+                (Some(a), Some(b)) => Some(a || b),
+            };
+        }
+        Ok(acc)
+    }
+
     fn find_key<'cx>(
         cx: &Context<'cx>,
         exact: bool,
@@ -1498,21 +1523,24 @@ fn has_prop<'cx>(
         props_list: &[properties::Id],
         key: &Name,
     ) -> Result<Option<bool>, FlowJsException> {
-        let current_has_prop_results: Vec<Option<bool>> = props_list
-            .iter()
-            .map(|props| match cx.get_prop(props.dupe(), key) {
-                Some(prop) => match prop.deref() {
-                    PropertyInner::Field(fd)
-                        if flow_typing_flow_js::slice_utils::is_prop_optional(&fd.type_) =>
-                    {
-                        None
-                    }
-                    _ => Some(true),
-                },
-                None => Some(false),
-            })
-            .collect();
-        let current_has_prop = some_has_prop(current_has_prop_results);
+        let current_has_prop =
+            some_has_prop(
+                props_list
+                    .iter()
+                    .map(|props| match cx.get_prop(props.dupe(), key) {
+                        Some(prop) => match prop.deref() {
+                            PropertyInner::Field(fd)
+                                if flow_typing_flow_js::slice_utils::is_prop_optional(
+                                    &fd.type_,
+                                ) =>
+                            {
+                                None
+                            }
+                            _ => Some(true),
+                        },
+                        None => Some(false),
+                    }),
+            );
 
         match current_has_prop {
             Some(true) => Ok(Some(true)),
@@ -1522,11 +1550,7 @@ fn has_prop<'cx>(
                     reason_of_t(super_t),
                     super_t,
                 )?;
-                let super_results: Vec<Option<bool>> = super_ts
-                    .iter()
-                    .map(|t| has_prop(cx, key, t))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let super_has_prop = all_have_prop(super_results);
+                let super_has_prop = try_all_have_prop(super_ts.iter(), |t| has_prop(cx, key, t))?;
                 match super_has_prop {
                     Some(true) => Ok(Some(true)),
                     Some(false) if !exact => Ok(None),
@@ -1559,18 +1583,11 @@ fn has_prop<'cx>(
         TypeInner::ObjProtoT(_) => Ok(Some(flow_js_utils::is_object_prototype_method(key))),
         TypeInner::FunProtoT(_) => Ok(Some(flow_js_utils::is_function_prototype(key))),
         TypeInner::IntersectionT(reason, rep) => {
-            let member_results: Vec<Option<bool>> = rep
-                .members_iter()
-                .map(|t| {
-                    let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason, t)?;
-                    let inner_results: Vec<Option<bool>> = ts
-                        .iter()
-                        .map(|t| has_prop(cx, key, t))
-                        .collect::<Result<Vec<_>, _>>()?;
-                    Ok(all_have_prop(inner_results))
-                })
-                .collect::<Result<Vec<_>, FlowJsException>>()?;
-            Ok(some_has_prop(member_results))
+            let member_has_prop = try_some_has_prop(rep.members_iter(), |t| {
+                let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason, t)?;
+                try_all_have_prop(ts.iter(), |t| has_prop(cx, key, t))
+            })?;
+            Ok(member_has_prop)
         }
         _ => Ok(None),
     }
@@ -2707,7 +2724,7 @@ pub fn run_predicate_for_filtering<'cx>(cx: &Context<'cx>, t: &Type, p: &Predica
     )
     .expect("Non speculating");
     let tout_type = Type::new(TypeInner::OpenT(tout.dupe()));
-    let collected: Vec<Type> = result_collector.collector.collect().into_iter().collect();
+    let collected = result_collector.collector.collect_to_vec();
     for t in collected.iter() {
         FlowJs::flow_t(cx, t, &tout_type).expect("Non speculating");
     }

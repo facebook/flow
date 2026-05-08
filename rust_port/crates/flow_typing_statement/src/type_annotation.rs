@@ -57,6 +57,28 @@ type FuncTypeParam = (Type, ast::types::function::Param<ALoc, (ALoc, Type)>);
 type FuncTypeRest = (Type, ast::types::function::RestParam<ALoc, (ALoc, Type)>);
 type FuncTypeThisParam = (Type, ast::types::function::ThisParam<ALoc, (ALoc, Type)>);
 
+fn try_map_vec<T, U, E>(items: &[T], mut f: impl FnMut(&T) -> Result<U, E>) -> Result<Vec<U>, E> {
+    let mut result = Vec::with_capacity(items.len());
+    for item in items {
+        result.push(f(item)?);
+    }
+    Ok(result)
+}
+
+fn try_map_pair_vecs<T, U, V, E>(
+    items: &[T],
+    mut f: impl FnMut(&T) -> Result<(U, V), E>,
+) -> Result<(Vec<U>, Vec<V>), E> {
+    let mut left = Vec::with_capacity(items.len());
+    let mut right = Vec::with_capacity(items.len());
+    for item in items {
+        let (l, r) = f(item)?;
+        left.push(l);
+        right.push(r);
+    }
+    Ok((left, right))
+}
+
 fn func_type_id_name(id: &ast::Identifier<ALoc, (ALoc, Type)>) -> FlowSmolStr {
     id.name.dupe()
 }
@@ -7958,12 +7980,9 @@ pub fn mk_declare_component_sig<'a>(
     }
 
     // Process all params
-    let processed_params: Vec<_> = component
-        .params
-        .params
-        .iter()
-        .map(|param| process_param(cx, &mut env, param))
-        .collect::<Result<Vec<_>, _>>()?;
+    let processed_params: Vec<_> = try_map_vec(&component.params.params, |param| {
+        process_param(cx, &mut env, param)
+    })?;
     let processed_rest = component
         .params
         .rest
@@ -8221,28 +8240,21 @@ pub fn mk_declare_class_sig<'a>(
                 None => (None, None),
             }
         };
-        let (mixins_list, mixins_ast_list): (Vec<_>, Vec<_>) = decl
-            .mixins
-            .iter()
-            .map(|m| mk_mixins(cx, &mut env, m))
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .unzip();
+        let (mixins_list, mixins_ast_list): (Vec<_>, Vec<_>) =
+            try_map_pair_vecs(&decl.mixins, |m| mk_mixins(cx, &mut env, m))?;
         let (implements_list, implements_ast) = match &decl.implements {
             None => (Vec::new(), None),
             Some(impls) => {
-                let (impl_list, ifaces_ast): (Vec<_>, Vec<_>) = impls
-                    .interfaces
-                    .iter()
-                    .map(
-                        |iface| -> Result<_, flow_utils_concurrency::job_error::JobError> {
-                            let id = &iface.id;
-                            match id {
-                                ast::types::generic::Identifier::Qualified(_)
-                                | ast::types::generic::Identifier::ImportTypeAnnot(_)
-                                    if !cx.tslib_syntax() =>
-                                {
-                                    flow_js_utils::add_output_non_speculating(
+                let (impl_list, ifaces_ast): (Vec<_>, Vec<_>) = try_map_pair_vecs(
+                    &impls.interfaces,
+                    |iface| -> Result<_, flow_utils_concurrency::job_error::JobError> {
+                        let id = &iface.id;
+                        match id {
+                            ast::types::generic::Identifier::Qualified(_)
+                            | ast::types::generic::Identifier::ImportTypeAnnot(_)
+                                if !cx.tslib_syntax() =>
+                            {
+                                flow_js_utils::add_output_non_speculating(
                                     cx,
                                     ErrorMessage::EUnsupportedSyntax(Box::new((
                                         iface.loc.dupe(),
@@ -8251,38 +8263,35 @@ pub fn mk_declare_class_sig<'a>(
                                         ),
                                     ))),
                                 );
-                                }
-                                _ => {}
                             }
-                            let (c, id) = convert_qualification(cx, "implements", id)?;
-                            let (typeapp, targs_ast) = match &iface.targs {
-                                None => ((iface.loc.dupe(), c.dupe(), None), None),
-                                Some(targs) => {
-                                    let (ts, targs_ast) =
-                                        convert_list_inner(cx, &mut env, &targs.arguments)?;
-                                    (
-                                        (iface.loc.dupe(), c.dupe(), Some(ts)),
-                                        Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
-                                            loc: targs.loc.dupe(),
-                                            arguments: targs_ast.into(),
-                                            comments: targs.comments.dupe(),
-                                        }),
-                                    )
-                                }
-                            };
-                            Ok((
-                                typeapp,
-                                ast::class::implements::Interface {
-                                    loc: iface.loc.dupe(),
-                                    id,
-                                    targs: targs_ast,
-                                },
-                            ))
-                        },
-                    )
-                    .collect::<Result<Vec<_>, _>>()?
-                    .into_iter()
-                    .unzip();
+                            _ => {}
+                        }
+                        let (c, id) = convert_qualification(cx, "implements", id)?;
+                        let (typeapp, targs_ast) = match &iface.targs {
+                            None => ((iface.loc.dupe(), c.dupe(), None), None),
+                            Some(targs) => {
+                                let (ts, targs_ast) =
+                                    convert_list_inner(cx, &mut env, &targs.arguments)?;
+                                (
+                                    (iface.loc.dupe(), c.dupe(), Some(ts)),
+                                    Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
+                                        loc: targs.loc.dupe(),
+                                        arguments: targs_ast.into(),
+                                        comments: targs.comments.dupe(),
+                                    }),
+                                )
+                            }
+                        };
+                        Ok((
+                            typeapp,
+                            ast::class::implements::Interface {
+                                loc: iface.loc.dupe(),
+                                id,
+                                targs: targs_ast,
+                            },
+                        ))
+                    },
+                )?;
                 (
                     impl_list,
                     Some(ast::class::Implements {
