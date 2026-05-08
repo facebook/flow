@@ -7743,12 +7743,6 @@ References:
 Found 1 error
 
 === types/utilities.md block 28 ===
-No errors!
-
-=== types/utilities.md block 29 ===
-No errors!
-
-=== types/utilities.md block 30 ===
 Error ------------------------------------------------------------------------------------------------------------ -:8:1
 
 Cannot cast `null` to `Name` because null [1] is incompatible with string [2]. [incompatible-type]
@@ -7766,10 +7760,10 @@ References:
 
 Found 1 error
 
-=== types/utilities.md block 31 ===
+=== types/utilities.md block 29 ===
 No errors!
 
-=== types/utilities.md block 32 ===
+=== types/utilities.md block 30 ===
 Error ----------------------------------------------------------------------------------------------------------- -:5:22
 
 Cannot call `assertEqual` with `42` bound to `expected` because number [1] is incompatible with string [2].
@@ -7788,7 +7782,7 @@ References:
 
 Found 1 error
 
-=== types/utilities.md block 33 ===
+=== types/utilities.md block 31 ===
 Error ----------------------------------------------------------------------------------------------------------- -:8:23
 
 Cannot call `createSignal` with `42` bound to `defaultValue` because number [1] is incompatible with string [2].
@@ -7807,10 +7801,10 @@ References:
 
 Found 1 error
 
-=== types/utilities.md block 34 ===
+=== types/utilities.md block 32 ===
 No errors!
 
-=== types/utilities.md block 35 ===
+=== types/utilities.md block 33 ===
 Error ----------------------------------------------------------------------------------------------------------- -:13:1
 
 Cannot cast `newObj.b` to string literal `a` because string literal `b` [1] is incompatible with string literal `a` [2].
@@ -7832,7 +7826,7 @@ References:
 
 Found 1 error
 
-=== types/utilities.md block 36 ===
+=== types/utilities.md block 34 ===
 Error ----------------------------------------------------------------------------------------------------------- -:12:1
 
 Cannot cast `makeStore(...)` to `Model` because `Store` [1] is incompatible with `Model` [2]. [incompatible-type]
@@ -7871,7 +7865,7 @@ References:
 
 Found 2 errors
 
-=== types/utilities.md block 37 ===
+=== types/utilities.md block 35 ===
 Error ---------------------------------------------------------------------------------------------------------- -:10:28
 
 Cannot call `makeParamStore` with `1` bound to `data` because number [1] is incompatible with boolean [2].
@@ -7890,7 +7884,7 @@ References:
 
 Found 1 error
 
-=== types/utilities.md block 38 ===
+=== types/utilities.md block 36 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
 
 Cannot cast `'random string'` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
@@ -7909,7 +7903,7 @@ References:
 
 Found 1 error
 
-=== types/utilities.md block 39 ===
+=== types/utilities.md block 37 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
 
 Cannot cast `'random string'` to `Exclaim` because string [1] is incompatible with string suffixed with `!` [2].
@@ -7928,7 +7922,7 @@ References:
 
 Found 1 error
 
-=== types/utilities.md block 40 ===
+=== types/utilities.md block 38 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:1
 
 Cannot cast `'random string'` to `CSSVar` because string [1] is incompatible with string prefixed with `var(--` [2].
@@ -7962,7 +7956,7 @@ References:
 
 Found 2 errors
 
-=== types/utilities.md block 41 ===
+=== types/utilities.md block 39 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
 
 Cannot cast `'$999'` to `Price` because string with prefix `$` removed [1] is incompatible with union type [2].
@@ -7980,4 +7974,10 @@ References:
 
 
 Found 1 error
+
+=== types/utilities.md block 40 ===
+No errors!
+
+=== types/utilities.md block 41 ===
+No errors!
 

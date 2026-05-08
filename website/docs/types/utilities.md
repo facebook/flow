@@ -382,31 +382,6 @@ const rec: NumberRecord = {}; // error
 const idx: IndexedObject = {}; // no error
 ```
 
-## `$Exact<T>` {#toc-exact}
-
-You can use `$Exact` to make an [inexact object type](./objects.md#exact-and-inexact-object-types) exact:
-
-```js flow-check
-type InexactUser = {name: string, ...};
-type ExactUser = $Exact<InexactUser>;
-
-const user = {name: 'John Wilkes Booth'};
-// These will both be satisfied because they are equivalent:
-const a: ExactUser = user;
-const b: {name: string} = user;
-```
-
-This is a utility type to avoid, as it's clearer and more concise to start off with an exact object type and make it inexact using [object type spread](./objects.md#object-type-spread)
-(if you wish to have both inexact and exact variants of one object type):
-
-```js flow-check
-type ExactUser = {name: string};
-type InexactUser = {...ExactUser, ...};
-
-const user = {name: 'John Wilkes Booth'};
-const a: ExactUser = user;
-```
-
 ## `NonNullable<T>` {#toc-nonmaybe}
 
 `NonNullable<T>` converts a type `T` to a non-[maybe type](./maybe.md).
@@ -598,6 +573,34 @@ type Price = StringPrefix<'$', '1' | '2'>;
 ```
 
 When not specified, the type of the remainder is just `string`.
+
+## `$Exact<T>` (Discouraged) {#toc-exact}
+
+:::warning
+Avoid `$Exact<T>`. Start with an exact object type and derive inexact variants from it using [object type spread](./objects.md#object-type-spread).
+:::
+
+`$Exact` makes an [inexact object type](./objects.md#exact-and-inexact-object-types) exact:
+
+```js flow-check
+type InexactUser = {name: string, ...};
+type ExactUser = $Exact<InexactUser>;
+
+const user = {name: 'John Wilkes Booth'};
+// These will both be satisfied because they are equivalent:
+const a: ExactUser = user;
+const b: {name: string} = user;
+```
+
+Prefer the inverse: define the exact type and spread it into the inexact one.
+
+```js flow-check
+type ExactUser = {name: string};
+type InexactUser = {...ExactUser, ...};
+
+const user = {name: 'John Wilkes Booth'};
+const a: ExactUser = user;
+```
 
 ## See Also {#toc-see-also}
 
