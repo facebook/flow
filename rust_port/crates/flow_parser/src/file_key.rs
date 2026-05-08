@@ -454,11 +454,16 @@ impl FileKey {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Mutex;
+
     use super::*;
+
+    static ROOTS_LOCK: Mutex<()> = Mutex::new(());
 
     // Exception-safe bracket: sets roots before the test body and restores
     // defaults afterwards, even if an assertion fails.
     fn with_roots<F: FnOnce()>(project: &str, flowlib: &str, f: F) {
+        let _guard = ROOTS_LOCK.lock().unwrap();
         set_project_root(project);
         set_flowlib_root(flowlib);
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(f));

@@ -1253,9 +1253,22 @@ mod esprima_tests {
     }
 
     fn resource_path() -> String {
-        let resource_dir = buck_resources::get("flow/rust_port/crates/flow_parser/esprima_tests")
-            .expect("esprima_tests resource not found");
-        resource_dir.join("esprima").to_str().unwrap().to_string()
+        match buck_resources::get("flow/rust_port/crates/flow_parser/esprima_tests") {
+            Ok(resource_dir) => resource_dir.join("esprima").to_str().unwrap().to_string(),
+            Err(_) => {
+                if let Some(cargo_manifest_dir) = option_env!("CARGO_MANIFEST_DIR") {
+                    std::path::Path::new(cargo_manifest_dir)
+                        .join("../../../src/parser/test/esprima")
+                        .to_str()
+                        .unwrap()
+                        .to_string()
+                } else {
+                    panic!(
+                        "esprima tests resource not found and CARGO_MANIFEST_DIR is unavailable"
+                    );
+                }
+            }
+        }
     }
 
     #[test]
@@ -1659,9 +1672,20 @@ mod hardcoded_tests {
     }
 
     fn resource_path() -> String {
-        let resource_dir = buck_resources::get("flow/rust_port/crates/flow_parser/flow_tests")
-            .expect("flow_tests resource not found");
-        resource_dir.join("flow").to_str().unwrap().to_string()
+        match buck_resources::get("flow/rust_port/crates/flow_parser/flow_tests") {
+            Ok(resource_dir) => resource_dir.join("flow").to_str().unwrap().to_string(),
+            Err(_) => {
+                if let Some(cargo_manifest_dir) = option_env!("CARGO_MANIFEST_DIR") {
+                    std::path::Path::new(cargo_manifest_dir)
+                        .join("../../../src/parser/test/flow")
+                        .to_str()
+                        .unwrap()
+                        .to_string()
+                } else {
+                    panic!("flow tests resource not found and CARGO_MANIFEST_DIR is unavailable");
+                }
+            }
+        }
     }
 
     #[test]

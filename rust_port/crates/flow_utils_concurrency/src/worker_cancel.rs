@@ -105,10 +105,13 @@ mod tests {
 
     use super::*;
 
+    static TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     /// A `stop_workers` call from another thread must wake an in-progress
     /// `interruptible_sleep` within ~50 ms. The sleep itself requests 5 s.
     #[test]
     fn interruptible_sleep_wakes_on_stop_workers() {
+        let _test_lock = TEST_LOCK.lock().expect("test lock poisoned");
         // Reset state so we don't trip over a sibling test.
         resume_workers();
 
@@ -138,6 +141,7 @@ mod tests {
     /// after the requested duration.
     #[test]
     fn interruptible_sleep_returns_ok_on_timeout() {
+        let _test_lock = TEST_LOCK.lock().expect("test lock poisoned");
         resume_workers();
         let start = Instant::now();
         let result = interruptible_sleep(Duration::from_millis(50));

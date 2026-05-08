@@ -336,16 +336,32 @@ fn typed_ast_tests() {
     let tests_dir = match std::env::var("TYPED_AST_TESTS_DIR") {
         Ok(dir) => dir,
         Err(_) => {
-            let candidates = ["flow/tests", "tests", "fbcode/flow/tests"];
+            let candidates = ["flow/tests", "tests", "../tests", "fbcode/flow/tests"];
             match candidates.iter().find(|p| std::path::Path::new(p).is_dir()) {
                 Some(p) => p.to_string(),
                 None => {
-                    panic!(
-                        "typed_ast_tests: tests directory not found. \
-                         Set TYPED_AST_TESTS_DIR to the absolute path of flow/tests/. \
-                         Tried: {:?}",
-                        candidates
-                    );
+                    if let Some(cargo_manifest_dir) = option_env!("CARGO_MANIFEST_DIR") {
+                        let cargo_candidate =
+                            std::path::Path::new(cargo_manifest_dir).join("../../../tests");
+                        if cargo_candidate.is_dir() {
+                            cargo_candidate.to_string_lossy().into_owned()
+                        } else {
+                            panic!(
+                                "typed_ast_tests: tests directory not found. \
+                                 Set TYPED_AST_TESTS_DIR to the absolute path of flow/tests/. \
+                                 Tried: {:?} and {}",
+                                candidates,
+                                cargo_candidate.display(),
+                            );
+                        }
+                    } else {
+                        panic!(
+                            "typed_ast_tests: tests directory not found. \
+                             Set TYPED_AST_TESTS_DIR to the absolute path of flow/tests/. \
+                             Tried: {:?}; CARGO_MANIFEST_DIR is unavailable",
+                            candidates,
+                        );
+                    }
                 }
             }
         }

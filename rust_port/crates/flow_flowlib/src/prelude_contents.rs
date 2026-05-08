@@ -9,7 +9,12 @@ use std::sync::LazyLock;
 
 use flow_common_xx as xx;
 
-pub static CONTENTS: &[(&str, &str)] = &[("prelude.js", include_str!("prelude/prelude.js"))];
+#[cfg(fbcode_build)]
+const PRELUDE_JS: &str = include_str!("prelude/prelude.js");
+#[cfg(not(fbcode_build))]
+const PRELUDE_JS: &str = include_str!("../../../../prelude/prelude.js");
+
+pub static CONTENTS: &[(&str, &str)] = &[("prelude.js", PRELUDE_JS)];
 
 pub static HASH: LazyLock<String> = LazyLock::new(|| {
     let mut state = xx::State::new(0);
