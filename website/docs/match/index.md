@@ -4,8 +4,6 @@ description: "match an input value against a series of patterns, which condition
 slug: /match
 ---
 
-*An experimental Flow language feature. See [adoption](#adoption) for how to enable.*
-
 `match` an input value against a series of [patterns](./patterns.md), which conditionally check the structure of the input and extract values, and either produce an expression (`match` expressions) or execute a block (`match` statements).
 
 You can [replace `switch` statements](./migration.md#replacing-switch) using `match`, avoiding the problems associated with `switch` (like fall-through behavior) while gaining benefits like [exhaustiveness checks](#exhaustive-checking) and complex pattern support.
