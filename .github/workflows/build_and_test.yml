@@ -36,10 +36,10 @@ jobs:
         restore-keys: v1-rust-port-cargo-${{ runner.os }}-
     - name: Build Rust port
       working-directory: rust_port
-      run: cargo build --workspace --all-targets --locked
+      run: cargo build --workspace --all-targets --offline --locked
     - name: Test Rust port
       working-directory: rust_port
-      run: cargo test --workspace --all-targets --locked
+      run: cargo test --workspace --all-targets --offline --locked
   build_js:
     runs-on: ubuntu-22.04
     env:
