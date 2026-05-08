@@ -313,22 +313,19 @@ mod full_env {
     /// namespace records type bindings (interface, type alias) so name_def can
     /// find their declaration locs and so reads at type-positions resolve to the
     /// interface rather than the same-named const.
-    #[derive(Debug, Clone, Dupe)]
+    #[derive(Debug, Clone)]
     pub(super) struct FunctionScope {
-        pub(super) value_local_stacked_env: FlowOrdMap<FlowSmolStr, FlowVector<EnvVal>>,
-        pub(super) type_local_stacked_env: FlowOrdMap<FlowSmolStr, FlowVector<EnvVal>>,
+        pub(super) value_local_stacked_env: BTreeMap<FlowSmolStr, Vec<EnvVal>>,
+        pub(super) type_local_stacked_env: BTreeMap<FlowSmolStr, Vec<EnvVal>>,
         pub(super) value_captured: Rc<RefCell<BTreeMap<FlowSmolStr, EnvVal>>>,
         pub(super) type_captured: Rc<RefCell<BTreeMap<FlowSmolStr, EnvVal>>>,
     }
 
     impl FunctionScope {
         fn new() -> Self {
-            thread_local! {
-                static CACHED: FlowOrdMap<FlowSmolStr, FlowVector<EnvVal>> = FlowOrdMap::new();
-            }
             FunctionScope {
-                value_local_stacked_env: CACHED.with(|c| c.clone()),
-                type_local_stacked_env: CACHED.with(|c| c.clone()),
+                value_local_stacked_env: BTreeMap::new(),
+                type_local_stacked_env: BTreeMap::new(),
                 value_captured: Rc::new(RefCell::new(BTreeMap::new())),
                 type_captured: Rc::new(RefCell::new(BTreeMap::new())),
             }
@@ -342,8 +339,8 @@ mod full_env {
     }
 
     pub(super) struct FunctionScopeLocalEnvSnapshot {
-        value: Vec<(FlowSmolStr, Option<FlowVector<EnvVal>>)>,
-        type_: Vec<(FlowSmolStr, Option<FlowVector<EnvVal>>)>,
+        value: Vec<(FlowSmolStr, bool)>,
+        type_: Vec<(FlowSmolStr, bool)>,
     }
 
     fn copy_env_val_from_env_below(
@@ -375,14 +372,14 @@ mod full_env {
 
     fn function_scope_read_value(x: &FlowSmolStr, scope: &FunctionScope) -> Option<EnvVal> {
         if let Some(stack) = scope.value_local_stacked_env.get(x) {
-            return stack.back().duped();
+            return stack.last().duped();
         }
         scope.value_captured.borrow().get(x).duped()
     }
 
     fn function_scope_read_type(x: &FlowSmolStr, scope: &FunctionScope) -> Option<EnvVal> {
         if let Some(stack) = scope.type_local_stacked_env.get(x) {
-            return stack.back().duped();
+            return stack.last().duped();
         }
         scope.type_captured.borrow().get(x).duped()
     }
@@ -413,7 +410,7 @@ mod full_env {
         let captured = scope.value_captured.borrow();
         let mut acc = HashMap::with_capacity(scope.value_local_stacked_env.len() + captured.len());
         for (x, stack) in &scope.value_local_stacked_env {
-            if let Some(last) = stack.back() {
+            if let Some(last) = stack.last() {
                 acc.insert(x.dupe(), f(x, last));
             }
         }
@@ -428,7 +425,7 @@ mod full_env {
         F: FnMut(&FlowSmolStr, &EnvVal),
     {
         for (x, stack) in &scope.value_local_stacked_env {
-            if let Some(last) = stack.back() {
+            if let Some(last) = stack.last() {
                 f(x, last);
             }
         }
@@ -439,24 +436,21 @@ mod full_env {
         }
     }
 
-    #[derive(Debug, Clone, Dupe)]
+    #[derive(Debug, Clone)]
     pub(super) struct FullEnv {
-        scopes: FlowVector<FunctionScope>,
+        scopes: Vec<FunctionScope>,
     }
 
     impl FullEnv {
         pub(super) fn init(globals: HashMap<FlowSmolStr, EnvVal>) -> Self {
-            let value_local_stacked_env = globals
-                .into_iter()
-                .map(|(k, v)| (k, FlowVector::unit(v)))
-                .collect();
+            let value_local_stacked_env = globals.into_iter().map(|(k, v)| (k, vec![v])).collect();
             FullEnv {
-                scopes: FlowVector::unit(FunctionScope {
+                scopes: vec![FunctionScope {
                     value_local_stacked_env,
-                    type_local_stacked_env: FlowOrdMap::new(),
+                    type_local_stacked_env: BTreeMap::new(),
                     value_captured: Rc::new(RefCell::new(BTreeMap::new())),
                     type_captured: Rc::new(RefCell::new(BTreeMap::new())),
-                }),
+                }],
             }
         }
 
@@ -464,7 +458,7 @@ mod full_env {
         where
             F: FnMut(A, &EnvVal) -> A,
         {
-            let scope = self.scopes.back().unwrap();
+            let scope = self.scopes.last().unwrap();
             let mut acc = init;
             for stack in scope.value_local_stacked_env.values() {
                 for v in stack {
@@ -482,7 +476,7 @@ mod full_env {
             should_havoc: impl Fn(&EnvVal) -> bool,
             x: &FlowSmolStr,
         ) -> Option<EnvVal> {
-            let curr_scope = self.scopes.back().unwrap();
+            let curr_scope = self.scopes.last().unwrap();
             if let Some(v) = function_scope_read_value(x, curr_scope) {
                 return Some(v);
             }
@@ -527,7 +521,7 @@ mod full_env {
             should_havoc: impl Fn(&EnvVal) -> bool,
             x: &FlowSmolStr,
         ) -> Option<EnvVal> {
-            let curr_scope = self.scopes.back().unwrap();
+            let curr_scope = self.scopes.last().unwrap();
             if let Some((v, _)) = function_scope_read_type_or_value(x, curr_scope) {
                 return Some(v);
             }
@@ -568,29 +562,27 @@ mod full_env {
             let scope = self.scopes.last_mut().unwrap();
             let mut value_snapshot = Vec::with_capacity(value.len());
             for (x, v) in value {
-                value_snapshot.push((x.dupe(), scope.value_local_stacked_env.get(&x).duped()));
-                match scope.value_local_stacked_env.get(&x) {
-                    Some(stack) => {
-                        let mut new_stack = stack.dupe();
-                        new_stack.push_back(v);
-                        scope.value_local_stacked_env.insert(x, new_stack);
+                match scope.value_local_stacked_env.entry(x) {
+                    std::collections::btree_map::Entry::Occupied(mut entry) => {
+                        value_snapshot.push((entry.key().dupe(), true));
+                        entry.get_mut().push(v);
                     }
-                    None => {
-                        scope.value_local_stacked_env.insert(x, FlowVector::unit(v));
+                    std::collections::btree_map::Entry::Vacant(entry) => {
+                        value_snapshot.push((entry.key().dupe(), false));
+                        entry.insert(vec![v]);
                     }
                 }
             }
             let mut type_snapshot = Vec::with_capacity(type_.len());
             for (x, v) in type_ {
-                type_snapshot.push((x.dupe(), scope.type_local_stacked_env.get(&x).duped()));
-                match scope.type_local_stacked_env.get(&x) {
-                    Some(stack) => {
-                        let mut new_stack = stack.dupe();
-                        new_stack.push_back(v);
-                        scope.type_local_stacked_env.insert(x, new_stack);
+                match scope.type_local_stacked_env.entry(x) {
+                    std::collections::btree_map::Entry::Occupied(mut entry) => {
+                        type_snapshot.push((entry.key().dupe(), true));
+                        entry.get_mut().push(v);
                     }
-                    None => {
-                        scope.type_local_stacked_env.insert(x, FlowVector::unit(v));
+                    std::collections::btree_map::Entry::Vacant(entry) => {
+                        type_snapshot.push((entry.key().dupe(), false));
+                        entry.insert(vec![v]);
                     }
                 }
             }
@@ -602,24 +594,30 @@ mod full_env {
 
         pub(super) fn pop_bindings(&mut self, snapshot: FunctionScopeLocalEnvSnapshot) {
             let scope = self.scopes.last_mut().unwrap();
-            for (name, old_stack) in snapshot.value {
-                match old_stack {
-                    Some(old_stack) => {
-                        scope.value_local_stacked_env.insert(name, old_stack);
+            for (name, had_existing_stack) in snapshot.value {
+                if had_existing_stack {
+                    match scope.value_local_stacked_env.get_mut(&name) {
+                        Some(stack) => {
+                            assert!(stack.pop().is_some(), "Missing value binding stack entry");
+                            debug_assert!(!stack.is_empty());
+                        }
+                        None => panic!("Missing value binding stack"),
                     }
-                    None => {
-                        scope.value_local_stacked_env.remove(&name);
-                    }
+                } else {
+                    scope.value_local_stacked_env.remove(&name);
                 }
             }
-            for (name, old_stack) in snapshot.type_ {
-                match old_stack {
-                    Some(old_stack) => {
-                        scope.type_local_stacked_env.insert(name, old_stack);
+            for (name, had_existing_stack) in snapshot.type_ {
+                if had_existing_stack {
+                    match scope.type_local_stacked_env.get_mut(&name) {
+                        Some(stack) => {
+                            assert!(stack.pop().is_some(), "Missing type binding stack entry");
+                            debug_assert!(!stack.is_empty());
+                        }
+                        None => panic!("Missing type binding stack"),
                     }
-                    None => {
-                        scope.type_local_stacked_env.remove(&name);
-                    }
+                } else {
+                    scope.type_local_stacked_env.remove(&name);
                 }
             }
         }
@@ -636,19 +634,19 @@ mod full_env {
         where
             F: Fn(&FlowSmolStr, &EnvVal) -> PartialEnvEntry,
         {
-            map_function_scope_value_into_partial_env_entries(self.scopes.back().unwrap(), f)
+            map_function_scope_value_into_partial_env_entries(self.scopes.last().unwrap(), f)
         }
 
         pub(super) fn update_env<F>(&self, f: F)
         where
             F: FnMut(&FlowSmolStr, &EnvVal),
         {
-            iter_function_scope_value(self.scopes.back().unwrap(), f);
+            iter_function_scope_value(self.scopes.last().unwrap(), f);
         }
 
         pub(super) fn reset_to_unreachable_env(&self, cache: &mut ValCache<ALoc>) {
             let empty_val = ssa_val::empty(cache);
-            iter_function_scope_value(self.scopes.back().unwrap(), |_, env_val| {
+            iter_function_scope_value(self.scopes.last().unwrap(), |_, env_val| {
                 *env_val.val_ref.borrow_mut() = empty_val.dupe();
                 let keys: Vec<_> = env_val.heap_refinements.borrow().keys().duped().collect();
                 *env_val.heap_refinements.borrow_mut() = keys
@@ -666,7 +664,7 @@ mod full_env {
         ) where
             F: FnMut(&FlowSmolStr, &PartialEnvEntry, &EnvVal),
         {
-            iter_function_scope_value(self.scopes.back().unwrap(), |x, env_val| {
+            iter_function_scope_value(self.scopes.last().unwrap(), |x, env_val| {
                 let env_entry = partial_env_snapshot::read_with_fallback(x, partial_env, |x| {
                     self.env_read_entry_from_below(&should_havoc, x)
                 });
@@ -683,7 +681,7 @@ mod full_env {
         ) where
             F: FnMut(&PartialEnvEntry, &PartialEnvEntry, &EnvVal),
         {
-            iter_function_scope_value(self.scopes.back().unwrap(), |x, env_val| {
+            iter_function_scope_value(self.scopes.last().unwrap(), |x, env_val| {
                 let v1 = partial_env_snapshot::read_with_fallback(x, env1, |x| {
                     self.env_read_entry_from_below(&should_havoc, x)
                 });
@@ -701,7 +699,7 @@ mod full_env {
         /// Get all names in the current scope (value namespace)
         pub(super) fn all_names(&self) -> Vec<FlowSmolStr> {
             let mut names = Vec::new();
-            iter_function_scope_value(self.scopes.back().unwrap(), |name, _| {
+            iter_function_scope_value(self.scopes.last().unwrap(), |name, _| {
                 names.push(name.dupe());
             });
             names
@@ -709,7 +707,7 @@ mod full_env {
 
         /// Get an env_val by name from the current scope (value namespace)
         pub(super) fn env_val_by_name(&self, name: &FlowSmolStr) -> Option<EnvVal> {
-            function_scope_read_value(name, self.scopes.back().unwrap())
+            function_scope_read_value(name, self.scopes.last().unwrap())
         }
     }
 }
@@ -1859,25 +1857,38 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     /// and successive refinement writes to model conjunctions, but it's not clear that that
     /// approach is simpler than this one.
     fn env_snapshot_without_latest_refinements(&self) -> PartialEnvSnapshot {
-        fn refinements_by_key(
-            refinement_maps: &RefinementMaps,
-        ) -> BTreeMap<refinement_key::Lookup, BTreeSet<usize>> {
-            let mut result = BTreeMap::new();
+        struct RefinementsByKey {
+            value: BTreeMap<FlowSmolStr, BTreeSet<usize>>,
+            heap: BTreeMap<FlowSmolStr, BTreeMap<FlowVector<Proj>, BTreeSet<usize>>>,
+        }
+
+        fn refinements_by_key(refinement_maps: &RefinementMaps) -> RefinementsByKey {
+            let mut result = RefinementsByKey {
+                value: BTreeMap::new(),
+                heap: BTreeMap::new(),
+            };
             for (lookup_key, refinement_id) in refinement_maps.applied.values() {
-                result
-                    .entry(lookup_key.dupe())
-                    .or_insert_with(BTreeSet::new)
-                    .insert(refinement_id.0);
+                if lookup_key.projections.is_empty() {
+                    result
+                        .value
+                        .entry(lookup_key.base.dupe())
+                        .or_default()
+                        .insert(refinement_id.0);
+                } else {
+                    result
+                        .heap
+                        .entry(lookup_key.base.dupe())
+                        .or_default()
+                        .entry(lookup_key.projections.dupe())
+                        .or_default()
+                        .insert(refinement_id.0);
+                }
             }
             result
         }
 
-        fn unrefine(
-            refinements_by_key: &BTreeMap<refinement_key::Lookup, BTreeSet<usize>>,
-            lookup_key: &refinement_key::Lookup,
-            v: Val<ALoc>,
-        ) -> Val<ALoc> {
-            match refinements_by_key.get(lookup_key) {
+        fn unrefine(refinement_ids: Option<&BTreeSet<usize>>, v: Val<ALoc>) -> Val<ALoc> {
+            match refinement_ids {
                 Some(refinement_ids) => {
                     let mut result = v;
                     for &ref_id in refinement_ids {
@@ -1895,30 +1906,29 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         }
         let refinements_by_key = refinements_by_key(head);
         self.env_state.env.to_partial_env_snapshot(|name, env_val| {
-            let lookup_key = refinement_key::Lookup::of_name(name.dupe());
-            let unrefined_env_val = unrefine(
-                &refinements_by_key,
-                &lookup_key,
-                env_val.val_ref.borrow().dupe(),
-            );
-            let unrefined_heap_refinements = env_val
-                .heap_refinements
-                .borrow()
-                .iter()
-                .map(|(projections, heap_val)| {
-                    let new_val = match heap_val {
-                        Err(invalidation_info) => Err(invalidation_info.dupe()),
-                        Ok(v) => {
-                            let lookup_key = refinement_key::Lookup::of_name_with_projections(
-                                name.dupe(),
-                                projections.dupe(),
-                            );
-                            Ok(unrefine(&refinements_by_key, &lookup_key, v.dupe()))
-                        }
-                    };
-                    (projections.dupe(), new_val)
-                })
-                .collect();
+            let value_refinement_ids = refinements_by_key.value.get(name);
+            let heap_refinements_for_name = refinements_by_key.heap.get(name);
+            if value_refinement_ids.is_none() && heap_refinements_for_name.is_none() {
+                return partial_env_snapshot::Entry::of_env_val(env_val);
+            }
+            let unrefined_env_val = unrefine(value_refinement_ids, env_val.val_ref.borrow().dupe());
+            let heap_refinements = env_val.heap_refinements.borrow();
+            let unrefined_heap_refinements = match heap_refinements_for_name {
+                None => heap_refinements.dupe(),
+                Some(heap_refinements_for_name) => heap_refinements
+                    .iter()
+                    .map(|(projections, heap_val)| {
+                        let new_val = match heap_val {
+                            Err(invalidation_info) => Err(invalidation_info.dupe()),
+                            Ok(v) => Ok(unrefine(
+                                heap_refinements_for_name.get(projections),
+                                v.dupe(),
+                            )),
+                        };
+                        (projections.dupe(), new_val)
+                    })
+                    .collect(),
+            };
             partial_env_snapshot::Entry {
                 env_val: unrefined_env_val,
                 heap_refinements: unrefined_heap_refinements,
@@ -4783,7 +4793,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 let scope = self.env_state.env.current_scope_mut();
                 if let Some(stack) = scope.value_local_stacked_env.get(base) {
                     stack
-                        .back()
+                        .last()
                         .unwrap()
                         .heap_refinements
                         .borrow_mut()
