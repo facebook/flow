@@ -114,29 +114,32 @@ pub(crate) fn clear_errors(files: &FlowOrdSet<FileKey>, mut errors: Errors) -> E
 }
 
 pub(crate) fn filter_errors(files: &FlowOrdSet<FileKey>, errors: &Errors) -> Errors {
-    let local_errors: BTreeMap<FileKey, ErrorSet> = errors
-        .local_errors
+    let Errors {
+        local_errors,
+        duplicate_providers,
+        merge_errors,
+        warnings,
+        suppressions,
+    } = errors;
+    let local_errors: BTreeMap<FileKey, ErrorSet> = local_errors
         .iter()
         .filter(|(file, _)| files.contains(file))
         .map(|(k, v)| (k.dupe(), v.dupe()))
         .collect();
-    let merge_errors: BTreeMap<FileKey, ErrorSet> = errors
-        .merge_errors
+    let merge_errors: BTreeMap<FileKey, ErrorSet> = merge_errors
         .iter()
         .filter(|(file, _)| files.contains(file))
         .map(|(k, v)| (k.dupe(), v.dupe()))
         .collect();
-    let warnings: BTreeMap<FileKey, ErrorSet> = errors
-        .warnings
+    let warnings: BTreeMap<FileKey, ErrorSet> = warnings
         .iter()
         .filter(|(file, _)| files.contains(file))
         .map(|(k, v)| (k.dupe(), v.dupe()))
         .collect();
-    let mut suppressions = errors.suppressions.clone();
-    suppressions.filter_by_file(files);
+    let suppressions = suppressions.filter_by_file(files);
     Errors {
         local_errors,
-        duplicate_providers: errors.duplicate_providers.clone(),
+        duplicate_providers: duplicate_providers.clone(),
         merge_errors,
         warnings,
         suppressions,
@@ -1918,9 +1921,8 @@ pub(crate) fn recheck_impl(
                     .into_inner()
                     .union(dependents_to_check.into_inner()),
             );
-            let all_suppressions = env.errors.suppressions.clone();
             let new_errors = filter_errors(&files, &env.errors);
-
+            let all_suppressions = env.errors.suppressions.clone();
             let mut collated_errors = env.collated_errors;
             collated_errors.clear_merge(&files);
 

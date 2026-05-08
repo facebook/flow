@@ -571,8 +571,19 @@ impl ErrorSuppressions {
         })
     }
 
-    pub fn filter_by_file(&mut self, files: &FlowOrdSet<FileKey>) {
-        self.0.retain(|file, _| files.contains(file));
+    pub fn filter_by_file(&self, files: &FlowOrdSet<FileKey>) -> Self {
+        Self(
+            self.0
+                .iter()
+                .filter_map(|(file, suppressions)| {
+                    if files.contains(file) {
+                        Some((file.dupe(), suppressions.clone()))
+                    } else {
+                        None
+                    }
+                })
+                .collect(),
+        )
     }
 }
 
