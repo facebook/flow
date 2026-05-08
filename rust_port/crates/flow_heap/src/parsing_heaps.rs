@@ -9,6 +9,9 @@ use std::cell::LazyCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::btree_map::Entry;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::Hash;
+use std::hash::Hasher;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -59,34 +62,46 @@ pub struct HashStats {
     pub slots: i32,
 }
 
+const GC_MAP_SHARDS: usize = 256;
+
 #[derive(Debug)]
 pub struct GcMap<K, V> {
-    map: parking_lot::RwLock<BTreeMap<K, V>>,
+    shards: [parking_lot::RwLock<BTreeMap<K, V>>; GC_MAP_SHARDS],
 }
 
 impl<K, V> Default for GcMap<K, V> {
     fn default() -> Self {
         Self {
-            map: parking_lot::RwLock::new(BTreeMap::new()),
+            shards: std::array::from_fn(|_| parking_lot::RwLock::new(BTreeMap::new())),
         }
     }
 }
 
-impl<K: Ord, V: Dupe> GcMap<K, V> {
+impl<K: Ord + Hash, V: Dupe> GcMap<K, V> {
     fn new() -> Self {
         Self::default()
     }
 
+    fn shard_index(key: &K) -> usize {
+        let mut hasher = DefaultHasher::new();
+        key.hash(&mut hasher);
+        hasher.finish() as usize & (GC_MAP_SHARDS - 1)
+    }
+
+    fn shard(&self, key: &K) -> &parking_lot::RwLock<BTreeMap<K, V>> {
+        &self.shards[Self::shard_index(key)]
+    }
+
     fn len(&self) -> usize {
-        self.map.read().len()
+        self.shards.iter().map(|shard| shard.read().len()).sum()
     }
 
     fn get(&self, key: &K) -> Option<V> {
-        self.map.read().get(key).map(|value| value.dupe())
+        self.shard(key).read().get(key).map(|value| value.dupe())
     }
 
     fn insert(&self, key: K, value: V) -> Option<V> {
-        let mut map = self.map.write();
+        let mut map = self.shard(&key).write();
         match map.entry(key) {
             Entry::Vacant(entry) => {
                 entry.insert(value);
@@ -100,7 +115,11 @@ impl<K: Ord, V: Dupe> GcMap<K, V> {
     where
         K: Dupe,
     {
-        let mut map = self.map.write();
+        if let Some(value) = self.shard(key).read().get(key).map(|value| value.dupe()) {
+            return (value, false);
+        }
+
+        let mut map = self.shard(key).write();
         match map.entry(key.dupe()) {
             Entry::Vacant(entry) => (entry.insert(value()).dupe(), true),
             Entry::Occupied(entry) => (entry.get().dupe(), false),
@@ -108,7 +127,7 @@ impl<K: Ord, V: Dupe> GcMap<K, V> {
     }
 
     fn remove_if(&self, key: &K, predicate: impl FnOnce(&V) -> bool) -> Option<V> {
-        let mut map = self.map.write();
+        let mut map = self.shard(key).write();
         if map.get(key).is_some_and(predicate) {
             map.remove(key)
         } else {
@@ -120,21 +139,47 @@ impl<K: Ord, V: Dupe> GcMap<K, V> {
     where
         K: Dupe,
     {
-        self.map.read().keys().map(|key| key.dupe()).collect()
+        let mut keys: Vec<_> = self
+            .shards
+            .iter()
+            .flat_map(|shard| {
+                shard
+                    .read()
+                    .keys()
+                    .map(|key| key.dupe())
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+        keys.sort();
+        keys
     }
 
     fn values(&self) -> Vec<V> {
-        self.map.read().values().map(|value| value.dupe()).collect()
+        self.shards
+            .iter()
+            .flat_map(|shard| {
+                shard
+                    .read()
+                    .values()
+                    .map(|value| value.dupe())
+                    .collect::<Vec<_>>()
+            })
+            .collect()
     }
 
     fn iter_unordered(&self) -> Vec<(K, V)>
     where
         K: Dupe,
     {
-        self.map
-            .read()
+        self.shards
             .iter()
-            .map(|(key, value)| (key.dupe(), value.dupe()))
+            .flat_map(|shard| {
+                shard
+                    .read()
+                    .iter()
+                    .map(|(key, value)| (key.dupe(), value.dupe()))
+                    .collect::<Vec<_>>()
+            })
             .collect()
     }
 }
@@ -1051,6 +1096,7 @@ impl SharedMem {
 
                 typed.resolved_requires.set(resolved_requires);
 
+                let mut new_alloc_size = 0;
                 for dep in &old_deps {
                     if !new_deps.contains(dep) {
                         self.remove_dependent_from(file, dep);
@@ -1059,9 +1105,10 @@ impl SharedMem {
 
                 for dep in &new_deps {
                     if !old_deps.contains(dep) {
-                        self.add_dependent_to(file, dep);
+                        new_alloc_size += self.add_dependent_to(file, dep);
                     }
                 }
+                self.note_alloc_many(new_alloc_size);
             }
         }
     }
@@ -1082,19 +1129,18 @@ impl SharedMem {
         }
     }
 
-    fn add_dependent_to(&self, file: &FileKey, dep: &Dependency) {
+    fn add_dependent_to(&self, file: &FileKey, dep: &Dependency) -> usize {
         match dep {
             Dependency::HasteModule(Modulename::Haste(haste_info)) => {
                 let module = self.get_or_create_haste_module(haste_info.dupe());
                 module.add_dependent(file.dupe());
+                0
             }
             Dependency::HasteModule(Modulename::Filename(dep_file))
             | Dependency::File(dep_file) => {
                 let (dep_entry, inserted) = self.file_heap.ensure(dep_file, FileEntry::new_phantom);
-                if inserted {
-                    self.note_alloc();
-                }
                 dep_entry.add_dependent(file.dupe());
+                usize::from(inserted)
             }
         }
     }
@@ -1119,11 +1165,13 @@ impl SharedMem {
                 self.remove_dependent_from(file, dep);
             }
         }
+        let mut new_alloc_size = 0;
         for dep in &old_dependencies {
             if !new_dependencies.contains(dep) {
-                self.add_dependent_to(file, dep);
+                new_alloc_size += self.add_dependent_to(file, dep);
             }
         }
+        self.note_alloc_many(new_alloc_size);
         ent.rollback();
     }
 
@@ -1165,9 +1213,11 @@ impl SharedMem {
                     .as_ref()
                     .map(ResolvedRequires::all_dependencies)
                     .unwrap_or_default();
+                let mut new_alloc_size = 0;
                 for dep in &old_dependencies {
-                    self.add_dependent_to(file_key, dep);
+                    new_alloc_size += self.add_dependent_to(file_key, dep);
                 }
+                self.note_alloc_many(new_alloc_size);
             }
             (None, Some(new_parse)) => {
                 let new_resolved_requires = new_parse.resolved_requires.read_latest_clone();
@@ -1199,8 +1249,16 @@ impl SharedMem {
     }
 
     fn note_alloc(&self) {
+        self.note_alloc_many(1);
+    }
+
+    fn note_alloc_many(&self, count: usize) {
+        if count == 0 {
+            return;
+        }
+
         let mut gc_state = self.gc_state.lock();
-        gc_state.new_alloc_size = gc_state.new_alloc_size.saturating_add(1);
+        gc_state.new_alloc_size = gc_state.new_alloc_size.saturating_add(count);
     }
 
     // GC will attempt to keep the overhead of garbage to no more than 20%. Before
