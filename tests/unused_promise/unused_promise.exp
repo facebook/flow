@@ -1,25 +1,16 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:8:5
+Error ------------------------------------------------------------------------------------------------------ test.js:9:5
 
 `Promise` in async scope is unused. Did you mean to `await` it? [unused-promise]
 
-   8|     foo(); // error
+   9|     foo(); // error
           ^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:10:5
+Error ----------------------------------------------------------------------------------------------------- test.js:11:5
 
 `Promise` in async scope is unused. Did you mean to `await` it? [unused-promise]
 
-   10|     bar(); // error
-           ^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:31:5
-
-`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
-.finally. [unused-promise]
-
-   31|     foo(); // error
+   11|     bar(); // error
            ^^^^^^
 
 
@@ -28,8 +19,8 @@ Error --------------------------------------------------------------------------
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   32|     foo().then(() => {}); // error
-           ^^^^^^^^^^^^^^^^^^^^^
+   32|     foo(); // error
+           ^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:33:5
@@ -37,17 +28,17 @@ Error --------------------------------------------------------------------------
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   33|     foo().then(() => {}).then(() => {}); // error
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   33|     foo().then(() => {}); // error
+           ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:37:5
+Error ----------------------------------------------------------------------------------------------------- test.js:34:5
 
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   37|     b && foo(); // error
-           ^^^^^^^^^^^
+   34|     foo().then(() => {}).then(() => {}); // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:5
@@ -55,8 +46,8 @@ Error --------------------------------------------------------------------------
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   38|     b && foo() && b; // error
-           ^^^^^^^^^^^^^^^^
+   38|     b && foo(); // error
+           ^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:39:5
@@ -64,25 +55,8 @@ Error --------------------------------------------------------------------------
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   39|     b && b && foo(); // error
+   39|     b && foo() && b; // error
            ^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:40:5
-
-This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
-[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
-[constant-condition]
-
-   test.js:40:5
-   40|     foo() && foo(); // error
-           ^^^^^
-
-References:
-   test.js:1:25
-    1| declare function foo(): Promise<void>;
-                               ^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:5
@@ -90,8 +64,8 @@ Error --------------------------------------------------------------------------
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   40|     foo() && foo(); // error
-           ^^^^^^^^^^^^^^^
+   40|     b && b && foo(); // error
+           ^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:5
@@ -102,13 +76,13 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
 [constant-condition]
 
    test.js:41:5
-     41|     foo().catch(() => {}) && foo(); // error
-             ^^^^^^^^^^^^^^^^^^^^^
+   41|     foo() && foo(); // error
+           ^^^^^
 
 References:
-   <BUILTINS>/core.js:2319:8
-   2319|     ): Promise<R | U>;
-                ^^^^^^^^^^^^^^ [1]
+   test.js:1:25
+    1| declare function foo(): Promise<void>;
+                               ^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:5
@@ -116,8 +90,8 @@ Error --------------------------------------------------------------------------
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   41|     foo().catch(() => {}) && foo(); // error
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   41|     foo() && foo(); // error
+           ^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:5
@@ -128,33 +102,7 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
 [constant-condition]
 
    test.js:42:5
-   42|     foo() && foo().catch(() => {}); // error
-           ^^^^^
-
-References:
-   test.js:1:25
-    1| declare function foo(): Promise<void>;
-                               ^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:42:5
-
-`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
-.finally. [unused-promise]
-
-   42|     foo() && foo().catch(() => {}); // error
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:47:5
-
-This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
-[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
-[constant-condition]
-
-   test.js:47:5
-     47|     foo().catch(() => {}) && foo().catch(() => {}); // ok
+     42|     foo().catch(() => {}) && foo(); // error
              ^^^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -163,13 +111,39 @@ References:
                 ^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:51:5
+Error ----------------------------------------------------------------------------------------------------- test.js:42:5
 
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   51|     b ? foo() : 3; // error
-           ^^^^^^^^^^^^^^
+   42|     foo().catch(() => {}) && foo(); // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:43:5
+
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   test.js:43:5
+   43|     foo() && foo().catch(() => {}); // error
+           ^^^^^
+
+References:
+   test.js:1:25
+    1| declare function foo(): Promise<void>;
+                               ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:43:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   43|     foo() && foo().catch(() => {}); // error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:52:5
@@ -177,17 +151,17 @@ Error --------------------------------------------------------------------------
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   52|     b ? 3 : foo(); // error
+   52|     b ? foo() : 3; // error
            ^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:65:5
+Error ----------------------------------------------------------------------------------------------------- test.js:53:5
 
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   65|     x.foo(); // error
-           ^^^^^^^^
+   53|     b ? 3 : foo(); // error
+           ^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:66:5
@@ -195,17 +169,17 @@ Error --------------------------------------------------------------------------
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   66|     x.bar(); // error
+   66|     x.foo(); // error
            ^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:80:5
+Error ----------------------------------------------------------------------------------------------------- test.js:67:5
 
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   80|     x?.foo(); // error
-           ^^^^^^^^^
+   67|     x.bar(); // error
+           ^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:81:5
@@ -213,9 +187,18 @@ Error --------------------------------------------------------------------------
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
-   81|     x?.bar(); // error
+   81|     x?.foo(); // error
+           ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:82:5
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   82|     x?.bar(); // error
            ^^^^^^^^^
 
 
 
-Found 21 errors
+Found 20 errors

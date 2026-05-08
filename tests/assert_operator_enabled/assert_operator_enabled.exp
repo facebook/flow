@@ -21,12 +21,12 @@ Error --------------------------------------------------------------------------
 with nullable types. [illegal-assert-operator]
 
    test.js:8:3
-   8|   a! as number;// ok
+   8|   a! as number;// error: a is not nullable, ! is illegal here
         ^^
 
 References:
    test.js:8:3
-   8|   a! as number;// ok
+   8|   a! as number;// error: a is not nullable, ! is illegal here
         ^ [1]
 
 
@@ -474,12 +474,12 @@ Error --------------------------------------------------------------------------
 values with nullable types. [illegal-assert-operator]
 
    test.js:78:3
-   78|   x.a!.b = 42; // ok
+   78|   x.a!.b = 42; // error: x.a was refined to non-null by the assignment above; ! is illegal here
          ^^^^
 
 References:
    test.js:78:3
-   78|   x.a!.b = 42; // ok
+   78|   x.a!.b = 42; // error: x.a was refined to non-null by the assignment above; ! is illegal here
          ^^^ [1]
 
 

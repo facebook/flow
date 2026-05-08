@@ -33,5 +33,5 @@ declare function f6<T>(
   v1: T,
   v2: NoInfer<{[K in keyof T]: T[K]}>
 ): void;
-f7({a: ''}, {a: ''}); // ok
-f7({a: ''}, {a: 3}); // error: number ~> string
+f6({a: ''}, {a: ''}); // ok
+f6({a: ''}, {a: 3}); // error: number ~> string

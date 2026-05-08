@@ -37,7 +37,7 @@ function extract_this_parameter_type() {
   // which comes from unsoundness of this param in function type annotation.
   3 as unknown as ThisParameterType<(string, number) => string>; // ok
 
-  '3' as OmitThisParameter<ThisParameterType<(this: number, string) => void>>; // ok: fn type with this type has an implicit any this type
+  3 as OmitThisParameter<ThisParameterType<(this: number, string) => void>>; // ok: ThisParameterType extracts `number`; OmitThisParameter on a non-function falls through unchanged, so target is `number`
 }
 
 function recursive_awaited_type() {

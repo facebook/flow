@@ -420,15 +420,15 @@ Error --------------------------------------------------------------------------
 Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    implicit_instantiation.js:15:50
-   15|   const reasonTest: (string) => unknown = (a) => a as empty; // ok
+   15|   const reasonTest: (string) => unknown = (a) => a as empty; // error: a is contextually typed as string, not empty
                                                         ^
 
 References:
    implicit_instantiation.js:15:22
-   15|   const reasonTest: (string) => unknown = (a) => a as empty; // ok
+   15|   const reasonTest: (string) => unknown = (a) => a as empty; // error: a is contextually typed as string, not empty
                             ^^^^^^ [1]
    implicit_instantiation.js:15:55
-   15|   const reasonTest: (string) => unknown = (a) => a as empty; // ok
+   15|   const reasonTest: (string) => unknown = (a) => a as empty; // error: a is contextually typed as string, not empty
                                                              ^^^^^ [2]
 
 

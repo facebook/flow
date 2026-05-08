@@ -301,12 +301,12 @@ Cannot add computed property because the indexer [1] may overwrite properties wi
 cannot track. [invalid-computed-prop]
 
    overwrite.js:7:29
-   7| const f4 = {baz: 'string', [s2]: 3}; // ok
+   7| const f4 = {baz: 'string', [s2]: 3}; // error: Flow conservatively rejects all such cases (does not check that 'baz' is disjoint from 'foo' | 'bar')
                                   ^^ [1]
 
 References:
    overwrite.js:7:13
-   7| const f4 = {baz: 'string', [s2]: 3}; // ok
+   7| const f4 = {baz: 'string', [s2]: 3}; // error: Flow conservatively rejects all such cases (does not check that 'baz' is disjoint from 'foo' | 'bar')
                   ^^^ [2]
 
 
@@ -314,7 +314,7 @@ Error --------------------------------------------------------------------------
 
 Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
 
-   3| function f1<T extends string>(x: T) { return {[x]: x} } // ok
+   3| function f1<T extends string>(x: T) { return {[x]: x} } // intended as the paired OK case (bounded T extends string should allow computed-prop keys); currently ERROR — Flow requires a return annotation on poly functions, and even with one (`: {[T]: T}`) it widens the computed key from T to string and emits [incompatible-type]
                                          
 
 

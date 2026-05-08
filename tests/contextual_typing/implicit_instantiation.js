@@ -12,7 +12,7 @@ function test1() {
   let f2: (string) => string = (a) => a as string; // ok
   f2 = (b) => b as string; // ok
 
-  const reasonTest: (string) => unknown = (a) => a as empty; // ok
+  const reasonTest: (string) => unknown = (a) => a as empty; // error: a is contextually typed as string, not empty
 }
 
 function test2() {

@@ -128,8 +128,8 @@ type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
     [key in keyof O]: ConstrainedBox<O[key]>,
   };
 
-  declare const constrained: MappedConstrained<O>; // ERROR HERE, NOT IN DEFINITION OF MAPPEDCONSTRAINED
-  constrained as {foo: {contents: number}}; // OK
+  declare const constrained: MappedConstrained<O>; // SHOULD ERROR HERE (constraint `T extends string` violated by O[foo] = number), NOT IN DEFINITION OF MAPPEDCONSTRAINED — but Flow currently delays the report to the cast below
+  constrained as {foo: {contents: number}}; // intended OK; currently ERROR — Flow surfaces the constraint violation here instead of at the type instantiation above
 }
 
 // Error positioning

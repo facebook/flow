@@ -6,7 +6,7 @@ var Div = 'div' as const;
 var Bad = 'bad' as const;
 var Str: string = 'str';
 
-<Div />; // This is fine
+<Div id="foo" />; // This is fine
 <Bad />; // Error: 'bad' not in JSXIntrinsics
 <Str />; // Error: string ~> keys of JSXIntrinsics
 
@@ -14,5 +14,4 @@ var Str: string = 'str';
 <bad />; // Error: 'bad' not in JSXIntrinsics
 <Str />; // Error: string ~> keys of JSXIntrinsics
 
-// TODO: Make this an error
-<Div id={42} />; // Not an error but should be eventually
+<Div id={42} />; // Error: 42 ~> string

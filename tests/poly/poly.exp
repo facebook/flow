@@ -1,17 +1,3 @@
-Error ---------------------------------------------------------------------------------------------------- annot.js:3:17
-
-Cannot use `A` [1] with fewer than 1 type argument. [missing-type-arg]
-
-   annot.js:3:17
-   3| class B extends A {} // OK, same as above
-                      ^
-
-References:
-   annot.js:1:8
-   1| class A<X> {}
-             ^^^ [1]
-
-
 Error --------------------------------------------------------------------------------------------------- annot2.js:1:20
 
 Missing an annotation on return because generic functions must be fully annotated. [missing-local-annot]
@@ -606,4 +592,4 @@ References:
 
 
 
-Found 36 errors
+Found 35 errors

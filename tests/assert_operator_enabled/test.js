@@ -5,7 +5,7 @@ function A(a: null | number) {//Using TS syntax to be able to compare with TS
 }
 
 function B(a: number) {
-  a! as number;// ok
+  a! as number;// error: a is not nullable, ! is illegal here
   a! as empty; // LHS is number
 }
 
@@ -75,7 +75,7 @@ class K {
 function L(x: {a?: { b?: number }, c: { d?: number, e?: number, f?: number }}) {
   x.a! = 1; // error
   x.a! = ({} as {b?: number}); // ok
-  x.a!.b = 42; // ok
+  x.a!.b = 42; // error: x.a was refined to non-null by the assignment above; ! is illegal here
   x.a!.b = "43"; // error
   x.f.d += 42; // error addition
   (x.c.d! += 42) as number; // ok

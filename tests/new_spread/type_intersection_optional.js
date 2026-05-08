@@ -2,13 +2,13 @@ declare class T {}
 declare class U {}
 
 declare const o1: {...{p:T, ...}&{p:U, ...}, ...};
-o1 as {p?:T&U, ...}; // ok
+o1 as {+p?:T&U, ...}; // ok
 
 declare const o2: {...{p?:T, ...}&{p:U, ...}, ...};
-o2 as {p?:T&U, ...}; // ok
+o2 as {+p?:T&U, ...}; // ok
 
 declare const o3: {...{p:T, ...}&{p?:U, ...}, ...};
-o3 as {p?:T&U, ...}; // ok
+o3 as {+p?:T&U, ...}; // ok
 
 declare const o4: {...{p?:T, ...}&{p?:U, ...}, ...};
 o4 as {p?:T&U, ...}; // ok
@@ -50,16 +50,16 @@ declare const o16: {...{p?:T}&{p?:U}};
 o16 as {p?:T&U}; // ok
 
 declare const o17: {...{p:T, ...}&{q:U, ...}, ...};
-o17 as {p?:T,q?:U, ...}; // ok
+o17 as {+p?:T, +q?:U, ...}; // ok
 
 declare const o18: {...{p?:T, ...}&{q:U, ...}, ...};
-o18 as {p?:T,q?:U, ...}; // ok
+o18 as {p?:T, +q?:U, ...}; // ok
 
 declare const o19: {...{p:T, ...}&{q?:U, ...}, ...};
-o19 as {p?:T,q?:U, ...}; // ok
+o19 as {+p?:T, q?:U, ...}; // ok
 
 declare const o20: {...{p?:T, ...}&{q?:U, ...}, ...};
 o20 as {p?:T,q?:U, ...}; // ok
 
 declare const o21: {...{p:T}&{q:U, ...}, ...};
-o21 as {p:T,q?:U, ...}; // ok
+o21 as {p:T, +q?:U, ...}; // ok

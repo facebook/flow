@@ -91,35 +91,6 @@ References:
                                  ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:12:1
-
-Cannot cast `o1` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{p: T, ...}` [3] and `{p?: T, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type.js:12:1
-   12| o1 as {p?:T, ...}; // ok
-       ^^
-
-References:
-   type.js:10:18
-   10| type O1 = {...{p:T, ...}, ...};
-                        ^ [1]
-   type.js:12:11
-   12| o1 as {p?:T, ...}; // ok
-                 ^ [2]
-   type.js:10:11
-   10| type O1 = {...{p:T, ...}, ...};
-                 ^^^^^^^^^^^^^^^^^^^^ [3]
-   type.js:12:7
-   12| o1 as {p?:T, ...}; // ok
-             ^^^^^^^^^^^ [4]
-
-
 Error ----------------------------------------------------------------------------------------------------- type.js:14:2
 
 Cannot cast object literal to `O1` because property `p` is missing in object literal [1] but exists in object type [2].
@@ -440,35 +411,6 @@ References:
                       ^^^^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- type.js:102:1
-
-Cannot cast `o14` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{p: T, ...}` [3] and `{p?: T, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type.js:102:1
-   102| o14 as {p?:T, ...}; // ok
-        ^^^
-
-References:
-   type.js:99:23
-    99| type O14 = {...{...{p:T}, ...}, ...};
-                              ^ [1]
-   type.js:102:12
-   102| o14 as {p?:T, ...}; // ok
-                   ^ [2]
-   type.js:99:12
-    99| type O14 = {...{...{p:T}, ...}, ...};
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   type.js:102:8
-   102| o14 as {p?:T, ...}; // ok
-               ^^^^^^^^^^^ [4]
-
-
 Error ---------------------------------------------------------------------------------------------------- type.js:105:5
 
 Cannot cast object literal to `O14` because in property `p`: `U` [1] is incompatible with `T` [2]. [incompatible-type]
@@ -764,55 +706,6 @@ References:
             ^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------- type_intersection.js:9:1
-
-Cannot cast `o1` to object type because properties `p` and `q` of `{p: T, q: U, ...}` [1] are not exactly the same as
-those of `{p?: T, q?: U, ...}` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because properties `p` and `q` are invariantly typed. To fix the error,
-- Either make `{p: T, q: U, ...}` [3] and `{p?: T, q?: U, ...}` [2] exactly the same
-- Or make properties `p` and `q` in object type [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_intersection.js:9:1
-   9| o1 as {p?:T,q?:U, ...}; // ok
-      ^^ [1]
-
-References:
-   type_intersection.js:9:7
-   9| o1 as {p?:T,q?:U, ...}; // ok
-            ^^^^^^^^^^^^^^^^ [2]
-   type_intersection.js:7:11
-   7| type O1 = {...{p:T, ...}&{q:U, ...}, ...};
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------- type_intersection.js:13:1
-
-Cannot cast `o2` to object type because in property `p`: `A & B` [1] is not exactly the same as `void | B` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{p: A & B, ...}` [1] and `{p?: B, ...}` [3] exactly the same
-- Or make property `p` in object type [3] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_intersection.js:13:1
-   13| o2 as {p?:B, ...}; // ok
-       ^^
-
-References:
-   type_intersection.js:11:11
-   11| type O2 = {...{p:A, ...}&{p:B, ...}, ...};
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_intersection.js:13:11
-   13| o2 as {p?:B, ...}; // ok
-                 ^ [2]
-   type_intersection.js:13:7
-   13| o2 as {p?:B, ...}; // ok
-             ^^^^^^^^^^^ [3]
-
-
 Error ---------------------------------------------------------------------------------------- type_intersection.js:15:6
 
 Cannot cast object literal to `O2` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
@@ -825,194 +718,6 @@ References:
    type_intersection.js:11:29
    11| type O2 = {...{p:A, ...}&{p:B, ...}, ...};
                                    ^ [2]
-
-
-Error -------------------------------------------------------------------------------- type_intersection_optional.js:5:1
-
-Cannot cast `o1` to object type because in property `p`: `T & U` [1] is not exactly the same as `void | (T & U)` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{p: T & U, ...}` [1] and `{p?: T & U, ...}` [3] exactly the same
-- Or make property `p` in object type [3] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_intersection_optional.js:5:1
-   5| o1 as {p?:T&U, ...}; // ok
-      ^^
-
-References:
-   type_intersection_optional.js:4:19
-   4| declare const o1: {...{p:T, ...}&{p:U, ...}, ...};
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_intersection_optional.js:5:11
-   5| o1 as {p?:T&U, ...}; // ok
-                ^^^ [2]
-   type_intersection_optional.js:5:7
-   5| o1 as {p?:T&U, ...}; // ok
-            ^^^^^^^^^^^^^ [3]
-
-
-Error -------------------------------------------------------------------------------- type_intersection_optional.js:8:1
-
-Cannot cast `o2` to object type because in property `p`: `T & U` [1] is not exactly the same as `void | (T & U)` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{p: T & U, ...}` [1] and `{p?: T & U, ...}` [3] exactly the same
-- Or make property `p` in object type [3] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_intersection_optional.js:8:1
-   8| o2 as {p?:T&U, ...}; // ok
-      ^^
-
-References:
-   type_intersection_optional.js:7:19
-   7| declare const o2: {...{p?:T, ...}&{p:U, ...}, ...};
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_intersection_optional.js:8:11
-   8| o2 as {p?:T&U, ...}; // ok
-                ^^^ [2]
-   type_intersection_optional.js:8:7
-   8| o2 as {p?:T&U, ...}; // ok
-            ^^^^^^^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------- type_intersection_optional.js:11:1
-
-Cannot cast `o3` to object type because in property `p`: `T & U` [1] is not exactly the same as `void | (T & U)` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{p: T & U, ...}` [1] and `{p?: T & U, ...}` [3] exactly the same
-- Or make property `p` in object type [3] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_intersection_optional.js:11:1
-   11| o3 as {p?:T&U, ...}; // ok
-       ^^
-
-References:
-   type_intersection_optional.js:10:19
-   10| declare const o3: {...{p:T, ...}&{p?:U, ...}, ...};
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   type_intersection_optional.js:11:11
-   11| o3 as {p?:T&U, ...}; // ok
-                 ^^^ [2]
-   type_intersection_optional.js:11:7
-   11| o3 as {p?:T&U, ...}; // ok
-             ^^^^^^^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------- type_intersection_optional.js:53:1
-
-Cannot cast `o17` to object type because properties `p` and `q` of `{p: T, q: U, ...}` [1] are not exactly the same as
-those of `{p?: T, q?: U, ...}` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because properties `p` and `q` are invariantly typed. To fix the error,
-- Either make `{p: T, q: U, ...}` [3] and `{p?: T, q?: U, ...}` [2] exactly the same
-- Or make properties `p` and `q` in object type [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_intersection_optional.js:53:1
-   53| o17 as {p?:T,q?:U, ...}; // ok
-       ^^^ [1]
-
-References:
-   type_intersection_optional.js:53:8
-   53| o17 as {p?:T,q?:U, ...}; // ok
-              ^^^^^^^^^^^^^^^^ [2]
-   type_intersection_optional.js:52:20
-   52| declare const o17: {...{p:T, ...}&{q:U, ...}, ...};
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------- type_intersection_optional.js:56:1
-
-Cannot cast `o18` to object type because in property `q`: `U` [1] is not exactly the same as `void | U` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `q` is invariantly typed. To fix the error,
-- Either make `{p?: T, q: U, ...}` [3] and `{p?: T, q?: U, ...}` [4] exactly the same
-- Or make property `q` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_intersection_optional.js:56:1
-   56| o18 as {p?:T,q?:U, ...}; // ok
-       ^^^
-
-References:
-   type_intersection_optional.js:55:39
-   55| declare const o18: {...{p?:T, ...}&{q:U, ...}, ...};
-                                             ^ [1]
-   type_intersection_optional.js:56:17
-   56| o18 as {p?:T,q?:U, ...}; // ok
-                       ^ [2]
-   type_intersection_optional.js:55:20
-   55| declare const o18: {...{p?:T, ...}&{q:U, ...}, ...};
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   type_intersection_optional.js:56:8
-   56| o18 as {p?:T,q?:U, ...}; // ok
-              ^^^^^^^^^^^^^^^^ [4]
-
-
-Error ------------------------------------------------------------------------------- type_intersection_optional.js:59:1
-
-Cannot cast `o19` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{p: T, q?: U, ...}` [3] and `{p?: T, q?: U, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_intersection_optional.js:59:1
-   59| o19 as {p?:T,q?:U, ...}; // ok
-       ^^^
-
-References:
-   type_intersection_optional.js:58:27
-   58| declare const o19: {...{p:T, ...}&{q?:U, ...}, ...};
-                                 ^ [1]
-   type_intersection_optional.js:59:12
-   59| o19 as {p?:T,q?:U, ...}; // ok
-                  ^ [2]
-   type_intersection_optional.js:58:20
-   58| declare const o19: {...{p:T, ...}&{q?:U, ...}, ...};
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   type_intersection_optional.js:59:8
-   59| o19 as {p?:T,q?:U, ...}; // ok
-              ^^^^^^^^^^^^^^^^ [4]
-
-
-Error ------------------------------------------------------------------------------- type_intersection_optional.js:65:1
-
-Cannot cast `o21` to object type because in property `q`: `U` [1] is not exactly the same as `void | U` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `q` is invariantly typed. To fix the error,
-- Either make `{p: T, q: U, ...}` [3] and `{p: T, q?: U, ...}` [4] exactly the same
-- Or make property `q` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_intersection_optional.js:65:1
-   65| o21 as {p:T,q?:U, ...}; // ok
-       ^^^
-
-References:
-   type_intersection_optional.js:64:33
-   64| declare const o21: {...{p:T}&{q:U, ...}, ...};
-                                       ^ [1]
-   type_intersection_optional.js:65:16
-   65| o21 as {p:T,q?:U, ...}; // ok
-                      ^ [2]
-   type_intersection_optional.js:64:20
-   64| declare const o21: {...{p:T}&{q:U, ...}, ...};
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   type_intersection_optional.js:65:8
-   65| o21 as {p:T,q?:U, ...}; // ok
-              ^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:3:4
@@ -1137,115 +842,12 @@ References:
                            ^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- type_statics.js:5:1
-
-Cannot cast `o1` to object type because in property `p`: `number` [1] is not exactly the same as `void | number` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{name: string, p: number, ...}` [3] and `{p?: number, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_statics.js:5:1
-   5| o1 as {p?:number, ...}; // ok
-      ^^
-
-References:
-   type_statics.js:1:20
-   1| class A {static p: number}
-                         ^^^^^^ [1]
-   type_statics.js:5:11
-   5| o1 as {p?:number, ...}; // ok
-                ^^^^^^ [2]
-   type_statics.js:3:11
-   3| type O1 = {...Class<A>, ...};
-                ^^^^^^^^^^^^^^^^^^ [3]
-   type_statics.js:5:7
-   5| o1 as {p?:number, ...}; // ok
-            ^^^^^^^^^^^^^^^^ [4]
-
-
 Error ---------------------------------------------------------------------------------------------- type_string.js:1:15
 
 string literal `foo` [1] is not an object. [not-an-object]
 
    1| type O1 = {..."foo", ...}; // Error
                     ^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------ type_union.js:9:1
-
-Cannot cast `o1` to union type because: [incompatible-type]
- - Either in property `q`: undefined [1] is incompatible with `U` [2].
-    - This property is invariantly typed. See
-      https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
- - Or property `p` is missing in object type [3] but exists in object type [4].
-    - This optional property of object type [4] is invariantly typed. To fix,
-      - Either make `{q: U, ...}` [5] and `{p?: T, ...}` [4] exactly the same
-      - Or make object type [4] readonly. See
-      https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   type_union.js:9:1
-   9| o1 as {p?:T, ...}|{q?:U, ...}; // ok
-      ^^
-
-References:
-   type_union.js:9:23
-   9| o1 as {p?:T, ...}|{q?:U, ...}; // ok
-                            ^ [1]
-   type_union.js:7:29
-   7| type O1 = {...{p:T, ...}|{q:U, ...}, ...};
-                                  ^ [2]
-   type_union.js:8:19
-   8| declare const o1: O1;
-                        ^^ [3]
-   type_union.js:9:7
-   9| o1 as {p?:T, ...}|{q?:U, ...}; // ok
-            ^^^^^^^^^^^ [4]
-   type_union.js:7:11
-   7| type O1 = {...{p:T, ...}|{q:U, ...}, ...};
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-
-
-Error ------------------------------------------------------------------------------------------------ type_union.js:9:1
-
-Cannot cast `o1` to union type because: [incompatible-type]
- - Either in property `p`: undefined [1] is incompatible with `T` [2].
-    - This property is invariantly typed. See
-      https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
- - Or property `q` is missing in object type [3] but exists in object type [4].
-    - This optional property of object type [4] is invariantly typed. To fix,
-      - Either make `{p: T, ...}` [5] and `{q?: U, ...}` [4] exactly the same
-      - Or make object type [4] readonly. See
-      https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   type_union.js:9:1
-   9| o1 as {p?:T, ...}|{q?:U, ...}; // ok
-      ^^
-
-References:
-   type_union.js:9:11
-   9| o1 as {p?:T, ...}|{q?:U, ...}; // ok
-                ^ [1]
-   type_union.js:7:18
-   7| type O1 = {...{p:T, ...}|{q:U, ...}, ...};
-                       ^ [2]
-   type_union.js:8:19
-   8| declare const o1: O1;
-                        ^^ [3]
-   type_union.js:9:19
-   9| o1 as {p?:T, ...}|{q?:U, ...}; // ok
-                        ^^^^^^^^^^^ [4]
-   type_union.js:7:11
-   7| type O1 = {...{p:T, ...}|{q:U, ...}, ...};
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:14:19
@@ -1452,35 +1054,6 @@ References:
                  ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ type_void.js:41:1
-
-Cannot cast `o5` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{p: T, ...}` [3] and `{p?: T, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
-   type_void.js:41:1
-   41| o5 as {p?:T, ...}; // ok
-       ^^
-
-References:
-   type_void.js:39:27
-   39| type O5 = {...void, ...{p:T, ...}, ...};
-                                 ^ [1]
-   type_void.js:41:11
-   41| o5 as {p?:T, ...}; // ok
-                 ^ [2]
-   type_void.js:39:11
-   39| type O5 = {...void, ...{p:T, ...}, ...};
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   type_void.js:41:7
-   41| o5 as {p?:T, ...}; // ok
-             ^^^^^^^^^^^ [4]
-
-
 Error ------------------------------------------------------------------------------------------------ type_void.js:43:2
 
 Cannot cast object literal to `O5` because property `p` is missing in object literal [1] but exists in object type [2].
@@ -1575,4 +1148,4 @@ References:
 
 
 
-Found 81 errors
+Found 66 errors

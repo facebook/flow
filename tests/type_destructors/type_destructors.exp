@@ -396,7 +396,7 @@ Cannot call `fn3` because in type argument `T`: property `p` is missing in objec
 type [2]. [incompatible-type]
 
    tvar4.js:35:9
-   35| fn3((x: {foo: number, ...}) => {})({foo: 42}); // OK
+   35| fn3((x: {foo: number, ...}) => {})({foo: 42}); // intended as the paired OK case for `Omit<T, 'p'>` (T inferred to include p); currently ERROR — Flow does not widen T to satisfy `{p: any, ...}` from a callback whose param has no `p`
                ^^^^^^^^^^^^^^^^^^ [1]
 
 References:

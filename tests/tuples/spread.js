@@ -86,13 +86,6 @@ type WithTail<T> = [1, ...T];
 [1, 2, 3] as WithTail<[2, 3]>; // OK
 [1, 2, 66] as WithTail<[2, 3]>; // ERROR
 
-// Tuple-like array spread
-{
-  const x = [1, 2];
-  type TupleArrSpread = [0, ...typeof x]; // OK
-  [0, 1, 2] as TupleArrSpread; // OK
-}
-
 // Reversal
 declare function tail<T>(xs: [1, ...T]): T;
 tail<[2, 3]>([ 1, 2, 3]); // OK

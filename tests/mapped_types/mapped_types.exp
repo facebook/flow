@@ -2368,7 +2368,7 @@ The above-mentioned two types must be the same because property `foo` is invaria
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:132:3
-   132|   constrained as {foo: {contents: number}}; // OK
+   132|   constrained as {foo: {contents: number}}; // intended OK; currently ERROR — Flow surfaces the constraint violation here instead of at the type instantiation above
           ^^^^^^^^^^^
 
 References:
@@ -2376,7 +2376,7 @@ References:
    128|     [key in keyof O]: ConstrainedBox<O[key]>,
                               ^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:132:24
-   132|   constrained as {foo: {contents: number}}; // OK
+   132|   constrained as {foo: {contents: number}}; // intended OK; currently ERROR — Flow surfaces the constraint violation here instead of at the type instantiation above
                                ^^^^^^^^^^^^^^^^^^ [2]
    test.js:127:45
                                                     v
@@ -2385,7 +2385,7 @@ References:
    129|   };
           ^ [3]
    test.js:132:18
-   132|   constrained as {foo: {contents: number}}; // OK
+   132|   constrained as {foo: {contents: number}}; // intended OK; currently ERROR — Flow surfaces the constraint violation here instead of at the type instantiation above
                          ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 

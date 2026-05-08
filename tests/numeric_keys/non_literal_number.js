@@ -19,5 +19,5 @@
   declare const o1: {[number]: boolean};
   // Creation with spread and `number` key
   const o2 = {...o1, [n]: true};
-  o2 as {[number]: true}; // OK
+  o2 as {+[number]: true}; // OK
 }

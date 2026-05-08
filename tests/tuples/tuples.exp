@@ -1828,119 +1828,105 @@ References:
                                   ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:92:8
-
-Cannot declare `TupleArrSpread` [1] because the name is already bound. [name-already-bound]
-
-   spread.js:92:8
-   92|   type TupleArrSpread = [0, ...typeof x]; // OK
-              ^^^^^^^^^^^^^^
-
-References:
-   spread.js:80:8
-   80|   type TupleArrSpread = [0, ...typeof x]; // OK
-              ^^^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- spread.js:106:3
+Error --------------------------------------------------------------------------------------------------- spread.js:99:3
 
 Cannot cast `x` to tuple type because `T` [1] has 2 elements but tuple type [2] has 3 elements. [invalid-tuple-arity]
 
-   spread.js:106:3
-   106|   x as [1, 2, 3]; // ERROR
-          ^
+   spread.js:99:3
+   99|   x as [1, 2, 3]; // ERROR
+         ^
 
 References:
-   spread.js:97:37
-    97| declare function tail<T>(xs: [1, ...T]): T;
-                                            ^ [1]
-   spread.js:106:8
-   106|   x as [1, 2, 3]; // ERROR
-               ^^^^^^^^^ [2]
+   spread.js:90:37
+   90| declare function tail<T>(xs: [1, ...T]): T;
+                                           ^ [1]
+   spread.js:99:8
+   99|   x as [1, 2, 3]; // ERROR
+              ^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- spread.js:108:7
+Error -------------------------------------------------------------------------------------------------- spread.js:101:7
 
 Cannot call `tail` with array literal bound to `xs` because in index `0`: number literal `666` [1] is incompatible with
 number literal `1` [2]. [incompatible-type]
 
-   spread.js:108:7
-   108| tail([666, 2, 3]); // ERROR
+   spread.js:101:7
+   101| tail([666, 2, 3]); // ERROR
               ^^^ [1]
 
 References:
-   spread.js:97:31
-    97| declare function tail<T>(xs: [1, ...T]): T;
+   spread.js:90:31
+    90| declare function tail<T>(xs: [1, ...T]): T;
                                       ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- spread.js:111:1
+Error -------------------------------------------------------------------------------------------------- spread.js:104:1
 
 Cannot call `noReversal1` because `T` [1] is underconstrained by call of `noReversal1` [2]. Either add explicit type
 arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
-   spread.js:111:1
-   111| noReversal1([1, 9, 2]); // ERROR
+   spread.js:104:1
+   104| noReversal1([1, 9, 2]); // ERROR
         ^^^^^^^^^^^
 
 References:
-   spread.js:110:30
-   110| declare function noReversal1<T>(xs: [1, ...T, 2]): T;
+   spread.js:103:30
+   103| declare function noReversal1<T>(xs: [1, ...T, 2]): T;
                                      ^ [1]
-   spread.js:111:1
-   111| noReversal1([1, 9, 2]); // ERROR
+   spread.js:104:1
+   104| noReversal1([1, 9, 2]); // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- spread.js:114:1
+Error -------------------------------------------------------------------------------------------------- spread.js:107:1
 
 Cannot call `noReversal2` because `T` [1] is underconstrained by call of `noReversal2` [2]. Either add explicit type
 arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
 
-   spread.js:114:1
-   114| noReversal2([1, 2, 3]); // ERROR
+   spread.js:107:1
+   107| noReversal2([1, 2, 3]); // ERROR
         ^^^^^^^^^^^
 
 References:
-   spread.js:113:30
-   113| declare function noReversal2<T>(xs: [...T, ...any]): T;
+   spread.js:106:30
+   106| declare function noReversal2<T>(xs: [...T, ...any]): T;
                                      ^ [1]
-   spread.js:114:1
-   114| noReversal2([1, 2, 3]); // ERROR
+   spread.js:107:1
+   107| noReversal2([1, 2, 3]); // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- spread.js:127:3
+Error -------------------------------------------------------------------------------------------------- spread.js:120:3
 
 Cannot cast `x[0]` to empty because number literal `0` [1] is incompatible with empty [2]. [incompatible-type]
 
-   spread.js:127:3
-   127|   x[0] as empty; // ERROR
+   spread.js:120:3
+   120|   x[0] as empty; // ERROR
           ^^^^
 
 References:
-   spread.js:126:21
-   126|   declare const x: [0, 1, ...[]];
+   spread.js:119:21
+   119|   declare const x: [0, 1, ...[]];
                             ^ [1]
-   spread.js:127:11
-   127|   x[0] as empty; // ERROR
+   spread.js:120:11
+   120|   x[0] as empty; // ERROR
                   ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- spread.js:133:3
+Error -------------------------------------------------------------------------------------------------- spread.js:126:3
 
 Cannot cast `x[0]` to empty because number literal `0` [1] is incompatible with empty [2]. [incompatible-type]
 
-   spread.js:133:3
-   133|   x[0] as empty; // ERROR
+   spread.js:126:3
+   126|   x[0] as empty; // ERROR
           ^^^^
 
 References:
-   spread.js:132:21
-   132|   declare const x: [0, 1, ...[2, 3]];
+   spread.js:125:21
+   125|   declare const x: [0, 1, ...[2, 3]];
                             ^ [1]
-   spread.js:133:11
-   133|   x[0] as empty; // ERROR
+   spread.js:126:11
+   126|   x[0] as empty; // ERROR
                   ^^^^^ [2]
 
 
@@ -2637,4 +2623,4 @@ References:
 
 
 
-Found 164 errors
+Found 163 errors

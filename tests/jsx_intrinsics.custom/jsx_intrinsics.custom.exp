@@ -27,24 +27,6 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- strings.js:9:2
-
-Cannot create `Div` element because property `id` is missing in props [1] but exists in props of string literal
-`div` [2]. [incompatible-type]
-
-   strings.js:9:2
-   9| <Div />; // This is fine
-       ^^^
-
-References:
-   strings.js:9:1
-   9| <Div />; // This is fine
-      ^^^^^^^ [1]
-   strings.js:5:11
-   5| var Div = 'div' as const;
-                ^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------- strings.js:10:2
 
 Cannot create `bad` element because property `bad` is missing in `$JSXIntrinsics` [1]. [prop-missing]
@@ -182,12 +164,12 @@ References:
                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- strings.js:18:10
+Error ------------------------------------------------------------------------------------------------- strings.js:17:10
 
 Cannot create `Div` element because in property `id`: number [1] is incompatible with string [2]. [incompatible-type]
 
-   strings.js:18:10
-   18| <Div id={42} />; // Not an error but should be eventually
+   strings.js:17:10
+   17| <Div id={42} />; // Error: 42 ~> string
                 ^^ [1]
 
 References:
@@ -197,4 +179,4 @@ References:
 
 
 
-Found 11 errors
+Found 10 errors

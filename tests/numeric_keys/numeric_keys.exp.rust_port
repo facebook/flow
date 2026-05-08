@@ -203,31 +203,20 @@ References:
 
 Error --------------------------------------------------------------------------------------- non_literal_number.js:22:3
 
-Cannot cast `o2` to object type because in the indexer property: `boolean` [1] is not exactly the same as `true` [2].
-[incompatible-type]
-
-The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
-- Either annotate object literal [3] with `{[number]: true}` [4]
-- Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+Cannot cast `o2` to object type because in the indexer property: boolean [1] is incompatible with boolean literal
+`true` [2]. [incompatible-type]
 
    non_literal_number.js:22:3
-   22|   o2 as {[number]: true}; // OK
+   22|   o2 as {+[number]: true}; // OK
          ^^
 
 References:
    non_literal_number.js:19:32
    19|   declare const o1: {[number]: boolean};
                                       ^^^^^^^ [1]
-   non_literal_number.js:22:20
-   22|   o2 as {[number]: true}; // OK
-                          ^^^^ [2]
-   non_literal_number.js:21:14
-   21|   const o2 = {...o1, [n]: true};
-                    ^^^^^^^^^^^^^^^^^^ [3]
-   non_literal_number.js:22:9
-   22|   o2 as {[number]: true}; // OK
-               ^^^^^^^^^^^^^^^^ [4]
+   non_literal_number.js:22:21
+   22|   o2 as {+[number]: true}; // OK
+                           ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
@@ -334,68 +323,38 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
-Cannot cast `o` to object type because in property `1`: `boolean` [1] is not exactly the same as `true` [2].
+Cannot cast `o` to object type because in property `1`: boolean [1] is incompatible with boolean literal `true` [2].
 [incompatible-type]
 
-The above-mentioned two types must be the same because property `1` is invariantly typed. To fix the error,
-- Either annotate object literal [3] with `{[number]: false, "1": true}` [4]
-- Or make property `1` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
    test.js:20:3
-   20|   o as {'1': true, [number]: false}; // OK
+   20|   o as {+'1': true, +[number]: false}; // OK
          ^
 
 References:
    test.js:3:10
     3|     '1': true,
                 ^^^^ [1]
-   test.js:20:14
-   20|   o as {'1': true, [number]: false}; // OK
-                    ^^^^ [2]
-   test.js:2:13
-                   v
-    2|   const o = {
-    3|     '1': true,
-    4|     '2': false,
-    5|   };
-         ^ [3]
-   test.js:20:8
-   20|   o as {'1': true, [number]: false}; // OK
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   test.js:20:15
+   20|   o as {+'1': true, +[number]: false}; // OK
+                     ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
-Cannot cast `o` to object type because in property `2`: `boolean` [1] is not exactly the same as `false` [2].
+Cannot cast `o` to object type because in property `2`: boolean [1] is incompatible with boolean literal `false` [2].
 [incompatible-type]
 
-The above-mentioned two types must be the same because property `2` is invariantly typed. To fix the error,
-- Either annotate object literal [3] with `{[number]: false, "1": true}` [4]
-- Or make property `2` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-
    test.js:20:3
-   20|   o as {'1': true, [number]: false}; // OK
+   20|   o as {+'1': true, +[number]: false}; // OK
          ^
 
 References:
    test.js:4:10
     4|     '2': false,
                 ^^^^^ [1]
-   test.js:20:30
-   20|   o as {'1': true, [number]: false}; // OK
-                                    ^^^^^ [2]
-   test.js:2:13
-                   v
-    2|   const o = {
-    3|     '1': true,
-    4|     '2': false,
-    5|   };
-         ^ [3]
-   test.js:20:8
-   20|   o as {'1': true, [number]: false}; // OK
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   test.js:20:32
+   20|   o as {+'1': true, +[number]: false}; // OK
+                                      ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3

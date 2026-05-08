@@ -649,13 +649,13 @@ Cannot create `FunctionExact_ManyProps` element because property `a`, property `
 props [1] but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:328:2
-   328| <FunctionExact_ManyProps // OK: Other props are allowed.
+   328| <FunctionExact_ManyProps // Error: extra props `a`, `b`, `c` not allowed on exact-props component
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    test.js:328:1
-        v-------------------------------------------------------
-   328| <FunctionExact_ManyProps // OK: Other props are allowed.
+        v------------------------------------------------------------------------------------------------
+   328| <FunctionExact_ManyProps // Error: extra props `a`, `b`, `c` not allowed on exact-props component
    329|   string1="foo"
    330|   string2={'bar'}
    331|   boolean1

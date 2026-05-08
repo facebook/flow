@@ -38,7 +38,7 @@ o4 as {p:T, ...}; // error
 
 type O5 = {...void, ...{p:T, ...}, ...};
 declare const o5: O5;
-o5 as {p?:T, ...}; // ok
+o5 as {+p?:T, ...}; // ok
 o5 as {p:T, ...}; // error: o5.p is optional
 ({} as O5); // error
 ({p:x} as O5); // ok

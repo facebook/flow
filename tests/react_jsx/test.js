@@ -325,7 +325,7 @@ const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
   boolean2={false}
   number={42}
 />;
-<FunctionExact_ManyProps // OK: Other props are allowed.
+<FunctionExact_ManyProps // Error: extra props `a`, `b`, `c` not allowed on exact-props component
   string1="foo"
   string2={'bar'}
   boolean1

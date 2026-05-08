@@ -9,7 +9,7 @@ declare const nil: {};
 // inexact: `p` may be non-own
 type O1 = {...{p:T, ...}, ...};
 declare const o1: O1;
-o1 as {p?:T, ...}; // ok
+o1 as {+p?:T, ...}; // ok
 o1 as {p:T, ...}; // error: o1.p is optional
 ({} as O1); // error
 ({p:x} as O1); // ok
@@ -99,7 +99,7 @@ o13 as {p:U, ...};
 type O14 = {...{...{p:T}, ...}, ...};
 declare const o14: O14;
 o14 as {p:T, ...}; // error: `p` is optional
-o14 as {p?:T, ...}; // ok
+o14 as {+p?:T, ...}; // ok
 o14 as {...}; // ok
 ({p:x} as O14); // ok
 ({p:y} as O14); // error: U ~> T

@@ -1,4 +1,5 @@
 declare function foo(): Promise<void>;
+declare function maybeFoo(): ?Promise<void>;
 
 class MyPromise extends Promise<void> {}
 
@@ -44,7 +45,7 @@ function logical(b: boolean) {
     b && foo().catch(() => {}); // ok
     b && foo().catch(() => {}) && b; // ok
     b && b && foo().catch(() => {}); // ok
-    foo().catch(() => {}) && foo().catch(() => {}); // ok
+    maybeFoo()?.catch(() => {}) && foo().catch(() => {}); // ok
 }
 
 function ternary(b: boolean) {

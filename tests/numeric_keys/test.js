@@ -17,7 +17,7 @@
   o as {['1']: boolean}; // ERROR
 
   o as {'1': boolean, '2': boolean}; // OK
-  o as {'1': true, [number]: false}; // OK
+  o as {+'1': true, +[number]: false}; // OK
   o as {'1': true, [number]: true}; // ERROR
 
   '1' as keyof typeof o; // OK

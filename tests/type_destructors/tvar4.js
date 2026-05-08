@@ -32,7 +32,7 @@ function fn3<T extends {p: any, ...}>(a: T => void): (Omit<T, 'p'>) => void {
 // number, but we expect a string.
 fn3((x: {foo: string, p: number, ...}) => {})({foo: 42});
 
-fn3((x: {foo: number, ...}) => {})({foo: 42}); // OK
+fn3((x: {foo: number, ...}) => {})({foo: 42}); // intended as the paired OK case for `Omit<T, 'p'>` (T inferred to include p); currently ERROR — Flow does not widen T to satisfy `{p: any, ...}` from a callback whose param has no `p`
 
 function fn4<T extends {p: any}>(a: T => void): (T['p']) => void {
   // We error here because the implementation of {p: empty} ~> empty currently
