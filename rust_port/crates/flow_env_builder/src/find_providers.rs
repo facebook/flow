@@ -16,6 +16,7 @@ use dupe::Dupe_;
 use flow_analysis::bindings::Kind as BindingKind;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
+use flow_data_structure_wrapper::red_black_tree_map::FlowRedBlackTreeMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_data_structure_wrapper::vector::FlowVector;
 use flow_parser::ast;
@@ -175,7 +176,7 @@ pub type Entry<L> = BaseEntry<L, Providers<L>, State>;
 pub(crate) struct Scope<L: LocSig> {
     kind: ScopeKind,
     entries: FlowOrdMap<FlowSmolStr, IntermediateEntry<L>>,
-    children: FlowOrdMap<L, Scope<L>>,
+    children: FlowRedBlackTreeMap<L, Scope<L>>,
 }
 
 impl<L: LocSig> Scope<L> {
@@ -183,7 +184,7 @@ impl<L: LocSig> Scope<L> {
         Scope {
             kind,
             entries: FlowOrdMap::new(),
-            children: FlowOrdMap::new(),
+            children: FlowRedBlackTreeMap::new(),
         }
     }
 }
@@ -2330,7 +2331,7 @@ where
     fn all_entries_in_scope<L: LocSig>(scope: &Scope<L>) -> Vec<Entry<L>> {
         let mut result = Vec::new();
 
-        for child in scope.children.values() {
+        for (_, child) in scope.children.iter() {
             result.extend(all_entries_in_scope(child));
         }
 

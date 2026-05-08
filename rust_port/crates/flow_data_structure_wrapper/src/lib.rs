@@ -11,5 +11,6 @@ pub mod list;
 pub mod multi_level_map;
 pub mod ord_map;
 pub mod ord_set;
+pub mod red_black_tree_map;
 pub mod smol_str;
 pub mod vector;

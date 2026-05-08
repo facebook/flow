@@ -16,6 +16,7 @@ use flow_common::reason::VirtualReason;
 use flow_common::refinement_invalidation::RefinementInvalidation;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
+use flow_data_structure_wrapper::red_black_tree_map::FlowRedBlackTreeMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_data_structure_wrapper::vector::FlowVector;
 use flow_parser::ast::expression::ArgList;
@@ -174,7 +175,7 @@ impl<L: Dupe + Eq + Ord + Hash> DerefMut for EnvSet<L> {
 
 #[derive(Debug, Clone, Default)]
 pub struct EnvMap<L: Dupe + Eq + Ord + Hash, V: Clone> {
-    inner: FlowOrdMap<EnvKey<L>, V>,
+    inner: FlowRedBlackTreeMap<EnvKey<L>, V>,
 }
 
 impl<L: Dupe + Eq + Ord + Hash, V: Clone> Dupe for EnvMap<L, V> {}
@@ -204,10 +205,47 @@ impl<L: Dupe + Eq + Ord + Hash, V: Clone> EnvMap<L, V> {
             self.inner.insert(key, new_value);
         }
     }
+
+    pub fn entry(&mut self, key: EnvKey<L>) -> EnvMapEntry<'_, L, V> {
+        EnvMapEntry { map: self, key }
+    }
+}
+
+pub struct EnvMapEntry<'a, L: Dupe + Eq + Ord + Hash, V: Clone> {
+    map: &'a mut EnvMap<L, V>,
+    key: EnvKey<L>,
+}
+
+impl<L: Dupe + Eq + Ord + Hash, V: Clone> EnvMapEntry<'_, L, V> {
+    pub fn and_modify<F>(self, f: F) -> Self
+    where
+        F: FnOnce(&mut V),
+    {
+        if let Some(mut value) = self.map.inner.remove(&self.key) {
+            f(&mut value);
+            self.map.inner.insert(self.key.dupe(), value);
+        }
+        self
+    }
+
+    pub fn or_insert(self, default: V) {
+        if self.map.inner.get(&self.key).is_none() {
+            self.map.inner.insert(self.key, default);
+        }
+    }
+
+    pub fn or_insert_with<F>(self, default: F)
+    where
+        F: FnOnce() -> V,
+    {
+        if self.map.inner.get(&self.key).is_none() {
+            self.map.inner.insert(self.key, default());
+        }
+    }
 }
 
 impl<L: Dupe + Eq + Ord + Hash, V: Clone> Deref for EnvMap<L, V> {
-    type Target = FlowOrdMap<EnvKey<L>, V>;
+    type Target = FlowRedBlackTreeMap<EnvKey<L>, V>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -509,7 +547,7 @@ where
     pub type_guard_consistency_maps: TypeGuardConsistencyMaps<L>,
     pub providers: Rc<provider_api::Info<L>>,
     pub refinement_of_id: Box<dyn Fn(i32) -> Refinement<L>>,
-    pub pred_func_map: FlowOrdMap<L, PredFuncInfo<L>>,
+    pub pred_func_map: FlowRedBlackTreeMap<L, PredFuncInfo<L>>,
     pub interface_merge_conflicts: FlowOrdMap<L, Vec<L>>,
     pub declare_class_interface_merge_conflicts: FlowOrdMap<L, Vec<L>>,
 }
@@ -560,7 +598,7 @@ where
             refinement_of_id: Box::new(|_| {
                 panic!("Empty env info: refinement_of_id called on empty EnvInfo")
             }),
-            pred_func_map: FlowOrdMap::new(),
+            pred_func_map: FlowRedBlackTreeMap::new(),
             interface_merge_conflicts: FlowOrdMap::new(),
             declare_class_interface_merge_conflicts: FlowOrdMap::new(),
         }

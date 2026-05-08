@@ -35,6 +35,7 @@ use flow_common::options::JsxMode;
 use flow_common::refinement_invalidation::RefinementInvalidation;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
+use flow_data_structure_wrapper::red_black_tree_map::FlowRedBlackTreeMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_data_structure_wrapper::vector::FlowVector;
 use flow_env_builder::env_api;
@@ -99,13 +100,16 @@ enum OptionalChainingRefinement {
     CanApplyPropIsExactlyNullRefi,
 }
 
-type LookupMap = FlowOrdMap<Lookup, Val<ALoc>>;
+type LookupMap = FlowRedBlackTreeMap<Lookup, Val<ALoc>>;
 
-type HeapRefinementMap = FlowOrdMap<FlowVector<Proj>, Result<Val<ALoc>, RefinementInvalidation>>;
+type HeapRefinementMap =
+    FlowRedBlackTreeMap<FlowVector<Proj>, Result<Val<ALoc>, RefinementInvalidation>>;
+
+type AppliedRefinementMap = FlowRedBlackTreeMap<usize, (Lookup, RefinementId)>;
 
 fn empty_heap_refinements() -> Rc<RefCell<HeapRefinementMap>> {
     thread_local! {
-        static CACHED: HeapRefinementMap = FlowOrdMap::new();
+        static CACHED: HeapRefinementMap = FlowRedBlackTreeMap::new();
     }
     Rc::new(RefCell::new(CACHED.with(|c| c.clone())))
 }
@@ -155,6 +159,8 @@ struct ReadEntry {
     value: Val<ALoc>,
     name: Option<FlowSmolStr>,
 }
+
+type ReadEntryMap = FlowRedBlackTreeMap<ALoc, ReadEntry>;
 
 /// A partial environment is a map from variables to environment value snapshots.
 /// This environment contains only the set of values that might change under the current scope.
@@ -803,7 +809,10 @@ impl std::ops::DerefMut for Changeset {
 
 impl IntoIterator for Changeset {
     type Item = (Lookup, Val<ALoc>);
-    type IntoIter = flow_data_structure_wrapper::ord_map::OrdMapConsumingIter<(Lookup, Val<ALoc>)>;
+    type IntoIter = flow_data_structure_wrapper::red_black_tree_map::RedBlackTreeMapConsumingIter<
+        Lookup,
+        Val<ALoc>,
+    >;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
@@ -813,7 +822,7 @@ impl IntoIterator for Changeset {
 #[derive(Debug, Clone)]
 enum RefinementPropInner {
     Refinements {
-        applied: FlowOrdMap<usize, (Lookup, RefinementId)>,
+        applied: AppliedRefinementMap,
         changeset: FlowOrdMap<Lookup, Val<ALoc>>,
     },
     Not(RefinementProp),
@@ -830,7 +839,7 @@ impl RefinementProp {
     }
 
     fn refinements(
-        applied: FlowOrdMap<usize, (Lookup, RefinementId)>,
+        applied: AppliedRefinementMap,
         changeset: FlowOrdMap<Lookup, Val<ALoc>>,
     ) -> Self {
         Self::new(RefinementPropInner::Refinements { applied, changeset })
@@ -864,7 +873,7 @@ impl std::ops::Deref for RefinementProp {
 // applied and the changeset. *)
 #[derive(Default, Debug, Clone, Dupe)]
 struct RefinementMaps {
-    applied: FlowOrdMap<usize, (Lookup, RefinementId)>,
+    applied: AppliedRefinementMap,
     changeset: Changeset,
     total: Option<RefinementProp>,
 }
@@ -903,7 +912,7 @@ use env_api::EnvMap;
 struct NameResolverState {
     /// We maintain a map of read locations to raw Val.t and their def locs terms, which are
     /// simplified to lists of write locations once the analysis is done.
-    values: FlowOrdMap<ALoc, ReadEntry>,
+    values: ReadEntryMap,
     /// Should not be used for normal checking. It's not comprehensive but it would be helpful
     /// to tell user on hover with certainty that certain values they want to stay refined are
     /// invalidated.
@@ -955,7 +964,7 @@ struct NameResolverState {
     interface_merge_conflicts: BTreeMap<ALoc, Vec<ALoc>>,
     declare_class_interface_merge_conflicts: BTreeMap<ALoc, Vec<ALoc>>,
     jsx_base_name: Option<FlowSmolStr>,
-    pred_func_map: FlowOrdMap<ALoc, env_api::PredFuncInfo<ALoc>>,
+    pred_func_map: FlowRedBlackTreeMap<ALoc, env_api::PredFuncInfo<ALoc>>,
     /// Track parameter binding def_locs currently being processed, so that we can
     /// error when these appear in the corresponding annotation.
     current_bindings: FlowOrdMap<ALoc, FlowSmolStr>,
@@ -967,10 +976,10 @@ struct NameResolverState {
 impl NameResolverState {
     fn new(env: FullEnv, exclude_syms: FlowOrdSet<FlowSmolStr>) -> Self {
         thread_local! {
-            static CACHED_VALUES: FlowOrdMap<ALoc, ReadEntry> = FlowOrdMap::new();
+            static CACHED_VALUES: ReadEntryMap = FlowRedBlackTreeMap::new();
             static CACHED_REFI_INFO: FlowOrdMap<ALoc, RefinementInvalidation> = FlowOrdMap::new();
             static CACHED_REFI_HEAP: FlowOrdMap<RefinementId, RefinementChain> = FlowOrdMap::new();
-            static CACHED_PRED: FlowOrdMap<ALoc, env_api::PredFuncInfo<ALoc>> = FlowOrdMap::new();
+            static CACHED_PRED: FlowRedBlackTreeMap<ALoc, env_api::PredFuncInfo<ALoc>> = FlowRedBlackTreeMap::new();
             static CACHED_BINDINGS: FlowOrdMap<ALoc, FlowSmolStr> = FlowOrdMap::new();
         }
         NameResolverState {
@@ -1369,7 +1378,7 @@ fn initialize_globals(
         let module_val = ssa_val::global(cache, module_name.dupe());
         let exports_val = ssa_val::global(cache, exports_name);
 
-        let mut heap_refinements = FlowOrdMap::new();
+        let mut heap_refinements = FlowRedBlackTreeMap::new();
         heap_refinements.insert(
             FlowVector::unit(Proj::Prop(FlowSmolStr::new_inline("exports"))),
             Ok(exports_val),
@@ -1485,7 +1494,7 @@ fn conj_total(t1: Option<RefinementProp>, t2: Option<RefinementProp>) -> Option<
 fn empty_refinements() -> RefinementMaps {
     thread_local! {
         static CACHED: RefinementMaps = RefinementMaps {
-            applied: FlowOrdMap::new(),
+            applied: FlowRedBlackTreeMap::new(),
             changeset: Changeset::default(),
             total: None,
         };
@@ -1659,7 +1668,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         )
     }
 
-    fn pred_func_map(&self) -> FlowOrdMap<ALoc, env_api::PredFuncInfo<ALoc>> {
+    fn pred_func_map(&self) -> FlowRedBlackTreeMap<ALoc, env_api::PredFuncInfo<ALoc>> {
         self.env_state.pred_func_map.dupe()
     }
 
@@ -1942,7 +1951,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         hr1: &HeapRefinementMap,
         hr2: &HeapRefinementMap,
     ) -> HeapRefinementMap {
-        let mut result = FlowOrdMap::new();
+        let mut result = FlowRedBlackTreeMap::new();
 
         // When we merge the heap refinements from two branches we cannot include
         // keys that did not appear on both sides. Take this example:
@@ -2190,7 +2199,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             return;
         }
         thread_local! {
-            static CACHED: HeapRefinementMap = FlowOrdMap::new();
+            static CACHED: HeapRefinementMap = FlowRedBlackTreeMap::new();
         }
         *heap_refinements.borrow_mut() = CACHED.with(|c| c.clone());
     }
@@ -2304,7 +2313,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             .latest_refinements
             .iter()
             .map(|rm| {
-                let applied: FlowOrdMap<usize, (Lookup, RefinementId)> = rm
+                let applied: AppliedRefinementMap = rm
                     .applied
                     .iter()
                     .filter(|(ssa_id, (lookup, _))| {
@@ -3572,7 +3581,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             if heap_refinements.is_empty() {
                 return;
             }
-            let new_heap: FlowOrdMap<_, _> = heap_refinements
+            let new_heap: HeapRefinementMap = heap_refinements
                 .iter()
                 .map(|(projections, entry)| {
                     let new_entry = match entry {
@@ -4574,7 +4583,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     let env_val = self.env_state.env.env_val_by_name(&name).unwrap();
 
                     let merged_heap = {
-                        let mut result: HeapRefinementMap = FlowOrdMap::new();
+                        let mut result: HeapRefinementMap = FlowRedBlackTreeMap::new();
                         let mut all_keys: std::collections::BTreeSet<_> =
                             refined_heap_entries1.keys().duped().collect();
                         all_keys.extend(refined_heap_entries2.keys().duped());
@@ -6010,7 +6019,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         let merged = conj_total(head_total, total.dupe());
         let (applied, changeset) = match &merged {
             Some(m) => self.normalize_total_refinements(m),
-            None => (FlowOrdMap::new(), FlowOrdMap::new()),
+            None => (FlowRedBlackTreeMap::new(), FlowOrdMap::new()),
         };
         let refis = RefinementMaps {
             applied: applied.into_iter().collect(),
@@ -6024,10 +6033,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     fn normalize_total_refinements(
         &mut self,
         total: &RefinementProp,
-    ) -> (
-        FlowOrdMap<usize, (Lookup, RefinementId)>,
-        FlowOrdMap<Lookup, Val<ALoc>>,
-    ) {
+    ) -> (AppliedRefinementMap, FlowOrdMap<Lookup, Val<ALoc>>) {
         fn nnf(total: &RefinementProp) -> RefinementProp {
             match &**total {
                 RefinementPropInner::Not(inner) => match &**inner {
@@ -6050,10 +6056,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         fn recur<'a, Cx: Context, Fl: Flow<Cx = Cx>>(
             resolver: &mut NameResolver<'a, Cx, Fl>,
             total: &RefinementProp,
-        ) -> (
-            FlowOrdMap<usize, (Lookup, RefinementId)>,
-            FlowOrdMap<Lookup, Val<ALoc>>,
-        ) {
+        ) -> (AppliedRefinementMap, FlowOrdMap<Lookup, Val<ALoc>>) {
             match &**total {
                 RefinementPropInner::Refinements {
                     applied: r,
@@ -6069,7 +6072,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     else {
                         unreachable!()
                     };
-                    let negated_r: FlowOrdMap<usize, (Lookup, RefinementId)> = r
+                    let negated_r: AppliedRefinementMap = r
                         .iter()
                         .map(|(ssa_id, (lookup, refinement_id))| {
                             let new_refinement_id = resolver.new_id();
@@ -6112,7 +6115,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 RefinementPropInner::Or(t1, t2) => {
                     let (r1, c1) = recur(resolver, t1);
                     let (r2, c2) = recur(resolver, t2);
-                    let mut r = FlowOrdMap::new();
+                    let mut r = FlowRedBlackTreeMap::new();
                     for (ssa_id, (lookup1, rid1)) in r1.iter() {
                         if let Some((lookup2, rid2)) = r2.get(ssa_id) {
                             if lookup1 == lookup2 {
@@ -6242,8 +6245,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             },
         );
 
-        let merged_changeset: FlowOrdMap<Lookup, Val<ALoc>> = {
-            let mut merged: FlowOrdMap<Lookup, Val<ALoc>> = changeset
+        let merged_changeset: LookupMap = {
+            let mut merged: LookupMap = changeset
                 .iter()
                 .map(|(k, v)| (k.dupe(), v.dupe()))
                 .collect();
@@ -6255,7 +6258,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             merged
         };
         let changeset_for_prop: FlowOrdMap<Lookup, Val<ALoc>> = changeset.into_iter().collect();
-        let map_for_prop: FlowOrdMap<usize, (Lookup, RefinementId)> = map.into_iter().collect();
+        let map_for_prop: AppliedRefinementMap = map.into_iter().collect();
         let new_total = conj_total(
             total,
             Some(RefinementProp::refinements(
@@ -6398,7 +6401,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 }
             }
             (Some(t), None) | (None, Some(t)) => {
-                let empty_refis = RefinementProp::refinements(FlowOrdMap::new(), FlowOrdMap::new());
+                let empty_refis =
+                    RefinementProp::refinements(FlowRedBlackTreeMap::new(), FlowOrdMap::new());
                 if conjunction {
                     Some(RefinementProp::and(t.dupe(), empty_refis))
                 } else {
@@ -6410,12 +6414,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         let (applied, changeset) = match &total {
             Some(t) => {
                 let (app, cset) = self.normalize_total_refinements(t);
-                (
-                    app.into_iter().collect(),
-                    Changeset(cset.into_iter().collect()),
-                )
+                (app, Changeset(cset.into_iter().collect()))
             }
-            None => (FlowOrdMap::new(), Changeset::default()),
+            None => (FlowRedBlackTreeMap::new(), Changeset::default()),
         };
         RefinementMaps {
             applied,
@@ -11760,7 +11761,7 @@ pub struct NameResolverResult {
     pub providers: Rc<provider_api::Info<ALoc>>,
     pub type_guard_consistency_maps: TypeGuardConsistencyMaps<ALoc>,
     pub refinement_of_id: RefinementOfId,
-    pub pred_func_map: FlowOrdMap<ALoc, env_api::PredFuncInfo<ALoc>>,
+    pub pred_func_map: FlowRedBlackTreeMap<ALoc, env_api::PredFuncInfo<ALoc>>,
     pub interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
     pub declare_class_interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
 }
