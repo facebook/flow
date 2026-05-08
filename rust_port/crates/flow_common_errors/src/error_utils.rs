@@ -3867,6 +3867,7 @@ pub mod cli_output {
                     // Print every line by appending the line number and appropriate
                     // gutter width.
                     let mut styled_code_block_lines: Vec<(tty::Style, String)> = Vec::new();
+
                     for (n, line) in (loc.start.line..).zip(line_list.iter()) {
                         // If we show more lines then some upper limit omit any extra code.
                         if n >= loc.start.line + OMIT_AFTER_LINES
@@ -4577,7 +4578,7 @@ pub mod json_output {
         match value {
             Value::Object(props) => {
                 let mut entries = props.iter().collect::<Vec<_>>();
-                entries.sort_by(|(left_key, _), (right_key, _)| left_key.cmp(right_key));
+                entries.sort_by_key(|(left_key, _)| *left_key);
                 entries
             }
             _ => Vec::new(),
@@ -5199,7 +5200,7 @@ pub mod json_output {
         let props = vec![
             (
                 "flowVersion".to_string(),
-                json!(flow_common::flow_version::VERSION),
+                json!(flow_common::flow_version::version()),
             ),
             ("jsonVersion".to_string(), json!(json_version)),
             ("errors".to_string(), errors_json),

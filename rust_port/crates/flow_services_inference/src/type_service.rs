@@ -2209,7 +2209,7 @@ fn get_updated_flowconfig(config_path: &str) -> Result<(FlowConfig, String), Str
 
 fn assert_compatible_flowconfig_version(config: &FlowConfig) -> Result<(), String> {
     let not_satisfied = |version_constraint: &str| -> bool {
-        match semver::satisfies(Some(true), version_constraint, flow_version::VERSION) {
+        match semver::satisfies(Some(true), version_constraint, flow_version::version()) {
             Ok(result) => !result,
             Err(_) => true,
         }
@@ -2218,7 +2218,7 @@ fn assert_compatible_flowconfig_version(config: &FlowConfig) -> Result<(), Strin
         Some(version_constraint) if not_satisfied(version_constraint) => Err(format!(
             "Wrong version of Flow. The config specifies version {} but this is version {}",
             version_constraint,
-            flow_version::VERSION
+            flow_version::version()
         )),
         _ => Ok(()),
     }

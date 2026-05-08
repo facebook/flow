@@ -41,7 +41,7 @@ pub fn persistent_client_handshake(
     (
         socket_handshake::ClientToMonitor1 {
             client_build_id: socket_handshake::build_revision(),
-            client_version: flow_common::flow_version::VERSION.to_string(),
+            client_version: flow_common::flow_version::version().to_string(),
             is_stop_request: false,
             server_should_hangup_if_still_initializing: true,
             version_mismatch_strategy: version_mismatch_strategy.clone(),

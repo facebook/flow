@@ -900,7 +900,7 @@ pub fn sys_utils_select_non_intr(
 }
 
 pub fn flow_version() -> &'static str {
-    flow_common::flow_version::VERSION
+    flow_common::flow_version::version()
 }
 
 pub fn read_flowconfig_from_disk(flowconfig_name: &str, root: &FilePath) -> FlowConfig {
@@ -929,14 +929,14 @@ pub fn command_utils_check_version(required_version: &Option<String>) -> Result<
             match flow_common_semver::semver::satisfies(
                 Some(true),
                 version_constraint,
-                flow_common::flow_version::VERSION,
+                flow_common::flow_version::version(),
             ) {
                 Ok(true) => Ok(()),
                 Ok(false) => {
                     let msg = format!(
                         "Wrong version of Flow. The config specifies version {} but this is version {}",
                         version_constraint,
-                        flow_common::flow_version::VERSION
+                        flow_common::flow_version::version()
                     );
                     Err(msg)
                 }
@@ -944,7 +944,7 @@ pub fn command_utils_check_version(required_version: &Option<String>) -> Result<
                     let msg = format!(
                         "Wrong version of Flow. The config specifies version {} but this is version {}",
                         version_constraint,
-                        flow_common::flow_version::VERSION
+                        flow_common::flow_version::version()
                     );
                     Err(msg)
                 }
@@ -2870,34 +2870,34 @@ fn try_connect(
         })) => {
             let cmp = flow_common_semver::semver::compare(
                 server_version,
-                flow_common::flow_version::VERSION,
+                flow_common::flow_version::version(),
             );
             match cmp {
                 Ok(n) if n < 0 => {
                     eprintln!(
                         "Flow: the running server is an older version of Flow ({}) than the LSP ({}), but we're not allowed to stop it",
                         server_version,
-                        flow_common::flow_version::VERSION
+                        flow_common::flow_version::version()
                     );
                 }
                 Ok(0) => {
                     eprintln!(
                         "Flow: the running server is a different binary with the same version ({})",
-                        flow_common::flow_version::VERSION
+                        flow_common::flow_version::version()
                     );
                 }
                 Ok(_) => {
                     eprintln!(
                         "Flow: the running server is a newer version of Flow ({}) than the LSP ({})",
                         server_version,
-                        flow_common::flow_version::VERSION
+                        flow_common::flow_version::version()
                     );
                 }
                 Err(_) => {
                     eprintln!(
                         "Flow: unable to compare server version ({}) with LSP version ({})",
                         server_version,
-                        flow_common::flow_version::VERSION
+                        flow_common::flow_version::version()
                     );
                 }
             }

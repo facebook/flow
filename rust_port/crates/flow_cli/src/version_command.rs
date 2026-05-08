@@ -46,11 +46,11 @@ fn spec() -> command_spec::Spec {
 fn print_semver(json: bool, pretty: bool) {
     if json || pretty {
         let json = serde_json::json!({
-            "semver": flow_version::VERSION,
+            "semver": flow_version::version(),
         });
         flow_hh_json::print_json_endline(pretty, &json);
     } else {
-        println!("{}", flow_version::VERSION);
+        println!("{}", flow_version::version());
     }
 }
 
@@ -84,7 +84,7 @@ fn main(args: &arg_spec::Values) {
             .map(|p| p.to_string_lossy().to_string())
             .unwrap_or_else(|_| "<unknown>".to_string());
         let json = serde_json::json!({
-            "semver": flow_version::VERSION,
+            "semver": flow_version::version(),
             "binary": binary_path,
             "build_id": socket_handshake::build_revision(),
             "flow_build_id": flow_common_build_id::get_build_id(),

@@ -380,7 +380,7 @@ fn perform_handshake_and_get_client_handshake(
                    server_intent: ServerIntent,
                    server2: Option<MonitorToClient2>| {
         assert!(server2.is_none() || client_build_id == server_build_id_for_respond);
-        let server_version = flow_common::flow_version::VERSION.to_string();
+        let server_version = flow_common::flow_version::version().to_string();
         let server1 = MonitorToClient1 {
             server_build_id: server_build_id_for_respond.clone(),
             server_bin: server_bin_for_respond.clone(),
@@ -431,11 +431,14 @@ fn perform_handshake_and_get_client_handshake(
             }
             VersionMismatchStrategy::StopServerIfOlder => {
                 let cmp: std::cmp::Ordering = match (
-                    semver::Version::parse(flow_common::flow_version::VERSION),
+                    semver::Version::parse(flow_common::flow_version::version()),
                     semver::Version::parse(&client_version),
                 ) {
                     (Ok(server_v), Ok(client_v)) => Ord::cmp(&server_v, &client_v),
-                    _ => Ord::cmp(flow_common::flow_version::VERSION, client_version.as_str()),
+                    _ => Ord::cmp(
+                        flow_common::flow_version::version(),
+                        client_version.as_str(),
+                    ),
                 };
                 if cmp < std::cmp::Ordering::Equal {
                     respond(client_stream, ServerIntent::ServerWillExit, None);

@@ -161,7 +161,7 @@ pub(super) fn get_filenames_from_input(
 pub(super) fn print_version() {
     println!(
         "Flow, a static type checker for JavaScript, version {}",
-        flow_common::flow_version::VERSION
+        flow_common::flow_version::version()
     );
 }
 
@@ -953,14 +953,14 @@ pub(super) fn check_version(required_version: &Option<String>) -> Result<(), Str
             match flow_common_semver::semver::satisfies(
                 Some(true),
                 version_constraint,
-                flow_common::flow_version::VERSION,
+                flow_common::flow_version::version(),
             ) {
                 Ok(true) => Ok(()),
                 _ => {
                     let msg = format!(
                         "Wrong version of Flow. The config specifies version {} but this is version {}",
                         version_constraint,
-                        flow_common::flow_version::VERSION
+                        flow_common::flow_version::version()
                     );
                     Err(msg)
                 }
@@ -3219,7 +3219,7 @@ fn connect_and_make_request_inner(
     let client_handshake = (
         flow_server_env::socket_handshake::ClientToMonitor1 {
             client_build_id: flow_server_env::socket_handshake::build_revision(),
-            client_version: flow_common::flow_version::VERSION.to_string(),
+            client_version: flow_common::flow_version::version().to_string(),
             is_stop_request: false,
             server_should_hangup_if_still_initializing: false,
             version_mismatch_strategy,

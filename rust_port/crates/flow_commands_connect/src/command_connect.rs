@@ -266,7 +266,7 @@ fn connect_rec(
                     eprintln!(
                         "Version mismatch! Server binary is Flow v{} but we are using v{}",
                         server_version,
-                        flow_version::VERSION,
+                        flow_version::version(),
                     );
                     eprintln!("Restarting command using the same binary as the server");
                 }
@@ -286,7 +286,7 @@ fn connect_rec(
                 let msg = format!(
                     "\nThe Flow server's version (v{}) didn't match the client's (v{}). Exiting",
                     server_version,
-                    flow_version::VERSION,
+                    flow_version::version(),
                 );
                 eprintln!("{}", msg);
                 flow_common_exit_status::exit(

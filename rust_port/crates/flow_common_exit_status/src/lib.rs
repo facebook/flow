@@ -239,7 +239,7 @@ pub fn json_props_of_t(
     vec![
         (
             "flowVersion".to_string(),
-            serde_json::Value::String(flow_common::flow_version::VERSION.to_string()),
+            serde_json::Value::String(flow_common::flow_version::version().to_string()),
         ),
         (
             "exit".to_string(),

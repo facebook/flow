@@ -15,7 +15,7 @@ use crate::server_status;
 pub type BuildId = String;
 
 pub fn build_revision() -> String {
-    flow_common::flow_version::VERSION.to_string()
+    flow_common::flow_version::version().to_string()
 }
 
 pub type ClientHandshakeWire = (String, Vec<u8>);

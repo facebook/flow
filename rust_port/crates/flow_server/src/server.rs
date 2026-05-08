@@ -185,7 +185,7 @@ fn init(
             .map(|p| p.display().to_string())
             .unwrap_or_default()
     );
-    flow_hh_logger::info!("version={}", flow_common::flow_version::VERSION);
+    flow_hh_logger::info!("version={}", flow_common::flow_version::version());
 
     let Some(workers) = genv.workers.as_ref() else {
         flow_common_exit_status::exit_with_msg(

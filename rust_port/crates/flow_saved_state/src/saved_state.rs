@@ -273,22 +273,12 @@ pub fn restore_dependency_info(
     DependencyInfo::of_map(pool, PartialDependencyGraph::from_map(map))
 }
 
-// It's simplest if the build ID is always the same length. Let's use 16, since that happens to
-// be the size of the build ID hash.
-const SAVED_STATE_VERSION_LENGTH: usize = 16;
-
 fn saved_state_version() -> String {
-    let version = if cfg!(debug_assertions) {
+    if cfg!(debug_assertions) {
         flow_common_build_id::get_build_id()
     } else {
-        let unpadded = flow_common::flow_version::VERSION;
-        assert!(unpadded.len() <= SAVED_STATE_VERSION_LENGTH);
-        // We have to pad out the build ID to bring it up to the right length
-        let padding = "n".repeat(SAVED_STATE_VERSION_LENGTH - unpadded.len());
-        format!("{unpadded}{padding}")
-    };
-    assert_eq!(version.len(), SAVED_STATE_VERSION_LENGTH);
-    version
+        flow_common::flow_version::version().to_string()
+    }
 }
 
 // We write the Flow version at the beginning of each saved state file.
@@ -298,7 +288,8 @@ fn write_version(file: &mut impl Write) -> Result<(), InvalidReason> {
 }
 
 fn verify_version(options: &Options, file: &mut impl Read) -> Result<(), InvalidReason> {
-    let mut buf = vec![0u8; SAVED_STATE_VERSION_LENGTH];
+    let expected = saved_state_version();
+    let mut buf = vec![0u8; expected.len()];
     file.read_exact(&mut buf)
         .map_err(|_| InvalidReason::Bad_header)?;
     if options.saved_state_skip_version_check {
@@ -310,7 +301,6 @@ fn verify_version(options: &Options, file: &mut impl Read) -> Result<(), Invalid
         return Ok(());
     }
     let actual = String::from_utf8_lossy(&buf).to_string();
-    let expected = saved_state_version();
     if actual == expected {
         Ok(())
     } else {
