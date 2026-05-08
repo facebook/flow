@@ -19,9 +19,9 @@ use flow_common_vcs::vcs::{self};
 use flow_common_vcs::vcs_utils;
 use flow_server_env::monitor_prot;
 use flow_server_env::monitor_prot::FileWatcherMetadata;
+use flow_tokio_runtime::handle;
 
 use crate::flow_server_monitor_options;
-use crate::runtime;
 use crate::status_stream;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -534,7 +534,7 @@ pub mod watchman_file_watcher {
             };
             *self.init_settings.lock().unwrap() = Some(settings.clone());
             *self.init_thread.lock().unwrap() =
-                Some(runtime::handle().spawn(async move { flow_watchman::init(settings).await }));
+                Some(handle().spawn(async move { flow_watchman::init(settings).await }));
         }
 
         async fn wait_for_init(&self, timeout: Option<f64>) -> Result<(), String> {
@@ -590,8 +590,7 @@ pub mod watchman_file_watcher {
                         init_settings,
                     });
                     let listen_env = new_env.clone();
-                    let listening =
-                        runtime::handle().spawn(async move { listen(listen_env).await });
+                    let listening = handle().spawn(async move { listen(listen_env).await });
                     *new_env.listening_thread.lock().await = Some(listening);
                     *self.env.lock().unwrap() = Some(new_env);
                     Ok(())
@@ -1114,7 +1113,7 @@ pub mod edenfs_file_watcher {
                 max_commit_distance: *edenfs_max_commit_distance as isize,
             };
             *self.init_thread.lock().unwrap() =
-                Some(runtime::handle().spawn(async move { flow_edenfs_watcher::init(settings) }));
+                Some(handle().spawn(async move { flow_edenfs_watcher::init(settings) }));
         }
 
         async fn wait_for_init(&self, timeout: Option<f64>) -> Result<(), String> {
@@ -1190,8 +1189,7 @@ pub mod edenfs_file_watcher {
                         mergebase_with: self.mergebase_with.clone(),
                     });
                     let listen_env = new_env.clone();
-                    let listening =
-                        runtime::handle().spawn(async move { listen(listen_env).await });
+                    let listening = handle().spawn(async move { listen(listen_env).await });
                     *new_env.listening_thread.lock().await = Some(listening);
                     *self.env.lock().unwrap() = Some(new_env);
                     // For lazy mode, get initial files changed since mergebase.

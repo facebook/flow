@@ -15,7 +15,6 @@ pub mod flow_server_monitor_options;
 pub mod flow_server_monitor_server;
 pub mod persistent_connection_map;
 pub mod request_map;
-pub mod runtime;
 pub mod socket_acceptor;
 pub mod startup_initializer;
 pub mod status_stream;

@@ -39,6 +39,7 @@ pub enum Command {
 // before the monitor exits
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
+
 static EXITING: AtomicBool = AtomicBool::new(false);
 
 // A broadcast notification for monitor exit. Loops that need to wake up
@@ -189,6 +190,7 @@ pub mod server_instance {
     use flow_daemon::Handle;
     use flow_server_env::lsp_prot;
     use flow_server_env::monitor_prot;
+    use flow_tokio_runtime::handle;
 
     use crate::flow_server_monitor_connection::ServerConnection;
 
@@ -314,7 +316,7 @@ pub mod server_instance {
         conn: &ServerConnection,
     ) {
         let watcher = watcher.clone();
-        let (files, metadata, initial, debug) = crate::runtime::handle().block_on(async move {
+        let (files, metadata, initial, debug) = handle().block_on(async move {
             let (files, metadata, initial) = watcher.get_and_clear_changed_files().await;
             let debug = watcher.debug();
             (files, metadata, initial, debug)
@@ -522,7 +524,7 @@ pub mod server_instance {
         let connection = t.connection.clone();
         // Lwt.join will run these threads in parallel and only return when EVERY thread has returned
         // or failed
-        crate::runtime::handle().block_on(async move {
+        handle().block_on(async move {
             tokio::join!(
                 async {
                     watcher.stop().await;
@@ -619,8 +621,8 @@ pub mod server_instance {
                 edenfs_watcher.start_init();
                 // Wait for initialization, using the same file_watcher_timeout as Watchman.
                 // This respects the file_watcher_timeout .flowconfig option (default 120s).
-                let init_result = crate::runtime::handle()
-                    .block_on(edenfs_watcher.wait_for_init(*_file_watcher_timeout));
+                let init_result =
+                    handle().block_on(edenfs_watcher.wait_for_init(*_file_watcher_timeout));
                 match init_result {
                     Ok(()) => {
                         flow_hh_logger::info!("EdenFS watcher initialized successfully");
@@ -729,8 +731,7 @@ pub mod server_instance {
         if !already_initialized {
             // This may block for quite awhile. No messages will be sent to the server process until the
             // file watcher is up and running
-            let init_result = crate::runtime::handle()
-                .block_on(any_watcher.wait_for_init(*_file_watcher_timeout));
+            let init_result = handle().block_on(any_watcher.wait_for_init(*_file_watcher_timeout));
             match init_result {
                 Ok(()) => {}
                 Err(msg) => {
@@ -756,7 +757,7 @@ pub mod server_instance {
         let file_watcher_exit_thread: Option<JoinHandle<()>> =
             Some(std::thread::spawn(move || {
                 let waitpid_fut = watcher_for_exit.waitpid_owned();
-                let exit_reason = crate::runtime::handle().block_on(waitpid_fut);
+                let exit_reason = handle().block_on(waitpid_fut);
                 match exit_reason {
                     // file watcher was shut down intentionally, i.e. watcher#stop
                     crate::file_watcher::ExitReason::WatcherStopped => {}
@@ -817,7 +818,7 @@ pub mod server_instance {
                 loop {
                     let (changes_tx, changes_rx) = crossbeam::channel::bounded::<()>(1);
                     let watcher_for_iter = watcher_for_loop.clone();
-                    let changes_handle = crate::runtime::handle().spawn(async move {
+                    let changes_handle = handle().spawn(async move {
                         watcher_for_iter.wait_for_changed_files().await;
                         // Receiver may already be dropped if select! resolved on a
                         // shutdown branch; that's the expected race.

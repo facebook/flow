@@ -24,8 +24,7 @@ use std::sync::Mutex;
 use std::sync::OnceLock;
 
 pub use flow_hh_logger::Level;
-
-use crate::runtime;
+use flow_tokio_runtime::handle;
 
 #[derive(Clone, Copy)]
 struct Dest {
@@ -167,7 +166,7 @@ pub fn init_logger(log_file: Option<File>) {
     if MSG_SENDER.set(tx).is_err() {
         panic!("logger msg_sender already initialized");
     }
-    runtime::handle().spawn(async move {
+    handle().spawn(async move {
         let panic_outcome = std::panic::AssertUnwindSafe(write_loop::run(file, rx));
         if let Err(panic_payload) = futures::FutureExt::catch_unwind(panic_outcome).await {
             let msg: String = match panic_payload.downcast_ref::<&'static str>() {

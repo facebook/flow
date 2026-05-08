@@ -19,11 +19,11 @@ use std::time::Duration;
 
 use flow_server_env::file_watcher_status;
 use flow_server_env::server_status;
+use flow_tokio_runtime::handle;
 use tokio::sync::mpsc;
 
 use crate::FlowServerMonitorOptions;
 use crate::flow_server_monitor_options::FileWatcher;
-use crate::runtime;
 
 // This is the status info for a single Flow server
 struct StatusInfo {
@@ -62,7 +62,7 @@ fn check_if_free(t: &mut StatusInfo) {
         && t.watcher_status.1 == file_watcher_status::StatusKind::Ready
     {
         t.ever_been_free = true;
-        runtime::handle().spawn(async {
+        handle().spawn(async {
             invoke_all_call_on_free();
         });
     }
@@ -172,7 +172,7 @@ fn empty(
         .unwrap()
         .take()
         .expect("stream receiver missing immediately after creation");
-    runtime::handle().spawn(async move {
+    handle().spawn(async move {
         update_loop::run(ret_for_loop, stream).await;
     });
     ret

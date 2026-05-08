@@ -79,6 +79,7 @@ members = [
   "crates/flow_services_references",
   "crates/flow_services_type_info",
   "crates/flow_services_type_of_name",
+  "crates/flow_tokio_runtime",
   "crates/flow_type_sig",
   "crates/flow_typing",
   "crates/flow_typing_builtins",

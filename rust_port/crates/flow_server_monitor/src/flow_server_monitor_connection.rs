@@ -27,11 +27,10 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use bincode::error::DecodeError;
+use flow_tokio_runtime::handle;
 use tokio::sync::Notify;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-
-use crate::runtime;
 
 // Cap any single bincode-framed inbound frame at 64 MiB. Without this cap,
 // `bincode::serde::decode_from_std_read` will read a length prefix and call
@@ -375,7 +374,7 @@ impl<P: ConnectionProcessor> Connection<P> {
             closed: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         });
 
-        let command_thread = runtime::handle().spawn(async move {
+        let command_thread = handle().spawn(async move {
             let conn = match start_rx_command.await {
                 Ok(c) => c,
                 Err(_) => return,
@@ -388,7 +387,7 @@ impl<P: ConnectionProcessor> Connection<P> {
         });
         *conn.command_thread.lock().unwrap() = Some(command_thread);
 
-        let read_thread = runtime::handle().spawn(async move {
+        let read_thread = handle().spawn(async move {
             let conn = match start_rx_read.await {
                 Ok(c) => c,
                 Err(_) => return,

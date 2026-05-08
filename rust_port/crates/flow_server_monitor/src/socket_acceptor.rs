@@ -18,6 +18,8 @@
 // `RequestWithMetadata` / `MessageFromServer`. All bincode-framed.
 use std::sync::Arc;
 
+use flow_tokio_runtime::handle;
+
 use crate::flow_server_monitor_connection::MAX_FRAME_BYTES;
 use crate::flow_server_monitor_server as Server;
 
@@ -150,8 +152,8 @@ fn create_ephemeral_connection(
     let wait_for_closed_notify = conn_for_wait.wait_for_closed_notify();
     let status_cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let status_cancel_for_loop = status_cancel.clone();
-    crate::runtime::handle().spawn(async move {
-        let close_on_exit_handle = crate::runtime::handle().spawn(close_on_exit);
+    handle().spawn(async move {
+        let close_on_exit_handle = handle().spawn(close_on_exit);
         let close_on_exit_abort = close_on_exit_handle.abort_handle();
         let status_loop_handle = tokio::task::spawn_blocking(move || {
             status_loop_run::<EphemeralStatusWriter>(&conn_for_loop, &status_cancel_for_loop);
@@ -259,8 +261,8 @@ fn create_persistent_connection(
     let wait_for_closed_notify = conn_for_wait.wait_for_closed_notify();
     let status_cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let status_cancel_for_loop = status_cancel.clone();
-    crate::runtime::handle().spawn(async move {
-        let close_on_exit_handle = crate::runtime::handle().spawn(close_on_exit);
+    handle().spawn(async move {
+        let close_on_exit_handle = handle().spawn(close_on_exit);
         let close_on_exit_abort = close_on_exit_handle.abort_handle();
         let status_loop_handle = tokio::task::spawn_blocking(move || {
             status_loop_run::<PersistentStatusWriter>(&conn_for_loop, &status_cancel_for_loop);

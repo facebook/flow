@@ -30,6 +30,7 @@ flow_server_env = { path = "../flow_server_env" }
 flow_server_file_watcher_spec = { path = "../flow_server_file_watcher_spec" }
 flow_server_files = { path = "../flow_server_files" }
 flow_server_watchman_expression_terms = { path = "../flow_server_watchman_expression_terms" }
+flow_tokio_runtime = { path = "../flow_tokio_runtime" }
 flow_watchman = { path = "../flow_watchman" }
 futures = { version = "0.3.31", features = ["async-await", "compat"] }
 libc = "0.2.183"
