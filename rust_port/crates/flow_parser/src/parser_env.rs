@@ -227,6 +227,8 @@ pub struct ParseOptions {
     pub esproposal_decorators: bool, /* enable parsing of decorators */
     /// enable parsing of Flow types
     pub types: bool,
+    /// enable parsing of Flow syntax that is ambiguous with valid JavaScript
+    pub ambiguous_types: bool,
     /// treat the file as strict, without needing a "use strict" directive
     pub use_strict: bool,
     pub assert_operator: bool,
@@ -248,6 +250,7 @@ impl Default for ParseOptions {
             records: false,
             esproposal_decorators: false,
             types: true,
+            ambiguous_types: true,
             use_strict: false,
             module_ref_prefix: None,
             ambient: false,
@@ -264,6 +267,7 @@ pub const PERMISSIVE_PARSE_OPTIONS: ParseOptions = ParseOptions {
     records: true,
     esproposal_decorators: true,
     types: true,
+    ambiguous_types: true,
     use_strict: false,
     module_ref_prefix: None,
     ambient: false,
@@ -524,6 +528,10 @@ impl<'a> ParserEnv<'a> {
 
     pub(crate) fn should_parse_types(&self) -> bool {
         self.parse_options.types
+    }
+
+    pub(crate) fn should_parse_ambiguous_types(&self) -> bool {
+        self.parse_options.types && self.parse_options.ambiguous_types
     }
 
     pub fn is_d_ts(&self) -> bool {

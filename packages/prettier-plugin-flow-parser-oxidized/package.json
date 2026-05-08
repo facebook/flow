@@ -17,26 +17,11 @@
       "default": "./index.mjs"
     }
   },
-  "scripts": {
-    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest"
-  },
   "peerDependencies": {
     "prettier": "^3.0.0"
   },
-  "devDependencies": {
-    "@babel/cli": "^7.16.0",
-    "@babel/core": "^7.16.10",
-    "@babel/preset-env": "^7.16.5",
-    "@babel/plugin-syntax-flow": "^7.16.7",
-    "@babel/plugin-transform-flow-strip-types": "^7.16.7",
-    "@babel/plugin-proposal-class-properties": "^7.16.5",
-    "babel-plugin-transform-flow-enums": "^0.0.2",
-    "jest": "^27.4.3",
-    "prettier": "3.6.2"
-  },
   "files": [
     "index.mjs",
-    "index.bundle.mjs",
     "LICENSE",
     "PRETTIER_LICENCE",
     "README.md"

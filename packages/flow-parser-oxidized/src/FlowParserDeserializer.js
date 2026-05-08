@@ -4,13 +4,37 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
+ * @flow strict
  * @format
  */
 
 'use strict';
 
-const HermesParserDecodeUTF8String = require('./HermesParserDecodeUTF8String');
-const NODE_DESERIALIZERS = require('./FlowParserNodeDeserializers');
+import type {HermesSourceLocation, HermesNode, HermesToken} from './HermesAST';
+import type {FlowParserWASM} from './FlowParserWASM';
+import type {ParserOptions} from './ParserOptions';
+
+import HermesParserDecodeUTF8String from './HermesParserDecodeUTF8String';
+import NODE_DESERIALIZERS from './FlowParserNodeDeserializers';
+
+type FlowComment = {
+  type: 'Block' | 'Line',
+  loc: HermesSourceLocation,
+  value: ?string,
+};
+
+export type FlowParserProgram = {
+  type: 'Program',
+  loc: HermesSourceLocation,
+  body: Array<?HermesNode>,
+  comments: Array<FlowComment>,
+  interpreter?: ?HermesNode,
+  tokens?: Array<HermesToken>,
+  errors?: Array<{loc: HermesSourceLocation, message: string}>,
+  sourceType?: 'script' | 'module',
+  docblock?: mixed,
+  [string]: mixed,
+};
 
 /**
  * Deserializer for the Flow Rust parser's binary protocol.
@@ -19,13 +43,23 @@ const NODE_DESERIALIZERS = require('./FlowParserNodeDeserializers');
  * FlowParserNodeDeserializers (matching the Rust serializer's node kind
  * numbering) and produces ESTree-compatible output directly.
  */
-class FlowParserDeserializer {
+export default class FlowParserDeserializer {
+  programBufferIdx: number;
+  positionBufferIdx: number;
+  +positionBufferSize: number;
+  +stringBufferBase: number;
+  +locMap: {[number]: HermesSourceLocation};
+  +HEAPU8: FlowParserWASM['HEAPU8'];
+  +HEAPU32: FlowParserWASM['HEAPU32'];
+  +HEAPF64: FlowParserWASM['HEAPF64'];
+  +options: ParserOptions;
+
   // Comment types: Flow uses ESTree-standard names
   // Matches CommentKind enum in ast.rs: Block = 0, Line = 1
-  commentTypes = ['Block', 'Line'];
+  +commentTypes: $ReadOnlyArray<FlowComment['type']> = ['Block', 'Line'];
 
   // Matches TokenType enum (same as Hermes for compatibility)
-  tokenTypes = [
+  +tokenTypes: $ReadOnlyArray<HermesToken['type']> = [
     'Boolean',
     'Identifier',
     'Keyword',
@@ -40,12 +74,12 @@ class FlowParserDeserializer {
   ];
 
   constructor(
-    programBuffer,
-    positionBuffer,
-    positionBufferSize,
-    stringBufferBase,
-    wasmParser,
-    options,
+    programBuffer: number,
+    positionBuffer: number,
+    positionBufferSize: number,
+    stringBufferBase: number,
+    wasmParser: FlowParserWASM,
+    options: ParserOptions,
   ) {
     // Program and position buffer are memory addresses, so we must convert
     // into indices into HEAPU32 (an array of 4-byte integers).
@@ -71,13 +105,13 @@ class FlowParserDeserializer {
   /**
    * Consume and return the next 4 bytes in the program buffer.
    */
-  next() {
+  next(): number {
     const num = this.HEAPU32[this.programBufferIdx++];
     return num;
   }
 
-  deserialize() {
-    const program = {
+  deserialize(): FlowParserProgram {
+    const program: FlowParserProgram = {
       type: 'Program',
       loc: this.addEmptyLoc(),
       body: this.deserializeNodeList(),
@@ -111,12 +145,15 @@ class FlowParserDeserializer {
    * pairs. Each entry becomes `{loc, message}` matching the OCaml/Hermes
    * shape consumed by the hardcoded fixture comparator.
    */
-  deserializeErrors() {
+  deserializeErrors(): Array<{loc: HermesSourceLocation, message: string}> {
     const size = this.next();
     const errors = [];
     for (let i = 0; i < size; i++) {
       const loc = this.addEmptyLoc();
       const message = this.deserializeString();
+      if (message == null) {
+        throw new Error('Expected serialized parser error message');
+      }
       errors.push({loc, message});
     }
     return errors;
@@ -125,7 +162,7 @@ class FlowParserDeserializer {
   /**
    * Booleans are serialized as a single 4-byte integer.
    */
-  deserializeBoolean() {
+  deserializeBoolean(): boolean {
     return Boolean(this.next());
   }
 
@@ -133,7 +170,7 @@ class FlowParserDeserializer {
    * Numbers are serialized directly into program buffer, taking up 8 bytes
    * preceded by 4 bytes of alignment padding if necessary.
    */
-  deserializeNumber() {
+  deserializeNumber(): number {
     let floatIdx;
 
     // Numbers are aligned on 8-byte boundaries, so skip padding if we are at
@@ -155,7 +192,7 @@ class FlowParserDeserializer {
    * string is null and no length word follows. The `+1` lets an empty
    * string at offset 0 stay distinguishable from null.
    */
-  deserializeString() {
+  deserializeString(): ?string {
     const offsetPlusOne = this.next();
     if (offsetPlusOne === 0) {
       return null;
@@ -177,7 +214,7 @@ class FlowParserDeserializer {
    * If the node kind is 0 the node is null, otherwise the node kind - 1 is an
    * index into the array of node deserialization functions.
    */
-  deserializeNode() {
+  deserializeNode(): ?HermesNode {
     const nodeType = this.next();
     if (nodeType === 0) {
       return null;
@@ -191,7 +228,7 @@ class FlowParserDeserializer {
    * Node lists are serialized as a 4-byte integer denoting the number of
    * elements in the list, followed by the serialized elements.
    */
-  deserializeNodeList() {
+  deserializeNodeList(): Array<?HermesNode> {
     const size = this.next();
     const nodeList = [];
 
@@ -207,7 +244,7 @@ class FlowParserDeserializer {
    * as a 4-byte integer denoting comment type, followed by a 4-byte value
    * denoting the loc ID, followed by a serialized string for the comment value.
    */
-  deserializeComments() {
+  deserializeComments(): Array<FlowComment> {
     const size = this.next();
     const comments = [];
 
@@ -225,7 +262,7 @@ class FlowParserDeserializer {
     return comments;
   }
 
-  deserializeTokens() {
+  deserializeTokens(): Array<HermesToken> {
     const size = this.next();
     const tokens = [];
 
@@ -248,8 +285,8 @@ class FlowParserDeserializer {
    * a 4-byte loc ID. This is used to create a map of loc IDs to empty loc
    * objects that are filled after the AST has been deserialized.
    */
-  addEmptyLoc() {
-    const loc = {};
+  addEmptyLoc(): HermesSourceLocation {
+    const loc: HermesSourceLocation = {};
     this.locMap[this.next()] = loc;
     return loc;
   }
@@ -259,7 +296,7 @@ class FlowParserDeserializer {
    * associated with, followed by kind which denotes whether it is a start
    * or end position, followed by line, column, and offset (4-bytes each).
    */
-  fillLocs() {
+  fillLocs(): void {
     for (let i = 0; i < this.positionBufferSize; i++) {
       const locId = this.HEAPU32[this.positionBufferIdx++];
       const kind = this.HEAPU32[this.positionBufferIdx++];
@@ -284,5 +321,3 @@ class FlowParserDeserializer {
     }
   }
 }
-
-module.exports = FlowParserDeserializer;

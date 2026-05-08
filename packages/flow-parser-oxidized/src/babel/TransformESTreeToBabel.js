@@ -38,6 +38,7 @@ import type {
   Super,
   TemplateElement,
   TypeAnnotation,
+  TypeAnnotationType,
   TypeofTypeAnnotation,
   TypeParameterDeclaration,
   TypeParameterInstantiation,
@@ -296,8 +297,93 @@ type BabelLiteral =
   | BabelRegExpLiteral
   | BabelBigIntLiteral;
 
+interface NodeWithOptional {
+  optional?: boolean;
+}
+
+interface NodeWithGenerator {
+  generator?: boolean;
+}
+
+interface NodeWithAbstract {
+  abstract?: boolean;
+}
+
+interface NodeWithExportKind {
+  exportKind?: 'value' | 'type';
+}
+
+interface NodeWithDeclareNamespaceExtras {
+  implicitDeclare?: boolean;
+  keyword?: boolean;
+  global?: boolean;
+}
+
+interface NodeWithImplicitDeclare {
+  implicitDeclare?: boolean;
+}
+
+interface NodeWithDeclareHookExtras extends NodeWithImplicitDeclare {
+  typeAnnotation?: TypeAnnotation;
+}
+
+interface NodeWithConst {
+  const?: boolean;
+}
+
+interface NodeWithMappedTypeExtras {
+  nameType?: TypeAnnotationType | null;
+  varianceOp?: '+' | '-' | null;
+}
+
+interface NodeWithObjectTypePropertyExtras {
+  abstract?: boolean;
+  computed?: boolean;
+  init?: boolean;
+  override?: boolean;
+  tsAccessibility?: string | null;
+}
+
+interface DeclareVariableWithDeclarations {
+  declarations?: $ReadOnlyArray<{
+    +id?: Identifier | null,
+  }>;
+}
+
+type FlowEnumExplicitType =
+  | 'string'
+  | 'number'
+  | 'bigint'
+  | 'boolean'
+  | 'symbol'
+  | null
+  | void;
+
+type BabelEnumBodyType =
+  | 'EnumStringBody'
+  | 'EnumSymbolBody'
+  | 'EnumNumberBody'
+  | 'EnumBigIntBody'
+  | 'EnumBooleanBody';
+
+type FlowEnumBodyMember = interface {
+  +type:
+    | 'EnumNumberMember'
+    | 'EnumBigIntMember'
+    | 'EnumBooleanMember'
+    | 'EnumStringMember'
+    | 'EnumDefaultedMember',
+};
+
+interface FlowEnumBody extends BaseNode {
+  type: 'EnumBody';
+  explicitType?: FlowEnumExplicitType;
+  members: $ReadOnlyArray<FlowEnumBodyMember>;
+}
+
 export type ESNodeOrBabelNode =
   | ESNode
+  | FlowEnumBody
   | BabelFile
   | BabelObjectMethod
   | BabelObjectProperty
@@ -534,13 +620,15 @@ function mapProperty(node: Property): BabelObjectMethod | BabelObjectProperty {
     return newNode;
   }
 
+  // $FlowExpectedError[incompatible-type]
+  const propertyValue: Expression = node.value;
+
   // Non-method property nodes should be renamed to ObjectProperty
   return {
     type: 'ObjectProperty',
     computed: node.computed,
     key: node.key,
-    // $FlowExpectedError[incompatible-type]
-    value: (node.value: Expression),
+    value: propertyValue,
     method: node.method,
     shorthand: node.shorthand,
     loc: node.loc,
@@ -778,18 +866,19 @@ function mapTypeofTypeAnnotation(
 }
 
 function mapDeclareVariable(node: DeclareVariable): DeclareVariable {
+  // $FlowExpectedError[incompatible-type]
+  const nodeWithDeclarations: DeclareVariableWithDeclarations = node;
   if (
-    Array.isArray(node.declarations) &&
-    node.declarations.length === 1 &&
-    node.declarations[0] != null &&
-    node.declarations[0].id != null
+    Array.isArray(nodeWithDeclarations.declarations) &&
+    nodeWithDeclarations.declarations.length === 1 &&
+    nodeWithDeclarations.declarations[0] != null &&
+    nodeWithDeclarations.declarations[0].id != null
   ) {
     // $FlowExpectedError[cannot-write]
     // $FlowExpectedError[prop-missing]
-    node.id = node.declarations[0].id;
+    node.id = nodeWithDeclarations.declarations[0].id;
     // $FlowExpectedError[cannot-write]
-    // $FlowExpectedError[prop-missing]
-    delete node.declarations;
+    delete nodeWithDeclarations.declarations;
   }
   if (node.kind != null) {
     // $FlowExpectedError[cannot-write]
@@ -1185,9 +1274,11 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       }
       // OCaml-ahead Flow extension: pattern slots carry an `optional` bit
       // that upstream patterns don't model. Strip when false for Babel parity.
-      if (node.optional === false) {
+      // $FlowExpectedError[incompatible-type]
+      const patternNode: NodeWithOptional = node;
+      if (patternNode.optional === false) {
         // $FlowExpectedError[cannot-write]
-        delete node.optional;
+        delete patternNode.optional;
       }
       return node;
     }
@@ -1214,9 +1305,13 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       // OCaml/Rust inherit the FunctionExpression shape and emit
       // `generator: false`. Strip for Babel parity. Other function kinds
       // can legitimately carry `generator: true`, so leave them alone.
-      if (node.type === 'ArrowFunctionExpression' && node.generator === false) {
-        // $FlowExpectedError[cannot-write]
-        delete node.generator;
+      if (node.type === 'ArrowFunctionExpression') {
+        // $FlowExpectedError[incompatible-type]
+        const functionNode: NodeWithGenerator = node;
+        if (functionNode.generator === false) {
+          // $FlowExpectedError[cannot-write]
+          delete functionNode.generator;
+        }
       }
       return node;
     }
@@ -1277,9 +1372,11 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       // `abstract` is a TypeScript-only field upstream Hermes does not emit.
       // Rust always serializes it (false by default); strip when false for
       // Babel parity.
-      if (node.abstract === false) {
+      // $FlowExpectedError[incompatible-type]
+      const classNode: NodeWithAbstract = node;
+      if (classNode.abstract === false) {
         // $FlowExpectedError[cannot-write]
-        delete node.abstract;
+        delete classNode.abstract;
       }
       return node;
     }
@@ -1350,9 +1447,11 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       // or per-ExportSpecifier (the parent declaration is the source of
       // truth). Rust serializer defaults to 'value' on each; strip when
       // 'value' for Babel parity.
-      if (node.exportKind === 'value') {
+      // $FlowExpectedError[incompatible-type]
+      const exportNode: NodeWithExportKind = node;
+      if (exportNode.exportKind === 'value') {
         // $FlowExpectedError[cannot-write]
-        delete node.exportKind;
+        delete exportNode.exportKind;
       }
       return node;
     }
@@ -1360,37 +1459,45 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       // Upstream emits only `id`+`body`; OCaml/Rust carry the
       // `implicitDeclare`/`keyword`/`global` discriminants for
       // upstream-flow_parser fidelity. Strip for Babel parity.
+      // $FlowExpectedError[incompatible-type]
+      const declareNamespaceNode: NodeWithDeclareNamespaceExtras = node;
       // $FlowExpectedError[cannot-write]
-      delete node.implicitDeclare;
+      delete declareNamespaceNode.implicitDeclare;
       // $FlowExpectedError[cannot-write]
-      delete node.keyword;
+      delete declareNamespaceNode.keyword;
       // $FlowExpectedError[cannot-write]
-      delete node.global;
+      delete declareNamespaceNode.global;
       return node;
     }
     case 'DeclareHook': {
       // Upstream's DeclareHook carries only `type/loc/id`; the Rust
       // serializer inherits extra declaration slots. Strip for Babel parity.
+      // $FlowExpectedError[incompatible-type]
+      const declareHookNode: NodeWithDeclareHookExtras = node;
       // $FlowExpectedError[cannot-write]
-      delete node.implicitDeclare;
+      delete declareHookNode.implicitDeclare;
       // $FlowExpectedError[cannot-write]
-      delete node.typeAnnotation;
+      delete declareHookNode.typeAnnotation;
       return node;
     }
     case 'ComponentDeclaration':
     case 'DeclareComponent': {
       // `implicitDeclare` is a DeclareNamespace-only field upstream; the
       // Rust serializer over-emits it on Component nodes. Strip for parity.
+      // $FlowExpectedError[incompatible-type]
+      const componentNode: NodeWithImplicitDeclare = node;
       // $FlowExpectedError[cannot-write]
-      delete node.implicitDeclare;
+      delete componentNode.implicitDeclare;
       return node;
     }
     case 'EnumDeclaration':
     case 'DeclareEnum': {
       // Upstream Enum nodes have no `const` slot; the Rust serializer
       // emits the OCaml-aligned discriminant. Strip for Babel parity.
+      // $FlowExpectedError[incompatible-type]
+      const enumNode: NodeWithConst = node;
       // $FlowExpectedError[cannot-write]
-      delete node.const;
+      delete enumNode.const;
       return node;
     }
     case 'EnumBody': {
@@ -1407,7 +1514,7 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       // is set. Symbol enums have no `init` per member so they are
       // recognizable from `explicitType` alone.
       const explicitTypeStr = node.explicitType;
-      let bodyType = 'EnumStringBody';
+      let bodyType: BabelEnumBodyType = 'EnumStringBody';
       if (explicitTypeStr === 'symbol') {
         bodyType = 'EnumSymbolBody';
       } else if (Array.isArray(node.members) && node.members.length > 0) {
@@ -1453,12 +1560,14 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
         }
       }
       // $FlowExpectedError[cannot-write]
+      // $FlowExpectedError[incompatible-type]
       node.type = bodyType;
       if (bodyType === 'EnumSymbolBody') {
         // $FlowExpectedError[cannot-write]
         delete node.explicitType;
       } else {
         // $FlowExpectedError[cannot-write]
+        // $FlowExpectedError[incompatible-type]
         node.explicitType = typeof explicitTypeStr === 'string';
       }
       return node;
@@ -1467,13 +1576,15 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       // Upstream does not emit `nameType` or `varianceOp`; the Rust
       // serializer carries those newer wire slots. When absent in source
       // they should not surface as explicit `null` in Babel output.
-      if (node.nameType == null) {
+      // $FlowExpectedError[incompatible-type]
+      const mappedTypePropertyNode: NodeWithMappedTypeExtras = node;
+      if (mappedTypePropertyNode.nameType == null) {
         // $FlowExpectedError[cannot-write]
-        delete node.nameType;
+        delete mappedTypePropertyNode.nameType;
       }
-      if (node.varianceOp == null) {
+      if (mappedTypePropertyNode.varianceOp == null) {
         // $FlowExpectedError[cannot-write]
-        delete node.varianceOp;
+        delete mappedTypePropertyNode.varianceOp;
       }
       return node;
     }
@@ -1482,24 +1593,28 @@ function transformNode(node: ESNodeOrBabelNode): ESNodeOrBabelNode | null {
       // the class-member fields `abstract`/`computed`/`init`/`override`/
       // `tsAccessibility` that the Rust serializer emits when inheriting
       // the class-member-like base shape. Strip for Babel parity.
+      // $FlowExpectedError[incompatible-type]
+      const objectTypePropertyNode: NodeWithObjectTypePropertyExtras = node;
       // $FlowExpectedError[cannot-write]
-      delete node.abstract;
+      delete objectTypePropertyNode.abstract;
       // $FlowExpectedError[cannot-write]
-      delete node.computed;
+      delete objectTypePropertyNode.computed;
       // $FlowExpectedError[cannot-write]
-      delete node.init;
+      delete objectTypePropertyNode.init;
       // $FlowExpectedError[cannot-write]
-      delete node.override;
+      delete objectTypePropertyNode.override;
       // $FlowExpectedError[cannot-write]
-      delete node.tsAccessibility;
+      delete objectTypePropertyNode.tsAccessibility;
       return node;
     }
     case 'ObjectTypeIndexer': {
       // Sibling of ObjectTypeProperty — upstream does not carry an
       // `optional` slot here. Strip when false for Babel parity.
-      if (node.optional === false) {
+      // $FlowExpectedError[incompatible-type]
+      const objectTypeIndexerNode: NodeWithOptional = node;
+      if (objectTypeIndexerNode.optional === false) {
         // $FlowExpectedError[cannot-write]
-        delete node.optional;
+        delete objectTypeIndexerNode.optional;
       }
       return node;
     }

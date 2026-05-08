@@ -4,13 +4,43 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
+ * @flow strict
  * @format
  */
 
 'use strict';
 
-const ParserOptionsKeys = new Set([
+import type {Expression} from 'flow-estree-oxidized';
+
+export type ParserOptions = {
+  allowReturnOutsideFunction?: boolean,
+  assertOperator?: boolean,
+  babel?: boolean,
+  flow?: 'all' | 'detect',
+  enableExperimentalComponentSyntax?: boolean,
+  enableExperimentalDecorators?: boolean,
+  enableExperimentalFlowMatchSyntax?: boolean,
+  enableExperimentalFlowRecordSyntax?: boolean,
+  enableEnums?: boolean,
+  enableRecords?: boolean,
+  enableTypes?: boolean,
+  enableTypesPragmaDetection?: boolean,
+  reactRuntimeTarget?: '18' | '19',
+  sourceFilename?: string,
+  sourceType?: 'module' | 'script' | 'unambiguous',
+  throwOnParseErrors?: boolean,
+  tokens?: boolean,
+  transformOptions?: {
+    +TransformEnumSyntax?: {
+      +enable: boolean,
+      +getRuntime?: () => Expression,
+    },
+  },
+};
+
+export const ParserOptionsKeys: $ReadOnlySet<$Keys<ParserOptions>> = new Set([
   'allowReturnOutsideFunction',
+  'assertOperator',
   'babel',
   'flow',
   'enableExperimentalComponentSyntax',
@@ -19,8 +49,7 @@ const ParserOptionsKeys = new Set([
   'reactRuntimeTarget',
   'sourceFilename',
   'sourceType',
+  'throwOnParseErrors',
   'tokens',
   'transformOptions',
 ]);
-
-module.exports = {ParserOptionsKeys};

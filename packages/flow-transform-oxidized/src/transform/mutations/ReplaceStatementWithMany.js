@@ -87,9 +87,9 @@ export function performReplaceStatementWithManyMutation(
     return replacementParent.parent;
   }
 
-  const statementsToReplaceWith =
-    // $FlowExpectedError[incompatible-type] -- this is enforced by isValidModuleDeclarationParent above
-    (mutation.nodesToReplaceWith: $ReadOnlyArray<DetachedNode<Statement>>);
+  const statementsToReplaceWith: $ReadOnlyArray<DetachedNode<Statement>> =
+    // $FlowExpectedError[incompatible-type] -- this is enforced by isValidModuleDeclarationParent above.
+    mutation.nodesToReplaceWith;
 
   // we need to wrap the nodes in a BlockStatement as before there was only 1 node
   const blockStatement = t.BlockStatement({
@@ -97,9 +97,9 @@ export function performReplaceStatementWithManyMutation(
     parent: replacementParent.parent,
   });
 
-  (replacementParent.parent: interface {[string]: mixed})[
-    replacementParent.key
-  ] = blockStatement;
+  const replacementParentNode: interface {[string]: mixed} =
+    replacementParent.parent;
+  replacementParentNode[replacementParent.key] = blockStatement;
 
   return replacementParent.parent;
 }

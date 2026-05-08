@@ -19,13 +19,32 @@ const distDir = path.join(packageDir, 'dist');
 const binUpgradeJs = path.join(distDir, 'bin/upgrade.js');
 const binCodemodJs = path.join(distDir, 'bin/runSpecificCodemod.js');
 
+function ensureDependencies() {
+  if (fs.existsSync(path.join(packageDir, 'node_modules/.bin/babel'))) {
+    return;
+  }
+
+  execSync(
+    'yarn install --frozen-lockfile --offline --ignore-scripts --non-interactive',
+    {
+      cwd: packageDir,
+      stdio: 'inherit',
+    },
+  );
+}
+
+function buildPackage() {
+  ensureDependencies();
+  execSync('yarn build', {
+    cwd: packageDir,
+    stdio: 'inherit',
+  });
+}
+
 describe('build output', () => {
   beforeAll(() => {
     // Ensure dist is built before running tests
-    execSync('yarn build', {
-      cwd: packageDir,
-      stdio: 'inherit',
-    });
+    buildPackage();
   });
 
   test('dist directory exists after build', () => {
@@ -78,7 +97,7 @@ describe('packaged installation', () => {
 
   beforeAll(() => {
     // Build and pack the package
-    execSync('yarn build', {cwd: packageDir, stdio: 'inherit'});
+    buildPackage();
 
     // Create tarball
     execSync('yarn pack --filename flow-upgrade-test.tgz', {
@@ -108,6 +127,10 @@ describe('packaged installation', () => {
 
   afterAll(() => {
     // Cleanup
+    if (tempDir == null) {
+      return;
+    }
+
     const parentDir = path.dirname(tempDir);
     if (
       parentDir &&

@@ -67,6 +67,40 @@ test('Flow pragma detection', () => {
     parsedAsFlow,
   );
 
+  // Without a Flow pragma, unambiguous Flow syntax is still parsed as Flow,
+  // matching upstream Hermes' ParseFlowSetting::UNAMBIGUOUS mode.
+  const unambiguousFlowWithoutFlowPragma = `
+    // @noflow
+    import type {Foo} from 'Foo';
+    type Bar = Foo;
+    function f(value: Bar): Bar {
+      return value;
+    }
+    const x = (f('x'): Bar);
+  `;
+  expect(
+    parse(unambiguousFlowWithoutFlowPragma, {babel: true, flow: 'detect'}),
+  ).toMatchObject({
+    type: 'File',
+    program: {
+      body: [
+        {
+          type: 'ImportDeclaration',
+          importKind: 'type',
+        },
+        {
+          type: 'TypeAlias',
+        },
+        {
+          type: 'FunctionDeclaration',
+        },
+        {
+          type: 'VariableDeclaration',
+        },
+      ],
+    },
+  });
+
   // Flow pragma can appear after directives
   const flowPragmaAfterDirective = `
     'use strict';

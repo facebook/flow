@@ -24,8 +24,8 @@ import * as StripFlowTypesForBabel from './estree/StripFlowTypesForBabel';
 import * as TransformESTreeToBabel from './babel/TransformESTreeToBabel';
 import * as StripFlowTypes from './estree/StripFlowTypes';
 
-const DEFAULTS = {
-  flow: ('detect': 'detect'),
+const DEFAULTS: {flow: 'detect'} = {
+  flow: 'detect',
 };
 
 function getOptions(opts?: ParserOptions): ParserOptions {
@@ -33,7 +33,7 @@ function getOptions(opts?: ParserOptions): ParserOptions {
   // Repeated calls with the same `opts` reference must produce identical
   // results — earlier versions wrote normalized fields back onto `opts`,
   // poisoning subsequent calls.
-  const options = {...DEFAULTS, ...(opts ?? {})};
+  const options: ParserOptions = {...DEFAULTS, ...(opts ?? {})};
 
   // Default to detecting whether to parse Flow syntax by the presence
   // of an @flow pragma.
@@ -124,9 +124,9 @@ export function parse(
   // Resolve `flow: 'all' | 'detect'` to the Rust parser's option set.
   // `flow: 'all'` always parses Flow type syntax (`enableTypes: true`).
   // `flow: 'detect'` opts the Rust parser into docblock-pragma scanning
-  // (`enableTypesPragmaDetection: true`); the Rust lexer mirrors C++
-  // hermes-parser `parser::hasFlowPragma` and overrides `enableTypes`
-  // based on whether the `@flow` pragma is present.
+  // (`enableTypesPragmaDetection: true`); the Rust side mirrors C++
+  // hermes-parser by parsing all Flow syntax with `@flow`, and only
+  // unambiguous Flow syntax without it.
   if (options.flow === 'all') {
     options.enableTypes = true;
   } else {

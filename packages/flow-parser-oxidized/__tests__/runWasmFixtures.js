@@ -15,17 +15,21 @@ const fs = require('node:fs');
 const path = require('node:path');
 const util = require('node:util');
 
-// Bypasses the public `../src` (i.e. `index.js`) entry on purpose. `parse()`
+// Bypasses the public `../dist` (i.e. `index.js`) entry on purpose. `parse()`
 // in index.js applies hermes-parser-compatible adapter fixups (literalType
 // synthesis, ChainExpression wrapping, docblock attachment, etc.) so that
 // downstream JS tooling sees a canonical hermes-parser-shape AST. The
 // fixtures under flow/src/parser/test/flow/ were captured against the OCaml
 // Flow parser's raw output, which doesn't have those fixups, so we go
 // straight to the underlying deserializer here. Don't "fix" this back to
-// `require('../src')` — that breaks ~12 fixtures with adapter-shape diffs.
-// Drop-in / contract parity with hermes-parser is exercised separately by
-// the jest tests under this directory; that suite goes through index.js.
-const FlowParser = require('../src/FlowParser');
+// `require('../dist')` — that breaks ~12 fixtures with adapter-shape diffs.
+// We reach into the babel-stripped dist/ build (populated by the workspace
+// `yarn build` step in runWasmFixtures.sh) because src/FlowParser.js uses
+// ES module + `import type` syntax and node's native `--test` runner has no
+// babel transform. Drop-in / contract parity with hermes-parser is exercised
+// separately by the jest tests under this directory; that suite goes through
+// index.js.
+const FlowParser = require('../dist/FlowParser');
 
 // Walk directory tree returning sorted list of files relative to root.
 function listFiles(root, dir) {

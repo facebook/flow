@@ -27,19 +27,47 @@
 // requires a corresponding tracked task — silent tolerance is forbidden.
 
 const {parse: ourParse} = require('flow-parser-oxidized');
-const {parse: upstreamParse} = require('hermes-parser');
+const {
+  parse: upstreamParse,
+}: $ReadOnly<{
+  +parse: (string, mixed) => mixed,
+  ...
+}> = require('hermes-parser');
 
 // Loc/range carry source-position bookkeeping that doesn't bear on the AST
 // shape contract. The contract-test suite already enforces loc presence;
 // here we strip it so the diff focuses on structural fields.
 const POSITION_KEYS = new Set(['loc', 'range', 'start', 'end']);
 
+type ObjectLike = interface {
+  +[string]: mixed,
+  +type?: mixed,
+};
+
+type Diff = {
+  path: string,
+  message: string,
+};
+
+type Tolerance = {
+  missing: Set<string>,
+  extra: Set<string>,
+  ignoreValueOf: Set<string>,
+};
+
+type ToleranceMap = {
+  [string]: Tolerance,
+};
+
 // Round-trip ESTree comparison helper. Walks both nodes in lockstep.
 // Returns a list of diff descriptors (path + message) — empty list ⇒ match.
-function diffNodes(ours, upstream, path, tolerate) {
-  const diffs = [];
-  const ourType = typeof ours;
-  const upstreamType = typeof upstream;
+function diffNodes(
+  ours: mixed,
+  upstream: mixed,
+  path: string,
+  tolerate: ToleranceMap,
+): Array<Diff> {
+  const diffs: Array<Diff> = [];
 
   // Both are arrays.
   if (Array.isArray(ours) && Array.isArray(upstream)) {
@@ -60,22 +88,26 @@ function diffNodes(ours, upstream, path, tolerate) {
   if (
     ours != null &&
     upstream != null &&
-    ourType === 'object' &&
-    upstreamType === 'object' &&
+    typeof ours === 'object' &&
+    typeof upstream === 'object' &&
     !Array.isArray(ours) &&
     !Array.isArray(upstream)
   ) {
+    const ourObject: ObjectLike = ours;
+    const upstreamObject: ObjectLike = upstream;
     // Apply per-node tolerate entries by node `type`. The tolerate map is
     // keyed on the *upstream* node type — the diff is keyed off upstream as
     // ground truth so we can flag when our type doesn't match.
     const tolerateForNode =
-      typeof upstream.type === 'string' ? tolerate[upstream.type] : null;
+      typeof upstreamObject.type === 'string'
+        ? tolerate[upstreamObject.type]
+        : null;
 
     const ourKeys = new Set(
-      Object.keys(ours).filter(k => !POSITION_KEYS.has(k)),
+      Object.keys(ourObject).filter(k => !POSITION_KEYS.has(k)),
     );
     const upstreamKeys = new Set(
-      Object.keys(upstream).filter(k => !POSITION_KEYS.has(k)),
+      Object.keys(upstreamObject).filter(k => !POSITION_KEYS.has(k)),
     );
 
     // Keys upstream has that we don't — these are real omissions on our end.
@@ -110,7 +142,9 @@ function diffNodes(ours, upstream, path, tolerate) {
       if (tolerateForNode != null && tolerateForNode.ignoreValueOf.has(k)) {
         continue;
       }
-      diffs.push(...diffNodes(ours[k], upstream[k], `${path}.${k}`, tolerate));
+      diffs.push(
+        ...diffNodes(ourObject[k], upstreamObject[k], `${path}.${k}`, tolerate),
+      );
     }
     return diffs;
   }
@@ -127,7 +161,7 @@ function diffNodes(ours, upstream, path, tolerate) {
   }
 
   // Both are BigInt — compare via toString to dodge `===` quirks.
-  if (ourType === 'bigint' && upstreamType === 'bigint') {
+  if (typeof ours === 'bigint' && typeof upstream === 'bigint') {
     if (ours.toString() !== upstream.toString()) {
       diffs.push({
         path,
@@ -141,10 +175,15 @@ function diffNodes(ours, upstream, path, tolerate) {
   if (ours !== upstream) {
     diffs.push({
       path,
-      message: `value: ours=${JSON.stringify(ours)} upstream=${JSON.stringify(upstream)}`,
+      message: `value: ours=${stringify(ours)} upstream=${stringify(upstream)}`,
     });
   }
   return diffs;
+}
+
+function stringify(value: mixed): string {
+  const result = JSON.stringify(value);
+  return result ?? String(value);
 }
 
 // Build a tolerate entry helper: lists of keys we expect to differ at the
@@ -265,7 +304,7 @@ function deepEqualWithTolerances(
   return diffNodes(ours, upstream, '$', tolerate);
 }
 
-const FIXTURES = {
+const FIXTURES: $ReadOnly<{[string]: string}> = {
   // Representative fixture set. Picked to cover the most adapter-touched
   // node families in the public AST shape.
   literal: `

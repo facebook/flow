@@ -71,7 +71,14 @@ export default function BabelPluginSyntaxHermesParser(
         return;
       }
 
-      return HermesParser.parse(code, {...parserOpts, babel: true});
+      if (parseLangTypes === 'all' && parserOpts.flow == null) {
+        parserOpts.flow = 'all';
+      }
+
+      return HermesParser.parse(code, {
+        ...parserOpts,
+        babel: true,
+      });
     },
 
     pre() {

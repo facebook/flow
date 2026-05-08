@@ -172,17 +172,17 @@ pub extern "C" fn hermesParse(
         }
     };
 
-    // When pragma detection is requested, scan the docblock for `@flow` and
-    // override `enable_types` accordingly. Mirrors Hermes' C++
-    // `parser::hasFlowPragma` + `parser::getCommentsInDocBlock`
-    // (xplat/static_h/lib/Parser/FlowHelpers.cpp:17-82) and the JS adapter
-    // helper that previously lived in
-    // flow-parser-oxidized/src/index.js::hasFlowPragma.
-    let resolved_enable_types = if enable_types_pragma_detection != 0 {
-        has_flow_pragma(source_str)
-    } else {
-        enable_types != 0
-    };
+    // When pragma detection is requested, mirror upstream Hermes'
+    // ParseFlowSetting::ALL vs ParseFlowSetting::UNAMBIGUOUS split:
+    // no pragma still enables unambiguous Flow syntax such as `import type`,
+    // while ambiguous call/new type-argument syntax stays disabled.
+    let (resolved_enable_types, resolved_enable_ambiguous_types) =
+        if enable_types_pragma_detection != 0 {
+            (true, has_flow_pragma(source_str))
+        } else {
+            let enable_types = enable_types != 0;
+            (enable_types, enable_types)
+        };
 
     let parse_options = flow_parser::ParseOptions {
         components: enable_components != 0,
@@ -191,6 +191,7 @@ pub extern "C" fn hermesParse(
         records: enable_records != 0,
         esproposal_decorators: enable_decorators != 0,
         types: resolved_enable_types,
+        ambiguous_types: resolved_enable_ambiguous_types,
         use_strict: false,
         assert_operator: assert_operator != 0,
         module_ref_prefix: None,
@@ -512,6 +513,7 @@ mod tests {
             records: true,
             esproposal_decorators: true,
             types: true,
+            ambiguous_types: true,
             use_strict: false,
             assert_operator: false,
             module_ref_prefix: None,

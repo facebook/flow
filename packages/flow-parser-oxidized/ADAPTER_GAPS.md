@@ -320,7 +320,7 @@ audit trail; **all listed suites now pass** following the JS-side fixups in
 | Directive | **#37** (ExpressionStatement `directive: null` over-emit) | resolved |
 | Enum | **#39** (`enableEnums` default) | resolved (default `enableEnums = true` in `getOptions`) |
 | ExportAllDeclaration | **#30**, **#35** | resolved |
-| FlowPragmaDetection | **#40** (flow:'detect' not respected) | resolved (`hasFlowPragma` JS scanner in `index.js` resolves `flow:'detect'` to `enableTypes` before the wasm call; Rust parser stays OCaml-faithful with `types: bool`) |
+| FlowPragmaDetection | **#40** (flow:'detect' not respected) | resolved (Rust wasm docblock scanner mirrors Hermes `ParseFlowSetting::ALL` with `@flow` and `ParseFlowSetting::UNAMBIGUOUS` without it) |
 | HermesParser | **#41** (parse() must throw SyntaxError) | resolved (SyntaxError throw in `parse()`) |
 | HookDeclaration | **#49** (Babel `__hookDeclaration:true` + `directives:[]` over-emit) | resolved |
 | ImportDeclaration | **#30**, **#35** | resolved |

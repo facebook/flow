@@ -11,21 +11,26 @@
 'use strict';
 
 import type {Program} from 'flow-estree-oxidized';
-import type {VisitorKeysType} from 'flow-parser-oxidized';
+import type {ParserOptions, VisitorKeysType} from 'flow-parser-oxidized';
 import type {PartialAnalyzeOptions, ScopeManager} from './scope-manager';
 
 import * as HermesParser from 'flow-parser-oxidized';
 import {analyze} from './scope-manager';
+
+type ESTreeParserOptions = $ReadOnly<{
+  ...ParserOptions,
+  babel?: false | void,
+}>;
 
 type ParseForESLintOptions = $ReadOnly<{
   ...PartialAnalyzeOptions,
 }>;
 
 function parse(code: string, options?: ParseForESLintOptions): Program {
-  const parserOptions = {
+  const parserOptions: ESTreeParserOptions = {
     allowReturnOutsideFunction: true,
-    flow: ('all': 'all'),
-    sourceType: options?.sourceType ?? ('module': 'module'),
+    flow: 'all',
+    sourceType: options?.sourceType ?? 'module',
     tokens: true,
     enableExperimentalComponentSyntax:
       options?.enableExperimentalComponentSyntax ?? true,

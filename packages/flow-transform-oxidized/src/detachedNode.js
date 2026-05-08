@@ -23,7 +23,7 @@ type DetachConfig = $ReadOnly<{
 const DETACHED_MARKER = Symbol.for('hermes-transform - Detached AST Node');
 const ORIGINAL_NODE = Symbol.for('hermes-transform - Original Node');
 
-export function isDetachedNode(node: MaybeDetachedNode<ESNode>): boolean {
+export function isDetachedNode<T: ESNode>(node: MaybeDetachedNode<T>): boolean {
   // $FlowExpectedError[invalid-in-lhs] flow doesn't support symbols as keys
   return DETACHED_MARKER in node;
 }
@@ -65,7 +65,7 @@ export const asDetachedNode: {
     return null;
   }
 
-  if (isDetachedNode((node: MaybeDetachedNode<T>))) {
+  if (isDetachedNode(node)) {
     return node;
   }
 
@@ -116,7 +116,7 @@ export function detachedProps<T: BaseNode>(
     // if not provided, then we purposely don't set this here
     // and will rely on the tooling to update it as appropriate.
     // nothing should be reading from this before it's set anyway.
-    parent: (parent: $FlowFixMe),
+    parent: parent,
   };
 
   // mark the node as detached
@@ -149,7 +149,8 @@ export function shallowCloneNode<T: ESNode>(
 ): DetachedNode<T> {
   return detachedProps<T>(
     null,
-    {...(node: $FlowFixMe), ...newProps},
+    // $FlowExpectedError[cannot-spread-interface] Flow cannot prove generic node spread.
+    {...node, ...newProps},
     {
       preserveLocation: config.preserveLocation ?? true,
       originalNode: config.originalNode ?? node,
@@ -187,8 +188,8 @@ export function deepCloneNode<T: ESNode>(
 /**
  * Corrects the parent pointers in direct children of the given node
  */
-export function setParentPointersInDirectChildren(
-  node: DetachedNode<ESNode>,
+export function setParentPointersInDirectChildren<T: ESNode>(
+  node: DetachedNode<T>,
 ): void {
   astNodeMutationHelpers.setParentPointersInDirectChildren(node);
 }

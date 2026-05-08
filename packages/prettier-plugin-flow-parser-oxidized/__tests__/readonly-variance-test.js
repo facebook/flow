@@ -90,52 +90,64 @@ describe(`'readonly' variance annotation`, () => {
   // `SyntaxError: ':' or '?' expected in property type annotation`, which
   // breaks codemods that mechanically rewrite `+x` to `readonly x`.
   describe('reserved-word property names', () => {
-    // $FlowFixMe[prop-missing]
-    test.failing('with', async () => {
-      // eslint-disable-next-line jest/no-standalone-expect
+    test('with', async () => {
       expect(
         await format(`
           type T = {
             readonly with: (start?: Position, end?: Position) => Range,
           };
         `),
-      ).toMatchInlineSnapshot();
+      ).toMatchInlineSnapshot(`
+"type T = {
+  readonly with: (start?: Position, end?: Position) => Range,
+};
+"
+`);
     });
 
-    // $FlowFixMe[prop-missing]
-    test.failing('enum', async () => {
-      // eslint-disable-next-line jest/no-standalone-expect
+    test('enum', async () => {
       expect(
         await format(`
           type T = {
             readonly enum: {+[string]: string},
           };
         `),
-      ).toMatchInlineSnapshot();
+      ).toMatchInlineSnapshot(`
+"type T = {
+  readonly enum: {+[string]: string},
+};
+"
+`);
     });
 
-    // $FlowFixMe[prop-missing]
-    test.failing('default (optional)', async () => {
-      // eslint-disable-next-line jest/no-standalone-expect
+    test('default (optional)', async () => {
       expect(
         await format(`
           type T<T> = {
             readonly default?: ?T,
           };
         `),
-      ).toMatchInlineSnapshot();
+      ).toMatchInlineSnapshot(`
+"type T<T> = {
+  readonly default?: ?T,
+};
+"
+`);
     });
 
-    // $FlowFixMe[prop-missing]
-    test.failing('new (inline object type)', async () => {
-      // eslint-disable-next-line jest/no-standalone-expect
+    test('new (inline object type)', async () => {
       expect(
         await format(`
           declare class C {
             constructor(value: {readonly old: string, readonly new: string, ...}): void;
           }
         `),
-      ).toMatchInlineSnapshot();
+      ).toMatchInlineSnapshot(`
+"declare class C {
+  constructor(value: {readonly old: string, readonly new: string, ...}): void;
+}
+"
+`);
     });
   });
 });

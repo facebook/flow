@@ -3874,6 +3874,7 @@ mod tests {
             records: true,
             esproposal_decorators: true,
             types: true,
+            ambiguous_types: true,
             use_strict: false,
             assert_operator: false,
             module_ref_prefix: None,

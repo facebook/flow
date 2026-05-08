@@ -1288,6 +1288,10 @@ pub(crate) struct ConnectParams {
     pub(crate) on_mismatch: OnMismatchBehavior,
 }
 
+// The Rust port uses TCP loopback sockets. Under heavily parallel startup, a
+// ready monitor can take longer than three seconds to drain connection attempts.
+const DEFAULT_CONNECT_RETRIES: i32 = 10;
+
 pub(crate) fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
     let lazy_ = command_spec::get(args, "--lazy", &arg_spec::truthy()).unwrap();
     let lazy_mode =
@@ -1308,7 +1312,7 @@ pub(crate) fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
     ConnectParams {
         retries: command_spec::get(args, "--retries", &arg_spec::int())
             .unwrap()
-            .unwrap_or(3),
+            .unwrap_or(DEFAULT_CONNECT_RETRIES),
         timeout,
         no_auto_start: command_spec::get(args, "--no-auto-start", &arg_spec::truthy()).unwrap(),
         autostop: false,
@@ -1346,7 +1350,7 @@ fn add_connect_flags_with_lazy_collector(spec: command_spec::Spec) -> command_sp
         .flag(
             "--retries",
             &arg_spec::int(),
-            "Set the number of retries. (default: 3)",
+            "Set the number of retries. (default: 10)",
             None,
         )
         .flag(

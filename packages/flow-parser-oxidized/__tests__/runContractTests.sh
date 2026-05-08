@@ -8,16 +8,18 @@
 # flow/packages/flow-parser-oxidized/__tests__/) against the live wasm-built
 # Flow parser. Same wasm-bootstrap dance as runWasmFixtures.sh: build the wasm
 # under emcc with --isolation-dir, drop it into src/FlowParserWASM.js, then
-# invoke jest. Phase C7 (#14) populates the actual jest test files; this
-# wrapper provides the wasm-aware run harness around them.
+# invoke jest filtered to flow-parser-oxidized only via the unified workspace
+# jest config at flow/packages/jest.config.js.
 
 set -e -o pipefail
 
 FBCODE_DIR=${1:?"missing FBCODE_DIR arg"}
-# Resolve to absolute path BEFORE any `cd`, since FBCODE_DIR may be `.`.
+# Resolve everything to absolute paths BEFORE any `cd`, since FBCODE_DIR may
+# be `.` and we cd into the workspace root before opening the dist flock.
 FBCODE_ABS=$(cd "$FBCODE_DIR" && pwd -P)
 
-PKG_DIR="$FBCODE_DIR/flow/packages/flow-parser-oxidized"
+WORKSPACE_DIR="$FBCODE_ABS/flow/packages"
+PKG_DIR="$WORKSPACE_DIR/flow-parser-oxidized"
 PKG_SRC="$PKG_DIR/src"
 WASM_OUT="$PKG_SRC/FlowParserWASM.js"
 
@@ -69,7 +71,7 @@ trap '
     cat "$WASM_PATH"
 } > "$WASM_OUT"
 
-cd "$PKG_DIR"
+cd "$WORKSPACE_DIR"
 
 # Serialize dist/ rebuilds + reads against runOxidizedJestTests.sh, which
 # also does `rm -rf dist; cp -r src dist; babel dist` and then `require()`s
@@ -77,35 +79,32 @@ cd "$PKG_DIR"
 # schedules `wasm_parser_contract_test` and `oxidized_jest_test` in
 # parallel; without this flock, target A's jest can read a torn
 # `dist/index.js` (un-stripped Flow `import type` lines from the cp -r
-# step) while target B's `yarn build` is mid-flight, surfacing as
-#   `SyntaxError: Cannot use import statement outside a module` or
-#   `TypeError: FlowParserWASMModule is not a function`.
-# Hold the lock through both `yarn build` AND the jest run so a concurrent
-# target can't clobber `dist/` while we're reading from it. Path is
-# relative because we just `cd`'d into $PKG_DIR; runOxidizedJestTests.sh
-# uses the same `.dist.flock` filename in the same package directory.
-DIST_FLOCK="$(pwd -P)/.dist.flock"
+# step) while target B's `yarn build` is mid-flight. Hold the lock through
+# both `yarn build` AND the jest run so a concurrent target can't clobber
+# `dist/` while we're reading from it.
+DIST_FLOCK="$PKG_DIR/.dist.flock"
 exec 9> "$DIST_FLOCK"
 echo "==> waiting for exclusive lock on $DIST_FLOCK"
 flock -x 9
 echo "==> acquired lock on $DIST_FLOCK"
 
-# yarn.lock is regenerated on first install (devDependencies were added in
-# Phase C6). Subsequent runs reuse the locked tree. We rely on the global
-# fbcode yarn offline mirror so --offline is the right mode here.
+# yarn.lock is regenerated on first install. Subsequent runs reuse the locked
+# tree. We rely on the global fbcode yarn offline mirror so --offline is the
+# right mode here.
 yarn install --offline
 
 # Build dist/ from src/ (Phase C5 / #11): contract tests `require()` the
 # public entry `flow-parser-oxidized` which package.json `"main"` points at
 # `dist/index.js`. Without this build, jest sees the ESM `src/` files
-# directly and node can't `require()` them. babel-jest in the contract suite
-# transforms test files on the fly, but the production import path goes
-# through the built `dist/`.
+# directly and node can't `require()` them.
 yarn build
 
 # Use the fbsource third-party Node toolchain (24.x). The system Node may be
 # 16.x which lacks `os.availableParallelism()` — required by jest 30's
-# `getMaxWorkers`. Jest 30 in turn is required to fix the cross-module ESM
-# dynamic import leak that crashes ComponentDeclaration / HookDeclaration
-# tests under jest 27.
-"$FBCODE_ABS/../xplat/third-party/node/bin/node" --experimental-vm-modules ./node_modules/.bin/jest --no-coverage
+# `getMaxWorkers`.
+#
+# Filter to flow-parser-oxidized only — the unified jest config picks up
+# every package's __tests__/ but contract tests scope to the parser surface.
+"$FBCODE_ABS/../xplat/third-party/node/bin/node" --experimental-vm-modules \
+    ./node_modules/.bin/jest --no-coverage \
+    --testPathPatterns='flow-parser-oxidized'

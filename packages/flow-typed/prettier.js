@@ -848,16 +848,9 @@ declare module 'prettier' {
 }
 
 declare module 'prettier/plugins/flow' {
-  declare type AST = any;
+  import type {Parser} from 'prettier';
 
   declare export var parsers: {
-    flow: {
-      astFormat: string,
-      parse(text: string, parsers: any, options: any): AST,
-      hasPragma?: ((text: string) => boolean) | void,
-      locStart: (node: AST) => number,
-      locEnd: (node: AST) => number,
-      preprocess?: ((text: string, options: any) => string) | void,
-    },
+    flow: Parser<>,
   };
 }

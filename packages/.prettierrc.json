@@ -1,0 +1,22 @@
+{
+  "arrowParens": "avoid",
+  "singleQuote": true,
+  "trailingComma": "all",
+  "bracketSpacing": false,
+  "bracketSameLine": true,
+  "requirePragma": true,
+  "overrides": [
+    {
+      "files": ["*.js", "*.jsx", "*.flow"],
+      "options": {
+        "parser": "flow"
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "options": {
+        "parser": "typescript"
+      }
+    }
+  ]
+}

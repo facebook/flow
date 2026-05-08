@@ -991,8 +991,8 @@ fn estree_types_missing_kinds(schema: &[NodeDef], upstream: &str) -> Vec<&'stati
 /// Rather than reimplement that file with partial schema-driven generation
 /// (which would lose the hand-curated refinements the downstream consumers
 /// depend on), this codegen mode emits the upstream file *verbatim* with our
-/// own header (Copyright + @noflow + @generated + regen instructions). This
-/// is **not** schema-derived generation — it is a verbatim mirror of the
+/// own header (Copyright + @flow strict + @generated + regen instructions).
+/// This is **not** schema-derived generation — it is a verbatim mirror of the
 /// upstream Flow types with a SCHEMA cross-check.
 ///
 /// The cross-check enforces a single invariant: every concrete NodeDef in
@@ -1046,7 +1046,7 @@ fn generate_estree_types() {
     }
 
     // Replace the upstream file header (lines 1-9: `Copyright … @flow strict @format`)
-    // with ours: same Copyright but `@noflow @generated`, plus regen instructions
+    // with ours: same Copyright plus `@generated`, plus regen instructions
     // and the design rationale required by the team-lead pushback.
     // The `@generated` tag is split via interpolation so this Rust file itself
     // is not tagged as generated.
@@ -1058,7 +1058,7 @@ fn generate_estree_types() {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @noflow
+ * @flow strict
  * @format
  * @{tag}
  */
@@ -1535,289 +1535,29 @@ fn generate_estree_predicates() {
 // ESTree selector types codegen (`--estree-selectors`)
 // ---------------------------------------------------------------------------
 
-/// ESTree types that the Rust SCHEMA models but upstream's
-/// `genSelectorTypes.js` should not emit selectors for. Same skip rationale
-/// as `PREDICATE_EXCLUDED_TYPES` (TS-only kinds, optional-chain refinements,
-/// EnumBody / RendersType union aliases, Flow-only InterpreterDirective).
-/// Kept as a separate const so the two generators evolve independently.
-const SELECTOR_EXCLUDED_TYPES: &[&str] = &[
-    // Optional-chain refinements collapsed into Call/Member by upstream.
-    "OptionalCallExpression",
-    "OptionalMemberExpression",
-    // Renders refinement union — upstream emits per-variant interfaces only.
-    "RendersType",
-    // Enum body union — upstream emits per-type body predicates only.
-    "EnumBody",
-    // TS-only kinds (mirror OCaml's full type space; not surfaced via the
-    // Flow-only adapter, so upstream JSON has no entry).
-    "ImportEqualsDeclaration",
-    "ExternalModuleReference",
-    "ExportAssignment",
-    "ExportNamespaceSpecifier",
-    "NamespaceExportDeclaration",
-    "SatisfiesExpression",
-    "NonNullExpression",
-    "ParameterProperty",
-    "DeclareMethodDefinition",
-    "AbstractMethodDefinition",
-    "AbstractPropertyDefinition",
-    "DeclareClassExtendsCall",
-    "ConstructorTypeAnnotation",
-    "ObjectTypePrivateField",
-    "TupleTypeElement",
-    "ImportType",
-    "TemplateLiteralTypeAnnotation",
-    "RendersMaybeType",
-    "RendersStarType",
-    // Flow-only kinds that exist in our SCHEMA but not in upstream Hermes
-    // ESTree JSON (so upstream emits no selector for them).
-    "InterpreterDirective",
-];
-
-/// ESTree types the JS adapter synthesizes (or upstream emits a selector for)
-/// but our SCHEMA does not directly model. Mirrors `PREDICATE_EXTRA_NODES`.
-///
-/// - `ChainExpression` is created by the deserializer chain-expression fixup.
-const SELECTOR_EXTRA_NODES: &[&str] = &["ChainExpression"];
-
-/// Properties to expose for the synthesized SELECTOR_EXTRA_NODES entries.
-/// `ChainExpression` has a single `expression` child. Mirrors what upstream's
-/// `genSelectorTypes.js` would emit if it iterated these node JSON entries.
-fn extra_node_arguments(name: &str) -> &'static [&'static str] {
-    match name {
-        "ChainExpression" => &["expression"],
-        _ => &[],
-    }
-}
+/// Default fbsource-relative path to upstream
+/// `hermes-estree/src/generated/HermesESTreeSelectorTypes.js.flow`.
+const DEFAULT_HERMES_ESTREE_SELECTOR_TYPES_PATH: &str =
+    "xplat/static_h/tools/hermes-parser/js/hermes-estree/src/generated/HermesESTreeSelectorTypes.js.flow";
 
 /// Generate `flow-estree-oxidized/src/generated/HermesESTreeSelectorTypes.js.flow`.
 ///
-/// Mirrors upstream's `xplat/static_h/tools/hermes-parser/js/scripts/genSelectorTypes.js`:
-///
-/// 1. Iterate every NodeKind in SCHEMA (skipping LITERAL_COLLAPSED_KINDS and
-///    SELECTOR_EXCLUDED_TYPES), plus the synthesized `Literal` entry, plus
-///    SELECTOR_EXTRA_NODES.
-/// 2. For each kept node, emit one bare selector
-///    `+'<Node>'?: (node: <Node>) => void` (and the matching `:exit` form).
-/// 3. For each property on the node, emit a refinement selector
-///    `+'<Node>[<prop>]'?: (node: <Node>_With_<prop>) => void` (and `:exit`)
-///    plus an interface alias
-///    `interface <Node>_With_<prop> extends <Node> { +<prop>: $NonMaybeType<<Node>['<prop>']> }`.
-/// 4. Emit the 6 special selectors (`*`, `:statement`, `:declaration`,
-///    `:pattern`, `:expression`, `:function`) with hand-curated type unions.
-/// 5. Wrap in the standard `formatAndWriteSrcArtifact({flow: 'strict'})`
-///    header (Copyright + @flow strict + @generated + lint pragmas).
+/// Upstream intentionally checks in a tiny hand-written selector surface that
+/// only types selectors used by local code; `selectors.js` has a typed fallback
+/// indexer for all other ESQuery selector strings. Mirroring that file keeps
+/// this fork's Flow surface checked without generating thousands of invalid
+/// refinement interfaces for upstream's union-split ESTree types.
 fn generate_estree_selectors() {
-    // Build the list of node names (estree_type) to emit selectors for.
-    // Iteration order: SCHEMA order (matches upstream's HermesESTreeJSON
-    // iteration), with `Literal` appended, then SELECTOR_EXTRA_NODES.
-    let mut nodes: Vec<&'static str> = Vec::new();
-    for def in SCHEMA.iter() {
-        if LITERAL_COLLAPSED_KINDS.contains(&def.name) {
-            continue;
-        }
-        if SELECTOR_EXCLUDED_TYPES.contains(&def.estree_type) {
-            continue;
-        }
-        if def.custom_emit {
-            // `Literal` — emitted explicitly after the SCHEMA iteration to
-            // mirror upstream's `.concat({name: 'Literal', arguments: []})`.
-            continue;
-        }
-        if !nodes.contains(&def.estree_type) {
-            nodes.push(def.estree_type);
-        }
-    }
-    nodes.push("Literal");
-    for extra in SELECTOR_EXTRA_NODES {
-        if !nodes.contains(extra) {
-            nodes.push(extra);
-        }
-    }
-
-    // Look up the property list for an estree_type. For SELECTOR_EXTRA_NODES,
-    // delegate to `extra_node_arguments`; for schema-modeled nodes, return the
-    // first SCHEMA NodeDef matching this estree_type (order: extra_pre_props,
-    // properties, extra_post_props — matches upstream JSON arg order).
-    fn props_for(name: &str) -> Vec<&'static str> {
-        if SELECTOR_EXTRA_NODES.contains(&name) {
-            return extra_node_arguments(name).to_vec();
-        }
-        if name == "Literal" {
-            // Custom-encoded; upstream emits it with `arguments: []`.
-            return Vec::new();
-        }
-        for def in SCHEMA.iter() {
-            if def.estree_type != name {
-                continue;
-            }
-            let mut out: Vec<&'static str> = Vec::new();
-            for (n, _) in def.extra_pre_props.iter() {
-                out.push(n);
-            }
-            for (n, _) in def.properties.iter() {
-                out.push(n);
-            }
-            for (n, _) in def.extra_post_props.iter() {
-                out.push(n);
-            }
-            return out;
-        }
-        Vec::new()
-    }
-
-    // Special selectors: alias name + selector string + member type list.
-    // Mirrors upstream's `specialSelectors` array verbatim.
-    let star_type: Vec<&'static str> = vec!["ESNode"];
-    let statement_type: Vec<&'static str> = nodes
-        .iter()
-        .copied()
-        .filter(|n| n.ends_with("Statement"))
-        .collect();
-    let declaration_type: Vec<&'static str> = nodes
-        .iter()
-        .copied()
-        .filter(|n| n.ends_with("Declaration"))
-        .collect();
-    let pattern_type: Vec<&'static str> = nodes
-        .iter()
-        .copied()
-        .filter(|n| n.ends_with("Pattern"))
-        .collect();
-    // `:expression` = ['Identifier', 'MetaProperty'] ++ *Expression ++ *Literal
-    let mut expression_type: Vec<&'static str> = vec!["Identifier", "MetaProperty"];
-    for n in nodes.iter() {
-        if n.ends_with("Expression") {
-            expression_type.push(n);
-        }
-    }
-    for n in nodes.iter() {
-        if n.ends_with("Literal") {
-            expression_type.push(n);
-        }
-    }
-    let function_type: Vec<&'static str> = vec![
-        "FunctionDeclaration",
-        "FunctionExpression",
-        "ArrowFunctionExpression",
-    ];
-
-    let special_selectors: &[(&str, &str, &[&'static str])] = &[
-        ("*", "Star", &star_type),
-        (":statement", "Statement", &statement_type),
-        (":declaration", "Declaration", &declaration_type),
-        (":pattern", "Pattern", &pattern_type),
-        (":expression", "Expression", &expression_type),
-        (":function", "Function", &function_type),
-    ];
-
-    // Build imports list. Upstream pushes `'ESNode'` first, then each node
-    // name in iteration order.
-    let mut imports: Vec<&'static str> = vec!["ESNode"];
-    for name in nodes.iter() {
-        imports.push(name);
-    }
-
-    // Header — matches upstream's `formatAndWriteSrcArtifact({flow: 'strict'})`
-    // template. Tag is split via interpolation so this Rust source itself is
-    // not flagged as generated.
-    let header = format!(
-        "\
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow strict
- * @{tag}
- */
-
-/*
- * !!! GENERATED FILE !!!
- *
- * Any manual changes to this file will be overwritten. To regenerate run \
-`buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \
---estree-selectors`.
- */
-
-// lint directives to let us do some basic validation of generated files
-/* eslint no-undef: 'error', no-unused-vars: ['error', {{vars: \"local\"}}], no-redeclare: 'error' */
-/* global $NonMaybeType, Partial, $ReadOnly, $ReadOnlyArray, $FlowFixMe */
-
-'use strict';
-
-",
-        tag = "generated"
-    );
-    print!("{header}");
-
-    // Emit the import block.
-    println!("import type {{");
-    for name in imports.iter() {
-        println!("{name},");
-    }
-    println!("}} from '../types';");
-    println!();
-
-    // Emit the per-node `_With_<prop>` interface aliases (one per Node-prop
-    // pair) followed by the per-special-selector type aliases.
-    for name in nodes.iter() {
-        for arg in props_for(name) {
-            println!(
-                "interface {name}_With_{arg} extends {name} {{ +{arg}: $NonMaybeType<{name}['{arg}']> }}"
-            );
-        }
-    }
-    for (_selector, alias_name, type_list) in special_selectors {
-        println!(
-            "type {alias_name}SpecialSelector = {types}",
-            types = type_list.join(" | ")
-        );
-    }
-    println!();
-
-    // Emit the selector dictionary. Upstream concatenates enter selectors
-    // first, then exit selectors. Each block is comma-separated; the final
-    // entry of each block also has a trailing comma (mirrors the JS string
-    // template's `enterSelectors.join(',\n')` followed by `,\n` separator).
-    println!("export type ESQueryNodeSelectorsWithoutFallback = {{");
-
-    // Enter selectors: bare-node + per-arg + special.
-    let mut enter_lines: Vec<String> = Vec::new();
-    for name in nodes.iter() {
-        enter_lines.push(format!("+'{name}'?: (node: {name}) => void"));
-        for arg in props_for(name) {
-            enter_lines.push(format!(
-                "+'{name}[{arg}]'?: (node: {name}_With_{arg}) => void"
-            ));
-        }
-    }
-    for (selector, alias_name, _ty) in special_selectors {
-        enter_lines.push(format!(
-            "+'{selector}'?: (node: {alias_name}SpecialSelector) => void"
-        ));
-    }
-
-    // Exit selectors: same shape, with `:exit` appended to each selector key.
-    let mut exit_lines: Vec<String> = Vec::new();
-    for name in nodes.iter() {
-        exit_lines.push(format!("+'{name}:exit'?: (node: {name}) => void"));
-        for arg in props_for(name) {
-            exit_lines.push(format!(
-                "+'{name}[{arg}]:exit'?: (node: {name}_With_{arg}) => void"
-            ));
-        }
-    }
-    for (selector, alias_name, _ty) in special_selectors {
-        exit_lines.push(format!(
-            "+'{selector}:exit'?: (node: {alias_name}SpecialSelector) => void"
-        ));
-    }
-
-    println!("{},", enter_lines.join(",\n"));
-    println!("{},", exit_lines.join(",\n"));
-    println!("}};");
+    let path = std::env::var("HERMES_ESTREE_SELECTOR_TYPES_JS")
+        .unwrap_or_else(|_| DEFAULT_HERMES_ESTREE_SELECTOR_TYPES_PATH.to_string());
+    let upstream = std::fs::read_to_string(&path).unwrap_or_else(|err| {
+        panic!(
+            "failed to read upstream hermes-estree selector types at {path:?}: {err}\n\
+             hint: run from the fbsource root, or set HERMES_ESTREE_SELECTOR_TYPES_JS to \
+             an absolute path"
+        )
+    });
+    print!("{upstream}");
 }
 
 #[cfg(test)]

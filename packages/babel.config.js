@@ -8,6 +8,7 @@
  */
 
 module.exports = {
+  babelrcRoots: ['.', './flow-upgrade'],
   assumptions: {
     constantReexports: true,
     constantSuper: true,

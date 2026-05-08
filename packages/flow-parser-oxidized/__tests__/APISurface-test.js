@@ -30,8 +30,12 @@
 // adapter-fixup audit (ADAPTER_GAPS.md) needs to be re-run against the new
 // upstream behavior.
 
-const ours = require('flow-parser-oxidized');
-const upstream = require('hermes-parser');
+type ModuleExports = interface {
+  +[string]: mixed,
+};
+
+const ours: ModuleExports = require('flow-parser-oxidized');
+const upstream: ModuleExports = require('hermes-parser');
 
 describe('Public export surface vs hermes-parser', () => {
   test('every upstream export name is present on flow-parser-oxidized', () => {
@@ -43,7 +47,11 @@ describe('Public export surface vs hermes-parser', () => {
 
   test('typeof of each shared export agrees with hermes-parser', () => {
     const upstreamNames = Object.keys(upstream).sort();
-    const mismatches = [];
+    const mismatches: Array<{
+      name: string,
+      upstream: string,
+      ours: string,
+    }> = [];
     for (const name of upstreamNames) {
       const upstreamType = typeof upstream[name];
       const ourType = typeof ours[name];

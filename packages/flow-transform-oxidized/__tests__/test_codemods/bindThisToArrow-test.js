@@ -101,6 +101,8 @@ function codemod(code: string, useCodeFrame: boolean = true) {
 }
 
 describe('React to react', () => {
+  let logSpy: JestMockFn<Array<mixed>, mixed>;
+
   it('should transform valid cases correctly', async () => {
     const result = await codemod(`\
 a = function y() {
@@ -136,8 +138,9 @@ d = (): void => {};
   });
 
   beforeEach(() => {
+    logSpy = jest.fn();
     // $FlowExpectedError[cannot-write]
-    console.log = jest.fn();
+    console.log = logSpy;
   });
 
   const ignoredExamples = `\
@@ -189,8 +192,6 @@ f = function y() {}.bind(foo);
   });
 
   it('should log with codeframe when using logWithNode', async () => {
-    const logSpy = ((console.log: $FlowFixMe): JestMockFn<Array<mixed>, mixed>);
-
     await codemod(ignoredExamples, true);
 
     expect(logSpy).toHaveBeenCalledTimes(5);
@@ -225,8 +226,6 @@ f = function y() {}.bind(foo);
   });
 
   it('should log with a prefix when using logWithNode', async () => {
-    const logSpy = ((console.log: $FlowFixMe): JestMockFn<Array<mixed>, mixed>);
-
     await codemod(ignoredExamples, false);
 
     expect(logSpy).toHaveBeenCalledTimes(5);

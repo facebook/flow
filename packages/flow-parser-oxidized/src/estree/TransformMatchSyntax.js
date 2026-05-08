@@ -351,10 +351,11 @@ function analyzePattern(
         key,
         seenBindingNames,
       );
+      const defaultKind: 'const' = 'const';
       const [id, kind] =
         target.type === 'MatchBindingPattern'
           ? [target.id, target.kind]
-          : [target, ('const': 'const')];
+          : [target, defaultKind];
       checkDuplicateBindingName(seenBindingNames, pattern, id.name);
       checkBindingKind(pattern, kind);
       const binding: Binding = {type: 'id', key, kind, id};

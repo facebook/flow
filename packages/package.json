@@ -1,8 +1,39 @@
 {
   "name": "flow-packages-oxidized-workspace",
   "private": true,
-  "version": "0.0.1",
-  "description": "Yarn workspace root for the in-tree oxidized Flow packages (flow-parser-oxidized, flow-estree-oxidized, flow-eslint-oxidized, babel-plugin-syntax-flow-parser-oxidized, prettier-plugin-flow-parser-oxidized, flow-transform-oxidized). Pattern after xplat/js/graphql. The workspaces array is intentionally limited to the oxidized packages we control in this stack — the other siblings under flow/packages/ (flow-parser, flow-remove-types, etc.) continue to operate as standalone yarn packages outside this workspace_root.",
+  "devDependencies": {
+    "@babel/cli": "7.16.0",
+    "@babel/core": "7.16.5",
+    "@babel/node": "^7.15.8",
+    "@babel/plugin-proposal-class-properties": "7.16.5",
+    "@babel/plugin-syntax-flow": "^7.16.7",
+    "@babel/plugin-transform-flow-strip-types": "7.16.7",
+    "@babel/preset-env": "7.16.5",
+    "babel-plugin-transform-flow-enums": "^0.0.2",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-eslint-comments": "^3.2.0",
+    "eslint-plugin-fb-flow": "^0.0.5",
+    "eslint-plugin-flowtype": "^8.0.3",
+    "eslint-plugin-jest": "^25.2.4",
+    "flow-bin": "^0.312.0",
+    "glob": "^8.0.3",
+    "jest": "^30.0.5",
+    "jest-specific-snapshot": "^5.0.0",
+    "mkdirp": "^1.0.4",
+    "patch-package": "^6.5.0",
+    "prettier": "3.6.2",
+    "prettier-plugin-hermes-parser": "*"
+  },
+  "scripts": {
+    "build": "./scripts/build.sh",
+    "build-prettier": "./scripts/build-prettier.sh",
+    "lint": "eslint .",
+    "flow": "flow",
+    "format": "./node_modules/prettier/bin/prettier.cjs --config ./.prettierrc.json --write \"**/*.js\"",
+    "postinstall": "patch-package",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest"
+  },
   "workspaces": [
     "flow-parser-oxidized",
     "flow-estree-oxidized",
@@ -10,5 +41,9 @@
     "babel-plugin-syntax-flow-parser-oxidized",
     "prettier-plugin-flow-parser-oxidized",
     "flow-transform-oxidized"
-  ]
+  ],
+  "dependencies": {},
+  "resolutions": {
+    "lodash": "^4.17.23"
+  }
 }

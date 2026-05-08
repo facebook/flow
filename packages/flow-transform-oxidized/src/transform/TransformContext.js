@@ -333,17 +333,17 @@ export function getTransformContext(): TransformContextAdditions {
     }
   }
 
-  const cloneAPIs: TransformCloneAPIs = {
+  const cloneAPIsUntyped: $FlowFixMe = {
     // $FlowFixMe[incompatible-exact]
-    shallowCloneNode: (((node: ?ESNode): ?DetachedNode<ESNode> => {
+    shallowCloneNode: (node: ?ESNode): ?DetachedNode<ESNode> => {
       if (node == null) {
         return null;
       }
 
       return shallowCloneNode(node, {});
-    }: $FlowFixMe): TransformCloneAPIs['shallowCloneNode']),
+    },
 
-    shallowCloneNodeWithOverrides: (((
+    shallowCloneNodeWithOverrides: (
       node: ?ESNode,
       newProps?: $ReadOnly<{...}> = {},
     ): // $FlowExpectedError[prop-missing]
@@ -353,10 +353,10 @@ export function getTransformContext(): TransformContextAdditions {
       }
 
       return shallowCloneNode(node, newProps);
-    }: $FlowFixMe): TransformCloneAPIs['shallowCloneNodeWithOverrides']),
+    },
 
     // $FlowFixMe[incompatible-exact]
-    shallowCloneArray: ((<T: ESNode>(
+    shallowCloneArray: <T: ESNode>(
       nodes: ?$ReadOnlyArray<?T>,
     ): ?$ReadOnlyArray<DetachedNode<?ESNode>> => {
       if (nodes == null) {
@@ -371,18 +371,18 @@ export function getTransformContext(): TransformContextAdditions {
         }
         return shallowCloneNode<ESNode>(node, {});
       });
-    }: $FlowFixMe): TransformCloneAPIs['shallowCloneArray']),
+    },
 
     // $FlowFixMe[incompatible-exact]
-    deepCloneNode: (((node: ?ESNode): ?DetachedNode<ESNode> => {
+    deepCloneNode: (node: ?ESNode): ?DetachedNode<ESNode> => {
       if (node == null) {
         return null;
       }
 
       return deepCloneNode(node, {});
-    }: $FlowFixMe): TransformCloneAPIs['deepCloneNode']),
+    },
 
-    deepCloneNodeWithOverrides: (((
+    deepCloneNodeWithOverrides: (
       node: ?ESNode,
       newProps?: $ReadOnly<{...}> = {},
     ): // $FlowExpectedError[prop-missing]
@@ -392,26 +392,27 @@ export function getTransformContext(): TransformContextAdditions {
       }
 
       return deepCloneNode(node, newProps);
-    }: $FlowFixMe): TransformCloneAPIs['deepCloneNodeWithOverrides']),
+    },
   };
+  const cloneAPIs: TransformCloneAPIs = cloneAPIsUntyped;
   const commentAPIs: TransformCommentAPIs = {
-    getComments: ((node): Array<Comment> => {
+    getComments: (node): Array<Comment> => {
       return [...getCommentsForNode(node)];
-    }: TransformCommentAPIs['getComments']),
+    },
 
-    getLeadingComments: ((node): Array<Comment> => {
+    getLeadingComments: (node): Array<Comment> => {
       return getCommentsForNode(node).filter(isLeadingComment);
-    }: TransformCommentAPIs['getLeadingComments']),
+    },
 
-    getTrailingComments: ((node): Array<Comment> => {
+    getTrailingComments: (node): Array<Comment> => {
       return getCommentsForNode(node).filter(isTrailingComment);
-    }: TransformCommentAPIs['getTrailingComments']),
+    },
 
-    cloneCommentsTo: ((target, destination): void => {
+    cloneCommentsTo: (target, destination): void => {
       pushMutation(createCloneCommentsToMutation(target, destination));
-    }: TransformCommentAPIs['cloneCommentsTo']),
+    },
 
-    addLeadingComments: ((node, comments): void => {
+    addLeadingComments: (node, comments): void => {
       pushMutation(
         createAddCommentsMutation(
           node,
@@ -421,9 +422,9 @@ export function getTransformContext(): TransformContextAdditions {
           })),
         ),
       );
-    }: TransformCommentAPIs['addLeadingComments']),
+    },
 
-    addLeadingInlineComments: ((node, comments): void => {
+    addLeadingInlineComments: (node, comments): void => {
       pushMutation(
         createAddCommentsMutation(
           node,
@@ -433,9 +434,9 @@ export function getTransformContext(): TransformContextAdditions {
           })),
         ),
       );
-    }: TransformCommentAPIs['addLeadingInlineComments']),
+    },
 
-    addTrailingComments: ((node, comments): void => {
+    addTrailingComments: (node, comments): void => {
       pushMutation(
         createAddCommentsMutation(
           node,
@@ -445,9 +446,9 @@ export function getTransformContext(): TransformContextAdditions {
           })),
         ),
       );
-    }: TransformCommentAPIs['addTrailingComments']),
+    },
 
-    addTrailingInlineComments: ((node, comments): void => {
+    addTrailingInlineComments: (node, comments): void => {
       pushMutation(
         createAddCommentsMutation(
           node,
@@ -457,16 +458,16 @@ export function getTransformContext(): TransformContextAdditions {
           })),
         ),
       );
-    }: TransformCommentAPIs['addTrailingInlineComments']),
+    },
 
-    removeComments: ((comments): void => {
+    removeComments: (comments): void => {
       toArray(comments).forEach(comment => {
         pushMutation(createRemoveCommentMutation(comment));
       });
-    }: TransformCommentAPIs['removeComments']),
+    },
   };
   const insertAPIs: TransformInsertAPIs = {
-    insertAfterStatement: ((target, nodesToInsert): void => {
+    insertAfterStatement: (target, nodesToInsert): void => {
       pushMutation(
         createInsertStatementMutation(
           'after',
@@ -476,9 +477,9 @@ export function getTransformContext(): TransformContextAdditions {
           ),
         ),
       );
-    }: TransformInsertAPIs['insertBeforeStatement']),
+    },
 
-    insertBeforeStatement: ((target, nodesToInsert): void => {
+    insertBeforeStatement: (target, nodesToInsert): void => {
       pushMutation(
         createInsertStatementMutation(
           'before',
@@ -488,19 +489,20 @@ export function getTransformContext(): TransformContextAdditions {
           ),
         ),
       );
-    }: TransformInsertAPIs['insertBeforeStatement']),
+    },
   };
   const removeAPIs: TransformRemoveAPIs = {
-    removeNode: ((node): void => {
+    removeNode: (node): void => {
       pushMutation(createRemoveNodeMutation(node));
-    }: TransformRemoveAPIs['removeNode']),
+    },
 
-    removeStatement: ((node): void => {
+    removeStatement: (node): void => {
       pushMutation(createRemoveStatementMutation(node));
-    }: TransformRemoveAPIs['removeStatement']),
+    },
   };
   const replaceAPIs: TransformReplaceAPIs = {
-    replaceNode: (((
+    // $FlowFixMe[incompatible-exact]
+    replaceNode: (
       target: ESNode,
       nodeToReplaceWith: MaybeDetachedNode<ESNode>,
       options?: ReplaceNodeOptions,
@@ -512,9 +514,9 @@ export function getTransformContext(): TransformContextAdditions {
           options,
         ),
       );
-    }: $FlowFixMe): TransformReplaceAPIs['replaceNode']),
+    },
 
-    replaceStatementWithMany: ((
+    replaceStatementWithMany: (
       target,
       nodesToReplaceWith,
       options?: ReplaceNodeOptions,
@@ -526,10 +528,10 @@ export function getTransformContext(): TransformContextAdditions {
           options,
         ),
       );
-    }: TransformReplaceAPIs['replaceStatementWithMany']),
+    },
   };
   const modifyAPIs: TransformModifyAPIs = {
-    modifyNodeInPlace: ((target: ESNode, newProps: $ReadOnly<{...}>): void => {
+    modifyNodeInPlace: (target: ESNode, newProps: $ReadOnly<{...}>): void => {
       const detachedProps = {};
       for (const [key, value] of Object.entries(newProps)) {
         if (isNode(value)) {
@@ -542,7 +544,7 @@ export function getTransformContext(): TransformContextAdditions {
       }
 
       pushMutation(createModifyNodeInPlaceMutation(target, detachedProps));
-    }: TransformModifyAPIs['modifyNodeInPlace']),
+    },
   };
 
   return {
@@ -564,7 +566,8 @@ export function getTransformContext(): TransformContextAdditions {
 
 function toArray<T>(thing: SingleOrArray<T>): $ReadOnlyArray<T> {
   if (Array.isArray(thing)) {
-    return (thing: $FlowFixMe);
+    // $FlowExpectedError[incompatible-type] Flow does not preserve the generic element through Array.isArray.
+    return thing;
   }
   return [thing];
 }

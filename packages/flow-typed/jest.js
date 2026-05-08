@@ -630,6 +630,23 @@ declare var it: {
     ) => void,
   },
   /**
+   * Invert the test expectation: the test passes when the callback fails.
+   */
+  failing: {
+    (
+      name: JestTestName,
+      fn?: (done: JestDoneFn) => ?Promise<mixed>,
+      timeout?: number,
+    ): void,
+    each(
+      ...table: Array<Array<mixed> | mixed> | [Array<string>, string]
+    ): (
+      name: JestTestName,
+      fn?: (...args: Array<any>) => ?Promise<mixed>,
+      timeout?: number,
+    ) => void,
+  },
+  /**
    * Highlight planned tests in the summary output
    *
    * @param {String} Name of Test to do

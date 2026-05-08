@@ -1264,7 +1264,11 @@ pub(super) fn call_cover(
             }
         }
         TokenKind::TLshift | TokenKind::TLessThan => {
-            if env.should_parse_types() {
+            let is_optional_type_call =
+                matches!(optional, Some(expression::OptionalCallKind::Optional));
+            if env.should_parse_ambiguous_types()
+                || (env.should_parse_types() && is_optional_type_call)
+            {
                 // If we are parsing types, then f<T>(e) is a function call with a
                 // type application. If we aren't, it's a nested binary expression.
                 // Parameterized call syntax is ambiguous, so we fall back to
@@ -1403,12 +1407,12 @@ fn new_expression(env: &mut ParserEnv) -> Result<expression::Expression<Loc, Loc
 
             // Remove trailing comments if the callee is followed by args or type args
             if peek::token(env) == &TokenKind::TLparen
-                || (env.should_parse_types() && peek::token(env) == &TokenKind::TLessThan)
+                || (env.should_parse_ambiguous_types() && peek::token(env) == &TokenKind::TLessThan)
             {
                 comment_attachment::expression_remove_trailing(env, &mut callee);
             }
 
-            let targs = if env.should_parse_types() {
+            let targs = if env.should_parse_ambiguous_types() {
                 // If we are parsing types, then new C<T>(e) is a constructor with a
                 // type application. If we aren't, it's a nested binary expression.
                 env.with_error_callback(

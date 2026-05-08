@@ -12,7 +12,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const OUTPUT_FILE = path.resolve(__dirname, '../dist/FlowParserWASM.js');
+const OUTPUT_FILE = path.resolve(
+  __dirname,
+  '..',
+  'flow-parser-oxidized',
+  'dist',
+  'FlowParserWASM.js',
+);
 
 const HEADER = `/**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -28,7 +34,7 @@ const inputPath = process.argv[2];
 if (inputPath == null) {
   console.error(
     'Usage: node genFlowWasmParser.js <path-to-wasm-js>\n' +
-      '  Prepends the MIT license header to the emcc-built JS and writes it to dist/.',
+      '  Prepends the MIT license header to the emcc-built JS and writes it to flow-parser-oxidized/dist/.',
   );
   process.exit(1);
 }

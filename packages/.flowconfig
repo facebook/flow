@@ -1,0 +1,59 @@
+[libs]
+./flow-typed
+
+[ignore]
+<PROJECT_ROOT>/.*/dist
+<PROJECT_ROOT>/.*/node_modules
+<PROJECT_ROOT>/babel-plugin-transform-flow-enums/.*
+<PROJECT_ROOT>/eslint-plugin-fb-flow/.*
+<PROJECT_ROOT>/flow-dev-tools/.*
+<PROJECT_ROOT>/flow-enums-runtime/.*
+<PROJECT_ROOT>/flow-for-vscode/.*
+<PROJECT_ROOT>/flow-parser/.*
+<PROJECT_ROOT>/flow-remove-types/.*
+<PROJECT_ROOT>/flow-typed-oxidized/.*
+<PROJECT_ROOT>/flow-upgrade/.*
+<PROJECT_ROOT>/try-flow-website-js/.*
+
+[options]
+name=flow-packages-oxidized
+emoji=true
+file_watcher=watchman
+lazy_mode=true
+module.system=node
+munge_underscores=true
+; Yarn workspaces hoist packages to the top level node_modules, causing module resolution errors if
+; we do not specify where each package's type definitions can be found.
+module.name_mapper='^flow-parser-oxidized$' -> '<PROJECT_ROOT>/flow-parser-oxidized/src/index.js'
+module.name_mapper='^flow-estree-oxidized$' -> '<PROJECT_ROOT>/flow-estree-oxidized/src/index.js'
+module.name_mapper='^flow-eslint-oxidized$' -> '<PROJECT_ROOT>/flow-eslint-oxidized/src/index.js'
+module.name_mapper='^flow-transform-oxidized$' -> '<PROJECT_ROOT>/flow-transform-oxidized/src/index.js'
+module.name_mapper='^hermes-estree$' -> '<PROJECT_ROOT>/flow-estree-oxidized/src/index.js'
+
+enums=true
+component_syntax=false
+experimental.pattern_matching=false
+
+[version]
+^0.312.0
+
+[lints]
+untyped-type-import=error
+unclear-type=error
+
+; ES6 module lints
+invalid-import-star-use=error
+non-const-var-export=error
+this-in-exported-function=error
+mixed-import-and-require=error
+export-renamed-default=error
+default-import-access=error
+
+[strict]
+deprecated-type
+nonstrict-import
+sketchy-null
+unclear-type
+unsafe-getters-setters
+untyped-import
+untyped-type-import

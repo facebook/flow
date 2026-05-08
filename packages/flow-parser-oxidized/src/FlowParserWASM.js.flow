@@ -57,6 +57,10 @@ export type FlowParserWASM = $ReadOnly<{
         'number',
         'number',
         'number',
+        'number',
+        'number',
+        'number',
+        'number',
       ],
     ): (
       number,
@@ -69,6 +73,10 @@ export type FlowParserWASM = $ReadOnly<{
       CBoolean,
       CBoolean,
       CBoolean,
+      CBoolean,
+      CBoolean,
+      CBoolean,
+      number,
       CBoolean,
     ) => number,
     ('hermesParseResult_free', 'void', ['number']): number => void,
@@ -91,6 +99,11 @@ export type FlowParserWASM = $ReadOnly<{
     ): number => number,
     (
       'hermesParseResult_getPositionBufferSize',
+      'number',
+      ['number'],
+    ): number => number,
+    (
+      'hermesParseResult_getStringBuffer',
       'number',
       ['number'],
     ): number => number,

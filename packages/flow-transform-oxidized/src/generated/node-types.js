@@ -1371,7 +1371,7 @@ export function AnyTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<AnyTypeAnnotationType> {
-  return detachedProps<AnyTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<AnyTypeAnnotationType>(props.parent, {
     type: 'AnyTypeAnnotation',
   });
 }
@@ -1380,12 +1380,12 @@ export function ArrayExpression(props: {
   ...ArrayExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<ArrayExpressionType> {
-  const node = detachedProps<ArrayExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ArrayExpressionType>(props.parent, {
     type: 'ArrayExpression',
     elements: props.elements.map(n => asDetachedNodeForCodeGen(n)),
     trailingComma: props.trailingComma,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1393,12 +1393,12 @@ export function ArrayPattern(props: {
   ...ArrayPatternProps,
   +parent?: ESNode,
 }): DetachedNode<ArrayPatternType> {
-  const node = detachedProps<ArrayPatternType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ArrayPatternType>(props.parent, {
     type: 'ArrayPattern',
     elements: props.elements.map(n => asDetachedNodeForCodeGen(n)),
     typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1407,13 +1407,13 @@ export function ArrayTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<ArrayTypeAnnotationType> {
   const node = detachedProps<ArrayTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ArrayTypeAnnotation',
       elementType: asDetachedNodeForCodeGen(props.elementType),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1422,13 +1422,13 @@ export function AsConstExpression(props: {
   +parent?: ESNode,
 }): DetachedNode<AsConstExpressionType> {
   const node = detachedProps<AsConstExpressionType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'AsConstExpression',
       expression: asDetachedNodeForCodeGen(props.expression),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1436,12 +1436,12 @@ export function AsExpression(props: {
   ...AsExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<AsExpressionType> {
-  const node = detachedProps<AsExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<AsExpressionType>(props.parent, {
     type: 'AsExpression',
     expression: asDetachedNodeForCodeGen(props.expression),
     typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1450,7 +1450,7 @@ export function AssignmentExpression(props: {
   +parent?: ESNode,
 }): DetachedNode<AssignmentExpressionType> {
   const node = detachedProps<AssignmentExpressionType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'AssignmentExpression',
       operator: props.operator,
@@ -1458,7 +1458,7 @@ export function AssignmentExpression(props: {
       right: asDetachedNodeForCodeGen(props.right),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1467,14 +1467,14 @@ export function AssignmentPattern(props: {
   +parent?: ESNode,
 }): DetachedNode<AssignmentPatternType> {
   const node = detachedProps<AssignmentPatternType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'AssignmentPattern',
       left: asDetachedNodeForCodeGen(props.left),
       right: asDetachedNodeForCodeGen(props.right),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1482,11 +1482,11 @@ export function AwaitExpression(props: {
   ...AwaitExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<AwaitExpressionType> {
-  const node = detachedProps<AwaitExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<AwaitExpressionType>(props.parent, {
     type: 'AwaitExpression',
     argument: asDetachedNodeForCodeGen(props.argument),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1495,13 +1495,13 @@ export function BigIntLiteralTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<BigIntLiteralTypeAnnotationType> {
   const node = detachedProps<BigIntLiteralTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'BigIntLiteralTypeAnnotation',
       raw: props.raw,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1510,7 +1510,7 @@ export function BigIntTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<BigIntTypeAnnotationType> {
-  return detachedProps<BigIntTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<BigIntTypeAnnotationType>(props.parent, {
     type: 'BigIntTypeAnnotation',
   });
 }
@@ -1519,13 +1519,13 @@ export function BinaryExpression(props: {
   ...BinaryExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<BinaryExpressionType> {
-  const node = detachedProps<BinaryExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<BinaryExpressionType>(props.parent, {
     type: 'BinaryExpression',
     left: asDetachedNodeForCodeGen(props.left),
     right: asDetachedNodeForCodeGen(props.right),
     operator: props.operator,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1534,14 +1534,14 @@ export function BooleanLiteralTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<BooleanLiteralTypeAnnotationType> {
   const node = detachedProps<BooleanLiteralTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'BooleanLiteralTypeAnnotation',
       value: props.value,
       raw: props.raw,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1550,7 +1550,7 @@ export function BooleanTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<BooleanTypeAnnotationType> {
-  return detachedProps<BooleanTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<BooleanTypeAnnotationType>(props.parent, {
     type: 'BooleanTypeAnnotation',
   });
 }
@@ -1559,11 +1559,11 @@ export function BreakStatement(props: {
   ...BreakStatementProps,
   +parent?: ESNode,
 }): DetachedNode<BreakStatementType> {
-  const node = detachedProps<BreakStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<BreakStatementType>(props.parent, {
     type: 'BreakStatement',
     label: asDetachedNodeForCodeGen(props.label),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1571,13 +1571,13 @@ export function CallExpression(props: {
   ...CallExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<CallExpressionType> {
-  const node = detachedProps<CallExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<CallExpressionType>(props.parent, {
     type: 'CallExpression',
     callee: asDetachedNodeForCodeGen(props.callee),
     typeArguments: asDetachedNodeForCodeGen(props.typeArguments),
     arguments: props.arguments.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1585,12 +1585,12 @@ export function CatchClause(props: {
   ...CatchClauseProps,
   +parent?: ESNode,
 }): DetachedNode<CatchClauseType> {
-  const node = detachedProps<CatchClauseType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<CatchClauseType>(props.parent, {
     type: 'CatchClause',
     param: asDetachedNodeForCodeGen(props.param),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1598,11 +1598,11 @@ export function ChainExpression(props: {
   ...ChainExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<ChainExpressionType> {
-  const node = detachedProps<ChainExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ChainExpressionType>(props.parent, {
     type: 'ChainExpression',
     expression: asDetachedNodeForCodeGen(props.expression),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1610,11 +1610,11 @@ export function ClassBody(props: {
   ...ClassBodyProps,
   +parent?: ESNode,
 }): DetachedNode<ClassBodyType> {
-  const node = detachedProps<ClassBodyType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ClassBodyType>(props.parent, {
     type: 'ClassBody',
     body: props.body.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1622,7 +1622,7 @@ export function ClassExpression(props: {
   ...ClassExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<ClassExpressionType> {
-  const node = detachedProps<ClassExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ClassExpressionType>(props.parent, {
     type: 'ClassExpression',
     id: asDetachedNodeForCodeGen(props.id),
     typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
@@ -1632,7 +1632,7 @@ export function ClassExpression(props: {
     decorators: props.decorators.map(n => asDetachedNodeForCodeGen(n)),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1640,12 +1640,12 @@ export function ClassImplements(props: {
   ...ClassImplementsProps,
   +parent?: ESNode,
 }): DetachedNode<ClassImplementsType> {
-  const node = detachedProps<ClassImplementsType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ClassImplementsType>(props.parent, {
     type: 'ClassImplements',
     id: asDetachedNodeForCodeGen(props.id),
     typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1654,7 +1654,7 @@ export function ComponentDeclaration(props: {
   +parent?: ESNode,
 }): DetachedNode<ComponentDeclarationType> {
   const node = detachedProps<ComponentDeclarationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ComponentDeclaration',
       id: asDetachedNodeForCodeGen(props.id),
@@ -1665,7 +1665,7 @@ export function ComponentDeclaration(props: {
       async: props.async,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1674,7 +1674,7 @@ export function ComponentParameter(props: {
   +parent?: ESNode,
 }): DetachedNode<ComponentParameterType> {
   const node = detachedProps<ComponentParameterType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ComponentParameter',
       name: asDetachedNodeForCodeGen(props.name),
@@ -1682,7 +1682,7 @@ export function ComponentParameter(props: {
       shorthand: props.shorthand,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1691,7 +1691,7 @@ export function ComponentTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<ComponentTypeAnnotationType> {
   const node = detachedProps<ComponentTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ComponentTypeAnnotation',
       params: props.params.map(n => asDetachedNodeForCodeGen(n)),
@@ -1700,7 +1700,7 @@ export function ComponentTypeAnnotation(props: {
       rendersType: asDetachedNodeForCodeGen(props.rendersType),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1709,7 +1709,7 @@ export function ComponentTypeParameter(props: {
   +parent?: ESNode,
 }): DetachedNode<ComponentTypeParameterType> {
   const node = detachedProps<ComponentTypeParameterType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ComponentTypeParameter',
       name: asDetachedNodeForCodeGen(props.name),
@@ -1717,7 +1717,7 @@ export function ComponentTypeParameter(props: {
       optional: props.optional,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1726,7 +1726,7 @@ export function ConditionalExpression(props: {
   +parent?: ESNode,
 }): DetachedNode<ConditionalExpressionType> {
   const node = detachedProps<ConditionalExpressionType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ConditionalExpression',
       test: asDetachedNodeForCodeGen(props.test),
@@ -1734,7 +1734,7 @@ export function ConditionalExpression(props: {
       consequent: asDetachedNodeForCodeGen(props.consequent),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1743,7 +1743,7 @@ export function ConditionalTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<ConditionalTypeAnnotationType> {
   const node = detachedProps<ConditionalTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ConditionalTypeAnnotation',
       checkType: asDetachedNodeForCodeGen(props.checkType),
@@ -1752,7 +1752,7 @@ export function ConditionalTypeAnnotation(props: {
       falseType: asDetachedNodeForCodeGen(props.falseType),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1761,13 +1761,13 @@ export function ContinueStatement(props: {
   +parent?: ESNode,
 }): DetachedNode<ContinueStatementType> {
   const node = detachedProps<ContinueStatementType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ContinueStatement',
       label: asDetachedNodeForCodeGen(props.label),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1776,7 +1776,7 @@ export function DebuggerStatement(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<DebuggerStatementType> {
-  return detachedProps<DebuggerStatementType>((props.parent: $FlowFixMe), {
+  return detachedProps<DebuggerStatementType>(props.parent, {
     type: 'DebuggerStatement',
   });
 }
@@ -1785,7 +1785,7 @@ export function DeclareClass(props: {
   ...DeclareClassProps,
   +parent?: ESNode,
 }): DetachedNode<DeclareClassType> {
-  const node = detachedProps<DeclareClassType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<DeclareClassType>(props.parent, {
     type: 'DeclareClass',
     id: asDetachedNodeForCodeGen(props.id),
     typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
@@ -1794,7 +1794,7 @@ export function DeclareClass(props: {
     mixins: props.mixins.map(n => asDetachedNodeForCodeGen(n)),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1802,7 +1802,7 @@ export function DeclareComponent(props: {
   ...DeclareComponentProps,
   +parent?: ESNode,
 }): DetachedNode<DeclareComponentType> {
-  const node = detachedProps<DeclareComponentType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<DeclareComponentType>(props.parent, {
     type: 'DeclareComponent',
     id: asDetachedNodeForCodeGen(props.id),
     params: props.params.map(n => asDetachedNodeForCodeGen(n)),
@@ -1810,7 +1810,7 @@ export function DeclareComponent(props: {
     typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
     rendersType: asDetachedNodeForCodeGen(props.rendersType),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1819,13 +1819,13 @@ export function DeclaredPredicate(props: {
   +parent?: ESNode,
 }): DetachedNode<DeclaredPredicateType> {
   const node = detachedProps<DeclaredPredicateType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'DeclaredPredicate',
       value: asDetachedNodeForCodeGen(props.value),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1833,12 +1833,12 @@ export function DeclareEnum(props: {
   ...DeclareEnumProps,
   +parent?: ESNode,
 }): DetachedNode<DeclareEnumType> {
-  const node = detachedProps<DeclareEnumType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<DeclareEnumType>(props.parent, {
     type: 'DeclareEnum',
     id: asDetachedNodeForCodeGen(props.id),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1847,13 +1847,13 @@ export function DeclareExportAllDeclaration(props: {
   +parent?: ESNode,
 }): DetachedNode<DeclareExportAllDeclarationType> {
   const node = detachedProps<DeclareExportAllDeclarationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'DeclareExportAllDeclaration',
       source: asDetachedNodeForCodeGen(props.source),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1861,14 +1861,14 @@ export function DeclareInterface(props: {
   ...DeclareInterfaceProps,
   +parent?: ESNode,
 }): DetachedNode<DeclareInterfaceType> {
-  const node = detachedProps<DeclareInterfaceType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<DeclareInterfaceType>(props.parent, {
     type: 'DeclareInterface',
     id: asDetachedNodeForCodeGen(props.id),
     typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
     extends: props.extends.map(n => asDetachedNodeForCodeGen(n)),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1876,12 +1876,12 @@ export function DeclareModule(props: {
   ...DeclareModuleProps,
   +parent?: ESNode,
 }): DetachedNode<DeclareModuleType> {
-  const node = detachedProps<DeclareModuleType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<DeclareModuleType>(props.parent, {
     type: 'DeclareModule',
     id: asDetachedNodeForCodeGen(props.id),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1890,13 +1890,13 @@ export function DeclareModuleExports(props: {
   +parent?: ESNode,
 }): DetachedNode<DeclareModuleExportsType> {
   const node = detachedProps<DeclareModuleExportsType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'DeclareModuleExports',
       typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1904,12 +1904,12 @@ export function DeclareNamespace(props: {
   ...DeclareNamespaceProps,
   +parent?: ESNode,
 }): DetachedNode<DeclareNamespaceType> {
-  const node = detachedProps<DeclareNamespaceType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<DeclareNamespaceType>(props.parent, {
     type: 'DeclareNamespace',
     id: asDetachedNodeForCodeGen(props.id),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1918,7 +1918,7 @@ export function DeclareOpaqueType(props: {
   +parent?: ESNode,
 }): DetachedNode<DeclareOpaqueTypeType> {
   const node = detachedProps<DeclareOpaqueTypeType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'DeclareOpaqueType',
       id: asDetachedNodeForCodeGen(props.id),
@@ -1929,7 +1929,7 @@ export function DeclareOpaqueType(props: {
       supertype: asDetachedNodeForCodeGen(props.supertype),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1937,13 +1937,13 @@ export function DeclareTypeAlias(props: {
   ...DeclareTypeAliasProps,
   +parent?: ESNode,
 }): DetachedNode<DeclareTypeAliasType> {
-  const node = detachedProps<DeclareTypeAliasType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<DeclareTypeAliasType>(props.parent, {
     type: 'DeclareTypeAlias',
     id: asDetachedNodeForCodeGen(props.id),
     typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
     right: asDetachedNodeForCodeGen(props.right),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1951,12 +1951,12 @@ export function DeclareVariable(props: {
   ...DeclareVariableProps,
   +parent?: ESNode,
 }): DetachedNode<DeclareVariableType> {
-  const node = detachedProps<DeclareVariableType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<DeclareVariableType>(props.parent, {
     type: 'DeclareVariable',
     id: asDetachedNodeForCodeGen(props.id),
     kind: props.kind,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1964,11 +1964,11 @@ export function Decorator(props: {
   ...DecoratorProps,
   +parent?: ESNode,
 }): DetachedNode<DecoratorType> {
-  const node = detachedProps<DecoratorType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<DecoratorType>(props.parent, {
     type: 'Decorator',
     expression: asDetachedNodeForCodeGen(props.expression),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1976,12 +1976,12 @@ export function DoWhileStatement(props: {
   ...DoWhileStatementProps,
   +parent?: ESNode,
 }): DetachedNode<DoWhileStatementType> {
-  const node = detachedProps<DoWhileStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<DoWhileStatementType>(props.parent, {
     type: 'DoWhileStatement',
     body: asDetachedNodeForCodeGen(props.body),
     test: asDetachedNodeForCodeGen(props.test),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -1990,7 +1990,7 @@ export function EmptyStatement(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<EmptyStatementType> {
-  return detachedProps<EmptyStatementType>((props.parent: $FlowFixMe), {
+  return detachedProps<EmptyStatementType>(props.parent, {
     type: 'EmptyStatement',
   });
 }
@@ -2000,7 +2000,7 @@ export function EmptyTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<EmptyTypeAnnotationType> {
-  return detachedProps<EmptyTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<EmptyTypeAnnotationType>(props.parent, {
     type: 'EmptyTypeAnnotation',
   });
 }
@@ -2009,13 +2009,13 @@ export function EnumBigIntBody(props: {
   ...EnumBigIntBodyProps,
   +parent?: ESNode,
 }): DetachedNode<EnumBigIntBodyType> {
-  const node = detachedProps<EnumBigIntBodyType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<EnumBigIntBodyType>(props.parent, {
     type: 'EnumBigIntBody',
     members: props.members.map(n => asDetachedNodeForCodeGen(n)),
     explicitType: props.explicitType,
     hasUnknownMembers: props.hasUnknownMembers,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2023,12 +2023,12 @@ export function EnumBigIntMember(props: {
   ...EnumBigIntMemberProps,
   +parent?: ESNode,
 }): DetachedNode<EnumBigIntMemberType> {
-  const node = detachedProps<EnumBigIntMemberType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<EnumBigIntMemberType>(props.parent, {
     type: 'EnumBigIntMember',
     id: asDetachedNodeForCodeGen(props.id),
     init: asDetachedNodeForCodeGen(props.init),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2036,13 +2036,13 @@ export function EnumBooleanBody(props: {
   ...EnumBooleanBodyProps,
   +parent?: ESNode,
 }): DetachedNode<EnumBooleanBodyType> {
-  const node = detachedProps<EnumBooleanBodyType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<EnumBooleanBodyType>(props.parent, {
     type: 'EnumBooleanBody',
     members: props.members.map(n => asDetachedNodeForCodeGen(n)),
     explicitType: props.explicitType,
     hasUnknownMembers: props.hasUnknownMembers,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2051,14 +2051,14 @@ export function EnumBooleanMember(props: {
   +parent?: ESNode,
 }): DetachedNode<EnumBooleanMemberType> {
   const node = detachedProps<EnumBooleanMemberType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'EnumBooleanMember',
       id: asDetachedNodeForCodeGen(props.id),
       init: asDetachedNodeForCodeGen(props.init),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2066,12 +2066,12 @@ export function EnumDeclaration(props: {
   ...EnumDeclarationProps,
   +parent?: ESNode,
 }): DetachedNode<EnumDeclarationType> {
-  const node = detachedProps<EnumDeclarationType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<EnumDeclarationType>(props.parent, {
     type: 'EnumDeclaration',
     id: asDetachedNodeForCodeGen(props.id),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2080,13 +2080,13 @@ export function EnumDefaultedMember(props: {
   +parent?: ESNode,
 }): DetachedNode<EnumDefaultedMemberType> {
   const node = detachedProps<EnumDefaultedMemberType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'EnumDefaultedMember',
       id: asDetachedNodeForCodeGen(props.id),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2094,13 +2094,13 @@ export function EnumNumberBody(props: {
   ...EnumNumberBodyProps,
   +parent?: ESNode,
 }): DetachedNode<EnumNumberBodyType> {
-  const node = detachedProps<EnumNumberBodyType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<EnumNumberBodyType>(props.parent, {
     type: 'EnumNumberBody',
     members: props.members.map(n => asDetachedNodeForCodeGen(n)),
     explicitType: props.explicitType,
     hasUnknownMembers: props.hasUnknownMembers,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2108,12 +2108,12 @@ export function EnumNumberMember(props: {
   ...EnumNumberMemberProps,
   +parent?: ESNode,
 }): DetachedNode<EnumNumberMemberType> {
-  const node = detachedProps<EnumNumberMemberType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<EnumNumberMemberType>(props.parent, {
     type: 'EnumNumberMember',
     id: asDetachedNodeForCodeGen(props.id),
     init: asDetachedNodeForCodeGen(props.init),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2121,13 +2121,13 @@ export function EnumStringBody(props: {
   ...EnumStringBodyProps,
   +parent?: ESNode,
 }): DetachedNode<EnumStringBodyType> {
-  const node = detachedProps<EnumStringBodyType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<EnumStringBodyType>(props.parent, {
     type: 'EnumStringBody',
     members: props.members.map(n => asDetachedNodeForCodeGen(n)),
     explicitType: props.explicitType,
     hasUnknownMembers: props.hasUnknownMembers,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2135,12 +2135,12 @@ export function EnumStringMember(props: {
   ...EnumStringMemberProps,
   +parent?: ESNode,
 }): DetachedNode<EnumStringMemberType> {
-  const node = detachedProps<EnumStringMemberType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<EnumStringMemberType>(props.parent, {
     type: 'EnumStringMember',
     id: asDetachedNodeForCodeGen(props.id),
     init: asDetachedNodeForCodeGen(props.init),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2148,12 +2148,12 @@ export function EnumSymbolBody(props: {
   ...EnumSymbolBodyProps,
   +parent?: ESNode,
 }): DetachedNode<EnumSymbolBodyType> {
-  const node = detachedProps<EnumSymbolBodyType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<EnumSymbolBodyType>(props.parent, {
     type: 'EnumSymbolBody',
     members: props.members.map(n => asDetachedNodeForCodeGen(n)),
     hasUnknownMembers: props.hasUnknownMembers,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2162,7 +2162,7 @@ export function ExistsTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<ExistsTypeAnnotationType> {
-  return detachedProps<ExistsTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<ExistsTypeAnnotationType>(props.parent, {
     type: 'ExistsTypeAnnotation',
   });
 }
@@ -2172,7 +2172,7 @@ export function ExportAllDeclaration(props: {
   +parent?: ESNode,
 }): DetachedNode<ExportAllDeclarationType> {
   const node = detachedProps<ExportAllDeclarationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ExportAllDeclaration',
       exported: asDetachedNodeForCodeGen(props.exported),
@@ -2180,7 +2180,7 @@ export function ExportAllDeclaration(props: {
       exportKind: props.exportKind,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2189,13 +2189,13 @@ export function ExportDefaultDeclaration(props: {
   +parent?: ESNode,
 }): DetachedNode<ExportDefaultDeclarationType> {
   const node = detachedProps<ExportDefaultDeclarationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ExportDefaultDeclaration',
       declaration: asDetachedNodeForCodeGen(props.declaration),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2203,12 +2203,12 @@ export function ExportSpecifier(props: {
   ...ExportSpecifierProps,
   +parent?: ESNode,
 }): DetachedNode<ExportSpecifierType> {
-  const node = detachedProps<ExportSpecifierType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ExportSpecifierType>(props.parent, {
     type: 'ExportSpecifier',
     exported: asDetachedNodeForCodeGen(props.exported),
     local: asDetachedNodeForCodeGen(props.local),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2217,14 +2217,14 @@ export function ExpressionStatement(props: {
   +parent?: ESNode,
 }): DetachedNode<ExpressionStatementType> {
   const node = detachedProps<ExpressionStatementType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ExpressionStatement',
       expression: asDetachedNodeForCodeGen(props.expression),
       directive: props.directive,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2232,13 +2232,13 @@ export function ForInStatement(props: {
   ...ForInStatementProps,
   +parent?: ESNode,
 }): DetachedNode<ForInStatementType> {
-  const node = detachedProps<ForInStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ForInStatementType>(props.parent, {
     type: 'ForInStatement',
     left: asDetachedNodeForCodeGen(props.left),
     right: asDetachedNodeForCodeGen(props.right),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2246,14 +2246,14 @@ export function ForOfStatement(props: {
   ...ForOfStatementProps,
   +parent?: ESNode,
 }): DetachedNode<ForOfStatementType> {
-  const node = detachedProps<ForOfStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ForOfStatementType>(props.parent, {
     type: 'ForOfStatement',
     left: asDetachedNodeForCodeGen(props.left),
     right: asDetachedNodeForCodeGen(props.right),
     body: asDetachedNodeForCodeGen(props.body),
     await: props.await,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2261,14 +2261,14 @@ export function ForStatement(props: {
   ...ForStatementProps,
   +parent?: ESNode,
 }): DetachedNode<ForStatementType> {
-  const node = detachedProps<ForStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ForStatementType>(props.parent, {
     type: 'ForStatement',
     init: asDetachedNodeForCodeGen(props.init),
     test: asDetachedNodeForCodeGen(props.test),
     update: asDetachedNodeForCodeGen(props.update),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2277,7 +2277,7 @@ export function FunctionDeclaration(props: {
   +parent?: ESNode,
 }): DetachedNode<FunctionDeclarationType> {
   const node = detachedProps<FunctionDeclarationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'FunctionDeclaration',
       id: asDetachedNodeForCodeGen(props.id),
@@ -2290,7 +2290,7 @@ export function FunctionDeclaration(props: {
       async: props.async,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2299,7 +2299,7 @@ export function FunctionExpression(props: {
   +parent?: ESNode,
 }): DetachedNode<FunctionExpressionType> {
   const node = detachedProps<FunctionExpressionType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'FunctionExpression',
       id: asDetachedNodeForCodeGen(props.id),
@@ -2312,7 +2312,7 @@ export function FunctionExpression(props: {
       async: props.async,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2321,7 +2321,7 @@ export function FunctionTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<FunctionTypeAnnotationType> {
   const node = detachedProps<FunctionTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'FunctionTypeAnnotation',
       params: props.params.map(n => asDetachedNodeForCodeGen(n)),
@@ -2331,7 +2331,7 @@ export function FunctionTypeAnnotation(props: {
       typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2340,7 +2340,7 @@ export function FunctionTypeParam(props: {
   +parent?: ESNode,
 }): DetachedNode<FunctionTypeParamType> {
   const node = detachedProps<FunctionTypeParamType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'FunctionTypeParam',
       name: asDetachedNodeForCodeGen(props.name),
@@ -2348,7 +2348,7 @@ export function FunctionTypeParam(props: {
       optional: props.optional,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2357,14 +2357,14 @@ export function GenericTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<GenericTypeAnnotationType> {
   const node = detachedProps<GenericTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'GenericTypeAnnotation',
       id: asDetachedNodeForCodeGen(props.id),
       typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2372,7 +2372,7 @@ export function HookDeclaration(props: {
   ...HookDeclarationProps,
   +parent?: ESNode,
 }): DetachedNode<HookDeclarationType> {
-  const node = detachedProps<HookDeclarationType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<HookDeclarationType>(props.parent, {
     type: 'HookDeclaration',
     id: asDetachedNodeForCodeGen(props.id),
     params: props.params.map(n => asDetachedNodeForCodeGen(n)),
@@ -2381,7 +2381,7 @@ export function HookDeclaration(props: {
     returnType: asDetachedNodeForCodeGen(props.returnType),
     async: props.async,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2390,7 +2390,7 @@ export function HookTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<HookTypeAnnotationType> {
   const node = detachedProps<HookTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'HookTypeAnnotation',
       params: props.params.map(n => asDetachedNodeForCodeGen(n)),
@@ -2399,7 +2399,7 @@ export function HookTypeAnnotation(props: {
       typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2407,13 +2407,13 @@ export function IfStatement(props: {
   ...IfStatementProps,
   +parent?: ESNode,
 }): DetachedNode<IfStatementType> {
-  const node = detachedProps<IfStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<IfStatementType>(props.parent, {
     type: 'IfStatement',
     test: asDetachedNodeForCodeGen(props.test),
     consequent: asDetachedNodeForCodeGen(props.consequent),
     alternate: asDetachedNodeForCodeGen(props.alternate),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2421,12 +2421,12 @@ export function ImportAttribute(props: {
   ...ImportAttributeProps,
   +parent?: ESNode,
 }): DetachedNode<ImportAttributeType> {
-  const node = detachedProps<ImportAttributeType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ImportAttributeType>(props.parent, {
     type: 'ImportAttribute',
     key: asDetachedNodeForCodeGen(props.key),
     value: asDetachedNodeForCodeGen(props.value),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2435,7 +2435,7 @@ export function ImportDeclaration(props: {
   +parent?: ESNode,
 }): DetachedNode<ImportDeclarationType> {
   const node = detachedProps<ImportDeclarationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ImportDeclaration',
       specifiers: props.specifiers.map(n => asDetachedNodeForCodeGen(n)),
@@ -2444,7 +2444,7 @@ export function ImportDeclaration(props: {
       importKind: props.importKind,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2453,13 +2453,13 @@ export function ImportDefaultSpecifier(props: {
   +parent?: ESNode,
 }): DetachedNode<ImportDefaultSpecifierType> {
   const node = detachedProps<ImportDefaultSpecifierType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ImportDefaultSpecifier',
       local: asDetachedNodeForCodeGen(props.local),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2467,12 +2467,12 @@ export function ImportExpression(props: {
   ...ImportExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<ImportExpressionType> {
-  const node = detachedProps<ImportExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ImportExpressionType>(props.parent, {
     type: 'ImportExpression',
     source: asDetachedNodeForCodeGen(props.source),
     options: asDetachedNodeForCodeGen(props.options),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2481,13 +2481,13 @@ export function ImportNamespaceSpecifier(props: {
   +parent?: ESNode,
 }): DetachedNode<ImportNamespaceSpecifierType> {
   const node = detachedProps<ImportNamespaceSpecifierType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ImportNamespaceSpecifier',
       local: asDetachedNodeForCodeGen(props.local),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2495,13 +2495,13 @@ export function ImportSpecifier(props: {
   ...ImportSpecifierProps,
   +parent?: ESNode,
 }): DetachedNode<ImportSpecifierType> {
-  const node = detachedProps<ImportSpecifierType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ImportSpecifierType>(props.parent, {
     type: 'ImportSpecifier',
     imported: asDetachedNodeForCodeGen(props.imported),
     local: asDetachedNodeForCodeGen(props.local),
     importKind: props.importKind,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2510,14 +2510,14 @@ export function IndexedAccessType(props: {
   +parent?: ESNode,
 }): DetachedNode<IndexedAccessTypeType> {
   const node = detachedProps<IndexedAccessTypeType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'IndexedAccessType',
       objectType: asDetachedNodeForCodeGen(props.objectType),
       indexType: asDetachedNodeForCodeGen(props.indexType),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2526,7 +2526,7 @@ export function InferredPredicate(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<InferredPredicateType> {
-  return detachedProps<InferredPredicateType>((props.parent: $FlowFixMe), {
+  return detachedProps<InferredPredicateType>(props.parent, {
     type: 'InferredPredicate',
   });
 }
@@ -2536,13 +2536,13 @@ export function InferTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<InferTypeAnnotationType> {
   const node = detachedProps<InferTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'InferTypeAnnotation',
       typeParameter: asDetachedNodeForCodeGen(props.typeParameter),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2551,7 +2551,7 @@ export function InterfaceDeclaration(props: {
   +parent?: ESNode,
 }): DetachedNode<InterfaceDeclarationType> {
   const node = detachedProps<InterfaceDeclarationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'InterfaceDeclaration',
       id: asDetachedNodeForCodeGen(props.id),
@@ -2560,7 +2560,7 @@ export function InterfaceDeclaration(props: {
       body: asDetachedNodeForCodeGen(props.body),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2568,12 +2568,12 @@ export function InterfaceExtends(props: {
   ...InterfaceExtendsProps,
   +parent?: ESNode,
 }): DetachedNode<InterfaceExtendsType> {
-  const node = detachedProps<InterfaceExtendsType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<InterfaceExtendsType>(props.parent, {
     type: 'InterfaceExtends',
     id: asDetachedNodeForCodeGen(props.id),
     typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2582,14 +2582,14 @@ export function InterfaceTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<InterfaceTypeAnnotationType> {
   const node = detachedProps<InterfaceTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'InterfaceTypeAnnotation',
       extends: props.extends.map(n => asDetachedNodeForCodeGen(n)),
       body: asDetachedNodeForCodeGen(props.body),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2598,13 +2598,13 @@ export function IntersectionTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<IntersectionTypeAnnotationType> {
   const node = detachedProps<IntersectionTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'IntersectionTypeAnnotation',
       types: props.types.map(n => asDetachedNodeForCodeGen(n)),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2612,12 +2612,12 @@ export function JSXAttribute(props: {
   ...JSXAttributeProps,
   +parent?: ESNode,
 }): DetachedNode<JSXAttributeType> {
-  const node = detachedProps<JSXAttributeType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<JSXAttributeType>(props.parent, {
     type: 'JSXAttribute',
     name: asDetachedNodeForCodeGen(props.name),
     value: asDetachedNodeForCodeGen(props.value),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2626,13 +2626,13 @@ export function JSXClosingElement(props: {
   +parent?: ESNode,
 }): DetachedNode<JSXClosingElementType> {
   const node = detachedProps<JSXClosingElementType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'JSXClosingElement',
       name: asDetachedNodeForCodeGen(props.name),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2641,7 +2641,7 @@ export function JSXClosingFragment(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<JSXClosingFragmentType> {
-  return detachedProps<JSXClosingFragmentType>((props.parent: $FlowFixMe), {
+  return detachedProps<JSXClosingFragmentType>(props.parent, {
     type: 'JSXClosingFragment',
   });
 }
@@ -2650,13 +2650,13 @@ export function JSXElement(props: {
   ...JSXElementProps,
   +parent?: ESNode,
 }): DetachedNode<JSXElementType> {
-  const node = detachedProps<JSXElementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<JSXElementType>(props.parent, {
     type: 'JSXElement',
     openingElement: asDetachedNodeForCodeGen(props.openingElement),
     children: props.children.map(n => asDetachedNodeForCodeGen(n)),
     closingElement: asDetachedNodeForCodeGen(props.closingElement),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2665,7 +2665,7 @@ export function JSXEmptyExpression(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<JSXEmptyExpressionType> {
-  return detachedProps<JSXEmptyExpressionType>((props.parent: $FlowFixMe), {
+  return detachedProps<JSXEmptyExpressionType>(props.parent, {
     type: 'JSXEmptyExpression',
   });
 }
@@ -2675,13 +2675,13 @@ export function JSXExpressionContainer(props: {
   +parent?: ESNode,
 }): DetachedNode<JSXExpressionContainerType> {
   const node = detachedProps<JSXExpressionContainerType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'JSXExpressionContainer',
       expression: asDetachedNodeForCodeGen(props.expression),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2689,13 +2689,13 @@ export function JSXFragment(props: {
   ...JSXFragmentProps,
   +parent?: ESNode,
 }): DetachedNode<JSXFragmentType> {
-  const node = detachedProps<JSXFragmentType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<JSXFragmentType>(props.parent, {
     type: 'JSXFragment',
     openingFragment: asDetachedNodeForCodeGen(props.openingFragment),
     children: props.children.map(n => asDetachedNodeForCodeGen(n)),
     closingFragment: asDetachedNodeForCodeGen(props.closingFragment),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2703,11 +2703,11 @@ export function JSXIdentifier(props: {
   ...JSXIdentifierProps,
   +parent?: ESNode,
 }): DetachedNode<JSXIdentifierType> {
-  const node = detachedProps<JSXIdentifierType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<JSXIdentifierType>(props.parent, {
     type: 'JSXIdentifier',
     name: props.name,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2716,14 +2716,14 @@ export function JSXMemberExpression(props: {
   +parent?: ESNode,
 }): DetachedNode<JSXMemberExpressionType> {
   const node = detachedProps<JSXMemberExpressionType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'JSXMemberExpression',
       object: asDetachedNodeForCodeGen(props.object),
       property: asDetachedNodeForCodeGen(props.property),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2732,14 +2732,14 @@ export function JSXNamespacedName(props: {
   +parent?: ESNode,
 }): DetachedNode<JSXNamespacedNameType> {
   const node = detachedProps<JSXNamespacedNameType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'JSXNamespacedName',
       namespace: asDetachedNodeForCodeGen(props.namespace),
       name: asDetachedNodeForCodeGen(props.name),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2748,7 +2748,7 @@ export function JSXOpeningElement(props: {
   +parent?: ESNode,
 }): DetachedNode<JSXOpeningElementType> {
   const node = detachedProps<JSXOpeningElementType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'JSXOpeningElement',
       name: asDetachedNodeForCodeGen(props.name),
@@ -2757,7 +2757,7 @@ export function JSXOpeningElement(props: {
       typeArguments: asDetachedNodeForCodeGen(props.typeArguments),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2766,7 +2766,7 @@ export function JSXOpeningFragment(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<JSXOpeningFragmentType> {
-  return detachedProps<JSXOpeningFragmentType>((props.parent: $FlowFixMe), {
+  return detachedProps<JSXOpeningFragmentType>(props.parent, {
     type: 'JSXOpeningFragment',
   });
 }
@@ -2776,13 +2776,13 @@ export function JSXSpreadAttribute(props: {
   +parent?: ESNode,
 }): DetachedNode<JSXSpreadAttributeType> {
   const node = detachedProps<JSXSpreadAttributeType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'JSXSpreadAttribute',
       argument: asDetachedNodeForCodeGen(props.argument),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2790,11 +2790,11 @@ export function JSXSpreadChild(props: {
   ...JSXSpreadChildProps,
   +parent?: ESNode,
 }): DetachedNode<JSXSpreadChildType> {
-  const node = detachedProps<JSXSpreadChildType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<JSXSpreadChildType>(props.parent, {
     type: 'JSXSpreadChild',
     expression: asDetachedNodeForCodeGen(props.expression),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2802,12 +2802,12 @@ export function JSXText(props: {
   ...JSXTextProps,
   +parent?: ESNode,
 }): DetachedNode<JSXTextType> {
-  const node = detachedProps<JSXTextType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<JSXTextType>(props.parent, {
     type: 'JSXText',
     value: props.value,
     raw: props.raw,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2816,13 +2816,13 @@ export function KeyofTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<KeyofTypeAnnotationType> {
   const node = detachedProps<KeyofTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'KeyofTypeAnnotation',
       argument: asDetachedNodeForCodeGen(props.argument),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2830,12 +2830,12 @@ export function LabeledStatement(props: {
   ...LabeledStatementProps,
   +parent?: ESNode,
 }): DetachedNode<LabeledStatementType> {
-  const node = detachedProps<LabeledStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<LabeledStatementType>(props.parent, {
     type: 'LabeledStatement',
     label: asDetachedNodeForCodeGen(props.label),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2844,7 +2844,7 @@ export function LogicalExpression(props: {
   +parent?: ESNode,
 }): DetachedNode<LogicalExpressionType> {
   const node = detachedProps<LogicalExpressionType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'LogicalExpression',
       left: asDetachedNodeForCodeGen(props.left),
@@ -2852,7 +2852,7 @@ export function LogicalExpression(props: {
       operator: props.operator,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2861,14 +2861,14 @@ export function MatchArrayPattern(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchArrayPatternType> {
   const node = detachedProps<MatchArrayPatternType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchArrayPattern',
       elements: props.elements.map(n => asDetachedNodeForCodeGen(n)),
       rest: asDetachedNodeForCodeGen(props.rest),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2876,12 +2876,12 @@ export function MatchAsPattern(props: {
   ...MatchAsPatternProps,
   +parent?: ESNode,
 }): DetachedNode<MatchAsPatternType> {
-  const node = detachedProps<MatchAsPatternType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<MatchAsPatternType>(props.parent, {
     type: 'MatchAsPattern',
     pattern: asDetachedNodeForCodeGen(props.pattern),
     target: asDetachedNodeForCodeGen(props.target),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2890,14 +2890,14 @@ export function MatchBindingPattern(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchBindingPatternType> {
   const node = detachedProps<MatchBindingPatternType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchBindingPattern',
       id: asDetachedNodeForCodeGen(props.id),
       kind: props.kind,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2905,12 +2905,12 @@ export function MatchExpression(props: {
   ...MatchExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<MatchExpressionType> {
-  const node = detachedProps<MatchExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<MatchExpressionType>(props.parent, {
     type: 'MatchExpression',
     argument: asDetachedNodeForCodeGen(props.argument),
     cases: props.cases.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2919,7 +2919,7 @@ export function MatchExpressionCase(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchExpressionCaseType> {
   const node = detachedProps<MatchExpressionCaseType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchExpressionCase',
       pattern: asDetachedNodeForCodeGen(props.pattern),
@@ -2927,7 +2927,7 @@ export function MatchExpressionCase(props: {
       guard: asDetachedNodeForCodeGen(props.guard),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2936,13 +2936,13 @@ export function MatchIdentifierPattern(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchIdentifierPatternType> {
   const node = detachedProps<MatchIdentifierPatternType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchIdentifierPattern',
       id: asDetachedNodeForCodeGen(props.id),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2951,14 +2951,14 @@ export function MatchInstanceObjectPattern(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchInstanceObjectPatternType> {
   const node = detachedProps<MatchInstanceObjectPatternType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchInstanceObjectPattern',
       properties: props.properties.map(n => asDetachedNodeForCodeGen(n)),
       rest: asDetachedNodeForCodeGen(props.rest),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2967,14 +2967,14 @@ export function MatchInstancePattern(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchInstancePatternType> {
   const node = detachedProps<MatchInstancePatternType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchInstancePattern',
       targetConstructor: asDetachedNodeForCodeGen(props.targetConstructor),
       properties: asDetachedNodeForCodeGen(props.properties),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2983,13 +2983,13 @@ export function MatchLiteralPattern(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchLiteralPatternType> {
   const node = detachedProps<MatchLiteralPatternType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchLiteralPattern',
       literal: asDetachedNodeForCodeGen(props.literal),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -2998,14 +2998,14 @@ export function MatchMemberPattern(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchMemberPatternType> {
   const node = detachedProps<MatchMemberPatternType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchMemberPattern',
       base: asDetachedNodeForCodeGen(props.base),
       property: asDetachedNodeForCodeGen(props.property),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3014,14 +3014,14 @@ export function MatchObjectPattern(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchObjectPatternType> {
   const node = detachedProps<MatchObjectPatternType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchObjectPattern',
       properties: props.properties.map(n => asDetachedNodeForCodeGen(n)),
       rest: asDetachedNodeForCodeGen(props.rest),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3030,7 +3030,7 @@ export function MatchObjectPatternProperty(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchObjectPatternPropertyType> {
   const node = detachedProps<MatchObjectPatternPropertyType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchObjectPatternProperty',
       key: asDetachedNodeForCodeGen(props.key),
@@ -3038,7 +3038,7 @@ export function MatchObjectPatternProperty(props: {
       shorthand: props.shorthand,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3046,11 +3046,11 @@ export function MatchOrPattern(props: {
   ...MatchOrPatternProps,
   +parent?: ESNode,
 }): DetachedNode<MatchOrPatternType> {
-  const node = detachedProps<MatchOrPatternType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<MatchOrPatternType>(props.parent, {
     type: 'MatchOrPattern',
     patterns: props.patterns.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3058,11 +3058,11 @@ export function MatchRestPattern(props: {
   ...MatchRestPatternProps,
   +parent?: ESNode,
 }): DetachedNode<MatchRestPatternType> {
-  const node = detachedProps<MatchRestPatternType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<MatchRestPatternType>(props.parent, {
     type: 'MatchRestPattern',
     argument: asDetachedNodeForCodeGen(props.argument),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3070,12 +3070,12 @@ export function MatchStatement(props: {
   ...MatchStatementProps,
   +parent?: ESNode,
 }): DetachedNode<MatchStatementType> {
-  const node = detachedProps<MatchStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<MatchStatementType>(props.parent, {
     type: 'MatchStatement',
     argument: asDetachedNodeForCodeGen(props.argument),
     cases: props.cases.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3084,7 +3084,7 @@ export function MatchStatementCase(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchStatementCaseType> {
   const node = detachedProps<MatchStatementCaseType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchStatementCase',
       pattern: asDetachedNodeForCodeGen(props.pattern),
@@ -3092,7 +3092,7 @@ export function MatchStatementCase(props: {
       guard: asDetachedNodeForCodeGen(props.guard),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3101,14 +3101,14 @@ export function MatchUnaryPattern(props: {
   +parent?: ESNode,
 }): DetachedNode<MatchUnaryPatternType> {
   const node = detachedProps<MatchUnaryPatternType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'MatchUnaryPattern',
       argument: asDetachedNodeForCodeGen(props.argument),
       operator: props.operator,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3117,7 +3117,7 @@ export function MatchWildcardPattern(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<MatchWildcardPatternType> {
-  return detachedProps<MatchWildcardPatternType>((props.parent: $FlowFixMe), {
+  return detachedProps<MatchWildcardPatternType>(props.parent, {
     type: 'MatchWildcardPattern',
   });
 }
@@ -3126,12 +3126,12 @@ export function MetaProperty(props: {
   ...MetaPropertyProps,
   +parent?: ESNode,
 }): DetachedNode<MetaPropertyType> {
-  const node = detachedProps<MetaPropertyType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<MetaPropertyType>(props.parent, {
     type: 'MetaProperty',
     meta: asDetachedNodeForCodeGen(props.meta),
     property: asDetachedNodeForCodeGen(props.property),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3139,7 +3139,7 @@ export function MethodDefinition(props: {
   ...MethodDefinitionProps,
   +parent?: ESNode,
 }): DetachedNode<MethodDefinitionType> {
-  const node = detachedProps<MethodDefinitionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<MethodDefinitionType>(props.parent, {
     type: 'MethodDefinition',
     key: asDetachedNodeForCodeGen(props.key),
     value: asDetachedNodeForCodeGen(props.value),
@@ -3148,7 +3148,7 @@ export function MethodDefinition(props: {
     static: props.static,
     decorators: props.decorators.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3157,7 +3157,7 @@ export function MixedTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<MixedTypeAnnotationType> {
-  return detachedProps<MixedTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<MixedTypeAnnotationType>(props.parent, {
     type: 'MixedTypeAnnotation',
   });
 }
@@ -3167,7 +3167,7 @@ export function NeverTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<NeverTypeAnnotationType> {
-  return detachedProps<NeverTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<NeverTypeAnnotationType>(props.parent, {
     type: 'NeverTypeAnnotation',
   });
 }
@@ -3176,13 +3176,13 @@ export function NewExpression(props: {
   ...NewExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<NewExpressionType> {
-  const node = detachedProps<NewExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<NewExpressionType>(props.parent, {
     type: 'NewExpression',
     callee: asDetachedNodeForCodeGen(props.callee),
     typeArguments: asDetachedNodeForCodeGen(props.typeArguments),
     arguments: props.arguments.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3191,13 +3191,13 @@ export function NullableTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<NullableTypeAnnotationType> {
   const node = detachedProps<NullableTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'NullableTypeAnnotation',
       typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3207,7 +3207,7 @@ export function NullLiteralTypeAnnotation(
   } = {...null},
 ): DetachedNode<NullLiteralTypeAnnotationType> {
   return detachedProps<NullLiteralTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'NullLiteralTypeAnnotation',
     },
@@ -3219,14 +3219,14 @@ export function NumberLiteralTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<NumberLiteralTypeAnnotationType> {
   const node = detachedProps<NumberLiteralTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'NumberLiteralTypeAnnotation',
       value: props.value,
       raw: props.raw,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3235,7 +3235,7 @@ export function NumberTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<NumberTypeAnnotationType> {
-  return detachedProps<NumberTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<NumberTypeAnnotationType>(props.parent, {
     type: 'NumberTypeAnnotation',
   });
 }
@@ -3244,11 +3244,11 @@ export function ObjectExpression(props: {
   ...ObjectExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<ObjectExpressionType> {
-  const node = detachedProps<ObjectExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ObjectExpressionType>(props.parent, {
     type: 'ObjectExpression',
     properties: props.properties.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3256,12 +3256,12 @@ export function ObjectPattern(props: {
   ...ObjectPatternProps,
   +parent?: ESNode,
 }): DetachedNode<ObjectPatternType> {
-  const node = detachedProps<ObjectPatternType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ObjectPatternType>(props.parent, {
     type: 'ObjectPattern',
     properties: props.properties.map(n => asDetachedNodeForCodeGen(n)),
     typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3270,7 +3270,7 @@ export function ObjectTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<ObjectTypeAnnotationType> {
   const node = detachedProps<ObjectTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ObjectTypeAnnotation',
       properties: props.properties.map(n => asDetachedNodeForCodeGen(n)),
@@ -3283,7 +3283,7 @@ export function ObjectTypeAnnotation(props: {
       exact: props.exact,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3292,14 +3292,14 @@ export function ObjectTypeCallProperty(props: {
   +parent?: ESNode,
 }): DetachedNode<ObjectTypeCallPropertyType> {
   const node = detachedProps<ObjectTypeCallPropertyType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ObjectTypeCallProperty',
       value: asDetachedNodeForCodeGen(props.value),
       static: props.static,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3308,7 +3308,7 @@ export function ObjectTypeIndexer(props: {
   +parent?: ESNode,
 }): DetachedNode<ObjectTypeIndexerType> {
   const node = detachedProps<ObjectTypeIndexerType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ObjectTypeIndexer',
       id: asDetachedNodeForCodeGen(props.id),
@@ -3318,7 +3318,7 @@ export function ObjectTypeIndexer(props: {
       variance: asDetachedNodeForCodeGen(props.variance),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3327,7 +3327,7 @@ export function ObjectTypeInternalSlot(props: {
   +parent?: ESNode,
 }): DetachedNode<ObjectTypeInternalSlotType> {
   const node = detachedProps<ObjectTypeInternalSlotType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ObjectTypeInternalSlot',
       id: asDetachedNodeForCodeGen(props.id),
@@ -3337,7 +3337,7 @@ export function ObjectTypeInternalSlot(props: {
       method: props.method,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3346,7 +3346,7 @@ export function ObjectTypeMappedTypeProperty(props: {
   +parent?: ESNode,
 }): DetachedNode<ObjectTypeMappedTypePropertyType> {
   const node = detachedProps<ObjectTypeMappedTypePropertyType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ObjectTypeMappedTypeProperty',
       keyTparam: asDetachedNodeForCodeGen(props.keyTparam),
@@ -3356,7 +3356,7 @@ export function ObjectTypeMappedTypeProperty(props: {
       optional: props.optional,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3365,13 +3365,13 @@ export function ObjectTypeSpreadProperty(props: {
   +parent?: ESNode,
 }): DetachedNode<ObjectTypeSpreadPropertyType> {
   const node = detachedProps<ObjectTypeSpreadPropertyType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'ObjectTypeSpreadProperty',
       argument: asDetachedNodeForCodeGen(props.argument),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3379,7 +3379,7 @@ export function OpaqueType(props: {
   ...OpaqueTypeProps,
   +parent?: ESNode,
 }): DetachedNode<OpaqueTypeType> {
-  const node = detachedProps<OpaqueTypeType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<OpaqueTypeType>(props.parent, {
     type: 'OpaqueType',
     id: asDetachedNodeForCodeGen(props.id),
     typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
@@ -3388,7 +3388,7 @@ export function OpaqueType(props: {
     upperBound: asDetachedNodeForCodeGen(props.upperBound),
     supertype: asDetachedNodeForCodeGen(props.supertype),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3397,7 +3397,7 @@ export function OptionalIndexedAccessType(props: {
   +parent?: ESNode,
 }): DetachedNode<OptionalIndexedAccessTypeType> {
   const node = detachedProps<OptionalIndexedAccessTypeType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'OptionalIndexedAccessType',
       objectType: asDetachedNodeForCodeGen(props.objectType),
@@ -3405,7 +3405,7 @@ export function OptionalIndexedAccessType(props: {
       optional: props.optional,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3414,13 +3414,13 @@ export function PrivateIdentifier(props: {
   +parent?: ESNode,
 }): DetachedNode<PrivateIdentifierType> {
   const node = detachedProps<PrivateIdentifierType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'PrivateIdentifier',
       name: props.name,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3428,7 +3428,7 @@ export function Property(props: {
   ...PropertyProps,
   +parent?: ESNode,
 }): DetachedNode<PropertyType> {
-  const node = detachedProps<PropertyType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<PropertyType>(props.parent, {
     type: 'Property',
     key: asDetachedNodeForCodeGen(props.key),
     value: asDetachedNodeForCodeGen(props.value),
@@ -3437,7 +3437,7 @@ export function Property(props: {
     method: props.method,
     shorthand: props.shorthand,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3446,7 +3446,7 @@ export function PropertyDefinition(props: {
   +parent?: ESNode,
 }): DetachedNode<PropertyDefinitionType> {
   const node = detachedProps<PropertyDefinitionType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'PropertyDefinition',
       key: asDetachedNodeForCodeGen(props.key),
@@ -3460,7 +3460,7 @@ export function PropertyDefinition(props: {
       typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3469,14 +3469,14 @@ export function QualifiedTypeIdentifier(props: {
   +parent?: ESNode,
 }): DetachedNode<QualifiedTypeIdentifierType> {
   const node = detachedProps<QualifiedTypeIdentifierType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'QualifiedTypeIdentifier',
       qualification: asDetachedNodeForCodeGen(props.qualification),
       id: asDetachedNodeForCodeGen(props.id),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3485,14 +3485,14 @@ export function QualifiedTypeofIdentifier(props: {
   +parent?: ESNode,
 }): DetachedNode<QualifiedTypeofIdentifierType> {
   const node = detachedProps<QualifiedTypeofIdentifierType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'QualifiedTypeofIdentifier',
       qualification: asDetachedNodeForCodeGen(props.qualification),
       id: asDetachedNodeForCodeGen(props.id),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3501,7 +3501,7 @@ export function RecordDeclaration(props: {
   +parent?: ESNode,
 }): DetachedNode<RecordDeclarationType> {
   const node = detachedProps<RecordDeclarationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'RecordDeclaration',
       id: asDetachedNodeForCodeGen(props.id),
@@ -3510,7 +3510,7 @@ export function RecordDeclaration(props: {
       body: asDetachedNodeForCodeGen(props.body),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3519,13 +3519,13 @@ export function RecordDeclarationBody(props: {
   +parent?: ESNode,
 }): DetachedNode<RecordDeclarationBodyType> {
   const node = detachedProps<RecordDeclarationBodyType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'RecordDeclarationBody',
       elements: props.elements.map(n => asDetachedNodeForCodeGen(n)),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3534,14 +3534,14 @@ export function RecordDeclarationImplements(props: {
   +parent?: ESNode,
 }): DetachedNode<RecordDeclarationImplementsType> {
   const node = detachedProps<RecordDeclarationImplementsType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'RecordDeclarationImplements',
       id: asDetachedNodeForCodeGen(props.id),
       typeArguments: asDetachedNodeForCodeGen(props.typeArguments),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3550,7 +3550,7 @@ export function RecordDeclarationProperty(props: {
   +parent?: ESNode,
 }): DetachedNode<RecordDeclarationPropertyType> {
   const node = detachedProps<RecordDeclarationPropertyType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'RecordDeclarationProperty',
       key: asDetachedNodeForCodeGen(props.key),
@@ -3558,7 +3558,7 @@ export function RecordDeclarationProperty(props: {
       defaultValue: asDetachedNodeForCodeGen(props.defaultValue),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3567,7 +3567,7 @@ export function RecordDeclarationStaticProperty(props: {
   +parent?: ESNode,
 }): DetachedNode<RecordDeclarationStaticPropertyType> {
   const node = detachedProps<RecordDeclarationStaticPropertyType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'RecordDeclarationStaticProperty',
       key: asDetachedNodeForCodeGen(props.key),
@@ -3575,7 +3575,7 @@ export function RecordDeclarationStaticProperty(props: {
       value: asDetachedNodeForCodeGen(props.value),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3583,13 +3583,13 @@ export function RecordExpression(props: {
   ...RecordExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<RecordExpressionType> {
-  const node = detachedProps<RecordExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<RecordExpressionType>(props.parent, {
     type: 'RecordExpression',
     recordConstructor: asDetachedNodeForCodeGen(props.recordConstructor),
     typeArguments: asDetachedNodeForCodeGen(props.typeArguments),
     properties: asDetachedNodeForCodeGen(props.properties),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3598,13 +3598,13 @@ export function RecordExpressionProperties(props: {
   +parent?: ESNode,
 }): DetachedNode<RecordExpressionPropertiesType> {
   const node = detachedProps<RecordExpressionPropertiesType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'RecordExpressionProperties',
       properties: props.properties.map(n => asDetachedNodeForCodeGen(n)),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3612,11 +3612,11 @@ export function RestElement(props: {
   ...RestElementProps,
   +parent?: ESNode,
 }): DetachedNode<RestElementType> {
-  const node = detachedProps<RestElementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<RestElementType>(props.parent, {
     type: 'RestElement',
     argument: asDetachedNodeForCodeGen(props.argument),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3624,11 +3624,11 @@ export function ReturnStatement(props: {
   ...ReturnStatementProps,
   +parent?: ESNode,
 }): DetachedNode<ReturnStatementType> {
-  const node = detachedProps<ReturnStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ReturnStatementType>(props.parent, {
     type: 'ReturnStatement',
     argument: asDetachedNodeForCodeGen(props.argument),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3637,13 +3637,13 @@ export function SequenceExpression(props: {
   +parent?: ESNode,
 }): DetachedNode<SequenceExpressionType> {
   const node = detachedProps<SequenceExpressionType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'SequenceExpression',
       expressions: props.expressions.map(n => asDetachedNodeForCodeGen(n)),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3651,11 +3651,11 @@ export function SpreadElement(props: {
   ...SpreadElementProps,
   +parent?: ESNode,
 }): DetachedNode<SpreadElementType> {
-  const node = detachedProps<SpreadElementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<SpreadElementType>(props.parent, {
     type: 'SpreadElement',
     argument: asDetachedNodeForCodeGen(props.argument),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3663,11 +3663,11 @@ export function StaticBlock(props: {
   ...StaticBlockProps,
   +parent?: ESNode,
 }): DetachedNode<StaticBlockType> {
-  const node = detachedProps<StaticBlockType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<StaticBlockType>(props.parent, {
     type: 'StaticBlock',
     body: props.body.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3676,14 +3676,14 @@ export function StringLiteralTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<StringLiteralTypeAnnotationType> {
   const node = detachedProps<StringLiteralTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'StringLiteralTypeAnnotation',
       value: props.value,
       raw: props.raw,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3692,7 +3692,7 @@ export function StringTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<StringTypeAnnotationType> {
-  return detachedProps<StringTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<StringTypeAnnotationType>(props.parent, {
     type: 'StringTypeAnnotation',
   });
 }
@@ -3702,7 +3702,7 @@ export function Super(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<SuperType> {
-  return detachedProps<SuperType>((props.parent: $FlowFixMe), {
+  return detachedProps<SuperType>(props.parent, {
     type: 'Super',
   });
 }
@@ -3711,12 +3711,12 @@ export function SwitchCase(props: {
   ...SwitchCaseProps,
   +parent?: ESNode,
 }): DetachedNode<SwitchCaseType> {
-  const node = detachedProps<SwitchCaseType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<SwitchCaseType>(props.parent, {
     type: 'SwitchCase',
     test: asDetachedNodeForCodeGen(props.test),
     consequent: props.consequent.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3724,12 +3724,12 @@ export function SwitchStatement(props: {
   ...SwitchStatementProps,
   +parent?: ESNode,
 }): DetachedNode<SwitchStatementType> {
-  const node = detachedProps<SwitchStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<SwitchStatementType>(props.parent, {
     type: 'SwitchStatement',
     discriminant: asDetachedNodeForCodeGen(props.discriminant),
     cases: props.cases.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3738,7 +3738,7 @@ export function SymbolTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<SymbolTypeAnnotationType> {
-  return detachedProps<SymbolTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<SymbolTypeAnnotationType>(props.parent, {
     type: 'SymbolTypeAnnotation',
   });
 }
@@ -3748,14 +3748,14 @@ export function TaggedTemplateExpression(props: {
   +parent?: ESNode,
 }): DetachedNode<TaggedTemplateExpressionType> {
   const node = detachedProps<TaggedTemplateExpressionType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'TaggedTemplateExpression',
       tag: asDetachedNodeForCodeGen(props.tag),
       quasi: asDetachedNodeForCodeGen(props.quasi),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3763,12 +3763,12 @@ export function TemplateLiteral(props: {
   ...TemplateLiteralProps,
   +parent?: ESNode,
 }): DetachedNode<TemplateLiteralType> {
-  const node = detachedProps<TemplateLiteralType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<TemplateLiteralType>(props.parent, {
     type: 'TemplateLiteral',
     quasis: props.quasis.map(n => asDetachedNodeForCodeGen(n)),
     expressions: props.expressions.map(n => asDetachedNodeForCodeGen(n)),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3777,7 +3777,7 @@ export function ThisExpression(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<ThisExpressionType> {
-  return detachedProps<ThisExpressionType>((props.parent: $FlowFixMe), {
+  return detachedProps<ThisExpressionType>(props.parent, {
     type: 'ThisExpression',
   });
 }
@@ -3787,7 +3787,7 @@ export function ThisTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<ThisTypeAnnotationType> {
-  return detachedProps<ThisTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<ThisTypeAnnotationType>(props.parent, {
     type: 'ThisTypeAnnotation',
   });
 }
@@ -3796,11 +3796,11 @@ export function ThrowStatement(props: {
   ...ThrowStatementProps,
   +parent?: ESNode,
 }): DetachedNode<ThrowStatementType> {
-  const node = detachedProps<ThrowStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<ThrowStatementType>(props.parent, {
     type: 'ThrowStatement',
     argument: asDetachedNodeForCodeGen(props.argument),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3808,13 +3808,13 @@ export function TryStatement(props: {
   ...TryStatementProps,
   +parent?: ESNode,
 }): DetachedNode<TryStatementType> {
-  const node = detachedProps<TryStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<TryStatementType>(props.parent, {
     type: 'TryStatement',
     block: asDetachedNodeForCodeGen(props.block),
     handler: asDetachedNodeForCodeGen(props.handler),
     finalizer: asDetachedNodeForCodeGen(props.finalizer),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3823,14 +3823,14 @@ export function TupleTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<TupleTypeAnnotationType> {
   const node = detachedProps<TupleTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'TupleTypeAnnotation',
       elementTypes: props.elementTypes.map(n => asDetachedNodeForCodeGen(n)),
       inexact: props.inexact,
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3839,7 +3839,7 @@ export function TupleTypeLabeledElement(props: {
   +parent?: ESNode,
 }): DetachedNode<TupleTypeLabeledElementType> {
   const node = detachedProps<TupleTypeLabeledElementType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'TupleTypeLabeledElement',
       label: asDetachedNodeForCodeGen(props.label),
@@ -3848,7 +3848,7 @@ export function TupleTypeLabeledElement(props: {
       variance: asDetachedNodeForCodeGen(props.variance),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3857,14 +3857,14 @@ export function TupleTypeSpreadElement(props: {
   +parent?: ESNode,
 }): DetachedNode<TupleTypeSpreadElementType> {
   const node = detachedProps<TupleTypeSpreadElementType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'TupleTypeSpreadElement',
       label: asDetachedNodeForCodeGen(props.label),
       typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3872,13 +3872,13 @@ export function TypeAlias(props: {
   ...TypeAliasProps,
   +parent?: ESNode,
 }): DetachedNode<TypeAliasType> {
-  const node = detachedProps<TypeAliasType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<TypeAliasType>(props.parent, {
     type: 'TypeAlias',
     id: asDetachedNodeForCodeGen(props.id),
     typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
     right: asDetachedNodeForCodeGen(props.right),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3886,11 +3886,11 @@ export function TypeAnnotation(props: {
   ...TypeAnnotationProps,
   +parent?: ESNode,
 }): DetachedNode<TypeAnnotationType> {
-  const node = detachedProps<TypeAnnotationType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<TypeAnnotationType>(props.parent, {
     type: 'TypeAnnotation',
     typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3899,14 +3899,14 @@ export function TypeCastExpression(props: {
   +parent?: ESNode,
 }): DetachedNode<TypeCastExpressionType> {
   const node = detachedProps<TypeCastExpressionType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'TypeCastExpression',
       expression: asDetachedNodeForCodeGen(props.expression),
       typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3915,14 +3915,14 @@ export function TypeofTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<TypeofTypeAnnotationType> {
   const node = detachedProps<TypeofTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'TypeofTypeAnnotation',
       argument: asDetachedNodeForCodeGen(props.argument),
       typeArguments: asDetachedNodeForCodeGen(props.typeArguments),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3930,12 +3930,12 @@ export function TypeOperator(props: {
   ...TypeOperatorProps,
   +parent?: ESNode,
 }): DetachedNode<TypeOperatorType> {
-  const node = detachedProps<TypeOperatorType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<TypeOperatorType>(props.parent, {
     type: 'TypeOperator',
     operator: props.operator,
     typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3943,7 +3943,7 @@ export function TypeParameter(props: {
   ...TypeParameterProps,
   +parent?: ESNode,
 }): DetachedNode<TypeParameterType> {
-  const node = detachedProps<TypeParameterType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<TypeParameterType>(props.parent, {
     type: 'TypeParameter',
     name: props.name,
     const: props.const,
@@ -3952,7 +3952,7 @@ export function TypeParameter(props: {
     default: asDetachedNodeForCodeGen(props.default),
     usesExtendsBound: props.usesExtendsBound,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3961,13 +3961,13 @@ export function TypeParameterDeclaration(props: {
   +parent?: ESNode,
 }): DetachedNode<TypeParameterDeclarationType> {
   const node = detachedProps<TypeParameterDeclarationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'TypeParameterDeclaration',
       params: props.params.map(n => asDetachedNodeForCodeGen(n)),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3976,13 +3976,13 @@ export function TypeParameterInstantiation(props: {
   +parent?: ESNode,
 }): DetachedNode<TypeParameterInstantiationType> {
   const node = detachedProps<TypeParameterInstantiationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'TypeParameterInstantiation',
       params: props.params.map(n => asDetachedNodeForCodeGen(n)),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -3990,13 +3990,13 @@ export function TypePredicate(props: {
   ...TypePredicateProps,
   +parent?: ESNode,
 }): DetachedNode<TypePredicateType> {
-  const node = detachedProps<TypePredicateType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<TypePredicateType>(props.parent, {
     type: 'TypePredicate',
     parameterName: asDetachedNodeForCodeGen(props.parameterName),
     typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
     kind: props.kind,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -4004,13 +4004,13 @@ export function UnaryExpression(props: {
   ...UnaryExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<UnaryExpressionType> {
-  const node = detachedProps<UnaryExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<UnaryExpressionType>(props.parent, {
     type: 'UnaryExpression',
     operator: props.operator,
     argument: asDetachedNodeForCodeGen(props.argument),
     prefix: props.prefix,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -4020,7 +4020,7 @@ export function UndefinedTypeAnnotation(
   } = {...null},
 ): DetachedNode<UndefinedTypeAnnotationType> {
   return detachedProps<UndefinedTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'UndefinedTypeAnnotation',
     },
@@ -4032,13 +4032,13 @@ export function UnionTypeAnnotation(props: {
   +parent?: ESNode,
 }): DetachedNode<UnionTypeAnnotationType> {
   const node = detachedProps<UnionTypeAnnotationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'UnionTypeAnnotation',
       types: props.types.map(n => asDetachedNodeForCodeGen(n)),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -4047,7 +4047,7 @@ export function UnknownTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<UnknownTypeAnnotationType> {
-  return detachedProps<UnknownTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<UnknownTypeAnnotationType>(props.parent, {
     type: 'UnknownTypeAnnotation',
   });
 }
@@ -4056,13 +4056,13 @@ export function UpdateExpression(props: {
   ...UpdateExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<UpdateExpressionType> {
-  const node = detachedProps<UpdateExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<UpdateExpressionType>(props.parent, {
     type: 'UpdateExpression',
     operator: props.operator,
     argument: asDetachedNodeForCodeGen(props.argument),
     prefix: props.prefix,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -4071,14 +4071,14 @@ export function VariableDeclaration(props: {
   +parent?: ESNode,
 }): DetachedNode<VariableDeclarationType> {
   const node = detachedProps<VariableDeclarationType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'VariableDeclaration',
       kind: props.kind,
       declarations: props.declarations.map(n => asDetachedNodeForCodeGen(n)),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -4087,14 +4087,14 @@ export function VariableDeclarator(props: {
   +parent?: ESNode,
 }): DetachedNode<VariableDeclaratorType> {
   const node = detachedProps<VariableDeclaratorType>(
-    (props.parent: $FlowFixMe),
+    props.parent,
     {
       type: 'VariableDeclarator',
       init: asDetachedNodeForCodeGen(props.init),
       id: asDetachedNodeForCodeGen(props.id),
     },
   );
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -4102,11 +4102,11 @@ export function Variance(props: {
   ...VarianceProps,
   +parent?: ESNode,
 }): DetachedNode<VarianceType> {
-  const node = detachedProps<VarianceType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<VarianceType>(props.parent, {
     type: 'Variance',
     kind: props.kind,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -4115,7 +4115,7 @@ export function VoidTypeAnnotation(
     +parent?: ESNode,
   } = {...null},
 ): DetachedNode<VoidTypeAnnotationType> {
-  return detachedProps<VoidTypeAnnotationType>((props.parent: $FlowFixMe), {
+  return detachedProps<VoidTypeAnnotationType>(props.parent, {
     type: 'VoidTypeAnnotation',
   });
 }
@@ -4124,12 +4124,12 @@ export function WhileStatement(props: {
   ...WhileStatementProps,
   +parent?: ESNode,
 }): DetachedNode<WhileStatementType> {
-  const node = detachedProps<WhileStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<WhileStatementType>(props.parent, {
     type: 'WhileStatement',
     body: asDetachedNodeForCodeGen(props.body),
     test: asDetachedNodeForCodeGen(props.test),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -4137,12 +4137,12 @@ export function WithStatement(props: {
   ...WithStatementProps,
   +parent?: ESNode,
 }): DetachedNode<WithStatementType> {
-  const node = detachedProps<WithStatementType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<WithStatementType>(props.parent, {
     type: 'WithStatement',
     object: asDetachedNodeForCodeGen(props.object),
     body: asDetachedNodeForCodeGen(props.body),
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 
@@ -4150,12 +4150,12 @@ export function YieldExpression(props: {
   ...YieldExpressionProps,
   +parent?: ESNode,
 }): DetachedNode<YieldExpressionType> {
-  const node = detachedProps<YieldExpressionType>((props.parent: $FlowFixMe), {
+  const node = detachedProps<YieldExpressionType>(props.parent, {
     type: 'YieldExpression',
     argument: asDetachedNodeForCodeGen(props.argument),
     delegate: props.delegate,
   });
-  setParentPointersInDirectChildren((node: $FlowFixMe));
+  setParentPointersInDirectChildren(node);
   return node;
 }
 

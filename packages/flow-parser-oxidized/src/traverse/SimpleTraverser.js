@@ -83,9 +83,9 @@ export class SimpleTraverser {
 
     const keys = getVisitorKeys(node, options.visitorKeys);
     for (const key of keys) {
-      const child: ESNode | $ReadOnlyArray<ESNode> = (node[
-        (key: $FlowFixMe)
-      ]: $FlowFixMe);
+      const childKey: $FlowFixMe = key;
+      // $FlowFixMe[incompatible-type] - matches upstream's unsafe visitor-key lookup.
+      const child: ESNode | $ReadOnlyArray<ESNode> = node[childKey];
 
       if (Array.isArray(child)) {
         for (let j = 0; j < child.length; ++j) {

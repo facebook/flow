@@ -94,9 +94,9 @@ export function performInsertStatementMutation(
     return insertionParent.parent;
   }
 
-  const statementsToInsert =
-    // $FlowExpectedError[incompatible-type] -- this is enforced by isValidModuleDeclarationParent above
-    (mutation.nodesToInsert: $ReadOnlyArray<DetachedNode<Statement>>);
+  const statementsToInsert: $ReadOnlyArray<DetachedNode<Statement>> =
+    // $FlowExpectedError[incompatible-type] -- this is enforced by isValidModuleDeclarationParent above.
+    mutation.nodesToInsert;
 
   const {parent, key} = insertionParent;
 
@@ -111,8 +111,9 @@ export function performInsertStatementMutation(
     parent: insertionParent.parent,
   });
 
-  (insertionParent.parent: interface {[string]: mixed})[insertionParent.key] =
-    blockStatement;
+  const insertionParentNode: interface {[string]: mixed} =
+    insertionParent.parent;
+  insertionParentNode[insertionParent.key] = blockStatement;
   statementToWrap.parent = blockStatement;
 
   return insertionParent.parent;

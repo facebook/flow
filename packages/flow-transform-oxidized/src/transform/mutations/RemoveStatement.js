@@ -60,8 +60,8 @@ export function performRemoveStatementMutation(
       parent: removalParent.parent,
     });
 
-    (removalParent.parent: interface {[string]: mixed})[removalParent.key] =
-      blockStatement;
+    const removalParentNode: interface {[string]: mixed} = removalParent.parent;
+    removalParentNode[removalParent.key] = blockStatement;
   }
 
   return removalParent.parent;

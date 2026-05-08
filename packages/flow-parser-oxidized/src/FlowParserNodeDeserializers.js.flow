@@ -9,10 +9,10 @@
  */
 
 import type {HermesNode} from './HermesAST';
-import type {ParserOptions} from './ParserOptions';
+import type FlowParserDeserializer from './FlowParserDeserializer';
 
-declare function parse(source: string, options: ParserOptions): HermesNode;
+declare const NODE_DESERIALIZERS: $ReadOnlyArray<
+  (this: FlowParserDeserializer) => HermesNode,
+>;
 
-declare module.exports: {
-  parse: typeof parse,
-};
+export default NODE_DESERIALIZERS;

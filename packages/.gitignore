@@ -1,2 +1,14 @@
 node_modules/
 dist/
+
+# Generated WASM wrapper for flow-parser-oxidized. Written into src/ by
+# scripts/runContractTests.sh and into dist/ by scripts/build.sh. Never
+# commit this - it's a copy of the buck-built emcc artifact and would bloat
+# the repo.
+flow-parser-oxidized/src/FlowParserWASM.js
+flow-parser-oxidized/src/FlowParserWASM.js.lock.d/
+
+# Lock file used by scripts/runContractTests.sh to serialize concurrent
+# `yarn build` rebuilds of dist/ when buck schedules wasm_parser_contract_test
+# and oxidized_jest_test in parallel.
+flow-parser-oxidized/.dist.flock
