@@ -24,22 +24,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3.6.0
     - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-    - name: Cargo cache
-      uses: actions/cache@v4
+      uses: dtolnay/rust-toolchain@nightly
+    - name: set up rust cache
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |-
-          ~/.cargo/git
-          ~/.cargo/registry
-          rust_port/target
-        key: v1-rust-port-cargo-${{ runner.os }}-${{ hashFiles('rust_port/Cargo.lock') }}
-        restore-keys: v1-rust-port-cargo-${{ runner.os }}-
+        prefix-key: flow-rust-port
     - name: Build Rust port
       working-directory: rust_port
-      run: cargo build --workspace --all-targets --offline --locked
+      run: cargo build
     - name: Test Rust port
       working-directory: rust_port
-      run: cargo test --workspace --all-targets --offline --locked
+      run: cargo test
   build_js:
     runs-on: ubuntu-22.04
     env:
