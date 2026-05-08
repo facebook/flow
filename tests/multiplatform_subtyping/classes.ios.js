@@ -1,6 +1,6 @@
 declare export class Empty {} // ok
 
-declare export class ImplHasExtra { // ok
+declare export class ImplHasExtra { // error: extra members are not in the common interface
   static bar: string;
   foo(): string;
 }

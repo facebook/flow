@@ -114,7 +114,7 @@ Cannot implement `ImplHasExtra` [1] with `ImplHasExtra` because property `bar` i
 exists in `ImplHasExtra` [2]. [incompatible-type]
 
    classes.ios.js:3:22
-   3| declare export class ImplHasExtra { // ok
+   3| declare export class ImplHasExtra { // error: extra members are not in the common interface
                            ^^^^^^^^^^^^ [2]
 
 References:
@@ -129,7 +129,7 @@ Cannot implement `ImplHasExtra` [1] with `ImplHasExtra` because property `foo` i
 exists in `ImplHasExtra` [2]. [incompatible-type]
 
    classes.ios.js:3:22
-   3| declare export class ImplHasExtra { // ok
+   3| declare export class ImplHasExtra { // error: extra members are not in the common interface
                            ^^^^^^^^^^^^ [2]
 
 References:
