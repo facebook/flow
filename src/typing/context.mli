@@ -361,15 +361,29 @@ val post_inference_projects_strict_boundary_import_pattern_opt_outs_validations 
     call. *)
 val init_interface_merge_field_index : t -> unit
 
+(** Tell the context which type parameters belong to this merging interface or
+    declared class. Declaration merging pairs type parameters positionally, so
+    checker-time member copies and conflict checks use this to translate the
+    current declaration's local generics into the canonical declaration's
+    generics. *)
+val record_interface_tparams : t -> ALoc.t -> Type.typeparams -> Type.t Subst_name.Map.t -> unit
+
 (** Tell the context that interface [id_loc] declared a Field of this name and
     type. Only meaningful for interfaces being merged with a same-named
     sibling; others are silently ignored. *)
 val record_interface_field : t -> ALoc.t -> Reason.name -> Type.t -> unit
 
+(** A substitution map from [source_loc]'s declaration-local type parameters to
+    [target_loc]'s canonical GenericT parameters. Empty if either declaration is
+    not participating in declaration merging or the arity does not match. *)
+val interface_tparam_subst_map :
+  t -> source_loc:ALoc.t -> target_loc:ALoc.t -> Type.t Subst_name.Map.t
+
 (** All the type-equality obligations produced by interface declaration
     merging in this file, in [unify]-ready form. A non-empty list means: at
     least one merge contains a field that two decls disagreed on a type for. *)
-val interface_merge_unify_tasks : t -> (Type.use_op * Type.t * Type.t) list
+val interface_merge_unify_tasks :
+  t -> (Type.use_op * Type.t Subst_name.Map.t * Type.t * Type.t) list
 
 (** Look up the heap ids of the property maps backing each interface
     declaration's InstanceT. The merger uses these to combine the property

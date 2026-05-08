@@ -63,6 +63,7 @@ use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
+use flow_typing_flow_common::type_subst;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::tvar_resolver;
 use flow_typing_loc_env::match_pattern_ir;
@@ -2432,19 +2433,50 @@ fn resolve_import<'cx>(
     }
 }
 
+// Interface/declare-class merging copies property maps from the absorbed
+// declaration into the canonical declaration. Those copied property types may
+// mention the absorbed declaration's local type parameters, so translate them
+// into the canonical declaration's GenericTs before mutating the target maps.
+fn subst_merge_props<'cx>(
+    cx: &Context<'cx>,
+    tparam_subst_map: &FlowOrdMap<SubstName, Type>,
+    props: flow_typing_type::type_::properties::PropertiesMap,
+) -> flow_typing_type::type_::properties::PropertiesMap {
+    if tparam_subst_map.is_empty() {
+        return props;
+    }
+    props.ident_map(|prop| {
+        flow_typing_type::type_::property::map_t(
+            |t| {
+                type_subst::subst(
+                    cx,
+                    None,
+                    true,
+                    false,
+                    type_subst::Purpose::Normal,
+                    tparam_subst_map,
+                    t.dupe(),
+                )
+            },
+            prop,
+        )
+    })
+}
+
 fn merge_props_by_id<'cx>(
     cx: &Context<'cx>,
     target_own: &flow_typing_type::type_::properties::Id,
     target_proto: &flow_typing_type::type_::properties::Id,
     source_own: &flow_typing_type::type_::properties::Id,
     source_proto: &flow_typing_type::type_::properties::Id,
+    tparam_subst_map: &FlowOrdMap<SubstName, Type>,
 ) {
     use flow_typing_type::type_::Property;
     use flow_typing_type::type_::PropertyInner;
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_::inter_rep;
     let target_own_map = cx.find_props(target_own.dupe());
-    let source_own_map = cx.find_props(source_own.dupe());
+    let source_own_map = subst_merge_props(cx, tparam_subst_map, cx.find_props(source_own.dupe()));
     let mut merged_own = target_own_map.clone();
     for (name, prop) in source_own_map.iter() {
         if !merged_own.contains_key(name) {
@@ -2453,7 +2485,8 @@ fn merge_props_by_id<'cx>(
     }
     cx.add_property_map(target_own.dupe(), merged_own);
     let target_proto_map = cx.find_props(target_proto.dupe());
-    let source_proto_map = cx.find_props(source_proto.dupe());
+    let source_proto_map =
+        subst_merge_props(cx, tparam_subst_map, cx.find_props(source_proto.dupe()));
     let mut merged_proto = target_proto_map.clone();
     for (name, source_prop) in source_proto_map.iter() {
         match merged_proto.get(name).cloned() {
@@ -2507,7 +2540,16 @@ fn merge_with_conflicts<'cx>(
             if let Some((good_own, good_proto)) = prop_ids.get(name_loc).cloned() {
                 for bad_name_loc in bad_locs {
                     if let Some((bad_own, bad_proto)) = prop_ids.get(bad_name_loc).cloned() {
-                        merge_props_by_id(cx, &good_own, &good_proto, &bad_own, &bad_proto);
+                        let tparam_subst_map =
+                            cx.interface_tparam_subst_map(bad_name_loc, name_loc);
+                        merge_props_by_id(
+                            cx,
+                            &good_own,
+                            &good_proto,
+                            &bad_own,
+                            &bad_proto,
+                            &tparam_subst_map,
+                        );
                     }
                 }
             }
@@ -2517,7 +2559,16 @@ fn merge_with_conflicts<'cx>(
             if bad_locs.contains(name_loc) {
                 if let Some((good_own, good_proto)) = prop_ids.get(good_name_loc).cloned() {
                     if let Some((bad_own, bad_proto)) = prop_ids.get(name_loc).cloned() {
-                        merge_props_by_id(cx, &good_own, &good_proto, &bad_own, &bad_proto);
+                        let tparam_subst_map =
+                            cx.interface_tparam_subst_map(name_loc, good_name_loc);
+                        merge_props_by_id(
+                            cx,
+                            &good_own,
+                            &good_proto,
+                            &bad_own,
+                            &bad_proto,
+                            &tparam_subst_map,
+                        );
                     }
                 }
             }

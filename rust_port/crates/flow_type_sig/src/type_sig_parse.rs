@@ -24,6 +24,7 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 use dupe::Dupe;
+use flow_common::alpha_rename;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::platform_set::PlatformSet;
 use flow_common::polarity::Polarity;
@@ -1515,6 +1516,927 @@ pub(super) mod scope {
         }
     }
 
+    mod type_param_renaming {
+        use std::collections::BTreeSet;
+
+        use super::*;
+
+        type TParamRenameMap = BTreeMap<FlowSmolStr, FlowSmolStr>;
+
+        fn tparams_names<'arena, 'ast>(
+            tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> Vec<FlowSmolStr> {
+            match tparams {
+                TParams::Mono => Vec::new(),
+                TParams::Poly(box (_, params)) => params.iter().map(|tp| tp.name.dupe()).collect(),
+            }
+        }
+
+        fn tparams_name_locs<'arena, 'ast>(
+            tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> Vec<(LocNode<'arena>, FlowSmolStr)> {
+            match tparams {
+                TParams::Mono => Vec::new(),
+                TParams::Poly(box (_, params)) => params
+                    .iter()
+                    .map(|tp| (tp.name_loc.dupe(), tp.name.dupe()))
+                    .collect(),
+            }
+        }
+
+        // TypeScript declaration merging treats type parameters as positional
+        // slots, while the parsed type-sig representation refers to them by name.
+        // If `declare class Iterator<Yield, Return, Next>` absorbs
+        // `interface Iterator<T, TReturn, TNext>`, the interface members must be
+        // alpha-renamed into the class's names before we concatenate signatures.
+        // Otherwise the merged signature contains free references like `TReturn`
+        // under a declaration that only binds `Return`.
+        fn tparam_rename_map<'arena, 'ast>(
+            from_tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+            to_tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> TParamRenameMap {
+            tparams_names(from_tparams)
+                .into_iter()
+                .zip(tparams_names(to_tparams))
+                .collect()
+        }
+
+        fn remove_tparams_from_rename_map<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> TParamRenameMap {
+            let mut rename_map = rename_map.clone();
+            for name in tparams_names(tparams) {
+                rename_map.remove(&name);
+            }
+            rename_map
+        }
+
+        fn rename_tparam_name(rename_map: &TParamRenameMap, name: &FlowSmolStr) -> FlowSmolStr {
+            rename_map.get(name).map_or_else(|| name.dupe(), Dupe::dupe)
+        }
+
+        fn rename_map_targets(rename_map: &TParamRenameMap) -> BTreeSet<FlowSmolStr> {
+            rename_map.values().map(Dupe::dupe).collect()
+        }
+
+        fn rename_map_names(rename_map: &TParamRenameMap) -> BTreeSet<FlowSmolStr> {
+            rename_map
+                .iter()
+                .flat_map(|(from_name, to_name)| [from_name.dupe(), to_name.dupe()])
+                .collect()
+        }
+
+        fn capture_avoidance_map<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> (TParamRenameMap, TParamRenameMap) {
+            let body_rename_map = remove_tparams_from_rename_map(rename_map, tparams);
+            let capture_names = rename_map_targets(&body_rename_map);
+            let mut used_names = rename_map_names(rename_map);
+            used_names.extend(tparams_names(tparams));
+
+            let (alpha_map, body_rename_map, _) = tparams_names(tparams).into_iter().fold(
+                (TParamRenameMap::new(), body_rename_map, used_names),
+                |(mut alpha_map, body_rename_map, mut used_names), name| {
+                    let original_name = name.dupe();
+                    let (renamed_name, body_rename_map) = alpha_rename::avoid_capture(
+                        name,
+                        body_rename_map,
+                        |name| capture_names.contains(name),
+                        || used_names.clone(),
+                        alpha_rename::string,
+                        |mut map, name| {
+                            map.remove(name);
+                            map
+                        },
+                        |mut map, name, new_name| {
+                            map.insert(name, new_name);
+                            map
+                        },
+                    );
+                    if renamed_name != original_name {
+                        alpha_map.insert(original_name, renamed_name.dupe());
+                    }
+                    used_names.insert(renamed_name);
+                    (alpha_map, body_rename_map, used_names)
+                },
+            );
+            (alpha_map, body_rename_map)
+        }
+
+        fn loc_node_eq(left: &LocNode<'_>, right: &LocNode<'_>) -> bool {
+            left.0.data().deref() == right.0.data().deref()
+        }
+
+        // Rename only references to the outer declaration's type parameters. Nested
+        // binders (function/component/class type params, conditional `infer`, and
+        // mapped-type keys) shadow same-named outer params. When an outer type
+        // parameter is renamed to a name used by a nested binder, alpha-rename the
+        // nested binder first so the renamed outer reference stays free.
+        fn rename_tparams_in_parsed<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            parsed: &Parsed<'arena, 'ast>,
+        ) -> Parsed<'arena, 'ast> {
+            match parsed {
+                Parsed::Annot(annot) => {
+                    Parsed::Annot(Box::new(rename_tparams_in_annot(rename_map, annot)))
+                }
+                Parsed::Value(value) => {
+                    Parsed::Value(Box::new(rename_tparams_in_value(rename_map, value)))
+                }
+                Parsed::TyRefApp { loc, name, targs } => Parsed::TyRefApp {
+                    loc: loc.dupe(),
+                    name: name.clone(),
+                    targs: targs
+                        .iter()
+                        .map(|t| rename_tparams_in_parsed(rename_map, t))
+                        .collect(),
+                },
+                Parsed::Eval(loc, t, op) => Parsed::Eval(
+                    loc.dupe(),
+                    Box::new(rename_tparams_in_parsed(rename_map, t)),
+                    Box::new(op.map(&mut (), |_, t| rename_tparams_in_parsed(rename_map, t))),
+                ),
+                Parsed::TyRef(_)
+                | Parsed::AsyncVoidReturn(_)
+                | Parsed::ValRef { .. }
+                | Parsed::Err(_, _)
+                | Parsed::BuiltinTyRef { .. }
+                | Parsed::Pattern(_)
+                | Parsed::Require { .. }
+                | Parsed::ImportDynamic { .. }
+                | Parsed::ModuleRef { .. }
+                | Parsed::ImportTypeAnnot { .. } => parsed.clone(),
+            }
+        }
+
+        fn override_bound_names_by_loc<'arena, 'ast>(
+            loc_names: &[(LocNode<'arena>, FlowSmolStr)],
+            parsed: &Parsed<'arena, 'ast>,
+        ) -> Parsed<'arena, 'ast> {
+            match parsed {
+                Parsed::Annot(box Annot::Bound(inner)) => {
+                    let name = loc_names
+                        .iter()
+                        .find_map(|(loc, name)| {
+                            if loc_node_eq(loc, &inner.ref_loc) {
+                                Some(name.dupe())
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or_else(|| inner.name.dupe());
+                    Parsed::Annot(Box::new(Annot::Bound(Box::new(AnnotBound {
+                        ref_loc: inner.ref_loc.dupe(),
+                        name,
+                    }))))
+                }
+                Parsed::Annot(annot) => Parsed::Annot(Box::new(annot.map(
+                    &mut (),
+                    |_, loc: &LocNode<'arena>| loc.dupe(),
+                    |_, t| override_bound_names_by_loc(loc_names, t),
+                ))),
+                Parsed::Value(value) => Parsed::Value(Box::new(value.map(
+                    &mut (),
+                    &|_, loc: &LocNode<'arena>| loc.dupe(),
+                    &|_, t| override_bound_names_by_loc(loc_names, t),
+                ))),
+                Parsed::TyRefApp { loc, name, targs } => Parsed::TyRefApp {
+                    loc: loc.dupe(),
+                    name: name.clone(),
+                    targs: targs
+                        .iter()
+                        .map(|t| override_bound_names_by_loc(loc_names, t))
+                        .collect(),
+                },
+                Parsed::Eval(loc, t, op) => Parsed::Eval(
+                    loc.dupe(),
+                    Box::new(override_bound_names_by_loc(loc_names, t)),
+                    Box::new(op.map(&mut (), |_, t| override_bound_names_by_loc(loc_names, t))),
+                ),
+                Parsed::TyRef(_)
+                | Parsed::AsyncVoidReturn(_)
+                | Parsed::ValRef { .. }
+                | Parsed::Err(_, _)
+                | Parsed::BuiltinTyRef { .. }
+                | Parsed::Pattern(_)
+                | Parsed::Require { .. }
+                | Parsed::ImportDynamic { .. }
+                | Parsed::ModuleRef { .. }
+                | Parsed::ImportTypeAnnot { .. } => parsed.clone(),
+            }
+        }
+
+        fn rename_tparams_in_value<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            value: &ParsedValue<'arena, 'ast>,
+        ) -> ParsedValue<'arena, 'ast> {
+            match value {
+                Value::ClassExpr(box (loc, def)) => Value::ClassExpr(Box::new((
+                    loc.dupe(),
+                    rename_tparams_in_class_sig(rename_map, def),
+                ))),
+                Value::FunExpr(inner) => Value::FunExpr(Box::new(ValueFunExpr {
+                    loc: inner.loc.dupe(),
+                    async_: inner.async_,
+                    generator: inner.generator,
+                    def: rename_tparams_in_fun_sig(rename_map, &inner.def),
+                    statics: inner
+                        .statics
+                        .iter()
+                        .map(|(name, (loc, t))| {
+                            (
+                                name.dupe(),
+                                (loc.dupe(), rename_tparams_in_parsed(rename_map, t)),
+                            )
+                        })
+                        .collect(),
+                })),
+                Value::DeclareModuleImplicitlyExportedObject(inner) => {
+                    Value::DeclareModuleImplicitlyExportedObject(Box::new(
+                        ValueDeclareModuleImplicitlyExportedObject {
+                            loc: inner.loc.dupe(),
+                            module_name: inner.module_name.clone(),
+                            props: inner
+                                .props
+                                .iter()
+                                .map(|(name, prop)| {
+                                    (
+                                        name.dupe(),
+                                        rename_tparams_in_obj_value_prop(rename_map, prop),
+                                    )
+                                })
+                                .collect(),
+                        },
+                    ))
+                }
+                Value::ObjLit(inner) => Value::ObjLit(Box::new(ValueObjLit {
+                    loc: inner.loc.dupe(),
+                    frozen: inner.frozen,
+                    proto: inner
+                        .proto
+                        .as_ref()
+                        .map(|(loc, t)| (loc.dupe(), rename_tparams_in_parsed(rename_map, t))),
+                    props: inner
+                        .props
+                        .iter()
+                        .map(|(name, prop)| {
+                            (
+                                name.dupe(),
+                                rename_tparams_in_obj_value_prop(rename_map, prop),
+                            )
+                        })
+                        .collect(),
+                })),
+                Value::ObjSpreadLit(inner) => Value::ObjSpreadLit(Box::new(ValueObjSpreadLit {
+                    loc: inner.loc.dupe(),
+                    frozen: inner.frozen,
+                    proto: inner
+                        .proto
+                        .as_ref()
+                        .map(|(loc, t)| (loc.dupe(), rename_tparams_in_parsed(rename_map, t))),
+                    elems: inner.elems.mapped_ref(|elem| {
+                        rename_tparams_in_obj_value_spread_elem(rename_map, elem)
+                    }),
+                })),
+                Value::ArrayLit(box (loc, t, ts)) => Value::ArrayLit(Box::new((
+                    loc.dupe(),
+                    rename_tparams_in_parsed(rename_map, t),
+                    ts.iter()
+                        .map(|t| rename_tparams_in_parsed(rename_map, t))
+                        .collect(),
+                ))),
+                Value::AsConst(value) => {
+                    Value::AsConst(Box::new(rename_tparams_in_value(rename_map, value)))
+                }
+                Value::StringVal(_)
+                | Value::StringLit(_)
+                | Value::NumberVal(_)
+                | Value::NumberLit(_)
+                | Value::BigIntVal(_)
+                | Value::BigIntLit(_)
+                | Value::BooleanVal(_)
+                | Value::BooleanLit(_)
+                | Value::NullLit(_)
+                | Value::EmptyConstArrayLit(_) => value.clone(),
+            }
+        }
+
+        fn rename_tparams_in_annot<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            annot: &ParsedAnnot<'arena, 'ast>,
+        ) -> ParsedAnnot<'arena, 'ast> {
+            match annot {
+                Annot::Bound(inner) => Annot::Bound(Box::new(AnnotBound {
+                    ref_loc: inner.ref_loc.dupe(),
+                    name: rename_tparam_name(rename_map, &inner.name),
+                })),
+                Annot::FunAnnot(box (loc, def)) => Annot::FunAnnot(Box::new((
+                    loc.dupe(),
+                    rename_tparams_in_fun_sig(rename_map, def),
+                ))),
+                Annot::ComponentAnnot(box (loc, def)) => Annot::ComponentAnnot(Box::new((
+                    loc.dupe(),
+                    rename_tparams_in_component_sig(rename_map, def),
+                ))),
+                Annot::Conditional(inner) => {
+                    let (infer_tparams, infer_body_rename_map) =
+                        rename_tparams_for_nested_scope(rename_map, &inner.infer_tparams);
+                    let extends_type = override_bound_names_by_loc(
+                        &tparams_name_locs(&infer_tparams),
+                        &rename_tparams_in_parsed(rename_map, &inner.extends_type),
+                    );
+                    Annot::Conditional(Box::new(AnnotConditional {
+                        loc: inner.loc.dupe(),
+                        distributive_tparam: inner
+                            .distributive_tparam
+                            .as_ref()
+                            .map(|tp| rename_distributive_tparam(rename_map, tp)),
+                        infer_tparams,
+                        check_type: rename_tparams_in_parsed(rename_map, &inner.check_type),
+                        extends_type,
+                        true_type: rename_tparams_in_parsed(
+                            &infer_body_rename_map,
+                            &inner.true_type,
+                        ),
+                        false_type: rename_tparams_in_parsed(rename_map, &inner.false_type),
+                    }))
+                }
+                Annot::MappedTypeAnnot(inner) => {
+                    let (key_tparam, property_type_rename_map) =
+                        rename_tparam_for_nested_scope(rename_map, &inner.loc, &inner.key_tparam);
+                    Annot::MappedTypeAnnot(Box::new(AnnotMappedTypeAnnot {
+                        loc: inner.loc.dupe(),
+                        source_type: rename_tparams_in_parsed(rename_map, &inner.source_type),
+                        property_type: rename_tparams_in_parsed(
+                            &property_type_rename_map,
+                            &inner.property_type,
+                        ),
+                        key_tparam,
+                        variance: inner.variance,
+                        variance_op: inner.variance_op,
+                        optional: inner.optional,
+                        inline_keyof: inner.inline_keyof,
+                    }))
+                }
+                Annot::ObjAnnot(inner) => Annot::ObjAnnot(Box::new(AnnotObjAnnot {
+                    loc: inner.loc.dupe(),
+                    obj_kind: rename_tparams_in_obj_kind(rename_map, &inner.obj_kind),
+                    props: inner
+                        .props
+                        .iter()
+                        .map(|(name, prop)| {
+                            (
+                                name.dupe(),
+                                rename_tparams_in_obj_annot_prop(rename_map, prop),
+                            )
+                        })
+                        .collect(),
+                    computed_props: inner
+                        .computed_props
+                        .iter()
+                        .map(|(key, prop)| {
+                            (
+                                rename_tparams_in_parsed(rename_map, key),
+                                rename_tparams_in_obj_annot_prop(rename_map, prop),
+                            )
+                        })
+                        .collect(),
+                    proto: rename_tparams_in_obj_annot_proto(rename_map, &inner.proto),
+                })),
+                Annot::ObjSpreadAnnot(inner) => {
+                    Annot::ObjSpreadAnnot(Box::new(AnnotObjSpreadAnnot {
+                        loc: inner.loc.dupe(),
+                        exact: inner.exact,
+                        elems: inner.elems.mapped_ref(|elem| {
+                            rename_tparams_in_obj_spread_annot_elem(rename_map, elem)
+                        }),
+                    }))
+                }
+                Annot::InlineInterface(box (loc, def)) => Annot::InlineInterface(Box::new((
+                    loc.dupe(),
+                    rename_tparams_in_interface_sig(rename_map, def),
+                ))),
+                _ => annot.map(
+                    &mut (),
+                    |_, loc| loc.dupe(),
+                    |_, t| rename_tparams_in_parsed(rename_map, t),
+                ),
+            }
+        }
+
+        fn rename_tparams_in_tparam<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            alpha_map: &TParamRenameMap,
+            tparam: &TParam<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> TParam<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            TParam {
+                name_loc: tparam.name_loc.dupe(),
+                name: rename_tparam_name(alpha_map, &tparam.name),
+                polarity: tparam.polarity,
+                bound: tparam
+                    .bound
+                    .as_ref()
+                    .map(|t| rename_tparams_in_parsed(rename_map, t)),
+                default: tparam
+                    .default
+                    .as_ref()
+                    .map(|t| rename_tparams_in_parsed(rename_map, t)),
+                is_const: tparam.is_const,
+            }
+        }
+
+        fn rename_distributive_tparam<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            tparam: &TParam<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> TParam<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            TParam {
+                name_loc: tparam.name_loc.dupe(),
+                name: rename_tparam_name(rename_map, &tparam.name),
+                polarity: tparam.polarity,
+                bound: tparam
+                    .bound
+                    .as_ref()
+                    .map(|t| rename_tparams_in_parsed(rename_map, t)),
+                default: tparam
+                    .default
+                    .as_ref()
+                    .map(|t| rename_tparams_in_parsed(rename_map, t)),
+                is_const: tparam.is_const,
+            }
+        }
+
+        fn rename_tparams_in_tparams_with_alpha<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            alpha_map: &TParamRenameMap,
+            tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> TParams<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            match tparams {
+                TParams::Mono => TParams::Mono,
+                TParams::Poly(box (loc, tparams)) => {
+                    let mut scoped_rename_map = rename_map.clone();
+                    let tparams = tparams
+                        .iter()
+                        .map(|tparam| {
+                            let renamed =
+                                rename_tparams_in_tparam(&scoped_rename_map, alpha_map, tparam);
+                            scoped_rename_map.remove(&tparam.name);
+                            if let Some(fresh_name) = alpha_map.get(&tparam.name) {
+                                scoped_rename_map.insert(tparam.name.dupe(), fresh_name.dupe());
+                            }
+                            renamed
+                        })
+                        .collect();
+                    let tparams = Vec1::try_from_vec(tparams)
+                        .expect("poly type parameters should be non-empty");
+                    TParams::Poly(Box::new((loc.dupe(), tparams)))
+                }
+            }
+        }
+
+        fn rename_tparams_for_nested_scope<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> (
+            TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+            TParamRenameMap,
+        ) {
+            let (alpha_map, body_rename_map) = capture_avoidance_map(rename_map, tparams);
+            (
+                rename_tparams_in_tparams_with_alpha(rename_map, &alpha_map, tparams),
+                body_rename_map,
+            )
+        }
+
+        fn rename_tparam_for_nested_scope<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            loc: &LocNode<'arena>,
+            tparam: &TParam<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> (
+            TParam<LocNode<'arena>, Parsed<'arena, 'ast>>,
+            TParamRenameMap,
+        ) {
+            let tparams = TParams::Poly(Box::new((loc.dupe(), Vec1::new((*tparam).clone()))));
+            let (tparams, body_rename_map) = rename_tparams_for_nested_scope(rename_map, &tparams);
+            let TParams::Poly(box (_, tparams)) = tparams else {
+                return ((*tparam).clone(), body_rename_map);
+            };
+            let tparam = tparams
+                .into_iter()
+                .next()
+                .expect("poly type parameters should be non-empty");
+            (tparam, body_rename_map)
+        }
+
+        fn rename_tparams_in_fun_sig<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            sig: &FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> FunSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            let (tparams, body_rename_map) =
+                rename_tparams_for_nested_scope(rename_map, &sig.tparams);
+            FunSig {
+                tparams,
+                params: sig
+                    .params
+                    .iter()
+                    .map(|param| FunParam {
+                        name: param.name.dupe(),
+                        t: rename_tparams_in_parsed(&body_rename_map, &param.t),
+                    })
+                    .collect(),
+                rest_param: sig.rest_param.as_ref().map(|param| FunRestParam {
+                    name: param.name.dupe(),
+                    loc: param.loc.dupe(),
+                    t: rename_tparams_in_parsed(&body_rename_map, &param.t),
+                }),
+                this_param: sig
+                    .this_param
+                    .as_ref()
+                    .map(|t| rename_tparams_in_parsed(&body_rename_map, t)),
+                return_: rename_tparams_in_parsed(&body_rename_map, &sig.return_),
+                type_guard: sig.type_guard.as_ref().map(|type_guard| TypeGuard {
+                    loc: type_guard.loc.dupe(),
+                    param_name: (
+                        type_guard.param_name.0.dupe(),
+                        type_guard.param_name.1.dupe(),
+                    ),
+                    type_guard: rename_tparams_in_parsed(&body_rename_map, &type_guard.type_guard),
+                    one_sided: type_guard.one_sided,
+                }),
+                effect_: sig.effect_.clone(),
+            }
+        }
+
+        fn rename_tparams_in_component_sig<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            sig: &ComponentSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> ComponentSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            let (tparams, body_rename_map) =
+                rename_tparams_for_nested_scope(rename_map, &sig.tparams);
+            ComponentSig {
+                params_loc: sig.params_loc.dupe(),
+                tparams,
+                params: sig
+                    .params
+                    .iter()
+                    .map(|param| ComponentParam {
+                        name: param.name.dupe(),
+                        name_loc: param.name_loc.dupe(),
+                        t: rename_tparams_in_parsed(&body_rename_map, &param.t),
+                    })
+                    .collect(),
+                rest_param: sig.rest_param.as_ref().map(|param| ComponentRestParam {
+                    t: rename_tparams_in_parsed(&body_rename_map, &param.t),
+                }),
+                renders: rename_tparams_in_parsed(&body_rename_map, &sig.renders),
+            }
+        }
+
+        fn rename_tparams_in_accessor<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            accessor: &Accessor<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> Accessor<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            match accessor {
+                Accessor::Get(box (loc, t)) => Accessor::Get(Box::new((
+                    loc.dupe(),
+                    rename_tparams_in_parsed(rename_map, t),
+                ))),
+                Accessor::Set(box (loc, t)) => Accessor::Set(Box::new((
+                    loc.dupe(),
+                    rename_tparams_in_parsed(rename_map, t),
+                ))),
+                Accessor::GetSet(box (get_loc, get_t, set_loc, set_t)) => {
+                    Accessor::GetSet(Box::new((
+                        get_loc.dupe(),
+                        rename_tparams_in_parsed(rename_map, get_t),
+                        set_loc.dupe(),
+                        rename_tparams_in_parsed(rename_map, set_t),
+                    )))
+                }
+            }
+        }
+
+        fn rename_tparams_in_interface_prop<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            prop: &InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            match prop {
+                InterfaceProp::InterfaceField(box (id_loc, t, polarity)) => {
+                    InterfaceProp::InterfaceField(Box::new((
+                        id_loc.dupe(),
+                        rename_tparams_in_parsed(rename_map, t),
+                        *polarity,
+                    )))
+                }
+                InterfaceProp::InterfaceAccess(accessor) => InterfaceProp::InterfaceAccess(
+                    Box::new(rename_tparams_in_accessor(rename_map, accessor)),
+                ),
+                InterfaceProp::InterfaceMethod(methods) => InterfaceProp::InterfaceMethod(
+                    Box::new(methods.mapped_ref(|(id_loc, fn_loc, def)| {
+                        (
+                            id_loc.dupe(),
+                            fn_loc.dupe(),
+                            rename_tparams_in_fun_sig(rename_map, def),
+                        )
+                    })),
+                ),
+            }
+        }
+
+        fn rename_tparams_in_obj_annot_dict<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            dict: &ObjAnnotDict<Parsed<'arena, 'ast>>,
+        ) -> ObjAnnotDict<Parsed<'arena, 'ast>> {
+            ObjAnnotDict {
+                name: dict.name.dupe(),
+                polarity: dict.polarity,
+                key: rename_tparams_in_parsed(rename_map, &dict.key),
+                value: rename_tparams_in_parsed(rename_map, &dict.value),
+            }
+        }
+
+        fn rename_tparams_in_obj_kind<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            obj_kind: &ObjKind<Parsed<'arena, 'ast>>,
+        ) -> ObjKind<Parsed<'arena, 'ast>> {
+            match obj_kind {
+                ObjKind::ExactObj => ObjKind::ExactObj,
+                ObjKind::InexactObj => ObjKind::InexactObj,
+                ObjKind::IndexedObj(dict) => ObjKind::IndexedObj(Box::new(
+                    rename_tparams_in_obj_annot_dict(rename_map, dict),
+                )),
+            }
+        }
+
+        fn rename_tparams_in_obj_annot_prop<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            prop: &ObjAnnotProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> ObjAnnotProp<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            match prop {
+                ObjAnnotProp::ObjAnnotField(box (loc, t, polarity)) => {
+                    ObjAnnotProp::ObjAnnotField(Box::new((
+                        loc.dupe(),
+                        rename_tparams_in_parsed(rename_map, t),
+                        *polarity,
+                    )))
+                }
+                ObjAnnotProp::ObjAnnotAccess(accessor) => ObjAnnotProp::ObjAnnotAccess(Box::new(
+                    rename_tparams_in_accessor(rename_map, accessor),
+                )),
+                ObjAnnotProp::ObjAnnotMethod(inner) => {
+                    ObjAnnotProp::ObjAnnotMethod(Box::new(ObjAnnotMethodData {
+                        id_loc: inner.id_loc.dupe(),
+                        fn_loc: inner.fn_loc.dupe(),
+                        def: rename_tparams_in_fun_sig(rename_map, &inner.def),
+                    }))
+                }
+            }
+        }
+
+        fn rename_tparams_in_obj_annot_proto<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            proto: &ObjAnnotProto<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> ObjAnnotProto<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            match proto {
+                ObjAnnotProto::ObjAnnotImplicitProto => ObjAnnotProto::ObjAnnotImplicitProto,
+                ObjAnnotProto::ObjAnnotExplicitProto(box (loc, t)) => {
+                    ObjAnnotProto::ObjAnnotExplicitProto(Box::new((
+                        loc.dupe(),
+                        rename_tparams_in_parsed(rename_map, t),
+                    )))
+                }
+                ObjAnnotProto::ObjAnnotCallable(ts) => ObjAnnotProto::ObjAnnotCallable(Box::new(
+                    ts.mapped_ref(|t| rename_tparams_in_parsed(rename_map, t)),
+                )),
+            }
+        }
+
+        fn rename_tparams_in_obj_spread_annot_elem<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            elem: &ObjSpreadAnnotElem<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> ObjSpreadAnnotElem<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            match elem {
+                ObjSpreadAnnotElem::ObjSpreadAnnotElem(t) => {
+                    ObjSpreadAnnotElem::ObjSpreadAnnotElem(Box::new(rename_tparams_in_parsed(
+                        rename_map, t,
+                    )))
+                }
+                ObjSpreadAnnotElem::ObjSpreadAnnotSlice(inner) => {
+                    ObjSpreadAnnotElem::ObjSpreadAnnotSlice(Box::new(ObjSpreadAnnotSliceData {
+                        dict: inner
+                            .dict
+                            .as_ref()
+                            .map(|dict| rename_tparams_in_obj_annot_dict(rename_map, dict)),
+                        props: inner
+                            .props
+                            .iter()
+                            .map(|(name, prop)| {
+                                (
+                                    name.dupe(),
+                                    rename_tparams_in_obj_annot_prop(rename_map, prop),
+                                )
+                            })
+                            .collect(),
+                        computed_props: inner
+                            .computed_props
+                            .iter()
+                            .map(|(key, prop)| {
+                                (
+                                    rename_tparams_in_parsed(rename_map, key),
+                                    rename_tparams_in_obj_annot_prop(rename_map, prop),
+                                )
+                            })
+                            .collect(),
+                    }))
+                }
+            }
+        }
+
+        fn rename_tparams_in_obj_value_prop<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            prop: &ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            match prop {
+                ObjValueProp::ObjValueField(box (loc, t, polarity)) => {
+                    ObjValueProp::ObjValueField(Box::new((
+                        loc.dupe(),
+                        rename_tparams_in_parsed(rename_map, t),
+                        *polarity,
+                    )))
+                }
+                ObjValueProp::ObjValueAccess(accessor) => ObjValueProp::ObjValueAccess(Box::new(
+                    rename_tparams_in_accessor(rename_map, accessor),
+                )),
+                ObjValueProp::ObjValueMethod(inner) => {
+                    ObjValueProp::ObjValueMethod(Box::new(ObjValueMethodData {
+                        id_loc: inner.id_loc.dupe(),
+                        fn_loc: inner.fn_loc.dupe(),
+                        async_: inner.async_,
+                        generator: inner.generator,
+                        def: rename_tparams_in_fun_sig(rename_map, &inner.def),
+                    }))
+                }
+            }
+        }
+
+        fn rename_tparams_in_obj_value_spread_elem<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            elem: &ObjValueSpreadElem<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> ObjValueSpreadElem<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            match elem {
+                ObjValueSpreadElem::ObjValueSpreadElem(t) => {
+                    ObjValueSpreadElem::ObjValueSpreadElem(Box::new(rename_tparams_in_parsed(
+                        rename_map, t,
+                    )))
+                }
+                ObjValueSpreadElem::ObjValueSpreadSlice(props) => {
+                    ObjValueSpreadElem::ObjValueSpreadSlice(Box::new(
+                        props
+                            .iter()
+                            .map(|(name, prop)| {
+                                (
+                                    name.dupe(),
+                                    rename_tparams_in_obj_value_prop(rename_map, prop),
+                                )
+                            })
+                            .collect(),
+                    ))
+                }
+            }
+        }
+
+        fn rename_tparams_in_class_extends<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            extends: &ClassExtends<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> ClassExtends<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            match extends {
+                ClassExtends::ClassExplicitExtends(box (loc, t)) => {
+                    ClassExtends::ClassExplicitExtends(Box::new((
+                        loc.dupe(),
+                        rename_tparams_in_parsed(rename_map, t),
+                    )))
+                }
+                ClassExtends::ClassExplicitExtendsApp(box (loc, t, targs)) => {
+                    ClassExtends::ClassExplicitExtendsApp(Box::new((
+                        loc.dupe(),
+                        rename_tparams_in_parsed(rename_map, t),
+                        targs
+                            .iter()
+                            .map(|t| rename_tparams_in_parsed(rename_map, t))
+                            .collect(),
+                    )))
+                }
+                ClassExtends::ClassImplicitExtends => ClassExtends::ClassImplicitExtends,
+                ClassExtends::ObjectPrototypeExtendsNull => {
+                    ClassExtends::ObjectPrototypeExtendsNull
+                }
+            }
+        }
+
+        fn rename_tparams_in_class_sig<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            sig: &ClassSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> ClassSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            let (tparams, body_rename_map) =
+                rename_tparams_for_nested_scope(rename_map, &sig.tparams);
+            ClassSig {
+                tparams,
+                extends: rename_tparams_in_class_extends(&body_rename_map, &sig.extends),
+                implements: sig
+                    .implements
+                    .iter()
+                    .map(|t| rename_tparams_in_parsed(&body_rename_map, t))
+                    .collect(),
+                static_props: sig
+                    .static_props
+                    .iter()
+                    .map(|(name, prop)| {
+                        (
+                            name.dupe(),
+                            rename_tparams_in_obj_value_prop(&body_rename_map, prop),
+                        )
+                    })
+                    .collect(),
+                proto_props: sig
+                    .proto_props
+                    .iter()
+                    .map(|(name, prop)| {
+                        (
+                            name.dupe(),
+                            rename_tparams_in_obj_value_prop(&body_rename_map, prop),
+                        )
+                    })
+                    .collect(),
+                own_props: sig
+                    .own_props
+                    .iter()
+                    .map(|(name, prop)| {
+                        (
+                            name.dupe(),
+                            rename_tparams_in_obj_value_prop(&body_rename_map, prop),
+                        )
+                    })
+                    .collect(),
+                dict: sig
+                    .dict
+                    .as_ref()
+                    .map(|dict| rename_tparams_in_obj_annot_dict(&body_rename_map, dict)),
+            }
+        }
+
+        fn rename_tparams_in_interface_sig<'arena, 'ast>(
+            rename_map: &TParamRenameMap,
+            sig: &InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            InterfaceSig {
+                extends: sig
+                    .extends
+                    .iter()
+                    .map(|t| rename_tparams_in_parsed(rename_map, t))
+                    .collect(),
+                props: sig
+                    .props
+                    .iter()
+                    .map(|(name, prop)| {
+                        (
+                            name.dupe(),
+                            rename_tparams_in_interface_prop(rename_map, prop),
+                        )
+                    })
+                    .collect(),
+                computed_props: sig
+                    .computed_props
+                    .iter()
+                    .map(|(key, prop)| {
+                        (
+                            rename_tparams_in_parsed(rename_map, key),
+                            rename_tparams_in_interface_prop(rename_map, prop),
+                        )
+                    })
+                    .collect(),
+                calls: sig
+                    .calls
+                    .iter()
+                    .map(|t| rename_tparams_in_parsed(rename_map, t))
+                    .collect(),
+                dict: sig
+                    .dict
+                    .as_ref()
+                    .map(|dict| rename_tparams_in_obj_annot_dict(rename_map, dict)),
+            }
+        }
+
+        pub(super) fn rename_interface_sig<'arena, 'ast>(
+            from_tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+            to_tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+            sig: &InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            let rename_map = tparam_rename_map(from_tparams, to_tparams);
+            rename_tparams_in_interface_sig(&rename_map, sig)
+        }
+    }
+
     fn merge_interface_props_combine<'arena, 'ast>(
         _prop_name: &FlowSmolStr,
         existing_prop: &InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
@@ -1545,8 +2467,11 @@ pub(super) mod scope {
         current_id_loc: LocNode<'arena>,
         tbls: &mut Tables<'arena, 'ast>,
         dc_sig: &DeclareClassSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        iface_tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
         iface_sig: &InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
     ) -> DeclareClassSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+        let iface_sig =
+            type_param_renaming::rename_interface_sig(iface_tparams, &dc_sig.tparams, iface_sig);
         let mut proto_props = dc_sig.proto_props.clone();
         for (prop_name, new_prop) in &iface_sig.props {
             use std::collections::btree_map::Entry;
@@ -1605,9 +2530,12 @@ pub(super) mod scope {
         existing_id_loc: LocNode<'arena>,
         current_id_loc: LocNode<'arena>,
         tbls: &mut Tables<'arena, 'ast>,
+        old_tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        new_tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
         old_sig: &InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
         new_sig: &InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
     ) -> InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+        let new_sig = type_param_renaming::rename_interface_sig(new_tparams, old_tparams, new_sig);
         // props: union, first wins; methods merge overloads, fields conflict
         let mut props = old_sig.props.clone();
         for (prop_name, new_prop) in &new_sig.props {
@@ -1761,6 +2689,7 @@ pub(super) mod scope {
                                     iface_id_loc_local,
                                     tbls,
                                     &forced_dc,
+                                    &iface.tparams,
                                     &iface_def_local,
                                 )
                             } else {
@@ -1842,6 +2771,8 @@ pub(super) mod scope {
                                                 old_iface.id_loc.dupe(),
                                                 new_iface.id_loc.dupe(),
                                                 tbls,
+                                                &old_iface.tparams,
+                                                &new_iface.tparams,
                                                 &old_iface.def,
                                                 &new_iface.def,
                                             );
@@ -2052,6 +2983,7 @@ pub(super) mod scope {
                                             iface_id_loc.dupe(),
                                             tbls,
                                             &forced_dc,
+                                            &iface_tp,
                                             &iface_sig,
                                         )
                                     } else {
@@ -3398,18 +4330,16 @@ pub(super) mod scope {
                     }
                     (false, Some(BindingNode::LocalBinding(node)), None)
                     | (true, Some(BindingNode::LocalBinding(node)), None)
-                    | (true, None, Some(BindingNode::LocalBinding(node))) => {
+                    | (true, None, Some(BindingNode::LocalBinding(node)))
                         if merge_namespace_into_local_binding_node(
                             tbls,
                             &node,
                             ns_values.clone(),
                             ns_types.clone(),
-                        ) {
-                            k(scopes, &name, node);
-                            true
-                        } else {
-                            false
-                        }
+                        ) =>
+                    {
+                        k(scopes, &name, node);
+                        true
                     }
                     _ => false,
                 };

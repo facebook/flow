@@ -1248,9 +1248,19 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
     else
       t
 
-let merge_props_by_id cx ~target_own ~target_proto ~source_own ~source_proto =
+(* Interface/declare-class merging copies property maps from the absorbed
+   declaration into the canonical declaration. Those copied property types may
+   mention the absorbed declaration's local type parameters, so translate them
+   into the canonical declaration's GenericTs before mutating the target maps. *)
+let subst_merge_props cx tparam_subst_map props =
+  if Subst_name.Map.is_empty tparam_subst_map then
+    props
+  else
+    NameUtils.Map.map (Property.map_t (Type_subst.subst cx tparam_subst_map)) props
+
+let merge_props_by_id cx ~target_own ~target_proto ~source_own ~source_proto ~tparam_subst_map =
   let target_own_map = Context.find_props cx target_own in
-  let source_own_map = Context.find_props cx source_own in
+  let source_own_map = Context.find_props cx source_own |> subst_merge_props cx tparam_subst_map in
   Context.add_property_map
     cx
     target_own
@@ -1260,7 +1270,9 @@ let merge_props_by_id cx ~target_own ~target_proto ~source_own ~source_proto =
        source_own_map
     );
   let target_proto_map = Context.find_props cx target_proto in
-  let source_proto_map = Context.find_props cx source_proto in
+  let source_proto_map =
+    Context.find_props cx source_proto |> subst_merge_props cx tparam_subst_map
+  in
   Context.add_property_map
     cx
     target_proto
@@ -1294,12 +1306,16 @@ let merge_with_conflicts cx ~name_loc ~merge_conflicts ~prop_ids =
           (fun bad_name_loc ->
             match ALocMap.find_opt bad_name_loc prop_ids with
             | Some (bad_own, bad_proto) ->
+              let tparam_subst_map =
+                Context.interface_tparam_subst_map cx ~source_loc:bad_name_loc ~target_loc:name_loc
+              in
               merge_props_by_id
                 cx
                 ~target_own:good_own
                 ~target_proto:good_proto
                 ~source_own:bad_own
                 ~source_proto:bad_proto
+                ~tparam_subst_map
             | None -> ())
           bad_locs)
     | None -> ()
@@ -1312,12 +1328,16 @@ let merge_with_conflicts cx ~name_loc ~merge_conflicts ~prop_ids =
             (match ALocMap.find_opt name_loc prop_ids with
             | None -> ()
             | Some (bad_own, bad_proto) ->
+              let tparam_subst_map =
+                Context.interface_tparam_subst_map cx ~source_loc:name_loc ~target_loc:good_name_loc
+              in
               merge_props_by_id
                 cx
                 ~target_own:good_own
                 ~target_proto:good_proto
                 ~source_own:bad_own
-                ~source_proto:bad_proto)
+                ~source_proto:bad_proto
+                ~tparam_subst_map)
           | None -> ())
       merge_conflicts
 

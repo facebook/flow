@@ -12,6 +12,7 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocMap;
+use flow_common::alpha_rename;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::flow_symbol::Symbol;
 use flow_common::polarity::Polarity;
@@ -5958,7 +5959,7 @@ fn mk_type_param_inner<'a>(
         && env.tparams_map.contains_key(&SubstName::name(name.dupe()))
     {
         let keys: FlowOrdSet<SubstName> = env.tparams_map.keys().cloned().collect();
-        type_subst::new_name(&SubstName::name(name.dupe()), &keys)
+        alpha_rename::subst_name(&SubstName::name(name.dupe()), &keys)
     } else {
         SubstName::name(name.dupe())
     };
@@ -7584,6 +7585,7 @@ pub fn mk_interface_sig<'a>(
         flow_parser::ast_visitor::TypeParamsContext::Interface,
         decl.tparams.as_ref(),
     )?;
+    cx.record_interface_tparams(id_loc.dupe(), &tparams, &env.tparams_map);
     let class_name = &id_name.name;
     let id = cx.make_aloc_id(id_loc);
     let mut extends = Vec::new();
@@ -8195,6 +8197,7 @@ pub fn mk_declare_class_sig<'a>(
             flow_parser::ast_visitor::TypeParamsContext::DeclareClass,
             decl.tparams.as_ref(),
         )?;
+        cx.record_interface_tparams(id_loc.dupe(), &tparams, &env.tparams_map);
         let (this_tparam, this_t) = class_sig::mk_this(self_, cx, reason.dupe());
         let id = cx.make_aloc_id(id_loc);
         let (extends, extends_ast) = {

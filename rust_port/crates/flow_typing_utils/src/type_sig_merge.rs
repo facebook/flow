@@ -19,6 +19,7 @@ use dupe::OptionDupedExt;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_aloc::aloc_representation_do_not_use;
+use flow_common::alpha_rename;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::flow_symbol::Symbol;
@@ -3248,7 +3249,7 @@ fn merge_tparam<'cx>(
     let subst_name = if from_infer && env.tps.contains_key(name) {
         let fvs: flow_data_structure_wrapper::ord_set::FlowOrdSet<SubstName> =
             env.tps.keys().map(|n| SubstName::name(n.dupe())).collect();
-        flow_typing_flow_common::type_subst::new_name(&SubstName::name(name.dupe()), &fvs)
+        alpha_rename::subst_name(&SubstName::name(name.dupe()), &fvs)
     } else {
         SubstName::name(name.dupe())
     };

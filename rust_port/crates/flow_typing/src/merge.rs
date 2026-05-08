@@ -72,6 +72,7 @@ use flow_typing_errors::intermediate_error_types::StrictComparisonInfo;
 use flow_typing_errors::intermediate_error_types::StrictComparisonKind;
 use flow_typing_exists_check::ExistsCheck;
 use flow_typing_flow_common::flow_js_utils;
+use flow_typing_flow_common::type_subst;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::tvar_resolver;
@@ -1304,8 +1305,17 @@ fn check_general_post_inference_validations<'cx>(
 fn check_interface_merge_prop_conflicts<'cx>(
     cx: &Context<'cx>,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
-    for (use_op, bad_t, good_t) in cx.interface_merge_unify_tasks().iter() {
-        flow_js::unify_non_speculating(cx, Some(use_op.dupe()), bad_t, good_t)?;
+    for (use_op, tparam_subst_map, bad_t, good_t) in cx.interface_merge_unify_tasks().iter() {
+        let bad_t = type_subst::subst(
+            cx,
+            Some(use_op.dupe()),
+            true,
+            false,
+            type_subst::Purpose::Normal,
+            tparam_subst_map,
+            bad_t.dupe(),
+        );
+        flow_js::unify_non_speculating(cx, Some(use_op.dupe()), &bad_t, good_t)?;
     }
     Ok(())
 }

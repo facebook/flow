@@ -99,23 +99,6 @@ let free_var_finder_in_destructor cx ?(bound = Subst_name.Set.empty) d =
 
 (** Substitute bound type variables with associated types in a type. **)
 
-let new_name name fvs =
-  let (ct, n) =
-    match name with
-    | Subst_name.Synthetic { name = n; _ } ->
-      failwith (Utils_js.spf "Cannot rename synthetic name %s" n)
-    | Subst_name.Name n -> (0, n)
-    | Subst_name.Id (ct, n) -> (ct, n)
-  in
-  let rec loop ct =
-    let name = Subst_name.Id (ct, n) in
-    if not @@ Subst_name.Set.mem name fvs then
-      name
-    else
-      loop (ct + 1)
-  in
-  loop (ct + 1)
-
 let fvs_of_map map =
   Subst_name.Map.fold
     (fun _ t acc ->
@@ -127,13 +110,14 @@ let fvs_of_map map =
 
 let avoid_capture map name =
   let fvs = fvs_of_map map in
-  if Subst_name.Set.mem name fvs then
-    let new_name =
-      new_name name (Subst_name.Map.fold (fun n _ acc -> Subst_name.Set.add n acc) map fvs)
-    in
-    (new_name, Subst_name.Map.add name (AlphaRename new_name) map)
-  else
-    (name, Subst_name.Map.remove name map)
+  Alpha_rename.avoid_capture
+    ~name
+    ~map
+    ~in_free_vars:(fun name -> Subst_name.Set.mem name fvs)
+    ~used_names:(fun () -> Subst_name.Map.fold (fun n _ acc -> Subst_name.Set.add n acc) map fvs)
+    ~fresh_name:Alpha_rename.subst_name
+    ~remove:Subst_name.Map.remove
+    ~add_alpha:(fun name new_name map -> Subst_name.Map.add name (AlphaRename new_name) map)
 
 let union_ident_map_and_dedup =
   let rec union_flatten cx seen ts = Base.List.concat_map ~f:(flatten cx seen) ts

@@ -462,6 +462,14 @@ pub struct ComponentT<'cx> {
     /// are absent from this table — their loc never gets a slot, so
     /// recording is a no-op for them.
     merging_interface_field_types: RefCell<HashMap<ALoc, HashMap<Name, Type>>>,
+    /// Declaration merging compares and copies member types across
+    /// declaration boundaries. Type parameter names are local to each
+    /// declaration, so an absorbed declaration's member types need a
+    /// positional renaming into the canonical declaration's type parameter
+    /// namespace before we replay those types during checking. This table
+    /// stores each merging declaration's declared type parameters, paired with
+    /// the `GenericT` created for that parameter, in source order.
+    merging_interface_typeparams: RefCell<HashMap<ALoc, Vec<(type_::TypeParam, Type)>>>,
     /// Also supports interface declaration merging, but for a different step:
     /// actually combining the property maps. Each interface InstanceT stores
     /// its own/proto properties in two heap-allocated maps identified by
@@ -787,6 +795,7 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
             Vec::new(),
         ),
         merging_interface_field_types: RefCell::new(HashMap::new()),
+        merging_interface_typeparams: RefCell::new(HashMap::new()),
         interface_prop_ids: RefCell::new(BTreeMap::new()),
         env_value_cache: RefCell::new(IntHashMap::default()),
         env_type_cache: RefCell::new(IntHashMap::default()),
@@ -1538,7 +1547,9 @@ impl<'cx> Context<'cx> {
     /// compute it ourselves.
     pub fn init_interface_merge_field_index(&self) {
         let mut table = self.0.ccx.merging_interface_field_types.borrow_mut();
+        let mut typeparams = self.0.ccx.merging_interface_typeparams.borrow_mut();
         table.clear();
+        typeparams.clear();
         let mut install = |good_loc: &ALoc, bad_locs: &Vec<ALoc>| {
             table.entry(good_loc.dupe()).or_insert_with(HashMap::new);
             for bad_loc in bad_locs {
@@ -1560,6 +1571,68 @@ impl<'cx> Context<'cx> {
         }
     }
 
+    pub fn record_interface_tparams(
+        &self,
+        id_loc: ALoc,
+        tparams: &type_::TypeParams,
+        tparams_map: &FlowOrdMap<SubstName, Type>,
+    ) {
+        if !self
+            .0
+            .ccx
+            .merging_interface_field_types
+            .borrow()
+            .contains_key(&id_loc)
+        {
+            return;
+        }
+
+        let tparams = match tparams {
+            None => Vec::new(),
+            Some((_, tparams)) => tparams
+                .iter()
+                .filter_map(|tparam| {
+                    tparams_map
+                        .get(&tparam.name)
+                        .map(|t| (tparam.dupe(), t.dupe()))
+                })
+                .collect(),
+        };
+        self.0
+            .ccx
+            .merging_interface_typeparams
+            .borrow_mut()
+            .insert(id_loc, tparams);
+    }
+
+    /// TypeScript declaration merging matches type parameters positionally,
+    /// not by spelling. The source declaration may write
+    /// `interface Foo<TValue>`, while the canonical declaration wrote
+    /// `interface Foo<T>`. Member types copied or compared from the source
+    /// declaration therefore need `TValue` substituted with the canonical
+    /// `GenericT` for `T`. A length mismatch means another validation owns
+    /// the arity error, so the checker leaves the member types unchanged.
+    pub fn interface_tparam_subst_map(
+        &self,
+        source_loc: &ALoc,
+        target_loc: &ALoc,
+    ) -> FlowOrdMap<SubstName, Type> {
+        let typeparams = self.0.ccx.merging_interface_typeparams.borrow();
+        let (Some(source_tparams), Some(target_tparams)) =
+            (typeparams.get(source_loc), typeparams.get(target_loc))
+        else {
+            return FlowOrdMap::new();
+        };
+        if source_tparams.len() != target_tparams.len() {
+            return FlowOrdMap::new();
+        }
+        source_tparams
+            .iter()
+            .zip(target_tparams)
+            .map(|((source_tparam, _), (_, target_t))| (source_tparam.name.dupe(), target_t.dupe()))
+            .collect()
+    }
+
     /// Remember that interface `id_loc` declared a Field named `name` of type
     /// `t`. Only matters for interfaces that participate in declaration
     /// merging — for anyone else, the absence of a slot in the table makes
@@ -1577,9 +1650,13 @@ impl<'cx> Context<'cx> {
     /// The list of "these two types should be the same, and here's why"
     /// obligations that interface declaration merging produces. Each tuple
     /// is one shared field between two merging declarations: post-inference
-    /// will `unify` them, and anyone who wrote disagreeing types gets a
-    /// `MergedDeclaration` error pointing at both decls.
-    pub fn interface_merge_unify_tasks(&self) -> Vec<(UseOp, Type, Type)> {
+    /// will substitute the current declaration's type parameters into the
+    /// canonical declaration's namespace, `unify` the resulting types, and
+    /// anyone who wrote disagreeing types gets a `MergedDeclaration` error
+    /// pointing at both decls.
+    pub fn interface_merge_unify_tasks(
+        &self,
+    ) -> Vec<(UseOp, FlowOrdMap<SubstName, Type>, Type, Type)> {
         let interface_conflicts = self.environment().var_info.interface_merge_conflicts.dupe();
         let dc_conflicts = self
             .environment()
@@ -1587,32 +1664,39 @@ impl<'cx> Context<'cx> {
             .declare_class_interface_merge_conflicts
             .dupe();
         let fields = self.0.ccx.merging_interface_field_types.borrow();
-        let walk = |good_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
-                    bad_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
-                    conflicts: &FlowOrdMap<ALoc, Vec<ALoc>>,
-                    acc: &mut Vec<(UseOp, Type, Type)>| {
-            for (good_loc, bad_locs) in conflicts.iter() {
-                let Some(good_fields) = fields.get(good_loc) else {
-                    continue;
-                };
-                let first_decl = good_reason(good_loc.dupe());
-                for bad_loc in bad_locs {
-                    let Some(bad_fields) = fields.get(bad_loc) else {
+        let walk =
+            |good_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
+             bad_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
+             conflicts: &FlowOrdMap<ALoc, Vec<ALoc>>,
+             acc: &mut Vec<(UseOp, FlowOrdMap<SubstName, Type>, Type, Type)>| {
+                for (good_loc, bad_locs) in conflicts.iter() {
+                    let Some(good_fields) = fields.get(good_loc) else {
                         continue;
                     };
-                    let current_decl = bad_reason(bad_loc.dupe());
-                    let use_op = UseOp::Op(Arc::new(RootUseOp::MergedDeclaration {
-                        first_decl: first_decl.dupe(),
-                        current_decl,
-                    }));
-                    for (name, bad_t) in bad_fields.iter() {
-                        if let Some(good_t) = good_fields.get(name) {
-                            acc.push((use_op.dupe(), bad_t.dupe(), good_t.dupe()));
+                    let first_decl = good_reason(good_loc.dupe());
+                    for bad_loc in bad_locs {
+                        let Some(bad_fields) = fields.get(bad_loc) else {
+                            continue;
+                        };
+                        let current_decl = bad_reason(bad_loc.dupe());
+                        let use_op = UseOp::Op(Arc::new(RootUseOp::MergedDeclaration {
+                            first_decl: first_decl.dupe(),
+                            current_decl,
+                        }));
+                        let tparam_subst_map = self.interface_tparam_subst_map(bad_loc, good_loc);
+                        for (name, bad_t) in bad_fields.iter() {
+                            if let Some(good_t) = good_fields.get(name) {
+                                acc.push((
+                                    use_op.dupe(),
+                                    tparam_subst_map.dupe(),
+                                    bad_t.dupe(),
+                                    good_t.dupe(),
+                                ));
+                            }
                         }
                     }
                 }
-            }
-        };
+            };
         let mut acc = Vec::new();
         walk(
             &|loc| VirtualReason::new(VirtualReasonDesc::RInterfaceType, loc),

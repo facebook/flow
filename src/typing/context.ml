@@ -228,6 +228,14 @@ type component_t = {
      Interfaces not involved in any merge are absent from this table — their
      loc never gets a slot, so recording is a no-op for them. *)
   merging_interface_field_types: (ALoc.t, (Reason.name, Type.t) Hashtbl.t) Hashtbl.t;
+  (* Declaration merging compares and copies member types across declaration
+     boundaries. Type parameter names are local to each declaration, so an
+     absorbed declaration's member types need a positional renaming into the
+     canonical declaration's type parameter namespace before we replay those
+     types during checking. This table stores each merging declaration's
+     declared type parameters, paired with the GenericT created for that
+     parameter, in source order. *)
+  merging_interface_typeparams: (ALoc.t, (Type.typeparam * Type.t) list) Hashtbl.t;
   (* Also supports interface declaration merging, but for a different step:
      actually combining the property maps. Each interface InstanceT stores its
      own/proto properties in two heap-allocated maps identified by
@@ -480,6 +488,7 @@ let make_ccx () =
     post_inference_validation_flows = [];
     post_inference_projects_strict_boundary_import_pattern_opt_outs_validations = [];
     merging_interface_field_types = Hashtbl.create 0;
+    merging_interface_typeparams = Hashtbl.create 0;
     interface_prop_ids = ALocMap.empty;
     env_value_cache = IMap.empty;
     env_type_cache = IMap.empty;
@@ -835,7 +844,9 @@ let post_inference_projects_strict_boundary_import_pattern_opt_outs_validations 
    ourselves. *)
 let init_interface_merge_field_index cx =
   let table = cx.ccx.merging_interface_field_types in
+  let typeparams = cx.ccx.merging_interface_typeparams in
   Hashtbl.reset table;
+  Hashtbl.reset typeparams;
   let install good_loc bad_locs =
     Hashtbl.replace table good_loc (Hashtbl.create 4);
     List.iter (fun bad -> Hashtbl.replace table bad (Hashtbl.create 4)) bad_locs
@@ -856,11 +867,47 @@ let record_interface_field cx id_loc name t =
   | None -> ()
   | Some inner -> if not (Hashtbl.mem inner name) then Hashtbl.add inner name t
 
+let record_interface_tparams cx id_loc tparams tparams_map =
+  match Hashtbl.find_opt cx.ccx.merging_interface_field_types id_loc with
+  | None -> ()
+  | Some _ ->
+    let tparams =
+      Type.TypeParams.to_list tparams
+      |> List.filter_map (fun ({ Type.name; _ } as tparam) ->
+             Base.Option.map (Subst_name.Map.find_opt name tparams_map) ~f:(fun t -> (tparam, t))
+         )
+    in
+    Hashtbl.replace cx.ccx.merging_interface_typeparams id_loc tparams
+
+(* TypeScript declaration merging matches type parameters positionally, not by
+   spelling. The source declaration may write `interface Foo<TValue>`, while the
+   canonical declaration wrote `interface Foo<T>`. Member types copied or
+   compared from the source declaration therefore need `TValue` substituted with
+   the canonical GenericT for `T`. A length mismatch means another validation
+   owns the arity error, so the checker leaves the member types unchanged. *)
+let interface_tparam_subst_map cx ~source_loc ~target_loc =
+  let typeparams = cx.ccx.merging_interface_typeparams in
+  match (Hashtbl.find_opt typeparams source_loc, Hashtbl.find_opt typeparams target_loc) with
+  | (Some source_tparams, Some target_tparams) ->
+    let rec loop subst_map source_tparams target_tparams =
+      match (source_tparams, target_tparams) with
+      | ([], []) -> subst_map
+      | ((source_tparam, _) :: source_tparams, (_, target_t) :: target_tparams) ->
+        loop
+          (Subst_name.Map.add source_tparam.Type.name target_t subst_map)
+          source_tparams
+          target_tparams
+      | _ -> Subst_name.Map.empty
+    in
+    loop Subst_name.Map.empty source_tparams target_tparams
+  | _ -> Subst_name.Map.empty
+
 (* The list of "these two types should be the same, and here's why" obligations
    that interface declaration merging produces. Each tuple is one shared field
-   between two merging declarations: post-inference will [unify] them, and
-   anyone who wrote disagreeing types gets a [MergedDeclaration] error
-   pointing at both decls. *)
+   between two merging declarations: post-inference will substitute the current
+   declaration's type parameters into the canonical declaration's namespace,
+   [unify] the resulting types, and anyone who wrote disagreeing types gets a
+   [MergedDeclaration] error pointing at both decls. *)
 let interface_merge_unify_tasks cx =
   let interface_conflicts = cx.environment.Loc_env.var_info.Env_api.interface_merge_conflicts in
   let dc_conflicts =
@@ -881,10 +928,13 @@ let interface_merge_unify_tasks cx =
               | Some bad_fields ->
                 let current_decl = bad_reason bad_loc in
                 let use_op = Type.Op (Type.MergedDeclaration { first_decl; current_decl }) in
+                let tparam_subst_map =
+                  interface_tparam_subst_map cx ~source_loc:bad_loc ~target_loc:good_loc
+                in
                 Hashtbl.fold
                   (fun name bad_t acc ->
                     match Hashtbl.find_opt good_fields name with
-                    | Some good_t -> (use_op, bad_t, good_t) :: acc
+                    | Some good_t -> (use_op, tparam_subst_map, bad_t, good_t) :: acc
                     | None -> acc)
                   bad_fields
                   acc)

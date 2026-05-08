@@ -939,6 +939,491 @@ module Scope = struct
     | Mono -> 0
     | Poly (_, _, rest) -> 1 + List.length rest
 
+  module Type_param_renaming = struct
+    let tparam_name (TParam { name; _ }) = name
+
+    let tparams_names = function
+      | Mono -> []
+      | Poly (_, tp, tps) -> List.map tparam_name (tp :: tps)
+
+    let tparams_name_locs = function
+      | Mono -> []
+      | Poly (_, tp, tps) ->
+        List.map (fun (TParam { name_loc; name; _ }) -> (name_loc, name)) (tp :: tps)
+
+    (* TypeScript declaration merging treats type parameters as positional slots,
+       while the parsed type-sig representation refers to them by name. If
+       `declare class Iterator<Yield, Return, Next>` absorbs
+       `interface Iterator<T, TReturn, TNext>`, the interface members must be
+       alpha-renamed into the class's names before we concatenate signatures.
+       Otherwise the merged signature contains free references like `TReturn`
+       under a declaration that only binds `Return`. *)
+    let tparam_rename_map ~from_tparams ~to_tparams =
+      List.fold_left2
+        (fun map from_name to_name -> SMap.add from_name to_name map)
+        SMap.empty
+        (tparams_names from_tparams)
+        (tparams_names to_tparams)
+
+    let remove_tparams_from_rename_map rename_map tparams =
+      List.fold_left (fun map name -> SMap.remove name map) rename_map (tparams_names tparams)
+
+    let rename_tparam_name rename_map name =
+      match SMap.find_opt name rename_map with
+      | Some name -> name
+      | None -> name
+
+    let rename_map_targets rename_map =
+      SMap.fold (fun _ name acc -> SSet.add name acc) rename_map SSet.empty
+
+    let rename_map_names rename_map =
+      SMap.fold
+        (fun from_name to_name acc -> SSet.add from_name (SSet.add to_name acc))
+        rename_map
+        SSet.empty
+
+    let capture_avoidance_map rename_map tparams =
+      let body_rename_map = remove_tparams_from_rename_map rename_map tparams in
+      let capture_names = rename_map_targets body_rename_map in
+      let used_names =
+        List.fold_left
+          (fun used_names name -> SSet.add name used_names)
+          (rename_map_names rename_map)
+          (tparams_names tparams)
+      in
+      let (alpha_map, body_rename_map, _) =
+        List.fold_left
+          (fun (alpha_map, body_rename_map, used_names) name ->
+            let (renamed_name, body_rename_map) =
+              Alpha_rename.avoid_capture
+                ~name
+                ~map:body_rename_map
+                ~in_free_vars:(fun name -> SSet.mem name capture_names)
+                ~used_names:(fun () -> used_names)
+                ~fresh_name:Alpha_rename.string
+                ~remove:SMap.remove
+                ~add_alpha:(fun name new_name map -> SMap.add name new_name map)
+            in
+            let alpha_map =
+              if renamed_name = name then
+                alpha_map
+              else
+                SMap.add name renamed_name alpha_map
+            in
+            (alpha_map, body_rename_map, SSet.add renamed_name used_names))
+          (SMap.empty, body_rename_map, used_names)
+          (tparams_names tparams)
+      in
+      (alpha_map, body_rename_map)
+
+    (* Rename only references to the outer declaration's type parameters. Nested
+       binders (function/component/class type params, conditional `infer`, and
+       mapped-type keys) shadow same-named outer params. When an outer type
+       parameter is renamed to a name used by a nested binder, alpha-rename the
+       nested binder first so the renamed outer reference stays free. *)
+    let rec rename_tparams_in_parsed rename_map = function
+      | Annot annot -> Annot (rename_tparams_in_annot rename_map annot)
+      | Value value -> Value (rename_tparams_in_value rename_map value)
+      | TyRefApp { loc; name; targs } ->
+        TyRefApp { loc; name; targs = List.map (rename_tparams_in_parsed rename_map) targs }
+      | Eval (loc, t, op) ->
+        Eval
+          ( loc,
+            rename_tparams_in_parsed rename_map t,
+            map_op (rename_tparams_in_parsed rename_map) op
+          )
+      | ( TyRef _ | AsyncVoidReturn _ | ValRef _ | Err _ | BuiltinTyRef _ | Pattern _ | Require _
+        | ImportDynamic _ | ModuleRef _ | ImportTypeAnnot _ ) as t ->
+        t
+
+    and override_bound_names_by_loc loc_names = function
+      | Annot (Bound { ref_loc; name }) ->
+        let name =
+          match List.find_opt (fun (loc, _) -> loc = ref_loc) loc_names with
+          | Some (_, name) -> name
+          | None -> name
+        in
+        Annot (Bound { ref_loc; name })
+      | Annot annot ->
+        Annot (map_annot (fun loc -> loc) (override_bound_names_by_loc loc_names) annot)
+      | Value value ->
+        Value (map_value (fun loc -> loc) (override_bound_names_by_loc loc_names) value)
+      | TyRefApp { loc; name; targs } ->
+        TyRefApp { loc; name; targs = List.map (override_bound_names_by_loc loc_names) targs }
+      | Eval (loc, t, op) ->
+        Eval
+          ( loc,
+            override_bound_names_by_loc loc_names t,
+            map_op (override_bound_names_by_loc loc_names) op
+          )
+      | ( TyRef _ | AsyncVoidReturn _ | ValRef _ | Err _ | BuiltinTyRef _ | Pattern _ | Require _
+        | ImportDynamic _ | ModuleRef _ | ImportTypeAnnot _ ) as t ->
+        t
+
+    and rename_tparams_in_value rename_map = function
+      | ClassExpr (loc, def) -> ClassExpr (loc, rename_tparams_in_class_sig rename_map def)
+      | FunExpr { loc; async; generator; def; statics } ->
+        FunExpr
+          {
+            loc;
+            async;
+            generator;
+            def = rename_tparams_in_fun_sig rename_map def;
+            statics =
+              SMap.map (fun (loc, t) -> (loc, rename_tparams_in_parsed rename_map t)) statics;
+          }
+      | DeclareModuleImplicitlyExportedObject { loc; module_name; props } ->
+        DeclareModuleImplicitlyExportedObject
+          { loc; module_name; props = SMap.map (rename_tparams_in_obj_value_prop rename_map) props }
+      | ObjLit { loc; frozen; proto; props } ->
+        ObjLit
+          {
+            loc;
+            frozen;
+            proto =
+              Option.map ~f:(fun (loc, t) -> (loc, rename_tparams_in_parsed rename_map t)) proto;
+            props = SMap.map (rename_tparams_in_obj_value_prop rename_map) props;
+          }
+      | ObjSpreadLit { loc; frozen; proto; elems_rev } ->
+        ObjSpreadLit
+          {
+            loc;
+            frozen;
+            proto =
+              Option.map ~f:(fun (loc, t) -> (loc, rename_tparams_in_parsed rename_map t)) proto;
+            elems_rev = Nel.map (rename_tparams_in_obj_value_spread_elem rename_map) elems_rev;
+          }
+      | ArrayLit (loc, t, ts) ->
+        ArrayLit
+          ( loc,
+            rename_tparams_in_parsed rename_map t,
+            List.map (rename_tparams_in_parsed rename_map) ts
+          )
+      | AsConst value -> AsConst (rename_tparams_in_value rename_map value)
+      | ( StringVal _ | StringLit _ | NumberVal _ | NumberLit _ | BigIntVal _ | BigIntLit _
+        | BooleanVal _ | BooleanLit _ | NullLit _ | EmptyConstArrayLit _ ) as value ->
+        value
+
+    and rename_tparams_in_annot rename_map = function
+      | Bound { ref_loc; name } -> Bound { ref_loc; name = rename_tparam_name rename_map name }
+      | FunAnnot (loc, def) -> FunAnnot (loc, rename_tparams_in_fun_sig rename_map def)
+      | ComponentAnnot (loc, def) ->
+        ComponentAnnot (loc, rename_tparams_in_component_sig rename_map def)
+      | Conditional
+          {
+            loc;
+            distributive_tparam;
+            infer_tparams;
+            check_type;
+            extends_type;
+            true_type;
+            false_type;
+          } ->
+        let (infer_tparams, infer_body_rename_map) =
+          rename_tparams_for_nested_scope rename_map infer_tparams
+        in
+        let extends_type =
+          override_bound_names_by_loc
+            (tparams_name_locs infer_tparams)
+            (rename_tparams_in_parsed rename_map extends_type)
+        in
+        Conditional
+          {
+            loc;
+            distributive_tparam =
+              Option.map ~f:(rename_distributive_tparam rename_map) distributive_tparam;
+            infer_tparams;
+            check_type = rename_tparams_in_parsed rename_map check_type;
+            extends_type;
+            true_type = rename_tparams_in_parsed infer_body_rename_map true_type;
+            false_type = rename_tparams_in_parsed rename_map false_type;
+          }
+      | MappedTypeAnnot
+          {
+            loc;
+            source_type;
+            property_type;
+            key_tparam;
+            variance;
+            variance_op;
+            optional;
+            inline_keyof;
+          } ->
+        let (key_tparams, property_type_rename_map) =
+          rename_tparams_for_nested_scope rename_map (Poly (loc, key_tparam, []))
+        in
+        let key_tparam =
+          match key_tparams with
+          | Poly (_, key_tparam, []) -> key_tparam
+          | _ -> key_tparam
+        in
+        MappedTypeAnnot
+          {
+            loc;
+            source_type = rename_tparams_in_parsed rename_map source_type;
+            property_type = rename_tparams_in_parsed property_type_rename_map property_type;
+            key_tparam;
+            variance;
+            variance_op;
+            optional;
+            inline_keyof;
+          }
+      | ObjAnnot { loc; obj_kind; props; computed_props; proto } ->
+        ObjAnnot
+          {
+            loc;
+            obj_kind = rename_tparams_in_obj_kind rename_map obj_kind;
+            props = SMap.map (rename_tparams_in_obj_annot_prop rename_map) props;
+            computed_props =
+              List.map
+                (fun (key, prop) ->
+                  ( rename_tparams_in_parsed rename_map key,
+                    rename_tparams_in_obj_annot_prop rename_map prop
+                  ))
+                computed_props;
+            proto = rename_tparams_in_obj_annot_proto rename_map proto;
+          }
+      | ObjSpreadAnnot { loc; exact; elems_rev } ->
+        ObjSpreadAnnot
+          {
+            loc;
+            exact;
+            elems_rev = Nel.map (rename_tparams_in_obj_spread_annot_elem rename_map) elems_rev;
+          }
+      | InlineInterface (loc, def) ->
+        InlineInterface (loc, rename_tparams_in_interface_sig rename_map def)
+      | annot -> map_annot (fun loc -> loc) (rename_tparams_in_parsed rename_map) annot
+
+    and rename_tparams_in_tparam
+        rename_map alpha_map (TParam { name_loc; name; polarity; bound; default; is_const }) =
+      TParam
+        {
+          name_loc;
+          name = rename_tparam_name alpha_map name;
+          polarity;
+          bound = Option.map ~f:(rename_tparams_in_parsed rename_map) bound;
+          default = Option.map ~f:(rename_tparams_in_parsed rename_map) default;
+          is_const;
+        }
+
+    and rename_distributive_tparam
+        rename_map (TParam { name_loc; name; polarity; bound; default; is_const }) =
+      TParam
+        {
+          name_loc;
+          name = rename_tparam_name rename_map name;
+          polarity;
+          bound = Option.map ~f:(rename_tparams_in_parsed rename_map) bound;
+          default = Option.map ~f:(rename_tparams_in_parsed rename_map) default;
+          is_const;
+        }
+
+    and rename_tparams_in_tparams_with_alpha rename_map alpha_map = function
+      | Mono -> Mono
+      | Poly (loc, tp, tps) ->
+        let rec loop rename_map = function
+          | [] -> []
+          | (TParam { name; _ } as tp) :: tps ->
+            let tp = rename_tparams_in_tparam rename_map alpha_map tp in
+            let rename_map = SMap.remove name rename_map in
+            let rename_map =
+              match SMap.find_opt name alpha_map with
+              | Some fresh_name -> SMap.add name fresh_name rename_map
+              | None -> rename_map
+            in
+            tp :: loop rename_map tps
+        in
+        (match loop rename_map (tp :: tps) with
+        | tp :: tps -> Poly (loc, tp, tps)
+        | [] -> Mono)
+
+    and rename_tparams_for_nested_scope rename_map tparams =
+      let (alpha_map, body_rename_map) = capture_avoidance_map rename_map tparams in
+      (rename_tparams_in_tparams_with_alpha rename_map alpha_map tparams, body_rename_map)
+
+    and rename_tparams_in_fun_sig
+        rename_map (FunSig { tparams; params; rest_param; this_param; return; type_guard; effect_ })
+        =
+      let (tparams, body_rename_map) = rename_tparams_for_nested_scope rename_map tparams in
+      FunSig
+        {
+          tparams;
+          params =
+            List.map
+              (fun (FunParam { name; t }) ->
+                FunParam { name; t = rename_tparams_in_parsed body_rename_map t })
+              params;
+          rest_param =
+            Option.map
+              ~f:(fun (FunRestParam { name; loc; t }) ->
+                FunRestParam { name; loc; t = rename_tparams_in_parsed body_rename_map t })
+              rest_param;
+          this_param = Option.map ~f:(rename_tparams_in_parsed body_rename_map) this_param;
+          return = rename_tparams_in_parsed body_rename_map return;
+          type_guard =
+            Option.map
+              ~f:(fun (TypeGuard { loc; param_name; type_guard; one_sided }) ->
+                TypeGuard
+                  {
+                    loc;
+                    param_name;
+                    type_guard = rename_tparams_in_parsed body_rename_map type_guard;
+                    one_sided;
+                  })
+              type_guard;
+          effect_;
+        }
+
+    and rename_tparams_in_component_sig
+        rename_map (ComponentSig { params_loc; tparams; params; rest_param; renders }) =
+      let (tparams, body_rename_map) = rename_tparams_for_nested_scope rename_map tparams in
+      ComponentSig
+        {
+          params_loc;
+          tparams;
+          params =
+            List.map
+              (fun (ComponentParam { name; name_loc; t }) ->
+                ComponentParam { name; name_loc; t = rename_tparams_in_parsed body_rename_map t })
+              params;
+          rest_param =
+            Option.map
+              ~f:(fun (ComponentRestParam { t }) ->
+                ComponentRestParam { t = rename_tparams_in_parsed body_rename_map t })
+              rest_param;
+          renders = rename_tparams_in_parsed body_rename_map renders;
+        }
+
+    and rename_tparams_in_accessor rename_map = function
+      | Get (loc, t) -> Get (loc, rename_tparams_in_parsed rename_map t)
+      | Set (loc, t) -> Set (loc, rename_tparams_in_parsed rename_map t)
+      | GetSet (get_loc, get_t, set_loc, set_t) ->
+        GetSet
+          ( get_loc,
+            rename_tparams_in_parsed rename_map get_t,
+            set_loc,
+            rename_tparams_in_parsed rename_map set_t
+          )
+
+    and rename_tparams_in_interface_prop rename_map = function
+      | InterfaceField (id_loc, t, polarity) ->
+        InterfaceField (id_loc, rename_tparams_in_parsed rename_map t, polarity)
+      | InterfaceAccess accessor -> InterfaceAccess (rename_tparams_in_accessor rename_map accessor)
+      | InterfaceMethod methods ->
+        InterfaceMethod
+          (Nel.map
+             (fun (id_loc, fn_loc, def) ->
+               (id_loc, fn_loc, rename_tparams_in_fun_sig rename_map def))
+             methods
+          )
+
+    and rename_tparams_in_obj_annot_dict rename_map (ObjDict { name; polarity; key; value }) =
+      ObjDict
+        {
+          name;
+          polarity;
+          key = rename_tparams_in_parsed rename_map key;
+          value = rename_tparams_in_parsed rename_map value;
+        }
+
+    and rename_tparams_in_obj_kind rename_map = function
+      | ExactObj -> ExactObj
+      | InexactObj -> InexactObj
+      | IndexedObj dict -> IndexedObj (rename_tparams_in_obj_annot_dict rename_map dict)
+
+    and rename_tparams_in_obj_annot_prop rename_map = function
+      | ObjAnnotField (loc, t, polarity) ->
+        ObjAnnotField (loc, rename_tparams_in_parsed rename_map t, polarity)
+      | ObjAnnotAccess accessor -> ObjAnnotAccess (rename_tparams_in_accessor rename_map accessor)
+      | ObjAnnotMethod { id_loc; fn_loc; def } ->
+        ObjAnnotMethod { id_loc; fn_loc; def = rename_tparams_in_fun_sig rename_map def }
+
+    and rename_tparams_in_obj_annot_proto rename_map = function
+      | ObjAnnotImplicitProto -> ObjAnnotImplicitProto
+      | ObjAnnotExplicitProto (loc, t) ->
+        ObjAnnotExplicitProto (loc, rename_tparams_in_parsed rename_map t)
+      | ObjAnnotCallable { ts_rev } ->
+        ObjAnnotCallable { ts_rev = Nel.map (rename_tparams_in_parsed rename_map) ts_rev }
+
+    and rename_tparams_in_obj_spread_annot_elem rename_map = function
+      | ObjSpreadAnnotElem t -> ObjSpreadAnnotElem (rename_tparams_in_parsed rename_map t)
+      | ObjSpreadAnnotSlice { dict; props; computed_props } ->
+        ObjSpreadAnnotSlice
+          {
+            dict = Option.map ~f:(rename_tparams_in_obj_annot_dict rename_map) dict;
+            props = SMap.map (rename_tparams_in_obj_annot_prop rename_map) props;
+            computed_props =
+              List.map
+                (fun (key, prop) ->
+                  ( rename_tparams_in_parsed rename_map key,
+                    rename_tparams_in_obj_annot_prop rename_map prop
+                  ))
+                computed_props;
+          }
+
+    and rename_tparams_in_obj_value_prop rename_map = function
+      | ObjValueField (loc, t, polarity) ->
+        ObjValueField (loc, rename_tparams_in_parsed rename_map t, polarity)
+      | ObjValueAccess accessor -> ObjValueAccess (rename_tparams_in_accessor rename_map accessor)
+      | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
+        ObjValueMethod
+          { id_loc; fn_loc; async; generator; def = rename_tparams_in_fun_sig rename_map def }
+
+    and rename_tparams_in_obj_value_spread_elem rename_map = function
+      | ObjValueSpreadElem t -> ObjValueSpreadElem (rename_tparams_in_parsed rename_map t)
+      | ObjValueSpreadSlice props ->
+        ObjValueSpreadSlice (SMap.map (rename_tparams_in_obj_value_prop rename_map) props)
+
+    and rename_tparams_in_class_extends rename_map = function
+      | ClassExplicitExtends { loc; t } ->
+        ClassExplicitExtends { loc; t = rename_tparams_in_parsed rename_map t }
+      | ClassExplicitExtendsApp { loc; t; targs } ->
+        ClassExplicitExtendsApp
+          {
+            loc;
+            t = rename_tparams_in_parsed rename_map t;
+            targs = List.map (rename_tparams_in_parsed rename_map) targs;
+          }
+      | ClassImplicitExtends -> ClassImplicitExtends
+      | ObjectPrototypeExtendsNull -> ObjectPrototypeExtendsNull
+
+    and rename_tparams_in_class_sig
+        rename_map
+        (ClassSig { tparams; extends; implements; static_props; proto_props; own_props; dict }) =
+      let (tparams, body_rename_map) = rename_tparams_for_nested_scope rename_map tparams in
+      ClassSig
+        {
+          tparams;
+          extends = rename_tparams_in_class_extends body_rename_map extends;
+          implements = List.map (rename_tparams_in_parsed body_rename_map) implements;
+          static_props = SMap.map (rename_tparams_in_obj_value_prop body_rename_map) static_props;
+          proto_props = SMap.map (rename_tparams_in_obj_value_prop body_rename_map) proto_props;
+          own_props = SMap.map (rename_tparams_in_obj_value_prop body_rename_map) own_props;
+          dict = Option.map ~f:(rename_tparams_in_obj_annot_dict body_rename_map) dict;
+        }
+
+    and rename_tparams_in_interface_sig
+        rename_map (InterfaceSig { extends; props; computed_props; calls; dict }) =
+      InterfaceSig
+        {
+          extends = List.map (rename_tparams_in_parsed rename_map) extends;
+          props = SMap.map (rename_tparams_in_interface_prop rename_map) props;
+          computed_props =
+            List.map
+              (fun (key, prop) ->
+                ( rename_tparams_in_parsed rename_map key,
+                  rename_tparams_in_interface_prop rename_map prop
+                ))
+              computed_props;
+          calls = List.map (rename_tparams_in_parsed rename_map) calls;
+          dict = Option.map ~f:(rename_tparams_in_obj_annot_dict rename_map) dict;
+        }
+
+    let rename_interface_sig ~from_tparams ~to_tparams sig_ =
+      let rename_map = tparam_rename_map ~from_tparams ~to_tparams in
+      rename_tparams_in_interface_sig rename_map sig_
+  end
+
   let merge_interface_props_combine prop_name existing_prop new_prop =
     match (existing_prop, new_prop) with
     | (InterfaceMethod old_sigs, InterfaceMethod new_sigs) ->
@@ -948,15 +1433,20 @@ module Scope = struct
       Some existing_prop
 
   (* Fold an [interface_sig] into an existing [declare_class_sig], producing a
-     new [declare_class_sig] whose own/proto props absorb the interface's props
-     and whose implements list gains the interface's extends. The class wins on
-     overlapping fields; overlapping methods build an overload chain. Type
-     mismatches between merged-in fields and class fields are caught later by
+      new [declare_class_sig] whose own/proto props absorb the interface's props
+      and whose implements list gains the interface's extends. The class wins on
+      overlapping fields; overlapping methods build an overload chain. Type
+      mismatches between merged-in fields and class fields are caught later by
      post-inference unification (see Context.interface_merge_unify_tasks). *)
-  let merge_interface_into_declare_class_sig ~existing_id_loc ~current_id_loc tbls dc_sig iface_sig
-      =
+  let merge_interface_into_declare_class_sig
+      ~existing_id_loc ~current_id_loc ~iface_tparams tbls dc_sig iface_sig =
     let (DeclareClassSig dc) = dc_sig in
-    let (InterfaceSig iface) = iface_sig in
+    let (InterfaceSig iface) =
+      Type_param_renaming.rename_interface_sig
+        ~from_tparams:iface_tparams
+        ~to_tparams:dc.tparams
+        iface_sig
+    in
     let proto_props =
       SMap.union ~combine:merge_interface_props_combine dc.proto_props iface.props
     in
@@ -980,9 +1470,15 @@ module Scope = struct
     in
     DeclareClassSig { dc with proto_props; computed_proto_props; calls; implements; dict }
 
-  let merge_interface_sigs ~existing_id_loc ~current_id_loc tbls old_sig new_sig =
+  let merge_interface_sigs
+      ~existing_id_loc ~current_id_loc ~old_tparams ~new_tparams tbls old_sig new_sig =
     let (InterfaceSig old_s) = old_sig in
-    let (InterfaceSig new_s) = new_sig in
+    let (InterfaceSig new_s) =
+      Type_param_renaming.rename_interface_sig
+        ~from_tparams:new_tparams
+        ~to_tparams:old_tparams
+        new_sig
+    in
     InterfaceSig
       {
         extends = old_s.extends @ new_s.extends;
@@ -1042,6 +1538,7 @@ module Scope = struct
                          merge_interface_into_declare_class_sig
                            ~existing_id_loc:dc_id_loc
                            ~current_id_loc:iface_id_loc
+                           ~iface_tparams:iface_tp
                            tbls
                            forced_dc
                            iface_sig
@@ -1091,6 +1588,8 @@ module Scope = struct
                             merge_interface_sigs
                               ~existing_id_loc:id_loc
                               ~current_id_loc:new_id_loc
+                              ~old_tparams:old_tp
+                              ~new_tparams:new_tp
                               tbls
                               old_sig
                               new_sig;
@@ -1173,6 +1672,7 @@ module Scope = struct
                    merge_interface_into_declare_class_sig
                      ~existing_id_loc:id_loc
                      ~current_id_loc:iface_id_loc
+                     ~iface_tparams:iface_tp
                      tbls
                      forced_dc
                      iface_sig

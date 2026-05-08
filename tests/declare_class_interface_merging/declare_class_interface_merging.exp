@@ -32,6 +32,57 @@ References:
              ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- capture_avoid_local.js:10:1
+
+Cannot cast `local.local(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   capture_avoid_local.js:10:1
+   10| local.local(true) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   capture_avoid_local.js:8:35
+    8| declare const local: CaptureLocal<number, string>;
+                                         ^^^^^^ [1]
+   capture_avoid_local.js:10:22
+   10| local.local(true) as string; // ERROR
+                            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- capture_avoid_local.js:21:1
+
+Cannot cast `conflict.same(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   capture_avoid_local.js:21:1
+   21| conflict.same(true) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   capture_avoid_local.js:19:46
+   19| declare const conflict: CaptureLocalConflict<number, string>;
+                                                    ^^^^^^ [1]
+   capture_avoid_local.js:21:24
+   21| conflict.same(true) as string; // ERROR
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- capture_avoid_use.js:4:1
+
+Cannot cast `capt.weird(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   capture_avoid_use.js:4:1
+   4| capt.weird(true) as string; // ERROR
+      ^^^^^^^^^^^^^^^^
+
+References:
+   capture_avoid_def.js:8:36
+   8| declare export const capt: Capture<number, string>;
+                                         ^^^^^^ [1]
+   capture_avoid_use.js:4:21
+   4| capt.weird(true) as string; // ERROR
+                          ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------ cross_file_reverse_use.js:6:1
 
 Cannot cast `f.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
@@ -296,5 +347,103 @@ References:
               ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- type_param_renaming.js:13:1
 
-Found 17 errors
+Cannot cast `box.extra` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   type_param_renaming.js:13:1
+   13| box.extra as number; // ERROR
+       ^^^^^^^^^
+
+References:
+   type_param_renaming.js:11:32
+   11| declare const box: Box<number, string, boolean>;
+                                      ^^^^^^ [1]
+   type_param_renaming.js:13:14
+   13| box.extra as number; // ERROR
+                    ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- type_param_renaming.js:15:1
+
+Cannot cast `box.same(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   type_param_renaming.js:15:1
+   15| box.same(true) as string; // ERROR
+       ^^^^^^^^^^^^^^
+
+References:
+   type_param_renaming.js:11:24
+   11| declare const box: Box<number, string, boolean>;
+                              ^^^^^^ [1]
+   type_param_renaming.js:15:19
+   15| box.same(true) as string; // ERROR
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- type_param_renaming.js:16:10
+
+Cannot call `box.same` with `0` bound to `value` because number [1] is incompatible with boolean [2].
+[incompatible-type]
+
+   type_param_renaming.js:16:10
+   16| box.same(0); // ERROR
+                ^ [1]
+
+References:
+   type_param_renaming.js:11:40
+   11| declare const box: Box<number, string, boolean>;
+                                              ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- type_param_renaming.js:28:1
+
+Cannot cast `pair.second` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   type_param_renaming.js:28:1
+   28| pair.second as number; // ERROR
+       ^^^^^^^^^^^
+
+References:
+   type_param_renaming.js:26:34
+   26| declare const pair: Pair<number, string>;
+                                        ^^^^^^ [1]
+   type_param_renaming.js:28:16
+   28| pair.second as number; // ERROR
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- type_param_renaming.js:30:1
+
+Cannot cast `pair.same(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   type_param_renaming.js:30:1
+   30| pair.same("") as string; // ERROR
+       ^^^^^^^^^^^^^
+
+References:
+   type_param_renaming.js:26:26
+   26| declare const pair: Pair<number, string>;
+                                ^^^^^^ [1]
+   type_param_renaming.js:30:18
+   30| pair.same("") as string; // ERROR
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- type_param_renaming.js:31:11
+
+Cannot call `pair.same` with `0` bound to `value` because number [1] is incompatible with string [2].
+[incompatible-type]
+
+   type_param_renaming.js:31:11
+   31| pair.same(0); // ERROR
+                 ^ [1]
+
+References:
+   type_param_renaming.js:26:34
+   26| declare const pair: Pair<number, string>;
+                                        ^^^^^^ [2]
+
+
+
+Found 26 errors

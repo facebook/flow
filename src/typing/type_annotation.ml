@@ -2944,7 +2944,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         let subst_name =
           if kind = Flow_ast_mapper.InferTP && Subst_name.Map.mem (Subst_name.Name name) tparams_map
           then
-            Type_subst.new_name
+            Alpha_rename.subst_name
               (Subst_name.Name name)
               (tparams_map |> Subst_name.Map.keys |> Subst_name.Set.of_list)
           else
@@ -3781,6 +3781,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let (tparams, env, tparams_ast) =
       mk_type_param_declarations env ~kind:Flow_ast_mapper.InterfaceTP tparams
     in
+    Context.record_interface_tparams cx id_loc tparams env.tparams_map;
     let (iface_sig, extends_ast) =
       let class_name = id_name.Ast.Identifier.name in
       let id = Context.make_aloc_id cx id_loc in
@@ -4114,6 +4115,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       let (tparams, env, tparam_asts) =
         mk_type_param_declarations env ~kind:Flow_ast_mapper.DeclareClassTP tparams
       in
+      Context.record_interface_tparams cx id_loc tparams env.tparams_map;
       let (this_tparam, this_t) = Class_type_sig.mk_this ~self cx reason in
       let (iface_sig, extends_ast, mixins_ast, implements_ast) =
         let id = Context.make_aloc_id cx id_loc in

@@ -10,6 +10,7 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 use dupe::Dupe;
+use flow_common::alpha_rename;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
 use flow_common::subst_name::SubstName;
@@ -17,7 +18,6 @@ use flow_common::subst_name::SubstNameInner;
 use flow_common_utils::list_utils;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
-use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
@@ -228,48 +228,6 @@ pub fn free_var_finder_in_destructor<'cx>(
 }
 
 // Substitute bound type variables with associated types in a type.
-
-pub fn new_name(name: &SubstName, fvs: &FlowOrdSet<SubstName>) -> SubstName {
-    let (ct, n): (i32, FlowSmolStr) = match name.deref() {
-        SubstNameInner::Synthetic { name, .. } => {
-            panic!("Cannot rename synthetic name {}", name)
-        }
-        SubstNameInner::Name(n) => (0, n.dupe()),
-        SubstNameInner::Id(ct, n) => (*ct, n.dupe()),
-    };
-
-    let mut ct = ct + 1;
-    loop {
-        let name = SubstName::id(ct, n.dupe());
-        if !fvs.contains(&name) {
-            return name;
-        }
-        ct += 1;
-    }
-}
-
-fn new_name_avoiding_map(
-    name: &SubstName,
-    fvs: &FlowOrdSet<SubstName>,
-    map: &FlowOrdMap<SubstName, Replacement>,
-) -> SubstName {
-    let (ct, n): (i32, FlowSmolStr) = match name.deref() {
-        SubstNameInner::Synthetic { name, .. } => {
-            panic!("Cannot rename synthetic name {}", name)
-        }
-        SubstNameInner::Name(n) => (0, n.dupe()),
-        SubstNameInner::Id(ct, n) => (*ct, n.dupe()),
-    };
-
-    let mut ct = ct + 1;
-    loop {
-        let candidate = SubstName::id(ct, n.dupe());
-        if !fvs.contains(&candidate) && !map.contains_key(&candidate) {
-            return candidate;
-        }
-        ct += 1;
-    }
-}
 
 fn fvs_of_map<'cx>(
     cx: &Context<'cx>,
@@ -491,7 +449,9 @@ impl<'cx> Substituter<'cx> {
     ) -> (SubstName, FlowOrdMap<SubstName, Replacement<'cx>>) {
         if self.name_in_fvs_of_map(cx, &map, &name) {
             let fvs = self.get_fvs_of_map(cx, &map);
-            let new_name_val = new_name_avoiding_map(&name, &fvs, &map);
+            let mut used_names = fvs.dupe();
+            used_names.extend(map.keys().map(Dupe::dupe));
+            let new_name_val = alpha_rename::subst_name(&name, &used_names);
             let mut new_map = map;
             new_map.insert(name, Replacement::AlphaRename(new_name_val.dupe()));
             self.cached_fvs = Some((new_map.dupe(), fvs));

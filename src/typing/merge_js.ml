@@ -828,7 +828,10 @@ let check_general_post_inference_validations cx =
   Base.List.iter (Context.post_inference_validation_flows cx) ~f:(fun pair -> Flow_js.flow cx pair)
 
 let check_interface_merge_prop_conflicts cx =
-  Base.List.iter (Context.interface_merge_unify_tasks cx) ~f:(fun (use_op, bad_t, good_t) ->
+  Base.List.iter
+    (Context.interface_merge_unify_tasks cx)
+    ~f:(fun (use_op, tparam_subst_map, bad_t, good_t) ->
+      let bad_t = Type_subst.subst cx ~use_op tparam_subst_map bad_t in
       Flow_js.unify cx ~use_op bad_t good_t
   )
 

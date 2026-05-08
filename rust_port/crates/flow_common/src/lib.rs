@@ -7,6 +7,7 @@
 
 #![feature(box_patterns)]
 
+pub mod alpha_rename;
 pub mod bitset;
 pub mod cli_overrides;
 pub mod docblock;
