@@ -1111,12 +1111,11 @@ pub fn union_optimization_guard<'cx, F>(
 where
     F: Fn(&Type, &Type) -> bool + Copy,
 {
-    use flow_data_structure_wrapper::ord_set::FlowOrdSet;
     use flow_typing_type::type_::union_rep::UnionRep;
     use flow_typing_type::type_util::type_ex_set;
     use flow_typing_visitors::type_mapper;
 
-    type TypeSet = FlowOrdSet<Type>;
+    type TypeSet = BTreeSet<Type>;
 
     fn unwrap_type<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
         cx.find_resolved(t).unwrap_or_else(|| t.dupe())
@@ -1167,7 +1166,7 @@ where
     }
 
     fn union_optimization_guard_impl<'cx, F2>(
-        seen: &TypeSet,
+        seen: &mut TypeSet,
         cx: &Context<'cx>,
         comparator: F2,
         l: &Type,
@@ -1231,12 +1230,13 @@ where
                             if seen.contains(u_elem) {
                                 return false;
                             }
-                            let mut new_seen = seen.dupe();
-                            new_seen.insert(u_elem.dupe());
-                            matches!(
-                                union_optimization_guard_impl(&new_seen, cx, comparator, l, u_elem),
+                            seen.insert(u_elem.dupe());
+                            let result = matches!(
+                                union_optimization_guard_impl(seen, cx, comparator, l, u_elem),
                                 UnionOptimizationGuardResult::True
-                            )
+                            );
+                            seen.remove(u_elem);
+                            result
                         };
                         if uts.iter().any(guard) {
                             return UnionOptimizationGuardResult::True;
@@ -1258,7 +1258,7 @@ where
         }
     }
 
-    union_optimization_guard_impl(&TypeSet::new(), cx, comparator, l, u)
+    union_optimization_guard_impl(&mut TypeSet::new(), cx, comparator, l, u)
 }
 
 // Optimization where an union is a subset of another. Equality modulo

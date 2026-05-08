@@ -8516,7 +8516,7 @@ pub mod type_collector {
 
     #[derive(Debug, Clone, Dupe)]
     pub struct TypeCollector {
-        types: Rc<RefCell<FlowOrdSet<Type>>>,
+        types: Rc<RefCell<BTreeSet<Type>>>,
     }
 
     impl PartialEq for TypeCollector {
@@ -8547,11 +8547,8 @@ pub mod type_collector {
 
     impl TypeCollector {
         pub fn create() -> Self {
-            thread_local! {
-                static CACHED: FlowOrdSet<Type> = FlowOrdSet::new();
-            }
             TypeCollector {
-                types: Rc::new(RefCell::new(CACHED.with(|c| c.clone()))),
+                types: Rc::new(RefCell::new(BTreeSet::new())),
             }
         }
 
@@ -8563,8 +8560,8 @@ pub mod type_collector {
             }
         }
 
-        pub fn collect(&self) -> FlowOrdSet<Type> {
-            self.types.borrow().dupe()
+        pub fn collect(&self) -> BTreeSet<Type> {
+            self.types.borrow().clone()
         }
 
         pub fn collect_to_vec(&self) -> Vec<Type> {
