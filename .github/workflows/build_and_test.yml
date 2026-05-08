@@ -14,6 +14,32 @@ env:
   FLOW_BOT_TOKEN: ${{ secrets.FLOW_BOT_TOKEN }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 jobs:
+  build_and_test_rust_port:
+    runs-on: ubuntu-22.04
+    env:
+      CARGO_INCREMENTAL: 0
+      CARGO_TERM_COLOR: always
+      RUSTC_BOOTSTRAP: 1
+      RUST_MIN_STACK: 5242880
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    - name: Cargo cache
+      uses: actions/cache@v4
+      with:
+        path: |-
+          ~/.cargo/git
+          ~/.cargo/registry
+          rust_port/target
+        key: v1-rust-port-cargo-${{ runner.os }}-${{ hashFiles('rust_port/Cargo.lock') }}
+        restore-keys: v1-rust-port-cargo-${{ runner.os }}-
+    - name: Build Rust port
+      working-directory: rust_port
+      run: cargo build --workspace --all-targets --locked
+    - name: Test Rust port
+      working-directory: rust_port
+      run: cargo test --workspace --all-targets --locked
   build_js:
     runs-on: ubuntu-22.04
     env:
