@@ -1,16 +1,16 @@
 /* @flow */
 
-type DeepNestedMaybes = {|
-  a: ?{|
+type DeepNestedMaybes = {
+  a: ?{
     b: ?string,
-  |},
-  c: {|
-    d: ?{|
+  },
+  c: {
+    d: ?{
       e: ?number,
-    |},
-  |},
+    },
+  },
   g: null,
-|};
+};
 
 type ExtractNonNull<T> = NonNullable<T>;
 

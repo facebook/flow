@@ -6,7 +6,7 @@
 // property test on object type
 //
 
-type Person = { first: string, last: string };
+type Person = { first: string, last: string, ... };
 
 function prop_test_exact(p: $Exact<Person>): string {
   if (p.xxx) {     // Error - xxx doesn't exist in the exact type
@@ -19,7 +19,7 @@ function prop_test_exact(p: $Exact<Person>): string {
 // property test on union of object types
 //
 
-type Address = { city: string, state: string };
+type Address = { city: string, state: string, ... };
 
 function prop_test_exact_union(pc: $Exact<Person> | $Exact<Address>): string {
   if (pc.first) {       // ok, union of exact types
@@ -33,8 +33,8 @@ function prop_test_exact_union(pc: $Exact<Person> | $Exact<Address>): string {
 //
 
 // direct declaration of subobjectss
-type Bundle1 = { person: { first: string, last: string }, extra1: string };
-type Bundle2 = { address: { city: string, state: string }, extra2: string };
+type Bundle1 = { person: { first: string, last: string, ... }, extra1: string, ... };
+type Bundle2 = { address: { city: string, state: string, ... }, extra2: string, ... };
 
 function prop_test_exact_union_2(b: $Exact<Bundle1> | $Exact<Bundle2>): string {
   if (b.person) {       // ok
@@ -44,8 +44,8 @@ function prop_test_exact_union_2(b: $Exact<Bundle1> | $Exact<Bundle2>): string {
 }
 
 // aliased declaration of subobjects
-type Bundle3 = { person: Person, extra1: string };
-type Bundle4 = { address: Address, extra2: string };
+type Bundle3 = { person: Person, extra1: string, ... };
+type Bundle4 = { address: Address, extra2: string, ... };
 
 function prop_test_exact_union_3(b: $Exact<Bundle3> | $Exact<Bundle4>): string {
   if (b.person) {       // ok

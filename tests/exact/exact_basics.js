@@ -32,8 +32,8 @@
 // values that are exactly a Person have only these properties.
 // subtypes may have additional properties.
 //
-type Person = { salutation: string, last: string };
-type ExactPerson = {| salutation: string, last: string |};
+type Person = { salutation: string, last: string, ... };
+type ExactPerson = { salutation: string, last: string };
 
 // object literals have exact inferred types.
 //
@@ -62,8 +62,8 @@ takesExactlyPerson(returnsSubtypeOfPerson());  // error
 
 // exact types must match, of course
 //
-type Person2 = { salutation: string, first: string, last: string };
-type ExactPerson2 = {| salutation: string, first: string, last: string |};
+type Person2 = { salutation: string, first: string, last: string, ... };
+type ExactPerson2 = { salutation: string, first: string, last: string };
 
 declare function returnsExactlyPerson2(): ExactPerson2;
 

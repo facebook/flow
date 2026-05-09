@@ -1,12 +1,12 @@
-type T = {|
+type T = {
   all: string,
   some: string,
-|} | {|
+} | {
   all: string,
   some: string,
-|} | {|
+} | {
   all: string,
-|};
+};
 
 
 {
@@ -59,7 +59,7 @@ type T = {|
   // It should not be possible to create such an object (intersection of
   // different exact objects), but unfortunately we have many instances
   // of this (e.g. React props) that exist due to other unsoundness issues.
-  declare const o: {|a: number|} & {|b: string|};
+  declare const o: {a: number} & {b: string};
 
   // Prop access
   o.a as number; // OK
@@ -75,6 +75,7 @@ type T = {|
   declare const Foo:{
     foo: 1,
     bar: 2,
+    ...
   };
   type K = 'foo' | 'bar' | 'xxx';
   declare const k: K;

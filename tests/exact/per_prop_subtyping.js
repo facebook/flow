@@ -3,11 +3,11 @@
  * allow per-property subtyping in the usual cases
  */
 
-export type Flag = $Exact<{
+export type Flag = {
   name: string,
   description: string,
   aliases?: Array<string>,
-}>;
+};
 
 // fresh values have per-property subtyping
 function getFlag_ok(): Flag {

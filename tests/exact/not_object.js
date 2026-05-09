@@ -1,17 +1,17 @@
 //@flow
 
-let x: {||} = 3;
-let y: {||} = '';
-let z: {||} = true;
+let x: {} = 3;
+let y: {} = '';
+let z: {} = true;
 
-let c: {||} = new (class {})();
-let f: {||} = () => {};
+let c: {} = new (class {})();
+let f: {} = () => {};
 
-declare const u: {||} | {};
-u as {||};
+declare const u: {} | {...};
+u as {};
 
-declare const v: number | {};
-v as {||};
+declare const v: number | {...};
+v as {};
 
 class A {}
 

@@ -3,19 +3,19 @@
  * using {| ... |} annotation syntax
  */
 
-type Flag = {|
+type Flag = {
   type: "string",
   name: string,
   description: string,
   argName: string,
   aliases?: Array<string>,
   default?: string,
-|} | {|
+} | {
   type: "boolean",
   name: string,
   description: string,
   aliases?: Array<string>,
-|} | {|
+} | {
   type: "enum",
   name: string,
   description: string,
@@ -23,7 +23,7 @@ type Flag = {|
   validValues: Array<string>,
   aliases?: Array<string>,
   default?: string,
-|};
+};
 
 function checkFlag_ok(flag: Flag): string {
   if (flag.default) {
