@@ -28,7 +28,7 @@ const DefinitionType = keyMirror({
   TypeParameter: null,
   Variable: null,
 });
-type DefinitionTypeType = $Values<typeof DefinitionType>;
+type DefinitionTypeType = Values<typeof DefinitionType>;
 
 export type {DefinitionTypeType};
 export {DefinitionType};

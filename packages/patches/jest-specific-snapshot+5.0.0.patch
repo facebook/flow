@@ -1,0 +1,18 @@
+diff --git a/node_modules/jest-specific-snapshot/dist/index.js b/node_modules/jest-specific-snapshot/dist/index.js
+index ae66597..4acb452 100644
+--- a/node_modules/jest-specific-snapshot/dist/index.js
++++ b/node_modules/jest-specific-snapshot/dist/index.js
+@@ -60,7 +60,12 @@ function toMatchSpecificSnapshot(received, snapshotFile) {
+   if (!snapshotState) {
+     snapshotState = new _jestSnapshot.SnapshotState(absoluteSnapshotFile, {
+       updateSnapshot: commonSnapshotState._updateSnapshot,
+-      snapshotPath: absoluteSnapshotFile
++      snapshotPath: absoluteSnapshotFile,
++      // Jest v29 defaults
++      snapshotFormat: {
++        printBasicPrototype: false,
++        escapeString: false,
++      },
+     });
+     snapshotsStateMap.set(absoluteSnapshotFile, snapshotState);
+   }

@@ -174,9 +174,9 @@ function createPropsTypeAnnotation(
 }
 
 function mapComponentParameters(
-  params: $ReadOnlyArray<ComponentParameter | RestElement>,
+  params: ReadonlyArray<ComponentParameter | RestElement>,
   options: ParserOptions,
-): $ReadOnly<{
+): Readonly<{
   props: ?(ObjectPattern | Identifier),
   ref: ?(BindingName | AssignmentPattern),
 }> {
@@ -723,7 +723,7 @@ function mapComponentDeclarationIntoList(
 }
 
 function mapStatementList(
-  stmts: $ReadOnlyArray<Statement | ModuleDeclaration>,
+  stmts: ReadonlyArray<Statement | ModuleDeclaration>,
   options: ParserOptions,
 ) {
   const newBody: Array<Statement | ModuleDeclaration> = [];

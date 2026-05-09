@@ -12,12 +12,12 @@ type INTENTIONAL_ANY = $FlowFixMe;
 type JSType = 'number' | 'string' | 'array' | 'boolean';
 type CBoolean = ?(number | boolean);
 
-type WASMModuleOverrides = $ReadOnly<{
+type WASMModuleOverrides = Readonly<{
   quit(status: number, toThrow: Error): void,
 }>;
 
 // Flow Rust WASM parser exports the same C ABI as Hermes
-export type FlowParserWASM = $ReadOnly<{
+export type FlowParserWASM = Readonly<{
   HEAP8: Int8Array,
   HEAP16: Int16Array,
   HEAP32: Int32Array,
@@ -33,11 +33,11 @@ export type FlowParserWASM = $ReadOnly<{
   ccall(
     ident: string,
     returnType: JSType | null,
-    argTypes: $ReadOnlyArray<JSType>,
-    args: $ReadOnlyArray<
-      number | string | $ReadOnlyArray<INTENTIONAL_ANY> | boolean,
+    argTypes: ReadonlyArray<JSType>,
+    args: ReadonlyArray<
+      number | string | ReadonlyArray<INTENTIONAL_ANY> | boolean,
     >,
-    opts?: $ReadOnly<{
+    opts?: Readonly<{
       async?: boolean | void,
     }>,
   ): INTENTIONAL_ANY,
@@ -46,6 +46,7 @@ export type FlowParserWASM = $ReadOnly<{
       'hermesParse',
       'number',
       [
+        'number',
         'number',
         'number',
         'number',
@@ -77,6 +78,7 @@ export type FlowParserWASM = $ReadOnly<{
       CBoolean,
       CBoolean,
       number,
+      CBoolean,
       CBoolean,
     ) => number,
     ('hermesParseResult_free', 'void', ['number']): number => void,

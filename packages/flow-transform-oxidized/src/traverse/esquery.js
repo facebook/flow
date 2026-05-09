@@ -145,9 +145,9 @@ type SubjectSelector =
   | AttributeAtom;
 type Literal = StringLiteralAtom | NumericLiteralAtom;
 
-export type ESQueryOptions = $ReadOnly<{
-  visitorKeys?: $ReadOnly<{[string]: $ReadOnlyArray<string>}>,
-  fallback?: (node: ESNode) => $ReadOnlyArray<string>,
+export type ESQueryOptions = Readonly<{
+  visitorKeys?: Readonly<{[string]: ReadonlyArray<string>}>,
+  fallback?: (node: ESNode) => ReadonlyArray<string>,
 }>;
 
 /** Parse a selector and return its AST. */

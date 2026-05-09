@@ -48,7 +48,7 @@ class ESLintScopeVariable extends VariableBase {
    * If this key exists, it is a global variable added by ESLint.
    * @public
    */
-  eslintExplicitGlobalComments: void | $ReadOnlyArray<Comment>;
+  eslintExplicitGlobalComments: void | ReadonlyArray<Comment>;
 }
 
 export {ESLintScopeVariable};

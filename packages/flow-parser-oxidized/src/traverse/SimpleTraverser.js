@@ -16,7 +16,7 @@ import type {ESNode} from 'flow-estree-oxidized';
 import {getVisitorKeys, isNode} from './getVisitorKeys';
 
 export type TraverserCallback = (node: ESNode, parent: ?ESNode) => void;
-export type TraverserOptions = $ReadOnly<{
+export type TraverserOptions = Readonly<{
   /** The callback function which is called on entering each node. */
   enter: TraverserCallback,
   /** The callback function which is called on leaving each node. */
@@ -83,9 +83,9 @@ export class SimpleTraverser {
 
     const keys = getVisitorKeys(node, options.visitorKeys);
     for (const key of keys) {
-      const childKey: $FlowFixMe = key;
-      // $FlowFixMe[incompatible-type] - matches upstream's unsafe visitor-key lookup.
-      const child: ESNode | $ReadOnlyArray<ESNode> = node[childKey];
+      const lookupKey: $FlowFixMe = key;
+      const childAny: $FlowFixMe = node[lookupKey];
+      const child: ESNode | ReadonlyArray<ESNode> = childAny;
 
       if (Array.isArray(child)) {
         for (let j = 0; j < child.length; ++j) {

@@ -14,10 +14,7 @@ const path = require('path');
 
 const OUTPUT_FILE = path.resolve(
   __dirname,
-  '..',
-  'flow-parser-oxidized',
-  'dist',
-  'FlowParserWASM.js',
+  '../flow-parser-oxidized/dist/FlowParserWASM.js',
 );
 
 const HEADER = `/**
@@ -30,14 +27,8 @@ const HEADER = `/**
 'use strict';
 `;
 
-const inputPath = process.argv[2];
-if (inputPath == null) {
-  console.error(
-    'Usage: node genFlowWasmParser.js <path-to-wasm-js>\n' +
-      '  Prepends the MIT license header to the emcc-built JS and writes it to flow-parser-oxidized/dist/.',
-  );
-  process.exit(1);
-}
+// Add header and sign file before writing back to disk
+const wasmParserContents = fs.readFileSync(process.argv[2]).toString();
+const fileContents = HEADER + wasmParserContents;
 
-const wasmParserContents = fs.readFileSync(inputPath).toString();
-fs.writeFileSync(OUTPUT_FILE, HEADER + wasmParserContents);
+fs.writeFileSync(OUTPUT_FILE, fileContents);

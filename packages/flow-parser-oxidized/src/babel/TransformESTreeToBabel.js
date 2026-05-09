@@ -113,7 +113,7 @@ function nodeWith<T: ESNode>(node: T, overrideProps: Partial<T>): T {
 export interface BabelFile extends BaseNode {
   +type: 'File';
   +program: Program;
-  +comments: $ReadOnlyArray<BabelComment>;
+  +comments: ReadonlyArray<BabelComment>;
 }
 
 interface BabelCommentBlock extends BaseToken {
@@ -130,7 +130,7 @@ interface BabelObjectMethod extends BaseNode {
   +type: 'ObjectMethod';
   +kind: 'method' | 'get' | 'set';
   +key: Expression;
-  +params: $ReadOnlyArray<FunctionParameter>;
+  +params: ReadonlyArray<FunctionParameter>;
   +body: BlockStatement;
   +computed: boolean;
   +generator: boolean;
@@ -165,7 +165,7 @@ interface BabelClassMethodBase extends BaseNode {
     | ClassPropertyNameComputed
     | ClassPropertyNameNonComputed;
   +id: null;
-  +params: $ReadOnlyArray<FunctionParameter>;
+  +params: ReadonlyArray<FunctionParameter>;
   +body: BlockStatement;
   +async: boolean;
   +generator: boolean;
@@ -210,7 +210,7 @@ interface BabelExportNamespaceSpecifier extends BaseNode {
 interface BabelExportNamedDeclaration extends BaseNode {
   +type: 'ExportNamedDeclaration';
   +declaration?: null;
-  +specifiers: $ReadOnlyArray<BabelExportNamespaceSpecifier>;
+  +specifiers: ReadonlyArray<BabelExportNamespaceSpecifier>;
   +source?: StringLiteral | null;
   +exportKind: 'value' | 'type';
 }
@@ -239,7 +239,7 @@ interface BabelOptionalCallExpression extends BaseNode {
     | Super
     | BabelOptionalMemberExpression
     | BabelOptionalCallExpression;
-  +arguments: $ReadOnlyArray<Expression | SpreadElement>;
+  +arguments: ReadonlyArray<Expression | SpreadElement>;
   +optional: boolean;
   +typeArguments?: TypeParameterInstantiation | null;
 }
@@ -247,7 +247,7 @@ interface BabelOptionalCallExpression extends BaseNode {
 interface BabelStringLiteral extends BaseNode {
   +type: 'StringLiteral';
   +value: string;
-  +extra: $ReadOnly<{
+  +extra: Readonly<{
     +rawValue: string,
     +raw: string,
   }>;
@@ -256,7 +256,7 @@ interface BabelStringLiteral extends BaseNode {
 interface BabelNumericLiteral extends BaseNode {
   +type: 'NumericLiteral';
   +value: number;
-  +extra: $ReadOnly<{
+  +extra: Readonly<{
     +rawValue: number,
     +raw: string,
   }>;
@@ -265,7 +265,7 @@ interface BabelNumericLiteral extends BaseNode {
 interface BabelBigIntLiteral extends BaseNode {
   +type: 'BigIntLiteral';
   +value: string;
-  +extra: $ReadOnly<{
+  +extra: Readonly<{
     +rawValue: string,
     +raw: string,
   }>;
@@ -282,7 +282,7 @@ interface BabelNullLiteral extends BaseNode {
 
 interface BabelRegExpLiteral extends BaseNode {
   +type: 'RegExpLiteral';
-  +extra: $ReadOnly<{
+  +extra: Readonly<{
     +raw: string,
   }>;
   +pattern: string;
@@ -345,7 +345,7 @@ interface NodeWithObjectTypePropertyExtras {
 }
 
 interface DeclareVariableWithDeclarations {
-  declarations?: $ReadOnlyArray<{
+  declarations?: ReadonlyArray<{
     +id?: Identifier | null,
   }>;
 }
@@ -378,7 +378,7 @@ type FlowEnumBodyMember = interface {
 interface FlowEnumBody extends BaseNode {
   type: 'EnumBody';
   explicitType?: FlowEnumExplicitType;
-  members: $ReadOnlyArray<FlowEnumBodyMember>;
+  members: ReadonlyArray<FlowEnumBodyMember>;
 }
 
 export type ESNodeOrBabelNode =
@@ -499,7 +499,7 @@ function mapProgram(node: Program): BabelFile {
   };
   const range = [0, endRange];
 
-  const babelComments: $ReadOnlyArray<BabelComment> = program.comments.map(
+  const babelComments: ReadonlyArray<BabelComment> = program.comments.map(
     comment => {
       switch (comment.type) {
         case 'Line': {

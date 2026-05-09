@@ -31,7 +31,7 @@ export type ObjectTypeMethodSignatureProps = {
   +proto?: ObjectTypeMethodSignatureType['proto'],
 };
 export function ObjectTypeMethodSignature(props: {
-  ...$ReadOnly<ObjectTypeMethodSignatureProps>,
+  ...Readonly<ObjectTypeMethodSignatureProps>,
   +parent?: ESNode,
 }): DetachedNode<ObjectTypeMethodSignatureType> {
   const node = detachedProps<ObjectTypeMethodSignatureType>(props.parent, {
@@ -60,7 +60,7 @@ export type ObjectTypePropertySignatureProps = {
   +proto?: ObjectTypeMethodSignatureType['proto'],
 };
 export function ObjectTypePropertySignature(props: {
-  ...$ReadOnly<ObjectTypePropertySignatureProps>,
+  ...Readonly<ObjectTypePropertySignatureProps>,
   +parent?: ESNode,
 }): DetachedNode<ObjectTypePropertySignatureType> {
   const node = detachedProps<ObjectTypePropertySignatureType>(props.parent, {
@@ -89,7 +89,7 @@ export type ObjectTypeAccessorSignatureProps = {
   +proto?: ObjectTypeMethodSignatureType['proto'],
 };
 export function ObjectTypeAccessorSignature(props: {
-  ...$ReadOnly<ObjectTypeAccessorSignatureProps>,
+  ...Readonly<ObjectTypeAccessorSignatureProps>,
   +parent?: ESNode,
 }): DetachedNode<ObjectTypeAccessorSignatureType> {
   const node = detachedProps<ObjectTypeAccessorSignatureType>(props.parent, {

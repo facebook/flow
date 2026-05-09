@@ -23,18 +23,18 @@ import type {Variable} from '../variable';
 
 import {createIdGenerator} from '../ID';
 
-const ReferenceFlag: $ReadOnly<{
+const ReferenceFlag = {
   Read: 0x1,
   Write: 0x2,
   ReadWrite: 0x3,
-}> = {
+} as Readonly<{
   Read: 0x1,
   Write: 0x2,
   ReadWrite: 0x3,
-};
-type ReferenceFlagType = $Values<typeof ReferenceFlag>;
+}>;
+type ReferenceFlagType = Values<typeof ReferenceFlag>;
 
-type ReferenceImplicitGlobal = $ReadOnly<{
+type ReferenceImplicitGlobal = Readonly<{
   node: ESNode,
   pattern: BindingName,
   ref?: Reference,
@@ -42,16 +42,16 @@ type ReferenceImplicitGlobal = $ReadOnly<{
 
 const generator = createIdGenerator();
 
-const ReferenceTypeFlag: $ReadOnly<{
+const ReferenceTypeFlag = {
   Value: 0x1,
   Type: 0x2,
   ValueAndType: 0x3,
-}> = {
+} as Readonly<{
   Value: 0x1,
   Type: 0x2,
   ValueAndType: 0x3,
-};
-type ReferenceTypeFlagType = $Values<typeof ReferenceTypeFlag>;
+}>;
+type ReferenceTypeFlagType = Values<typeof ReferenceTypeFlag>;
 
 /**
  * A Reference represents a single occurrence of an identifier in code.

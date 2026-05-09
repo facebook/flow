@@ -43,7 +43,7 @@ import {
 // boolean which is true when the body isn't a BlockStatement.
 // No need to make consumers set these
 export type ArrowFunctionExpressionProps = {
-  +params: $ReadOnlyArray<
+  +params: ReadonlyArray<
     MaybeDetachedNode<ArrowFunctionExpressionType['params'][number]>,
   >,
   +body: MaybeDetachedNode<ArrowFunctionExpressionType['body']>,
@@ -55,7 +55,7 @@ export type ArrowFunctionExpressionProps = {
   +async: ArrowFunctionExpressionType['async'],
 };
 export function ArrowFunctionExpression(props: {
-  ...$ReadOnly<ArrowFunctionExpressionProps>,
+  ...Readonly<ArrowFunctionExpressionProps>,
   +parent?: ESNode,
 }): DetachedNode<ArrowFunctionExpressionType> {
   const node = detachedProps<ArrowFunctionExpressionType>(props.parent, {
@@ -85,17 +85,17 @@ export type ClassDeclarationProps = {
     ClassDeclarationType['superTypeArguments'],
   >,
   // make this optional as it's rarer that people would want to include them
-  +implements?: $ReadOnlyArray<
+  +implements?: ReadonlyArray<
     MaybeDetachedNode<ClassDeclarationType['implements'][number]>,
   >,
   // make this optional as it's rarer that people would want to include them
-  +decorators?: $ReadOnlyArray<
+  +decorators?: ReadonlyArray<
     MaybeDetachedNode<ClassDeclarationType['decorators'][number]>,
   >,
   +body: MaybeDetachedNode<ClassDeclarationType['body']>,
 };
 export function ClassDeclaration(props: {
-  ...$ReadOnly<ClassDeclarationProps>,
+  ...Readonly<ClassDeclarationProps>,
   +parent?: ESNode,
 }): DetachedNode<ClassDeclarationType> {
   const node = detachedProps<ClassDeclarationType>(props.parent, {
@@ -123,7 +123,7 @@ export type TemplateElementProps = {
   +raw: TemplateElementType['value']['raw'],
 };
 export function TemplateElement(props: {
-  ...$ReadOnly<TemplateElementProps>,
+  ...Readonly<TemplateElementProps>,
   +parent?: ESNode,
 }): DetachedNode<TemplateElementType> {
   return detachedProps<TemplateElementType>(props.parent, {
@@ -144,7 +144,7 @@ export type IdentifierProps = {
   +optional?: IdentifierType['optional'],
 };
 export function Identifier(props: {
-  ...$ReadOnly<IdentifierProps>,
+  ...Readonly<IdentifierProps>,
   +parent?: ESNode,
 }): DetachedNode<IdentifierType> {
   const node = detachedProps<IdentifierType>(props.parent, {
@@ -162,14 +162,14 @@ export function Identifier(props: {
 // this manual def to allow us to default some values
 export type ProgramProps = {
   +sourceType?: ?ProgramType['sourceType'],
-  +body: $ReadOnlyArray<MaybeDetachedNode<ProgramType['body'][number]>>,
-  +tokens?: ?$ReadOnlyArray<MaybeDetachedNode<TokenType>>,
-  +comments?: ?$ReadOnlyArray<MaybeDetachedNode<CommentType>>,
+  +body: ReadonlyArray<MaybeDetachedNode<ProgramType['body'][number]>>,
+  +tokens?: ?ReadonlyArray<MaybeDetachedNode<TokenType>>,
+  +comments?: ?ReadonlyArray<MaybeDetachedNode<CommentType>>,
   +interpreter?: ?string,
   +docblock?: ?DocblockMetadataType,
 };
 export function Program(props: {
-  ...$ReadOnly<ProgramProps>,
+  ...Readonly<ProgramProps>,
 }): DetachedNode<ProgramType> {
   return detachedProps<ProgramType>(null, {
     type: 'Program',
@@ -198,7 +198,7 @@ export type DeclareFunctionProps = {
   +predicate?: ?MaybeDetachedNode<DeclareFunctionType['predicate']>,
 };
 export function DeclareFunction(props: {
-  ...$ReadOnly<DeclareFunctionProps>,
+  ...Readonly<DeclareFunctionProps>,
   +parent?: ESNode,
 }): DetachedNode<DeclareFunctionType> {
   const node = detachedProps<DeclareFunctionType>(props.parent, {
@@ -226,7 +226,7 @@ export type MemberExpressionProps = {
 };
 
 export function MemberExpression(props: {
-  ...$ReadOnly<MemberExpressionProps>,
+  ...Readonly<MemberExpressionProps>,
   +parent?: ESNode,
 }): DetachedNode<MemberExpressionType> {
   const node = detachedProps<MemberExpressionType>(props.parent, {
@@ -242,10 +242,10 @@ export function MemberExpression(props: {
 
 // Ignore the hermes-specific `implicit` property.
 export type BlockStatementProps = {
-  +body: $ReadOnlyArray<MaybeDetachedNode<StatementType>>,
+  +body: ReadonlyArray<MaybeDetachedNode<StatementType>>,
 };
 export function BlockStatement(props: {
-  ...$ReadOnly<BlockStatementProps>,
+  ...Readonly<BlockStatementProps>,
   +parent?: ESNode,
 }): DetachedNode<BlockStatementType> {
   const node = detachedProps<BlockStatementType>(props.parent, {

@@ -25,7 +25,7 @@ function getParentKey(
   target: ESNode,
   parent: ESNode,
   visitorKeys?: ?VisitorKeysType,
-): $ReadOnly<
+): Readonly<
   | {
       type: 'single',
       node: ESNode,
@@ -75,7 +75,7 @@ function getParentKey(
 export function replaceNodeOnParent(
   originalNode: ESNode,
   originalNodeParent: ESNode,
-  nodeToReplaceWith: ESNode | $ReadOnlyArray<ESNode>,
+  nodeToReplaceWith: ESNode | ReadonlyArray<ESNode>,
   visitorKeys?: ?VisitorKeysType,
 ): void {
   const replacementParent = getParentKey(

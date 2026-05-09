@@ -34,7 +34,7 @@ export type DestructuringObjectPropertyProps = {
   +shorthand: DestructuringObjectPropertyType['shorthand'],
 };
 export function DestructuringObjectProperty(props: {
-  ...$ReadOnly<DestructuringObjectPropertyProps>,
+  ...Readonly<DestructuringObjectPropertyProps>,
   +parent?: ESNode,
 }): DetachedNode<DestructuringObjectPropertyType> {
   const node = detachedProps<DestructuringObjectPropertyType>(props.parent, {
@@ -59,7 +59,7 @@ export type DestructuringObjectPropertyWithNonShorthandStaticNameProps = {
   >,
 };
 export function DestructuringObjectPropertyWithNonShorthandStaticName(props: {
-  ...$ReadOnly<DestructuringObjectPropertyWithNonShorthandStaticNameProps>,
+  ...Readonly<DestructuringObjectPropertyWithNonShorthandStaticNameProps>,
   +parent?: ESNode,
 }): DetachedNode<DestructuringObjectPropertyWithNonShorthandStaticNameType> {
   const node =
@@ -88,7 +88,7 @@ export type DestructuringObjectPropertyWithShorthandStaticNameProps = {
   >,
 };
 export function DestructuringObjectPropertyWithShorthandStaticName(props: {
-  ...$ReadOnly<DestructuringObjectPropertyWithShorthandStaticNameProps>,
+  ...Readonly<DestructuringObjectPropertyWithShorthandStaticNameProps>,
   +parent?: ESNode,
 }): DetachedNode<DestructuringObjectPropertyWithShorthandStaticNameType> {
   const node =
@@ -117,7 +117,7 @@ export type DestructuringObjectPropertyWithComputedNameProps = {
   >,
 };
 export function DestructuringObjectPropertyWithComputedName(props: {
-  ...$ReadOnly<DestructuringObjectPropertyWithComputedNameProps>,
+  ...Readonly<DestructuringObjectPropertyWithComputedNameProps>,
   +parent?: ESNode,
 }): DetachedNode<DestructuringObjectPropertyWithComputedNameType> {
   const node = detachedProps<DestructuringObjectPropertyWithComputedNameType>(
@@ -145,7 +145,7 @@ export type ObjectPropertyProps = {
   +shorthand: ObjectPropertyType['shorthand'],
 };
 export function ObjectProperty(props: {
-  ...$ReadOnly<ObjectPropertyProps>,
+  ...Readonly<ObjectPropertyProps>,
   +parent?: ESNode,
 }): DetachedNode<ObjectPropertyType> {
   const node = detachedProps<ObjectPropertyType>(props.parent, {
@@ -170,7 +170,7 @@ export type ObjectPropertyWithNonShorthandStaticNameProps = {
   +method: ObjectPropertyWithNonShorthandStaticNameType['method'],
 };
 export function ObjectPropertyWithNonShorthandStaticName(props: {
-  ...$ReadOnly<ObjectPropertyWithNonShorthandStaticNameProps>,
+  ...Readonly<ObjectPropertyWithNonShorthandStaticNameProps>,
   +parent?: ESNode,
 }): DetachedNode<ObjectPropertyWithNonShorthandStaticNameType> {
   const node = detachedProps<ObjectPropertyWithNonShorthandStaticNameType>(
@@ -194,7 +194,7 @@ export type ObjectPropertyWithShorthandStaticNameProps = {
   +value: MaybeDetachedNode<ObjectPropertyWithShorthandStaticNameType['value']>,
 };
 export function ObjectPropertyWithShorthandStaticName(props: {
-  ...$ReadOnly<ObjectPropertyWithShorthandStaticNameProps>,
+  ...Readonly<ObjectPropertyWithShorthandStaticNameProps>,
   +parent?: ESNode,
 }): DetachedNode<ObjectPropertyWithShorthandStaticNameType> {
   const node = detachedProps<ObjectPropertyWithShorthandStaticNameType>(
@@ -220,7 +220,7 @@ export type ObjectPropertyWithComputedNameProps = {
   +method: ObjectPropertyWithComputedNameType['method'],
 };
 export function ObjectPropertyWithComputedName(props: {
-  ...$ReadOnly<ObjectPropertyWithComputedNameProps>,
+  ...Readonly<ObjectPropertyWithComputedNameProps>,
   +parent?: ESNode,
 }): DetachedNode<ObjectPropertyWithComputedNameType> {
   const node = detachedProps<ObjectPropertyWithComputedNameType>(props.parent, {

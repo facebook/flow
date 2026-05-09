@@ -26,7 +26,7 @@ WASM_OUT="$PKG_SRC/FlowParserWASM.js"
 WASM_PATH=$(buck2 --isolation-dir flow_contract_test build \
     @fbsource//xplat/mode/hermes/opt \
     @fbsource//xplat/mode/emcc \
-    fbsource//xplat/hermes/tools/flow-parser-wasm:flow-parser-wasm.js \
+    fbcode//flow/packages/flow-parser-wasm:flow-parser-wasm.js \
     --show-full-output 2>&1 \
     | awk '/flow-parser-wasm\.js$/ {print $2; exit}')
 

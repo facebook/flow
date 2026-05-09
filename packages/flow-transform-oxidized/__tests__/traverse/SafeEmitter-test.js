@@ -10,12 +10,9 @@
 
 'use strict';
 
-import type {AnyTypeAnnotation, ESNode} from 'flow-estree-oxidized';
+import type {AnyTypeAnnotation} from 'flow-estree-oxidized';
 
 import {SafeEmitter} from '../../src/traverse/SafeEmitter';
-
-// $FlowExpectedError[incompatible-type] This test node is a root sentinel.
-const PARENT: ESNode = null;
 
 const NODE: AnyTypeAnnotation = {
   type: 'AnyTypeAnnotation',
@@ -24,7 +21,7 @@ const NODE: AnyTypeAnnotation = {
     start: {line: 0, column: 0},
     end: {line: 0, column: 0},
   },
-  parent: PARENT,
+  parent: null as $FlowFixMe,
 };
 
 describe('SafeEmitter', () => {

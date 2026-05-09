@@ -27,7 +27,7 @@ import {
 import {isBlockComment} from 'flow-estree-oxidized';
 import {EOL} from 'os';
 
-export type Options = $ReadOnly<{}>;
+export type Options = Readonly<{}>;
 
 export enum CommentPlacement {
   LEADING_OWN_LINE,
@@ -37,7 +37,7 @@ export enum CommentPlacement {
 }
 
 export function attachComments(
-  comments: $ReadOnlyArray<Comment>,
+  comments: ReadonlyArray<Comment>,
   ast: Program,
   text: string,
 ): void {
@@ -145,7 +145,7 @@ export function cloneJSDocCommentsToNewNode(
 
 export function setCommentsOnNode(
   node: ESNode | DetachedNode<ESNode>,
-  comments: $ReadOnlyArray<Comment>,
+  comments: ReadonlyArray<Comment>,
 ): void {
   // $FlowExpectedError[prop-missing] - this property is secretly added by prettier.
   // $FlowExpectedError[incompatible-use] - this property is secretly added by prettier.
@@ -155,7 +155,7 @@ export function setCommentsOnNode(
 
 export function getCommentsForNode(
   node: ESNode | DetachedNode<ESNode>,
-): $ReadOnlyArray<Comment> {
+): ReadonlyArray<Comment> {
   // $FlowExpectedError[prop-missing] - this property is secretly added by prettier.
   // $FlowExpectedError[incompatible-use] - this property is secretly added by prettier.
   return node.comments ?? [];
@@ -178,13 +178,13 @@ export function isTrailingComment(comment: Comment): boolean {
 
 export function getLeadingCommentsForNode(
   node: ESNode | DetachedNode<ESNode>,
-): $ReadOnlyArray<Comment> {
+): ReadonlyArray<Comment> {
   return getCommentsForNode(node).filter(isLeadingComment);
 }
 
 export function getTrailingCommentsForNode(
   node: ESNode | DetachedNode<ESNode>,
-): $ReadOnlyArray<Comment> {
+): ReadonlyArray<Comment> {
   return getCommentsForNode(node).filter(isTrailingComment);
 }
 
@@ -207,7 +207,7 @@ export function addComment(
   }
 }
 
-export function cloneComment<T: Comment>(comment: T): T {
+export function cloneComment<T extends Comment>(comment: T): T {
   // $FlowExpectedError[incompatible-type]
   return {
     type: comment.type,
@@ -217,7 +217,7 @@ export function cloneComment<T: Comment>(comment: T): T {
   };
 }
 
-export function cloneCommentWithMarkers<T: Comment>(comment: T): T {
+export function cloneCommentWithMarkers<T extends Comment>(comment: T): T {
   // $FlowExpectedError[incompatible-type]
   return {
     type: comment.type,

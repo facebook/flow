@@ -68,6 +68,18 @@ impl<'a> Serializer<'a> {
         }
     }
 
+    fn with_optional_chain_state<R>(
+        &mut self,
+        in_optional_chain: bool,
+        f: impl FnOnce(&mut Self) -> R,
+    ) -> R {
+        let prev = self.in_optional_chain;
+        self.in_optional_chain = in_optional_chain;
+        let result = f(self);
+        self.in_optional_chain = prev;
+        result
+    }
+
     // ---------------------------------------------------------------
     // Core encoding methods
     // ---------------------------------------------------------------
@@ -497,10 +509,9 @@ impl<'a> Serializer<'a> {
                 // wrapping an optional sub-expression breaks the chain (the
                 // semantics of `(x?.y).z` differ from `x?.y.z`). Reset the
                 // chain state so the child starts its own ChainExpression.
-                let prev = self.in_optional_chain;
-                self.in_optional_chain = false;
-                self.serialize_expression_dispatch(expr);
-                self.in_optional_chain = prev;
+                self.with_optional_chain_state(false, |this| {
+                    this.serialize_expression_dispatch(expr);
+                });
             }
             _ => self.serialize_expression_dispatch(expr),
         }
@@ -1258,7 +1269,9 @@ impl<'a> Serializer<'a> {
                 self.serialize_private_name(pn);
             }
             ast::expression::member::Property::PropertyExpression(expr) => {
-                self.serialize_expression(expr);
+                self.with_optional_chain_state(false, |this| {
+                    this.serialize_expression(expr);
+                });
             }
         }
     }
@@ -1301,10 +1314,14 @@ impl<'a> Serializer<'a> {
         for arg in args.arguments.iter() {
             match arg {
                 ast::expression::ExpressionOrSpread::Expression(expr) => {
-                    self.serialize_expression(expr);
+                    self.with_optional_chain_state(false, |this| {
+                        this.serialize_expression(expr);
+                    });
                 }
                 ast::expression::ExpressionOrSpread::Spread(spread) => {
-                    self.serialize_spread_element(spread);
+                    self.with_optional_chain_state(false, |this| {
+                        this.serialize_spread_element(spread);
+                    });
                 }
             }
         }
@@ -3875,6 +3892,7 @@ mod tests {
             esproposal_decorators: true,
             types: true,
             ambiguous_types: true,
+            enable_types_in_comments: false,
             use_strict: false,
             assert_operator: false,
             module_ref_prefix: None,
@@ -4050,6 +4068,36 @@ mod tests {
         let source = "const x = a?.b?.c;";
         let buffers = parse_and_serialize(source);
         assert_eq!(buffers.program_buffer[1], 1);
+    }
+
+    #[test]
+    fn test_optional_chain_argument_starts_independent_chain() {
+        let source = "foo?.(bar?.baz);";
+        let buffers = parse_and_serialize(source);
+        let chain_tag = NodeKind::ChainExpression as u32 + 1;
+        assert_eq!(
+            buffers
+                .program_buffer
+                .iter()
+                .filter(|&&tag| tag == chain_tag)
+                .count(),
+            2
+        );
+    }
+
+    #[test]
+    fn test_optional_chain_computed_property_starts_independent_chain() {
+        let source = "foo?.[bar?.baz];";
+        let buffers = parse_and_serialize(source);
+        let chain_tag = NodeKind::ChainExpression as u32 + 1;
+        assert_eq!(
+            buffers
+                .program_buffer
+                .iter()
+                .filter(|&&tag| tag == chain_tag)
+                .count(),
+            2
+        );
     }
 
     #[test]

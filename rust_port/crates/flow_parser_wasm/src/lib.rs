@@ -84,6 +84,9 @@ fn nonneg_u32(v: i32) -> u32 {
 ///   `/* */` comments, and directive-prologue string literals up to the
 ///   first non-directive token; in each collected comment it searches for
 ///   `@flow` followed by a non-word boundary.
+/// - enable_types_in_comments: ignored compatibility slot. This Hermes-compatible
+///   entry point always treats Flow's legacy comment syntax (`/*: T */`,
+///   `/*:: ... */`) as plain JavaScript comments.
 /// - source_type: 0 = unspecified, 1 = script, 2 = module. flow_parser has
 ///   no script/module gate (parser_env.rs:218): `init_env` pins
 ///   `allow_yield: false, allow_await: false` at the top level
@@ -112,6 +115,7 @@ pub extern "C" fn hermesParse(
     enable_types: i32,
     source_type: i32,
     enable_types_pragma_detection: i32,
+    _enable_types_in_comments: i32,
 ) -> *mut ParseResult {
     match source_type {
         0..=2 => {}
@@ -192,6 +196,7 @@ pub extern "C" fn hermesParse(
         esproposal_decorators: enable_decorators != 0,
         types: resolved_enable_types,
         ambiguous_types: resolved_enable_ambiguous_types,
+        enable_types_in_comments: false,
         use_strict: false,
         assert_operator: assert_operator != 0,
         module_ref_prefix: None,
@@ -514,6 +519,7 @@ mod tests {
             esproposal_decorators: true,
             types: true,
             ambiguous_types: true,
+            enable_types_in_comments: false,
             use_strict: false,
             assert_operator: false,
             module_ref_prefix: None,
@@ -617,6 +623,7 @@ mod tests {
             1, // enable_types
             source_type,
             0, // enable_types_pragma_detection
+            0, // enable_types_in_comments
         );
         // `bytes` must outlive the call — ensure rustc cannot drop it
         // before `hermesParse` returns by reading it after.

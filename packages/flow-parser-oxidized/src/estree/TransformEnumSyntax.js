@@ -105,7 +105,7 @@ export function transformProgram(
   options: ParserOptions,
 ): Program {
   return SimpleTransform.transformProgram(program, {
-    transform(node: ESNode): ESNode | $ReadOnlyArray<ESNode> {
+    transform(node: ESNode): ESNode | ReadonlyArray<ESNode> {
       switch (node.type) {
         case 'EnumDeclaration': {
           return mapEnumDeclaration(node, options);

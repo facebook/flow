@@ -19,7 +19,7 @@ import type {
 
 import {InvalidStatementError} from '../../Errors';
 
-type StatementParent = $ReadOnly<
+type StatementParent = Readonly<
   | {
       type: 'single',
       parent: StatementParentSingle,
@@ -36,10 +36,9 @@ type StatementParent = $ReadOnly<
 export function getStatementParent(
   target: ModuleDeclaration | Statement,
 ): StatementParent {
-  function assertValidStatementLocation<T: $ReadOnly<interface {type: string}>>(
-    parentWithType: T,
-    ...invalidKeys: $ReadOnlyArray<$Keys<T>>
-  ): void {
+  function assertValidStatementLocation<
+    T extends Readonly<interface {type: string}>,
+  >(parentWithType: T, ...invalidKeys: ReadonlyArray<keyof T>): void {
     for (const key of invalidKeys) {
       // $FlowExpectedError[prop-missing]
       const value = parentWithType[key];
@@ -55,7 +54,7 @@ export function getStatementParent(
       }
     }
   }
-  function getAssertedIndex(key: string, arr: $ReadOnlyArray<mixed>): number {
+  function getAssertedIndex(key: string, arr: ReadonlyArray<unknown>): number {
     const idx = arr.indexOf(target);
     if (idx === -1) {
       throw new InvalidStatementError(

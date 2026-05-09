@@ -8,9 +8,9 @@
     "name": "Flow Team",
     "email": "flow@fb.com"
   },
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "files": [
-    "src",
+    "dist",
     "README.md"
   ],
   "engines": {

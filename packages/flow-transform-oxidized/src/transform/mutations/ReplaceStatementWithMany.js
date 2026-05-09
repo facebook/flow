@@ -22,10 +22,10 @@ import * as t from '../../generated/node-types';
 export type ReplaceStatementWithManyMutationNodes =
   | ModuleDeclaration
   | Statement;
-export type ReplaceStatementWithManyMutation = $ReadOnly<{
+export type ReplaceStatementWithManyMutation = Readonly<{
   type: 'replaceStatementWithMany',
   target: ReplaceStatementWithManyMutationNodes,
-  nodesToReplaceWith: $ReadOnlyArray<
+  nodesToReplaceWith: ReadonlyArray<
     DetachedNode<ReplaceStatementWithManyMutationNodes>,
   >,
   keepComments: boolean,
@@ -34,7 +34,7 @@ export type ReplaceStatementWithManyMutation = $ReadOnly<{
 export function createReplaceStatementWithManyMutation(
   target: ReplaceStatementWithManyMutation['target'],
   nodesToReplaceWith: ReplaceStatementWithManyMutation['nodesToReplaceWith'],
-  options?: $ReadOnly<{keepComments?: boolean}>,
+  options?: Readonly<{keepComments?: boolean}>,
 ): ?ReplaceStatementWithManyMutation {
   if (nodesToReplaceWith.length === 0) {
     return null;
@@ -76,7 +76,7 @@ export function performReplaceStatementWithManyMutation(
 
   if (replacementParent.type === 'array') {
     const parent: interface {
-      [string]: $ReadOnlyArray<DetachedNode<Statement | ModuleDeclaration>>,
+      [string]: ReadonlyArray<DetachedNode<Statement | ModuleDeclaration>>,
     } = replacementParent.parent;
     parent[replacementParent.key] = astArrayMutationHelpers.replaceInArray(
       parent[replacementParent.key],
@@ -87,9 +87,9 @@ export function performReplaceStatementWithManyMutation(
     return replacementParent.parent;
   }
 
-  const statementsToReplaceWith: $ReadOnlyArray<DetachedNode<Statement>> =
-    // $FlowExpectedError[incompatible-type] -- this is enforced by isValidModuleDeclarationParent above.
-    mutation.nodesToReplaceWith;
+  const statementsToReplaceWith =
+    // $FlowExpectedError[incompatible-type] -- this is enforced by isValidModuleDeclarationParent above
+    mutation.nodesToReplaceWith as ReadonlyArray<DetachedNode<Statement>>;
 
   // we need to wrap the nodes in a BlockStatement as before there was only 1 node
   const blockStatement = t.BlockStatement({
@@ -97,9 +97,9 @@ export function performReplaceStatementWithManyMutation(
     parent: replacementParent.parent,
   });
 
-  const replacementParentNode: interface {[string]: mixed} =
-    replacementParent.parent;
-  replacementParentNode[replacementParent.key] = blockStatement;
+  (replacementParent.parent as interface {[string]: unknown})[
+    replacementParent.key
+  ] = blockStatement;
 
   return replacementParent.parent;
 }

@@ -13,7 +13,7 @@ import type {Comment, Program} from 'flow-estree-oxidized';
 import {SimpleTraverser, SimpleTraverserBreak} from 'flow-parser-oxidized';
 import {getCommentsForNode, setCommentsOnNode} from '../comments/comments';
 
-export type RemoveCommentMutation = $ReadOnly<{
+export type RemoveCommentMutation = Readonly<{
   type: 'removeComment',
   comment: Comment,
 }>;
@@ -29,7 +29,7 @@ export function createRemoveCommentMutation(
 
 export function performRemoveCommentMutations(
   ast: Program,
-  mutations: $ReadOnlyArray<RemoveCommentMutation>,
+  mutations: ReadonlyArray<RemoveCommentMutation>,
 ): void {
   if (mutations.length === 0) {
     return;
@@ -65,8 +65,8 @@ export function performRemoveCommentMutations(
 }
 
 function intersectSets<T>(
-  first: $ReadOnlySet<T>,
-  other: $ReadOnlySet<T>,
+  first: ReadonlySet<T>,
+  other: ReadonlySet<T>,
 ): Set<T> {
   const ret = new Set<T>();
   for (const value of first) {

@@ -10,7 +10,7 @@
 
 'use strict';
 
-const ScopeType: $ReadOnly<{
+const ScopeType = {
   Block: 'block',
   Catch: 'catch',
   Component: 'component',
@@ -30,7 +30,7 @@ const ScopeType: $ReadOnly<{
   Switch: 'switch',
   Type: 'type',
   With: 'with',
-}> = {
+} as Readonly<{
   Block: 'block',
   Catch: 'catch',
   Component: 'component',
@@ -50,8 +50,8 @@ const ScopeType: $ReadOnly<{
   Switch: 'switch',
   Type: 'type',
   With: 'with',
-};
-type ScopeTypeType = $Values<typeof ScopeType>;
+}>;
+type ScopeTypeType = Values<typeof ScopeType>;
 
 export type {ScopeTypeType};
 export {ScopeType};

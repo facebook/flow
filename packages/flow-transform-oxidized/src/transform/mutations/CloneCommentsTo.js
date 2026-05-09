@@ -14,7 +14,7 @@ import type {MutationContext} from '../MutationContext';
 
 import {cloneCommentsToNewNode} from '../comments/comments';
 
-export type CloneCommentsToMutation = $ReadOnly<{
+export type CloneCommentsToMutation = Readonly<{
   type: 'cloneCommentsTo',
   target: ESNode | DetachedNode<ESNode>,
   destination: ESNode | DetachedNode<ESNode>,

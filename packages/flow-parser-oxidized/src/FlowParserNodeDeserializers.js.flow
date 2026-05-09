@@ -11,7 +11,7 @@
 import type {HermesNode} from './HermesAST';
 import type FlowParserDeserializer from './FlowParserDeserializer';
 
-declare const NODE_DESERIALIZERS: $ReadOnlyArray<
+declare const NODE_DESERIALIZERS: ReadonlyArray<
   (this: FlowParserDeserializer) => HermesNode,
 >;
 

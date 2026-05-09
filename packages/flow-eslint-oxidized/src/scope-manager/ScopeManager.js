@@ -38,7 +38,7 @@ import {ClassStaticBlockScope} from './scope/ClassStaticBlockScope';
 import {Variable} from './variable';
 import {ScopeType} from './scope/ScopeType';
 
-type ScopeManagerOptions = $ReadOnly<{
+type ScopeManagerOptions = Readonly<{
   globalReturn?: boolean,
   sourceType?: 'module' | 'script',
 }>;
@@ -153,6 +153,15 @@ class ScopeManager {
     return null;
   }
 
+  addGlobals(names: ReadonlyArray<string>): void {
+    if (this.globalScope == null) {
+      throw new Error(
+        'addGlobals must be called after a global scope has been created.',
+      );
+    }
+    this.globalScope.addVariables(names);
+  }
+
   _assertCurrentScope(): Scope {
     if (this.currentScope == null) {
       throw new Error('currentScope was unexpectedly null.');
@@ -160,7 +169,7 @@ class ScopeManager {
 
     return this.currentScope;
   }
-  _nestScope<T: Scope>(scope: T): T {
+  _nestScope<T extends Scope>(scope: T): T {
     if (scope instanceof GlobalScope) {
       this.globalScope = scope;
     }

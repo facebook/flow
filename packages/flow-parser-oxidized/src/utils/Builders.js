@@ -103,7 +103,7 @@ export function nullLiteral(info?: Etc): NullLiteral {
   };
 }
 
-export function conjunction(tests: $ReadOnlyArray<Expression>): Expression {
+export function conjunction(tests: ReadonlyArray<Expression>): Expression {
   if (tests.length === 0) {
     throw new Error('Must have at least one test.');
   }
@@ -116,7 +116,7 @@ export function conjunction(tests: $ReadOnlyArray<Expression>): Expression {
   }));
 }
 
-export function disjunction(tests: $ReadOnlyArray<Expression>): Expression {
+export function disjunction(tests: ReadonlyArray<Expression>): Expression {
   if (tests.length === 0) {
     throw new Error('Must have at least one test.');
   }
@@ -153,7 +153,7 @@ export function variableDeclaration(
 
 export function callExpression(
   callee: Expression | Super,
-  args: $ReadOnlyArray<Expression | SpreadElement>,
+  args: ReadonlyArray<Expression | SpreadElement>,
   info?: Etc,
 ): CallExpression {
   return {
@@ -175,9 +175,9 @@ export function throwStatement(arg: Expression, info?: Etc): ThrowStatement {
 }
 
 export function iife(
-  statements: $ReadOnlyArray<Statement>,
-  params: $ReadOnlyArray<BindingName> = [],
-  args: $ReadOnlyArray<Expression> = [],
+  statements: ReadonlyArray<Statement>,
+  params: ReadonlyArray<BindingName> = [],
+  args: ReadonlyArray<Expression> = [],
 ): CallExpression {
   const callee: ArrowFunctionExpression = {
     type: 'ArrowFunctionExpression',

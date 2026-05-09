@@ -8,7 +8,7 @@
  * @format
  */
 
-function assertArrayBounds<T>(array: $ReadOnlyArray<T>, index: number): void {
+function assertArrayBounds<T>(array: ReadonlyArray<T>, index: number): void {
   if (index < 0 || index >= array.length) {
     throw new Error(
       `Invalid Mutation: Tried to mutate an elements array with an out of bounds index. Index: ${index}, Array Size: ${array.length}`,
@@ -17,8 +17,8 @@ function assertArrayBounds<T>(array: $ReadOnlyArray<T>, index: number): void {
 }
 
 export function arrayIsEqual(
-  a1: $ReadOnlyArray<mixed>,
-  a2: $ReadOnlyArray<mixed>,
+  a1: ReadonlyArray<unknown>,
+  a2: ReadonlyArray<unknown>,
 ): boolean {
   if (a1 === a2) {
     return true;
@@ -38,9 +38,9 @@ export function arrayIsEqual(
 }
 
 export function insertInArray<T>(
-  array: $ReadOnlyArray<T>,
+  array: ReadonlyArray<T>,
   index: number,
-  elements: $ReadOnlyArray<T>,
+  elements: ReadonlyArray<T>,
 ): Array<T> {
   if (index === array.length) {
     // Support the insert at end of array case.
@@ -51,7 +51,7 @@ export function insertInArray<T>(
 }
 
 export function removeFromArray<T>(
-  array: $ReadOnlyArray<T>,
+  array: ReadonlyArray<T>,
   index: number,
 ): Array<T> {
   assertArrayBounds(array, index);
@@ -59,9 +59,9 @@ export function removeFromArray<T>(
 }
 
 export function replaceInArray<T>(
-  array: $ReadOnlyArray<T>,
+  array: ReadonlyArray<T>,
   index: number,
-  elements: $ReadOnlyArray<T>,
+  elements: ReadonlyArray<T>,
 ): Array<T> {
   assertArrayBounds(array, index);
   return array

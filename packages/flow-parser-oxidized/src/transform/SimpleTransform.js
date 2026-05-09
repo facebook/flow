@@ -31,9 +31,9 @@ import {
  */
 export type TransformCallback = (
   node: ESNode,
-) => ESNode | $ReadOnlyArray<ESNode> | null;
+) => ESNode | ReadonlyArray<ESNode> | null;
 
-export type TransformOptions = $ReadOnly<{
+export type TransformOptions = Readonly<{
   /** The callback function which is called on entering each node. */
   transform: TransformCallback,
 
@@ -42,7 +42,7 @@ export type TransformOptions = $ReadOnly<{
 }>;
 
 function setParentPointer(
-  node: ESNode | $ReadOnlyArray<ESNode>,
+  node: ESNode | ReadonlyArray<ESNode>,
   parent: ?ESNode,
 ): void {
   if (parent != null) {
@@ -75,11 +75,10 @@ export class SimpleTransform {
         // Ensure the parent pointers are correctly set before entering the node.
         setParentPointer(node, parent);
 
-        const resultNode: ESNode | $ReadOnlyArray<ESNode> | null =
+        const resultNode: ESNode | ReadonlyArray<ESNode> | null =
           options.transform(node);
         if (resultNode !== node) {
-          let traversedResultNode: ESNode | $ReadOnlyArray<ESNode> | null =
-            null;
+          let traversedResultNode: ESNode | ReadonlyArray<ESNode> | null = null;
 
           if (resultNode != null) {
             // Ensure the new node has the correct parent pointers before recursing again.

@@ -15,7 +15,7 @@ import {astNodeMutationHelpers} from 'flow-parser-oxidized';
 export opaque type DetachedNode<+T> = T;
 export type MaybeDetachedNode<+T> = T | DetachedNode<T>;
 
-type DetachConfig = $ReadOnly<{
+type DetachConfig = Readonly<{
   preserveLocation?: boolean,
   originalNode?: ESNode,
 }>;
@@ -23,7 +23,7 @@ type DetachConfig = $ReadOnly<{
 const DETACHED_MARKER = Symbol.for('hermes-transform - Detached AST Node');
 const ORIGINAL_NODE = Symbol.for('hermes-transform - Original Node');
 
-export function isDetachedNode<T: ESNode>(node: MaybeDetachedNode<T>): boolean {
+export function isDetachedNode(node: MaybeDetachedNode<ESNode>): boolean {
   // $FlowExpectedError[invalid-in-lhs] flow doesn't support symbols as keys
   return DETACHED_MARKER in node;
 }
@@ -47,16 +47,16 @@ export function asDetachedNodeForCodeGen(node: any): ?DetachedNode<any> {
 }
 
 export const asDetachedNode: {
-  <T: ESNode>(
+  <T extends ESNode>(
     node: MaybeDetachedNode<T>,
     config?: {useDeepClone: boolean},
   ): DetachedNode<T>,
-  <T: ?ESNode>(
+  <T extends ?ESNode>(
     node: ?MaybeDetachedNode<T>,
     config?: {useDeepClone: boolean},
   ): ?DetachedNode<T>,
   // $FlowFixMe[incompatible-exact]
-} = <T: ESNode>(
+} = <T extends ESNode>(
   node: ?MaybeDetachedNode<T>,
   {useDeepClone}: {useDeepClone: boolean} = {useDeepClone: false},
 ): // $FlowExpectedError[incompatible-type]
@@ -65,7 +65,7 @@ export const asDetachedNode: {
     return null;
   }
 
-  if (isDetachedNode(node)) {
+  if (isDetachedNode(node as MaybeDetachedNode<T>)) {
     return node;
   }
 
@@ -75,7 +75,7 @@ export const asDetachedNode: {
 };
 
 // used by the node type function codegen
-export function detachedProps<T: BaseNode>(
+export function detachedProps<T extends BaseNode>(
   parent: ?ESNode,
   props: {...},
   config: DetachConfig = {},
@@ -116,7 +116,7 @@ export function detachedProps<T: BaseNode>(
     // if not provided, then we purposely don't set this here
     // and will rely on the tooling to update it as appropriate.
     // nothing should be reading from this before it's set anyway.
-    parent: parent,
+    parent: parent as $FlowFixMe,
   };
 
   // mark the node as detached
@@ -142,15 +142,14 @@ export function detachedProps<T: BaseNode>(
 /**
  * Shallowly clones the node, but not its children.
  */
-export function shallowCloneNode<T: ESNode>(
+export function shallowCloneNode<T extends ESNode>(
   node: T,
   newProps: {...},
   config?: DetachConfig = {},
 ): DetachedNode<T> {
   return detachedProps<T>(
     null,
-    // $FlowExpectedError[cannot-spread-interface] Flow cannot prove generic node spread.
-    {...node, ...newProps},
+    {...(node as $FlowFixMe), ...newProps},
     {
       preserveLocation: config.preserveLocation ?? true,
       originalNode: config.originalNode ?? node,
@@ -161,7 +160,7 @@ export function shallowCloneNode<T: ESNode>(
 /**
  * Deeply clones node and its entire tree.
  */
-export function deepCloneNode<T: ESNode>(
+export function deepCloneNode<T extends ESNode>(
   node: T,
   newProps: {...},
 ): DetachedNode<T> {
@@ -188,8 +187,8 @@ export function deepCloneNode<T: ESNode>(
 /**
  * Corrects the parent pointers in direct children of the given node
  */
-export function setParentPointersInDirectChildren<T: ESNode>(
-  node: DetachedNode<T>,
+export function setParentPointersInDirectChildren(
+  node: DetachedNode<ESNode>,
 ): void {
   astNodeMutationHelpers.setParentPointersInDirectChildren(node);
 }

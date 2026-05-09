@@ -58,15 +58,6 @@ import {
   VariableDefinition,
 } from '../definition';
 
-interface FlowDeclareVariable extends DeclareVariable {
-  +declarations?: $ReadOnlyArray<
-    $ReadOnly<{
-      id: Identifier,
-      ...
-    }>,
-  >;
-}
-
 class TypeVisitor extends Visitor {
   +_referencer: Referencer;
 
@@ -291,8 +282,8 @@ class TypeVisitor extends Visitor {
   }
 
   DeclareVariable(node: DeclareVariable): void {
-    const flowNode: FlowDeclareVariable = node;
-    const id = flowNode.declarations?.[0]?.id ?? node.id;
+    const nodeAny: any = node;
+    const id = node.id ?? nodeAny.declarations?.[0]?.id;
     this._referencer
       .currentScope()
       .defineIdentifier(id, new VariableDefinition(id, node, node));

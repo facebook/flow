@@ -16,7 +16,7 @@
 
 // lint directives to let us do some basic validation of generated files
 /* eslint no-undef: 'error', no-unused-vars: ['error', {vars: "local"}], no-redeclare: 'error' */
-/* global $NonMaybeType, Partial, $ReadOnly, $ReadOnlyArray, $FlowFixMe */
+/* global NonNullable, Partial, Readonly, ReadonlyArray, $FlowFixMe */
 
 'use strict';
 
@@ -45,7 +45,6 @@ import type {
   AssignmentExpression,
   AssignmentPattern,
   AwaitExpression,
-  BigIntLiteralTypeAnnotation,
   BigIntTypeAnnotation,
   BinaryExpression,
   BlockStatement,
@@ -307,11 +306,6 @@ export function isAssignmentPattern(node /*: ESNode | Token */) /*: implies node
 
 export function isAwaitExpression(node /*: ESNode | Token */) /*: implies node is AwaitExpression */ {
   return node.type === 'AwaitExpression';
-}
-    
-
-export function isBigIntLiteralTypeAnnotation(node /*: ESNode | Token */) /*: implies node is BigIntLiteralTypeAnnotation */ {
-  return node.type === 'BigIntLiteralTypeAnnotation';
 }
     
 

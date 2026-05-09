@@ -33,7 +33,7 @@ class GlobalScope extends ScopeBase<
   // note this is accessed in used in the legacy eslint-scope tests, so it can't be true private
   +__implicit: {
     +set: Map<string, Variable>,
-    +variables: Array<Variable>,
+    variables: Array<Variable>,
     /**
      * List of {@link Reference}s that are left to be resolved (i.e. which
      * need to be linked to the variable they refer to).
@@ -48,6 +48,39 @@ class GlobalScope extends ScopeBase<
       variables: [],
       referencesLeftToResolve: [],
     };
+  }
+
+  addVariables(names: ReadonlyArray<string>): void {
+    for (const name of names) {
+      this.__defineVariable(name, this.set, this.variables, null, null);
+      this.__implicit.set.delete(name);
+    }
+
+    const nameSet = new Set(names);
+
+    for (const reference of this.through) {
+      if (nameSet.has(reference.identifier.name)) {
+        const variable = this.set.get(reference.identifier.name);
+        if (!variable) {
+          throw new Error(
+            `Expected variable with name "${reference.identifier.name}" to be defined.`,
+          );
+        }
+        reference.resolved = variable;
+        variable.references.push(reference);
+      }
+    }
+
+    this.through = this.through.filter(
+      reference => !nameSet.has(reference.identifier.name),
+    );
+    this.__implicit.variables = this.__implicit.variables.filter(
+      variable => !nameSet.has(variable.name),
+    );
+    this.__implicit.referencesLeftToResolve =
+      this.__implicit.referencesLeftToResolve.filter(
+        reference => !nameSet.has(reference.identifier.name),
+      );
   }
 
   close(scopeManager: ScopeManager): Scope | null {
@@ -72,9 +105,10 @@ class GlobalScope extends ScopeBase<
       }
     }
 
-    // $FlowFixMe[incompatible-type] We know this value is an array at this point.
-    this.__implicit.referencesLeftToResolve = this.__referencesLeftToResolve;
-    return super.close(scopeManager);
+    super.close(scopeManager);
+    this.__implicit.referencesLeftToResolve = [...this.through];
+
+    return null;
   }
 }
 

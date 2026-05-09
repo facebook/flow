@@ -163,7 +163,7 @@ pub enum MainToken {
     Pound,
     #[token("\\")]
     Backslash,
-    #[regex(r"([$_a-zA-Z]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\})([$_a-zA-Z0-9]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\})*")]
+    #[regex(r"[$_a-zA-Z]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]{1,6}\}")]
     JsIdStart,
     #[regex(r".", priority = 1)]
     Other,
@@ -249,8 +249,6 @@ pub(super) enum JsxQuoteTextToken {
     DecimalEntityRef,
     #[regex(r"&[a-zA-Z][a-zA-Z0-9]{1,7};")]
     NamedEntityRef,
-    #[regex(r#"[^'"&\r\n\u2028\u2029]+"#, priority = 2)]
-    Text,
     #[regex(r".", priority = 1)]
     Other,
 }
@@ -283,7 +281,7 @@ pub(super) enum JsxTagToken {
     SingleQuote,
     #[token("\"")]
     DoubleQuote,
-    #[regex(r"([$_a-zA-Z]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\})([$_a-zA-Z0-9\-]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\})*")]
+    #[regex(r"[$_a-zA-Z]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]{1,6}\}")]
     JsxIdStart,
     #[regex(r".", priority = 1)]
     Other,

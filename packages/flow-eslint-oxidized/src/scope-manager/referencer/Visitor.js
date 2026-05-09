@@ -21,7 +21,7 @@ import type {VisitorOptions} from './VisitorBase';
 import {VisitorBase} from './VisitorBase';
 import {PatternVisitor} from './PatternVisitor';
 
-type VisitPatternOptions = $ReadOnly<{
+type VisitPatternOptions = Readonly<{
   ...PatternVisitorOptions,
   processRightHandNodes?: boolean,
 }>;

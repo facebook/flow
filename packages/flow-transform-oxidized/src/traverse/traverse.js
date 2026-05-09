@@ -17,11 +17,11 @@ import {NodeEventGenerator} from './NodeEventGenerator';
 import {SafeEmitter} from './SafeEmitter';
 import {SimpleTraverser} from 'flow-parser-oxidized';
 
-export type TraversalContextBase = $ReadOnly<{
+export type TraversalContextBase = Readonly<{
   /**
    * Gets the variables that were declared by the given node.
    */
-  getDeclaredVariables: (node: ESNode) => $ReadOnlyArray<Variable>,
+  getDeclaredVariables: (node: ESNode) => ReadonlyArray<Variable>,
   /**
    * Gets the nearest variable declared for the given name declare in the
    * current or an upper scope.
@@ -67,7 +67,7 @@ export type TraversalContextBase = $ReadOnly<{
    */
   skipTraversal: () => void,
 }>;
-export type TraversalContext<T> = $ReadOnly<{
+export type TraversalContext<T> = Readonly<{
   ...TraversalContextBase,
   ...T,
 }>;
@@ -175,8 +175,7 @@ export function traverseWithContext<T = TraversalContextBase>(
   // add all the selectors from the visitor as listeners
   Object.keys(selectors).forEach(selector => {
     // flow doesn't want us to be general here - but it's safe
-    // $FlowExpectedError[incompatible-type]
-    const listener: ?EmitterListener = selectors[selector];
+    const listener: ?EmitterListener = (selectors as $FlowFixMe)[selector];
     if (listener) {
       emitter.on(selector, listener);
     }

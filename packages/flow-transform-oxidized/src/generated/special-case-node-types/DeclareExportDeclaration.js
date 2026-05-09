@@ -28,7 +28,7 @@ export type DeclareExportDefaultDeclarationProps = {
   >,
 };
 export function DeclareExportDefaultDeclaration(props: {
-  ...$ReadOnly<DeclareExportDefaultDeclarationProps>,
+  ...Readonly<DeclareExportDefaultDeclarationProps>,
   +parent?: ESNode,
 }): DetachedNode<DeclareExportDefaultDeclarationType> {
   const node = detachedProps<DeclareExportDefaultDeclarationType>(
@@ -52,7 +52,7 @@ export type DeclareExportDeclarationNamedWithDeclarationProps = {
   >,
 };
 export function DeclareExportDeclarationNamedWithDeclaration(props: {
-  ...$ReadOnly<DeclareExportDeclarationNamedWithDeclarationProps>,
+  ...Readonly<DeclareExportDeclarationNamedWithDeclarationProps>,
   +parent?: ESNode,
 }): DetachedNode<DeclareExportDeclarationNamedWithDeclarationType> {
   const node = detachedProps<DeclareExportDeclarationNamedWithDeclarationType>(
@@ -71,7 +71,7 @@ export function DeclareExportDeclarationNamedWithDeclaration(props: {
 }
 
 export type DeclareExportDeclarationNamedWithSpecifiersProps = {
-  +specifiers: $ReadOnlyArray<
+  +specifiers: ReadonlyArray<
     MaybeDetachedNode<
       DeclareExportDeclarationNamedWithSpecifiersType['specifiers'][number],
     >,
@@ -81,7 +81,7 @@ export type DeclareExportDeclarationNamedWithSpecifiersProps = {
   >,
 };
 export function DeclareExportDeclarationNamedWithSpecifiers(props: {
-  ...$ReadOnly<DeclareExportDeclarationNamedWithSpecifiersProps>,
+  ...Readonly<DeclareExportDeclarationNamedWithSpecifiersProps>,
   +parent?: ESNode,
 }): DetachedNode<DeclareExportDeclarationNamedWithSpecifiersType> {
   const node = detachedProps<DeclareExportDeclarationNamedWithSpecifiersType>(

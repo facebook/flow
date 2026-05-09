@@ -31,7 +31,7 @@ export default function BabelPluginSyntaxHermesParser(
   // $FlowExpectedError[unclear-type] We don't have types for this.
   api: any,
   options: Options,
-): $ReadOnly<{...}> {
+): Readonly<{...}> {
   api.assertVersion('^7.0.0 || ^8.0.0-alpha.6');
 
   const {parseLangTypes = 'all'} = options;
@@ -43,7 +43,7 @@ export default function BabelPluginSyntaxHermesParser(
     name: 'syntax-hermes-parser',
 
     manipulateOptions(
-      opts: $ReadOnly<{parserOpts: ParserOptions, filename?: ?string}>,
+      opts: Readonly<{parserOpts: ParserOptions, filename?: ?string}>,
     ) {
       curParserOpts = opts.parserOpts;
       curFilename = opts.filename;

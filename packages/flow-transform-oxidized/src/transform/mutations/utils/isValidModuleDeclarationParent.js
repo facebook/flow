@@ -43,7 +43,7 @@ function isModuleDeclaration(node: ESNode) /*: node is (
 
 export function isValidModuleDeclarationParent(
   target: ESNode,
-  nodesToInsertOrReplace: $ReadOnlyArray<
+  nodesToInsertOrReplace: ReadonlyArray<
     DetachedNode<ModuleDeclaration | Statement>,
   >,
 ): boolean {
@@ -55,9 +55,12 @@ export function isValidModuleDeclarationParent(
   }
 
   for (const node of nodesToInsertOrReplace) {
-    // $FlowExpectedError[incompatible-type]
-    const nodeToCheck: ESNode = node;
-    if (!isModuleDeclaration(nodeToCheck)) {
+    if (
+      !isModuleDeclaration(
+        // $FlowExpectedError[incompatible-type]
+node as ESNode,
+      )
+    ) {
       continue;
     }
 

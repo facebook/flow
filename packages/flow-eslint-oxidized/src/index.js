@@ -11,26 +11,21 @@
 'use strict';
 
 import type {Program} from 'flow-estree-oxidized';
-import type {ParserOptions, VisitorKeysType} from 'flow-parser-oxidized';
+import type {VisitorKeysType} from 'flow-parser-oxidized';
 import type {PartialAnalyzeOptions, ScopeManager} from './scope-manager';
 
 import * as HermesParser from 'flow-parser-oxidized';
 import {analyze} from './scope-manager';
 
-type ESTreeParserOptions = $ReadOnly<{
-  ...ParserOptions,
-  babel?: false | void,
-}>;
-
-type ParseForESLintOptions = $ReadOnly<{
+type ParseForESLintOptions = Readonly<{
   ...PartialAnalyzeOptions,
 }>;
 
 function parse(code: string, options?: ParseForESLintOptions): Program {
-  const parserOptions: ESTreeParserOptions = {
+  const parserOptions = {
     allowReturnOutsideFunction: true,
-    flow: 'all',
-    sourceType: options?.sourceType ?? 'module',
+    flow: 'all' as 'all',
+    sourceType: options?.sourceType ?? ('module' as 'module'),
     tokens: true,
     enableExperimentalComponentSyntax:
       options?.enableExperimentalComponentSyntax ?? true,
@@ -57,6 +52,12 @@ function parse(code: string, options?: ParseForESLintOptions): Program {
 }
 
 const VisitorKeys = HermesParser.FlowVisitorKeys;
+
+const meta: Readonly<{name: string, version: string}> = {
+  name: 'flow-eslint-oxidized',
+  // $FlowExpectedError[untyped-import]
+  version: require('../package.json').version as string,
+};
 
 type ParseForESLintReturn = {
   ast: Program,
@@ -90,4 +91,4 @@ function parseForESLint(
 export type * from './scope-manager';
 export type {ParseForESLintOptions, ParseForESLintReturn};
 export {ScopeType, DefinitionType} from './scope-manager';
-export {parse, parseForESLint, VisitorKeys};
+export {parse, parseForESLint, VisitorKeys, meta};

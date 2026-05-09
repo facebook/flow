@@ -15,9 +15,9 @@ import type {CommentPlacement} from '../comments/comments';
 
 import {addComment, cloneComment} from '../comments/comments';
 
-export type AddCommentsMutation = $ReadOnly<{
+export type AddCommentsMutation = Readonly<{
   type: 'addComments',
-  comments: $ReadOnlyArray<{comment: Comment, placement: CommentPlacement}>,
+  comments: ReadonlyArray<{comment: Comment, placement: CommentPlacement}>,
   node: ESNode | DetachedNode<ESNode>,
 }>;
 

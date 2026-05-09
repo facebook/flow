@@ -738,7 +738,7 @@ interface MatchCase<T> {
   +body: T;
 }
 
-function analyzeCases<T>(cases: $ReadOnlyArray<MatchCase<T>>): {
+function analyzeCases<T>(cases: ReadonlyArray<MatchCase<T>>): {
   hasBindings: boolean,
   hasWildcard: boolean,
   analyses: Array<CaseAnalysis<T>>,

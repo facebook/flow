@@ -139,7 +139,7 @@ exports[`ComponentDeclaration Complex params Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -483,7 +483,7 @@ exports[`ComponentDeclaration default params Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -670,7 +670,7 @@ exports[`ComponentDeclaration destructure params Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -867,7 +867,7 @@ exports[`ComponentDeclaration normal and rest params Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -1092,7 +1092,7 @@ exports[`ComponentDeclaration normal and rest params with nested rest Babel 1`] 
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -1338,7 +1338,7 @@ exports[`ComponentDeclaration ref and normal params Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -1566,7 +1566,7 @@ exports[`ComponentDeclaration ref and normal params default exported Babel 1`] =
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -1805,7 +1805,7 @@ exports[`ComponentDeclaration ref and normal params named exported Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -2071,7 +2071,7 @@ exports[`ComponentDeclaration ref and normal params with hoisting (recursive) Ba
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -2377,7 +2377,7 @@ exports[`ComponentDeclaration ref and normal params with hoisting Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -2494,7 +2494,7 @@ exports[`ComponentDeclaration ref and normal params with hoisting Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -2857,7 +2857,7 @@ exports[`ComponentDeclaration ref and normal params within block Babel 1`] = `
                   "type": "TypeAnnotation",
                   "typeAnnotation": {
                     "id": {
-                      "name": "$ReadOnly",
+                      "name": "Readonly",
                       "type": "Identifier",
                     },
                     "type": "GenericTypeAnnotation",
@@ -3024,7 +3024,7 @@ exports[`ComponentDeclaration ref and normal params within block Babel 1`] = `
                   "type": "TypeAnnotation",
                   "typeAnnotation": {
                     "id": {
-                      "name": "$ReadOnly",
+                      "name": "Readonly",
                       "type": "Identifier",
                     },
                     "type": "GenericTypeAnnotation",
@@ -3418,7 +3418,7 @@ exports[`ComponentDeclaration ref and normal params within case Babel 1`] = `
                     "type": "TypeAnnotation",
                     "typeAnnotation": {
                       "id": {
-                        "name": "$ReadOnly",
+                        "name": "Readonly",
                         "type": "Identifier",
                       },
                       "type": "GenericTypeAnnotation",
@@ -3710,7 +3710,7 @@ exports[`ComponentDeclaration ref param Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -3885,7 +3885,7 @@ exports[`ComponentDeclaration ref param renamed Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -4060,7 +4060,7 @@ exports[`ComponentDeclaration ref param renamed destructure Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -4270,7 +4270,7 @@ exports[`ComponentDeclaration ref param with default Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",
@@ -5010,7 +5010,7 @@ exports[`ComponentDeclaration type parameters Babel 1`] = `
             "type": "TypeAnnotation",
             "typeAnnotation": {
               "id": {
-                "name": "$ReadOnly",
+                "name": "Readonly",
                 "type": "Identifier",
               },
               "type": "GenericTypeAnnotation",

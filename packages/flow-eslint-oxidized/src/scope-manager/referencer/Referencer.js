@@ -125,7 +125,7 @@ function getJsxName(name: JSXTagNameExpression): string {
 
 const FBT_NAMES = new Set(['fbt', 'fbs']);
 
-type ReferencerOptions = $ReadOnly<{
+type ReferencerOptions = Readonly<{
   ...VisitorOptions,
   fbtSupport: boolean | null,
   jsxPragma: string | null,

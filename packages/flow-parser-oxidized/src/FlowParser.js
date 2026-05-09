@@ -35,6 +35,7 @@ type FlowParse = (
   number,
   number,
   number,
+  number,
 ) => number;
 
 type WireSourceLocation = {
@@ -90,12 +91,13 @@ function initFlowParserWASM(): void {
   // or record syntax opt in via their `.options.json`), an `enableTypes`
   // flag that mirrors OCaml's `types` option (on by default; fixtures that
   // need to exercise the no-type-grammar path opt out via `types: false`),
-  // and a `sourceType` integer (0=unspecified, 1=script, 2=module). The
-  // Rust parser does docblock `@flow` pragma detection internally when
+  // a `sourceType` integer (0=unspecified, 1=script, 2=module), and a final
+  // zero to keep Flow's legacy comment syntax disabled. The Rust parser does
+  // docblock `@flow` pragma detection internally when
   // `enableTypesPragmaDetection` is set; the JS adapter `parse()` resolves
-  // `flow: 'detect'` to that flag so the Rust side can choose Hermes-style
-  // ALL vs UNAMBIGUOUS Flow parsing.
+  // `flow: 'detect'` to that flag.
   flowParse = FlowParserWASM.cwrap('hermesParse', 'number', [
+    'number',
     'number',
     'number',
     'number',
@@ -262,6 +264,7 @@ function parse(source: string, options: ParserOptions): Program {
       // (e.g. the wasm fixture runner) leave it off and supply
       // `enableTypes` directly.
       flag(options.enableTypesPragmaDetection),
+      0,
     );
 
     // The Rust parser always returns a (possibly partial) AST plus an

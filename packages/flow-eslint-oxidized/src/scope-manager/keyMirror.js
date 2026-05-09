@@ -10,7 +10,7 @@
 
 'use strict';
 
-export default function keyMirror<T: {...}>(obj: T): $KeyMirror<T> {
+export default function keyMirror<T extends {...}>(obj: T): $KeyMirror<T> {
   const ret: {[string]: string} = {};
   for (const key of Object.keys(obj)) {
     ret[key] = key;

@@ -28,8 +28,7 @@ demo_flow_parser.js              — end-to-end smoke demo
 ## WASM build target
 
 `flow-parser-wasm.js` is defined at
-`fbsource//xplat/hermes/tools/flow-parser-wasm:flow-parser-wasm.js` and depends on
-`fbcode//flow/rust_port/crates/flow_parser_wasm:flow_parser_wasm`. The wasm BUCK
-rule lives in `xplat/` because the `hermes_wasm_binary` macro requires its call
-site to be under the FBCODE_SELECT_RECURSIVE_ALLOWLIST (which covers `xplat/hermes`);
-only the BUCK rule lives there — the JS package surface stays here.
+`fbcode//flow/packages/flow-parser-wasm:flow-parser-wasm.js` and depends on
+`fbcode//flow/rust_port/crates/flow_parser_wasm:flow_parser_wasm`. The wasm target
+is kept as its own Buck package under `flow/packages`; the JS package surface stays
+in `flow-parser-oxidized`.

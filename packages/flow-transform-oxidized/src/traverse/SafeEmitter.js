@@ -25,7 +25,7 @@ export type EmitterListener = (node: ESNode) => void;
  * `this` value of the emitter instance, which would give listeners access to other listeners.)
  */
 export class SafeEmitter {
-  // $FlowExpectedError[incompatible-type] - Object.create is always typed as returning `mixed`
+  // $FlowExpectedError[incompatible-type] - Object.create is always typed as returning `unknown`
   +listeners: {[string]: Array<EmitterListener>} = Object.create(null);
 
   on(eventName: string, listener: EmitterListener): void {

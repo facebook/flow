@@ -229,6 +229,8 @@ pub struct ParseOptions {
     pub types: bool,
     /// enable parsing of Flow syntax that is ambiguous with valid JavaScript
     pub ambiguous_types: bool,
+    /// enable parsing Flow comment syntax like `/*: T */` and `/*:: T */`
+    pub enable_types_in_comments: bool,
     /// treat the file as strict, without needing a "use strict" directive
     pub use_strict: bool,
     pub assert_operator: bool,
@@ -251,6 +253,7 @@ impl Default for ParseOptions {
             esproposal_decorators: false,
             types: true,
             ambiguous_types: true,
+            enable_types_in_comments: true,
             use_strict: false,
             module_ref_prefix: None,
             ambient: false,
@@ -268,6 +271,7 @@ pub const PERMISSIVE_PARSE_OPTIONS: ParseOptions = ParseOptions {
     esproposal_decorators: true,
     types: true,
     ambiguous_types: true,
+    enable_types_in_comments: true,
     use_strict: false,
     module_ref_prefix: None,
     ambient: false,
@@ -371,7 +375,7 @@ pub fn init_env<'a, E>(
         }
     };
     let parse_options = parse_options.unwrap_or(PERMISSIVE_PARSE_OPTIONS);
-    let enable_types_in_comments = parse_options.types;
+    let enable_types_in_comments = parse_options.types && parse_options.enable_types_in_comments;
     let lex_env = wrapped_lex_env::WrappedLexEnv::new(source, content, enable_types_in_comments);
     let lookahead = lookahead::Lookahead::new(LexMode::Normal, &lex_env);
 
@@ -1680,8 +1684,8 @@ pub mod try_parse {
     pub struct Rollback;
 
     struct SavedState<'a> {
-        saved_errors: Vec<(Loc, ParseError)>,
-        saved_comments: Vec<Comment<Loc>>,
+        saved_errors_len: usize,
+        saved_comments_len: usize,
         saved_last_lex_result: Option<(Loc, TokenKind)>,
         saved_lex_mode_stack: Vec<LexMode>,
         saved_lex_env: wrapped_lex_env::WrappedLexEnv<'a>,
@@ -1702,8 +1706,8 @@ pub mod try_parse {
         };
 
         SavedState {
-            saved_errors: env.errors.clone(),
-            saved_comments: env.comments.clone(),
+            saved_errors_len: env.errors.len(),
+            saved_comments_len: env.comments.len(),
             saved_last_lex_result: env.last_lex_result.clone(),
             saved_lex_mode_stack: env.lex_mode_stack.clone(),
             saved_lex_env: env.lex_env.clone(),
@@ -1735,8 +1739,8 @@ pub mod try_parse {
         saved_state: SavedState<'a>,
     ) -> ParseResult<T> {
         reset_token_sink(env, saved_state.token_buffer, false);
-        env.errors = saved_state.saved_errors;
-        env.comments = saved_state.saved_comments;
+        env.errors.truncate(saved_state.saved_errors_len);
+        env.comments.truncate(saved_state.saved_comments_len);
         env.last_lex_result = saved_state.saved_last_lex_result;
         env.lex_mode_stack = saved_state.saved_lex_mode_stack;
         env.lex_env = saved_state.saved_lex_env;

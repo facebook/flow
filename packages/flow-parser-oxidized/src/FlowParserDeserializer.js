@@ -56,10 +56,10 @@ export default class FlowParserDeserializer {
 
   // Comment types: Flow uses ESTree-standard names
   // Matches CommentKind enum in ast.rs: Block = 0, Line = 1
-  +commentTypes: $ReadOnlyArray<FlowComment['type']> = ['Block', 'Line'];
+  +commentTypes: ReadonlyArray<FlowComment['type']> = ['Block', 'Line'];
 
   // Matches TokenType enum (same as Hermes for compatibility)
-  +tokenTypes: $ReadOnlyArray<HermesToken['type']> = [
+  +tokenTypes: ReadonlyArray<HermesToken['type']> = [
     'Boolean',
     'Identifier',
     'Keyword',

@@ -34,10 +34,10 @@ import type {
  */
 
 interface FunctionDeclaration_With_id extends FunctionDeclaration {
-  +id: $NonMaybeType<FunctionDeclaration['id']>;
+  +id: NonNullable<FunctionDeclaration['id']>;
 }
 
-export type ESQueryNodeSelectorsWithoutFallback = $ReadOnly<{
+export type ESQueryNodeSelectorsWithoutFallback = Readonly<{
   +AnyTypeAnnotation?: (node: AnyTypeAnnotation) => void,
   +CallExpression?: (node: CallExpression) => void,
   +ClassDeclaration?: (node: ClassDeclaration) => void,

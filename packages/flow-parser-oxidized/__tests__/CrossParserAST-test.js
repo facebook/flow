@@ -29,7 +29,7 @@
 const {parse: ourParse} = require('flow-parser-oxidized');
 const {
   parse: upstreamParse,
-}: $ReadOnly<{
+}: Readonly<{
   +parse: (string, mixed) => mixed,
   ...
 }> = require('hermes-parser');
@@ -194,10 +194,10 @@ function tol({
   missing = [],
   extra = [],
   ignoreValueOf = [],
-}: $ReadOnly<{
-  missing?: $ReadOnlyArray<string>,
-  extra?: $ReadOnlyArray<string>,
-  ignoreValueOf?: $ReadOnlyArray<string>,
+}: Readonly<{
+  missing?: ReadonlyArray<string>,
+  extra?: ReadonlyArray<string>,
+  ignoreValueOf?: ReadonlyArray<string>,
 }>) {
   return {
     missing: new Set(missing),
@@ -304,7 +304,7 @@ function deepEqualWithTolerances(
   return diffNodes(ours, upstream, '$', tolerate);
 }
 
-const FIXTURES: $ReadOnly<{[string]: string}> = {
+const FIXTURES: Readonly<{[string]: string}> = {
   // Representative fixture set. Picked to cover the most adapter-touched
   // node families in the public AST shape.
   literal: `

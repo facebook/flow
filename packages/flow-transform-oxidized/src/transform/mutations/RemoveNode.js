@@ -35,7 +35,7 @@ import type {DetachedNode} from '../../detachedNode';
 import {astArrayMutationHelpers} from 'flow-parser-oxidized';
 import {InvalidRemovalError} from '../Errors';
 
-export type RemoveNodeMutation = $ReadOnly<{
+export type RemoveNodeMutation = Readonly<{
   type: 'removeNode',
   node:
     | ClassMember
@@ -67,34 +67,34 @@ export function createRemoveNodeMutation(
   };
 }
 
-const VALID_ENUM_MEMBER_PARENTS: $ReadOnlyArray<string> = [
+const VALID_ENUM_MEMBER_PARENTS: ReadonlyArray<string> = [
   'EnumBooleanBody',
   'EnumNumberBody',
   'EnumBigIntBody',
   'EnumStringBody',
   'EnumSymbolBody',
 ];
-const VALID_FUNCTION_PARAMETER_PARENTS: $ReadOnlyArray<string> = [
+const VALID_FUNCTION_PARAMETER_PARENTS: ReadonlyArray<string> = [
   'ArrowFunctionExpression',
   'FunctionDeclaration',
   'FunctionExpression',
 ];
-const VALID_PROPERTY_PARENTS: $ReadOnlyArray<string> = [
+const VALID_PROPERTY_PARENTS: ReadonlyArray<string> = [
   'ObjectExpression',
   'ObjectPattern',
 ];
-const VALID_COMPONENT_TYPE_PARAMETER_PARENTS: $ReadOnlyArray<string> = [
+const VALID_COMPONENT_TYPE_PARAMETER_PARENTS: ReadonlyArray<string> = [
   'DeclareComponent',
   'ComponentTypeAnnotation',
 ];
-function getRemovalParent(node: RemoveNodeMutation['node']): $ReadOnly<{
+function getRemovalParent(node: RemoveNodeMutation['node']): Readonly<{
   type: 'array',
   parent: ESNode,
   key: string,
   targetIndex: number,
 }> {
   const key = ((): string => {
-    function getErrorMessage(expectedParents: $ReadOnlyArray<string>): string {
+    function getErrorMessage(expectedParents: ReadonlyArray<string>): string {
       return `Tried to remove ${node.type} from parent of type ${
         node.parent.type
       }.\nHowever ${
@@ -103,7 +103,7 @@ function getRemovalParent(node: RemoveNodeMutation['node']): $ReadOnly<{
         ' | ',
       )}.`;
     }
-    function assertParent(expectedParents_: string | $ReadOnlyArray<string>) {
+    function assertParent(expectedParents_: string | ReadonlyArray<string>) {
       const expectedParents =
         typeof expectedParents_ === 'string'
           ? [expectedParents_]
@@ -304,7 +304,7 @@ export function performRemoveNodeMutation(
   mutationContext.markMutation(removalParent.parent, removalParent.key);
 
   const parent: interface {
-    [string]: $ReadOnlyArray<DetachedNode<RemoveNodeMutation['node']>>,
+    [string]: ReadonlyArray<DetachedNode<RemoveNodeMutation['node']>>,
   } = removalParent.parent;
   parent[removalParent.key] = astArrayMutationHelpers.removeFromArray(
     parent[removalParent.key],

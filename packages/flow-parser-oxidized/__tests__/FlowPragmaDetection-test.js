@@ -11,6 +11,7 @@
 'use strict';
 
 import {parse} from '../__test_utils__/parse';
+import {parse as parseRaw} from '../src/FlowParser';
 
 test('Flow pragma detection', () => {
   const parsedAsFlow = {
@@ -100,6 +101,67 @@ test('Flow pragma detection', () => {
       ],
     },
   });
+
+  // Special Flow comment syntax is not parsed as Flow. This matches upstream
+  // Hermes: comment syntax remains a JavaScript comment regardless of
+  // `flow: 'detect'`, `flow: 'all'`, a file-level Flow pragma, or direct
+  // raw parser calls.
+  const commentSyntax = `
+    module.exports = (require("dompurify-2.5.8")()/*:: as any */);
+    function f(x/*: number */) { return x; }
+  `;
+  const commentSyntaxCases: Array<{
+    source: string,
+    flow: 'detect' | 'all',
+  }> = [
+    {source: commentSyntax, flow: 'detect'},
+    {source: '/** @flow */\n' + commentSyntax, flow: 'detect'},
+    {source: commentSyntax, flow: 'all'},
+  ];
+  for (const {source, flow} of commentSyntaxCases) {
+    const commentSyntaxAST = parse(source, {babel: true, flow});
+    expect(commentSyntaxAST.program.body[0]).toMatchObject({
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'AssignmentExpression',
+        right: {
+          type: 'CallExpression',
+        },
+      },
+    });
+    expect(commentSyntaxAST.program.body[1]).toMatchObject({
+      type: 'FunctionDeclaration',
+      params: [
+        {
+          type: 'Identifier',
+        },
+      ],
+    });
+    expect(commentSyntaxAST.program.body[1].params[0]).not.toHaveProperty(
+      'typeAnnotation',
+    );
+  }
+  const rawCommentSyntaxAST = parseRaw(commentSyntax, {enableTypes: true});
+  expect(rawCommentSyntaxAST.body[0]).toMatchObject({
+    type: 'ExpressionStatement',
+    expression: {
+      type: 'AssignmentExpression',
+      right: {
+        type: 'CallExpression',
+      },
+    },
+  });
+  expect(rawCommentSyntaxAST.body[1]).toMatchObject({
+    type: 'FunctionDeclaration',
+    params: [
+      {
+        type: 'Identifier',
+      },
+    ],
+  });
+  expect(rawCommentSyntaxAST.body[1].params[0]).not.toHaveProperty(
+    'typeAnnotation',
+  );
 
   // Flow pragma can appear after directives
   const flowPragmaAfterDirective = `

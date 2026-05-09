@@ -32,7 +32,7 @@ export type BigIntLiteralProps = {
   +raw?: NumericLiteralType['raw'],
 };
 export function BigIntLiteral(props: {
-  ...$ReadOnly<BigIntLiteralProps>,
+  ...Readonly<BigIntLiteralProps>,
   +parent?: ESNode,
 }): DetachedNode<BigIntLiteralType> {
   return detachedProps<BigIntLiteralType>(props.parent, {
@@ -47,7 +47,7 @@ export type BooleanLiteralProps = {
   +value: BooleanLiteralType['value'],
 };
 export function BooleanLiteral(props: {
-  ...$ReadOnly<BooleanLiteralProps>,
+  ...Readonly<BooleanLiteralProps>,
   +parent?: ESNode,
 }): DetachedNode<BooleanLiteralType> {
   return detachedProps<BooleanLiteralType>(props.parent, {
@@ -66,7 +66,7 @@ export type NumericLiteralProps = {
   +raw?: NumericLiteralType['raw'],
 };
 export function NumericLiteral(props: {
-  ...$ReadOnly<NumericLiteralProps>,
+  ...Readonly<NumericLiteralProps>,
   +parent?: ESNode,
 }): DetachedNode<NumericLiteralType> {
   return detachedProps<NumericLiteralType>(props.parent, {
@@ -96,7 +96,7 @@ export type RegExpLiteralProps = {
   +flags: RegExpLiteralType['regex']['flags'],
 };
 export function RegExpLiteral(props: {
-  ...$ReadOnly<RegExpLiteralProps>,
+  ...Readonly<RegExpLiteralProps>,
   +parent?: ESNode,
 }): DetachedNode<RegExpLiteralType> {
   const value = new RegExp(props.pattern, props.flags);
@@ -116,7 +116,7 @@ export type StringLiteralProps = {
   +raw?: StringLiteralType['raw'],
 };
 export function StringLiteral(props: {
-  ...$ReadOnly<StringLiteralProps>,
+  ...Readonly<StringLiteralProps>,
   +parent?: ESNode,
 }): DetachedNode<StringLiteralType> {
   const hasSingleQuote = props.value.includes('"');

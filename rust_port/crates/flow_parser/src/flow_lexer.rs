@@ -2382,7 +2382,7 @@ fn jsx_quote_text<'a>(
                     }
                 }
             }
-            Some(Ok(JsxQuoteTextToken::Text)) | Some(Ok(JsxQuoteTextToken::Other)) => {
+            Some(Ok(JsxQuoteTextToken::Other)) => {
                 let c = lexer.slice();
                 raw.push_str(c);
                 buf.push_str(c);

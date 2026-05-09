@@ -16,7 +16,7 @@ import {FlowVisitorKeys} from 'flow-parser-oxidized';
 import {Referencer} from './referencer';
 import {ScopeManager} from './ScopeManager';
 
-type AnalyzeOptions = $ReadOnly<{
+type AnalyzeOptions = Readonly<{
   /**
    * Whether the whole script is executed under node.js environment.
    * When enabled, the scope manager adds a function scope immediately following the global scope.
@@ -76,7 +76,7 @@ type AnalyzeOptions = $ReadOnly<{
    */
   enableExperimentalFlowRecordSyntax?: boolean,
 }>;
-type PartialAnalyzeOptions = $ReadOnly<Partial<AnalyzeOptions>>;
+type PartialAnalyzeOptions = Readonly<Partial<AnalyzeOptions>>;
 
 const DEFAULT_OPTIONS: AnalyzeOptions = {
   globalReturn: false,
@@ -87,7 +87,7 @@ const DEFAULT_OPTIONS: AnalyzeOptions = {
 };
 
 const JS_IDENTIFIER_REGEX = /^[_$a-zA-Z][_$a-zA-Z0-9]*$/;
-function extractIdentifier(directive: ?$ReadOnlyArray<string>): ?string {
+function extractIdentifier(directive: ?ReadonlyArray<string>): ?string {
   // handle `@\jsx Foo.bar` -> we want to extract `Foo`, not `Foo.bar`
   const foundPragma = directive?.[0].split('.')[0];
   if (foundPragma != null && JS_IDENTIFIER_REGEX.test(foundPragma)) {
