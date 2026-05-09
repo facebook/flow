@@ -56,6 +56,7 @@ pub enum CCSError {
 enum ConnectExn {
     Timeout,
     MissingSocket,
+    Other,
 }
 
 struct MonitorMisbehaved;
@@ -116,14 +117,19 @@ fn open_connection(
     if let Some(conn) = existing {
         return Ok(conn);
     }
-    let mut conn = TcpStream::connect_timeout(&sockaddr, std::time::Duration::from_secs(timeout))
-        .map_err(|e| {
-        if e.kind() == std::io::ErrorKind::NotFound {
-            ConnectExn::MissingSocket
-        } else {
-            ConnectExn::Timeout
-        }
-    })?;
+    let mut conn =
+        match TcpStream::connect_timeout(&sockaddr, std::time::Duration::from_secs(timeout)) {
+            Ok(conn) => conn,
+            Err(e) => {
+                return Err(match e.kind() {
+                    std::io::ErrorKind::NotFound => ConnectExn::MissingSocket,
+                    std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock => {
+                        ConnectExn::Timeout
+                    }
+                    _ => ConnectExn::Other,
+                });
+            }
+        };
     // It's important that we only write this once per connection.
     //
     // The wire shape mirrors OCaml `SocketHandshake.client_handshake_wire`:
@@ -137,8 +143,8 @@ fn open_connection(
     let (ref client1, ref client2) = *client_handshake;
     let client1_json =
         serde_json::to_string(&socket_handshake::client_to_monitor_1_to_json(client1))
-            .map_err(|_| ConnectExn::Timeout)?;
-    let client2_bytes = serde_json::to_vec(client2).map_err(|_| ConnectExn::Timeout)?;
+            .map_err(|_| ConnectExn::Other)?;
+    let client2_bytes = serde_json::to_vec(client2).map_err(|_| ConnectExn::Other)?;
     let wire: socket_handshake::ClientHandshakeWire = (client1_json, client2_bytes);
     {
         use std::io::Write;
@@ -148,10 +154,10 @@ fn open_connection(
             &mut buffered,
             bincode::config::legacy().with_limit::<MAX_FRAME_BYTES>(),
         )
-        .map_err(|_| ConnectExn::Timeout)?;
-        buffered.flush().map_err(|_| ConnectExn::Timeout)?;
+        .map_err(|_| ConnectExn::Other)?;
+        buffered.flush().map_err(|_| ConnectExn::Other)?;
     }
-    let conn_clone = conn.try_clone().map_err(|_| ConnectExn::Timeout)?;
+    let conn_clone = conn.try_clone().map_err(|_| ConnectExn::Other)?;
     with_connections(|conns| {
         conns.insert(sockaddr, conn_clone);
     });
@@ -183,21 +189,18 @@ fn establish_connection(
         root,
     ));
 
-    let port_str = std::fs::read_to_string(&socket_path).map_err(|_| ConnectExn::MissingSocket)?;
-    let port: u16 = port_str
-        .trim()
-        .parse()
-        .map_err(|_| ConnectExn::MissingSocket)?;
+    let port_str = std::fs::read_to_string(&socket_path).map_err(|_| ConnectExn::Other)?;
+    let port: u16 = port_str.trim().parse().map_err(|_| ConnectExn::Other)?;
 
     let sockaddr = SocketAddr::from(([127, 0, 0, 1], port));
     let stream = open_connection(timeout, client_handshake, sockaddr)?;
 
     stream
         .set_read_timeout(Some(std::time::Duration::from_secs(timeout)))
-        .map_err(|_| ConnectExn::Timeout)?;
+        .map_err(|_| ConnectExn::Other)?;
     stream
         .set_write_timeout(Some(std::time::Duration::from_secs(10)))
-        .map_err(|_| ConnectExn::Timeout)?;
+        .map_err(|_| ConnectExn::Other)?;
 
     Ok((sockaddr, stream))
 }
@@ -209,26 +212,29 @@ fn get_handshake(
 ) -> Result<(SocketAddr, socket_handshake::ServerHandshake), ConnectExn> {
     stream
         .set_read_timeout(Some(std::time::Duration::from_secs(timeout)))
-        .map_err(|_| ConnectExn::Timeout)?;
+        .map_err(|_| ConnectExn::Other)?;
     let wire: socket_handshake::ServerHandshakeWire = bincode::serde::decode_from_std_read(
         &mut *stream,
         bincode::config::legacy().with_limit::<MAX_FRAME_BYTES>(),
     )
     .map_err(|e| {
         if let bincode::error::DecodeError::Io { inner, .. } = &e {
-            if inner.kind() == std::io::ErrorKind::TimedOut {
+            if matches!(
+                inner.kind(),
+                std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock
+            ) {
                 // Timeouts are expected
                 return ConnectExn::Timeout;
             }
         }
         close_connection(sockaddr);
-        ConnectExn::Timeout
+        ConnectExn::Other
     })?;
     let server1_json: serde_json::Value =
-        serde_json::from_str(&wire.0).map_err(|_| ConnectExn::Timeout)?;
+        serde_json::from_str(&wire.0).map_err(|_| ConnectExn::Other)?;
     let server1 = socket_handshake::json_to_monitor_to_client_1(&server1_json).map_err(|_| {
         close_connection(sockaddr);
-        ConnectExn::Timeout
+        ConnectExn::Other
     })?;
     // Server invariant: it only sends us snd=Some if it knows client+server versions match.
     // JSON, not bincode: matches the server-side encode (see `socket_acceptor`).
@@ -237,7 +243,7 @@ fn get_handshake(
             Ok(s) => Some(s),
             Err(_) => {
                 close_connection(sockaddr);
-                return Err(ConnectExn::Timeout);
+                return Err(ConnectExn::Other);
             }
         },
         None => None,
@@ -334,13 +340,13 @@ pub fn connect_once(
             establish_connection(flowconfig_name, 1, client_handshake, tmp_dir, root).map_err(
                 |e| match e {
                     ConnectExn::MissingSocket => BroadCatch::MissingSocket,
-                    ConnectExn::Timeout => BroadCatch::TimeoutOrOther,
+                    ConnectExn::Timeout | ConnectExn::Other => BroadCatch::TimeoutOrOther,
                 },
             )?;
         let (sockaddr, server_handshake) =
             get_handshake(1, sockaddr, &mut stream).map_err(|e| match e {
                 ConnectExn::MissingSocket => BroadCatch::MissingSocket,
-                ConnectExn::Timeout => BroadCatch::TimeoutOrOther,
+                ConnectExn::Timeout | ConnectExn::Other => BroadCatch::TimeoutOrOther,
             })?;
         match verify_handshake(client_handshake, &server_handshake, sockaddr, &mut stream) {
             Ok(Ok(())) => Ok(Ok((sockaddr, stream))),
