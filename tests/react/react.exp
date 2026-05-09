@@ -1225,12 +1225,106 @@ References:
                                 ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- profiler.js:19:3
+Error ------------------------------------------------------------------------------------------------- profiler.js:35:4
 
-Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclosing parent tag [ParseError]
+Cannot create `Profiler` element because properties `id` and `onRender` are missing in props [1] but exist in props of
+component [2]. [incompatible-type]
 
-   19|   <Profiler id="fake" onRender={onRender}>
-         ^
+   profiler.js:35:4
+     35|   <Profiler />; // Error: no "id" or "onRender" prop
+            ^^^^^^^^
+
+References:
+   profiler.js:35:3
+     35|   <Profiler />; // Error: no "id" or "onRender" prop
+           ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1137:38
+                                              v
+   1137|     declare const Profiler: component(
+   1138|       children?: React$Node,
+   1139|       id: string,
+   1140|       onRender: ProfilerOnRenderFnType,
+   1141|     );
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- profiler.js:36:4
+
+Cannot create `Profiler` element because property `onRender` is missing in props [1] but exists in props of
+component [2]. [incompatible-type]
+
+   profiler.js:36:4
+     36|   <Profiler id="fake" />; // Error: no "onRender" prop
+            ^^^^^^^^
+
+References:
+   profiler.js:36:3
+     36|   <Profiler id="fake" />; // Error: no "onRender" prop
+           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1137:38
+                                              v
+   1137|     declare const Profiler: component(
+   1138|       children?: React$Node,
+   1139|       id: string,
+   1140|       onRender: ProfilerOnRenderFnType,
+   1141|     );
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- profiler.js:37:4
+
+Cannot create `Profiler` element because property `id` is missing in props [1] but exists in props of component [2].
+[incompatible-type]
+
+   profiler.js:37:4
+     37|   <Profiler onRender={onRender} />; // Error: no "id" prop
+            ^^^^^^^^
+
+References:
+   profiler.js:37:3
+     37|   <Profiler onRender={onRender} />; // Error: no "id" prop
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1137:38
+                                              v
+   1137|     declare const Profiler: component(
+   1138|       children?: React$Node,
+   1139|       id: string,
+   1140|       onRender: ProfilerOnRenderFnType,
+   1141|     );
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ profiler.js:38:33
+
+Cannot create `Profiler` element because in property `onRender`: null [1] is incompatible with
+`ProfilerOnRenderFnType` [2]. [incompatible-type]
+
+   profiler.js:38:33
+     38|   <Profiler id="fake" onRender={null} />; // Error: invalid "onRender" prop
+                                         ^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:1140:17
+   1140|       onRender: ProfilerOnRenderFnType,
+                         ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ profiler.js:42:33
+
+Cannot create `Profiler` element because in property `onRender` > the first parameter: number [1] is incompatible with
+string [2]. [incompatible-type]
+
+   profiler.js:42:33
+    42|   <Profiler id="fake" onRender={badOnRender} />; // Error: invalid "onRender" prop
+                                        ^^^^^^^^^^^
+
+References:
+   profiler.js:40:37
+    40|   declare function badOnRender(foo: number): void;
+                                            ^^^^^^ [1]
+   <BUILTINS>/react.js:845:9
+   845|     id: string,
+                ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------- react_util_types_monomorphization.js:7:3
@@ -2527,4 +2621,4 @@ References:
 
 
 
-Found 143 errors
+Found 147 errors
