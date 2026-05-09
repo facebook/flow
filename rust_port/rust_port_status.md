@@ -1441,7 +1441,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `file_watcher_ready`, `file_watcher_deferred`
     - [x] `reset`, `get_status`, `ever_been_free`
     - [x] `wait_for_significant_status`, `update`
-- [ ] parser/
+- [x] parser/
   - [x] __tests__/
     - [x] flow_ast_mapper_test.ml → `flow_parser/src/flow_ast_mapper_test.rs`
     - [x] jsdoc_test.ml → `flow_parser/src/jsdoc_test.rs`
@@ -1525,8 +1525,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `regexp`
     - [x] `template_tail`
     - [x] `type_token`
-  - [ ] flow_parser_dot_js.ml
-  - [ ] flow_parser_js.ml
+  - [x] flow_parser_dot_js.ml → `flow_parser_wasm/src/lib.rs`
+  - [x] flow_parser_js.ml → `flow_parser_wasm/src/lib.rs` + `flow_parser_wasm/src/serializer.rs`
   - [x] js_id.ml → `flow_parser/src/js_id_unicode.rs`
   - [x] js_id_unicode.ml → `flow_parser/src/js_id_unicode.rs`
   - [x] jsdoc.ml → `flow_parser/src/jsdoc.rs`
