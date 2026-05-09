@@ -45,7 +45,7 @@ class UpdateSuppressionsCommand extends Base<Args> {
       flowconfigName: argv.flowconfigName,
       errorCheckCommand: argv.check,
       roots: argv._.map(root => realpathSync(resolve(process.cwd(), root))),
-      rootNames: (argv.sites || '': RootName)
+      rootNames: ((argv.sites || '') as RootName)
         .split(',')
         .map(site => site.trim()),
       includeFlowtest: !!argv['include-flowtest'],

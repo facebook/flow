@@ -10,7 +10,7 @@
 
 import typeof Base from './Base';
 
-module.exports = ({
+module.exports = {
   'add-comments': () => require('../comment/add-commentsCommand'),
   'check-test': () => require('../check-test/checkTestCommand'),
   'error-summary': () => require('../error-summary/error-summaryCommand'),
@@ -38,7 +38,7 @@ module.exports = ({
   // @fb-only: 'windtunnel-prof': () => require('../facebook/windtunnel-prof/windtunnel-profCommand'),
   // prettier-ignore
   // @fb-only: 'windtunnel-recheck-prof': () => require('../facebook/windtunnel-recheck-prof/windtunnel-recheck-profCommand'),
-}: {
+} as {
   [string]: () => {
     +default: interface {
       description(): string,
@@ -47,4 +47,4 @@ module.exports = ({
     },
     ...
   },
-});
+};

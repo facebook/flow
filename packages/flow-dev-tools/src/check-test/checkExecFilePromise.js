@@ -135,7 +135,7 @@ function execFilePromise(
           // but can be a string for system errors (e.g. 'ENOENT',
           // 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER'). Default to 1 for
           // non-numeric codes.
-          const rawCode = (err: any).code;
+          const rawCode = (err as any).code;
           code = typeof rawCode === 'number' ? rawCode : 1;
         }
         resolve({code, stdout: String(stdout), stderr: String(stderr)});
@@ -170,7 +170,7 @@ function execShellPromise(
       (err, stdout, stderr) => {
         let code = 0;
         if (err) {
-          const rawCode = (err: any).code;
+          const rawCode = (err as any).code;
           code = typeof rawCode === 'number' ? rawCode : 1;
         }
         resolve({code, stdout: String(stdout), stderr: String(stderr)});

@@ -70,7 +70,7 @@ async function findTestsByName(
 
 function loadSuiteByFilename(filename: string): Suite {
   delete require.cache[require.resolve(filename)];
-  const suite = (require: any)(filename);
+  const suite = (require as any)(filename);
   // I don't know why, but suite instanceof Suite doesn't seem to work when
   // using symlinks. So this is a fuzzy approximation
   if (!(suite && suite.__SUITE__)) {

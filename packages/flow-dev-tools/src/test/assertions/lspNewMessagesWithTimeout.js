@@ -27,7 +27,7 @@ function lspNewMessagesWithTimeout(
 
     let suggestion: Suggestion = {
       method: 'waitAndVerifyNoLSPMessagesSinceStartOfStep',
-      args: [(Math.round(timeoutMs / 10): mixed)],
+      args: [Math.round(timeoutMs / 10) as unknown],
     };
     if (actual.length > 0) {
       suggestion = {

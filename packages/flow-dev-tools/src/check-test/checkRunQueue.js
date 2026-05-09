@@ -29,7 +29,7 @@ type TestJob = {
 class CheckRunQueue {
   _parallelism: number;
   _quiet: boolean;
-  _jobs: Array<TestJob>;
+  _jobs: ReadonlyArray<TestJob>;
   _results: Array<TestResult | null>;
   _running: number;
   _nextJob: number;
@@ -37,11 +37,11 @@ class CheckRunQueue {
   _resolve: ?(results: Array<TestResult>) => void;
   _isTTY: boolean;
 
-  constructor(jobs: Array<TestJob>, opts: QueueOpts) {
+  constructor(jobs: ReadonlyArray<TestJob>, opts: QueueOpts) {
     this._parallelism = opts.parallelism;
     this._quiet = opts.quiet;
     this._jobs = jobs;
-    this._results = (Array(jobs.length).fill(null): Array<TestResult | null>);
+    this._results = Array(jobs.length).fill(null) as Array<TestResult | null>;
     this._running = 0;
     this._nextJob = 0;
     this._completed = 0;

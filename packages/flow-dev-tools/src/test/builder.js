@@ -451,7 +451,7 @@ class TestBuilder {
     const messages: Array<LSPMessage> = [];
     const outstandingRequestsInfo = {
       nextId: 1,
-      mostRecent: (null: ?number),
+      mostRecent: null as ?number,
     };
     const outstandingRequestsFromServer: Map<
       number,
@@ -639,7 +639,7 @@ class TestBuilder {
     }
     lsp.outstandingRequestsFromServer.delete(id);
     if (argsRaw.length == 1 && argsRaw[0] instanceof Error) {
-      const e = (argsRaw[0]: Error);
+      const e = argsRaw[0] as Error;
       callbacks.reject(e);
     } else {
       const args = this.sanitizeOutgoingLSPMessage(argsRaw);

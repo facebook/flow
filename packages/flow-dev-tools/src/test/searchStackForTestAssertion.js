@@ -15,7 +15,7 @@ import type {AssertionLocation} from './assertions/assertionTypes';
 function searchStackForTestAssertion(): ?AssertionLocation {
   const oldPrepareStackTrace = Error.prepareStackTrace;
   Error.prepareStackTrace = (_, stack) => stack;
-  const stack: Array<Object> = (new Error().stack: any);
+  const stack: Array<Object> = new Error().stack as any;
   Error.prepareStackTrace = oldPrepareStackTrace;
 
   for (const callSite of stack) {
