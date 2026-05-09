@@ -8,7 +8,6 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
-use std::sync::LazyLock;
 use std::sync::Mutex;
 use std::sync::RwLock;
 use std::sync::atomic::AtomicBool;
@@ -37,12 +36,9 @@ use flow_utils_concurrency::worker_cancel;
 
 use crate::recheck_updates;
 
-static TOKIO_RUNTIME: LazyLock<tokio::runtime::Runtime> = LazyLock::new(|| {
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .expect("failed to build flow_rechecker tokio runtime")
-});
+pub fn init_tokio_runtime() {
+    flow_tokio_runtime::prewarm_blocking_pool();
+}
 
 pub struct ProfilingFinished {
     pub duration: f64,
@@ -86,12 +82,20 @@ fn start_parallelizable_workloads(
     _genv: &server_env::Genv,
     env: &server_env::Env,
 ) -> ParallelizableWorkloadsStopper {
+    init_tokio_runtime();
+
     let wait_for_cancel = Arc::new(AtomicBool::new(false));
     let env_for_loop = env.clone();
     let wait_for_cancel_for_loop = wait_for_cancel.dupe();
-    let loop_task = TOKIO_RUNTIME.spawn_blocking(move || {
+    let (loop_started_tx, loop_started_rx) = tokio::sync::oneshot::channel::<()>();
+    let loop_task = flow_tokio_runtime::spawn_blocking(move || {
+        loop_started_tx
+            .send(())
+            .expect("parallelizable workload loop start signal should be received");
         parallelizable_workload_loop::run(&wait_for_cancel_for_loop, &env_for_loop);
     });
+    flow_tokio_runtime::block_on(loop_started_rx)
+        .expect("parallelizable workload loop should start");
     ParallelizableWorkloadsStopper {
         wait_for_cancel,
         loop_task: Arc::new(Mutex::new(Some(loop_task))),
@@ -110,13 +114,13 @@ impl ParallelizableWorkloadsStopper {
             server_monitor_listener_state::wake_workload_waiters();
         }
 
-        let handle = self
+        let loop_task = self
             .loop_task
             .lock()
             .expect("parallelizable workload loop task lock should not be poisoned")
             .take();
-        if let Some(handle) = handle {
-            match TOKIO_RUNTIME.block_on(handle) {
+        if let Some(loop_task) = loop_task {
+            match flow_tokio_runtime::block_on(loop_task) {
                 Ok(()) => {}
                 Err(err) if err.is_panic() => std::panic::resume_unwind(err.into_panic()),
                 Err(err) => panic!("parallelizable workload loop task failed: {}", err),
@@ -347,7 +351,7 @@ where
     PostCancel: FnOnce() -> T,
 {
     let (stop_tx, stop_rx) = crossbeam::channel::bounded::<()>(1);
-    let cancel_task = TOKIO_RUNTIME.spawn_blocking(move || {
+    let cancel_task = flow_tokio_runtime::spawn_blocking(move || {
         match server_monitor_listener_state::wait_for_updates_for_recheck(
             &process_updates,
             &get_forced,
@@ -388,7 +392,7 @@ where
         Err(crossbeam::channel::TrySendError::Full(())) => {}
         Err(crossbeam::channel::TrySendError::Disconnected(())) => {}
     }
-    let cancel_fired = match TOKIO_RUNTIME.block_on(cancel_task) {
+    let cancel_fired = match flow_tokio_runtime::block_on(cancel_task) {
         Ok(cancel_fired) => cancel_fired,
         Err(err) if err.is_panic() => std::panic::resume_unwind(err.into_panic()),
         Err(err) => panic!("recheck cancel task failed: {}", err),

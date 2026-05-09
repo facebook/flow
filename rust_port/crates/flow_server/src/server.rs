@@ -480,6 +480,8 @@ fn run(
         None => monitor_rpc::disable(),
     }
 
+    flow_server_rechecker::rechecker::init_tokio_runtime();
+
     let genv_arc = Arc::new(create_program_init(_init_id, _options.clone()));
     let listener_running = matches!(monitor_rpc::state(), monitor_rpc::StateKind::Initialized);
     if listener_running {

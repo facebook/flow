@@ -961,6 +961,7 @@ dependencies = [
 name = "flow_dot_js_wasm"
 version = "0.0.0"
 dependencies = [
+ "dupe",
  "flow_aloc",
  "flow_common",
  "flow_common_errors",
@@ -1563,6 +1564,7 @@ dependencies = [
  "flow_services_inference",
  "flow_services_module",
  "flow_services_references",
+ "flow_tokio_runtime",
  "flow_utils_concurrency",
  "serde_json",
  "tokio",
