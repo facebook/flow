@@ -30,5 +30,5 @@ function f(x: { (z: number): string, ... }): Function {
 
 // ... but only if the object is callable
 function g(x: {...}): Function {
-  return x; // error
+  return x;
 }

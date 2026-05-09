@@ -39,9 +39,9 @@ declare const x: 0;
   }
 
   const e = match (x) { // ERROR
-    1 => null,
-    2 => null,
-    3 => null,
+    case 1 => null,
+    case 2 => null,
+    case 3 => null,
   };
 }
 

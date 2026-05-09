@@ -33,7 +33,7 @@ const IdMappedCompWithRequiredRefProp = id(CompWithRequiredRefProp); // ok
 ({}) as React.ElementConfig<typeof IdMappedCompWithoutRefProp>; // error: missing foo prop
 ({}) as React.ElementConfig<typeof IdMappedCompWithOptionalRefProp>; // error: missing foo prop
 ({}) as React.ElementConfig<typeof IdMappedCompWithRequiredRefProp>; // error: missing foo prop
-undefined as React.ElementRef<typeof IdMappedCompWithoutRefProp>; // error: null ~> empty (missing ref prop of IdMappedCompWithoutRefProp becomes empty)
+undefined as React.ElementRef<typeof IdMappedCompWithoutRefProp>;
 null as React.ElementRef<typeof IdMappedCompWithoutRefProp>; // error: null ~> empty
 new HTMLElement() as React.ElementRef<typeof IdMappedCompWithOptionalRefProp>; // ok
 null as React.ElementRef<typeof IdMappedCompWithOptionalRefProp>; // error: null ~> HTMLElement

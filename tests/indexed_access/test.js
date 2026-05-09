@@ -69,7 +69,7 @@ declare class C {
   bar: number;
 }
 1 as C['bar']; // OK
-1 as C[Bar]; // Should be ok, currently errors
+1 as C[Bar]; // OK
 true as C[number]; // OK
 'xx' as C['bar']; // Error
 
@@ -78,7 +78,7 @@ interface I {
   bar: number;
 }
 1 as I['bar']; // OK
-1 as I[Bar]; // Should be ok, currently errors
+1 as I[Bar]; // OK
 true as I[number]; // OK
 'xx' as I['bar']; // ERROR
 

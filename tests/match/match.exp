@@ -373,6 +373,26 @@ References:
            ^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------- invalid-case-syntax.js:41:13
+
+Drop the `case`. Just <pattern>. It's cleaner. At [1] [2] [3]. [unsupported-syntax]
+
+   invalid-case-syntax.js:41:13
+   41|   const e = match (x) { // ERROR
+                   ^^^^^
+
+References:
+   invalid-case-syntax.js:42:5
+   42|     case 1 => null,
+           ^^^^ [1]
+   invalid-case-syntax.js:43:5
+   43|     case 2 => null,
+           ^^^^ [2]
+   invalid-case-syntax.js:44:5
+   44|     case 3 => null,
+           ^^^^ [3]
+
+
 Error -------------------------------------------------------------------------------------- invalid-case-syntax.js:52:3
 
 Invalid match case syntax:
@@ -1800,4 +1820,4 @@ References:
 
 
 
-Found 136 errors
+Found 137 errors

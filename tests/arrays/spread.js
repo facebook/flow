@@ -39,12 +39,12 @@ let z = ["a"] as const;
 [...x, ...[3, 4]][0] as 3;
 [...x, ...[3, 4]][1] as 4;
 
-[...x, ...x][0] as 3; // error
-[...x, ...x][1] as 4; // error
+[...x, ...x][0] as 3;
+[...x, ...x][1] as 4;
 
-[...x, ...x, ...y][0] as 3; // error
-[...x, ...x, ...y][1] as 4; // error
-[...x, ...x, 1][0] as 3; // error
+[...x, ...x, ...y][0] as 3;
+[...x, ...x, ...y][1] as 4;
+[...x, ...x, 1][0] as 3;
 
 let three = 3 as const;
 let a = [three, three];

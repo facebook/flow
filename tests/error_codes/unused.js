@@ -20,7 +20,7 @@ y.x as string;
 //$FlowFixMe[incompatible-type] unused
 //$FlowFixMe[incompatible-type] unused
 //$FlowFixMe[prop-missing] unused
-y.x as string; // error not suppressed, missing code
+y.x as string;
 
 
 //$FlowFixMe unused
@@ -35,4 +35,4 @@ y.x as string;
 //$FlowFixMe unused
 //$FlowFixMe[incompatible-type] unused
 //$FlowFixMe[prop-missing]
-y.x as string; // error w/incompatible cast
+y.x as string;

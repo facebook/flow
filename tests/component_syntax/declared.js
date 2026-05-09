@@ -48,7 +48,7 @@ declare component Duplicate(x: number, ...rest: {x: number}); // error
 <Duplicate x={1} />;
 
 declare component InlineRef(ref: number); // error
-<InlineRef ref={1} />; // error: string and number refs are still not allowed
+<InlineRef ref={1} />;
 
 declare component SpreadRef(...p: {ref: number}); // ok: allowed in full ref-as-prop support
 <SpreadRef ref={1} />; // ok

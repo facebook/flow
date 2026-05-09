@@ -87,7 +87,7 @@ function spreads() {
   const o = optional({cp, foo: '', bar: 3}); // ok
   o.cp; // error
   o.foo; // error
-  o.bar as number; // error
+  o.bar as number;
 }
 
 function rests() {

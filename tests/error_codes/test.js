@@ -125,7 +125,7 @@ any as {} & number as {bar:string};  // error not suppressed, missing code
 any as {} & number as {bar:string};  // no error
 
 // $FlowFixMe[incompatible-type]
-any as {} & number as {bar:string};  // error + unused suppression
+any as {} & number as {bar:string};  // no error
 
 // $FlowFixMe[prop-missing]
 any as {} & number as {bar:string};  // error + unused suppression

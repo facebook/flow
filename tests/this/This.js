@@ -9,9 +9,8 @@ function f1(this: typeof Object.prototype | {x: number} | {x: string}) : number 
 
 var f1_1 = f1.bind({x: 0})();            // ok
 var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
-var f1_3 = f1.bind({x: ""})();           // error, string -> number
-// TODO make this error blame the call site, rather than the function body
-var f1_4 = f1();                         // error, (global object).x
+var f1_3 = f1.bind({x: ""})();
+var f1_4 = f1();
 
 /* arrow functions bind this at point of definition */
 /* top level arrow functions bind this to global object */

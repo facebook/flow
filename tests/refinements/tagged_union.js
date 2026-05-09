@@ -127,11 +127,11 @@ let tests = [
       q.valeuOf as number; // inside the block, it's a number
       q.valeuOf as string; // error: number literal 0 !~> string
     }
-    if (r.toStirng === 0) { // error: toStirng prop missing
+    if (r.toStirng === 0) {
       r.toStirng as empty;
     }
-    if (s.call === 0) {} // Error
-    if (s.calll === 0) { // error: calll prop missing
+    if (s.call === 0) {}
+    if (s.calll === 0) {
       s.calll as empty;
     }
     if (t.call === 0) {} // Error

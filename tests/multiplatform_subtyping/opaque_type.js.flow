@@ -13,7 +13,7 @@ declare export const o5: OpaqueType5;
 declare export opaque type GenericOpaqueType1<T1>;
 declare export opaque type GenericOpaqueType2<T2>;
 declare export opaque type GenericOpaqueType3<T1>; // error: misplaced, should be in opaque_type.ios.js
-declare export opaque type GenericOpaqueType4<T1, T2>; // error: misplaced, should be in opaque_type.ios.js
+declare export opaque type GenericOpaqueType4<T1, T2>;
 declare export opaque type GenericOpaqueType5<T1, T2>: [T1, T2];
 declare export opaque type GenericOpaqueType6<T1, T2>: [T1, T2];
 

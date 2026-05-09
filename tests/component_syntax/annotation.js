@@ -46,7 +46,7 @@ declare const Duplicate: component(x: number, ...{x: number}); // error
 <Duplicate x={1} />;
 
 declare const InlineRef: component(ref: number); // ok: ref type in componenent type can be arbitrary
-<InlineRef ref={1} />; // error: string and number refs are still not allowed
+<InlineRef ref={1} />;
 
 declare const SpreadRef: component(...p: {ref: number}); // no error. spreading ref is now allowed
 <SpreadRef ref={1} />; // no error. spreading ref is now allowed

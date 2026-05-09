@@ -38,5 +38,7 @@ t as I;
 
 class C { }
 
-C as { ...}; // error
-C as interface { };
+declare const c: C;
+
+c as { ...}; // error
+c as interface { };

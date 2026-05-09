@@ -20,7 +20,7 @@ x.c; // ok
 x.d; // error, TestClass has no d
 
 var y : Foo = x;
-y.b; // error, doesn't exist in TestClass
+y.b;
 y.d; // ok, it's optional
 
 class Test2Superclass {

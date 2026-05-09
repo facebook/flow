@@ -7,7 +7,7 @@ class Bar<T> {
 }
 
 class Foo<+T> {
-    bad (x: number) : ReadonlySet<T> { // Error: T in invariant position
+    bad (x: number) : ReadonlySet<T> {
         return new Set();
     }
 }

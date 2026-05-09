@@ -7,5 +7,5 @@ class B {
   constructor(_: any) { }
 }
 function bar(x: Class<B>): B {
-  return new x(); // error (too few args)
+  return new x();
 }

@@ -71,7 +71,7 @@ function fun9(x: unknown, y : unknown, z : empty) {
 declare const obj : {field : unknown, ...};
 if (typeof obj.field === 'function') {
   const f = obj.field(0); // error
-  const f2 = f.foo; // error
+  const f2 = f.foo;
 }
 
 function fun10(x: unknown) {

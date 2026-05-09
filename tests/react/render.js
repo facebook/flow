@@ -28,10 +28,10 @@ const E: React.ComponentType<{...}> = props => {
 };
 
 <C foo="bar" />;
-// Error: `React$AbstractComponent` must return `React$Node` which can't be undefined
+// OK: React$Node permits undefined
 
 <D foo="bar" />;
-// Error: `React$AbstractComponent` must return `React$Node` which can't be undefined
+// OK: React$Node permits undefined
 
 <E foo="bar" />;
 // OK
@@ -44,7 +44,7 @@ type UnfixedPropsType = {foo?: string};
 class F extends React.Component<UnfixedPropsType, void> {
   render = (): React.Node => this.props.foo;
 }
-// Error: props.foo could be undefined
+// OK: React$Node permits undefined
 
 /**
  * PropsType inference: stateless functional component test
@@ -52,4 +52,4 @@ class F extends React.Component<UnfixedPropsType, void> {
 const G: React.ComponentType<UnfixedPropsType> = props => {
   return props.foo;
 };
-// Error: props.foo could be undefined
+// OK: React$Node permits undefined
