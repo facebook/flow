@@ -24,11 +24,10 @@ let string_of_file_watcher = function
   | Watchman -> "Watchman"
   | EdenFS -> "EdenFS"
 
-let string_of_status =
-  let string_of_status = function
-    | Initializing -> "still initializing"
-    | Ready -> "ready"
-    | Deferred { reason } -> Printf.sprintf "deferred (%s)" reason
-  in
-  fun (watcher, status) ->
-    Printf.sprintf "%s file watcher is %s" (string_of_file_watcher watcher) (string_of_status status)
+let string_of_status' = function
+  | Initializing -> "still initializing"
+  | Ready -> "ready"
+  | Deferred { reason } -> Printf.sprintf "deferred (%s)" reason
+
+let string_of_status (watcher, status) =
+  Printf.sprintf "%s file watcher is %s" (string_of_file_watcher watcher) (string_of_status' status)

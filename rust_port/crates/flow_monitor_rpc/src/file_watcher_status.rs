@@ -31,17 +31,18 @@ pub fn string_of_file_watcher(fw: &FileWatcher) -> &'static str {
     }
 }
 
-pub fn string_of_status((watcher, status): &Status) -> String {
-    fn string_of_status_kind(status: &StatusKind) -> String {
-        match status {
-            StatusKind::Initializing => "still initializing".to_string(),
-            StatusKind::Ready => "ready".to_string(),
-            StatusKind::Deferred { reason } => format!("deferred ({})", reason),
-        }
+pub fn string_of_status_prime(status: &StatusKind) -> String {
+    match status {
+        StatusKind::Initializing => "still initializing".to_string(),
+        StatusKind::Ready => "ready".to_string(),
+        StatusKind::Deferred { reason } => format!("deferred ({})", reason),
     }
+}
+
+pub fn string_of_status((watcher, status): &Status) -> String {
     format!(
         "{} file watcher is {}",
         string_of_file_watcher(watcher),
-        string_of_status_kind(status)
+        string_of_status_prime(status)
     )
 }

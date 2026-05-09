@@ -249,11 +249,12 @@ let perform_handshake_and_get_client_handshake ~client_fd =
       let%lwt () = respond Server_will_hangup (Some (Server_still_initializing status)) in
       (* In the case of Persistent, lspCommand will retry a second later. *)
       (* The message we log here solely goes to the logs, not the user. *)
-      let (server_status, watchman_status) = status in
+      let (server_status, (file_watcher, watcher_status)) = status in
       Logger.info
-        "Server still initializing -> hangup. server_status=%s watchman_status=%s"
+        "[file_watcher=%s] Server still initializing -> hangup. server_status=%s watcher_status=%s"
+        (FileWatcherStatus.string_of_file_watcher file_watcher)
         (ServerStatus.string_of_status server_status)
-        (FileWatcherStatus.string_of_status watchman_status);
+        (FileWatcherStatus.string_of_status' watcher_status);
       Lwt.return None
     ) else
       let%lwt () = respond Server_will_continue (Some (Server_still_initializing status)) in

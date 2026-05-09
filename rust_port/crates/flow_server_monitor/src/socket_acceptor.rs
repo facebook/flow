@@ -478,11 +478,12 @@ fn perform_handshake_and_get_client_handshake(
             );
             // In the case of Persistent, lspCommand will retry a second later.
             // The message we log here solely goes to the logs, not the user.
-            let (server_status, watchman_status) = status;
+            let (server_status, (file_watcher, watcher_status)) = status;
             flow_hh_logger::info!(
-                "Server still initializing -> hangup. server_status={} watchman_status={}",
+                "[file_watcher={}] Server still initializing -> hangup. server_status={} watcher_status={}",
+                flow_server_env::file_watcher_status::string_of_file_watcher(&file_watcher),
                 flow_server_env::server_status::string_of_status(false, false, &server_status),
-                flow_server_env::file_watcher_status::string_of_status(&watchman_status)
+                flow_server_env::file_watcher_status::string_of_status_prime(&watcher_status)
             );
             None
         } else {
