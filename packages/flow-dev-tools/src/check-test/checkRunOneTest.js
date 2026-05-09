@@ -35,6 +35,7 @@ export type TestResult = {
   status: number,
   name: string,
   diff?: string,
+  ...
 };
 
 // Recursively copy directory contents (preserving symlinks).
@@ -73,6 +74,7 @@ async function runOneTest(opts: {
   savedState: boolean,
   longLivedWorkers: boolean,
   record: boolean,
+  ...
 }): Promise<TestResult> {
   const {testDir, flowBin, version, checkOnly, savedState, record} = opts;
   const longLivedWorkers = opts.longLivedWorkers ? '1' : '0';

@@ -26,6 +26,7 @@ export type TestConfig = {
   git: boolean,
   skip_rust_port: boolean,
   skip_windows: boolean,
+  ...
 };
 
 async function parseTestConfig(testDir: string): Promise<TestConfig> {

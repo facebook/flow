@@ -15,6 +15,7 @@ export type ExecResult = {
   code: number,
   stdout: string,
   stderr: string,
+  ...
 };
 
 // Default timeout: 10 minutes. Prevents the test runner from hanging

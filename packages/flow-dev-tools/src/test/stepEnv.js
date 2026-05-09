@@ -42,6 +42,7 @@ export interface StepEnvReadable {
 function newEnv(oldErrors: FlowResult): {
   envWrite: StepEnvWriteable,
   envRead: StepEnvReadable,
+  ...
 } {
   let stdout: Array<string> = [];
   let stderr: Array<string> = [];

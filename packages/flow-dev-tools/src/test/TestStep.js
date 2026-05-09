@@ -57,6 +57,7 @@ export type StepResult = $ReadOnly<{
   passed: boolean,
   assertionResults: $ReadOnlyArray<ErrorAssertionResult>,
   exception?: Error,
+  ...
 }>;
 
 /**
@@ -299,7 +300,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
     string,
     string | RegExp,
     string,
-    ?{triggerFlowCheck: boolean},
+    ?{triggerFlowCheck: boolean, ...},
   ) => TestStepFirstStage = (filename, searchValue, replaceValue, options) => {
     const ret = this._cloneWithAction(async (builder, env) => {
       await builder.modifyFile(filename, searchValue, replaceValue);
@@ -461,7 +462,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  lspStart: ({|needsFlowServer: boolean|}) => TestStepFirstStage = arg => {
+  lspStart: ({needsFlowServer: boolean}) => TestStepFirstStage = arg => {
     const needsFlowServer = arg.needsFlowServer;
 
     const ret = this._cloneWithAction(async (builder, env) => {

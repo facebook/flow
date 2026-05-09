@@ -35,7 +35,7 @@ import type {AllInvocations} from './ShellMocker';
 
 type CancellationToken = {
   +isCancellationRequested: boolean,
-  onCancellationRequested(callback: () => any): void,
+  onCancellationRequested(callback: () => any): void, ...
 };
 
 class TestBuilder {
@@ -50,11 +50,11 @@ class TestBuilder {
     process: child_process$ChildProcess,
     outstandingRequestsFromServer: Map<
       number,
-      {|resolve: any => void, reject: Error => void|},
+      {resolve: any => void, reject: Error => void},
     >,
-    outstandingRequestsInfo: {nextId: number, mostRecent: ?number},
+    outstandingRequestsInfo: {nextId: number, mostRecent: ?number, ...},
     stderr: Array<string>,
-    messageEmitter: EventEmitter,
+    messageEmitter: EventEmitter, ...
   } = null;
   lspMessages: Array<LSPMessage>; // this should outlive the death of the lsp+server in a step
   lspEmitter: EventEmitter;
@@ -455,13 +455,13 @@ class TestBuilder {
     };
     const outstandingRequestsFromServer: Map<
       number,
-      {|resolve: any => void, reject: Error => void|},
+      {resolve: any => void, reject: Error => void},
     > = new Map();
 
     connection.onRequest(
       (
         method: string,
-        rawParams: Array<mixed> | {} | void,
+        rawParams: Array<mixed> | {...} | void,
         cancellationToken: CancellationToken,
       ) => {
         const id = outstandingRequestsInfo.nextId;
@@ -490,7 +490,7 @@ class TestBuilder {
     );
 
     connection.onNotification(
-      (method: string, rawParams: Array<mixed> | {} | void) => {
+      (method: string, rawParams: Array<mixed> | {...} | void) => {
         const params = this.sanitizeIncomingLSPMessage(rawParams);
         messages.push({method, params});
         messageEmitter.emit('message');

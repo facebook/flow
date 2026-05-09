@@ -16,12 +16,19 @@ export type RpcConnection = {
   // TODO requests
   listen(): void,
   dispose(): void,
+  ...
 };
 
 export type LSPMessage =
-  | {method: string, params: $ReadOnlyArray<mixed> | {...} | void, id?: mixed} // Notification/request
+  | {
+      method: string,
+      params: $ReadOnlyArray<mixed> | {...} | void,
+      id?: mixed,
+      ...
+    } // Notification/request
   | {
       method: string,
       result: $ReadOnlyArray<mixed> | {...} | string | number | boolean | null,
+      ...
     } // Response
-  | {method: string, error: mixed}; // Response-error
+  | {method: string, error: mixed, ...}; // Response-error

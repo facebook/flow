@@ -24,6 +24,7 @@ export type Args = {
   error_code: ?string,
   errorCheckCommand: ErrorCheckCommand,
   root: string,
+  ...
 };
 
 class AddCommentsCommand extends Base<Args> {

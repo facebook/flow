@@ -30,6 +30,7 @@ export type Args = {
   watch: boolean,
   maxErroredTests: ?number,
   maxErroredTestsPct: ?number,
+  ...
 };
 
 class TestCommand extends Base<Args> {

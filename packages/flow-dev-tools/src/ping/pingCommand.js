@@ -22,6 +22,7 @@ const findFlowBin = require('../command/findFlowBin').default;
 type Args = {
   bin: string,
   root: string,
+  ...
 };
 
 const PingRequest = new rpc.RequestType('telemetry/ping');

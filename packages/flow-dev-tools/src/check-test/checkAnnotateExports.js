@@ -145,7 +145,8 @@ async function runAnnotateExports(opts: {
   fileWatcher: string,
   longLivedWorkers: string,
   env: {[string]: string | void},
-}): Promise<{output: string, stderr: string, errorCode: number}> {
+  ...
+}): Promise<{output: string, stderr: string, errorCode: number, ...}> {
   const {
     flowBin,
     testDir,

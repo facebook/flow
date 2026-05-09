@@ -23,6 +23,7 @@ export type Args = {
   parallelism: number,
   errorCheckCommand: ErrorCheckCommand,
   rerun: ?string,
+  ...
 };
 
 class RecordCommand extends Base<Args> {

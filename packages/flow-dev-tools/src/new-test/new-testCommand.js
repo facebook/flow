@@ -18,6 +18,7 @@ const findFlowBin = require('../command/findFlowBin').default;
 export type Args = {
   names: Set<string>,
   bin: string,
+  ...
 };
 
 class NewTestCommand extends Base<Args> {

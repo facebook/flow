@@ -91,6 +91,7 @@ class TestContext {
     longLivedWorkers: string,
     savedState: boolean,
     tempDir: string,
+    ...
   }) {
     this._flowBin = opts.flowBin;
     this._testDir = opts.testDir;
@@ -157,7 +158,7 @@ class TestContext {
   // Extract the caller's line number from a stack trace for error messages
   // that match bash's `(line N)` format.
   _getCallerLine(): number {
-    const obj: {stack?: string} = {};
+    const obj: {stack?: string, ...} = {};
     Error.captureStackTrace(obj);
     if (obj.stack) {
       // Stack: Error -> _getCallerLine -> <immediate caller> -> <caller's caller>
@@ -176,7 +177,7 @@ class TestContext {
 
   async flowCmd(
     args: Array<string>,
-    opts?: {cwd?: string, stdin?: string},
+    opts?: {cwd?: string, stdin?: string, ...},
   ): Promise<[number, string, string]> {
     const cwd = (opts && opts.cwd) || this._testDir;
     const result = await execFilePromise(
@@ -194,7 +195,7 @@ class TestContext {
   async assertExit(
     expectedCode: number,
     args: Array<string>,
-    opts?: {cwd?: string, stdin?: string, noprint?: boolean},
+    opts?: {cwd?: string, stdin?: string, noprint?: boolean, ...},
   ): Promise<void> {
     // When called directly (not via assertOk/assertErrors/assertOne),
     // _getCallerLine gives us the right frame. When called via a wrapper,
@@ -219,7 +220,7 @@ class TestContext {
     callerLine: number,
     expectedCode: number,
     args: Array<string>,
-    opts?: {cwd?: string, stdin?: string, noprint?: boolean},
+    opts?: {cwd?: string, stdin?: string, noprint?: boolean, ...},
   ): Promise<void> {
     const [code, stdout] = await this.flowCmd(args, opts);
     if (!(opts && opts.noprint)) {
@@ -235,7 +236,7 @@ class TestContext {
 
   async assertOk(
     args: Array<string>,
-    opts?: {cwd?: string, stdin?: string, noprint?: boolean},
+    opts?: {cwd?: string, stdin?: string, noprint?: boolean, ...},
   ): Promise<void> {
     // Capture caller line here (1 frame closer to the test script than
     // assertExit would be) so error messages reference the test file.
@@ -245,7 +246,7 @@ class TestContext {
 
   async assertErrors(
     args: Array<string>,
-    opts?: {cwd?: string, stdin?: string, noprint?: boolean},
+    opts?: {cwd?: string, stdin?: string, noprint?: boolean, ...},
   ): Promise<void> {
     const callerLine = this._getCallerLine();
     return this._assertExitWithLine(callerLine, EXIT_ERRS, args, opts);
@@ -253,7 +254,7 @@ class TestContext {
 
   async assertOne(
     args: Array<string>,
-    opts?: {cwd?: string, stdin?: string, noprint?: boolean},
+    opts?: {cwd?: string, stdin?: string, noprint?: boolean, ...},
   ): Promise<void> {
     const callerLine = this._getCallerLine();
     return this._assertExitWithLine(callerLine, EXIT_ONE, args, opts);

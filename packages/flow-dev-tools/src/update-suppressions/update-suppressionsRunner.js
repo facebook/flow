@@ -38,12 +38,17 @@ const getPathToLoc = require('../comment/getPathToLoc').default;
 
 type LocKey = string;
 
-type ErrorsForLine = {|
+type ErrorsForLine = {
   // Flow only reports one unused suppression per line
-  unusedSuppressions: ?{roots: Set<RootName>, loc: FlowLoc, bins: Set<string>},
+  unusedSuppressions: ?{
+    roots: Set<RootName>,
+    loc: FlowLoc,
+    bins: Set<string>,
+    ...
+  },
   errorCodes: Set<string>,
   loc: FlowLoc,
-|};
+};
 
 function locKey(loc: FlowLoc): LocKey {
   return `${loc.start.offset}-${loc.end.offset}`;

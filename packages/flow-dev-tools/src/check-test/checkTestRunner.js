@@ -37,6 +37,7 @@ export type RunnerArgs = {
   verbose: boolean,
   jsonOutput: boolean,
   listTests: boolean,
+  ...
 };
 
 const COLOR_RESET = '\x1b[0m';

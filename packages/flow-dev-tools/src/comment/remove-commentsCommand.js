@@ -23,6 +23,7 @@ export type Args = {
   errorCheckCommand: ErrorCheckCommand,
   root: string,
   includeFlowtest: boolean,
+  ...
 };
 
 class RemoveCommentsCommand extends Base<Args> {

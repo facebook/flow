@@ -16,6 +16,7 @@ export type FlowResult = {
   flowVersion: string,
   timing?: FlowTiming,
   memory?: FlowMemory,
+  ...
 };
 export type FlowError = {
   kind: string,
@@ -26,6 +27,7 @@ export type FlowError = {
   operation?: FlowMessage,
   extra?: FlowExtra,
   error_codes: Array<string>,
+  ...
 };
 export type FlowMessage = {
   descr: string,
@@ -33,25 +35,30 @@ export type FlowMessage = {
   context?: ?string,
   loc?: ?FlowLoc,
   indent?: number,
+  ...
 };
 type FlowExtra = Array<{
   message: Array<FlowMessage>,
   children: FlowExtra,
+  ...
 }>;
 export type FlowLoc = {
   source: ?string,
   type: ?('LibFile' | 'SourceFile' | 'JsonFile' | 'Builtin'),
   start: FlowPos,
   end: FlowPos,
+  ...
 };
 type FlowPos = {
   line: number,
   column: number,
   offset: number,
+  ...
 };
 type FlowTimer = {
   start_age: number,
   duration: number,
+  ...
 };
 type FlowTiming = {
   results: {
@@ -66,15 +73,17 @@ type FlowTiming = {
       system: FlowTimer,
       worker_user: FlowTimer,
       worker_system: FlowTimer,
+      ...
     },
   },
+  ...
 };
-type FlowMemoryStat = {|start: number, delta: number, hwm_delta: number|};
-type FlowMemoryGroup = {|[stat: string]: FlowMemoryStat|};
-type FlowMemory = {|
+type FlowMemoryStat = {start: number, delta: number, hwm_delta: number};
+type FlowMemoryGroup = {[stat: string]: FlowMemoryStat};
+type FlowMemory = {
   sub_results: {[key: string]: FlowMemory},
   [group: string]: number | FlowMemoryGroup,
-|};
+};
 
 const noErrors: FlowResult = {
   passed: true,

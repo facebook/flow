@@ -40,12 +40,12 @@ import type {FlowLoc, FlowError, FlowMessage} from '../flowResult';
 import type {Context} from './getContext';
 const {formatComment, addCommentToText} = require('./commentMutator');
 
-export type Suppression = {|
+export type Suppression = {
   loc: FlowLoc,
   isError: boolean,
   lints: Set<string>,
   error_codes: Array<string>,
-|};
+};
 
 async function runner(args: Args): Promise<void> {
   let flowResult = await getFlowErrors(

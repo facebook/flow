@@ -23,6 +23,7 @@ import type {ReadStream, WriteStream} from 'fs';
 
 export type ExecOpts = child_process$execOpts & {
   stdin?: string,
+  ...
 };
 
 // Based on nothing but a few experiments on my laptop,

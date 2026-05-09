@@ -18,12 +18,14 @@ import type {TestResult} from './checkRunOneTest';
 export type QueueOpts = {
   parallelism: number,
   quiet: boolean,
+  ...
 };
 
 type TestJob = {
   index: number,
   testDir: string,
   run: () => Promise<TestResult>,
+  ...
 };
 
 class CheckRunQueue {

@@ -27,6 +27,7 @@ export type Args = {
   fileFilter: ?string,
   showErrors: ?boolean,
   showFiles: ?boolean,
+  ...
 };
 
 class ErrorSummaryCommand extends Base<Args> {

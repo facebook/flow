@@ -32,6 +32,7 @@ class RunQueue {
     start_time: number,
     end_time: number,
     details: string,
+    ...
   }>;
   isFbmakeJson: boolean;
   isTTY: boolean;
@@ -41,7 +42,7 @@ class RunQueue {
   results: {[key: string]: SuiteResult};
   writeResults: Array<Promise<void>> = [];
   running: Array<string>;
-  statuses: {[key: string]: {status: string, details: string}};
+  statuses: {[key: string]: {status: string, details: string, ...}};
   suites: {[key: string]: Suite};
   todo: Array<string>;
 

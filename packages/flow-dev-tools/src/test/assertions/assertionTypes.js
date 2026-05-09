@@ -14,6 +14,7 @@ export type AssertionLocation = {
   filename: string,
   line: number,
   column: number,
+  ...
 };
 
 export type AssertionMethod =
@@ -36,11 +37,13 @@ export type AssertionMethod =
 export type CallSuggestion = $ReadOnly<{
   method: AssertionMethod,
   args: $ReadOnlyArray<mixed>,
+  ...
 }>;
 
 export type SnapshotSuggestion = $ReadOnly<{
   file: string,
   contents: string,
+  ...
 }>;
 
 export type Suggestion = CallSuggestion | SnapshotSuggestion;
@@ -48,12 +51,14 @@ export type Suggestion = CallSuggestion | SnapshotSuggestion;
 export type ErrorAssertionResult =
   | $ReadOnly<{
       type: 'pass',
+      ...
     }>
   | $ReadOnly<{
       type: 'fail',
       messages: $ReadOnlyArray<string>,
       assertLoc: ?AssertionLocation,
       suggestion: Suggestion,
+      ...
     }>;
 
 export type ErrorAssertion = (

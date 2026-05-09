@@ -24,16 +24,19 @@ import type {StepResult} from './TestStep';
 type TestResult = $ReadOnly<{
   name: ?string,
   stepResults: $ReadOnlyArray<StepResult>,
+  ...
 }>;
 
 export type SuiteResult =
   | $ReadOnly<{
       type: 'exceptional',
       message: string,
+      ...
     }>
   | $ReadOnly<{
       type: 'normal',
       testResults: $ReadOnlyArray<TestResult>,
+      ...
     }>;
 
 async function runTestSuite(

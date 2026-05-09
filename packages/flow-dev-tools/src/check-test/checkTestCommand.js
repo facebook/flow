@@ -31,6 +31,7 @@ type Args = {
   verbose: boolean,
   jsonOutput: boolean,
   listTests: boolean,
+  ...
 };
 
 class CheckTestCommand extends Base.default<Args> {

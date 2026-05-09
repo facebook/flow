@@ -31,6 +31,7 @@ export type Args = {
   rootNames: Array<RootName>,
   includeFlowtest: boolean,
   only: ?('add' | 'remove'),
+  ...
 };
 
 class UpdateSuppressionsCommand extends Base<Args> {

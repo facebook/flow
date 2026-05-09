@@ -15,6 +15,7 @@ const allCommands = require('../command/allCommands');
 
 type Args = {
   command: ?string,
+  ...
 };
 
 class HelpCommand extends Base<Args> {

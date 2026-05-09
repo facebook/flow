@@ -23,6 +23,7 @@ export type Args = {
   errorCheckCommand: ErrorCheckCommand,
   root: string,
   maxDepth: number,
+  ...
 };
 
 class OptimalPerDirectoryEnforcementCommand extends Base<Args> {

@@ -108,7 +108,11 @@ async function runner(args: Args): Promise<void> {
 
   // We want to find the largest no error directory possible,
   // so we start with the root of the no-error trie, and bfs down if the directory has errors.
-  const bfsQueue = new Queue<{node: TrieNode, path: $ReadOnlyArray<string>}>();
+  const bfsQueue = new Queue<{
+    node: TrieNode,
+    path: $ReadOnlyArray<string>,
+    ...
+  }>();
   bfsQueue.enqueue({node: noErrorFileTrie.root, path: []});
   const solution = new Set<string>();
   while (true) {

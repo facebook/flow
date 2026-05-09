@@ -15,6 +15,7 @@ type ASTNode = Object;
 export type PathNode = {
   ast: ASTNode,
   key: string,
+  ...
 };
 
 const EXCLUDE_NODES_FROM_TRAVERSAL = new Set(['range', 'comments', 'loc']);
@@ -86,7 +87,7 @@ function findPathToLocation(
   return path;
 }
 
-type Position = {line: number, column: number};
+type Position = {line: number, column: number, ...};
 
 // Returns true if position a comes before or is equal to position b
 function isBeforeOrEqual(a: Position, b: Position): boolean {

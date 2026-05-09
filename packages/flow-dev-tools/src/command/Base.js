@@ -20,12 +20,14 @@ export type Flag =
       argName: string,
       aliases?: $ReadOnlyArray<string>,
       default?: string,
+      ...
     }>
   | $ReadOnly<{
       type: 'boolean',
       name: string,
       description: string,
       aliases?: $ReadOnlyArray<string>,
+      ...
     }>
   | $ReadOnly<{
       type: 'enum',
@@ -35,6 +37,7 @@ export type Flag =
       validValues: $ReadOnlyArray<string>,
       aliases?: $ReadOnlyArray<string>,
       default?: string,
+      ...
     }>;
 
 const commonFlags = {

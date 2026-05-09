@@ -20,7 +20,7 @@ function bufferCharAt(buf: Buffer, pos: number): string {
 }
 
 const flowlintRegex = /^[ \t\n\r*]*flowlint(-line|-next-line)?\b/;
-function isLintSuppression(commentAST: {value: string}): boolean {
+function isLintSuppression(commentAST: {value: string, ...}): boolean {
   return flowlintRegex.test(commentAST.value);
 }
 
@@ -48,7 +48,7 @@ function expandComment(
   contents: Buffer,
   startOffset: number,
   endOffset: number,
-  commentAST: {value: string, range: [number, number]} | void,
+  commentAST: {value: string, range: [number, number], ...} | void,
   ast: Object,
 ) {
   const length = contents.length;
@@ -375,9 +375,9 @@ function splitAtWord(str: string, max: number): [string, string] {
 function formatComment(
   comments: Array<string>,
   line: string,
-  args: {|
+  args: {
     jsx?: boolean,
-  |},
+  },
 ): Array<string> {
   const {jsx = false} = args;
   const match = line.match(/^ */);
