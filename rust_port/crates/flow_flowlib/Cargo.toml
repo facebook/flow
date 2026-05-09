@@ -9,4 +9,4 @@ edition = "2024"
 flow_common = { path = "../flow_common" }
 flow_common_exit_status = { path = "../flow_common_exit_status" }
 flow_common_xx = { path = "../flow_common_xx" }
-libc = "0.2.183"
+libc = "0.2.186"

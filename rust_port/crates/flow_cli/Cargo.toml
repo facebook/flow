@@ -72,7 +72,7 @@ flow_typing_type = { path = "../flow_typing_type" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 flow_utils_find = { path = "../flow_utils_find" }
 flow_utils_tty = { path = "../flow_utils_tty" }
-libc = "0.2.183"
+libc = "0.2.186"
 lsp-types = "0.94.1"
 regex = "1.12.3"
 serde = { version = "1.0.219", features = ["derive", "rc"] }

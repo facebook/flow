@@ -6,4 +6,4 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-libc = "0.2.183"
+libc = "0.2.186"

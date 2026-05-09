@@ -33,7 +33,7 @@ flow_server_watchman_expression_terms = { path = "../flow_server_watchman_expres
 flow_tokio_runtime = { path = "../flow_tokio_runtime" }
 flow_watchman = { path = "../flow_watchman" }
 futures = { version = "0.3.31", features = ["async-await", "compat"] }
-libc = "0.2.183"
+libc = "0.2.186"
 lsp-types = "0.94.1"
 nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
 semver = { version = "1.0.28", features = ["serde"] }
