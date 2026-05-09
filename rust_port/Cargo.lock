@@ -958,6 +958,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "flow_dot_js_wasm"
+version = "0.0.0"
+dependencies = [
+ "flow_aloc",
+ "flow_common",
+ "flow_common_errors",
+ "flow_lint_settings",
+ "flow_parser",
+ "flow_parser_utils",
+ "flow_parser_utils_output",
+ "flow_parsing",
+ "flow_server_env",
+ "flow_services_autocomplete",
+ "flow_services_export",
+ "flow_services_get_def",
+ "flow_services_type_info",
+ "flow_type_sig",
+ "flow_typing",
+ "flow_typing_builtins",
+ "flow_typing_context",
+ "flow_typing_errors",
+ "flow_typing_ty_normalizer",
+ "flow_typing_type",
+ "flow_typing_utils",
+ "flow_utils_concurrency",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "flow_edenfs_watcher"
 version = "0.0.0"
 dependencies = [

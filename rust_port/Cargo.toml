@@ -26,6 +26,7 @@ members = [
   "crates/flow_daemon",
   "crates/flow_data_structure_wrapper",
   "crates/flow_dfind",
+  "crates/flow_dot_js_wasm",
   "crates/flow_edenfs_watcher",
   "crates/flow_env_builder",
   "crates/flow_env_builder_resolver",
