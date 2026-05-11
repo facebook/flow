@@ -237,7 +237,7 @@ fn main(args: &arg_spec::Values) {
                 results.len(),
                 "TYPE_OF_NAME result count should match requested names",
             );
-            for (index, (query_name, result)) in names.iter().zip(results.into_iter()).enumerate() {
+            for (index, (query_name, result)) in names.iter().zip(results).enumerate() {
                 if index > 0 {
                     println!();
                 }
