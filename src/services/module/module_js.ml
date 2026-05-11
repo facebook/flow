@@ -459,25 +459,21 @@ module Node = struct
         )
 
   (* Parses a package import specifier into a package name and subpath,
-   * accounting for things such as scoped packages *)
+   * accounting for things such as scoped packages.
+   * JavaScript import specifiers always use forward slashes (`/`). *)
   let parse_package_name specifier =
     match specifier with
     | "" -> ("", ".")
     | _ ->
       let initial_char = String.sub specifier 0 1 in
       let first_separator_index =
-        try Str.search_forward (Str.regexp_string Filename.dir_sep) specifier 0 with
+        try Str.search_forward (Str.regexp_string "/") specifier 0 with
         | Not_found -> -1
       in
       let separator_index =
         match initial_char with
         | "@" ->
-          (try
-             Str.search_forward
-               (Str.regexp_string Filename.dir_sep)
-               specifier
-               (first_separator_index + 1)
-           with
+          (try Str.search_forward (Str.regexp_string "/") specifier (first_separator_index + 1) with
           | Not_found -> -1)
         | _ -> first_separator_index
       in

@@ -408,7 +408,12 @@ let resolve_name_from_index ~options ~env ~profiling ~exact_match_only target_na
         | NamedType -> spf "type {%s}" actual_name
         | Namespace -> spf "%s" actual_name
       in
-      Ok (spf "import %s from '%s';" thing (File_key.to_string s))
+      Ok
+        (spf
+           "import %s from '%s';"
+           thing
+           (Sys_utils.normalize_filename_dir_sep (File_key.to_string s))
+        )
     | (Global, (DefaultType | NamedType)) -> Ok (spf "declare var _: %s;" actual_name)
     | (Global, (Default | Named | Namespace)) -> Ok (spf "%s;" actual_name)
     | (Builtin _, _) -> Error "builtin lookup not supported"

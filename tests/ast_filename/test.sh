@@ -17,7 +17,7 @@ printf "\nReading JSON from a file:\n"
 assert_ok "$FLOW" ast --pretty bar.json
 
 printf "\nUsing absolute --path with stdin:\n"
-assert_ok "$FLOW" ast --pretty --path /some/path.js < foo.js
+MSYS_NO_PATHCONV=1 assert_ok "$FLOW" ast --pretty --path /some/path.js < foo.js
 
 printf "\nUsing relative --path with stdin:\n"
 assert_ok "$FLOW" ast --pretty --path my/relative/path.js < foo.js
