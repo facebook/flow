@@ -237,7 +237,8 @@ async function runAnnotateExports(opts: {
 
   // Match bash `(echo "$codemod_out"; echo "")` semantics: command
   // substitution strips trailing newlines, echo adds one, echo "" adds another.
-  output += codemodResult.stdout.replace(/\n+$/, '') + '\n\n';
+  output +=
+    codemodResult.stdout.replace(/\r/g, '').replace(/\n+$/, '') + '\n\n';
 
   output += '\n=== Autofix exports ===\n\n';
 

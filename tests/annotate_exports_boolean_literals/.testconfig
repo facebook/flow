@@ -1,2 +1,1 @@
 cmd: annotate-exports
-skip_windows: true
