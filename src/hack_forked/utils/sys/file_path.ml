@@ -45,7 +45,21 @@ let basename = Filename.basename
 let make path =
   match Sys_utils.realpath path with
   | Some path -> path
-  | None -> (* assert false? *) path
+  | None ->
+    (* realpath failed (the path doesn't exist yet). Normalize directory
+       separators to the native format so that downstream Filename.concat /
+       strip_project_root comparisons use consistent separators. On Unix this
+       is a no-op; on Windows it converts forward slashes to backslashes. *)
+    if Sys.win32 then
+      String.map
+        (fun c ->
+          if c = '/' then
+            '\\'
+          else
+            c)
+        path
+    else
+      path
 
 (**
  * Creates a Path without running it through `realpath`. This is unsafe because
