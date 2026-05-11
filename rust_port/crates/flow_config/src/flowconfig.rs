@@ -2369,9 +2369,15 @@ pub mod opts {
                     Some(saved_state_restart_on_reinit_parser(values, config))
                 }
                 "exact_by_default" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.exact_by_default = Some(v);
-                        Ok(())
+                    |_opts, v| {
+                        if v {
+                            Ok(())
+                        } else {
+                            Err(
+                                "`exact_by_default=false` has been deprecated. Read this [blog post](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69) for details on how to migrate to `exact_by_default=true` (the default since 2023), and our [docs on objects](https://flow.org/en/docs/types/objects/)."
+                                    .to_string(),
+                            )
+                        }
                     },
                     values,
                     config,

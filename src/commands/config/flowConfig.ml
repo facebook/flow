@@ -1116,7 +1116,15 @@ module Opts = struct
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
       ("saved_state_restart_on_reinit", saved_state_restart_on_reinit_parser);
-      ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
+      ( "exact_by_default",
+        boolean (fun opts v ->
+            if v then
+              Ok opts
+            else
+              Error
+                "`exact_by_default=false` has been deprecated. Read this [blog post](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69) for details on how to migrate to `exact_by_default=true` (the default since 2023), and our [docs on objects](https://flow.org/en/docs/types/objects/)."
+        )
+      );
       ( "experimental.abstract_classes",
         boolean (fun opts v -> Ok { opts with abstract_classes = v })
       );
