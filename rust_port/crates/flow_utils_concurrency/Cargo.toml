@@ -12,10 +12,14 @@ dupe = "0.9.1"
 equivalent = "1.0.2"
 flow_aloc = { path = "../flow_aloc" }
 flow_common_utils = { path = "../flow_common_utils" }
-human_bytes = "0.4.3"
 itertools = "0.14.0"
 lock_free_hashtable = "0.1.2"
-nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
-rayon = "1.11.0"
 starlark_map = "0.13.0"
+
+[target.'cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd"))'.dependencies]
+nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+human_bytes = "0.4.3"
+rayon = "1.11.0"
 tracing = { version = "0.1.41", features = ["attributes", "valuable"] }

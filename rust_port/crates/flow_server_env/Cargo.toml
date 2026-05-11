@@ -33,5 +33,10 @@ lsp-types = "0.94.1"
 rayon = "1.11.0"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
-tokio = { version = "1.52.1", features = ["full", "test-util", "tracing"] }
 vec1 = { version = "1.12.1", features = ["serde"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.52.1", features = ["full", "test-util", "tracing"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+tokio = { version = "1.52.1", features = ["macros", "sync"], default-features = false }
