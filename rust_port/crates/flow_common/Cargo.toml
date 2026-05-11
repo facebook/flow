@@ -15,8 +15,10 @@ flow_packed_locs = { path = "../flow_packed_locs" }
 flow_parser = { path = "../flow_parser" }
 jwalk = "0.8.1"
 lazy_static = "1.5"
-nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
 regex = "1.12.3"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 vec1 = { version = "1.12.1", features = ["serde"] }
+
+[target.'cfg(all(unix, not(target_arch = "wasm32")))'.dependencies]
+nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }

@@ -86,6 +86,34 @@ jobs:
       with:
         name: build_js_packages
         path: packages/flow-parser/flow_parser.js
+  build_js_rust_port:
+    runs-on: ubuntu-22.04
+    env:
+      CARGO_INCREMENTAL: 0
+      CARGO_TERM_COLOR: always
+      RUSTC_BOOTSTRAP: 1
+      RUST_MIN_STACK: 5242880
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@nightly
+      with:
+        targets: wasm32-unknown-emscripten
+    - name: Install Emscripten
+      uses: mymindstorm/setup-emsdk@v14
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+    - name: set up rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        prefix-key: flow-rust-port-flow-js
+    - name: Build and test Rust flow.js
+      run: make test-js FLOW_JS_IMPL=rust-wasm
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_js_rust_port_bin
+        path: bin/flow.js
   build_linux:
     runs-on: ubuntu-22.04
     env:

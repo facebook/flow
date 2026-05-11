@@ -1,0 +1,156 @@
+#!/bin/bash
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+set -e -o pipefail
+
+usage() {
+  echo "Usage: $0 [--output PATH] [--profile dev|release]" >&2
+}
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FLOW_DIR="$(realpath "$DIR/..")"
+REPO_DIR="$(realpath "$FLOW_DIR/../..")"
+RUST_PORT_DIR="$FLOW_DIR/rust_port"
+OUTPUT="$FLOW_DIR/bin/flow.js"
+PROFILE="${FLOW_DOT_JS_WASM_PROFILE:-}"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --output)
+      OUTPUT="$2"
+      shift 2
+      ;;
+    --profile)
+      PROFILE="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      usage
+      exit 2
+      ;;
+  esac
+done
+
+is_truthy() {
+  case "${1:-}" in
+    ""|0|false|False|FALSE)
+      return 1
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+}
+
+if [[ -z "$PROFILE" ]]; then
+  if is_truthy "${FLOW_RELEASE:-${CI:-}}"; then
+    PROFILE=release
+  else
+    PROFILE=dev
+  fi
+fi
+
+CARGO_PROFILE_ARGS=()
+CARGO_TARGET_PROFILE=debug
+case "$PROFILE" in
+  release|opt)
+    CARGO_PROFILE_ARGS=(--release)
+    CARGO_TARGET_PROFILE=release
+    ;;
+  dev|debug)
+    ;;
+  *)
+    echo "Unknown profile '$PROFILE'. Expected dev or release." >&2
+    exit 2
+    ;;
+esac
+
+INTERNAL_RUST_BIN="$REPO_DIR/xplat/rust/toolchain/current/basic/bin"
+if [[ -d "$INTERNAL_RUST_BIN" ]]; then
+  export PATH="$INTERNAL_RUST_BIN:$PATH"
+fi
+
+export RUSTC_BOOTSTRAP="${RUSTC_BOOTSTRAP:-1}"
+export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$RUST_PORT_DIR/target}"
+
+CARGO_CONFIG="$REPO_DIR/third-party/rust/.cargo/config.toml"
+CARGO_ARGS=(
+  --manifest-path "$RUST_PORT_DIR/Cargo.toml"
+  --package flow_dot_js_wasm
+  --target wasm32-unknown-emscripten
+  --lib
+  --crate-type staticlib
+)
+if [[ -f "$CARGO_CONFIG" ]]; then
+  CARGO_ARGS+=(--config "$CARGO_CONFIG" --locked --offline)
+fi
+
+EMCC_BIN="${EMCC:-emcc}"
+if ! command -v "$EMCC_BIN" >/dev/null 2>&1; then
+  echo "emcc is required to build Rust flow.js. Install Emscripten or set EMCC." >&2
+  exit 1
+fi
+
+"${CARGO:-cargo}" rustc "${CARGO_ARGS[@]}" "${CARGO_PROFILE_ARGS[@]}"
+
+RUST_STATICLIB="$CARGO_TARGET_DIR/wasm32-unknown-emscripten/$CARGO_TARGET_PROFILE/libflow_dot_js_wasm.a"
+if [[ ! -f "$RUST_STATICLIB" ]]; then
+  echo "Expected Rust static library was not produced: $RUST_STATICLIB" >&2
+  exit 1
+fi
+
+RAW_JS_DIR="$CARGO_TARGET_DIR/flow-dot-js-wasm/$CARGO_TARGET_PROFILE"
+RAW_JS="$RAW_JS_DIR/flow_dot_js_wasm.js"
+mkdir -p "$RAW_JS_DIR"
+rm -f "$RAW_JS" "$RAW_JS_DIR/flow_dot_js_wasm.wasm"
+
+"$EMCC_BIN" \
+  "$RUST_STATICLIB" \
+  -o "$RAW_JS" \
+  -sWASM=1 \
+  -sALLOW_MEMORY_GROWTH=1 \
+  -sASSERTIONS=0 \
+  -sDISABLE_EXCEPTION_CATCHING=1 \
+  -sENVIRONMENT=web,worker \
+  "-sEXPORTED_FUNCTIONS=['_flowDotJsAlloc','_flowDotJsFree','_flowDotJsStringFree','_flowDotJsCall']" \
+  "-sEXPORTED_RUNTIME_METHODS=[]" \
+  -sEXPORT_NAME=flow_dot_js_wasm \
+  -sFILESYSTEM=0 \
+  "-sINCOMING_MODULE_JS_API=['quit']" \
+  -sINVOKE_RUN=0 \
+  -sMALLOC=emmalloc \
+  -sNODEJS_CATCH_EXIT=0 \
+  -sNODEJS_CATCH_REJECTION=0 \
+  -sNODERAWFS=0 \
+  -sSINGLE_FILE=1 \
+  -sSTACK_SIZE=8MB \
+  -sSUPPORT_LONGJMP=0 \
+  -sWASM_ASYNC_COMPILATION=1 \
+  --no-entry \
+  -Wl,-u,flowDotJsAlloc \
+  -Wl,-u,flowDotJsFree \
+  -Wl,-u,flowDotJsStringFree \
+  -Wl,-u,flowDotJsCall \
+  -Wl,--export=flowDotJsAlloc \
+  -Wl,--export=flowDotJsFree \
+  -Wl,--export=flowDotJsStringFree \
+  -Wl,--export=flowDotJsCall \
+  -g0 \
+  -O1
+
+mkdir -p "$(dirname "$OUTPUT")"
+"${NODE:-node}" \
+  "$FLOW_DIR/src/flow_dot_js_wasm_packager.js" \
+  "$RAW_JS" \
+  "$OUTPUT" \
+  "$FLOW_DIR/src/flow_dot_js_wasm.js"
+
+echo "Built $OUTPUT"

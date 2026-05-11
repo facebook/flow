@@ -31,7 +31,10 @@ endif
 
 DUNE_PROFILE=$(if $(FLOW_RELEASE),opt,dev)
 
+FLOW_JS_IMPL?=js-of-ocaml
+
 NPM?=npm
+NODE?=node
 YARN?=yarn
 
 ################################################################################
@@ -82,7 +85,7 @@ ounit-tests-ci:
 	OUNIT_CI=true OUNIT_OUTPUT_JUNIT_FILE='$(shell pwd)/test-results/ounit/$$(suite_name).xml' dune runtest --force
 
 do-test-js: bin/flow.js
-	node src/__tests__/flow_dot_js_smoke_test.js $(realpath bin/flow.js)
+	$(NODE) src/__tests__/flow_dot_js_smoke_test.js $(realpath bin/flow.js)
 
 do-test:
 	./runtests.sh bin/flow$(EXE)
@@ -102,13 +105,26 @@ test: bin/flow$(EXE) bin/flow.js
 	${MAKE} do-test do-test-js
 
 .PHONY: bin/flow.js
+ifeq ($(FLOW_JS_IMPL),js-of-ocaml)
 bin/flow.js:
 	@mkdir -p $(@D)
 	dune build --profile $(DUNE_PROFILE) src/flow_dot_js.bc.js
 	install -C _build/default/src/flow_dot_js.bc.js "$@"
+else ifeq ($(FLOW_JS_IMPL),rust-wasm)
+bin/flow.js:
+	FLOW_RELEASE="$(FLOW_RELEASE)" scripts/build-flow-dot-js-wasm.sh --output "$@"
+else
+$(error Unknown FLOW_JS_IMPL '$(FLOW_JS_IMPL)'. Expected js-of-ocaml or rust-wasm)
+endif
 
 # Run `make js FLOW_RELEASE=1` to do an optimized build
 js: bin/flow.js
+
+js-rust:
+	${MAKE} js FLOW_JS_IMPL=rust-wasm
+
+test-js-rust:
+	${MAKE} test-js FLOW_JS_IMPL=rust-wasm
 
 dist/flow/flow$(EXE): bin/flow$(EXE)
 	mkdir -p $(@D)
@@ -126,7 +142,7 @@ dist/npm-%.tgz: FORCE
 
 FORCE:
 
-.PHONY: all js FORCE
+.PHONY: all js js-rust test-js-rust FORCE
 
 # Don't run in parallel because of https://github.com/ocaml/ocamlbuild/issues/300
 .NOTPARALLEL:
