@@ -1303,7 +1303,10 @@ pub mod opts {
         parse_uint(
             |opts, v| {
                 if v > 0 && !opts.saved_state_restart_on_reinit {
-                    return Err("file_watcher.edenfs.max_commit_distance requires saved_state_restart_on_reinit=true".to_string());
+                    return Err(
+                        "file_watcher.edenfs.max_commit_distance requires saved_state_restart_on_reinit=true"
+                            .to_string(),
+                    );
                 }
                 opts.file_watcher_edenfs_max_commit_distance = v;
                 Ok(())
@@ -2125,11 +2128,157 @@ pub mod opts {
     }
 
     pub fn parse(config: &mut Opts, lines: &[(u32, String)]) -> Result<Vec<Warning>, Error> {
-        let raw_opts = parse_lines(lines)?;
+        let mut raw_opts = parse_lines(lines)?;
+        let parser_keys = [
+            "all",
+            "autoimports",
+            "autoimports.min_characters",
+            "autoimports_ranked_by_usage",
+            "autoimports_ranked_by_usage.experimental.boost_exact_match_min_length",
+            "babel_loose_array_spread",
+            "ban_spread_key_props",
+            "casting_syntax",
+            "check_is_status",
+            "component_syntax",
+            "dev_only.refinement_info_as_errors",
+            "emoji",
+            "enums",
+            "estimate_recheck_time",
+            "saved_state_restart_on_reinit",
+            "exact_by_default",
+            "experimental.abstract_classes",
+            "experimental.assert_operator",
+            "experimental.casting_syntax.only_support_as.excludes",
+            "experimental.async_component_syntax",
+            "experimental.async_component_syntax.includes",
+            "experimental.channel_mode",
+            "experimental.channel_mode.windows",
+            "experimental.component_syntax.hook_compatibility",
+            "experimental.component_syntax.hook_compatibility.excludes",
+            "experimental.component_syntax.hook_compatibility.includes",
+            "experimental.const_params",
+            "experimental.deprecated_utilities",
+            "experimental.deprecated_utilities.excludes",
+            "experimental.enable_custom_error",
+            "experimental.facebook_module_interop",
+            "experimental.instance_t_objkit_fix",
+            "experimental.long_lived_workers",
+            "experimental.long_lived_workers.windows",
+            "experimental.llm_context.include_imports",
+            "experimental.log_per_error_typing_telemetry",
+            "experimental.module.automatic_require_default",
+            "experimental.multi_platform",
+            "experimental.multi_platform.extensions",
+            "experimental.multi_platform.ambient_supports_platform.project_overrides",
+            "experimental.multi_platform.extension_group_mapping",
+            "experimental.opaque_type_new_bound_syntax",
+            "experimental.pattern_matching",
+            "experimental.pattern_matching.instance_patterns",
+            "experimental.projects",
+            "experimental.projects.strict_boundary",
+            "experimental.projects.strict_boundary.import_pattern_opt_outs",
+            "experimental.projects.strict_boundary.import_pattern_opt_outs.validate",
+            "experimental.projects_path_mapping",
+            "experimental.records",
+            "experimental.records.includes",
+            "experimental.strict_es6_import_export",
+            "experimental.ts_syntax",
+            "experimental.allow_readonly_variance",
+            "experimental.allow_variance_keywords",
+            "experimental.deprecated_variance_sigils",
+            "experimental.deprecated_variance_sigils.excludes",
+            "experimental.deprecated_colon_extends",
+            "experimental.deprecated_colon_extends.excludes",
+            "experimental.tslib_syntax",
+            "experimental.typescript_library_definition_support",
+            "experimental.type_expansion_recursion_limit",
+            "facebook.fbs",
+            "facebook.fbt",
+            "file_watcher",
+            "file_watcher.edenfs.throttle_time_ms",
+            "file_watcher.edenfs.timeout",
+            "file_watcher.edenfs.max_commit_distance",
+            "file_watcher.mergebase_with",
+            "file_watcher.mergebase_with_git",
+            "file_watcher.mergebase_with_hg",
+            "file_watcher.watchman.defer_state",
+            "file_watcher.watchman.sync_timeout",
+            "file_watcher_timeout",
+            "files.implicitly_include_root",
+            "format.bracket_spacing",
+            "format.single_quotes",
+            "gc.worker.custom_major_ratio",
+            "gc.worker.custom_minor_max_size",
+            "gc.worker.custom_minor_ratio",
+            "gc.worker.major_heap_increment",
+            "gc.worker.minor_heap_size",
+            "gc.worker.space_overhead",
+            "gc.worker.window_size",
+            "include_warnings",
+            "jest_integration",
+            "lazy_mode",
+            "log_saving",
+            "max_header_tokens",
+            "merge_timeout",
+            "module.declaration_dirnames",
+            "module.file_ext",
+            "module.ignore_non_literal_requires",
+            "module.missing_module_generators",
+            "module.name_mapper",
+            "module.name_mapper.extension",
+            "module.system",
+            "module.system.haste.module_ref_prefix",
+            "module.system.haste.paths.excludes",
+            "module.system.haste.paths.includes",
+            "module.system.node.allow_root_relative",
+            "module.system.node.main_field",
+            "module.system.node.package_export_condition",
+            "module.system.node.resolve_dirname",
+            "module.system.node.root_relative_dirname",
+            "module.use_strict",
+            "munge_underscores",
+            "name",
+            "no_flowlib",
+            "no_unchecked_indexed_access",
+            "node_modules_errors",
+            "react.custom_jsx_typing",
+            "react.ref_as_prop",
+            "react.runtime",
+            "recursion_limit",
+            "relay_integration",
+            "relay_integration.esmodules",
+            "relay_integration.excludes",
+            "relay_integration.module_prefix",
+            "relay_integration.module_prefix.includes",
+            "saved_state.allow_reinit",
+            "saved_state.fetcher",
+            "saved_state.direct_serialization",
+            "saved_state.parallel_decompress",
+            "saved_state.persist_export_index",
+            "saved_state.reinit_on_lib_change",
+            "saved_state.skip_version_check_DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
+            "server.max_workers",
+            "server.max_workers.full_check",
+            "server.max_workers.windows",
+            "sharedmemory.hash_table_pow",
+            "sharedmemory.heap_size",
+            "supported_operating_systems",
+            "stylex_shorthand_prop",
+            "types_first.max_files_checked_per_worker",
+            "types_first.max_files_checked_per_worker.rust_port",
+            "types_first.max_seconds_for_check_per_worker",
+            "unsuppressable_error_codes",
+            "use_unknown_in_catch_variables",
+            "vpn_less",
+            "wait_for_recheck",
+        ];
         let mut warnings = Vec::new();
 
-        for (key, values) in raw_opts.0 {
-            let result = match key.as_str() {
+        for key in parser_keys {
+            let Some(values) = raw_opts.0.shift_remove(key) else {
+                continue;
+            };
+            let result = match key {
                 "all" => Some(parse_boolean(
                     |opts, v| {
                         opts.all = Some(v);
@@ -2906,17 +3055,7 @@ pub mod opts {
                     values,
                     config,
                 )),
-                _ => {
-                    // If the user specified any options that aren't defined, issue a warning
-                    let msg = format!("Unsupported option specified! ({})", key);
-                    warnings.extend(
-                        values
-                            .0
-                            .into_iter()
-                            .map(|RawValue(line_num, _)| Warning(line_num, msg.clone())),
-                    );
-                    None
-                }
+                _ => None,
             };
 
             if let Some(res) = result {
@@ -2933,6 +3072,17 @@ pub mod opts {
                     Error(line, msg)
                 })?;
             }
+        }
+
+        for (key, values) in raw_opts.0 {
+            // If the user specified any options that aren't defined, issue a warning
+            let msg = format!("Unsupported option specified! ({})", key);
+            warnings.extend(
+                values
+                    .0
+                    .into_iter()
+                    .map(|RawValue(line_num, _)| Warning(line_num, msg.clone())),
+            );
         }
 
         Ok(warnings)

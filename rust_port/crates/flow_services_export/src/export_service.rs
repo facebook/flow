@@ -6,11 +6,13 @@
  */
 
 use std::collections::BTreeSet;
+use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_common::files;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
+use flow_common::flow_projects::FlowProjects;
 use flow_common_modulename::Modulename;
 use flow_common_utils::utils_js;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -23,6 +25,8 @@ use flow_imports_exports::imports;
 use flow_monitor_rpc::monitor_rpc;
 use flow_monitor_rpc::server_status;
 use flow_parser::file_key::FileKey;
+use flow_utils_concurrency::map_reduce;
+use flow_utils_concurrency::thread_pool::ThreadPool;
 
 use crate::export_index;
 use crate::export_index::ExportIndex;
@@ -403,10 +407,10 @@ fn add_exports_of_builtins_inner(lib_exports: &Exports, index: &mut ExportIndex)
 }
 
 pub fn add_exports_of_builtins(
-    lib_exports: &Exports,
-    scoped_lib_exports: &[(impl AsRef<str>, Exports)],
+    libs: &(Exports, Vec<(FlowProjects, Exports)>),
     index: &mut ExportIndex,
 ) {
+    let (lib_exports, scoped_lib_exports) = libs;
     add_exports_of_builtins_inner(lib_exports, index);
     for (_scoped_dir, lib_exports) in scoped_lib_exports {
         add_exports_of_builtins_inner(lib_exports, index);
@@ -478,14 +482,38 @@ fn index_file(
 // name to see if a changed file used to export it. Instead, we re-index the previous
 // version of the file to know what to remove.
 pub fn index(
-    shared_mem: &SharedMem,
+    pool: &ThreadPool,
+    shared_mem: &Arc<SharedMem>,
     parsed: &BTreeSet<FileKey>,
 ) -> (ExportIndex, ExportIndex, ExportIndex, ExportIndex) {
     let total_count = parsed.len() as i32;
-    let mut new_available_exports = export_index::empty();
-    let mut old_available_exports = export_index::empty();
-    let mut imports_to_add = export_index::empty();
-    let mut imports_to_remove = export_index::empty();
+    let parsed: Vec<_> = parsed.iter().map(|file| file.dupe()).collect();
+
+    let shared_mem = shared_mem.dupe();
+    let job = move |files: Vec<FileKey>| {
+        let mut new_available_exports = export_index::empty();
+        let mut old_available_exports = export_index::empty();
+        let mut imports_to_add = export_index::empty();
+        let mut imports_to_remove = export_index::empty();
+        for file_key in &files {
+            index_file(
+                &shared_mem,
+                file_key,
+                &mut new_available_exports,
+                &mut old_available_exports,
+                &mut imports_to_add,
+                &mut imports_to_remove,
+            );
+        }
+        let count = files.len() as i32;
+        (
+            new_available_exports,
+            old_available_exports,
+            imports_to_add,
+            imports_to_remove,
+            count,
+        )
+    };
 
     flow_hh_logger::info!("Indexing files: creating index...");
     monitor_rpc::status_update(server_status::Event::IndexingProgress(
@@ -495,26 +523,79 @@ pub fn index(
         },
     ));
 
-    for (finished, file_key) in parsed.iter().enumerate() {
-        index_file(
-            shared_mem,
-            file_key,
-            &mut new_available_exports,
-            &mut old_available_exports,
-            &mut imports_to_add,
-            &mut imports_to_remove,
-        );
-        let finished = (finished + 1) as i32;
-        monitor_rpc::status_update(server_status::Event::IndexingProgress(
-            server_status::Progress {
-                finished,
-                total: Some(total_count),
+    // each job returns Export_index.t's. we cons them onto lists and merge them all
+    // afterwards because the ~merge function blocks talking to workers so it needs to
+    // be as fast as possible in order to keep the workers busy. [Export_index.merge]
+    // was found to be slow enough for this to matter. Using a large max_size reduces
+    // the number of batches (and thus merge_all work) while still providing enough
+    // batches for good load balancing across workers.
+    let next = map_reduce::make_next(
+        pool.num_workers(),
+        None::<fn(i32, i32, i32)>,
+        Some(16000),
+        parsed,
+    );
+    let (new_available_exports, old_available_exports, imports_to_add, imports_to_remove, _count) =
+        map_reduce::call(
+            pool,
+            next,
+            move |acc: &mut (
+                Vec<ExportIndex>,
+                Vec<ExportIndex>,
+                Vec<ExportIndex>,
+                Vec<ExportIndex>,
+                i32,
+            ),
+                  files| {
+                let (
+                    new_available_exports,
+                    old_available_exports,
+                    imports_to_add,
+                    imports_to_remove,
+                    count,
+                ) = job(files);
+                acc.0.push(new_available_exports);
+                acc.1.push(old_available_exports);
+                acc.2.push(imports_to_add);
+                acc.3.push(imports_to_remove);
+                acc.4 += count;
             },
-        ));
-    }
+            |acc,
+             (
+                mut new_available_exports,
+                mut old_available_exports,
+                mut imports_to_add,
+                mut imports_to_remove,
+                count,
+            )| {
+                let (
+                    new_available_exports_acc,
+                    old_available_exports_acc,
+                    imports_to_add_acc,
+                    imports_to_remove_acc,
+                    finished,
+                ) = acc;
+                *finished += count;
+                monitor_rpc::status_update(server_status::Event::IndexingProgress(
+                    server_status::Progress {
+                        finished: *finished,
+                        total: Some(total_count),
+                    },
+                ));
+                new_available_exports_acc.append(&mut new_available_exports);
+                old_available_exports_acc.append(&mut old_available_exports);
+                imports_to_add_acc.append(&mut imports_to_add);
+                imports_to_remove_acc.append(&mut imports_to_remove);
+            },
+        );
 
     flow_hh_logger::info!("Indexing files: indexing post-process...");
     monitor_rpc::status_update(server_status::Event::IndexingPostProcess);
+
+    let new_available_exports = export_index::merge_all(new_available_exports);
+    let old_available_exports = export_index::merge_all(old_available_exports);
+    let imports_to_add = export_index::merge_all(imports_to_add);
+    let imports_to_remove = export_index::merge_all(imports_to_remove);
 
     (
         new_available_exports,
@@ -527,16 +608,16 @@ pub fn index(
 // Initializes an [Export_search.t] with the exports of all of the [parsed] files
 // as well as the builtin libdefs.
 pub fn init(
-    shared_mem: &SharedMem,
-    libs: &(Exports, Vec<(String, Exports)>),
+    pool: &ThreadPool,
+    shared_mem: &Arc<SharedMem>,
+    libs: &(Exports, Vec<(FlowProjects, Exports)>),
     parsed: &BTreeSet<FileKey>,
 ) -> ExportSearch {
     let (new_available_exports, _old_available_exports, imports_to_add, _imports_to_remove) =
-        index(shared_mem, parsed);
+        index(pool, shared_mem, parsed);
     flow_hh_logger::info!("Indexing files: adding exports of builtins...");
     let mut exports_to_add = new_available_exports;
-    let (lib_exports, scoped_lib_exports) = libs;
-    add_exports_of_builtins(lib_exports, scoped_lib_exports, &mut exports_to_add);
+    add_exports_of_builtins(libs, &mut exports_to_add);
     flow_hh_logger::info!("Indexing files: merging exports-imports...");
     let final_export_index = export_index::merge_export_import(&imports_to_add, &exports_to_add);
     flow_hh_logger::info!("Indexing files: initing...");
@@ -548,12 +629,13 @@ pub fn init(
 // [update ~changed previous] updates the exports for all of the [changed] files
 // in the [previous] [Export_search.t].
 pub fn update(
-    shared_mem: &SharedMem,
+    pool: &ThreadPool,
+    shared_mem: &Arc<SharedMem>,
     dirty_files: &BTreeSet<FileKey>,
     previous: &ExportSearch,
 ) -> ExportSearch {
     let (new_available_exports, old_available_exports, imports_to_add, imports_to_remove) =
-        index(shared_mem, dirty_files);
+        index(pool, shared_mem, dirty_files);
     let result = export_search::merge_available_exports(
         &old_available_exports,
         &new_available_exports,

@@ -22,7 +22,7 @@ fn spec() -> command_spec::Spec {
     let exe_name = command_utils::exe_name();
     let spec = command_spec::Spec::new(
         CMD_NAME,
-        "Compute all inlay hints available in a file. This command is only exposed for the purpose of testing Flow. There is no stability guarantee.",
+        "Compute all inlay hints available in a file (testing only, no stability guarantee)",
         command_spec::Visibility::Experimental,
         format!(
             "Usage: {exe_name} {CMD_NAME} [OPTION]... [FILE]\n\ne.g. {exe_name} {CMD_NAME} foo.js\nor   {exe_name} {CMD_NAME} < foo.js\n"

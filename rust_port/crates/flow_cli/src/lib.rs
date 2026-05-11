@@ -251,21 +251,21 @@ fn explicit_commands() -> Vec<command_spec::Command> {
         ast_command::command(),
         autocomplete_command::command(),
         autofix_command::command(),
-        batch_coverage_command::command(),
         foreground_check_commands::full_check_command(),
         foreground_check_commands::focus_check_command(),
         check_contents_command::command(),
         codemod_command::command(),
         config_command::command(),
         coverage_command::command(),
+        batch_coverage_command::command(),
         cycle_command::command(),
-        dump_types_command::command(),
         env_builder_debug_command::command(),
+        graph_command::command(),
+        dump_types_command::command(),
         find_module_command::command(),
         force_recheck_command::command(),
         get_def_command::command(),
         glean_command::command(),
-        graph_command::command(),
         init_command::command(),
         inlay_hint_command::command(),
         llm_context_command::command(),
@@ -294,7 +294,7 @@ fn all_commands() -> Vec<command_spec::Command> {
     let registered = registered_commands();
     let mut commands = Vec::with_capacity(registered.len() + 4);
     commands.push(shell_complete_command::command());
-    commands.push(status_command::default_command(default_command_docs()));
+    commands.push(status_command::default_command(default_command_info()));
     commands.push(status_command::check_command());
     commands.push(status_command::status_command());
     commands.extend(registered);
@@ -345,7 +345,7 @@ fn flow_shell_main() {
         );
     }
 
-    let default_command = status_command::default_command(default_command_docs());
+    let default_command = status_command::default_command(default_command_info());
     let (command, argv) = match arguments.split_first() {
         None => (default_command, vec![]),
         Some((subcmd, rest)) => {
@@ -404,7 +404,7 @@ pub fn main() {
     }
 }
 
-fn default_command_docs() -> Vec<(String, String)> {
+fn default_command_info() -> Vec<status_command::CommandInfo> {
     let mut commands = Vec::with_capacity(registered_commands().len() + 2);
     commands.push(status_command::check_command());
     commands.push(status_command::status_command());
@@ -414,10 +414,15 @@ fn default_command_docs() -> Vec<(String, String)> {
         .filter_map(|command| {
             let name = command.name().to_string();
             let doc = command.doc().to_string();
-            if name.is_empty() || command.visibility() != command_spec::Visibility::Public {
+            let visibility = command.visibility();
+            if name.is_empty() {
                 None
             } else {
-                Some((name, doc))
+                Some(status_command::CommandInfo {
+                    name,
+                    doc,
+                    visibility,
+                })
             }
         })
         .collect()

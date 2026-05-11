@@ -17,3 +17,4 @@ flow_imports_exports = { path = "../flow_imports_exports" }
 flow_monitor_rpc = { path = "../flow_monitor_rpc" }
 flow_parser = { path = "../flow_parser" }
 flow_services_export_index = { path = "../flow_services_export_index" }
+flow_utils_concurrency = { path = "../flow_utils_concurrency" }

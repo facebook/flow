@@ -1690,6 +1690,7 @@ dependencies = [
  "flow_monitor_rpc",
  "flow_parser",
  "flow_services_export_index",
+ "flow_utils_concurrency",
 ]
 
 [[package]]
@@ -1745,6 +1746,7 @@ dependencies = [
  "flow_common_xx",
  "flow_config",
  "flow_data_structure_wrapper",
+ "flow_event_logger",
  "flow_heap",
  "flow_heap_serialization",
  "flow_hh_logger",

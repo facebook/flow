@@ -179,6 +179,54 @@ pub fn merge(x: &ExportIndex, y: &ExportIndex) -> ExportIndex {
     result
 }
 
+pub fn merge_all(indices: Vec<ExportIndex>) -> ExportIndex {
+    // Batch indices into groups and fold each group separately, then fold
+    // the group results. This improves cache locality since early merges
+    // operate on small maps that fit in cache.
+    const BATCH_SIZE: usize = 64;
+
+    // let rec batch_fold acc batch batch_len = function
+    fn batch_fold<'a>(
+        mut acc: Vec<ExportIndex>,
+        mut batch: Vec<&'a ExportIndex>,
+        batch_len: usize,
+        rest: &[&'a ExportIndex],
+    ) -> Vec<ExportIndex> {
+        match rest.split_first() {
+            None => {
+                let batched = batch.iter().fold(empty(), |acc, index| merge(index, &acc));
+                acc.push(batched);
+                acc
+            }
+            Some((x, rest)) => {
+                if batch_len >= BATCH_SIZE {
+                    let batched = batch.iter().fold(empty(), |acc, index| merge(index, &acc));
+                    acc.push(batched);
+                    batch_fold(acc, vec![*x], 1, rest)
+                } else {
+                    batch.push(*x);
+                    batch_fold(acc, batch, batch_len + 1, rest)
+                }
+            }
+        }
+    }
+
+    let mut indices_iter = indices.into_iter();
+    match (indices_iter.next(), indices_iter.next()) {
+        (None, _) => empty(),
+        (Some(x), None) => x,
+        (Some(x), Some(y)) => {
+            let mut indices = vec![x, y];
+            indices.extend(indices_iter);
+            let indices = indices.iter().collect::<Vec<_>>();
+            let batched = batch_fold(Vec::new(), Vec::new(), 0, &indices);
+            batched
+                .iter()
+                .fold(empty(), |acc, index| merge(index, &acc))
+        }
+    }
+}
+
 pub fn merge_export_import(add_index: &ExportIndex, t: &ExportIndex) -> ExportIndex {
     let mut acc = t.clone();
     for (name, add_exports) in add_index {

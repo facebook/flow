@@ -317,7 +317,10 @@ fn recheck(
     let duration = recheck_start.elapsed().as_secs_f64();
     let profiling = ProfilingFinished { duration };
 
-    log_recheck_event();
+    let profiling_json = serde_json::json!({
+        "duration": profiling.get_profiling_duration(),
+    });
+    log_recheck_event(&profiling_json);
 
     let lsp_stats = lsp_prot::RecheckStats {
         dependent_file_count: recheck_stats.dependent_file_count as i32,

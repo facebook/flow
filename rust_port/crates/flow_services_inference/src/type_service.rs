@@ -54,6 +54,7 @@ use flow_server_env::server_env::Errors;
 use flow_server_env::server_monitor_listener_state;
 use flow_server_env::server_status;
 use flow_server_files::server_files_js;
+use flow_services_export::export_index::ExportIndex;
 use flow_services_export::export_search::ExportSearch;
 use flow_services_get_def::get_def_types::DefInfo;
 use flow_services_module::PackageIncompatibleReturn;
@@ -1131,35 +1132,39 @@ pub(crate) fn restart_if_faster_than_recheck(
     to_merge: &CheckedSet,
 ) -> Result<(), RecheckError> {
     let files_already_checked = env.checked_files.cardinal();
-    let files_about_to_recheck = to_merge.cardinal();
+    let files_to_merge = to_merge.cardinal();
+    let files_to_check = to_merge.focused_cardinal() + to_merge.dependents_cardinal();
     flow_hh_logger::info!(
-        "We've already checked {} files. We're about to recheck {} files",
+        "We've already checked {} files. About to merge {} files and check {} files",
         files_already_checked,
-        files_about_to_recheck
+        files_to_merge,
+        files_to_check
     );
     let init_time = recheck_stats::get_init_time();
-    let per_file_time = recheck_stats::get_per_file_time();
-    let time_to_restart = init_time + (per_file_time * files_already_checked as f64);
-    let time_to_recheck = per_file_time * files_about_to_recheck as f64;
+    let per_merge_file_time = recheck_stats::get_per_merge_file_time();
+    let per_check_file_time = recheck_stats::get_per_check_file_time();
+    let time_to_restart = init_time;
+    let time_to_recheck = (per_merge_file_time * files_to_merge as f64)
+        + (per_check_file_time * files_to_check as f64);
+    let per_file_time = per_merge_file_time + per_check_file_time;
     let estimates = recheck_stats::Estimates {
         estimated_time_to_recheck: time_to_recheck,
         estimated_time_to_restart: time_to_restart,
         estimated_time_to_init: init_time,
         estimated_time_per_file: per_file_time,
-        estimated_files_to_recheck: files_about_to_recheck as i64,
+        estimated_files_to_recheck: files_to_merge as i64,
         estimated_files_to_init: files_already_checked as i64,
     };
     flow_hh_logger::debug!(
-        "Estimated restart time: {}s to init + ({}s * {} files) = {}s",
-        init_time,
-        per_file_time,
-        files_already_checked,
+        "Estimated restart time: {}s (init from saved state)",
         time_to_restart
     );
     flow_hh_logger::debug!(
-        "Estimated recheck time: {}s * {} files = {}s",
-        per_file_time,
-        files_about_to_recheck,
+        "Estimated recheck time: {}s * {} merge files + {}s * {} check files = {}s",
+        per_merge_file_time,
+        files_to_merge,
+        per_check_file_time,
+        files_to_check,
         time_to_recheck
     );
     flow_hh_logger::info!(
@@ -1623,7 +1628,12 @@ pub(crate) mod recheck {
                 let updated_exports = with_memory_timer(options, "Indexing", || {
                     let dirty_files: BTreeSet<FileKey> =
                         sig_new_or_changed.iter().duped().collect();
-                    flow_services_export::export_service::update(shared_mem, &dirty_files, exports)
+                    flow_services_export::export_service::update(
+                        pool,
+                        shared_mem,
+                        &dirty_files,
+                        exports,
+                    )
                 });
                 flow_hh_logger::info!("Done updating index");
                 Some(updated_exports)
@@ -1711,10 +1721,18 @@ pub(crate) mod recheck {
         }
 
         let options_for_record = options.dupe();
-        let to_merge_cardinal = to_merge.cardinal() as i64;
-        let total_time = time_to_merge.as_secs_f64() + time_to_check_merged;
+        let merge_time = time_to_merge.as_secs_f64();
+        let check_time = time_to_check_merged;
+        let merged_files = to_merge.cardinal() as i64;
+        let checked_files = (to_check.focused_cardinal() + to_check.dependents_cardinal()) as i64;
         let record_recheck_time: Box<dyn FnOnce()> = Box::new(move || {
-            recheck_stats::record_recheck_time(&options_for_record, total_time, to_merge_cardinal);
+            recheck_stats::record_recheck_time(
+                &options_for_record,
+                merge_time,
+                check_time,
+                merged_files,
+                checked_files,
+            );
         });
         let mut checked_files = unchanged_checked;
         checked_files.union(to_merge.dupe());
@@ -1869,8 +1887,16 @@ pub(crate) fn recheck_impl(
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> Result<(Box<dyn FnOnce()>, RecheckStats, FindRefResults, Env), RecheckError> {
-    let (env, stats, record_recheck_time, find_ref_results, _first_internal_error) =
+) -> Result<
+    (
+        Box<dyn FnOnce(&serde_json::Value)>,
+        RecheckStats,
+        FindRefResults,
+        Env,
+    ),
+    RecheckError,
+> {
+    let (env, stats, record_recheck_time, find_ref_results, first_internal_error) =
         match with_transaction_result("recheck", |_transaction| {
             recheck::full(
                 pool,
@@ -1903,16 +1929,16 @@ pub(crate) fn recheck_impl(
         modified_count,
         deleted_count,
         dependent_file_count,
-        to_merge: _,
+        to_merge,
         to_check,
         top_cycle,
-        merge_skip_count: _merge_skip_count,
-        check_skip_count: _check_skip_count,
-        slowest_file: _slowest_file,
-        num_slow_files: _num_slow_files,
+        merge_skip_count,
+        check_skip_count,
+        slowest_file,
+        num_slow_files,
     } = stats;
 
-    let (collated_errors, _error_resolution_stat) =
+    let (collated_errors, error_resolution_stat) =
         with_memory_timer(options, "CollateErrors", || {
             let focused_to_check = to_check.focused().dupe();
             let dependents_to_check = to_check.dependents().dupe();
@@ -1964,7 +1990,24 @@ pub(crate) fn recheck_impl(
         master_cx: env.master_cx,
     };
 
-    let log_recheck_event: Box<dyn FnOnce()> = Box::new(move || {
+    let log_recheck_event: Box<dyn FnOnce(&serde_json::Value)> = Box::new(move |profiling| {
+        flow_event_logger::recheck(
+            modified_count as i32,
+            deleted_count as i32,
+            to_merge.dependencies_cardinal() as i32,
+            dependent_file_count as i32,
+            merge_skip_count as i32,
+            check_skip_count as i32,
+            profiling,
+            error_resolution_stat.time_to_resolve_all_type_errors,
+            error_resolution_stat.time_to_resolve_all_type_errors_in_one_file,
+            error_resolution_stat.time_to_resolve_all_subtyping_errors,
+            error_resolution_stat.time_to_resolve_all_subtyping_errors_in_one_file,
+            first_internal_error.as_deref(),
+            slowest_file.as_deref(),
+            Some(num_slow_files as i32),
+            changed_mergebase,
+        );
         record_recheck_time();
     });
 
@@ -2343,14 +2386,14 @@ fn process_saved_state_updates(
 }
 
 fn saved_duplicate_providers_from_direct_state(
-    duplicate_providers: &BTreeMap<FlowSmolStr, (FileKey, Vec<FileKey>)>,
+    duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec<FileKey>)>,
 ) -> BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)> {
     duplicate_providers
-        .iter()
+        .into_iter()
         .filter_map(|(key, (leader, others))| {
-            Vec1::try_from_vec(others.clone())
+            Vec1::try_from_vec(others)
                 .ok()
-                .map(|others| (key.dupe(), (leader.dupe(), others)))
+                .map(|others| (key, (leader, others)))
         })
         .collect()
 }
@@ -2478,6 +2521,7 @@ fn init_with_initial_state(
     options: &Arc<Options>,
     restore_dependency_info: impl FnOnce() -> DependencyInfo,
     saved_duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
+    saved_export_index: Option<ExportIndex>,
     env: Option<&Env>,
     parsed: FlowOrdSet<FileKey>,
     unparsed: FlowOrdSet<FileKey>,
@@ -2524,7 +2568,7 @@ fn init_with_initial_state(
         package_json: _package_json,
     } = parse(pool, shared_mem, options, next);
 
-    let (libs_ok, local_errors, warnings, suppressions, _exports, master_cx) = init_libs(
+    let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
         options,
         shared_mem,
         ordered_libs.clone(),
@@ -2625,6 +2669,34 @@ fn init_with_initial_state(
         warnings,
         suppressions,
     };
+    let exports = if options.autoimports {
+        match saved_export_index {
+            Some(index) => {
+                flow_hh_logger::info!("Indexing files (from saved state)");
+                let exports = with_memory_timer(options, "Indexing", || {
+                    flow_services_export::export_search::init(index)
+                });
+                flow_hh_logger::info!("Indexing files Done");
+                Some(exports)
+            }
+            None => {
+                flow_hh_logger::info!("Indexing files");
+                let exports = with_memory_timer(options, "Indexing", || {
+                    let parsed: BTreeSet<FileKey> = parsed.iter().duped().collect();
+                    flow_services_export::export_service::init(
+                        pool,
+                        shared_mem,
+                        &lib_exports,
+                        &parsed,
+                    )
+                });
+                flow_hh_logger::info!("Indexing files Done");
+                Some(exports)
+            }
+        }
+    } else {
+        None
+    };
     let mut collated_errors = CollatedErrors::empty();
     {
         let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
@@ -2665,7 +2737,7 @@ fn init_with_initial_state(
         connections: env
             .map(|env| env.connections.clone())
             .unwrap_or_else(flow_server_env::persistent_connection::empty),
-        exports: None,
+        exports,
         master_cx,
     };
     (env, libs_ok)
@@ -2675,7 +2747,7 @@ pub fn init_from_legacy_saved_state(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
-    saved_state: &flow_saved_state::SavedStateData,
+    saved_state: flow_saved_state::SavedStateData,
     updates: &CheckedSet,
     env: Option<&Env>,
 ) -> (
@@ -2683,36 +2755,45 @@ pub fn init_from_legacy_saved_state(
     bool,
     Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) {
+    let flow_saved_state::SavedStateData {
+        parsed_heaps,
+        unparsed_heaps,
+        package_heaps,
+        local_errors: saved_local_errors,
+        node_modules_containers: saved_node_modules_containers,
+        dependency_graph,
+        export_index,
+        ..
+    } = saved_state;
     flow_hh_logger::info!("Restoring heaps");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
-    let node_modules_containers =
-        Arc::new(RwLock::new(saved_state.node_modules_containers.clone()));
+    let node_modules_containers = Arc::new(RwLock::new(saved_node_modules_containers));
     let mut parsed = FlowOrdSet::new();
     let mut unparsed = FlowOrdSet::new();
     let mut package_json_files = FlowOrdSet::new();
     let mut dirty_modules = BTreeSet::new();
     let mut invalid_hashes = Vec::new();
 
-    for (file, parsed_file_data) in &saved_state.parsed_heaps {
-        parsed.insert(file.dupe());
-        dirty_modules.extend(restore_parsed(shared_mem, file, parsed_file_data));
-        if options.saved_state_verify && !verify_hash(shared_mem, file) {
+    for (file, parsed_file_data) in parsed_heaps {
+        dirty_modules.extend(restore_parsed(shared_mem, &file, &parsed_file_data));
+        if options.saved_state_verify && !verify_hash(shared_mem, &file) {
             invalid_hashes.push(file.dupe());
         }
+        parsed.insert(file);
     }
-    for (file, unparsed_file_data) in &saved_state.unparsed_heaps {
-        unparsed.insert(file.dupe());
-        dirty_modules.extend(restore_unparsed(shared_mem, file, unparsed_file_data));
-        if options.saved_state_verify && !verify_hash(shared_mem, file) {
+    for (file, unparsed_file_data) in unparsed_heaps {
+        dirty_modules.extend(restore_unparsed(shared_mem, &file, &unparsed_file_data));
+        if options.saved_state_verify && !verify_hash(shared_mem, &file) {
             invalid_hashes.push(file.dupe());
         }
+        unparsed.insert(file);
     }
-    for (file, package_data) in &saved_state.package_heaps {
-        package_json_files.insert(file.dupe());
-        dirty_modules.extend(restore_package(shared_mem, file, package_data));
-        if options.saved_state_verify && !verify_hash(shared_mem, file) {
+    for (file, package_data) in package_heaps {
+        dirty_modules.extend(restore_package(shared_mem, &file, &package_data));
+        if options.saved_state_verify && !verify_hash(shared_mem, &file) {
             invalid_hashes.push(file.dupe());
         }
+        package_json_files.insert(file);
     }
     dirty_modules.extend(clear_deleted_heaps(
         shared_mem,
@@ -2725,7 +2806,7 @@ pub fn init_from_legacy_saved_state(
         assert_valid_hashes(updates, invalid_hashes);
     }
     let local_errors = merge_error_maps(
-        saved_state.local_errors.clone(),
+        saved_local_errors,
         get_saved_state_local_errors(pool, shared_mem, options, &unparsed, &package_json_files),
     );
 
@@ -2733,8 +2814,13 @@ pub fn init_from_legacy_saved_state(
         pool,
         shared_mem,
         options,
-        || flow_saved_state::restore_dependency_info(pool, saved_state.dependency_graph.clone()),
+        || flow_saved_state::restore_dependency_info(pool, dependency_graph),
         BTreeMap::new(),
+        if options.saved_state_persist_export_index {
+            export_index
+        } else {
+            None
+        },
         env,
         parsed,
         unparsed,
@@ -2750,7 +2836,7 @@ pub fn init_from_direct_saved_state(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
-    saved_state: &flow_saved_state::SavedStateEnvData,
+    saved_state: flow_saved_state::SavedStateEnvData,
     updates: &CheckedSet,
     env: Option<&Env>,
 ) -> (
@@ -2758,6 +2844,17 @@ pub fn init_from_direct_saved_state(
     bool,
     Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) {
+    let flow_saved_state::SavedStateEnvData {
+        parsed_files,
+        unparsed_files,
+        package_json_files: saved_package_json_files,
+        local_errors: saved_local_errors,
+        node_modules_containers: saved_node_modules_containers,
+        dependency_info,
+        duplicate_providers,
+        export_index,
+        ..
+    } = saved_state;
     flow_hh_logger::info!("Processing saved state file sets");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
     // Direct serialization saved state: the heap was already bulk-loaded by
@@ -2767,22 +2864,11 @@ pub fn init_from_direct_saved_state(
     // 1. Handle deleted files (files in saved state that no longer exist on disk)
     // 2. Compute dirty modules by querying the already-populated heap
     // 3. Optionally verify file hashes
-    let node_modules_containers =
-        Arc::new(RwLock::new(saved_state.node_modules_containers.clone()));
-    let parsed = saved_state
-        .parsed_files
-        .iter()
-        .cloned()
-        .collect::<FlowOrdSet<_>>();
-    let unparsed = saved_state
-        .unparsed_files
-        .iter()
-        .cloned()
-        .collect::<FlowOrdSet<_>>();
-    let package_json_files = saved_state
-        .package_json_files
-        .iter()
-        .cloned()
+    let node_modules_containers = Arc::new(RwLock::new(saved_node_modules_containers));
+    let parsed = parsed_files.into_iter().collect::<FlowOrdSet<_>>();
+    let unparsed = unparsed_files.into_iter().collect::<FlowOrdSet<_>>();
+    let package_json_files = saved_package_json_files
+        .into_iter()
         .collect::<FlowOrdSet<_>>();
     let dirty_modules =
         clear_deleted_heaps(shared_mem, env, &parsed, &unparsed, &package_json_files);
@@ -2806,7 +2892,7 @@ pub fn init_from_direct_saved_state(
         assert_valid_hashes(updates, invalid_hashes);
     }
     let local_errors = merge_error_maps(
-        saved_state.local_errors.clone(),
+        saved_local_errors,
         get_saved_state_local_errors(pool, shared_mem, options, &unparsed, &package_json_files),
     );
 
@@ -2814,8 +2900,13 @@ pub fn init_from_direct_saved_state(
         pool,
         shared_mem,
         options,
-        || saved_state.dependency_info.clone(),
-        saved_duplicate_providers_from_direct_state(&saved_state.duplicate_providers),
+        || dependency_info,
+        saved_duplicate_providers_from_direct_state(duplicate_providers),
+        if options.saved_state_persist_export_index {
+            export_index
+        } else {
+            None
+        },
         env,
         parsed,
         unparsed,
@@ -2831,7 +2922,7 @@ pub fn init_from_saved_state(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
-    saved_state: &LoadedSavedState,
+    saved_state: LoadedSavedState,
     updates: &CheckedSet,
     env: Option<&Env>,
 ) -> (
@@ -3097,14 +3188,7 @@ pub fn init_from_scratch(
             flow_hh_logger::info!("Indexing files");
             let exports = with_memory_timer(options, "Indexing", || {
                 let parsed: BTreeSet<FileKey> = parsed_set.iter().duped().collect();
-                let (lib_exports, scoped_lib_exports) = &lib_exports;
-                let scoped_lib_exports: Vec<(String, flow_imports_exports::exports::Exports)> =
-                    scoped_lib_exports
-                        .iter()
-                        .map(|(_project, exports)| (String::new(), exports.clone()))
-                        .collect();
-                let lib_exports = (lib_exports.clone(), scoped_lib_exports);
-                flow_services_export::export_service::init(shared_mem, &lib_exports, &parsed)
+                flow_services_export::export_service::init(pool, shared_mem, &lib_exports, &parsed)
             });
             flow_hh_logger::info!("Indexing files Done");
             Some(exports)
@@ -3260,7 +3344,7 @@ pub fn init(
         Ok((saved_state, updates)) => {
             // We loaded a saved state successfully! We are awesome!
             let (env, libs_ok, node_modules_containers) =
-                init_from_saved_state(pool, shared_mem, options, &saved_state, &updates, None);
+                init_from_saved_state(pool, shared_mem, options, saved_state, &updates, None);
             let env = handle_updates_since_saved_state(
                 pool,
                 shared_mem,
@@ -3299,12 +3383,17 @@ pub fn reinit(
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
     allow_fallback: bool,
-    _reason: &str,
+    reason: &str,
     updates: &CheckedSet,
     files_to_force: CheckedSet,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> Option<(Box<dyn FnOnce()>, RecheckStats, FindRefResults, Env)> {
+) -> Option<(
+    Box<dyn FnOnce(&serde_json::Value)>,
+    RecheckStats,
+    FindRefResults,
+    Env,
+)> {
     let (saved_state, updates_since_saved_state) = match load_saved_state(pool, shared_mem, options)
     {
         Ok(result) => result,
@@ -3331,7 +3420,7 @@ pub fn reinit(
         pool,
         shared_mem,
         options,
-        &saved_state,
+        saved_state,
         &updates_since_saved_state,
         Some(&env),
     );
@@ -3359,7 +3448,10 @@ pub fn reinit(
         Some(files_to_force),
     );
 
-    let log_recheck_event: Box<dyn FnOnce()> = Box::new(|| {});
+    let reason = reason.to_string();
+    let log_recheck_event: Box<dyn FnOnce(&serde_json::Value)> = Box::new(move |profiling| {
+        flow_event_logger::reinit(&reason, profiling);
+    });
     let recheck_stats = RecheckStats {
         dependent_file_count: 0,
         changed_file_count: 0,
@@ -3378,7 +3470,15 @@ pub fn reinit_full_check(
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> Result<(Box<dyn FnOnce()>, RecheckStats, FindRefResults, Env), RecheckError> {
+) -> Result<
+    (
+        Box<dyn FnOnce(&serde_json::Value)>,
+        RecheckStats,
+        FindRefResults,
+        Env,
+    ),
+    RecheckError,
+> {
     shared_mem.clear_reader_cache();
     flow_hh_logger::info!("Reiniting with a full check.");
     let env = {
@@ -3389,6 +3489,7 @@ pub fn reinit_full_check(
                 options,
                 || env.dependency_info.clone(),
                 env.errors.duplicate_providers.clone(),
+                None,
                 Some(&env),
                 env.files.dupe(),
                 env.unparsed.dupe(),
@@ -3417,7 +3518,9 @@ pub fn reinit_full_check(
         Some(all_checked_set),
     );
 
-    let log_recheck_event: Box<dyn FnOnce()> = Box::new(|| {});
+    let log_recheck_event: Box<dyn FnOnce(&serde_json::Value)> = Box::new(|profiling| {
+        flow_event_logger::reinit_full_check(profiling);
+    });
     let recheck_stats = RecheckStats {
         dependent_file_count: 0,
         changed_file_count: 0,
@@ -3440,7 +3543,15 @@ pub fn recheck(
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> Result<(Box<dyn FnOnce()>, RecheckStats, FindRefResults, Env), RecheckError> {
+) -> Result<
+    (
+        Box<dyn FnOnce(&serde_json::Value)>,
+        RecheckStats,
+        FindRefResults,
+        Env,
+    ),
+    RecheckError,
+> {
     let did_change_mergebase = changed_mergebase.unwrap_or(false);
     if incompatible_lib_change {
         if did_change_mergebase {

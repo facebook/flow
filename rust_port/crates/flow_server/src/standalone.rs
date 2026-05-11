@@ -681,7 +681,11 @@ fn do_rechecks(
                     },
                 );
                 flow_server_env::monitor_rpc::status_update(server_status::Event::FinishingUp);
-                log_recheck_event();
+                let duration = recheck_start.elapsed().as_secs_f64();
+                let profiling = serde_json::json!({
+                    "duration": duration,
+                });
+                log_recheck_event(&profiling);
                 let lsp_stats = flow_server_env::lsp_prot::RecheckStats {
                     dependent_file_count: recheck_stats.dependent_file_count as i32,
                     changed_file_count: recheck_stats.changed_file_count as i32,
@@ -689,7 +693,7 @@ fn do_rechecks(
                 };
                 flow_server_env::monitor_rpc::send_telemetry(
                     flow_server_env::lsp_prot::TelemetryFromServer::RecheckSummary {
-                        duration: recheck_start.elapsed().as_secs_f64(),
+                        duration,
                         stats: lsp_stats,
                     },
                 );

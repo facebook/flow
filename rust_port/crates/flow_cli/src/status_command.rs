@@ -56,6 +56,12 @@ fn spec(
             "Print version number and exit",
             None,
         )
+        .flag(
+            "--help-all",
+            &arg_spec::truthy(),
+            "Show all commands including internal and experimental ones",
+            None,
+        )
     };
     spec.anon("root", &arg_spec::optional(arg_spec::string()))
 }
@@ -191,10 +197,56 @@ fn check_status(flowconfig_name: &str, args: &StatusArgs, connect_flags: &Connec
     }
 }
 
-fn main(args: &arg_spec::Values) {
+fn main(args: &arg_spec::Values, command_info: &[CommandInfo]) {
     let version = command_spec::get(args, "--version", &arg_spec::truthy()).unwrap_or(false);
     if version {
         command_utils::print_version();
+        flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError);
+    }
+
+    let help_all_flag = command_spec::get(args, "--help-all", &arg_spec::truthy()).unwrap_or(false);
+    if help_all_flag {
+        let by_visibility = |visibility| {
+            let mut result: Vec<_> = command_info
+                .iter()
+                .filter(|command| command.visibility == visibility)
+                .map(|command| (command.name.clone(), command.doc.clone()))
+                .collect();
+            result.sort_by(|(a, _), (b, _)| a.cmp(b));
+            result
+        };
+        let public = by_visibility(command_spec::Visibility::Public);
+        let experimental = by_visibility(command_spec::Visibility::Experimental);
+        let internal = by_visibility(command_spec::Visibility::Internal);
+        let col_width = 1 + public
+            .iter()
+            .chain(experimental.iter())
+            .chain(internal.iter())
+            .map(|(name, _)| name.len())
+            .max()
+            .unwrap_or(0);
+        let fmt = |commands: &[(String, String)]| {
+            command_spec::format_two_columns(None, Some(col_width), 1, commands)
+        };
+        let mut help_all = format!(
+            "Documentation: {}\n\nUsage: {} [COMMAND] \n\nValid values for COMMAND:\n{}\n",
+            crate::extra_commands::docs_url(),
+            command_utils::exe_name(),
+            fmt(&public),
+        );
+        if !experimental.is_empty() {
+            help_all.push_str(&format!(
+                "\nExperimental commands (may change or be removed):\n{}\n",
+                fmt(&experimental),
+            ));
+        }
+        if !internal.is_empty() {
+            help_all.push_str(&format!(
+                "\nInternal commands (not part of the public API):\n{}\n",
+                fmt(&internal),
+            ));
+        }
+        print!("{}", help_all);
         flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError);
     }
 
@@ -237,6 +289,12 @@ fn main(args: &arg_spec::Values) {
     check_status(&flowconfig_name, &status_args, &connect_flags)
 }
 
+pub(crate) struct CommandInfo {
+    pub(crate) name: String,
+    pub(crate) doc: String,
+    pub(crate) visibility: command_spec::Visibility,
+}
+
 pub(crate) fn status_command() -> command_spec::Command {
     command_spec::command(
         spec(
@@ -249,7 +307,7 @@ pub(crate) fn status_command() -> command_spec::Command {
             ),
             true,
         ),
-        main,
+        |args| main(args, &[]),
     )
 }
 
@@ -265,27 +323,31 @@ pub(crate) fn check_command() -> command_spec::Command {
             ),
             true,
         ),
-        main,
+        |args| main(args, &[]),
     )
 }
 
-pub(crate) fn default_command(command_info: Vec<(String, String)>) -> command_spec::Command {
-    let mut command_info = command_info;
-    command_info.sort_by(|(a, _), (b, _)| a.cmp(b));
-    let cmd_usage = command_spec::format_two_columns(None, None, 1, &command_info);
+pub(crate) fn default_command(command_info: Vec<CommandInfo>) -> command_spec::Command {
+    let mut public_command_info = command_info
+        .iter()
+        .filter(|command| command.visibility == command_spec::Visibility::Public)
+        .map(|command| (command.name.clone(), command.doc.clone()))
+        .collect::<Vec<_>>();
+    public_command_info.sort_by(|(a, _), (b, _)| a.cmp(b));
+    let cmd_usage = command_spec::format_two_columns(None, None, 1, &public_command_info);
     command_spec::command(
         spec(
             "default",
             "",
-            command_spec::Visibility::Public,
+            command_spec::Visibility::Internal,
             format!(
-                "Documentation: {}\n\nUsage: {} [COMMAND] \n\nValid values for COMMAND:\n{}\n\nDefault values if unspecified:\n COMMAND\tstatus\n\nStatus command options:",
+                "Documentation: {}\n\nUsage: {} [COMMAND] \n\nValid values for COMMAND:\n{}\n\nDefault values if unspecified:\n  COMMAND\tstatus\n\nStatus command options:",
                 crate::extra_commands::docs_url(),
                 command_utils::exe_name(),
                 cmd_usage
             ),
             false,
         ),
-        main,
+        move |args| main(args, &command_info),
     )
 }

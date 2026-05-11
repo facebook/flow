@@ -149,7 +149,7 @@ struct SerializedSavedStateEnvData {
     node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     dependency_graph: SavedStateDependencyGraph,
     duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec<FileKey>)>,
-    #[serde(skip, default)]
+    #[serde(default)]
     export_index: Option<ExportIndex>,
     parsed_heaps: Vec<(FileKey, ParsedFileData)>,
     unparsed_heaps: Vec<(FileKey, UnparsedFileData)>,
@@ -543,6 +543,13 @@ fn collect_saved_state_env_data(
             )
         })
         .collect();
+    let export_index = if options.saved_state_persist_export_index {
+        env.exports
+            .as_ref()
+            .map(|exports| flow_services_export::export_search::get_index(exports).clone())
+    } else {
+        None
+    };
     SavedStateEnvData {
         flowconfig_hash: options.flowconfig_hash.dupe(),
         parsed_files: env
@@ -563,7 +570,7 @@ fn collect_saved_state_env_data(
         node_modules_containers: collect_node_modules_containers(node_modules_containers, options),
         dependency_info: env.dependency_info.clone(),
         duplicate_providers,
-        export_index: None,
+        export_index,
     }
 }
 

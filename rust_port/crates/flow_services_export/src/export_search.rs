@@ -86,8 +86,7 @@ fn partition_candidates(index: &ExportIndex) -> Candidates {
 
 pub fn init(index: ExportIndex) -> ExportSearch {
     let Candidates { values, types } = partition_candidates(&index);
-    let value_matcher = FuzzyPath::init(values);
-    let type_matcher = FuzzyPath::init(types);
+    let (value_matcher, type_matcher) = FuzzyPath::init_pair_from_arrays(values, types);
     ExportSearch {
         index,
         value_matcher,

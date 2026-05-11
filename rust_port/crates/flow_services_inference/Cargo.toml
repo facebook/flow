@@ -21,6 +21,7 @@ flow_common_utils = { path = "../flow_common_utils" }
 flow_common_xx = { path = "../flow_common_xx" }
 flow_config = { path = "../flow_config" }
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
+flow_event_logger = { path = "../flow_event_logger" }
 flow_heap = { path = "../flow_heap" }
 flow_heap_serialization = { path = "../flow_heap_serialization" }
 flow_hh_logger = { path = "../flow_hh_logger" }

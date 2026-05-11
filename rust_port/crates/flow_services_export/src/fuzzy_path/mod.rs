@@ -82,6 +82,28 @@ impl FuzzyPath {
         fp.add_candidates(candidates);
         fp
     }
+
+    pub fn init_from_array(candidates: Vec<(FlowSmolStr, i32)>) -> Self {
+        let mut fp = FuzzyPath {
+            matcher: matcher_base::MatcherBase::new(),
+        };
+        fp.matcher.add_candidates_bulk(candidates);
+        fp
+    }
+
+    pub fn init_pair_from_arrays(
+        a: Vec<(FlowSmolStr, i32)>,
+        b: Vec<(FlowSmolStr, i32)>,
+    ) -> (Self, Self) {
+        // matcher_init_pair_bulk initializes one matcher on a worker thread
+        // while initializing the other on the current thread.
+        std::thread::scope(|scope| {
+            let handle = scope.spawn(move || FuzzyPath::init_from_array(b));
+            let a = FuzzyPath::init_from_array(a);
+            let b = handle.join().unwrap();
+            (a, b)
+        })
+    }
 }
 
 pub fn fuzzy_score(

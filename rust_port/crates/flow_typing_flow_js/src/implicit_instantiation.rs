@@ -111,7 +111,6 @@ use vec1::Vec1;
 use crate::flow_js::FlowJs;
 use crate::marked::Marked;
 use crate::natural_inference;
-use crate::slice_utils;
 use crate::speculation_kit;
 
 fn union_flatten_list(ts: impl IntoIterator<Item = Type>) -> Vec<Type> {

@@ -14,6 +14,7 @@ use std::sync::Mutex;
 use dupe::Dupe;
 use flow_common::flow_projects::FlowProjects;
 use flow_common::options::Options;
+use flow_common::sys_utils::normalize_filename_dir_sep;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
@@ -2464,7 +2465,22 @@ fn batch_coverage(
                 .to_string(),
         )
     } else {
-        let filter = |key: &str| batch.iter().any(|elt| key.starts_with(elt.as_str()));
+        let batch: Vec<_> = batch
+            .iter()
+            .map(|elt| normalize_filename_dir_sep(elt).into_owned())
+            .collect();
+        let filter = |key: &str| {
+            let key = normalize_filename_dir_sep(key);
+            batch.iter().any(|elt| {
+                if key.as_ref() == elt {
+                    true
+                } else if elt.ends_with('/') {
+                    key.starts_with(elt)
+                } else {
+                    key.starts_with(&format!("{elt}/"))
+                }
+            })
+        };
         let mut response: Vec<_> = env
             .coverage
             .iter()

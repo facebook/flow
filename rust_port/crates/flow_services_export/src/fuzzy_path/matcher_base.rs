@@ -305,6 +305,82 @@ impl MatcherBase {
         });
     }
 
+    // void MatcherBase::addCandidatesBulk(const std::string *candidates, const int *weights, size_t count) {
+    pub(super) fn add_candidates_bulk(&mut self, mut candidates: Vec<(FlowSmolStr, i32)>) {
+        let base = self.candidates.len();
+        let count = candidates.len();
+        if count == 0 {
+            return;
+        }
+
+        // Build CandidateData entries in parallel (string copy + lowercase + bitmask)
+        let num_threads = std::thread::available_parallelism()
+            .map(|threads| threads.get())
+            .unwrap_or(1)
+            .min(8);
+        let mut new_candidates: Vec<Candidate> = Vec::with_capacity(count);
+        if num_threads <= 1 || count < 10000 {
+            for (value, weight) in candidates {
+                let value_lower = value.to_ascii_lowercase();
+                let bitmask = letter_bitmask(&value_lower);
+                new_candidates.push(Candidate {
+                    value,
+                    value_lower,
+                    bitmask,
+                    last_match: true,
+                    weight,
+                });
+            }
+        } else {
+            let chunk = count.div_ceil(num_threads);
+            let mut chunks = Vec::new();
+            while candidates.len() > chunk {
+                let rest = candidates.split_off(chunk);
+                chunks.push(candidates);
+                candidates = rest;
+            }
+            chunks.push(candidates);
+
+            let chunk_results = std::thread::scope(|scope| {
+                let mut handles = Vec::new();
+                for chunk in chunks {
+                    handles.push(scope.spawn(move || {
+                        let mut chunk_candidates = Vec::with_capacity(chunk.len());
+                        for (value, weight) in chunk {
+                            let value_lower = value.to_ascii_lowercase();
+                            let bitmask = letter_bitmask(&value_lower);
+                            chunk_candidates.push(Candidate {
+                                value,
+                                value_lower,
+                                bitmask,
+                                last_match: true,
+                                weight,
+                            });
+                        }
+                        chunk_candidates
+                    }));
+                }
+                let mut chunk_results = Vec::with_capacity(handles.len());
+                for handle in handles {
+                    chunk_results.push(handle.join().unwrap());
+                }
+                chunk_results
+            });
+            for chunk_candidates in chunk_results {
+                new_candidates.extend(chunk_candidates);
+            }
+        }
+
+        self.candidates.extend(new_candidates);
+
+        // Build lookup map sequentially (fast - just inserts, no finds)
+        self.lookup.reserve(count);
+        for i in 0..count {
+            self.lookup
+                .insert(self.candidates[base + i].value.dupe(), base + i);
+        }
+    }
+
     pub(super) fn remove_candidate(&mut self, value: &FlowSmolStr) {
         if let Some(&idx) = self.lookup.get(value) {
             if idx + 1 != self.candidates.len() {
