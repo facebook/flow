@@ -56,8 +56,6 @@ type Obj = {foo: number, bar: string};
 type MappedObj = {[key in keyof Obj]: GetterOf<Obj[key]>};
 ```
 
-> NOTE: `keyof` only works inline in mapped types for now. Full support for `keyof` is not yet available.
-
 But you do not need to use an object to generate a mapped type. You can also use a union of string
 literal types to represent the keys of an object type:
 ```js flow-check
