@@ -92,7 +92,8 @@ pub mod flow_constraint {
                 | UseTInner::ElemT(..)
                 | UseTInner::ReposLowerT { .. }
                 | UseTInner::ObjKitT { .. }
-                | UseTInner::HasOwnPropT(..),
+                | UseTInner::HasOwnPropT(..)
+                | UseTInner::ResolveSpreadT(..),
             ) => false,
             _ => {
                 // Use ops are purely for better error messages: they should have no
@@ -242,6 +243,6 @@ pub fn summarize_flow_constraint(cx: &Context) -> Vec<(String, i32)> {
     );
 
     let mut result: Vec<(String, i32)> = group_counts.into_iter().collect();
-    result.sort_by(|(_, i1), (_, i2)| i1.cmp(i2));
+    result.sort_by_key(|(_, i1)| *i1);
     result
 }

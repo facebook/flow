@@ -35,7 +35,8 @@ module FlowConstraint = struct
         (* The following use_t constructors have near-0% hit rate across a large
          * codebase. Caching them wastes insertions with negligible benefit. *)
         | ValueToTypeReferenceT _ | SpecializeT _ | EvalTypeDestructorT _ | ConcretizeTypeAppsT _
-        | ExtendsUseT _ | ResolveUnionT _ | ConditionalT _ | DeepReadOnlyT _ | ElemT _
+        | ExtendsUseT _ | ResolveUnionT _ | ResolveSpreadT _ | ConditionalT _ | DeepReadOnlyT _
+        | ElemT _
         (* Very low hit rate *)
         | ReposLowerT _ | ObjKitT _ | HasOwnPropT _ )
       ) ->
