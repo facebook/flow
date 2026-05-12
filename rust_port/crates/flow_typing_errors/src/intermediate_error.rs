@@ -5644,34 +5644,44 @@ where
                     .flat_map(|(name, map)| string_of_non_unique_key(name, map))
                     .collect();
                 let mut features = vec![text(
-                    "Union could not be fully optimized internally. The following keys have non-unique values:",
+                    "Flow cannot use these keys to quickly check this union because the same supported value appears in multiple members:",
                 )];
                 features.extend(keys);
                 friendly::Message(features)
             }
             MessageCannotOptimizeUnionInternally(kind) => {
                 use flow_typing_type::type_::union_rep::OptimizedError;
-                let kind_msg = match kind {
+                let features = match kind {
                     OptimizedError::ContainsUnresolved(r) => vec![
-                        text("The form of "),
+                        text("Flow cannot resolve "),
                         ref_(r),
-                        text(" is not supported for optimization. "),
-                        text("Try replacing this type with a simpler alternative."),
+                        text(" well enough to quickly check this union. "),
+                        text("Try inlining or simplifying this type."),
                     ],
                     OptimizedError::NoCandidateMembers => vec![
-                        text("The union needs to include in its members "),
-                        text("at least one of: "),
-                        text("object type, string literal, numeric literal, "),
-                        text("boolean literal, void or null types."),
+                        text(
+                            "Flow needs at least one object member, literal member (string, numeric, boolean, or bigint), ",
+                        ),
+                        code("void"),
+                        text(", or "),
+                        code("null"),
+                        text(" to quickly check this union. This union has none of those."),
                     ],
-                    OptimizedError::NoCommonKeys => {
-                        vec![text(
-                            "There are no common keys among the members of the union.",
-                        )]
-                    }
+                    OptimizedError::NoCommonKeys => vec![
+                        text(
+                            "Flow checks object unions faster when every member has a shared key, such as ",
+                        ),
+                        code("type"),
+                        text(" or "),
+                        code("kind"),
+                        text(
+                            ", with a supported literal value. Add a shared key with a different literal value for each member.",
+                        ),
+                        text(
+                            " See https://flow.org/en/docs/types/unions/ for more information on unions.",
+                        ),
+                    ],
                 };
-                let mut features = vec![text("Union could not be optimized internally. ")];
-                features.extend(kind_msg);
                 friendly::Message(features)
             }
             MessageCannotPassReactRefAsArgument { usage, in_hook } => {

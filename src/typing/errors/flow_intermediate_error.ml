@@ -2812,29 +2812,37 @@ let to_printable_error :
         |> Base.List.concat_map ~f:string_of_non_unique_key
       in
       text
-        "Union could not be fully optimized internally. The following keys have non-unique values:"
+        "Flow cannot use these keys to quickly check this union because the same supported value appears in multiple members:"
       :: keys
     | MessageCannotOptimizeUnionInternally kind ->
-      let kind =
-        let open Type.UnionRep in
-        match kind with
-        | ContainsUnresolved r ->
-          [
-            text "The form of ";
-            ref r;
-            text " is not supported for optimization. ";
-            text "Try replacing this type with a simpler alternative.";
-          ]
-        | NoCandidateMembers ->
-          [
-            text "The union needs to include in its members ";
-            text "at least one of: ";
-            text "object type, string literal, numeric literal, ";
-            text "boolean literal, void or null types.";
-          ]
-        | NoCommonKeys -> [text "There are no common keys among the members of the union."]
-      in
-      text "Union could not be optimized internally. " :: kind
+      let open Type.UnionRep in
+      (match kind with
+      | ContainsUnresolved r ->
+        [
+          text "Flow cannot resolve ";
+          ref r;
+          text " well enough to quickly check this union. ";
+          text "Try inlining or simplifying this type.";
+        ]
+      | NoCandidateMembers ->
+        [
+          text
+            "Flow needs at least one object member, literal member (string, numeric, boolean, or bigint), ";
+          code "void";
+          text ", or ";
+          code "null";
+          text " to quickly check this union. This union has none of those.";
+        ]
+      | NoCommonKeys ->
+        [
+          text "Flow checks object unions faster when every member has a shared key, such as ";
+          code "type";
+          text " or ";
+          code "kind";
+          text
+            ", with a supported literal value. Add a shared key with a different literal value for each member.";
+          text " See https://flow.org/en/docs/types/unions/ for more information on unions.";
+        ])
     | MessageCannotPassReactRefAsArgument { usage; in_hook } ->
       let context =
         if in_hook then

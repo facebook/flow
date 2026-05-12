@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- file.js:24:15
 
-Union could not be optimized internally. The union needs to include in its members at least one of: object type, string
-literal, numeric literal, boolean literal, void or null types. [union-unoptimizable]
+Flow needs at least one object member, literal member (string, numeric, boolean, or bigint), `void`, or `null` to
+quickly check this union. This union has none of those. [union-unoptimizable]
 
    24| type Error1 = $Flow$EnforceOptimized<number | string>; // error not object candidates
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -9,7 +9,9 @@ literal, numeric literal, boolean literal, void or null types. [union-unoptimiza
 
 Error ---------------------------------------------------------------------------------------------------- file.js:26:15
 
-Union could not be optimized internally. There are no common keys among the members of the union. [union-unoptimizable]
+Flow checks object unions faster when every member has a shared key, such as `type` or `kind`, with a supported literal
+value. Add a shared key with a different literal value for each member. See https://flow.org/en/docs/types/unions/ for
+more information on unions. [union-unoptimizable]
 
                      v----------------------------------------------
    26| type Error2 = $Flow$EnforceOptimized< // error no common keys
@@ -21,8 +23,8 @@ Union could not be optimized internally. There are no common keys among the memb
 
 Error ---------------------------------------------------------------------------------------------------- file.js:31:15
 
-Union could not be optimized internally. The form of `Readonly` [1] is not supported for optimization. Try replacing
-this type with a simpler alternative. [union-unoptimizable]
+Flow cannot resolve `Readonly` [1] well enough to quickly check this union. Try inlining or simplifying this type.
+[union-unoptimizable]
 
    file.js:31:15
                      v--------------------------------------------------------
@@ -40,8 +42,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- file.js:37:15
 
-Union could not be optimized internally. The form of `Foo` [1] is not supported for optimization. Try replacing this
-type with a simpler alternative. [union-unoptimizable]
+Flow cannot resolve `Foo` [1] well enough to quickly check this union. Try inlining or simplifying this type.
+[union-unoptimizable]
 
    file.js:37:15
                      v-----------------------------------------------------------
@@ -59,7 +61,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- file.js:42:15
 
-Union could not be fully optimized internally. The following keys have non-unique values:
+Flow cannot use these keys to quickly check this union because the same supported value appears in multiple members:
  - Key `f` has value `1` in object type [1], object type [2].
  - Key `g` has value `a` in object type [1], object type [2].
  - Key `h` has value `true` in object type [1], object type [2].
