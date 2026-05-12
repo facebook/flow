@@ -18,6 +18,9 @@ declare function requirejs(
 
 const versionCache /*: Map<string, Promise<FlowJs>> */ = new Map();
 
+const MASTER_VERSION = 'master';
+const MASTER_RUST_PORT_VERSION = 'master (rust port)';
+
 const TRY_LIB_CONTENTS = `
 declare type $JSXIntrinsics = {
   [string]: {
@@ -67,6 +70,17 @@ function get(url: string) {
 function versionedUnpkgComUrl(version: string): string {
   version = version.startsWith('v') ? version.substring(1) : version;
   return `https://unpkg.com/try-flow-website-js@${version}`;
+}
+
+function masterVersionBasePath(version: string): ?string {
+  switch (version) {
+    case MASTER_VERSION:
+      return '/flow/master';
+    case MASTER_RUST_PORT_VERSION:
+      return '/flow/master-rust-port';
+    default:
+      return null;
+  }
 }
 
 function isFlowJs(value: mixed): boolean {
@@ -123,13 +137,15 @@ export function load(
   if (cached) {
     return Promise.resolve(cached);
   }
+  const masterBasePath = masterVersionBasePath(version);
   const majorVersion =
-    version === 'master' ? Infinity : parseInt(version.split('.')[1], 10);
+    masterBasePath != null ? Infinity : parseInt(version.split('.')[1], 10);
   const libs =
-    version === 'master'
-      ? [`/flow/master/flowlib/core.js`, `/flow/master/flowlib/react.js`].map(
-          withBaseUrl,
-        )
+    masterBasePath != null
+      ? [
+          `${masterBasePath}/flowlib/core.js`,
+          `${masterBasePath}/flowlib/react.js`,
+        ].map(withBaseUrl)
       : majorVersion >= 266
         ? [
             `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
@@ -143,8 +159,8 @@ export function load(
   const flowLoader = new Promise<FlowJs>((resolve, reject) => {
     requirejs(
       [
-        version === 'master'
-          ? withBaseUrl('/flow/master/flow.js')
+        masterBasePath != null
+          ? withBaseUrl(`${masterBasePath}/flow.js`)
           : `${versionedUnpkgComUrl(version)}/flow.js`,
       ],
       flowModule => {

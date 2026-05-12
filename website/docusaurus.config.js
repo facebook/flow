@@ -12,6 +12,11 @@ const webpack = require('webpack');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const allFlowVersions = require('./src/js/flow-versions');
 
+const defaultFlowVersion =
+  allFlowVersions.find(
+    version => version !== 'master' && version !== 'master (rust port)',
+  ) || 'master';
+
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = async () => ({
   title: 'Flow',
@@ -222,9 +227,9 @@ module.exports = async () => ({
     },
   },
   customFields: {
-    /* The latest release is in the second slot, but it might be unavailable if
-       INCLUDE_PAST_RELEASES env var is not on. In that case, we default to master. */
-    flowVersion: allFlowVersions[1] || allFlowVersions[0],
+    /* The latest release might be unavailable if INCLUDE_PAST_RELEASES env var
+       is not on. In that case, we default to master. */
+    flowVersion: defaultFlowVersion,
     allFlowVersions,
     fbRepoName: 'fbsource',
   },

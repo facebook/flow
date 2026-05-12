@@ -185,15 +185,18 @@ function loadWasm() {
           reject(error);
         }
       };
-      const onRuntimeInitialized = Module.onRuntimeInitialized;
-      Module.onRuntimeInitialized = function () {
-        if (typeof onRuntimeInitialized === 'function') {
-          onRuntimeInitialized();
-        }
-        finish();
-      };
       if (Module.calledRun) {
         finish();
+      } else if (typeof addOnInit === 'function') {
+        addOnInit(finish);
+      } else {
+        const onRuntimeInitialized = Module.onRuntimeInitialized;
+        Module.onRuntimeInitialized = function () {
+          if (typeof onRuntimeInitialized === 'function') {
+            onRuntimeInitialized();
+          }
+          finish();
+        };
       }
     });
   }

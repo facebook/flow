@@ -173,9 +173,15 @@ export default component TryFlow(
   }
 
   function semanticDecorations(flowService: FlowJsServices, model: any) {
-    const decorations =
-      flowService.semanticDecorations?.('-', model.getValue())?.decorations ||
-      [];
+    let decorations: $ReadOnlyArray<{kind: 'refined-value', range: any}> = [];
+    try {
+      decorations =
+        flowService.semanticDecorations?.('-', model.getValue())?.decorations ||
+        [];
+    } catch {
+      // Refined value decorations are best-effort UI hints. They should not
+      // interrupt typechecking or surface as Try Flow internal errors.
+    }
     const refinedValueDecorations = [];
     for (const decoration of decorations) {
       switch (decoration.kind) {

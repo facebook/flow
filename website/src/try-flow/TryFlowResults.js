@@ -117,6 +117,13 @@ export default component TryFlowResults(
   ast: interface {} | string,
 ) {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
+  const latestReleaseVersion = flowVersions.find(
+    version => version !== 'master' && version !== 'master (rust port)',
+  );
+  const isOldFlowVersion =
+    flowVersion !== 'master' &&
+    flowVersion !== 'master (rust port)' &&
+    flowVersion !== latestReleaseVersion;
 
   return (
     <div className={styles.results}>
@@ -148,8 +155,7 @@ export default component TryFlowResults(
           </li>
         </ul>
         <div className={styles.version}>
-          {flowVersion !== flowVersions[0] &&
-          flowVersion !== flowVersions[1] ? (
+          {isOldFlowVersion ? (
             <span className={styles.versionWarning}>old version selected</span>
           ) : null}
           {/* $FlowFixMe[incompatible-type] SyntheticInputEvent vs SyntheticEvent */}
