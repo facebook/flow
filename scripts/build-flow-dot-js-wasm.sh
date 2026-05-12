@@ -92,6 +92,11 @@ CARGO_ARGS=(
 if [[ -f "$CARGO_CONFIG" ]]; then
   CARGO_ARGS+=(--config "$CARGO_CONFIG" --locked --offline)
 fi
+# Keep this in sync with rust_port/crates/PACKAGE, which applies the same
+# rustc flag to Buck's internal wasm-emscripten build.
+CARGO_ARGS+=(
+  --config 'target.wasm32-unknown-emscripten.rustflags=["-Copt-level=z"]'
+)
 
 EMCC_BIN="${EMCC:-emcc}"
 if ! command -v "$EMCC_BIN" >/dev/null 2>&1; then

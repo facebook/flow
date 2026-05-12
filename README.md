@@ -117,8 +117,10 @@ Flow is written in OCaml (OCaml 5.2.0 is required).
     toolchain with the `wasm32-unknown-emscripten` target, then run:
 
     ```sh
-    make js FLOW_JS_IMPL=rust-wasm
+    make js FLOW_JS_IMPL=rust-wasm FLOW_RELEASE=1
     ```
+
+    Omit `FLOW_RELEASE=1` for a faster development build.
 
     The Flow parser can also be compiled to JavaScript. [Read how here](src/parser/README.md).
 
