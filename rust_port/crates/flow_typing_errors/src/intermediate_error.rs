@@ -6852,7 +6852,8 @@ where
                     ),
                 ];
                 features.extend(union_refs);
-                features.push(text(" are both unions. Please use at most one union type per spread to simplify reasoning about the spread result."));
+                features.push(text(" are both unions, and spreading multiple unions produces one result for every combination of their members."));
+                features.push(text(" Please use at most one union type per spread to simplify reasoning about the spread result."));
                 features.push(text(" You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union."));
                 friendly::Message(features)
             }

@@ -3800,7 +3800,9 @@ let to_printable_error :
       @ union_refs
       @ [
           text
-            " are both unions. Please use at most one union type per spread to simplify reasoning about the spread result.";
+            " are both unions, and spreading multiple unions produces one result for every combination of their members.";
+          text
+            " Please use at most one union type per spread to simplify reasoning about the spread result.";
           text
             " You may be able to get rid of a union by specifying a more general type that captures all of the branches of the union.";
         ]
