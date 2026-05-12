@@ -242,7 +242,6 @@ pub struct Mapper<'a, 'cx, Extra: BaseStats> {
     pub lint_severities: LintSettings<Severity>,
     pub max_type_size: usize,
     pub merge_arrays: bool,
-    pub exact_by_default: bool,
     pub casting_syntax: CastingSyntax,
 
     pub acc: Acc<Extra>,
@@ -260,10 +259,7 @@ impl<'a, 'cx, Extra: BaseStats> Mapper<'a, 'cx, Extra> {
     }
 
     fn serialize(&self, t: ALocTy) -> ast::types::Type<Loc, Loc> {
-        let options = ty_serializer::SerializerOptions {
-            exact_by_default: self.exact_by_default,
-        };
-        ty_serializer::type_(&options, &t)
+        ty_serializer::type_(&t)
     }
 
     #[allow(unreachable_code)]

@@ -607,7 +607,6 @@ and 'loc t' =
     }
   | EParseError of 'loc * Parse_error.t
   | EDocblockError of 'loc * docblock_error
-  | EImplicitInexactObject of 'loc
   | EAmbiguousObjectType of 'loc
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of 'loc * Flow_import_specifier.userland
@@ -1582,7 +1581,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EDuplicateModuleProvider { module_name; provider = f provider; conflict = f conflict }
   | EParseError (loc, p) -> EParseError (f loc, p)
   | EDocblockError (loc, e) -> EDocblockError (f loc, e)
-  | EImplicitInexactObject loc -> EImplicitInexactObject (f loc)
   | EAmbiguousObjectType loc -> EAmbiguousObjectType (f loc)
   | EUntypedTypeImport (loc, s) -> EUntypedTypeImport (f loc, s)
   | EUntypedImport (loc, s) -> EUntypedImport (f loc, s)
@@ -2294,7 +2292,6 @@ let util_use_op_of_msg nope util = function
   | EDuplicateModuleProvider { module_name = _; provider = _; conflict = _ }
   | EParseError (_, _)
   | EDocblockError (_, _)
-  | EImplicitInexactObject _
   | EAmbiguousObjectType _
   | EUntypedTypeImport (_, _)
   | EUntypedImport (_, _)
@@ -2525,7 +2522,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnusedSuppression loc
   | ECodelessSuppression loc
   | EDocblockError (loc, _)
-  | EImplicitInexactObject loc
   | EReactIntrinsicOverlap { def = loc; _ }
   | EInvalidComponentRestParam loc
   | EAmbiguousObjectType loc
@@ -2720,7 +2716,6 @@ let kind_of_msg =
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
     | EUnnecessaryOptionalChain _ -> LintError Lints.UnnecessaryOptionalChain
     | EUnnecessaryInvariant _ -> LintError Lints.UnnecessaryInvariant
-    | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EEnumError (EnumNotAllChecked { default_case_loc = Some _; _ }) ->
       LintError Lints.RequireExplicitEnumSwitchCases
@@ -3522,7 +3517,6 @@ let friendly_message_of_msg = function
     Normal (MessageDuplicateModuleProvider { module_name; provider; conflict })
   | EParseError (_, parse_error) -> Normal (MessageParseError parse_error)
   | EDocblockError (_, err) -> Normal (MessageDocblockError err)
-  | EImplicitInexactObject _ -> Normal MessageImplicitInexactObject
   | EAmbiguousObjectType _ -> Normal MessageAmbiguousObjectType
   | EUntypedTypeImport (_, module_name) ->
     Normal (MessageUntypedTypeImport (Flow_import_specifier.display_userland module_name))
@@ -3919,7 +3913,6 @@ let defered_in_speculation = function
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EUnnecessaryDeclareTypeOnlyExport _
-  | EImplicitInexactObject _
   | EAmbiguousObjectType _
   | EEnumError (EnumNotAllChecked { default_case_loc = Some _; _ })
   | EMatchError (MatchNonExplicitEnumCheck _)
@@ -4293,7 +4286,6 @@ let error_code_of_message err : error_code option =
   | ESketchyNumberLint _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
-  | EImplicitInexactObject _
   | EAmbiguousObjectType _
   | EReactIntrinsicOverlap _
   | EUninitializedInstanceProperty _

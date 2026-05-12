@@ -1541,7 +1541,6 @@ let make_options
       | Some ("1" | "true") -> true
       | Some ("0" | "false") -> false
       | _ -> FlowConfig.saved_state_restart_on_reinit flowconfig);
-    opt_exact_by_default = true;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
     opt_facebook_module_interop = FlowConfig.facebook_module_interop flowconfig;

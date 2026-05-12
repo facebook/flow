@@ -69,7 +69,6 @@ module Opts = struct
     enums: bool;
     estimate_recheck_time: bool option;
     saved_state_restart_on_reinit: bool;
-    exact_by_default: bool option;
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
@@ -242,7 +241,6 @@ module Opts = struct
       enums = false;
       estimate_recheck_time = None;
       saved_state_restart_on_reinit = false;
-      exact_by_default = None;
       facebook_fbs = None;
       facebook_fbt = None;
       facebook_module_interop = false;
@@ -1531,12 +1529,7 @@ end = struct
         if options.all <> default_options.all then
           pp_opt o "all" (string_of_bool (Base.Option.value options.all ~default:false));
         if options.include_warnings <> default_options.include_warnings then
-          pp_opt o "include_warnings" (string_of_bool options.include_warnings);
-        if options.exact_by_default <> default_options.exact_by_default then
-          pp_opt
-            o
-            "exact_by_default"
-            (string_of_bool (Base.Option.value ~default:false options.exact_by_default))
+          pp_opt o "include_warnings" (string_of_bool options.include_warnings)
       )
 
   let lints o config =
@@ -2080,8 +2073,6 @@ let enums c = c.options.Opts.enums
 let estimate_recheck_time c = c.options.Opts.estimate_recheck_time
 
 let saved_state_restart_on_reinit c = c.options.Opts.saved_state_restart_on_reinit
-
-let exact_by_default c = c.options.Opts.exact_by_default
 
 let facebook_fbs c = c.options.Opts.facebook_fbs
 

@@ -2025,7 +2025,6 @@ pub(super) fn make_options(
                 enums,
                 estimate_recheck_time,
                 saved_state_restart_on_reinit,
-                exact_by_default: _exact_by_default,
                 facebook_fbs,
                 facebook_fbt,
                 facebook_module_interop,
@@ -2222,7 +2221,6 @@ pub(super) fn make_options(
         Some("0" | "false") => false,
         _ => saved_state_restart_on_reinit,
     };
-    let exact_by_default = true;
     let lazy_mode = matches!(
         lazy_mode_override.unwrap_or(lazy_mode.unwrap_or(LazyMode::NonLazy)),
         LazyMode::Lazy | LazyMode::WatchmanDeprecated
@@ -2687,7 +2685,6 @@ pub(super) fn make_options(
         enums,
         estimate_recheck_time,
         saved_state_restart_on_reinit,
-        exact_by_default,
         facebook_fbs: facebook_fbs.map(FlowSmolStr::new),
         facebook_fbt: facebook_fbt.map(FlowSmolStr::new),
         facebook_module_interop,

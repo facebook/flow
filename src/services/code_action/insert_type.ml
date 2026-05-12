@@ -49,8 +49,7 @@ let unexpected err = FailedToInsertType (Unexpected err)
 let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
 (* Generate an equivalent Flow_ast.Type *)
-let serialize
-    ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~typed_ast ~exact_by_default loc ty =
+let serialize ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~typed_ast loc ty =
   let mapper =
     new Utils.type_normalization_hardcoded_fixes_mapper
       ~cx
@@ -65,10 +64,7 @@ let serialize
       ~add_warning:(fun _ _ -> ()
     )
   in
-  mapper#on_t loc ty
-  |> simplify
-  |> Ty_serializer.(type_ { exact_by_default })
-  |> Utils.patch_up_type_ast
+  mapper#on_t loc ty |> simplify |> Ty_serializer.type_ |> Utils.patch_up_type_ast
 
 let path_of_loc ?(error = Error "no path for location") (loc : Loc.t) : (string, string) result =
   match Loc.source loc with
@@ -264,7 +260,6 @@ let synth_type
     ~remote_converter
     type_loc
     t =
-  let exact_by_default = Context.exact_by_default cx in
   let process ty =
     match Utils.Validator.validate_type ~size_limit ~loc_of_aloc:ALoc.to_loc_exn ty with
     | (_, error :: _) ->
@@ -304,7 +299,6 @@ let synth_type
           ~get_ast_from_shared_mem
           ~file_sig
           ~typed_ast
-          ~exact_by_default
           type_loc
           import_fixed_ty
       in
@@ -524,15 +518,7 @@ let insert_type_ty
           ty
       in
       let ast =
-        serialize
-          ~cx
-          ~loc_of_aloc
-          ~get_ast_from_shared_mem
-          ~file_sig
-          ~typed_ast
-          ~exact_by_default:(Context.exact_by_default cx)
-          loc
-          import_fixed_ty
+        serialize ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~typed_ast loc import_fixed_ty
       in
       Ok (loc, ast))
     ast

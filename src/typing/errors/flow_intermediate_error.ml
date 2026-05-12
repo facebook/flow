@@ -3820,13 +3820,6 @@ let to_printable_error :
       [ref def; text " requires another argument"]
     | MessageFunctionRequiresAnotherArgument { def; from = Some from } ->
       [ref def; text " requires another argument from "; ref from]
-    | MessageImplicitInexactObject ->
-      [
-        text "Please add ";
-        code "...";
-        text " to the end of the list of ";
-        text "properties to express an inexact object type.";
-      ]
     | MessageImportTypeAsTypeof export_name ->
       let (prefix, export) = msg_export "the type " export_name in
       [

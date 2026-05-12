@@ -104,7 +104,6 @@ type metadata = {
   enable_pattern_matching_instance_patterns: bool;
   enable_records: bool;
   enable_relay_integration: bool;
-  exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -239,8 +238,6 @@ val errors : t -> Flow_error.ErrorSet.t
 val error_suppressions : t -> Error_suppressions.t
 
 val evaluated : t -> Type.t Type.Eval.Map.t
-
-val exact_by_default : t -> bool
 
 val file_options : t -> Files.options
 

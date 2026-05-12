@@ -26,7 +26,6 @@ pub struct LintSettings<T: Copy> {
 }
 
 const IGNORED_BY_ALL: &[LintKind] = &[
-    LintKind::ImplicitInexactObject,
     LintKind::AmbiguousObjectType,
     LintKind::UninitializedInstanceProperty,
 ];

@@ -56,7 +56,6 @@ let stub_metadata ~root ~checked =
     enable_pattern_matching_instance_patterns = false;
     enable_records = false;
     enable_relay_integration = false;
-    exact_by_default = false;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;

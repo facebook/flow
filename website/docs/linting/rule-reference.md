@@ -33,9 +33,6 @@ Triggered on the `bool` type, which is just an alias for `boolean`. Just use `bo
 type A = Array<bool>; // Error
 ```
 
-### `implicit-inexact-object` {#toc-implicit-inexact-object}
-Like [`ambiguous-object-type`](#toc-ambiguous-object-type), except triggers even when the `exact_by_default` option is set to `false`.
-
 ### `nested-component` {#toc-nested-component}
 Triggers when a [component](../react/component-syntax.md) is defined directly inside another component or hook. Nested components are problematic because React cannot preserve the state of a nested component across re-renders of the parent — each render creates a brand new component type, so React always unmounts and remounts it.
 

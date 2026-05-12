@@ -27,7 +27,6 @@ async function main() {
 
   const config = {
     'react.runtime': 'classic',
-    exact_by_default: true,
   };
 
   // Regression test for invalid configSchema literal

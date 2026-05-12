@@ -622,12 +622,6 @@ fn type_object<L: Dupe>(
     obj: &ObjT<L>,
     mut size: usize,
 ) -> LayoutNode {
-    let s_exact = if matches!(obj.obj_kind, ObjKind::ExactObj) && !opts.exact_by_default {
-        LayoutNode::atom("|".to_string())
-    } else {
-        LayoutNode::empty()
-    };
-
     let mut props = Vec::new();
     for prop in obj.obj_props.iter() {
         if size == 0 {
@@ -652,8 +646,8 @@ fn type_object<L: Dupe>(
     layout::list(
         None,
         Some((
-            layout::fuse(vec![LayoutNode::atom("{".to_string()), s_exact.clone()]),
-            layout::fuse(vec![s_exact, LayoutNode::atom("}".to_string())]),
+            LayoutNode::atom("{".to_string()),
+            LayoutNode::atom("}".to_string()),
         )),
         Some(LayoutNode::atom(",".to_string())),
         false,
@@ -1540,7 +1534,6 @@ pub struct PrinterOptions {
     pub prefer_single_quotes: bool,
     pub size: usize,
     pub with_comments: bool,
-    pub exact_by_default: bool,
     pub ts_syntax: bool,
 }
 
@@ -1550,7 +1543,6 @@ impl Default for PrinterOptions {
             prefer_single_quotes: false,
             size: 5000,
             with_comments: true,
-            exact_by_default: true,
             ts_syntax: false,
         }
     }

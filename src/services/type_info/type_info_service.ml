@@ -96,18 +96,15 @@ let type_at_pos
         |> json_data_of_type
              "type"
              ((* TODO use Ty_debug.json_of_t after making it faster using count_calls *)
-              let exact_by_default = Context.exact_by_default cx in
               Ty_printer.string_of_elt
-                ~exact_by_default
                 ~ts_syntax:(Context.ts_syntax cx)
                 unevaluated
              )
         |> json_data_of_type_opt
              "type_evaluated"
-             (let exact_by_default = Context.exact_by_default cx in
-              Base.Option.map
+             (Base.Option.map
                 evaluated
-                ~f:(Ty_printer.string_of_elt ~exact_by_default ~ts_syntax:(Context.ts_syntax cx))
+                ~f:(Ty_printer.string_of_elt ~ts_syntax:(Context.ts_syntax cx))
              )
         |> json_data_of_locs_opt "refining_locs" refining_locs
         |> json_data_of_locs_opt "refinement_invalidated" (List.map fst refinement_invalidated)
@@ -169,10 +166,7 @@ let dump_types ~evaluate_type_destructors ~for_tool cx file_sig typed_ast =
   match for_tool with
   | Some depth -> Query_types.dump_types_for_tool cx typed_ast depth
   | None ->
-    let exact_by_default = Context.exact_by_default cx in
-    let printer =
-      Ty_printer.string_of_elt_single_line ~exact_by_default ~ts_syntax:(Context.ts_syntax cx)
-    in
+    let printer = Ty_printer.string_of_elt_single_line ~ts_syntax:(Context.ts_syntax cx) in
     Query_types.dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast
 
 let coverage ~cx ~typed_ast ~force file content =

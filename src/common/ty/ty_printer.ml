@@ -44,8 +44,7 @@ let variance_ = function
 (* Main Transformation   *)
 (*************************)
 
-let layout_of_elt
-    ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~exact_by_default ~ts_syntax elt =
+let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~ts_syntax elt =
   let size = ref size in
   let local_name_of_symbol symbol =
     let { sym_name = name; sym_provenance = provenance; _ } = symbol in
@@ -482,12 +481,6 @@ let layout_of_elt
       ]
   and type_object ~depth ?(sep = Atom ",") obj =
     let { obj_kind; obj_props; _ } = obj in
-    let s_exact =
-      if obj_kind = ExactObj && not exact_by_default then
-        Atom "|"
-      else
-        Empty
-    in
     let props = counted_map (type_object_property ~depth) obj_props in
     let props =
       match obj_kind with
@@ -496,7 +489,7 @@ let layout_of_elt
       | ExactObj -> props
       | MappedTypeObj -> props
     in
-    list ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) ~sep ~trailing:false props
+    list ~wrap:(Atom "{", Atom "}") ~sep ~trailing:false props
   and intersperse_pretty_line ~depth ~sep ts =
     let elts =
       match counted_map (type_with_parens ~depth) ts with
@@ -702,16 +695,9 @@ let layout_of_elt
   | Decl d -> decl ~depth:0 d
 
 let layout_of_type_at_pos_types
-    ~prefer_single_quotes ?size ?with_comments ~exact_by_default ~ts_syntax (unevaluated, evaluated)
-    =
+    ~prefer_single_quotes ?size ?with_comments ~ts_syntax (unevaluated, evaluated) =
   let layout_unevaluated =
-    layout_of_elt
-      ~prefer_single_quotes
-      ?size
-      ?with_comments
-      ~exact_by_default
-      ~ts_syntax
-      unevaluated
+    layout_of_elt ~prefer_single_quotes ?size ?with_comments ~ts_syntax unevaluated
   in
   match (unevaluated, evaluated) with
   | (_, None) -> layout_unevaluated
@@ -724,13 +710,7 @@ let layout_of_type_at_pos_types
         | Decl (TypeAliasDecl { type_ = Some t; _ }) -> Type t
         | x -> x
       in
-      layout_of_elt
-        ~prefer_single_quotes
-        ?size
-        ?with_comments
-        ~exact_by_default
-        ~ts_syntax
-        evaluated
+      layout_of_elt ~prefer_single_quotes ?size ?with_comments ~ts_syntax evaluated
     in
     fuse [layout_unevaluated; hardline; Atom "="; space; layout_evaluated]
 
@@ -755,59 +735,28 @@ let print_single_line node =
 
 let print_pretty node = Pretty_printer.print ~skip_endline:true node
 
-let string_of_elt
-    ?(prefer_single_quotes = false)
-    ?(with_comments = true)
-    ~exact_by_default
-    ~ts_syntax
-    (elt : Ty.elt) : string =
-  layout_of_elt ~prefer_single_quotes ~with_comments ~exact_by_default ~ts_syntax elt
+let string_of_elt ?(prefer_single_quotes = false) ?(with_comments = true) ~ts_syntax (elt : Ty.elt)
+    : string =
+  layout_of_elt ~prefer_single_quotes ~with_comments ~ts_syntax elt
   |> print_pretty
   |> Source.contents
 
 let string_of_elt_single_line
-    ?(prefer_single_quotes = false)
-    ?(with_comments = true)
-    ?(exact_by_default = true)
-    ~ts_syntax
-    (elt : Ty.elt) =
-  layout_of_elt ~prefer_single_quotes ~with_comments ~exact_by_default ~ts_syntax elt
+    ?(prefer_single_quotes = false) ?(with_comments = true) ~ts_syntax (elt : Ty.elt) =
+  layout_of_elt ~prefer_single_quotes ~with_comments ~ts_syntax elt
   |> print_single_line
   |> Source.contents
 
-let string_of_t
-    ?(prefer_single_quotes = false)
-    ?(with_comments = true)
-    ?(exact_by_default = true)
-    ~ts_syntax
-    (ty : Ty.t) =
-  string_of_elt ~prefer_single_quotes ~with_comments ~exact_by_default ~ts_syntax (Ty.Type ty)
+let string_of_t ?(prefer_single_quotes = false) ?(with_comments = true) ~ts_syntax (ty : Ty.t) =
+  string_of_elt ~prefer_single_quotes ~with_comments ~ts_syntax (Ty.Type ty)
 
 let string_of_t_single_line
-    ?(prefer_single_quotes = false)
-    ?(with_comments = true)
-    ?(exact_by_default = true)
-    ~ts_syntax
-    (ty : Ty.t) =
-  string_of_elt_single_line
-    ~prefer_single_quotes
-    ~with_comments
-    ~exact_by_default
-    ~ts_syntax
-    (Ty.Type ty)
+    ?(prefer_single_quotes = false) ?(with_comments = true) ~ts_syntax (ty : Ty.t) =
+  string_of_elt_single_line ~prefer_single_quotes ~with_comments ~ts_syntax (Ty.Type ty)
 
 let string_of_decl_single_line
-    ?(prefer_single_quotes = false)
-    ?(with_comments = true)
-    ?(exact_by_default = true)
-    ~ts_syntax
-    (d : Ty.decl) =
-  string_of_elt_single_line
-    ~prefer_single_quotes
-    ~with_comments
-    ~exact_by_default
-    ~ts_syntax
-    (Ty.Decl d)
+    ?(prefer_single_quotes = false) ?(with_comments = true) ~ts_syntax (d : Ty.decl) =
+  string_of_elt_single_line ~prefer_single_quotes ~with_comments ~ts_syntax (Ty.Decl d)
 
 let string_of_symbol_set syms =
   LocSymbolSet.elements syms
@@ -825,12 +774,11 @@ let string_of_symbol_set syms =
 let string_of_type_at_pos_result
     ?(prefer_single_quotes = false)
     ?(with_comments = true)
-    ?(exact_by_default = true)
     ~ts_syntax
     { Ty.unevaluated; evaluated; refs } =
   let type_str =
     (unevaluated, evaluated)
-    |> layout_of_type_at_pos_types ~prefer_single_quotes ~with_comments ~exact_by_default ~ts_syntax
+    |> layout_of_type_at_pos_types ~prefer_single_quotes ~with_comments ~ts_syntax
     |> print_pretty
     |> Source.contents
   in

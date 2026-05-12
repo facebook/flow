@@ -73,7 +73,6 @@ let load_lib_files files =
       enable_relay_integration = false;
       relay_integration_module_prefix = None;
       facebook_fbt = None;
-      exact_by_default = true;
       enable_custom_error = false;
       enable_enums = true;
       enable_component_syntax = true;
@@ -126,7 +125,6 @@ let stub_metadata ~root ~checked =
     enable_pattern_matching_instance_patterns = true;
     enable_records = true;
     enable_relay_integration = false;
-    exact_by_default = true;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
@@ -201,7 +199,6 @@ let merge_custom_check_config js_config_object metadata =
   in
   let ts_syntax = Js.Unsafe.get js_config_object "experimental.ts_syntax" |> Js.to_bool in
   let enable_enums = Js.Unsafe.get js_config_object "enums" |> Js.to_bool in
-  let exact_by_default = Js.Unsafe.get js_config_object "exact_by_default" |> Js.to_bool in
   let react_runtime =
     match Js.Unsafe.get js_config_object "react.runtime" |> Js.to_string with
     | "automatic" -> Options.ReactRuntimeAutomatic
@@ -216,7 +213,6 @@ let merge_custom_check_config js_config_object metadata =
     Context.babel_loose_array_spread;
     enable_const_params;
     enable_enums;
-    exact_by_default;
     react_runtime;
     ts_syntax;
     assert_operator;
@@ -574,10 +570,7 @@ let infer_type filename content line col js_config_object :
           (loc, Error "Unparseable", refining_locs, refinement_invalidated)
         | Success (loc, result) ->
           let (result, _) =
-            Ty_printer.string_of_type_at_pos_result
-              ~exact_by_default:true
-              ~ts_syntax:(Context.ts_syntax cx)
-              result
+            Ty_printer.string_of_type_at_pos_result ~ts_syntax:(Context.ts_syntax cx) result
           in
           (loc, Ok result, refining_locs, refinement_invalidated)
       end
@@ -670,9 +663,7 @@ let dump_types js_file js_content js_config_object =
       )
     in
     let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
-    let printer =
-      Ty_printer.string_of_elt_single_line ~exact_by_default:true ~ts_syntax:(Context.ts_syntax cx)
-    in
+    let printer = Ty_printer.string_of_elt_single_line ~ts_syntax:(Context.ts_syntax cx) in
     let types =
       Query_types.dump_types
         ~printer
@@ -984,13 +975,6 @@ let () =
     "type": "bool",
     "default": true,
     "desc": "Enable support for Flow Enums."
-  },
-  {
-    "key": "exact_by_default",
-    "kind": "option",
-    "type": "bool",
-    "default": true,
-    "desc": "Treat object types as exact by default."
   },
   {
     "key": "experimental.const_params",

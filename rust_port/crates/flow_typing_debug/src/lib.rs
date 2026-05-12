@@ -2966,9 +2966,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 err_str
             )
         }
-        ErrorMessage::EImplicitInexactObject(loc) => {
-            format!("EImplicitInexactObject ({})", string_of_aloc(None, loc))
-        }
         ErrorMessage::EAmbiguousObjectType(loc) => {
             format!("EAmbiguousObjectType ({})", string_of_aloc(None, loc))
         }

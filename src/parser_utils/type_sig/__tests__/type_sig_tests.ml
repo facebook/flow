@@ -210,7 +210,6 @@ let sig_options
     ?(munge = false)
     ?(facebook_keyMirror = false)
     ?facebook_fbt
-    ?(exact_by_default = false)
     ?(enable_custom_error = false)
     ?(enable_enums = true)
     ?(enable_component_syntax = true)
@@ -227,7 +226,6 @@ let sig_options
     Type_sig_options.munge;
     facebook_keyMirror;
     facebook_fbt;
-    exact_by_default;
     enable_custom_error;
     enable_enums;
     enable_component_syntax;
@@ -256,7 +254,6 @@ let print_sig
     ?munge
     ?facebook_fbt
     ?facebook_keyMirror
-    ?exact_by_default
     ?module_ref_prefix
     ?enable_custom_error
     ?enable_enums
@@ -273,7 +270,6 @@ let print_sig
       ?munge
       ?facebook_fbt
       ?facebook_keyMirror
-      ?exact_by_default
       ?enable_custom_error
       ?enable_enums
       ?enable_records
@@ -828,7 +824,7 @@ let%expect_test "function_param_typeof_reference" =
                      t =
                      (Annot
                         ObjAnnot {loc = [2:65-82];
-                          obj_kind = InexactObj;
+                          obj_kind = ExactObj;
                           props =
                           { "boz" ->
                             (ObjAnnotField ([2:66-69],
@@ -917,7 +913,7 @@ let%expect_test "component_param_typeof_reference" =
                t =
                (Annot
                   ObjAnnot {loc = [2:68-85];
-                    obj_kind = InexactObj;
+                    obj_kind = ExactObj;
                     props =
                     { "boz" ->
                       (ObjAnnotField ([2:69-72],
@@ -3454,7 +3450,7 @@ let%expect_test "type_spread" =
          body =
          (Annot
             ObjAnnot {loc = [1:9-22];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "a" -> (ObjAnnotField ([1:11-12], (Annot (String [1:14-20])), Polarity.Neutral)) };
               computed_props = []; proto = ObjAnnotImplicitProto})}
@@ -3463,7 +3459,7 @@ let%expect_test "type_spread" =
          body =
          (Annot
             ObjAnnot {loc = [2:9-22];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "b" -> (ObjAnnotField ([2:11-12], (Annot (Number [2:14-20])), Polarity.Neutral)) };
               computed_props = []; proto = ObjAnnotImplicitProto})}
@@ -3473,7 +3469,7 @@ let%expect_test "type_spread" =
          body =
          (Annot
             ObjSpreadAnnot {loc = [3:16-39];
-              exact = false;
+              exact = true;
               elems_rev =
               (ObjSpreadAnnotSlice {dict = None;
                  props =
@@ -3542,7 +3538,7 @@ let%expect_test "object_annot_optional" =
          body =
          (Annot
             ObjAnnot {loc = [1:16-30];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "p" ->
                 (ObjAnnotField ([1:18-19], (
@@ -3649,7 +3645,7 @@ let%expect_test "object_annot_method" =
          body =
          (Annot
             ObjAnnot {loc = [1:16-29];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "m" ->
                 ObjAnnotMethod {id_loc = [1:18-19];
@@ -3682,7 +3678,7 @@ let%expect_test "object_annot_optional_method" =
          body =
          (Annot
             ObjAnnot {loc = [1:16-30];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "m" ->
                 (ObjAnnotField ([1:18-19],
@@ -3802,8 +3798,8 @@ let%expect_test "object_annot_call_poly" =
          body =
          (Annot
             ObjAnnot {loc = [1:16-29];
-              obj_kind = InexactObj;
-              props = {}; computed_props = [];
+              obj_kind = ExactObj; props = {};
+              computed_props = [];
               proto =
               ObjAnnotCallable {
                 ts_rev =
@@ -3856,8 +3852,8 @@ let%expect_test "object_annot_multiple_call" =
          body =
          (Annot
             ObjAnnot {loc = [1:16-42];
-              obj_kind = InexactObj;
-              props = {}; computed_props = [];
+              obj_kind = ExactObj; props = {};
+              computed_props = [];
               proto =
               ObjAnnotCallable {
                 ts_rev =
@@ -4085,7 +4081,7 @@ let%expect_test "cycle" =
          body =
          (Annot
             ObjAnnot {loc = [1:16-25];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "p" ->
                 (ObjAnnotField ([1:18-19],
@@ -4100,7 +4096,7 @@ let%expect_test "cycle" =
          body =
          (Annot
             ObjAnnot {loc = [2:16-25];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "p" ->
                 (ObjAnnotField ([2:18-19],
@@ -4448,7 +4444,7 @@ let%expect_test "existential" =
          namespace_types = {}} |}]
 
 let%expect_test "exact_by_default" =
-  print_sig ~exact_by_default:true {|
+  print_sig {|
     export type T = { p: string }
   |};
   [%expect {|
@@ -4759,8 +4755,8 @@ let%expect_test "obj_annot_proto" =
          def =
          (Annot
             ObjAnnot {loc = [1:22-41];
-              obj_kind = InexactObj;
-              props = {}; computed_props = [];
+              obj_kind = ExactObj; props = {};
+              computed_props = [];
               proto = (ObjAnnotExplicitProto ([1:35-39], (Annot (Null [1:35-39]))))})} |}]
 
 let%expect_test "getter_setter" =
@@ -5251,7 +5247,7 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
             (ReadOnly ([2:10-31],
                (Annot
                   ObjAnnot {loc = [2:20-30];
-                    obj_kind = InexactObj;
+                    obj_kind = ExactObj;
                     props =
                     { "foo" ->
                       (ObjAnnotField ([2:21-24],
@@ -6427,7 +6423,7 @@ let%expect_test "this_param_6" =
          body =
          (Annot
             ObjAnnot {loc = [1:16-58];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "a" -> (ObjAnnotField ([1:46-47], (Annot (Number [1:50-56])), Polarity.Neutral));
                 "f" ->
@@ -6604,7 +6600,7 @@ let%expect_test "duplicate_binding2" =
     Pattern defs:
     0. (Annot
           ObjAnnot {loc = [2:23-49];
-            obj_kind = InexactObj;
+            obj_kind = ExactObj;
             props =
             { "bar" -> (ObjAnnotField ([2:37-40], (Annot (Number [2:42-48])), Polarity.Neutral));
               "foo" -> (ObjAnnotField ([2:24-27], (Annot (Number [2:29-35])), Polarity.Neutral)) };
@@ -6767,7 +6763,7 @@ let%expect_test "mapped_types" =
          body =
          (Annot
             ObjAnnot {loc = [1:9-35];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "bar" -> (ObjAnnotField ([1:23-26], (Annot (String [1:28-34])), Polarity.Neutral));
                 "foo" -> (ObjAnnotField ([1:10-13], (Annot (Number [1:15-21])), Polarity.Neutral)) };
@@ -6924,7 +6920,7 @@ export const {foo} = {foo: 3};
                  body =
                  (Annot
                     ObjAnnot {loc = [1:21-47];
-                      obj_kind = InexactObj;
+                      obj_kind = ExactObj;
                       props =
                       { "bar" ->
                         (ObjAnnotField ([1:35-38], (Annot (String [1:40-46])), Polarity.Neutral));
@@ -7020,7 +7016,7 @@ let%expect_test "component2" =
          body =
          (Annot
             ObjAnnot {loc = [1:12-25];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "x" -> (ObjAnnotField ([1:14-15], (Annot (Number [1:17-23])), Polarity.Neutral)) };
               computed_props = []; proto = ObjAnnotImplicitProto})}
@@ -7304,9 +7300,8 @@ let%expect_test "component_type" =
          body =
          (Annot
             ObjAnnot {loc = [5:13-15];
-              obj_kind = InexactObj;
-              props = {}; computed_props = [];
-              proto = ObjAnnotImplicitProto})}
+              obj_kind = ExactObj; props = {};
+              computed_props = []; proto = ObjAnnotImplicitProto})}
     5. TypeAlias {id_loc = [6:12-16];
          custom_error_loc_opt = None;
          name = "Mono"; tparams = Mono;
@@ -7782,8 +7777,7 @@ let%expect_test "d_ts_computed_property_string_key" =
          body =
          (Annot
             ObjAnnot {loc = [2:25-44];
-              obj_kind = InexactObj;
-              props = {};
+              obj_kind = ExactObj; props = {};
               computed_props =
               [((Ref LocalRef {ref_loc = [2:27-34]; index = 0}),
                 (ObjAnnotField ([2:27-34], (Annot (Number [2:37-43])), Polarity.Neutral)))];
@@ -7813,8 +7807,7 @@ let%expect_test "d_ts_computed_property_number_key" =
          body =
          (Annot
             ObjAnnot {loc = [2:25-44];
-              obj_kind = InexactObj;
-              props = {};
+              obj_kind = ExactObj; props = {};
               computed_props =
               [((Ref LocalRef {ref_loc = [2:27-34]; index = 0}),
                 (ObjAnnotField ([2:27-34], (Annot (String [2:37-43])), Polarity.Neutral)))];
@@ -7912,8 +7905,7 @@ let%expect_test "d_ts_computed_property_bigint_key" =
          body =
          (Annot
             ObjAnnot {loc = [2:25-44];
-              obj_kind = InexactObj;
-              props = {};
+              obj_kind = ExactObj; props = {};
               computed_props =
               [((Ref LocalRef {ref_loc = [2:27-34]; index = 0}),
                 (ObjAnnotField ([2:27-34], (Annot (String [2:37-43])), Polarity.Neutral)))];
@@ -7938,7 +7930,7 @@ let%expect_test "d_ts_computed_property_bigint_literal" =
          body =
          (Annot
             ObjAnnot {loc = [1:28-43];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "42" -> (ObjAnnotField ([1:30-33], (Annot (String [1:36-42])), Polarity.Neutral)) };
               computed_props = []; proto = ObjAnnotImplicitProto})} |}]
@@ -7962,7 +7954,7 @@ let%expect_test "d_ts_computed_property_number_literal" =
          body =
          (Annot
             ObjAnnot {loc = [1:25-40];
-              obj_kind = InexactObj;
+              obj_kind = ExactObj;
               props =
               { "100" -> (ObjAnnotField ([1:27-30], (Annot (String [1:33-39])), Polarity.Neutral)) };
               computed_props = []; proto = ObjAnnotImplicitProto})} |}]
@@ -7992,8 +7984,7 @@ let%expect_test "d_ts_computed_property_unsupported_expression" =
          body =
          (Annot
             ObjAnnot {loc = [3:30-47];
-              obj_kind = InexactObj;
-              props = {};
+              obj_kind = ExactObj; props = {};
               computed_props =
               [((Err [3:31-38]),
                 (ObjAnnotField ([3:31-38], (Annot (Number [3:40-46])), Polarity.Neutral)))];

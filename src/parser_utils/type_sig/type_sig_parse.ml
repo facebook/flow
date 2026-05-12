@@ -3496,7 +3496,7 @@ and object_type =
   in
   fun opts scope tbls xs loc o ->
     let { O.exact; inexact; properties; comments = _ } = o in
-    let exact = exact || ((not inexact) && opts.exact_by_default) in
+    let exact = exact || not inexact in
     (* Mapped types do not allow extra properties yet. We syntactically match
      * on objects with only a mapped type property and make other objects
      * including a mapped type `any`.

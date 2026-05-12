@@ -24,7 +24,7 @@ let tests =
            let obj =
              Ty.Obj { Ty.obj_kind = Ty.ExactObj; obj_def_loc = None; obj_props = [getter] }
            in
-           let str = Ty_printer.string_of_t ~exact_by_default:true ~ts_syntax:false obj in
+           let str = Ty_printer.string_of_t ~ts_syntax:false obj in
            assert_equal ~ctxt ~printer:(fun x -> x) "{get foo(): string}" str
          );
          ( "type_object_property_set" >:: fun ctxt ->
@@ -41,7 +41,7 @@ let tests =
            let obj =
              Ty.Obj { Ty.obj_kind = Ty.ExactObj; obj_def_loc = None; obj_props = [setter] }
            in
-           let str = Ty_printer.string_of_t ~exact_by_default:true ~ts_syntax:false obj in
+           let str = Ty_printer.string_of_t ~ts_syntax:false obj in
            assert_equal ~ctxt ~printer:(fun x -> x) "{set foo(string): void}" str
          );
          ( "empty_inexact_tuple" >:: fun ctxt ->

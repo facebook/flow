@@ -131,7 +131,6 @@ pub enum LintKind {
     UnsafeObjectAssign,
     UnnecessaryOptionalChain,
     UnnecessaryInvariant,
-    ImplicitInexactObject,
     UninitializedInstanceProperty,
     AmbiguousObjectType,
     RequireExplicitEnumChecks,
@@ -167,7 +166,6 @@ impl LintKind {
             LintKind::UnsafeObjectAssign => "unsafe-object-assign",
             LintKind::UnnecessaryOptionalChain => "unnecessary-optional-chain",
             LintKind::UnnecessaryInvariant => "unnecessary-invariant",
-            LintKind::ImplicitInexactObject => "implicit-inexact-object",
             LintKind::UninitializedInstanceProperty => "uninitialized-instance-property",
             LintKind::AmbiguousObjectType => "ambiguous-object-type",
             LintKind::RequireExplicitEnumChecks => "require-explicit-enum-checks",
@@ -231,7 +229,6 @@ impl LintKind {
             "unsafe-object-assign" => Some(vec![LintKind::UnsafeObjectAssign]),
             "unnecessary-optional-chain" => Some(vec![LintKind::UnnecessaryOptionalChain]),
             "unnecessary-invariant" => Some(vec![LintKind::UnnecessaryInvariant]),
-            "implicit-inexact-object" => Some(vec![LintKind::ImplicitInexactObject]),
             "ambiguous-object-type" => Some(vec![LintKind::AmbiguousObjectType]),
             "require-explicit-enum-checks" => Some(vec![LintKind::RequireExplicitEnumChecks]),
             "require-explicit-enum-switch-cases" => {

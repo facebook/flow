@@ -90,7 +90,6 @@ pub mod opts {
         pub enums: bool,
         pub estimate_recheck_time: Option<bool>,
         pub saved_state_restart_on_reinit: bool,
-        pub exact_by_default: Option<bool>,
         pub facebook_fbs: Option<String>,
         pub facebook_fbt: Option<String>,
         pub facebook_module_interop: bool,
@@ -257,7 +256,6 @@ pub mod opts {
             enums: false,
             estimate_recheck_time: None,
             saved_state_restart_on_reinit: false,
-            exact_by_default: None,
             facebook_fbs: None,
             facebook_fbt: None,
             facebook_module_interop: false,
@@ -3776,13 +3774,6 @@ pub fn write<W: std::io::Write>(out: &mut W, config: &FlowConfig) -> std::io::Re
         }
         if options.include_warnings != default_options.include_warnings {
             writeln!(out, "include_warnings={}", options.include_warnings)?;
-        }
-        if options.exact_by_default != default_options.exact_by_default {
-            writeln!(
-                out,
-                "exact_by_default={}",
-                options.exact_by_default.unwrap_or(false)
-            )?;
         }
         Ok(())
     }

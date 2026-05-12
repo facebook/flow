@@ -5,10 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type reporter_options = {
-  strip_root: File_path.t option;
-  exact_by_default: bool;
-}
+type reporter_options = { strip_root: File_path.t option }
 
 type 'a reporter =
   | StringReporter of (reporter_options -> 'a -> string)

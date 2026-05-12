@@ -40,7 +40,6 @@ type lint_kind =
   | UnsafeObjectAssign
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
-  | ImplicitInexactObject
   | UninitializedInstanceProperty
   | AmbiguousObjectType
   | RequireExplicitEnumChecks
@@ -91,7 +90,6 @@ let string_of_kind = function
   | UnsafeObjectAssign -> "unsafe-object-assign"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryInvariant -> "unnecessary-invariant"
-  | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | AmbiguousObjectType -> "ambiguous-object-type"
   | RequireExplicitEnumChecks -> "require-explicit-enum-checks"
@@ -140,7 +138,6 @@ let kinds_of_string = function
   | "unsafe-object-assign" -> Some [UnsafeObjectAssign]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
-  | "implicit-inexact-object" -> Some [ImplicitInexactObject]
   | "ambiguous-object-type" -> Some [AmbiguousObjectType]
   | "require-explicit-enum-checks" -> Some [RequireExplicitEnumChecks]
   | "require-explicit-enum-switch-cases" -> Some [RequireExplicitEnumSwitchCases]

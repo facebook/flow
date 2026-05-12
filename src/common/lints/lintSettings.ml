@@ -33,8 +33,7 @@ let default_explicit_values =
   |> LintMap.add Lints.UnsafeObjectAssign (Severity.Err, None)
   |> LintMap.add Lints.UntypedTypeImport (Severity.Err, None)
 
-let ignored_by_all =
-  [Lints.ImplicitInexactObject; Lints.AmbiguousObjectType; Lints.UninitializedInstanceProperty]
+let ignored_by_all = [Lints.AmbiguousObjectType; Lints.UninitializedInstanceProperty]
 
 let config_default kind =
   LintMap.find_opt kind default_explicit_values |> Base.Option.value ~default:(Severity.Off, None)

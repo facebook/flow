@@ -121,7 +121,7 @@ let rec lookup_member_in_elt member_name ty_elt =
 
 (* Generate a type summary string from a Ty.t for ref expansion *)
 let rec summarize_ty t =
-  let type_str = Ty_printer.string_of_t_single_line ~exact_by_default:true ~ts_syntax:false t in
+  let type_str = Ty_printer.string_of_t_single_line ~ts_syntax:false t in
   match t with
   | Ty.Obj { Ty.obj_props; _ } ->
     let n = Base.List.length obj_props in
@@ -238,9 +238,7 @@ let format_ty_elt_response
     ~reader ~genv ~ref_type_bodies_tbl ~loc ~documentation ~ast ~actual_name ~source ty_elt =
   let refs = Ty.symbols_of_elt ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader) ty_elt in
   let r = { Ty.unevaluated = ty_elt; evaluated = None; refs = Some refs } in
-  let (type_str, refs) =
-    Ty_printer.string_of_type_at_pos_result ~exact_by_default:true ~ts_syntax:false r
-  in
+  let (type_str, refs) = Ty_printer.string_of_type_at_pos_result ~ts_syntax:false r in
   let refs = augment_refs_with_summaries ~genv ~ref_type_bodies_tbl refs in
   let prop_docs = extract_prop_docs ~reader ~ast ty_elt in
   ServerProt.Response.InferTypeOfName.

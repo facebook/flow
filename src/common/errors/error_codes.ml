@@ -58,7 +58,6 @@ type error_code =
   | IllegalNewArray
   | IllegalThis
   | IllegalTypeof
-  | ImplicitInexactObject
   | ImportTypeAsValue
   | ImportValueAsType
   | IncompatibleExact
@@ -203,7 +202,6 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UnsafeObjectAssign -> UnsafeObjectAssign
   | Lints.UnnecessaryOptionalChain -> UnnecessaryOptionalChain
   | Lints.UnnecessaryInvariant -> UnnecessaryInvariant
-  | Lints.ImplicitInexactObject -> ImplicitInexactObject
   | Lints.UninitializedInstanceProperty -> UninitializedInstanceProperty
   | Lints.AmbiguousObjectType -> AmbiguousObjectType
   | Lints.RequireExplicitEnumChecks -> RequireExplicitEnumChecks
@@ -277,7 +275,6 @@ let string_of_code : error_code -> string = function
   | IllegalNewArray -> "illegal-new-array"
   | IllegalThis -> "illegal-this"
   | IllegalTypeof -> "illegal-typeof"
-  | ImplicitInexactObject -> "implicit-inexact-object"
   | ImportTypeAsValue -> "import-type-as-value"
   | ImportValueAsType -> "import-value-as-type"
   | IncompatibleExact -> "incompatible-exact"

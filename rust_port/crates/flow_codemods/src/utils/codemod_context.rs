@@ -122,16 +122,8 @@ pub mod typed {
         }
     }
 
-    pub fn flowfixme_ast(
-        lint_severities: &LintSettings<Severity>,
-        ccx: &TypedCodemodContext<'_>,
-    ) -> ast::types::Type<Loc, Loc> {
-        let TypedCodemodContext { options, .. } = ccx;
-        let exact_by_default: bool = options.exact_by_default;
-        flow_services_code_action::insert_type_utils::builtins::flowfixme_ast(
-            exact_by_default,
-            lint_severities,
-        )
+    pub fn flowfixme_ast(lint_severities: &LintSettings<Severity>) -> ast::types::Type<Loc, Loc> {
+        flow_services_code_action::insert_type_utils::builtins::flowfixme_ast(lint_severities)
     }
 }
 

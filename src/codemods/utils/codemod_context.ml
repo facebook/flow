@@ -59,10 +59,7 @@ module Typed = struct
     else
       Options.lint_severities options
 
-  let flowfixme_ast ~lint_severities ccx =
-    let { options; _ } = ccx in
-    let exact_by_default = Options.exact_by_default options in
-    Insert_type_utils.Builtins.flowfixme_ast ~lint_severities ~exact_by_default
+  let flowfixme_ast ~lint_severities = Insert_type_utils.Builtins.flowfixme_ast ~lint_severities
 end
 
 module Untyped = struct

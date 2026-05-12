@@ -427,8 +427,7 @@ module Builtins = struct
 
   let flowfixme_ty_default = Ty.Any (Ty.Annotated ALoc.none)
 
-  let flowfixme_ast ~exact_by_default ~lint_severities =
-    flowfixme_ty lint_severities |> Ty_serializer.type_ { Ty_serializer.exact_by_default }
+  let flowfixme_ast ~lint_severities = flowfixme_ty lint_severities |> Ty_serializer.type_
 end
 
 (* Validation *)

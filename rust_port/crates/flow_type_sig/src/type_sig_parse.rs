@@ -6430,7 +6430,7 @@ fn object_type<'arena, 'ast>(
         return object_mapped_type(opts, scope, scopes, tbls, xs, p);
     }
 
-    let exact = o.exact || ((!o.inexact) && opts.exact_by_default);
+    let exact = o.exact || !o.inexact;
     let mut acc = ObjAnnotAcc::empty();
 
     for objprop in o.properties.iter() {

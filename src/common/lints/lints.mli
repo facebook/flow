@@ -40,7 +40,6 @@ type lint_kind =
   | UnsafeObjectAssign
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
-  | ImplicitInexactObject
   | UninitializedInstanceProperty
   | AmbiguousObjectType
   | RequireExplicitEnumChecks

@@ -173,7 +173,6 @@ pub struct FrozenMetadata {
     pub enable_pattern_matching_instance_patterns: bool,
     pub enable_records: bool,
     pub enable_relay_integration: bool,
-    pub exact_by_default: bool,
     pub facebook_fbs: Option<FlowSmolStr>,
     pub facebook_fbt: Option<FlowSmolStr>,
     pub facebook_module_interop: bool,
@@ -242,7 +241,6 @@ impl Default for FrozenMetadata {
             enable_pattern_matching_instance_patterns: false,
             enable_records: false,
             enable_relay_integration: false,
-            exact_by_default: true,
             facebook_fbs: None,
             facebook_fbt: None,
             facebook_module_interop: false,
@@ -647,7 +645,6 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
                 .enable_pattern_matching_instance_patterns,
             enable_records: options.enable_records,
             enable_relay_integration: options.enable_relay_integration,
-            exact_by_default: options.exact_by_default,
             facebook_fbs: options.facebook_fbs.dupe(),
             facebook_fbt: options.facebook_fbt.dupe(),
             facebook_module_interop: options.facebook_module_interop,
@@ -1196,10 +1193,6 @@ impl<'cx> Context<'cx> {
 
     pub fn evaluated(&self) -> type_::eval::Map<Type> {
         self.0.ccx.sig_cx.borrow().evaluated.dupe()
-    }
-
-    pub fn exact_by_default(&self) -> bool {
-        self.0.metadata.frozen.exact_by_default
     }
 
     pub fn file_options(&self) -> Arc<FileOptions> {

@@ -1630,10 +1630,8 @@ fn declaration_infos<'a, 'cx>(
         file_sig.clone(),
         imported_names.dupe(),
     );
-    let exact_by_default = cx.exact_by_default();
     let docs_and_spans = documentation_fullspan_map::create(ast, Some(file));
     let printer_opts = ty_printer::PrinterOptions {
-        exact_by_default,
         ts_syntax: cx.ts_syntax(),
         ..Default::default()
     };

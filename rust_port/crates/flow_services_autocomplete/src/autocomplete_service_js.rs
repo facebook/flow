@@ -158,16 +158,11 @@ pub struct AcOptions {
 
 type DocumentationAndTags = (Option<String>, Option<Vec<LspCompletionItemTag>>);
 
-fn printer_options(
-    prefer_single_quotes: bool,
-    exact_by_default: bool,
-    ts_syntax: bool,
-) -> ty_printer::PrinterOptions {
+fn printer_options(prefer_single_quotes: bool, ts_syntax: bool) -> ty_printer::PrinterOptions {
     ty_printer::PrinterOptions {
         prefer_single_quotes,
         size: 80,
         with_comments: false,
-        exact_by_default,
         ts_syntax,
     }
 }
@@ -255,31 +250,22 @@ fn text_edit(
 }
 
 fn detail_of_ty(
-    exact_by_default: bool,
     optional: bool,
     ts_syntax: bool,
     ty_: &Ty<ALoc>,
 ) -> (Option<String>, Option<String>) {
-    let type_ = ty_printer::string_of_t_single_line(
-        ty_,
-        &printer_options(false, exact_by_default, ts_syntax),
-    );
+    let type_ = ty_printer::string_of_t_single_line(ty_, &printer_options(false, ts_syntax));
     let detail = format!("{}: {}", if optional { "?" } else { "" }, type_);
     (Some(type_), Some(detail))
 }
 
-fn detail_of_ty_decl(
-    exact_by_default: bool,
-    ts_syntax: bool,
-    decl: &Decl<ALoc>,
-) -> (Option<String>, Option<String>) {
+fn detail_of_ty_decl(ts_syntax: bool, decl: &Decl<ALoc>) -> (Option<String>, Option<String>) {
     let type_ = ty_printer::string_of_decl_single_line(
         decl,
         &ty_printer::PrinterOptions {
             prefer_single_quotes: false,
             size: 80,
             with_comments: false,
-            exact_by_default,
             ts_syntax,
         },
     );
@@ -292,7 +278,7 @@ fn detail_of_ty_decl(
         | Decl::NamespaceDecl(..)
         | Decl::ModuleDecl(..)
         | Decl::TypeAliasDecl(..) => None,
-        Decl::VariableDecl(box (_, ty_)) => detail_of_ty(exact_by_default, false, ts_syntax, ty_).1,
+        Decl::VariableDecl(box (_, ty_)) => detail_of_ty(false, ts_syntax, ty_).1,
     };
     (Some(type_), detail)
 }
@@ -303,7 +289,6 @@ fn autocomplete_create_result(
     preselect: bool,
     snippet: bool,
     documentation_and_tags: DocumentationAndTags,
-    exact_by_default: bool,
     ts_syntax: bool,
     log_info: &str,
     name: &str,
@@ -311,7 +296,7 @@ fn autocomplete_create_result(
     optional: bool,
     ty_: &Ty<ALoc>,
 ) -> ac_completion::CompletionItem {
-    let (item_detail, label_detail) = detail_of_ty(exact_by_default, optional, ts_syntax, ty_);
+    let (item_detail, label_detail) = detail_of_ty(optional, ts_syntax, ty_);
     ac_completion::CompletionItem {
         kind: Some(lsp_completion_of_type(ty_)),
         name: name.to_string(),
@@ -338,7 +323,6 @@ fn autocomplete_create_result_decl(
     preselect: bool,
     snippet: bool,
     documentation_and_tags: DocumentationAndTags,
-    exact_by_default: bool,
     ts_syntax: bool,
     log_info: &str,
     name: &str,
@@ -346,7 +330,7 @@ fn autocomplete_create_result_decl(
     decl: &Decl<ALoc>,
 ) -> ac_completion::CompletionItem {
     let kind = Some(lsp_completion_of_decl(decl));
-    let (item_detail, label_detail) = detail_of_ty_decl(exact_by_default, ts_syntax, decl);
+    let (item_detail, label_detail) = detail_of_ty_decl(ts_syntax, decl);
     ac_completion::CompletionItem {
         kind,
         name: name.to_string(),
@@ -372,7 +356,6 @@ fn autocomplete_create_result_elt(
     rank: usize,
     preselect: bool,
     documentation_and_tags: DocumentationAndTags,
-    exact_by_default: bool,
     ts_syntax: bool,
     log_info: &str,
     name: &str,
@@ -386,7 +369,6 @@ fn autocomplete_create_result_elt(
             preselect,
             false,
             documentation_and_tags,
-            exact_by_default,
             ts_syntax,
             log_info,
             name,
@@ -400,7 +382,6 @@ fn autocomplete_create_result_elt(
             preselect,
             false,
             documentation_and_tags,
-            exact_by_default,
             ts_syntax,
             log_info,
             name,
@@ -673,7 +654,6 @@ fn autocomplete_record(
     record_type: &Type,
     defaulted_props: &BTreeSet<String>,
 ) -> Option<ac_completion::CompletionItem> {
-    let exact_by_default = typing.cx.exact_by_default();
     match ty_normalizer_flow::from_type(&typing.norm_genv(), record_type) {
         Err(_) => None,
         Ok(elt) => match elt {
@@ -693,7 +673,6 @@ fn autocomplete_record(
                             false,
                             false,
                             documentation_and_tags,
-                            exact_by_default,
                             typing.cx.ts_syntax(),
                             "record",
                             record_name,
@@ -899,7 +878,6 @@ fn autocomplete_literals(
 ) -> Vec<ac_completion::CompletionItem> {
     let expected_type_ty = ty_normalizer_flow::expand_literal_union(genv, expected_type)
         .unwrap_or_else(|_| Arc::new(Ty::Top));
-    let exact_by_default = cx.exact_by_default();
     let literals = literals_of_ty(&expected_type_ty);
     let (prefer_single_quotes, edit_locs) =
         autocomplete_create_string_literal_edit_controls(prefer_single_quotes, edit_locs, token);
@@ -908,7 +886,7 @@ fn autocomplete_literals(
         .map(|ty_| {
             let name = ty_printer::string_of_t_single_line(
                 &ty_,
-                &printer_options(prefer_single_quotes, exact_by_default, cx.ts_syntax()),
+                &printer_options(prefer_single_quotes, cx.ts_syntax()),
             );
             autocomplete_create_result(
                 Some(&name),
@@ -916,7 +894,6 @@ fn autocomplete_literals(
                 true,
                 false,
                 ac_completion::empty_documentation_and_tags(),
-                exact_by_default,
                 cx.ts_syntax(),
                 "literal from upper bound",
                 &name,
@@ -1261,7 +1238,6 @@ fn autocomplete_id(
     token: &str,
     type_: &Type,
 ) -> Result<AcResult<ac_completion::T>, flow_utils_concurrency::job_error::JobError> {
-    let exact_by_default = typing.cx.exact_by_default();
     let expected_type = expected_concrete_type_of_t(typing.cx, type_);
     let prefer_single_quotes = typing.layout_options.single_quotes;
     let results = autocomplete_literals(
@@ -1307,7 +1283,6 @@ fn autocomplete_id(
                             rank,
                             false,
                             documentation_and_tags,
-                            exact_by_default,
                             typing.cx.ts_syntax(),
                             "local value identifier",
                             &name,
@@ -1419,7 +1394,6 @@ enum ModuleExportKind {
 
 fn exports_of_module_ty(
     edit_locs: &(Loc, Loc),
-    exact_by_default: bool,
     ts_syntax: bool,
     documentation_and_tags_of_module_member: &dyn Fn(&ALoc) -> DocumentationAndTags,
     kind: ModuleExportKind,
@@ -1456,7 +1430,6 @@ fn exports_of_module_ty(
                     false,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     ts_syntax,
                     "qualified type alias",
                     name.sym_name.as_str(),
@@ -1473,7 +1446,6 @@ fn exports_of_module_ty(
                     false,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     ts_syntax,
                     "qualified interface",
                     name.sym_name.as_str(),
@@ -1490,7 +1462,6 @@ fn exports_of_module_ty(
                     false,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     ts_syntax,
                     "qualified class",
                     name.sym_name.as_str(),
@@ -1507,7 +1478,6 @@ fn exports_of_module_ty(
                     false,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     ts_syntax,
                     "qualified record",
                     name.sym_name.as_str(),
@@ -1526,7 +1496,6 @@ fn exports_of_module_ty(
                     false,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     ts_syntax,
                     "qualified enum",
                     name.sym_name.as_str(),
@@ -1541,7 +1510,6 @@ fn exports_of_module_ty(
                     false,
                     false,
                     ac_completion::empty_documentation_and_tags(),
-                    exact_by_default,
                     ts_syntax,
                     "qualified variable",
                     name.as_str(),
@@ -1560,7 +1528,6 @@ fn exports_of_module_ty(
                     false,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     ts_syntax,
                     "qualified component",
                     name.sym_name.as_str(),
@@ -1579,7 +1546,6 @@ fn exports_of_module_ty(
                     false,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     ts_syntax,
                     "qualified namespace",
                     name.sym_name.as_str(),
@@ -1911,7 +1877,6 @@ fn autocomplete_unqualified_type(
     edit_locs: &(Loc, Loc),
     token: &str,
 ) -> Result<AcResult<ac_completion::T>, flow_utils_concurrency::job_error::JobError> {
-    let exact_by_default = typing.cx.exact_by_default();
     let mut items_rev: VecDeque<ac_completion::CompletionItem> = VecDeque::new();
     for name in BUILTIN_TYPES {
         items_rev.push_front(make_builtin_type(edit_locs, name));
@@ -1936,7 +1901,6 @@ fn autocomplete_unqualified_type(
                 0,
                 false,
                 documentation_and_tags,
-                exact_by_default,
                 typing.cx.ts_syntax(),
                 "unqualified type: local type identifier",
                 &name,
@@ -1961,7 +1925,6 @@ fn autocomplete_unqualified_type(
                     0,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     typing.cx.ts_syntax(),
                     "unqualified type: class, record, enum",
                     &name,
@@ -1975,7 +1938,6 @@ fn autocomplete_unqualified_type(
                     0,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     typing.cx.ts_syntax(),
                     "unqualified type: react element shorthand",
                     &name,
@@ -1997,7 +1959,6 @@ fn autocomplete_unqualified_type(
                     0,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     typing.cx.ts_syntax(),
                     "unqualified type: react element shorthand",
                     &name,
@@ -2008,7 +1969,6 @@ fn autocomplete_unqualified_type(
             Ok(Elt::Decl(decl))
                 if !exports_of_module_ty(
                     edit_locs,
-                    exact_by_default,
                     typing.cx.ts_syntax(),
                     &|_| ac_completion::empty_documentation_and_tags(),
                     ModuleExportKind::Type,
@@ -2024,7 +1984,6 @@ fn autocomplete_unqualified_type(
                     false,
                     false,
                     documentation_and_tags,
-                    exact_by_default,
                     typing.cx.ts_syntax(),
                     "unqualified type -> qualified type",
                     &name,
@@ -2218,7 +2177,6 @@ fn autocomplete_member(
     force_instance: bool,
 ) -> Result<AutocompleteServiceResult, flow_utils_concurrency::job_error::JobError> {
     let edit_locs = fix_locs_of_string_token(token, edit_locs);
-    let exact_by_default = typing.cx.exact_by_default();
     match members_of_type(typing, false, force_instance, false, &BTreeSet::new(), this) {
         Err(err) => Ok(AutocompleteServiceResultGeneric::AcFatalError(err)),
         Ok((mems, errors_to_log)) => {
@@ -2274,7 +2232,6 @@ fn autocomplete_member(
                                 false,
                                 false,
                                 documentation_and_tags,
-                                exact_by_default,
                                 typing.cx.ts_syntax(),
                                 "member",
                                 &name,
@@ -2296,7 +2253,6 @@ fn autocomplete_member(
                                 false,
                                 false,
                                 documentation_and_tags,
-                                exact_by_default,
                                 typing.cx.ts_syntax(),
                                 "bracket syntax member",
                                 &insert_text,
@@ -2315,7 +2271,6 @@ fn autocomplete_member(
                                 false,
                                 false,
                                 documentation_and_tags,
-                                exact_by_default,
                                 typing.cx.ts_syntax(),
                                 "dot-member switched to bracket-syntax member",
                                 &insert_text,
@@ -2338,7 +2293,6 @@ fn autocomplete_member(
                                 false,
                                 false,
                                 documentation_and_tags,
-                                exact_by_default,
                                 typing.cx.ts_syntax(),
                                 "start optional chain",
                                 &opt_chain_name,
@@ -2563,7 +2517,6 @@ fn autocomplete_record_field(
     token: &str,
     record_t: &Type,
 ) -> AutocompleteServiceResult {
-    let exact_by_default = typing.cx.exact_by_default();
     match members_of_type(typing, true, true, false, used_field_names, record_t) {
         Err(err) => AutocompleteServiceResultGeneric::AcFatalError(err),
         Ok((mems, errors_to_log)) => {
@@ -2576,7 +2529,6 @@ fn autocomplete_record_field(
                         false,
                         false,
                         documentation_and_tags,
-                        exact_by_default,
                         typing.cx.ts_syntax(),
                         "record field",
                         &name,
@@ -2628,7 +2580,6 @@ fn autocomplete_jsx_attribute(
     )?;
     let mut exclude_keys = used_attr_names.clone();
     exclude_keys.insert("children".to_string());
-    let exact_by_default = typing.cx.exact_by_default();
     match members_of_type(typing, true, false, false, &exclude_keys, &props_object) {
         Err(err) => Ok(AutocompleteServiceResultGeneric::AcFatalError(err)),
         Ok((mems, errors_to_log)) => {
@@ -2646,7 +2597,6 @@ fn autocomplete_jsx_attribute(
                         false,
                         false,
                         documentation_and_tags,
-                        exact_by_default,
                         typing.cx.ts_syntax(),
                         "jsx attribute",
                         &name,
@@ -2680,7 +2630,6 @@ fn autocomplete_module_exports(
     filter_name: Option<&dyn Fn(&str) -> bool>,
     module_type_opt: Option<ModuleTypeOrType>,
 ) -> AutocompleteServiceResult {
-    let exact_by_default = typing.cx.exact_by_default();
     let documentation_and_tags_of_module_member =
         |def_loc: &ALoc| documentation_and_tags_of_def_loc(typing, def_loc);
     let (items, errors_to_log) = match module_type_opt {
@@ -2691,7 +2640,6 @@ fn autocomplete_module_exports(
                 Ok(module_ty) => (
                     exports_of_module_ty(
                         edit_locs,
-                        exact_by_default,
                         typing.cx.ts_syntax(),
                         &documentation_and_tags_of_module_member,
                         kind,
@@ -2709,7 +2657,6 @@ fn autocomplete_module_exports(
                 Ok(Elt::Decl(module_ty)) => (
                     exports_of_module_ty(
                         edit_locs,
-                        exact_by_default,
                         typing.cx.ts_syntax(),
                         &documentation_and_tags_of_module_member,
                         kind,
@@ -2849,7 +2796,6 @@ fn autocomplete_object_key(
                                     false,
                                     false,
                                     documentation_and_tags,
-                                    typing.cx.exact_by_default(),
                                     typing.cx.ts_syntax(),
                                     "object key",
                                     &name,
@@ -2866,7 +2812,6 @@ fn autocomplete_object_key(
                                     false,
                                     false,
                                     documentation_and_tags,
-                                    typing.cx.exact_by_default(),
                                     typing.cx.ts_syntax(),
                                     "bracket syntax object key",
                                     &insert_text,

@@ -1632,8 +1632,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       ((loc, t), Component { Component.params; tparams; renders; comments })
     | (loc, Object { Object.exact; properties; inexact; comments }) as ot ->
       let cx = env.cx in
-      let exact_by_default = Context.exact_by_default cx in
-      let exact_type = exact || ((not inexact) && exact_by_default) in
+      let exact_type = exact || not inexact in
       let (has_indexer, mapped_type_loc) =
         properties
         |> List.fold_left
@@ -1652,11 +1651,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         Tast_utils.error_mapper#type_ ot
       | None ->
         let (t, properties) = convert_object env loc ~exact:exact_type properties in
-        if (not exact) && (not inexact) && not has_indexer then (
+        if (not exact) && (not inexact) && not has_indexer then
           Flow_js_utils.add_output cx Error_message.(EAmbiguousObjectType loc);
-          if not exact_by_default then
-            Flow_js_utils.add_output cx Error_message.(EImplicitInexactObject loc)
-        );
         ((loc, t), Object { Object.exact; properties; inexact; comments }))
     | (loc, Interface { Interface.extends; body; comments }) ->
       let ( body_loc,

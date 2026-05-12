@@ -54,7 +54,6 @@ type metadata = {
   enable_pattern_matching_instance_patterns: bool;
   enable_records: bool;
   enable_relay_integration: bool;
-  exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
@@ -357,7 +356,6 @@ let metadata_of_options options =
       Options.enable_pattern_matching_instance_patterns options;
     enable_records = Options.enable_records options;
     enable_relay_integration = Options.enable_relay_integration options;
-    exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
@@ -675,8 +673,6 @@ let errors cx = cx.ccx.errors
 let error_suppressions cx = cx.ccx.error_suppressions
 
 let evaluated cx = cx.ccx.sig_cx.evaluated
-
-let exact_by_default cx = cx.metadata.exact_by_default
 
 let file_options cx = cx.metadata.file_options
 

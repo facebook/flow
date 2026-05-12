@@ -6872,12 +6872,6 @@ where
                 code(name.as_str()),
                 text(" as a type."),
             ]),
-            MessageImplicitInexactObject => friendly::Message(vec![
-                text("Please add "),
-                code("..."),
-                text(" to the end of the list of "),
-                text("properties to express an inexact object type."),
-            ]),
             MessageImportTypeAsTypeof(export_name) => {
                 let (prefix, export) = msg_export("the type ", export_name);
                 let mut features = vec![text("Cannot import ")];

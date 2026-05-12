@@ -86,7 +86,6 @@ pub fn serialize(
     get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     file_sig: &FileSig,
     typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
-    exact_by_default: bool,
     loc: Loc,
     ty: ALocTy,
 ) -> ast::types::Type<Loc, Loc> {
@@ -107,8 +106,7 @@ pub fn serialize(
     );
     let ty = mapper.on_t(&loc, ty);
     let ty = simplify(ty);
-    let options = ty_serializer::SerializerOptions { exact_by_default };
-    let ty = ty_serializer::type_(&options, &ty);
+    let ty = ty_serializer::type_(&ty);
     insert_type_utils::patch_up_type_ast(&ty)
 }
 
@@ -732,7 +730,6 @@ pub fn synth_type<'a, 'cx>(
     type_loc: Loc,
     t: flow_typing_type::type_::Type,
 ) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected> {
-    let exact_by_default = cx.exact_by_default();
     let size_limit = size_limit.unwrap_or(30);
     let process = |ty: ALocTy| -> Result<ALocTy, Expected> {
         let (_, errors) =
@@ -786,7 +783,6 @@ pub fn synth_type<'a, 'cx>(
                     get_ast_from_shared_mem,
                     file_sig,
                     typed_ast,
-                    exact_by_default,
                     type_loc.dupe(),
                     import_fixed_ty,
                 );
@@ -1136,14 +1132,12 @@ pub fn insert_type_ty<'a>(
                 ty.dupe()
             }
         };
-        let exact_by_default = cx.exact_by_default();
         let ast = serialize(
             cx,
             loc_of_aloc,
             get_ast_from_shared_mem,
             file_sig,
             typed_ast,
-            exact_by_default,
             loc.dupe(),
             import_fixed_ty,
         );

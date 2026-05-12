@@ -54,7 +54,6 @@ fn sig_opts() -> TypeSigOptions {
         munge: false,
         facebook_key_mirror: false,
         facebook_fbt: None,
-        exact_by_default: true,
         enable_custom_error: false,
         enable_enums: true,
         enable_component_syntax: true,

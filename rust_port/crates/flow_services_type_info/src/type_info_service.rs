@@ -184,10 +184,8 @@ pub fn type_at_pos<'a>(
             (json_data, loc, None)
         }
         QueryResult::Success(loc, tys) => {
-            let exact_by_default = cx.exact_by_default();
             let ts_syntax = cx.ts_syntax();
             let opts = PrinterOptions {
-                exact_by_default,
                 ts_syntax,
                 ..Default::default()
             };
@@ -315,10 +313,8 @@ pub fn dump_types<'a>(
     match for_tool {
         Some(depth) => query_types::dump_types_for_tool(cx, typed_ast, depth),
         None => {
-            let exact_by_default = cx.exact_by_default();
             let ts_syntax = cx.ts_syntax();
             let opts = PrinterOptions {
-                exact_by_default,
                 ts_syntax,
                 ..Default::default()
             };

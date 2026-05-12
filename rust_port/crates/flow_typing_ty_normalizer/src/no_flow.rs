@@ -193,7 +193,6 @@ pub fn debug_string_of_t<'a, 'cx: 'a>(cx: &'a Context<'cx>, t: &Type) -> String 
         Err(e) => format!("<Error {}>", e.kind),
         Ok(elt) => {
             let opts = flow_common_ty::ty_printer::PrinterOptions {
-                exact_by_default: true,
                 ts_syntax: cx.ts_syntax(),
                 ..Default::default()
             };

@@ -600,14 +600,12 @@ pub mod builtins {
     }
 
     pub fn flowfixme_ast(
-        exact_by_default: bool,
         lint_severities: &flow_lint_settings::lint_settings::LintSettings<
             flow_lint_settings::severity::Severity,
         >,
     ) -> flow_parser::ast::types::Type<Loc, Loc> {
         let ty = flowfixme_ty(lint_severities);
-        let options = flow_common_ty::ty_serializer::SerializerOptions { exact_by_default };
-        flow_common_ty::ty_serializer::type_(&options, &ty)
+        flow_common_ty::ty_serializer::type_(&ty)
     }
 }
 

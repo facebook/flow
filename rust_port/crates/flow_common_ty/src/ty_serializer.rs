@@ -45,11 +45,6 @@ use crate::ty_printer::property_key_quotes_needed;
 use crate::ty_printer::utf8_escape;
 use crate::ty_symbol::Symbol;
 
-#[derive(Debug, Clone, Default, dupe::Dupe, Copy)]
-pub struct SerializerOptions {
-    pub exact_by_default: bool,
-}
-
 pub type AstType = ast::types::Type<Loc, Loc>;
 
 pub type AstTypeArgs = ast::types::TypeArgs<Loc, Loc>;
@@ -167,13 +162,11 @@ fn qualified3(x1: &str, x2: &str, x3: &str) -> ast::types::Type<Loc, Loc> {
     })
 }
 
-pub struct Serializer {
-    options: SerializerOptions,
-}
+pub struct Serializer;
 
 impl Serializer {
-    pub fn new(options: SerializerOptions) -> Self {
-        Serializer { options }
+    pub fn new() -> Self {
+        Serializer
     }
 
     pub fn type_<L: Dupe>(&self, t: &Arc<Ty<L>>) -> AstType {
@@ -580,7 +573,7 @@ impl Serializer {
             o.obj_props.iter().map(|p| self.obj_prop(p)).collect();
 
         let (exact, inexact, properties) = match &o.obj_kind {
-            ObjKind::ExactObj => (!self.options.exact_by_default, false, properties),
+            ObjKind::ExactObj => (false, false, properties),
             ObjKind::InexactObj => (false, true, properties),
             ObjKind::IndexedObj(d) => {
                 let indexer = self.obj_index_prop(d);
@@ -1194,7 +1187,7 @@ impl Serializer {
     }
 }
 
-pub fn type_<L: Dupe>(options: &SerializerOptions, t: &Arc<Ty<L>>) -> AstType {
-    let serializer = Serializer::new(options.dupe());
+pub fn type_<L: Dupe>(t: &Arc<Ty<L>>) -> AstType {
+    let serializer = Serializer::new();
     serializer.type_(t)
 }

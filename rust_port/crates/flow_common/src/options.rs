@@ -195,7 +195,6 @@ pub struct Options {
     pub enums: bool,
     pub estimate_recheck_time: bool,
     pub saved_state_restart_on_reinit: bool,
-    pub exact_by_default: bool,
     pub facebook_fbs: Option<FlowSmolStr>,
     pub facebook_fbt: Option<FlowSmolStr>,
     pub facebook_module_interop: bool,

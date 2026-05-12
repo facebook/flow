@@ -1914,7 +1914,6 @@ pub enum Message<L: Dupe> {
         from: Option<VirtualReason<L>>,
     },
 
-    MessageImplicitInexactObject,
     MessageImportTypeAsTypeof(FlowSmolStr),
     MessageImportTypeAsValue(FlowSmolStr),
     MessageImportValueAsType(FlowSmolStr),

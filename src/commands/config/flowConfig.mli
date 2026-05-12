@@ -115,8 +115,6 @@ val estimate_recheck_time : config -> bool option
 
 val saved_state_restart_on_reinit : config -> bool
 
-val exact_by_default : config -> bool option
-
 val facebook_fbs : config -> string option
 
 val facebook_fbt : config -> string option

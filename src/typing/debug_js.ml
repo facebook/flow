@@ -1659,7 +1659,6 @@ let dump_error_message =
         | Flow_intermediate_error_types.InvalidJSXRuntimeAttribute -> "InvalidJSXRuntimeAttribute"
         | Flow_intermediate_error_types.InvalidSupportsPlatform _ -> "InvalidSupportsPlatform"
         | Flow_intermediate_error_types.DisallowedSupportsPlatform -> "DisallowedSupportsPlatform")
-    | EImplicitInexactObject loc -> spf "EImplicitInexactObject (%s)" (string_of_aloc loc)
     | EAmbiguousObjectType loc -> spf "EAmbiguousObjectType (%s)" (string_of_aloc loc)
     | EUntypedTypeImport (loc, module_name) ->
       spf

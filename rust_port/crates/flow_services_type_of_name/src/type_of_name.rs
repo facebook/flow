@@ -227,7 +227,6 @@ fn lookup_member_in_elt<L: Dupe>(
 // Generates a type summary string for ref expansion.
 fn summarize_ty<L: Dupe>(t: &Ty<L>) -> Option<String> {
     let opts = PrinterOptions {
-        exact_by_default: true,
         ts_syntax: false,
         ..Default::default()
     };
@@ -383,7 +382,6 @@ fn format_ty_elt_response(
 ) -> response::infer_type_of_name::T {
     let refs = ty::symbols_of_elt(|aloc| reader.loc_of_aloc(aloc), &ty_elt);
     let opts = PrinterOptions {
-        exact_by_default: true,
         ts_syntax: false,
         ..Default::default()
     };

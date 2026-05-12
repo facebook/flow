@@ -268,7 +268,6 @@ impl<'a, 'cx> AnnotateExportsMapper<'a, 'cx> {
                 lint_severities,
                 max_type_size: max_type_size as usize,
                 merge_arrays: false,
-                exact_by_default: cctx.options.exact_by_default,
                 casting_syntax: cctx.options.casting_syntax,
                 acc: flow_services_code_action::insert_type_utils::Acc::empty(),
                 _phantom: std::marker::PhantomData,
@@ -343,10 +342,8 @@ impl<'a, 'cx> AnnotateExportsMapper<'a, 'cx> {
                                 &loc,
                                 &flow_services_code_action::insert_type_utils::info::T::DefaultAny,
                             );
-                            let flowfixme_ast = codemod_context::typed::flowfixme_ast(
-                                &self.mapper.lint_severities,
-                                self.cctx,
-                            );
+                            let flowfixme_ast =
+                                codemod_context::typed::flowfixme_ast(&self.mapper.lint_severities);
                             types::AnnotationOrHint::Available(ast::types::Annotation {
                                 loc: Loc::none(),
                                 annotation: flowfixme_ast,
@@ -384,10 +381,8 @@ impl<'a, 'cx> AnnotateExportsMapper<'a, 'cx> {
                             &loc,
                             &flow_services_code_action::insert_type_utils::info::T::DefaultAny,
                         );
-                        let flowfixme_ast = codemod_context::typed::flowfixme_ast(
-                            &self.mapper.lint_severities,
-                            self.cctx,
-                        );
+                        let flowfixme_ast =
+                            codemod_context::typed::flowfixme_ast(&self.mapper.lint_severities);
                         types::AnnotationOrHint::Available(ast::types::Annotation {
                             loc: Loc::none(),
                             annotation: flowfixme_ast,
@@ -538,7 +533,6 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
                                     );
                                     let flowfixme_ast = codemod_context::typed::flowfixme_ast(
                                         &self.mapper.lint_severities,
-                                        self.cctx,
                                     );
                                     let annot = ast::types::Annotation {
                                         loc: Loc::none(),
@@ -585,7 +579,6 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
                                 );
                                 let flowfixme_ast = codemod_context::typed::flowfixme_ast(
                                     &self.mapper.lint_severities,
-                                    self.cctx,
                                 );
                                 let annot = ast::types::Annotation {
                                     loc: Loc::none(),
@@ -661,7 +654,6 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
                                             let flowfixme_ast =
                                                 codemod_context::typed::flowfixme_ast(
                                                     &self.mapper.lint_severities,
-                                                    self.cctx,
                                                 );
                                             ast::function::ReturnAnnot::Available(
                                                 ast::types::Annotation {
@@ -699,7 +691,6 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
                                         );
                                         let flowfixme_ast = codemod_context::typed::flowfixme_ast(
                                             &self.mapper.lint_severities,
-                                            self.cctx,
                                         );
                                         ast::function::ReturnAnnot::Available(
                                             ast::types::Annotation {
@@ -829,7 +820,6 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
                                             let flowfixme_ast =
                                                 codemod_context::typed::flowfixme_ast(
                                                     &self.mapper.lint_severities,
-                                                    self.cctx,
                                                 );
                                             class::Property {
                                                 annot: types::AnnotationOrHint::Available(
@@ -873,7 +863,6 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
                                         );
                                         let flowfixme_ast = codemod_context::typed::flowfixme_ast(
                                             &self.mapper.lint_severities,
-                                            self.cctx,
                                         );
                                         class::Property {
                                             annot: types::AnnotationOrHint::Available(

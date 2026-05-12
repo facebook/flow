@@ -133,7 +133,6 @@ mod tests {
         }));
         frozen.hook_compatibility = true;
         frozen.component_syntax = true;
-        frozen.exact_by_default = true;
         frozen.enable_enums = true;
         frozen.opaque_type_new_bound_syntax = true;
         frozen.strip_root = true;
@@ -275,7 +274,6 @@ mod tests {
                 enable_relay_integration: false,
                 relay_integration_module_prefix: None,
                 facebook_fbt: None,
-                exact_by_default: true,
                 enable_custom_error: false,
                 enable_enums: true,
                 enable_component_syntax: true,

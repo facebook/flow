@@ -41,7 +41,6 @@ mod tests {
             prefer_single_quotes: false,
             size: 80,
             with_comments: false,
-            exact_by_default: true,
             ts_syntax: false,
         };
         let result = string_of_t(&obj, &opts);
@@ -66,7 +65,6 @@ mod tests {
             prefer_single_quotes: false,
             size: 80,
             with_comments: false,
-            exact_by_default: true,
             ts_syntax: false,
         };
         let result = string_of_t(&obj, &opts);
@@ -83,7 +81,6 @@ mod tests {
             prefer_single_quotes: false,
             size: 80,
             with_comments: false,
-            exact_by_default: false,
             ts_syntax: false,
         };
         let result = string_of_t(&tup, &opts);
@@ -106,7 +103,6 @@ mod tests {
             prefer_single_quotes: false,
             size: 80,
             with_comments: false,
-            exact_by_default: false,
             ts_syntax: false,
         };
         let result = string_of_t(&tup, &opts);

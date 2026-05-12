@@ -43,7 +43,6 @@ fn default_sig_options() -> TypeSigOptions {
         munge: false,
         facebook_key_mirror: false,
         facebook_fbt: None,
-        exact_by_default: false,
         enable_custom_error: false,
         enable_enums: true,
         enable_component_syntax: true,
@@ -1706,7 +1705,7 @@ Module {
                                                 ObjAnnot(
                                                     AnnotObjAnnot {
                                                         loc: 10,
-                                                        obj_kind: InexactObj,
+                                                        obj_kind: ExactObj,
                                                         props: {
                                                             "boz": ObjAnnotField(
                                                                 (
@@ -1969,7 +1968,7 @@ Module {
                                 ObjAnnot(
                                     AnnotObjAnnot {
                                         loc: 12,
-                                        obj_kind: InexactObj,
+                                        obj_kind: ExactObj,
                                         props: {
                                             "boz": ObjAnnotField(
                                                 (
@@ -9014,7 +9013,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {
                                 "a": ObjAnnotField(
                                     (
@@ -9045,7 +9044,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 5,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {
                                 "b": ObjAnnotField(
                                     (
@@ -9076,7 +9075,7 @@ Module {
                     ObjSpreadAnnot(
                         AnnotObjSpreadAnnot {
                             loc: 9,
-                            exact: false,
+                            exact: true,
                             elems: [
                                 ObjSpreadAnnotElem(
                                     TyRef(
@@ -9294,7 +9293,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {
                                 "p": ObjAnnotField(
                                     (
@@ -9595,7 +9594,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {
                                 "m": ObjAnnotMethod(
                                     ObjAnnotMethodData {
@@ -9679,7 +9678,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {},
                             computed_props: [],
                             proto: ObjAnnotCallable(
@@ -9800,7 +9799,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {},
                             computed_props: [],
                             proto: ObjAnnotCallable(
@@ -10493,7 +10492,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {
                                 "p": ObjAnnotField(
                                     (
@@ -10536,7 +10535,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 6,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {
                                 "p": ObjAnnotField(
                                     (
@@ -11553,15 +11552,7 @@ Module {
     patterns: [],
 }
 "#;
-    assert_eq!(
-        dedent_trim(expected_output),
-        dedent_trim(&print_sig_with_options(
-            input,
-            Some(|opts: &mut TypeSigOptions| {
-                opts.exact_by_default = true;
-            })
-        ))
-    )
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
 #[test]
@@ -12482,7 +12473,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {},
                             computed_props: [],
                             proto: ObjAnnotExplicitProto(
@@ -14382,7 +14373,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {
                                 "a": ObjAnnotField(
                                     (
@@ -14757,7 +14748,7 @@ Module {
             ObjAnnot(
                 AnnotObjAnnot {
                     loc: 1,
-                    obj_kind: InexactObj,
+                    obj_kind: ExactObj,
                     props: {
                         "bar": ObjAnnotField(
                             (
@@ -15285,7 +15276,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {
                                 "bar": ObjAnnotField(
                                     (
@@ -15698,7 +15689,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 3,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {},
                             computed_props: [],
                             proto: ObjAnnotImplicitProto,
@@ -15790,7 +15781,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {
                                 "bar": ObjAnnotField(
                                     (
@@ -16130,7 +16121,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 1,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {
                                 "x": ObjAnnotField(
                                     (
@@ -17025,7 +17016,7 @@ Module {
                     ObjAnnot(
                         AnnotObjAnnot {
                             loc: 16,
-                            obj_kind: InexactObj,
+                            obj_kind: ExactObj,
                             props: {},
                             computed_props: [],
                             proto: ObjAnnotImplicitProto,
@@ -18008,7 +17999,7 @@ Local defs:
                         ObjAnnot(
                             AnnotObjAnnot {
                                 loc: 5,
-                                obj_kind: InexactObj,
+                                obj_kind: ExactObj,
                                 props: {
                                     "foo": ObjAnnotField(
                                         (

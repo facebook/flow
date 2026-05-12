@@ -888,7 +888,6 @@ type 'loc message =
       def: 'loc virtual_reason;
       from: 'loc virtual_reason option;
     }
-  | MessageImplicitInexactObject
   | MessageImportTypeAsTypeof of string
   | MessageImportTypeAsValue of string
   | MessageImportValueAsType of string

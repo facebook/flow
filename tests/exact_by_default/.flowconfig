@@ -1,5 +1,2 @@
 [options]
 all=true
-
-[lints]
-implicit-inexact-object=error

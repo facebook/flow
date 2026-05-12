@@ -133,7 +133,6 @@ type t = {
   opt_enums: bool;
   opt_estimate_recheck_time: bool;
   opt_saved_state_restart_on_reinit: bool;
-  opt_exact_by_default: bool;
   opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
   opt_facebook_module_interop: bool;
@@ -286,8 +285,6 @@ let enums opts = opts.opt_enums
 let estimate_recheck_time opts = opts.opt_estimate_recheck_time
 
 let saved_state_restart_on_reinit opts = opts.opt_saved_state_restart_on_reinit
-
-let exact_by_default opts = opts.opt_exact_by_default
 
 let facebook_fbs opts = opts.opt_facebook_fbs
 

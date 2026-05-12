@@ -1286,7 +1286,6 @@ where
 
         let reporter_options = codemod_report::ReporterOptions {
             strip_root: strip_root.clone(),
-            exact_by_default: _options.exact_by_default,
         };
 
         let (files, report) = SR::digest(results);

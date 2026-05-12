@@ -3282,12 +3282,11 @@ fn convert_inner<'a>(
             }
         }
         TypeInner::Object { loc, inner } => {
-            let exact_by_default = cx.exact_by_default();
             let exact = inner.exact;
             let inexact = inner.inexact;
             let properties = &inner.properties;
             let comments = &inner.comments;
-            let exact_type = exact || (!inexact && exact_by_default);
+            let exact_type = exact || !inexact;
             let mut has_indexer = false;
             let mut mapped_type_loc: Option<ALoc> = None;
             for property in properties.iter() {
@@ -3324,12 +3323,6 @@ fn convert_inner<'a>(
                             cx,
                             ErrorMessage::EAmbiguousObjectType(loc.dupe()),
                         );
-                        if !exact_by_default {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EImplicitInexactObject(loc.dupe()),
-                            );
-                        }
                     }
                     ast::types::Type::new(TypeInner::Object {
                         loc: (loc.dupe(), obj_t),

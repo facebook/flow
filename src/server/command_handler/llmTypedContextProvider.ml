@@ -44,9 +44,7 @@ let normalize_type ~cx ~file_sig ~typed_ast ~reader (t : Type.t) :
     let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
     let refs = Ty.symbols_of_elt ~loc_of_aloc ty in
     let result = { Ty.unevaluated = ty; evaluated = None; refs = Some refs } in
-    let (type_str, refs) =
-      Ty_printer.string_of_type_at_pos_result ~exact_by_default:true ~ts_syntax:false result
-    in
+    let (type_str, refs) = Ty_printer.string_of_type_at_pos_result ~ts_syntax:false result in
     (type_str, refs)
   | Error _ -> ("<unknown>", None)
 

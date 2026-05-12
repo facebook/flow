@@ -9,7 +9,6 @@ use std::path::PathBuf;
 
 pub struct ReporterOptions {
     pub strip_root: Option<PathBuf>,
-    pub exact_by_default: bool,
 }
 
 pub enum Reporter<A> {

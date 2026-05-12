@@ -5,6 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type options = { exact_by_default: bool }
-
-val type_ : options -> Ty.t -> (Loc.t, Loc.t) Flow_ast.Type.t
+val type_ : Ty.t -> (Loc.t, Loc.t) Flow_ast.Type.t

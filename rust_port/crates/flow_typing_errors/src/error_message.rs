@@ -2627,8 +2627,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EDocblockError(Box<(L, DocblockError)>),
 
-    EImplicitInexactObject(L),
-
     EAmbiguousObjectType(L),
 
     // The string is either the name of a module or "the module that exports `_`".
@@ -4482,7 +4480,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EParseError(box (loc, p)) => EParseError(Box::new((f(loc), p))),
             EDocblockError(box (loc, e)) => EDocblockError(Box::new((f(loc), e))),
-            EImplicitInexactObject(loc) => EImplicitInexactObject(f(loc)),
             EAmbiguousObjectType(loc) => EAmbiguousObjectType(f(loc)),
             EUntypedTypeImport(box (loc, s)) => EUntypedTypeImport(Box::new((f(loc), s))),
             EUntypedImport(box (loc, s)) => EUntypedImport(Box::new((f(loc), s))),
@@ -5772,7 +5769,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EUnusedSuppression(loc)
             | Self::ECodelessSuppression(loc)
             | Self::EDocblockError(box (loc, _))
-            | Self::EImplicitInexactObject(loc)
             | Self::EInvalidComponentRestParam(loc)
             | Self::EAmbiguousObjectType(loc)
             | Self::EParseError(box (loc, _))
@@ -6076,7 +6072,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 LintError(UnnecessaryOptionalChain)
             }
             ErrorMessage::EUnnecessaryInvariant(box (_, _)) => LintError(UnnecessaryInvariant),
-            ErrorMessage::EImplicitInexactObject(_) => LintError(ImplicitInexactObject),
             ErrorMessage::EAmbiguousObjectType(_) => LintError(AmbiguousObjectType),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(
                 box EnumNotAllCheckedData {
@@ -6881,10 +6876,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EUnsupportedSetProto(_) => {
                 Normal(Message::MessageCannotMutateThisPrototype)
-            }
-
-            ErrorMessage::EImplicitInexactObject(_) => {
-                Normal(Message::MessageImplicitInexactObject)
             }
 
             ErrorMessage::EAmbiguousObjectType(_) => Normal(Message::MessageAmbiguousObjectType),
@@ -8942,7 +8933,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             | Self::EUnnecessaryOptionalChain(box (_, _))
             | Self::EUnnecessaryInvariant(box (_, _))
             | Self::EUnnecessaryDeclareTypeOnlyExport(_)
-            | Self::EImplicitInexactObject(_)
             | Self::EAmbiguousObjectType(_)
             | Self::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck(
                 box MatchNonExplicitEnumCheckData { .. },
@@ -9605,7 +9595,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             | ErrorMessage::ESketchyNumberLint { .. }
             | ErrorMessage::EUnnecessaryOptionalChain { .. }
             | ErrorMessage::EUnnecessaryInvariant { .. }
-            | ErrorMessage::EImplicitInexactObject { .. }
             | ErrorMessage::EAmbiguousObjectType { .. }
             | ErrorMessage::EReactIntrinsicOverlap(box EReactIntrinsicOverlapData { .. })
             | ErrorMessage::EUninitializedInstanceProperty { .. }

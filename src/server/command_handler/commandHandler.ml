@@ -738,7 +738,6 @@ let infer_type_to_response
     ~reader
     ~json
     ~expanded
-    ~exact_by_default
     ~ts_syntax
     ~strip_root
     loc
@@ -754,11 +753,7 @@ let infer_type_to_response
       let open Hh_json in
       let type_json t =
         let json_obj =
-          [
-            ( "type",
-              JSON_String (Ty_printer.string_of_elt_single_line ~exact_by_default ~ts_syntax t)
-            );
-          ]
+          [("type", JSON_String (Ty_printer.string_of_elt_single_line ~ts_syntax t))]
         in
         let json_obj =
           if expanded then
@@ -779,9 +774,7 @@ let infer_type_to_response
     else
       ServerProt.Response.InferType.Friendly
         (Base.Option.map tys ~f:(fun r ->
-             let (type_str, refs) =
-               Ty_printer.string_of_type_at_pos_result ~exact_by_default ~ts_syntax r
-             in
+             let (type_str, refs) = Ty_printer.string_of_type_at_pos_result ~ts_syntax r in
              { ServerProt.Response.InferType.type_str; refs }
          )
         )
@@ -935,13 +928,11 @@ let infer_type
           ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
           :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
         in
-        let exact_by_default = Options.exact_by_default options in
         let response =
           infer_type_to_response
             ~reader
             ~json
             ~expanded
-            ~exact_by_default
             ~ts_syntax:(Options.ts_syntax options)
             ~strip_root
             loc
@@ -1057,10 +1048,7 @@ let inlay_hint
             let tys =
               Base.Option.map tys ~f:(fun r ->
                   let (type_str, refs) =
-                    Ty_printer.string_of_type_at_pos_result
-                      ~exact_by_default:(Options.exact_by_default options)
-                      ~ts_syntax:(Options.ts_syntax options)
-                      r
+                    Ty_printer.string_of_type_at_pos_result ~ts_syntax:(Options.ts_syntax options) r
                   in
                   { ServerProt.Response.InferType.type_str; refs }
               )

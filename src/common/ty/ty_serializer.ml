@@ -9,8 +9,6 @@ module Ast = Flow_ast
 open Ty
 module T = Flow_ast.Type
 
-type options = { exact_by_default: bool }
-
 let id_from_string x = Flow_ast_utils.ident_of_source (Loc.none, x)
 
 let id_from_symbol x =
@@ -54,7 +52,7 @@ let qualified3 x1 x2 x3 =
   let q = Qualified (Loc.none, { qualification = q; id = id_from_string x3 }) in
   T.Typeof { T.Typeof.argument = q; targs = None; comments = None }
 
-let type_ options =
+let type_ =
   let rec type_ t =
     let just t = (Loc.none, t) in
     match t with
@@ -326,7 +324,7 @@ let type_ options =
     let properties = Base.List.map ~f:obj_prop o.obj_props in
     let (exact, inexact, properties) =
       match o.obj_kind with
-      | ExactObj -> (not options.exact_by_default, false, properties)
+      | ExactObj -> (false, false, properties)
       | InexactObj -> (false, true, properties)
       | IndexedObj d ->
         let p = obj_index_prop d in

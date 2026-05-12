@@ -97,7 +97,6 @@ module Make (Extra : BASE_STATS) = struct
     ~lint_severities
     ~max_type_size
     ~merge_arrays
-    ?(exact_by_default = Options.exact_by_default cctx.Codemod_context.Typed.options)
     ?(casting_syntax = Options.casting_syntax cctx.Codemod_context.Typed.options)
     () =
     object (this)
@@ -113,7 +112,7 @@ module Make (Extra : BASE_STATS) = struct
 
       method private get_remote_converter = Base.Option.value_exn remote_converter
 
-      method private serialize t = Ty_serializer.(type_ { exact_by_default } t)
+      method private serialize t = Ty_serializer.type_ t
 
       method private replace_type_node_with_ty =
         let run loc ty =

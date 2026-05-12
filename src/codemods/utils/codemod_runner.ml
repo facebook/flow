@@ -841,9 +841,7 @@ module RepeatRunner (StepRunner : STEP_RUNNER) : RUNNABLE = struct
       else
         None
     in
-    let reporter_options =
-      { Codemod_report.strip_root; exact_by_default = Options.exact_by_default options }
-    in
+    let reporter_options = { Codemod_report.strip_root } in
     (* post-process *)
     let (files, report) = StepRunner.digest results in
     let%lwt changed_files = Codemod_printer.print_asts ~strip_root ~write files in

@@ -1541,7 +1541,6 @@ fn get_def_of_check_result(
 fn infer_type_to_response(
     json: bool,
     expanded: bool,
-    exact_by_default: bool,
     ts_syntax: bool,
     strip_root: Option<&std::path::Path>,
     loc: flow_parser::loc::Loc,
@@ -1557,7 +1556,6 @@ fn infer_type_to_response(
     let converter = flow_common_ty::ty_debug::AlocToLocFn::new(loc_of_aloc);
     let tys = if json {
         let printer_opts = flow_common_ty::ty_printer::PrinterOptions {
-            exact_by_default,
             ts_syntax,
             ..Default::default()
         };
@@ -1607,7 +1605,6 @@ fn infer_type_to_response(
         server_prot::response::infer_type::Payload::Json(json_string)
     } else {
         let printer_opts = flow_common_ty::ty_printer::PrinterOptions {
-            exact_by_default,
             ts_syntax,
             ..Default::default()
         };
@@ -1805,11 +1802,9 @@ fn infer_type(
                             serde_json::Value::Bool(documentation.is_some()),
                         ),
                     );
-                    let exact_by_default = options.exact_by_default;
                     let response = infer_type_to_response(
                         json,
                         expanded,
-                        exact_by_default,
                         options.ts_syntax,
                         strip_root.as_deref(),
                         loc,
@@ -2013,7 +2008,6 @@ fn inlay_hint(
                                     &r.evaluated,
                                     &r.refs,
                                     &flow_common_ty::ty_printer::PrinterOptions {
-                                        exact_by_default: options.exact_by_default,
                                         ts_syntax: options.ts_syntax,
                                         ..Default::default()
                                     },

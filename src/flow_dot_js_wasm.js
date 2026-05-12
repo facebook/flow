@@ -360,13 +360,6 @@ flowDotJsExports.configSchema = `[
     "desc": "Enable support for Flow Enums."
   },
   {
-    "key": "exact_by_default",
-    "kind": "option",
-    "type": "bool",
-    "default": true,
-    "desc": "Treat object types as exact by default."
-  },
-  {
     "key": "experimental.const_params",
     "kind": "option",
     "type": "bool",
