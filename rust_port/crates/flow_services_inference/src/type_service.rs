@@ -3553,8 +3553,60 @@ pub fn recheck(
     RecheckError,
 > {
     let did_change_mergebase = changed_mergebase.unwrap_or(false);
-    if incompatible_lib_change {
-        if did_change_mergebase {
+    if !did_change_mergebase {
+        // When the mergebase did not change, the only reinit trigger is a local libdef
+        // change. [Recheck_too_slow] cannot fire (it requires changed_mergebase=Some true),
+        // and [missed_changes] without a mergebase change was already handled upstream
+        // by adding focused files to [updates] (rechecker.ml).
+        if incompatible_lib_change {
+            reinit_full_check(
+                pool,
+                shared_mem,
+                options,
+                updates,
+                files_to_force,
+                node_modules_containers,
+                will_be_checked_files,
+                env,
+            )
+        } else {
+            recheck_impl(
+                pool,
+                shared_mem,
+                options,
+                updates,
+                find_ref_request,
+                files_to_force,
+                changed_mergebase,
+                node_modules_containers,
+                will_be_checked_files,
+                env,
+            )
+        }
+    } else {
+        let reinit_or_restart = |reason: &str,
+                                 files_to_force: CheckedSet,
+                                 will_be_checked_files: &mut CheckedSet,
+                                 env: Env| {
+            if options.saved_state_restart_on_reinit {
+                flow_hh_logger::info!("Reinit ({}): exiting for a clean restart", reason);
+                flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::Restart);
+            }
+            // allow_fallback is false, so reinit exits on error and always returns Some
+            reinit(
+                pool,
+                shared_mem,
+                options,
+                false,
+                reason,
+                updates,
+                files_to_force,
+                will_be_checked_files,
+                env,
+            )
+            .unwrap()
+        };
+        if incompatible_lib_change {
             // The mergebase changed and a libdef changed. Try loading saved state first -
             // if the saved state was built after the libdef change, we only need to recheck
             // the delta files instead of all files. If saved state loading fails (e.g.
@@ -3590,71 +3642,38 @@ pub fn recheck(
                     )
                 }
             }
+        } else if missed_changes {
+            Ok(reinit_or_restart(
+                "missed_changes",
+                files_to_force,
+                will_be_checked_files,
+                env,
+            ))
         } else {
-            reinit_full_check(
+            let env_for_reinit = env.clone();
+            let files_to_force_for_reinit = files_to_force.dupe();
+            match recheck_impl(
                 pool,
                 shared_mem,
                 options,
                 updates,
+                find_ref_request,
                 files_to_force,
+                changed_mergebase,
                 node_modules_containers,
                 will_be_checked_files,
                 env,
-            )
-        }
-    } else if missed_changes && did_change_mergebase {
-        if did_change_mergebase && options.saved_state_restart_on_reinit {
-            flow_hh_logger::info!("Reinit (missed_changes): exiting for a clean restart");
-            flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::Restart);
-        }
-        Ok(reinit(
-            pool,
-            shared_mem,
-            options,
-            false,
-            "missed_changes",
-            updates,
-            files_to_force,
-            will_be_checked_files,
-            env,
-        )
-        .unwrap())
-    } else {
-        let env_for_reinit = env.clone();
-        let files_to_force_for_reinit = files_to_force.dupe();
-        match recheck_impl(
-            pool,
-            shared_mem,
-            options,
-            updates,
-            find_ref_request,
-            files_to_force.dupe(),
-            changed_mergebase,
-            node_modules_containers,
-            will_be_checked_files,
-            env,
-        ) {
-            Ok(result) => Ok(result),
-            Err(RecheckError::TooSlow) => {
-                if did_change_mergebase && options.saved_state_restart_on_reinit {
-                    flow_hh_logger::info!("Reinit (recheck_too_slow): exiting for a clean restart");
-                    flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::Restart);
-                }
-                Ok(reinit(
-                    pool,
-                    shared_mem,
-                    options,
-                    false,
+            ) {
+                Ok(result) => Ok(result),
+                Err(RecheckError::TooSlow) => Ok(reinit_or_restart(
                     "recheck_too_slow",
-                    updates,
                     files_to_force_for_reinit,
                     will_be_checked_files,
                     env_for_reinit,
-                )
-                .unwrap())
-            }
-            Err(RecheckError::Canceled(changed_files)) => {
-                Err(RecheckError::Canceled(changed_files))
+                )),
+                Err(RecheckError::Canceled(changed_files)) => {
+                    Err(RecheckError::Canceled(changed_files))
+                }
             }
         }
     }

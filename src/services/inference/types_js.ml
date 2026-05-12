@@ -2723,15 +2723,13 @@ let recheck
     ~will_be_checked_files
     env =
   let did_change_mergebase = Base.Option.value ~default:false changed_mergebase in
-  let reinit_no_fallback ~reason =
-    if did_change_mergebase && Options.saved_state_restart_on_reinit options then begin
-      Hh_logger.info "Reinit (%s): exiting for a clean restart" reason;
-      Exit.exit Exit.Restart
-    end;
-    let%lwt result =
-      reinit
-        ~allow_fallback:false
-        ~reason
+  if not did_change_mergebase then
+    (* When the mergebase did not change, the only reinit trigger is a local libdef
+       change. [Recheck_too_slow] cannot fire (it requires changed_mergebase=Some true),
+       and [missed_changes] without a mergebase change was already handled upstream
+       by adding focused files to [updates] (rechecker.ml). *)
+    if incompatible_lib_change then
+      reinit_full_check
         ~profiling
         ~workers
         ~options
@@ -2739,12 +2737,39 @@ let recheck
         ~files_to_force
         ~will_be_checked_files
         env
+    else
+      recheck_impl
+        ~profiling
+        ~options
+        ~workers
+        ~updates
+        ~find_ref_request
+        ~files_to_force
+        ~changed_mergebase
+        ~will_be_checked_files
+        env
+  else
+    let reinit_or_restart ~reason =
+      if Options.saved_state_restart_on_reinit options then begin
+        Hh_logger.info "Reinit (%s): exiting for a clean restart" reason;
+        Exit.exit Exit.Restart
+      end;
+      let%lwt result =
+        reinit
+          ~allow_fallback:false
+          ~reason
+          ~profiling
+          ~workers
+          ~options
+          ~updates
+          ~files_to_force
+          ~will_be_checked_files
+          env
+      in
+      (* allow_fallback is false, so reinit exits on error and always returns Some *)
+      Lwt.return (Base.Option.value_exn result)
     in
-    (* allow_fallback is false, so reinit exits on error and always returns Some *)
-    Lwt.return (Base.Option.value_exn result)
-  in
-  if incompatible_lib_change then
-    if did_change_mergebase then begin
+    if incompatible_lib_change then begin
       (* The mergebase changed and a libdef changed. Try loading saved state first —
          if the saved state was built after the libdef change, we only need to recheck
          the delta files instead of all files. If saved state loading fails (e.g.
@@ -2773,31 +2798,22 @@ let recheck
           ~files_to_force
           ~will_be_checked_files
           env
-    end else
-      reinit_full_check
-        ~profiling
-        ~workers
-        ~options
-        ~updates
-        ~files_to_force
-        ~will_be_checked_files
-        env
-  else if missed_changes && did_change_mergebase then
-    reinit_no_fallback ~reason:"missed_changes"
-  else
-    try%lwt
-      recheck_impl
-        ~profiling
-        ~options
-        ~workers
-        ~updates
-        ~find_ref_request
-        ~files_to_force
-        ~changed_mergebase
-        ~will_be_checked_files
-        env
-    with
-    | Recheck_too_slow -> reinit_no_fallback ~reason:"recheck_too_slow"
+    end else if missed_changes then
+      reinit_or_restart ~reason:"missed_changes"
+    else
+      try%lwt
+        recheck_impl
+          ~profiling
+          ~options
+          ~workers
+          ~updates
+          ~find_ref_request
+          ~files_to_force
+          ~changed_mergebase
+          ~will_be_checked_files
+          env
+      with
+      | Recheck_too_slow -> reinit_or_restart ~reason:"recheck_too_slow"
 
 let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~message env =
   let { ServerEnv.dependency_info; errors; collated_errors; _ } = env in
