@@ -154,6 +154,7 @@ module Opts = struct
     relay_integration_excludes: string list;
     relay_integration_module_prefix: string option;
     relay_integration_module_prefix_includes: string list;
+    restart_on_flowconfig_change: bool;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
     saved_state_direct_serialization: bool;
@@ -326,6 +327,7 @@ module Opts = struct
       relay_integration_excludes = [];
       relay_integration_module_prefix = None;
       relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
+      restart_on_flowconfig_change = true;
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
       saved_state_direct_serialization = false;
@@ -1241,6 +1243,9 @@ module Opts = struct
           ~init:(fun opts -> { opts with records_includes = [] })
           ~multiple:true
           (fun opts v -> Ok { opts with records_includes = v :: opts.records_includes })
+      );
+      ( "experimental.restart_on_flowconfig_change",
+        boolean (fun opts v -> Ok { opts with restart_on_flowconfig_change = v })
       );
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
@@ -2253,6 +2258,8 @@ let relay_integration_module_prefix_includes c =
   c.options.Opts.relay_integration_module_prefix_includes
 
 let required_version c = c.version
+
+let restart_on_flowconfig_change c = c.options.Opts.restart_on_flowconfig_change
 
 let root_name c = c.options.Opts.root_name
 

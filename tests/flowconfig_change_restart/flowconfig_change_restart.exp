@@ -1,0 +1,62 @@
+Before any changes:
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:3:1
+   3| x as string;
+      ^
+
+References:
+   test.js:2:18
+   2| declare const x: number;
+                       ^^^^^^ [1]
+   test.js:3:6
+   3| x as string;
+           ^^^^^^ [2]
+
+
+
+Found 1 error
+
+After .flowconfig change (server should have restarted):
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:3:1
+   3| x as string;
+      ^
+
+References:
+   test.js:2:18
+   2| declare const x: number;
+                       ^^^^^^ [1]
+   test.js:3:6
+   3| x as string;
+           ^^^^^^ [2]
+
+
+
+Found 1 error
+
+After package.json change (server should have restarted):
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:3:1
+   3| x as string;
+      ^
+
+References:
+   test.js:2:18
+   2| declare const x: number;
+                       ^^^^^^ [1]
+   test.js:3:6
+   3| x as string;
+           ^^^^^^ [2]
+
+
+
+Found 1 error

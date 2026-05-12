@@ -249,6 +249,7 @@ pub struct Options {
     pub relay_integration_excludes: Arc<[Regex]>,
     pub relay_integration_module_prefix: Option<FlowSmolStr>,
     pub relay_integration_module_prefix_includes: Arc<[Regex]>,
+    pub restart_on_flowconfig_change: bool,
     pub root: Arc<PathBuf>,
     pub root_name: Option<FlowSmolStr>,
     pub saved_state_direct_serialization: bool,

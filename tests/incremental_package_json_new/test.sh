@@ -15,10 +15,11 @@ echo "0 as 1;" > file.js
 
 assert_ok "$FLOW" force-recheck --focus --no-auto-start package.json file.js
 
-# sleep added to ensure server has died
+# Server restarts on incompatible package.json change. Wait, then stop the
+# auto-restarted (lazy) server and start a non-lazy one to check all files.
 sleep 2
-
-# The following should succeed, since server should have died with the recheck
+"$FLOW" stop . 2>/dev/null || true
+sleep 1
 assert_ok "$FLOW" start --file-watcher none --lazy-mode none --wait .
 
 assert_errors "$FLOW" status --no-auto-start . # errors on file.js

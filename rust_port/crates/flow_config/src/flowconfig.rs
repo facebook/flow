@@ -186,6 +186,7 @@ pub mod opts {
         pub relay_integration_excludes: Vec<String>,
         pub relay_integration_module_prefix: Option<String>,
         pub relay_integration_module_prefix_includes: Vec<String>,
+        pub restart_on_flowconfig_change: bool,
         pub root_name: Option<String>,
         pub saved_state_direct_serialization: bool,
         pub saved_state_parallel_decompress: bool,
@@ -350,6 +351,7 @@ pub mod opts {
             relay_integration_module_prefix_includes: vec![ocaml_str_to_rust_regex(
                 "<PROJECT_ROOT>/.*",
             )],
+            restart_on_flowconfig_change: true,
             root_name: None,
             saved_state_direct_serialization: false,
             saved_state_parallel_decompress: false,
@@ -2552,6 +2554,14 @@ pub mod opts {
                         config,
                     ))
                 }
+                "experimental.restart_on_flowconfig_change" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.restart_on_flowconfig_change = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
                 "experimental.strict_es6_import_export" => {
                     Some(strict_es6_import_export_parser(values, config))
                 }

@@ -604,6 +604,9 @@ module KeepAliveLoop = LwtLoop.Make (struct
     if monitor_options.FlowServerMonitorOptions.no_restart then
       (true, None, false)
     else
+      let restart_on_flowconfig_change =
+        Options.restart_on_flowconfig_change monitor_options.FlowServerMonitorOptions.server_options
+      in
       Exit.(
         match exit_status with
         (**** Things the server might exit with that implies that the monitor should exit too ****)
@@ -615,8 +618,6 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* Parse/version/etc error. Server will never start correctly. *)
         | Path_is_not_a_file
         (* Required a file but privided path was not a file *)
-        | Flowconfig_changed
-        (* We could survive some config changes, but it's too hard to tell *)
         | Invalid_saved_state
         (* The saved state file won't automatically recover by restarting *)
         | Unused_server
@@ -660,7 +661,13 @@ module KeepAliveLoop = LwtLoop.Make (struct
         | Server_out_of_date (* Server needs to restart, but monitor can survive *) ->
           (false, Some ServerStatus.Server_out_of_date, false)
         | Killed_by_monitor (* The server died because we asked it to die *) -> (false, None, false)
-        | Restart (* The server asked to be restarted *) -> (false, Some ServerStatus.Restart, false)
+        | Flowconfig_changed when not restart_on_flowconfig_change ->
+          (* Killswitch: revert to the legacy behavior where the monitor exits on
+             flowconfig/package.json changes. Remove once the new behavior is fully rolled out. *)
+          (true, None, false)
+        | Restart (* The server asked to be restarted *)
+        | Flowconfig_changed (* .flowconfig or package.json changed; restart with new config *) ->
+          (false, Some ServerStatus.Restart, false)
         (**** Unrelated exit codes. If we see them then something is wrong ****)
         | Type_error
         | Out_of_time
