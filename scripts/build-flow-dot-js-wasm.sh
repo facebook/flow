@@ -62,7 +62,10 @@ CARGO_PROFILE_ARGS=()
 CARGO_TARGET_PROFILE=debug
 case "$PROFILE" in
   release|opt)
-    CARGO_PROFILE_ARGS=(--release)
+    CARGO_PROFILE_ARGS=(
+      --release
+      "-Zbuild-std=std,panic_abort"
+    )
     CARGO_TARGET_PROFILE=release
     ;;
   dev|debug)
@@ -92,11 +95,14 @@ CARGO_ARGS=(
 if [[ -f "$CARGO_CONFIG" ]]; then
   CARGO_ARGS+=(--config "$CARGO_CONFIG" --locked --offline)
 fi
-# Keep this in sync with rust_port/crates/PACKAGE, which applies the same
-# rustc flag to Buck's internal wasm-emscripten build.
-CARGO_ARGS+=(
-  --config 'target.wasm32-unknown-emscripten.rustflags=["-Copt-level=z"]'
-)
+if [[ "$PROFILE" == "release" || "$PROFILE" == "opt" ]]; then
+  # Keep this in sync with Buck's internal opt wasm-emscripten Rust action. The
+  # release build also rebuilds std above so these flags apply to the sysroot,
+  # matching Buck's optimized wasm sysroot instead of rustup's prebuilt std.
+  CARGO_ARGS+=(
+    --config 'target.wasm32-unknown-emscripten.rustflags=["-Zunstable-options","-Crelocation-model=static","-Cpanic=abort","-Cpanic=immediate-abort","-Cembed-bitcode=no","-Ccodegen-units=1","-Cdebug-assertions=off","-Cdebuginfo=0","-Copt-level=z"]'
+  )
+fi
 
 EMCC_BIN="${EMCC:-emcc}"
 if ! command -v "$EMCC_BIN" >/dev/null 2>&1; then

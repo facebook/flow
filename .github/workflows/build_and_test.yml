@@ -99,6 +99,7 @@ jobs:
       uses: dtolnay/rust-toolchain@nightly
       with:
         targets: wasm32-unknown-emscripten
+        components: rust-src
     - name: Install Emscripten
       uses: mymindstorm/setup-emsdk@v14
     - uses: actions/setup-node@v4

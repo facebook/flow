@@ -114,7 +114,8 @@ Flow is written in OCaml (OCaml 5.2.0 is required).
     This produces `bin/flow.js`.
 
     To build `flow.js` from the Rust port instead, install Emscripten and a Rust
-    toolchain with the `wasm32-unknown-emscripten` target, then run:
+    toolchain with the `wasm32-unknown-emscripten` target and `rust-src`
+    component, then run:
 
     ```sh
     make js FLOW_JS_IMPL=rust-wasm FLOW_RELEASE=1
