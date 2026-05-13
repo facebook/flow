@@ -742,7 +742,7 @@ fn autoimport_options(
 fn search_exported_values(
     ac_options: &flow_services_autocomplete::autocomplete_service_js::AcOptions,
     before: &str,
-    exports: &mut ExportSearch,
+    exports: &ExportSearch,
 ) -> SearchResults {
     let options = autoimport_options(ac_options);
     export_search::search_values(Some(&options), before, exports)
@@ -751,7 +751,7 @@ fn search_exported_values(
 fn search_exported_types(
     ac_options: &flow_services_autocomplete::autocomplete_service_js::AcOptions,
     before: &str,
-    exports: &mut ExportSearch,
+    exports: &ExportSearch,
 ) -> SearchResults {
     let options = autoimport_options(ac_options);
     export_search::search_types(Some(&options), before, exports)
@@ -1101,23 +1101,16 @@ fn autocomplete_on_parsed(
     let ac_result = match ac_typing_artifacts {
         None => None,
         Some((info, file_sig, ast, parse_errors, cx)) => {
-            let exports = env
-                .exports
-                .clone()
-                .map(|exports| std::rc::Rc::new(std::cell::RefCell::new(exports)));
             let search_exported_values_fn: Box<
                 dyn Fn(
                         &flow_services_autocomplete::autocomplete_service_js::AcOptions,
                         &str,
                     ) -> SearchResults
                     + '_,
-            > = match &exports {
-                Some(exports) => {
-                    let exports = std::rc::Rc::clone(exports);
-                    Box::new(move |ac_options, before| {
-                        search_exported_values(ac_options, before, &mut exports.borrow_mut())
-                    })
-                }
+            > = match env.exports.as_ref() {
+                Some(exports) => Box::new(move |ac_options, before| {
+                    search_exported_values(ac_options, before, exports)
+                }),
                 None => Box::new(|_ac_options, _before| {
                     flow_services_export::export_search_types::empty_search_results()
                 }),
@@ -1128,13 +1121,10 @@ fn autocomplete_on_parsed(
                         &str,
                     ) -> SearchResults
                     + '_,
-            > = match &exports {
-                Some(exports) => {
-                    let exports = std::rc::Rc::clone(exports);
-                    Box::new(move |ac_options, before| {
-                        search_exported_types(ac_options, before, &mut exports.borrow_mut())
-                    })
-                }
+            > = match env.exports.as_ref() {
+                Some(exports) => Box::new(move |ac_options, before| {
+                    search_exported_types(ac_options, before, exports)
+                }),
                 None => Box::new(|_ac_options, _before| {
                     flow_services_export::export_search_types::empty_search_results()
                 }),
@@ -5373,14 +5363,13 @@ fn handle_persistent_workspace_symbol(
                     std::thread::available_parallelism().map_or(1, |n| n.get().saturating_sub(2)),
                 );
                 search_options.weighted = true;
-                let mut exports_clone = exports.clone();
                 let SearchResults {
                     results,
                     is_incomplete: _,
                 } = export_search::search_both_values_and_types(
                     Some(&search_options),
                     query,
-                    &mut exports_clone,
+                    exports,
                 );
                 results
                     .into_iter()

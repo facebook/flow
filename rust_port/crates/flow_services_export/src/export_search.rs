@@ -6,6 +6,8 @@
  */
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -24,9 +26,9 @@ use crate::fuzzy_path::FuzzyPath;
 
 #[derive(Debug, Clone)]
 pub struct ExportSearch {
-    index: ExportIndex,
-    value_matcher: FuzzyPath,
-    type_matcher: FuzzyPath,
+    index: Arc<ExportIndex>,
+    value_matcher: Arc<Mutex<FuzzyPath>>,
+    type_matcher: Arc<Mutex<FuzzyPath>>,
 }
 
 pub type SearchOptions = fuzzy_path::Options;
@@ -88,9 +90,9 @@ pub fn init(index: ExportIndex) -> ExportSearch {
     let Candidates { values, types } = partition_candidates(&index);
     let (value_matcher, type_matcher) = FuzzyPath::init_pair_from_arrays(values, types);
     ExportSearch {
-        index,
-        value_matcher,
-        type_matcher,
+        index: Arc::new(index),
+        value_matcher: Arc::new(Mutex::new(value_matcher)),
+        type_matcher: Arc::new(Mutex::new(type_matcher)),
     }
 }
 
@@ -101,26 +103,40 @@ pub fn merge_available_exports(
 ) -> ExportSearch {
     let (addition_index, removal_index) =
         export_index::diff(old_available_exports_index, new_available_exports_index);
-    let (index, dead_candidates) = export_index::subtract(&removal_index, &search.index);
-    let mut value_matcher = search.value_matcher.clone();
-    value_matcher.remove_candidates(&dead_candidates);
-    let mut type_matcher = search.type_matcher.clone();
-    type_matcher.remove_candidates(&dead_candidates);
+    let (index, dead_candidates) = export_index::subtract(&removal_index, search.index.as_ref());
+    search
+        .value_matcher
+        .lock()
+        .expect("export search value matcher mutex poisoned")
+        .remove_candidates(&dead_candidates);
+    search
+        .type_matcher
+        .lock()
+        .expect("export search type matcher mutex poisoned")
+        .remove_candidates(&dead_candidates);
     let index = export_index::merge(&addition_index, &index);
     let Candidates { values, types } = partition_candidates(&addition_index);
-    value_matcher.add_candidates(values);
-    type_matcher.add_candidates(types);
+    search
+        .value_matcher
+        .lock()
+        .expect("export search value matcher mutex poisoned")
+        .add_candidates(values);
+    search
+        .type_matcher
+        .lock()
+        .expect("export search type matcher mutex poisoned")
+        .add_candidates(types);
     ExportSearch {
-        index,
-        value_matcher,
-        type_matcher,
+        index: Arc::new(index),
+        value_matcher: search.value_matcher.clone(),
+        type_matcher: search.type_matcher.clone(),
     }
 }
 
 pub fn subtract_count(removed_imports: &ExportIndex, search: &ExportSearch) -> ExportSearch {
-    let index = export_index::subtract_count(removed_imports, &search.index);
+    let index = export_index::subtract_count(removed_imports, search.index.as_ref());
     ExportSearch {
-        index,
+        index: Arc::new(index),
         value_matcher: search.value_matcher.clone(),
         type_matcher: search.type_matcher.clone(),
     }
@@ -128,9 +144,9 @@ pub fn subtract_count(removed_imports: &ExportIndex, search: &ExportSearch) -> E
 
 // (*Merge_import *)
 pub fn merge_export_import(new_index: &ExportIndex, search: &ExportSearch) -> ExportSearch {
-    let index = export_index::merge_export_import(new_index, &search.index);
+    let index = export_index::merge_export_import(new_index, search.index.as_ref());
     ExportSearch {
-        index,
+        index: Arc::new(index),
         value_matcher: search.value_matcher.clone(),
         type_matcher: search.type_matcher.clone(),
     }
@@ -277,19 +293,7 @@ fn take(
     }
 }
 
-fn search_internal(
-    options: &SearchOptions,
-    query: Query,
-    search: &mut ExportSearch,
-) -> SearchResults {
-    let (matcher, query_txt) = match &query {
-        Query::Value(txt) => (&mut search.value_matcher, txt.as_str()),
-        Query::Type(txt) => (&mut search.type_matcher, txt.as_str()),
-        Query::BothValueAndType(_) => {
-            panic!("BothValueAndType query should be handled by search_both_values_and_types")
-        }
-    };
-
+fn search_internal(options: &SearchOptions, query: Query, search: &ExportSearch) -> SearchResults {
     let max_results = options.max_results;
     let search_options = if max_results < usize::MAX {
         let mut opts = options.clone();
@@ -298,17 +302,35 @@ fn search_internal(
     } else {
         options.clone()
     };
-
     let weighted = search_options.weighted;
-
-    let fuzzy_matches = matcher.search(query_txt, &search_options);
-    take(weighted, max_results, &search.index, &query, &fuzzy_matches)
+    let fuzzy_matches = match &query {
+        Query::Value(txt) => search
+            .value_matcher
+            .lock()
+            .expect("export search value matcher mutex poisoned")
+            .search(txt, &search_options),
+        Query::Type(txt) => search
+            .type_matcher
+            .lock()
+            .expect("export search type matcher mutex poisoned")
+            .search(txt, &search_options),
+        Query::BothValueAndType(_) => {
+            panic!("BothValueAndType query should be handled by search_both_values_and_types")
+        }
+    };
+    take(
+        weighted,
+        max_results,
+        search.index.as_ref(),
+        &query,
+        &fuzzy_matches,
+    )
 }
 
 pub fn search_values(
     options: Option<&SearchOptions>,
     query: &str,
-    t: &mut ExportSearch,
+    t: &ExportSearch,
 ) -> SearchResults {
     let opts = match options {
         Some(o) => o.clone(),
@@ -320,7 +342,7 @@ pub fn search_values(
 pub fn search_types(
     options: Option<&SearchOptions>,
     query: &str,
-    t: &mut ExportSearch,
+    t: &ExportSearch,
 ) -> SearchResults {
     let opts = match options {
         Some(o) => o.clone(),
@@ -332,7 +354,7 @@ pub fn search_types(
 pub fn search_both_values_and_types(
     options: Option<&SearchOptions>,
     query: &str,
-    t: &mut ExportSearch,
+    t: &ExportSearch,
 ) -> SearchResults {
     let options = match options {
         Some(o) => o.clone(),
@@ -348,8 +370,16 @@ pub fn search_both_values_and_types(
     };
 
     let weighted = search_options.weighted;
-    let value_fuzzy_results = t.value_matcher.search(query, &search_options);
-    let type_fuzzy_results = t.type_matcher.search(query, &search_options);
+    let value_fuzzy_results = t
+        .value_matcher
+        .lock()
+        .expect("export search value matcher mutex poisoned")
+        .search(query, &search_options);
+    let type_fuzzy_results = t
+        .type_matcher
+        .lock()
+        .expect("export search type matcher mutex poisoned")
+        .search(query, &search_options);
 
     let mut combined = value_fuzzy_results;
     combined.extend(type_fuzzy_results);
@@ -359,7 +389,7 @@ pub fn search_both_values_and_types(
     } = take(
         weighted,
         max_results,
-        &t.index,
+        t.index.as_ref(),
         &Query::BothValueAndType(query.to_string()),
         &combined,
     );
@@ -389,11 +419,11 @@ pub fn search_both_values_and_types(
 
 // let get_index t = t.index
 pub fn get_index(t: &ExportSearch) -> &ExportIndex {
-    &t.index
+    t.index.as_ref()
 }
 
 pub fn get(name: &str, t: &ExportSearch) -> ExportMap<i32> {
-    export_index::find(name, &t.index)
+    export_index::find(name, t.index.as_ref())
 }
 
 pub fn get_values(name: &str, t: &ExportSearch) -> ExportMap<i32> {

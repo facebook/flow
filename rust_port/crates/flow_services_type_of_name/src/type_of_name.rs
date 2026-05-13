@@ -594,15 +594,10 @@ fn resolve_name_from_index(
         .unwrap_or(1);
     search_options.num_threads = std::cmp::max(1, num_cpus.saturating_sub(2));
     search_options.weighted = true;
-    let mut exports_clone = exports.clone();
     let export_search_types::SearchResults {
         results,
         is_incomplete: _,
-    } = export_search::search_both_values_and_types(
-        Some(&search_options),
-        target_name,
-        &mut exports_clone,
-    );
+    } = export_search::search_both_values_and_types(Some(&search_options), target_name, exports);
     let (actual_name, source, kind) =
         match find_first_match(exact_match_only, target_name, &results) {
             Some(scored) => {

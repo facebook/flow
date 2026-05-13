@@ -103,8 +103,8 @@ fn assert_search_results(expected: &SearchResults, actual: &SearchResults) {
 #[test]
 fn case_insensitive() {
     let index = make_index();
-    let mut t = export_search::init(index);
-    let results = export_search::search_values(None, "foobar", &mut t);
+    let t = export_search::init(index);
+    let results = export_search::search_values(None, "foobar", &t);
     let expected = mk_results(
         false,
         vec![("FooBar", sf("/a/foobar.js"), Kind::Named, 40, 0)],
@@ -115,14 +115,14 @@ fn case_insensitive() {
 #[test]
 fn is_incomplete() {
     let index = make_index();
-    let mut t = export_search::init(index);
+    let t = export_search::init(index);
 
     let mut options = default_options();
     options.max_results = 2;
     let SearchResults {
         results,
         is_incomplete,
-    } = export_search::search_values(Some(&options), "f", &mut t);
+    } = export_search::search_values(Some(&options), "f", &t);
     assert!(is_incomplete);
     assert_eq!(2, results.len());
 
@@ -131,7 +131,7 @@ fn is_incomplete() {
     let SearchResults {
         results,
         is_incomplete,
-    } = export_search::search_values(Some(&options), "f", &mut t);
+    } = export_search::search_values(Some(&options), "f", &t);
     assert!(!is_incomplete);
     assert_eq!(4, results.len());
 
@@ -140,7 +140,7 @@ fn is_incomplete() {
     let SearchResults {
         results,
         is_incomplete,
-    } = export_search::search_values(Some(&options), "f", &mut t);
+    } = export_search::search_values(Some(&options), "f", &t);
     assert!(!is_incomplete);
     assert_eq!(4, results.len());
 }
@@ -154,11 +154,11 @@ fn is_incomplete_multiple_files() {
     export_index::add("Foo", sf("/a/foo_3.js"), Kind::Named, &mut index);
     let mut options = default_options();
     options.max_results = 2;
-    let mut t = export_search::init(index);
+    let t = export_search::init(index);
     let SearchResults {
         results,
         is_incomplete,
-    } = export_search::search_values(Some(&options), "Foo", &mut t);
+    } = export_search::search_values(Some(&options), "Foo", &t);
     assert!(is_incomplete);
     assert_eq!(2, results.len());
 }
@@ -167,9 +167,9 @@ fn is_incomplete_multiple_files() {
 fn same_name_different_file() {
     let mut index = make_index();
     export_index::add("FooBar", sf("/a/f.js"), Kind::Named, &mut index);
-    let mut t = export_search::init(index);
+    let t = export_search::init(index);
 
-    let results = export_search::search_values(None, "FooBar", &mut t);
+    let results = export_search::search_values(None, "FooBar", &t);
     let expected = mk_results(
         false,
         vec![
@@ -184,16 +184,16 @@ fn same_name_different_file() {
 fn filter_values_and_types() {
     let mut index = make_index();
     export_index::add("FooBar", sf("/a/f_type.js"), Kind::NamedType, &mut index);
-    let mut t = export_search::init(index);
+    let t = export_search::init(index);
 
-    let results = export_search::search_values(None, "FooBar", &mut t);
+    let results = export_search::search_values(None, "FooBar", &t);
     let expected = mk_results(
         false,
         vec![("FooBar", sf("/a/foobar.js"), Kind::Named, 44, 0)],
     );
     assert_search_results(&expected, &results);
 
-    let results = export_search::search_types(None, "FooBar", &mut t);
+    let results = export_search::search_types(None, "FooBar", &t);
     let expected = mk_results(
         false,
         vec![("FooBar", sf("/a/f_type.js"), Kind::NamedType, 44, 0)],
@@ -209,12 +209,12 @@ fn max_results_filtered_by_kind() {
     export_index::add("FooBar", sf("/a/foobar_b.js"), Kind::NamedType, &mut index);
     export_index::add("FooBar", sf("/a/foobar_c.js"), Kind::NamedType, &mut index);
     export_index::add("FooBar", sf("/a/foobar_e.js"), Kind::NamedType, &mut index);
-    let mut t = export_search::init(index);
+    let t = export_search::init(index);
 
     let mut options = default_options();
     options.max_results = 2;
 
-    let results = export_search::search_values(Some(&options), "FooBar", &mut t);
+    let results = export_search::search_values(Some(&options), "FooBar", &t);
     let expected = mk_results(
         true,
         vec![
@@ -224,7 +224,7 @@ fn max_results_filtered_by_kind() {
     );
     assert_search_results(&expected, &results);
 
-    let results = export_search::search_types(Some(&options), "FooBar", &mut t);
+    let results = export_search::search_types(Some(&options), "FooBar", &t);
     let expected = mk_results(
         true,
         vec![
@@ -254,9 +254,9 @@ fn sorted() {
     export_index::add("foo", sf("path/to/foo.js"), Kind::Default, &mut index);
     export_index::add("foo", sf("path/to/foo.js"), Kind::Namespace, &mut index);
     export_index::add("foo", Source::Global, Kind::Named, &mut index);
-    let mut t = export_search::init(index);
+    let t = export_search::init(index);
 
-    let results = export_search::search_values(Some(&default_options()), "foo", &mut t);
+    let results = export_search::search_values(Some(&default_options()), "foo", &t);
 
     // defaults before named before namespace, then
     // globals before builtins before source files
@@ -284,7 +284,7 @@ fn weights() {
     export_index::add("biz", sf("biz.js"), Kind::Named, &mut index);
     export_index::add("biz", sf("biz.js"), Kind::Named, &mut index);
     export_index::add("biz", sf("biz2.js"), Kind::Named, &mut index);
-    let mut t = export_search::init(index);
+    let t = export_search::init(index);
 
     // the fuzzy score of "b" is the same for "bar", "baz" and "biz"
     let query = "b";
@@ -292,7 +292,7 @@ fn weights() {
     // without weights: they all tie and are sorted alphabetically
     let mut options = default_options();
     options.weighted = false;
-    let results = export_search::search_values(Some(&options), query, &mut t);
+    let results = export_search::search_values(Some(&options), query, &t);
     let expected = mk_results(
         false,
         vec![
@@ -307,7 +307,7 @@ fn weights() {
     // with weights: the fuzzy scores tie, so the weights dominate
     let mut options = default_options();
     options.weighted = true;
-    let results = export_search::search_values(Some(&options), query, &mut t);
+    let results = export_search::search_values(Some(&options), query, &t);
     let expected = mk_results(
         false,
         vec![
@@ -323,7 +323,7 @@ fn weights() {
     let mut options = default_options();
     options.weighted = false;
     options.max_results = 2;
-    let results = export_search::search_values(Some(&options), query, &mut t);
+    let results = export_search::search_values(Some(&options), query, &t);
     let expected = mk_results(
         true,
         vec![
@@ -337,7 +337,7 @@ fn weights() {
     let mut options = default_options();
     options.weighted = true;
     options.max_results = 2;
-    let results = export_search::search_values(Some(&options), query, &mut t);
+    let results = export_search::search_values(Some(&options), query, &t);
     let expected = mk_results(
         true,
         vec![
