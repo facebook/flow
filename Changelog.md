@@ -1,3 +1,12 @@
+### 0.314.0
+
+Likely to cause new Flow errors:
+* Deleted the `implicit-inexact-object` lint, it no longer does anything since `exact_by_default=false` was deprecated.
+* `exact_by_default=false` is now deprecated in `.flowconfig`. Read this [blog post](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69) on how to migrate, and our [docs on objects](https://flow.org/en/docs/types/objects/) for more. `exact_by_default=true` is the default (since 2023) so simply delete the option when migrating.
+
+Notable bug fixes:
+* Fixed incorrect enum cast suggestion when using an enum as a type argument
+
 ### 0.313.0
 
 Likely to cause new Flow errors:
