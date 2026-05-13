@@ -1,11 +1,11 @@
 // Two sibling cases proving method-syntax is bivariant in .ts while
-// arrow-property syntax remains contravariant -- matching TS
-// --strictFunctionTypes.
+// arrow-property syntax remains contravariant.
 //
 // Note: bivariance only kicks in when BOTH sides use method syntax.
 // One-sided cases (Method on the supertype, Field/arrow on the
-// subtype) take the existing contravariant path -- TS rejects those
-// at the property-shape level too.
+// subtype) take Flow's existing contravariant path. TS accepts the
+// Method-target/arrow-source case, so that negative below intentionally
+// guards Flow's current narrower relaxation.
 
 declare class Animal {
   name: string;

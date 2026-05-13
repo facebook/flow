@@ -487,7 +487,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
         add_output_prop_polarity_mismatch cx use_op_v (lreason, ureason) errs
     | _ -> ());
 
-    if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (
+    (* TS consumers need exact object types to behave structurally for non-literal
+       values, but this also suppresses Flow's usual excess-property check for
+       object literals like `{a: 1, b: 2} as {a: number}`. TypeScript still
+       reports those as excess properties, so this is a known compatibility gap. *)
+    if
+      rflags.obj_kind = Exact
+      && (not (is_literal_object_reason ureason))
+      && not (Files.has_ts_ext (Context.file cx))
+    then (
       if not (Obj_type.is_exact lflags.obj_kind) then
         exact_obj_error cx lflags.obj_kind ~use_op ~exact_reason:ureason (DefT (lreason, ObjT l_obj));
       let missing_props =
@@ -2341,7 +2349,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* InstanceT -> ObjT *)
     | ( DefT (lreason, InstanceT { inst = { inst_kind = ClassKind | InterfaceKind _; _ }; _ }),
         DefT (ureason, ObjT { flags = { obj_kind = Exact; _ }; _ })
-      ) ->
+      )
+      when not (Files.has_ts_ext (Context.file cx)) ->
       let reasons = FlowError.ordered_reasons (lreason, ureason) in
       add_output
         cx
@@ -2359,18 +2368,29 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ),
         DefT (ureason, ObjT { props_tmap = uflds; proto_t = uproto; call_t = ucall; _ })
       ) ->
-      let error_kind =
+      let suppress_class_to_object_error =
+        Files.has_ts_ext (Context.file cx)
+        &&
         match inst_kind with
         | ClassKind
         | InterfaceKind _ ->
-          Flow_intermediate_error_types.ClassKind.Class
-        | RecordKind _ -> Flow_intermediate_error_types.ClassKind.Record
+          true
+        | RecordKind _ -> false
       in
-      add_output
-        cx
-        (Error_message.EClassToObject
-           { reason_class = lreason; reason_obj = ureason; use_op; kind = error_kind }
-        );
+      ( if not suppress_class_to_object_error then
+        let error_kind =
+          match inst_kind with
+          | ClassKind
+          | InterfaceKind _ ->
+            Flow_intermediate_error_types.ClassKind.Class
+          | RecordKind _ -> Flow_intermediate_error_types.ClassKind.Record
+        in
+        add_output
+          cx
+          (Error_message.EClassToObject
+             { reason_class = lreason; reason_obj = ureason; use_op; kind = error_kind }
+          )
+      );
       let lflds =
         let own_props = Context.find_props cx lown in
         let proto_props = Context.find_props cx lproto in
@@ -2754,7 +2774,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
      *)
     | ( DefT (lreason, FunT _),
         DefT (ureason, ObjT { flags = { obj_kind = (Exact | Indexed _) as obj_kind; _ }; _ })
-      ) ->
+      )
+      when (not (Files.has_ts_ext (Context.file cx))) || obj_kind <> Exact ->
       let reasons = FlowError.ordered_reasons (lreason, ureason) in
       (match obj_kind with
       | Exact ->

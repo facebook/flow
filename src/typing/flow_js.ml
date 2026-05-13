@@ -4869,20 +4869,43 @@ struct
                     InstanceT
                       {
                         super;
-                        inst =
-                          {
-                            own_props;
-                            proto_props;
-                            inst_call_t;
-                            inst_kind = InterfaceKind _;
-                            inst_dict;
-                            _;
-                          };
+                        inst = { own_props; proto_props; inst_call_t; inst_kind; inst_dict; _ };
                         _;
                       }
                   )
               )
-          ) ->
+          )
+          when let is_ts = Files.has_ts_ext (Context.file cx) in
+               match inst_kind with
+               | InterfaceKind _ -> true
+               | ClassKind -> is_ts
+               | RecordKind _ -> false ->
+          (* In TS mode, classes are structural and `constructor` is not part of
+             the structural shape, so drop it from proto_props before checking.
+             Matches TS, where `const c: C = { x: 1 }` is accepted.
+
+             KNOWN LIMITATION: ECMAScript `#private` fields and methods live on
+             `class_private_fields` / `class_private_methods` on `insttype` and
+             are not threaded into `structural_subtype`, so a `.ts` consumer can
+             satisfy a class with private members via a structurally-matching
+             object literal. TS treats `#private` nominally; matching that here
+             would require also passing the private maps through the structural
+             check and is left as future work. *)
+          let proto_props =
+            (* The `when` above guarantees `ClassKind` only matches in TS mode,
+               so no extra gating is needed here. *)
+            match inst_kind with
+            | ClassKind ->
+              let filtered =
+                NameUtils.Map.remove (OrdinaryName "constructor") (Context.find_props cx proto_props)
+              in
+              let id = Properties.generate_id () in
+              Context.add_property_map cx id filtered;
+              id
+            | InterfaceKind _
+            | RecordKind _ ->
+              proto_props
+          in
           structural_subtype
             cx
             trace

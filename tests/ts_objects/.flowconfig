@@ -1,0 +1,5 @@
+[options]
+all=false
+no_flowlib=false
+module.file_ext=.ts
+module.file_ext=.js

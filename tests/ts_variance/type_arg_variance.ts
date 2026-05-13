@@ -3,7 +3,9 @@
 // instantiation; Flow matches that in .ts.
 
 declare class Animal {}
-declare class Dog extends Animal {}
+declare class Dog extends Animal {
+  bark(): void;
+}
 
 declare class Box<T> {
   value: T;
@@ -17,7 +19,9 @@ const a: Box<Animal> = dogBox; // OK in .ts
 declare const numBox: Box<number>;
 const b: Box<string> = numBox; // ERROR: number is not assignable to string
 
-// Positive (out T) tparam: T appears only in covariant positions.
+// Positive (out T) tparam: T appears only in covariant positions. `Dog`
+// has a public member not present on `Animal`, so the reverse direction is
+// a real structural mismatch in both Flow and TS.
 // The .ts gate must NOT relax the wrong direction here -- it gates only
 // the Neutral arm of type_app_variance_check.
 declare class Producer<out T> {

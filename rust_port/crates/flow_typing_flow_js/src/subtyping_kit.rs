@@ -1037,7 +1037,13 @@ fn flow_obj_to_obj<'cx>(
         _ => {}
     }
 
-    if rflags.obj_kind == ObjKind::Exact && !flow_common::reason::is_literal_object_reason(ureason)
+    // TS consumers need exact object types to behave structurally for non-literal
+    // values, but this also suppresses Flow's usual excess-property check for
+    // object literals like `{a: 1, b: 2} as {a: number}`. TypeScript still
+    // reports those as excess properties, so this is a known compatibility gap.
+    if rflags.obj_kind == ObjKind::Exact
+        && !flow_common::reason::is_literal_object_reason(ureason)
+        && !flow_common::files::has_ts_ext(&cx.file())
     {
         if !obj_type::is_exact(&lflags.obj_kind) {
             let l_t = Type::new(TypeInner::DefT(
@@ -4576,7 +4582,8 @@ pub fn rec_sub_t<'cx>(
         // InstanceT -> ObjT
         (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
             if matches!(ld.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. }))
-                && matches!(ud.deref(), DefTInner::ObjT(obj) if obj.flags.obj_kind == ObjKind::Exact) =>
+                && matches!(ud.deref(), DefTInner::ObjT(obj) if obj.flags.obj_kind == ObjKind::Exact)
+                && !flow_common::files::has_ts_ext(&cx.file()) =>
         {
             let reasons = ordered_reasons((lreason.dupe(), ureason.dupe()));
             flow_js_utils::add_output(
@@ -4603,21 +4610,28 @@ pub fn rec_sub_t<'cx>(
             let uproto = &u_obj.proto_t;
             let ucall = u_obj.call_t;
 
-            let error_kind = match inst_kind {
-                InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. } => {
-                    intermediate_error_types::ClassKind::Class
-                }
-                InstanceKind::RecordKind { .. } => intermediate_error_types::ClassKind::Record,
-            };
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::EClassToObject(Box::new(EClassToObjectData {
-                    reason_class: lreason.dupe(),
-                    reason_obj: ureason.dupe(),
-                    use_op: use_op.dupe(),
-                    kind: error_kind,
-                })),
-            )?;
+            let suppress_class_to_object_error = flow_common::files::has_ts_ext(&cx.file())
+                && match inst_kind {
+                    InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. } => true,
+                    InstanceKind::RecordKind { .. } => false,
+                };
+            if !suppress_class_to_object_error {
+                let error_kind = match inst_kind {
+                    InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. } => {
+                        intermediate_error_types::ClassKind::Class
+                    }
+                    InstanceKind::RecordKind { .. } => intermediate_error_types::ClassKind::Record,
+                };
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EClassToObject(Box::new(EClassToObjectData {
+                        reason_class: lreason.dupe(),
+                        reason_obj: ureason.dupe(),
+                        use_op: use_op.dupe(),
+                        kind: error_kind,
+                    })),
+                )?;
+            }
             let own_props = cx.find_props(lown.dupe());
             let proto_props = cx.find_props(lproto.dupe());
             let mut lflds_map = own_props.clone();
@@ -5250,7 +5264,9 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
             if matches!(ld.deref(), DefTInner::FunT(_, _))
                 && let DefTInner::ObjT(obj) = ud.deref()
-                && matches!(obj.flags.obj_kind, ObjKind::Exact | ObjKind::Indexed(_)) =>
+                && matches!(obj.flags.obj_kind, ObjKind::Exact | ObjKind::Indexed(_))
+                && (!flow_common::files::has_ts_ext(&cx.file())
+                    || obj.flags.obj_kind != ObjKind::Exact) =>
         {
             let reasons = ordered_reasons((lreason.dupe(), ureason.dupe()));
             match &obj.flags.obj_kind {

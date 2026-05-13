@@ -17,10 +17,12 @@ const slot: SlotRecord<"sm" | "md" | "lg", {description: string}> = {
 declare function take<T>(x: Partial<Record<"a" | "b", T | undefined>>): T;
 const t: {description: string} = take({a: {description: "x"}}); // OK in .ts
 
-// 3. Anonymous mapped type with optional+neutral properties.
+// 3. Anonymous mapped type with optional+neutral properties. Use an explicit
+// type argument so this remains a TS-compatible optional-input case while
+// still requiring the returned type to include `y`.
 type OptMap<O> = {[K in keyof O]?: O[K]};
 declare function consume<O>(x: OptMap<O>): O;
-const o: {x: number; y: number} = consume({x: 1}); // OK in .ts
+const o: {x: number; y: number} = consume<{x: number; y: number}>({x: 1}); // OK in .ts
 
 // 4. Negative case: the gate replaces invariance with covariance, not
 // bivariance. A genuine type-arg incompatibility must still error.

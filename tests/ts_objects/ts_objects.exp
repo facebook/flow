@@ -1,0 +1,303 @@
+Error ------------------------------------------------------------------------------------------ class_to_object.ts:18:1
+
+Cannot cast `a` to object type because property `missing` is missing in `Animal` [1] but exists in object type [2].
+[incompatible-type]
+
+   class_to_object.ts:18:1
+   18| a as {name: string; missing: boolean}; // ERROR: `missing` not in Animal
+       ^
+
+References:
+   class_to_object.ts:11:18
+   11| declare const a: Animal;
+                        ^^^^^^ [1]
+   class_to_object.ts:18:6
+   18| a as {name: string; missing: boolean}; // ERROR: `missing` not in Animal
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ class_to_object.ts:21:1
+
+Cannot cast `a` to object type because in property `name`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   class_to_object.ts:21:1
+   21| a as {name: number}; // ERROR: number vs string
+       ^
+
+References:
+   class_to_object.ts:7:9
+    7|   name: string;
+               ^^^^^^ [1]
+   class_to_object.ts:21:13
+   21| a as {name: number}; // ERROR: number vs string
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- exact_constraint.ts:28:20
+
+Cannot instantiate `Constrained` because in type argument `T`: property `a` is missing in `NoA` [1] but exists in object
+type [2]. [incompatible-type]
+
+   exact_constraint.ts:28:20
+   28| noA as Constrained<NoA>; // ERROR: `a` missing in NoA
+                          ^^^ [1]
+
+References:
+   exact_constraint.ts:6:28
+    6| type Constrained<T extends {a: number}> = T;
+                                  ^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- extra_props_usage.js:15:6
+
+Cannot call `take` with object literal bound to `x` because property `b` is extra in object literal [1] but missing in
+object type [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   extra_props_usage.js:15:6
+   15| take({a: 1, b: "extra"}); // ERROR: extra prop on exact target
+            ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   extra_props_lib.ts:4:33
+    4| export declare function take(x: {a: number}): void;
+                                       ^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- extra_props_usage.js:18:6
+
+Cannot call `take` with object literal bound to `x` because property `a` is missing in object literal [1] but exists in
+object type [2]. [incompatible-type]
+
+   extra_props_usage.js:18:6
+   18| take({}); // ERROR: missing `a`
+            ^^ [1]
+
+References:
+   extra_props_lib.ts:4:33
+    4| export declare function take(x: {a: number}): void;
+                                       ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- extra_props_usage.js:21:10
+
+Cannot call `take` with object literal bound to `x` because in property `a`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   extra_props_usage.js:21:10
+   21| take({a: "not a number"}); // ERROR: string vs number
+                ^^^^^^^^^^^^^^ [1]
+
+References:
+   extra_props_lib.ts:4:37
+    4| export declare function take(x: {a: number}): void;
+                                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- function_to_object.ts:15:1
+
+Cannot cast `f` to object type because function type [1] is incompatible with object type [2]. [incompatible-type]
+
+Functions without statics are not compatible with objects.
+
+   function_to_object.ts:15:1
+   15| f as {x: number}; // ERROR: missing `x` on function
+       ^
+
+References:
+   function_to_object.ts:7:19
+    7| declare function f(): void;
+                         ^^^^^^^^ [1]
+   function_to_object.ts:15:6
+   15| f as {x: number}; // ERROR: missing `x` on function
+            ^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- function_to_object.ts:19:1
+
+Cannot cast `f` to object type because function type [1] is incompatible with indexed object type [2].
+[incompatible-function-indexer]
+
+   function_to_object.ts:19:1
+   19| f as {[k: string]: number}; // ERROR: function vs indexed object
+       ^
+
+References:
+   function_to_object.ts:7:19
+    7| declare function f(): void;
+                         ^^^^^^^^ [1]
+   function_to_object.ts:19:6
+   19| f as {[k: string]: number}; // ERROR: function vs indexed object
+            ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_usage.js:14:1
+
+Cannot cast `f` to object type because inexact function type [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   function_usage.js:14:1
+   14| f as {}; // ERROR: function vs exact object
+       ^
+
+References:
+   function_lib.ts:4:26
+    4| export declare function f(): void;
+                                ^^^^^^^^ [1]
+   function_usage.js:14:6
+   14| f as {}; // ERROR: function vs exact object
+            ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_usage.js:18:1
+
+Cannot cast `f` to object type because function type [1] is incompatible with indexed object type [2].
+[incompatible-function-indexer]
+
+   function_usage.js:18:1
+   18| f as {[k: string]: number}; // ERROR: function vs indexed object
+       ^
+
+References:
+   function_lib.ts:4:26
+    4| export declare function f(): void;
+                                ^^^^^^^^ [1]
+   function_usage.js:18:6
+   18| f as {[k: string]: number}; // ERROR: function vs indexed object
+            ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- instance_usage.js:20:1
+
+Cannot cast `b` to object type because inexact `Box` [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   instance_usage.js:20:1
+   20| b as {v: number}; // ERROR
+       ^
+
+References:
+   instance_usage.js:15:18
+   15| declare const b: Box;
+                        ^^^ [1]
+   instance_usage.js:20:6
+   20| b as {v: number}; // ERROR
+            ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- instance_usage.js:24:1
+
+Cannot cast `b` to object type because `Box` [1] is not a subtype of object type [2]. Class instances are not subtypes
+of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+
+   instance_usage.js:24:1
+   24| b as {v: number, ...}; // ERROR
+       ^
+
+References:
+   instance_usage.js:15:18
+   15| declare const b: Box;
+                        ^^^ [1]
+   instance_usage.js:24:6
+   24| b as {v: number, ...}; // ERROR
+            ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- instance_usage.js:27:1
+
+Cannot cast `ib` to object type because inexact `IBox` [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   instance_usage.js:27:1
+   27| ib as {v: number}; // ERROR
+       ^^
+
+References:
+   instance_usage.js:16:19
+   16| declare const ib: IBox;
+                         ^^^^ [1]
+   instance_usage.js:27:7
+   27| ib as {v: number}; // ERROR
+             ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- instance_usage.js:32:1
+
+Cannot cast `ib` to object type because `IBox` [1] is not a subtype of object type [2]. Class instances are not subtypes
+of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+
+   instance_usage.js:32:1
+   32| ib as {v: number, ...}; // ERROR
+       ^^
+
+References:
+   instance_usage.js:16:19
+   16| declare const ib: IBox;
+                         ^^^^ [1]
+   instance_usage.js:32:7
+   32| ib as {v: number, ...}; // ERROR
+             ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ object_to_class.ts:16:2
+
+Cannot cast object literal to `Point` because property `y` is missing in object literal [1] but exists in `Point` [2].
+[incompatible-type]
+
+   object_to_class.ts:16:2
+   16| ({x: 1}) as Point; // ERROR: missing `y`
+        ^^^^^^ [1]
+
+References:
+   object_to_class.ts:16:13
+   16| ({x: 1}) as Point; // ERROR: missing `y`
+                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- object_to_class.ts:19:12
+
+Cannot cast object literal to `Point` because in property `y`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   object_to_class.ts:19:12
+   19| ({x: 1, y: "two"}) as Point; // ERROR: string vs number
+                  ^^^^^ [1]
+
+References:
+   object_to_class.ts:8:6
+    8|   y: number;
+            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ object_to_class.ts:36:2
+
+Cannot cast object literal to `Greeter` because property `greet` is missing in object literal [1] but exists in
+`Greeter` [2]. [incompatible-type]
+
+   object_to_class.ts:36:2
+   36| ({name: "x"}) as Greeter; // ERROR: missing `greet`
+        ^^^^^^^^^^^ [1]
+
+References:
+   object_to_class.ts:36:18
+   36| ({name: "x"}) as Greeter; // ERROR: missing `greet`
+                        ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ object_to_class.ts:45:2
+
+Cannot cast object literal to `IPoint` because property `y` is missing in object literal [1] but exists in `IPoint` [2].
+[incompatible-type]
+
+   object_to_class.ts:45:2
+   45| ({x: 1}) as IPoint; // ERROR: missing `y`
+        ^^^^^^ [1]
+
+References:
+   object_to_class.ts:45:13
+   45| ({x: 1}) as IPoint; // ERROR: missing `y`
+                   ^^^^^^ [2]
+
+
+
+Found 18 errors

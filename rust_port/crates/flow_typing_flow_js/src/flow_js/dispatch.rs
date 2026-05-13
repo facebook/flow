@@ -9030,11 +9030,45 @@ fn __flow_impl<'cx>(
             && try_ts.is_empty()
             && let TypeInner::DefT(reason_inst, inner_def) = ext_u.deref()
             && let DefTInner::InstanceT(inst_t) = inner_def.deref()
-            && matches!(inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
+            && {
+                let is_ts = flow_common::files::has_ts_ext(cx.file());
+                match &inst_t.inst.inst_kind {
+                    InstanceKind::InterfaceKind { .. } => true,
+                    InstanceKind::ClassKind => is_ts,
+                    InstanceKind::RecordKind { .. } => false,
+                }
+            } =>
         {
             let super_ = &inst_t.super_;
             let own_props = inst_t.inst.own_props.dupe();
-            let proto_props = inst_t.inst.proto_props.dupe();
+            let inst_kind = &inst_t.inst.inst_kind;
+            // In TS mode, classes are structural and `constructor` is not part of
+            // the structural shape, so drop it from proto_props before checking.
+            // Matches TS, where `const c: C = { x: 1 }` is accepted.
+            //
+            // KNOWN LIMITATION: ECMAScript `#private` fields and methods live on
+            // `class_private_fields` / `class_private_methods` on `insttype` and
+            // are not threaded into `structural_subtype`, so a `.ts` consumer can
+            // satisfy a class with private members via a structurally-matching
+            // object literal. TS treats `#private` nominally; matching that here
+            // would require also passing the private maps through the structural
+            // check and is left as future work.
+            let proto_props = {
+                // The `if` guard above guarantees `ClassKind` only matches in TS mode,
+                // so no extra gating is needed here.
+                match inst_kind {
+                    InstanceKind::ClassKind => {
+                        let mut filtered = cx.find_props(inst_t.inst.proto_props.dupe());
+                        filtered.remove(&Name::new(FlowSmolStr::new_inline("constructor")));
+                        let id = properties::Id::generate_id();
+                        cx.add_property_map(id.dupe(), filtered);
+                        id
+                    }
+                    InstanceKind::InterfaceKind { .. } | InstanceKind::RecordKind { .. } => {
+                        inst_t.inst.proto_props.dupe()
+                    }
+                }
+            };
             let inst_call_t = inst_t.inst.inst_call_t;
             let inst_dict = &inst_t.inst.inst_dict;
             structural_subtype(
