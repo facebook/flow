@@ -490,16 +490,20 @@ fn process_persistent_workloads(
                 }));
                 continue;
             }
-            let env = {
+            let handled_parallelizable_workload = {
                 let (lock, _) = &**state;
                 let server_state = lock.lock().unwrap();
-                server_state.env.clone()
+                if let Some(env) = server_state.env.as_ref()
+                    && let Some(workload) =
+                        server_monitor_listener_state::pop_next_parallelizable_workload()
+                {
+                    (workload.parallelizable_workload_handler)(env);
+                    true
+                } else {
+                    false
+                }
             };
-            if let Some(env) = env
-                && let Some(workload) =
-                    server_monitor_listener_state::pop_next_parallelizable_workload()
-            {
-                (workload.parallelizable_workload_handler)(&env);
+            if handled_parallelizable_workload {
                 continue;
             }
             server_monitor_listener_state::wait_for_parallelizable_workload_or_stop(
