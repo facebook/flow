@@ -7450,23 +7450,6 @@ fn expression_<'a>(
                 (true, false) => t2,
                 (false, true) => t1,
                 (true, true) => empty_t::at(loc.dupe()),
-                // In general it is dangerous to express the least upper bound of
-                // some types as a union: it might pin down the least upper bound
-                // prematurely (before all the types have been inferred), and when the
-                // union appears as an upper bound, it might lead to speculative matching.
-                //
-                // However, here a union is safe, because this union is guaranteed to only
-                // appear as a lower bound.
-                //
-                // In such "covariant" positions, avoiding unnecessary indirection via
-                // tvars is a good thing, because it improves precision. In particular, it
-                // enables more types to be fully resolvable, which improves results of
-                // speculative matching.
-                //
-                // It should be possible to do this more broadly and systematically. For
-                // example, results of operations on annotations (like property gets on
-                // objects, calls on functions) are often represented as unresolved tvars,
-                // where they could be pinned down to resolved types.
                 (false, false) => Type::new(TypeInner::UnionT(
                     reason.dupe(),
                     type_::union_rep::make(
@@ -7478,7 +7461,6 @@ fn expression_<'a>(
                     ),
                 )),
             };
-            // TODO call loc_of_predicate on some pred?
             let ast = expression::Expression::new(ExpressionInner::Conditional {
                 loc: (loc.dupe(), combined_type),
                 inner: (expression::Conditional {
