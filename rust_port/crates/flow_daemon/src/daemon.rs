@@ -427,6 +427,7 @@ fn accept_with_token(
         // The accepted stream inherits the listener's nonblocking flag on
         // some platforms; ensure it is blocking and bounded by remaining time.
         stream.set_nonblocking(false)?;
+        stream.set_nodelay(true)?;
         let remaining = deadline.saturating_duration_since(std::time::Instant::now());
         if remaining.is_zero() {
             return Err(std::io::Error::new(
@@ -542,6 +543,12 @@ pub fn check_entry_point() {
             e
         )
     });
+    child_in_sock.set_nodelay(true).unwrap_or_else(|e| {
+        panic!(
+            "Daemon child: failed to set TCP_NODELAY on parent out-socket: {}",
+            e
+        )
+    });
     child_in_sock.write_all(&token).unwrap_or_else(|e| {
         panic!(
             "Daemon child: failed to write token to parent out-socket: {}",
@@ -551,6 +558,12 @@ pub fn check_entry_point() {
     let mut child_out_sock = TcpStream::connect(parent_in_addr).unwrap_or_else(|e| {
         panic!(
             "Daemon child: failed to connect to parent in-socket (child write end): {}",
+            e
+        )
+    });
+    child_out_sock.set_nodelay(true).unwrap_or_else(|e| {
+        panic!(
+            "Daemon child: failed to set TCP_NODELAY on parent in-socket: {}",
             e
         )
     });

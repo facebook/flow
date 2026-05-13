@@ -130,6 +130,7 @@ fn open_connection(
                 });
             }
         };
+    conn.set_nodelay(true).map_err(|_| ConnectExn::Other)?;
     // It's important that we only write this once per connection.
     //
     // The wire shape mirrors OCaml `SocketHandshake.client_handshake_wire`:

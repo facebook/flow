@@ -537,6 +537,9 @@ fn socket_acceptor_loop<H: Handler>(autostop: bool, listener: std::net::TcpListe
                 return;
             }
         };
+        if let Err(e) = client_stream.set_nodelay(true) {
+            flow_hh_logger::error!("Failed to set TCP_NODELAY on {}: {}", H::name(), e);
+        }
 
         H::create_socket_connection(autostop, client_stream);
     }

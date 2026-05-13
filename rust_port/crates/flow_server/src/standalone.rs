@@ -402,6 +402,9 @@ impl FlowServer {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
+                    if let Err(e) = stream.set_nodelay(true) {
+                        eprintln!("Error setting TCP_NODELAY on client connection: {}", e);
+                    }
                     let Some(slot_guard) = connection_slots.try_acquire() else {
                         eprintln!("Refusing connection: too many concurrent clients");
                         drop(stream);
