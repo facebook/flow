@@ -4110,6 +4110,26 @@ struct
               ReposLowerT
                 { reason = reason_inst; use_desc = false; use_t = ImplementsT (use_op, t) }
             )
+        | ( DefT (reason_obj, ObjT { props_tmap; flags; call_t; proto_t = _; reachable_targs = _ }),
+            ImplementsT (use_op, implementor)
+          )
+          when Files.has_ts_ext (Context.file cx)
+               && Base.Option.is_none (Obj_type.get_dict_opt flags.obj_kind) ->
+          (* TS-mode: a class may `implements` a resolved object type
+             (e.g. `class C implements Omit<HTMLAttrs, "k">`). Run the same
+             structural check as the InterfaceKind arm above. Indexed ObjTs
+             (e.g. `Record<string, number>`) are excluded: structural_subtype
+             would silently accept indexer-free classes, since
+             inst_structural_subtype only enforces the upper indexer when the
+             lower InstanceT carries inst_dict. *)
+          let proto_props = Context.generate_property_map cx NameUtils.Map.empty in
+          structural_subtype
+            cx
+            trace
+            ~use_op
+            implementor
+            reason_obj
+            (props_tmap, proto_props, call_t, None)
         | (_, ImplementsT _) -> add_output cx (Error_message.EUnsupportedImplements (reason_of_t l))
         (*********************************************************************)
         (* class A is a base class of class B iff                            *)
@@ -4136,7 +4156,16 @@ struct
              the case. All that remains is the "constructor" prop, which has no
              special meaning on the static object. *)
           NameUtils.Map.iter (fun x p -> if inherited_method x then check_super st x p) static
-          (* Keep opaque types in computed object keys *)
+        | (DefT (ureason, ObjT _), SuperT (use_op, reason, Derived { own; proto; static = _ }))
+          when Files.has_ts_ext (Context.file cx) ->
+          (* TS-mode: an interface may extend a resolved object type
+             (e.g. `interface X extends Omit<Y, K>`). Run the same
+             override-consistency check as the InstanceT arm above; ObjT has
+             no static slot so the static map is dropped. *)
+          let check_super_at x p = check_super cx trace ~use_op reason ureason l x p in
+          NameUtils.Map.iter check_super_at own;
+          NameUtils.Map.iter (fun x p -> if inherited_method x then check_super_at x p) proto
+        (* Keep opaque types in computed object keys *)
         | ( t,
             ConcretizeT { reason = _; kind = ConcretizeForComputedObjectKeys; seen = _; collector }
           ) ->

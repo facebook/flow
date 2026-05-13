@@ -7314,6 +7314,35 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
+        (TypeInner::DefT(reason_obj, def_t), UseTInner::ImplementsT(use_op, implementor))
+            if let DefTInner::ObjT(obj) = def_t.deref()
+                && flow_common::files::has_ts_ext(cx.file())
+                && obj_type::get_dict_opt(&obj.flags.obj_kind).is_none() =>
+        {
+            // TS-mode: a class may `implements` a resolved object type
+            // (e.g. `class C implements Omit<HTMLAttrs, "k">`). Run the same
+            // structural check as the InterfaceKind arm above. Indexed ObjTs
+            // (e.g. `Record<string, number>`) are excluded: structural_subtype
+            // would silently accept indexer-free classes, since
+            // inst_structural_subtype only enforces the upper indexer when the
+            // lower InstanceT carries inst_dict.
+            let ObjType {
+                props_tmap,
+                flags: _,
+                call_t,
+                proto_t: _,
+                reachable_targs: _,
+            } = obj.as_ref();
+            let proto_props = cx.generate_property_map(properties::PropertiesMap::new());
+            structural_subtype(
+                cx,
+                trace,
+                use_op.dupe(),
+                implementor,
+                reason_obj,
+                (props_tmap.dupe(), proto_props, *call_t, &None),
+            )?;
+        }
         (_, UseTInner::ImplementsT(_, _)) => {
             flow_js_utils::add_output(
                 cx,
@@ -7365,6 +7394,34 @@ fn __flow_impl<'cx>(
             for (x, p) in static_props.iter() {
                 if inherited_method(x) {
                     check_super(cx, trace, use_op.dupe(), reason, ureason, st, x, p)?;
+                }
+            }
+        }
+        (
+            TypeInner::DefT(ureason, def_t),
+            UseTInner::SuperT(box SuperTData {
+                use_op,
+                reason,
+                derived_type: derived,
+            }),
+        ) if matches!(def_t.deref(), DefTInner::ObjT(_))
+            && flow_common::files::has_ts_ext(cx.file()) =>
+        {
+            // TS-mode: an interface may extend a resolved object type
+            // (e.g. `interface X extends Omit<Y, K>`). Run the same
+            // override-consistency check as the InstanceT arm above; ObjT has
+            // no static slot so the static map is dropped.
+            let DerivedType {
+                own,
+                proto,
+                static_: _,
+            } = derived;
+            for (x, p) in own.iter() {
+                check_super(cx, trace, use_op.dupe(), reason, ureason, l, x, p)?;
+            }
+            for (x, p) in proto.iter() {
+                if inherited_method(x) {
+                    check_super(cx, trace, use_op.dupe(), reason, ureason, l, x, p)?;
                 }
             }
         }

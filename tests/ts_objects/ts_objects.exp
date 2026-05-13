@@ -1,3 +1,52 @@
+Error ---------------------------------------------------------------------------------- class_implements_object.ts:43:7
+
+Cannot implement `Omit` [1] with `Bad` because property `age` is missing in `Bad` [2] but exists in `Omit` [1].
+[incompatible-type]
+
+   class_implements_object.ts:43:7
+   43| class Bad implements Omit<Animal, "sound"> {
+             ^^^ [2]
+
+References:
+   class_implements_object.ts:43:22
+   43| class Bad implements Omit<Animal, "sound"> {
+                            ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- class_implements_object.ts:50:10
+
+Cannot implement `Box` [1] with `WrongType` because in property `value`: number [2] is incompatible with string [3].
+[incompatible-type]
+
+   class_implements_object.ts:50:10
+   50|   value: number = 1; // ERROR: number incompatible with string
+                ^^^^^^ [2]
+
+References:
+   class_implements_object.ts:49:28
+   49| class WrongType implements Box<string> {
+                                  ^^^^^^^^^^^ [1]
+   class_implements_object.ts:49:32
+   49| class WrongType implements Box<string> {
+                                      ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------- class_implements_object.ts:66:28
+
+Cannot implement `Record` because it is not an interface. [cannot-implement]
+
+   66| class NoIndexer implements Record<string, number> { // ERROR: indexed ObjT not accepted
+                                  ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------- class_implements_usage.js:8:25
+
+Cannot implement `Shape` because it is not an interface. [cannot-implement]
+
+   8| class JsImpl implements Shape { // ERROR: cannot-implement in .js
+                              ^^^^^
+
+
 Error ------------------------------------------------------------------------------------------ class_to_object.ts:18:1
 
 Cannot cast `a` to object type because property `missing` is missing in `Animal` [1] but exists in object type [2].
@@ -239,6 +288,46 @@ References:
              ^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------- interface_extends_jslib.js:8:11
+
+Cannot extend `Omit` [1] with `JsExt` because `Omit` [1] is not inheritable. [incompatible-use]
+
+   interface_extends_jslib.js:8:11
+   8| interface JsExt extends Omit<Base, "b"> { // ERROR: not inheritable in .js
+                ^^^^^
+
+References:
+   interface_extends_jslib.js:8:25
+   8| interface JsExt extends Omit<Base, "b"> { // ERROR: not inheritable in .js
+                              ^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- interface_extends_object.ts:80:9
+
+Cannot extend `Omit` [1] with `BadOverride` because in property `name`: number [2] is incompatible with string [3].
+[incompatible-type]
+
+   interface_extends_object.ts:80:9
+   80|   name: number; // ERROR: number incompatible with string
+               ^^^^^^ [2]
+
+References:
+   interface_extends_object.ts:79:31
+   79| interface BadOverride extends Omit<Animal, "sound"> {
+                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
+   interface_extends_object.ts:8:9
+    8|   name: string;
+               ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------- interface_extends_object.ts:86:27
+
+Cannot resolve name `T`. [cannot-resolve-name]
+
+   86| interface Wrap<T> extends T {} // ERROR: cannot-resolve-name on T
+                                 ^
+
+
 Error ------------------------------------------------------------------------------------------ object_to_class.ts:16:2
 
 Cannot cast object literal to `Point` because property `y` is missing in object literal [1] but exists in `Point` [2].
@@ -300,4 +389,4 @@ References:
 
 
 
-Found 18 errors
+Found 25 errors
