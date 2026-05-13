@@ -1,7 +1,7 @@
 ---
 title: Type Reference
 slug: /react/types
-description: "Reference for all React utility types exported by Flow, including React.Node, React.Element, React.MixedElement, and more."
+description: "Reference for all React utility types exported by Flow, including React.Node, React.MixedElement, and more."
 ---
 
 React exports a handful of utility types that may be useful to you when typing
