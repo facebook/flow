@@ -34,7 +34,7 @@ When enabled, IDE autocomplete suggests the exports of other files, and the
 necessary `import` statements are automatically inserted. A "quick fix" code
 action is also provided on undefined variables that suggests matching imports.
 
-The default value for `autoimports` is `true` as of Flow v0.155.0.
+The default value for `autoimports` is `true`.
 
 ### babel_loose_array_spread {#toc-babel-loose-array-spread}
 
@@ -110,8 +110,7 @@ The default value for `enums` is `false`.
 
 Type: `boolean`
 
-When set to `true` (the default as of version 0.202), Flow interprets object
-types as exact by default:
+When set to `true` (the default), Flow interprets object types as exact by default:
 
 ```js flow-check
 type O1 = {foo: number}; // exact
@@ -126,15 +125,6 @@ type O1 = {foo: number}; // inexact
 type O2 = {|foo: number|}; // exact
 type O3 = {foo: number, ...}; // inexact
 ```
-
-- From inception to Flow version 0.199, the default value of the flag was
-  `false`.
-- In versions 0.200 and 0.201, the flag was required to be explicitly set to
-  either `true` or `false`.
-- From version 0.202, the default value is `true`.
-
-You can read more about this change in our blog post about making
-[exact object types by default, by default](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69).
 
 ### experimental.const_params {#toc-experimental-const-params}
 

@@ -153,7 +153,7 @@ You can also [migrate from existing patterns](./migration.md) like `switch` or c
 
 ## Adoption
 
-* Flow: 0.274.1+ with option: `experimental.pattern_matching=true`
+* Flow: enable the `experimental.pattern_matching=true` option in your `.flowconfig`.
 * Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.29+, see our [Babel guide](../tools/babel.md) for more details.
 * ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.29+, see our [ESLint guide](../tools/eslint.md) for more details.
 

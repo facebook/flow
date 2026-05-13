@@ -155,9 +155,6 @@ const b = {
 
 ## Object type inference {#toc-object-type-inference}
 
-> NOTE: The behavior of empty object literals has changed in version 0.191 -
-> see this [blog post](https://medium.com/flow-type/improved-handling-of-the-empty-object-in-flow-ead91887e40c) for more details.
-
 When you create an object value, its type is set at the creation point. You cannot add new properties,
 or modify the type of existing properties.
 
@@ -236,7 +233,7 @@ const FixedUtils = { // Works!
 
 ## Exact and inexact object types
 
-Exact object types are the default (as of version 0.202), unless you have set [`exact_by_default=false`](../config/options.md#toc-exact-by-default) in your `.flowconfig`.
+Exact object types are the default, unless you have set [`exact_by_default=false`](../config/options.md#toc-exact-by-default) in your `.flowconfig`.
 
 Inexact objects (denoted with the `...`) allow extra properties to be passed in:
 

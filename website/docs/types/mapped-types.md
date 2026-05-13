@@ -173,7 +173,6 @@ type Unsupported2 = {-[K in keyof Tuple]: string}; // Error
 
 To use mapped types, you need to upgrade your infrastructure so that it supports the syntax:
 
-- `flow` and `flow-parser`: 0.210.0. Between v0.210.0 to v0.211.1, you need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `mapped_type=true`.
 - `prettier`: 3
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../tools/babel.md) for setup instructions.
 - `eslint` with `hermes-eslint`. See [our ESLint guide](../tools/eslint.md) for setup instructions.

@@ -302,13 +302,11 @@ mapTupleArray(arrays, (x: number, y: number) => x + y); // ERROR: array is not a
 To use labeled tuple elements (including optional elements and variance annotations on elements) and tuple spread elements,
 you need to upgrade your infrastructure so that it supports the syntax:
 
-- `flow` and `flow-parser`: 0.212
 - `prettier`: 3
 - `babel` with `babel-plugin-syntax-hermes-parser` (v0.15). See [our Babel guide](../tools/babel.md) for setup instructions.
 - `eslint` with `hermes-eslint` (v0.15). See [our ESLint guide](../tools/eslint.md) for setup instructions.
 
 To use inexact tuples, upgrade to:
-- `flow` and `flow-parser`: 0.243
 - `prettier`: 3.3
 - `babel` with `babel-plugin-syntax-hermes-parser` (v0.23). See [our Babel guide](../tools/babel.md) for setup instructions.
 - `eslint` with `hermes-eslint` (v0.23). See [our ESLint guide](../tools/eslint.md) for setup instructions.

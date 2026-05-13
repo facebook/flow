@@ -92,7 +92,7 @@ would make it unsuitable as a distinguishing tag in a disjoint union.
 Check out [render types](../react/render-types.md) and [react type references](../react/types.md) if you are not familiar with React typing in Flow.
 :::
 
-Since version 0.284, Flow will infer a more general type for React JSX elements by default.
+Flow infers a more general type for React JSX elements by default.
 
 ```js flow-check
 import * as React from 'react';
@@ -135,7 +135,6 @@ onlyAllowsExactDiv(divSpecific); // OK
 
 ## Adoption of `as const` syntax
 To use the `as const` syntax, you need to upgrade your infrastructure:
-- Flow and Flow Parser: 0.256+
 - Prettier: 3.1+
 - Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.19+, see our [Babel guide](../tools/babel.md) for more details.
 - ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.19+, see our [ESLint guide](../tools/eslint.md) for more details.
@@ -176,9 +175,6 @@ The variables `y1` and `y2` will have the same type as `x1` and `x2`, respective
 
 ## Adoption of `const` type parameter syntax
 To use the `as const` syntax, you need to upgrade your infrastructure:
-- Flow and Flow Parser:
-  * 0.267 and 0.268 and passing the `experimental.const_type_params=true` flag in the flowconfig
-  * 0.269+ without the flag.
 - Prettier: 3.5+
 - Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.26+, see our [Babel guide](../tools/babel.md) for more details.
 - ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.26+, see our [ESLint guide](../tools/eslint.md) for more details.

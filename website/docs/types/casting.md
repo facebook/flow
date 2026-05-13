@@ -24,8 +24,6 @@ value as Type
 
 This can also be referred to as an "as expression".
 
-> Before Flow version 0.229, the [legacy syntax](#legacy-casting-syntax) `(value: Type)` was used.
-
 Type cast expressions can appear anywhere an expression can appear:
 
 ```js
@@ -107,12 +105,9 @@ const otherObj = fooObj as {foo: number, bar: string};  // ERROR
 
 ### Adoption of `as` syntax
 To use the `as` keyword for type casts, you need to upgrade your infrastructure so that it supports the syntax:
-- Flow and Flow Parser: 0.229+
 - Prettier: 3.1+
 - Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.19+, see our [Babel guide](../tools/babel.md) for more details.
 - ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.19+, see our [ESLint guide](../tools/eslint.md) for more details.
-
-For more details on how to migrate to the new casting syntax (`as`) check out our [blog post](https://medium.com/flow-type/new-type-casting-syntax-for-flow-as-3ef41567ff3e).
 
 ## Using type cast expressions {#toc-using-type-cast-expressions}
 
@@ -186,17 +181,6 @@ clone.foo as number;  // Works!
 clone.bar as boolean; // Works!
 clone.baz as string;  // Works!
 ```
-
-## Legacy casting syntax
-
-Before version 0.229, to create a type cast expression around a `value`, you would
-add a colon `:` with the `Type` and wrap the expression with parentheses `(` `)`.
-
-```js
-(value: Type)
-```
-
-> **Note:** The parentheses are necessary to avoid ambiguity with other syntax.
 
 ## See Also {#toc-see-also}
 

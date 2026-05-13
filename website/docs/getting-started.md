@@ -180,8 +180,8 @@ No errors!
 
 ### Setup Library Definitions {#toc-setup-library-definitions}
 
-Since version 0.263.0, most library definitions are no longer bundled with Flow.
-Instead, they are managed by [flow-typed](https://github.com/flow-typed/flow-typed).
+Most library definitions are not bundled with Flow.
+They are managed by [flow-typed](https://github.com/flow-typed/flow-typed).
 
 You should have a `flow-typed.config.json` in the root of your project with the
 following content:

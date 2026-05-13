@@ -70,8 +70,6 @@ In the then-branch of the conditional `if (isA(x))`, `x` will have the type `A`.
 
 ### One-sided Type Guards {#toc-one-sided-type-guards}
 
-**Note:** This feature is available as of v0.237.0 when option `one_sided_type_guards=true` is set in the flowconfig. It is enabled by default as of v0.239.0.
-
 In some cases we may want to declare that a type guard function only refines the then-branch of a conditional. Consider for example the function
 ```js flow-check
 function isPositive(n: ?number): boolean {
@@ -113,9 +111,6 @@ if (isPositive(n)) {
 ```
 
 ### `this` Type guards
-
-**Note:** This feature is available as of v0.261.0 when option `this_type_guards=true` is set in the flowconfig.
-It is enabled by default as of v0.269.0.
 
 Sometimes, it is useful to declare a type predicate over the class instance on which a method is called.
 This can be done by adding `this is Type` as return annotation for this method.
@@ -211,7 +206,7 @@ In `filterError1`, filtering produces `Array<Success>` that is not compatible wi
 
 In `filterError2`, the predicate `response.type === 'success'` is used to refine `Response`s to `Success`s, not `Error`s.
 
-Note that as of version 0.261 it is not necessary to provide a type guard annotation for the argument of `.filter()`.
+Note that it is not necessary to provide a type guard annotation for the argument of `.filter()`.
 This will be inferred from the body of the arrow function:
 ```js flow-check
 type Success = Readonly<{type: 'success', value: 23}>;
@@ -335,8 +330,6 @@ This is because the negation of the predicate of `isPosNum` is "`x` is not a num
 
 If you're seeing errors related to this check, consider using a one-sided type guard (write `implies x is T`). Ones-sided type guards do not require this check, since they do not refine the else-branch of conditionals.
 
-**Note:** This check only happens when `one_sided_type_guards=true` is set in the flowconfig. It happens by default as of v0.239.0.
-
 3. The parameter that is refined cannot be reassigned in the body of the type guard function. Therefore the following are errors:
 ```js flow-check
 function isNumberError1(x: unknown): x is number {
@@ -387,10 +380,6 @@ function isKnown<T>(x: Item<T>): x is Known {
 
 To use type guards, you need to upgrade your infrastructure so that it supports the syntax:
 
-- `flow` and `flow-parser`:
-  * 0.209.1. Between v0.209.1 to v0.211.1, you need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `type_guards=true`.
-  * One-sided type guards are available as of version 0.237.0 with the option `one_sided_type_guards=true`, and are enabled by default as of v0.239.0.
-  * `this` type guards are available as of version 0.261.0 with the option `this_type_guards=true`, and are enabled by default as of v0.269.0.
 - `prettier`: 3. `this` type guards require version 3.5 or later. See [these instructions](../tools/prettier.md) for installing prettier.
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../tools/babel.md) for setup instructions.
   * `this` type guards require hermes-parser version 0.26 or later.

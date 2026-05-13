@@ -51,11 +51,7 @@ In order to be a valid suppression comment, there are also some conditions that 
 
 ### Making Suppressions More Granular with Error Codes {#toc-making-suppressions-more-granular-with-error-codes}
 
-:::info
-Starting from version v0.281, suppressions must have error codes.
-:::
-
-Suppressible Flow errors will also have an error code associated with them. This code concisely describes the type of issue the error is reporting, and is different between different kinds of errors.
+Suppressions must have error codes. Suppressible Flow errors will also have an error code associated with them. This code concisely describes the type of issue the error is reporting, and is different between different kinds of errors.
 
 In order to prevent suppressions from suppressing different kinds of type errors on the same line (by default suppressions without codes suppress every error on the following line), you can add an error code to your suppression. For example: `// $FlowFixMe[incompatible-type]` would only suppress errors with the `incompatible-type` code. So:
 
