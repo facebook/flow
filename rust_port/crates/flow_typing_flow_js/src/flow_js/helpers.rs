@@ -2305,6 +2305,16 @@ pub(super) fn type_app_variance_check<'cx>(
                         trace,
                         (t2, &UseT::new(UseTInner::UseT(use_op, t1.dupe()))),
                     ),
+                    Polarity::Neutral if flow_common::files::has_ts_ext(&cx.file()) => {
+                        // TS treats Neutral (read-write) tparam slots as covariant in
+                        // instantiation, not invariant. Match that by doing a covariant
+                        // subtype check in .ts instead of unification.
+                        rec_flow(
+                            cx,
+                            trace,
+                            (t1, &UseT::new(UseTInner::UseT(use_op, t2.dupe()))),
+                        )
+                    }
                     Polarity::Neutral => {
                         rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, t1, t2)
                     }

@@ -907,6 +907,7 @@ and internal_error =
   | ForcedReadOfUnderResolutionTvar of Env_api.def_loc_type
   | EnvInvariant of Env_api.env_invariant_failure
   | ImplicitInstantiationInvariant of string
+  | MethodBivariantInvariant of string
 
 and lower_kind =
   | Possibly_null
@@ -2820,6 +2821,8 @@ let string_of_internal_error = function
     spf "Did not find %s in name_resolver environment, please report this to the Flow team" x
   | ImplicitInstantiationInvariant str ->
     "Implicit instantiation issue, please report this to the Flow team: " ^ str
+  | MethodBivariantInvariant str ->
+    "Method bivariant subtyping issue, please report this to the Flow team: " ^ str
 
 let type_casting_examples enabled_casting_syntax =
   let example_as = "<expr> as <type>" in

@@ -260,7 +260,13 @@ fn __unify_inner<'cx>(
                                         (Some(te1), Some(te2)) => {
                                             let p1 = te1.polarity;
                                             let p2 = te2.polarity;
-                                            if !Polarity::equal(p1, p2) {
+                                            let ts_safe_direction =
+                                                Polarity::equal(p1, Polarity::Neutral)
+                                                    && Polarity::equal(p2, Polarity::Positive);
+                                            if !(flow_common::files::has_ts_ext(&cx.file())
+                                                && ts_safe_direction)
+                                                && !Polarity::equal(p1, p2)
+                                            {
                                                 add_output(
                                                     cx,
                                                     ErrorMessage::ETupleElementPolarityMismatch(
@@ -683,7 +689,8 @@ pub(super) fn unify_props<'cx>(
             // Error if polarity is not compatible both ways.
             let polarity1 = property::polarity(p1);
             let polarity2 = property::polarity(p2);
-            if !Polarity::equal(polarity1, polarity2) {
+            if !flow_common::files::has_ts_ext(&cx.file()) && !Polarity::equal(polarity1, polarity2)
+            {
                 add_output(
                     cx,
                     ErrorMessage::EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {

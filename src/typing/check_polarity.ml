@@ -22,7 +22,9 @@ end = struct
       match Subst_name.Map.find_opt name tparams with
       | None -> check_polarity cx ?trace seen tparams polarity bound
       | Some tp ->
-        if not (Polarity.compat (tp.polarity, polarity)) then
+        if
+          (not (Polarity.compat (tp.polarity, polarity))) && not (Files.has_ts_ext (Context.file cx))
+        then
           Flow_js_utils.add_output
             cx
             (Error_message.EPolarityMismatch

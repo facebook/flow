@@ -7915,7 +7915,13 @@ struct
           | ( Some (TupleElement { t = t1; polarity = p1; name = _; optional = _; reason = _ }),
               Some (TupleElement { t = t2; polarity = p2; name = _; optional = _; reason = _ })
             ) ->
-            if not @@ Polarity.equal (p1, p2) then
+            let ts_safe_direction =
+              Polarity.equal (p1, Polarity.Neutral) && Polarity.equal (p2, Polarity.Positive)
+            in
+            if
+              (not (Files.has_ts_ext (Context.file cx) && ts_safe_direction))
+              && (not @@ Polarity.equal (p1, p2))
+            then
               add_output
                 cx
                 (Error_message.ETupleElementPolarityMismatch
@@ -8103,7 +8109,8 @@ struct
       (* Error if polarity is not compatible both ways. *)
       let polarity1 = Property.polarity p1 in
       let polarity2 = Property.polarity p2 in
-      if not (Polarity.equal (polarity1, polarity2)) then
+      if (not (Files.has_ts_ext (Context.file cx))) && not (Polarity.equal (polarity1, polarity2))
+      then
         add_output
           cx
           (Error_message.EPropPolarityMismatch
@@ -9362,6 +9369,11 @@ struct
               match polarity with
               | Polarity.Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
               | Polarity.Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
+              | Polarity.Neutral when Files.has_ts_ext (Context.file cx) ->
+                (* TS treats Neutral (read-write) tparam slots as covariant in
+                   instantiation, not invariant. Match that by doing a covariant
+                   subtype check in .ts instead of unification. *)
+                rec_flow cx trace (t1, UseT (use_op, t2))
               | Polarity.Neutral ->
                 rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
             in

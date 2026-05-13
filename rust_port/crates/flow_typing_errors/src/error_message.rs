@@ -2926,6 +2926,7 @@ pub enum InternalError {
     ForcedReadOfUnderResolutionTvar(DefLocType),
     EnvInvariant(EnvInvariantFailure<ALoc>),
     ImplicitInstantiationInvariant(FlowSmolStr),
+    MethodBivariantInvariant(FlowSmolStr),
     WorkerCanceled,
 }
 
@@ -6266,6 +6267,11 @@ pub fn string_of_internal_error(error: &InternalError) -> FlowSmolStr {
         },
         InternalError::ImplicitInstantiationInvariant(s) => format!(
             "Implicit instantiation issue, please report this to the Flow team: {}",
+            s
+        )
+        .into(),
+        InternalError::MethodBivariantInvariant(s) => format!(
+            "Method bivariant subtyping issue, please report this to the Flow team: {}",
             s
         )
         .into(),

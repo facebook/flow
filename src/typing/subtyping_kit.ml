@@ -52,10 +52,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
     iter_union ~f:rec_flow ~init:() ~join:(fun _ _ -> ()) cx trace rep u
 
   let add_output_prop_polarity_mismatch cx use_op (lreason, ureason) props =
-    match Nel.of_list props with
-    | None -> ()
-    | Some props ->
-      add_output cx (Error_message.EPropPolarityMismatch { lreason; ureason; props; use_op })
+    if Files.has_ts_ext (Context.file cx) then
+      ()
+    else
+      match Nel.of_list props with
+      | None -> ()
+      | Some props ->
+        add_output cx (Error_message.EPropPolarityMismatch { lreason; ureason; props; use_op })
 
   let polarity_error_content propref lp up =
     let lpol = Property.polarity_of_property_type lp in
@@ -71,6 +74,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ?(report_polarity = true)
       propref = function
     (* unification cases *)
+    | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
+        OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
+      )
+      when Files.has_ts_ext (Context.file cx) ->
+      (* TS treats read-write-on-both-sides property type mismatch in
+         extends/implements/instantiation contexts as covariant, not invariant.
+         Match that by skipping unification and doing a covariant subtype check. *)
+      flow_opt cx ?trace (lt, UseT (use_op, ut));
+      []
     | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
         OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
       ) ->
@@ -135,6 +147,270 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (t1, t2)
     else
       rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
+
+  (* TS-mode bivariant param flow for method-syntax properties: try the
+     contravariant direction (target -> source, the standard subtyping
+     direction) first via speculation; on failure, fall back to the covariant
+     direction (source -> target). Mirrors TS's bivariance for methods, which
+     accepts assignability whenever either direction holds. *)
+  let bivariant_param_flow cx trace ~use_op (source, target) =
+    match
+      SpeculationKit.try_singleton_custom_throw_on_failure cx (fun () ->
+          rec_flow cx trace (target, UseT (use_op, source))
+      )
+    with
+    | () -> ()
+    | exception Flow_js_utils.SpeculationSingletonError ->
+      rec_flow cx trace (source, UseT (use_op, target))
+
+  (* Shared FunT ~> FunT subtyping driver. The this-binding, effect, return,
+     and type-guard checks are identical in the standard (contravariant) and
+     TS-mode bivariant paths; the only difference is how params are flowed.
+     `check_params` receives the FunCompatibility-rewritten use_op and is
+     responsible for the param-flow step (e.g. `multiflow_subtype` for the
+     standard path, a bivariant pairwise walk for the TS-mode path). *)
+  let funt_to_funt_check cx trace ~use_op (lreason, ft1) (ureason, ft2) ~check_params =
+    let use_op =
+      Frame
+        ( FunCompatibility { lower = lreason; upper = ureason },
+          (* The $call PropertyCompatibility is redundant when we have a
+           * FunCompatibility use_op. *)
+          match use_op with
+          | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); _ }, use_op) ->
+            use_op
+          | _ -> use_op
+        )
+    in
+    begin
+      let use_op =
+        Frame (FunParam { n = 0; name = Some "this"; lower = lreason; upper = ureason }, use_op)
+      in
+      let (this_param1, this_status_1) = ft1.this_t in
+      let (this_param2, this_status_2) = ft2.this_t in
+      match (this_status_1, this_status_2) with
+      | (This_Method _, This_Method _) ->
+        rec_flow cx trace (subtype_this_of_function ft2, UseT (use_op, subtype_this_of_function ft1))
+      (* lower bound method, upper bound function
+         This is always banned, as it would allow methods to be unbound through casting *)
+      | (This_Method { unbound }, This_Function) ->
+        if (not unbound) && not (Files.has_ts_ext (Context.file cx)) then
+          add_output
+            cx
+            (Error_message.EMethodUnbinding
+               { use_op; reason_op = lreason; reason_prop = reason_of_t this_param1 }
+            );
+        rec_flow cx trace (this_param2, UseT (use_op, subtype_this_of_function ft1))
+      (* lower bound function, upper bound method.
+         Ok as long as the types match up *)
+      | (This_Function, This_Method _)
+      (* Both functions *)
+      | (This_Function, This_Function) ->
+        rec_flow cx trace (this_param2, UseT (use_op, this_param1))
+    end;
+    check_params ~use_op;
+    begin
+      match (ft1.effect_, ft2.effect_) with
+      | (AnyEffect, _)
+      | (_, AnyEffect)
+      | (ArbitraryEffect, ArbitraryEffect)
+      | ((HookDecl _ | HookAnnot), HookAnnot) ->
+        ()
+      | (HookDecl a, HookDecl b) when ALoc.equal_id a b -> ()
+      | ((HookDecl _ | HookAnnot), ArbitraryEffect) ->
+        add_output
+          cx
+          (Error_message.EHookIncompatible
+             {
+               use_op;
+               lower = lreason;
+               upper = ureason;
+               lower_is_hook = true;
+               hook_is_annot = ft1.effect_ = HookAnnot;
+             }
+          )
+      | (ArbitraryEffect, (HookDecl _ | HookAnnot)) ->
+        add_output
+          cx
+          (Error_message.EHookIncompatible
+             {
+               use_op;
+               lower = lreason;
+               upper = ureason;
+               lower_is_hook = false;
+               hook_is_annot = ft2.effect_ = HookAnnot;
+             }
+          )
+      | ((HookDecl _ | HookAnnot), HookDecl _) ->
+        add_output
+          cx
+          (Error_message.EHookUniqueIncompatible { use_op; lower = lreason; upper = ureason })
+    end;
+    let ret_use_op =
+      Frame
+        (FunReturn { lower = reason_of_t ft1.return_t; upper = reason_of_t ft2.return_t }, use_op)
+    in
+    rec_flow cx trace (ft1.return_t, UseT (ret_use_op, ft2.return_t));
+    begin
+      match (ft1.type_guard, ft2.type_guard) with
+      | (None, Some (TypeGuard _)) ->
+        (* Non-predicate functions are incompatible with predicate ones
+           TODO: somehow the original flow needs to be propagated as well *)
+        add_output
+          cx
+          (Error_message.ETypeGuardFuncIncompatibility { use_op; reasons = (lreason, ureason) })
+      | ( Some
+            (TypeGuard
+              { reason = r1; one_sided = impl1; param_name = x1; type_guard = t1; inferred = _ }
+              ),
+          Some
+            (TypeGuard
+              { reason = r2; one_sided = impl2; param_name = x2; type_guard = t2; inferred = _ }
+              )
+        ) ->
+        func_type_guard_compat
+          cx
+          trace
+          use_op
+          (r1, ft1.params, impl1, x1, t1)
+          (r2, ft2.params, impl2, x2, t2)
+      | (Some _, None)
+      | (None, None) ->
+        ()
+    end
+
+  (* The standard (contravariant) param-flow check: builds an arglist from
+     ft2's params + rest, then routes it through `multiflow_subtype` so it
+     flows into ft1's params. *)
+  let funt_to_funt_check_params_contravariant cx trace ~ureason ~ft1 ~ft2 ~use_op =
+    let args = List.rev_map (fun (_, t) -> Arg t) ft2.params in
+    let args =
+      List.rev
+        (match ft2.rest_param with
+        | Some (_, _, rest) -> SpreadArg rest :: args
+        | None -> args)
+    in
+    multiflow_subtype cx trace ~use_op ureason args ft1
+
+  (* TS-mode bivariant param-flow check used for method-syntax properties: a
+     pairwise walk over ft1.params/ft2.params using `bivariant_param_flow`,
+     plus arity enforcement. Trailing ft1 params not provided by ft2 are
+     filled with VoidT so optional params (whose type unions in void) accept
+     and required ones produce a `FunMissingArg` error -- the same mechanism
+     `multiflow_full` uses. When ft2 has more fixed params than ft1, the
+     extras flow into `ft1.rest_param` (if present) so callers of the upper
+     signature cannot smuggle the wrong type into the lower's rest -- this
+     mirrors what `multiflow_subtype` does in the standard path.
+
+     Caveat: `rest_param`'s type is the whole array (e.g. `Array<string>`),
+     not the element type, so flowing a single param's type bivariantly
+     against it is a single-vs-array mismatch and will always fail. That
+     means the rest-vs-extra-fixed cases (both the symmetric one above and
+     the pre-existing one below) are correctly *sound* (incompatible types
+     produce an error) but may *over-reject* compatible cases like
+     `(x, ...ys: number[]) <: (x, y: number)`. multiflow_subtype handles
+     these by building a tuple literal and flowing it; replicating that
+     here was deferred since method-syntax with rest is uncommon. *)
+  let funt_to_funt_check_params_bivariant cx trace ~lreason ~ureason ~ft1 ~ft2 ~use_op =
+    let rec walk_params n params1 params2 =
+      match (params1, params2) with
+      | ([], []) -> ()
+      | ([], (_, t2) :: rest2) ->
+        (match ft1.rest_param with
+        | Some (_, _, t1_rest) ->
+          let use_op = Frame (FunRestParam { lower = lreason; upper = ureason }, use_op) in
+          bivariant_param_flow cx trace ~use_op (t1_rest, t2);
+          walk_params (n + 1) [] rest2
+        | None ->
+          (* ft1 has no slot for the extra; JS drops the arg at runtime, sound. *)
+          ())
+      | ((name1, t1) :: rest1, []) ->
+        (match ft2.rest_param with
+        | Some (_, _, rest_t) ->
+          let use_op =
+            Frame (FunParam { n; name = name1; lower = lreason; upper = ureason }, use_op)
+          in
+          bivariant_param_flow cx trace ~use_op (t1, rest_t);
+          walk_params (n + 1) rest1 []
+        | None ->
+          let use_op = Frame (FunMissingArg { n; op = ureason; def = lreason }, use_op) in
+          rec_flow cx trace (VoidT.why ureason, UseT (use_op, t1));
+          walk_params (n + 1) rest1 [])
+      | ((_, t1) :: rest1, (name2, t2) :: rest2) ->
+        let use_op =
+          Frame (FunParam { n; name = name2; lower = lreason; upper = ureason }, use_op)
+        in
+        bivariant_param_flow cx trace ~use_op (t1, t2);
+        walk_params (n + 1) rest1 rest2
+    in
+    walk_params 1 ft1.params ft2.params;
+    match (ft1.rest_param, ft2.rest_param) with
+    | (Some (_, _, t1_rest), Some (_, _, t2_rest)) ->
+      let use_op = Frame (FunRestParam { lower = lreason; upper = ureason }, use_op) in
+      bivariant_param_flow cx trace ~use_op (t1_rest, t2_rest)
+    | _ -> ()
+
+  let funt_to_funt_method_bivariant cx trace ~use_op (lreason, ft1) (ureason, ft2) =
+    funt_to_funt_check
+      cx
+      trace
+      ~use_op
+      (lreason, ft1)
+      (ureason, ft2)
+      ~check_params:(funt_to_funt_check_params_bivariant cx trace ~lreason ~ureason ~ft1 ~ft2)
+
+  (* Returns true if (lt, ut) is a method-shape pair (FunT/FunT or compatible
+     PolyT/PolyT) and the bivariant subtyping was applied. Returns false to
+     signal the caller to fall back to the standard subtyping path. The PolyT
+     case mirrors the `PolyT ~> PolyT` instantiation logic (see flow_obj_to_obj
+     callers below) so generic methods get the same TS-style bivariance treatment
+     as monomorphic ones. *)
+  let try_method_bivariant cx trace ~use_op lt ut =
+    match (lt, ut) with
+    | (DefT (lreason_f, FunT (_, ft1)), DefT (ureason_f, FunT (_, ft2))) ->
+      funt_to_funt_method_bivariant cx trace ~use_op (lreason_f, ft1) (ureason_f, ft2);
+      true
+    | ( DefT (_, PolyT { tparams = ps1; t_out = DefT (_, FunT _) as inner1; _ }),
+        DefT (_, PolyT { tparams = ps2; t_out = DefT (_, FunT _) as inner2; _ })
+      )
+      when Nel.length ps1 = Nel.length ps2 ->
+      let (map1, map2) =
+        Base.List.fold2_exn
+          (Nel.to_list ps1)
+          (Nel.to_list ps2)
+          ~init:(Subst_name.Map.empty, Subst_name.Map.empty)
+          ~f:(fun (prev_map1, prev_map2) p1 p2 ->
+            let bound2 = Type_subst.subst cx ~use_op prev_map2 p2.bound in
+            rec_flow cx trace (bound2, UseT (use_op, p1.bound));
+            if p1.is_const <> p2.is_const then
+              add_output
+                cx
+                (Error_message.ETypeParamConstIncompatibility
+                   { use_op; lower = p1.reason; upper = p2.reason }
+                );
+            let (gen, map1) = Flow_js_utils.generic_bound cx prev_map1 p1 in
+            let map2 = Subst_name.Map.add p2.name gen prev_map2 in
+            (map1, map2)
+        )
+      in
+      (* Substitution preserves the outer DefT/FunT constructor (the pattern
+         guard above requires t_out is FunT, and Type_subst only rewrites
+         tparam references inside), so the assertive match is exhaustive in
+         practice. If it ever falls through, raise rather than silently report
+         success. *)
+      (match (Type_subst.subst cx ~use_op map1 inner1, Type_subst.subst cx ~use_op map2 inner2) with
+      | (DefT (lreason_f, FunT (_, ft1)), DefT (ureason_f, FunT (_, ft2))) ->
+        funt_to_funt_method_bivariant cx trace ~use_op (lreason_f, ft1) (ureason_f, ft2)
+      | _ ->
+        add_output
+          cx
+          (Error_message.EInternal
+             ( loc_of_t lt,
+               Error_message.MethodBivariantInvariant
+                 "PolyT with FunT inner produced non-FunT after subst"
+             )
+          ));
+      true
+    | _ -> false
 
   let flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     let {
@@ -288,46 +564,69 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | (Some lp, _) ->
             if lit then
               (* prop from unaliased LB: check <: *)
-              match (Property.read_t lp, Property.read_t up) with
-              | (Some lt, Some ut) ->
-                rec_flow cx trace (lt, UseT (use_op, ut));
+              match (lp, up) with
+              | (Method { type_ = lt; _ }, Method { type_ = ut; _ })
+                when Files.has_ts_ext (Context.file cx)
+                     && try_method_bivariant cx trace ~use_op lt ut ->
                 acc
-              | _ -> acc
+              | _ ->
+                (match (Property.read_t lp, Property.read_t up) with
+                | (Some lt, Some ut) ->
+                  rec_flow cx trace (lt, UseT (use_op, ut));
+                  acc
+                | _ -> acc)
             else
               (* prop from aliased LB *)
               let (invariant_subtyping_failed_prop_names, additional_polarity_mismatch_errs) =
-                match (Property.type_ lp, Property.type_ up) with
-                | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
-                    OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
-                  )
-                  when (not (Speculation.speculating cx))
-                       && (not (TvarVisitors.has_unresolved_tvars cx lt))
-                       && not (TvarVisitors.has_unresolved_tvars cx ut) ->
-                  let invariant_subtyping_failed_prop_names =
-                    if
-                      try
-                        SpeculationKit.try_unify cx trace lt use_op ut;
-                        false
-                      with
-                      | Flow_js_utils.SpeculationSingletonError -> true
-                    then
-                      (name, lt, ut) :: invariant_subtyping_failed_prop_names
-                    else
-                      invariant_subtyping_failed_prop_names
-                  in
+                match (lp, up) with
+                | (Method { type_ = lt; _ }, Method { type_ = ut; _ })
+                  when Files.has_ts_ext (Context.file cx)
+                       && try_method_bivariant cx trace ~use_op lt ut ->
                   (invariant_subtyping_failed_prop_names, [])
-                | (lp, up) ->
-                  ( invariant_subtyping_failed_prop_names,
-                    rec_flow_p
-                      cx
-                      ~trace
-                      ~use_op
-                      ~lower_upper_subtyping_obj_ts:
-                        (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
-                      ~upper_object_reason:ureason
-                      propref
-                      (lp, up)
-                  )
+                | _ ->
+                  (match (Property.type_ lp, Property.type_ up) with
+                  | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
+                      OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
+                    )
+                    when Files.has_ts_ext (Context.file cx) ->
+                    (* TS treats read-write-on-both-sides property type mismatch
+                       in extends/implements/instantiation as covariant, not
+                       invariant. Skip the try_unify path and do a covariant
+                       subtype check; do not record this property as an
+                       invariant-subtyping failure. *)
+                    rec_flow cx trace (lt, UseT (use_op, ut));
+                    (invariant_subtyping_failed_prop_names, [])
+                  | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
+                      OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
+                    )
+                    when (not (Speculation.speculating cx))
+                         && (not (TvarVisitors.has_unresolved_tvars cx lt))
+                         && not (TvarVisitors.has_unresolved_tvars cx ut) ->
+                    let invariant_subtyping_failed_prop_names =
+                      if
+                        try
+                          SpeculationKit.try_unify cx trace lt use_op ut;
+                          false
+                        with
+                        | Flow_js_utils.SpeculationSingletonError -> true
+                      then
+                        (name, lt, ut) :: invariant_subtyping_failed_prop_names
+                      else
+                        invariant_subtyping_failed_prop_names
+                    in
+                    (invariant_subtyping_failed_prop_names, [])
+                  | (lp_t, up_t) ->
+                    ( invariant_subtyping_failed_prop_names,
+                      rec_flow_p
+                        cx
+                        ~trace
+                        ~use_op
+                        ~lower_upper_subtyping_obj_ts:
+                          (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
+                        ~upper_object_reason:ureason
+                        propref
+                        (lp_t, up_t)
+                    ))
               in
               ( invariant_subtyping_failed_prop_names,
                 lhs_missing_props,
@@ -594,30 +893,43 @@ module Make (Flow : INPUT) : OUTPUT = struct
           add_output cx error_message;
           ()
       );
-      Base.Option.iter (Nel.of_list rhs_neutral_optional) ~f:(fun props ->
-          let t1 = DefT (lreason, ObjT l_obj) in
-          let t2 = DefT (ureason, ObjT u_obj) in
-          let lower_obj_loc = def_loc_of_reason lreason in
-          let upper_obj_loc = def_loc_of_reason ureason in
-          let error_message =
-            Error_message.EPropsNotFoundInInvariantSubtyping
-              {
-                prop_names = props;
-                reason_lower = lreason;
-                reason_upper = ureason;
-                lower_obj_loc;
-                upper_obj_loc;
-                lower_obj_desc = TypeOrTypeDesc.Type t1;
-                upper_obj_desc = TypeOrTypeDesc.Type t2;
-                use_op;
-              }
-          in
-          add_output cx error_message;
-          ()
-      );
+      if not (Files.has_ts_ext (Context.file cx)) then
+        Base.Option.iter (Nel.of_list rhs_neutral_optional) ~f:(fun props ->
+            let t1 = DefT (lreason, ObjT l_obj) in
+            let t2 = DefT (ureason, ObjT u_obj) in
+            let lower_obj_loc = def_loc_of_reason lreason in
+            let upper_obj_loc = def_loc_of_reason ureason in
+            let error_message =
+              Error_message.EPropsNotFoundInInvariantSubtyping
+                {
+                  prop_names = props;
+                  reason_lower = lreason;
+                  reason_upper = ureason;
+                  lower_obj_loc;
+                  upper_obj_loc;
+                  lower_obj_desc = TypeOrTypeDesc.Type t1;
+                  upper_obj_desc = TypeOrTypeDesc.Type t2;
+                  use_op;
+                }
+            in
+            add_output cx error_message;
+            ()
+        );
       Base.List.iter ups_to_flow_any ~f:(fun up ->
           let any = AnyT.error_of_kind UnresolvedName ureason in
           match Property.type_ up with
+          | OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
+            when Files.has_ts_ext (Context.file cx) ->
+            (* TS treats missing optional Neutral properties as covariantly
+               filled rather than invariantly demanded. Replace the unify with
+               a covariant `any ~> ut` flow so any genuine type-arg
+               incompatibility still surfaces via [incompatible-type], but the
+               invariance demand is dropped. The `any ~> ut` is intentional
+               (not a missed `unify_opt`): `any` flowing into `ut` is a no-op
+               for type checking, which is exactly what we want -- this branch
+               exists to keep the `ups_to_flow_any` loop's structure intact
+               while neutralizing the polarity-only constraint. *)
+            flow_opt cx ~trace (any, UseT (use_op, ut))
           | OrdinaryField { type_ = ut; polarity = Polarity.Neutral } ->
             unify_opt cx ~trace ~use_op ~unify_cause:UnifyCause.Uncategorized any ut
           | up ->
@@ -1996,128 +2308,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
     (* FunT ~> FunT *)
     | (DefT (lreason, FunT (_, ft1)), DefT (ureason, FunT (_, ft2))) ->
-      let use_op =
-        Frame
-          ( FunCompatibility { lower = lreason; upper = ureason },
-            (* The $call PropertyCompatibility is redundant when we have a
-             * FunCompatibility use_op. *)
-            match use_op with
-            | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); _ }, use_op) ->
-              use_op
-            | _ -> use_op
-          )
-      in
-
-      begin
-        let use_op =
-          Frame (FunParam { n = 0; name = Some "this"; lower = lreason; upper = ureason }, use_op)
-        in
-        let (this_param1, this_status_1) = ft1.this_t in
-        let (this_param2, this_status_2) = ft2.this_t in
-        match (this_status_1, this_status_2) with
-        | (This_Method _, This_Method _) ->
-          rec_flow
-            cx
-            trace
-            (subtype_this_of_function ft2, UseT (use_op, subtype_this_of_function ft1))
-        (* lower bound method, upper bound function
-           This is always banned, as it would allow methods to be unbound through casting *)
-        | (This_Method { unbound }, This_Function) ->
-          if (not unbound) && not (Files.has_ts_ext (Context.file cx)) then
-            add_output
-              cx
-              (Error_message.EMethodUnbinding
-                 { use_op; reason_op = lreason; reason_prop = reason_of_t this_param1 }
-              );
-          rec_flow cx trace (this_param2, UseT (use_op, subtype_this_of_function ft1))
-        (* lower bound function, upper bound method.
-           Ok as long as the types match up *)
-        | (This_Function, This_Method _)
-        (* Both functions *)
-        | (This_Function, This_Function) ->
-          rec_flow cx trace (this_param2, UseT (use_op, this_param1))
-      end;
-      let args = List.rev_map (fun (_, t) -> Arg t) ft2.params in
-      let args =
-        List.rev
-          (match ft2.rest_param with
-          | Some (_, _, rest) -> SpreadArg rest :: args
-          | None -> args)
-      in
-      multiflow_subtype cx trace ~use_op ureason args ft1;
-
-      begin
-        match (ft1.effect_, ft2.effect_) with
-        | (AnyEffect, _)
-        | (_, AnyEffect)
-        | (ArbitraryEffect, ArbitraryEffect)
-        | ((HookDecl _ | HookAnnot), HookAnnot) ->
-          ()
-        | (HookDecl a, HookDecl b) when ALoc.equal_id a b -> ()
-        | ((HookDecl _ | HookAnnot), ArbitraryEffect) ->
-          add_output
-            cx
-            (Error_message.EHookIncompatible
-               {
-                 use_op;
-                 lower = lreason;
-                 upper = ureason;
-                 lower_is_hook = true;
-                 hook_is_annot = ft1.effect_ = HookAnnot;
-               }
-            )
-        | (ArbitraryEffect, (HookDecl _ | HookAnnot)) ->
-          add_output
-            cx
-            (Error_message.EHookIncompatible
-               {
-                 use_op;
-                 lower = lreason;
-                 upper = ureason;
-                 lower_is_hook = false;
-                 hook_is_annot = ft2.effect_ = HookAnnot;
-               }
-            )
-        | ((HookDecl _ | HookAnnot), HookDecl _) ->
-          add_output
-            cx
-            (Error_message.EHookUniqueIncompatible { use_op; lower = lreason; upper = ureason })
-      end;
-
-      (* Return type subtyping *)
-      let ret_use_op =
-        Frame
-          (FunReturn { lower = reason_of_t ft1.return_t; upper = reason_of_t ft2.return_t }, use_op)
-      in
-      rec_flow cx trace (ft1.return_t, UseT (ret_use_op, ft2.return_t));
-
-      begin
-        match (ft1.type_guard, ft2.type_guard) with
-        | (None, Some (TypeGuard _)) ->
-          (* Non-predicate functions are incompatible with predicate ones
-             TODO: somehow the original flow needs to be propagated as well *)
-          add_output
-            cx
-            (Error_message.ETypeGuardFuncIncompatibility { use_op; reasons = (lreason, ureason) })
-        | ( Some
-              (TypeGuard
-                { reason = r1; one_sided = impl1; param_name = x1; type_guard = t1; inferred = _ }
-                ),
-            Some
-              (TypeGuard
-                { reason = r2; one_sided = impl2; param_name = x2; type_guard = t2; inferred = _ }
-                )
-          ) ->
-          func_type_guard_compat
-            cx
-            trace
-            use_op
-            (r1, ft1.params, impl1, x1, t1)
-            (r2, ft2.params, impl2, x2, t2)
-        | (Some _, None)
-        | (None, None) ->
-          ()
-      end
+      funt_to_funt_check
+        cx
+        trace
+        ~use_op
+        (lreason, ft1)
+        (ureason, ft2)
+        ~check_params:(funt_to_funt_check_params_contravariant cx trace ~ureason ~ft1 ~ft2)
     (* unwrap namespace type into object type, drop all information about types in the namespace *)
     | (NamespaceT { namespace_symbol = _; values_type; types_tmap = _ }, _) ->
       rec_flow_t cx trace ~use_op (values_type, u)
@@ -2213,17 +2410,23 @@ module Make (Flow : INPUT) : OUTPUT = struct
                     use_op
                   )
               in
-              let errs =
-                rec_flow_p
-                  cx
-                  ~trace
-                  ~use_op
-                  ~lower_upper_subtyping_obj_ts:(Some (l, u))
-                  ~upper_object_reason:ureason
-                  propref
-                  (Property.type_ lp, Property.type_ up)
-              in
-              Base.List.rev_append errs acc
+              (match (lp, up) with
+              | (Method { type_ = lt; _ }, Method { type_ = ut; _ })
+                when Files.has_ts_ext (Context.file cx)
+                     && try_method_bivariant cx trace ~use_op lt ut ->
+                acc
+              | _ ->
+                let errs =
+                  rec_flow_p
+                    cx
+                    ~trace
+                    ~use_op
+                    ~lower_upper_subtyping_obj_ts:(Some (l, u))
+                    ~upper_object_reason:ureason
+                    propref
+                    (Property.type_ lp, Property.type_ up)
+                in
+                Base.List.rev_append errs acc)
             | _ ->
               let lookup_kind =
                 match up with

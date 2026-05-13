@@ -1,0 +1,261 @@
+Error ------------------------------------------------------------------------------------- cross_lang_consumer.js:10:24
+
+Cannot assign `dogBox` to `a` because in type argument `T` [1]: `Animal` [2] is incompatible with `Dog` [3].
+[incompatible-type]
+
+   cross_lang_consumer.js:10:24
+   10| const a: Box<Animal> = dogBox; // ERROR in .js: Neutral T is invariant
+                              ^^^^^^
+
+References:
+   cross_lang_lib.ts:10:26
+   10| export declare class Box<T> {
+                                ^ [1]
+   cross_lang_consumer.js:10:14
+   10| const a: Box<Animal> = dogBox; // ERROR in .js: Neutral T is invariant
+                    ^^^^^^ [2]
+   cross_lang_consumer.js:9:27
+    9| declare const dogBox: Box<Dog>;
+                                 ^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- extends_implements.ts:36:8
+
+Cannot extend `Parent` [1] with `Child` because in property `tag`: string literal `c` [2] is incompatible with union
+type [3]. [incompatible-type]
+
+   extends_implements.ts:36:8
+   36|   tag: "c"; // ERROR: "c" is not assignable to "a" | "b"
+              ^^^ [2]
+
+References:
+   extends_implements.ts:35:25
+   35| interface Child extends Parent {
+                               ^^^^^^ [1]
+   extends_implements.ts:33:8
+   33|   tag: "a" | "b";
+              ^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- method_bivariance.ts:43:33
+
+Cannot assign object literal to `a` because in property `cb` > the first parameter: `Dog` [1] is incompatible with
+`Animal` [2]. [incompatible-type]
+
+   method_bivariance.ts:43:33
+   43| const a: ArrowHolder = {cb: (x: Dog): void => {}}; // ERROR: contravariance
+                                       ^^^ [1]
+
+References:
+   method_bivariance.ts:40:11
+   40|   cb: (x: Animal) => void;
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- method_bivariance.ts:49:3
+
+Cannot assign object literal to `tooManyParams` because in property `cb`: function [1] requires another argument from
+function type [2]. [incompatible-type]
+
+   method_bivariance.ts:49:3
+   49|   cb(x: Dog, y: number): void {}, // ERROR: missing arg `y` when called with the target's arity
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   method_bivariance.ts:20:3
+   20|   cb(x: Animal): void;
+         ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- method_bivariance.ts:74:35
+
+Cannot assign `restSource` to `restMismatch` because in property `cb`: number [1] is incompatible with array type [2].
+[incompatible-type]
+
+   method_bivariance.ts:74:35
+   74| const restMismatch: FixedTarget = restSource; // ERROR: number/string[] incompatible
+                                         ^^^^^^^^^^
+
+References:
+   method_bivariance.ts:71:20
+   71|   cb(x: Animal, y: number): void;
+                          ^^^^^^ [1]
+   method_bivariance.ts:73:49
+   73| declare const restSource: {cb(x: Animal, ...ys: string[]): void};
+                                                       ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- method_bivariance.ts:83:38
+
+Cannot assign `restNumberSource` to `restRestMismatch` because in property `cb` > array element: `number` [1] is not
+exactly the same as `string` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<number>` [3] and `Array<string>` [4] exactly the same
+- Or make array type [4] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   method_bivariance.ts:83:38
+   83| const restRestMismatch: RestTarget = restNumberSource; // ERROR: bivariance still requires related types
+                                            ^^^^^^^^^^^^^^^^
+
+References:
+   method_bivariance.ts:82:44
+   82| declare const restNumberSource: {cb(...ys: number[]): void};
+                                                  ^^^^^^ [1]
+   method_bivariance.ts:80:13
+   80|   cb(...ys: string[]): void;
+                   ^^^^^^ [2]
+   method_bivariance.ts:82:44
+   82| declare const restNumberSource: {cb(...ys: number[]): void};
+                                                  ^^^^^^^^ [3]
+   method_bivariance.ts:80:13
+   80|   cb(...ys: string[]): void;
+                   ^^^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------- method_bivariance.ts:94:44
+
+Cannot assign object literal to `oneSidedErr` because in property `cb` > the first parameter: `Dog` [1] is incompatible
+with `Animal` [2]. [incompatible-type]
+
+   method_bivariance.ts:94:44
+   94| const oneSidedErr: MethodTarget = {cb: (x: Dog): void => {}}; // ERROR: arrow source, no bivariance
+                                                  ^^^ [1]
+
+References:
+   method_bivariance.ts:91:9
+   91|   cb(x: Animal): void;
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ method_bivariance_consumer.js:20:32
+
+Cannot assign object literal to `m` because in property `cb` > the first parameter: `Dog` [1] is incompatible with
+`Animal` [2]. [incompatible-type]
+
+   method_bivariance_consumer.js:20:32
+   20| const m: MethodHolder = {cb(x: Dog): void {}}; // ERROR in .js: no bivariance
+                                      ^^^ [1]
+
+References:
+   method_bivariance_consumer.js:15:9
+   15|   cb(x: Animal): void,
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- optional_property_invariance.ts:28:12
+
+Cannot call `strict` with object literal bound to `x` because in property `a`: number [1] is incompatible with
+string [2]. [incompatible-type]
+
+   optional_property_invariance.ts:28:12
+   28| strict({a: 42}); // ERROR: number not assignable to string
+                  ^^ [1]
+
+References:
+   optional_property_invariance.ts:27:48
+   27| declare function strict(x: Partial<Record<"a", string>>): void;
+                                                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ tuple_polarity.ts:14:30
+
+Cannot assign `ro` to `must_error` because tuple element at index `0` is read-only in tuple type [1] but writable in
+tuple type [2]. [incompatible-variance]
+
+   tuple_polarity.ts:14:30
+   14| const must_error: [string] = ro; // ERROR: readonly cannot flow into mutable
+                                    ^^
+
+References:
+   tuple_polarity.ts:7:28
+    7| declare const ro: readonly [string];
+                                  ^^^^^^^^ [1]
+   tuple_polarity.ts:14:19
+   14| const must_error: [string] = ro; // ERROR: readonly cannot flow into mutable
+                         ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ tuple_polarity.ts:19:30
+
+Cannot assign `roNum` to `c` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
+
+   tuple_polarity.ts:19:30
+   19| const c: readonly [string] = roNum; // ERROR: number vs string
+                                    ^^^^^
+
+References:
+   tuple_polarity.ts:18:32
+   18| declare const roNum: readonly [number];
+                                      ^^^^^^ [1]
+   tuple_polarity.ts:19:20
+   19| const c: readonly [string] = roNum; // ERROR: number vs string
+                          ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- type_arg_variance.ts:18:24
+
+Cannot assign `numBox` to `b` because in type argument `T` [1]: number [2] is incompatible with string [3].
+[incompatible-type]
+
+   type_arg_variance.ts:18:24
+   18| const b: Box<string> = numBox; // ERROR: number is not assignable to string
+                              ^^^^^^
+
+References:
+   type_arg_variance.ts:8:19
+    8| declare class Box<T> {
+                         ^ [1]
+   type_arg_variance.ts:17:27
+   17| declare const numBox: Box<number>;
+                                 ^^^^^^ [2]
+   type_arg_variance.ts:18:14
+   18| const b: Box<string> = numBox; // ERROR: number is not assignable to string
+                    ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- type_arg_variance.ts:29:30
+
+Cannot assign `animalProducer` to `p_err` because in type argument `T` [1]: `Animal` [2] is incompatible with `Dog` [3].
+[incompatible-type]
+
+   type_arg_variance.ts:29:30
+   29| const p_err: Producer<Dog> = animalProducer; // ERROR: Animal not assignable to Dog (covariance)
+                                    ^^^^^^^^^^^^^^
+
+References:
+   type_arg_variance.ts:23:28
+   23| declare class Producer<out T> {
+                                  ^ [1]
+   type_arg_variance.ts:28:40
+   28| declare const animalProducer: Producer<Animal>;
+                                              ^^^^^^ [2]
+   type_arg_variance.ts:29:23
+   29| const p_err: Producer<Dog> = animalProducer; // ERROR: Animal not assignable to Dog (covariance)
+                             ^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- type_arg_variance.ts:39:33
+
+Cannot assign `dogConsumer` to `c_err` because in type argument `T` [1]: `Dog` [2] is incompatible with `Animal` [3].
+[incompatible-type]
+
+   type_arg_variance.ts:39:33
+   39| const c_err: Consumer<Animal> = dogConsumer; // ERROR: Dog not assignable to Animal (contravariance)
+                                       ^^^^^^^^^^^
+
+References:
+   type_arg_variance.ts:33:27
+   33| declare class Consumer<in T> {
+                                 ^ [1]
+   type_arg_variance.ts:38:37
+   38| declare const dogConsumer: Consumer<Dog>;
+                                           ^^^ [2]
+   type_arg_variance.ts:39:23
+   39| const c_err: Consumer<Animal> = dogConsumer; // ERROR: Dog not assignable to Animal (contravariance)
+                             ^^^^^^ [3]
+
+
+
+Found 14 errors

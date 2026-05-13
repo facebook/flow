@@ -45,6 +45,7 @@ use flow_typing_errors::error_message::EUnionOptimizationOnNonUnionData;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumIncompatibleData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::flow_error::ordered_reasons;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_flow_common::flow_js_utils;
@@ -156,7 +157,6 @@ fn flow_all_in_union<'cx>(
     )
 }
 
-// let add_output_prop_polarity_mismatch cx use_op (lreason, ureason) props =
 fn add_output_prop_polarity_mismatch<'cx>(
     cx: &Context<'cx>,
     use_op: UseOp,
@@ -164,7 +164,9 @@ fn add_output_prop_polarity_mismatch<'cx>(
     ureason: &Reason,
     props: Vec<(Option<Name>, (Polarity, Polarity))>,
 ) -> Result<(), FlowJsException> {
-    if let Ok(props) = Vec1::try_from_vec(props) {
+    if flow_common::files::has_ts_ext(&cx.file()) {
+        Ok(())
+    } else if let Ok(props) = Vec1::try_from_vec(props) {
         flow_js_utils::add_output(
             cx,
             ErrorMessage::EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
@@ -174,8 +176,10 @@ fn add_output_prop_polarity_mismatch<'cx>(
                 use_op,
             })),
         )?;
+        Ok(())
+    } else {
+        Ok(())
     }
-    Ok(())
 }
 
 fn polarity_error_content(
@@ -201,6 +205,27 @@ fn rec_flow_p_inner<'cx>(
 ) -> Result<Vec<(Option<Name>, (Polarity, Polarity))>, FlowJsException> {
     match (lp, up) {
         // unification cases
+        (
+            PropertyType::OrdinaryField {
+                type_: lt,
+                polarity: Polarity::Neutral,
+            },
+            PropertyType::OrdinaryField {
+                type_: ut,
+                polarity: Polarity::Neutral,
+            },
+        ) if flow_common::files::has_ts_ext(&cx.file()) => {
+            // TS treats read-write-on-both-sides property type mismatch in
+            // extends/implements/instantiation contexts as covariant, not invariant.
+            // Match that by skipping unification and doing a covariant subtype check.
+            FlowJs::flow_opt(
+                cx,
+                trace,
+                lt,
+                &UseT::new(UseTInner::UseT(use_op, ut.dupe())),
+            )?;
+            Ok(vec![])
+        }
         (
             PropertyType::OrdinaryField {
                 type_: lt,
@@ -339,6 +364,547 @@ fn func_type_guard_compat<'cx>(
         FlowJs::rec_flow_t(cx, trace, use_op, t1, t2)
     } else {
         FlowJs::rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, t1, t2)
+    }
+}
+
+// TS-mode bivariant param flow for method-syntax properties: try the
+// contravariant direction (target -> source, the standard subtyping
+// direction) first via speculation; on failure, fall back to the covariant
+// direction (source -> target). Mirrors TS's bivariance for methods, which
+// accepts assignability whenever either direction holds.
+fn bivariant_param_flow<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    use_op: UseOp,
+    source: &Type,
+    target: &Type,
+) -> Result<(), FlowJsException> {
+    let source_spec = source.dupe();
+    let target_spec = target.dupe();
+    let use_op_spec = use_op.dupe();
+    match speculation_kit::try_singleton_custom_throw_on_failure(
+        cx,
+        Box::new(move |cx| {
+            FlowJs::rec_flow(
+                cx,
+                trace,
+                &target_spec,
+                &UseT::new(UseTInner::UseT(use_op_spec, source_spec)),
+            )
+        }),
+    ) {
+        Ok(()) => Ok(()),
+        Err(FlowJsException::SpeculationSingletonError) => FlowJs::rec_flow(
+            cx,
+            trace,
+            source,
+            &UseT::new(UseTInner::UseT(use_op, target.dupe())),
+        ),
+        Err(other) => Err(other),
+    }
+}
+
+// Shared FunT ~> FunT subtyping driver. The this-binding, effect, return,
+// and type-guard checks are identical in the standard (contravariant) and
+// TS-mode bivariant paths; the only difference is how params are flowed.
+// `check_params` receives the FunCompatibility-rewritten use_op and is
+// responsible for the param-flow step (e.g. `multiflow_subtype` for the
+// standard path, a bivariant pairwise walk for the TS-mode path).
+fn funt_to_funt_check<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    use_op: UseOp,
+    lreason: &Reason,
+    ft1: &flow_typing_type::type_::FunType,
+    ureason: &Reason,
+    ft2: &flow_typing_type::type_::FunType,
+    check_params: &dyn Fn(&UseOp) -> Result<(), FlowJsException>,
+) -> Result<(), FlowJsException> {
+    let inner_use_op = if let VirtualUseOp::Frame(ref frame, ref inner) = use_op {
+        if let VirtualFrameUseOp::PropertyCompatibility(box PropertyCompatibilityData {
+            prop: Some(name),
+            ..
+        }) = frame.deref()
+        {
+            // The $call PropertyCompatibility is redundant when we have a
+            // FunCompatibility use_op.
+            if name.as_str() == "$call" {
+                inner.deref().dupe()
+            } else {
+                use_op
+            }
+        } else {
+            use_op
+        }
+    } else {
+        use_op
+    };
+    let use_op = VirtualUseOp::Frame(
+        Arc::new(VirtualFrameUseOp::FunCompatibility {
+            lower: lreason.dupe(),
+            upper: ureason.dupe(),
+        }),
+        Arc::new(inner_use_op),
+    );
+
+    {
+        let use_op = VirtualUseOp::Frame(
+            Arc::new(VirtualFrameUseOp::FunParam(Box::new(FunParamData {
+                n: 0,
+                name: Some(FlowSmolStr::new_inline("this")),
+                lower: lreason.dupe(),
+                upper: ureason.dupe(),
+            }))),
+            Arc::new(use_op.dupe()),
+        );
+        let (this_param1, this_status_1) = &ft1.this_t;
+        let (this_param2, this_status_2) = &ft2.this_t;
+        match (this_status_1, this_status_2) {
+            (ThisStatus::ThisMethod { .. }, ThisStatus::ThisMethod { .. }) => {
+                let sub_this2 = type_util::subtype_this_of_function(ft2);
+                let sub_this1 = type_util::subtype_this_of_function(ft1);
+                FlowJs::rec_flow(
+                    cx,
+                    trace,
+                    &sub_this2,
+                    &UseT::new(UseTInner::UseT(use_op, sub_this1)),
+                )?;
+            }
+            // lower bound method, upper bound function
+            // This is always banned, as it would allow methods to be unbound through casting
+            (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) => {
+                if !unbound && !flow_common::files::has_ts_ext(&cx.file()) {
+                    flow_js_utils::add_output(
+                        cx,
+                        ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
+                            use_op: use_op.dupe(),
+                            reason_op: lreason.dupe(),
+                            reason_prop: type_util::reason_of_t(this_param1).clone(),
+                        })),
+                    )?;
+                }
+                let sub_this1 = type_util::subtype_this_of_function(ft1);
+                FlowJs::rec_flow(
+                    cx,
+                    trace,
+                    this_param2,
+                    &UseT::new(UseTInner::UseT(use_op, sub_this1)),
+                )?;
+            }
+            // lower bound function, upper bound method.
+            // Ok as long as the types match up
+            (ThisStatus::ThisFunction, ThisStatus::ThisMethod { .. })
+            | (ThisStatus::ThisFunction, ThisStatus::ThisFunction) => {
+                FlowJs::rec_flow(
+                    cx,
+                    trace,
+                    this_param2,
+                    &UseT::new(UseTInner::UseT(use_op, this_param1.dupe())),
+                )?;
+            }
+        }
+    }
+    check_params(&use_op)?;
+    match (&ft1.effect_, &ft2.effect_) {
+        (ReactEffectType::AnyEffect, _)
+        | (_, ReactEffectType::AnyEffect)
+        | (ReactEffectType::ArbitraryEffect, ReactEffectType::ArbitraryEffect)
+        | (ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot, ReactEffectType::HookAnnot) =>
+            {}
+        (ReactEffectType::HookDecl(a), ReactEffectType::HookDecl(b)) if a == b => {}
+        (
+            ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot,
+            ReactEffectType::ArbitraryEffect,
+        ) => {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EHookIncompatible(Box::new(EHookIncompatibleData {
+                    use_op: use_op.dupe(),
+                    lower: lreason.dupe(),
+                    upper: ureason.dupe(),
+                    lower_is_hook: true,
+                    hook_is_annot: ft1.effect_ == ReactEffectType::HookAnnot,
+                })),
+            )?;
+        }
+        (
+            ReactEffectType::ArbitraryEffect,
+            ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot,
+        ) => {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EHookIncompatible(Box::new(EHookIncompatibleData {
+                    use_op: use_op.dupe(),
+                    lower: lreason.dupe(),
+                    upper: ureason.dupe(),
+                    lower_is_hook: false,
+                    hook_is_annot: ft2.effect_ == ReactEffectType::HookAnnot,
+                })),
+            )?;
+        }
+        (
+            ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot,
+            ReactEffectType::HookDecl(_),
+        ) => {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EHookUniqueIncompatible(Box::new(EHookUniqueIncompatibleData {
+                    use_op: use_op.dupe(),
+                    lower: lreason.dupe(),
+                    upper: ureason.dupe(),
+                })),
+            )?;
+        }
+    }
+    let ret_use_op = VirtualUseOp::Frame(
+        Arc::new(VirtualFrameUseOp::FunReturn {
+            lower: type_util::reason_of_t(&ft1.return_t).clone(),
+            upper: type_util::reason_of_t(&ft2.return_t).clone(),
+        }),
+        Arc::new(use_op.dupe()),
+    );
+    FlowJs::rec_flow(
+        cx,
+        trace,
+        &ft1.return_t,
+        &UseT::new(UseTInner::UseT(ret_use_op, ft2.return_t.dupe())),
+    )?;
+    match (&ft1.type_guard, &ft2.type_guard) {
+        (None, Some(_)) => {
+            // Non-predicate functions are incompatible with predicate ones
+            // TODO: somehow the original flow needs to be propagated as well
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::ETypeGuardFuncIncompatibility {
+                    use_op: use_op.dupe(),
+                    reasons: (lreason.dupe(), ureason.dupe()),
+                },
+            )?;
+        }
+        (Some(tg1), Some(tg2)) => {
+            let params1: Vec<(Option<Name>, Type)> = ft1
+                .params
+                .iter()
+                .map(|p| (p.0.as_ref().map(|s| Name::new(s.dupe())), p.1.dupe()))
+                .collect();
+            let params2: Vec<(Option<Name>, Type)> = ft2
+                .params
+                .iter()
+                .map(|p| (p.0.as_ref().map(|s| Name::new(s.dupe())), p.1.dupe()))
+                .collect();
+            let name1 = Name::new(tg1.param_name.1.dupe());
+            let name2 = Name::new(tg2.param_name.1.dupe());
+            func_type_guard_compat(
+                cx,
+                trace,
+                use_op.dupe(),
+                (
+                    &tg1.reason,
+                    &params1,
+                    tg1.one_sided,
+                    (&tg1.param_name.0, &name1),
+                    &tg1.type_guard,
+                ),
+                (
+                    &tg2.reason,
+                    &params2,
+                    tg2.one_sided,
+                    (&tg2.param_name.0, &name2),
+                    &tg2.type_guard,
+                ),
+            )?;
+        }
+        (Some(_), None) | (None, None) => {}
+    }
+    Ok(())
+}
+
+// The standard (contravariant) param-flow check: builds an arglist from
+// ft2's params + rest, then routes it through `multiflow_subtype` so it
+// flows into ft1's params.
+fn funt_to_funt_check_params_contravariant<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    ureason: &Reason,
+    ft1: &flow_typing_type::type_::FunType,
+    ft2: &flow_typing_type::type_::FunType,
+    use_op: &UseOp,
+) -> Result<(), FlowJsException> {
+    let mut args: Vec<CallArg> = ft2
+        .params
+        .iter()
+        .map(|p| CallArg::arg(p.1.dupe()))
+        .collect();
+    if let Some(FunRestParam(_, _, rest)) = &ft2.rest_param {
+        args.push(CallArg::spread_arg(rest.dupe()));
+    }
+    FlowJs::multiflow_subtype(cx, trace, use_op.dupe(), ureason, &args, ft1)
+}
+
+// TS-mode bivariant param-flow check used for method-syntax properties: a
+// pairwise walk over ft1.params/ft2.params using `bivariant_param_flow`,
+// plus arity enforcement. Trailing ft1 params not provided by ft2 are
+// filled with VoidT so optional params (whose type unions in void) accept
+// and required ones produce a `FunMissingArg` error -- the same mechanism
+// `multiflow_full` uses. When ft2 has more fixed params than ft1, the
+// extras flow into `ft1.rest_param` (if present) so callers of the upper
+// signature cannot smuggle the wrong type into the lower's rest -- this
+// mirrors what `multiflow_subtype` does in the standard path.
+//
+// Caveat: `rest_param`'s type is the whole array (e.g. `Array<string>`),
+// not the element type, so flowing a single param's type bivariantly
+// against it is a single-vs-array mismatch and will always fail. That
+// means the rest-vs-extra-fixed cases (both the symmetric one above and
+// the pre-existing one below) are correctly *sound* (incompatible types
+// produce an error) but may *over-reject* compatible cases like
+// `(x, ...ys: number[]) <: (x, y: number)`. multiflow_subtype handles
+// these by building a tuple literal and flowing it; replicating that
+// here was deferred since method-syntax with rest is uncommon.
+fn funt_to_funt_check_params_bivariant<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    lreason: &Reason,
+    ureason: &Reason,
+    ft1: &flow_typing_type::type_::FunType,
+    ft2: &flow_typing_type::type_::FunType,
+    use_op: &UseOp,
+) -> Result<(), FlowJsException> {
+    let mut n: i32 = 1;
+    let mut params1: &[flow_typing_type::type_::FunParam] = &ft1.params;
+    let mut params2: &[flow_typing_type::type_::FunParam] = &ft2.params;
+    loop {
+        match (params1.split_first(), params2.split_first()) {
+            (None, None) => break,
+            (None, Some((p2, rest2))) => {
+                let t2 = &p2.1;
+                match &ft1.rest_param {
+                    Some(FunRestParam(_, _, t1_rest)) => {
+                        let inner_use_op = VirtualUseOp::Frame(
+                            Arc::new(VirtualFrameUseOp::FunRestParam {
+                                lower: lreason.dupe(),
+                                upper: ureason.dupe(),
+                            }),
+                            Arc::new(use_op.dupe()),
+                        );
+                        bivariant_param_flow(cx, trace, inner_use_op, t1_rest, t2)?;
+                        n += 1;
+                        params2 = rest2;
+                    }
+                    None => {
+                        // ft1 has no slot for the extra; JS drops the arg at runtime, sound.
+                        break;
+                    }
+                }
+            }
+            (Some((p1, rest1)), None) => {
+                let (name1, t1) = (&p1.0, &p1.1);
+                match &ft2.rest_param {
+                    Some(FunRestParam(_, _, rest_t)) => {
+                        let inner_use_op = VirtualUseOp::Frame(
+                            Arc::new(VirtualFrameUseOp::FunParam(Box::new(FunParamData {
+                                n,
+                                name: name1.dupe(),
+                                lower: lreason.dupe(),
+                                upper: ureason.dupe(),
+                            }))),
+                            Arc::new(use_op.dupe()),
+                        );
+                        bivariant_param_flow(cx, trace, inner_use_op, t1, rest_t)?;
+                        n += 1;
+                        params1 = rest1;
+                    }
+                    None => {
+                        let inner_use_op = VirtualUseOp::Frame(
+                            Arc::new(VirtualFrameUseOp::FunMissingArg(Box::new(
+                                flow_typing_type::type_::FunMissingArgData {
+                                    n,
+                                    op: ureason.dupe(),
+                                    def: lreason.dupe(),
+                                },
+                            ))),
+                            Arc::new(use_op.dupe()),
+                        );
+                        let void =
+                            Type::new(TypeInner::DefT(ureason.dupe(), DefT::new(DefTInner::VoidT)));
+                        FlowJs::rec_flow(
+                            cx,
+                            trace,
+                            &void,
+                            &UseT::new(UseTInner::UseT(inner_use_op, t1.dupe())),
+                        )?;
+                        n += 1;
+                        params1 = rest1;
+                    }
+                }
+            }
+            (Some((p1, rest1)), Some((p2, rest2))) => {
+                let t1 = &p1.1;
+                let (name2, t2) = (&p2.0, &p2.1);
+                let inner_use_op = VirtualUseOp::Frame(
+                    Arc::new(VirtualFrameUseOp::FunParam(Box::new(FunParamData {
+                        n,
+                        name: name2.dupe(),
+                        lower: lreason.dupe(),
+                        upper: ureason.dupe(),
+                    }))),
+                    Arc::new(use_op.dupe()),
+                );
+                bivariant_param_flow(cx, trace, inner_use_op, t1, t2)?;
+                n += 1;
+                params1 = rest1;
+                params2 = rest2;
+            }
+        }
+    }
+    match (&ft1.rest_param, &ft2.rest_param) {
+        (Some(FunRestParam(_, _, t1_rest)), Some(FunRestParam(_, _, t2_rest))) => {
+            let use_op = VirtualUseOp::Frame(
+                Arc::new(VirtualFrameUseOp::FunRestParam {
+                    lower: lreason.dupe(),
+                    upper: ureason.dupe(),
+                }),
+                Arc::new(use_op.dupe()),
+            );
+            bivariant_param_flow(cx, trace, use_op, t1_rest, t2_rest)
+        }
+        _ => Ok(()),
+    }
+}
+
+fn funt_to_funt_method_bivariant<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    use_op: UseOp,
+    lreason: &Reason,
+    ft1: &flow_typing_type::type_::FunType,
+    ureason: &Reason,
+    ft2: &flow_typing_type::type_::FunType,
+) -> Result<(), FlowJsException> {
+    funt_to_funt_check(cx, trace, use_op, lreason, ft1, ureason, ft2, &|use_op| {
+        funt_to_funt_check_params_bivariant(cx, trace, lreason, ureason, ft1, ft2, use_op)
+    })
+}
+
+// Returns true if (lt, ut) is a method-shape pair (FunT/FunT or compatible
+// PolyT/PolyT) and the bivariant subtyping was applied. Returns false to
+// signal the caller to fall back to the standard subtyping path. The PolyT
+// case mirrors the `PolyT ~> PolyT` instantiation logic (see flow_obj_to_obj
+// callers below) so generic methods get the same TS-style bivariance treatment
+// as monomorphic ones.
+fn try_method_bivariant<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    use_op: UseOp,
+    lt: &Type,
+    ut: &Type,
+) -> Result<bool, FlowJsException> {
+    match (lt.deref(), ut.deref()) {
+        (TypeInner::DefT(lreason_f, ld), TypeInner::DefT(ureason_f, ud))
+            if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
+                (ld.deref(), ud.deref()) =>
+        {
+            funt_to_funt_method_bivariant(cx, trace, use_op, lreason_f, ft1, ureason_f, ft2)?;
+            Ok(true)
+        }
+        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+            if let (
+                DefTInner::PolyT(box PolyTData {
+                    tparams: ps1,
+                    t_out: inner1,
+                    ..
+                }),
+                DefTInner::PolyT(box PolyTData {
+                    tparams: ps2,
+                    t_out: inner2,
+                    ..
+                }),
+            ) = (ld.deref(), ud.deref())
+                && matches!(inner1.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
+                && matches!(inner2.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
+                && ps1.len() == ps2.len() =>
+        {
+            let mut map1 = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
+            let mut map2 = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
+            for (p1, p2) in ps1.iter().zip(ps2.iter()) {
+                let bound2 = flow_typing_flow_common::type_subst::subst(
+                    cx,
+                    Some(use_op.dupe()),
+                    true,
+                    false,
+                    flow_typing_flow_common::type_subst::Purpose::Normal,
+                    &map2,
+                    p2.bound.dupe(),
+                );
+                FlowJs::rec_flow(
+                    cx,
+                    trace,
+                    &bound2,
+                    &UseT::new(UseTInner::UseT(use_op.dupe(), p1.bound.dupe())),
+                )?;
+                if p1.is_const != p2.is_const {
+                    flow_js_utils::add_output(
+                        cx,
+                        ErrorMessage::ETypeParamConstIncompatibility(Box::new(
+                            ETypeParamConstIncompatibilityData {
+                                use_op: use_op.dupe(),
+                                lower: p1.reason.dupe(),
+                                upper: p2.reason.dupe(),
+                            },
+                        )),
+                    )?;
+                }
+                let (gen_t, new_map1) = flow_js_utils::generic_bound(cx, map1, p1);
+                map1 = new_map1;
+                map2.insert(p2.name.dupe(), gen_t);
+            }
+            // Substitution preserves the outer DefT/FunT constructor (the pattern
+            // guard above requires t_out is FunT, and Type_subst only rewrites
+            // tparam references inside), so the assertive match is exhaustive in
+            // practice. If it ever falls through, report an internal error rather
+            // than crashing — matches the OCaml behavior of add_output(EInternal
+            // (..., MethodBivariantInvariant ...)).
+            let inner1_subst = flow_typing_flow_common::type_subst::subst(
+                cx,
+                Some(use_op.dupe()),
+                true,
+                false,
+                flow_typing_flow_common::type_subst::Purpose::Normal,
+                &map1,
+                inner1.dupe(),
+            );
+            let inner2_subst = flow_typing_flow_common::type_subst::subst(
+                cx,
+                Some(use_op.dupe()),
+                true,
+                false,
+                flow_typing_flow_common::type_subst::Purpose::Normal,
+                &map2,
+                inner2.dupe(),
+            );
+            match (inner1_subst.deref(), inner2_subst.deref()) {
+                (TypeInner::DefT(lreason_f, ld), TypeInner::DefT(ureason_f, ud))
+                    if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
+                        (ld.deref(), ud.deref()) =>
+                {
+                    funt_to_funt_method_bivariant(
+                        cx, trace, use_op, lreason_f, ft1, ureason_f, ft2,
+                    )?;
+                }
+                _ => {
+                    flow_js_utils::add_output(
+                        cx,
+                        ErrorMessage::EInternal(Box::new((
+                            type_util::loc_of_t(lt).dupe(),
+                            InternalError::MethodBivariantInvariant(FlowSmolStr::from(
+                                "PolyT with FunT inner produced non-FunT after subst",
+                            )),
+                        ))),
+                    )?;
+                }
+            }
+            Ok(true)
+        }
+        _ => Ok(false),
     }
 }
 
@@ -602,21 +1168,74 @@ fn flow_obj_to_obj<'cx>(
                 (Some(lp), _) => {
                     if lit {
                         // prop from unaliased LB: check <:
-                        match (property::read_t(&lp), property::read_t(up)) {
-                            (Some(lt), Some(ut)) => {
-                                FlowJs::rec_flow(
-                                    cx,
-                                    trace,
-                                    &lt,
-                                    &UseT::new(UseTInner::UseT(mk_use_op(), ut)),
-                                )?;
+                        let bivariant_handled = if flow_common::files::has_ts_ext(&cx.file()) {
+                            if let (
+                                PropertyInner::Method { type_: lt, .. },
+                                PropertyInner::Method { type_: ut, .. },
+                            ) = (lp.deref(), up.deref())
+                            {
+                                try_method_bivariant(cx, trace, mk_use_op(), lt, ut)?
+                            } else {
+                                false
                             }
-                            _ => {}
+                        } else {
+                            false
+                        };
+                        if !bivariant_handled {
+                            match (property::read_t(&lp), property::read_t(up)) {
+                                (Some(lt), Some(ut)) => {
+                                    FlowJs::rec_flow(
+                                        cx,
+                                        trace,
+                                        &lt,
+                                        &UseT::new(UseTInner::UseT(mk_use_op(), ut)),
+                                    )?;
+                                }
+                                _ => {}
+                            }
                         }
                     } else {
                         // prop from aliased LB
-                        let additional_polarity_mismatch_errs =
+                        let bivariant_handled = if flow_common::files::has_ts_ext(&cx.file()) {
+                            if let (
+                                PropertyInner::Method { type_: lt, .. },
+                                PropertyInner::Method { type_: ut, .. },
+                            ) = (lp.deref(), up.deref())
+                            {
+                                try_method_bivariant(cx, trace, mk_use_op(), lt, ut)?
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        };
+                        let additional_polarity_mismatch_errs = if bivariant_handled {
+                            vec![]
+                        } else {
                             match (property::property_type(&lp), property::property_type(up)) {
+                                (
+                                    PropertyType::OrdinaryField {
+                                        type_: ref lt,
+                                        polarity: Polarity::Neutral,
+                                    },
+                                    PropertyType::OrdinaryField {
+                                        type_: ref ut,
+                                        polarity: Polarity::Neutral,
+                                    },
+                                ) if flow_common::files::has_ts_ext(&cx.file()) => {
+                                    // TS treats read-write-on-both-sides property type mismatch
+                                    // in extends/implements/instantiation as covariant, not
+                                    // invariant. Skip the try_unify path and do a covariant
+                                    // subtype check; do not record this property as an
+                                    // invariant-subtyping failure.
+                                    FlowJs::rec_flow(
+                                        cx,
+                                        trace,
+                                        lt,
+                                        &UseT::new(UseTInner::UseT(mk_use_op(), ut.dupe())),
+                                    )?;
+                                    vec![]
+                                }
                                 (
                                     PropertyType::OrdinaryField {
                                         type_: ref lt,
@@ -675,7 +1294,8 @@ fn flow_obj_to_obj<'cx>(
                                         &up_type,
                                     )?
                                 }
-                            };
+                            }
+                        };
                         polarity_mismatch_errs.extend(additional_polarity_mismatch_errs);
                     }
                 }
@@ -1046,36 +1666,58 @@ fn flow_obj_to_obj<'cx>(
             })),
         )?;
     }
-    if let Ok(props) = Vec1::try_from_vec(rhs_neutral_optional) {
-        let t1 = Type::new(TypeInner::DefT(
-            lreason.dupe(),
-            DefT::new(DefTInner::ObjT(l_obj.dupe())),
-        ));
-        let t2 = Type::new(TypeInner::DefT(
-            ureason.dupe(),
-            DefT::new(DefTInner::ObjT(u_obj.dupe())),
-        ));
-        let lower_obj_loc = lreason.def_loc().dupe();
-        let upper_obj_loc = ureason.def_loc().dupe();
-        flow_js_utils::add_output(
-            cx,
-            ErrorMessage::EPropsNotFoundInInvariantSubtyping(Box::new(
-                EPropsNotFoundInInvariantSubtypingData {
-                    prop_names: props,
-                    reason_lower: lreason.dupe(),
-                    reason_upper: ureason.dupe(),
-                    lower_obj_loc,
-                    upper_obj_loc,
-                    lower_obj_desc: type_or_type_desc::TypeOrTypeDescT::Type(t1),
-                    upper_obj_desc: type_or_type_desc::TypeOrTypeDescT::Type(t2),
-                    use_op: use_op.dupe(),
-                },
-            )),
-        )?;
+    if !flow_common::files::has_ts_ext(&cx.file()) {
+        if let Ok(props) = Vec1::try_from_vec(rhs_neutral_optional) {
+            let t1 = Type::new(TypeInner::DefT(
+                lreason.dupe(),
+                DefT::new(DefTInner::ObjT(l_obj.dupe())),
+            ));
+            let t2 = Type::new(TypeInner::DefT(
+                ureason.dupe(),
+                DefT::new(DefTInner::ObjT(u_obj.dupe())),
+            ));
+            let lower_obj_loc = lreason.def_loc().dupe();
+            let upper_obj_loc = ureason.def_loc().dupe();
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EPropsNotFoundInInvariantSubtyping(Box::new(
+                    EPropsNotFoundInInvariantSubtypingData {
+                        prop_names: props,
+                        reason_lower: lreason.dupe(),
+                        reason_upper: ureason.dupe(),
+                        lower_obj_loc,
+                        upper_obj_loc,
+                        lower_obj_desc: type_or_type_desc::TypeOrTypeDescT::Type(t1),
+                        upper_obj_desc: type_or_type_desc::TypeOrTypeDescT::Type(t2),
+                        use_op: use_op.dupe(),
+                    },
+                )),
+            )?;
+        }
     }
     for up in &ups_to_flow_any {
         let any = any_t::error_of_kind(AnyErrorKind::UnresolvedName, ureason.dupe());
         match property::property_type(up) {
+            PropertyType::OrdinaryField {
+                type_: ut,
+                polarity: Polarity::Neutral,
+            } if flow_common::files::has_ts_ext(&cx.file()) => {
+                // TS treats missing optional Neutral properties as covariantly
+                // filled rather than invariantly demanded. Replace the unify with
+                // a covariant `any ~> ut` flow so any genuine type-arg
+                // incompatibility still surfaces via [incompatible-type], but the
+                // invariance demand is dropped. The `any ~> ut` is intentional
+                // (not a missed `unify_opt`): `any` flowing into `ut` is a no-op
+                // for type checking, which is exactly what we want -- this branch
+                // exists to keep the `ups_to_flow_any` loop's structure intact
+                // while neutralizing the polarity-only constraint.
+                FlowJs::flow_opt(
+                    cx,
+                    Some(trace),
+                    &any,
+                    &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
+                )?;
+            }
             PropertyType::OrdinaryField {
                 type_: ut,
                 polarity: Polarity::Neutral,
@@ -3897,219 +4539,9 @@ pub fn rec_sub_t<'cx>(
             if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
                 (ld.deref(), ud.deref()) =>
         {
-            let inner_use_op = if let VirtualUseOp::Frame(ref frame, ref inner) = use_op {
-                if let VirtualFrameUseOp::PropertyCompatibility(box PropertyCompatibilityData {
-                    prop: Some(name),
-                    ..
-                }) = frame.deref()
-                {
-                    // The $call PropertyCompatibility is redundant when we have a
-                    // FunCompatibility use_op.
-                    if name.as_str() == "$call" {
-                        inner.deref().dupe()
-                    } else {
-                        use_op
-                    }
-                } else {
-                    use_op
-                }
-            } else {
-                use_op
-            };
-            let use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::FunCompatibility {
-                    lower: lreason.dupe(),
-                    upper: ureason.dupe(),
-                }),
-                Arc::new(inner_use_op),
-            );
-
-            {
-                let use_op = VirtualUseOp::Frame(
-                    Arc::new(VirtualFrameUseOp::FunParam(Box::new(FunParamData {
-                        n: 0,
-                        name: Some(FlowSmolStr::new_inline("this")),
-                        lower: lreason.dupe(),
-                        upper: ureason.dupe(),
-                    }))),
-                    Arc::new(use_op.dupe()),
-                );
-                let (this_param1, this_status_1) = &ft1.this_t;
-                let (this_param2, _this_status_2) = &ft2.this_t;
-                match (this_status_1, &ft2.this_t.1) {
-                    (ThisStatus::ThisMethod { .. }, ThisStatus::ThisMethod { .. }) => {
-                        let sub_this2 = type_util::subtype_this_of_function(ft2);
-                        let sub_this1 = type_util::subtype_this_of_function(ft1);
-                        FlowJs::rec_flow(
-                            cx,
-                            trace,
-                            &sub_this2,
-                            &UseT::new(UseTInner::UseT(use_op, sub_this1)),
-                        )?;
-                    }
-                    // lower bound method, upper bound function
-                    // This is always banned, as it would allow methods to be unbound through casting
-                    (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) => {
-                        if !unbound && !flow_common::files::has_ts_ext(cx.file()) {
-                            flow_js_utils::add_output(
-                                cx,
-                                ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
-                                    use_op: use_op.dupe(),
-                                    reason_op: lreason.dupe(),
-                                    reason_prop: type_util::reason_of_t(this_param1).clone(),
-                                })),
-                            )?;
-                        }
-                        let sub_this1 = type_util::subtype_this_of_function(ft1);
-                        FlowJs::rec_flow(
-                            cx,
-                            trace,
-                            this_param2,
-                            &UseT::new(UseTInner::UseT(use_op, sub_this1)),
-                        )?;
-                    }
-                    // lower bound function, upper bound method/function.
-                    // Ok as long as the types match up
-                    (ThisStatus::ThisFunction, ThisStatus::ThisMethod { .. })
-                    | (ThisStatus::ThisFunction, ThisStatus::ThisFunction) => {
-                        FlowJs::rec_flow(
-                            cx,
-                            trace,
-                            this_param2,
-                            &UseT::new(UseTInner::UseT(use_op, this_param1.dupe())),
-                        )?;
-                    }
-                }
-            }
-            let mut args: Vec<CallArg> = ft2
-                .params
-                .iter()
-                .map(|p| CallArg::arg(p.1.dupe()))
-                .collect();
-            if let Some(FunRestParam(_, _, rest)) = &ft2.rest_param {
-                args.push(CallArg::spread_arg(rest.dupe()));
-            }
-            FlowJs::multiflow_subtype(cx, trace, use_op.dupe(), ureason, &args, ft1)?;
-
-            match (&ft1.effect_, &ft2.effect_) {
-                (ReactEffectType::AnyEffect, _)
-                | (_, ReactEffectType::AnyEffect)
-                | (ReactEffectType::ArbitraryEffect, ReactEffectType::ArbitraryEffect)
-                | (
-                    ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot,
-                    ReactEffectType::HookAnnot,
-                ) => {}
-                (ReactEffectType::HookDecl(a), ReactEffectType::HookDecl(b)) if a == b => {}
-                (
-                    ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot,
-                    ReactEffectType::ArbitraryEffect,
-                ) => {
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EHookIncompatible(Box::new(EHookIncompatibleData {
-                            use_op: use_op.dupe(),
-                            lower: lreason.dupe(),
-                            upper: ureason.dupe(),
-                            lower_is_hook: true,
-                            hook_is_annot: ft1.effect_ == ReactEffectType::HookAnnot,
-                        })),
-                    )?;
-                }
-                (
-                    ReactEffectType::ArbitraryEffect,
-                    ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot,
-                ) => {
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EHookIncompatible(Box::new(EHookIncompatibleData {
-                            use_op: use_op.dupe(),
-                            lower: lreason.dupe(),
-                            upper: ureason.dupe(),
-                            lower_is_hook: false,
-                            hook_is_annot: ft2.effect_ == ReactEffectType::HookAnnot,
-                        })),
-                    )?;
-                }
-                (
-                    ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot,
-                    ReactEffectType::HookDecl(_),
-                ) => {
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EHookUniqueIncompatible(Box::new(
-                            EHookUniqueIncompatibleData {
-                                use_op: use_op.dupe(),
-                                lower: lreason.dupe(),
-                                upper: ureason.dupe(),
-                            },
-                        )),
-                    )?;
-                }
-            }
-
-            // Return type subtyping
-            let ret_use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::FunReturn {
-                    lower: type_util::reason_of_t(&ft1.return_t).clone(),
-                    upper: type_util::reason_of_t(&ft2.return_t).clone(),
-                }),
-                Arc::new(use_op.dupe()),
-            );
-            FlowJs::rec_flow(
-                cx,
-                trace,
-                &ft1.return_t,
-                &UseT::new(UseTInner::UseT(ret_use_op, ft2.return_t.dupe())),
-            )?;
-
-            match (&ft1.type_guard, &ft2.type_guard) {
-                (None, Some(_)) => {
-                    // Non-predicate functions are incompatible with predicate ones
-                    // TODO: somehow the original flow needs to be propagated as well
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::ETypeGuardFuncIncompatibility {
-                            use_op: use_op.dupe(),
-                            reasons: (lreason.dupe(), ureason.dupe()),
-                        },
-                    )?;
-                }
-                (Some(tg1), Some(tg2)) => {
-                    let params1: Vec<(Option<Name>, Type)> = ft1
-                        .params
-                        .iter()
-                        .map(|p| (p.0.as_ref().map(|s| Name::new(s.dupe())), p.1.dupe()))
-                        .collect();
-                    let params2: Vec<(Option<Name>, Type)> = ft2
-                        .params
-                        .iter()
-                        .map(|p| (p.0.as_ref().map(|s| Name::new(s.dupe())), p.1.dupe()))
-                        .collect();
-                    let name1 = Name::new(tg1.param_name.1.dupe());
-                    let name2 = Name::new(tg2.param_name.1.dupe());
-                    func_type_guard_compat(
-                        cx,
-                        trace,
-                        use_op.dupe(),
-                        (
-                            &tg1.reason,
-                            &params1,
-                            tg1.one_sided,
-                            (&tg1.param_name.0, &name1),
-                            &tg1.type_guard,
-                        ),
-                        (
-                            &tg2.reason,
-                            &params2,
-                            tg2.one_sided,
-                            (&tg2.param_name.0, &name2),
-                            &tg2.type_guard,
-                        ),
-                    )?;
-                }
-                (Some(_), None) | (None, None) => {}
-            }
-            Ok(())
+            funt_to_funt_check(cx, trace, use_op, lreason, ft1, ureason, ft2, &|use_op| {
+                funt_to_funt_check_params_contravariant(cx, trace, ureason, ft1, ft2, use_op)
+            })
         }
 
         // unwrap namespace type into object type, drop all information about types in the namespace
@@ -4241,18 +4673,33 @@ pub fn rec_sub_t<'cx>(
                                 ))),
                                 Arc::new(use_op.dupe()),
                             );
-                            let new_errs = rec_flow_p_inner(
-                                cx,
-                                Some(trace),
-                                prop_use_op,
-                                Some((l, u)),
-                                ureason,
-                                true,
-                                &propref,
-                                &property::property_type(lp),
-                                &property::property_type(up),
-                            )?;
-                            acc.extend(new_errs);
+                            let bivariant_handled = if flow_common::files::has_ts_ext(&cx.file()) {
+                                if let (
+                                    PropertyInner::Method { type_: lt, .. },
+                                    PropertyInner::Method { type_: ut, .. },
+                                ) = (lp.deref(), up.deref())
+                                {
+                                    try_method_bivariant(cx, trace, prop_use_op.dupe(), lt, ut)?
+                                } else {
+                                    false
+                                }
+                            } else {
+                                false
+                            };
+                            if !bivariant_handled {
+                                let new_errs = rec_flow_p_inner(
+                                    cx,
+                                    Some(trace),
+                                    prop_use_op,
+                                    Some((l, u)),
+                                    ureason,
+                                    true,
+                                    &propref,
+                                    &property::property_type(lp),
+                                    &property::property_type(up),
+                                )?;
+                                acc.extend(new_errs);
+                            }
                         }
                         None => {
                             let lookup_kind = if let PropertyInner::Field(fd) = up.deref() {

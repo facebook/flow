@@ -82,7 +82,9 @@ fn check_polarity_impl<'cx>(
         }) => match tparams.get(name) {
             None => check_polarity_impl(cx, trace, seen, tparams, polarity, bound)?,
             Some(tp) => {
-                if !Polarity::compat(tp.polarity, polarity) {
+                if !Polarity::compat(tp.polarity, polarity)
+                    && !flow_common::files::has_ts_ext(&cx.file())
+                {
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPolarityMismatch(Box::new(EPolarityMismatchData {

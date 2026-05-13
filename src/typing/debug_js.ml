@@ -1054,6 +1054,7 @@ let dump_error_message =
     | MissingEnvWrite _ -> "MissingEnvWrite"
     | EnvInvariant _ -> "EnvInvariant"
     | ImplicitInstantiationInvariant _ -> "ImplicitInstantiationInvariant"
+    | MethodBivariantInvariant _ -> "MethodBivariantInvariant"
   in
   let dump_upper_kind = function
     | IncompatibleGetPropT _ -> "IncompatibleGetPropT"
