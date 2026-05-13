@@ -530,9 +530,15 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
                       _opts: &Options,
                       _for_find_all_refs: bool,
                       _component: vec1::Vec1<FileKey>| {
-                    merge_job(&mutator, _opts, _for_find_all_refs, _shared_mem, _component)
+                    Ok(merge_job(
+                        &mutator,
+                        _opts,
+                        _for_find_all_refs,
+                        _shared_mem,
+                        _component,
+                    ))
                 },
-            );
+            )?;
         }
         flow_hh_logger::info!("Merging done.");
         flow_hh_logger::info!("Checking {} files", _roots.len());
@@ -654,9 +660,9 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                       _o: &Options,
                       _f: bool,
                       _c: vec1::Vec1<FileKey>| {
-                    merge_job(&mutator, _o, _f, _sm, _c)
+                    Ok(merge_job(&mutator, _o, _f, _sm, _c))
                 },
-            );
+            )?;
         }
         flow_hh_logger::info!("Merging done.");
         flow_hh_logger::info!("Checking {} files", _roots.len());
@@ -730,9 +736,9 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                       _o: &Options,
                       _f: bool,
                       _c: vec1::Vec1<FileKey>| {
-                    merge_job(&mutator2, _o, _f, _sm, _c)
+                    Ok(merge_job(&mutator2, _o, _f, _sm, _c))
                 },
-            );
+            )?;
         }
         flow_hh_logger::info!("Merging done.");
         let mut check_fn2 = mk_check(
@@ -826,9 +832,9 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                       _o: &Options,
                       _f: bool,
                       _c: vec1::Vec1<FileKey>| {
-                    merge_job(&mutator, _o, _f, _sm, _c)
+                    Ok(merge_job(&mutator, _o, _f, _sm, _c))
                 },
-            );
+            )?;
         }
         flow_hh_logger::info!("Merging done.");
         let files_to_check = checked_set_all(_files_to_check);

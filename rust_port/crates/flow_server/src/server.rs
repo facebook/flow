@@ -224,7 +224,11 @@ fn init(
 async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
     let idle_period_in_seconds = 300.0_f64;
     async fn sample(profiling: &ProfilingRunning) {
-        let cgroup_stats = cgroup::get_stats();
+        let cgroup_stats = match tokio::task::spawn_blocking(cgroup::get_stats).await {
+            Ok(cgroup_stats) => cgroup_stats,
+            Err(err) if err.is_panic() => std::panic::resume_unwind(err.into_panic()),
+            Err(err) => Err(err.to_string()),
+        };
         match cgroup_stats {
             Err(_) => {}
             Ok(cgroup::Stats {
@@ -270,6 +274,11 @@ async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
             - _start_time;
         flow_hh_logger::info!("Idle heartbeat after {:.3}s", idle_time);
         flow_event_logger::idle_heartbeat(idle_time, &serde_json::Value::Null);
+        flow_tokio_runtime::spawn(async {
+            if let Err(err) = flow_event_logger_lwt::flush().await {
+                flow_hh_logger::error!("Failed to flush Flow event logs: {}", err);
+            }
+        });
     }
 }
 
@@ -344,7 +353,11 @@ fn serve(
             _env = workload(_env);
         }
         // Flush the logs asynchronously
-        log::logger().flush();
+        flow_tokio_runtime::spawn(async {
+            if let Err(err) = flow_event_logger_lwt::flush().await {
+                flow_hh_logger::error!("Failed to flush Flow event logs: {}", err);
+            }
+        });
     }
 }
 

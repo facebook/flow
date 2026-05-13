@@ -20,7 +20,6 @@ use flow_common_utils::checked_set::CheckedSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_server_env::error_collator;
-use flow_server_env::file_watcher_status;
 use flow_server_env::lsp_prot;
 use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
@@ -194,17 +193,6 @@ pub fn process_updates(
 fn send_start_recheck(env: &server_env::Env) {
     monitor_rpc::status_update(server_status::Event::RecheckStart);
     persistent_connection::send_start_recheck(&env.connections);
-    persistent_connection::send_status(
-        server_status::Status::Typechecking(
-            server_status::TypecheckMode::Rechecking,
-            server_status::TypecheckStatus::StartingTypecheck,
-        ),
-        (
-            file_watcher_status::FileWatcher::NoFileWatcher,
-            file_watcher_status::StatusKind::Ready,
-        ),
-        &env.connections,
-    );
 }
 
 // We must send "end_recheck" prior to sending errors+warnings so the client
@@ -212,14 +200,6 @@ fn send_start_recheck(env: &server_env::Env) {
 fn send_end_recheck(options: &Options, env: &server_env::Env) {
     let lazy_stats = get_lazy_stats(options, env);
     persistent_connection::send_end_recheck(lazy_stats, &env.connections);
-    persistent_connection::send_status(
-        server_status::Status::Free,
-        (
-            file_watcher_status::FileWatcher::NoFileWatcher,
-            file_watcher_status::StatusKind::Ready,
-        ),
-        &env.connections,
-    );
 
     persistent_connection::update_clients(
         &env.connections,
@@ -234,10 +214,7 @@ fn send_end_recheck(options: &Options, env: &server_env::Env) {
 }
 
 fn persistent_server_logging_context() -> lsp_prot::LoggingContext {
-    lsp_prot::LoggingContext {
-        from: None,
-        agent_id: None,
-    }
+    flow_event_logger::get_context()
 }
 
 fn recheck(
@@ -436,48 +413,19 @@ pub(crate) fn recheck_single(
 ) -> RecheckOutcome {
     let env = server_monitor_listener_state::update_env(env);
     let options = &genv.options;
-    let env_for_process_updates = env.clone();
-    let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
-        process_updates(
-            skip_incompatible,
-            options,
-            &env_for_process_updates,
-            shared_mem,
-            updates,
-        )
-    };
 
-    let will_be_checked_files = Arc::new(RwLock::new(env.checked_files.clone()));
-    let get_forced = || {
-        will_be_checked_files
-            .read()
-            .expect("will_be_checked_files lock should not be poisoned")
-            .clone()
-    };
-
-    let (priority, workload) = server_monitor_listener_state::get_and_clear_recheck_workload(
-        &process_updates,
-        &get_forced,
-    );
-    let options_for_cancel = options.dupe();
-    let shared_mem_for_cancel = genv.shared_mem.dupe();
-    let env_for_cancel_updates = env_for_process_updates.clone();
-    let process_updates_for_cancel =
-        move |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
-            crate::rechecker::process_updates(
-                skip_incompatible,
-                &options_for_cancel,
-                &env_for_cancel_updates,
-                &shared_mem_for_cancel,
-                updates,
-            )
+    let will_be_checked_files = Arc::new(RwLock::new(env.checked_files.dupe()));
+    let (priority, workload) = {
+        let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
+            process_updates(skip_incompatible, options, &env, shared_mem, updates)
         };
-    let will_be_checked_files_for_cancel = will_be_checked_files.clone();
-    let get_forced_for_cancel = move || {
-        will_be_checked_files_for_cancel
-            .read()
-            .expect("will_be_checked_files lock should not be poisoned")
-            .clone()
+        let get_forced = || {
+            will_be_checked_files
+                .read()
+                .expect("will_be_checked_files lock should not be poisoned")
+                .dupe()
+        };
+        server_monitor_listener_state::get_and_clear_recheck_workload(&process_updates, &get_forced)
     };
 
     let did_change_mergebase = workload.metadata.changed_mergebase.unwrap_or(false);
@@ -502,6 +450,27 @@ pub(crate) fn recheck_single(
     {
         return RecheckOutcome::NothingToDo(env);
     }
+
+    let options_for_cancel = options.dupe();
+    let shared_mem_for_cancel = genv.shared_mem.dupe();
+    let env_for_cancel_updates = env.clone();
+    let process_updates_for_cancel =
+        move |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
+            crate::rechecker::process_updates(
+                skip_incompatible,
+                &options_for_cancel,
+                &env_for_cancel_updates,
+                &shared_mem_for_cancel,
+                updates,
+            )
+        };
+    let will_be_checked_files_for_cancel = will_be_checked_files.clone();
+    let get_forced_for_cancel = move || {
+        will_be_checked_files_for_cancel
+            .read()
+            .expect("will_be_checked_files lock should not be poisoned")
+            .dupe()
+    };
 
     let stop_parallelizable_workloads = start_parallelizable_workloads(genv, &env);
     let stop_parallelizable_workloads_for_cancel = stop_parallelizable_workloads.clone();
@@ -536,7 +505,7 @@ pub(crate) fn recheck_single(
         let mut will_be_checked_files_for_recheck = will_be_checked_files_for_recheck
             .read()
             .expect("will_be_checked_files lock should not be poisoned")
-            .clone();
+            .dupe();
         match recheck(
             genv,
             env,

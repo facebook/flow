@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::sync::LazyLock;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicU64;
@@ -73,6 +74,7 @@ enum CacheKind {
 trait AnyFilenameCache {
     fn as_any(&self) -> &dyn Any;
     fn clear(&self);
+    fn remove_entry(&self, file_key: &flow_parser::file_key::FileKey);
 }
 
 struct TypedFilenameCache<V>(filename_cache::Cache<V>);
@@ -85,6 +87,10 @@ impl<V: 'static> AnyFilenameCache for TypedFilenameCache<V> {
     fn clear(&self) {
         filename_cache::clear(&self.0);
     }
+
+    fn remove_entry(&self, file_key: &flow_parser::file_key::FileKey) {
+        filename_cache::remove_entry(file_key, &self.0);
+    }
 }
 
 pub struct SingleClient {
@@ -92,6 +98,7 @@ pub struct SingleClient {
     generation: u64,
     filename_caches: HashMap<(CacheKind, TypeId), Box<dyn AnyFilenameCache>>,
     cache_epoch: u64,
+    cache_invalidation_generation: u64,
 }
 
 pub type SingleClientRef = Rc<RefCell<SingleClient>>;
@@ -100,12 +107,14 @@ struct RegistryEntry {
     generation: u64,
     lsp_initialize_params: InitializeParams,
     subscribed: bool,
-    opened_files: BTreeMap<String, String>,
+    opened_files: BTreeMap<String, Arc<str>>,
     client_config: client_config::T,
     outstanding_handlers: HashMap<Prot::LspId, lsp_handler::UnitLspHandler>,
     autocomplete_token: Option<AutocompleteToken>,
     autocomplete_session_length: i32,
     pending_messages: VecDeque<Prot::MessageFromServer>,
+    cache_invalidation_generation: u64,
+    cache_invalidations: VecDeque<CacheInvalidation>,
 }
 
 #[derive(Debug, Clone)]
@@ -113,6 +122,14 @@ pub struct PersistentConnection(pub Vec<Prot::ClientId>);
 
 const CACHE_MAX_SIZE: usize = 10;
 const MAX_PENDING_MESSAGES: usize = 1024;
+const MAX_CACHE_INVALIDATIONS: usize = 1024;
+
+#[derive(Clone)]
+struct CacheInvalidation {
+    generation: u64,
+    file_key: flow_parser::file_key::FileKey,
+    autocomplete: bool,
+}
 
 static ACTIVE_CLIENTS: LazyLock<Mutex<BTreeMap<Prot::ClientId, RegistryEntry>>> =
     LazyLock::new(|| Mutex::new(BTreeMap::new()));
@@ -142,23 +159,90 @@ fn make_single_client(client_id: Prot::ClientId, generation: u64) -> SingleClien
         generation,
         filename_caches: HashMap::new(),
         cache_epoch: current_cache_epoch(),
+        cache_invalidation_generation: 0,
     }
 }
 
-fn invalidate_client_caches(client_id: Prot::ClientId) {
-    // Filename caches are stored in thread-local SingleClient values. Bumping
-    // the generation makes every worker discard this client's stale caches on
-    // its next lookup.
-    let generation = CLIENT_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
-    if with_registry_mut(client_id, |entry| {
-        entry.generation = generation;
-    })
-    .is_some()
-    {
-        LOCAL_CLIENTS.with(|clients| {
-            clients.borrow_mut().remove(&client_id);
-        });
+fn remove_cache_entry_from_client(
+    client: &mut SingleClient,
+    file_key: &flow_parser::file_key::FileKey,
+    autocomplete: bool,
+) {
+    for ((kind, _), cache) in client.filename_caches.iter() {
+        match kind {
+            CacheKind::TypeParseArtifacts => cache.remove_entry(file_key),
+            CacheKind::AutocompleteArtifacts if autocomplete => cache.remove_entry(file_key),
+            CacheKind::AutocompleteArtifacts => {}
+        }
     }
+}
+
+fn invalidate_client_cache_entry(client_id: Prot::ClientId, filename: &str, autocomplete: bool) {
+    let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(filename);
+    let Some(generation) = with_registry_mut(client_id, |entry| {
+        entry.cache_invalidation_generation += 1;
+        let generation = entry.cache_invalidation_generation;
+        entry.cache_invalidations.push_back(CacheInvalidation {
+            generation,
+            file_key: file_key.clone(),
+            autocomplete,
+        });
+        if entry.cache_invalidations.len() > MAX_CACHE_INVALIDATIONS {
+            entry.cache_invalidations.pop_front();
+        }
+        generation
+    }) else {
+        return;
+    };
+
+    LOCAL_CLIENTS.with(|clients| {
+        if let Some(client) = clients.borrow_mut().get_mut(&client_id) {
+            let mut client = client.borrow_mut();
+            remove_cache_entry_from_client(&mut client, &file_key, autocomplete);
+            client.cache_invalidation_generation = generation;
+        }
+    });
+}
+
+fn sync_client_cache_invalidations(client_id: Prot::ClientId, client: &SingleClientRef) {
+    let applied_generation = client.borrow().cache_invalidation_generation;
+    let Some((latest_generation, invalidations)) = with_registry(client_id, |entry| {
+        (
+            entry.cache_invalidation_generation,
+            entry
+                .cache_invalidations
+                .iter()
+                .cloned()
+                .collect::<Vec<_>>(),
+        )
+    }) else {
+        return;
+    };
+    if applied_generation == latest_generation {
+        return;
+    }
+
+    let mut client = client.borrow_mut();
+    match invalidations.first() {
+        Some(first) if applied_generation + 1 < first.generation => {
+            for cache in client.filename_caches.values() {
+                cache.clear();
+            }
+        }
+        _ => {
+            for invalidation in invalidations
+                .iter()
+                .filter(|invalidation| invalidation.generation > applied_generation)
+            {
+                remove_cache_entry_from_client(
+                    &mut client,
+                    &invalidation.file_key,
+                    invalidation.autocomplete,
+                );
+            }
+        }
+    }
+    client.cache_invalidation_generation = latest_generation;
 }
 
 pub fn get_client(client_id: Prot::ClientId) -> Option<SingleClientRef> {
@@ -186,6 +270,7 @@ pub fn get_client(client_id: Prot::ClientId) -> Option<SingleClientRef> {
                 client
             }
         };
+        sync_client_cache_invalidations(client_id, &client);
         {
             let mut client = client.borrow_mut();
             let cache_epoch = current_cache_epoch();
@@ -434,6 +519,8 @@ pub fn add_client(client_id: Prot::ClientId, lsp_initialize_params: InitializePa
             autocomplete_token: None,
             autocomplete_session_length: 0,
             pending_messages: VecDeque::new(),
+            cache_invalidation_generation: 0,
+            cache_invalidations: VecDeque::new(),
         },
     );
     flow_hh_logger::info!("Adding new persistent connection #{}", client_id);
@@ -596,14 +683,18 @@ pub fn client_did_open(client: &SingleClientRef, files: &[(String, String)]) -> 
             len => flow_hh_logger::info!("Client #{} opened {} files", client.client_id, len),
         }
     }
-    invalidate_client_caches(client_id);
+    for (filename, _) in files {
+        invalidate_client_cache_entry(client_id, filename, true);
+    }
     with_registry_mut(client_id, |entry| {
         let mut changed = false;
         for (filename, content) in files {
             match entry.opened_files.get(filename) {
-                Some(existing_content) if existing_content == content => {}
+                Some(existing_content) if existing_content.as_ref() == content => {}
                 _ => {
-                    entry.opened_files.insert(filename.clone(), content.clone());
+                    entry
+                        .opened_files
+                        .insert(filename.clone(), Arc::<str>::from(content.as_str()));
                     changed = true;
                 }
             }
@@ -618,25 +709,30 @@ pub fn client_did_change(
     filename: &str,
     changes: &[lsp_types::TextDocumentContentChangeEvent],
 ) -> Result<(), (String, String)> {
-    invalidate_client_caches(get_id(client));
-    let Some(content) = with_registry(get_id(client), |entry| {
-        entry.opened_files.get(filename).cloned()
+    invalidate_client_cache_entry(get_id(client), filename, false);
+    with_registry_mut(get_id(client), |entry| {
+        let Some(content) = entry.opened_files.get(filename) else {
+            return Err((
+                format!("File {} wasn't open to change", filename),
+                String::new(),
+            ));
+        };
+        match lsp_helpers::apply_changes(content.as_ref(), changes) {
+            Err((reason, stack)) => Err((reason, stack)),
+            Ok(new_content) => {
+                entry
+                    .opened_files
+                    .insert(filename.to_string(), Arc::<str>::from(new_content));
+                Ok(())
+            }
+        }
     })
-    .flatten() else {
-        return Err((
+    .unwrap_or_else(|| {
+        Err((
             format!("File {} wasn't open to change", filename),
             String::new(),
-        ));
-    };
-    match lsp_helpers::apply_changes(&content, changes) {
-        Err((reason, stack)) => Err((reason, stack)),
-        Ok(new_content) => {
-            let _ = with_registry_mut(get_id(client), |entry| {
-                entry.opened_files.insert(filename.to_string(), new_content);
-            });
-            Ok(())
-        }
-    }
+        ))
+    })
 }
 
 pub fn client_did_close(client: &SingleClientRef, filenames: &[String]) -> bool {
@@ -648,7 +744,9 @@ pub fn client_did_close(client: &SingleClientRef, filenames: &[String]) -> bool 
             len => flow_hh_logger::info!("Client #{} closed {} files", client.client_id, len),
         }
     }
-    invalidate_client_caches(client_id);
+    for filename in filenames {
+        invalidate_client_cache_entry(client_id, filename, true);
+    }
     with_registry_mut(client_id, |entry| {
         let mut changed = false;
         for filename in filenames {
@@ -743,6 +841,8 @@ fn filename_cache_for<V: Clone + 'static>(
     client: &SingleClientRef,
     kind: CacheKind,
 ) -> filename_cache::Cache<V> {
+    let client_id = get_id(client);
+    sync_client_cache_invalidations(client_id, client);
     let mut client = client.borrow_mut();
     let type_id = TypeId::of::<V>();
     let cache = client

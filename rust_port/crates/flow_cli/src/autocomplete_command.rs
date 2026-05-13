@@ -76,7 +76,7 @@ fn extract_cursor(
         Some((contents, cursor)) => {
             let input = flow_server_utils::file_input::FileInput::FileContent(
                 input.path_of_file_input().map(str::to_string),
-                contents,
+                contents.into(),
             );
             (input, Some(cursor))
         }

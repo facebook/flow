@@ -11,8 +11,6 @@
 //! with support for batching to reduce lock contention and streaming work distribution.
 
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
 use std::time::Instant;
 
 use crossbeam::channel;
@@ -42,6 +40,38 @@ pub enum Bucket<W> {
     Wait,
     /// No more work available.
     Done,
+}
+
+#[derive(Debug, Default)]
+struct WaitState {
+    generation: u64,
+    done: bool,
+}
+
+fn notify_waiters(wait_signal: &Condvar, wait_state: &Mutex<WaitState>) {
+    {
+        let mut state = wait_state.lock();
+        state.generation = state.generation.wrapping_add(1);
+    }
+    wait_signal.notify_all();
+}
+
+fn notify_waiters_done(wait_signal: &Condvar, wait_state: &Mutex<WaitState>) {
+    {
+        let mut state = wait_state.lock();
+        state.done = true;
+        state.generation = state.generation.wrapping_add(1);
+    }
+    wait_signal.notify_all();
+}
+
+fn progress_generation(wait_state: &Mutex<WaitState>) -> u64 {
+    wait_state.lock().generation
+}
+
+fn wait_for_progress_since(wait_signal: &Condvar, wait_state: &Mutex<WaitState>, generation: u64) {
+    let state = wait_state.lock();
+    drop(wait_signal.wait_while(state, |state| state.generation == generation && !state.done));
 }
 
 /// A function that produces work batches on-demand.
@@ -382,66 +412,39 @@ where
     M: Fn(&mut A, A) + Send + Sync,
     N: Next<W> + 'static,
 {
-    let (sender, receiver) = channel::unbounded::<Vec<W>>();
-    let receiver = Arc::new(receiver);
     let results_mutex = Arc::new(Mutex::new(Default::default()));
     let job = Arc::new(job);
     let merge = Arc::new(merge);
     let next = Arc::new(next);
-    let done = Arc::new(AtomicBool::new(false));
+    let next_mutex = Arc::new(Mutex::new(()));
     let wait_signal = Arc::new(Condvar::new());
-    let wait_mutex = Arc::new(Mutex::new(()));
+    let wait_state = Arc::new(Mutex::new(WaitState::default()));
     let done_start_times = Arc::new(Mutex::new(Vec::new()));
-
-    // Producer thread: calls next() and sends batches to workers
-    let done_producer = done.dupe();
-    let next_producer = next.dupe();
-    let sender_clone = sender.clone();
-    let wait_signal_producer = wait_signal.dupe();
-    let wait_mutex_producer = wait_mutex.dupe();
-    std::thread::spawn(move || {
-        loop {
-            match next_producer.next() {
-                Bucket::Job(batch) => {
-                    if sender_clone.send(batch).is_err() {
-                        break;
-                    }
-                    // Wake up workers waiting for new work
-                    wait_signal_producer.notify_all();
-                }
-                Bucket::Wait => {
-                    // Wait for workers to complete, which may generate new work
-                    let guard = wait_mutex_producer.lock();
-                    let _ = wait_signal_producer
-                        .wait_timeout(guard, std::time::Duration::from_millis(10));
-                }
-                Bucket::Done => {
-                    done_producer.store(true, Ordering::Release);
-                    // Wake all workers so they can exit
-                    wait_signal_producer.notify_all();
-                    break;
-                }
-            }
-        }
-    });
 
     // Spawn worker threads
     pool.spawn_many(|| {
-        let receiver = receiver.dupe();
         let results_mutex = results_mutex.dupe();
         let job = job.dupe();
         let merge = merge.dupe();
-        let done = done.dupe();
+        let next = next.dupe();
+        let next_mutex = next_mutex.dupe();
         let wait_signal = wait_signal.dupe();
-        let wait_mutex = wait_mutex.dupe();
+        let wait_state = wait_state.dupe();
         let done_start_times = done_start_times.dupe();
 
         // Each worker has a local accumulator (created once per worker thread)
         let mut local_acc = Default::default();
 
         loop {
-            match sample_worker_read_request(|| receiver.try_recv()) {
-                Ok(batch) => {
+            if wait_state.lock().done {
+                break;
+            }
+            let generation = progress_generation(&wait_state);
+            match sample_worker_read_request(|| {
+                let _guard = next_mutex.lock();
+                next.next()
+            }) {
+                Bucket::Job(batch) => {
                     sample_worker_run(|| {
                         job(&mut local_acc, batch);
                     });
@@ -454,21 +457,19 @@ where
                         drop(results);
                     });
 
-                    // Notify producer in case it's waiting
-                    wait_signal.notify_all();
+                    // Notify workers waiting for progress.
+                    notify_waiters(&wait_signal, &wait_state);
                 }
-                Err(channel::TryRecvError::Empty) => {
-                    if done.load(Ordering::Acquire) {
-                        // Producer is done and channel is empty
-                        break;
-                    }
-                    // Wait for producer to signal new work or completion
-                    let guard = wait_mutex.lock();
+                Bucket::Wait => {
+                    // OCaml waits on Lwt_condition here and only retries next()
+                    // after a worker has merged and broadcast progress.
                     sample_worker_idle(|| {
-                        drop(wait_signal.wait_timeout(guard, std::time::Duration::from_millis(10)));
+                        wait_for_progress_since(&wait_signal, &wait_state, generation);
                     });
                 }
-                Err(channel::TryRecvError::Disconnected) => {
+                Bucket::Done => {
+                    // Wake all workers so they can exit.
+                    notify_waiters_done(&wait_signal, &wait_state);
                     break;
                 }
             }
@@ -479,9 +480,6 @@ where
     });
     sample_worker_done(&done_start_times);
 
-    drop(sender);
-    drop(receiver);
-
     Arc::try_unwrap(results_mutex)
         .expect("All workers should be done")
         .into_inner()
@@ -489,8 +487,8 @@ where
 
 /// Like `call()`, but with work stealing between batches.
 ///
-/// When a worker's channel is empty (no batches available), instead of
-/// just waiting, it calls `steal(&mut acc)`. If steal returns true
+/// When `next` reports no currently available batches, instead of just
+/// waiting, a worker calls `steal(&mut acc)`. If steal returns true
 /// (it did useful work), the worker loops back immediately. If false,
 /// the worker waits for new batches as usual.
 ///
@@ -512,68 +510,41 @@ where
     N: Next<W> + 'static,
     S: Fn(&mut A) -> bool + Send + Sync,
 {
-    let (sender, receiver) = channel::unbounded::<Vec<W>>();
-    let receiver = Arc::new(receiver);
     let results_mutex = Arc::new(Mutex::new(Default::default()));
     let job = Arc::new(job);
     let merge = Arc::new(merge);
     let next = Arc::new(next);
     let steal = Arc::new(steal);
-    let done = Arc::new(AtomicBool::new(false));
+    let next_mutex = Arc::new(Mutex::new(()));
     let wait_signal = Arc::new(Condvar::new());
-    let wait_mutex = Arc::new(Mutex::new(()));
+    let wait_state = Arc::new(Mutex::new(WaitState::default()));
     let done_start_times = Arc::new(Mutex::new(Vec::new()));
-
-    // Producer thread: calls next() and sends batches to workers
-    let done_producer = done.dupe();
-    let next_producer = next.dupe();
-    let sender_clone = sender.clone();
-    let wait_signal_producer = wait_signal.dupe();
-    let wait_mutex_producer = wait_mutex.dupe();
-    std::thread::spawn(move || {
-        loop {
-            match next_producer.next() {
-                Bucket::Job(batch) => {
-                    if sender_clone.send(batch).is_err() {
-                        break;
-                    }
-                    // Wake up workers waiting for new work
-                    wait_signal_producer.notify_all();
-                }
-                Bucket::Wait => {
-                    // Wait for workers to complete, which may generate new work
-                    let guard = wait_mutex_producer.lock();
-                    let _ = wait_signal_producer
-                        .wait_timeout(guard, std::time::Duration::from_millis(10));
-                }
-                Bucket::Done => {
-                    done_producer.store(true, Ordering::Release);
-                    // Wake all workers so they can exit
-                    wait_signal_producer.notify_all();
-                    break;
-                }
-            }
-        }
-    });
 
     // Spawn worker threads
     pool.spawn_many(|| {
-        let receiver = receiver.dupe();
         let results_mutex = results_mutex.dupe();
         let job = job.dupe();
         let merge = merge.dupe();
+        let next = next.dupe();
+        let next_mutex = next_mutex.dupe();
         let steal = steal.dupe();
-        let done = done.dupe();
         let wait_signal = wait_signal.dupe();
-        let wait_mutex = wait_mutex.dupe();
+        let wait_state = wait_state.dupe();
         let done_start_times = done_start_times.dupe();
 
         // Each worker has a local accumulator (created once per worker thread)
         let mut local_acc = Default::default();
 
         loop {
-            match sample_worker_read_request(|| receiver.try_recv()) {
-                Ok(batch) => {
+            if wait_state.lock().done {
+                break;
+            }
+            let generation = progress_generation(&wait_state);
+            match sample_worker_read_request(|| {
+                let _guard = next_mutex.lock();
+                next.next()
+            }) {
+                Bucket::Job(batch) => {
                     sample_worker_run(|| {
                         job(&mut local_acc, batch);
                     });
@@ -586,13 +557,13 @@ where
                         drop(results);
                     });
 
-                    // Notify producer in case it's waiting
-                    wait_signal.notify_all();
+                    // Notify workers waiting for progress.
+                    notify_waiters(&wait_signal, &wait_state);
                 }
-                Err(channel::TryRecvError::Empty) => {
-                    // Try stealing before waiting
+                Bucket::Wait => {
+                    // Try stealing before waiting.
                     if sample_worker_run(|| steal(&mut local_acc)) {
-                        // Did useful work — merge and loop back
+                        // Did useful work; merge and loop back.
                         sample_worker_send_response(|| {
                             let mut results = results_mutex.lock();
                             let acc_to_merge = std::mem::take(&mut local_acc);
@@ -600,20 +571,19 @@ where
                             drop(results);
                         });
 
-                        wait_signal.notify_all();
+                        notify_waiters(&wait_signal, &wait_state);
                         continue;
                     }
-                    if done.load(Ordering::Acquire) {
-                        // Producer is done and channel is empty
-                        break;
-                    }
-                    // Wait for producer to signal new work or completion
-                    let guard = wait_mutex.lock();
+
+                    // OCaml waits on Lwt_condition here and only retries next()
+                    // after a worker has merged and broadcast progress.
                     sample_worker_idle(|| {
-                        drop(wait_signal.wait_timeout(guard, std::time::Duration::from_millis(10)));
+                        wait_for_progress_since(&wait_signal, &wait_state, generation);
                     });
                 }
-                Err(channel::TryRecvError::Disconnected) => {
+                Bucket::Done => {
+                    // Wake all workers so they can exit.
+                    notify_waiters_done(&wait_signal, &wait_state);
                     break;
                 }
             }
@@ -623,9 +593,6 @@ where
         }
     });
     sample_worker_done(&done_start_times);
-
-    drop(sender);
-    drop(receiver);
 
     Arc::try_unwrap(results_mutex)
         .expect("All workers should be done")

@@ -517,14 +517,14 @@ mod stub {
         reason = "matches OCaml signature; line-by-line port forbids bundling into a struct"
     )]
     pub fn persistent_command_success(
-        _server_logging_context: &LoggingContext,
+        _server_logging_context: Option<&LoggingContext>,
         _request_id: &str,
         _method_name: &str,
-        _request: &serde_json::Value,
-        _extra_data: &serde_json::Value,
+        _request: &str,
+        _extra_data: &[(String, serde_json::Value)],
         _client_context: &LoggingContext,
-        _persistent_context: &PersistentContext,
-        _persistent_delay: &PersistentDelay,
+        _persistent_context: Option<&PersistentContext>,
+        _persistent_delay: Option<&PersistentDelay>,
         _server_profiling: Option<&serde_json::Value>,
         _client_duration: Option<f64>,
         _wall_start: f64,
@@ -538,12 +538,12 @@ mod stub {
         reason = "matches OCaml signature; line-by-line port forbids bundling into a struct"
     )]
     pub fn persistent_command_failure(
-        _server_logging_context: &LoggingContext,
-        _request: &serde_json::Value,
-        _extra_data: &serde_json::Value,
+        _server_logging_context: Option<&LoggingContext>,
+        _request: &str,
+        _extra_data: &[(String, serde_json::Value)],
         _client_context: &LoggingContext,
-        _persistent_context: &PersistentContext,
-        _persistent_delay: &PersistentDelay,
+        _persistent_context: Option<&PersistentContext>,
+        _persistent_delay: Option<&PersistentDelay>,
         _server_profiling: Option<&serde_json::Value>,
         _client_duration: Option<f64>,
         _wall_start: f64,
@@ -553,7 +553,7 @@ mod stub {
     }
 
     pub fn persistent_expected_error(
-        _request: &serde_json::Value,
+        _request: Option<&str>,
         _client_context: &LoggingContext,
         _activity_key: Option<&serde_json::Value>,
         _error: &Error,
@@ -561,7 +561,7 @@ mod stub {
     }
 
     pub fn persistent_unexpected_error(
-        _request: &serde_json::Value,
+        _request: Option<&str>,
         _client_context: &LoggingContext,
         _activity_key: Option<&serde_json::Value>,
         _error: &Error,
@@ -594,26 +594,11 @@ mod stub {
 
     pub fn idle_heartbeat(_idle_time: f64, _profiling: &serde_json::Value) {}
 
-    pub fn live_parse_errors(
-        _request: &serde_json::Value,
-        _data: &serde_json::Value,
-        _wall_start: f64,
-    ) {
-    }
+    pub fn live_parse_errors(_request: &str, _data: &str, _wall_start: f64) {}
 
-    pub fn live_non_parse_errors(
-        _request: &serde_json::Value,
-        _data: &serde_json::Value,
-        _wall_start: f64,
-    ) {
-    }
+    pub fn live_non_parse_errors(_request: &str, _data: &str, _wall_start: f64) {}
 
-    pub fn live_non_parse_errors_failed(
-        _request: &serde_json::Value,
-        _data: &serde_json::Value,
-        _wall_start: f64,
-    ) {
-    }
+    pub fn live_non_parse_errors_failed(_request: &str, _data: &str, _wall_start: f64) {}
 
     pub fn file_watcher_event_started(_name: &str, _data: &str) {}
 
@@ -1213,39 +1198,36 @@ mod fb_facade {
     }
 
     // SHIM: clones LoggingContexts/PersistentContext/PersistentDelay into
-    // FB-internal shapes; serialises the `&serde_json::Value` request into a
-    // string; decomposes the `extra_data` JSON object into the
-    // `Vec<(String, serde_json::Value)>` FB-internal expects; wraps the OSS
-    // `Error` into an `fb::Error(String, Callstack(...))`. Until callers
-    // migrate, the request column is compact JSON serialisation.
+    // FB-internal shapes and wraps the OSS `Error` into an
+    // `fb::Error(String, Callstack(...))`.
     #[expect(
         clippy::too_many_arguments,
         reason = "OSS-shaped API mirrors flowEventLogger.mli's labelled persistent_command_success arguments"
     )]
     pub fn persistent_command_success(
-        server_logging_context: &LoggingContext,
+        server_logging_context: Option<&LoggingContext>,
         request_id: &str,
         method_name: &str,
-        request: &serde_json::Value,
-        extra_data: &serde_json::Value,
+        request: &str,
+        extra_data: &[(String, serde_json::Value)],
         client_context: &LoggingContext,
-        persistent_context: &PersistentContext,
-        persistent_delay: &PersistentDelay,
+        persistent_context: Option<&PersistentContext>,
+        persistent_delay: Option<&PersistentDelay>,
         server_profiling: Option<&serde_json::Value>,
         client_duration: Option<f64>,
         wall_start: f64,
         activity_key: Option<&serde_json::Value>,
         error: Option<&Error>,
     ) {
-        let fb_server = to_fb_logging_context(server_logging_context.clone());
+        let fb_server = server_logging_context.map(|ctx| to_fb_logging_context(ctx.clone()));
         let fb_client = to_fb_logging_context(client_context.clone());
-        let fb_pctx = fb::PersistentContext {
+        let fb_pctx = persistent_context.map(|persistent_context| fb::PersistentContext {
             start_lsp_state: persistent_context.start_lsp_state.clone(),
             start_lsp_state_reason: persistent_context.start_lsp_state_reason.clone(),
             start_server_status: persistent_context.start_server_status.clone(),
             start_watcher_status: persistent_context.start_watcher_status.clone(),
-        };
-        let fb_pdelay = fb::PersistentDelay {
+        });
+        let fb_pdelay = persistent_delay.map(|persistent_delay| fb::PersistentDelay {
             init_duration: persistent_delay.init_duration,
             command_count: persistent_delay.command_count,
             command_duration: persistent_delay.command_duration,
@@ -1260,19 +1242,18 @@ mod fb_facade {
             recheck_worst_changed_file_count: persistent_delay.recheck_worst_changed_file_count,
             recheck_worst_cycle_leader: persistent_delay.recheck_worst_cycle_leader.clone(),
             recheck_worst_cycle_size: persistent_delay.recheck_worst_cycle_size,
-        };
-        let request_str = request.to_string();
-        let extra_data_vec = json_object_to_vec(extra_data);
+        });
+        let extra_data_vec = extra_data.to_vec();
         let fb_err = error.map(to_fb_error);
         fb::persistent_command_success(
-            Some(fb_server),
+            fb_server,
             request_id.to_string(),
             method_name.to_string(),
-            &request_str,
+            request,
             extra_data_vec,
             &fb_client,
-            Some(&fb_pctx),
-            Some(&fb_pdelay),
+            fb_pctx.as_ref(),
+            fb_pdelay.as_ref(),
             server_profiling,
             client_duration,
             wall_start,
@@ -1288,27 +1269,27 @@ mod fb_facade {
         reason = "OSS-shaped API mirrors flowEventLogger.mli's labelled persistent_command_failure arguments"
     )]
     pub fn persistent_command_failure(
-        server_logging_context: &LoggingContext,
-        request: &serde_json::Value,
-        extra_data: &serde_json::Value,
+        server_logging_context: Option<&LoggingContext>,
+        request: &str,
+        extra_data: &[(String, serde_json::Value)],
         client_context: &LoggingContext,
-        persistent_context: &PersistentContext,
-        persistent_delay: &PersistentDelay,
+        persistent_context: Option<&PersistentContext>,
+        persistent_delay: Option<&PersistentDelay>,
         server_profiling: Option<&serde_json::Value>,
         client_duration: Option<f64>,
         wall_start: f64,
         activity_key: Option<&serde_json::Value>,
         error: &Error,
     ) {
-        let fb_server = to_fb_logging_context(server_logging_context.clone());
+        let fb_server = server_logging_context.map(|ctx| to_fb_logging_context(ctx.clone()));
         let fb_client = to_fb_logging_context(client_context.clone());
-        let fb_pctx = fb::PersistentContext {
+        let fb_pctx = persistent_context.map(|persistent_context| fb::PersistentContext {
             start_lsp_state: persistent_context.start_lsp_state.clone(),
             start_lsp_state_reason: persistent_context.start_lsp_state_reason.clone(),
             start_server_status: persistent_context.start_server_status.clone(),
             start_watcher_status: persistent_context.start_watcher_status.clone(),
-        };
-        let fb_pdelay = fb::PersistentDelay {
+        });
+        let fb_pdelay = persistent_delay.map(|persistent_delay| fb::PersistentDelay {
             init_duration: persistent_delay.init_duration,
             command_count: persistent_delay.command_count,
             command_duration: persistent_delay.command_duration,
@@ -1323,17 +1304,16 @@ mod fb_facade {
             recheck_worst_changed_file_count: persistent_delay.recheck_worst_changed_file_count,
             recheck_worst_cycle_leader: persistent_delay.recheck_worst_cycle_leader.clone(),
             recheck_worst_cycle_size: persistent_delay.recheck_worst_cycle_size,
-        };
-        let request_str = request.to_string();
-        let extra_data_vec = json_object_to_vec(extra_data);
+        });
+        let extra_data_vec = extra_data.to_vec();
         let fb_err = to_fb_error(error);
         fb::persistent_command_failure(
-            Some(fb_server),
-            &request_str,
+            fb_server,
+            request,
             extra_data_vec,
             &fb_client,
-            Some(&fb_pctx),
-            Some(&fb_pdelay),
+            fb_pctx.as_ref(),
+            fb_pdelay.as_ref(),
             server_profiling,
             client_duration,
             wall_start,
@@ -1342,39 +1322,30 @@ mod fb_facade {
         );
     }
 
-    // SHIM: serialises non-null `request` JSON value to a string for FB's
-    // optional parameter; `null` becomes `None`. Wraps OSS Error tuple into
+    // SHIM: clones the optional request string and wraps OSS Error tuple into
     // FB Error struct.
     pub fn persistent_expected_error(
-        request: &serde_json::Value,
+        request: Option<&str>,
         client_context: &LoggingContext,
         activity_key: Option<&serde_json::Value>,
         error: &Error,
     ) {
         let fb_client = to_fb_logging_context(client_context.clone());
         let fb_err = to_fb_error(error);
-        let request_owned = if request.is_null() {
-            None
-        } else {
-            Some(request.to_string())
-        };
+        let request_owned = request.map(|request| request.to_string());
         fb::persistent_expected_error(request_owned, &fb_client, activity_key, &fb_err);
     }
 
     // SHIM: same translations as `persistent_expected_error`.
     pub fn persistent_unexpected_error(
-        request: &serde_json::Value,
+        request: Option<&str>,
         client_context: &LoggingContext,
         activity_key: Option<&serde_json::Value>,
         error: &Error,
     ) {
         let fb_client = to_fb_logging_context(client_context.clone());
         let fb_err = to_fb_error(error);
-        let request_owned = if request.is_null() {
-            None
-        } else {
-            Some(request.to_string())
-        };
+        let request_owned = request.map(|request| request.to_string());
         fb::persistent_unexpected_error(request_owned, &fb_client, activity_key, &fb_err);
     }
 
@@ -1436,38 +1407,18 @@ mod fb_facade {
         fb::idle_heartbeat(idle_time, profiling);
     }
 
-    // SHIM: serialises the OSS `request`/`data` JSON values into the strings
-    // FB-internal expects. Compact JSON serialisation.
-    pub fn live_parse_errors(
-        request: &serde_json::Value,
-        data: &serde_json::Value,
-        wall_start: f64,
-    ) {
-        let request_s = request.to_string();
-        let data_s = data.to_string();
-        fb::live_parse_errors(&request_s, &data_s, wall_start);
+    pub fn live_parse_errors(request: &str, data: &str, wall_start: f64) {
+        fb::live_parse_errors(request, data, wall_start);
     }
 
     // SHIM: same translation as `live_parse_errors`.
-    pub fn live_non_parse_errors(
-        request: &serde_json::Value,
-        data: &serde_json::Value,
-        wall_start: f64,
-    ) {
-        let request_s = request.to_string();
-        let data_s = data.to_string();
-        fb::live_non_parse_errors(&request_s, &data_s, wall_start);
+    pub fn live_non_parse_errors(request: &str, data: &str, wall_start: f64) {
+        fb::live_non_parse_errors(request, data, wall_start);
     }
 
     // SHIM: same translation as `live_parse_errors`.
-    pub fn live_non_parse_errors_failed(
-        request: &serde_json::Value,
-        data: &serde_json::Value,
-        wall_start: f64,
-    ) {
-        let request_s = request.to_string();
-        let data_s = data.to_string();
-        fb::live_non_parse_errors_failed(&request_s, &data_s, wall_start);
+    pub fn live_non_parse_errors_failed(request: &str, data: &str, wall_start: f64) {
+        fb::live_non_parse_errors_failed(request, data, wall_start);
     }
 
     // SHIM: forwards directly; FB and OSS share identical signature.
@@ -1575,16 +1526,6 @@ mod fb_facade {
     // SHIM: forwards directly; FB and OSS share identical signature.
     pub fn edenfs_watcher_lost_changes(msg: &str, backtrace: &str) {
         fb::edenfs_watcher_lost_changes(msg, backtrace);
-    }
-
-    // Helper: convert a `serde_json::Value` JSON object into the
-    // `Vec<(String, serde_json::Value)>` shape that the FB-internal
-    // persistent-command logger expects for `extra_data`.
-    fn json_object_to_vec(value: &serde_json::Value) -> Vec<(String, serde_json::Value)> {
-        match value.as_object() {
-            Some(map) => map.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
-            None => Vec::new(),
-        }
     }
 }
 

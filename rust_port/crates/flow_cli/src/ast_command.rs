@@ -143,7 +143,7 @@ fn get_file(path: Option<String>, filename: Option<String>) -> FileInput {
             std::io::stdin()
                 .read_to_string(&mut content)
                 .expect("failed to read stdin");
-            FileInput::FileContent(path, content)
+            FileInput::FileContent(path, content.into())
         }
     }
 }

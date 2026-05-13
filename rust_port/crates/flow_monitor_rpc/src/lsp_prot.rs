@@ -90,11 +90,7 @@ pub type ErrorInfo = (ErrorKind, String, String);
 
 pub type Json = serde_json::Value;
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct LoggingContext {
-    pub from: Option<String>,
-    pub agent_id: Option<String>,
-}
+pub type LoggingContext = flow_event_logger::LoggingContext;
 
 pub type ProfilingFinished = serde_json::Value;
 

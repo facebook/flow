@@ -343,7 +343,9 @@ fn mk_normalizer_genv<'a, 'cx: 'a>(
     expand_component_props: bool,
     check_result: &'a FileArtifacts<'cx>,
 ) -> (Genv<'a, 'cx>, Rc<RefCell<BTreeMap<String, Type>>>) {
-    let (ParseArtifacts { file_sig, .. }, TypecheckArtifacts { cx, typed_ast, .. }) = check_result;
+    let (parse_artifacts, typecheck_artifacts) = check_result;
+    let ParseArtifacts { file_sig, .. } = parse_artifacts.as_ref();
+    let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts.as_ref();
     let options = flow_typing_ty_normalizer::env::Options {
         expand_internal_types: false,
         expand_enum_members: true,
@@ -417,7 +419,9 @@ fn type_of_name_from_artifacts<'a, 'cx: 'a>(
     aloc: &ALoc,
     type_: &Type,
 ) -> Result<response::infer_type_of_name::T, String> {
-    let (ParseArtifacts { ast, .. }, TypecheckArtifacts { cx, .. }) = check_result;
+    let (parse_artifacts, typecheck_artifacts) = check_result;
+    let ParseArtifacts { ast, .. } = parse_artifacts.as_ref();
+    let TypecheckArtifacts { cx, .. } = typecheck_artifacts.as_ref();
     let loc = reader.loc_of_aloc(aloc);
     let documentation = {
         let line = loc.start.line;
@@ -474,8 +478,9 @@ fn type_of_name_member<'a, 'cx: 'a>(
     source: export_index::Source,
     type_: &Type,
 ) -> Result<response::infer_type_of_name::T, String> {
-    let (ParseArtifacts { file_sig, ast, .. }, TypecheckArtifacts { cx, typed_ast, .. }) =
-        check_result;
+    let (parse_artifacts, typecheck_artifacts) = check_result;
+    let ParseArtifacts { file_sig, ast, .. } = parse_artifacts.as_ref();
+    let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts.as_ref();
     let (genv, ref_type_bodies_tbl) = mk_normalizer_genv(true, check_result);
     match ty_normalizer_flow::from_type(&genv, type_) {
         Err(e) => Err(format!("normalizer error {}", e)),
@@ -651,7 +656,8 @@ fn resolve_name_from_index(
     ) {
         Err(_errors) => Err("Parse or typing errors on index".to_string()),
         Ok(check_result) => {
-            let (_, TypecheckArtifacts { typed_ast, .. }) = &check_result;
+            let (_, typecheck_artifacts) = &check_result;
+            let TypecheckArtifacts { typed_ast, .. } = typecheck_artifacts.as_ref();
             match find_identifier_and_type(actual_name.as_str(), typed_ast) {
                 Some((aloc, type_)) => {
                     Ok((actual_name.to_string(), source, check_result, aloc, type_))
@@ -731,7 +737,8 @@ fn type_of_name_single<'a, 'cx: 'a>(
         [] => Err("empty name".to_string()),
         [_] => {
             // No dot — existing logic
-            let (_, TypecheckArtifacts { typed_ast, .. }) = check_result;
+            let (_, typecheck_artifacts) = check_result;
+            let TypecheckArtifacts { typed_ast, .. } = typecheck_artifacts.as_ref();
             match find_identifier_and_type(target_name, typed_ast) {
                 Some((aloc, type_)) => type_of_name_from_artifacts(
                     doc_at_loc,
@@ -771,7 +778,8 @@ fn type_of_name_single<'a, 'cx: 'a>(
                         type_,
                     )
                 };
-            let (_, TypecheckArtifacts { typed_ast, .. }) = check_result;
+            let (_, typecheck_artifacts) = check_result;
+            let TypecheckArtifacts { typed_ast, .. } = typecheck_artifacts.as_ref();
             match find_identifier_and_type(base_name, typed_ast) {
                 Some((_aloc, type_)) => resolve_member_from_check_result(
                     check_result,

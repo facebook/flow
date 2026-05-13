@@ -7,6 +7,7 @@
 
 #![allow(dead_code)]
 
+use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::LazyLock;
 use std::sync::Mutex;
@@ -109,6 +110,22 @@ fn is_latest_live_errors_metadata(uri: &str, metadata: &lsp_prot::Metadata) -> b
     }
 }
 
+fn live_errors_canceled_response(
+    uri: &str,
+    metadata: lsp_prot::Metadata,
+) -> (lsp_prot::Response, lsp_prot::Metadata) {
+    (
+        lsp_prot::Response::LiveErrorsResponse(Err(lsp_prot::LiveErrorsFailure {
+            live_errors_failure_kind: lsp_prot::ErrorResponseKind::CanceledErrorResponse,
+            live_errors_failure_reason: "Subsumed by a later request".to_string(),
+            live_errors_failure_uri: lsp_types::Url::parse(uri)
+                .or_else(|_| lsp_types::Url::from_file_path(uri).map_err(|_| ()))
+                .unwrap_or_else(|_| lsp_types::Url::parse(&format!("file://{}", uri)).unwrap()),
+        })),
+        metadata,
+    )
+}
+
 use flow_common_tarjan::topsort;
 use flow_parsing::docblock_parser::parse_docblock;
 use flow_server_env::error_collator;
@@ -176,7 +193,7 @@ fn type_parse_artifacts_with_cache(
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     master_cx: Arc<flow_typing_context::MasterContext>,
     file: flow_parser::file_key::FileKey,
-    artifacts: (
+    artifacts: impl FnOnce() -> (
         Option<ParseArtifacts>,
         flow_typing_errors::flow_error::ErrorSet,
     ),
@@ -192,7 +209,7 @@ fn type_parse_artifacts_with_cache(
                 shared_mem,
                 master_cx,
                 file,
-                artifacts,
+                artifacts(),
                 node_modules_containers,
             );
             (result, None)
@@ -208,7 +225,7 @@ fn type_parse_artifacts_with_cache(
                         shared_mem,
                         master_cx,
                         file_for_result,
-                        artifacts,
+                        artifacts(),
                         node_modules_containers,
                     )
                 },
@@ -592,9 +609,9 @@ fn of_file_input(
     options: &Options,
     env: &server_env::Env,
     file_input: &FileInput,
-) -> Result<(flow_parser::file_key::FileKey, String), IdeFileError> {
+) -> Result<(flow_parser::file_key::FileKey, Arc<str>), IdeFileError> {
     let file_key = file_key_of_file_input(options, env, file_input);
-    match file_input.content_of_file_input() {
+    match file_input.content_of_file_input_arc() {
         Err(msg) => Err(IdeFileError::Failed(msg)),
         Ok(file_contents) => {
             match check_that_we_care_about_this_file(options, env, &file_key, &file_contents) {
@@ -714,7 +731,10 @@ fn autoimport_options(
 ) -> SearchOptions {
     let mut opts = export_search::default_options();
     opts.max_results = 100;
-    opts.num_threads = std::cmp::max(1, 4_usize.saturating_sub(2)); // num_cpus not available, using default
+    let num_cpus = std::thread::available_parallelism()
+        .map(|parallelism| parallelism.get())
+        .unwrap_or(4);
+    opts.num_threads = std::cmp::max(1, num_cpus.saturating_sub(2));
     opts.weighted = ac_options.imports_ranked_usage;
     opts
 }
@@ -937,7 +957,7 @@ fn type_parse_artifacts_for_ac_with_cache(
     master_cx: Arc<flow_typing_context::MasterContext>,
     file: flow_parser::file_key::FileKey,
     contents: String,
-    artifacts: (
+    artifacts: impl FnOnce() -> (
         Option<ParseArtifacts>,
         flow_typing_errors::flow_error::ErrorSet,
     ),
@@ -947,7 +967,7 @@ fn type_parse_artifacts_for_ac_with_cache(
     >,
 ) -> (AcArtifactsResult<'static>, Option<bool>) {
     let file_for_result = file.dupe();
-    let type_parse_artifacts = || match artifacts {
+    let type_parse_artifacts = || match artifacts() {
         (None, errs) => Err(TypeContentsError::Errors(errs)),
         (Some(parse_artifacts), _errs) => {
             let ParseArtifacts {
@@ -975,12 +995,16 @@ fn type_parse_artifacts_for_ac_with_cache(
                     return Err(TypeContentsError::CheckedDependenciesCanceled);
                 }
             };
-            Ok((contents.clone(), parse_artifacts, cx))
+            Ok((
+                Rc::<str>::from(contents.clone()),
+                Rc::new(parse_artifacts),
+                Rc::new(cx),
+            ))
         }
     };
     let cond = |result: &AcArtifactsResult<'static>| match result {
         Err(_) => false,
-        Ok((contents_prime, _, _)) => contents == *contents_prime,
+        Ok((contents_prime, _, _)) => contents == contents_prime.as_ref(),
     };
     match type_parse_artifacts_cache {
         Some(cache) => {
@@ -1039,7 +1063,7 @@ fn autocomplete_on_parsed(
     let type_parse_artifacts_cache = client_id
         .and_then(persistent_connection::get_client)
         .map(|client| persistent_connection::autocomplete_artifacts_cache(&client));
-    let parse_result = parse_contents(options, &contents, filename);
+    let parse_result = || parse_contents(options, &contents, filename);
     let (file_artifacts_result, did_hit) = type_parse_artifacts_for_ac_with_cache(
         options,
         type_parse_artifacts_cache.as_ref(),
@@ -1059,28 +1083,37 @@ fn autocomplete_on_parsed(
         Err(_) => None,
         Ok((_contents, parse_artifacts, cx)) => {
             let ParseArtifacts {
-                docblock: _info,
-                docblock_errors: _,
+                docblock,
                 ast,
-                requires: _,
                 file_sig,
-                tolerable_errors: _,
-                parse_errors: _parse_errors,
-            } = parse_artifacts;
-            Some((_info, file_sig, ast, _parse_errors, cx))
+                parse_errors,
+                ..
+            } = parse_artifacts.as_ref();
+            Some((
+                docblock.dupe(),
+                file_sig.dupe(),
+                ast.dupe(),
+                parse_errors.clone(),
+                cx,
+            ))
         }
     };
     let ac_result = match ac_typing_artifacts {
         None => None,
         Some((info, file_sig, ast, parse_errors, cx)) => {
+            let exports = env
+                .exports
+                .clone()
+                .map(|exports| std::rc::Rc::new(std::cell::RefCell::new(exports)));
             let search_exported_values_fn: Box<
                 dyn Fn(
-                    &flow_services_autocomplete::autocomplete_service_js::AcOptions,
-                    &str,
-                ) -> SearchResults,
-            > = match &env.exports {
+                        &flow_services_autocomplete::autocomplete_service_js::AcOptions,
+                        &str,
+                    ) -> SearchResults
+                    + '_,
+            > = match &exports {
                 Some(exports) => {
-                    let exports = std::cell::RefCell::new(exports.clone());
+                    let exports = std::rc::Rc::clone(exports);
                     Box::new(move |ac_options, before| {
                         search_exported_values(ac_options, before, &mut exports.borrow_mut())
                     })
@@ -1091,12 +1124,13 @@ fn autocomplete_on_parsed(
             };
             let search_exported_types_fn: Box<
                 dyn Fn(
-                    &flow_services_autocomplete::autocomplete_service_js::AcOptions,
-                    &str,
-                ) -> SearchResults,
-            > = match &env.exports {
+                        &flow_services_autocomplete::autocomplete_service_js::AcOptions,
+                        &str,
+                    ) -> SearchResults
+                    + '_,
+            > = match &exports {
                 Some(exports) => {
-                    let exports = std::cell::RefCell::new(exports.clone());
+                    let exports = std::rc::Rc::clone(exports);
                     Box::new(move |ac_options, before| {
                         search_exported_types(ac_options, before, &mut exports.borrow_mut())
                     })
@@ -1127,7 +1161,7 @@ fn autocomplete_on_parsed(
                 &module_system_info,
                 &*search_exported_values_fn,
                 &*search_exported_types_fn,
-                &cx,
+                cx.as_ref(),
                 file_sig,
                 ast.dupe(),
                 canon_token_owned.as_ref(),
@@ -1200,7 +1234,7 @@ fn autofix_errors_cli(
     input: &FileInput,
 ) -> server_prot::response::ApplyCodeActionResponse {
     let file_key = file_key_of_file_input(options, env, input);
-    let file_content = input.content_of_file_input()?;
+    let file_content = input.content_of_file_input_arc()?;
     let shared_mem_loa = shared_mem.clone();
     let loc_of_aloc: Arc<dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc> =
         Arc::new(move |aloc| shared_mem_loa.loc_of_aloc(aloc));
@@ -1257,7 +1291,7 @@ fn autofix_imports_cli(
     input: &FileInput,
 ) -> server_prot::response::ApplyCodeActionResponse {
     let file_key = file_key_of_file_input(options, env, input);
-    let file_content = input.content_of_file_input()?;
+    let file_content = input.content_of_file_input_arc()?;
     let shared_mem_loa = shared_mem.clone();
     let loc_of_aloc = move |aloc: &flow_aloc::ALoc| shared_mem_loa.loc_of_aloc(aloc);
     let module_system_info = mk_module_system_info(options, shared_mem.clone());
@@ -1285,7 +1319,7 @@ fn suggest_imports_cli(
     input: &FileInput,
 ) -> server_prot::response::SuggestImportsResponse {
     let file_key = file_key_of_file_input(options, env, input);
-    let file_content = input.content_of_file_input()?;
+    let file_content = input.content_of_file_input_arc()?;
     let shared_mem_loa = shared_mem.clone();
     let loc_of_aloc = move |aloc: &flow_aloc::ALoc| shared_mem_loa.loc_of_aloc(aloc);
     let module_system_info = mk_module_system_info(options, shared_mem.clone());
@@ -1726,7 +1760,7 @@ fn infer_type(
             Ok((Ok(response), extra_data))
         }
         Ok((file_key, content)) => {
-            let parse_result = parse_contents(&options, &content, &file_key);
+            let parse_result = || parse_contents(&options, &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
                 &options,
                 type_parse_artifacts_cache,
@@ -1850,7 +1884,7 @@ fn type_of_name(
         Ok((file_key, content)) => {
             let mut options = options.clone();
             options.verbose = verbose.as_ref().map(|v| std::sync::Arc::new(v.clone()));
-            let parse_result = parse_contents(&options, &content, &file_key);
+            let parse_result = || parse_contents(&options, &content, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 &options,
                 type_parse_artifacts_cache,
@@ -1935,7 +1969,7 @@ fn inlay_hint(
             Ok((Ok(vec![]), extra_data))
         }
         Ok((file_key, content)) => {
-            let parse_result = parse_contents(&options, &content, &file_key);
+            let parse_result = || parse_contents(&options, &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = match type_parse_artifacts_with_cache(
                 &options,
                 type_parse_artifacts_cache,
@@ -2044,7 +2078,7 @@ fn insert_type(
     location_is_strict: bool,
 ) -> Result<server_prot::response::InsertTypeResponse, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, file_input);
-    let file_content = match file_input.content_of_file_input() {
+    let file_content = match file_input.content_of_file_input_arc() {
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
     };
@@ -2122,7 +2156,7 @@ fn autofix_exports(
     input: &FileInput,
 ) -> Result<server_prot::response::AutofixExportsResponse, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, input);
-    let file_content = match input.content_of_file_input() {
+    let file_content = match input.content_of_file_input_arc() {
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
     };
@@ -2209,7 +2243,7 @@ fn autofix_missing_local_annot(
     input: &FileInput,
 ) -> Result<server_prot::response::AutofixMissingLocalAnnotResponse, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, input);
-    let file_content = match input.content_of_file_input() {
+    let file_content = match input.content_of_file_input_arc() {
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
     };
@@ -2363,7 +2397,7 @@ fn dump_types(
     file_input: &FileInput,
 ) -> Result<Result<Vec<(flow_parser::loc::Loc, String)>, String>, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, file_input);
-    let content = match file_input.content_of_file_input() {
+    let content = match file_input.content_of_file_input_arc() {
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
     };
@@ -2415,7 +2449,7 @@ fn coverage(
 > {
     let mut options = options.clone();
     options.all = options.all || force;
-    let intermediate_result = parse_contents(&options, content, file_key);
+    let intermediate_result = || parse_contents(&options, content, file_key);
     let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
         &options,
         type_parse_artifacts_cache,
@@ -2657,7 +2691,7 @@ fn get_def(
             ))
         }
         Ok((file_key, content)) => {
-            let intermediate_result = parse_contents(options, &content, &file_key);
+            let intermediate_result = || parse_contents(options, &content, &file_key);
             let (check_result, did_hit_cache) = match type_parse_artifacts_with_cache(
                 options,
                 type_parse_artifacts_cache,
@@ -2745,12 +2779,13 @@ fn save_state(
     env: &server_env::Env,
     saved_state_filename: &str,
 ) -> Result<String, String> {
+    let node_modules_containers = genv.node_modules_containers_snapshot();
     flow_saved_state::save(
         std::path::Path::new(saved_state_filename),
         &genv.shared_mem,
         env,
         &genv.options,
-        genv.node_modules_containers.as_ref(),
+        node_modules_containers.as_ref(),
     )
     .map(|_| saved_state_filename.to_string())
     .map_err(|reason| reason.to_string())
@@ -3382,7 +3417,8 @@ pub fn handle_ephemeral_command_for_standalone(
 ) -> EphemeralParallelizableResult {
     let options = &*genv.options;
     let shared_mem = genv.shared_mem.dupe();
-    let node_modules_containers = genv.node_modules_containers.as_ref();
+    let node_modules_containers = genv.node_modules_containers_snapshot();
+    let node_modules_containers = node_modules_containers.as_ref();
     match command {
         server_prot::request::Command::APPLY_CODE_ACTION {
             input,
@@ -3601,11 +3637,12 @@ pub fn handle_ephemeral_command_for_standalone_wrapped(
 ) -> EphemeralParallelizableResult {
     struct CommandSummaryGuard {
         cmd_str: String,
+        start: std::time::Instant,
     }
 
     impl Drop for CommandSummaryGuard {
         fn drop(&mut self) {
-            send_command_summary(&(), &self.cmd_str);
+            send_command_summary(self.start.elapsed().as_secs_f64(), &self.cmd_str);
         }
     }
 
@@ -3616,6 +3653,7 @@ pub fn handle_ephemeral_command_for_standalone_wrapped(
     );
     let _guard = CommandSummaryGuard {
         cmd_str: cmd_str.clone(),
+        start: std::time::Instant::now(),
     };
     handle_ephemeral_command_for_standalone(genv, env, command)
 }
@@ -3651,7 +3689,7 @@ fn find_code_actions(
             (Ok(vec![]), extra_data)
         }
         Ok((file_key, file_contents)) => {
-            let intermediate_result = parse_contents(options, &file_contents, &file_key);
+            let intermediate_result = || parse_contents(options, &file_contents, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
                 type_parse_artifacts_cache.as_ref(),
@@ -3770,17 +3808,17 @@ fn add_missing_imports(
     let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
         .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
     let file_key = file_key_of_file_input(options, env, &file_input);
-    match file_input.content_of_file_input() {
+    match file_input.content_of_file_input_arc() {
         Err(msg) => Err(msg),
         Ok(file_contents) => {
             let uri = &text_document.uri;
-            let intermediate_result = parse_contents(options, &file_contents, &file_key);
+            let intermediate_result = || parse_contents(options, &file_contents, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
                 type_parse_artifacts_cache.as_ref(),
                 shared_mem.clone(),
                 env.master_cx.clone(),
-                file_key,
+                file_key.dupe(),
                 intermediate_result,
                 node_modules_containers,
             );
@@ -3817,7 +3855,7 @@ fn organize_imports(
         &std::collections::BTreeSet::new(),
         &file_input,
     );
-    match file_input.content_of_file_input() {
+    match file_input.content_of_file_input_arc() {
         Err(msg) => Err(msg),
         Ok(file_contents) => {
             let (parse_artifacts, _parse_errors) =
@@ -3912,10 +3950,10 @@ pub fn classify_ephemeral_command(
     get_ephemeral_handler(genv, command)
 }
 
-fn send_command_summary(_profiling: &(), name: &str) {
+fn send_command_summary(duration: f64, name: &str) {
     flow_server_env::monitor_rpc::send_telemetry(lsp_prot::TelemetryFromServer::CommandSummary {
         name: name.to_string(),
-        duration: 0.0,
+        duration,
     });
     flow_server_env::monitor_rpc::status_update(
         flow_server_env::server_status::Event::HandlingRequestEnd,
@@ -3982,6 +4020,7 @@ fn wrap_ephemeral_handler(
     flow_server_env::monitor_rpc::status_update(
         flow_server_env::server_status::Event::HandlingRequestStart,
     );
+    let start = std::time::Instant::now();
     let _should_print_summary = genv.options.profile;
     let result =
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(handler)).unwrap_or_else(|e| {
@@ -3995,7 +4034,7 @@ fn wrap_ephemeral_handler(
             handle_ephemeral_uncaught_exception(cmd_str, exn_str)
                 .map_err(EphemeralHandlerError::Failure)
         });
-    send_command_summary(&(), cmd_str);
+    send_command_summary(start.elapsed().as_secs_f64(), cmd_str);
     let to_send: Result<
         ((), server_prot::response::Response, Option<lsp_prot::Json>),
         (String, Option<lsp_prot::Json>),
@@ -4035,6 +4074,10 @@ fn wrap_immediate_ephemeral_handler(
     >,
 ) -> Result<(), ()> {
     flow_hh_logger::info!("{}{}", cmd_str, format_client_context(client_context));
+    flow_server_env::monitor_rpc::status_update(
+        flow_server_env::server_status::Event::HandlingRequestStart,
+    );
+    let start = std::time::Instant::now();
     let _should_print_summary = genv.options.profile;
     let result =
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(handler)).unwrap_or_else(|e| {
@@ -4047,7 +4090,7 @@ fn wrap_immediate_ephemeral_handler(
             };
             handle_ephemeral_uncaught_exception(cmd_str, exn_str)
         });
-    send_command_summary(&(), cmd_str);
+    send_command_summary(start.elapsed().as_secs_f64(), cmd_str);
     send_ephemeral_response(cmd_str, request_id, client_context, result)?;
     Ok(())
 }
@@ -4102,7 +4145,7 @@ fn run_command_in_serial(
                     "Command successfully canceled. Running a recheck before restarting the command"
                 );
                 let node_modules_containers_arc = std::sync::Arc::new(std::sync::RwLock::new(
-                    (*genv.node_modules_containers).clone(),
+                    (*genv.node_modules_containers_snapshot()).clone(),
                 ));
                 let (_recheck_profiling, new_env) = flow_server_rechecker::rechecker::recheck_loop(
                     genv,
@@ -4330,11 +4373,9 @@ fn cancelled_request_id_opt(request: &lsp_prot::Request) -> Option<lsp_prot::Lsp
             let cancellation_requests = server_monitor_listener_state::cancellation_requests()
                 .lock()
                 .unwrap();
-            let id_str = match id {
-                lsp_types::NumberOrString::Number(n) => n.to_string(),
-                lsp_types::NumberOrString::String(s) => s.clone(),
-            };
-            if cancellation_requests.contains(&id_str) {
+            if cancellation_requests.contains(
+                &server_monitor_listener_state::CancellationRequestId::from(id),
+            ) {
                 Some(id.clone())
             } else {
                 None
@@ -4379,10 +4420,7 @@ fn persistent_profiling_json(duration_secs: f64) -> lsp_prot::ProfilingFinished 
 }
 
 fn persistent_server_logging_context() -> lsp_prot::LoggingContext {
-    lsp_prot::LoggingContext {
-        from: None,
-        agent_id: None,
-    }
+    flow_event_logger::get_context()
 }
 
 fn send_persistent_response<T>(
@@ -4450,9 +4488,14 @@ fn wrap_persistent_handler<T: Default>(
             }
         },
     };
-    let profiling = persistent_profiling_json(start.elapsed().as_secs_f64());
+    let result = match check_if_cancelled(&request, result.2.clone()) {
+        Some((response, metadata)) => (T::default(), response, metadata),
+        None => result,
+    };
+    let duration = start.elapsed().as_secs_f64();
+    let profiling = persistent_profiling_json(duration);
     let ret = send_persistent_response(client_id, profiling.clone(), result);
-    send_command_summary(&(), &lsp_prot::string_of_request(&request));
+    send_command_summary(duration, &lsp_prot::string_of_request(&request));
     Ok(ret)
 }
 
@@ -4697,11 +4740,9 @@ fn handle_persistent_cancel_notification(
     let mut cancellation_requests = server_monitor_listener_state::cancellation_requests()
         .lock()
         .unwrap();
-    let id_str = match &id {
-        lsp_types::NumberOrString::Number(n) => n.to_string(),
-        lsp_types::NumberOrString::String(s) => s.clone(),
-    };
-    cancellation_requests.remove(&id_str);
+    cancellation_requests.remove(&server_monitor_listener_state::CancellationRequestId::from(
+        &id,
+    ));
     (lsp_prot::Response::LspFromServer(None), metadata)
 }
 
@@ -5193,7 +5234,7 @@ fn handle_persistent_signaturehelp_lsp(
     let fn_content = match &file_input {
         FileInput::FileContent(filename, content) => Ok((filename.clone(), content.clone())),
         FileInput::FileName(filename) => match std::fs::read_to_string(filename) {
-            Ok(content) => Ok((Some(filename.clone()), content)),
+            Ok(content) => Ok((Some(filename.clone()), Arc::<str>::from(content))),
             Err(error) => Err((error.to_string(), format!("{error:?}"))),
         },
     };
@@ -5208,7 +5249,7 @@ fn handle_persistent_signaturehelp_lsp(
             };
             let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
                 .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
-            let intermediate_result = parse_contents(options, &contents, &path);
+            let intermediate_result = || parse_contents(options, &contents, &path);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
                 type_parse_artifacts_cache.as_ref(),
@@ -5413,7 +5454,7 @@ fn get_file_artifacts(
         Err(IdeFileError::Failed(reason)) => (Err(reason), None),
         Err(IdeFileError::Skipped(reason)) => (Ok(None), json_of_skipped(&reason)),
         Ok((file_key, content)) => {
-            let intermediate_result = parse_contents(options, &content, &file_key);
+            let intermediate_result = || parse_contents(options, &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
                 type_parse_artifacts_cache.as_ref(),
@@ -6158,7 +6199,7 @@ fn handle_persistent_llm_context(
                 Err(_) => return None,
                 Ok(v) => v,
             };
-            let intermediate_result = parse_contents(options, &content, &file_key);
+            let intermediate_result = || parse_contents(options, &content, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
                 type_parse_artifacts_cache.as_ref(),
@@ -6452,7 +6493,7 @@ fn prepare_document_paste(
             (vec![], extra_data)
         }
         Ok((file_key, contents)) => {
-            let intermediate_result = parse_contents(options, &contents, &file_key);
+            let intermediate_result = || parse_contents(options, &contents, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
                 type_parse_artifacts_cache.as_ref(),
@@ -6892,24 +6933,17 @@ fn live_diagnostics_of_uri(
                             persistent_connection::get_client(client_id).map(|client| {
                                 persistent_connection::type_parse_artifacts_cache(&client)
                             });
-                        let intermediate_result = parse_contents(options, content, &file_key);
+                        let intermediate_result = || parse_contents(options, content, &file_key);
                         let (result, did_hit_cache): (FileArtifactsResult<'static>, Option<bool>) =
-                            if !intermediate_result.1.is_empty() {
-                                (
-                                    Err(TypeContentsError::Errors(intermediate_result.1.clone())),
-                                    None,
-                                )
-                            } else {
-                                type_parse_artifacts_with_cache(
-                                    options,
-                                    type_parse_artifacts_cache.as_ref(),
-                                    shared_mem.clone(),
-                                    env.master_cx.clone(),
-                                    file_key.dupe(),
-                                    intermediate_result,
-                                    node_modules_containers,
-                                )
-                            };
+                            type_parse_artifacts_with_cache(
+                                options,
+                                type_parse_artifacts_cache.as_ref(),
+                                shared_mem.clone(),
+                                env.master_cx.clone(),
+                                file_key.dupe(),
+                                intermediate_result,
+                                node_modules_containers,
+                            );
                         let (live_errors, live_warnings) =
                             printable_errors_of_file_artifacts_result(
                                 options,
@@ -6971,7 +7005,7 @@ fn live_diagnostics_of_uri(
                 flow_parser::loc::Loc,
             >| { vscode_dd };
             let unsaved_content: flow_common_errors::error_utils::StdinFile =
-                Some((std::path::PathBuf::from(&file_path), content.clone()));
+                Some((std::path::PathBuf::from(&file_path), content.to_string()));
             let diagnostics_map = flow_lsp_conversions::diagnostics_of_flow_errors(
                 &unsaved_content,
                 &should_include,
@@ -7016,16 +7050,7 @@ fn handle_live_errors_request(
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     if !is_latest_live_errors_metadata(uri, &metadata) {
-        return (
-            lsp_prot::Response::LiveErrorsResponse(Err(lsp_prot::LiveErrorsFailure {
-                live_errors_failure_kind: lsp_prot::ErrorResponseKind::CanceledErrorResponse,
-                live_errors_failure_reason: "Subsumed by a later request".to_string(),
-                live_errors_failure_uri: lsp_types::Url::parse(uri)
-                    .or_else(|_| lsp_types::Url::from_file_path(uri).map_err(|_| ()))
-                    .unwrap_or_else(|_| lsp_types::Url::parse(&format!("file://{}", uri)).unwrap()),
-            })),
-            metadata,
-        );
+        return live_errors_canceled_response(uri, metadata);
     }
 
     let ret = match live_diagnostics_of_uri(
@@ -7049,6 +7074,8 @@ fn handle_live_errors_request(
     if is_latest_live_errors_metadata(uri, &ret.1) {
         let mut map = URI_TO_LATEST_METADATA_MAP.lock().unwrap();
         map.remove(uri);
+    } else {
+        return live_errors_canceled_response(uri, ret.1);
     }
 
     ret
@@ -7141,14 +7168,12 @@ fn get_persistent_handler(
     let options = &*genv.options;
     let (ref request_inner, ref metadata) = *request;
     if let lsp_prot::Request::LspToServer(LspMessage::RequestMessage(id, _)) = request_inner {
-        let id_str = match id {
-            lsp_types::NumberOrString::Number(n) => n.to_string(),
-            lsp_types::NumberOrString::String(s) => s.clone(),
-        };
         let is_cancelled = server_monitor_listener_state::cancellation_requests()
             .lock()
             .unwrap()
-            .contains(&id_str);
+            .contains(&server_monitor_listener_state::CancellationRequestId::from(
+                id,
+            ));
         if is_cancelled {
             let id = id.clone();
             let metadata = metadata.clone();
@@ -7240,14 +7265,12 @@ fn get_persistent_handler(
         )) => {
             let id = params.id.clone();
             {
-                let id_str = match &id {
-                    lsp_types::NumberOrString::Number(n) => n.to_string(),
-                    lsp_types::NumberOrString::String(s) => s.clone(),
-                };
                 server_monitor_listener_state::cancellation_requests()
                     .lock()
                     .unwrap()
-                    .insert(id_str);
+                    .insert(server_monitor_listener_state::CancellationRequestId::from(
+                        &id,
+                    ));
             }
             let metadata = metadata.clone();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |_env| {
@@ -7278,7 +7301,7 @@ fn get_persistent_handler(
             );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7310,7 +7333,7 @@ fn get_persistent_handler(
             );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7338,7 +7361,7 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7367,7 +7390,7 @@ fn get_persistent_handler(
                 file_input_of_text_document_position_opt(client_id, &params.text_document_position);
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7399,7 +7422,7 @@ fn get_persistent_handler(
             );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7427,7 +7450,7 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = Arc::new(options.clone());
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7458,7 +7481,7 @@ fn get_persistent_handler(
             );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7486,7 +7509,7 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                 Ok(handle_persistent_find_references(
                     &options_arc,
@@ -7511,7 +7534,7 @@ fn get_persistent_handler(
             let file_input = file_input_of_text_document_position_opt(client_id, &params);
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7539,7 +7562,7 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let options_arc = Arc::new(genv.options.clone());
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                 Ok(handle_persistent_rename(
                     &options_arc,
@@ -7587,7 +7610,7 @@ fn get_persistent_handler(
                 file_input_of_text_document_identifier_opt(client_id, &params.text_document);
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7663,7 +7686,7 @@ fn get_persistent_handler(
                         Some(text_document) => {
                             let options_arc = genv.options.clone();
                             let shared_mem = genv.shared_mem.clone();
-                            let node_modules_containers = genv.node_modules_containers.clone();
+                            let node_modules_containers = genv.node_modules_containers_snapshot();
                             mk_parallelizable_persistent(
                                 options,
                                 Box::new(move |env| {
@@ -7753,7 +7776,7 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7847,7 +7870,7 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             let options_for_closure = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
@@ -7901,7 +7924,7 @@ fn get_persistent_handler(
             live_errors_mark_latest_metadata(&uri, &metadata);
             let options_arc = Arc::new(options.clone());
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers.clone();
+            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7957,6 +7980,10 @@ fn wrap_immediate_persistent_handler<T: Default>(
                 (T::default(), response, metadata)
             })
         }
+    };
+    let result = match check_if_cancelled(&request, result.2.clone()) {
+        Some((response, metadata)) => (T::default(), response, metadata),
+        None => result,
     };
     let profiling = persistent_profiling_json(start.elapsed().as_secs_f64());
     send_persistent_response(client_id, profiling, result)
@@ -8100,7 +8127,7 @@ fn mk_nonparallelizable_persistent_workload(
                         );
                         let node_modules_containers_arc =
                             std::sync::Arc::new(std::sync::RwLock::new(
-                                (*genv_for_handler.node_modules_containers).clone(),
+                                (*genv_for_handler.node_modules_containers_snapshot()).clone(),
                             ));
                         let (_recheck_profiling, new_env) =
                             flow_server_rechecker::rechecker::recheck_loop(

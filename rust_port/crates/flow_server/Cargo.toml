@@ -19,6 +19,7 @@ flow_daemon = { path = "../flow_daemon" }
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_event_logger = { path = "../flow_event_logger" }
 flow_event_logger_common = { path = "../flow_event_logger_common" }
+flow_event_logger_lwt = { path = "../flow_event_logger_lwt" }
 flow_flowlib = { path = "../flow_flowlib" }
 flow_heap = { path = "../flow_heap" }
 flow_hh_logger = { path = "../flow_hh_logger" }
@@ -32,9 +33,9 @@ flow_server_rechecker = { path = "../flow_server_rechecker" }
 flow_services_inference = { path = "../flow_services_inference" }
 flow_services_inference_types = { path = "../flow_services_inference_types" }
 flow_services_references = { path = "../flow_services_references" }
+flow_tokio_runtime = { path = "../flow_tokio_runtime" }
 flow_typing_errors = { path = "../flow_typing_errors" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
-log = { version = "0.4.29", features = ["kv_unstable", "kv_unstable_std"] }
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 tokio = { version = "1.52.1", features = ["full", "test-util", "tracing"] }

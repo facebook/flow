@@ -14,6 +14,17 @@ pub struct CommandResult {
     pub status: ExitStatus,
 }
 
+#[cfg(target_arch = "wasm32")]
+pub async fn exec(
+    _env: Option<&[(String, String)]>,
+    _cwd: Option<&str>,
+    _cmd: &str,
+    _args: &[&str],
+) -> CommandResult {
+    panic!("LwtSysUtils.exec is not supported on wasm targets");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub async fn exec(
     env: Option<&[(String, String)]>,
     cwd: Option<&str>,

@@ -60,6 +60,7 @@ use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_type::type_::Type;
 use flow_utils_concurrency::thread_pool::ThreadPool;
+use flow_utils_concurrency::worker_cancel;
 use once_cell::unsync::Lazy;
 use vec1::Vec1;
 
@@ -667,7 +668,7 @@ fn merge_component(
     options: &Options,
     for_find_all_refs: bool,
     component: Vec1<FileKey>,
-) -> (bool, Option<(ErrorSuppressions, f64)>) {
+) -> Result<(bool, Option<(ErrorSuppressions, f64)>), worker_cancel::WorkerCanceled> {
     let start_time = Instant::now();
 
     let typed_component: Vec<_> = component
@@ -676,13 +677,16 @@ fn merge_component(
         .collect();
 
     if typed_component.is_empty() {
-        return (false, None);
+        return Ok((false, None));
     }
 
+    worker_cancel::check_should_cancel()?;
     let hash = sig_hash(for_find_all_refs, &options.root, shared_mem, &component);
+    worker_cancel::check_should_cancel()?;
 
     let mut suppressions = ErrorSuppressions::empty();
     for (file, typed_parse) in &typed_component {
+        worker_cancel::check_should_cancel()?;
         let docblock = typed_parse.docblock_unsafe(file);
         let metadata = Metadata {
             overridable: OverridableMetadata {
@@ -706,10 +710,11 @@ fn merge_component(
         suppressions.union(new_suppressions);
     }
 
+    worker_cancel::check_should_cancel()?;
     let diff = merge_context_mutator::add_merge_on_diff(for_find_all_refs, &typed_component, hash);
     let duration = start_time.elapsed().as_secs_f64();
 
-    (diff, Some((suppressions, duration)))
+    Ok((diff, Some((suppressions, duration))))
 }
 
 pub type CheckFileArtifacts = (
@@ -1063,20 +1068,26 @@ fn merge_job<A, F>(
     for_find_all_refs: bool,
     job: &F,
     batch: Vec<Component>,
-) -> MergeResult<A>
+) -> Result<MergeResult<A>, worker_cancel::WorkerCanceled>
 where
-    F: Fn(&SharedMem, &Options, bool, Vec1<FileKey>) -> (bool, A),
+    F: Fn(
+        &SharedMem,
+        &Options,
+        bool,
+        Vec1<FileKey>,
+    ) -> Result<(bool, A), worker_cancel::WorkerCanceled>,
 {
     let results = batch
         .into_iter()
         .map(|Component(component)| {
+            worker_cancel::check_should_cancel()?;
             let leader = component.first().dupe();
             let component_cloned = (*component).clone();
-            let (diff, result) = job(shared_mem, options, for_find_all_refs, component_cloned);
-            (leader, diff, result)
+            let (diff, result) = job(shared_mem, options, for_find_all_refs, component_cloned)?;
+            Ok((leader, diff, result))
         })
-        .collect();
-    MergeResult(results)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(MergeResult(results))
 }
 
 pub fn merge_runner<A, F>(
@@ -1088,11 +1099,28 @@ pub fn merge_runner<A, F>(
     components: Vec<Vec1<FileKey>>,
     recheck_set: &FlowOrdSet<FileKey>,
     job: F,
-) -> MergeResults<A>
+) -> Result<MergeResults<A>, worker_cancel::WorkerCanceled>
 where
     A: Send + Sync + Default + std::fmt::Debug + 'static,
-    F: Fn(&SharedMem, &Options, bool, Vec1<FileKey>) -> (bool, A) + Send + Sync + 'static,
+    F: Fn(
+            &SharedMem,
+            &Options,
+            bool,
+            Vec1<FileKey>,
+        ) -> Result<(bool, A), worker_cancel::WorkerCanceled>
+        + Send
+        + Sync
+        + 'static,
 {
+    #[derive(Debug)]
+    struct MergeAcc<A>(Result<Vec<A>, worker_cancel::WorkerCanceled>);
+
+    impl<A> Default for MergeAcc<A> {
+        fn default() -> Self {
+            MergeAcc(Ok(Vec::new()))
+        }
+    }
+
     let num_workers = pool.num_workers();
     let start_time = Instant::now();
     let stream = Arc::new(MergeStream::<A>::new(
@@ -1108,18 +1136,35 @@ where
 
     let shared_mem_clone = shared_mem.dupe();
 
-    let results: Vec<A> = flow_utils_concurrency::map_reduce::call(
+    let results: MergeAcc<A> = flow_utils_concurrency::map_reduce::call(
         pool,
         move || stream_ref.next(),
-        move |acc: &mut Vec<A>, batch: Vec<Component>| {
-            let merged = merge_job(shared_mem_clone, options, for_find_all_refs, &job, batch);
-            let new_acc = stream_merge.merge(merged, std::mem::take(acc));
-            *acc = new_acc;
+        move |acc: &mut MergeAcc<A>, batch: Vec<Component>| {
+            if acc.0.is_err() {
+                return;
+            }
+            match merge_job(shared_mem_clone, options, for_find_all_refs, &job, batch) {
+                Ok(merged) => {
+                    let acc_vec = acc.0.as_mut().unwrap();
+                    let new_acc = stream_merge.merge(merged, std::mem::take(acc_vec));
+                    *acc_vec = new_acc;
+                }
+                Err(c) => {
+                    acc.0 = Err(c);
+                }
+            }
         },
-        |a, mut b| {
-            a.append(&mut b);
+        |a, b| match (&mut a.0, b.0) {
+            (Err(_), _) => {}
+            (a_slot @ Ok(_), Err(c)) => {
+                *a_slot = Err(c);
+            }
+            (Ok(a_vec), Ok(mut b_vec)) => {
+                a_vec.append(&mut b_vec);
+            }
         },
     );
+    let results = results.0?;
 
     let total_files = stream.total_files();
     let skipped_count = stream.skipped_count();
@@ -1132,13 +1177,13 @@ where
         flow_hh_logger::info!("merged in {}", elapsed);
     }
 
-    (
+    Ok((
         results,
         SigOptsData {
             skipped_count,
             sig_new_or_changed,
         },
-    )
+    ))
 }
 
 pub fn merge(
@@ -1149,7 +1194,7 @@ pub fn merge(
     sig_dependency_graph: &Graph<FileKey>,
     components: Vec<Vec1<FileKey>>,
     recheck_set: &FlowOrdSet<FileKey>,
-) -> MergeResults<Option<(ErrorSuppressions, f64)>> {
+) -> Result<MergeResults<Option<(ErrorSuppressions, f64)>>, worker_cancel::WorkerCanceled> {
     merge_runner(
         pool,
         shared_mem,

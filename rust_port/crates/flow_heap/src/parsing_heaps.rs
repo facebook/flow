@@ -12,6 +12,7 @@ use std::collections::btree_map::Entry;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hash;
 use std::hash::Hasher;
+use std::ops::Bound;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -135,23 +136,31 @@ impl<K: Ord + Hash, V: Dupe> GcMap<K, V> {
         }
     }
 
-    fn keys(&self) -> Vec<K>
+    fn keys_after(&self, shard_index: usize, after: Option<&K>, limit: usize) -> (Vec<K>, bool)
     where
         K: Dupe,
     {
-        let mut keys: Vec<_> = self
-            .shards
-            .iter()
-            .flat_map(|shard| {
-                shard
-                    .read()
-                    .keys()
-                    .map(|key| key.dupe())
-                    .collect::<Vec<_>>()
-            })
-            .collect();
-        keys.sort();
-        keys
+        let map = self.shards[shard_index].read();
+        let mut keys = Vec::new();
+        let done = match after {
+            None => {
+                let mut iter = map.keys();
+                for key in iter.by_ref().take(limit) {
+                    keys.push(key.dupe());
+                }
+                iter.next().is_none()
+            }
+            Some(after) => {
+                let mut iter = map
+                    .range((Bound::Excluded(after), Bound::Unbounded))
+                    .map(|(key, _)| key);
+                for key in iter.by_ref().take(limit) {
+                    keys.push(key.dupe());
+                }
+                iter.next().is_none()
+            }
+        };
+        (keys, done)
     }
 
     fn values(&self) -> Vec<V> {
@@ -198,11 +207,13 @@ struct GcState {
     haste_modules: Vec<HasteModuleInfo>,
     free_files: Vec<FileKey>,
     free_haste_modules: Vec<HasteModuleInfo>,
-    mark_index: usize,
+    mark_file_shard: usize,
+    mark_file_cursor: Option<FileKey>,
+    mark_haste_shard: usize,
+    mark_haste_cursor: Option<HasteModuleInfo>,
     sweep_file_index: usize,
     sweep_haste_index: usize,
     new_alloc_size: usize,
-    scanned_size: usize,
     free_size: usize,
 }
 
@@ -214,11 +225,13 @@ impl Default for GcState {
             haste_modules: Vec::new(),
             free_files: Vec::new(),
             free_haste_modules: Vec::new(),
-            mark_index: 0,
+            mark_file_shard: 0,
+            mark_file_cursor: None,
+            mark_haste_shard: 0,
+            mark_haste_cursor: None,
             sweep_file_index: 0,
             sweep_haste_index: 0,
             new_alloc_size: 0,
-            scanned_size: 0,
             free_size: 0,
         }
     }
@@ -1283,28 +1296,76 @@ impl SharedMem {
     }
 
     fn start_cycle(&self, gc_state: &mut GcState) {
-        gc_state.files = self.file_heap.keys();
-        gc_state.haste_modules = self.haste_module_heap.keys();
+        gc_state.files.clear();
+        gc_state.haste_modules.clear();
         gc_state.free_files.clear();
         gc_state.free_haste_modules.clear();
-        gc_state.mark_index = 0;
+        gc_state.mark_file_shard = 0;
+        gc_state.mark_file_cursor = None;
+        gc_state.mark_haste_shard = 0;
+        gc_state.mark_haste_cursor = None;
         gc_state.sweep_file_index = 0;
         gc_state.sweep_haste_index = 0;
-        gc_state.scanned_size = gc_state.files.len() + gc_state.haste_modules.len();
         gc_state.new_alloc_size = 0;
         gc_state.free_size = 0;
         gc_state.phase = GcPhase::Mark;
     }
 
-    fn mark_slice(gc_state: &mut GcState, work: usize) -> usize {
+    fn mark_slice(&self, gc_state: &mut GcState, work: usize) -> usize {
         // work := mark_slice !work
-        let remaining = gc_state.scanned_size.saturating_sub(gc_state.mark_index);
-        let used = remaining.min(work);
-        gc_state.mark_index += used;
-        if gc_state.mark_index == gc_state.scanned_size {
+        let mut work = work;
+        while work > 0 && gc_state.mark_file_shard < GC_MAP_SHARDS {
+            let (keys, done) = self.file_heap.keys_after(
+                gc_state.mark_file_shard,
+                gc_state.mark_file_cursor.as_ref(),
+                work,
+            );
+            if keys.is_empty() {
+                gc_state.mark_file_shard += 1;
+                gc_state.mark_file_cursor = None;
+                work -= 1;
+            } else {
+                let used = keys.len();
+                gc_state.mark_file_cursor = if done {
+                    None
+                } else {
+                    keys.last().map(Dupe::dupe)
+                };
+                gc_state.files.extend(keys);
+                if done {
+                    gc_state.mark_file_shard += 1;
+                }
+                work -= used;
+            }
+        }
+        while work > 0 && gc_state.mark_haste_shard < GC_MAP_SHARDS {
+            let (haste_modules, done) = self.haste_module_heap.keys_after(
+                gc_state.mark_haste_shard,
+                gc_state.mark_haste_cursor.as_ref(),
+                work,
+            );
+            if haste_modules.is_empty() {
+                gc_state.mark_haste_shard += 1;
+                gc_state.mark_haste_cursor = None;
+                work -= 1;
+            } else {
+                let used = haste_modules.len();
+                gc_state.mark_haste_cursor = if done {
+                    None
+                } else {
+                    haste_modules.last().map(Dupe::dupe)
+                };
+                gc_state.haste_modules.extend(haste_modules);
+                if done {
+                    gc_state.mark_haste_shard += 1;
+                }
+                work -= used;
+            }
+        }
+        if gc_state.mark_file_shard == GC_MAP_SHARDS && gc_state.mark_haste_shard == GC_MAP_SHARDS {
             gc_state.phase = GcPhase::Sweep;
         }
-        work - used
+        work
     }
 
     fn file_entry_is_free(file_entry: &FileEntry) -> bool {
@@ -1336,7 +1397,6 @@ impl SharedMem {
                 gc_state.free_size = gc_state.free_size.saturating_add(1);
                 gc_state.free_files.push(file.dupe());
             }
-            self.compact_parse(&file);
             gc_state.sweep_file_index += 1;
             work -= 1;
         }
@@ -1358,7 +1418,6 @@ impl SharedMem {
             gc_state.phase = GcPhase::Idle;
             gc_state.files.clear();
             gc_state.haste_modules.clear();
-            gc_state.mark_index = 0;
             gc_state.sweep_file_index = 0;
             gc_state.sweep_haste_index = 0;
         }
@@ -1384,17 +1443,12 @@ impl SharedMem {
             let mut gc_state = self.gc_state.lock();
             gc_state.free_size = 0;
             gc_state.new_alloc_size = 0;
-            gc_state.scanned_size = self.heap_size().max(0) as usize;
             gc_state.free_files.clear();
             gc_state.free_haste_modules.clear();
         }
         if let Some(finish_compaction) = finish_compaction {
             finish_compaction();
         }
-    }
-
-    pub fn compact_parse(&self, file: &FileKey) {
-        self.reader_cache.remove(file);
     }
 
     // Perform an incremental "slice" of GC work. The caller can control the amount
@@ -1417,7 +1471,7 @@ impl SharedMem {
                         work = 0;
                     }
                 }
-                GcPhase::Mark => work = Self::mark_slice(&mut gc_state, work),
+                GcPhase::Mark => work = self.mark_slice(&mut gc_state, work),
                 GcPhase::Sweep => {
                     Self::sweep_slice(self, &mut gc_state, work);
                     work = 0;
@@ -1468,7 +1522,7 @@ impl SharedMem {
             if gc_state.phase != GcPhase::Mark {
                 break;
             }
-            Self::mark_slice(&mut gc_state, usize::MAX);
+            self.mark_slice(&mut gc_state, usize::MAX);
         }
         loop {
             let mut gc_state = self.gc_state.lock();
@@ -1565,7 +1619,7 @@ mod tests {
         {
             let mut gc_state = shared_mem.gc_state.lock();
             shared_mem.start_cycle(&mut gc_state);
-            SharedMem::mark_slice(&mut gc_state, usize::MAX);
+            shared_mem.mark_slice(&mut gc_state, usize::MAX);
             SharedMem::sweep_slice(&shared_mem, &mut gc_state, usize::MAX);
         }
 
@@ -1594,7 +1648,14 @@ mod tests {
         shared_mem.add_unparsed(file, 1, None);
 
         assert!(!shared_mem.collect_slice(1));
-        assert_eq!(shared_mem.gc_state.lock().phase, GcPhase::Sweep);
+        assert_eq!(shared_mem.gc_state.lock().phase, GcPhase::Mark);
+        for _ in 0..(GC_MAP_SHARDS * 2) {
+            if shared_mem.gc_state.lock().phase == GcPhase::Sweep {
+                return;
+            }
+            assert!(!shared_mem.collect_slice(1));
+        }
+        panic!("GC should reach sweep phase after incremental mark slices");
     }
 }
 

@@ -2998,7 +2998,7 @@ pub(crate) fn get_file_from_filename_or_stdin(
                 Some("") | None => None,
                 Some(path) => Some(get_path_of_file(path)),
             };
-            FileInput::FileContent(filename, content)
+            FileInput::FileContent(filename, content.into())
         }
     }
 }
@@ -3058,13 +3058,8 @@ fn connect_and_make_request_inner(
         stream: &mut std::net::TcpStream,
         cmd: &server_prot::request::Command,
     ) -> Result<(), bincode::error::EncodeError> {
-        let logging_context = flow_event_logger::get_context();
-        let client_logging_context = flow_monitor_rpc::lsp_prot::LoggingContext {
-            from: logging_context.from,
-            agent_id: logging_context.agent_id,
-        };
         let command = flow_monitor_rpc::server_command_with_context::ServerCommandWithContext {
-            client_logging_context,
+            client_logging_context: flow_event_logger::get_context(),
             command: cmd.clone(),
         };
         flow_parser::loc::with_full_source_serde(|| {

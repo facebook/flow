@@ -17,10 +17,11 @@
 // behaviour: messages are read and timestamped as soon as they arrive and
 // surfaced to the main loop through an `mpsc` channel.
 
-use std::sync::mpsc::Receiver;
-use std::sync::mpsc::RecvTimeoutError;
 use std::time::Duration;
 
+use crossbeam::channel::Receiver;
+use crossbeam::channel::RecvTimeoutError;
+use crossbeam::channel::TryRecvError;
 use flow_server_env::lsp_prot::LspId;
 use lsp_types::NumberOrString;
 
@@ -144,7 +145,7 @@ pub struct JsonrpcQueue {
 
 impl JsonrpcQueue {
     pub fn new() -> Self {
-        let (sender, receiver) = std::sync::mpsc::channel();
+        let (sender, receiver) = crossbeam::channel::unbounded();
         std::thread::spawn(move || {
             use std::io::BufRead;
             use std::io::Read;
@@ -240,6 +241,19 @@ impl JsonrpcQueue {
         }
     }
 
+    pub fn try_get_message(&self) -> Option<Result<JsonrpcMessage, FlowLspError>> {
+        match self.receiver.try_recv() {
+            Ok(result) => Some(result),
+            Err(TryRecvError::Empty) => None,
+            Err(TryRecvError::Disconnected) => Some(Err(
+                FlowLspError::ClientFatalConnectionException(RemoteExceptionData {
+                    message: "End_of_file".to_string(),
+                    stack: String::new(),
+                }),
+            )),
+        }
+    }
+
     pub fn get_message_timeout(
         &self,
         timeout: Duration,
@@ -254,6 +268,10 @@ impl JsonrpcQueue {
                 }),
             )),
         }
+    }
+
+    pub fn receiver(&self) -> &Receiver<Result<JsonrpcMessage, FlowLspError>> {
+        &self.receiver
     }
 }
 

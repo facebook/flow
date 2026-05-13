@@ -3133,9 +3133,12 @@ fn with_type_checked_file<T>(
         }
     };
     match file_artifacts {
-        Ok((ParseArtifacts { ast, file_sig, .. }, TypecheckArtifacts { cx, typed_ast, .. })) => {
-            f(&cx, &file_sig, &ast, &typed_ast)
-        }
+        Ok((parse_artifacts, typecheck_artifacts)) => f(
+            &typecheck_artifacts.cx,
+            &parse_artifacts.file_sig,
+            &parse_artifacts.ast,
+            &typecheck_artifacts.typed_ast,
+        ),
         _ => Err("Failed to parse or check file".to_string()),
     }
 }

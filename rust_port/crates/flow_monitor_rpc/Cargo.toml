@@ -10,6 +10,7 @@ dupe = "0.9.1"
 flow_common = { path = "../flow_common" }
 flow_common_errors = { path = "../flow_common_errors" }
 flow_common_exit_status = { path = "../flow_common_exit_status" }
+flow_event_logger = { path = "../flow_event_logger" }
 flow_lsp = { path = "../flow_lsp" }
 flow_parser = { path = "../flow_parser" }
 flow_parser_utils_output = { path = "../flow_parser_utils_output" }

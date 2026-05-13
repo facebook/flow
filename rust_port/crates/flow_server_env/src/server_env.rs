@@ -8,6 +8,7 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
+use std::sync::RwLock;
 
 use flow_common::options::Options;
 use flow_common_utils::checked_set::CheckedSet;
@@ -29,11 +30,24 @@ use crate::persistent_connection::PersistentConnection;
 
 // The "static" environment, initialized first and then unchanged.
 
+pub type NodeModulesContainers = BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>;
+pub type LiveNodeModulesContainers = Arc<RwLock<NodeModulesContainers>>;
+
 pub struct Genv {
     pub options: Arc<Options>,
     pub workers: Option<ThreadPool>,
     pub shared_mem: Arc<SharedMem>,
-    pub node_modules_containers: Arc<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>,
+    pub node_modules_containers: Arc<NodeModulesContainers>,
+    pub live_node_modules_containers: Option<LiveNodeModulesContainers>,
+}
+
+impl Genv {
+    pub fn node_modules_containers_snapshot(&self) -> Arc<NodeModulesContainers> {
+        match self.live_node_modules_containers {
+            Some(ref live) => Arc::new(live.read().unwrap().clone()),
+            None => self.node_modules_containers.clone(),
+        }
+    }
 }
 
 // The environment constantly maintained by the server.

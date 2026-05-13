@@ -6,12 +6,15 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
+crossbeam = "0.8"
 dupe = "0.9.1"
 flow_commands_connect = { path = "../flow_commands_connect" }
 flow_common = { path = "../flow_common" }
 flow_common_exit_status = { path = "../flow_common_exit_status" }
 flow_common_semver = { path = "../flow_common_semver" }
 flow_config = { path = "../flow_config" }
+flow_event_logger = { path = "../flow_event_logger" }
+flow_event_logger_lwt = { path = "../flow_event_logger_lwt" }
 flow_flowlib = { path = "../flow_flowlib" }
 flow_interaction_logger = { path = "../flow_interaction_logger" }
 flow_lsp = { path = "../flow_lsp" }
@@ -19,7 +22,9 @@ flow_parser = { path = "../flow_parser" }
 flow_server_env = { path = "../flow_server_env" }
 flow_server_files = { path = "../flow_server_files" }
 flow_server_utils = { path = "../flow_server_utils" }
+flow_tokio_runtime = { path = "../flow_tokio_runtime" }
 lsp-types = "0.94.1"
 regex = "1.12.3"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+tokio = { version = "1.52.1", features = ["full", "test-util", "tracing"] }

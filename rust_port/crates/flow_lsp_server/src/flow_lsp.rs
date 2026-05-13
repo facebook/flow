@@ -13,9 +13,10 @@ use std::io::Write as _;
 use std::net::Shutdown;
 use std::net::TcpStream;
 use std::sync::Mutex;
-use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
+use crossbeam::channel::Receiver;
+use crossbeam::channel::TryRecvError;
 use flow_common_exit_status::FlowExitStatus;
 
 pub type FilePath = std::path::PathBuf;
@@ -490,7 +491,8 @@ fn classify_persistent_connect(
     let reader_stream = stream
         .try_clone()
         .map_err(|_| ConnectError::ServerBusy(ServerBusyKind::NotResponding))?;
-    let (sender, receiver) = std::sync::mpsc::channel::<io::Result<lsp_prot::MessageFromServer>>();
+    let (sender, receiver) =
+        crossbeam::channel::unbounded::<io::Result<lsp_prot::MessageFromServer>>();
     std::thread::Builder::new()
         .name("flow_lsp_persistent_reader".to_string())
         .spawn(move || {
@@ -738,116 +740,41 @@ pub fn file_options_of_flowconfig(root: &FilePath, flowconfig: &FlowConfig) -> F
     }
 }
 
-pub mod flow_event_logger {
-    fn emit(event_name: &str, fields: serde_json::Value) {
-        eprintln!(
-            "{}",
-            serde_json::json!({
-                "event_name": event_name,
-                "fields": fields,
-            })
-        );
+fn flow_event_logger_persistent_context(
+    metadata: &Metadata,
+) -> flow_event_logger::PersistentContext {
+    flow_event_logger::PersistentContext {
+        start_lsp_state: metadata.start_lsp_state.clone(),
+        start_lsp_state_reason: metadata.start_lsp_state_reason.clone(),
+        start_server_status: metadata
+            .start_server_status
+            .as_ref()
+            .map(|status| server_status::string_of_status(false, true, status)),
+        start_watcher_status: metadata
+            .start_watcher_status
+            .as_ref()
+            .map(file_watcher_status::string_of_status),
     }
+}
 
-    pub fn live_non_parse_errors(request: &str, data: &str, wall_start: f64) {
-        emit(
-            "LIVE_NON_PARSE_ERRORS",
-            serde_json::json!({
-                "request": request,
-                "data": data,
-                "wall_start": wall_start,
-            }),
-        );
-    }
-
-    pub fn live_non_parse_errors_failed(request: &str, data: &str, wall_start: f64) {
-        emit(
-            "LIVE_NON_PARSE_ERRORS_FAILED",
-            serde_json::json!({
-                "request": request,
-                "data": data,
-                "wall_start": wall_start,
-            }),
-        );
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn persistent_command_success(
-        metadata: &super::Metadata,
-        request: &str,
-        request_id: Option<&str>,
-        persistent_delay: Option<&super::PersistentDelay>,
-        error: Option<(&str, &str)>,
-    ) {
-        emit(
-            "PERSISTENT_COMMAND_SUCCESS",
-            serde_json::json!({
-                "request": request,
-                "request_id": request_id.unwrap_or(""),
-                "method_name": metadata.lsp_method_name,
-                "extra_data": metadata.extra_data,
-                "server_profiling": metadata.server_profiling,
-                "client_duration": metadata.client_duration,
-                "server_logging_context": metadata.server_logging_context,
-                "persistent_delay": persistent_delay,
-                "activity_key": metadata.activity_key,
-                "error": error,
-                "wall_start": metadata.start_wall_time,
-            }),
-        );
-    }
-
-    pub fn persistent_command_failure(
-        metadata: &super::Metadata,
-        request: &str,
-        persistent_delay: Option<&super::PersistentDelay>,
-        error: (&str, &str),
-    ) {
-        emit(
-            "PERSISTENT_COMMAND_FAILURE",
-            serde_json::json!({
-                "request": request,
-                "method_name": metadata.lsp_method_name,
-                "extra_data": metadata.extra_data,
-                "server_profiling": metadata.server_profiling,
-                "client_duration": metadata.client_duration,
-                "server_logging_context": metadata.server_logging_context,
-                "persistent_delay": persistent_delay,
-                "activity_key": metadata.activity_key,
-                "error": error,
-                "wall_start": metadata.start_wall_time,
-            }),
-        );
-    }
-
-    pub fn persistent_expected_error(
-        request: Option<&str>,
-        activity_key: Option<&serde_json::Value>,
-        error: (&str, &str),
-    ) {
-        emit(
-            "PERSISTENT_EXPECTED_ERROR",
-            serde_json::json!({
-                "request": request.unwrap_or(""),
-                "activity_key": activity_key,
-                "error": error,
-            }),
-        );
-    }
-
-    pub fn persistent_unexpected_error(
-        request: Option<&str>,
-        activity_key: Option<&serde_json::Value>,
-        error: (&str, &str),
-    ) {
-        emit(
-            "PERSISTENT_UNEXPECTED_ERROR",
-            serde_json::json!({
-                "request": request.unwrap_or(""),
-                "activity_key": activity_key,
-                "error": error,
-            }),
-        );
+fn flow_event_logger_persistent_delay(
+    persistent_delay: &PersistentDelay,
+) -> flow_event_logger::PersistentDelay {
+    flow_event_logger::PersistentDelay {
+        init_duration: persistent_delay.init_duration,
+        command_count: persistent_delay.command_count,
+        command_duration: persistent_delay.command_duration,
+        command_worst: persistent_delay.command_worst.clone(),
+        command_worst_duration: persistent_delay.command_worst_duration,
+        recheck_count: persistent_delay.recheck_count,
+        recheck_dependent_files: persistent_delay.recheck_dependent_files,
+        recheck_changed_files: persistent_delay.recheck_changed_files,
+        recheck_duration: persistent_delay.recheck_duration,
+        recheck_worst_duration: persistent_delay.recheck_worst_duration,
+        recheck_worst_dependent_file_count: persistent_delay.recheck_worst_dependent_file_count,
+        recheck_worst_changed_file_count: persistent_delay.recheck_worst_changed_file_count,
+        recheck_worst_cycle_leader: persistent_delay.recheck_worst_cycle_leader.clone(),
+        recheck_worst_cycle_size: persistent_delay.recheck_worst_cycle_size,
     }
 }
 
@@ -920,7 +847,26 @@ pub fn lsp_interaction_init() {
     crate::lsp_interaction::init();
 }
 
-pub fn log_flusher_run() {}
+pub fn log_flusher_run() {
+    std::thread::Builder::new()
+        .name("flow_lsp_log_flusher".to_string())
+        .spawn(|| {
+            loop {
+                std::thread::sleep(Duration::from_secs(5));
+                let event_logger_result = flow_tokio_runtime::block_on(async {
+                    let event_logger_flush = flow_event_logger_lwt::flush();
+                    let interaction_flush = crate::lsp_interaction::flush();
+                    let (event_logger_result, ()) =
+                        tokio::join!(event_logger_flush, interaction_flush);
+                    event_logger_result
+                });
+                if let Err(err) = event_logger_result {
+                    eprintln!("Failed to flush Flow event logs: {}", err);
+                }
+            }
+        })
+        .expect("failed to spawn LSP log flusher");
+}
 
 pub fn command_utils_check_version(required_version: &Option<String>) -> Result<(), String> {
     match required_version {
@@ -1283,21 +1229,34 @@ fn get_next_event_from_server(
     let incoming = cenv.c_conn.incoming.lock().unwrap();
     match incoming.try_recv() {
         Ok(Ok(message)) => Ok(Some(Event::ServerMessage(message))),
-        Ok(Err(err)) => {
-            let msg = match err.kind() {
-                std::io::ErrorKind::UnexpectedEof
-                | std::io::ErrorKind::ConnectionReset
-                | std::io::ErrorKind::ConnectionAborted
-                | std::io::ErrorKind::BrokenPipe => "End_of_file".to_string(),
-                _ => err.to_string(),
-            };
-            Err(server_fatal_connection_exception(msg))
-        }
-        Err(std::sync::mpsc::TryRecvError::Empty) => Ok(None),
-        Err(std::sync::mpsc::TryRecvError::Disconnected) => Err(server_fatal_connection_exception(
+        Ok(Err(err)) => Err(server_reader_error(err)),
+        Err(TryRecvError::Empty) => Ok(None),
+        Err(TryRecvError::Disconnected) => Err(server_fatal_connection_exception(
             "Server connection reader thread exited".to_string(),
         )),
     }
+}
+
+fn server_reader_error(err: std::io::Error) -> FlowLspError {
+    let msg = match err.kind() {
+        std::io::ErrorKind::UnexpectedEof
+        | std::io::ErrorKind::ConnectionReset
+        | std::io::ErrorKind::ConnectionAborted
+        | std::io::ErrorKind::BrokenPipe => "End_of_file".to_string(),
+        _ => err.to_string(),
+    };
+    server_fatal_connection_exception(msg)
+}
+
+fn event_from_client_message(
+    state: &State,
+    message: JsonrpcMessage,
+    parser: &dyn Fn(&JsonrpcMessage) -> Result<lsp_prot::LspMessage, FlowLspError>,
+) -> Result<Event, FlowLspError> {
+    let lsp_message =
+        parser(&message).map_err(|error| annotate_request_parse_error(&message, error))?;
+    let metadata = new_metadata(state, &message);
+    Ok(Event::ClientMessage(lsp_message, metadata))
 }
 
 #[allow(dead_code)]
@@ -1307,41 +1266,70 @@ async fn get_next_event_from_client(
     parser: &dyn Fn(&JsonrpcMessage) -> Result<lsp_prot::LspMessage, FlowLspError>,
 ) -> Result<Event, FlowLspError> {
     let message = client.get_message()?;
-    let lsp_message =
-        parser(&message).map_err(|error| annotate_request_parse_error(&message, error))?;
-    let metadata = new_metadata(state, &message);
-    Ok(Event::ClientMessage(lsp_message, metadata))
+    event_from_client_message(state, message, parser)
 }
 
 fn get_next_event_sync(
-    flowconfig_name: &str,
+    _flowconfig_name: &str,
     state: &State,
     client: &JsonrpcQueue,
     parser: &dyn Fn(&JsonrpcMessage) -> Result<lsp_prot::LspMessage, FlowLspError>,
 ) -> Result<Event, FlowLspError> {
     let tick_deadline = std::time::Instant::now() + Duration::from_secs(1);
-    loop {
-        if let State::Initialized(ServerState::Connected(cenv)) = state {
-            if let Some(event) = get_next_event_from_server(flowconfig_name, cenv)? {
-                return Ok(event);
-            }
-        }
+    if let Some(message) = client.try_get_message() {
+        return event_from_client_message(state, message?, parser);
+    }
 
-        let now = std::time::Instant::now();
-        if now >= tick_deadline {
-            return Ok(Event::Tick);
+    let server_receiver = match state {
+        State::Initialized(ServerState::Connected(cenv)) => {
+            Some(cenv.c_conn.incoming.lock().unwrap().clone())
         }
-        let timeout = std::cmp::min(Duration::from_millis(50), tick_deadline - now);
-        match client.get_message_timeout(timeout) {
-            Some(Ok(message)) => {
-                let lsp_message = parser(&message)
-                    .map_err(|error| annotate_request_parse_error(&message, error))?;
-                let metadata = new_metadata(state, &message);
-                return Ok(Event::ClientMessage(lsp_message, metadata));
+        _ => None,
+    };
+
+    let now = std::time::Instant::now();
+    if now >= tick_deadline {
+        return Ok(Event::Tick);
+    }
+    let timeout = tick_deadline - now;
+
+    match server_receiver {
+        Some(server_receiver) => {
+            // OCaml selects the raw client/server file descriptors. The Rust port
+            // reads both descriptors on background threads, so a server status burst
+            // can keep the server channel ready after the raw socket would already
+            // have yielded back to the event loop. Prefer queued client work here so
+            // LSP requests and $/cancelRequest notifications are not starved behind
+            // queued PleaseHold/status notifications.
+            let mut select = crossbeam::channel::Select::new_biased();
+            let client_oper = select.recv(client.receiver());
+            let server_oper = select.recv(&server_receiver);
+            match select.select_timeout(timeout) {
+                Ok(oper) if oper.index() == client_oper => match oper.recv(client.receiver()) {
+                    Ok(message) => event_from_client_message(state, message?, parser),
+                    Err(_) => Err(FlowLspError::ClientFatalConnectionException(
+                        RemoteExceptionData {
+                            message: "End_of_file".to_string(),
+                            stack: String::new(),
+                        },
+                    )),
+                },
+                Ok(oper) if oper.index() == server_oper => match oper.recv(&server_receiver) {
+                    Ok(Ok(message)) => Ok(Event::ServerMessage(message)),
+                    Ok(Err(err)) => Err(server_reader_error(err)),
+                    Err(_) => Err(server_fatal_connection_exception(
+                        "Server connection reader thread exited".to_string(),
+                    )),
+                },
+                Ok(_) => unreachable!("unexpected LSP select operation"),
+                Err(_) => Ok(Event::Tick),
             }
-            Some(Err(e)) => return Err(e),
-            None => {}
         }
+        None => match client.get_message_timeout(timeout) {
+            Some(Ok(message)) => event_from_client_message(state, message, parser),
+            Some(Err(e)) => Err(e),
+            None => Ok(Event::Tick),
+        },
     }
 }
 
@@ -2155,7 +2143,10 @@ fn lsp_document_item_to_flow(
     let uri = &open_doc.uri;
     let fn_ = lsp_helpers::lsp_uri_to_path(uri).map_err(FlowLspError::LspException)?;
     let fn_ = sys_utils_realpath(&fn_).unwrap_or(fn_);
-    Ok(FileInput::FileContent(Some(fn_), open_doc.text.clone()))
+    Ok(FileInput::FileContent(
+        Some(fn_),
+        open_doc.text.clone().into(),
+    ))
 }
 
 fn diagnostic_of_parse_error(
@@ -2962,6 +2953,7 @@ async fn main_loop(flowconfig_name: &str, client: &JsonrpcQueue, state: State) {
 
 fn main_loop_sync(flowconfig_name: &str, client: &JsonrpcQueue, mut state: State) {
     loop {
+        std::thread::yield_now();
         gc_pending_interactions(&state);
 
         state = match get_next_event_sync(flowconfig_name, &state, client, &|message| {
@@ -3706,18 +3698,31 @@ fn main_handle_unsafe(
 
 fn main_log_command(_state: &State, metadata: &Metadata) {
     let request = serde_json::to_string(&metadata.start_json_truncated).unwrap_or_default();
-    let request_id = metadata.lsp_id.as_ref().map(lsp_fmt::id_to_string);
+    let request_id = metadata
+        .lsp_id
+        .as_ref()
+        .map(lsp_fmt::id_to_string)
+        .unwrap_or_else(|| "notif".to_string());
+    let client_context = flow_event_logger::get_context();
+    let persistent_context = flow_event_logger_persistent_context(metadata);
     let persistent_delay = match _state {
         State::Initialized(ServerState::Connected(cenv)) => {
             let delays: Vec<_> = cenv
                 .c_recent_summaries
                 .iter()
-                .map(|(_, summary)| summary.clone())
+                .filter_map(|(time, summary)| {
+                    if *time > metadata.start_wall_time {
+                        Some(summary.clone())
+                    } else {
+                        None
+                    }
+                })
                 .collect();
             if delays.is_empty() {
                 None
             } else {
-                Some(log_of_summaries(&cenv.c_ienv.i_root, &delays))
+                let persistent_delay = log_of_summaries(&cenv.c_ienv.i_root, &delays);
+                Some(flow_event_logger_persistent_delay(&persistent_delay))
             }
         }
         State::PreInit(_)
@@ -3727,34 +3732,60 @@ fn main_log_command(_state: &State, metadata: &Metadata) {
     match &metadata.error_info {
         None => {
             flow_event_logger::persistent_command_success(
-                metadata,
+                metadata.server_logging_context.as_ref(),
+                &request_id,
+                &metadata.lsp_method_name,
                 &request,
-                request_id.as_deref(),
+                metadata.extra_data.as_slice(),
+                &client_context,
+                Some(&persistent_context),
                 persistent_delay.as_ref(),
+                metadata.server_profiling.as_ref(),
+                metadata.client_duration,
+                metadata.start_wall_time,
+                metadata.activity_key.as_ref(),
                 None,
             );
         }
         Some((lsp_prot::ErrorKind::ExpectedError, msg, stack)) => {
+            let error = (msg.clone(), stack.clone());
             flow_event_logger::persistent_command_success(
-                metadata,
+                metadata.server_logging_context.as_ref(),
+                &request_id,
+                &metadata.lsp_method_name,
                 &request,
-                request_id.as_deref(),
+                metadata.extra_data.as_slice(),
+                &client_context,
+                Some(&persistent_context),
                 persistent_delay.as_ref(),
-                Some((msg.as_str(), stack.as_str())),
+                metadata.server_profiling.as_ref(),
+                metadata.client_duration,
+                metadata.start_wall_time,
+                metadata.activity_key.as_ref(),
+                Some(&error),
             );
         }
         Some((lsp_prot::ErrorKind::UnexpectedError, msg, stack)) => {
+            let error = (msg.clone(), stack.clone());
             flow_event_logger::persistent_command_failure(
-                metadata,
+                metadata.server_logging_context.as_ref(),
                 &request,
+                metadata.extra_data.as_slice(),
+                &client_context,
+                Some(&persistent_context),
                 persistent_delay.as_ref(),
-                (msg.as_str(), stack.as_str()),
+                metadata.server_profiling.as_ref(),
+                metadata.client_duration,
+                metadata.start_wall_time,
+                metadata.activity_key.as_ref(),
+                &error,
             );
         }
     }
 }
 
 fn main_log_error(expected: bool, msg: &str, stack: &str, event: Option<&Event>) {
+    let client_context = flow_event_logger::get_context();
     let (request, activity_key) = match event {
         Some(Event::ClientMessage(_, metadata)) => (
             Some(serde_json::to_string(&metadata.start_json_truncated).unwrap_or_default()),
@@ -3762,17 +3793,20 @@ fn main_log_error(expected: bool, msg: &str, stack: &str, event: Option<&Event>)
         ),
         Some(Event::ServerMessage(_)) | Some(Event::Tick) | None => (None, None),
     };
+    let error = (msg.to_string(), stack.to_string());
     if expected {
         flow_event_logger::persistent_expected_error(
             request.as_deref(),
+            &client_context,
             activity_key,
-            (msg, stack),
+            &error,
         );
     } else {
         flow_event_logger::persistent_unexpected_error(
             request.as_deref(),
+            &client_context,
             activity_key,
-            (msg, stack),
+            &error,
         );
     }
 }

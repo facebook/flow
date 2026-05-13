@@ -6,6 +6,7 @@
  */
 
 use std::collections::BTreeSet;
+use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -460,7 +461,7 @@ pub fn type_parse_artifacts(
                 }
             };
             Ok((
-                ParseArtifacts {
+                Rc::new(ParseArtifacts {
                     docblock,
                     docblock_errors,
                     ast,
@@ -468,12 +469,12 @@ pub fn type_parse_artifacts(
                     file_sig,
                     tolerable_errors,
                     parse_errors,
-                },
-                TypecheckArtifacts {
+                }),
+                Rc::new(TypecheckArtifacts {
                     cx,
                     typed_ast,
                     obj_to_obj_map,
-                },
+                }),
             ))
         }
         (None, errs) => Err(TypeContentsError::Errors(errs)),

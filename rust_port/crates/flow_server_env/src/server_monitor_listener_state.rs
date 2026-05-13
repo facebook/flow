@@ -37,23 +37,15 @@ static ENV_UPDATE_NOTIFY: std::sync::LazyLock<(Sender<()>, Receiver<()>)> =
     std::sync::LazyLock::new(crossbeam::channel::unbounded);
 static RECHECK_NOTIFY: std::sync::LazyLock<(Sender<()>, Receiver<()>)> =
     std::sync::LazyLock::new(crossbeam::channel::unbounded);
-static WORKLOAD_ASYNC_NOTIFY: std::sync::LazyLock<tokio::sync::Notify> =
-    std::sync::LazyLock::new(tokio::sync::Notify::new);
-static ENV_UPDATE_ASYNC_NOTIFY: std::sync::LazyLock<tokio::sync::Notify> =
-    std::sync::LazyLock::new(tokio::sync::Notify::new);
-static RECHECK_ASYNC_NOTIFY: std::sync::LazyLock<tokio::sync::Notify> =
-    std::sync::LazyLock::new(tokio::sync::Notify::new);
 
 pub fn push_new_workload(name: &str, workload: Workload) {
     WORKLOAD_STREAM.push(name, workload);
     WORKLOAD_NOTIFY.0.send(()).unwrap();
-    WORKLOAD_ASYNC_NOTIFY.notify_one();
 }
 
 pub fn push_new_parallelizable_workload(name: &str, workload: ParallelizableWorkload) {
     WORKLOAD_STREAM.push_parallelizable(name, workload);
     WORKLOAD_NOTIFY.0.send(()).unwrap();
-    WORKLOAD_ASYNC_NOTIFY.notify_one();
 }
 
 static DEFERRED_PARALLELIZABLE_WORKLOADS: Mutex<Vec<(String, ParallelizableWorkload)>> =
@@ -73,7 +65,6 @@ pub fn requeue_deferred_parallelizable_workloads() {
         WORKLOAD_STREAM.requeue_parallelizable(&name, workload);
     }
     WORKLOAD_NOTIFY.0.send(()).unwrap();
-    WORKLOAD_ASYNC_NOTIFY.notify_one();
 }
 
 static ENV_UPDATE_STREAM: Mutex<Vec<EnvUpdate>> = Mutex::new(Vec::new());
@@ -81,7 +72,6 @@ static ENV_UPDATE_STREAM: Mutex<Vec<EnvUpdate>> = Mutex::new(Vec::new());
 pub fn push_new_env_update(env_update: EnvUpdate) {
     ENV_UPDATE_STREAM.lock().unwrap().push(env_update);
     ENV_UPDATE_NOTIFY.0.send(()).unwrap();
-    ENV_UPDATE_ASYNC_NOTIFY.notify_one();
 }
 
 // Outstanding cancellation requests are lodged here as soon as they arrive
@@ -95,9 +85,24 @@ pub fn push_new_env_update(env_update: EnvUpdate) {
 // Observe that our cancellation handling is best-effort only... we won't
 // cancel something already underway, and we might start something even while
 // the cancellation request is queued up somewhere between monitor and server.
-static CANCELLATION_REQUESTS: Mutex<BTreeSet<String>> = Mutex::new(BTreeSet::new());
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub enum CancellationRequestId {
+    Number(i32),
+    String(String),
+}
 
-pub fn cancellation_requests() -> &'static Mutex<BTreeSet<String>> {
+impl From<&crate::lsp_prot::LspId> for CancellationRequestId {
+    fn from(id: &crate::lsp_prot::LspId) -> Self {
+        match id {
+            lsp_types::NumberOrString::Number(n) => Self::Number(*n),
+            lsp_types::NumberOrString::String(s) => Self::String(s.clone()),
+        }
+    }
+}
+
+static CANCELLATION_REQUESTS: Mutex<BTreeSet<CancellationRequestId>> = Mutex::new(BTreeSet::new());
+
+pub fn cancellation_requests() -> &'static Mutex<BTreeSet<CancellationRequestId>> {
     &CANCELLATION_REQUESTS
 }
 
@@ -155,7 +160,6 @@ fn push_recheck_msg_with_metadata(metadata: Option<FileWatcherMetadata>, files: 
         files,
     });
     RECHECK_NOTIFY.0.send(()).unwrap();
-    RECHECK_ASYNC_NOTIFY.notify_one();
     notify_recheck_push_subscribers();
 }
 
@@ -663,17 +667,52 @@ pub fn wake_workload_waiters() {
     WORKLOAD_STREAM.wake_waiters();
 }
 
+fn recheck_workload_counts() -> (usize, usize, usize) {
+    with_recheck_acc(|w| {
+        (
+            w.files_to_prioritize.len(),
+            w.files_to_recheck.len(),
+            w.files_to_force.cardinal(),
+        )
+    })
+}
+
+fn fetch_recheck_changes(
+    process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
+    get_forced: &dyn Fn() -> CheckedSet,
+    priority: Priority,
+) -> Option<WorkloadChanges> {
+    let before_len = recheck_workload_counts();
+    if recheck_fetch(process_updates, get_forced, priority) {
+        let after_len = recheck_workload_counts();
+        Some(WorkloadChanges {
+            num_files_to_prioritize: after_len.0 - before_len.0,
+            num_files_to_recheck: after_len.1 - before_len.1,
+            num_files_to_force: after_len.2 - before_len.2,
+        })
+    } else {
+        None
+    }
+}
+
 pub fn wait_for_updates_for_recheck(
     process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
     get_forced: &dyn Fn() -> CheckedSet,
     priority: Priority,
     stop: Option<&Receiver<()>>,
 ) -> Option<WorkloadChanges> {
+    let recheck_pushes = stop.map(|_| subscribe_recheck_pushes());
     loop {
+        if let Some(changes) = fetch_recheck_changes(process_updates, get_forced, priority) {
+            return Some(changes);
+        }
         match stop {
             Some(stop) => {
+                let recheck_pushes = recheck_pushes
+                    .as_ref()
+                    .expect("recheck push subscription should exist while stop is present");
                 crossbeam::channel::select! {
-                    recv(RECHECK_NOTIFY.1) -> result => {
+                    recv(recheck_pushes) -> result => {
                         if result.is_err() {
                             return None;
                         }
@@ -683,85 +722,43 @@ pub fn wait_for_updates_for_recheck(
             }
             None => wait_for_recheck(),
         }
-        let before_len = with_recheck_acc(|w| {
-            (
-                w.files_to_prioritize.len(),
-                w.files_to_recheck.len(),
-                w.files_to_force.cardinal(),
-            )
-        });
-        if recheck_fetch(process_updates, get_forced, priority) {
-            let after_len = with_recheck_acc(|w| {
-                (
-                    w.files_to_prioritize.len(),
-                    w.files_to_recheck.len(),
-                    w.files_to_force.cardinal(),
-                )
-            });
-            return Some(WorkloadChanges {
-                num_files_to_prioritize: after_len.0 - before_len.0,
-                num_files_to_recheck: after_len.1 - before_len.1,
-                num_files_to_force: after_len.2 - before_len.2,
-            });
-        }
+    }
+}
+
+fn wait_for_anything_blocking() {
+    crossbeam::channel::select! {
+        recv(WORKLOAD_NOTIFY.1) -> _ => {}
+        recv(ENV_UPDATE_NOTIFY.1) -> _ => {}
+        recv(RECHECK_NOTIFY.1) -> _ => {}
     }
 }
 
 /// Block until any stream receives something
 pub fn wait_for_anything(
-    process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
-    get_forced: &dyn Fn() -> CheckedSet,
+    _process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
+    _get_forced: &dyn Fn() -> CheckedSet,
 ) {
-    loop {
-        crossbeam::channel::select! {
-            recv(WORKLOAD_NOTIFY.1) -> _ => return,
-            recv(ENV_UPDATE_NOTIFY.1) -> _ => return,
-            recv(RECHECK_NOTIFY.1) -> _ => {
-                if recheck_fetch(process_updates, get_forced, Priority::Normal) {
-                    return;
-                }
-            }
-        }
-    }
+    wait_for_anything_blocking()
 }
 
-/// Cancellable Tokio equivalent of `wait_for_anything`.
-///
-/// The synchronous notification channels are still drained so the legacy
-/// blocking waiters do not see stale wakeups after this async waiter handles a
-/// message.
+/// Tokio wrapper for `wait_for_anything`.
 pub async fn wait_for_anything_async(
-    process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
-    get_forced: &dyn Fn() -> CheckedSet,
+    _process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
+    _get_forced: &dyn Fn() -> CheckedSet,
 ) {
-    let drain_notify = |receiver: &Receiver<()>| {
-        while receiver.try_recv().is_ok() {}
-    };
-
-    loop {
-        if WORKLOAD_STREAM.has_workload() {
-            drain_notify(&WORKLOAD_NOTIFY.1);
-            return;
-        }
-
-        if !ENV_UPDATE_STREAM.lock().unwrap().is_empty() {
-            drain_notify(&ENV_UPDATE_NOTIFY.1);
-            return;
-        }
-
-        if recheck_fetch(process_updates, get_forced, Priority::Normal) {
-            drain_notify(&RECHECK_NOTIFY.1);
-            return;
-        }
-
-        drain_notify(&WORKLOAD_NOTIFY.1);
-        drain_notify(&ENV_UPDATE_NOTIFY.1);
-        drain_notify(&RECHECK_NOTIFY.1);
-
-        tokio::select! {
-            _ = WORKLOAD_ASYNC_NOTIFY.notified() => {}
-            _ = ENV_UPDATE_ASYNC_NOTIFY.notified() => {}
-            _ = RECHECK_ASYNC_NOTIFY.notified() => {}
-        }
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    let waiter = std::thread::Builder::new()
+        .name("wait_for_anything".to_string())
+        .spawn(move || {
+            wait_for_anything_blocking();
+            let _ = sender.send(());
+        })
+        .expect("failed to spawn wait_for_anything thread");
+    match receiver.await {
+        Ok(()) => {}
+        Err(err) => panic!("wait_for_anything task failed: {}", err),
+    }
+    if let Err(err) = waiter.join() {
+        std::panic::resume_unwind(err);
     }
 }

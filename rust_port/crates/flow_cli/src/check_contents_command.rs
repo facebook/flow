@@ -114,9 +114,9 @@ fn main(args: &arg_spec::Values) {
         response => command_utils::failwith_bad_response(&request, &response),
     };
     let stdin_file = match &file {
-        FileInput::FileContent(None, contents) => Some((PathBuf::from("-"), contents.clone())),
+        FileInput::FileContent(None, contents) => Some((PathBuf::from("-"), contents.to_string())),
         FileInput::FileContent(Some(path), contents) => {
-            Some((PathBuf::from(path), contents.clone()))
+            Some((PathBuf::from(path), contents.to_string()))
         }
         _ => None,
     };

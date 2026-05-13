@@ -5,10 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::sync::Arc;
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum FileInput {
     FileName(String),
-    FileContent(Option<String>, String),
+    FileContent(Option<String>, Arc<str>),
 }
 
 impl FileInput {
@@ -32,13 +34,22 @@ impl FileInput {
         match self {
             FileInput::FileName(f) => std::fs::read_to_string(f)
                 .expect("content_of_file_input_unsafe: failed to read file"),
-            FileInput::FileContent(_, content) => content.clone(),
+            FileInput::FileContent(_, content) => content.to_string(),
         }
     }
 
     pub fn content_of_file_input(&self) -> Result<String, String> {
         match self {
             FileInput::FileName(f) => std::fs::read_to_string(f).map_err(|e| format!("{}", e)),
+            FileInput::FileContent(_, content) => Ok(content.to_string()),
+        }
+    }
+
+    pub fn content_of_file_input_arc(&self) -> Result<Arc<str>, String> {
+        match self {
+            FileInput::FileName(f) => std::fs::read_to_string(f)
+                .map(Arc::<str>::from)
+                .map_err(|e| format!("{}", e)),
             FileInput::FileContent(_, content) => Ok(content.clone()),
         }
     }

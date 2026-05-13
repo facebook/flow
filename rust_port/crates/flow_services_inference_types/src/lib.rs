@@ -7,6 +7,7 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use flow_aloc::ALoc;
@@ -45,7 +46,7 @@ pub struct TypecheckArtifacts<'cx> {
     pub obj_to_obj_map: BTreeMap<Loc, BTreeSet<properties::Id>>,
 }
 
-pub type FileArtifacts<'cx> = (ParseArtifacts, TypecheckArtifacts<'cx>);
+pub type FileArtifacts<'cx> = (Rc<ParseArtifacts>, Rc<TypecheckArtifacts<'cx>>);
 
 #[derive(Clone, Debug)]
 pub struct CheckedDependenciesCanceled;
@@ -56,7 +57,7 @@ pub enum TypeContentsError {
     CheckedDependenciesCanceled,
 }
 
-pub type AutocompleteArtifacts<'cx> = (String, ParseArtifacts, Context<'cx>);
+pub type AutocompleteArtifacts<'cx> = (Rc<str>, Rc<ParseArtifacts>, Rc<Context<'cx>>);
 
 pub type Duration = f64;
 

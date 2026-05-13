@@ -15,6 +15,7 @@ use std::sync::Arc;
 use std::sync::Condvar;
 use std::sync::Mutex;
 use std::sync::RwLock;
+use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
 
@@ -231,6 +232,7 @@ impl FlowServer {
             }),
             Condvar::new(),
         ));
+        let serial_workloads_allowed = Arc::new(AtomicBool::new(false));
 
         let canceled_state = state.clone();
         crate::multi_worker::set_report_canceled_callback(move |total, finished| {
@@ -268,6 +270,7 @@ impl FlowServer {
         let init_pool_workers = self.pool.num_workers();
         let init_lock_path = lock_path.clone();
         let init_socket_path = socket_path.clone();
+        let init_serial_workloads_allowed = serial_workloads_allowed.clone();
 
         let node_modules_containers: Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>> =
             Arc::new(RwLock::new(BTreeMap::new()));
@@ -334,6 +337,8 @@ impl FlowServer {
                         server_state.env_generation += 1;
                         server_state.init_done = true;
                         let (status, watcher_status) = current_persistent_status(&server_state);
+                        init_serial_workloads_allowed.store(true, Ordering::Release);
+                        server_monitor_listener_state::wake_workload_waiters();
                         cvar.notify_all();
                         persistent_connection::send_status(
                             status,
@@ -351,6 +356,7 @@ impl FlowServer {
                         &init_shared_mem,
                         init_pool_workers,
                         &init_nmc_ref,
+                        &init_serial_workloads_allowed,
                         &init_pids_path,
                         &init_lock_path,
                         &init_socket_path,
@@ -377,6 +383,7 @@ impl FlowServer {
         let workload_options = self.options.dupe();
         let workload_shared_mem = self.shared_mem.dupe();
         let workload_nmc = node_modules_containers.clone();
+        let workload_serial_workloads_allowed = serial_workloads_allowed.clone();
         std::thread::Builder::new()
             .stack_size(SERVER_THREAD_STACK_SIZE)
             .spawn(move || {
@@ -385,6 +392,7 @@ impl FlowServer {
                     &workload_options,
                     &workload_shared_mem,
                     &workload_nmc,
+                    &workload_serial_workloads_allowed,
                 );
             })
             .expect("failed to spawn persistent workload thread");
@@ -442,9 +450,64 @@ fn process_persistent_workloads(
     _options: &Arc<Options>,
     _shared_mem: &Arc<SharedMem>,
     _node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
+    serial_workloads_allowed: &Arc<AtomicBool>,
 ) -> ! {
     loop {
         server_monitor_listener_state::wait_for_workload();
+
+        let (run_serial, run_parallel, pending_recheck) = {
+            let (lock, cvar) = &**state;
+            let server_state = lock.lock().unwrap();
+            let server_state = cvar
+                .wait_while(server_state, |s| {
+                    (!s.init_done || s.env.is_none() || s.should_shutdown)
+                        && !serial_workloads_allowed.load(Ordering::Acquire)
+                })
+                .unwrap();
+            if server_state.should_shutdown {
+                flow_common_exit_status::exit(
+                    flow_common_exit_status::FlowExitStatus::KilledByMonitor,
+                );
+            }
+            (
+                server_state.init_done
+                    && server_state.env.is_some()
+                    && !server_state.pending_recheck
+                    && !server_state.recheck_in_progress,
+                server_state.init_done
+                    && server_state.env.is_some()
+                    && server_state.recheck_in_progress,
+                server_state.pending_recheck && !server_state.recheck_in_progress,
+            )
+        };
+
+        if !run_serial {
+            if pending_recheck || !run_parallel {
+                let (lock, cvar) = &**state;
+                let server_state = lock.lock().unwrap();
+                drop(cvar.wait_while(server_state, |s| {
+                    s.pending_recheck && !s.recheck_in_progress && !s.should_shutdown
+                }));
+                continue;
+            }
+            let env = {
+                let (lock, _) = &**state;
+                let server_state = lock.lock().unwrap();
+                server_state.env.clone()
+            };
+            if let Some(env) = env
+                && let Some(workload) =
+                    server_monitor_listener_state::pop_next_parallelizable_workload()
+            {
+                (workload.parallelizable_workload_handler)(&env);
+                continue;
+            }
+            server_monitor_listener_state::wait_for_parallelizable_workload_or_stop(
+                serial_workloads_allowed,
+            );
+            continue;
+        }
+
         let Some(workload) = server_monitor_listener_state::pop_next_workload() else {
             continue;
         };
@@ -758,6 +821,7 @@ fn process_pending_rechecks(
     shared_mem: &Arc<SharedMem>,
     pool_workers: usize,
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
+    serial_workloads_allowed: &Arc<AtomicBool>,
     pids_path: &str,
     lock_path: &str,
     socket_path: &str,
@@ -773,6 +837,8 @@ fn process_pending_rechecks(
 
             if !server_state.pending_recheck {
                 server_state.recheck_in_progress = false;
+                serial_workloads_allowed.store(true, Ordering::Release);
+                server_monitor_listener_state::wake_workload_waiters();
                 cvar.notify_all();
                 server_state = cvar
                     .wait_while(server_state, |s| !s.pending_recheck && !s.should_shutdown)
@@ -785,6 +851,8 @@ fn process_pending_rechecks(
 
             server_state.pending_recheck = false;
             server_state.recheck_in_progress = true;
+            serial_workloads_allowed.store(false, Ordering::Release);
+            server_monitor_listener_state::wake_workload_waiters();
         }
 
         let outcome = {
@@ -923,6 +991,7 @@ fn handle_persistent_request(
                 workers: None,
                 shared_mem: shared_mem.dupe(),
                 node_modules_containers: Arc::new(node_modules_containers.read().unwrap().clone()),
+                live_node_modules_containers: Some(node_modules_containers.clone()),
             });
             command_handler::enqueue_persistent(&genv, client_id, request);
             (ServerResponse::PersistentAck, false)
@@ -1090,6 +1159,7 @@ fn handle_connection(
                 workers: None,
                 shared_mem: shared_mem.dupe(),
                 node_modules_containers: Arc::new(node_modules_containers.read().unwrap().clone()),
+                live_node_modules_containers: Some(node_modules_containers.clone()),
             };
             let command = command.into_server_command();
             loop {

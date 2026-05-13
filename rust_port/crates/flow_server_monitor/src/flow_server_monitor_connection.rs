@@ -215,16 +215,12 @@ mod command_loop {
         Other(String),
     }
 
-    async fn main<P: ConnectionProcessor>(
+    fn main<P: ConnectionProcessor>(
         conn: &Arc<Connection<P>>,
         rx: &mut mpsc::UnboundedReceiver<Command<<P::Ch as Channel>::OutMessage>>,
     ) -> Result<(), LoopExn> {
-        let command = rx.recv().await.ok_or(LoopExn::StreamEmpty)?;
-        let conn_for_block = conn.clone();
-        let result = tokio::task::spawn_blocking(move || conn_for_block.handle_command(command))
-            .await
-            .map_err(|e| LoopExn::Other(format!("join error: {}", e)))?;
-        match result {
+        let command = rx.blocking_recv().ok_or(LoopExn::StreamEmpty)?;
+        match conn.handle_command(command) {
             Ok(()) => Ok(()),
             Err(e) => Err(LoopExn::Other(e.to_string())),
         }
@@ -244,13 +240,12 @@ mod command_loop {
         }
     }
 
-    pub(super) async fn run<P: ConnectionProcessor>(
+    pub(super) fn run<P: ConnectionProcessor>(
         conn: Arc<Connection<P>>,
         mut rx: mpsc::UnboundedReceiver<Command<<P::Ch as Channel>::OutMessage>>,
     ) {
         loop {
-            tokio::task::yield_now().await;
-            match main(&conn, &mut rx).await {
+            match main(&conn, &mut rx) {
                 Ok(()) => continue,
                 Err(e) => {
                     catch(&conn, e);
@@ -278,19 +273,9 @@ mod read_loop {
         }
     }
 
-    async fn main<P: ConnectionProcessor>(connection: &Arc<Connection<P>>) -> Result<(), LoopExn> {
-        let reader = connection.reader.clone();
-        let outcome_result = tokio::task::spawn_blocking(
-            move || -> io::Result<
-                ReadOutcome<<P::Ch as Channel>::InMessage, <P::Ch as Channel>::OutMessage>,
-            > {
-                let mut reader = reader.lock().unwrap();
-                P::Ch::read(&mut *reader)
-            },
-        )
-        .await
-        .map_err(|e| LoopExn::Other(format!("join error: {}", e)))?;
-        let outcome = outcome_result.map_err(|e| classify_io(&e))?;
+    fn main<P: ConnectionProcessor>(connection: &Arc<Connection<P>>) -> Result<(), LoopExn> {
+        let mut reader = connection.reader.lock().unwrap();
+        let outcome = P::Ch::read(&mut *reader).map_err(|e| classify_io(&e))?;
         match outcome {
             ReadOutcome::Message(msg) => {
                 (connection.on_read)(msg, connection);
@@ -324,10 +309,9 @@ mod read_loop {
         connection.close_immediately();
     }
 
-    pub(super) async fn run<P: ConnectionProcessor>(connection: Arc<Connection<P>>) {
+    pub(super) fn run<P: ConnectionProcessor>(connection: Arc<Connection<P>>) {
         loop {
-            tokio::task::yield_now().await;
-            match main(&connection).await {
+            match main(&connection) {
                 Ok(()) => continue,
                 Err(e) => {
                     catch(&connection, e);
@@ -383,7 +367,12 @@ impl<P: ConnectionProcessor> Connection<P> {
                 Some(rx) => rx,
                 None => return,
             };
-            command_loop::run(conn, rx).await;
+            let result = tokio::task::spawn_blocking(move || command_loop::run(conn, rx)).await;
+            match result {
+                Ok(()) => {}
+                Err(err) if err.is_panic() => std::panic::resume_unwind(err.into_panic()),
+                Err(err) => flow_hh_logger::error!("CommandLoop blocking task failed: {}", err),
+            }
         });
         *conn.command_thread.lock().unwrap() = Some(command_thread);
 
@@ -392,7 +381,12 @@ impl<P: ConnectionProcessor> Connection<P> {
                 Ok(c) => c,
                 Err(_) => return,
             };
-            read_loop::run(conn).await;
+            let result = tokio::task::spawn_blocking(move || read_loop::run(conn)).await;
+            match result {
+                Ok(()) => {}
+                Err(err) if err.is_panic() => std::panic::resume_unwind(err.into_panic()),
+                Err(err) => flow_hh_logger::error!("ReadLoop blocking task failed: {}", err),
+            }
         });
         *conn.read_thread.lock().unwrap() = Some(read_thread);
 

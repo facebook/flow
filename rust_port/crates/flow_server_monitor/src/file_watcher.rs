@@ -8,8 +8,8 @@
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::Condvar;
-use std::sync::Mutex;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use flow_common_vcs::git;
@@ -29,6 +29,37 @@ pub enum ExitReason {
     WatcherStopped,
     WatcherDied,
     WatcherMissedChanges,
+}
+
+pub struct ChangesCondition {
+    changed: AtomicBool,
+    notify: tokio::sync::Notify,
+}
+
+impl ChangesCondition {
+    fn new() -> Self {
+        Self {
+            changed: AtomicBool::new(false),
+            notify: tokio::sync::Notify::new(),
+        }
+    }
+
+    fn notify_changed(&self) {
+        self.changed.store(true, Ordering::Release);
+        self.notify.notify_waiters();
+    }
+
+    async fn wait(&self) {
+        loop {
+            let notified = self.notify.notified();
+            tokio::pin!(notified);
+            notified.as_mut().enable();
+            if self.changed.swap(false, Ordering::AcqRel) {
+                return;
+            }
+            notified.await;
+        }
+    }
 }
 
 // TODO - Push-based API for dfind. While the FileWatcher API is push based, dfind is faking it
@@ -226,7 +257,7 @@ pub mod watchman_file_watcher {
         pub instance: Arc<tokio::sync::Mutex<Option<flow_watchman::Env>>>,
         pub shared: Arc<std::sync::Mutex<EnvShared>>,
         pub listening_thread: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<ExitReason>>>>,
-        pub changes_condition: Arc<(std::sync::Mutex<bool>, Condvar)>,
+        pub changes_condition: Arc<ChangesCondition>,
         pub init_settings: flow_watchman::InitSettings,
     }
 
@@ -270,10 +301,7 @@ pub mod watchman_file_watcher {
         pub fn broadcast(env: &Env) {
             let shared = env.shared.lock().unwrap();
             if !shared.files.is_empty() || shared.metadata.missed_changes {
-                let (lock, cvar) = &*env.changes_condition;
-                let mut changed = lock.lock().unwrap();
-                *changed = true;
-                cvar.notify_all();
+                env.changes_condition.notify_changed();
             }
         }
 
@@ -586,7 +614,7 @@ pub mod watchman_file_watcher {
                         instance: Arc::new(tokio::sync::Mutex::new(Some(watchman))),
                         shared,
                         listening_thread: Arc::new(tokio::sync::Mutex::new(None)),
-                        changes_condition: Arc::new((std::sync::Mutex::new(false), Condvar::new())),
+                        changes_condition: Arc::new(ChangesCondition::new()),
                         init_settings,
                     });
                     let listen_env = new_env.clone();
@@ -618,17 +646,7 @@ pub mod watchman_file_watcher {
 
         async fn wait_for_changed_files(&self) {
             let env = self.get_env();
-            let cv = env.changes_condition.clone();
-            tokio::task::spawn_blocking(move || {
-                let (lock, cvar) = &*cv;
-                let mut changed = lock.lock().unwrap();
-                while !*changed {
-                    changed = cvar.wait(changed).unwrap();
-                }
-                *changed = false;
-            })
-            .await
-            .expect("spawn_blocking for wait_for_changed_files panicked");
+            env.changes_condition.wait().await;
         }
 
         async fn stop(&self) {
@@ -695,7 +713,7 @@ pub mod edenfs_file_watcher {
         pub notification_fd: std::os::raw::c_int,
         pub shared: Arc<std::sync::Mutex<EnvShared>>,
         pub listening_thread: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<ExitReason>>>>,
-        pub changes_condition: Arc<(Mutex<bool>, Condvar)>,
+        pub changes_condition: Arc<ChangesCondition>,
         pub root: PathBuf,
         pub mergebase_with: String,
     }
@@ -820,10 +838,7 @@ pub mod edenfs_file_watcher {
         pub fn broadcast(env: &Env) {
             let shared = env.shared.lock().unwrap();
             if !shared.files.is_empty() || shared.metadata.missed_changes {
-                let (lock, cvar) = &*env.changes_condition;
-                let mut changed = lock.lock().unwrap();
-                *changed = true;
-                cvar.notify_all();
+                env.changes_condition.notify_changed();
             }
         }
 
@@ -1184,7 +1199,7 @@ pub mod edenfs_file_watcher {
                         notification_fd,
                         shared,
                         listening_thread: Arc::new(tokio::sync::Mutex::new(None)),
-                        changes_condition: Arc::new((Mutex::new(false), Condvar::new())),
+                        changes_condition: Arc::new(ChangesCondition::new()),
                         root: self.root_path.clone(),
                         mergebase_with: self.mergebase_with.clone(),
                     });
@@ -1225,17 +1240,7 @@ pub mod edenfs_file_watcher {
 
         async fn wait_for_changed_files(&self) {
             let env = self.get_env();
-            let cv = env.changes_condition.clone();
-            tokio::task::spawn_blocking(move || {
-                let (lock, cvar) = &*cv;
-                let mut changed = lock.lock().unwrap();
-                while !*changed {
-                    changed = cvar.wait(changed).unwrap();
-                }
-                *changed = false;
-            })
-            .await
-            .expect("spawn_blocking for wait_for_changed_files panicked");
+            env.changes_condition.wait().await;
         }
 
         async fn stop(&self) {

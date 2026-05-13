@@ -83,6 +83,10 @@ pub enum RecheckError {
     Canceled(Vec<FileKey>),
 }
 
+fn check_recheck_canceled() -> Result<(), RecheckError> {
+    worker_cancel::check_should_cancel().map_err(|_| RecheckError::Canceled(Vec::new()))
+}
+
 fn with_memory_timer<T>(options: &Options, timer: &str, f: impl FnOnce() -> T) -> T {
     flow_profiling::memory_utils::with_memory_timer(options.profile && !options.quiet, timer, f)
 }
@@ -294,14 +298,18 @@ fn commit_modules(
     })
 }
 
-fn resolve_requires(
+fn resolve_requires_impl(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     parsed: &FlowOrdSet<FileKey>,
-) {
+    cancelable: bool,
+) -> Result<(), RecheckError> {
     with_memory_timer(options, "ResolveRequires", || {
+        if cancelable {
+            check_recheck_canceled()?;
+        }
         let parsed_files: Vec<FileKey> = parsed.iter().map(|f| f.dupe()).collect();
         let next = flow_utils_concurrency::map_reduce::make_next(
             pool.num_workers(),
@@ -314,6 +322,9 @@ fn resolve_requires(
         let node_modules_containers = node_modules_containers.dupe();
         flow_utils_concurrency::map_reduce::iter(pool, next, move |batch| {
             for file in batch {
+                if cancelable && worker_cancel::should_cancel() {
+                    return;
+                }
                 let Ok(()) = flow_services_module::add_parsed_resolved_requires(
                     &options_clone,
                     &shared_mem_clone,
@@ -324,7 +335,46 @@ fn resolve_requires(
                 };
             }
         });
+        if cancelable {
+            check_recheck_canceled()?;
+        }
+        Ok(())
     })
+}
+
+fn resolve_requires(
+    pool: &ThreadPool,
+    shared_mem: &Arc<SharedMem>,
+    options: &Arc<Options>,
+    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
+    parsed: &FlowOrdSet<FileKey>,
+) {
+    resolve_requires_impl(
+        pool,
+        shared_mem,
+        options,
+        node_modules_containers,
+        parsed,
+        false,
+    )
+    .expect("non-recheck resolve requires should not be canceled");
+}
+
+fn resolve_requires_for_recheck(
+    pool: &ThreadPool,
+    shared_mem: &Arc<SharedMem>,
+    options: &Arc<Options>,
+    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
+    parsed: &FlowOrdSet<FileKey>,
+) -> Result<(), RecheckError> {
+    resolve_requires_impl(
+        pool,
+        shared_mem,
+        options,
+        node_modules_containers,
+        parsed,
+        true,
+    )
 }
 
 fn error_set_of_internal_error(
@@ -345,33 +395,64 @@ pub struct MergeResult {
     pub time_to_merge: std::time::Duration,
 }
 
+fn calc_deps_impl(
+    options: &Options,
+    components: Vec<Vec1<FileKey>>,
+    to_merge: &FlowOrdSet<FileKey>,
+    cancelable: bool,
+) -> Result<Vec<Vec1<FileKey>>, RecheckError> {
+    with_memory_timer(options, "CalcDeps", || {
+        let mut acc = Vec::new();
+        for component in components {
+            if cancelable {
+                check_recheck_canceled()?;
+            }
+            if component.iter().any(|f| to_merge.contains(f)) {
+                acc.push(component);
+            }
+        }
+        Ok(acc)
+    })
+}
+
 pub fn calc_deps(
     options: &Options,
     components: Vec<Vec1<FileKey>>,
     to_merge: &FlowOrdSet<FileKey>,
 ) -> Vec<Vec1<FileKey>> {
-    with_memory_timer(options, "CalcDeps", || {
-        components
-            .into_iter()
-            .filter(|component: &Vec1<FileKey>| component.iter().any(|f| to_merge.contains(f)))
-            .collect()
-    })
+    calc_deps_impl(options, components, to_merge, false)
+        .expect("non-recheck dependency calculation should not be canceled")
 }
 
-pub fn include_dependencies_and_dependents(
+fn calc_deps_for_recheck(
+    options: &Options,
+    components: Vec<Vec1<FileKey>>,
+    to_merge: &FlowOrdSet<FileKey>,
+) -> Result<Vec<Vec1<FileKey>>, RecheckError> {
+    calc_deps_impl(options, components, to_merge, true)
+}
+
+fn include_dependencies_and_dependents_impl(
     options: &Options,
     input: CheckedSet,
     unchanged_checked: CheckedSet,
     all_dependent_files: FlowOrdSet<FileKey>,
     implementation_dependency_graph: &Graph<FileKey>,
     sig_dependency_graph: &Graph<FileKey>,
-) -> (
-    CheckedSet,
-    CheckedSet,
-    Vec<Vec1<FileKey>>,
-    FlowOrdSet<FileKey>,
-) {
+    cancelable: bool,
+) -> Result<
+    (
+        CheckedSet,
+        CheckedSet,
+        Vec<Vec1<FileKey>>,
+        FlowOrdSet<FileKey>,
+    ),
+    RecheckError,
+> {
     with_memory_timer(options, "PruneDeps", || {
+        if cancelable {
+            check_recheck_canceled()?;
+        }
         let mut to_check = input.dupe();
         to_check.add(None, Some(all_dependent_files.dupe()), None);
 
@@ -389,6 +470,9 @@ pub fn include_dependencies_and_dependents(
 
         let mut dependencies = FlowOrdSet::new();
         for component in &components {
+            if cancelable {
+                check_recheck_canceled()?;
+            }
             let all_in_unchanged_checked = component
                 .iter()
                 .all(|filename| unchanged_checked.mem(filename));
@@ -408,8 +492,60 @@ pub fn include_dependencies_and_dependents(
 
         let recheck_set = definitely_to_merge.all();
 
-        (to_merge, to_check, components, recheck_set)
+        Ok((to_merge, to_check, components, recheck_set))
     })
+}
+
+pub fn include_dependencies_and_dependents(
+    options: &Options,
+    input: CheckedSet,
+    unchanged_checked: CheckedSet,
+    all_dependent_files: FlowOrdSet<FileKey>,
+    implementation_dependency_graph: &Graph<FileKey>,
+    sig_dependency_graph: &Graph<FileKey>,
+) -> (
+    CheckedSet,
+    CheckedSet,
+    Vec<Vec1<FileKey>>,
+    FlowOrdSet<FileKey>,
+) {
+    include_dependencies_and_dependents_impl(
+        options,
+        input,
+        unchanged_checked,
+        all_dependent_files,
+        implementation_dependency_graph,
+        sig_dependency_graph,
+        false,
+    )
+    .expect("non-recheck dependency pruning should not be canceled")
+}
+
+fn include_dependencies_and_dependents_for_recheck(
+    options: &Options,
+    input: CheckedSet,
+    unchanged_checked: CheckedSet,
+    all_dependent_files: FlowOrdSet<FileKey>,
+    implementation_dependency_graph: &Graph<FileKey>,
+    sig_dependency_graph: &Graph<FileKey>,
+) -> Result<
+    (
+        CheckedSet,
+        CheckedSet,
+        Vec<Vec1<FileKey>>,
+        FlowOrdSet<FileKey>,
+    ),
+    RecheckError,
+> {
+    include_dependencies_and_dependents_impl(
+        options,
+        input,
+        unchanged_checked,
+        all_dependent_files,
+        implementation_dependency_graph,
+        sig_dependency_graph,
+        true,
+    )
 }
 
 fn update_first_internal_error(
@@ -558,8 +694,9 @@ fn run_merge_service(
     components: Vec<Vec1<FileKey>>,
     recheck_set: &FlowOrdSet<FileKey>,
     suppressions: ErrorSuppressions,
-) -> (ErrorSuppressions, usize, FlowOrdSet<FileKey>) {
+) -> Result<(ErrorSuppressions, usize, FlowOrdSet<FileKey>), RecheckError> {
     with_memory_timer(options, "Merge", || {
+        check_recheck_canceled()?;
         let (results, sig_opts_data) = merge_service::merge(
             pool,
             shared_mem,
@@ -568,15 +705,17 @@ fn run_merge_service(
             sig_dependency_graph,
             components,
             recheck_set,
-        );
+        )
+        .map_err(|_| RecheckError::Canceled(Vec::new()))?;
 
         let suppressions = results.into_iter().fold(suppressions, update_merge_results);
 
-        (
+        check_recheck_canceled()?;
+        Ok((
             suppressions,
             sig_opts_data.skipped_count,
             sig_opts_data.sig_new_or_changed,
-        )
+        ))
     })
 }
 
@@ -590,7 +729,7 @@ fn merge(
     recheck_set: &FlowOrdSet<FileKey>,
     sig_dependency_graph: &Graph<FileKey>,
     suppressions: ErrorSuppressions,
-) -> MergeResult {
+) -> Result<MergeResult, RecheckError> {
     if !options.quiet {
         flow_hh_logger::info!("to_merge: {}", to_merge.debug_counts_to_string());
         flow_hh_logger::info!("Calculating dependencies");
@@ -598,8 +737,9 @@ fn merge(
     monitor_rpc::status_update(server_status::Event::CalculatingDependenciesProgress);
     let files_to_merge = to_merge.dupe().all();
     let calc_deps_start = Instant::now();
-    let components = calc_deps(options, components, &files_to_merge);
+    let components = calc_deps_for_recheck(options, components, &files_to_merge)?;
     let calc_deps_time = calc_deps_start.elapsed();
+    check_recheck_canceled()?;
 
     if !options.quiet {
         flow_hh_logger::info!("Merging");
@@ -621,7 +761,7 @@ fn merge(
         components,
         recheck_set,
         suppressions,
-    );
+    )?;
 
     if options.profile && !options.quiet {
         // OCaml:
@@ -637,14 +777,14 @@ fn merge(
     }
     let time_to_merge = merge_start.elapsed();
 
-    MergeResult {
+    Ok(MergeResult {
         suppressions,
         skipped_count,
         sig_new_or_changed,
         top_cycle,
         calc_deps_time,
         time_to_merge,
-    }
+    })
 }
 
 mod check_files {
@@ -1228,7 +1368,8 @@ pub(crate) mod recheck {
         files_to_force: CheckedSet,
         node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
         mut env: Env,
-    ) -> Result<(Env, IntermediateValues), UnexpectedFileChanges> {
+    ) -> Result<(Env, IntermediateValues), RecheckError> {
+        check_recheck_canceled()?;
         let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
         let shared_mem_for_ast = shared_mem.dupe();
         let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
@@ -1280,6 +1421,7 @@ pub(crate) mod recheck {
             local_errors: new_local_errors,
             package_json: _,
         } = reparse(pool, shared_mem, options, def_info, modified_next);
+        check_recheck_canceled()?;
 
         let new_or_changed = parsed_set.dupe().union(unparsed_set.dupe());
         let new_or_changed_or_deleted = new_or_changed.dupe().union(deleted.dupe());
@@ -1398,6 +1540,7 @@ pub(crate) mod recheck {
             duplicate_providers,
             dirty_modules,
         );
+        check_recheck_canceled()?;
 
         let unparsed_or_deleted: BTreeSet<FileKey> = {
             let mut set: BTreeSet<FileKey> = unparsed_set.iter().duped().collect();
@@ -1416,15 +1559,18 @@ pub(crate) mod recheck {
 
         flow_hh_logger::info!("Re-resolving parsed and directly dependent files");
         let dirty_direct_dependents_set: FlowOrdSet<FileKey> = dirty_direct_dependents.dupe();
-        ensure_parsed(pool, shared_mem, options, dirty_direct_dependents_set)?;
+        ensure_parsed(pool, shared_mem, options, dirty_direct_dependents_set).map_err(
+            |UnexpectedFileChanges(changed_files)| handle_unexpected_file_changes(changed_files),
+        )?;
         let parsed_set_for_resolve = parsed_set.dupe().union(dirty_direct_dependents.dupe());
-        resolve_requires(
+        resolve_requires_for_recheck(
             pool,
             shared_mem,
             options,
             node_modules_containers,
             &parsed_set_for_resolve,
-        );
+        )?;
+        check_recheck_canceled()?;
 
         flow_hh_logger::info!("Recalculating dependency graph");
         monitor_rpc::status_update(server_status::Event::CalculatingDependenciesProgress);
@@ -1443,6 +1589,7 @@ pub(crate) mod recheck {
                 unparsed_or_deleted,
             )
         });
+        check_recheck_canceled()?;
 
         let to_remove = parsed.dupe().union(deleted);
         let unparsed = FlowOrdSet::from(
@@ -1498,7 +1645,8 @@ pub(crate) mod recheck {
         unchanged_checked: CheckedSet,
         unchanged_files_to_force: &CheckedSet,
         dirty_direct_dependents: &FlowOrdSet<FileKey>,
-    ) -> DetermineWhatToRecheckResult {
+    ) -> Result<DetermineWhatToRecheckResult, RecheckError> {
+        check_recheck_canceled()?;
         let input_focused = freshparsed
             .focused()
             .dupe()
@@ -1516,23 +1664,25 @@ pub(crate) mod recheck {
             );
             filter_out_node_modules(options, &all_dependent_files)
         });
+        check_recheck_canceled()?;
         let input = unfocused_files_to_infer(options, &input_focused, input_dependencies);
-        let (to_merge, to_check, components, recheck_set) = include_dependencies_and_dependents(
-            options,
-            input,
-            unchanged_checked.dupe(),
-            all_dependent_files.dupe(),
-            implementation_dependency_graph,
-            sig_dependency_graph,
-        );
+        let (to_merge, to_check, components, recheck_set) =
+            include_dependencies_and_dependents_for_recheck(
+                options,
+                input,
+                unchanged_checked.dupe(),
+                all_dependent_files.dupe(),
+                implementation_dependency_graph,
+                sig_dependency_graph,
+            )?;
         let dependent_file_count = all_dependent_files.len();
-        DetermineWhatToRecheckResult {
+        Ok(DetermineWhatToRecheckResult {
             to_merge,
             to_check,
             components,
             recheck_set,
             dependent_file_count,
-        }
+        })
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1588,7 +1738,7 @@ pub(crate) mod recheck {
             unchanged_checked.dupe(),
             &unchanged_files_to_force,
             &dirty_direct_dependents,
-        );
+        )?;
         monitor_rpc::status_update(server_status::Event::CalculatingDependentsEnd);
         will_be_checked_files.union(to_merge.dupe());
 
@@ -1598,7 +1748,9 @@ pub(crate) mod recheck {
             }
             _ => {}
         }
+        check_recheck_canceled()?;
         ensure_parsed_or_trigger_recheck(pool, shared_mem, options, to_merge.dupe().all())?;
+        check_recheck_canceled()?;
         if dependent_file_count > 0 {
             flow_hh_logger::info!("recheck {} dependent files:", dependent_file_count);
         }
@@ -1619,11 +1771,12 @@ pub(crate) mod recheck {
             &recheck_set,
             sig_dependency_graph,
             errors.suppressions.clone(),
-        );
+        )?;
 
         let exports = match &env.exports {
             None => None,
             Some(exports) => {
+                check_recheck_canceled()?;
                 flow_hh_logger::info!("Updating index");
                 let updated_exports = with_memory_timer(options, "Indexing", || {
                     let dirty_files: BTreeSet<FileKey> =
@@ -1639,6 +1792,7 @@ pub(crate) mod recheck {
                 Some(updated_exports)
             }
         };
+        check_recheck_canceled()?;
 
         let sig_new_or_changed = sig_new_or_changed.union(unchanged_files_to_upgrade.dupe().all());
         let (
@@ -1664,6 +1818,7 @@ pub(crate) mod recheck {
             &env.dependency_info,
             env.master_cx.dupe(),
         )?;
+        check_recheck_canceled()?;
         if let Some(ref err) = check_internal_error {
             flow_hh_logger::error!("{}", err);
         }
@@ -1719,6 +1874,7 @@ pub(crate) mod recheck {
                 }
             }
         }
+        check_recheck_canceled()?;
 
         let options_for_record = options.dupe();
         let merge_time = time_to_merge.as_secs_f64();
@@ -1788,7 +1944,7 @@ pub(crate) mod recheck {
         RecheckError,
     > {
         let def_info = &find_ref_request.def_info;
-        let (env, intermediate_values) = match recheck_parse_and_update_dependency_info(
+        let (env, intermediate_values) = recheck_parse_and_update_dependency_info(
             pool,
             shared_mem,
             options,
@@ -1797,12 +1953,7 @@ pub(crate) mod recheck {
             files_to_force,
             node_modules_containers,
             env,
-        ) {
-            Ok(result) => result,
-            Err(UnexpectedFileChanges(changed_files)) => {
-                return Err(handle_unexpected_file_changes(changed_files));
-            }
-        };
+        )?;
         let for_find_all_refs = match def_info {
             DefInfo::VariableDefinition(_, _) | DefInfo::PropertyDefinition(_) => true,
             DefInfo::NoDefinition(_) => false,
@@ -1829,7 +1980,7 @@ pub(crate) mod recheck {
         files_to_force: CheckedSet,
         node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
         env: Env,
-    ) -> Result<Env, UnexpectedFileChanges> {
+    ) -> Result<Env, RecheckError> {
         let (env, intermediate_values) = recheck_parse_and_update_dependency_info(
             pool,
             shared_mem,
@@ -1896,6 +2047,7 @@ pub(crate) fn recheck_impl(
     ),
     RecheckError,
 > {
+    check_recheck_canceled()?;
     let (env, stats, record_recheck_time, find_ref_results, first_internal_error) =
         match with_transaction_result("recheck", |_transaction| {
             recheck::full(
@@ -1924,6 +2076,7 @@ pub(crate) fn recheck_impl(
     }
 
     shared_mem.commit_entities();
+    check_recheck_canceled()?;
 
     let recheck::RecheckResult {
         modified_count,
@@ -1940,6 +2093,7 @@ pub(crate) fn recheck_impl(
 
     let (collated_errors, error_resolution_stat) =
         with_memory_timer(options, "CollateErrors", || {
+            check_recheck_canceled()?;
             let focused_to_check = to_check.focused().dupe();
             let dependents_to_check = to_check.dependents().dupe();
             let files = FlowOrdSet::from(
@@ -1971,8 +2125,9 @@ pub(crate) fn recheck_impl(
             let error_resolution_stat =
                 error_collator::update_error_state_timestamps(&mut collated_errors);
 
-            (collated_errors, error_resolution_stat)
-        });
+            check_recheck_canceled()?;
+            Ok((collated_errors, error_resolution_stat))
+        })?;
 
     let env = Env {
         collated_errors,
@@ -2038,7 +2193,7 @@ pub fn parse_and_update_dependency_info(
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     env: Env,
 ) -> Result<Env, RecheckError> {
-    match recheck::parse_and_update_dependency_info(
+    recheck::parse_and_update_dependency_info(
         pool,
         shared_mem,
         options,
@@ -2047,12 +2202,7 @@ pub fn parse_and_update_dependency_info(
         files_to_force,
         node_modules_containers,
         env,
-    ) {
-        Ok(env) => Ok(env),
-        Err(UnexpectedFileChanges(changed_files)) => {
-            Err(handle_unexpected_file_changes(changed_files))
-        }
-    }
+    )
 }
 
 pub fn make_next_files(
@@ -3006,10 +3156,14 @@ pub fn handle_updates_since_saved_state(
                     shared_mem.commit_entities();
                     return env;
                 }
-                Err(UnexpectedFileChanges(changed_files)) => {
+                Err(RecheckError::Canceled(changed_files)) if !changed_files.is_empty() => {
                     shared_mem.rollback_entities();
                     let dependencies = changed_files.into_iter().collect();
                     updated_files.add(None, None, Some(dependencies));
+                }
+                Err(err) => {
+                    shared_mem.rollback_entities();
+                    panic!("lazy init update deps failed: {:?}", err);
                 }
             }
         }
@@ -3727,7 +3881,7 @@ pub fn check_files_for_init(
             &recheck_set,
             sig_dependency_graph,
             env_errors.suppressions.clone(),
-        );
+        )?;
         let (
             mut errors,
             coverage,
@@ -3977,6 +4131,7 @@ pub fn debug_determine_what_to_recheck(
         unchanged_files_to_force,
         dirty_direct_dependents,
     )
+    .expect("debug dependency calculation should not be canceled")
 }
 
 pub fn debug_include_dependencies_and_dependents(

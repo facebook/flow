@@ -139,7 +139,7 @@ impl From<flow_server_utils::file_input::FileInput> for FileInput {
         match input {
             flow_server_utils::file_input::FileInput::FileName(path) => Self::FileName(path),
             flow_server_utils::file_input::FileInput::FileContent(path, content) => {
-                Self::FileContent(path, content)
+                Self::FileContent(path, content.to_string())
             }
         }
     }
@@ -150,7 +150,7 @@ impl FileInput {
         match self {
             FileInput::FileName(path) => flow_server_utils::file_input::FileInput::FileName(path),
             FileInput::FileContent(path, content) => {
-                flow_server_utils::file_input::FileInput::FileContent(path, content)
+                flow_server_utils::file_input::FileInput::FileContent(path, content.into())
             }
         }
     }
