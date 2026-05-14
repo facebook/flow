@@ -581,6 +581,28 @@ type merge_env = {
 let mk_merge_env ?(infer_tps = SMap.empty) ?(in_no_infer = false) ?(in_renders_arg = false) tps =
   { tps; infer_tps; in_no_infer; in_renders_arg }
 
+(* Build a Type.Method property from a Nel of overload representations. The
+   intersection is built so that overloads end up in source order (the storage
+   Nel is in reverse source order), and the key_loc is the id_loc of the first
+   source overload (= the last visited). Mirrors how InterfaceMethod overloads
+   were already merged in the [merge_interface_prop] path. *)
+let merge_overloaded_methods ms ~merge_one ~id_loc =
+  let finish = function
+    | (t, []) -> t
+    | (t0, t1 :: ts) ->
+      let reason = TypeUtil.reason_of_t t0 in
+      Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
+  in
+  let rec loop acc last_id_loc = function
+    | [] -> Type.Method { key_loc = Some last_id_loc; type_ = finish acc }
+    | m :: rest ->
+      let acc = Nel.cons (merge_one m) acc in
+      loop acc (id_loc m) rest
+  in
+  let (head, tail) = ms in
+  let acc = Nel.one (merge_one head) in
+  loop acc (id_loc head) tail
+
 let rec merge ?(as_const = false) ?(const_decl = false) env file = function
   | Pack.Annot t ->
     let t = merge_annot env file t in
@@ -1456,22 +1478,26 @@ and merge_obj_value_prop ~for_export ~as_const ~frozen env file key = function
     let polarity = Utils_js.ite (as_const || frozen) Polarity.Positive polarity in
     Type.Field { preferred_def_locs = None; key_loc = Some id_loc; type_; polarity }
   | ObjValueAccess x -> merge_accessor env file x
-  | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
-    let reason = Reason.func_reason ~async ~generator fn_loc in
-    let statics = merge_fun_statics env file reason SMap.empty in
-    let type_ = merge_fun env file reason def statics in
-    Type.Method { key_loc = Some id_loc; type_ }
+  | ObjValueMethod ms ->
+    let merge_one { id_loc = _; fn_loc; async; generator; def } =
+      let reason = Reason.func_reason ~async ~generator fn_loc in
+      let statics = merge_fun_statics env file reason SMap.empty in
+      merge_fun env file reason def statics
+    in
+    merge_overloaded_methods ms ~merge_one ~id_loc:(fun { id_loc; _ } -> id_loc)
 
 and merge_class_prop env file = function
   | ObjValueField (id_loc, t, polarity) ->
     let type_ = merge env file t in
     Type.Field { preferred_def_locs = None; key_loc = Some id_loc; type_; polarity }
   | ObjValueAccess x -> merge_accessor env file x
-  | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
-    let reason = Reason.func_reason ~async ~generator fn_loc in
-    let statics = Type.dummy_static reason in
-    let type_ = merge_fun ~is_method:true env file reason def statics in
-    Type.Method { key_loc = Some id_loc; type_ }
+  | ObjValueMethod ms ->
+    let merge_one { id_loc = _; fn_loc; async; generator; def } =
+      let reason = Reason.func_reason ~async ~generator fn_loc in
+      let statics = Type.dummy_static reason in
+      merge_fun ~is_method:true env file reason def statics
+    in
+    merge_overloaded_methods ms ~merge_one ~id_loc:(fun { id_loc; _ } -> id_loc)
 
 and merge_obj_annot_prop env file = function
   | ObjAnnotField (id_loc, t, polarity) ->
@@ -1490,26 +1516,12 @@ and merge_interface_prop ?(is_static = false) env file = function
     Type.Field { preferred_def_locs = None; key_loc = id_loc; type_ = t; polarity }
   | InterfaceAccess x -> merge_accessor env file x
   | InterfaceMethod ms ->
-    let merge_method fn_loc def =
+    let merge_one (_, fn_loc, def) =
       let reason = Reason.(mk_reason RFunctionType fn_loc) in
       let statics = Type.dummy_static reason in
       merge_fun ~is_method:true ~is_static env file reason def statics
     in
-    let finish = function
-      | (t, []) -> t
-      | (t0, t1 :: ts) ->
-        let reason = TypeUtil.reason_of_t t0 in
-        Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
-    in
-    let rec loop acc id_loc = function
-      | [] -> Type.Method { key_loc = Some id_loc; type_ = finish acc }
-      | (id_loc, fn_loc, def) :: ms ->
-        let acc = Nel.cons (merge_method fn_loc def) acc in
-        loop acc id_loc ms
-    in
-    let ((id_loc, fn_loc, def), ms) = ms in
-    let acc = Nel.one (merge_method fn_loc def) in
-    loop acc id_loc ms
+    merge_overloaded_methods ms ~merge_one ~id_loc:(fun (id_loc, _, _) -> id_loc)
 
 and merge_dict env file ?(as_const = false) (ObjDict { name; polarity; key; value }) =
   let key = merge env file key in

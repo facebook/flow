@@ -233,6 +233,21 @@ pub fn append_constructor<C: ConfigTypes>(
     });
 }
 
+pub fn append_constructor_replacing_default<C: ConfigTypes>(
+    id_loc: Option<ALoc>,
+    func_sig_: func_class_sig_types::func::Func<C>,
+    set_asts: Option<class_types::SetAsts<C>>,
+    set_type: Option<class_types::SetType>,
+    s: &mut class_types::Class<C>,
+) {
+    match s.constructor.as_slice() {
+        [class_types::FuncInfo { id_loc: None, .. }] => {
+            add_constructor(id_loc, func_sig_, set_asts, set_type, s)
+        }
+        _ => append_constructor(id_loc, func_sig_, set_asts, set_type, s),
+    }
+}
+
 fn add_field_inner<C: ConfigTypes>(
     static_: bool,
     name: FlowSmolStr,
@@ -1507,12 +1522,17 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
     type_env::in_class_scope(cx, x.class_loc.dupe(), || {
         let method_ = |set_asts: &class_types::SetAsts<C>,
                        f: &func_class_sig_types::func::Func<C>| {
-            let (params_ast, body_ast, init_ast) = func_sig::toplevels(cx, f)?;
-            if let Some(ref init) = init_ast {
-                let (_, t) = init.loc();
-                cx.add_missing_local_annot_lower_bound(f.ret_annot_loc.dupe(), t.dupe());
+            match (&f.body, &f.kind) {
+                (None, func_class_sig_types::func::Kind::FieldInit(_)) | (Some(_), _) => {
+                    let (params_ast, body_ast, init_ast) = func_sig::toplevels(cx, f)?;
+                    if let Some(ref init) = init_ast {
+                        let (_, t) = init.loc();
+                        cx.add_missing_local_annot_lower_bound(f.ret_annot_loc.dupe(), t.dupe());
+                    }
+                    (set_asts)((params_ast, body_ast, init_ast));
+                }
+                (None, _) => (set_asts)((None, None, None)),
             }
-            (set_asts)((params_ast, body_ast, init_ast));
             Ok(())
         };
         let field =

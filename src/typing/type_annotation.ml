@@ -4303,4 +4303,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       mk_type_param_declarations (mk_convert_env cx tparams_map) ~kind tparams
     in
     (tparams, env.tparams_map, t_ast)
+
+  let convert_return_annotation ~meth_kind cx tparams_map =
+    convert_return_annotation ~meth_kind (mk_convert_env cx tparams_map)
 end

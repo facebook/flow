@@ -169,4 +169,34 @@ module type S = sig
 
   val error_on_unsupported_variance_annotation :
     Context.t -> kind:string -> (ALoc.t, ALoc.t) Flow_ast.Type.TypeParams.t option -> unit
+
+  type method_kind =
+    | FunctionKind
+    | MethodKind of { static: bool }
+    | ConstructorKind
+    | GetterKind
+    | SetterKind
+
+  val method_kind_to_string : method_kind -> string
+
+  val convert_return_annotation :
+    meth_kind:method_kind ->
+    Context.t ->
+    Type.t Subst_name.Map.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.Function.Params.t ->
+    Type.fun_param list ->
+    (ALoc.t, ALoc.t) Flow_ast.Type.Function.return_annotation ->
+    Type.t
+    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.Function.return_annotation
+    * Type.type_guard option
+
+  (** Build the typed Function.Param AST node for a single function-type
+      parameter from its raw param, the resolved type, and the converted
+      annotation AST. Shared by all function-type conversion paths to keep
+      typed-AST construction consistent. *)
+  val typed_function_param_ast :
+    (ALoc.t, ALoc.t) Flow_ast.Type.Function.Param.t' ->
+    Type.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.Function.Param.t'
 end

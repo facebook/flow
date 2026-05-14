@@ -2268,14 +2268,22 @@ pub(super) mod scope {
                 ObjValueProp::ObjValueAccess(accessor) => ObjValueProp::ObjValueAccess(Box::new(
                     rename_tparams_in_accessor(rename_map, accessor),
                 )),
-                ObjValueProp::ObjValueMethod(inner) => {
-                    ObjValueProp::ObjValueMethod(Box::new(ObjValueMethodData {
-                        id_loc: inner.id_loc.dupe(),
-                        fn_loc: inner.fn_loc.dupe(),
-                        async_: inner.async_,
-                        generator: inner.generator,
-                        def: rename_tparams_in_fun_sig(rename_map, &inner.def),
-                    }))
+                ObjValueProp::ObjValueMethod(ms) => {
+                    ObjValueProp::ObjValueMethod(Box::new(ms.mapped_ref(
+                        |ObjValueMethodData {
+                             id_loc,
+                             fn_loc,
+                             async_,
+                             generator,
+                             def,
+                         }| ObjValueMethodData {
+                            id_loc: id_loc.dupe(),
+                            fn_loc: fn_loc.dupe(),
+                            async_: *async_,
+                            generator: *generator,
+                            def: rename_tparams_in_fun_sig(rename_map, def),
+                        },
+                    )))
                 }
             }
         }
@@ -4631,6 +4639,7 @@ mod class_acc {
 
     use flow_common::polarity::Polarity;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+    use vec1::Vec1;
 
     use super::*;
 
@@ -4669,6 +4678,9 @@ mod class_acc {
             }
         }
 
+        // Accumulate overloaded methods (e.g. bodyless overloads in a `.d.ts` class
+        // body) into a Nel. Runtime classes can't actually have multiple bodies for
+        // the same name, but bodyless overloads under tslib_syntax can.
         pub(super) fn add_method(
             &mut self,
             static_: bool,
@@ -4679,17 +4691,29 @@ mod class_acc {
             generator: bool,
             def: FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
         ) {
-            let prop = ObjValueProp::ObjValueMethod(Box::new(ObjValueMethodData {
+            let m = ObjValueMethodData {
                 id_loc,
                 fn_loc,
                 async_,
                 generator,
                 def,
-            }));
-            if static_ {
-                self.static_.insert(name, prop);
+            };
+            let map = if static_ {
+                &mut self.static_
             } else {
-                self.proto.insert(name, prop);
+                &mut self.proto
+            };
+            match map.entry(name) {
+                std::collections::btree_map::Entry::Occupied(mut e) => {
+                    if let ObjValueProp::ObjValueMethod(ms) = e.get_mut() {
+                        ms.push(m);
+                    } else {
+                        e.insert(ObjValueProp::ObjValueMethod(Box::new(Vec1::new(m))));
+                    }
+                }
+                std::collections::btree_map::Entry::Vacant(e) => {
+                    e.insert(ObjValueProp::ObjValueMethod(Box::new(Vec1::new(m))));
+                }
             }
         }
 
@@ -5182,16 +5206,15 @@ mod object_literal_acc {
             generator: bool,
             def: FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
         ) {
-            self.props.insert(
-                name,
-                ObjValueProp::ObjValueMethod(Box::new(ObjValueMethodData {
-                    id_loc,
-                    fn_loc,
-                    async_,
-                    generator,
-                    def,
-                })),
-            );
+            let m = ObjValueMethodData {
+                id_loc,
+                fn_loc,
+                async_,
+                generator,
+                def,
+            };
+            self.props
+                .insert(name, ObjValueProp::ObjValueMethod(Box::new(Vec1::new(m))));
         }
 
         pub(super) fn add_accessor(

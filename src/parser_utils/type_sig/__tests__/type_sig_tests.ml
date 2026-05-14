@@ -1094,15 +1094,20 @@ let%expect_test "export_class_reference" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:2-36]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
-                 rest_param = None; this_param = None;
-                 return = (Annot (Number [3:16-22]));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [3:2-3];
+                   fn_loc = [3:2-36];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
+                     rest_param = None;
+                     this_param = None;
+                     return = (Annot (Number [3:16-22]));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) };
            dict = None};
@@ -1138,15 +1143,20 @@ let%expect_test "export_class_reference_check1" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:2-36]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
-                 rest_param = None; this_param = None;
-                 return = (Annot (Number [3:16-22]));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [3:2-3];
+                   fn_loc = [3:2-36];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
+                     rest_param = None;
+                     this_param = None;
+                     return = (Annot (Number [3:16-22]));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" ->
              (ObjValueField ([2:2-3], (Value (NumberLit ([2:6-7], 0., "0"))), Polarity.Neutral)) };
@@ -1183,15 +1193,20 @@ let%expect_test "export_class_reference_check2" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:2-28]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params = [FunParam {name = (Some "x"); t = (Err [3:4-5])}];
-                 rest_param = None; this_param = None;
-                 return = (Annot (Number [3:8-14]));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [3:2-3];
+                   fn_loc = [3:2-28];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params = [FunParam {name = (Some "x"); t = (Err [3:4-5])}];
+                     rest_param = None;
+                     this_param = None;
+                     return = (Annot (Number [3:8-14]));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) };
            dict = None};
@@ -1230,15 +1245,20 @@ let%expect_test "export_class_reference_check3" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:2-28]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
-                 rest_param = None; this_param = None;
-                 return = (Err [3:14]);
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [3:2-3];
+                   fn_loc = [3:2-28];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
+                     rest_param = None;
+                     this_param = None;
+                     return = (Err [3:14]);
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) };
            dict = None};
@@ -1290,18 +1310,23 @@ let%expect_test "type_alias_dependencies" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [6:2-3];
-               fn_loc = [6:2-28]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params =
-                 [FunParam {name = (Some "x");
-                    t = (TyRef (Unqualified LocalRef {ref_loc = [6:7-9]; index = 1}))}
-                   ];
-                 rest_param = None; this_param = None;
-                 return = (TyRef (Unqualified LocalRef {ref_loc = [6:12-14]; index = 2}));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [6:2-3];
+                   fn_loc = [6:2-28];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params =
+                     [FunParam {name = (Some "x");
+                        t = (TyRef (Unqualified LocalRef {ref_loc = [6:7-9]; index = 1}))}
+                       ];
+                     rest_param = None;
+                     this_param = None;
+                     return = (TyRef (Unqualified LocalRef {ref_loc = [6:12-14]; index = 2}));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" ->
              (ObjValueField ([5:2-3],
@@ -1350,18 +1375,23 @@ let%expect_test "class_dependencies" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:2-26]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params =
-                 [FunParam {name = (Some "x");
-                    t = (TyRef (Unqualified LocalRef {ref_loc = [4:7-8]; index = 0}))}
-                   ];
-                 rest_param = None; this_param = None;
-                 return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [4:2-3];
+                   fn_loc = [4:2-26];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params =
+                     [FunParam {name = (Some "x");
+                        t = (TyRef (Unqualified LocalRef {ref_loc = [4:7-8]; index = 0}))}
+                       ];
+                     rest_param = None;
+                     this_param = None;
+                     return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1412,18 +1442,23 @@ let%expect_test "class_dependencies_check" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:2-26]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params =
-                 [FunParam {name = (Some "x");
-                    t = (TyRef (Unqualified LocalRef {ref_loc = [4:7-8]; index = 0}))}
-                   ];
-                 rest_param = None; this_param = None;
-                 return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [4:2-3];
+                   fn_loc = [4:2-26];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params =
+                     [FunParam {name = (Some "x");
+                        t = (TyRef (Unqualified LocalRef {ref_loc = [4:7-8]; index = 0}))}
+                       ];
+                     rest_param = None;
+                     this_param = None;
+                     return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1472,18 +1507,23 @@ let%expect_test "export_new_typecast" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:2-26]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params =
-                 [FunParam {name = (Some "x");
-                    t = (TyRef (Unqualified LocalRef {ref_loc = [4:7-8]; index = 0}))}
-                   ];
-                 rest_param = None; this_param = None;
-                 return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [4:2-3];
+                   fn_loc = [4:2-26];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params =
+                     [FunParam {name = (Some "x");
+                        t = (TyRef (Unqualified LocalRef {ref_loc = [4:7-8]; index = 0}))}
+                       ];
+                     rest_param = None;
+                     this_param = None;
+                     return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1534,18 +1574,23 @@ let%expect_test "export_new_typecast_check" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:2-26]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params =
-                 [FunParam {name = (Some "x");
-                    t = (TyRef (Unqualified LocalRef {ref_loc = [4:7-8]; index = 0}))}
-                   ];
-                 rest_param = None; this_param = None;
-                 return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [4:2-3];
+                   fn_loc = [4:2-26];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params =
+                     [FunParam {name = (Some "x");
+                        t = (TyRef (Unqualified LocalRef {ref_loc = [4:7-8]; index = 0}))}
+                       ];
+                     rest_param = None;
+                     this_param = None;
+                     return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1583,18 +1628,23 @@ let%expect_test "recursive_dependencies" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:2-26]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params =
-                 [FunParam {name = (Some "x");
-                    t = (TyRef (Unqualified LocalRef {ref_loc = [3:7-8]; index = 0}))}
-                   ];
-                 rest_param = None; this_param = None;
-                 return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [3:2-3];
+                   fn_loc = [3:2-26];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params =
+                     [FunParam {name = (Some "x");
+                        t = (TyRef (Unqualified LocalRef {ref_loc = [3:7-8]; index = 0}))}
+                       ];
+                     rest_param = None;
+                     this_param = None;
+                     return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" ->
              (ObjValueField ([2:2-3],
@@ -1632,18 +1682,23 @@ let%expect_test "recursive_dependencies_check" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [3:2-3];
-               fn_loc = [3:2-26]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params =
-                 [FunParam {name = (Some "x");
-                    t = (TyRef (Unqualified LocalRef {ref_loc = [3:7-8]; index = 0}))}
-                   ];
-                 rest_param = None; this_param = None;
-                 return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [3:2-3];
+                   fn_loc = [3:2-26];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params =
+                     [FunParam {name = (Some "x");
+                        t = (TyRef (Unqualified LocalRef {ref_loc = [3:7-8]; index = 0}))}
+                       ];
+                     rest_param = None;
+                     this_param = None;
+                     return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:6-11]), Polarity.Neutral)) };
            dict = None};
          namespace_types = {}}
@@ -1961,18 +2016,23 @@ let%expect_test "import_type_dependencies" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:2-28]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params =
-                 [FunParam {name = (Some "x");
-                    t = (TyRef (Unqualified RemoteRef {ref_loc = [4:7-9]; index = 1}))}
-                   ];
-                 rest_param = None; this_param = None;
-                 return = (TyRef (Unqualified RemoteRef {ref_loc = [4:12-14]; index = 2}));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [4:2-3];
+                   fn_loc = [4:2-28];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params =
+                     [FunParam {name = (Some "x");
+                        t = (TyRef (Unqualified RemoteRef {ref_loc = [4:7-9]; index = 1}))}
+                       ];
+                     rest_param = None;
+                     this_param = None;
+                     return = (TyRef (Unqualified RemoteRef {ref_loc = [4:12-14]; index = 2}));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -2019,28 +2079,34 @@ let%expect_test "qualified_references" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [4:2-3];
-               fn_loc = [4:2-32]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params =
-                 [FunParam {name = (Some "x");
-                    t =
-                    (TyRef
-                       Qualified {loc = [4:7-11];
-                         id_loc = [4:10-11];
-                         name = "T";
-                         qualification = (Unqualified RemoteRef {ref_loc = [4:7-9]; index = 0})})}
-                   ];
-                 rest_param = None; this_param = None;
-                 return =
-                 (TyRef
-                    Qualified {loc = [4:14-18];
-                      id_loc = [4:17-18];
-                      name = "T";
-                      qualification = (Unqualified RemoteRef {ref_loc = [4:14-16]; index = 1})});
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [4:2-3];
+                   fn_loc = [4:2-32];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params =
+                     [FunParam {name = (Some "x");
+                        t =
+                        (TyRef
+                           Qualified {
+                             loc = [4:7-11];
+                             id_loc = [4:10-11];
+                             name = "T";
+                             qualification = (Unqualified RemoteRef {ref_loc = [4:7-9]; index = 0})})}
+                       ];
+                     rest_param = None;
+                     this_param = None;
+                     return =
+                     (TyRef
+                        Qualified {loc = [4:14-18];
+                          id_loc = [4:17-18];
+                          name = "T";
+                          qualification = (Unqualified RemoteRef {ref_loc = [4:14-16]; index = 1})});
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props = {}; dict = None};
          namespace_types = {}}
 
@@ -2516,14 +2582,19 @@ let%expect_test "munged_methods_not_ignored" =
            implements = []; static_props = {};
            proto_props =
            { "_method" ->
-             ObjValueMethod {id_loc = [2:2-9];
-               fn_loc = [2:2-25]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params = []; rest_param = None;
-                 this_param = None; return = (Err [2:11]);
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [2:2-9];
+                   fn_loc = [2:2-25];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params = []; rest_param = None;
+                     this_param = None;
+                     return = (Err [2:11]);
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props = {}; dict = None};
          namespace_types = {}}
 
@@ -4348,14 +4419,19 @@ let%expect_test "class_this" =
            implements = []; static_props = {};
            proto_props =
            { "m" ->
-             ObjValueMethod {id_loc = [2:2-3];
-               fn_loc = [2:2-27]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params = []; rest_param = None;
-                 this_param = None; return = (Annot Bound {ref_loc = [2:7-11]; name = "this"});
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [2:2-3];
+                   fn_loc = [2:2-27];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params = []; rest_param = None;
+                     this_param = None;
+                     return = (Annot Bound {ref_loc = [2:7-11]; name = "this"});
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props = {}; dict = None};
          namespace_types = {}} |}]
 
@@ -6301,15 +6377,19 @@ let%expect_test "this_param_2" =
            implements = []; static_props = {};
            proto_props =
            { "foo" ->
-             ObjValueMethod {id_loc = [2:2-5];
-               fn_loc = [2:2-29]; async = false;
-               generator = false;
-               def =
-               FunSig {tparams = Mono;
-                 params = []; rest_param = None;
-                 this_param = (Some (Annot (Mixed [2:13-18])));
-                 return = (Annot (Void [2:22-26]));
-                 type_guard = None; effect_ = ArbitraryEffect}} };
+             (ObjValueMethod
+                ({ id_loc = [2:2-5];
+                   fn_loc = [2:2-29];
+                   async = false; generator = false;
+                   def =
+                   FunSig {tparams = Mono;
+                     params = []; rest_param = None;
+                     this_param = (Some (Annot (Mixed [2:13-18])));
+                     return = (Annot (Void [2:22-26]));
+                     type_guard = None;
+                     effect_ = ArbitraryEffect}
+                   },
+                 [])) };
            own_props = {}; dict = None};
          namespace_types = {}} |}]
 

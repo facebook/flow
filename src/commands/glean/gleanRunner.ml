@@ -382,9 +382,9 @@ let loc_of_obj_value_prop ~loc_source ~reader =
   | ObjValueField (index, _, _)
   | ObjValueAccess (Get (index, _))
   | ObjValueAccess (Set (index, _))
-  | ObjValueAccess (GetSet (_, _, index, _))
-  | ObjValueMethod { id_loc = index; _ } ->
+  | ObjValueAccess (GetSet (_, _, index, _)) ->
     loc_of_index ~loc_source ~reader index
+  | ObjValueMethod ({ id_loc = index; _ }, _) -> loc_of_index ~loc_source ~reader index
 
 let loc_of_obj_annot_prop ~loc_source ~reader =
   let open Type_sig in

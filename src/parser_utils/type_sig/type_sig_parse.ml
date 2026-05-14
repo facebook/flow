@@ -1365,9 +1365,13 @@ module Scope = struct
       | ObjValueField (loc, t, polarity) ->
         ObjValueField (loc, rename_tparams_in_parsed rename_map t, polarity)
       | ObjValueAccess accessor -> ObjValueAccess (rename_tparams_in_accessor rename_map accessor)
-      | ObjValueMethod { id_loc; fn_loc; async; generator; def } ->
+      | ObjValueMethod ms ->
         ObjValueMethod
-          { id_loc; fn_loc; async; generator; def = rename_tparams_in_fun_sig rename_map def }
+          (Nel.map
+             (fun { id_loc; fn_loc; async; generator; def } ->
+               { id_loc; fn_loc; async; generator; def = rename_tparams_in_fun_sig rename_map def })
+             ms
+          )
 
     and rename_tparams_in_obj_value_spread_elem rename_map = function
       | ObjValueSpreadElem t -> ObjValueSpreadElem (rename_tparams_in_parsed rename_map t)
@@ -2539,8 +2543,16 @@ module ClassAcc = struct
     else
       map_own f acc
 
+  (* Accumulate overloaded methods (e.g. bodyless overloads in a `.d.ts` class
+     body) into a Nel. Runtime classes can't actually have multiple bodies for
+     the same name, but bodyless overloads under tslib_syntax can. *)
+  let add_method_helper m = function
+    | Some (ObjValueMethod ms) -> Some (ObjValueMethod (Nel.cons m ms))
+    | _ -> Some (ObjValueMethod (Nel.one m))
+
   let add_method ~static name id_loc fn_loc ~async ~generator def acc =
-    let f = SMap.add name (ObjValueMethod { id_loc; fn_loc; async; generator; def }) in
+    let m = { id_loc; fn_loc; async; generator; def } in
+    let f = SMap.update name (add_method_helper m) in
     if static then
       map_static f acc
     else
@@ -2789,7 +2801,8 @@ module ObjectLiteralAcc = struct
     map_props f acc
 
   let add_method name id_loc fn_loc ~async ~generator def acc =
-    let f = SMap.add name (ObjValueMethod { id_loc; fn_loc; async; generator; def }) in
+    let m = { id_loc; fn_loc; async; generator; def } in
+    let f = SMap.add name (ObjValueMethod (Nel.one m)) in
     map_props f acc
 
   let add_accessor_helper x = function

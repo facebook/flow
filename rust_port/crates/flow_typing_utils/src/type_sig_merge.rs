@@ -1231,6 +1231,36 @@ fn mk_merge_env(tps: FlowOrdMap<FlowSmolStr, Type>) -> MergeEnv {
     }
 }
 
+/* Build a Type.Method property from a Nel of overload representations. The
+intersection is built so that overloads end up in source order (the storage
+Nel is in reverse source order), and the key_loc is the id_loc of the first
+source overload (= the last visited). Mirrors how InterfaceMethod overloads
+were already merged in the [merge_interface_prop] path. */
+fn merge_overloaded_methods<M>(
+    ms: &Vec1<M>,
+    merge_one: impl Fn(&M) -> Type,
+    id_loc: impl Fn(&M) -> &ALoc,
+) -> type_::Property {
+    let key_loc = id_loc(&ms[0]).dupe();
+    let mut iter = ms.iter().map(merge_one);
+    let t0 = iter.next().expect("Vec1 always has at least one element");
+    let type_ = match iter.next() {
+        None => t0,
+        Some(t1) => {
+            let rest: Vec<Type> = iter.collect();
+            let reason = type_util::reason_of_t(&t0).dupe();
+            Type::new(type_::TypeInner::IntersectionT(
+                reason,
+                type_::inter_rep::make(t0, t1, rest.into()),
+            ))
+        }
+    };
+    type_::Property::new(type_::PropertyInner::Method {
+        key_loc: Some(key_loc),
+        type_,
+    })
+}
+
 fn merge_impl<'cx>(
     env: &MergeEnv,
     cx: &Context<'cx>,
@@ -3021,20 +3051,20 @@ fn merge_obj_value_prop<'cx>(
             })))
         }
         ObjValueProp::ObjValueAccess(box x) => merge_accessor(env, cx, file, x),
-        ObjValueProp::ObjValueMethod(box ObjValueMethodData {
-            id_loc,
-            fn_loc,
-            async_,
-            generator,
-            def,
-        }) => {
-            let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
-            let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
-            let type_ = merge_fun(env, cx, file, reason, def, statics, false, false);
-            type_::Property::new(type_::PropertyInner::Method {
-                key_loc: Some(id_loc.dupe()),
-                type_,
-            })
+        ObjValueProp::ObjValueMethod(box ms) => {
+            let merge_one =
+                |ObjValueMethodData {
+                     id_loc: _,
+                     fn_loc,
+                     async_,
+                     generator,
+                     def,
+                 }: &ObjValueMethodData<ALoc, Pack::Packed<ALoc>>| {
+                    let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
+                    let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
+                    merge_fun(env, cx, file, reason, def, statics, false, false)
+                };
+            merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
         }
     }
 }
@@ -3056,20 +3086,20 @@ fn merge_class_prop<'cx>(
             })))
         }
         ObjValueProp::ObjValueAccess(box x) => merge_accessor(env, cx, file, x),
-        ObjValueProp::ObjValueMethod(box ObjValueMethodData {
-            id_loc,
-            fn_loc,
-            async_,
-            generator,
-            def,
-        }) => {
-            let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
-            let statics = type_::dummy_static(reason.dupe());
-            let type_ = merge_fun(env, cx, file, reason, def, statics, true, false);
-            type_::Property::new(type_::PropertyInner::Method {
-                key_loc: Some(id_loc.dupe()),
-                type_,
-            })
+        ObjValueProp::ObjValueMethod(box ms) => {
+            let merge_one =
+                |ObjValueMethodData {
+                     id_loc: _,
+                     fn_loc,
+                     async_,
+                     generator,
+                     def,
+                 }: &ObjValueMethodData<ALoc, Pack::Packed<ALoc>>| {
+                    let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
+                    let statics = type_::dummy_static(reason.dupe());
+                    merge_fun(env, cx, file, reason, def, statics, true, false)
+                };
+            merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
         }
     }
 }
@@ -3128,32 +3158,12 @@ fn merge_interface_prop<'cx>(
         }
         InterfaceProp::InterfaceAccess(box x) => merge_accessor(env, cx, file, x),
         InterfaceProp::InterfaceMethod(box ms) => {
-            let merge_method = |fn_loc: &ALoc, def: &FunSig<ALoc, Pack::Packed<ALoc>>| {
+            let merge_one = |(_, fn_loc, def): &(ALoc, ALoc, FunSig<ALoc, Pack::Packed<ALoc>>)| {
                 let reason = reason::mk_reason(RFunctionType, fn_loc.dupe());
                 let statics = type_::dummy_static(reason.dupe());
                 merge_fun(env, cx, file, reason, def, statics, true, is_static)
             };
-            let (ref first_id_loc, ref first_fn_loc, ref first_def) = ms[0];
-            let mut all_types: Vec<Type> = vec![merge_method(first_fn_loc, first_def)];
-            for (_id_loc, fn_loc, def) in &ms[1..] {
-                all_types.push(merge_method(fn_loc, def));
-            }
-            let type_ = if all_types.len() == 1 {
-                all_types.pop().unwrap()
-            } else {
-                let mut iter = all_types.into_iter();
-                let t0 = iter.next().unwrap();
-                let t1 = iter.next().unwrap();
-                let reason = type_util::reason_of_t(&t0).dupe();
-                Type::new(type_::TypeInner::IntersectionT(
-                    reason,
-                    type_::inter_rep::make(t0, t1, iter.collect::<Vec<_>>().into()),
-                ))
-            };
-            type_::Property::new(type_::PropertyInner::Method {
-                key_loc: Some(first_id_loc.dupe()),
-                type_,
-            })
+            merge_overloaded_methods(ms, merge_one, |(id_loc, _, _)| id_loc)
         }
     }
 }

@@ -8518,6 +8518,12 @@ module Make
         (* All classes have a static "name" property. *)
         let class_sig = Class_stmt_sig.add_name_field class_sig in
 
+        let class_member_kind_of_method_kind = function
+          | Ast.Class.Method.Constructor -> None
+          | Ast.Class.Method.Method -> Some Class_Member_Method
+          | Ast.Class.Method.Get -> Some Class_Member_Getter
+          | Ast.Class.Method.Set -> Some Class_Member_Setter
+        in
         let check_duplicate_name public_seen_names member_loc name ~static ~private_ kind =
           let class_kind =
             match inst_kind with
@@ -8567,6 +8573,194 @@ module Make
            initializer/body (respectively) will not get checked, and the corresponding
            nodes of the typed AST will be filled in with error nodes.
         *)
+        let mk_declare_method_func_sig ~meth_kind loc func =
+          let {
+            Ast.Type.Function.params;
+            effect_ = _;
+            tparams = func_tparams;
+            return = func_return;
+            comments = _;
+          } =
+            func
+          in
+          Anno.error_on_unsupported_variance_annotation
+            cx
+            ~kind:(Anno.method_kind_to_string meth_kind)
+            func_tparams;
+          let (tparams, tparams_map', tparams_ast) =
+            Anno.mk_type_param_declarations
+              cx
+              ~kind:Flow_ast_mapper.FunctionTypeTP
+              ~tparams_map:tparams_map_with_this
+              func_tparams
+          in
+          let ( params_loc,
+                { Ast.Type.Function.Params.params = plist; rest; this_; comments = params_comments }
+              ) =
+            params
+          in
+          (* Convert a function-type Param using the same primitives as
+             [type_annotation.ml]'s [mk_method_func_sig], then project out the
+             extra fields needed to build a [Func_stmt_config_types.Types.Param].
+             Returns (resolved t, typed Function.Param AST, typed Identifier.t
+             for the Pattern.Identifier, annotation_or_hint, optional flag,
+             name string option for the [(name, t)] fun_param tuple). *)
+          let convert_param (param_loc, p) =
+            let (name_opt, annot, optional) = Flow_ast_utils.function_type_param_parts p in
+            let (((_, t), _) as annot_ast) = Anno.convert cx tparams_map' annot in
+            let typed_param_ast = (param_loc, Anno.typed_function_param_ast p t annot_ast) in
+            let name_id =
+              match name_opt with
+              | Some (name_loc, name_ast) -> ((name_loc, t), name_ast)
+              | None ->
+                ((param_loc, t), { Ast.Identifier.name = "<<anonymous param>>"; comments = None })
+            in
+            let name_str =
+              Base.Option.map ~f:(fun (_, { Ast.Identifier.name; _ }) -> name) name_opt
+            in
+            let annot_or_hint = Ast.Type.Available (fst annot, annot_ast) in
+            (t, typed_param_ast, name_id, annot_or_hint, optional, name_str)
+          in
+          let make_stmt_param ~ploc ~name_id ~annot_or_hint ~optional t =
+            Func_stmt_config_types.Types.Param
+              {
+                t;
+                loc = ploc;
+                ploc;
+                pattern =
+                  Func_stmt_config_types.Types.Id
+                    { Ast.Pattern.Identifier.name = name_id; annot = annot_or_hint; optional };
+                default = None;
+                has_anno = true;
+              }
+          in
+          let fparams = Func_stmt_params.empty (fun _ _ _ -> None) in
+          let (rev_params, rev_fun_params, fparams) =
+            List.fold_left
+              (fun (rp, rfp, fparams) (param_loc, p) ->
+                let (t, typed_ast, name_id, annot_or_hint, optional, name_str) =
+                  convert_param (param_loc, p)
+                in
+                let stmt_param =
+                  make_stmt_param ~ploc:param_loc ~name_id ~annot_or_hint ~optional t
+                in
+                let fun_param =
+                  let t' =
+                    if optional then
+                      TypeUtil.optional t
+                    else
+                      t
+                  in
+                  (name_str, t')
+                in
+                (typed_ast :: rp, fun_param :: rfp, Func_stmt_params.add_param stmt_param fparams))
+              ([], [], fparams)
+              plist
+          in
+          let typed_params_list = List.rev rev_params in
+          let fun_params_list = List.rev rev_fun_params in
+          let (typed_rest, fparams) =
+            match rest with
+            | None -> (None, fparams)
+            | Some
+                ( rest_loc,
+                  { Ast.Type.Function.RestParam.argument = (ploc, p); comments = rest_comments }
+                ) ->
+              let (t, typed_inner, name_id, annot_or_hint, _optional, _name_str) =
+                convert_param (ploc, p)
+              in
+              let rest_param =
+                Func_stmt_config_types.Types.Rest
+                  {
+                    t;
+                    loc = rest_loc;
+                    ploc;
+                    id =
+                      {
+                        Ast.Pattern.Identifier.name = name_id;
+                        annot = annot_or_hint;
+                        optional = false;
+                      };
+                    has_anno = true;
+                  }
+              in
+              let typed_rest =
+                ( rest_loc,
+                  { Ast.Type.Function.RestParam.argument = typed_inner; comments = rest_comments }
+                )
+              in
+              (Some typed_rest, Func_stmt_params.add_rest rest_param fparams)
+          in
+          let (typed_this, fparams) =
+            match this_ with
+            | None -> (None, fparams)
+            | Some
+                ( this_loc,
+                  { Ast.Type.Function.ThisParam.annot = (ta_loc, ta); comments = this_comments }
+                ) ->
+              let (((_, t), _) as annot') = Anno.convert cx tparams_map' ta in
+              let this_param =
+                Func_stmt_config_types.Types.This { t; loc = this_loc; annot = (ta_loc, annot') }
+              in
+              ( Some
+                  ( this_loc,
+                    {
+                      Ast.Type.Function.ThisParam.annot = (ta_loc, annot');
+                      comments = this_comments;
+                    }
+                  ),
+                Func_stmt_params.add_this this_param fparams
+              )
+          in
+          let typed_params_ast =
+            ( params_loc,
+              {
+                Ast.Type.Function.Params.params = typed_params_list;
+                rest = typed_rest;
+                this_ = typed_this;
+                comments = params_comments;
+              }
+            )
+          in
+          let (return_t, return_ast, type_guard) =
+            Anno.convert_return_annotation
+              ~meth_kind
+              cx
+              tparams_map'
+              typed_params_ast
+              fun_params_list
+              func_return
+          in
+          let func_kind =
+            match type_guard with
+            | None -> Func_class_sig_types.Func.Ordinary
+            | Some g -> Func_class_sig_types.Func.TypeGuard g
+          in
+          let reason = mk_annot_reason RFunctionType loc in
+          let func_sig =
+            {
+              Func_stmt_sig_types.reason;
+              kind = func_kind;
+              tparams;
+              fparams;
+              body = None;
+              return_t = Annotated return_t;
+              ret_annot_loc = loc_of_t return_t;
+              statics = None;
+              effect_ = ArbitraryEffect;
+            }
+          in
+          let typed_func =
+            {
+              Ast.Type.Function.tparams = tparams_ast;
+              params = typed_params_ast;
+              return = return_ast;
+              effect_ = func.Ast.Type.Function.effect_;
+              comments = func.Ast.Type.Function.comments;
+            }
+          in
+          (func_sig, typed_func)
+        in
         let (class_sig, rev_elements, _) =
           List.fold_left
             (let open Ast.Class in
@@ -8648,58 +8842,45 @@ module Make
                       }
                     )
                 in
-                let (add, class_member_kind) =
+                let add =
                   match kind with
                   | Method.Constructor ->
-                    let add =
-                      Class_stmt_sig.add_constructor ~id_loc:(Some id_loc) ~set_asts ~set_type
-                    in
-                    (add, None)
+                    Class_stmt_sig.add_constructor ~id_loc:(Some id_loc) ~set_asts ~set_type
+                  | Method.Method when private_ ->
+                    Class_stmt_sig.add_private_method
+                      ~static
+                      name
+                      ~id_loc
+                      ~this_write_loc:(Some func_loc)
+                      ~set_asts
+                      ~set_type
                   | Method.Method ->
-                    let add =
-                      if private_ then
-                        Class_stmt_sig.add_private_method
-                          ~static
-                          name
-                          ~id_loc
-                          ~this_write_loc:(Some func_loc)
-                          ~set_asts
-                          ~set_type
-                      else
-                        Class_stmt_sig.add_method
-                          ~static
-                          name
-                          ~id_loc
-                          ~this_write_loc:(Some func_loc)
-                          ~set_asts
-                          ~set_type
-                    in
-                    (add, Some Class_Member_Method)
+                    Class_stmt_sig.add_method
+                      ~static
+                      name
+                      ~id_loc
+                      ~this_write_loc:(Some func_loc)
+                      ~set_asts
+                      ~set_type
                   | Method.Get ->
-                    let add =
-                      Class_stmt_sig.add_getter
-                        ~static
-                        name
-                        ~id_loc
-                        ~this_write_loc:(Some func_loc)
-                        ~set_asts
-                        ~set_type
-                    in
-                    (add, Some Class_Member_Getter)
+                    Class_stmt_sig.add_getter
+                      ~static
+                      name
+                      ~id_loc
+                      ~this_write_loc:(Some func_loc)
+                      ~set_asts
+                      ~set_type
                   | Method.Set ->
-                    let add =
-                      Class_stmt_sig.add_setter
-                        ~static
-                        name
-                        ~id_loc
-                        ~this_write_loc:(Some func_loc)
-                        ~set_asts
-                        ~set_type
-                    in
-                    (add, Some Class_Member_Setter)
+                    Class_stmt_sig.add_setter
+                      ~static
+                      name
+                      ~id_loc
+                      ~this_write_loc:(Some func_loc)
+                      ~set_asts
+                      ~set_type
                 in
                 let public_seen_names' =
-                  match class_member_kind with
+                  match class_member_kind_of_method_kind kind with
                   | Some k -> check_duplicate_name public_seen_names id_loc name ~static ~private_ k
                   | None -> public_seen_names
                 in
@@ -9025,6 +9206,174 @@ module Make
                   cx
                   (Error_message.EUnsupportedSyntax
                      (loc, Flow_intermediate_error_types.ClassStaticBlock)
+                  );
+                ( c,
+                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                  public_seen_names
+                )
+              | Body.DeclareMethod
+                  ( elem_loc,
+                    ( {
+                        DeclareMethod.kind;
+                        key =
+                          Ast.Expression.Object.Property.Identifier
+                            (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                        annot =
+                          (annot_loc, ((func_annot_loc, Ast.Type.Function func_annot) as _annot));
+                        static;
+                        override;
+                        optional;
+                        comments;
+                      } as _decl_method
+                    )
+                  )
+                when Context.under_declaration_context cx ->
+                if override then
+                  Flow.add_output
+                    cx
+                    (Error_message.EUnsupportedSyntax
+                       (elem_loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
+                    );
+                let meth_kind =
+                  match kind with
+                  | Method.Constructor -> Anno.ConstructorKind
+                  | Method.Get -> Anno.GetterKind
+                  | Method.Set -> Anno.SetterKind
+                  | Method.Method -> Anno.MethodKind { static }
+                in
+                let (func_sig, typed_func) =
+                  mk_declare_method_func_sig ~meth_kind func_annot_loc func_annot
+                in
+                if optional then
+                  let func_t =
+                    Func_stmt_sig.methodtype
+                      cx
+                      None
+                      (Type.implicit_mixed_this func_sig.Func_stmt_sig_types.reason)
+                      func_sig
+                  in
+                  let optional_t = TypeUtil.optional func_t in
+                  let c =
+                    Class_stmt_sig.add_field
+                      ~static
+                      name
+                      id_loc
+                      Polarity.Neutral
+                      (Annot optional_t)
+                      c
+                  in
+                  let public_seen_names' =
+                    check_duplicate_name
+                      public_seen_names
+                      id_loc
+                      name
+                      ~static
+                      ~private_:false
+                      Class_Member_Field
+                  in
+                  let get_element () =
+                    Body.DeclareMethod
+                      ( (elem_loc, optional_t),
+                        {
+                          DeclareMethod.kind;
+                          key = Ast.Expression.Object.Property.Identifier ((id_loc, optional_t), id);
+                          annot =
+                            (annot_loc, ((func_annot_loc, func_t), Ast.Type.Function typed_func));
+                          static;
+                          override;
+                          optional;
+                          comments;
+                        }
+                      )
+                  in
+                  (c, get_element :: rev_elements, public_seen_names')
+                else
+                  let func_t_ref : Type.t option ref = ref None in
+                  let set_type t = func_t_ref := Some t in
+                  let get_element () =
+                    let func_t = Base.Option.value !func_t_ref ~default:(EmptyT.at id_loc) in
+                    Body.DeclareMethod
+                      ( (elem_loc, func_t),
+                        {
+                          DeclareMethod.kind;
+                          key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id);
+                          annot =
+                            (annot_loc, ((func_annot_loc, func_t), Ast.Type.Function typed_func));
+                          static;
+                          override;
+                          optional;
+                          comments;
+                        }
+                      )
+                  in
+                  (match kind with
+                  | Method.Get
+                  | Method.Set ->
+                    Flow_js.add_output cx (Error_message.EUnsafeGettersSetters elem_loc)
+                  | _ -> ());
+                  let c =
+                    match kind with
+                    | Method.Constructor ->
+                      Class_stmt_sig.append_constructor_replacing_default
+                        ~id_loc:(Some id_loc)
+                        ~func_sig
+                        ~set_type
+                        c
+                    | Method.Method ->
+                      Class_stmt_sig.append_method
+                        ~static
+                        name
+                        ~id_loc
+                        ~this_write_loc:None
+                        ~func_sig
+                        ~set_type
+                        c
+                    | Method.Get ->
+                      Class_stmt_sig.add_getter
+                        ~static
+                        name
+                        ~id_loc
+                        ~this_write_loc:None
+                        ~func_sig
+                        ~set_type
+                        c
+                    | Method.Set ->
+                      Class_stmt_sig.add_setter
+                        ~static
+                        name
+                        ~id_loc
+                        ~this_write_loc:None
+                        ~func_sig
+                        ~set_type
+                        c
+                  in
+                  (* For overloaded methods, only flag the first occurrence so
+                     N overloads don't produce N-1 duplicate-name errors. *)
+                  let public_seen_names' =
+                    match class_member_kind_of_method_kind kind with
+                    | None -> public_seen_names
+                    | Some Class_Member_Method
+                      when SMap.find_opt
+                             name
+                             ( if static then
+                               public_seen_names.static_names
+                             else
+                               public_seen_names.instance_names
+                             )
+                           = Some Class_Member_Method ->
+                      public_seen_names
+                    | Some k ->
+                      check_duplicate_name public_seen_names id_loc name ~static ~private_:false k
+                  in
+                  (c, get_element :: rev_elements, public_seen_names')
+              | Body.DeclareMethod (loc, _) as elem when Context.under_declaration_context cx ->
+                Flow.add_output
+                  cx
+                  Error_message.(
+                    EInternal
+                      ( loc,
+                        UnexpectedAnnotationInference "DeclareMethod annot must be Function type"
+                      )
                   );
                 ( c,
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,

@@ -563,7 +563,7 @@ fn allows_this_type_guards(kind: MethodKind) -> bool {
     }
 }
 
-fn method_kind_to_string(kind: MethodKind) -> &'static str {
+pub fn method_kind_to_string(kind: MethodKind) -> &'static str {
     match kind {
         MethodKind::FunctionKind => "function",
         MethodKind::MethodKind { .. } => "method",
@@ -2875,7 +2875,7 @@ fn convert_inner<'a>(
                 comments: params_comments.clone(),
             };
             let fparams = params;
-            let (return_t, return_ast, type_guard) = convert_return_annotation(
+            let (return_t, return_ast, type_guard) = convert_return_annotation_inner(
                 cx,
                 env,
                 MethodKind::FunctionKind,
@@ -5237,7 +5237,7 @@ fn error_type_guard<'a>(
     Ok((bool_t, guard_prime, None))
 }
 
-fn convert_return_annotation<'a>(
+fn convert_return_annotation_inner<'a>(
     cx: &Context<'a>,
     env: &mut ConvertEnv,
     meth_kind: MethodKind,
@@ -5432,7 +5432,7 @@ fn convert_return_annotation<'a>(
 }
 
 /// Build typed AST for a function type parameter after type-checking.
-fn typed_function_param_ast(
+pub fn typed_function_param_ast(
     param: &ast::types::function::ParamKind<ALoc, ALoc>,
     t: Type,
     annot_ast: ast::types::Type<ALoc, (ALoc, Type)>,
@@ -5612,7 +5612,7 @@ fn mk_method_func_sig<'a>(
     )?;
     let (fparams, params_ast) = convert_params(cx, env, &func.params)?;
     let fparams_value = crate::func_params::value::<FuncTypeParamsConfig>(&fparams.params);
-    let (return_t, return_ast, type_guard) = convert_return_annotation(
+    let (return_t, return_ast, type_guard) = convert_return_annotation_inner(
         cx,
         env,
         meth_kind,
@@ -8466,6 +8466,25 @@ pub fn convert_indexer(
 > {
     let mut env = ConvertEnv::new(None, None, None, tparams_map.dupe());
     convert_indexer_internal(cx, &mut env, indexer)
+}
+
+pub fn convert_return_annotation<'a>(
+    cx: &Context<'a>,
+    meth_kind: MethodKind,
+    tparams_map: FlowOrdMap<SubstName, Type>,
+    params: &ast::types::function::Params<ALoc, ALoc>,
+    fparams: &[type_::FunParam],
+    return_annot: &ast::types::function::ReturnAnnotation<ALoc, ALoc>,
+) -> Result<
+    (
+        Type,
+        ast::types::function::ReturnAnnotation<ALoc, (ALoc, Type)>,
+        Option<type_::TypeGuard>,
+    ),
+    flow_utils_concurrency::job_error::JobError,
+> {
+    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    convert_return_annotation_inner(cx, &mut env, meth_kind, params, fparams, return_annot)
 }
 
 pub fn mk_empty_interface_type<'a>(

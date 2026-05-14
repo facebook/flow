@@ -58,6 +58,15 @@ module type S = sig
   val append_constructor :
     id_loc:ALoc.t option -> func_sig:func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
 
+  (** Like [append_constructor], but replaces the implicit default constructor
+      if it is the only constructor present. Subsequent calls append as usual.
+      Use for bodyless constructors in regular class bodies under any ambient
+      context (lib files, [.flow]/[.d.ts] files, [declare module]/[declare
+      namespace]) that support overloads but must evict the implicit zero-arg
+      default. *)
+  val append_constructor_replacing_default :
+    id_loc:ALoc.t option -> func_sig:func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
+
   (** Add field to signature. *)
   val add_field : static:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
 

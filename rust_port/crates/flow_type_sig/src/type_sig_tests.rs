@@ -2478,36 +2478,38 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 4,
-                                fn_loc: 3,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: Annot(
-                                                Number(
-                                                    5,
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 4,
+                                    fn_loc: 3,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
                                                 ),
+                                                t: Annot(
+                                                    Number(
+                                                        5,
+                                                    ),
+                                                ),
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: Annot(
+                                            Number(
+                                                6,
                                             ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Annot(
-                                        Number(
-                                            6,
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -2604,36 +2606,38 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 4,
-                                fn_loc: 3,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: Annot(
-                                                Number(
-                                                    5,
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 4,
+                                    fn_loc: 3,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
                                                 ),
+                                                t: Annot(
+                                                    Number(
+                                                        5,
+                                                    ),
+                                                ),
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: Annot(
+                                            Number(
+                                                6,
                                             ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Annot(
-                                        Number(
-                                            6,
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -2734,34 +2738,36 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 4,
-                                fn_loc: 3,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 4,
+                                    fn_loc: 3,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
+                                                ),
+                                                t: Err(
+                                                    5,
+                                                ),
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: Annot(
+                                            Number(
+                                                6,
                                             ),
-                                            t: Err(
-                                                5,
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Annot(
-                                        Number(
-                                            6,
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -2860,34 +2866,36 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 4,
-                                fn_loc: 3,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: Annot(
-                                                Number(
-                                                    5,
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 4,
+                                    fn_loc: 3,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
                                                 ),
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Err(
-                                        6,
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                                t: Annot(
+                                                    Number(
+                                                        5,
+                                                    ),
+                                                ),
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: Err(
+                                            6,
+                                        ),
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -3034,46 +3042,48 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 10,
-                                fn_loc: 9,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: TyRef(
-                                                Unqualified(
-                                                    LocalRef(
-                                                        PackedRefLocal {
-                                                            ref_loc: 11,
-                                                            index: 1,
-                                                        },
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 10,
+                                    fn_loc: 9,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
+                                                ),
+                                                t: TyRef(
+                                                    Unqualified(
+                                                        LocalRef(
+                                                            PackedRefLocal {
+                                                                ref_loc: 11,
+                                                                index: 1,
+                                                            },
+                                                        ),
                                                     ),
                                                 ),
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: TyRef(
-                                        Unqualified(
-                                            LocalRef(
-                                                PackedRefLocal {
-                                                    ref_loc: 12,
-                                                    index: 2,
-                                                },
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: TyRef(
+                                            Unqualified(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 12,
+                                                        index: 2,
+                                                    },
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -3207,46 +3217,48 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 7,
-                                fn_loc: 6,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: TyRef(
-                                                Unqualified(
-                                                    LocalRef(
-                                                        PackedRefLocal {
-                                                            ref_loc: 8,
-                                                            index: 0,
-                                                        },
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 7,
+                                    fn_loc: 6,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
+                                                ),
+                                                t: TyRef(
+                                                    Unqualified(
+                                                        LocalRef(
+                                                            PackedRefLocal {
+                                                                ref_loc: 8,
+                                                                index: 0,
+                                                            },
+                                                        ),
                                                     ),
                                                 ),
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: TyRef(
-                                        Unqualified(
-                                            LocalRef(
-                                                PackedRefLocal {
-                                                    ref_loc: 9,
-                                                    index: 0,
-                                                },
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: TyRef(
+                                            Unqualified(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 9,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -3384,46 +3396,48 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 7,
-                                fn_loc: 6,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: TyRef(
-                                                Unqualified(
-                                                    LocalRef(
-                                                        PackedRefLocal {
-                                                            ref_loc: 8,
-                                                            index: 0,
-                                                        },
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 7,
+                                    fn_loc: 6,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
+                                                ),
+                                                t: TyRef(
+                                                    Unqualified(
+                                                        LocalRef(
+                                                            PackedRefLocal {
+                                                                ref_loc: 8,
+                                                                index: 0,
+                                                            },
+                                                        ),
                                                     ),
                                                 ),
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: TyRef(
-                                        Unqualified(
-                                            LocalRef(
-                                                PackedRefLocal {
-                                                    ref_loc: 9,
-                                                    index: 0,
-                                                },
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: TyRef(
+                                            Unqualified(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 9,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -3559,46 +3573,48 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 7,
-                                fn_loc: 6,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: TyRef(
-                                                Unqualified(
-                                                    LocalRef(
-                                                        PackedRefLocal {
-                                                            ref_loc: 8,
-                                                            index: 0,
-                                                        },
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 7,
+                                    fn_loc: 6,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
+                                                ),
+                                                t: TyRef(
+                                                    Unqualified(
+                                                        LocalRef(
+                                                            PackedRefLocal {
+                                                                ref_loc: 8,
+                                                                index: 0,
+                                                            },
+                                                        ),
                                                     ),
                                                 ),
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: TyRef(
-                                        Unqualified(
-                                            LocalRef(
-                                                PackedRefLocal {
-                                                    ref_loc: 9,
-                                                    index: 0,
-                                                },
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: TyRef(
+                                            Unqualified(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 9,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -3738,46 +3754,48 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 7,
-                                fn_loc: 6,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: TyRef(
-                                                Unqualified(
-                                                    LocalRef(
-                                                        PackedRefLocal {
-                                                            ref_loc: 8,
-                                                            index: 0,
-                                                        },
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 7,
+                                    fn_loc: 6,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
+                                                ),
+                                                t: TyRef(
+                                                    Unqualified(
+                                                        LocalRef(
+                                                            PackedRefLocal {
+                                                                ref_loc: 8,
+                                                                index: 0,
+                                                            },
+                                                        ),
                                                     ),
                                                 ),
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: TyRef(
-                                        Unqualified(
-                                            LocalRef(
-                                                PackedRefLocal {
-                                                    ref_loc: 9,
-                                                    index: 0,
-                                                },
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: TyRef(
+                                            Unqualified(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 9,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -3879,46 +3897,48 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 4,
-                                fn_loc: 3,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: TyRef(
-                                                Unqualified(
-                                                    LocalRef(
-                                                        PackedRefLocal {
-                                                            ref_loc: 5,
-                                                            index: 0,
-                                                        },
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 4,
+                                    fn_loc: 3,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
+                                                ),
+                                                t: TyRef(
+                                                    Unqualified(
+                                                        LocalRef(
+                                                            PackedRefLocal {
+                                                                ref_loc: 5,
+                                                                index: 0,
+                                                            },
+                                                        ),
                                                     ),
                                                 ),
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: TyRef(
-                                        Unqualified(
-                                            LocalRef(
-                                                PackedRefLocal {
-                                                    ref_loc: 6,
-                                                    index: 0,
-                                                },
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: TyRef(
+                                            Unqualified(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 6,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -4020,46 +4040,48 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 4,
-                                fn_loc: 3,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: TyRef(
-                                                Unqualified(
-                                                    LocalRef(
-                                                        PackedRefLocal {
-                                                            ref_loc: 5,
-                                                            index: 0,
-                                                        },
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 4,
+                                    fn_loc: 3,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
+                                                ),
+                                                t: TyRef(
+                                                    Unqualified(
+                                                        LocalRef(
+                                                            PackedRefLocal {
+                                                                ref_loc: 5,
+                                                                index: 0,
+                                                            },
+                                                        ),
                                                     ),
                                                 ),
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: TyRef(
-                                        Unqualified(
-                                            LocalRef(
-                                                PackedRefLocal {
-                                                    ref_loc: 6,
-                                                    index: 0,
-                                                },
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: TyRef(
+                                            Unqualified(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 6,
+                                                        index: 0,
+                                                    },
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -4927,46 +4949,48 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 7,
-                                fn_loc: 6,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: TyRef(
-                                                Unqualified(
-                                                    RemoteRef(
-                                                        PackedRefRemote {
-                                                            ref_loc: 8,
-                                                            index: 1,
-                                                        },
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 7,
+                                    fn_loc: 6,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
+                                                ),
+                                                t: TyRef(
+                                                    Unqualified(
+                                                        RemoteRef(
+                                                            PackedRefRemote {
+                                                                ref_loc: 8,
+                                                                index: 1,
+                                                            },
+                                                        ),
                                                     ),
                                                 ),
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: TyRef(
-                                        Unqualified(
-                                            RemoteRef(
-                                                PackedRefRemote {
-                                                    ref_loc: 9,
-                                                    index: 2,
-                                                },
+                                            },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: TyRef(
+                                            Unqualified(
+                                                RemoteRef(
+                                                    PackedRefRemote {
+                                                        ref_loc: 9,
+                                                        index: 2,
+                                                    },
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {
@@ -5096,60 +5120,62 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 4,
-                                fn_loc: 3,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [
-                                        FunParam {
-                                            name: Some(
-                                                "x",
-                                            ),
-                                            t: TyRef(
-                                                Qualified(
-                                                    TyRefQualified {
-                                                        loc: 5,
-                                                        id_loc: 7,
-                                                        name: "T",
-                                                        qualification: Unqualified(
-                                                            RemoteRef(
-                                                                PackedRefRemote {
-                                                                    ref_loc: 6,
-                                                                    index: 0,
-                                                                },
-                                                            ),
-                                                        ),
-                                                    },
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 4,
+                                    fn_loc: 3,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [
+                                            FunParam {
+                                                name: Some(
+                                                    "x",
                                                 ),
-                                            ),
-                                        },
-                                    ],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: TyRef(
-                                        Qualified(
-                                            TyRefQualified {
-                                                loc: 8,
-                                                id_loc: 10,
-                                                name: "T",
-                                                qualification: Unqualified(
-                                                    RemoteRef(
-                                                        PackedRefRemote {
-                                                            ref_loc: 9,
-                                                            index: 1,
+                                                t: TyRef(
+                                                    Qualified(
+                                                        TyRefQualified {
+                                                            loc: 5,
+                                                            id_loc: 7,
+                                                            name: "T",
+                                                            qualification: Unqualified(
+                                                                RemoteRef(
+                                                                    PackedRefRemote {
+                                                                        ref_loc: 6,
+                                                                        index: 0,
+                                                                    },
+                                                                ),
+                                                            ),
                                                         },
                                                     ),
                                                 ),
                                             },
+                                        ],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: TyRef(
+                                            Qualified(
+                                                TyRefQualified {
+                                                    loc: 8,
+                                                    id_loc: 10,
+                                                    name: "T",
+                                                    qualification: Unqualified(
+                                                        RemoteRef(
+                                                            PackedRefRemote {
+                                                                ref_loc: 9,
+                                                                index: 1,
+                                                            },
+                                                        ),
+                                                    ),
+                                                },
+                                            ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {},
@@ -6253,23 +6279,25 @@ Module {
                     static_props: {},
                     proto_props: {
                         "_method": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 2,
-                                fn_loc: 1,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Err(
-                                        3,
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 2,
+                                    fn_loc: 1,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: Err(
+                                            3,
+                                        ),
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {},
@@ -11226,28 +11254,30 @@ Module {
                     static_props: {},
                     proto_props: {
                         "m": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 2,
-                                fn_loc: 1,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [],
-                                    rest_param: None,
-                                    this_param: None,
-                                    return_: Annot(
-                                        Bound(
-                                            AnnotBound {
-                                                ref_loc: 3,
-                                                name: "this",
-                                            },
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 2,
+                                    fn_loc: 1,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [],
+                                        rest_param: None,
+                                        this_param: None,
+                                        return_: Annot(
+                                            Bound(
+                                                AnnotBound {
+                                                    ref_loc: 3,
+                                                    name: "this",
+                                                },
+                                            ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {},
@@ -14032,31 +14062,33 @@ Module {
                     static_props: {},
                     proto_props: {
                         "foo": ObjValueMethod(
-                            ObjValueMethodData {
-                                id_loc: 2,
-                                fn_loc: 1,
-                                async_: false,
-                                generator: false,
-                                def: FunSig {
-                                    tparams: Mono,
-                                    params: [],
-                                    rest_param: None,
-                                    this_param: Some(
-                                        Annot(
-                                            Mixed(
-                                                3,
+                            [
+                                ObjValueMethodData {
+                                    id_loc: 2,
+                                    fn_loc: 1,
+                                    async_: false,
+                                    generator: false,
+                                    def: FunSig {
+                                        tparams: Mono,
+                                        params: [],
+                                        rest_param: None,
+                                        this_param: Some(
+                                            Annot(
+                                                Mixed(
+                                                    3,
+                                                ),
                                             ),
                                         ),
-                                    ),
-                                    return_: Annot(
-                                        Void(
-                                            4,
+                                        return_: Annot(
+                                            Void(
+                                                4,
+                                            ),
                                         ),
-                                    ),
-                                    type_guard: None,
-                                    effect_: ArbitraryEffect,
+                                        type_guard: None,
+                                        effect_: ArbitraryEffect,
+                                    },
                                 },
-                            },
+                            ],
                         ),
                     },
                     own_props: {},

@@ -498,19 +498,19 @@ impl<Loc, T> Accessor<Loc, T> {
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
-pub enum ObjValueProp<Loc, T> {
-    ObjValueField(Box<(Loc, T, Polarity)>),
-    ObjValueAccess(Box<Accessor<Loc, T>>),
-    ObjValueMethod(Box<ObjValueMethodData<Loc, T>>),
-}
-
-#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct ObjValueMethodData<Loc, T> {
     pub id_loc: Loc,
     pub fn_loc: Loc,
     pub async_: bool,
     pub generator: bool,
     pub def: FunSig<Loc, T>,
+}
+
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub enum ObjValueProp<Loc, T> {
+    ObjValueField(Box<(Loc, T, Polarity)>),
+    ObjValueAccess(Box<Accessor<Loc, T>>),
+    ObjValueMethod(Box<Vec1<ObjValueMethodData<Loc, T>>>),
 }
 
 impl<Loc, T> ObjValueProp<Loc, T> {
@@ -526,16 +526,19 @@ impl<Loc, T> ObjValueProp<Loc, T> {
                 f_t(cx, t);
             }
             ObjValueProp::ObjValueAccess(box accessor) => accessor.iter(cx, f_loc, f_t),
-            ObjValueProp::ObjValueMethod(box ObjValueMethodData {
-                id_loc,
-                fn_loc,
-                async_: _,
-                generator: _,
-                def,
-            }) => {
-                f_loc(cx, id_loc);
-                f_loc(cx, fn_loc);
-                def.iter(cx, f_loc, f_t);
+            ObjValueProp::ObjValueMethod(box ms) => {
+                for ObjValueMethodData {
+                    id_loc,
+                    fn_loc,
+                    async_: _,
+                    generator: _,
+                    def,
+                } in ms.iter()
+                {
+                    f_loc(cx, id_loc);
+                    f_loc(cx, fn_loc);
+                    def.iter(cx, f_loc, f_t);
+                }
             }
         }
     }
@@ -553,19 +556,23 @@ impl<Loc, T> ObjValueProp<Loc, T> {
             ObjValueProp::ObjValueAccess(box accessor) => {
                 ObjValueProp::ObjValueAccess(Box::new(accessor.map(cx, &f_loc, &f_t)))
             }
-            ObjValueProp::ObjValueMethod(box ObjValueMethodData {
-                id_loc,
-                fn_loc,
-                async_,
-                generator,
-                def,
-            }) => ObjValueProp::ObjValueMethod(Box::new(ObjValueMethodData {
-                id_loc: f_loc(cx, id_loc),
-                fn_loc: f_loc(cx, fn_loc),
-                async_: *async_,
-                generator: *generator,
-                def: def.map(cx, &f_loc, &f_t),
-            })),
+            ObjValueProp::ObjValueMethod(box ms) => {
+                ObjValueProp::ObjValueMethod(Box::new(ms.mapped_ref(
+                    |ObjValueMethodData {
+                         id_loc,
+                         fn_loc,
+                         async_,
+                         generator,
+                         def,
+                     }| ObjValueMethodData {
+                        id_loc: f_loc(cx, id_loc),
+                        fn_loc: f_loc(cx, fn_loc),
+                        async_: *async_,
+                        generator: *generator,
+                        def: def.map(cx, &f_loc, &f_t),
+                    },
+                )))
+            }
         }
     }
 }

@@ -1,0 +1,36 @@
+class MyClass {
+  method(x: number): void;
+  static staticMethod(): string;
+  overloaded(x: number): number;
+  overloaded(x: string): string;
+  generic<T>(x: T): T;
+}
+
+class DuplicateFieldMethod {
+  foo: string;
+  foo(x: number): void; // ERROR: duplicate
+}
+
+class DuplicateGetterMethod {
+  get bar(): number;
+  bar(x: number): void; // ERROR: duplicate
+}
+
+class WithRestParam {
+  method(...args: Array<number>): void;
+}
+
+class WithDestructuringParams {
+  objectParam({a}: {a: number}): void;
+  arrayParam([a]: [number]): void;
+  optionalObjectParam({a}?: {a: number}): void;
+  optionalArrayParam([a]?: [number]): void;
+}
+
+export {
+  MyClass,
+  DuplicateFieldMethod,
+  DuplicateGetterMethod,
+  WithRestParam,
+  WithDestructuringParams,
+};

@@ -150,16 +150,19 @@ type ('loc, 'a) accessor =
   | GetSet of 'loc * 'a * 'loc * 'a
 [@@deriving iter, map, show { with_path = false }]
 
+type ('loc, 'a) obj_value_method = {
+  id_loc: 'loc;
+  fn_loc: 'loc;
+  async: bool;
+  generator: bool;
+  def: ('loc, 'a) fun_sig;
+}
+[@@deriving iter, map, show { with_path = false }]
+
 type ('loc, 'a) obj_value_prop =
   | ObjValueField of 'loc * 'a * Polarity.t
   | ObjValueAccess of ('loc, 'a) accessor
-  | ObjValueMethod of {
-      id_loc: 'loc;
-      fn_loc: 'loc;
-      async: bool;
-      generator: bool;
-      def: ('loc, 'a) fun_sig;
-    }
+  | ObjValueMethod of ('loc, 'a) obj_value_method Nel.t
 [@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) obj_annot_prop =

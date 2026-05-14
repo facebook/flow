@@ -125,6 +125,11 @@ module Make
         :: s.constructor;
     }
 
+  let append_constructor_replacing_default ~id_loc ~func_sig ?set_asts ?set_type s =
+    match s.constructor with
+    | [{ id_loc = None; _ }] -> add_constructor ~id_loc ~func_sig ?set_asts ?set_type s
+    | _ -> append_constructor ~id_loc ~func_sig ?set_asts ?set_type s
+
   let add_field' ~static name fld x =
     let flat = static || structural x in
     map_sig
@@ -877,11 +882,15 @@ module Make
   let toplevels cx x =
     Type_env.in_class_scope cx x.class_loc (fun () ->
         let method_ ~set_asts f =
-          let (params_ast, body_ast, init_ast) = F.toplevels cx f in
-          Base.Option.iter init_ast ~f:(fun ((_, t), _) ->
-              Context.add_missing_local_annot_lower_bound cx f.F.Types.ret_annot_loc t
-          );
-          set_asts (params_ast, body_ast, init_ast)
+          match (f.F.Types.body, f.F.Types.kind) with
+          | (None, Func_class_sig_types.Func.FieldInit _)
+          | (Some _, _) ->
+            let (params_ast, body_ast, init_ast) = F.toplevels cx f in
+            Base.Option.iter init_ast ~f:(fun ((_, t), _) ->
+                Context.add_missing_local_annot_lower_bound cx f.F.Types.ret_annot_loc t
+            );
+            set_asts (params_ast, body_ast, init_ast)
+          | (None, _) -> set_asts (None, None, None)
         in
         let field _name (_, _, value) =
           match value with

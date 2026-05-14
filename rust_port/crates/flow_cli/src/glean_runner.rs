@@ -915,9 +915,10 @@ pub(crate) fn loc_of_obj_value_prop<T>(
             Accessor::Set(box (index, _)) => loc_of_index(loc_source, reader, *index),
             Accessor::GetSet(box (_, _, index, _)) => loc_of_index(loc_source, reader, *index),
         },
-        ObjValueProp::ObjValueMethod(box type_sig::ObjValueMethodData {
-            id_loc: index, ..
-        }) => loc_of_index(loc_source, reader, *index),
+        ObjValueProp::ObjValueMethod(box ms) => {
+            let type_sig::ObjValueMethodData { id_loc: index, .. } = &ms[0];
+            loc_of_index(loc_source, reader, *index)
+        }
     }
 }
 

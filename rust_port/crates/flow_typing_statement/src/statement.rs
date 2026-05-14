@@ -16067,6 +16067,272 @@ pub fn mk_class_sig<'a>(
                     Ok(())
                 }
 
+                #[allow(clippy::too_many_arguments)]
+                fn mk_declare_method_func_sig<'a>(
+                    cx: &Context<'a>,
+                    tparams_map_with_this: &FlowOrdMap<SubstName, Type>,
+                    meth_kind: type_annotation::MethodKind,
+                    loc: ALoc,
+                    func: &ast::types::Function<ALoc, ALoc>,
+                ) -> Result<
+                    (
+                        func_class_sig_types::func::Func<func_class_sig_types::StmtConfigTypes>,
+                        ast::types::Function<ALoc, (ALoc, Type)>,
+                    ),
+                    flow_utils_concurrency::job_error::JobError,
+                > {
+                    use std::rc::Rc;
+                    use std::sync::Arc;
+
+                    use flow_typing_loc_env::func_class_sig_types::StmtConfigTypes;
+                    use flow_typing_loc_env::func_stmt_config_types;
+
+                    let params = &func.params;
+                    let func_tparams = func.tparams.as_ref();
+                    let func_return = &func.return_;
+
+                    type_annotation::error_on_unsupported_variance_annotation(
+                        cx,
+                        type_annotation::method_kind_to_string(meth_kind),
+                        func_tparams,
+                    );
+                    let (tparams, tparams_map_prime, tparams_ast) =
+                        type_annotation::mk_type_param_declarations(
+                            cx,
+                            flow_parser::ast_visitor::TypeParamsContext::FunctionType,
+                            Some(tparams_map_with_this.dupe()),
+                            func_tparams,
+                        )?;
+
+                    let params_loc = params.loc.dupe();
+                    let plist = &params.params;
+                    let rest = &params.rest;
+                    let this_ = &params.this;
+                    let params_comments = params.comments.dupe();
+
+                    /* Convert a function-type Param using the same primitives as
+                    [type_annotation.ml]'s [mk_method_func_sig], then project out the
+                    extra fields needed to build a [Func_stmt_config_types.Types.Param].
+                    Returns (resolved t, typed Function.Param AST, typed Identifier.t
+                    for the Pattern.Identifier, annotation_or_hint, optional flag,
+                    name string option for the [(name, t)] fun_param tuple). */
+                    let convert_param = |param_loc: ALoc,
+                                         p: &ast::types::function::ParamKind<ALoc, ALoc>|
+                     -> Result<
+                        (
+                            Type,
+                            ast::types::function::Param<ALoc, (ALoc, Type)>,
+                            ast::Identifier<ALoc, (ALoc, Type)>,
+                            ast::types::AnnotationOrHint<ALoc, (ALoc, Type)>,
+                            bool,
+                            Option<FlowSmolStr>,
+                        ),
+                        flow_utils_concurrency::job_error::JobError,
+                    > {
+                        let (name_opt, annot, optional) =
+                            flow_parser::ast_utils::function_type_param_parts(p);
+                        let annot_loc = annot.loc().dupe();
+                        let annot_ast =
+                            type_annotation::convert(cx, tparams_map_prime.dupe(), annot)?;
+                        let (_, t) = annot_ast.loc();
+                        let t = t.dupe();
+                        let typed_param_ast = ast::types::function::Param {
+                            loc: param_loc.dupe(),
+                            param: type_annotation::typed_function_param_ast(
+                                p,
+                                t.dupe(),
+                                annot_ast.clone(),
+                            ),
+                        };
+                        let name_id = match name_opt {
+                            Some(name) => ast::Identifier::new(ast::IdentifierInner {
+                                loc: (name.loc.dupe(), t.dupe()),
+                                name: name.name.dupe(),
+                                comments: name.comments.dupe(),
+                            }),
+                            None => ast::Identifier::new(ast::IdentifierInner {
+                                loc: (param_loc.dupe(), t.dupe()),
+                                name: FlowSmolStr::new("<<anonymous param>>"),
+                                comments: None,
+                            }),
+                        };
+                        let name_str = name_opt.map(|n| n.name.dupe());
+                        let annot_or_hint =
+                            ast::types::AnnotationOrHint::Available(ast::types::Annotation {
+                                loc: annot_loc,
+                                annotation: annot_ast,
+                            });
+                        Ok((
+                            t,
+                            typed_param_ast,
+                            name_id,
+                            annot_or_hint,
+                            optional,
+                            name_str,
+                        ))
+                    };
+
+                    let make_stmt_param =
+                        |ploc: ALoc,
+                         name_id: ast::Identifier<ALoc, (ALoc, Type)>,
+                         annot_or_hint: ast::types::AnnotationOrHint<ALoc, (ALoc, Type)>,
+                         optional: bool,
+                         t: Type|
+                         -> func_stmt_config_types::Param {
+                            func_stmt_config_types::Param {
+                                t,
+                                loc: ploc.dupe(),
+                                ploc,
+                                pattern: func_stmt_config_types::Pattern::Id(
+                                    flow_parser::ast::pattern::Identifier {
+                                        name: name_id,
+                                        annot: annot_or_hint,
+                                        optional,
+                                    },
+                                ),
+                                default: None,
+                                has_anno: true,
+                            }
+                        };
+
+                    let mut fparams =
+                        crate::func_params::empty::<StmtConfigTypes>(Rc::new(|_, _, _| None));
+                    let mut rev_params: Vec<ast::types::function::Param<ALoc, (ALoc, Type)>> =
+                        Vec::new();
+                    let mut rev_fun_params: Vec<type_::FunParam> = Vec::new();
+                    for param in plist.iter() {
+                        let param_loc = param.loc.dupe();
+                        let p = &param.param;
+                        let (t, typed_ast, name_id, annot_or_hint, optional, name_str) =
+                            convert_param(param_loc.dupe(), p)?;
+                        let stmt_param =
+                            make_stmt_param(param_loc, name_id, annot_or_hint, optional, t.dupe());
+                        let t_prime = if optional {
+                            flow_typing_type::type_util::optional(t, None, false)
+                        } else {
+                            t
+                        };
+                        let fun_param = type_::FunParam(name_str, t_prime);
+                        rev_params.push(typed_ast);
+                        rev_fun_params.push(fun_param);
+                        crate::func_params::add_param::<StmtConfigTypes>(stmt_param, &mut fparams);
+                    }
+                    let typed_params_list = rev_params;
+                    let fun_params_list = rev_fun_params;
+
+                    let typed_rest = match rest {
+                        None => None,
+                        Some(rest_param) => {
+                            let rest_loc = rest_param.loc.dupe();
+                            let argument = &rest_param.argument;
+                            let ploc = argument.loc.dupe();
+                            let p = &argument.param;
+                            let rest_comments = rest_param.comments.dupe();
+                            let (t, typed_inner, name_id, annot_or_hint, _optional, _name_str) =
+                                convert_param(ploc.dupe(), p)?;
+                            let rest_param = func_stmt_config_types::Rest {
+                                t,
+                                loc: rest_loc.dupe(),
+                                ploc,
+                                id: flow_parser::ast::pattern::Identifier {
+                                    name: name_id,
+                                    annot: annot_or_hint,
+                                    optional: false,
+                                },
+                                has_anno: true,
+                            };
+                            let typed_rest = ast::types::function::RestParam {
+                                loc: rest_loc,
+                                argument: typed_inner,
+                                comments: rest_comments,
+                            };
+                            crate::func_params::add_rest::<StmtConfigTypes>(
+                                rest_param,
+                                &mut fparams,
+                            );
+                            Some(typed_rest)
+                        }
+                    };
+
+                    let typed_this = match this_ {
+                        None => None,
+                        Some(this_param) => {
+                            let this_loc = this_param.loc.dupe();
+                            let ta_loc = this_param.annot.loc.dupe();
+                            let ta = &this_param.annot.annotation;
+                            let this_comments = this_param.comments.dupe();
+                            let annot_prime =
+                                type_annotation::convert(cx, tparams_map_prime.dupe(), ta)?;
+                            let (_, t) = annot_prime.loc();
+                            let t = t.dupe();
+                            let this_param = func_stmt_config_types::ThisParam {
+                                t,
+                                loc: this_loc.dupe(),
+                                annot: ast::types::Annotation {
+                                    loc: ta_loc.dupe(),
+                                    annotation: annot_prime.clone(),
+                                },
+                            };
+                            let typed_this = ast::types::function::ThisParam {
+                                loc: this_loc,
+                                annot: ast::types::Annotation {
+                                    loc: ta_loc,
+                                    annotation: annot_prime,
+                                },
+                                comments: this_comments,
+                            };
+                            crate::func_params::add_this::<StmtConfigTypes>(
+                                this_param,
+                                &mut fparams,
+                            );
+                            Some(typed_this)
+                        }
+                    };
+
+                    let typed_params_ast = ast::types::function::Params {
+                        loc: params_loc,
+                        params: Arc::from(typed_params_list),
+                        rest: typed_rest,
+                        this: typed_this,
+                        comments: params_comments,
+                    };
+
+                    let (return_t, return_ast, type_guard) =
+                        type_annotation::convert_return_annotation(
+                            cx,
+                            meth_kind,
+                            tparams_map_prime,
+                            &func.params,
+                            &fun_params_list,
+                            func_return,
+                        )?;
+                    let func_kind = match type_guard {
+                        None => func_class_sig_types::func::Kind::Ordinary,
+                        Some(g) => func_class_sig_types::func::Kind::TypeGuard(g),
+                    };
+                    let reason = mk_annot_reason(VirtualReasonDesc::RFunctionType, loc.dupe());
+                    let ret_annot_loc = loc_of_t(&return_t).dupe();
+                    let func_sig = func_class_sig_types::func::Func {
+                        reason,
+                        kind: func_kind,
+                        tparams,
+                        fparams,
+                        body: None,
+                        return_t: type_::AnnotatedOrInferred::Annotated(return_t),
+                        ret_annot_loc,
+                        statics: None,
+                        effect_: type_::ReactEffectType::ArbitraryEffect,
+                    };
+                    let typed_func = ast::types::Function {
+                        tparams: tparams_ast,
+                        params: typed_params_ast,
+                        return_: return_ast,
+                        effect: func.effect.clone(),
+                        comments: None,
+                    };
+                    Ok((func_sig, typed_func))
+                }
+
                 for elem in elements.iter() {
                     use ast::class::BodyElement;
                     use ast::class::PrivateField;
@@ -16598,6 +16864,341 @@ pub fn mk_class_sig<'a>(
                                 );
                                 Ok(v)
                             }));
+                        }
+                        BodyElement::DeclareMethod(dm) if cx.under_declaration_context() => {
+                            let elem_loc = dm.loc.dupe();
+                            let kind = dm.kind;
+                            let static_ = dm.static_;
+                            let override_ = dm.override_;
+                            let optional = dm.optional;
+                            let comments = dm.comments.dupe();
+                            // Try to destructure as Identifier key + Function annot
+                            let id_loc_and_id = match &dm.key {
+                                ast::expression::object::Key::Identifier(id) => {
+                                    Some((id.loc.dupe(), id.clone()))
+                                }
+                                _ => None,
+                            };
+                            let annot_loc = dm.annot.loc.dupe();
+                            let func_annot_match = match dm.annot.annotation.0.as_ref() {
+                                ast::types::TypeInner::Function {
+                                    loc: func_annot_loc,
+                                    inner: func_annot,
+                                } => Some((func_annot_loc.dupe(), func_annot.clone())),
+                                _ => None,
+                            };
+                            match (id_loc_and_id, func_annot_match) {
+                                (Some((id_loc, id)), Some((func_annot_loc, func_annot))) => {
+                                    let name = id.name.dupe();
+                                    if override_ {
+                                        flow_js::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EUnsupportedSyntax(Box::new((
+                                                elem_loc.dupe(),
+                                                UnsupportedSyntax::TSLibSyntax(
+                                                    TsLibSyntaxKind::OverrideModifier,
+                                                ),
+                                            ))),
+                                        );
+                                    }
+                                    let meth_kind = match kind {
+                                        ast::class::MethodKind::Constructor => {
+                                            type_annotation::MethodKind::ConstructorKind
+                                        }
+                                        ast::class::MethodKind::Get => {
+                                            type_annotation::MethodKind::GetterKind
+                                        }
+                                        ast::class::MethodKind::Set => {
+                                            type_annotation::MethodKind::SetterKind
+                                        }
+                                        ast::class::MethodKind::Method => {
+                                            type_annotation::MethodKind::MethodKind {
+                                                is_static: static_,
+                                            }
+                                        }
+                                    };
+                                    let (func_sig, typed_func) = mk_declare_method_func_sig(
+                                        cx,
+                                        &tparams_map_with_this,
+                                        meth_kind,
+                                        func_annot_loc.dupe(),
+                                        &func_annot,
+                                    )?;
+                                    if optional {
+                                        let func_t = crate::func_sig::methodtype(
+                                            cx,
+                                            None,
+                                            type_::implicit_mixed_this(func_sig.reason.dupe()),
+                                            &func_sig,
+                                        );
+                                        let optional_t = flow_typing_type::type_util::optional(
+                                            func_t.dupe(),
+                                            None,
+                                            false,
+                                        );
+                                        class_sig::add_field(
+                                            static_,
+                                            name.dupe(),
+                                            id_loc.dupe(),
+                                            flow_common::polarity::Polarity::Neutral,
+                                            class_types::Field::Annot(optional_t.dupe()),
+                                            &mut class_sig,
+                                        );
+                                        check_duplicate_name(
+                                            &mut public_seen_names,
+                                            id_loc.dupe(),
+                                            &name,
+                                            static_,
+                                            false,
+                                            ClassMemberKind::ClassMemberField,
+                                        );
+                                        let elem_loc_c = elem_loc.dupe();
+                                        let id_loc_c = id_loc.dupe();
+                                        let id_c = id.clone();
+                                        let annot_loc_c = annot_loc.dupe();
+                                        let func_annot_loc_c = func_annot_loc.dupe();
+                                        let optional_t_c = optional_t.dupe();
+                                        let func_t_c = func_t.dupe();
+                                        let typed_func_c = typed_func.clone();
+                                        let comments_c = comments.clone();
+                                        #[allow(clippy::arc_with_non_send_sync)]
+                                        let get_element = Box::new(
+                                            move |_cx: &Context<'a>| -> Result<
+                                                ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                                flow_utils_concurrency::job_error::JobError,
+                                            > {
+                                                Ok(ast::class::BodyElement::DeclareMethod(
+                                                    ast::class::DeclareMethod {
+                                                        loc: (elem_loc_c, optional_t_c.dupe()),
+                                                        kind,
+                                                        key:
+                                                            ast::expression::object::Key::Identifier(
+                                                                ast::Identifier::new(
+                                                                    ast::IdentifierInner {
+                                                                        loc: (
+                                                                            id_loc_c,
+                                                                            optional_t_c.dupe(),
+                                                                        ),
+                                                                        name: id_c.name.dupe(),
+                                                                        comments: id_c
+                                                                            .comments
+                                                                            .dupe(),
+                                                                    },
+                                                                ),
+                                                            ),
+                                                        annot: ast::types::Annotation {
+                                                            loc: annot_loc_c,
+                                                            annotation: ast::types::Type::new(
+                                                                ast::types::TypeInner::Function {
+                                                                    loc: (
+                                                                        func_annot_loc_c,
+                                                                        func_t_c,
+                                                                    ),
+                                                                    inner: std::sync::Arc::new(
+                                                                        typed_func_c,
+                                                                    ),
+                                                                },
+                                                            ),
+                                                        },
+                                                        static_,
+                                                        override_,
+                                                        optional,
+                                                        comments: comments_c,
+                                                    },
+                                                ))
+                                            },
+                                        );
+                                        rev_elements.push(get_element);
+                                    } else {
+                                        use std::cell::RefCell;
+                                        use std::rc::Rc;
+                                        let func_t_ref: Rc<RefCell<Option<Type>>> =
+                                            Rc::new(RefCell::new(None));
+                                        let func_t_ref_c = func_t_ref.dupe();
+                                        let set_type: class_types::SetType =
+                                            Rc::new(move |t| *func_t_ref_c.borrow_mut() = Some(t));
+                                        let id_loc_for_get = id_loc.dupe();
+                                        let elem_loc_c = elem_loc.dupe();
+                                        let id_loc_c = id_loc.dupe();
+                                        let id_c = id.clone();
+                                        let annot_loc_c = annot_loc.dupe();
+                                        let func_annot_loc_c = func_annot_loc.dupe();
+                                        let typed_func_c = typed_func.clone();
+                                        let comments_c = comments.clone();
+                                        #[allow(clippy::arc_with_non_send_sync)]
+                                        let get_element = Box::new(
+                                            move |_cx: &Context<'a>| -> Result<
+                                                ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                                flow_utils_concurrency::job_error::JobError,
+                                            > {
+                                                let func_t = func_t_ref
+                                                    .borrow()
+                                                    .clone()
+                                                    .unwrap_or_else(|| {
+                                                        type_::empty_t::at(id_loc_for_get.dupe())
+                                                    });
+                                                Ok(ast::class::BodyElement::DeclareMethod(
+                                                    ast::class::DeclareMethod {
+                                                        loc: (elem_loc_c, func_t.dupe()),
+                                                        kind,
+                                                        key:
+                                                            ast::expression::object::Key::Identifier(
+                                                                ast::Identifier::new(
+                                                                    ast::IdentifierInner {
+                                                                        loc: (
+                                                                            id_loc_c,
+                                                                            func_t.dupe(),
+                                                                        ),
+                                                                        name: id_c.name.dupe(),
+                                                                        comments: id_c
+                                                                            .comments
+                                                                            .dupe(),
+                                                                    },
+                                                                ),
+                                                            ),
+                                                        annot: ast::types::Annotation {
+                                                            loc: annot_loc_c,
+                                                            annotation: ast::types::Type::new(
+                                                                ast::types::TypeInner::Function {
+                                                                    loc: (
+                                                                        func_annot_loc_c,
+                                                                        func_t.dupe(),
+                                                                    ),
+                                                                    inner: std::sync::Arc::new(
+                                                                        typed_func_c,
+                                                                    ),
+                                                                },
+                                                            ),
+                                                        },
+                                                        static_,
+                                                        override_,
+                                                        optional,
+                                                        comments: comments_c,
+                                                    },
+                                                ))
+                                            },
+                                        );
+                                        match kind {
+                                            ast::class::MethodKind::Get
+                                            | ast::class::MethodKind::Set => {
+                                                flow_js::add_output_non_speculating(
+                                                    cx,
+                                                    ErrorMessage::EUnsafeGettersSetters(
+                                                        elem_loc.dupe(),
+                                                    ),
+                                                );
+                                            }
+                                            _ => {}
+                                        }
+                                        match kind {
+                                            ast::class::MethodKind::Constructor => {
+                                                class_sig::append_constructor_replacing_default(
+                                                    Some(id_loc.dupe()),
+                                                    func_sig,
+                                                    None,
+                                                    Some(set_type),
+                                                    &mut class_sig,
+                                                );
+                                            }
+                                            ast::class::MethodKind::Method => {
+                                                class_sig::append_method(
+                                                    static_,
+                                                    name.dupe(),
+                                                    id_loc.dupe(),
+                                                    None,
+                                                    func_sig,
+                                                    None,
+                                                    Some(set_type),
+                                                    &mut class_sig,
+                                                );
+                                            }
+                                            ast::class::MethodKind::Get => {
+                                                class_sig::add_getter(
+                                                    static_,
+                                                    name.dupe(),
+                                                    id_loc.dupe(),
+                                                    None,
+                                                    func_sig,
+                                                    None,
+                                                    Some(set_type),
+                                                    &mut class_sig,
+                                                );
+                                            }
+                                            ast::class::MethodKind::Set => {
+                                                class_sig::add_setter(
+                                                    static_,
+                                                    name.dupe(),
+                                                    id_loc.dupe(),
+                                                    None,
+                                                    func_sig,
+                                                    None,
+                                                    Some(set_type),
+                                                    &mut class_sig,
+                                                );
+                                            }
+                                        }
+                                        // For overloaded methods, only flag the first occurrence so
+                                        // N overloads don't produce N-1 duplicate-name errors.
+                                        let class_member_kind = match kind {
+                                            ast::class::MethodKind::Constructor => None,
+                                            ast::class::MethodKind::Method => {
+                                                Some(ClassMemberKind::ClassMemberMethod)
+                                            }
+                                            ast::class::MethodKind::Get => {
+                                                Some(ClassMemberKind::ClassMemberGetter)
+                                            }
+                                            ast::class::MethodKind::Set => {
+                                                Some(ClassMemberKind::ClassMemberSetter)
+                                            }
+                                        };
+                                        match class_member_kind {
+                                            None => {}
+                                            Some(ClassMemberKind::ClassMemberMethod)
+                                                if {
+                                                    let names_map = if static_ {
+                                                        &public_seen_names.static_names
+                                                    } else {
+                                                        &public_seen_names.instance_names
+                                                    };
+                                                    names_map.get(&name).copied()
+                                                        == Some(ClassMemberKind::ClassMemberMethod)
+                                                } => {}
+                                            Some(k) => {
+                                                check_duplicate_name(
+                                                    &mut public_seen_names,
+                                                    id_loc.dupe(),
+                                                    &name,
+                                                    static_,
+                                                    false,
+                                                    k,
+                                                );
+                                            }
+                                        }
+                                        rev_elements.push(get_element);
+                                    }
+                                }
+                                _ => {
+                                    flow_js::add_output_non_speculating(
+                                        cx,
+                                        ErrorMessage::EInternal(Box::new((
+                                            elem_loc,
+                                            flow_typing_errors::error_message::InternalError::UnexpectedAnnotationInference(
+                                                FlowSmolStr::new(
+                                                    "DeclareMethod annot must be Function type",
+                                                ),
+                                            ),
+                                        ))),
+                                    );
+                                    let elem_c = elem.clone();
+                                    rev_elements.push(Box::new(move |_cx| {
+                                        let Ok(v) = polymorphic_ast_mapper::class_element(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            &elem_c,
+                                        );
+                                        Ok(v)
+                                    }));
+                                }
+                            }
                         }
                         BodyElement::DeclareMethod(_dm) => {
                             let loc = &_dm.loc;
