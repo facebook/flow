@@ -46,7 +46,7 @@ struct TestEntries {
 
 static TEST_ENTRIES: OnceLock<TestEntries> = OnceLock::new();
 
-#[ctor::ctor]
+#[ctor::ctor(unsafe)]
 fn register_test_entries_and_dispatch() {
     let entries = TestEntries {
         echo: register_entry_point("__test_echo", echo_entry),
