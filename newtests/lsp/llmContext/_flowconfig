@@ -1,4 +1,3 @@
 [options]
-exact_by_default=true
 component_syntax=true
 experimental.llm_context.include_imports=true
