@@ -6,7 +6,7 @@
 import type {SuiteType} from '../Tester';
 const {suite, test} = require('../Tester');
 
-module.exports = (suite(
+module.exports = suite(
   ({addFile, flowCmd, lspStart, lspInitializeParams, waitUntilLSPMessage}) => [
     test('start from IDE, then issue command line request', [
       addFile('debug_sleep.js'),
@@ -38,4 +38,4 @@ module.exports = (suite(
       ),
     ]),
   ],
-): SuiteType);
+) as SuiteType;

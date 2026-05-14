@@ -134,4 +134,4 @@ module.exports = (suite(({addFile, removeFile, flowCmd}) => [
       .waitUntilServerStatus(2000, 'stopped') // only 2s not 10s so as not to waste time
       .verifyServerStatus('running'),
   ]).flowConfig('node_flowconfig').noAutoRestart(),
-]): SuiteType);
+]) as SuiteType);

@@ -231,4 +231,4 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]),
-]): SuiteType);
+]) as SuiteType);
