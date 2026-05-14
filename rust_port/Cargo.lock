@@ -421,9 +421,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "0.13.1"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3429e8f8e3ce0ffe475c411850f70468c70d7a87d2ac3d15dd44703fb885aede"
+checksum = "378f0974ae2468eaf63aa036dbe9c926b0dc7ea64c156f2ea618bc2f75b934f0"
 dependencies = [
  "link-section",
  "linktime-proc-macro",
@@ -934,7 +934,7 @@ name = "flow_daemon"
 version = "0.0.0"
 dependencies = [
  "bincode",
- "ctor 0.13.1",
+ "ctor 1.0.5",
  "flow_common",
  "rand 0.10.1",
  "serde",
@@ -2889,9 +2889,9 @@ dependencies = [
 
 [[package]]
 name = "link-section"
-version = "0.13.1"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea2c24837c4fd5ab6a31d64133eae954f5199247523cf29586117e85245c0dd3"
+checksum = "5c8600ca3dbe044f07955b443ff606c50f45295b863289bbe7d0844d50cf11e4"
 
 [[package]]
 name = "linked-hash-map"
