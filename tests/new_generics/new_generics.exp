@@ -1170,7 +1170,7 @@ type [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:422:38
-   422|   declare export type ComponentType<-P: {...}> = component(...P);
+   422|   declare export type ComponentType<-P extends {...}> = component(...P);
                                              ^ [1]
    react.js:11:40
     11|   declare const a: React.ComponentType<Props>;

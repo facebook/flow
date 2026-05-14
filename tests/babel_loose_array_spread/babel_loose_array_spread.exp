@@ -11,9 +11,9 @@ References:
    apply.js:3:11
      3| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:380:29
-   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                    ^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:380:36
+   380|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- apply.js:11:15

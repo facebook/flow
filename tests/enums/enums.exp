@@ -234,9 +234,9 @@ Cannot instantiate `Enum` because in type argument `TEnumValue`: boolean [1] is 
                        ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:3237:24
-   3237| type Enum<+TEnumValue: EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
-                                ^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:3237:31
+   3237| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+                                       ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:11:1
@@ -267,10 +267,10 @@ string [3] is incompatible with boolean [4]. [incompatible-type]
 
 References:
    <BUILTINS>/core.js:3237:12
-   3237| type Enum<+TEnumValue: EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+   3237| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
                     ^^^^^^^^^^ [1]
    <BUILTINS>/core.js:3219:4
-   3219|   +TRepresentationType: EnumRepresentationTypes = EnumRepresentationTypes
+   3219|   +TRepresentationType extends EnumRepresentationTypes = EnumRepresentationTypes
             ^^^^^^^^^^^^^^^^^^^ [2]
    abstract-enum.js:15:35
      15|   declare const x: Enum<EnumValue<string>>;
@@ -291,7 +291,7 @@ Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1]: `EnumValue`
 
 References:
    <BUILTINS>/core.js:3237:12
-   3237| type Enum<+TEnumValue: EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+   3237| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
                     ^^^^^^^^^^ [1]
    abstract-enum.js:15:25
      15|   declare const x: Enum<EnumValue<string>>;
@@ -340,9 +340,9 @@ Cannot call `f` because in type argument `TEnumValue`: boolean [1] is incompatib
            ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:3237:24
-   3237| type Enum<+TEnumValue: EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
-                                ^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:3237:31
+   3237| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+                                       ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:42:3

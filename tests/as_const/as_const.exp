@@ -1145,7 +1145,7 @@ incompatible with string literal `div` [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:97:52
    97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
@@ -1166,7 +1166,7 @@ is incompatible with string [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    jsx.js:5:35
     5| b as ExactReactElement_DEPRECATED<'div'>; // error

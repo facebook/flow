@@ -3687,7 +3687,7 @@ component [2] is incompatible with string literal `div` [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:97:52
    97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
@@ -3708,7 +3708,7 @@ literal `div` [2] is incompatible with string [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    -:4:46
     4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
@@ -3728,9 +3728,9 @@ incompatible with props of string literal `div` [3]. [incompatible-type]
                           ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    <BUILTINS>/react.js:97:71
    97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
                                                                              ^^^^^^^ [2]
@@ -3750,7 +3750,7 @@ component [2] is incompatible with string literal `div` [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:97:52
    97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
@@ -3771,7 +3771,7 @@ literal `div` [2] is incompatible with string [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    -:4:46
     4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
@@ -3791,9 +3791,9 @@ incompatible with props of string literal `div` [3]. [incompatible-type]
                             ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    <BUILTINS>/react.js:97:71
    97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
                                                                              ^^^^^^^ [2]
@@ -6431,9 +6431,9 @@ References:
    -:15:57
      15| function filterError1(response: Array<Response>): Array<Error> {
                                                                  ^^^^^ [2]
-   <BUILTINS>/core.js:1071:138
-   1071|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
-                                                                                                                                                  ^^^^^^^^ [3]
+   <BUILTINS>/core.js:1071:145
+   1071|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+                                                                                                                                                         ^^^^^^^^ [3]
    -:15:51
      15| function filterError1(response: Array<Response>): Array<Error> {
                                                            ^^^^^^^^^^^^ [4]

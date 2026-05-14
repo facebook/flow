@@ -44,9 +44,9 @@ exists in object type [3]. [incompatible-type]
                                                                   ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    test.js:4:27
     4| function Component(props: Props): React.Node { return null }
                                  ^^^^^ [2]
@@ -65,9 +65,9 @@ missing in object type [3]. Exact objects do not accept extra props. [incompatib
                                                                   ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    test.js:4:27
     4| function Component(props: Props): React.Node { return null }
                                  ^^^^^ [2]
@@ -87,7 +87,7 @@ extra in object type [2] but missing in `Props` [3]. Exact objects do not accept
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    test.js:5:28
     5| function Component2(props: { bar: number }): React.Node { return null }
@@ -108,7 +108,7 @@ missing in object type [2] but exists in `Props` [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    test.js:5:28
     5| function Component2(props: { bar: number }): React.Node { return null }

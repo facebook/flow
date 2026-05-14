@@ -140,7 +140,7 @@ incompatible with string literal `span` [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    createElement_invalid_implicit.js:2:43
     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
@@ -162,9 +162,9 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
           ^^^ [2]
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    createElement_invalid_implicit.js:2:43
     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
                                                  ^^^^^^ [3]
@@ -189,7 +189,7 @@ incompatible with string literal `span` [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    createElement_invalid_implicit.js:7:43
     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
@@ -211,9 +211,9 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
           ^^^ [2]
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    createElement_invalid_implicit.js:7:43
     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
                                                  ^^^^^^ [3]
@@ -260,7 +260,7 @@ incompatible with string literal `span` [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    createElement_invalid_implicit.js:12:43
    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
@@ -282,9 +282,9 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
           ^^^ [2]
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    createElement_invalid_implicit.js:12:43
    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
                                                  ^^^^^^ [3]
@@ -568,9 +568,9 @@ object type [2] but exists in object type [3]. [incompatible-type]
        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    element_with_component_type.js:3:40
     3| declare const Foo: React.ComponentType<{a: number, ...}>
                                               ^^^^^^^^^^^^^^^^ [2]
@@ -590,10 +590,10 @@ Cannot cast `<Foo />` to `ExactReactElement_DEPRECATED` because in type argument
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:422:38
-   422|   declare export type ComponentType<-P: {...}> = component(...P);
+   422|   declare export type ComponentType<-P extends {...}> = component(...P);
                                              ^ [2]
    element_with_component_type.js:6:67
      6| <Foo a={42}/> as ExactReactElement_DEPRECATED<React.ComponentType<{b: number, ...}>>; // Error
@@ -1037,9 +1037,9 @@ Cannot create `Resize` element because `Omit` [1] is not a polymorphic type. [in
           ^^^^^^
 
 References:
-   <BUILTINS>/core.js:3187:36
-   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
-                                            ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3187:43
+   3187| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+                                                   ^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ hoc_omit_regressions.js:104:1
@@ -1051,9 +1051,9 @@ Cannot call `takesConfig` because `Omit` [1] is not a polymorphic type. [incompa
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3187:36
-   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
-                                            ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3187:43
+   3187| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+                                                   ^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- import_react.js:7:17
@@ -1594,9 +1594,9 @@ References:
    useCallback_hook.js:4:3
       4|   React.useCallback(); // Error: function requires another argument.
            ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1232:33
-   1232|     declare hook useCallback<T: (...args: ReadonlyArray<empty>) => unknown>(
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:1232:40
+   1232|     declare hook useCallback<T extends (...args: ReadonlyArray<empty>) => unknown>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- useCallback_hook.js:10:23

@@ -606,9 +606,9 @@ with number [3]. [incompatible-type]
                                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    component_in_type_position.js:12:126
    12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
                                                                                                                                     ^^^^^^^^ [2]
@@ -1816,9 +1816,9 @@ incompatible with number [3]. [incompatible-type]
                                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    import_component_in_type_position.js:13:132
    13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
                                                                                                                                           ^^^^^^^^ [2]

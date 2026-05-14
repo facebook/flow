@@ -269,9 +269,9 @@ References:
    <BUILTINS>/core.js:1495:13
    1495|     length: number;
                      ^^^^^^ [1]
-   <BUILTINS>/core.js:1071:102
-   1071|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
-                                                                                                              ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1071:109
+   1071|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+                                                                                                                     ^^^^^^^^^^^^^^^^^^ [2]
    filter_error_msg_quality_test.js:2:30
       2| declare const str_arr: Array<string>;
                                       ^^^^^^ [3]

@@ -7,9 +7,9 @@ Cannot call `action` because `Omit` [1] is not a polymorphic type. [incompatible
          ^^^^^^
 
 References:
-   <BUILTINS>/core.js:3187:36
-   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
-                                            ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3187:43
+   3187| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+                                                   ^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------- namespace_omit_inference.js:3:23
@@ -21,9 +21,9 @@ Cannot call `actionNamespace.tools.action` because `Omit` [1] is not a polymorph
                                ^^^^^^
 
 References:
-   <BUILTINS>/core.js:3187:36
-   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
-                                            ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3187:43
+   3187| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+                                                   ^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ omit.js:7:7
@@ -231,9 +231,9 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3187:36
-   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
-                                            ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3187:43
+   3187| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+                                                   ^^^^^^^^^^^^^^ [1]
    omit_inference.js:1:40
       1| function projectWithoutA<T extends {a: number, b: string}>(): Omit<T, 'a'> {
                                                 ^^^^^^ [2]
@@ -251,9 +251,9 @@ Cannot call `actionWithDefaults` because `Omit` [1] is not a polymorphic type. [
          ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3187:36
-   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
-                                            ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3187:43
+   3187| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+                                                   ^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- pick.js:8:10
@@ -273,9 +273,9 @@ Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with 
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3182:61
-   3182| type Pick<O: interface {}, Keys: keyof O> = {[key in Keys]: O[key]};
-                                                                     ^^^^^^ [1]
+   <BUILTINS>/core.js:3182:75
+   3182| type Pick<O extends interface {}, Keys extends keyof O> = {[key in Keys]: O[key]};
+                                                                                   ^^^^^^ [1]
    pick.js:9:17
       9| pickedO1.bar as string; // ERROR bar is optional
                          ^^^^^^ [2]

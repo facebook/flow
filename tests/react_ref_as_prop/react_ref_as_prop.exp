@@ -406,9 +406,9 @@ in object type [2]. [incompatible-type]
        ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:90:44
-   90|   type ComponentType<-P: {...}> = component(...P);
-                                                  ^^^^^^ [1]
+   <BUILTINS>/react.js:90:51
+   90|   type ComponentType<-P extends {...}> = component(...P);
+                                                         ^^^^^^ [1]
    fn_components.js:3:54
     3| declare export function FnWithRequiredRefProp(props: {foo: string, ref: React.RefSetter<HTMLElement>}): React.Node;
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]

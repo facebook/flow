@@ -9,7 +9,7 @@ incompatible with `CustomComponentNope` [3]. [incompatible-type]
 
 References:
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    main.js:3:7
     3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
@@ -33,9 +33,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
            ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                           ^ [1]
+   <BUILTINS>/react.js:58:91
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                  ^ [1]
    main.js:4:7
      4| class CustomComponentNope extends React.Component<{prop: string, ...}, void> {}
               ^^^^^^^^^^^^^^^^^^^ [2]
@@ -61,9 +61,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
            ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                           ^ [1]
+   <BUILTINS>/react.js:58:91
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                  ^ [1]
    main.js:4:7
      4| class CustomComponentNope extends React.Component<{prop: string, ...}, void> {}
               ^^^^^^^^^^^^^^^^^^^ [2]
@@ -86,7 +86,7 @@ property `prop` is missing in object type [3] but exists in object type [4]. [in
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:968:29
    968|     declare class Component<Props, State = void> {
@@ -110,7 +110,7 @@ property `prop1` is missing in object type [3] but exists in object type [4]. [i
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:968:29
    968|     declare class Component<Props, State = void> {
@@ -133,9 +133,9 @@ class `CustomComponent` [2] but exists in props of statics of `React.Component` 
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [1]
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
    main.js:3:7
     3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
              ^^^^^^^^^^^^^^^ [2]
@@ -158,9 +158,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
            ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                           ^ [1]
+   <BUILTINS>/react.js:58:91
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                  ^ [1]
    main.js:10:43
     10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string, ...}, void>>> =
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -186,9 +186,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
            ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:84
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                           ^ [1]
+   <BUILTINS>/react.js:58:91
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                  ^ [1]
    main.js:10:43
     10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string, ...}, void>>> =
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]

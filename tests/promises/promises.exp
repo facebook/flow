@@ -110,8 +110,8 @@ Cannot call `Promise.all` because function [1] requires another argument. [incom
 
 References:
    <BUILTINS>/core.js:2347:5
-             v------------------------------------------------------
-   2347|     static all<T: Iterable<unknown>>(promises: T): Promise<
+             v-------------------------------------------------------------
+   2347|     static all<T extends Iterable<unknown>>(promises: T): Promise<
    2348|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
    2349|       T extends Iterable<infer V> ? Array<Awaited<V>> : any
    2350|     >;
@@ -143,8 +143,8 @@ Cannot call `Promise.allSettled` because function [1] requires another argument.
 
 References:
    <BUILTINS>/core.js:2357:5
-             v-------------------------------------------------------------
-   2357|     static allSettled<T: Iterable<unknown>>(promises: T): Promise<
+             v--------------------------------------------------------------------
+   2357|     static allSettled<T extends Iterable<unknown>>(promises: T): Promise<
    2358|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
    2359|       T extends Iterable<infer V> ? Array<$SettledPromiseResult<Awaited<V>>> : any
    2360|     >;
@@ -208,8 +208,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
 
 References:
    <BUILTINS>/core.js:2375:15
-   2375|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   2375|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- any.js:2:9
@@ -222,8 +222,8 @@ Cannot call `Promise.any` because function [1] requires another argument. [incom
 
 References:
    <BUILTINS>/core.js:2375:5
-   2375|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   2375|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- any.js:5:1
@@ -236,8 +236,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
 
 References:
    <BUILTINS>/core.js:2375:15
-   2375|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   2375|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ any.js:5:29
@@ -251,9 +251,9 @@ subtype of an interface. [incompatible-type]
                                      ^ [1]
 
 References:
-   <BUILTINS>/core.js:2375:51
-   2375|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-                                                           ^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:2375:58
+   2375|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+                                                                  ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- promise.js:16:19
