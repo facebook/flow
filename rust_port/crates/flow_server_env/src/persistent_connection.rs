@@ -21,6 +21,7 @@ use std::sync::atomic::Ordering;
 use flow_common_exit_status::FlowExitStatus;
 use flow_common_utils::filename_cache;
 use lsp_types::InitializeParams;
+use serde_json::Value;
 
 use crate::file_watcher_status;
 use crate::flow_lsp_conversions;
@@ -57,6 +58,19 @@ pub mod client_config {
     pub fn show_suggest_ranking_info(t: &T) -> bool {
         t.show_suggest_ranking_info
     }
+}
+
+fn detailed_error_rendering_from_initialization_options(
+    initialization_options: Option<&Value>,
+) -> bool {
+    initialization_options
+        .and_then(|opts| match opts.get("detailedErrorRendering") {
+            Some(Value::Bool(b)) => Some(*b),
+            Some(Value::String(s)) if s == "true" => Some(true),
+            Some(Value::String(s)) if s == "false" => Some(false),
+            _ => None,
+        })
+        .unwrap_or(false)
 }
 
 #[derive(Clone)]
@@ -380,13 +394,9 @@ fn send_errors(
     let Some((opened_files, vscode_detailed_diagnostics)) = with_registry(client_id, |entry| {
         (
             entry.opened_files.clone(),
-            entry
-                .lsp_initialize_params
-                .initialization_options
-                .as_ref()
-                .and_then(|opts| opts.get("detailedErrorRendering"))
-                .and_then(|value| value.as_bool())
-                .unwrap_or(false),
+            detailed_error_rendering_from_initialization_options(
+                entry.lsp_initialize_params.initialization_options.as_ref(),
+            ),
         )
     }) else {
         return;
@@ -433,7 +443,7 @@ fn send_errors(
                 let loc = flow_common_errors::error_utils::loc_of_printable_error(error);
                 match &loc.source {
                     None => false,
-                    Some(source) => opened_files.contains_key(source.as_str()),
+                    Some(source) => opened_files.contains_key(&source.to_absolute()),
                 }
             } else {
                 false
@@ -934,4 +944,49 @@ pub fn autocomplete_session(
         entry.autocomplete_session_length
     })
     .unwrap_or(0)
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::detailed_error_rendering_from_initialization_options;
+
+    #[test]
+    fn detailed_error_rendering_from_initialization_options_matches_ocaml_parser() {
+        assert!(
+            detailed_error_rendering_from_initialization_options(Some(
+                &json!({"detailedErrorRendering": true})
+            )),
+            "OCaml accepts boolean true"
+        );
+        assert!(
+            !detailed_error_rendering_from_initialization_options(Some(
+                &json!({"detailedErrorRendering": false})
+            )),
+            "OCaml accepts boolean false"
+        );
+        assert!(
+            detailed_error_rendering_from_initialization_options(Some(
+                &json!({"detailedErrorRendering": "true"})
+            )),
+            "OCaml accepts string true"
+        );
+        assert!(
+            !detailed_error_rendering_from_initialization_options(Some(
+                &json!({"detailedErrorRendering": "false"})
+            )),
+            "OCaml accepts string false"
+        );
+        assert!(
+            !detailed_error_rendering_from_initialization_options(Some(
+                &json!({"detailedErrorRendering": "yes"})
+            )),
+            "OCaml ignores unsupported strings and defaults to false"
+        );
+        assert!(
+            !detailed_error_rendering_from_initialization_options(Some(&json!({}))),
+            "OCaml defaults missing detailedErrorRendering to false"
+        );
+    }
 }
