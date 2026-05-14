@@ -123,7 +123,6 @@ export function onDidOpenTextDocument(
             'useCodeSnippetOnFunctionSuggest',
           )!,
           logLevel: pluginConfig.get('logLevel')!,
-          lazyMode: pluginConfig.get('lazyMode')!,
           coverage: {
             showUncovered: pluginConfig.get('showUncovered')!,
             diagnosticSeverity: toDiagnosticSeverity(

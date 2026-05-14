@@ -39,7 +39,6 @@ export type FlowLanguageClientConfig = {
   useBundledFlow: boolean;
   stopFlowOnExit: boolean;
   useCodeSnippetOnFunctionSuggest: boolean;
-  lazyMode: string | null;
   logLevel: LogLevel;
   coverage: {
     showUncovered: boolean;
@@ -189,7 +188,6 @@ export default class FlowLanguageClient {
       args: [
         'lsp',
         ...['--from', 'vscode'],
-        ...(config.lazyMode ? ['--lazy-mode', config.lazyMode] : []),
         // auto stop flow process
         config.stopFlowOnExit ? '--autostop' : null,
       ].filter((v) => v != null),

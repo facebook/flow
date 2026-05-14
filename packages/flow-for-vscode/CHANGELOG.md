@@ -1,5 +1,17 @@
 # Changelog
 
+### 3.1.3 (2026-05-14)
+
+#### Changes
+
+* Removed the `flow.lazyMode` VS Code setting and stopped passing `--lazy-mode` when starting `flow lsp`.
+
+### 3.1.2 (2026-02-17)
+
+#### Changes
+
+* Support Apple Silicon Mac
+
 ### 3.1.1 (2025-05-16)
 
 #### Features

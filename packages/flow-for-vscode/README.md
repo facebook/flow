@@ -53,8 +53,6 @@ You can specify a configuration by amending the VS Code `settings.json` file. Ac
 
 * `flow.coverageSeverity` (default: 'info'): Type coverage diagnostic severity.
 
-* `flow.lazyMode` (default: null): to override the [lazy mode](https://flow.org/en/docs/lang/lazy-modes/). Prefer to set this in `.flowconfig` instead.
-
 * `flow.stopFlowOnExit` (default: true) stop flow server on exit from Project.
 
 * `flow.useCodeSnippetOnFunctionSuggest` (default: true) Complete functions with their parameter signature.
