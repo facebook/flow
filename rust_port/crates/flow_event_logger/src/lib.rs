@@ -655,6 +655,7 @@ mod fb_facade {
     use std::time::SystemTime;
 
     use flow_facebook_logging::flow_event_logger as fb;
+    use flow_facebook_logging::scuba;
 
     // Local OSS-shaped types. The shapes intentionally match the OSS stub
     // (serde derives, OSS field set) so callers — written against the OSS
@@ -1040,7 +1041,10 @@ mod fb_facade {
     }
 
     pub fn register_scuba_entry() {
-        flow_facebook_logging::scuba::entry();
+        scuba::table::of_name("flow_server_events");
+        scuba::table::of_name("flow_typing_errors");
+        scuba::table::of_name("flow_interactions");
+        scuba::entry();
     }
 
     // SHIM: ANDs the local OSS-style flag with the FB-internal should_log so
@@ -1526,6 +1530,36 @@ mod fb_facade {
     // SHIM: forwards directly; FB and OSS share identical signature.
     pub fn edenfs_watcher_lost_changes(msg: &str, backtrace: &str) {
         fb::edenfs_watcher_lost_changes(msg, backtrace);
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn register_scuba_entry_registers_ocaml_top_level_scuba_tables() {
+            register_scuba_entry();
+
+            let categories = flow_facebook_logging::scuba::table::post_init_array();
+            assert!(
+                categories
+                    .iter()
+                    .any(|category| category == "perfpipe_flow_server_events"),
+                "EventLogger daemon child needs the Flow events table registered before dispatch"
+            );
+            assert!(
+                categories
+                    .iter()
+                    .any(|category| category == "perfpipe_flow_typing_errors"),
+                "EventLogger daemon child needs the typing errors table registered before dispatch"
+            );
+            assert!(
+                categories
+                    .iter()
+                    .any(|category| category == "perfpipe_flow_interactions"),
+                "FlowInteractionLogger daemon child needs the interactions table registered before dispatch"
+            );
+        }
     }
 }
 
