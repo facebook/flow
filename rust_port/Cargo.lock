@@ -421,9 +421,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "0.6.3"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "424e0138278faeb2b401f174ad17e715c829512d74f3d1e81eb43365c2e0590e"
+checksum = "dcc0886dc1150cf3c118cc534187f3f54859c9503f7d2e2788b8608d91cccb97"
 dependencies = [
  "ctor-proc-macro",
  "dtor",
@@ -533,9 +533,9 @@ dependencies = [
 
 [[package]]
 name = "dtor"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "404d02eeb088a82cfd873006cb713fe411306c7d182c344905e101fb1167d301"
+checksum = "25202a48cefdb3f0cb59d7bfff5b7aa2fdacbbc17e0c8dd7533c9d22ecc3cf01"
 dependencies = [
  "dtor-proc-macro",
 ]
@@ -955,7 +955,7 @@ name = "flow_daemon"
 version = "0.0.0"
 dependencies = [
  "bincode",
- "ctor 0.6.3",
+ "ctor 0.7.0",
  "flow_common",
  "rand 0.10.1",
  "serde",
