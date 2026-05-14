@@ -2261,7 +2261,7 @@ incompatible with implicitly-returned undefined. [incompatible-type]
 
 References:
    <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                                 ^ [1]
 
 

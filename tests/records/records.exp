@@ -274,9 +274,9 @@ Operation `Pick` [1] is not allowed on record `R` [2]. To fix, turn the record t
                              ^ [2]
 
 References:
-   <BUILTINS>/core.js:3182:47
-   3182| type Pick<O: interface {}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
-                                                       ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3182:46
+   3182| type Pick<O: interface {}, Keys: keyof O> = {[key in Keys]: O[key]};
+                                                      ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- declaration.js:416:21

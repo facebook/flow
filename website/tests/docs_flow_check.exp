@@ -2688,8 +2688,8 @@ References:
      4| hook useMultiplier(x: number): number {
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:885:30
-   885|     map<U, This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => U, thisArg: This): Array<U>;
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   885|     map<U, This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => U, thisArg: This): Array<U>;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    -:10:18
     10| component Mapper(args: Array<number>) {
                          ^^^^^^^^^^^^^^^^^^^ [3]
@@ -3690,7 +3690,7 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:97:52
-   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
                                                           ^^^^^^^^^^^^^^^^^ [2]
    -:4:46
     4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
@@ -3714,7 +3714,7 @@ References:
     4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
                                                     ^^^^^ [2]
    <BUILTINS>/react.js:97:52
-   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
                                                           ^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -3732,8 +3732,8 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                                                           ^ [1]
    <BUILTINS>/react.js:97:71
-   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
-                                                                             ^^^^^ [2]
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
+                                                                             ^^^^^^^ [2]
    -:4:46
     4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
                                                     ^^^^^ [3]
@@ -3753,7 +3753,7 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:97:52
-   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
                                                           ^^^^^^^^^^^^^^^^^ [2]
    -:4:46
     4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
@@ -3777,7 +3777,7 @@ References:
     4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
                                                     ^^^^^ [2]
    <BUILTINS>/react.js:97:52
-   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
                                                           ^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -3795,8 +3795,8 @@ References:
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                                                           ^ [1]
    <BUILTINS>/react.js:97:71
-   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
-                                                                             ^^^^^ [2]
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
+                                                                             ^^^^^^^ [2]
    -:4:46
     4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
                                                     ^^^^^ [3]
@@ -6431,9 +6431,9 @@ References:
    -:15:57
      15| function filterError1(response: Array<Response>): Array<Error> {
                                                                  ^^^^^ [2]
-   <BUILTINS>/core.js:1071:139
-   1071|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): Array<S>;
-                                                                                                                                                   ^^^^^^^^ [3]
+   <BUILTINS>/core.js:1071:138
+   1071|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+                                                                                                                                                  ^^^^^^^^ [3]
    -:15:51
      15| function filterError1(response: Array<Response>): Array<Error> {
                                                            ^^^^^^^^^^^^ [4]

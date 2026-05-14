@@ -47,8 +47,8 @@ Cannot call `Symbol` because no more than 1 argument is expected by function typ
 
 References:
    <BUILTINS>/core.js:281:10
-   281|   static (value?: mixed): symbol;
-                 ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   281|   static (value?: unknown): symbol;
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:23:5

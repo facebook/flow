@@ -986,7 +986,7 @@ components can appear in renders but string [2] is not a component-syntax compon
 
 References:
    <BUILTINS>/react.js:97:52
-   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
                                                           ^^^^^^^^^^^^^^^^^ [2]
 
 

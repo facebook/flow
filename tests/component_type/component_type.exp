@@ -55,7 +55,7 @@ References:
     11|     ref: React.RefSetter<string>
                                  ^^^^^^ [2]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => mixed)
+   108|     | ((T | null) => unknown)
                     ^^^^ [3]
 
 
@@ -102,8 +102,8 @@ References:
     15|     ref: ImNotARefSetter // ok: ref prop in component type can be arbitrary
                  ^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [2]
+   108|     | ((T | null) => unknown)
+               ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:109:7
    109|     | null
               ^^^^ [3]
@@ -184,7 +184,7 @@ References:
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
                                                             ^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => mixed)
+   108|     | ((T | null) => unknown)
                     ^^^^ [3]
 
 

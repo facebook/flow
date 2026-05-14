@@ -38,8 +38,8 @@ Cannot call `function () { ... }.apply` because no more than 2 arguments are exp
 
 References:
    <BUILTINS>/core.js:380:19
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:45
@@ -57,8 +57,8 @@ References:
      1| const arr = [1,2,3];  // badly-positioned error
                        ^ [1]
    <BUILTINS>/core.js:380:29
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                    ^^^^^^^^^^^^^^^^^ [2]
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:45
@@ -71,8 +71,8 @@ Cannot call `function () { ... }.apply` because no more than 2 arguments are exp
 
 References:
    <BUILTINS>/core.js:380:19
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:45
@@ -90,8 +90,8 @@ References:
      1| const arr = [1,2,3];  // badly-positioned error
                      ^ [1]
    <BUILTINS>/core.js:380:29
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                    ^^^^^^^^^^^^^^^^^ [2]
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:45
@@ -104,8 +104,8 @@ Cannot call `function () { ... }.apply` because no more than 2 arguments are exp
 
 References:
    <BUILTINS>/core.js:380:19
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:45
@@ -123,8 +123,8 @@ References:
      1| const arr = [1,2,3];  // badly-positioned error
                        ^ [1]
    <BUILTINS>/core.js:380:29
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                    ^^^^^^^^^^^^^^^^^ [2]
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 

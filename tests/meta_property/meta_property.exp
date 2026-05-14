@@ -11,7 +11,7 @@ References:
    <BUILTINS>/core.js:3115:20
                             v
    3115| type Import$Meta = {
-   3116|   [string]: mixed,
+   3116|   [string]: unknown,
    3117|   url?: string,
    3118|   ...
    3119| };
@@ -32,8 +32,8 @@ Cannot cast `import.meta.XXX` to number literal `1` because `unknown` [1] is inc
 
 References:
    <BUILTINS>/core.js:3116:13
-   3116|   [string]: mixed,
-                     ^^^^^ [1]
+   3116|   [string]: unknown,
+                     ^^^^^^^ [1]
    import_meta.js:6:20
       6| import.meta.XXX as 1; // Error
                             ^ [2]

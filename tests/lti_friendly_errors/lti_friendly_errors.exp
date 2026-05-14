@@ -9,11 +9,11 @@ incompatible with string [3]. [incompatible-type]
 
 References:
    <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                                 ^ [1]
    <BUILTINS>/core.js:2285:28
-   2285| declare class Promise<+R = mixed> {
-                                    ^^^^^ [2]
+   2285| declare class Promise<+R = unknown> {
+                                    ^^^^^^^ [2]
    reason_of_inferred_targs.js:2:14
       2| p as Promise<string>; // error
                       ^^^^^^ [3]

@@ -25,12 +25,12 @@ References:
    1848|      * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
    1849|      */
    1850|     +stringify: ((
-   1851|         value: null | string | number | boolean | interface {} | $ReadOnlyArray<mixed>,
+   1851|         value: null | string | number | boolean | interface {} | ReadonlyArray<unknown>,
    1852|         replacer?: ?((key: string, value: any) => any) | Array<any>,
    1853|         space?: string | number
    1854|       ) => string) &
    1855|       (
-   1856|         value: mixed,
+   1856|         value: unknown,
    1857|         replacer?: ?((key: string, value: any) => any) | Array<any>,
    1858|         space?: string | number
    1859|       ) => string | void,
@@ -231,11 +231,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
 
 References:
    <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:18:23
@@ -254,11 +254,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
 
 References:
    <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:19:23
@@ -277,11 +277,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
 
 References:
    <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:24
@@ -300,11 +300,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
 
 References:
    <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:27
@@ -323,11 +323,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
 
 References:
    <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:30
@@ -346,11 +346,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
 
 References:
    <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:31:15
@@ -372,11 +372,11 @@ References:
      24| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
    <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^ [3]
+   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 

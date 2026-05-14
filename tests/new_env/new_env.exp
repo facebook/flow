@@ -224,8 +224,8 @@ References:
    2286|     constructor(callback: (
    2287|       resolve: (result: Promise<R> | R) => void,
    2288|       reject: (error: any) => void
-   2289|     ) => mixed): void;
-             ----------------^ [1]
+   2289|     ) => unknown): void;
+             ------------------^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- globals.js:6:1

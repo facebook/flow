@@ -1549,7 +1549,7 @@ Cannot return `(typeof x) == "number"` because `Promise` [1] is incompatible wit
 
 References:
    <BUILTINS>/core.js:2285:15
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                        ^^^^^^^ [1]
    invalid.js:28:35
      28| async function async(x: unknown): x is number { // error

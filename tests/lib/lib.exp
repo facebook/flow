@@ -58,9 +58,9 @@ Cannot assign `parseInt(...)` to `w` because number [1] is incompatible with str
                       ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:35:59
-   35| declare function parseInt(string: mixed, radix?: number): number;
-                                                                 ^^^^^^ [1]
+   <BUILTINS>/core.js:35:61
+   35| declare function parseInt(string: unknown, radix?: number): number;
+                                                                   ^^^^^^ [1]
    libtest.js:4:7
     4| var w:string = parseInt("...");
              ^^^^^^ [2]

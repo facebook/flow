@@ -9,7 +9,7 @@ surprising behaviors. [libdef-override]
 
 References:
    <BUILTINS>/core.js:2285:15
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                        ^^^^^^^ [1]
 
 

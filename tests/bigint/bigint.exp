@@ -31,23 +31,23 @@ Cannot call `BigInt` with `null` bound to `value` because: [incompatible-type]
 
 References:
    <BUILTINS>/core.js:3122:18
-   3122|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   3122|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                           ^^^^^^^ [2]
    <BUILTINS>/core.js:3122:28
-   3122|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   3122|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                     ^^^^^^ [3]
    <BUILTINS>/core.js:3122:37
-   3122|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   3122|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                              ^^^^^^ [4]
    <BUILTINS>/core.js:3122:46
-   3122|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   3122|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                                       ^^^^^^ [5]
    <BUILTINS>/core.js:3122:55
-   3122|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   3122|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                                                ^^^^^^^^^^^^ [6]
    <BUILTINS>/core.js:3122:70
-   3122|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
-                                                                              ^^^^^^^^^^^^^^^^^^^^^ [7]
+   3122|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+                                                                              ^^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:25:5

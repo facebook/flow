@@ -43,7 +43,7 @@ References:
    <BUILTINS>/react.js:902:24
                                v-------
    902|       component: () => Promise<
-   903|         $ReadOnly<{
+   903|         Readonly<{
    904|           default: component(...Config) renders Renders,
    905|           ...
    906|         }>,
@@ -67,7 +67,7 @@ References:
    <BUILTINS>/react.js:902:24
                                v-------
    902|       component: () => Promise<
-   903|         $ReadOnly<{
+   903|         Readonly<{
    904|           default: component(...Config) renders Renders,
    905|           ...
    906|         }>,
@@ -88,14 +88,14 @@ Functions without statics are not compatible with objects.
 
 References:
    <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                                 ^ [1]
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:903:19
-                           v
-    903|         $ReadOnly<{
+   <BUILTINS>/react.js:903:18
+                          v
+    903|         Readonly<{
     904|           default: component(...Config) renders Renders,
     905|           ...
     906|         }>,
@@ -113,14 +113,14 @@ property `default` is missing in statics of `ClassComponent` [2] but exists in o
 
 References:
    <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                                 ^ [1]
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:903:19
-                           v
-    903|         $ReadOnly<{
+   <BUILTINS>/react.js:903:18
+                          v
+    903|         Readonly<{
     904|           default: component(...Config) renders Renders,
     905|           ...
     906|         }>,

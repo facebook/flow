@@ -75,8 +75,8 @@ References:
      7| class Foo extends React.Component<Props, State> {
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:977:23
-   977|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   977|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
@@ -94,9 +94,9 @@ References:
    classes.js:7:19
      7| class Foo extends React.Component<Props, State> {
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:977:53
-   977|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:977:52
+   977|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:21
@@ -373,8 +373,8 @@ References:
      5| type State = {foo: number, bar: number};
                                         ^^^^^^ [2]
    <BUILTINS>/react.js:977:23
-   977|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   977|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- state6.js:31:29
@@ -426,8 +426,8 @@ References:
     11| class MyComponent extends React.Component<{prop: number, ...}, State> {
                                                                        ^^^^^ [2]
    <BUILTINS>/react.js:977:23
-   977|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   977|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- state6.js:45:2

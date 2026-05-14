@@ -1573,8 +1573,8 @@ Cannot call `readOnlyRef.push` because property `push` is missing in `$ReadOnlyA
 
 References:
    <BUILTINS>/core.js:843:77
-   843|     forEach<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): void;
-                                                                                    ^^^^^^^^^^^^^^^^^ [1]
+   843|     forEach<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This): void;
+                                                                                    ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- readonly-array.js:27:5

@@ -8,7 +8,7 @@ Cannot return `1` because in type argument `R` [1]: number [2] is incompatible w
 
 References:
    <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                                 ^ [1]
    async.js:9:30
       9| async function f1(): Promise<boolean> {
@@ -26,7 +26,7 @@ Cannot return `await p` because in type argument `R` [1]: number [2] is incompat
 
 References:
    <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                                 ^ [1]
    async.js:28:30
      28| async function f4(p: Promise<number>): Promise<boolean> {
@@ -100,7 +100,7 @@ incompatible with implicitly-returned undefined. [incompatible-type]
 
 References:
    <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                                 ^ [1]
 
 
@@ -140,7 +140,7 @@ Cannot return undefined because in type argument `R` [1]: undefined [2] is incom
 
 References:
    <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                                 ^ [1]
    async_return_void.js:1:32
       1| async function foo1(): Promise<string> {
@@ -158,7 +158,7 @@ Cannot return `undefined` because in type argument `R` [1]: undefined [2] is inc
 
 References:
    <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                                 ^ [1]
    async_return_void.js:5:32
       5| async function foo2(): Promise<string> {
@@ -176,7 +176,7 @@ Cannot return `bar()` because in type argument `R` [1]: undefined [2] is incompa
 
 References:
    <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = mixed> {
+   2285| declare class Promise<+R = unknown> {
                                 ^ [1]
    async_return_void.js:10:17
      10|   function bar() { }
@@ -223,9 +223,9 @@ References:
    <BUILTINS>/core.js:2037:27
    2037| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [1]
-   <BUILTINS>/core.js:2348:58
-   2348|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
-                                                                  ^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:2348:59
+   2348|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                   ^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- generator.js:21:30
@@ -240,9 +240,9 @@ References:
    <BUILTINS>/core.js:2037:27
    2037| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [1]
-   <BUILTINS>/core.js:2348:58
-   2348|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
-                                                                  ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:2348:59
+   2348|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+                                                                   ^^^^^^^^^^^^^ [2]
    generator.js:21:45
      21| async function *genError1(): AsyncGenerator<number, void, void> {
                                                      ^^^^^^ [3]

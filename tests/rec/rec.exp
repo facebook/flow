@@ -357,8 +357,8 @@ References:
    743|       // $FlowFixMe[incompatible-variance]
    744|       S = T
    745|       // $FlowFixMe[incompatible-variance]
-   746|     >(...items: Array<$ReadOnlyArray<S> | S>): Array<T | S>;
-            ------------------------------------------------------^ [2]
+   746|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+            -----------------------------------------------------^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- this_subst.js:1:53

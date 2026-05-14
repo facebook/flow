@@ -1069,8 +1069,8 @@ References:
    107|     | { -current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [3]
+   108|     | ((T | null) => unknown)
+               ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ declared.js:56:52
@@ -2055,8 +2055,8 @@ References:
    107|     | { -current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [3]
+   108|     | ((T | null) => unknown)
+               ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- names.js:23:2
@@ -2567,7 +2567,7 @@ References:
      3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
                                                                    ^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => mixed)
+   108|     | ((T | null) => unknown)
                     ^^^^ [3]
 
 
@@ -2592,7 +2592,7 @@ References:
      3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
                                                                    ^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => mixed)
+   108|     | ((T | null) => unknown)
                     ^^^^ [3]
 
 
@@ -2660,8 +2660,8 @@ References:
      3| component Foo(ref: {current: typeof Reffed}) { return null };
                            ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [4]
+   108|     | ((T | null) => unknown)
+               ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:5:15
@@ -2683,7 +2683,7 @@ References:
      5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
                              ^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => mixed)
+   108|     | ((T | null) => unknown)
                     ^^^^ [2]
    refs.js:5:21
      5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
@@ -2973,7 +2973,7 @@ References:
     15| Bar as component(ref: React.RefSetter<string>); // err
                                               ^^^^^^ [2]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => mixed)
+   108|     | ((T | null) => unknown)
                     ^^^^ [3]
 
 
@@ -3072,7 +3072,7 @@ References:
     88|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => mixed)
+   108|     | ((T | null) => unknown)
                     ^^^^ [4]
 
 
@@ -3122,8 +3122,8 @@ References:
    107|     | { -current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [3]
+   108|     | ((T | null) => unknown)
+               ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- refs.js:108:23

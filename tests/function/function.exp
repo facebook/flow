@@ -29,8 +29,8 @@ an interface. [incompatible-type]
 
 References:
    <BUILTINS>/core.js:380:29
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                    ^^^^^^^^^^^^^^^^^ [2]
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- apply-array-like.js:5:16
@@ -115,8 +115,8 @@ References:
    2020| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:380:29
-    380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                     ^^^^^^^^^^^^^^^^^ [2]
+    380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                     ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- apply-array-like.js:21:16
@@ -133,8 +133,8 @@ References:
     16| function * gen() {
                         ^ [1]
    <BUILTINS>/core.js:380:29
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                    ^^^^^^^^^^^^^^^^^ [2]
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:2:15
@@ -161,8 +161,8 @@ Cannot call `test.apply` because no more than 2 arguments are expected by functi
 
 References:
    <BUILTINS>/core.js:380:19
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:15:1
@@ -177,9 +177,9 @@ References:
    apply.js:1:1
      1| function test(this: number | string, a: string, b: number): number {
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:380:59
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:380:61
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:18:1
@@ -228,8 +228,8 @@ an interface. [incompatible-type]
 
 References:
    <BUILTINS>/core.js:380:29
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                    ^^^^^^^^^^^^^^^^^ [2]
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                    ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- apply.js:22:16
@@ -310,9 +310,9 @@ Cannot call `test.bind.apply` because function prototype [1] is incompatible wit
         ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:380:59
-   380|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:380:61
+   380|     proto apply: (<T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:44:5
@@ -428,9 +428,9 @@ References:
    call.js:1:1
      1| function test(this: number | string, a: string, b: number): number {
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:382:57
-   382|     proto call: <T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
-                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:382:59
+   382|     proto call: <T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- call.js:15:1
@@ -610,7 +610,7 @@ arguments or cast the expression to your expected type. [underconstrained-implic
 
 References:
    <BUILTINS>/core.js:382:21
-   382|     proto call: <T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
+   382|     proto call: <T, R, A: $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
                             ^ [1]
    call.js:63:15
     63|   const err = setError.call(this, 1); // error under-constrained T
