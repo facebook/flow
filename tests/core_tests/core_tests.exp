@@ -9,8 +9,8 @@ Cannot use `new` on object type [1]. Only classes and interfaces with a construc
 
 References:
    <BUILTINS>/core.js:1836:19
-                           v-
-   1836| declare var JSON: {|
+                           v
+   1836| declare var JSON: {
    1837|     /**
    1838|      * Converts a JavaScript Object Notation (JSON) string into an object.
    1839|      * @param text A valid JSON string.
@@ -34,8 +34,8 @@ References:
    1857|         replacer?: ?((key: string, value: any) => any) | Array<any>,
    1858|         space?: string | number
    1859|       ) => string | void,
-   1860| |};
-         -^ [1]
+   1860| };
+         ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ json.js:9:6

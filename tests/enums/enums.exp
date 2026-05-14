@@ -3023,15 +3023,15 @@ Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumPr
 
 References:
    <BUILTINS>/core.js:3004:59
-                                                                   v-
-   3004| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {|
+                                                                   v
+   3004| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
    3005|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
    3006|   getName(this: TEnum, input: TEnumValue): string,
    3007|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
    3008|   members(this: TEnum): Iterator<TEnumValue>,
    3009|   __proto__: null,
-   3010| |}
-         -^ [1]
+   3010| }
+         ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- methods.js:32:3
@@ -3044,15 +3044,15 @@ Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumP
 
 References:
    <BUILTINS>/core.js:3004:59
-                                                                   v-
-   3004| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {|
+                                                                   v
+   3004| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
    3005|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
    3006|   getName(this: TEnum, input: TEnumValue): string,
    3007|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
    3008|   members(this: TEnum): Iterator<TEnumValue>,
    3009|   __proto__: null,
-   3010| |}
-         -^ [1]
+   3010| }
+         ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- methods.js:35:3
@@ -3079,15 +3079,15 @@ Cannot call `E.A` because property `A` is missing in `$EnumProto` [1]. [prop-mis
 
 References:
    <BUILTINS>/core.js:3004:59
-                                                                   v-
-   3004| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {|
+                                                                   v
+   3004| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
    3005|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
    3006|   getName(this: TEnum, input: TEnumValue): string,
    3007|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
    3008|   members(this: TEnum): Iterator<TEnumValue>,
    3009|   __proto__: null,
-   3010| |}
-         -^ [1]
+   3010| }
+         ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- methods.js:41:3
@@ -3100,15 +3100,15 @@ Cannot call `E.toString` because property `toString` is missing in `$EnumProto` 
 
 References:
    <BUILTINS>/core.js:3004:59
-                                                                   v-
-   3004| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {|
+                                                                   v
+   3004| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
    3005|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
    3006|   getName(this: TEnum, input: TEnumValue): string,
    3007|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
    3008|   members(this: TEnum): Iterator<TEnumValue>,
    3009|   __proto__: null,
-   3010| |}
-         -^ [1]
+   3010| }
+         ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- methods.js:44:1

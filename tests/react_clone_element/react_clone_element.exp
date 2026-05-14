@@ -26,14 +26,14 @@ References:
              v--------------------------------------------------------------------------
    326|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
    327|     element: E,
-   328|     props?: ?Partial<Readonly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
+   328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>}>>,
    329|   ) => E)
           -----^ [3]
    <BUILTINS>/react.js:330:6
              v--------------------------------------------------------------------------
    330|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
    331|     element: E,
-   332|     props: ?Partial<Readonly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
+   332|     props: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>}>>,
    333|     children: NoInfer<Props>['children']
    334|   ) => E)
           -----^ [4]
@@ -41,7 +41,7 @@ References:
              v--------------------------------------------------------------------------
    335|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
    336|     element: E,
-   337|     props: ?Partial<Readonly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
+   337|     props: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>}>>,
    338|     firstChild: NoInfer<Props>['children'][0],
    339|     secondChild: NoInfer<Props>['children'][1],
    340|     ...restChildren: NoInfer<Props>['children'] extends [+first: unknown, +second: unknown, ...infer Rest] ? Rest : NoInfer<Props>['children']
@@ -158,8 +158,8 @@ References:
      31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
                                ^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:328:31
-    328|     props?: ?Partial<Readonly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+    328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>}>>,
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:7
@@ -282,7 +282,7 @@ References:
               v--------------------------------------------------------------------------
     326|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
     327|     element: E,
-    328|     props?: ?Partial<Readonly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
+    328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>}>>,
     329|   ) => E)
            -----^ [4]
 
@@ -314,7 +314,7 @@ References:
              v--------------------------------------------------------------------------
    326|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
    327|     element: E,
-   328|     props?: ?Partial<Readonly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
+   328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>}>>,
    329|   ) => E)
           -----^ [4]
 
@@ -346,7 +346,7 @@ References:
              v--------------------------------------------------------------------------
    326|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
    327|     element: E,
-   328|     props?: ?Partial<Readonly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
+   328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>}>>,
    329|   ) => E)
           -----^ [4]
 
@@ -534,8 +534,8 @@ References:
      76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
                                    ^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:328:31
-    328|     props?: ?Partial<Readonly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+    328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>}>>,
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:92:9
