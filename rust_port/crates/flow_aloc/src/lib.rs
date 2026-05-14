@@ -350,38 +350,37 @@ impl ALoc {
         use std::cmp::Ordering::*;
         // String comparisons are expensive, so we should only evaluate this lambda if
         // the other information we have ties
-        let source_compare = || compare_opt_file_key(self.source(), other.source());
-        match (self.kind(), other.kind()) {
-            (Kind::Keyed, Kind::Keyed) => {
-                let k1 = self.get_key_exn();
-                let k2 = other.get_key_exn();
-                let key_compare = k1.cmp(&k2);
+        let source_compare =
+            || compare_opt_file_key(self.0.source.as_ref(), other.0.source.as_ref());
+        match (self.is_keyed(), other.is_keyed()) {
+            (true, true) => {
+                let key_compare = self.0.start.line.cmp(&other.0.start.line);
                 if key_compare == Equal {
                     source_compare()
                 } else {
                     key_compare
                 }
             }
-            (Kind::Concrete, Kind::Concrete) => {
-                let l1 = self.to_loc_exn();
-                let l2 = other.to_loc_exn();
-                let start_compare = l1.start.cmp(&l2.start);
-                if start_compare == Equal {
-                    let end_compare = l1.end.cmp(&l2.end);
-                    if end_compare == Equal {
-                        source_compare()
+            (false, false) => match (self.0.is_none(), other.0.is_none()) {
+                (true, true) => Equal,
+                (true, false) => Less,
+                (false, true) => Greater,
+                (false, false) => {
+                    let start_compare = self.0.start.cmp(&other.0.start);
+                    if start_compare == Equal {
+                        let end_compare = self.0.end.cmp(&other.0.end);
+                        if end_compare == Equal {
+                            source_compare()
+                        } else {
+                            end_compare
+                        }
                     } else {
-                        end_compare
+                        start_compare
                     }
-                } else {
-                    start_compare
                 }
-            }
-            (Kind::ALocNone, Kind::ALocNone) => Equal,
-            (Kind::ALocNone, Kind::Keyed | Kind::Concrete) => Less,
-            (Kind::Keyed | Kind::Concrete, Kind::ALocNone) => Greater,
-            (Kind::Keyed, Kind::Concrete) => Greater,
-            (Kind::Concrete, Kind::Keyed) => Less,
+            },
+            (true, false) => Greater,
+            (false, true) => Less,
         }
     }
 
