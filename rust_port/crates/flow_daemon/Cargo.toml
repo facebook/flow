@@ -14,4 +14,4 @@ tempfile = "3.27.0"
 tracing = { version = "0.1.41", features = ["attributes", "valuable"] }
 
 [dev-dependencies]
-ctor = "0.10.1"
+ctor = "0.11.1"
