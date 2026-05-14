@@ -326,6 +326,10 @@ pub fn has_client(client_id: Prot::ClientId) -> bool {
 
 fn send_message_to_client(response: Prot::MessageFromServer, client: &SingleClientRef) {
     let client_id = client.borrow().client_id;
+    if monitor_rpc::state() == monitor_rpc::StateKind::Initialized {
+        monitor_rpc::respond_to_persistent_connection(client_id, response);
+        return;
+    }
     let should_disconnect = {
         let mut clients = ACTIVE_CLIENTS.lock().unwrap();
         match clients.get_mut(&client_id) {
