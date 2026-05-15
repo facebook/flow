@@ -301,7 +301,7 @@ pub mod leaf {
 pub type LeafSet = FlowOrdSet<leaf::Leaf>;
 
 pub fn sort_object_patterns_by_index<T>(items: &mut [(usize, T)]) {
-    items.sort_by(|(a, _), (b, _)| a.cmp(b));
+    items.sort_by_key(|(a, _)| *a);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
