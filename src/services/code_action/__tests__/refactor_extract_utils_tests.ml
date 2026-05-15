@@ -33,7 +33,7 @@ let stub_metadata ~root ~checked =
     (* global *)
     abstract_classes = false;
     allow_readonly_variance = false;
-    allow_variance_keywords = false;
+    allow_variance_keywords = true;
     deprecated_variance_sigils = false;
     deprecated_variance_sigils_excludes = [];
     assert_operator = Options.AssertOperator.Disabled;

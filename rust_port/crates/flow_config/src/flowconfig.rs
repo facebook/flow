@@ -363,7 +363,7 @@ pub mod opts {
             strict_es6_import_export: false,
             ts_syntax: false,
             allow_readonly_variance: false,
-            allow_variance_keywords: false,
+            allow_variance_keywords: true,
             deprecated_variance_sigils: false,
             deprecated_variance_sigils_excludes: Vec::new(),
             ts_utility_syntax: true,

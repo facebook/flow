@@ -1,38 +1,4 @@
 {
   "method": "textDocument/codeAction",
-  "result": [
-    {
-      "command": {
-        "arguments": [
-          "textDocument/codeAction",
-          "convert_out_variance",
-          "Convert to `+`"
-        ],
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "title": ""
-      },
-      "diagnostics": [],
-      "edit": {
-        "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/fix-out-variance.js": [
-            {
-              "newText": ": (<+A>() => A)",
-              "range": {
-                "end": {
-                  "character": 30,
-                  "line": 2
-                },
-                "start": {
-                  "character": 18,
-                  "line": 2
-                }
-              }
-            }
-          ]
-        }
-      },
-      "kind": "quickfix",
-      "title": "Convert to `+`"
-    }
-  ]
+  "result": []
 }
