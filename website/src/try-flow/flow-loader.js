@@ -20,6 +20,8 @@ const versionCache /*: Map<string, Promise<FlowJs>> */ = new Map();
 
 const MASTER_VERSION = 'master';
 const MASTER_RUST_PORT_VERSION = 'master (rust port)';
+const FLOW_RELEASE_VERSION =
+  /^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/;
 
 const TRY_LIB_CONTENTS = `
 declare type $JSXIntrinsics = {
@@ -67,9 +69,21 @@ function get(url: string) {
   });
 }
 
+function normalizeFlowReleaseVersion(version: string): string {
+  const normalizedVersion = version.startsWith('v')
+    ? version.substring(1)
+    : version;
+  if (!FLOW_RELEASE_VERSION.test(normalizedVersion)) {
+    throw new Error(`Invalid Flow release version: ${version}`);
+  }
+  return normalizedVersion;
+}
+
 function versionedUnpkgComUrl(version: string): string {
-  version = version.startsWith('v') ? version.substring(1) : version;
-  return `https://unpkg.com/try-flow-website-js@${version}`;
+  const releaseVersion = normalizeFlowReleaseVersion(version);
+  return `https://unpkg.com/try-flow-website-js@${encodeURIComponent(
+    releaseVersion,
+  )}`;
 }
 
 function masterVersionBasePath(version: string): ?string {
@@ -138,39 +152,45 @@ export function load(
     return Promise.resolve(cached);
   }
   const masterBasePath = masterVersionBasePath(version);
-  const majorVersion =
-    masterBasePath != null ? Infinity : parseInt(version.split('.')[1], 10);
-  const libs =
-    masterBasePath != null
-      ? [
-          `${masterBasePath}/flowlib/core.js`,
-          `${masterBasePath}/flowlib/react.js`,
-        ].map(withBaseUrl)
-      : majorVersion >= 266
+  let flowPath: string;
+  let libs: Array<string>;
+  if (masterBasePath != null) {
+    flowPath = withBaseUrl(`${masterBasePath}/flow.js`);
+    libs = [
+      `${masterBasePath}/flowlib/core.js`,
+      `${masterBasePath}/flowlib/react.js`,
+    ].map(withBaseUrl);
+  } else {
+    let releaseVersion;
+    try {
+      releaseVersion = normalizeFlowReleaseVersion(version);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+
+    const versionedBaseUrl = versionedUnpkgComUrl(releaseVersion);
+    const minorVersion = parseInt(releaseVersion.split('.')[1], 10);
+    flowPath = `${versionedBaseUrl}/flow.js`;
+    libs =
+      minorVersion >= 266
         ? [
-            `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
-            `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
+            `${versionedBaseUrl}/flowlib/core.js`,
+            `${versionedBaseUrl}/flowlib/react.js`,
           ]
         : [
-            `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
-            `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
-            `${versionedUnpkgComUrl(version)}/flowlib/intl.js`,
+            `${versionedBaseUrl}/flowlib/core.js`,
+            `${versionedBaseUrl}/flowlib/react.js`,
+            `${versionedBaseUrl}/flowlib/intl.js`,
           ];
+  }
   const flowLoader = new Promise<FlowJs>((resolve, reject) => {
-    requirejs(
-      [
-        masterBasePath != null
-          ? withBaseUrl(`${masterBasePath}/flow.js`)
-          : `${versionedUnpkgComUrl(version)}/flow.js`,
-      ],
-      flowModule => {
-        try {
-          resolve(getLoadedFlow(flowModule));
-        } catch (error) {
-          reject(error);
-        }
-      },
-    );
+    requirejs([flowPath], flowModule => {
+      try {
+        resolve(getLoadedFlow(flowModule));
+      } catch (error) {
+        reject(error);
+      }
+    });
   });
   return Promise.all([
     flowLoader.then(waitForReady),
