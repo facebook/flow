@@ -2220,7 +2220,7 @@ pub fn analyze<'cx>(
             FlowSmolStr,
             (usize, pattern_object::PatternObject, BTreeSet<Reason>),
         )> = tuple_examples_map.into_iter().collect();
-        tuple_entries.sort_by(|(_, (a, _, _)), (_, (b, _, _))| a.cmp(b));
+        tuple_entries.sort_by_key(|(_, (a, _, _))| *a);
         for (example, (_, pattern, reasons)) in tuple_entries {
             let reasons_vec: Vec<Reason> = reasons.into_iter().collect();
             examples.push((example, reasons_vec));
@@ -2252,7 +2252,7 @@ pub fn analyze<'cx>(
             FlowSmolStr,
             (usize, pattern_object::PatternObject, BTreeSet<Reason>),
         )> = object_examples_map.into_iter().collect();
-        object_entries.sort_by(|(_, (a, _, _)), (_, (b, _, _))| a.cmp(b));
+        object_entries.sort_by_key(|(_, (a, _, _))| *a);
         for (example, (_, pattern, reasons)) in object_entries {
             let reasons_vec: Vec<Reason> = reasons.into_iter().collect();
             examples.push((example, reasons_vec));
