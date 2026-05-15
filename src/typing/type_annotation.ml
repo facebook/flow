@@ -234,7 +234,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       Flow_js_utils.add_output cx (Error_message.EUnclearType loc)
     | _ -> ()
 
-  let polarity cx variance =
+  let polarity cx ~on variance =
     ( if not (Context.ts_syntax cx) then
       match variance with
       | Some (loc, { Ast.Variance.kind = Ast.Variance.Readonly; _ })
@@ -264,10 +264,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Writeonly; loc })
     | Some (loc, { Ast.Variance.kind = Ast.Variance.Plus; _ })
       when Context.is_variance_sigil_deprecated cx ->
-      Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Plus; loc })
+      Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Plus on; loc })
     | Some (loc, { Ast.Variance.kind = Ast.Variance.Minus; _ })
       when Context.is_variance_sigil_deprecated cx ->
-      Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Minus; loc })
+      Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Minus on; loc })
     | _ -> ());
     Typed_ast_utils.polarity variance
 
@@ -1587,7 +1587,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                            ->
                            RemoveVariance Polarity.Negative
                          | _ ->
-                           let pol = polarity cx variance in
+                           let pol = polarity cx ~on:`Property variance in
                            if pol = Polarity.Neutral then
                              KeepVariance
                            else
@@ -2126,7 +2126,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 else
                   Properties.add_field
                     (OrdinaryName name)
-                    (polarity env.cx variance)
+                    (polarity env.cx ~on:`Property variance)
                     ~key_loc:(Some loc)
                     t
               in
@@ -2178,7 +2178,11 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 if _method then
                   Properties.add_method name (Some (fst expr)) t
                 else
-                  Properties.add_field name (polarity env.cx variance) ~key_loc:(Some (fst expr)) t
+                  Properties.add_field
+                    name
+                    (polarity env.cx ~on:`Property variance)
+                    ~key_loc:(Some (fst expr))
+                    t
               in
               let prop_ast =
                 {
@@ -2301,7 +2305,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           Type.dict_name = Base.Option.map ~f:ident_name id;
           key;
           value;
-          dict_polarity = polarity env.cx variance;
+          dict_polarity = polarity env.cx ~on:`Property variance;
         },
         {
           Object.Indexer.id;
@@ -2540,7 +2544,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       let name = Some str_name in
       let reason = mk_reason (RTupleElement { name }) loc in
       ( UnresolvedArg
-          (TupleElement { name; t; polarity = polarity env.cx variance; optional; reason }, None),
+          ( TupleElement
+              { name; t; polarity = polarity env.cx ~on:`Property variance; optional; reason },
+            None
+          ),
         element_ast
       )
     | Ast.Type.Tuple.SpreadElement { Ast.Type.Tuple.SpreadElement.name; annot } ->
@@ -2888,7 +2895,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         type_param
       in
       let reason = mk_annot_reason (RType (OrdinaryName name)) name_loc in
-      let polarity = polarity cx variance in
+      let polarity = polarity cx ~on:`TypeParam variance in
       let is_const =
         let open Flow_ast_mapper in
         match (const, kind) with
@@ -3017,7 +3024,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let { Ast.Type.Object.Indexer.id; key; value; variance; optional; _ } = indexer in
     let (((_, k), _) as key_ast) = convert env key in
     let (((annot_loc, v), _) as value_ast) = convert env value in
-    let p = polarity env.cx variance in
+    let p = polarity env.cx ~on:`Property variance in
     let v =
       if optional then
         TypeUtil.optional ~annot_loc v
@@ -3195,7 +3202,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     (Error_message.EUnsupportedSyntax
                        (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalShorthandMethod))
                     );
-                let polarity = polarity env.cx variance in
+                let polarity = polarity env.cx ~on:`Property variance in
                 let handle_init_only_property name id_loc ~rebuild_key =
                   match init_ with
                   | Some init_expr when Context.tslib_syntax env.cx && is_literal_init init_expr ->

@@ -2112,8 +2112,8 @@ pub struct EVarianceKeywordData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub enum VarianceKeywordKind {
     Writeonly,
-    Plus,
-    Minus,
+    Plus(crate::intermediate_error_types::VarianceSigilParent),
+    Minus(crate::intermediate_error_types::VarianceSigilParent),
 }
 
 #[derive(
@@ -8909,11 +8909,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use crate::intermediate_error_types::VarianceSigilKind;
                 let msg = match kind {
                     VarianceKeywordKind::Writeonly => Message::MessageVarianceKeywordWriteonly,
-                    VarianceKeywordKind::Plus => {
-                        Message::MessageDeprecatedVarianceSigil(VarianceSigilKind::Plus)
+                    VarianceKeywordKind::Plus(parent) => {
+                        Message::MessageDeprecatedVarianceSigil(VarianceSigilKind::Plus(parent))
                     }
-                    VarianceKeywordKind::Minus => {
-                        Message::MessageDeprecatedVarianceSigil(VarianceSigilKind::Minus)
+                    VarianceKeywordKind::Minus(parent) => {
+                        Message::MessageDeprecatedVarianceSigil(VarianceSigilKind::Minus(parent))
                     }
                 };
                 Normal(msg)

@@ -1551,9 +1551,26 @@ pub struct MessageMatchNonExplicitEnumCheckData<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub enum VarianceSigilParent {
+    Property,
+    TypeParam,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum VarianceSigilKind {
-    Plus,
-    Minus,
+    Plus(VarianceSigilParent),
+    Minus(VarianceSigilParent),
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

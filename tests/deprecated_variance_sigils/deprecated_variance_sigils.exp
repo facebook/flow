@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:5:17
 
-The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsupported-syntax]
+The `+` variance sigil is deprecated. Use `readonly` instead. [unsupported-syntax]
 
    5| type CovObj = { +p: number }; // error: + deprecated
                       ^
@@ -8,7 +8,7 @@ The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsuppor
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:20
 
-The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsupported-syntax]
+The `-` variance sigil is deprecated. Use `writeonly` instead. [unsupported-syntax]
 
    6| type ContraObj = { -p: number }; // error: - deprecated
                          ^
@@ -16,7 +16,7 @@ The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsuppor
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:9
 
-The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsupported-syntax]
+The `+` variance sigil is deprecated. Use `out` instead. [unsupported-syntax]
 
    8| class A<+T> {} // error: + deprecated
               ^
@@ -24,7 +24,7 @@ The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsuppor
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:9
 
-The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsupported-syntax]
+The `-` variance sigil is deprecated. Use `in` instead. [unsupported-syntax]
 
    9| class B<-T> {} // error: - deprecated
               ^
@@ -32,7 +32,7 @@ The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsuppor
 
 Error ---------------------------------------------------------------------------------------------------- test.js:11:17
 
-The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsupported-syntax]
+The `+` variance sigil is deprecated. Use `readonly` instead. [unsupported-syntax]
 
    11| type CovIdx = { +[k: string]: number }; // error: + deprecated
                        ^
@@ -40,7 +40,7 @@ The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsuppor
 
 Error ---------------------------------------------------------------------------------------------------- test.js:12:20
 
-The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsupported-syntax]
+The `-` variance sigil is deprecated. Use `writeonly` instead. [unsupported-syntax]
 
    12| type ContraIdx = { -[k: string]: number }; // error: - deprecated
                           ^
@@ -48,7 +48,7 @@ The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsuppor
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:3
 
-The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsupported-syntax]
+The `+` variance sigil is deprecated. Use `readonly` instead. [unsupported-syntax]
 
    15|   +covField: number; // error: + deprecated
          ^
@@ -56,7 +56,7 @@ The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsuppor
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:3
 
-The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsupported-syntax]
+The `-` variance sigil is deprecated. Use `writeonly` instead. [unsupported-syntax]
 
    16|   -contraField: number; // error: - deprecated
          ^
@@ -64,7 +64,7 @@ The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsuppor
 
 Error ---------------------------------------------------------------------------------------------------- test.js:19:12
 
-The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsupported-syntax]
+The `+` variance sigil is deprecated. Use `out` instead. [unsupported-syntax]
 
    19| type Alias<+T> = T; // error: + deprecated
                   ^
@@ -72,7 +72,7 @@ The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsuppor
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:15
 
-The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsupported-syntax]
+The `-` variance sigil is deprecated. Use `in` instead. [unsupported-syntax]
 
    20| type AliasNeg<-T> = (T) => void; // error: - deprecated
                      ^
@@ -80,7 +80,7 @@ The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsuppor
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:16
 
-The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsupported-syntax]
+The `+` variance sigil is deprecated. Use `out` instead. [unsupported-syntax]
 
    22| interface ICov<+T> {} // error: + deprecated
                       ^
@@ -88,7 +88,7 @@ The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsuppor
 
 Error ---------------------------------------------------------------------------------------------------- test.js:23:19
 
-The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsupported-syntax]
+The `-` variance sigil is deprecated. Use `in` instead. [unsupported-syntax]
 
    23| interface IContra<-T> {} // error: - deprecated
                          ^
@@ -96,7 +96,7 @@ The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsuppor
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:3
 
-The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsupported-syntax]
+The `+` variance sigil is deprecated. Use `readonly` instead. [unsupported-syntax]
 
    26|   +covProp: number; // error: + deprecated
          ^
@@ -104,7 +104,7 @@ The `+` variance sigil is deprecated. Use `readonly` or `out` instead. [unsuppor
 
 Error ----------------------------------------------------------------------------------------------------- test.js:27:3
 
-The `-` variance sigil is deprecated. Use `writeonly` or `in` instead. [unsupported-syntax]
+The `-` variance sigil is deprecated. Use `writeonly` instead. [unsupported-syntax]
 
    27|   -contraProp: number; // error: - deprecated
          ^

@@ -8997,7 +8997,7 @@ module Make
                        (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalClassProperty))
                     );
                 let reason = mk_reason (RPrivateProperty name) loc in
-                let polarity = Anno.polarity cx variance in
+                let polarity = Anno.polarity cx ~on:`Property variance in
                 let decorators =
                   Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
                 in
@@ -9065,7 +9065,7 @@ module Make
                        (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalClassProperty))
                     );
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
-                let polarity = Anno.polarity cx variance in
+                let polarity = Anno.polarity cx ~on:`Property variance in
                 let decorators =
                   Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
                 in

@@ -16613,7 +16613,11 @@ pub fn mk_class_sig<'a>(
                                         VirtualReasonDesc::RProperty(Some(Name::new(name.dupe()))),
                                         loc.dupe(),
                                     );
-                                    let polarity = type_annotation::polarity(cx, variance.as_ref());
+                                    let polarity = type_annotation::polarity(
+                                        cx,
+                                        flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                                        variance.as_ref(),
+                                    );
                                     //   let decorators = ...
                                     let decorators_ast: Vec<_> = decorators
                                         .iter()
@@ -16776,7 +16780,11 @@ pub fn mk_class_sig<'a>(
                                 VirtualReasonDesc::RPrivateProperty(name.dupe()),
                                 loc.dupe(),
                             );
-                            let polarity = type_annotation::polarity(cx, variance.as_ref());
+                            let polarity = type_annotation::polarity(
+                                cx,
+                                flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                                variance.as_ref(),
+                            );
                             let decorators_ast: Vec<_> = decorators
                                 .iter()
                                 .map(|d| {

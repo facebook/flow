@@ -4992,18 +4992,18 @@ let to_printable_error :
         text " flowconfig option.";
       ]
     | MessageDeprecatedVarianceSigil sigil ->
-      let (sigil_str, replacement_property, replacement_tparam) =
+      let (sigil_str, replacement) =
         match sigil with
-        | `Plus -> ("+", "readonly", "out")
-        | `Minus -> ("-", "writeonly", "in")
+        | `Plus `Property -> ("+", "readonly")
+        | `Plus `TypeParam -> ("+", "out")
+        | `Minus `Property -> ("-", "writeonly")
+        | `Minus `TypeParam -> ("-", "in")
       in
       [
         text "The ";
         code sigil_str;
         text " variance sigil is deprecated. Use ";
-        code replacement_property;
-        text " or ";
-        code replacement_tparam;
+        code replacement;
         text " instead.";
       ]
     | MessageTSUndefinedType ->

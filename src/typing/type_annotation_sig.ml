@@ -156,7 +156,8 @@ module type S = sig
     (ALoc.t, ALoc.t) Flow_ast.Type.Object.Indexer.t' ->
     Type.dicttype * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.Object.Indexer.t'
 
-  val polarity : Context.t -> ALoc.t Flow_ast.Variance.t option -> Polarity.t
+  val polarity :
+    Context.t -> on:[ `Property | `TypeParam ] -> ALoc.t Flow_ast.Variance.t option -> Polarity.t
 
   val qualified_name : (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t -> string
 

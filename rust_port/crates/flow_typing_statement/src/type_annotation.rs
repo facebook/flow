@@ -375,7 +375,11 @@ fn add_unclear_type_error_if_not_lib_file<'a>(cx: &Context<'a>, loc: ALoc) {
     }
 }
 
-pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) -> Polarity {
+pub fn polarity<'a>(
+    cx: &Context<'a>,
+    on: flow_typing_errors::intermediate_error_types::VarianceSigilParent,
+    variance: Option<&ast::Variance<ALoc>>,
+) -> Polarity {
     if !cx.ts_syntax() {
         match variance {
             Some(ast::Variance {
@@ -461,7 +465,7 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
-                    kind: flow_typing_errors::error_message::VarianceKeywordKind::Plus,
+                    kind: flow_typing_errors::error_message::VarianceKeywordKind::Plus(on),
                     loc: loc.dupe(),
                 })),
             );
@@ -474,7 +478,7 @@ pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) ->
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
-                    kind: flow_typing_errors::error_message::VarianceKeywordKind::Minus,
+                    kind: flow_typing_errors::error_message::VarianceKeywordKind::Minus(on),
                     loc: loc.dupe(),
                 })),
             );
@@ -3225,7 +3229,11 @@ fn convert_inner<'a>(
                                                 )
                                             }
                                             _ => {
-                                                let pol = polarity(cx, variance.as_ref());
+                                                let pol = polarity(
+                                                    cx,
+                                                    flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                                                    variance.as_ref(),
+                                                );
                                                 if pol == Polarity::Neutral {
                                                     type_::MappedTypeVariance::KeepVariance
                                                 } else {
@@ -4330,7 +4338,11 @@ fn convert_object<'a>(
                                 );
                             });
                         } else {
-                            let pol = polarity(cx, variance.as_ref());
+                            let pol = polarity(
+                                cx,
+                                flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                                variance.as_ref(),
+                            );
                             let key_loc_clone = key_loc.dupe();
                             let t_clone = t.dupe();
                             acc.add_prop(move |pmap| {
@@ -4468,7 +4480,11 @@ fn convert_object<'a>(
                                         );
                                     });
                                 } else {
-                                    let pol = polarity(cx, variance.as_ref());
+                                    let pol = polarity(
+                                        cx,
+                                        flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                                        variance.as_ref(),
+                                    );
                                     let id_loc_clone = id_loc.dupe();
                                     let t_clone = t.dupe();
                                     acc.add_prop(move |pmap| {
@@ -4756,7 +4772,11 @@ fn convert_object<'a>(
                         dict_name: indexer.id.as_ref().map(ident_name),
                         key: key_t,
                         value: value_t,
-                        dict_polarity: polarity(cx, indexer.variance.as_ref()),
+                        dict_polarity: polarity(
+                            cx,
+                            flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                            indexer.variance.as_ref(),
+                        ),
                     };
                     let indexer_ast = ast::types::object::Indexer {
                         loc: indexer.loc.dupe(),
@@ -5095,7 +5115,11 @@ fn convert_tuple_element<'a>(
             let te = type_::TupleElement {
                 name: name_opt,
                 t,
-                polarity: polarity(cx, variance.as_ref()),
+                polarity: polarity(
+                    cx,
+                    flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                    variance.as_ref(),
+                ),
                 optional: *optional,
                 reason,
             };
@@ -5873,7 +5897,11 @@ fn mk_type_param_inner<'a>(
         reason::VirtualReasonDesc::RType(Name::new(name.dupe())),
         name_loc.dupe(),
     );
-    let pol = polarity(cx, variance);
+    let pol = polarity(
+        cx,
+        flow_typing_errors::intermediate_error_types::VarianceSigilParent::TypeParam,
+        variance,
+    );
     let is_const = match (const_mod, kind) {
         (Some(_), TypeParamsContext::Class)
         | (Some(_), TypeParamsContext::Function)
@@ -6126,7 +6154,11 @@ fn convert_indexer_internal(
     let (annot_loc, v) = value_ast.loc();
     let annot_loc = annot_loc.dupe();
     let v = v.dupe();
-    let p = polarity(cx, indexer.variance.as_ref());
+    let p = polarity(
+        cx,
+        flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+        indexer.variance.as_ref(),
+    );
     let v = if indexer.optional {
         type_util::optional(v, Some(annot_loc), false)
     } else {
@@ -6398,7 +6430,11 @@ fn add_interface_properties<'a>(
                         prop_asts.push(error_prop);
                         continue;
                     }
-                    let polarity = polarity(cx, np.variance.as_ref());
+                    let polarity = polarity(
+                        cx,
+                        flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                        np.variance.as_ref(),
+                    );
                     let mut handle_init_only_property =
                         |name: FlowSmolStr,
                          id_loc: ALoc,

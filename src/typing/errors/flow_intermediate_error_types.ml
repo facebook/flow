@@ -1160,7 +1160,8 @@ type 'loc message =
   | MessageTSVarianceOut
   | MessageTSVarianceReadOnly
   | MessageVarianceKeywordWriteonly
-  | MessageDeprecatedVarianceSigil of [ `Plus | `Minus ]
+  | MessageDeprecatedVarianceSigil of
+      [ `Plus of [ `Property | `TypeParam ] | `Minus of [ `Property | `TypeParam ] ]
   | MessageTSClassAccessibility of Flow_ast.Class.TSAccessibility.kind
   | MessageTSParameterProperty
   | MessageAbstractClass
