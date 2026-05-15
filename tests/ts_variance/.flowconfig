@@ -3,4 +3,3 @@ all=false
 no_flowlib=false
 module.file_ext=.ts
 module.file_ext=.js
-experimental.allow_readonly_variance=true
