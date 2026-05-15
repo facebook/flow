@@ -293,7 +293,7 @@ module.exports = suite(
         path.join(__dirname, '__snapshots__', 'quickfix-in-variance.json'),
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
-    ]),
+    ]).flowConfig('_flowconfig_no_variance_keywords'),
     test('provide quickfix for `out` variance', [
       addFile('fix-out-variance.js.ignored', 'fix-out-variance.js'),
       lspStartAndConnect(),
@@ -319,7 +319,7 @@ module.exports = suite(
         path.join(__dirname, '__snapshots__', 'quickfix-out-variance.json'),
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
-    ]),
+    ]).flowConfig('_flowconfig_no_variance_keywords'),
     test('provide quickfix for `in out` variance', [
       addFile('fix-in-out-variance.js.ignored', 'fix-in-out-variance.js'),
       lspStartAndConnect(),
