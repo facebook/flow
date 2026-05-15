@@ -2280,8 +2280,6 @@ let stylex_shorthand_prop c = c.options.Opts.stylex_shorthand_prop
 
 let ts_syntax c = c.options.Opts.ts_syntax
 
-let allow_readonly_variance c = c.options.Opts.allow_readonly_variance
-
 let allow_variance_keywords c = c.options.Opts.allow_variance_keywords
 
 let deprecated_variance_sigils c = c.options.Opts.deprecated_variance_sigils

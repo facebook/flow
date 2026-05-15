@@ -386,7 +386,7 @@ pub fn polarity<'a>(
                 loc,
                 kind: ast::VarianceKind::Readonly,
                 ..
-            }) if !(cx.allow_readonly_variance() || cx.allow_variance_keywords()) => {
+            }) if !cx.allow_variance_keywords() => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {

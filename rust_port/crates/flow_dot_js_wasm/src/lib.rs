@@ -198,7 +198,6 @@ fn config_options(config: Option<&Value>) -> Options {
         root: Arc::new(PathBuf::new()),
         strip_root: true,
         ts_syntax: bool_config(config, "experimental.ts_syntax", true),
-        allow_readonly_variance: true,
         allow_variance_keywords: true,
         tslib_syntax: true,
         ts_utility_syntax: true,

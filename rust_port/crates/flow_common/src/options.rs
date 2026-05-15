@@ -268,7 +268,6 @@ pub struct Options {
     pub stylex_shorthand_prop: Option<String>,
     pub temp_dir: FlowSmolStr,
     pub ts_syntax: bool,
-    pub allow_readonly_variance: bool,
     pub allow_variance_keywords: bool,
     pub deprecated_variance_sigils: bool,
     pub deprecated_variance_sigils_excludes: Arc<[Regex]>,

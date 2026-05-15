@@ -83,7 +83,6 @@ type metadata = {
   strip_root: bool;
   stylex_shorthand_prop: string option;
   ts_syntax: bool;
-  allow_readonly_variance: bool;
   allow_variance_keywords: bool;
   deprecated_variance_sigils: bool;
   deprecated_variance_sigils_excludes: Str.regexp list;
@@ -380,7 +379,6 @@ let metadata_of_options options =
     strip_root = Options.should_strip_root options;
     stylex_shorthand_prop = Options.stylex_shorthand_prop options;
     ts_syntax = Options.ts_syntax options;
-    allow_readonly_variance = Options.allow_readonly_variance options;
     allow_variance_keywords = Options.allow_variance_keywords options;
     deprecated_variance_sigils = Options.deprecated_variance_sigils options;
     deprecated_variance_sigils_excludes = Options.deprecated_variance_sigils_excludes options;
@@ -773,8 +771,6 @@ let should_strip_root cx = cx.metadata.strip_root
 let stylex_shorthand_prop cx = cx.metadata.stylex_shorthand_prop
 
 let ts_syntax cx = cx.metadata.ts_syntax
-
-let allow_readonly_variance cx = cx.metadata.allow_readonly_variance
 
 let allow_variance_keywords cx = cx.metadata.allow_variance_keywords
 
