@@ -696,5 +696,137 @@ module.exports = suite(
         'quickfix-fix-all-colon-cast',
       ),
     ),
+    test('provide quickfix for deprecated `+` sigil on property', [
+      addFile(
+        'fix-deprecated-plus-sigil-prop.js.ignored',
+        'fix-deprecated-plus-sigil-prop.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-deprecated-plus-sigil-prop.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 10,
+          },
+          end: {
+            line: 2,
+            character: 11,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-deprecated-plus-sigil-prop.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_deprecated_variance_sigils'),
+    test('provide quickfix for deprecated `-` sigil on property', [
+      addFile(
+        'fix-deprecated-minus-sigil-prop.js.ignored',
+        'fix-deprecated-minus-sigil-prop.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-deprecated-minus-sigil-prop.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 10,
+          },
+          end: {
+            line: 2,
+            character: 11,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-deprecated-minus-sigil-prop.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_deprecated_variance_sigils'),
+    test('provide quickfix for deprecated `+` sigil on type parameter', [
+      addFile(
+        'fix-deprecated-plus-sigil-tparam.js.ignored',
+        'fix-deprecated-plus-sigil-tparam.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-deprecated-plus-sigil-tparam.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 8,
+          },
+          end: {
+            line: 2,
+            character: 9,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-deprecated-plus-sigil-tparam.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_deprecated_variance_sigils'),
+    test('provide quickfix for deprecated `-` sigil on type parameter', [
+      addFile(
+        'fix-deprecated-minus-sigil-tparam.js.ignored',
+        'fix-deprecated-minus-sigil-tparam.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-deprecated-minus-sigil-tparam.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 8,
+          },
+          end: {
+            line: 2,
+            character: 9,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-deprecated-minus-sigil-tparam.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_deprecated_variance_sigils'),
   ],
 ) as SuiteType;

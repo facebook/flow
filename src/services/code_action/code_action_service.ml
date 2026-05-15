@@ -1079,6 +1079,58 @@ let ast_transforms_of_error
       ]
     else
       []
+  | Error_message.EVarianceKeyword { kind = `Plus `Property; loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Convert to `readonly`";
+          diagnostic_title = "convert_plus_sigil_to_readonly";
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_plus_sigil_to_readonly;
+          target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
+        };
+      ]
+    else
+      []
+  | Error_message.EVarianceKeyword { kind = `Plus `TypeParam; loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Convert to `out`";
+          diagnostic_title = "convert_plus_sigil_to_out";
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_plus_sigil_to_out;
+          target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
+        };
+      ]
+    else
+      []
+  | Error_message.EVarianceKeyword { kind = `Minus `Property; loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Convert to `writeonly`";
+          diagnostic_title = "convert_minus_sigil_to_writeonly";
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_minus_sigil_to_writeonly;
+          target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
+        };
+      ]
+    else
+      []
+  | Error_message.EVarianceKeyword { kind = `Minus `TypeParam; loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Convert to `in`";
+          diagnostic_title = "convert_minus_sigil_to_in";
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_minus_sigil_to_in;
+          target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
+        };
+      ]
+    else
+      []
   | Error_message.ETSSyntax
       { kind = Error_message.TSSatisfiesType enabled_casting_syntax; loc = error_loc } ->
     if loc_opt_intersects ~error_loc ~loc then

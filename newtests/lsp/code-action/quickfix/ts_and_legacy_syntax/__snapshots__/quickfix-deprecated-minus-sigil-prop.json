@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_minus_sigil_to_writeonly",
+          "Convert to `writeonly`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-deprecated-minus-sigil-prop.js": [
+            {
+              "newText": "writeonly ",
+              "range": {
+                "end": {
+                  "character": 11,
+                  "line": 2
+                },
+                "start": {
+                  "character": 10,
+                  "line": 2
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "quickfix",
+      "title": "Convert to `writeonly`"
+    }
+  ]
+}

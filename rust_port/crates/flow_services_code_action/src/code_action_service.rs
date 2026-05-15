@@ -61,6 +61,7 @@ use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
 use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPropsNotFoundInInvariantSubtypingData;
 use flow_typing_errors::error_message::ETSSyntaxData;
+use flow_typing_errors::error_message::EVarianceKeywordData;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
 use flow_typing_errors::error_message::EnumInvalidMemberNameData;
@@ -79,6 +80,7 @@ use flow_typing_errors::error_message::ReadonlyTypeKind;
 use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::error_message::TSSyntaxKind;
 use flow_typing_errors::error_message::UpperKind;
+use flow_typing_errors::error_message::VarianceKeywordKind;
 use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_errors::flow_error::FlowError;
 use flow_typing_errors::intermediate_error::make_intermediate_error;
@@ -87,6 +89,7 @@ use flow_typing_errors::intermediate_error_types::ExplanationWithLazyParts;
 use flow_typing_errors::intermediate_error_types::IncorrectType;
 use flow_typing_errors::intermediate_error_types::InternalType;
 use flow_typing_errors::intermediate_error_types::InvalidRenderTypeKind;
+use flow_typing_errors::intermediate_error_types::VarianceSigilParent;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use lsp_types::CodeAction;
@@ -1620,6 +1623,78 @@ pub fn ast_transforms_of_error(
                     diagnostic_title: "remove_in_out_variance".to_string(),
                     transform: untyped_ast_transform(Box::new(|ast, loc| {
                         autofix_ts_syntax::remove_in_out_variance(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EVarianceKeyword(box EVarianceKeywordData {
+            kind: VarianceKeywordKind::Plus(VarianceSigilParent::Property),
+            loc: error_loc,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `readonly`".to_string(),
+                    diagnostic_title: "convert_plus_sigil_to_readonly".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_plus_sigil_to_readonly(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EVarianceKeyword(box EVarianceKeywordData {
+            kind: VarianceKeywordKind::Plus(VarianceSigilParent::TypeParam),
+            loc: error_loc,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `out`".to_string(),
+                    diagnostic_title: "convert_plus_sigil_to_out".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_plus_sigil_to_out(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EVarianceKeyword(box EVarianceKeywordData {
+            kind: VarianceKeywordKind::Minus(VarianceSigilParent::Property),
+            loc: error_loc,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `writeonly`".to_string(),
+                    diagnostic_title: "convert_minus_sigil_to_writeonly".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_minus_sigil_to_writeonly(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EVarianceKeyword(box EVarianceKeywordData {
+            kind: VarianceKeywordKind::Minus(VarianceSigilParent::TypeParam),
+            loc: error_loc,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `in`".to_string(),
+                    diagnostic_title: "convert_minus_sigil_to_in".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_minus_sigil_to_in(ast, loc)
                     })),
                     target_loc: error_loc.dupe(),
                     confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,

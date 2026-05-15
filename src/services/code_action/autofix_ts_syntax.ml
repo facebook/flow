@@ -51,6 +51,14 @@ class mapper target_loc kind =
         (Loc.none, { kind = Plus; comments })
       | In when kind = `InVariance && this#is_target loc -> (Loc.none, { kind = Minus; comments })
       | Out when kind = `OutVariance && this#is_target loc -> (Loc.none, { kind = Plus; comments })
+      | Plus when kind = `PlusSigilToReadonly && this#is_target loc ->
+        (Loc.none, { kind = Readonly; comments })
+      | Plus when kind = `PlusSigilToOut && this#is_target loc ->
+        (Loc.none, { kind = Out; comments })
+      | Minus when kind = `MinusSigilToWriteonly && this#is_target loc ->
+        (Loc.none, { kind = Writeonly; comments })
+      | Minus when kind = `MinusSigilToIn && this#is_target loc ->
+        (Loc.none, { kind = In; comments })
       | _ -> super#variance variance
 
     method! expression e =
@@ -107,6 +115,22 @@ let convert_out_variance ast loc =
 
 let remove_in_out_variance ast loc =
   let mapper = new mapper loc `InOutVariance in
+  mapper#program ast
+
+let convert_plus_sigil_to_readonly ast loc =
+  let mapper = new mapper loc `PlusSigilToReadonly in
+  mapper#program ast
+
+let convert_plus_sigil_to_out ast loc =
+  let mapper = new mapper loc `PlusSigilToOut in
+  mapper#program ast
+
+let convert_minus_sigil_to_writeonly ast loc =
+  let mapper = new mapper loc `MinusSigilToWriteonly in
+  mapper#program ast
+
+let convert_minus_sigil_to_in ast loc =
+  let mapper = new mapper loc `MinusSigilToIn in
   mapper#program ast
 
 let convert_as_expression ast loc =

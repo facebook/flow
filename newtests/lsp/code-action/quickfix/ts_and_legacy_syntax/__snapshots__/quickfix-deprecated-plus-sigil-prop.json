@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "command": {
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_plus_sigil_to_readonly",
+          "Convert to `readonly`"
+        ],
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "title": ""
+      },
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-deprecated-plus-sigil-prop.js": [
+            {
+              "newText": "readonly ",
+              "range": {
+                "end": {
+                  "character": 11,
+                  "line": 2
+                },
+                "start": {
+                  "character": 10,
+                  "line": 2
+                }
+              }
+            }
+          ]
+        }
+      },
+      "kind": "quickfix",
+      "title": "Convert to `readonly`"
+    }
+  ]
+}

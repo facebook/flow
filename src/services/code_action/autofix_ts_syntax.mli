@@ -55,6 +55,26 @@ val remove_in_out_variance :
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
 
+val convert_plus_sigil_to_readonly :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+val convert_plus_sigil_to_out :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+val convert_minus_sigil_to_writeonly :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+val convert_minus_sigil_to_in :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
 val convert_as_expression :
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   Loc.t ->

@@ -37,6 +37,10 @@ enum Kind {
     ReadonlyVariance,
     InVariance,
     OutVariance,
+    PlusSigilToReadonly,
+    PlusSigilToOut,
+    MinusSigilToWriteonly,
+    MinusSigilToIn,
     AsExpression,
     SatisfiesExpression,
 }
@@ -215,6 +219,42 @@ impl AstVisitor<'_, Loc> for Mapper {
                     comments: comments.clone(),
                 }
             }
+            ast::VarianceKind::Plus
+                if self.kind == Kind::PlusSigilToReadonly && self.contains.is_target(loc) =>
+            {
+                ast::Variance {
+                    loc: LOC_NONE,
+                    kind: ast::VarianceKind::Readonly,
+                    comments: comments.clone(),
+                }
+            }
+            ast::VarianceKind::Plus
+                if self.kind == Kind::PlusSigilToOut && self.contains.is_target(loc) =>
+            {
+                ast::Variance {
+                    loc: LOC_NONE,
+                    kind: ast::VarianceKind::Out,
+                    comments: comments.clone(),
+                }
+            }
+            ast::VarianceKind::Minus
+                if self.kind == Kind::MinusSigilToWriteonly && self.contains.is_target(loc) =>
+            {
+                ast::Variance {
+                    loc: LOC_NONE,
+                    kind: ast::VarianceKind::Writeonly,
+                    comments: comments.clone(),
+                }
+            }
+            ast::VarianceKind::Minus
+                if self.kind == Kind::MinusSigilToIn && self.contains.is_target(loc) =>
+            {
+                ast::Variance {
+                    loc: LOC_NONE,
+                    kind: ast::VarianceKind::In,
+                    comments: comments.clone(),
+                }
+            }
             _ => map_variance_default(self, variance),
         }
     }
@@ -349,6 +389,44 @@ pub fn remove_in_out_variance(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Pr
     let mut mapper = Mapper {
         contains: ContainsMapper::new(loc),
         kind: Kind::InOutVariance,
+    };
+    mapper.map_program(ast)
+}
+
+pub fn convert_plus_sigil_to_readonly(
+    ast: &ast::Program<Loc, Loc>,
+    loc: Loc,
+) -> ast::Program<Loc, Loc> {
+    let mut mapper = Mapper {
+        contains: ContainsMapper::new(loc),
+        kind: Kind::PlusSigilToReadonly,
+    };
+    mapper.map_program(ast)
+}
+
+pub fn convert_plus_sigil_to_out(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Program<Loc, Loc> {
+    let mut mapper = Mapper {
+        contains: ContainsMapper::new(loc),
+        kind: Kind::PlusSigilToOut,
+    };
+    mapper.map_program(ast)
+}
+
+pub fn convert_minus_sigil_to_writeonly(
+    ast: &ast::Program<Loc, Loc>,
+    loc: Loc,
+) -> ast::Program<Loc, Loc> {
+    let mut mapper = Mapper {
+        contains: ContainsMapper::new(loc),
+        kind: Kind::MinusSigilToWriteonly,
+    };
+    mapper.map_program(ast)
+}
+
+pub fn convert_minus_sigil_to_in(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Program<Loc, Loc> {
+    let mut mapper = Mapper {
+        contains: ContainsMapper::new(loc),
+        kind: Kind::MinusSigilToIn,
     };
     mapper.map_program(ast)
 }
