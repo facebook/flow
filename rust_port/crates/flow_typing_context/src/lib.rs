@@ -269,7 +269,7 @@ impl Default for FrozenMetadata {
             strip_root: true,
             stylex_shorthand_prop: None,
             ts_syntax: false,
-            allow_readonly_variance: false,
+            allow_readonly_variance: true,
             allow_variance_keywords: true,
             deprecated_variance_sigils: false,
             deprecated_variance_sigils_excludes: Arc::from([]),

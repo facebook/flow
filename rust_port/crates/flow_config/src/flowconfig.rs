@@ -362,7 +362,7 @@ pub mod opts {
             supported_operating_systems: Vec::new(),
             strict_es6_import_export: false,
             ts_syntax: false,
-            allow_readonly_variance: false,
+            allow_readonly_variance: true,
             allow_variance_keywords: true,
             deprecated_variance_sigils: false,
             deprecated_variance_sigils_excludes: Vec::new(),
