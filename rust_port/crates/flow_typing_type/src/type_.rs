@@ -4967,7 +4967,7 @@ pub enum LookupAction {
     WriteProp(Box<WritePropData>),
     LookupPropForTvarPopulation { polarity: Polarity, tout: Type },
     LookupPropForSubtyping(Box<LookupPropForSubtypingData>),
-    SuperProp(Box<(UseOp, PropertyType)>),
+    SuperProp(Box<(UseOp, Property)>),
     MatchProp(Box<LookupActionMatchPropData>),
 }
 

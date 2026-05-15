@@ -37,58 +37,105 @@ References:
               ^^^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------- method_bivariance.ts:43:29
+Error --------------------------------------------------------------------------------------- method_bivariance.ts:50:29
 
 Cannot assign object literal to `a` because in property `cb` > the first parameter: property `bark` is missing in
 `Animal` [1] but exists in `Dog` [2]. [incompatible-type]
 
-   method_bivariance.ts:43:29
-   43| const a: ArrowHolder = {cb: (x: Dog): void => {}}; // ERROR: contravariance
+   method_bivariance.ts:50:29
+   50| const a: ArrowHolder = {cb: (x: Dog): void => {}}; // ERROR: contravariance
                                    ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   method_bivariance.ts:40:11
-   40|   cb: (x: Animal) => void;
+   method_bivariance.ts:47:11
+   47|   cb: (x: Animal) => void;
                  ^^^^^^ [1]
-   method_bivariance.ts:43:33
-   43| const a: ArrowHolder = {cb: (x: Dog): void => {}}; // ERROR: contravariance
+   method_bivariance.ts:50:33
+   50| const a: ArrowHolder = {cb: (x: Dog): void => {}}; // ERROR: contravariance
                                        ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- method_bivariance.ts:49:3
+Error ---------------------------------------------------------------------------------------- method_bivariance.ts:56:3
 
 Cannot assign object literal to `tooManyParams` because in property `cb`: function [1] requires another argument from
 function type [2]. [incompatible-type]
 
-   method_bivariance.ts:49:3
-   49|   cb(x: Dog, y: number): void {}, // ERROR: missing arg `y` when called with the target's arity
+   method_bivariance.ts:56:3
+   56|   cb(x: Dog, y: number): void {}, // ERROR: missing arg `y` when called with the target's arity
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   method_bivariance.ts:20:3
-   20|   cb(x: Animal): void;
+   method_bivariance.ts:27:3
+   27|   cb(x: Animal): void;
          ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- method_bivariance.ts:74:35
+Error -------------------------------------------------------------------------------------- method_bivariance.ts:113:43
+
+Cannot assign `wrongOverloadedEventLike` to `overloadedWrongKey` because in property `addEventListener` > the first
+parameter: string [1] is incompatible with number literal `2` [2]. [incompatible-type]
+
+   method_bivariance.ts:113:43
+   113| const overloadedWrongKey: BaseEventLike = wrongOverloadedEventLike; // ERROR: no overload accepts string events
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method_bivariance.ts:75:26
+    75|   addEventListener(type: string, listener: Listener<Animal> | null): void;
+                                 ^^^^^^ [1]
+   method_bivariance.ts:110:26
+   110|   addEventListener(type: 2, listener: Listener<Dog>): void;
+                                 ^ [2]
+
+
+Error -------------------------------------------------------------------------------------- method_bivariance.ts:113:43
+
+Cannot assign `wrongOverloadedEventLike` to `overloadedWrongKey` because in the second parameter of property
+`addEventListener`: [incompatible-type]
+ - Either in the first parameter: property `bark` is missing in `Animal` [1] but exists in `Dog` [2].
+ - Or `Listener` [3] is incompatible with null [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   method_bivariance.ts:113:43
+   113| const overloadedWrongKey: BaseEventLike = wrongOverloadedEventLike; // ERROR: no overload accepts string events
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   method_bivariance.ts:75:53
+    75|   addEventListener(type: string, listener: Listener<Animal> | null): void;
+                                                            ^^^^^^ [1]
+   method_bivariance.ts:110:48
+   110|   addEventListener(type: 2, listener: Listener<Dog>): void;
+                                                       ^^^ [2]
+   method_bivariance.ts:110:39
+   110|   addEventListener(type: 2, listener: Listener<Dog>): void;
+                                              ^^^^^^^^^^^^^ [3]
+   method_bivariance.ts:75:63
+    75|   addEventListener(type: string, listener: Listener<Animal> | null): void;
+                                                                      ^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- method_bivariance.ts:124:35
 
 Cannot assign `restSource` to `restMismatch` because in property `cb`: number [1] is incompatible with array type [2].
 [incompatible-type]
 
-   method_bivariance.ts:74:35
-   74| const restMismatch: FixedTarget = restSource; // ERROR: number/string[] incompatible
-                                         ^^^^^^^^^^
+   method_bivariance.ts:124:35
+   124| const restMismatch: FixedTarget = restSource; // ERROR: number/string[] incompatible
+                                          ^^^^^^^^^^
 
 References:
-   method_bivariance.ts:71:20
-   71|   cb(x: Animal, y: number): void;
-                          ^^^^^^ [1]
-   method_bivariance.ts:73:49
-   73| declare const restSource: {cb(x: Animal, ...ys: string[]): void};
-                                                       ^^^^^^^^ [2]
+   method_bivariance.ts:121:20
+   121|   cb(x: Animal, y: number): void;
+                           ^^^^^^ [1]
+   method_bivariance.ts:123:49
+   123| declare const restSource: {cb(x: Animal, ...ys: string[]): void};
+                                                        ^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- method_bivariance.ts:83:38
+Error -------------------------------------------------------------------------------------- method_bivariance.ts:133:38
 
 Cannot assign `restNumberSource` to `restRestMismatch` because in property `cb` > array element: `number` [1] is not
 exactly the same as `string` [2]. [incompatible-type]
@@ -98,41 +145,41 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   method_bivariance.ts:83:38
-   83| const restRestMismatch: RestTarget = restNumberSource; // ERROR: bivariance still requires related types
-                                            ^^^^^^^^^^^^^^^^
+   method_bivariance.ts:133:38
+   133| const restRestMismatch: RestTarget = restNumberSource; // ERROR: bivariance still requires related types
+                                             ^^^^^^^^^^^^^^^^
 
 References:
-   method_bivariance.ts:82:44
-   82| declare const restNumberSource: {cb(...ys: number[]): void};
-                                                  ^^^^^^ [1]
-   method_bivariance.ts:80:13
-   80|   cb(...ys: string[]): void;
-                   ^^^^^^ [2]
-   method_bivariance.ts:82:44
-   82| declare const restNumberSource: {cb(...ys: number[]): void};
-                                                  ^^^^^^^^ [3]
-   method_bivariance.ts:80:13
-   80|   cb(...ys: string[]): void;
-                   ^^^^^^^^ [4]
+   method_bivariance.ts:132:44
+   132| declare const restNumberSource: {cb(...ys: number[]): void};
+                                                   ^^^^^^ [1]
+   method_bivariance.ts:130:13
+   130|   cb(...ys: string[]): void;
+                    ^^^^^^ [2]
+   method_bivariance.ts:132:44
+   132| declare const restNumberSource: {cb(...ys: number[]): void};
+                                                   ^^^^^^^^ [3]
+   method_bivariance.ts:130:13
+   130|   cb(...ys: string[]): void;
+                    ^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------- method_bivariance.ts:94:40
+Error -------------------------------------------------------------------------------------- method_bivariance.ts:144:40
 
 Cannot assign object literal to `oneSidedErr` because in property `cb` > the first parameter: property `bark` is missing
 in `Animal` [1] but exists in `Dog` [2]. [incompatible-type]
 
-   method_bivariance.ts:94:40
-   94| const oneSidedErr: MethodTarget = {cb: (x: Dog): void => {}}; // ERROR: arrow source, no bivariance
-                                              ^^^^^^^^^^^^^^^^^^^^
+   method_bivariance.ts:144:40
+   144| const oneSidedErr: MethodTarget = {cb: (x: Dog): void => {}}; // ERROR: arrow source, no bivariance
+                                               ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   method_bivariance.ts:91:9
-   91|   cb(x: Animal): void;
-               ^^^^^^ [1]
-   method_bivariance.ts:94:44
-   94| const oneSidedErr: MethodTarget = {cb: (x: Dog): void => {}}; // ERROR: arrow source, no bivariance
-                                                  ^^^ [2]
+   method_bivariance.ts:141:9
+   141|   cb(x: Animal): void;
+                ^^^^^^ [1]
+   method_bivariance.ts:144:44
+   144| const oneSidedErr: MethodTarget = {cb: (x: Dog): void => {}}; // ERROR: arrow source, no bivariance
+                                                   ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------ method_bivariance_consumer.js:20:32
@@ -264,4 +311,4 @@ References:
 
 
 
-Found 14 errors
+Found 16 errors

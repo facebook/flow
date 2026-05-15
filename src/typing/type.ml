@@ -1297,7 +1297,7 @@ module rec TypeTerm : sig
         reason_lower: reason;
         reason_upper: reason;
       }
-    | SuperProp of use_op * property_type
+    | SuperProp of use_op * property
     | MatchProp of {
         use_op: use_op;
         drop_generic: bool;

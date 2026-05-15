@@ -27,6 +27,7 @@ use flow_typing_type::type_::LookupPropForSubtypingData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NonstrictReturningData;
+use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::ReadElemData;
 use flow_typing_type::type_::ReadPropData;
@@ -148,6 +149,7 @@ pub(super) fn perform_lookup_action<'cx>(
     trace: DepthTrace,
     propref: &PropRef,
     p: &PropertyType,
+    prop: Option<&Property>,
     target_kind: PropertySource,
     lreason: &Reason,
     ureason: &Reason,
@@ -200,15 +202,17 @@ pub(super) fn perform_lookup_action<'cx>(
             )?;
         }
         LookupAction::SuperProp(box (use_op, lp)) => {
-            subtyping_kit::rec_flow_p(
+            let lp_type = property::property_type(lp);
+            subtyping_kit::rec_flow_p_with_lower_upper_property(
                 cx,
                 Some(trace),
                 use_op.dupe(),
+                prop.map(|up| (lp, up)),
                 true,
                 ureason,
                 lreason,
                 propref,
-                lp,
+                &lp_type,
                 p,
             )?;
         }

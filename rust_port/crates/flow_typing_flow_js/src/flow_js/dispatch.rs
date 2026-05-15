@@ -5495,6 +5495,7 @@ fn __flow_impl<'cx>(
                         trace,
                         propref,
                         &property_type,
+                        Some(&p),
                         target_kind,
                         lreason,
                         reason_op,
@@ -5673,6 +5674,7 @@ fn __flow_impl<'cx>(
                             trace,
                             &propref,
                             &property::property_type(p),
+                            Some(p),
                             PropertySource::PropertyMapProperty,
                             reason_c,
                             &spp_data.reason,
@@ -6056,6 +6058,7 @@ fn __flow_impl<'cx>(
                         trace,
                         propref,
                         &p,
+                        None,
                         target_kind.clone(),
                         reason_obj,
                         reason_op,
@@ -6099,9 +6102,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             match action {
-                box LookupAction::SuperProp(box (_, lp))
-                    if property::write_t_of_property_type(lp, None).is_none() =>
-                {
+                box LookupAction::SuperProp(box (_, lp)) if property::write_t(lp).is_none() => {
                     // Without this exception, we will call rec_flow_p where
                     // `write_t lp = None` and `write_t up = Some`, which is a polarity
                     // mismatch error. Instead of this, we could "read" `mixed` from
@@ -6125,6 +6126,7 @@ fn __flow_impl<'cx>(
                         trace,
                         propref,
                         &p,
+                        None,
                         PropertySource::DynamicProperty,
                         reason,
                         reason_op,
@@ -8666,6 +8668,7 @@ fn __flow_impl<'cx>(
                 trace,
                 propref,
                 &p,
+                None,
                 PropertySource::DynamicProperty,
                 reason,
                 reason_op,
@@ -8733,6 +8736,7 @@ fn __flow_impl<'cx>(
                 trace,
                 propref,
                 &p,
+                None,
                 PropertySource::DynamicProperty,
                 reason,
                 reason_op,
@@ -8789,6 +8793,7 @@ fn __flow_impl<'cx>(
                         trace,
                         propref,
                         &p,
+                        None,
                         PropertySource::DynamicProperty,
                         reason,
                         reason_op,
@@ -8881,6 +8886,7 @@ fn __flow_impl<'cx>(
                         trace,
                         propref,
                         &p,
+                        None,
                         PropertySource::DynamicProperty,
                         reason,
                         reason_op,

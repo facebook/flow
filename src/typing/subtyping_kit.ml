@@ -32,6 +32,7 @@ module type OUTPUT = sig
     Context.t ->
     ?trace:Type.DepthTrace.t ->
     use_op:use_op ->
+    ?lower_upper_property:Type.property * Type.property ->
     ?report_polarity:bool ->
     reason ->
     reason ->
@@ -64,62 +65,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     let lpol = Property.polarity_of_property_type lp in
     let upol = Property.polarity_of_property_type up in
     (propref, (lpol, upol))
-
-  let rec_flow_p
-      cx
-      ?trace
-      ~use_op
-      ~lower_upper_subtyping_obj_ts
-      ~upper_object_reason
-      ?(report_polarity = true)
-      propref = function
-    (* unification cases *)
-    | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
-        OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
-      )
-      when Files.has_ts_ext (Context.file cx) ->
-      (* TS treats read-write-on-both-sides property type mismatch in
-         extends/implements/instantiation contexts as covariant, not invariant.
-         Match that by skipping unification and doing a covariant subtype check. *)
-      flow_opt cx ?trace (lt, UseT (use_op, ut));
-      []
-    | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
-        OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
-      ) ->
-      let unify_cause =
-        match lower_upper_subtyping_obj_ts with
-        | None -> UnifyCause.Uncategorized
-        | Some (lower_obj_t, upper_obj_t) ->
-          let property_name =
-            match propref with
-            | Named { name; _ } -> Some (Reason.display_string_of_name name)
-            | Computed _ -> None
-          in
-          UnifyCause.MutableProperty
-            { lower_obj_t; upper_obj_t; upper_object_reason; property_name }
-      in
-      unify_opt cx ?trace ~use_op ~unify_cause lt ut;
-      []
-    (* directional cases *)
-    | (lp, up) ->
-      let propref_error = name_of_propref propref in
-      let errs1 =
-        match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
-        | (Some lt, Some ut) ->
-          flow_opt cx ?trace (lt, UseT (use_op, ut));
-          []
-        | (None, Some _) when report_polarity -> [polarity_error_content propref_error lp up]
-        | _ -> []
-      in
-      let errs2 =
-        match (Property.write_t_of_property_type lp, Property.write_t_of_property_type up) with
-        | (Some lt, Some ut) ->
-          flow_opt cx ?trace (ut, UseT (use_op, lt));
-          []
-        | (None, Some _) when report_polarity -> [polarity_error_content propref_error lp up]
-        | _ -> []
-      in
-      errs1 @ errs2
 
   let index_of_param params x =
     Base.List.find_mapi params ~f:(fun i p ->
@@ -358,59 +303,176 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (ureason, ft2)
       ~check_params:(funt_to_funt_check_params_bivariant cx trace ~lreason ~ureason ~ft1 ~ft2)
 
-  (* Returns true if (lt, ut) is a method-shape pair (FunT/FunT or compatible
-     PolyT/PolyT) and the bivariant subtyping was applied. Returns false to
-     signal the caller to fall back to the standard subtyping path. The PolyT
-     case mirrors the `PolyT ~> PolyT` instantiation logic (see flow_obj_to_obj
-     callers below) so generic methods get the same TS-style bivariance treatment
-     as monomorphic ones. *)
+  (* Returns true if (lt, ut) is a method-shape pair (FunT/FunT, compatible
+     PolyT/PolyT, or overload intersections of those shapes) and the bivariant
+     subtyping was applied. Returns false to signal the caller to fall back to
+     the standard subtyping path. The PolyT case mirrors the `PolyT ~> PolyT`
+     instantiation logic (see flow_obj_to_obj callers below) so generic methods
+     get the same TS-style bivariance treatment as monomorphic ones.
+
+     For overloaded methods, preserve Flow's existing intersection semantics:
+     every target overload must be covered, while a source overload set may
+     satisfy a target signature with any compatible overload. The only thing we
+     swap is the per-signature compatibility predicate, from contravariant params
+     to TS-style bivariant method params. *)
   let try_method_bivariant cx trace ~use_op lt ut =
-    match (lt, ut) with
-    | (DefT (lreason_f, FunT (_, ft1)), DefT (ureason_f, FunT (_, ft2))) ->
-      funt_to_funt_method_bivariant cx trace ~use_op (lreason_f, ft1) (ureason_f, ft2);
-      true
-    | ( DefT (_, PolyT { tparams = ps1; t_out = DefT (_, FunT _) as inner1; _ }),
-        DefT (_, PolyT { tparams = ps2; t_out = DefT (_, FunT _) as inner2; _ })
-      )
-      when Nel.length ps1 = Nel.length ps2 ->
-      let (map1, map2) =
-        Base.List.fold2_exn
-          (Nel.to_list ps1)
-          (Nel.to_list ps2)
-          ~init:(Subst_name.Map.empty, Subst_name.Map.empty)
-          ~f:(fun (prev_map1, prev_map2) p1 p2 ->
-            let bound2 = Type_subst.subst cx ~use_op prev_map2 p2.bound in
-            rec_flow cx trace (bound2, UseT (use_op, p1.bound));
-            if p1.is_const <> p2.is_const then
-              add_output
-                cx
-                (Error_message.ETypeParamConstIncompatibility
-                   { use_op; lower = p1.reason; upper = p2.reason }
-                );
-            let (gen, map1) = Flow_js_utils.generic_bound cx prev_map1 p1 in
-            let map2 = Subst_name.Map.add p2.name gen prev_map2 in
-            (map1, map2)
-        )
-      in
-      (* Substitution preserves the outer DefT/FunT constructor (the pattern
-         guard above requires t_out is FunT, and Type_subst only rewrites
-         tparam references inside), so the assertive match is exhaustive in
-         practice. If it ever falls through, raise rather than silently report
-         success. *)
-      (match (Type_subst.subst cx ~use_op map1 inner1, Type_subst.subst cx ~use_op map2 inner2) with
+    let direct_method_bivariant lt ut =
+      match (lt, ut) with
       | (DefT (lreason_f, FunT (_, ft1)), DefT (ureason_f, FunT (_, ft2))) ->
-        funt_to_funt_method_bivariant cx trace ~use_op (lreason_f, ft1) (ureason_f, ft2)
-      | _ ->
-        add_output
+        funt_to_funt_method_bivariant cx trace ~use_op (lreason_f, ft1) (ureason_f, ft2);
+        true
+      | ( DefT (_, PolyT { tparams = ps1; t_out = DefT (_, FunT _) as inner1; _ }),
+          DefT (_, PolyT { tparams = ps2; t_out = DefT (_, FunT _) as inner2; _ })
+        )
+        when Nel.length ps1 = Nel.length ps2 ->
+        let (map1, map2) =
+          Base.List.fold2_exn
+            (Nel.to_list ps1)
+            (Nel.to_list ps2)
+            ~init:(Subst_name.Map.empty, Subst_name.Map.empty)
+            ~f:(fun (prev_map1, prev_map2) p1 p2 ->
+              let bound2 = Type_subst.subst cx ~use_op prev_map2 p2.bound in
+              rec_flow cx trace (bound2, UseT (use_op, p1.bound));
+              if p1.is_const <> p2.is_const then
+                add_output
+                  cx
+                  (Error_message.ETypeParamConstIncompatibility
+                     { use_op; lower = p1.reason; upper = p2.reason }
+                  );
+              let (gen, map1) = Flow_js_utils.generic_bound cx prev_map1 p1 in
+              let map2 = Subst_name.Map.add p2.name gen prev_map2 in
+              (map1, map2)
+          )
+        in
+        (* Substitution preserves the outer DefT/FunT constructor (the pattern
+           guard above requires t_out is FunT, and Type_subst only rewrites
+           tparam references inside), so the assertive match is exhaustive in
+           practice. If it ever falls through, raise rather than silently report
+           success. *)
+        (match
+           (Type_subst.subst cx ~use_op map1 inner1, Type_subst.subst cx ~use_op map2 inner2)
+         with
+        | (DefT (lreason_f, FunT (_, ft1)), DefT (ureason_f, FunT (_, ft2))) ->
+          funt_to_funt_method_bivariant cx trace ~use_op (lreason_f, ft1) (ureason_f, ft2)
+        | _ ->
+          add_output
+            cx
+            (Error_message.EInternal
+               ( loc_of_t lt,
+                 Error_message.MethodBivariantInvariant
+                   "PolyT with FunT inner produced non-FunT after subst"
+               )
+            ));
+        true
+      | _ -> false
+    in
+    let rec can_try_method_bivariant lt ut =
+      match (lt, ut) with
+      | (_, IntersectionT (_, rep)) ->
+        InterRep.members rep |> Base.List.for_all ~f:(can_try_method_bivariant lt)
+      | (IntersectionT (_, rep), _) ->
+        InterRep.members rep |> Base.List.exists ~f:(fun lt -> can_try_method_bivariant lt ut)
+      | (DefT (_, FunT _), DefT (_, FunT _)) -> true
+      | ( DefT (_, PolyT { tparams = ps1; t_out = DefT (_, FunT _); _ }),
+          DefT (_, PolyT { tparams = ps2; t_out = DefT (_, FunT _); _ })
+        )
+        when Nel.length ps1 = Nel.length ps2 ->
+        true
+      | _ -> false
+    in
+    let rec apply_method_bivariant lt ut =
+      match (lt, ut) with
+      | (_, IntersectionT (_, rep)) ->
+        InterRep.members rep |> List.iter (fun ut -> apply_method_bivariant lt ut)
+      | (IntersectionT (_, rep), _) ->
+        let cases =
+          InterRep.members rep
+          |> Base.List.filter ~f:(fun lt -> can_try_method_bivariant lt ut)
+          |> Base.List.map ~f:(fun lt () -> apply_method_bivariant lt ut)
+        in
+        SpeculationKit.try_custom
           cx
-          (Error_message.EInternal
-             ( loc_of_t lt,
-               Error_message.MethodBivariantInvariant
-                 "PolyT with FunT inner produced non-FunT after subst"
-             )
-          ));
+          ~use_op
+          ~use_t:(UseT (use_op, ut))
+          ~no_match_error_loc:(loc_of_t lt)
+          cases
+      | _ -> ignore (direct_method_bivariant lt ut)
+    in
+    if can_try_method_bivariant lt ut then begin
+      apply_method_bivariant lt ut;
       true
-    | _ -> false
+    end else
+      false
+
+  let rec_flow_p
+      cx
+      ?trace
+      ~use_op
+      ?lower_upper_property
+      ~lower_upper_subtyping_obj_ts
+      ~upper_object_reason
+      ?(report_polarity = true)
+      propref
+      props =
+    match lower_upper_property with
+    | Some (Method { type_ = lt; _ }, Method { type_ = ut; _ })
+      when Files.has_ts_ext (Context.file cx)
+           && try_method_bivariant
+                cx
+                (Base.Option.value trace ~default:DepthTrace.dummy_trace)
+                ~use_op
+                lt
+                ut ->
+      []
+    | _ ->
+      (match props with
+      (* unification cases *)
+      | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
+          OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
+        )
+        when Files.has_ts_ext (Context.file cx) ->
+        (* TS treats read-write-on-both-sides property type mismatch in
+           extends/implements/instantiation contexts as covariant, not invariant.
+           Match that by skipping unification and doing a covariant subtype check. *)
+        flow_opt cx ?trace (lt, UseT (use_op, ut));
+        []
+      | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
+          OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
+        ) ->
+        let unify_cause =
+          match lower_upper_subtyping_obj_ts with
+          | None -> UnifyCause.Uncategorized
+          | Some (lower_obj_t, upper_obj_t) ->
+            let property_name =
+              match propref with
+              | Named { name; _ } -> Some (Reason.display_string_of_name name)
+              | Computed _ -> None
+            in
+            UnifyCause.MutableProperty
+              { lower_obj_t; upper_obj_t; upper_object_reason; property_name }
+        in
+        unify_opt cx ?trace ~use_op ~unify_cause lt ut;
+        []
+      (* directional cases *)
+      | (lp, up) ->
+        let propref_error = name_of_propref propref in
+        let errs1 =
+          match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
+          | (Some lt, Some ut) ->
+            flow_opt cx ?trace (lt, UseT (use_op, ut));
+            []
+          | (None, Some _) when report_polarity -> [polarity_error_content propref_error lp up]
+          | _ -> []
+        in
+        let errs2 =
+          match (Property.write_t_of_property_type lp, Property.write_t_of_property_type up) with
+          | (Some lt, Some ut) ->
+            flow_opt cx ?trace (ut, UseT (use_op, lt));
+            []
+          | (None, Some _) when report_polarity -> [polarity_error_content propref_error lp up]
+          | _ -> []
+        in
+        errs1 @ errs2)
 
   let flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     let {
@@ -3172,12 +3234,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
            { reason_lower; reason_upper; use_op; explanation = None }
         )
 
-  let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) lreason ureason propref p =
+  let rec_flow_p
+      cx ?trace ~use_op ?lower_upper_property ?(report_polarity = true) lreason ureason propref p =
     let errs =
       rec_flow_p
         cx
         ?trace
         ~use_op
+        ?lower_upper_property
         ~lower_upper_subtyping_obj_ts:None
         ~upper_object_reason:ureason
         ~report_polarity

@@ -845,7 +845,7 @@ fn dump_use_t_<CX>(
                 )
             }
             type_::LookupAction::SuperProp(box (_, p)) => {
-                format!("Super {}", normalized_prop(tvars, p))
+                format!("Super {}", dump_prop_(depth - 1, tvars, cx, p))
             }
             type_::LookupAction::MatchProp(box type_::LookupActionMatchPropData {
                 prop_t, ..

@@ -24,6 +24,7 @@ module type OUTPUT = sig
     Context.t ->
     ?trace:Type.DepthTrace.t ->
     use_op:Type.use_op ->
+    ?lower_upper_property:Type.property * Type.property ->
     ?report_polarity:bool ->
     Reason.reason ->
     Reason.reason ->

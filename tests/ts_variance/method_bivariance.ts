@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 // Two sibling cases proving method-syntax is bivariant in .ts while
 // arrow-property syntax remains contravariant.
 //
@@ -61,6 +68,49 @@ const g: GenericMethodHolder = {
     return x;
   },
 }; // OK: generic method, narrower param via bivariance
+
+type Listener<T> = (event: T) => void;
+
+type BaseEventLike = {
+  addEventListener(type: string, listener: Listener<Animal> | null): void;
+};
+
+declare const preciseEventLike: {
+  addEventListener(type: "dog", listener: Listener<Dog>): void;
+  addEventListener(type: string, listener: Listener<Animal>): void;
+};
+
+// Overloaded method-syntax on the source side: the string fallback overload
+// covers the base EventTarget-like signature, and method bivariance accepts the
+// missing `null` branch in the listener parameter. This mirrors the DOM
+// EventTarget pattern in TypeScript's builtin libs.
+const overloadedSource: BaseEventLike = preciseEventLike; // OK
+
+type OverloadedEventLike = {
+  addEventListener(type: "dog", listener: Listener<Dog> | null): void;
+  addEventListener(type: string, listener: Listener<Animal> | null): void;
+};
+
+// Overloaded method-syntax on both sides: every target overload must be
+// covered, but each target overload may be covered by any compatible source
+// overload.
+const overloadedBoth: OverloadedEventLike = preciseEventLike; // OK
+
+interface BaseEventInterface {
+  addEventListener(type: string, listener: Listener<Animal> | null): void;
+}
+
+interface PreciseEventInterface extends BaseEventInterface {
+  addEventListener(type: "dog", listener: Listener<Dog>): void;
+  addEventListener(type: string, listener: Listener<Animal>): void;
+}
+
+declare const wrongOverloadedEventLike: {
+  addEventListener(type: 1, listener: Listener<Animal>): void;
+  addEventListener(type: 2, listener: Listener<Dog>): void;
+};
+
+const overloadedWrongKey: BaseEventLike = wrongOverloadedEventLike; // ERROR: no overload accepts string events
 
 // Soundness: when the source method has a rest param and the target has an
 // extra fixed param, the rest's element type must still be compatible with

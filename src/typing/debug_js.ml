@@ -414,7 +414,7 @@ and dump_use_t_ (depth, tvars) cx t =
       spf "LookupPropForTvarPopulation (%s, %s)" (Polarity.show polarity) (kid tout)
     | LookupPropForSubtyping { use_op; prop; _ } ->
       spf "LookupPropForSubtyping (%s, %s)" (string_of_use_op use_op) (normalized_prop prop)
-    | SuperProp (_, p) -> spf "Super %s" (normalized_prop p)
+    | SuperProp (_, p) -> spf "Super %s" (dump_prop_ (depth - 1, tvars) cx p)
     | MatchProp { prop_t = tin; _ } -> spf "Match %s" (kid tin)
   in
   let react_kit =

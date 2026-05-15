@@ -180,7 +180,7 @@ struct
 
   (* get prop *)
 
-  let perform_lookup_action cx trace propref p target_kind lreason ureason =
+  let perform_lookup_action cx trace propref ?prop p target_kind lreason ureason =
     let open FlowJs in
     function
     | LookupPropForTvarPopulation { tout; polarity } ->
@@ -201,7 +201,17 @@ struct
           )
       in
       rec_flow_p cx ~trace ~use_op lreason ureason propref (p, up)
-    | SuperProp (use_op, lp) -> rec_flow_p cx ~trace ~use_op ureason lreason propref (lp, p)
+    | SuperProp (use_op, lp) ->
+      let lower_upper_property = Base.Option.map prop ~f:(fun up -> (lp, up)) in
+      rec_flow_p
+        cx
+        ~trace
+        ~use_op
+        ?lower_upper_property
+        ureason
+        lreason
+        propref
+        (Property.type_ lp, p)
     | ReadProp { use_op; obj_t; tout } ->
       let react_dro =
         match obj_t with
@@ -3142,6 +3152,7 @@ struct
               cx
               trace
               propref
+              ~prop:p
               (Property.type_ p)
               target_kind
               lreason
@@ -3534,7 +3545,7 @@ struct
               }
           ) ->
           (match action with
-          | SuperProp (_, lp) when Property.write_t_of_property_type lp = None ->
+          | SuperProp (_, lp) when Property.write_t lp = None ->
             (* Without this exception, we will call rec_flow_p where
              * `write_t lp = None` and `write_t up = Some`, which is a polarity
              * mismatch error. Instead of this, we could "read" `mixed` from
@@ -6203,7 +6214,7 @@ struct
       Frame (PropertyCompatibility { prop = Some x; lower = lreason; upper = ureason }, use_op)
     in
     let reason_prop = replace_desc_reason (RProperty (Some x)) lreason in
-    let action = SuperProp (use_op, Property.type_ p) in
+    let action = SuperProp (use_op, p) in
     let t =
       (* munge names beginning with single _ *)
       if is_munged_prop_name cx x then

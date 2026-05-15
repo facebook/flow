@@ -441,7 +441,7 @@ pub(super) fn check_super<'cx>(
     let reason_prop = lreason
         .dupe()
         .replace_desc(VirtualReasonDesc::RProperty(Some(x.dupe())));
-    let action = LookupAction::SuperProp(Box::new((use_op.dupe(), property::property_type(p))));
+    let action = LookupAction::SuperProp(Box::new((use_op.dupe(), p.dupe())));
     let t = if flow_js_utils::is_munged_prop_name(cx, x) {
         // munge names beginning with single _
         Type::new(TypeInner::ObjProtoT(reason_of_t(t).dupe()))

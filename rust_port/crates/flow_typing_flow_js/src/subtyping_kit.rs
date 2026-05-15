@@ -196,6 +196,7 @@ fn rec_flow_p_inner<'cx>(
     cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     use_op: UseOp,
+    lower_upper_property: Option<(&Property, &Property)>,
     lower_upper_subtyping_obj_ts: Option<(&Type, &Type)>,
     upper_object_reason: &Reason,
     report_polarity: bool,
@@ -203,6 +204,20 @@ fn rec_flow_p_inner<'cx>(
     lp: &PropertyType,
     up: &PropertyType,
 ) -> Result<Vec<(Option<Name>, (Polarity, Polarity))>, FlowJsException> {
+    if let Some((lower_property, upper_property)) = lower_upper_property
+        && flow_common::files::has_ts_ext(cx.file())
+        && let (PropertyInner::Method { type_: lt, .. }, PropertyInner::Method { type_: ut, .. }) =
+            (lower_property.deref(), upper_property.deref())
+        && try_method_bivariant(
+            cx,
+            trace.unwrap_or_else(DepthTrace::dummy_trace),
+            use_op.dupe(),
+            lt,
+            ut,
+        )?
+    {
+        return Ok(vec![]);
+    }
     match (lp, up) {
         // unification cases
         (
@@ -785,12 +800,18 @@ fn funt_to_funt_method_bivariant<'cx>(
     })
 }
 
-// Returns true if (lt, ut) is a method-shape pair (FunT/FunT or compatible
-// PolyT/PolyT) and the bivariant subtyping was applied. Returns false to
-// signal the caller to fall back to the standard subtyping path. The PolyT
-// case mirrors the `PolyT ~> PolyT` instantiation logic (see flow_obj_to_obj
-// callers below) so generic methods get the same TS-style bivariance treatment
-// as monomorphic ones.
+// Returns true if (lt, ut) is a method-shape pair (FunT/FunT, compatible
+// PolyT/PolyT, or overload intersections of those shapes) and the bivariant
+// subtyping was applied. Returns false to signal the caller to fall back to
+// the standard subtyping path. The PolyT case mirrors the `PolyT ~> PolyT`
+// instantiation logic (see flow_obj_to_obj callers below) so generic methods
+// get the same TS-style bivariance treatment as monomorphic ones.
+//
+// For overloaded methods, preserve Flow's existing intersection semantics:
+// every target overload must be covered, while a source overload set may
+// satisfy a target signature with any compatible overload. The only thing we
+// swap is the per-signature compatibility predicate, from contravariant params
+// to TS-style bivariant method params.
 fn try_method_bivariant<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -798,113 +819,209 @@ fn try_method_bivariant<'cx>(
     lt: &Type,
     ut: &Type,
 ) -> Result<bool, FlowJsException> {
-    match (lt.deref(), ut.deref()) {
-        (TypeInner::DefT(lreason_f, ld), TypeInner::DefT(ureason_f, ud))
-            if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
-                (ld.deref(), ud.deref()) =>
-        {
-            funt_to_funt_method_bivariant(cx, trace, use_op, lreason_f, ft1, ureason_f, ft2)?;
-            Ok(true)
-        }
-        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if let (
-                DefTInner::PolyT(box PolyTData {
-                    tparams: ps1,
-                    t_out: inner1,
-                    ..
-                }),
-                DefTInner::PolyT(box PolyTData {
-                    tparams: ps2,
-                    t_out: inner2,
-                    ..
-                }),
-            ) = (ld.deref(), ud.deref())
-                && matches!(inner1.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
-                && matches!(inner2.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
-                && ps1.len() == ps2.len() =>
-        {
-            let mut map1 = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
-            let mut map2 = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
-            for (p1, p2) in ps1.iter().zip(ps2.iter()) {
-                let bound2 = flow_typing_flow_common::type_subst::subst(
+    fn direct_method_bivariant<'cx>(
+        cx: &Context<'cx>,
+        trace: DepthTrace,
+        use_op: UseOp,
+        lt: &Type,
+        ut: &Type,
+    ) -> Result<bool, FlowJsException> {
+        match (lt.deref(), ut.deref()) {
+            (TypeInner::DefT(lreason_f, ld), TypeInner::DefT(ureason_f, ud))
+                if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
+                    (ld.deref(), ud.deref()) =>
+            {
+                funt_to_funt_method_bivariant(cx, trace, use_op, lreason_f, ft1, ureason_f, ft2)?;
+                Ok(true)
+            }
+            (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+                if let (
+                    DefTInner::PolyT(box PolyTData {
+                        tparams: ps1,
+                        t_out: inner1,
+                        ..
+                    }),
+                    DefTInner::PolyT(box PolyTData {
+                        tparams: ps2,
+                        t_out: inner2,
+                        ..
+                    }),
+                ) = (ld.deref(), ud.deref())
+                    && matches!(inner1.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
+                    && matches!(inner2.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
+                    && ps1.len() == ps2.len() =>
+            {
+                let mut map1 = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
+                let mut map2 = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
+                for (p1, p2) in ps1.iter().zip(ps2.iter()) {
+                    let bound2 = flow_typing_flow_common::type_subst::subst(
+                        cx,
+                        Some(use_op.dupe()),
+                        true,
+                        false,
+                        flow_typing_flow_common::type_subst::Purpose::Normal,
+                        &map2,
+                        p2.bound.dupe(),
+                    );
+                    FlowJs::rec_flow(
+                        cx,
+                        trace,
+                        &bound2,
+                        &UseT::new(UseTInner::UseT(use_op.dupe(), p1.bound.dupe())),
+                    )?;
+                    if p1.is_const != p2.is_const {
+                        flow_js_utils::add_output(
+                            cx,
+                            ErrorMessage::ETypeParamConstIncompatibility(Box::new(
+                                ETypeParamConstIncompatibilityData {
+                                    use_op: use_op.dupe(),
+                                    lower: p1.reason.dupe(),
+                                    upper: p2.reason.dupe(),
+                                },
+                            )),
+                        )?;
+                    }
+                    let (gen_t, new_map1) = flow_js_utils::generic_bound(cx, map1, p1);
+                    map1 = new_map1;
+                    map2.insert(p2.name.dupe(), gen_t);
+                }
+                // Substitution preserves the outer DefT/FunT constructor (the pattern
+                // guard above requires t_out is FunT, and Type_subst only rewrites
+                // tparam references inside), so the assertive match is exhaustive in
+                // practice. If it ever falls through, report an internal error rather
+                // than crashing — matches the OCaml behavior of add_output(EInternal
+                // (..., MethodBivariantInvariant ...)).
+                let inner1_subst = flow_typing_flow_common::type_subst::subst(
+                    cx,
+                    Some(use_op.dupe()),
+                    true,
+                    false,
+                    flow_typing_flow_common::type_subst::Purpose::Normal,
+                    &map1,
+                    inner1.dupe(),
+                );
+                let inner2_subst = flow_typing_flow_common::type_subst::subst(
                     cx,
                     Some(use_op.dupe()),
                     true,
                     false,
                     flow_typing_flow_common::type_subst::Purpose::Normal,
                     &map2,
-                    p2.bound.dupe(),
+                    inner2.dupe(),
                 );
-                FlowJs::rec_flow(
-                    cx,
-                    trace,
-                    &bound2,
-                    &UseT::new(UseTInner::UseT(use_op.dupe(), p1.bound.dupe())),
-                )?;
-                if p1.is_const != p2.is_const {
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::ETypeParamConstIncompatibility(Box::new(
-                            ETypeParamConstIncompatibilityData {
-                                use_op: use_op.dupe(),
-                                lower: p1.reason.dupe(),
-                                upper: p2.reason.dupe(),
-                            },
-                        )),
-                    )?;
+                match (inner1_subst.deref(), inner2_subst.deref()) {
+                    (TypeInner::DefT(lreason_f, ld), TypeInner::DefT(ureason_f, ud))
+                        if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
+                            (ld.deref(), ud.deref()) =>
+                    {
+                        funt_to_funt_method_bivariant(
+                            cx, trace, use_op, lreason_f, ft1, ureason_f, ft2,
+                        )?;
+                    }
+                    _ => {
+                        flow_js_utils::add_output(
+                            cx,
+                            ErrorMessage::EInternal(Box::new((
+                                type_util::loc_of_t(lt).dupe(),
+                                InternalError::MethodBivariantInvariant(FlowSmolStr::from(
+                                    "PolyT with FunT inner produced non-FunT after subst",
+                                )),
+                            ))),
+                        )?;
+                    }
                 }
-                let (gen_t, new_map1) = flow_js_utils::generic_bound(cx, map1, p1);
-                map1 = new_map1;
-                map2.insert(p2.name.dupe(), gen_t);
+                Ok(true)
             }
-            // Substitution preserves the outer DefT/FunT constructor (the pattern
-            // guard above requires t_out is FunT, and Type_subst only rewrites
-            // tparam references inside), so the assertive match is exhaustive in
-            // practice. If it ever falls through, report an internal error rather
-            // than crashing — matches the OCaml behavior of add_output(EInternal
-            // (..., MethodBivariantInvariant ...)).
-            let inner1_subst = flow_typing_flow_common::type_subst::subst(
-                cx,
-                Some(use_op.dupe()),
-                true,
-                false,
-                flow_typing_flow_common::type_subst::Purpose::Normal,
-                &map1,
-                inner1.dupe(),
-            );
-            let inner2_subst = flow_typing_flow_common::type_subst::subst(
-                cx,
-                Some(use_op.dupe()),
-                true,
-                false,
-                flow_typing_flow_common::type_subst::Purpose::Normal,
-                &map2,
-                inner2.dupe(),
-            );
-            match (inner1_subst.deref(), inner2_subst.deref()) {
-                (TypeInner::DefT(lreason_f, ld), TypeInner::DefT(ureason_f, ud))
-                    if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
-                        (ld.deref(), ud.deref()) =>
-                {
-                    funt_to_funt_method_bivariant(
-                        cx, trace, use_op, lreason_f, ft1, ureason_f, ft2,
-                    )?;
-                }
-                _ => {
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EInternal(Box::new((
-                            type_util::loc_of_t(lt).dupe(),
-                            InternalError::MethodBivariantInvariant(FlowSmolStr::from(
-                                "PolyT with FunT inner produced non-FunT after subst",
-                            )),
-                        ))),
-                    )?;
-                }
-            }
-            Ok(true)
+            _ => Ok(false),
         }
-        _ => Ok(false),
+    }
+
+    fn can_try_method_bivariant(lt: &Type, ut: &Type) -> bool {
+        match (lt.deref(), ut.deref()) {
+            (_, TypeInner::IntersectionT(_, rep)) => rep
+                .members_iter()
+                .all(|ut| can_try_method_bivariant(lt, ut)),
+            (TypeInner::IntersectionT(_, rep), _) => rep
+                .members_iter()
+                .any(|lt| can_try_method_bivariant(lt, ut)),
+            (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+                if matches!(
+                    (ld.deref(), ud.deref()),
+                    (DefTInner::FunT(_, _), DefTInner::FunT(_, _))
+                ) =>
+            {
+                true
+            }
+            (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+                if let (
+                    DefTInner::PolyT(box PolyTData {
+                        tparams: ps1,
+                        t_out: inner1,
+                        ..
+                    }),
+                    DefTInner::PolyT(box PolyTData {
+                        tparams: ps2,
+                        t_out: inner2,
+                        ..
+                    }),
+                ) = (ld.deref(), ud.deref())
+                    && matches!(inner1.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
+                    && matches!(inner2.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
+                    && ps1.len() == ps2.len() =>
+            {
+                true
+            }
+            _ => false,
+        }
+    }
+
+    fn apply_method_bivariant<'cx>(
+        cx: &Context<'cx>,
+        trace: DepthTrace,
+        use_op: UseOp,
+        lt: &Type,
+        ut: &Type,
+    ) -> Result<(), FlowJsException> {
+        match (lt.deref(), ut.deref()) {
+            (_, TypeInner::IntersectionT(_, rep)) => {
+                for ut in rep.members_iter() {
+                    apply_method_bivariant(cx, trace, use_op.dupe(), lt, ut)?;
+                }
+                Ok(())
+            }
+            (TypeInner::IntersectionT(_, rep), _) => {
+                let mut cases: Vec<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>>> =
+                    vec![];
+                for lt in rep
+                    .members_iter()
+                    .filter(|lt| can_try_method_bivariant(lt, ut))
+                {
+                    let lt = lt.dupe();
+                    let ut = ut.dupe();
+                    let use_op = use_op.dupe();
+                    cases.push(Box::new(move |cx: &Context<'cx>| {
+                        apply_method_bivariant(cx, trace, use_op, &lt, &ut)
+                    }));
+                }
+                let use_t = UseT::new(UseTInner::UseT(use_op.dupe(), ut.dupe()));
+                speculation_kit::try_custom(
+                    cx,
+                    Some(use_op),
+                    Some(use_t),
+                    None,
+                    type_util::loc_of_t(lt).dupe(),
+                    cases,
+                )
+            }
+            _ => direct_method_bivariant(cx, trace, use_op, lt, ut).map(|_| ()),
+        }
+    }
+
+    if can_try_method_bivariant(lt, ut) {
+        apply_method_bivariant(cx, trace, use_op, lt, ut)?;
+        Ok(true)
+    } else {
+        Ok(false)
     }
 }
 
@@ -978,6 +1095,7 @@ fn flow_obj_to_obj<'cx>(
                     cx,
                     Some(trace),
                     use_op_k.dupe(),
+                    None,
                     Some((&l_t, &u_t)),
                     ureason,
                     false,
@@ -1018,6 +1136,7 @@ fn flow_obj_to_obj<'cx>(
                     cx,
                     Some(trace),
                     use_op_v.dupe(),
+                    None,
                     Some((&l_t, &u_t)),
                     ureason,
                     true,
@@ -1292,6 +1411,7 @@ fn flow_obj_to_obj<'cx>(
                                         cx,
                                         Some(trace),
                                         mk_use_op(),
+                                        None,
                                         Some((&l_t, &u_t)),
                                         ureason,
                                         true,
@@ -1358,6 +1478,7 @@ fn flow_obj_to_obj<'cx>(
                                 cx,
                                 Some(trace),
                                 mk_use_op(),
+                                None,
                                 Some((&l_t, &u_t)),
                                 ureason,
                                 true,
@@ -1833,6 +1954,7 @@ fn flow_obj_to_obj<'cx>(
                             cx,
                             Some(trace),
                             use_op.dupe(),
+                            None,
                             Some((&l_t, &u_t)),
                             ureason,
                             true,
@@ -1980,6 +2102,7 @@ fn flow_obj_to_obj<'cx>(
                             cx,
                             Some(trace),
                             use_op.dupe(),
+                            None,
                             Some((&l_t, &u_t)),
                             ureason,
                             true,
@@ -4705,6 +4828,7 @@ pub fn rec_sub_t<'cx>(
                                     cx,
                                     Some(trace),
                                     prop_use_op,
+                                    None,
                                     Some((l, u)),
                                     ureason,
                                     true,
@@ -5981,10 +6105,37 @@ pub fn rec_flow_p<'cx>(
     lp: &PropertyType,
     up: &PropertyType,
 ) -> Result<(), FlowJsException> {
+    rec_flow_p_with_lower_upper_property(
+        cx,
+        trace,
+        use_op,
+        None,
+        report_polarity,
+        lreason,
+        ureason,
+        propref,
+        lp,
+        up,
+    )
+}
+
+pub fn rec_flow_p_with_lower_upper_property<'cx>(
+    cx: &Context<'cx>,
+    trace: Option<DepthTrace>,
+    use_op: UseOp,
+    lower_upper_property: Option<(&Property, &Property)>,
+    report_polarity: bool,
+    lreason: &Reason,
+    ureason: &Reason,
+    propref: &PropRef,
+    lp: &PropertyType,
+    up: &PropertyType,
+) -> Result<(), FlowJsException> {
     let errs = rec_flow_p_inner(
         cx,
         trace,
         use_op.dupe(),
+        lower_upper_property,
         None,
         ureason,
         report_polarity,
