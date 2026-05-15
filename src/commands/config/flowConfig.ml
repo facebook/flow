@@ -166,7 +166,6 @@ module Opts = struct
     strict_es6_import_export: bool;
     supported_operating_systems: Options.supported_os list;
     ts_syntax: bool;
-    allow_readonly_variance: bool;
     allow_variance_keywords: bool;
     deprecated_variance_sigils: bool;
     deprecated_variance_sigils_excludes: string list;
@@ -338,7 +337,6 @@ module Opts = struct
       strict_es6_import_export = false;
       supported_operating_systems = [];
       ts_syntax = false;
-      allow_readonly_variance = true;
       allow_variance_keywords = true;
       deprecated_variance_sigils = false;
       deprecated_variance_sigils_excludes = [];
@@ -1247,9 +1245,6 @@ module Opts = struct
       );
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
-      ( "experimental.allow_readonly_variance",
-        boolean (fun opts v -> Ok { opts with allow_readonly_variance = v })
-      );
       ( "experimental.allow_variance_keywords",
         boolean (fun opts v -> Ok { opts with allow_variance_keywords = v })
       );

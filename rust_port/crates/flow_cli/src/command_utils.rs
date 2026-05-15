@@ -2122,7 +2122,6 @@ pub(super) fn make_options(
                 supported_operating_systems,
                 strict_es6_import_export,
                 ts_syntax,
-                allow_readonly_variance: _,
                 allow_variance_keywords,
                 deprecated_variance_sigils,
                 deprecated_variance_sigils_excludes,
