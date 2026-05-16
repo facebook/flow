@@ -63,7 +63,7 @@ pub fn mk_patch_ast_differ_unsafe(opts: &Opts, diff: &NodeChanges, file: &FileIn
 
 pub fn print(patch: &Patch, content: &str) -> String {
     let mut patch_sorted = patch.clone();
-    patch_sorted.sort_by(|(start_one, _, _), (start_two, _, _)| start_one.cmp(start_two));
+    patch_sorted.sort_by_key(|(start_one, _, _)| *start_one);
     let file_end = content.len();
     // Apply the spans to the original text
     let (result_string_minus_end, last_span) = patch_sorted.iter().fold(
