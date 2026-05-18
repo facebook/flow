@@ -164,7 +164,7 @@ fn add_output_prop_polarity_mismatch<'cx>(
     ureason: &Reason,
     props: Vec<(Option<Name>, (Polarity, Polarity))>,
 ) -> Result<(), FlowJsException> {
-    if flow_common::files::has_ts_ext(&cx.file()) {
+    if flow_common::files::has_ts_ext(cx.file()) {
         Ok(())
     } else if let Ok(props) = Vec1::try_from_vec(props) {
         flow_js_utils::add_output(
@@ -229,7 +229,7 @@ fn rec_flow_p_inner<'cx>(
                 type_: ut,
                 polarity: Polarity::Neutral,
             },
-        ) if flow_common::files::has_ts_ext(&cx.file()) => {
+        ) if flow_common::files::has_ts_ext(cx.file()) => {
             // TS treats read-write-on-both-sides property type mismatch in
             // extends/implements/instantiation contexts as covariant, not invariant.
             // Match that by skipping unification and doing a covariant subtype check.
@@ -488,7 +488,7 @@ fn funt_to_funt_check<'cx>(
             // lower bound method, upper bound function
             // This is always banned, as it would allow methods to be unbound through casting
             (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) => {
-                if !unbound && !flow_common::files::has_ts_ext(&cx.file()) {
+                if !unbound && !flow_common::files::has_ts_ext(cx.file()) {
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
@@ -1162,7 +1162,7 @@ fn flow_obj_to_obj<'cx>(
     // reports those as excess properties, so this is a known compatibility gap.
     if rflags.obj_kind == ObjKind::Exact
         && !flow_common::reason::is_literal_object_reason(ureason)
-        && !flow_common::files::has_ts_ext(&cx.file())
+        && !flow_common::files::has_ts_ext(cx.file())
     {
         if !obj_type::is_exact(&lflags.obj_kind) {
             let l_t = Type::new(TypeInner::DefT(
@@ -1293,7 +1293,7 @@ fn flow_obj_to_obj<'cx>(
                 (Some(lp), _) => {
                     if lit {
                         // prop from unaliased LB: check <:
-                        let bivariant_handled = if flow_common::files::has_ts_ext(&cx.file()) {
+                        let bivariant_handled = if flow_common::files::has_ts_ext(cx.file()) {
                             if let (
                                 PropertyInner::Method { type_: lt, .. },
                                 PropertyInner::Method { type_: ut, .. },
@@ -1321,7 +1321,7 @@ fn flow_obj_to_obj<'cx>(
                         }
                     } else {
                         // prop from aliased LB
-                        let bivariant_handled = if flow_common::files::has_ts_ext(&cx.file()) {
+                        let bivariant_handled = if flow_common::files::has_ts_ext(cx.file()) {
                             if let (
                                 PropertyInner::Method { type_: lt, .. },
                                 PropertyInner::Method { type_: ut, .. },
@@ -1347,7 +1347,7 @@ fn flow_obj_to_obj<'cx>(
                                         type_: ref ut,
                                         polarity: Polarity::Neutral,
                                     },
-                                ) if flow_common::files::has_ts_ext(&cx.file()) => {
+                                ) if flow_common::files::has_ts_ext(cx.file()) => {
                                     // TS treats read-write-on-both-sides property type mismatch
                                     // in extends/implements/instantiation as covariant, not
                                     // invariant. Skip the try_unify path and do a covariant
@@ -1793,7 +1793,7 @@ fn flow_obj_to_obj<'cx>(
             })),
         )?;
     }
-    if !flow_common::files::has_ts_ext(&cx.file()) {
+    if !flow_common::files::has_ts_ext(cx.file()) {
         if let Ok(props) = Vec1::try_from_vec(rhs_neutral_optional) {
             let t1 = Type::new(TypeInner::DefT(
                 lreason.dupe(),
@@ -1828,7 +1828,7 @@ fn flow_obj_to_obj<'cx>(
             PropertyType::OrdinaryField {
                 type_: ut,
                 polarity: Polarity::Neutral,
-            } if flow_common::files::has_ts_ext(&cx.file()) => {
+            } if flow_common::files::has_ts_ext(cx.file()) => {
                 // TS treats missing optional Neutral properties as covariantly
                 // filled rather than invariantly demanded. Replace the unify with
                 // a covariant `any ~> ut` flow so any genuine type-arg
@@ -4733,7 +4733,7 @@ pub fn rec_sub_t<'cx>(
             let uproto = &u_obj.proto_t;
             let ucall = u_obj.call_t;
 
-            let suppress_class_to_object_error = flow_common::files::has_ts_ext(&cx.file())
+            let suppress_class_to_object_error = flow_common::files::has_ts_ext(cx.file())
                 && match inst_kind {
                     InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. } => true,
                     InstanceKind::RecordKind { .. } => false,
@@ -4810,7 +4810,7 @@ pub fn rec_sub_t<'cx>(
                                 ))),
                                 Arc::new(use_op.dupe()),
                             );
-                            let bivariant_handled = if flow_common::files::has_ts_ext(&cx.file()) {
+                            let bivariant_handled = if flow_common::files::has_ts_ext(cx.file()) {
                                 if let (
                                     PropertyInner::Method { type_: lt, .. },
                                     PropertyInner::Method { type_: ut, .. },
@@ -5389,7 +5389,7 @@ pub fn rec_sub_t<'cx>(
             if matches!(ld.deref(), DefTInner::FunT(_, _))
                 && let DefTInner::ObjT(obj) = ud.deref()
                 && matches!(obj.flags.obj_kind, ObjKind::Exact | ObjKind::Indexed(_))
-                && (!flow_common::files::has_ts_ext(&cx.file())
+                && (!flow_common::files::has_ts_ext(cx.file())
                     || obj.flags.obj_kind != ObjKind::Exact) =>
         {
             let reasons = ordered_reasons((lreason.dupe(), ureason.dupe()));
