@@ -343,6 +343,19 @@ struct
           ignore @@ this#block body_loc body_block;
           namespace
 
+        (* The Identifier form of [import_equals_declaration] (e.g. `import X =
+           A.B.C` / `export import X = A.B.C`) is intentionally skipped by
+           [name_resolver] (see name_resolver.ml:5095-5105), so no env entry is
+           registered for the qualified-identifier reference on the RHS. The
+           default visitor would walk into [A.B.C] and call [find_writes] on
+           [A], producing a spurious [MissingEnvRead] InternalError. The LHS
+           [id] also has no env entry. Skip the whole node. *)
+        method! import_equals_declaration _loc decl =
+          let open Ast.Statement.ImportEqualsDeclaration in
+          match decl.module_reference with
+          | ExternalModuleReference _ -> super#import_equals_declaration _loc decl
+          | Identifier _ -> decl
+
         method! this_expression loc this_ =
           let writes = this#find_writes ~for_type:false loc in
           Base.List.iter ~f:(this#add ~why:loc) writes;
@@ -723,7 +736,14 @@ struct
           | Property (_, prop) -> this#class_property_annotated prop
           | PrivateField (_, field) -> this#class_private_field_annotated field
           | StaticBlock _ -> ()
-          | DeclareMethod _ -> () (* DeclareMethod is a type annotation, no runtime def *)
+          | DeclareMethod (_, { Ast.Class.DeclareMethod.key; annot; _ }) ->
+            (* Even though DeclareMethod has no runtime def, its annotation
+               references types whose env entries must be resolved before this
+               class's body is checked. Without tracking these as dependencies,
+               typing.ml's [mk_declare_method_func_sig] (statement.ml) will read
+               unresolved env entries and crash with [ReadOfUnreachedTvar]. *)
+            run this#object_key key;
+            run this#type_annotation annot
           | AbstractMethod _ -> () (* AbstractMethod is a type annotation, no runtime def *)
           | AbstractProperty _ -> () (* AbstractProperty is a type annotation, no runtime def *)
           | IndexSignature _ -> () (* IndexSignature is a type annotation, no runtime def *)

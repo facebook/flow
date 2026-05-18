@@ -9366,19 +9366,6 @@ module Make
                       check_duplicate_name public_seen_names id_loc name ~static ~private_:false k
                   in
                   (c, get_element :: rev_elements, public_seen_names')
-              | Body.DeclareMethod (loc, _) as elem when Context.under_declaration_context cx ->
-                Flow.add_output
-                  cx
-                  Error_message.(
-                    EInternal
-                      ( loc,
-                        UnexpectedAnnotationInference "DeclareMethod annot must be Function type"
-                      )
-                  );
-                ( c,
-                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
-                  public_seen_names
-                )
               | Body.DeclareMethod (loc, _) as elem ->
                 Flow.add_output
                   cx

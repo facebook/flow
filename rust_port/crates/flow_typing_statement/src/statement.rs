@@ -17188,13 +17188,9 @@ pub fn mk_class_sig<'a>(
                                 _ => {
                                     flow_js::add_output_non_speculating(
                                         cx,
-                                        ErrorMessage::EInternal(Box::new((
+                                        ErrorMessage::EUnsupportedSyntax(Box::new((
                                             elem_loc,
-                                            flow_typing_errors::error_message::InternalError::UnexpectedAnnotationInference(
-                                                FlowSmolStr::new(
-                                                    "DeclareMethod annot must be Function type",
-                                                ),
-                                            ),
+                                            UnsupportedSyntax::ClassDeclareMethod,
                                         ))),
                                     );
                                     let elem_c = elem.clone();

@@ -396,7 +396,7 @@ let object_mapped_type_property
           key_tparam;
           prop_type;
           source_type;
-          name_type = _ (* TODO: visit inside tparam scope when key remapping is supported *);
+          name_type;
           variance = _;
           variance_op = _;
           optional = _;
@@ -409,7 +409,17 @@ let object_mapped_type_property
     Some (fst key_tparam, { Ast.Type.TypeParams.params = [key_tparam]; comments = None })
   in
   ignore @@ visitor#type_ source_type;
-  let in_tparam_scope () = ignore @@ visitor#type_ prop_type in
+  (* Visit [name_type] (the `as` clause) inside the [key_tparam] scope: the `as`
+     clause's expression refers to the key tparam ([K in keyof T as K extends ...]),
+     and may contain conditional types with [infer X] patterns whose writes must
+     be registered. Without this, downstream typing fires [MissingEnvWrite] on
+     those infer locations. Key remapping itself may be gated behind a flag, but
+     the env entries must always be tracked so the parser-accepted AST can be
+     traversed safely. *)
+  let in_tparam_scope () =
+    ignore @@ visitor#type_ prop_type;
+    Base.Option.iter name_type ~f:(fun nt -> ignore @@ visitor#type_ nt)
+  in
   scoped_type_params ~with_types visitor ~with_bindings ?hoist_op:None ~in_tparam_scope tparams;
   mt
 

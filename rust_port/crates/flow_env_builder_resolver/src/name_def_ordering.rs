@@ -786,8 +786,19 @@ where
                 self.class_private_field_annotated(field);
             }
             ast::class::BodyElement::StaticBlock(_) => {}
-            // DeclareMethod is a type annotation, no runtime def
-            ast::class::BodyElement::DeclareMethod(_) => {}
+            ast::class::BodyElement::DeclareMethod(ast::class::DeclareMethod {
+                key,
+                annot,
+                ..
+            }) => {
+                // Even though DeclareMethod has no runtime def, its annotation
+                // references types whose env entries must be resolved before this
+                // class's body is checked. Without tracking these as dependencies,
+                // typing.ml's [mk_declare_method_func_sig] (statement.ml) will read
+                // unresolved env entries and crash with [ReadOfUnreachedTvar].
+                let Ok(()) = self.object_key(key);
+                let Ok(()) = self.type_annotation(annot);
+            }
             // AbstractMethod is a type annotation, no runtime def
             ast::class::BodyElement::AbstractMethod(_) => {}
             // AbstractProperty is a type annotation, no runtime def
@@ -1062,6 +1073,27 @@ where
     ) -> Result<(), !> {
         let Ok(()) = self.block(&namespace.body.0, &namespace.body.1);
         Ok(())
+    }
+
+    // The Identifier form of [import_equals_declaration] (e.g. `import X =
+    // A.B.C` / `export import X = A.B.C`) is intentionally skipped by
+    // [name_resolver] (see name_resolver.ml:5095-5105), so no env entry is
+    // registered for the qualified-identifier reference on the RHS. The
+    // default visitor would walk into [A.B.C] and call [find_writes] on
+    // [A], producing a spurious [MissingEnvRead] InternalError. The LHS
+    // [id] also has no env entry. Skip the whole node.
+    fn import_equals_declaration(
+        &mut self,
+        loc: &ALoc,
+        decl: &ast::statement::ImportEqualsDeclaration<ALoc, ALoc>,
+    ) -> Result<(), !> {
+        use ast::statement::import_equals_declaration::ModuleReference;
+        match &decl.module_reference {
+            ModuleReference::ExternalModuleReference(..) => {
+                flow_parser::ast_visitor::import_equals_declaration_default(self, loc, decl)
+            }
+            ModuleReference::Identifier(..) => Ok(()),
+        }
     }
 
     fn this_expression(
