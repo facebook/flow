@@ -4706,7 +4706,7 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
             if matches!(ld.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. }))
                 && matches!(ud.deref(), DefTInner::ObjT(obj) if obj.flags.obj_kind == ObjKind::Exact)
-                && !flow_common::files::has_ts_ext(&cx.file()) =>
+                && !flow_common::files::has_ts_ext(cx.file()) =>
         {
             let reasons = ordered_reasons((lreason.dupe(), ureason.dupe()));
             flow_js_utils::add_output(
