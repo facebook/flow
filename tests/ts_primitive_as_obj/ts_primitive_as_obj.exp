@@ -1,0 +1,110 @@
+Error ----------------------------------------------------------------------------------- primitive_to_interface.ts:35:1
+
+Cannot cast `s` to `HasFoo` because property `foo` is missing in `String` [1] but exists in `HasFoo` [2].
+[incompatible-type]
+
+   primitive_to_interface.ts:35:1
+   35| s as HasFoo; // ERROR: `foo` missing on String wrapper
+       ^
+
+References:
+   primitive_to_interface.ts:16:18
+   16| declare const s: string;
+                        ^^^^^^ [1]
+   primitive_to_interface.ts:35:6
+   35| s as HasFoo; // ERROR: `foo` missing on String wrapper
+            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- primitive_to_interface.ts:36:1
+
+Cannot cast `bi` to `HasFoo` because property `foo` is missing in `BigInt` [1] but exists in `HasFoo` [2].
+[incompatible-type]
+
+   primitive_to_interface.ts:36:1
+   36| bi as HasFoo; // ERROR: `foo` missing on BigInt wrapper
+       ^^
+
+References:
+   primitive_to_interface.ts:19:19
+   19| declare const bi: bigint;
+                         ^^^^^^ [1]
+   primitive_to_interface.ts:36:7
+   36| bi as HasFoo; // ERROR: `foo` missing on BigInt wrapper
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- primitive_to_interface.ts:37:1
+
+Cannot cast `sym` to `HasFoo` because property `foo` is missing in `Symbol` [1] but exists in `HasFoo` [2].
+[incompatible-type]
+
+   primitive_to_interface.ts:37:1
+   37| sym as HasFoo; // ERROR: `foo` missing on Symbol wrapper
+       ^^^
+
+References:
+   primitive_to_interface.ts:20:20
+   20| declare const sym: symbol;
+                          ^^^^^^ [1]
+   primitive_to_interface.ts:37:8
+   37| sym as HasFoo; // ERROR: `foo` missing on Symbol wrapper
+              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- primitive_to_object.ts:28:1
+
+Cannot cast `s` to object type because property `foo` is missing in `String` [1] but exists in object type [2].
+[incompatible-type]
+
+   primitive_to_object.ts:28:1
+   28| s as {foo: number}; // ERROR: `foo` missing on String wrapper
+       ^
+
+References:
+   primitive_to_object.ts:9:18
+    9| declare const s: string;
+                        ^^^^^^ [1]
+   primitive_to_object.ts:28:6
+   28| s as {foo: number}; // ERROR: `foo` missing on String wrapper
+            ^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- primitive_to_object.ts:29:1
+
+Cannot cast `bi` to object type because property `foo` is missing in `BigInt` [1] but exists in object type [2].
+[incompatible-type]
+
+   primitive_to_object.ts:29:1
+   29| bi as {foo: number}; // ERROR: `foo` missing on BigInt wrapper
+       ^^
+
+References:
+   primitive_to_object.ts:12:19
+   12| declare const bi: bigint;
+                         ^^^^^^ [1]
+   primitive_to_object.ts:29:7
+   29| bi as {foo: number}; // ERROR: `foo` missing on BigInt wrapper
+             ^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- primitive_to_object.ts:30:1
+
+Cannot cast `sym` to object type because property `foo` is missing in `Symbol` [1] but exists in object type [2].
+[incompatible-type]
+
+   primitive_to_object.ts:30:1
+   30| sym as {foo: number}; // ERROR: `foo` missing on Symbol wrapper
+       ^^^
+
+References:
+   primitive_to_object.ts:13:20
+   13| declare const sym: symbol;
+                          ^^^^^^ [1]
+   primitive_to_object.ts:30:8
+   30| sym as {foo: number}; // ERROR: `foo` missing on Symbol wrapper
+              ^^^^^^^^^^^^^ [2]
+
+
+
+Found 6 errors

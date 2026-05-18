@@ -2910,6 +2910,23 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (DefT (_, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ }) as i)
       ) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
+    | ( DefT
+          ( reason,
+            ( BoolGeneralT | SingletonBoolT _ | NumGeneralT _ | SingletonNumT _ | StrGeneralT _
+            | SingletonStrT _ | BigIntGeneralT _ | SingletonBigIntT _ | SymbolT | UniqueSymbolT _ )
+          ),
+        DefT (_, (InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ } | ObjT _))
+      )
+      when Files.has_ts_ext (Context.file cx) ->
+      let builtin_name =
+        match l with
+        | DefT (_, (BoolGeneralT | SingletonBoolT _)) -> "Boolean"
+        | DefT (_, (NumGeneralT _ | SingletonNumT _)) -> "Number"
+        | DefT (_, (BigIntGeneralT _ | SingletonBigIntT _)) -> "BigInt"
+        | DefT (_, (SymbolT | UniqueSymbolT _)) -> "Symbol"
+        | _ -> "String"
+      in
+      rec_flow_t cx trace ~use_op (get_builtin_type cx reason builtin_name, u)
     | ( DefT (reason, (BoolGeneralT | SingletonBoolT _)),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->

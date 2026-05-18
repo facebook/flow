@@ -5486,6 +5486,60 @@ pub fn rec_sub_t<'cx>(
                 &UseT::new(UseTInner::ImplementsT(use_op, l.dupe())),
             )
         }
+        (TypeInner::DefT(reason, ld), TypeInner::DefT(_, ud))
+            if matches!(
+                ld.deref(),
+                DefTInner::BoolGeneralT
+                    | DefTInner::SingletonBoolT { .. }
+                    | DefTInner::NumGeneralT(_)
+                    | DefTInner::SingletonNumT { .. }
+                    | DefTInner::StrGeneralT(_)
+                    | DefTInner::SingletonStrT { .. }
+                    | DefTInner::BigIntGeneralT(_)
+                    | DefTInner::SingletonBigIntT { .. }
+                    | DefTInner::SymbolT
+                    | DefTInner::UniqueSymbolT(_)
+            ) && (matches!(
+                ud.deref(),
+                DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })
+            ) || matches!(ud.deref(), DefTInner::ObjT(_)))
+                && flow_common::files::has_ts_ext(cx.file()) =>
+        {
+            let builtin_name = match l.deref() {
+                TypeInner::DefT(_, ld)
+                    if matches!(
+                        ld.deref(),
+                        DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. }
+                    ) =>
+                {
+                    "Boolean"
+                }
+                TypeInner::DefT(_, ld)
+                    if matches!(
+                        ld.deref(),
+                        DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
+                    ) =>
+                {
+                    "Number"
+                }
+                TypeInner::DefT(_, ld)
+                    if matches!(
+                        ld.deref(),
+                        DefTInner::BigIntGeneralT(_) | DefTInner::SingletonBigIntT { .. }
+                    ) =>
+                {
+                    "BigInt"
+                }
+                TypeInner::DefT(_, ld)
+                    if matches!(ld.deref(), DefTInner::SymbolT | DefTInner::UniqueSymbolT(_)) =>
+                {
+                    "Symbol"
+                }
+                _ => "String",
+            };
+            let builtin = FlowJs::get_builtin_type(cx, Some(trace), reason, None, builtin_name)?;
+            FlowJs::rec_flow_t(cx, trace, use_op, &builtin, u)
+        }
         (TypeInner::DefT(reason, ld), TypeInner::DefT(interface_reason, ud))
             if matches!(
                 ld.deref(),
