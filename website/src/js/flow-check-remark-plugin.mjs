@@ -7,7 +7,7 @@
  * @format
  */
 
-import getFlowErrors from './initialized-flow-provider.js';
+import getFlowErrors from './initialized-flow-provider.mjs';
 
 /*:: type UnwrapPromise<T> = T extends Promise<infer V> ? V : T */
 

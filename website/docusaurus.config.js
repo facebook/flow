@@ -247,7 +247,7 @@ module.exports = async () => ({
           }),
           remarkPlugins: [
             [require('@docusaurus/remark-plugin-npm2yarn'), {sync: true}],
-            (await import('./src/js/flow-check-remark-plugin.js')).default,
+            (await import('./src/js/flow-check-remark-plugin.mjs')).default,
           ],
         },
         staticDocsProject: 'flow',
