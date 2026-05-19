@@ -6864,6 +6864,7 @@ let%expect_test "mapped_types" =
                  ElementType {loc = [2:36-42];
                    obj = (TyRef (Unqualified LocalRef {ref_loc = [2:36-37]; index = 0}));
                    elem = (Annot Bound {ref_loc = [2:38-41]; name = "key"})});
+              name_type = None;
               key_tparam =
               TParam {name_loc = [2:19-22];
                 name = "key"; polarity = Polarity.Neutral;
@@ -6884,6 +6885,7 @@ let%expect_test "mapped_types" =
                  ElementType {loc = [3:37-43];
                    obj = (TyRef (Unqualified LocalRef {ref_loc = [3:37-38]; index = 0}));
                    elem = (Annot Bound {ref_loc = [3:39-42]; name = "key"})});
+              name_type = None;
               key_tparam =
               TParam {name_loc = [3:19-22];
                 name = "key"; polarity = Polarity.Neutral;
@@ -6904,6 +6906,7 @@ let%expect_test "mapped_types" =
                  ElementType {loc = [4:37-43];
                    obj = (TyRef (Unqualified LocalRef {ref_loc = [4:37-38]; index = 0}));
                    elem = (Annot Bound {ref_loc = [4:39-42]; name = "key"})});
+              name_type = None;
               key_tparam =
               TParam {name_loc = [4:20-23];
                 name = "key"; polarity = Polarity.Neutral;
@@ -6924,6 +6927,7 @@ let%expect_test "mapped_types" =
                  ElementType {loc = [5:38-44];
                    obj = (TyRef (Unqualified LocalRef {ref_loc = [5:38-39]; index = 0}));
                    elem = (Annot Bound {ref_loc = [5:40-43]; name = "key"})});
+              name_type = None;
               key_tparam =
               TParam {name_loc = [5:20-23];
                 name = "key"; polarity = Polarity.Neutral;
@@ -6944,6 +6948,7 @@ let%expect_test "mapped_types" =
                  ElementType {loc = [6:30-36];
                    obj = (TyRef (Unqualified LocalRef {ref_loc = [6:30-31]; index = 0}));
                    elem = (Annot Bound {ref_loc = [6:32-35]; name = "key"})});
+              name_type = None;
               key_tparam =
               TParam {name_loc = [6:19-22];
                 name = "key"; polarity = Polarity.Neutral;
@@ -7032,6 +7037,7 @@ let%expect_test "mapped_types_minus_optional" =
                  ElementType {loc = [2:37-43];
                    obj = (TyRef (Unqualified LocalRef {ref_loc = [2:37-38]; index = 0}));
                    elem = (Annot Bound {ref_loc = [2:39-42]; name = "key"})});
+              name_type = None;
               key_tparam =
               TParam {name_loc = [2:18-21];
                 name = "key"; polarity = Polarity.Neutral;
@@ -7041,6 +7047,125 @@ let%expect_test "mapped_types_minus_optional" =
               variance_op = None; optional = Flow_ast.Type.Object.MappedType.MinusOptional;
               inline_keyof = true})}
   |}]
+
+let%expect_test "mapped_types_as_gate_off" =
+  (* Without `experimental.tslib_syntax`, the `as` key-remapping clause is gated off in
+     type_annotation.ml and resolves to `any`. type_sig must mirror that, so an `as`
+     mapped type defined in an imported file does not silently produce a different result
+     than a locally defined one. *)
+  print_sig {|
+    type O = {foo: number, bar: string};
+    export type Id = {[key in keyof O as key]: O[key]};
+  |};
+  [%expect{|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"Id"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [2:12-14];
+         custom_error_loc_opt = None;
+         name = "Id"; tparams = Mono;
+         body = (Annot (Any [2:18-49]))}
+  |}]
+
+let%expect_test "mapped_types_as" =
+  (* Exercises the `as` clause. The parse-order invariant requires `name_type` to be parsed
+   * before `property_type` since `as Name` appears before `: Prop` in source. The captured
+   * locations below show `name_type`'s ref_loc (e.g. col 37-40 in T1) preceding
+   * `property_type`'s loc (e.g. col 43-49 in T1) — confirming syntax-order parsing. *)
+  print_sig ~tslib_syntax:true {|
+    type O = {foo: number, bar: string};
+    export type Id = {[key in keyof O as key]: O[key]};
+    export type Const = {[key in keyof O as 'X']: O[key]};
+    export type Drop = {[key in keyof O as empty]: O[key]};
+  |};
+  [%expect{|
+    CJSModule {
+      type_exports = [|(ExportTypeBinding 2); (ExportTypeBinding 3); (ExportTypeBinding 1)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"Const"; "Drop"; "Id"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
+         name = "O"; tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [1:9-35];
+              obj_kind = ExactObj;
+              props =
+              { "bar" -> (ObjAnnotField ([1:23-26], (Annot (String [1:28-34])), Polarity.Neutral));
+                "foo" -> (ObjAnnotField ([1:10-13], (Annot (Number [1:15-21])), Polarity.Neutral)) };
+              computed_props = []; proto = ObjAnnotImplicitProto})}
+    1. TypeAlias {id_loc = [2:12-14];
+         custom_error_loc_opt = None;
+         name = "Id"; tparams = Mono;
+         body =
+         (Annot
+            MappedTypeAnnot {loc = [2:18-49];
+              source_type = (TyRef (Unqualified LocalRef {ref_loc = [2:32-33]; index = 0}));
+              property_type =
+              (Annot
+                 ElementType {loc = [2:43-49];
+                   obj = (TyRef (Unqualified LocalRef {ref_loc = [2:43-44]; index = 0}));
+                   elem = (Annot Bound {ref_loc = [2:45-48]; name = "key"})});
+              name_type = (Some (Annot Bound {ref_loc = [2:37-40]; name = "key"}));
+              key_tparam =
+              TParam {name_loc = [2:19-22];
+                name = "key"; polarity = Polarity.Neutral;
+                bound = None; default = None;
+                is_const = false};
+              variance = Polarity.Neutral;
+              variance_op = None; optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
+              inline_keyof = true})}
+    2. TypeAlias {id_loc = [3:12-17];
+         custom_error_loc_opt = None;
+         name = "Const"; tparams = Mono;
+         body =
+         (Annot
+            MappedTypeAnnot {loc = [3:21-52];
+              source_type = (TyRef (Unqualified LocalRef {ref_loc = [3:35-36]; index = 0}));
+              property_type =
+              (Annot
+                 ElementType {loc = [3:46-52];
+                   obj = (TyRef (Unqualified LocalRef {ref_loc = [3:46-47]; index = 0}));
+                   elem = (Annot Bound {ref_loc = [3:48-51]; name = "key"})});
+              name_type = (Some (Annot (SingletonString ([3:40-43], "X"))));
+              key_tparam =
+              TParam {name_loc = [3:22-25];
+                name = "key"; polarity = Polarity.Neutral;
+                bound = None; default = None;
+                is_const = false};
+              variance = Polarity.Neutral;
+              variance_op = None; optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
+              inline_keyof = true})}
+    3. TypeAlias {id_loc = [4:12-16];
+         custom_error_loc_opt = None;
+         name = "Drop"; tparams = Mono;
+         body =
+         (Annot
+            MappedTypeAnnot {loc = [4:20-53];
+              source_type = (TyRef (Unqualified LocalRef {ref_loc = [4:34-35]; index = 0}));
+              property_type =
+              (Annot
+                 ElementType {loc = [4:47-53];
+                   obj = (TyRef (Unqualified LocalRef {ref_loc = [4:47-48]; index = 0}));
+                   elem = (Annot Bound {ref_loc = [4:49-52]; name = "key"})});
+              name_type = (Some (Annot (Empty [4:39-44])));
+              key_tparam =
+              TParam {name_loc = [4:21-24];
+                name = "key"; polarity = Polarity.Neutral;
+                bound = None; default = None;
+                is_const = false};
+              variance = Polarity.Neutral;
+              variance_op = None; optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
+              inline_keyof = true})} |}]
 
 let%expect_test "dirtify_defs" =
   print_sig ~locs_to_dirtify:[

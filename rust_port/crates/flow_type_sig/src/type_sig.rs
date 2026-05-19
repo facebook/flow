@@ -2034,6 +2034,7 @@ pub struct AnnotMappedTypeAnnot<Loc, T> {
     pub loc: Loc,
     pub source_type: T,
     pub property_type: T,
+    pub name_type: Option<T>,
     pub key_tparam: TParam<Loc, T>,
     pub variance: Polarity,
     pub variance_op: Option<ast::types::object::MappedTypeVarianceOp>,
@@ -2277,6 +2278,7 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
                 inner.loc.hash(state);
                 inner.source_type.hash(state);
                 inner.property_type.hash(state);
+                inner.name_type.hash(state);
                 inner.key_tparam.hash(state);
                 inner.variance.hash(state);
                 inner.variance_op.hash(state);
@@ -2481,6 +2483,9 @@ impl<Loc, T> Annot<Loc, T> {
                 f_loc(cx, &inner.loc);
                 f_t(cx, &inner.source_type);
                 f_t(cx, &inner.property_type);
+                if let Some(nt) = &inner.name_type {
+                    f_t(cx, nt);
+                }
                 f_loc(cx, &inner.key_tparam.name_loc);
                 if let Some(b) = &inner.key_tparam.bound {
                     f_t(cx, b);
@@ -2797,6 +2802,7 @@ impl<Loc, T> Annot<Loc, T> {
                     loc: f_loc(cx, &inner.loc),
                     source_type: f_t(cx, &inner.source_type),
                     property_type: f_t(cx, &inner.property_type),
+                    name_type: inner.name_type.as_ref().map(|nt| f_t(cx, nt)),
                     key_tparam: inner.key_tparam.map(cx, &f_loc, &f_t),
                     variance: inner.variance,
                     variance_op: inner.variance_op,

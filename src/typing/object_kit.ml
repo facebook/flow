@@ -28,6 +28,7 @@ module type OBJECT = sig
     Reason.t ->
     keys:Type.t ->
     property_type:Type.t ->
+    name_type:Type.t option ->
     Type.mapped_type_flags ->
     Type.t
 end
@@ -71,6 +72,123 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
            | DefT (_, EmptyT) -> (keys, indexers)
            | _ -> (keys, t :: indexers))
          ([], [])
+
+  let dispatch_substituted_name cx reason name_t =
+    (* Returns (dest_names, indexer_keys) — splits the substituted name_type into
+     * singleton-string destinations vs. types that contribute to the output indexer. *)
+    let possible = Flow.possible_concrete_types_for_inspection cx reason name_t in
+    List.fold_left
+      (fun (dests, idx_keys) t ->
+        match t with
+        | DefT (_, EmptyT) -> (dests, idx_keys)
+        | DefT (r, SingletonStrT { value; _ }) -> ((value, r) :: dests, idx_keys)
+        | DefT (r, SingletonNumT { value = (_, str); _ }) ->
+          ((Reason.OrdinaryName str, r) :: dests, idx_keys)
+        | _ -> (dests, t :: idx_keys))
+      ([], [])
+      possible
+
+  let compute_name_remap cx trace use_op reason name_type selected_keys slice =
+    let { Object.props; flags; _ } = slice in
+    let source_keys =
+      match selected_keys with
+      | Some (named_keys, _) -> List.map fst named_keys
+      | None -> NameUtils.Map.keys props
+    in
+    let key_t_for k =
+      let key_loc =
+        match NameUtils.Map.find_opt k props with
+        | Some { Object.key_loc = Some loc; _ } -> loc
+        | _ -> loc_of_reason reason
+      in
+      DefT (mk_reason (RStringLit k) key_loc, SingletonStrT { from_annot = true; value = k })
+    in
+    let substitute_name_for_t key_t =
+      match name_type with
+      | DefT (_, PolyT { tparams = (kt, []); t_out; _ }) ->
+        Type_subst.subst cx ~use_op (Subst_name.Map.singleton kt.name key_t) t_out
+      | _ ->
+        typeapp_with_use_op
+          ~from_value:false
+          ~use_desc:false
+          (reason_of_t name_type)
+          use_op
+          name_type
+          [key_t]
+    in
+    let substitute_name k = substitute_name_for_t (key_t_for k) in
+    let (per_source, all_substituted) =
+      List.fold_left
+        (fun (map, all) k ->
+          let substituted = substitute_name k in
+          let (dests, idx_keys) = dispatch_substituted_name cx reason substituted in
+          ( NameUtils.Map.add k { Slice_utils.dest_names = dests; indexer_keys = idx_keys } map,
+            substituted :: all
+          ))
+        (NameUtils.Map.empty, [])
+        source_keys
+    in
+    let (source_indexer, indexer_substituted_opt) =
+      match (selected_keys, flags.obj_kind) with
+      | (None, Indexed dict_t) ->
+        let substituted = substitute_name_for_t dict_t.key in
+        let possible = Flow.possible_concrete_types_for_inspection cx reason substituted in
+        let all_empty =
+          List.for_all
+            (function
+              | DefT (_, EmptyT) -> true
+              | _ -> false)
+            possible
+        in
+        if all_empty then
+          (Some Slice_utils.DropSourceIndexer, Some substituted)
+        else
+          (Some (Slice_utils.KeepSourceIndexerKey substituted), Some substituted)
+      | _ -> (None, None)
+    in
+    (* For semi-homomorphic mapped types, the selected_keys.xs entries are non-literal indexer
+     * sources (e.g. `string` from `K = 'a' | string`). Substitute name_type over each xs entry to
+     * produce destination indexer keys. Filter out entries that substitute to empty. *)
+    let (selected_xs_keys, xs_substituted_for_check) =
+      match selected_keys with
+      | Some (_, xs) ->
+        List.fold_left
+          (fun (keys, all) xs_t ->
+            let substituted = substitute_name_for_t xs_t in
+            let possible = Flow.possible_concrete_types_for_inspection cx reason substituted in
+            let all_empty =
+              List.for_all
+                (function
+                  | DefT (_, EmptyT) -> true
+                  | _ -> false)
+                possible
+            in
+            if all_empty then
+              (keys, substituted :: all)
+            else
+              (substituted :: keys, substituted :: all))
+          ([], [])
+          xs
+      | None -> ([], [])
+    in
+    let all_substituted =
+      let acc = all_substituted in
+      let acc =
+        match indexer_substituted_opt with
+        | Some t -> t :: acc
+        | None -> acc
+      in
+      xs_substituted_for_check @ acc
+    in
+    let () =
+      match all_substituted with
+      | [] -> ()
+      | [t] -> ignore (partition_keys_and_indexer cx trace use_op reason t)
+      | t0 :: t1 :: ts ->
+        let union = UnionT (reason, UnionRep.make t0 t1 ts) in
+        ignore (partition_keys_and_indexer cx trace use_op reason union)
+    in
+    { Slice_utils.per_source; source_indexer; selected_xs_keys }
 
   let mapped_type_of_keys cx trace use_op reason ~keys =
     let (keys_with_reasons, indexers) = partition_keys_and_indexer cx trace use_op reason keys in
@@ -122,9 +240,15 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       }
     in
     let filter_optional t = OpenT (reason, Flow.filter_optional cx reason t) in
-    fun ~property_type mapped_type_flags ->
+    fun ~property_type ~name_type mapped_type_flags ->
+      let name_remap =
+        match name_type with
+        | None -> None
+        | Some nt -> Some (compute_name_remap cx trace use_op reason nt None slice)
+      in
       Slice_utils.map_object
         ~filter_optional
+        ?name_remap
         property_type
         mapped_type_flags
         cx
@@ -574,27 +698,33 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     (**************)
     (* Object Map *)
     (**************)
-    let object_map prop_type mapped_type_flags selected_keys_opt cx trace use_op reason x tout =
+    let object_map
+        prop_type name_type mapped_type_flags selected_keys_opt cx trace use_op reason x tout =
       let selected_keys =
         match selected_keys_opt with
         | Some keys -> Some (partition_keys_and_indexer cx trace use_op reason keys)
         | None -> None
       in
       let filter_optional t = OpenT (reason, Flow.filter_optional cx reason t) in
+      let map_one slice =
+        let name_remap =
+          match name_type with
+          | None -> None
+          | Some nt -> Some (compute_name_remap cx trace use_op reason nt selected_keys slice)
+        in
+        Slice_utils.map_object
+          ~filter_optional
+          ?name_remap
+          prop_type
+          mapped_type_flags
+          cx
+          reason
+          use_op
+          selected_keys
+          slice
+      in
       let t =
-        match
-          Nel.map
-            (Slice_utils.map_object
-               ~filter_optional
-               prop_type
-               mapped_type_flags
-               cx
-               reason
-               use_op
-               selected_keys
-            )
-            x
-        with
+        match Nel.map map_one x with
         | (t, []) -> t
         | (t0, t1 :: ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
       in
@@ -615,8 +745,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       | ObjectRep -> object_rep
       | Object.ReactCheckComponentConfig { props = pmap; allow_ref_in_spread } ->
         check_component_config ~allow_ref_in_spread pmap
-      | Object.ObjectMap { prop_type; mapped_type_flags; selected_keys_opt } ->
-        object_map prop_type mapped_type_flags selected_keys_opt
+      | Object.ObjectMap { prop_type; name_type; mapped_type_flags; selected_keys_opt } ->
+        object_map prop_type name_type mapped_type_flags selected_keys_opt
     in
     fun trace ->
       let add_output = Flow_js_utils.add_output in

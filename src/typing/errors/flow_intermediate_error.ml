@@ -5384,6 +5384,8 @@ let to_printable_error :
         code "export type";
         text " statements.";
       ]
+    | MessageUnsupportedSyntax (TSLibSyntax MappedTypeKeyRemappingOnArraySource) ->
+      [text "Key remapping (`as`) on tuple/array sources is not yet supported in mapped types."]
     | MessageUnsupportedSyntax (TSLibSyntax kind) ->
       let kind_str =
         match kind with
@@ -5406,6 +5408,7 @@ let to_printable_error :
         | OptionalShorthandMethod -> "Optional method signature"
         | AnonymousDefaultExportFunction -> "Anonymous default export function declaration"
         | MappedTypeKeyRemapping -> "Key remapping (`as`) in mapped types"
+        | MappedTypeKeyRemappingOnArraySource -> assert false
         | ReadonlyMappedTypeVarianceOp -> "`+readonly`/`-readonly` mapped type modifier"
         | MinusOptionalMappedType -> "`-?` mapped type modifier"
         | OptionalUnlabeledTupleElement -> "Optional unlabeled tuple element"

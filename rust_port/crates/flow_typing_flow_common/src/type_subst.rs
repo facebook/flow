@@ -148,6 +148,7 @@ impl TypeVisitor<FvAcc> for FreeVarVisitor {
             Destructor::MappedType(box DestructorMappedTypeData {
                 distributive_tparam_name,
                 property_type,
+                name_type,
                 homomorphic,
                 ..
             }) => self.with_distributive_tparam_name(
@@ -156,6 +157,10 @@ impl TypeVisitor<FvAcc> for FreeVarVisitor {
                 |this, mut acc| {
                     let pole_todo = Polarity::Neutral;
                     acc = this.type_(cx, pole_todo, acc, property_type);
+                    acc = match name_type {
+                        Some(t) => this.type_(cx, pole_todo, acc, t),
+                        None => acc,
+                    };
                     match homomorphic {
                         MappedTypeHomomorphicFlag::SemiHomomorphic(t) => {
                             this.type_(cx, pole_todo, acc, t)
@@ -947,6 +952,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
             Destructor::MappedType(box DestructorMappedTypeData {
                 distributive_tparam_name,
                 property_type,
+                name_type,
                 mapped_type_flags,
                 homomorphic,
             }) => {
@@ -957,6 +963,21 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                     &(new_map.dupe(), false, *placeholder_no_infer, *purpose, None),
                     property_type.dupe(),
                 );
+                let name_type_prime = match name_type {
+                    None => None,
+                    Some(nt) => {
+                        let nt_prime = self.type_(
+                            cx,
+                            &(new_map.dupe(), false, *placeholder_no_infer, *purpose, None),
+                            nt.dupe(),
+                        );
+                        if nt.ptr_eq(&nt_prime) {
+                            name_type.clone()
+                        } else {
+                            Some(nt_prime)
+                        }
+                    }
+                };
                 let (homomorphic_prime, homomorphic_changed) = match homomorphic {
                     MappedTypeHomomorphicFlag::SemiHomomorphic(hom_t) => {
                         let hom_t_prime = self.type_(
@@ -976,12 +997,21 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                     MappedTypeHomomorphicFlag::Homomorphic
                     | MappedTypeHomomorphicFlag::Unspecialized => (homomorphic.dupe(), false),
                 };
-                if property_type.ptr_eq(&property_type_prime) && !homomorphic_changed {
+                let name_type_changed = match (name_type, &name_type_prime) {
+                    (None, None) => false,
+                    (Some(a), Some(b)) => !a.ptr_eq(b),
+                    _ => true,
+                };
+                if property_type.ptr_eq(&property_type_prime)
+                    && !name_type_changed
+                    && !homomorphic_changed
+                {
                     t
                 } else {
                     Rc::new(Destructor::MappedType(Box::new(DestructorMappedTypeData {
                         distributive_tparam_name: distributive_tparam_name_new,
                         property_type: property_type_prime,
+                        name_type: name_type_prime,
                         mapped_type_flags: *mapped_type_flags,
                         homomorphic: homomorphic_prime,
                     })))

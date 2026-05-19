@@ -1346,6 +1346,41 @@ References:
                ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------- key_remapping_disabled.js:4:11
+
+Key remapping (`as`) in mapped types is not enabled. [unsupported-syntax]
+
+   4| type Id = {[K in keyof O as K]: O[K]}; // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------- key_remapping_disabled.js:7:45
+
+Key remapping (`as`) in mapped types is not enabled. [unsupported-syntax]
+
+                                                  v
+   7| type CombinedAsMinusReadonlyMinusOptional = {
+   8|   -readonly [K in keyof O as K]-?: O[K],
+   9| }; // ERROR x3 (as, -readonly, -?)
+      ^
+
+
+Error ------------------------------------------------------------------------------------ key_remapping_disabled.js:8:3
+
+`+readonly`/`-readonly` mapped type modifier is not enabled. [unsupported-syntax]
+
+   8|   -readonly [K in keyof O as K]-?: O[K],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------ key_remapping_disabled.js:8:3
+
+`-?` mapped type modifier is not enabled. [unsupported-syntax]
+
+   8|   -readonly [K in keyof O as K]-?: O[K],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------- lti_implicit_instantiation.js:8:22
 
 Cannot call method `freeze` because property `freeze` is missing in statics of `Object` [1]. [prop-missing]
@@ -2479,4 +2514,4 @@ References:
 
 
 
-Found 152 errors
+Found 156 errors

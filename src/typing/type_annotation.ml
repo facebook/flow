@@ -1008,6 +1008,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                      {
                        homomorphic = Unspecialized;
                        property_type = MixedT.make reason;
+                       name_type = None;
                        mapped_type_flags = { optional = KeepOptionality; variance = KeepVariance };
                        distributive_tparam_name = None;
                      }
@@ -1469,15 +1470,11 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           env.cx
           Error_message.(EInvalidMappedType { loc = obj_loc; kind = ExplicitExactOrInexact });
         Tast_utils.error_mapper#type_ ot
-      ) else if Option.is_some name_type then (
-        Flow_js_utils.add_output
-          env.cx
-          (Error_message.EUnsupportedSyntax
-             (obj_loc, Flow_intermediate_error_types.(TSLibSyntax MappedTypeKeyRemapping))
-          );
-        Tast_utils.error_mapper#type_ ot
       ) else if
-          (Option.is_some variance_op || optional = Ast.Type.Object.MappedType.MinusOptional)
+          (Option.is_some variance_op
+          || optional = Ast.Type.Object.MappedType.MinusOptional
+          || Option.is_some name_type
+          )
           && not (Context.tslib_syntax env.cx)
         then (
         if Option.is_some variance_op then
@@ -1493,6 +1490,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             env.cx
             (Error_message.EUnsupportedSyntax
                (mapped_type_loc, Flow_intermediate_error_types.(TSLibSyntax MinusOptionalMappedType))
+            );
+        if Option.is_some name_type then
+          Flow_js_utils.add_output
+            env.cx
+            (Error_message.EUnsupportedSyntax
+               (obj_loc, Flow_intermediate_error_types.(TSLibSyntax MappedTypeKeyRemapping))
             );
         Tast_utils.error_mapper#type_ ot
       ) else
@@ -1564,6 +1567,19 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             (Some (fst key_tparam, Nel.one tparam))
             prop_type
         in
+        let (poly_name_type, name_type_ast) =
+          match name_type with
+          | None -> (None, None)
+          | Some nt ->
+            let ((name_loc, name_t), nt_ast) = convert env nt in
+            let poly_nt =
+              poly_type_of_tparams
+                (Context.make_source_poly_id cx ~type_sig:false name_loc)
+                (Some (fst key_tparam, Nel.one tparam))
+                name_t
+            in
+            (Some poly_nt, Some ((name_loc, poly_nt), nt_ast))
+        in
         let reason = mk_reason RMappedType obj_loc in
         let eval_t =
           mk_type_destructor
@@ -1575,6 +1591,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                {
                  homomorphic;
                  property_type = poly_prop_type;
+                 name_type = poly_name_type;
                  mapped_type_flags =
                    {
                      optional = mapped_type_optionality;
@@ -1614,7 +1631,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 Object.MappedType.source_type = source_ast;
                 prop_type = poly_prop_type_ast;
                 key_tparam = tparam_ast;
-                name_type = None;
+                name_type = name_type_ast;
                 variance;
                 variance_op;
                 optional;

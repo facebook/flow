@@ -1206,9 +1206,9 @@ let mk_distributive_tparam_subst_fn cx ~use_op name distributed_t =
   subst cx ~use_op (Subst_name.Map.singleton name distributed_t)
 
 let substitute_mapped_type_distributive_tparams
-    cx ~use_op distributive_tparam_name ~property_type homomorphic ~source =
+    cx ~use_op distributive_tparam_name ~property_type ~name_type homomorphic ~source =
   match distributive_tparam_name with
-  | None -> (property_type, homomorphic)
+  | None -> (property_type, name_type, homomorphic)
   | Some name ->
     let subst = mk_distributive_tparam_subst_fn cx ~use_op name source in
     let homomorphic' =
@@ -1218,7 +1218,7 @@ let substitute_mapped_type_distributive_tparams
       | Unspecialized ->
         homomorphic
     in
-    (subst property_type, homomorphic')
+    (subst property_type, Option.map subst name_type, homomorphic')
 
 module ValueToTypeReferenceTransform = struct
   (* a component syntax value annotation becomes React$RendersExactly of that component *)

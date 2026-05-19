@@ -237,8 +237,27 @@ val mk_mapped_prop_type :
 
 val is_prop_optional : Type.t -> bool
 
+type per_source_dispatch = {
+  dest_names: (Reason.name * Reason.reason) list;
+  indexer_keys: Type.t list;
+}
+
+type source_indexer_remap =
+  | DropSourceIndexer
+  | KeepSourceIndexerKey of Type.t
+
+type name_remap = {
+  per_source: per_source_dispatch NameUtils.Map.t;
+  (* Source dict (when (None, Indexed _)) remap: drop the dict, or keep with a new key. *)
+  source_indexer: source_indexer_remap option;
+  (* Substituted destination keys derived from the "indexer side" of selected_keys (xs in
+   * `Some (named, xs)`). These are the non-literal entries of a SemiHomomorphic key tparam. *)
+  selected_xs_keys: Type.t list;
+}
+
 val map_object :
   filter_optional:(Type.t -> Type.t) ->
+  ?name_remap:name_remap ->
   Type.t ->
   Type.mapped_type_flags ->
   Context.t ->

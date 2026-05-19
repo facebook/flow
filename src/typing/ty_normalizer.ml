@@ -1630,7 +1630,7 @@ module Make (I : INPUT) : S = struct
       let obj_kind = Ty.ExactObj in
       return (Ty.Obj { Ty.obj_def_loc = None; obj_props; obj_kind })
 
-    and mapped_type ~env source property_type mapped_type_flags homomorphic =
+    and mapped_type ~env source property_type name_type mapped_type_flags homomorphic =
       let%bind (key_tparam, prop) =
         Type.TypeTerm.(
           match property_type with
@@ -1640,6 +1640,19 @@ module Make (I : INPUT) : S = struct
             return (key_tparam_ty, property_ty)
           | _ -> terr ~kind:BadMappedType (Some property_type)
         )
+      in
+      let%bind name_ty =
+        match name_type with
+        | None -> return None
+        | Some
+            (Type.TypeTerm.DefT
+              (_, Type.TypeTerm.PolyT { tparams = (_, []); t_out = name_t_out; _ })
+              ) ->
+          let%bind nty = type__ ~env name_t_out in
+          return (Some nty)
+        | Some t ->
+          let%bind nty = type__ ~env t in
+          return (Some nty)
       in
       let { Type.TypeTerm.variance; optional } = mapped_type_flags in
       let optional =
@@ -1665,7 +1678,9 @@ module Make (I : INPUT) : S = struct
           | Unspecialized -> return Ty.Unspecialized
         )
       in
-      let prop = Ty.(MappedTypeProp { key_tparam; source; prop; flags; homomorphic }) in
+      let prop =
+        Ty.(MappedTypeProp { key_tparam; source; prop; name_type = name_ty; flags; homomorphic })
+      in
       let obj_t = { Ty.obj_def_loc = None; obj_props = [prop]; obj_kind = Ty.MappedTypeObj } in
       return (Ty.Obj obj_t)
 
@@ -1713,17 +1728,19 @@ module Make (I : INPUT) : S = struct
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
       | T.RestType ((T.Object.Rest.SpreadReversal | T.Object.Rest.ReactConfigMerge _), _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
-      | T.MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
-        let (property_type, homomorphic) =
+      | T.MappedType
+          { property_type; name_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
+        let (property_type, name_type, homomorphic) =
           Flow_js_utils.substitute_mapped_type_distributive_tparams
             (Env.get_cx env)
             ~use_op:Type.unknown_use
             distributive_tparam_name
             ~property_type
+            ~name_type
             homomorphic
             ~source:t
         in
-        mapped_type ~env ty property_type mapped_type_flags homomorphic
+        mapped_type ~env ty property_type name_type mapped_type_flags homomorphic
 
     let rec type_ctor_ = type_ctor ~cont:type_ctor_
 

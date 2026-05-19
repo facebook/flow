@@ -6888,6 +6888,57 @@ fn __flow_impl<'cx>(
         // **************
         // * object kit *
         // **************
+        // Reject name remapping (`as`) on array/tuple sources for v1
+        (l_inner, UseTInner::ObjKitT(_use_op, reason_op, resolve_tool, tool, tout))
+            if let object::ResolveTool::Resolve(object::Resolve::Next) = &**resolve_tool
+                && let object::Tool::ObjectMap(box ObjectToolObjectMapData {
+                    name_type: Some(_),
+                    ..
+                }) = &**tool
+                && let TypeInner::OpenT(tout_tvar) = tout.deref()
+                && {
+                    match l_inner {
+                        TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::ArrT(_)),
+                        TypeInner::GenericT(box GenericTData { reason, bound, .. }) => {
+                            let roarray_bound = Type::new(TypeInner::DefT(
+                                reason.dupe(),
+                                DefT::new(DefTInner::ArrT(Rc::new(ArrType::ROArrayAT(Box::new(
+                                    (
+                                        Type::new(TypeInner::DefT(
+                                            reason.dupe(),
+                                            DefT::new(DefTInner::MixedT(
+                                                MixedFlavor::MixedEverything,
+                                            )),
+                                        )),
+                                        None,
+                                    ),
+                                ))))),
+                            ));
+                            speculative_subtyping_succeeds(cx, bound, &roarray_bound)?
+                        }
+                        _ => false,
+                    }
+                } =>
+        {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EUnsupportedSyntax(Box::new((
+                    reason_op.loc().dupe(),
+                    flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                        flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::MappedTypeKeyRemappingOnArraySource,
+                    ),
+                ))),
+            )?;
+            rec_flow_t(
+                cx,
+                trace,
+                unknown_use(),
+                (
+                    &any_t::error(reason_op.dupe()),
+                    &Type::new(TypeInner::OpenT(tout_tvar.dupe())),
+                ),
+            )?;
+        }
         (
             TypeInner::GenericT(box GenericTData {
                 reason,
@@ -6900,9 +6951,9 @@ fn __flow_impl<'cx>(
         ) if let object::ResolveTool::Resolve(object::Resolve::Next) = &**resolve_tool
             && let object::Tool::ObjectMap(box ObjectToolObjectMapData {
                 prop_type,
+                name_type: None,
                 mapped_type_flags,
                 selected_keys_opt: None,
-                ..
             }) = &**tool
             && {
                 let roarray_bound = Type::new(TypeInner::DefT(
@@ -6954,6 +7005,7 @@ fn __flow_impl<'cx>(
                                 Box::new(object::Tool::ObjectMap(Box::new(
                                     ObjectToolObjectMapData {
                                         prop_type: prop_type.dupe(),
+                                        name_type: None,
                                         mapped_type_flags: mapped_type_flags.clone(),
                                         selected_keys_opt: None,
                                     },
@@ -6986,9 +7038,9 @@ fn __flow_impl<'cx>(
             && let object::ResolveTool::Resolve(object::Resolve::Next) = &**resolve_tool
             && let object::Tool::ObjectMap(box ObjectToolObjectMapData {
                 prop_type: property_type,
+                name_type: None,
                 mapped_type_flags,
                 selected_keys_opt: None,
-                ..
             }) = &**tool
             && let TypeInner::OpenT(tout_tvar) = tout.deref() =>
         {

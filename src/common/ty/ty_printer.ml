@@ -418,6 +418,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
               key_tparam = { tp_name; _ };
               source;
               prop;
+              name_type;
               flags = { variance; optional };
               homomorphic;
             } ->
@@ -436,6 +437,11 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
             | KeepVariance ->
               Empty
           in
+          let as_clause =
+            match name_type with
+            | None -> Empty
+            | Some nt -> fuse [Atom " as "; type_ ~depth nt]
+          in
           fuse
             [
               variance_token;
@@ -448,6 +454,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
               | Unspecialized ->
                 Empty);
               type_ ~depth source;
+              as_clause;
               Atom "]";
               optional_modifier;
               Atom ":";

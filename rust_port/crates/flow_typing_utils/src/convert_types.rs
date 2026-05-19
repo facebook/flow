@@ -1015,6 +1015,7 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
             homomorphic,
             distributive_tparam_name,
             property_type,
+            name_type,
             mapped_type_flags,
         }) => {
             let homomorphic_json = match homomorphic {
@@ -1033,11 +1034,16 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
                 MappedTypeOptionality::RemoveOptional => "RemoveOptional",
                 MappedTypeOptionality::KeepOptionality => "KeepOptionality",
             };
+            let name_type_json = match name_type {
+                None => Json::Null,
+                Some(t) => type_to_json(cx, depth - 1, t),
+            };
             json!({
                 "kind": "MappedType",
                 "homomorphic": homomorphic_json,
                 "distributive_tparam_name": dist_name_json,
                 "property_type": type_to_json(cx, depth - 1, property_type),
+                "name_type": name_type_json,
                 "mapped_type_flags": {
                     "variance": match mapped_type_flags.variance {
                         MappedTypeVariance::OverrideVariance(Polarity::Positive) => "override_positive",

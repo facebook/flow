@@ -258,8 +258,19 @@ class ['a] t =
         acc
       | TypeMap ObjectKeyMirror -> acc
       | MappedType
-          { property_type; mapped_type_flags = _; homomorphic; distributive_tparam_name = _ } ->
+          {
+            property_type;
+            name_type;
+            mapped_type_flags = _;
+            homomorphic;
+            distributive_tparam_name = _;
+          } ->
         let acc = self#type_ cx pole_TODO acc property_type in
+        let acc =
+          match name_type with
+          | Some t -> self#type_ cx pole_TODO acc t
+          | None -> acc
+        in
         (match homomorphic with
         | SemiHomomorphic t -> self#type_ cx pole_TODO acc t
         | Homomorphic

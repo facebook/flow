@@ -24,6 +24,7 @@ module type OBJECT = sig
     Reason.t ->
     keys:Type.t ->
     property_type:Type.t ->
+    name_type:Type.t option ->
     Type.mapped_type_flags ->
     Type.t
 end

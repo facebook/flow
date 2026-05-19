@@ -885,6 +885,7 @@ and merge_annot env file = function
                     {
                       homomorphic = Unspecialized;
                       property_type = MixedT.make reason;
+                      name_type = None;
                       mapped_type_flags = { optional = KeepOptionality; variance = KeepVariance };
                       distributive_tparam_name = None;
                     }
@@ -1184,8 +1185,17 @@ and merge_annot env file = function
     let id = Context.make_aloc_id file.cx loc in
     merge_interface ~inline:true env file reason None id def []
   | MappedTypeAnnot
-      { loc; source_type; property_type; key_tparam; variance; variance_op; optional; inline_keyof }
-    ->
+      {
+        loc;
+        source_type;
+        property_type;
+        name_type;
+        key_tparam;
+        variance;
+        variance_op;
+        optional;
+        inline_keyof;
+      } ->
     let source_type = merge env file source_type in
     let (tp, _, env) = merge_tparam ~from_infer:false env file key_tparam in
     let property_type =
@@ -1195,6 +1205,22 @@ and merge_annot env file = function
       Type.(
         DefT (prop_reason, PolyT { tparams_loc = loc; tparams = Nel.one tp; t_out = prop_type; id })
       )
+    in
+    let name_type =
+      Option.map
+        ~f:(fun nt ->
+          let name_t = merge env file nt in
+          let name_reason = TypeUtil.reason_of_t name_t in
+          (* Use the name_type's own loc for the poly id so it doesn't collide with the
+           * property_type's poly id (which uses the MappedTypeAnnot loc). [make_source_poly_id]
+           * is deterministic in its loc argument. *)
+          let id =
+            Context.make_source_poly_id file.cx ~type_sig:true (Reason.loc_of_reason name_reason)
+          in
+          Type.(
+            DefT (name_reason, PolyT { tparams_loc = loc; tparams = Nel.one tp; t_out = name_t; id })
+          ))
+        name_type
     in
     let optional =
       Flow_ast.Type.Object.MappedType.(
@@ -1257,7 +1283,13 @@ and merge_annot env file = function
               ( unknown_use,
                 reason,
                 MappedType
-                  { property_type; mapped_type_flags; homomorphic; distributive_tparam_name }
+                  {
+                    property_type;
+                    name_type;
+                    mapped_type_flags;
+                    homomorphic;
+                    distributive_tparam_name;
+                  }
               );
           id;
         }

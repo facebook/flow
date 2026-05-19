@@ -2486,8 +2486,117 @@ pub fn is_prop_optional(t: &Type) -> bool {
     matches!(t.deref(), TypeInner::OptionalT { .. })
 }
 
+/* Per-source-key dispatch produced by [object_kit.rs] when a mapped type carries a [name_type]
+ * (the TS `as` clause). For each source key, [dest_names] lists the substituted destination
+ * names (singleton-string/numeric); [indexer_keys] lists the substituted name types that should
+ * contribute to the output indexer (e.g. [string], [number], [symbol]). */
+#[derive(Debug, Clone)]
+pub struct PerSourceDispatch {
+    pub dest_names: Vec<(Name, Reason)>,
+    pub indexer_keys: Vec<Type>,
+}
+
+/* What to do with the source object's indexer (the [(None, Indexed dict_t)] arm). */
+#[derive(Debug, Clone)]
+pub enum SourceIndexerRemap {
+    DropSourceIndexer,
+    KeepSourceIndexerKey(Type),
+}
+
+#[derive(Debug, Clone)]
+pub struct NameRemap {
+    pub per_source: BTreeMap<Name, PerSourceDispatch>,
+    /* Source dict (when (None, Indexed _)) remap: drop the dict, or keep with a new key. */
+    pub source_indexer: Option<SourceIndexerRemap>,
+    /* Substituted destination keys derived from the "indexer side" of selected_keys (xs in
+     * `Some (named, xs)`). These are the non-literal entries of a SemiHomomorphic key tparam. */
+    pub selected_xs_keys: Vec<Type>,
+}
+
+/* The greatest lower bound on the access lattice: the result must satisfy every contributor's
+ * contract. Positive (readonly) and Negative (write-only) are restrictions of Neutral
+ * (invariant), so when one contributor is restricted the merged property must inherit that
+ * restriction. The Positive/Negative case has no satisfying solution (one demands read-only,
+ * the other write-only); we conservatively fall through to Neutral, but in practice mapped
+ * types don't produce write-only fields so this case is unreachable. */
+pub fn mapped_type_meet_polarity(p1: Polarity, p2: Polarity) -> Polarity {
+    match (p1, p2) {
+        (Polarity::Positive, Polarity::Positive) => Polarity::Positive,
+        (Polarity::Negative, Polarity::Negative) => Polarity::Negative,
+        (Polarity::Neutral, Polarity::Neutral) => Polarity::Neutral,
+        (Polarity::Positive, Polarity::Neutral) | (Polarity::Neutral, Polarity::Positive) => {
+            Polarity::Positive
+        }
+        (Polarity::Negative, Polarity::Neutral) | (Polarity::Neutral, Polarity::Negative) => {
+            Polarity::Negative
+        }
+        (Polarity::Positive, Polarity::Negative) | (Polarity::Negative, Polarity::Positive) => {
+            Polarity::Neutral
+        }
+    }
+}
+
+/* Merge two field props from the same destination key — used when multiple source keys remap to
+ * the same destination, or when a source key remaps to multiple names that collide.
+ *
+ * Optionality must be preserved at the top level: `OptionalT<number> | string` would not be a
+ * top-level OptionalT, and Flow's missing-property logic would treat the merged property as
+ * required. We unwrap any contributing OptionalT, union the inner types, and re-wrap if any
+ * contributor was optional. */
+pub fn merge_field(reason: &Reason, existing: Option<Property>, incoming: Property) -> Property {
+    let unwrap_optional = |t: &Type| -> (Type, bool) {
+        match t.deref() {
+            TypeInner::OptionalT { type_, .. } => (type_.dupe(), true),
+            _ => (t.dupe(), false),
+        }
+    };
+    match existing {
+        None => incoming,
+        Some(existing_prop) => {
+            match (existing_prop.deref(), incoming.deref()) {
+                (
+                    PropertyInner::Field(box FieldData {
+                        preferred_def_locs: pl1,
+                        key_loc: kl1,
+                        type_: t1,
+                        polarity: p1,
+                    }),
+                    PropertyInner::Field(box FieldData {
+                        preferred_def_locs: _,
+                        key_loc: _,
+                        type_: t2,
+                        polarity: p2,
+                    }),
+                ) => {
+                    let (inner1, opt1) = unwrap_optional(t1);
+                    let (inner2, opt2) = unwrap_optional(t2);
+                    let merged_inner =
+                        type_util::union_of_ts(reason.dupe(), vec![inner1, inner2], None);
+                    let merged_type = if opt1 || opt2 {
+                        type_util::optional(merged_inner, None, false)
+                    } else {
+                        merged_inner
+                    };
+                    let merged_polarity = mapped_type_meet_polarity(*p1, *p2);
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: pl1.clone(),
+                        key_loc: kl1.clone(),
+                        type_: merged_type,
+                        polarity: merged_polarity,
+                    })))
+                }
+                _ => {
+                    /* map_object only ever produces Field props (line below). Other prop kinds shouldn't appear. */
+                    existing_prop
+                }
+            }
+        }
+    }
+}
+
 pub fn map_object<'cx>(
     filter_optional: &dyn Fn(Type) -> Type,
+    name_remap: Option<&NameRemap>,
     poly_prop: &Type,
     mapped_type_flags: &MappedTypeFlags,
     cx: &Context<'cx>,
@@ -2530,99 +2639,292 @@ pub fn map_object<'cx>(
             }
         }
     };
-    let keys: Vec<Name> = match &selected_keys {
-        Some((keys_with_reason, _)) => keys_with_reason.iter().map(|(k, _)| k.clone()).collect(),
-        None => props.keys().duped().collect(),
+    /* Build the field for a given source key and its prop in the source object. Returns
+     * (key_loc, field, indexer_keys) — the indexer_keys list is non-empty only when name_remap
+     * dispatched some of the substituted names to the indexer. */
+    let build_source_field = |key: &Name, prop: &Property| -> (ALoc, Property) {
+        let prop_t = property::type_(prop);
+        let prop_polarity = property::polarity(prop);
+        let key_loc = property::first_loc(prop)
+            .unwrap_or_else(|| type_util::reason_of_t(prop_t).loc().dupe());
+        let key_t = Type::new(TypeInner::DefT(
+            flow_common::reason::mk_reason(
+                VirtualReasonDesc::RStringLit(key.clone()),
+                key_loc.dupe(),
+            ),
+            DefT::new(DefTInner::SingletonStrT {
+                from_annot: true,
+                value: key.dupe(),
+            }),
+        ));
+        let prop_optional = is_prop_optional(prop_t);
+        let polarity = if *frozen {
+            Polarity::Positive
+        } else {
+            mk_variance(variance, prop_polarity)
+        };
+        let field = Property::new(PropertyInner::Field(Box::new(FieldData {
+            preferred_def_locs: None,
+            key_loc: Some(key_loc.dupe()),
+            type_: mk_prop_type(key_t, prop_optional),
+            polarity,
+        })));
+        (key_loc, field)
     };
-    let mut props_map = BTreeMap::new();
-    for key in &keys {
-        match props.get(key) {
-            None => {
-                // This is possible if a key is passed that does not actually conform to the
-                // $Keys/keyof upper bound. That already results in an error, so we refuse to evaluate
-                // the mapped type and signal to return `any` here
-                let field = Property::new(PropertyInner::Field(Box::new(FieldData {
-                    preferred_def_locs: None,
-                    key_loc: None,
-                    type_: any_t::why(AnySource::AnyError(None), reason.dupe()),
-                    polarity: if *frozen {
-                        Polarity::Positive
-                    } else {
-                        Polarity::Neutral
+    let any_field = || -> Property {
+        Property::new(PropertyInner::Field(Box::new(FieldData {
+            preferred_def_locs: None,
+            key_loc: None,
+            type_: any_t::why(AnySource::AnyError(None), reason.dupe()),
+            polarity: if *frozen {
+                Polarity::Positive
+            } else {
+                Polarity::Neutral
+            },
+        })))
+    };
+    let meet_polarity = mapped_type_meet_polarity;
+    let (out_props, extra_indexer_keys, extra_indexer_value_ts, extra_indexer_polarity_opt): (
+        BTreeMap<Name, Property>,
+        Vec<Type>,
+        Vec<Type>,
+        Option<Polarity>,
+    ) = match name_remap {
+        None => {
+            let keys: Vec<Name> = match &selected_keys {
+                Some((keys_with_reason, _)) => {
+                    keys_with_reason.iter().map(|(k, _)| k.clone()).collect()
+                }
+                None => props.keys().duped().collect(),
+            };
+            let mut out: BTreeMap<Name, Property> = BTreeMap::new();
+            for key in &keys {
+                match props.get(key) {
+                    None => {
+                        out.insert(key.dupe(), any_field());
+                    }
+                    Some(prop) => {
+                        let (_, field) = build_source_field(key, prop);
+                        out.insert(key.dupe(), field);
+                    }
+                }
+            }
+            (out, vec![], vec![], None)
+        }
+        Some(NameRemap {
+            per_source,
+            source_indexer: _,
+            selected_xs_keys: _,
+        }) => {
+            let source_keys: Vec<Name> = match &selected_keys {
+                Some((keys_with_reason, _)) => {
+                    keys_with_reason.iter().map(|(k, _)| k.clone()).collect()
+                }
+                None => props.keys().duped().collect(),
+            };
+            let mut out_map: BTreeMap<Name, Property> = BTreeMap::new();
+            let mut idx_keys: Vec<Type> = Vec::new();
+            let mut idx_values: Vec<Type> = Vec::new();
+            let mut idx_polarity: Option<Polarity> = None;
+            for src_key in &source_keys {
+                match per_source.get(src_key) {
+                    None => {
+                        /* Unreachable: [compute_name_remap] populates [per_source] for every source key
+                         * iterated here. Drop silently if it ever happens. */
+                    }
+                    Some(PerSourceDispatch {
+                        dest_names,
+                        indexer_keys,
+                    }) => match props.get(src_key) {
+                        None => {
+                            let f = any_field();
+                            for (n, _r) in dest_names {
+                                let existing = out_map.remove(n);
+                                let merged = merge_field(reason, existing, f.clone());
+                                out_map.insert(n.dupe(), merged);
+                            }
+                        }
+                        Some(prop) => {
+                            let (_, field) = build_source_field(src_key, prop);
+                            for (n, _r) in dest_names {
+                                let existing = out_map.remove(n);
+                                let merged = merge_field(reason, existing, field.clone());
+                                out_map.insert(n.dupe(), merged);
+                            }
+                            let (value_ts_for_indexer, field_polarity) = match field.deref() {
+                                PropertyInner::Field(box FieldData {
+                                    type_, polarity, ..
+                                }) => (vec![type_.dupe()], Some(*polarity)),
+                                _ => (vec![], None),
+                            };
+                            if !indexer_keys.is_empty() {
+                                let mut new_idx_keys = indexer_keys.clone();
+                                new_idx_keys.append(&mut idx_keys);
+                                idx_keys = new_idx_keys;
+                                let mut new_idx_values = value_ts_for_indexer;
+                                new_idx_values.append(&mut idx_values);
+                                idx_values = new_idx_values;
+                                idx_polarity = match (idx_polarity, field_polarity) {
+                                    (None, p) => p,
+                                    (p, None) => p,
+                                    (Some(a), Some(b)) => Some(meet_polarity(a, b)),
+                                };
+                            }
+                        }
                     },
-                })));
-                props_map.insert(key.dupe(), field);
+                }
             }
-            // Methods have no special consideration. There is no guarantee that the prop inserted by
-            // the mapped type is going to continue to be a function, so we transform it into a regular
-            // field
-            Some(prop) => {
-                let prop_t = property::type_(prop);
-                let prop_polarity = property::polarity(prop);
-                let key_loc = property::first_loc(prop)
-                    .unwrap_or_else(|| type_util::reason_of_t(prop_t).loc().dupe());
-                let key_t = Type::new(TypeInner::DefT(
-                    flow_common::reason::mk_reason(
-                        VirtualReasonDesc::RStringLit(key.clone()),
-                        key_loc.dupe(),
-                    ),
-                    DefT::new(DefTInner::SingletonStrT {
-                        from_annot: true,
-                        value: key.dupe(),
-                    }),
-                ));
-                let prop_optional = is_prop_optional(prop_t);
-                let polarity = if *frozen {
-                    Polarity::Positive
-                } else {
-                    mk_variance(variance, prop_polarity)
+            (out_map, idx_keys, idx_values, idx_polarity)
+        }
+    };
+    let props_map = out_props;
+    let obj_kind = match name_remap {
+        None => match (&selected_keys, &flags.obj_kind) {
+            (Some((_, indexers)), _) if indexers.is_empty() => ObjKind::Exact,
+            (Some((_, xs)), ObjKind::Indexed(dict_t)) => {
+                let dict_optional = is_prop_optional(&dict_t.value);
+                let dict_key = type_util::union_of_ts(reason.dupe(), xs.clone(), None);
+                let dict_t_prime = DictType {
+                    key: dict_key,
+                    value: mk_prop_type(dict_t.key.dupe(), dict_optional),
+                    dict_polarity: mk_variance(variance, dict_t.dict_polarity),
+                    ..dict_t.clone()
                 };
-                let field = Property::new(PropertyInner::Field(Box::new(FieldData {
-                    preferred_def_locs: None,
-                    key_loc: Some(key_loc),
-                    type_: mk_prop_type(key_t, prop_optional),
-                    polarity,
-                })));
-                props_map.insert(key.dupe(), field);
+                ObjKind::Indexed(dict_t_prime)
+            }
+            (Some((_, xs)), _) => {
+                let key = type_util::union_of_ts(reason.dupe(), xs.clone(), None);
+                let dict = DictType {
+                    dict_name: None,
+                    key,
+                    value: any_t::why(AnySource::AnyError(None), reason.dupe()),
+                    dict_polarity: Polarity::Neutral,
+                };
+                ObjKind::Indexed(dict)
+            }
+            (None, ObjKind::Indexed(dict_t)) => {
+                let dict_optional = is_prop_optional(&dict_t.value);
+                let dict_t_prime = DictType {
+                    value: mk_prop_type(dict_t.key.dupe(), dict_optional),
+                    dict_polarity: mk_variance(variance, dict_t.dict_polarity),
+                    ..dict_t.clone()
+                };
+                ObjKind::Indexed(dict_t_prime)
+            }
+            (None, _) => flags.obj_kind.clone(),
+        },
+        Some(NameRemap {
+            per_source,
+            source_indexer,
+            selected_xs_keys,
+        }) => {
+            let source_indexer_dropped =
+                matches!(source_indexer, Some(SourceIndexerRemap::DropSourceIndexer));
+            let is_identity_remap = per_source.iter().all(|(src_key, dispatch)| {
+                /* True when every source key remaps to exactly itself with no indexer keys.
+                 * Non-identity remaps cannot inherit the source's open shape: the result's
+                 * only known properties are the explicitly-named destinations. */
+                let PerSourceDispatch {
+                    dest_names,
+                    indexer_keys,
+                } = dispatch;
+                match (dest_names.as_slice(), indexer_keys.as_slice()) {
+                    ([(dst_name, _)], []) => src_key == dst_name,
+                    _ => false,
+                }
+            });
+            /* Compute output indexer from three sources of dest keys:
+             *   1. per_source: a source named key's substituted name was non-singleton
+             *   2. source_indexer: source object's own dict, remapped via name_type
+             *   3. selected_xs_keys: substituted xs entries from selected_keys's indexer side
+             * Cases 2 and 3 share the same source dict (when present) for the value/polarity. */
+            let (dict_idx_keys, dict_value_opt, dict_polarity_opt): (
+                Vec<Type>,
+                Option<Type>,
+                Option<Polarity>,
+            ) = match (source_indexer, selected_xs_keys, &flags.obj_kind) {
+                (Some(SourceIndexerRemap::DropSourceIndexer), _, _) => (vec![], None, None),
+                (
+                    Some(SourceIndexerRemap::KeepSourceIndexerKey(new_key)),
+                    xs,
+                    ObjKind::Indexed(dict_t),
+                ) => {
+                    let dict_optional = is_prop_optional(&dict_t.value);
+                    let value = mk_prop_type(dict_t.key.dupe(), dict_optional);
+                    let pol = mk_variance(variance, dict_t.dict_polarity);
+                    let mut keys = vec![new_key.dupe()];
+                    keys.extend(xs.iter().duped());
+                    (keys, Some(value), Some(pol))
+                }
+                (None, xs, ObjKind::Indexed(dict_t)) if !xs.is_empty() => {
+                    /* Selected_keys.xs entries with source dict — value comes from source dict_t.key,
+                     * matching the legacy `(Some (_, xs), Indexed dict_t)` arm. */
+                    let dict_optional = is_prop_optional(&dict_t.value);
+                    let value = mk_prop_type(dict_t.key.dupe(), dict_optional);
+                    let pol = mk_variance(variance, dict_t.dict_polarity);
+                    (xs.iter().duped().collect(), Some(value), Some(pol))
+                }
+                (None, xs, _) if !xs.is_empty() => {
+                    /* Selected_keys.xs entries but no source dict — matches legacy `(Some (_, xs), _) -> Any`
+                     * value, neutral polarity. */
+                    (
+                        xs.iter().duped().collect(),
+                        Some(any_t::why(AnySource::AnyError(None), reason.dupe())),
+                        Some(Polarity::Neutral),
+                    )
+                }
+                _ => (vec![], None, None),
+            };
+            let mut all_idx_keys = extra_indexer_keys.clone();
+            all_idx_keys.extend(dict_idx_keys.iter().duped());
+            let combined_polarity = match (extra_indexer_polarity_opt, dict_polarity_opt) {
+                (None, None) => Polarity::Neutral,
+                (Some(p), None) | (None, Some(p)) => p,
+                (Some(a), Some(b)) => meet_polarity(a, b),
+            };
+            let combined_value = || -> Type {
+                match (&extra_indexer_value_ts, &dict_value_opt) {
+                    (vs, Some(v)) if vs.is_empty() => v.dupe(),
+                    (vs, None) => type_util::union_of_ts(reason.dupe(), vs.clone(), None),
+                    (vs, Some(v)) => {
+                        let mut all = vec![v.dupe()];
+                        all.extend(vs.iter().duped());
+                        type_util::union_of_ts(reason.dupe(), all, None)
+                    }
+                }
+            };
+            match all_idx_keys.as_slice() {
+                [] => {
+                    /* No destination indexer contributions. We default to Exact when selected_keys is Some
+                     * (matching legacy `(Some (_, []), _) -> Exact`) or when name_type explicitly dropped the
+                     * source dict (`as empty` on the dict key). For homomorphic remaps without a destination
+                     * indexer, preserve flags.obj_kind only when the remap is identity (every source key maps
+                     * to itself); a non-identity remap produces a closed shape because the result's only
+                     * known properties are the explicitly-named destinations. */
+                    match &selected_keys {
+                        Some(_) => ObjKind::Exact,
+                        None if source_indexer_dropped => ObjKind::Exact,
+                        None if is_identity_remap => flags.obj_kind.clone(),
+                        None => ObjKind::Exact,
+                    }
+                }
+                [k] => ObjKind::Indexed(DictType {
+                    dict_name: None,
+                    key: k.dupe(),
+                    value: combined_value(),
+                    dict_polarity: combined_polarity,
+                }),
+                _ => {
+                    let key = type_util::union_of_ts(reason.dupe(), all_idx_keys.clone(), None);
+                    ObjKind::Indexed(DictType {
+                        dict_name: None,
+                        key,
+                        value: combined_value(),
+                        dict_polarity: combined_polarity,
+                    })
+                }
             }
         }
-    }
-    let obj_kind = match (&selected_keys, &flags.obj_kind) {
-        (Some((_, indexers)), _) if indexers.is_empty() => ObjKind::Exact,
-        (Some((_, xs)), ObjKind::Indexed(dict_t)) => {
-            let dict_optional = is_prop_optional(&dict_t.value);
-            let dict_key = type_util::union_of_ts(reason.dupe(), xs.clone(), None);
-            let dict_t_prime = DictType {
-                key: dict_key,
-                value: mk_prop_type(dict_t.key.dupe(), dict_optional),
-                dict_polarity: mk_variance(variance, dict_t.dict_polarity),
-                ..dict_t.clone()
-            };
-            ObjKind::Indexed(dict_t_prime)
-        }
-        (Some((_, xs)), _) => {
-            let key = type_util::union_of_ts(reason.dupe(), xs.clone(), None);
-            let dict = DictType {
-                dict_name: None,
-                key,
-                // Similar to the missing prop case above, this is only possible when a semi-homomorphic
-                // mapped type violates the constraint on the key type. We don't attempt to evaluate the
-                // prop because it will likely lead to an error
-                value: any_t::why(AnySource::AnyError(None), reason.dupe()),
-                dict_polarity: Polarity::Neutral,
-            };
-            ObjKind::Indexed(dict)
-        }
-        (None, ObjKind::Indexed(dict_t)) => {
-            let dict_optional = is_prop_optional(&dict_t.value);
-            let dict_t_prime = DictType {
-                value: mk_prop_type(dict_t.key.dupe(), dict_optional),
-                dict_polarity: mk_variance(variance, dict_t.dict_polarity),
-                ..dict_t.clone()
-            };
-            ObjKind::Indexed(dict_t_prime)
-        }
-        (None, _) => flags.obj_kind.clone(),
     };
     let call = None;
     let id = cx.generate_property_map(props_map.into());

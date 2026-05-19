@@ -2641,13 +2641,18 @@ pub fn substitute_mapped_type_distributive_tparams<'cx>(
     use_op: Option<UseOp>,
     distributive_tparam_name: Option<flow_common::subst_name::SubstName>,
     property_type: Type,
+    name_type: Option<Type>,
     homomorphic: flow_typing_type::type_::MappedTypeHomomorphicFlag,
     source: Type,
-) -> (Type, flow_typing_type::type_::MappedTypeHomomorphicFlag) {
+) -> (
+    Type,
+    Option<Type>,
+    flow_typing_type::type_::MappedTypeHomomorphicFlag,
+) {
     use flow_typing_type::type_::MappedTypeHomomorphicFlag;
 
     match distributive_tparam_name {
-        None => (property_type, homomorphic),
+        None => (property_type, name_type, homomorphic),
         Some(name) => {
             let subst_fn = mk_distributive_tparam_subst_fn(cx, use_op, name, source);
 
@@ -2659,7 +2664,11 @@ pub fn substitute_mapped_type_distributive_tparams<'cx>(
                 | MappedTypeHomomorphicFlag::Unspecialized => homomorphic.dupe(),
             };
 
-            (subst_fn(property_type), homomorphic_prime)
+            (
+                subst_fn(property_type),
+                name_type.map(subst_fn),
+                homomorphic_prime,
+            )
         }
     }
 }

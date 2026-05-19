@@ -598,6 +598,7 @@ type ('loc, 'a) annot =
       loc: 'loc;
       source_type: 'a;
       property_type: 'a;
+      name_type: 'a option;
       key_tparam: ('loc, 'a) tparam;
       variance: Polarity.t;
       variance_op: Flow_ast.Type.Object.MappedType.variance_op option;

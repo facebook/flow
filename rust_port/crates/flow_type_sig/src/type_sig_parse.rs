@@ -1873,6 +1873,10 @@ pub(super) mod scope {
                             &property_type_rename_map,
                             &inner.property_type,
                         ),
+                        name_type: inner
+                            .name_type
+                            .as_ref()
+                            .map(|nt| rename_tparams_in_parsed(&property_type_rename_map, nt)),
                         key_tparam,
                         variance: inner.variance,
                         variance_op: inner.variance_op,
@@ -6388,58 +6392,61 @@ fn object_type<'arena, 'ast>(
         } = p;
         let loc = tbls.push_loc(loc.dupe());
 
-        match name_type {
-            Some(_) => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
-            None if *optional == ast::types::object::MappedTypeOptionalFlag::MinusOptional
-                && !opts.tslib_syntax =>
-            {
-                // `-?` is gated on `experimental.tslib_syntax`. type_annotation errors and falls
-                // back to Any in this case; mirror that here so a `-?` mapped type defined in an
-                // imported file does not silently produce a different result than one defined
-                // locally.
-                Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
-            }
-            None => {
-                // The source type does not have the key_tparam in scope, but we need to parse locs in syntax
-                // order or we will violate type sig invariants.
-                let key_loc = tbls.push_loc(p.key_tparam.name.loc.dupe());
-                let key_name = key_tparam.name.name.dupe();
-
-                let (source_type, inline_keyof) = match source_type.deref() {
-                    TypeInner::Keyof { inner, .. } => {
-                        (annot(opts, scope, scopes, tbls, xs, &inner.argument), true)
-                    }
-                    _ => (annot(opts, scope, scopes, tbls, xs, source_type), false),
-                };
-
-                let key_tparam = TParam {
-                    name_loc: key_loc,
-                    name: key_name.clone(),
-                    polarity: Polarity::Neutral,
-                    bound: None,
-                    default: None,
-                    is_const: false,
-                };
-
-                xs.push_new_frame();
-                xs.insert(key_name);
-                let property_type = annot(opts, scope, scopes, tbls, xs, prop_type);
-                xs.pop_frame();
-
-                Parsed::Annot(Box::new(ParsedAnnot::MappedTypeAnnot(Box::new(
-                    AnnotMappedTypeAnnot {
-                        loc,
-                        source_type,
-                        property_type,
-                        key_tparam,
-                        variance: polarity(variance.as_ref().map(|v| (v.loc.dupe(), v.clone()))),
-                        variance_op: *variance_op,
-                        optional: p.optional.clone(),
-                        inline_keyof,
-                    },
-                ))))
-            }
+        if (*optional == ast::types::object::MappedTypeOptionalFlag::MinusOptional
+            || name_type.is_some())
+            && !opts.tslib_syntax
+        {
+            // `-?` and the `as` key-remapping clause are gated on `experimental.tslib_syntax`.
+            // type_annotation errors and falls back to Any in these cases; mirror that here so
+            // a gated mapped type defined in an imported file does not silently produce a
+            // different result than one defined locally.
+            return Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))));
         }
+
+        // The source type does not have the key_tparam in scope, but we need to parse locs in syntax
+        // order or we will violate type sig invariants.
+        let key_loc = tbls.push_loc(p.key_tparam.name.loc.dupe());
+        let key_name = key_tparam.name.name.dupe();
+
+        let (source_type, inline_keyof) = match source_type.deref() {
+            TypeInner::Keyof { inner, .. } => {
+                (annot(opts, scope, scopes, tbls, xs, &inner.argument), true)
+            }
+            _ => (annot(opts, scope, scopes, tbls, xs, source_type), false),
+        };
+
+        let key_tparam = TParam {
+            name_loc: key_loc,
+            name: key_name.clone(),
+            polarity: Polarity::Neutral,
+            bound: None,
+            default: None,
+            is_const: false,
+        };
+
+        xs.push_new_frame();
+        xs.insert(key_name);
+        // `as Name` appears before `: Prop` in source, so parse name_type first to keep loc parsing
+        // in syntax order (the type-sig invariant).
+        let name_type = name_type
+            .as_ref()
+            .map(|nt| annot(opts, scope, scopes, tbls, xs, nt));
+        let property_type = annot(opts, scope, scopes, tbls, xs, prop_type);
+        xs.pop_frame();
+
+        Parsed::Annot(Box::new(ParsedAnnot::MappedTypeAnnot(Box::new(
+            AnnotMappedTypeAnnot {
+                loc,
+                source_type,
+                property_type,
+                name_type,
+                key_tparam,
+                variance: polarity(variance.as_ref().map(|v| (v.loc.dupe(), v.clone()))),
+                variance_op: *variance_op,
+                optional: p.optional.clone(),
+                inline_keyof,
+            },
+        ))))
     }
 
     use ast::types::object as O;

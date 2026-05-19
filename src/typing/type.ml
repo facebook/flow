@@ -1569,6 +1569,9 @@ module rec TypeTerm : sig
         homomorphic: mapped_type_homomorphic_flag;
         distributive_tparam_name: Subst_name.t option;
         property_type: t;
+        (* Optional poly type over the same key tparam used by [property_type]. When [Some], each
+         * source key is substituted to produce the destination key (TS `as` clause). *)
+        name_type: t option;
         mapped_type_flags: mapped_type_flags;
       }
     | EnumType
@@ -3153,6 +3156,7 @@ and Object : sig
     | ObjectRep
     | ObjectMap of {
         prop_type: TypeTerm.t;
+        name_type: TypeTerm.t option;
         mapped_type_flags: TypeTerm.mapped_type_flags;
         selected_keys_opt: TypeTerm.t option;
       }

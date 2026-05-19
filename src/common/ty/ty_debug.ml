@@ -237,8 +237,8 @@ struct
     | NamedProp { name; prop; _ } -> dump_named_prop ~depth name prop
     | CallProp f -> dump_fun_t ~depth f
     | SpreadProp t -> dump_spread ~depth t
-    | MappedTypeProp { key_tparam; source; prop; flags; homomorphic } ->
-      dump_mapped_type ~depth key_tparam source prop flags homomorphic
+    | MappedTypeProp { key_tparam; source; prop; name_type; flags; homomorphic } ->
+      dump_mapped_type ~depth key_tparam source prop name_type flags homomorphic
 
   and dump_named_prop ~depth x = function
     | Field { t; polarity; optional } ->
@@ -264,15 +264,19 @@ struct
     | RemoveVariance pol -> spf "-%s" (dump_polarity pol)
     | KeepVariance -> ""
 
-  and dump_mapped_type ~depth { tp_name; _ } source prop { optional; variance } homomorphic =
+  and dump_mapped_type
+      ~depth { tp_name; _ } source prop name_type { optional; variance } homomorphic =
     spf
-      "%s[%s in %s%s]%s: %s"
+      "%s[%s in %s%s%s]%s: %s"
       (dump_mapped_type_variance variance)
       tp_name
       (match homomorphic with
       | Homomorphic -> "keyof "
       | _ -> "")
       (dump_t ~depth source)
+      (match name_type with
+      | None -> ""
+      | Some nt -> spf " as %s" (dump_t ~depth nt))
       (match optional with
       | KeepOptionality -> ""
       | MakeOptional -> "?"
@@ -768,6 +772,7 @@ struct
                 key_tparam = { tp_name; _ };
                 source;
                 prop;
+                name_type;
                 flags = { optional; variance };
                 homomorphic;
               } ->
@@ -792,6 +797,11 @@ struct
                     ("source", json_of_t source);
                     ("homomorphic", JSON_String homomorphic_str);
                     ("prop", json_of_t prop);
+                    ( "name_type",
+                      match name_type with
+                      | None -> JSON_Null
+                      | Some nt -> json_of_t nt
+                    );
                     ( "flags",
                       JSON_Object
                         [

@@ -2038,6 +2038,7 @@ fn convert_inner<'a>(
                                             homomorphic:
                                                 type_::MappedTypeHomomorphicFlag::Unspecialized,
                                             property_type: type_::mixed_t::make(reason.dupe()),
+                                            name_type: None,
                                             mapped_type_flags: type_::MappedTypeFlags {
                                                 optional:
                                                     type_::MappedTypeOptionality::KeepOptionality,
@@ -3000,23 +3001,10 @@ fn convert_inner<'a>(
                     let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
                     v
                 }
-            } else if name_type.is_some() {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::EUnsupportedSyntax(Box::new((
-                        obj_loc.dupe(),
-                        flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
-                            flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::MappedTypeKeyRemapping,
-                        ),
-                    ))),
-                );
-                {
-                    let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
-                    v
-                }
             } else if (variance_op.is_some()
                 || optional
-                    == flow_parser::ast::types::object::MappedTypeOptionalFlag::MinusOptional)
+                    == flow_parser::ast::types::object::MappedTypeOptionalFlag::MinusOptional
+                || name_type.is_some())
                 && !cx.tslib_syntax()
             {
                 if variance_op.is_some() {
@@ -3039,6 +3027,17 @@ fn convert_inner<'a>(
                             mapped_type_loc.dupe(),
                             flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                 flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::MinusOptionalMappedType,
+                            ),
+                        ))),
+                    );
+                }
+                if name_type.is_some() {
+                    flow_js_utils::add_output_non_speculating(
+                        cx,
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
+                            obj_loc.dupe(),
+                            flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                                flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::MappedTypeKeyRemapping,
                             ),
                         ))),
                     );
@@ -3169,11 +3168,27 @@ fn convert_inner<'a>(
                 let (prop_loc, prop_type_t) = prop_type_ast.loc();
                 let prop_loc = prop_loc.dupe();
                 let prop_type_t = prop_type_t.dupe();
+                let tparam_for_prop = tparam.clone();
                 let poly_prop_type = type_util::poly_type_of_tparams(
                     cx.make_source_poly_id(false, &prop_loc),
-                    Some((key_tparam.loc.dupe(), vec1::Vec1::new(tparam))),
+                    Some((key_tparam.loc.dupe(), vec1::Vec1::new(tparam_for_prop))),
                     prop_type_t,
                 );
+                let (poly_name_type, name_type_ast) = match name_type {
+                    None => (None, None),
+                    Some(nt) => {
+                        let nt_ast = convert_inner(cx, env, nt)?;
+                        let (name_loc, name_t) = nt_ast.loc();
+                        let name_loc = name_loc.dupe();
+                        let name_t = name_t.dupe();
+                        let poly_nt = type_util::poly_type_of_tparams(
+                            cx.make_source_poly_id(false, &name_loc),
+                            Some((key_tparam.loc.dupe(), vec1::Vec1::new(tparam.clone()))),
+                            name_t,
+                        );
+                        (Some(poly_nt.dupe()), Some(nt_ast))
+                    }
+                };
                 let reason =
                     reason::mk_reason(reason::VirtualReasonDesc::RMappedType, obj_loc.dupe());
                 let use_op =
@@ -3188,6 +3203,7 @@ fn convert_inner<'a>(
                     &type_::Destructor::MappedType(Box::new(DestructorMappedTypeData {
                         homomorphic,
                         property_type: poly_prop_type.dupe(),
+                        name_type: poly_name_type,
                         mapped_type_flags: type_::MappedTypeFlags {
                             optional: mapped_type_optionality,
                             variance: {
@@ -3261,7 +3277,7 @@ fn convert_inner<'a>(
                         source_type: source_ast,
                         prop_type: prop_type_ast,
                         key_tparam: tparam_ast,
-                        name_type: None,
+                        name_type: name_type_ast,
                         variance: variance.clone(),
                         variance_op: *variance_op,
                         optional,

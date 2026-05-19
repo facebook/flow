@@ -1515,11 +1515,23 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         Destructor::TypeMap(TypeMap::ObjectKeyMirror) => t.dupe(),
         Destructor::MappedType(box DestructorMappedTypeData {
             property_type,
+            name_type,
             mapped_type_flags,
             homomorphic,
             distributive_tparam_name,
         }) => {
             let property_type_prime = mapper.type_(cx, map_cx, property_type.dupe());
+            let name_type_prime = match name_type {
+                None => None,
+                Some(nt) => {
+                    let nt_prime = mapper.type_(cx, map_cx, nt.dupe());
+                    if nt.ptr_eq(&nt_prime) {
+                        name_type.clone()
+                    } else {
+                        Some(nt_prime)
+                    }
+                }
+            };
             let mut homomorphic_changed = false;
             let homomorphic_prime = match homomorphic {
                 MappedTypeHomomorphicFlag::SemiHomomorphic(inner_t) => {
@@ -1534,11 +1546,20 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                     MappedTypeHomomorphicFlag::Unspecialized
                 }
             };
-            if property_type.ptr_eq(&property_type_prime) && !homomorphic_changed {
+            let name_type_changed = match (name_type, &name_type_prime) {
+                (None, None) => false,
+                (Some(a), Some(b)) => !a.ptr_eq(b),
+                _ => true,
+            };
+            if property_type.ptr_eq(&property_type_prime)
+                && !name_type_changed
+                && !homomorphic_changed
+            {
                 t.dupe()
             } else {
                 Rc::new(Destructor::MappedType(Box::new(DestructorMappedTypeData {
                     property_type: property_type_prime,
+                    name_type: name_type_prime,
                     mapped_type_flags: mapped_type_flags.clone(),
                     homomorphic: homomorphic_prime,
                     distributive_tparam_name: distributive_tparam_name.clone(),

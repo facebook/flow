@@ -863,6 +863,177 @@ References:
                  ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- mapped_type_as.js:13:3
+
+Cannot get `w.b` because property `b` is missing in mapped type [1]. [prop-missing]
+
+   mapped_type_as.js:13:3
+   13| w.b; // ERROR - missing
+         ^
+
+References:
+   mapped_type_as.js:11:18
+   11| declare const w: WithoutB;
+                        ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- mapped_type_as.js:20:3
+
+Cannot get `s.a` because property `a` is missing in `PickStrings` [1]. [prop-missing]
+
+   mapped_type_as.js:20:3
+   20| s.a; // ERROR - missing
+         ^
+
+References:
+   mapped_type_as.js:18:18
+   18| declare const s: S;
+                        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- mapped_type_as.js:26:1
+
+Cannot cast `sa.X` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   mapped_type_as.js:26:1
+   26| sa.X as number; // ERROR
+       ^^^^
+
+References:
+   mapped_type_as.js:23:37
+   23| type Same = {[K in keyof O as 'X']: O[K]};
+                                           ^^^^ [1]
+   mapped_type_as.js:26:9
+   26| sa.X as number; // ERROR
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- mapped_type_as.js:33:4
+
+Cannot get `ra.a` because property `a` is missing in mapped type [1]. [prop-missing]
+
+   mapped_type_as.js:33:4
+   33| ra.a; // ERROR - renamed away
+          ^
+
+References:
+   mapped_type_as.js:30:19
+   30| declare const ra: RenameA;
+                         ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- mapped_type_as.js:41:4
+
+Cannot get `ix.a` because property `a` is missing in mapped type [1]. [prop-missing]
+
+   mapped_type_as.js:41:4
+   41| ix.a; // ERROR - renamed away
+          ^
+
+References:
+   mapped_type_as.js:38:19
+   38| declare const ix: Indexed;
+                         ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- mapped_type_as.js:47:4
+
+Cannot get `ev.a` because property `a` is missing in mapped type [1]. [prop-missing]
+
+   mapped_type_as.js:47:4
+   47| ev.a; // ERROR - missing
+          ^
+
+References:
+   mapped_type_as.js:45:19
+   45| declare const ev: Empty;
+                         ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- mapped_type_as.js:65:3
+
+Cannot assign `5` to `f.a` because property `a` is not writable. [cannot-write]
+
+   65| f.a = 5; // ERROR - readonly
+         ^
+
+
+Error ------------------------------------------------------------------------------------------- mapped_type_as.js:81:5
+
+Cannot assign `1` to `cro.X` because property `X` is not writable. [cannot-write]
+
+   81| cro.X = 1; // ERROR - readonly survives the collision
+           ^
+
+
+Error ------------------------------------------------------------------------------------------- mapped_type_as.js:88:4
+
+Cannot get `nh.a` because property `a` is missing in mapped type [1]. [prop-missing]
+
+   mapped_type_as.js:88:4
+   88| nh.a; // ERROR - renamed
+          ^
+
+References:
+   mapped_type_as.js:85:19
+   85| declare const nh: NonHomo;
+                         ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ mapped_type_as.js:100:4
+
+Cannot get `dr.foo` because property `foo` is missing in mapped type [1]. [prop-missing]
+
+   mapped_type_as.js:100:4
+   100| dr.foo; // ERROR
+           ^^^
+
+References:
+   mapped_type_as.js:98:19
+    98| declare const dr: Drop;
+                          ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- mapped_type_as.js:108:51
+
+Cannot assign `ii` to `_ii_exact_bad` because inexact mapped type [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+   mapped_type_as.js:108:51
+   108| const _ii_exact_bad: {| a: number, b: string |} = ii; // ERROR - source was inexact
+                                                          ^^
+
+References:
+   mapped_type_as.js:106:19
+   106| declare const ii: IdentityInexact;
+                          ^^^^^^^^^^^^^^^ [1]
+   mapped_type_as.js:108:22
+   108| const _ii_exact_bad: {| a: number, b: string |} = ii; // ERROR - source was inexact
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ mapped_type_as.js:116:4
+
+Cannot get `ci.notThere` because property `notThere` is missing in mapped type [1]. [prop-missing]
+
+   mapped_type_as.js:116:4
+   116| ci.notThere; // ERROR - source's open shape did not propagate
+           ^^^^^^^^
+
+References:
+   mapped_type_as.js:113:19
+   113| declare const ci: ConstInexact;
+                          ^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- mapped_type_as.js:125:15
+
+Key remapping (`as`) on tuple/array sources is not yet supported in mapped types. [unsupported-syntax]
+
+   125| type TupRen = {[K in keyof [string, number] as K]: [string, number][K]}; // ERROR - v1 limitation
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error -------------------------------------------------------------------------------- mapped_type_minus_optional.js:7:2
 
 Cannot cast object literal to `Required1` because property `bar` is missing in object literal [1] but exists in mapped
@@ -1691,4 +1862,4 @@ References:
 
 
 
-Found 114 errors
+Found 127 errors

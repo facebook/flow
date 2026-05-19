@@ -119,6 +119,203 @@ fn partition_keys_and_indexer<'cx>(
     Ok((keys_result, indexers))
 }
 
+fn dispatch_substituted_name<'cx>(
+    cx: &Context<'cx>,
+    reason: &Reason,
+    name_t: &Type,
+) -> Result<(Vec<(Name, Reason)>, Vec<Type>), FlowJsException> {
+    /* Returns (dest_names, indexer_keys) — splits the substituted name_type into
+     * singleton-string destinations vs. types that contribute to the output indexer. */
+    let possible = FlowJs::possible_concrete_types_for_inspection(cx, reason, name_t)?;
+    let mut dests: Vec<(Name, Reason)> = Vec::new();
+    let mut idx_keys: Vec<Type> = Vec::new();
+    for t in possible {
+        match t.deref() {
+            TypeInner::DefT(_, def_t) if let DefTInner::EmptyT = def_t.deref() => {
+                continue;
+            }
+            TypeInner::DefT(r, def_t)
+                if let DefTInner::SingletonStrT { value, .. } = def_t.deref() =>
+            {
+                dests.push((value.dupe(), r.dupe()));
+            }
+            TypeInner::DefT(r, def_t)
+                if let DefTInner::SingletonNumT {
+                    value: flow_typing_type::type_::NumberLiteral(_, str),
+                    ..
+                } = def_t.deref() =>
+            {
+                dests.push((Name::new(str.clone()), r.dupe()));
+            }
+            _ => idx_keys.push(t.dupe()),
+        }
+    }
+    Ok((dests, idx_keys))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn compute_name_remap<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    use_op: &UseOp,
+    reason: &Reason,
+    name_type: &Type,
+    selected_keys: Option<&(Vec<(Name, Reason)>, Vec<Type>)>,
+    slice: &object::Slice,
+) -> Result<slice_utils::NameRemap, FlowJsException> {
+    let object::Slice { props, flags, .. } = slice;
+    let source_keys: Vec<Name> = match selected_keys {
+        Some((named_keys, _)) => named_keys.iter().map(|(k, _)| k.clone()).collect(),
+        None => props.keys().duped().collect(),
+    };
+    let key_t_for = |k: &Name| -> Type {
+        let key_loc = match props.get(k) {
+            Some(p) => property::first_loc(p).unwrap_or_else(|| reason.loc().dupe()),
+            _ => reason.loc().dupe(),
+        };
+        Type::new(TypeInner::DefT(
+            flow_common::reason::mk_reason(VirtualReasonDesc::RStringLit(k.clone()), key_loc),
+            flow_typing_type::type_::DefT::new(DefTInner::SingletonStrT {
+                from_annot: true,
+                value: k.dupe(),
+            }),
+        ))
+    };
+    let substitute_name_for_t = |key_t: Type| -> Type {
+        match name_type.deref() {
+            TypeInner::DefT(_, def_t)
+                if let flow_typing_type::type_::DefTInner::PolyT(
+                    box flow_typing_type::type_::PolyTData { tparams, t_out, .. },
+                ) = def_t.deref()
+                    && tparams.len() == 1 =>
+            {
+                let kt = &tparams[0];
+                let map = flow_data_structure_wrapper::ord_map::FlowOrdMap::from_iter([(
+                    kt.name.dupe(),
+                    key_t,
+                )]);
+                flow_typing_flow_common::type_subst::subst(
+                    cx,
+                    Some(use_op.dupe()),
+                    false,
+                    false,
+                    flow_typing_flow_common::type_subst::Purpose::Normal,
+                    &map,
+                    t_out.dupe(),
+                )
+            }
+            _ => type_util::typeapp_with_use_op(
+                false,
+                false,
+                type_util::reason_of_t(name_type).dupe(),
+                use_op.dupe(),
+                name_type.dupe(),
+                vec![key_t],
+            ),
+        }
+    };
+    let substitute_name = |k: &Name| -> Type { substitute_name_for_t(key_t_for(k)) };
+    let mut per_source: std::collections::BTreeMap<Name, slice_utils::PerSourceDispatch> =
+        std::collections::BTreeMap::new();
+    let mut all_substituted: Vec<Type> = Vec::new();
+    for k in &source_keys {
+        let substituted = substitute_name(k);
+        let (dests, idx_keys) = dispatch_substituted_name(cx, reason, &substituted)?;
+        per_source.insert(
+            k.dupe(),
+            slice_utils::PerSourceDispatch {
+                dest_names: dests,
+                indexer_keys: idx_keys,
+            },
+        );
+        all_substituted.push(substituted);
+    }
+    let (source_indexer, indexer_substituted_opt) = match (selected_keys, &flags.obj_kind) {
+        (None, ObjKind::Indexed(dict_t)) => {
+            let substituted = substitute_name_for_t(dict_t.key.dupe());
+            let possible =
+                FlowJs::possible_concrete_types_for_inspection(cx, reason, &substituted)?;
+            let all_empty = possible.iter().all(|t| match t.deref() {
+                TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::EmptyT),
+                _ => false,
+            });
+            if all_empty {
+                (
+                    Some(slice_utils::SourceIndexerRemap::DropSourceIndexer),
+                    Some(substituted),
+                )
+            } else {
+                (
+                    Some(slice_utils::SourceIndexerRemap::KeepSourceIndexerKey(
+                        substituted.dupe(),
+                    )),
+                    Some(substituted),
+                )
+            }
+        }
+        _ => (None, None),
+    };
+    /* For semi-homomorphic mapped types, the selected_keys.xs entries are non-literal indexer
+     * sources (e.g. `string` from `K = 'a' | string`). Substitute name_type over each xs entry to
+     * produce destination indexer keys. Filter out entries that substitute to empty. */
+    let (selected_xs_keys, xs_substituted_for_check): (Vec<Type>, Vec<Type>) = match selected_keys {
+        Some((_, xs)) => {
+            let mut keys: Vec<Type> = Vec::new();
+            let mut all: Vec<Type> = Vec::new();
+            for xs_t in xs {
+                let substituted = substitute_name_for_t(xs_t.dupe());
+                let possible =
+                    FlowJs::possible_concrete_types_for_inspection(cx, reason, &substituted)?;
+                let all_empty = possible.iter().all(|t| match t.deref() {
+                    TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::EmptyT),
+                    _ => false,
+                });
+                if all_empty {
+                    all.push(substituted);
+                } else {
+                    keys.push(substituted.dupe());
+                    all.push(substituted);
+                }
+            }
+            (keys, all)
+        }
+        None => (vec![], vec![]),
+    };
+    let all_substituted = {
+        let mut acc = all_substituted;
+        if let Some(t) = indexer_substituted_opt {
+            acc.push(t);
+        }
+        let mut combined = xs_substituted_for_check;
+        combined.append(&mut acc);
+        combined
+    };
+    match all_substituted.as_slice() {
+        [] => {}
+        [t] => {
+            partition_keys_and_indexer(cx, trace, use_op.dupe(), reason, t)?;
+        }
+        [t0, t1, ts @ ..] => {
+            let union = Type::new(TypeInner::UnionT(
+                reason.dupe(),
+                union_rep::make(
+                    None,
+                    union_rep::UnionKind::UnknownKind,
+                    t0.dupe(),
+                    t1.dupe(),
+                    ts.iter().duped().collect::<Rc<[_]>>(),
+                ),
+            ));
+            partition_keys_and_indexer(cx, trace, use_op.dupe(), reason, &union)?;
+        }
+    }
+    Ok(slice_utils::NameRemap {
+        per_source,
+        source_indexer,
+        selected_xs_keys,
+    })
+}
+
 pub fn mapped_type_of_keys<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -126,6 +323,7 @@ pub fn mapped_type_of_keys<'cx>(
     reason: &Reason,
     keys: &Type,
     property_type: &Type,
+    name_type: Option<&Type>,
     mapped_type_flags: &MappedTypeFlags,
 ) -> Result<Type, FlowJsException> {
     let (keys_with_reasons, indexers) =
@@ -192,8 +390,15 @@ pub fn mapped_type_of_keys<'cx>(
             .expect("filter_optional not in speculation");
         Type::new(TypeInner::OpenT(Tvar::new(reason.dupe(), filter_id)))
     };
+    let name_remap = match name_type {
+        None => None,
+        Some(nt) => Some(compute_name_remap(
+            cx, trace, &use_op, reason, nt, None, &slice,
+        )?),
+    };
     Ok(slice_utils::map_object(
         &filter_optional,
+        name_remap.as_ref(),
         property_type,
         mapped_type_flags,
         cx,
@@ -912,6 +1117,7 @@ pub fn run<'cx>(
     // * Object Map *
     // **************
     let object_map = |prop_type: &Type,
+                      name_type: &Option<Type>,
                       mapped_type_flags: &MappedTypeFlags,
                       selected_keys_opt: &Option<Type>,
                       cx: &Context<'cx>,
@@ -929,9 +1135,22 @@ pub fn run<'cx>(
                 .expect("filter_optional not in speculation");
             Type::new(TypeInner::OpenT(Tvar::new(reason.dupe(), filter_id)))
         };
-        let ts = x.mapped_ref(|slice| {
-            slice_utils::map_object(
+        let map_one = |slice: &object::Slice| -> Result<Type, FlowJsException> {
+            let name_remap = match name_type {
+                None => None,
+                Some(nt) => Some(compute_name_remap(
+                    cx,
+                    trace,
+                    &use_op,
+                    reason,
+                    nt,
+                    selected_keys.as_ref(),
+                    slice,
+                )?),
+            };
+            Ok(slice_utils::map_object(
                 &filter_optional,
+                name_remap.as_ref(),
                 prop_type,
                 mapped_type_flags,
                 cx,
@@ -939,9 +1158,15 @@ pub fn run<'cx>(
                 &use_op,
                 selected_keys.clone(),
                 slice,
-            )
-        });
-        let (t0, rest) = ts.split_off_first();
+            ))
+        };
+        let mut mapped: Vec<Type> = Vec::new();
+        for slice in x.iter() {
+            mapped.push(map_one(slice)?);
+        }
+        let mut iter = mapped.into_iter();
+        let t0 = iter.next().expect("Vec1 has at least one element");
+        let rest: Vec<Type> = iter.collect();
         let t = if rest.is_empty() {
             t0
         } else {
@@ -991,10 +1216,12 @@ pub fn run<'cx>(
             } => check_component_config(*allow_ref_in_spread, pmap, cx, use_op, reason, x, tout),
             object::Tool::ObjectMap(box ObjectToolObjectMapData {
                 prop_type,
+                name_type,
                 mapped_type_flags,
                 selected_keys_opt,
             }) => object_map(
                 prop_type,
+                name_type,
                 mapped_type_flags,
                 selected_keys_opt,
                 cx,

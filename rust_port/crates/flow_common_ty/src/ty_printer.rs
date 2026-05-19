@@ -742,6 +742,7 @@ fn type_object_property<L: Dupe>(
             key_tparam,
             source,
             prop,
+            name_type,
             flags,
             homomorphic,
         } => {
@@ -760,6 +761,13 @@ fn type_object_property<L: Dupe>(
                 | MappedTypeVariance::RemoveVariance(Polarity::Neutral)
                 | MappedTypeVariance::KeepVariance => LayoutNode::empty(),
             };
+            let as_clause = match name_type {
+                None => LayoutNode::empty(),
+                Some(nt) => layout::fuse(vec![
+                    LayoutNode::atom(" as ".to_string()),
+                    type_impl(opts, depth, nt.as_ref(), size),
+                ]),
+            };
 
             layout::fuse(vec![
                 variance_token,
@@ -774,6 +782,7 @@ fn type_object_property<L: Dupe>(
                     | MappedTypeHomomorphicFlag::Unspecialized => LayoutNode::empty(),
                 },
                 type_impl(opts, depth, source.as_ref(), size),
+                as_clause,
                 LayoutNode::atom("]".to_string()),
                 optional_modifier,
                 LayoutNode::atom(":".to_string()),

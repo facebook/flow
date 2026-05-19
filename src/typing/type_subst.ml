@@ -75,11 +75,17 @@ let visitor =
             let { bound; free } = self#type_ cx pole { bound; free } extends_t in
             self#type_ cx pole { bound; free } true_t
         )
-      | MappedType { distributive_tparam_name; property_type; mapped_type_flags = _; homomorphic }
+      | MappedType
+          { distributive_tparam_name; property_type; name_type; mapped_type_flags = _; homomorphic }
         ->
         self#with_distributive_tparam_name { bound; free } distributive_tparam_name (fun acc ->
             let pole_TODO = Polarity.Neutral in
             let acc = self#type_ cx pole_TODO acc property_type in
+            let acc =
+              match name_type with
+              | Some t -> self#type_ cx pole_TODO acc t
+              | None -> acc
+            in
             match homomorphic with
             | SemiHomomorphic t -> self#type_ cx pole_TODO acc t
             | Homomorphic
@@ -423,12 +429,23 @@ let substituter =
             }
         else
           t
-      | MappedType { distributive_tparam_name; property_type; mapped_type_flags; homomorphic } ->
+      | MappedType
+          { distributive_tparam_name; property_type; name_type; mapped_type_flags; homomorphic } ->
         let (distributive_tparam_name, map) =
           self#distributive_tparam_name distributive_tparam_name map
         in
         let property_type' =
           self#type_ cx (map, false, placeholder_no_infer, purpose, None) property_type
+        in
+        let name_type' =
+          match name_type with
+          | None -> None
+          | Some nt ->
+            let nt' = self#type_ cx (map, false, placeholder_no_infer, purpose, None) nt in
+            if nt' == nt then
+              name_type
+            else
+              Some nt'
         in
         let homomorphic' =
           match homomorphic with
@@ -442,13 +459,15 @@ let substituter =
           | Unspecialized ->
             homomorphic
         in
-        if property_type' == property_type && homomorphic' == homomorphic then
+        if property_type' == property_type && name_type' == name_type && homomorphic' == homomorphic
+        then
           t
         else
           MappedType
             {
               distributive_tparam_name;
               property_type = property_type';
+              name_type = name_type';
               mapped_type_flags;
               homomorphic = homomorphic';
             }

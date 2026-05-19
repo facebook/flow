@@ -381,9 +381,18 @@ fn dump_prop<L: Debug + Clone + Dupe>(depth: i32, prop: &Prop<L>) -> String {
             key_tparam,
             source,
             prop,
+            name_type,
             flags,
             homomorphic,
-        } => dump_mapped_type(depth, key_tparam, source, prop, flags, homomorphic),
+        } => dump_mapped_type(
+            depth,
+            key_tparam,
+            source,
+            prop,
+            name_type.as_deref(),
+            flags,
+            homomorphic,
+        ),
     }
 }
 
@@ -431,6 +440,7 @@ fn dump_mapped_type<L: Debug + Clone + Dupe>(
     key_tparam: &TypeParam<L>,
     source: &Ty<L>,
     prop: &Ty<L>,
+    name_type: Option<&Ty<L>>,
     flags: &crate::ty::MappedTypeFlags,
     homomorphic: &MappedTypeHomomorphicFlag<L>,
 ) -> String {
@@ -443,12 +453,17 @@ fn dump_mapped_type<L: Debug + Clone + Dupe>(
         MappedTypeOptionalFlag::MakeOptional => "?",
         MappedTypeOptionalFlag::RemoveOptional => "-?",
     };
+    let as_str = match name_type {
+        None => String::new(),
+        Some(nt) => format!(" as {}", dump_t(depth, nt)),
+    };
     format!(
-        "{}[{} in {}{}]{}: {}",
+        "{}[{} in {}{}{}]{}: {}",
         dump_mapped_type_variance(flags.variance),
         key_tparam.tp_name,
         keyof,
         dump_t(depth, source),
+        as_str,
         optional_str,
         dump_t(depth, prop)
     )
@@ -1124,6 +1139,7 @@ fn json_of_prop<L: Debug + Clone + Dupe>(
             key_tparam,
             source,
             prop,
+            name_type,
             flags,
             homomorphic,
         } => {
@@ -1158,6 +1174,13 @@ fn json_of_prop<L: Debug + Clone + Dupe>(
                             Json::String(homomorphic_str.to_string()),
                         ),
                         ("prop".to_string(), json_of_t(converter, prop, strip_root)),
+                        (
+                            "name_type".to_string(),
+                            match name_type {
+                                None => Json::Null,
+                                Some(nt) => json_of_t(converter, nt, strip_root),
+                            },
+                        ),
                         (
                             "flags".to_string(),
                             Json::Object(serde_json::Map::from_iter(vec![

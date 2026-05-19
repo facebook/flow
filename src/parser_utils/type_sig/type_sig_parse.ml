@@ -1143,6 +1143,7 @@ module Scope = struct
             loc;
             source_type;
             property_type;
+            name_type;
             key_tparam;
             variance;
             variance_op;
@@ -1162,6 +1163,7 @@ module Scope = struct
             loc;
             source_type = rename_tparams_in_parsed rename_map source_type;
             property_type = rename_tparams_in_parsed property_type_rename_map property_type;
+            name_type = Option.map ~f:(rename_tparams_in_parsed property_type_rename_map) name_type;
             key_tparam;
             variance;
             variance_op;
@@ -3418,15 +3420,14 @@ and object_type =
       p
     in
     let loc = push_loc tbls loc in
-    match name_type with
-    | Some _ -> Annot (Any loc)
-    | None when optional = O.MappedType.MinusOptional && not opts.tslib_syntax ->
-      (* `-?` is gated on `experimental.tslib_syntax`. type_annotation.ml errors and
-         falls back to Any in this case; mirror that here so a `-?` mapped type defined
-         in an imported file does not silently produce a different result than one
-         defined locally. *)
+    if (optional = O.MappedType.MinusOptional || Option.is_some name_type) && not opts.tslib_syntax
+    then
+      (* `-?` and the `as` key-remapping clause are gated on `experimental.tslib_syntax`.
+         type_annotation.ml errors and falls back to Any in these cases; mirror that here
+         so a gated mapped type defined in an imported file does not silently produce a
+         different result than one defined locally. *)
       Annot (Any loc)
-    | None ->
+    else
       (* The source type does not have the key_tparam in scope, but we need to parse locs in syntax
        * order or we will violate type sig invariants. I keep track of old xs to make sure we don't
        * accidentally shadow a tparam in source_type *)
@@ -3464,6 +3465,9 @@ and object_type =
           SSet.add key_name xs
         )
       in
+      (* `as Name` appears before `: Prop` in source, so parse name_type first to keep loc parsing
+       * in syntax order (the type-sig invariant). *)
+      let name_type = Option.map ~f:(annot opts scope tbls xs) name_type in
       let property_type = annot opts scope tbls xs prop_type in
       Annot
         (MappedTypeAnnot
@@ -3471,6 +3475,7 @@ and object_type =
              loc;
              source_type;
              property_type;
+             name_type;
              key_tparam;
              variance = polarity variance;
              variance_op;

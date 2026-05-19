@@ -664,10 +664,15 @@ pub fn destructor_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
         TypeMap(flow_typing_type::type_::TypeMap::ObjectKeyMirror) => acc,
         MappedType(box flow_typing_type::type_::DestructorMappedTypeData {
             property_type,
+            name_type,
             homomorphic,
             ..
         }) => {
             let acc = visitor.type_(cx, pole_todo(), acc, property_type);
+            let acc = match name_type {
+                Some(t) => visitor.type_(cx, pole_todo(), acc, t),
+                None => acc,
+            };
             match homomorphic {
                 flow_typing_type::type_::MappedTypeHomomorphicFlag::SemiHomomorphic(t) => {
                     visitor.type_(cx, pole_todo(), acc, t)

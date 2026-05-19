@@ -2915,6 +2915,7 @@ mod type_converter {
         state: &mut State,
         source: ALocTy,
         property_type: &Type,
+        name_type: Option<&Type>,
         mapped_type_flags: &flow_typing_type::type_::MappedTypeFlags,
         homomorphic: &flow_typing_type::type_::MappedTypeHomomorphicFlag,
     ) -> Result<ALocTy, Error> {
@@ -2931,6 +2932,27 @@ mod type_converter {
                 _ => return Err(terr(ErrorKind::BadMappedType, None, Some(property_type))),
             },
             _ => return Err(terr(ErrorKind::BadMappedType, None, Some(property_type))),
+        };
+
+        let name_ty = match name_type {
+            None => None,
+            Some(t) => match t.deref() {
+                TypeInner::DefT(_, def_t)
+                    if let DefTInner::PolyT(box PolyTData {
+                        tparams,
+                        t_out: name_t_out,
+                        ..
+                    }) = def_t.deref()
+                        && tparams.len() == 1 =>
+                {
+                    let nty = type__::<I>(env, state, None, name_t_out)?;
+                    Some(nty)
+                }
+                _ => {
+                    let nty = type__::<I>(env, state, None, t)?;
+                    Some(nty)
+                }
+            },
         };
 
         let optional = match mapped_type_flags.optional {
@@ -2967,6 +2989,7 @@ mod type_converter {
             key_tparam,
             source,
             prop,
+            name_type: name_ty,
             flags,
             homomorphic: homomorphic_ty,
         };
@@ -3078,16 +3101,18 @@ mod type_converter {
             }
             D::MappedType(box DestructorMappedTypeData {
                 property_type,
+                name_type,
                 mapped_type_flags,
                 homomorphic,
                 distributive_tparam_name,
             }) => {
-                let (property_type, homomorphic) =
+                let (property_type, name_type, homomorphic) =
                     flow_typing_flow_common::flow_js_utils::substitute_mapped_type_distributive_tparams(
                         env.genv.cx,
                         Some(flow_typing_type::type_::unknown_use()),
                         distributive_tparam_name.clone(),
                         property_type.dupe(),
+                        name_type.clone(),
                         homomorphic.clone(),
                         t.dupe(),
                     );
@@ -3096,6 +3121,7 @@ mod type_converter {
                     state,
                     ty,
                     &property_type,
+                    name_type.as_ref(),
                     mapped_type_flags,
                     &homomorphic,
                 )

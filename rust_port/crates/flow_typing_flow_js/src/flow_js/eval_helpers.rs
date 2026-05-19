@@ -444,6 +444,7 @@ pub(super) fn eval_destructor<'cx>(
         homomorphic: MappedTypeHomomorphicFlag::Unspecialized,
         mapped_type_flags,
         property_type,
+        name_type,
         distributive_tparam_name: _,
     }) = d
     {
@@ -456,6 +457,7 @@ pub(super) fn eval_destructor<'cx>(
             reason,
             t,
             property_type,
+            name_type.as_ref(),
             mapped_type_flags,
         );
         let mapped_t = mapped_t?;
@@ -1273,16 +1275,18 @@ pub(super) fn eval_destructor<'cx>(
                 ),
                 Destructor::MappedType(box DestructorMappedTypeData {
                     property_type,
+                    name_type,
                     mapped_type_flags,
                     homomorphic,
                     distributive_tparam_name,
                 }) => {
-                    let (property_type, homomorphic) =
+                    let (property_type, name_type, homomorphic) =
                         flow_js_utils::substitute_mapped_type_distributive_tparams(
                             cx,
                             Some(use_op.dupe()),
                             distributive_tparam_name.clone(),
                             property_type.dupe(),
+                            name_type.clone(),
                             homomorphic.dupe(),
                             t.dupe(),
                         );
@@ -1297,6 +1301,7 @@ pub(super) fn eval_destructor<'cx>(
                         Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
                         Box::new(object::Tool::ObjectMap(Box::new(ObjectToolObjectMapData {
                             prop_type: property_type,
+                            name_type,
                             mapped_type_flags: *mapped_type_flags,
                             selected_keys_opt,
                         }))),

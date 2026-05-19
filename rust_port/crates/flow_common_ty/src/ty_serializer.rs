@@ -613,10 +613,18 @@ impl Serializer {
                 key_tparam,
                 source,
                 prop,
+                name_type,
                 flags,
                 homomorphic,
             } => {
-                let p = self.obj_mapped_type_prop(key_tparam, source, prop, flags, homomorphic);
+                let p = self.obj_mapped_type_prop(
+                    key_tparam,
+                    source,
+                    prop,
+                    name_type.as_ref(),
+                    flags,
+                    homomorphic,
+                );
                 ast::types::object::Property::MappedType(p)
             }
         }
@@ -773,6 +781,7 @@ impl Serializer {
         key_tparam: &TypeParam<L>,
         source: &Arc<Ty<L>>,
         prop: &Arc<Ty<L>>,
+        name_type: Option<&Arc<Ty<L>>>,
         flags: &crate::ty::MappedTypeFlags,
         homomorphic: &MappedTypeHomomorphicFlag<L>,
     ) -> ast::types::object::MappedType<Loc, Loc> {
@@ -789,6 +798,7 @@ impl Serializer {
             MappedTypeHomomorphicFlag::Unspecialized => source_type,
         };
         let prop_type = self.type_(prop);
+        let name_type = name_type.map(|nt| self.type_(nt));
         let key_tparam = self.type_param(key_tparam);
         let optional = match flags.optional {
             MappedTypeOptionalFlag::KeepOptionality => {
@@ -814,7 +824,7 @@ impl Serializer {
             key_tparam,
             prop_type,
             source_type,
-            name_type: None,
+            name_type,
             variance,
             variance_op,
             optional,

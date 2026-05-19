@@ -3852,13 +3852,42 @@ struct
         (**************)
         (* object kit *)
         (**************)
+        (* Reject name remapping (`as`) on array/tuple sources for v1 *)
+        | ( l,
+            Object.(
+              ObjKitT
+                ( _use_op,
+                  reason_op,
+                  Resolve Next,
+                  Object.ObjectMap { name_type = Some _; _ },
+                  OpenT tout
+                ))
+          )
+          when match l with
+               | DefT (_, ArrT _) -> true
+               | GenericT { reason; bound; _ } ->
+                 speculative_subtyping_succeeds
+                   cx
+                   bound
+                   (DefT (reason, ArrT (ROArrayAT (DefT (reason, MixedT Mixed_everything), None))))
+               | _ -> false ->
+          add_output
+            cx
+            Error_message.(
+              EUnsupportedSyntax
+                ( loc_of_reason reason_op,
+                  Flow_intermediate_error_types.(TSLibSyntax MappedTypeKeyRemappingOnArraySource)
+                )
+            );
+          rec_flow_t cx trace ~use_op:unknown_use (AnyT.error reason_op, OpenT tout)
         | ( GenericT { reason; no_infer; bound; _ },
             Object.(
               ObjKitT
                 ( use_op,
                   reason_op,
                   Resolve Next,
-                  Object.ObjectMap { prop_type; mapped_type_flags; selected_keys_opt = None },
+                  Object.ObjectMap
+                    { prop_type; name_type = None; mapped_type_flags; selected_keys_opt = None },
                   tout
                 ))
           )
@@ -3887,7 +3916,13 @@ struct
                       ( use_op,
                         reason_op,
                         Object.(Resolve Next),
-                        Object.ObjectMap { prop_type; mapped_type_flags; selected_keys_opt = None },
+                        Object.ObjectMap
+                          {
+                            prop_type;
+                            name_type = None;
+                            mapped_type_flags;
+                            selected_keys_opt = None;
+                          },
                         tout
                       )
                   )
@@ -3916,6 +3951,7 @@ struct
                   Object.ObjectMap
                     {
                       prop_type = property_type;
+                      name_type = None;
                       mapped_type_flags =
                         { variance = mapped_type_variance; optional = mapped_type_optionality };
                       selected_keys_opt = None;
@@ -6452,6 +6488,7 @@ struct
           homomorphic = Unspecialized;
           mapped_type_flags;
           property_type;
+          name_type;
           distributive_tparam_name = _;
         } ->
       let t =
@@ -6462,6 +6499,7 @@ struct
           reason
           ~keys:t
           ~property_type
+          ~name_type
           mapped_type_flags
       in
       (* Intentional unknown_use for the tout Flow *)
@@ -6861,13 +6899,16 @@ struct
         | TypeMap tmap -> rec_flow cx trace (t, MapTypeT (use_op, reason, tmap, OpenT tout))
         | ReactElementConfigType ->
           rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetConfig { tout = OpenT tout }))
-        | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
-          let (property_type, homomorphic) =
+        | MappedType
+            { property_type; name_type; mapped_type_flags; homomorphic; distributive_tparam_name }
+          ->
+          let (property_type, name_type, homomorphic) =
             substitute_mapped_type_distributive_tparams
               cx
               ~use_op
               distributive_tparam_name
               ~property_type
+              ~name_type
               homomorphic
               ~source:t
           in
@@ -6883,7 +6924,7 @@ struct
                   reason,
                   Resolve Next,
                   Object.ObjectMap
-                    { prop_type = property_type; mapped_type_flags; selected_keys_opt },
+                    { prop_type = property_type; name_type; mapped_type_flags; selected_keys_opt },
                   OpenT tout
                 )
             )

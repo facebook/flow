@@ -1752,8 +1752,90 @@ let is_prop_optional = function
   | OptionalT _ -> true
   | _ -> false
 
+(* Per-source-key dispatch produced by [object_kit.ml] when a mapped type carries a [name_type]
+ * (the TS `as` clause). For each source key, [dest_names] lists the substituted destination
+ * names (singleton-string/numeric); [indexer_keys] lists the substituted name types that should
+ * contribute to the output indexer (e.g. [string], [number], [symbol]). *)
+type per_source_dispatch = {
+  dest_names: (Reason.name * Reason.reason) list;
+  indexer_keys: Type.t list;
+}
+
+(* What to do with the source object's indexer (the [(None, Indexed dict_t)] arm). *)
+type source_indexer_remap =
+  | DropSourceIndexer
+  | KeepSourceIndexerKey of Type.t
+
+type name_remap = {
+  per_source: per_source_dispatch NameUtils.Map.t;
+  source_indexer: source_indexer_remap option;
+  selected_xs_keys: Type.t list;
+}
+
+(* The greatest lower bound on the access lattice: the result must satisfy every contributor's
+ * contract. Positive (readonly) and Negative (write-only) are restrictions of Neutral
+ * (invariant), so when one contributor is restricted the merged property must inherit that
+ * restriction. The Positive/Negative case has no satisfying solution (one demands read-only,
+ * the other write-only); we conservatively fall through to Neutral, but in practice mapped
+ * types don't produce write-only fields so this case is unreachable. *)
+let mapped_type_meet_polarity p1 p2 =
+  match (p1, p2) with
+  | (Polarity.Positive, Polarity.Positive) -> Polarity.Positive
+  | (Polarity.Negative, Polarity.Negative) -> Polarity.Negative
+  | (Polarity.Neutral, Polarity.Neutral) -> Polarity.Neutral
+  | (Polarity.Positive, Polarity.Neutral)
+  | (Polarity.Neutral, Polarity.Positive) ->
+    Polarity.Positive
+  | (Polarity.Negative, Polarity.Neutral)
+  | (Polarity.Neutral, Polarity.Negative) ->
+    Polarity.Negative
+  | (Polarity.Positive, Polarity.Negative)
+  | (Polarity.Negative, Polarity.Positive) ->
+    Polarity.Neutral
+
+(* Merge two field props from the same destination key — used when multiple source keys remap to
+ * the same destination, or when a source key remaps to multiple names that collide.
+ *
+ * Optionality must be preserved at the top level: `OptionalT<number> | string` would not be a
+ * top-level OptionalT, and Flow's missing-property logic would treat the merged property as
+ * required. We unwrap any contributing OptionalT, union the inner types, and re-wrap if any
+ * contributor was optional. *)
+let merge_field reason existing incoming =
+  let unwrap_optional = function
+    | OptionalT { type_; _ } -> (type_, true)
+    | t -> (t, false)
+  in
+  match (existing, incoming) with
+  | (None, f) -> Some f
+  | ( Some (Field { preferred_def_locs = pl1; key_loc = kl1; type_ = t1; polarity = p1 }),
+      Field { preferred_def_locs = _; key_loc = _; type_ = t2; polarity = p2 }
+    ) ->
+    let (inner1, opt1) = unwrap_optional t1 in
+    let (inner2, opt2) = unwrap_optional t2 in
+    let merged_inner = union_of_ts reason [inner1; inner2] in
+    let merged_type =
+      if opt1 || opt2 then
+        OptionalT { reason = reason_of_t merged_inner; type_ = merged_inner; use_desc = false }
+      else
+        merged_inner
+    in
+    let merged_polarity = mapped_type_meet_polarity p1 p2 in
+    Some
+      (Field
+         {
+           preferred_def_locs = pl1;
+           key_loc = kl1;
+           type_ = merged_type;
+           polarity = merged_polarity;
+         }
+      )
+  | (Some _, _) ->
+    (* map_object only ever produces Field props (line below). Other prop kinds shouldn't appear. *)
+    existing
+
 let map_object
     ~filter_optional
+    ?(name_remap : name_remap option)
     poly_prop
     { variance; optional = mapped_type_optionality }
     cx
@@ -1774,104 +1856,243 @@ let map_object
       else
         prop_polarity
   in
-  let props =
-    let keys =
-      match selected_keys_and_indexers with
-      | Some (keys_with_reason, _) -> List.map fst keys_with_reason
-      | _ -> NameUtils.Map.keys props
+  (* Build the field for a given source key and its prop in the source object. Returns
+   * (key_loc, field, indexer_keys) — the indexer_keys list is non-empty only when name_remap
+   * dispatched some of the substituted names to the indexer. *)
+  let build_source_field key prop =
+    let { Object.prop_t; is_own = _; is_method = _; polarity = prop_polarity; key_loc } = prop in
+    let key_loc =
+      match key_loc with
+      | None -> loc_of_reason (reason_of_t prop_t)
+      | Some loc -> loc
     in
-    keys
-    |> List.fold_left
-         (fun map key ->
-           match NameUtils.Map.find_opt key props with
-           | None ->
-             (* This is possible if a key is passed that does not actually conform to the
-              * $Keys/keyof upper bound. That already results in an error, so we refuse to evaluate
-              * the mapped type and signal to return `any` here *)
-             let field =
-               Field
-                 {
-                   preferred_def_locs = None;
-                   key_loc = None;
-                   type_ = AnyT.why (AnyError None) reason;
-                   polarity = U.ite frozen Polarity.Positive Polarity.Neutral;
-                 }
-             in
-             NameUtils.Map.add key field map
-           (* Methods have no special consideration. There is no guarantee that the prop inserted by
-            * the mapped type is going to continue to be a function, so we transform it into a regular
-            * field. *)
-           | Some { Object.prop_t; is_own = _; is_method = _; polarity = prop_polarity; key_loc } ->
-             let key_loc =
-               match key_loc with
-               | None -> loc_of_reason (reason_of_t prop_t)
-               | Some loc -> loc
-             in
-             let key_t =
-               DefT
-                 ( mk_reason (RStringLit key) key_loc,
-                   SingletonStrT { from_annot = true; value = key }
-                 )
-             in
-             let prop_optional = is_prop_optional prop_t in
-             let polarity =
-               if frozen then
-                 Polarity.Positive
-               else
-                 mk_variance variance prop_polarity
-             in
-             let field =
-               Field
-                 {
-                   preferred_def_locs = None;
-                   key_loc = Some key_loc;
-                   type_ = mk_prop_type key_t prop_optional;
-                   polarity;
-                 }
-             in
-             NameUtils.Map.add key field map)
-         NameUtils.Map.empty
+    let key_t =
+      DefT (mk_reason (RStringLit key) key_loc, SingletonStrT { from_annot = true; value = key })
+    in
+    let prop_optional = is_prop_optional prop_t in
+    let polarity =
+      if frozen then
+        Polarity.Positive
+      else
+        mk_variance variance prop_polarity
+    in
+    let field =
+      Field
+        {
+          preferred_def_locs = None;
+          key_loc = Some key_loc;
+          type_ = mk_prop_type key_t prop_optional;
+          polarity;
+        }
+    in
+    (key_loc, field)
   in
+  let any_field () =
+    Field
+      {
+        preferred_def_locs = None;
+        key_loc = None;
+        type_ = AnyT.why (AnyError None) reason;
+        polarity = U.ite frozen Polarity.Positive Polarity.Neutral;
+      }
+  in
+  let meet_polarity = mapped_type_meet_polarity in
+  let (out_props, extra_indexer_keys, extra_indexer_value_ts, extra_indexer_polarity_opt) =
+    match name_remap with
+    | None ->
+      let keys =
+        match selected_keys_and_indexers with
+        | Some (keys_with_reason, _) -> List.map fst keys_with_reason
+        | _ -> NameUtils.Map.keys props
+      in
+      let out =
+        keys
+        |> List.fold_left
+             (fun map key ->
+               match NameUtils.Map.find_opt key props with
+               | None -> NameUtils.Map.add key (any_field ()) map
+               | Some prop ->
+                 let (_, field) = build_source_field key prop in
+                 NameUtils.Map.add key field map)
+             NameUtils.Map.empty
+      in
+      (out, [], [], None)
+    | Some { per_source; source_indexer = _; selected_xs_keys = _ } ->
+      let source_keys =
+        match selected_keys_and_indexers with
+        | Some (keys_with_reason, _) -> List.map fst keys_with_reason
+        | _ -> NameUtils.Map.keys props
+      in
+      List.fold_left
+        (fun (out_map, idx_keys, idx_values, idx_polarity) src_key ->
+          match NameUtils.Map.find_opt src_key per_source with
+          | None ->
+            (* Unreachable: [compute_name_remap] populates [per_source] for every source key
+             * iterated here. Drop silently if it ever happens. *)
+            (out_map, idx_keys, idx_values, idx_polarity)
+          | Some { dest_names; indexer_keys } ->
+            (match NameUtils.Map.find_opt src_key props with
+            | None ->
+              let f = any_field () in
+              let out_map =
+                List.fold_left
+                  (fun m (n, _r) -> NameUtils.Map.update n (fun e -> merge_field reason e f) m)
+                  out_map
+                  dest_names
+              in
+              (out_map, idx_keys, idx_values, idx_polarity)
+            | Some prop ->
+              let (_, field) = build_source_field src_key prop in
+              let out_map =
+                List.fold_left
+                  (fun m (n, _r) -> NameUtils.Map.update n (fun e -> merge_field reason e field) m)
+                  out_map
+                  dest_names
+              in
+              let (value_ts_for_indexer, field_polarity) =
+                match field with
+                | Field { type_; polarity; _ } -> ([type_], Some polarity)
+                | _ -> ([], None)
+              in
+              let (idx_keys', idx_values', idx_polarity') =
+                match indexer_keys with
+                | [] -> (idx_keys, idx_values, idx_polarity)
+                | _ ->
+                  ( indexer_keys @ idx_keys,
+                    value_ts_for_indexer @ idx_values,
+                    (match (idx_polarity, field_polarity) with
+                    | (None, p) -> p
+                    | (p, None) -> p
+                    | (Some a, Some b) -> Some (meet_polarity a b))
+                  )
+              in
+              (out_map, idx_keys', idx_values', idx_polarity')))
+        (NameUtils.Map.empty, [], [], None)
+        source_keys
+  in
+  let props = out_props in
   let obj_kind =
-    match (selected_keys_and_indexers, flags.obj_kind) with
-    | (Some (_, []), _) -> Exact
-    | (Some (_, xs), Indexed dict_t) ->
-      let dict_optional = is_prop_optional dict_t.value in
-      let dict_key = union_of_ts reason xs in
-      let dict_t' =
-        {
-          dict_t with
-          key = dict_key;
-          value = mk_prop_type dict_t.key dict_optional;
-          dict_polarity = mk_variance variance dict_t.dict_polarity;
-        }
+    match name_remap with
+    | None ->
+      (match (selected_keys_and_indexers, flags.obj_kind) with
+      | (Some (_, []), _) -> Exact
+      | (Some (_, xs), Indexed dict_t) ->
+        let dict_optional = is_prop_optional dict_t.value in
+        let dict_key = union_of_ts reason xs in
+        let dict_t' =
+          {
+            dict_t with
+            key = dict_key;
+            value = mk_prop_type dict_t.key dict_optional;
+            dict_polarity = mk_variance variance dict_t.dict_polarity;
+          }
+        in
+        Indexed dict_t'
+      | (Some (_, xs), _) ->
+        let key = union_of_ts reason xs in
+        let dict =
+          {
+            dict_name = None;
+            key;
+            value = AnyT.why (AnyError None) reason;
+            dict_polarity = Polarity.Neutral;
+          }
+        in
+        Indexed dict
+      | (None, Indexed dict_t) ->
+        let dict_optional = is_prop_optional dict_t.value in
+        let dict_t' =
+          {
+            dict_t with
+            value = mk_prop_type dict_t.key dict_optional;
+            dict_polarity = mk_variance variance dict_t.dict_polarity;
+          }
+        in
+        Indexed dict_t'
+      | (None, _) -> flags.obj_kind)
+    | Some { per_source; source_indexer; selected_xs_keys } ->
+      let source_indexer_dropped =
+        match source_indexer with
+        | Some DropSourceIndexer -> true
+        | _ -> false
       in
-      Indexed dict_t'
-    | (Some (_, xs), _) ->
-      let key = union_of_ts reason xs in
-      let dict =
-        {
-          dict_name = None;
-          key;
-          (* Similar to the missing prop case above, this is only possible when a semi-homomorphic
-           * mapped type violates the constraint on the key type. We don't attempt to evaluate the
-           * prop because it will likely lead to an error *)
-          value = AnyT.why (AnyError None) reason;
-          dict_polarity = Polarity.Neutral;
-        }
+      let is_identity_remap =
+        (* True when every source key remaps to exactly itself with no indexer keys.
+         * Non-identity remaps cannot inherit the source's open shape: the result's
+         * only known properties are the explicitly-named destinations. *)
+        NameUtils.Map.for_all
+          (fun src_key { dest_names; indexer_keys } ->
+            match (dest_names, indexer_keys) with
+            | ([(dst_name, _)], []) -> Reason.equal_name src_key dst_name
+            | _ -> false)
+          per_source
       in
-      Indexed dict
-    | (None, Indexed dict_t) ->
-      let dict_optional = is_prop_optional dict_t.value in
-      let dict_t' =
-        {
-          dict_t with
-          value = mk_prop_type dict_t.key dict_optional;
-          dict_polarity = mk_variance variance dict_t.dict_polarity;
-        }
+      (* Compute output indexer from three sources of dest keys:
+       *   1. per_source: a source named key's substituted name was non-singleton
+       *   2. source_indexer: source object's own dict, remapped via name_type
+       *   3. selected_xs_keys: substituted xs entries from selected_keys's indexer side
+       * Cases 2 and 3 share the same source dict (when present) for the value/polarity. *)
+      let (dict_idx_keys, dict_value_opt, dict_polarity_opt) =
+        match (source_indexer, selected_xs_keys, flags.obj_kind) with
+        | (Some DropSourceIndexer, _, _) -> ([], None, None)
+        | (Some (KeepSourceIndexerKey new_key), xs, Indexed dict_t) ->
+          let dict_optional = is_prop_optional dict_t.value in
+          let value = mk_prop_type dict_t.key dict_optional in
+          let pol = mk_variance variance dict_t.dict_polarity in
+          (new_key :: xs, Some value, Some pol)
+        | (None, xs, Indexed dict_t) when xs <> [] ->
+          (* Selected_keys.xs entries with source dict — value comes from source dict_t.key,
+           * matching the legacy `(Some (_, xs), Indexed dict_t)` arm. *)
+          let dict_optional = is_prop_optional dict_t.value in
+          let value = mk_prop_type dict_t.key dict_optional in
+          let pol = mk_variance variance dict_t.dict_polarity in
+          (xs, Some value, Some pol)
+        | (None, xs, _) when xs <> [] ->
+          (* Selected_keys.xs entries but no source dict — matches legacy `(Some (_, xs), _) -> Any`
+           * value, neutral polarity. *)
+          (xs, Some (AnyT.why (AnyError None) reason), Some Polarity.Neutral)
+        | _ -> ([], None, None)
       in
-      Indexed dict_t'
-    | (None, _) -> flags.obj_kind
+      let all_idx_keys = extra_indexer_keys @ dict_idx_keys in
+      let combined_polarity =
+        match (extra_indexer_polarity_opt, dict_polarity_opt) with
+        | (None, None) -> Polarity.Neutral
+        | (Some p, None)
+        | (None, Some p) ->
+          p
+        | (Some a, Some b) -> meet_polarity a b
+      in
+      let combined_value () =
+        match (extra_indexer_value_ts, dict_value_opt) with
+        | ([], Some v) -> v
+        | (vs, None) -> union_of_ts reason vs
+        | (vs, Some v) -> union_of_ts reason (v :: vs)
+      in
+      (match all_idx_keys with
+      | [] ->
+        (* No destination indexer contributions. We default to Exact when selected_keys is Some
+         * (matching legacy `(Some (_, []), _) -> Exact`) or when name_type explicitly dropped the
+         * source dict (`as empty` on the dict key). For homomorphic remaps without a destination
+         * indexer, preserve flags.obj_kind only when the remap is identity (every source key maps
+         * to itself); a non-identity remap produces a closed shape because the result's only
+         * known properties are the explicitly-named destinations. *)
+        (match selected_keys_and_indexers with
+        | Some _ -> Exact
+        | None when source_indexer_dropped -> Exact
+        | None when is_identity_remap -> flags.obj_kind
+        | None -> Exact)
+      | [k] ->
+        Indexed
+          {
+            dict_name = None;
+            key = k;
+            value = combined_value ();
+            dict_polarity = combined_polarity;
+          }
+      | k0 :: k1 :: ks ->
+        let key = UnionT (reason, UnionRep.make k0 k1 ks) in
+        Indexed
+          { dict_name = None; key; value = combined_value (); dict_polarity = combined_polarity })
   in
   let call = None in
   let id = Context.generate_property_map cx props in

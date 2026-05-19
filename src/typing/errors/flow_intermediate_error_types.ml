@@ -145,6 +145,7 @@ and ts_lib_syntax_kind =
   | OptionalShorthandMethod
   | AnonymousDefaultExportFunction
   | MappedTypeKeyRemapping
+  | MappedTypeKeyRemappingOnArraySource
   | ReadonlyMappedTypeVarianceOp
   | MinusOptionalMappedType
   | OptionalUnlabeledTupleElement

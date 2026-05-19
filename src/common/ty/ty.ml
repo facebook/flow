@@ -206,6 +206,7 @@ and prop =
       key_tparam: type_param;
       source: t;
       prop: t;
+      name_type: t option;
       flags: mapped_type_flags;
       homomorphic: mapped_type_homomorphic_flag;
     }

@@ -343,8 +343,8 @@ let type_ =
     | SpreadProp t ->
       let p = obj_spread_prop t in
       T.Object.SpreadProperty p
-    | MappedTypeProp { key_tparam; source; prop; flags; homomorphic } ->
-      let p = obj_mapped_type_prop key_tparam source prop flags homomorphic in
+    | MappedTypeProp { key_tparam; source; prop; name_type; flags; homomorphic } ->
+      let p = obj_mapped_type_prop key_tparam source prop name_type flags homomorphic in
       T.Object.MappedType p
   and obj_named_prop =
     let to_key x =
@@ -443,7 +443,7 @@ let type_ =
     let t = type_ t in
     (Loc.none, { T.Object.SpreadProperty.argument = t; comments = None })
   and obj_mapped_type_prop
-      key_tparam source prop { optional; variance = mapped_variance } homomorphic =
+      key_tparam source prop name_type { optional; variance = mapped_variance } homomorphic =
     let source_type = type_ source in
     let source_type =
       match homomorphic with
@@ -452,6 +452,7 @@ let type_ =
       | Unspecialized -> source_type
     in
     let prop_type = type_ prop in
+    let name_type = Base.Option.map ~f:type_ name_type in
     let key_tparam = type_param key_tparam in
     let optional =
       T.Object.MappedType.(
@@ -472,7 +473,7 @@ let type_ =
         T.Object.MappedType.key_tparam;
         prop_type;
         source_type;
-        name_type = None;
+        name_type;
         variance;
         variance_op;
         optional;

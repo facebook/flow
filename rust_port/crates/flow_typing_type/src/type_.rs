@@ -5660,6 +5660,9 @@ pub struct DestructorMappedTypeData {
     pub homomorphic: MappedTypeHomomorphicFlag,
     pub distributive_tparam_name: Option<SubstName>,
     pub property_type: Type,
+    /// Optional poly type over the same key tparam used by [property_type]. When [Some], each
+    /// source key is substituted to produce the destination key (TS `as` clause).
+    pub name_type: Option<Type>,
     pub mapped_type_flags: MappedTypeFlags,
 }
 
@@ -8183,6 +8186,7 @@ pub mod object {
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct ObjectToolObjectMapData {
         pub prop_type: Type,
+        pub name_type: Option<Type>,
         pub mapped_type_flags: MappedTypeFlags,
         pub selected_keys_opt: Option<Type>,
     }

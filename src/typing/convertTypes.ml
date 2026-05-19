@@ -754,7 +754,8 @@ and json_of_destructor cx depth destructor =
           | DebugAnnot -> JSON_String "DebugAnnot"
         );
       ]
-  | MappedType { homomorphic; distributive_tparam_name; property_type; mapped_type_flags } ->
+  | MappedType
+      { homomorphic; distributive_tparam_name; property_type; name_type; mapped_type_flags } ->
     JSON_Object
       [
         ("kind", JSON_String "MappedType");
@@ -772,6 +773,11 @@ and json_of_destructor cx depth destructor =
           | Some name -> JSON_String (Subst_name.string_of_subst_name name)
         );
         ("property_type", type_to_json cx (depth - 1) property_type);
+        ( "name_type",
+          match name_type with
+          | None -> JSON_Null
+          | Some t -> type_to_json cx (depth - 1) t
+        );
         ( "mapped_type_flags",
           JSON_Object
             [

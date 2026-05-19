@@ -15386,6 +15386,7 @@ Module {
                                     },
                                 ),
                             ),
+                            name_type: None,
                             key_tparam: TParam {
                                 name_loc: 8,
                                 name: "key",
@@ -15448,6 +15449,7 @@ Module {
                                     },
                                 ),
                             ),
+                            name_type: None,
                             key_tparam: TParam {
                                 name_loc: 15,
                                 name: "key",
@@ -15510,6 +15512,7 @@ Module {
                                     },
                                 ),
                             ),
+                            name_type: None,
                             key_tparam: TParam {
                                 name_loc: 22,
                                 name: "key",
@@ -15572,6 +15575,7 @@ Module {
                                     },
                                 ),
                             ),
+                            name_type: None,
                             key_tparam: TParam {
                                 name_loc: 29,
                                 name: "key",
@@ -15634,6 +15638,7 @@ Module {
                                     },
                                 ),
                             ),
+                            name_type: None,
                             key_tparam: TParam {
                                 name_loc: 36,
                                 name: "key",
@@ -15760,6 +15765,64 @@ Module {
                 id_loc: 0,
                 custom_error_loc_opt: None,
                 name: "T",
+                tparams: Mono,
+                body: Annot(
+                    Any(
+                        1,
+                    ),
+                ),
+            },
+        ),
+    ],
+    dirty_local_defs: [],
+    remote_refs: [],
+    pattern_defs: [],
+    dirty_pattern_defs: [],
+    patterns: [],
+}
+"#;
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
+}
+
+#[test]
+fn mapped_types_as_gate_off() {
+    // Without `experimental.tslib_syntax`, the `as` key-remapping clause is gated off in
+    // type_annotation and resolves to `any`. type_sig must mirror that, so an `as` mapped type
+    // defined in an imported file does not silently produce a different result than a locally
+    // defined one.
+    let input = r#"
+            type O = {foo: number, bar: string};
+    export type Id = {[key in keyof O as key]: O[key]};
+        "#;
+    let expected_output = r#"
+Locs:
+0. [2:12-14]
+1. [2:18-49]
+Type Sig:
+Module {
+    module_kind: CJSModule {
+        type_exports: [
+            ExportTypeBinding(
+                0,
+            ),
+        ],
+        exports: None,
+        info: CJSModuleInfo {
+            type_export_keys: [
+                "Id",
+            ],
+            type_stars: [],
+            strict: true,
+            platform_availability_set: None,
+        },
+    },
+    module_refs: [],
+    local_defs: [
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "Id",
                 tparams: Mono,
                 body: Annot(
                     Any(
@@ -15907,6 +15970,7 @@ Module {
                                     },
                                 ),
                             ),
+                            name_type: None,
                             key_tparam: TParam {
                                 name_loc: 8,
                                 name: "key",

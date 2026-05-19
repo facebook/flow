@@ -1865,6 +1865,7 @@ fn merge_annot<'cx>(
                         DestructorMappedTypeData {
                             homomorphic: type_::MappedTypeHomomorphicFlag::Unspecialized,
                             property_type: type_::mixed_t::make(reason.dupe()),
+                            name_type: None,
                             mapped_type_flags: type_::MappedTypeFlags {
                                 optional: type_::MappedTypeOptionality::KeepOptionality,
                                 variance: type_::MappedTypeVariance::KeepVariance,
@@ -2409,6 +2410,7 @@ fn merge_annot<'cx>(
                 loc,
                 source_type,
                 property_type,
+                name_type,
                 key_tparam,
                 variance,
                 variance_op,
@@ -2426,12 +2428,29 @@ fn merge_annot<'cx>(
                     prop_reason,
                     type_::DefT::new(type_::DefTInner::PolyT(Box::new(type_::PolyTData {
                         tparams_loc: loc.dupe(),
-                        tparams: vec![tp].into(),
+                        tparams: vec![tp.clone()].into(),
                         t_out: prop_type,
                         id,
                     }))),
                 ))
             };
+            let name_type = name_type.as_ref().map(|nt| {
+                let name_t = merge_impl(&env, cx, file, nt, false, false);
+                let name_reason = type_util::reason_of_t(&name_t).dupe();
+                /* Use the name_type's own loc for the poly id so it doesn't collide with the
+                 * property_type's poly id (which uses the MappedTypeAnnot loc). [make_source_poly_id]
+                 * is deterministic in its loc argument. */
+                let id = cx.make_source_poly_id(true, name_reason.loc());
+                Type::new(type_::TypeInner::DefT(
+                    name_reason.dupe(),
+                    type_::DefT::new(type_::DefTInner::PolyT(Box::new(type_::PolyTData {
+                        tparams_loc: loc.dupe(),
+                        tparams: vec![tp.clone()].into(),
+                        t_out: name_t,
+                        id,
+                    }))),
+                ))
+            });
             let optional = {
                 use flow_parser::ast::types::object::MappedTypeOptionalFlag;
                 match optional {
@@ -2537,6 +2556,7 @@ fn merge_annot<'cx>(
                     Rc::new(type_::Destructor::MappedType(Box::new(
                         DestructorMappedTypeData {
                             property_type,
+                            name_type,
                             mapped_type_flags,
                             homomorphic,
                             distributive_tparam_name,

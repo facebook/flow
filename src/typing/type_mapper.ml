@@ -682,8 +682,19 @@ class virtual ['a] t =
               false_t = false_t';
             }
       | TypeMap ObjectKeyMirror -> t
-      | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
+      | MappedType
+          { property_type; name_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
         let property_type' = self#type_ cx map_cx property_type in
+        let name_type' =
+          match name_type with
+          | None -> None
+          | Some nt ->
+            let nt' = self#type_ cx map_cx nt in
+            if nt' == nt then
+              name_type
+            else
+              Some nt'
+        in
         let homomorphic' =
           match homomorphic with
           | SemiHomomorphic t ->
@@ -696,13 +707,15 @@ class virtual ['a] t =
           | Unspecialized ->
             homomorphic
         in
-        if property_type' == property_type && homomorphic' == homomorphic then
+        if property_type' == property_type && name_type' == name_type && homomorphic' == homomorphic
+        then
           t
         else
           MappedType
             {
               distributive_tparam_name;
               property_type = property_type';
+              name_type = name_type';
               mapped_type_flags;
               homomorphic = homomorphic';
             }

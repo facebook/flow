@@ -8914,6 +8914,9 @@ where
                         code("export type"),
                         text(" statements."),
                     ]),
+                    TSLibSyntax(crate::intermediate_error_types::TsLibSyntaxKind::MappedTypeKeyRemappingOnArraySource) => {
+                        friendly::Message(vec![text("Key remapping (`as`) on tuple/array sources is not yet supported in mapped types.")])
+                    }
                     TSLibSyntax(kind) => {
                         use TsLibSyntaxKind::*;
                         let kind_str = match kind {
@@ -8943,6 +8946,7 @@ where
                                 "Anonymous default export function declaration"
                             }
                             MappedTypeKeyRemapping => "Key remapping (`as`) in mapped types",
+                            MappedTypeKeyRemappingOnArraySource => unreachable!(),
                             ReadonlyMappedTypeVarianceOp => {
                                 "`+readonly`/`-readonly` mapped type modifier"
                             }

@@ -397,6 +397,7 @@ pub enum Prop<L> {
         key_tparam: TypeParam<L>,
         source: Arc<Ty<L>>,
         prop: Arc<Ty<L>>,
+        name_type: Option<Arc<Ty<L>>>,
         flags: MappedTypeFlags,
         homomorphic: MappedTypeHomomorphicFlag<L>,
     },
@@ -1444,12 +1445,16 @@ where
                 key_tparam,
                 source,
                 prop,
+                name_type,
                 flags: _,
                 homomorphic,
             } => {
                 self.on_type_param(env, key_tparam);
                 self.on_t(env, source);
                 self.on_t(env, prop);
+                if let Some(nt) = name_type {
+                    self.on_t(env, nt);
+                }
                 self.on_mapped_type_homomorphic_flag(env, homomorphic);
             }
         }
@@ -2091,21 +2096,28 @@ where
                 Prop::MappedTypeProp {
                     key_tparam: k1,
                     source: s1,
-                    prop: p1,
+                    prop: pr1,
+                    name_type: nt1,
                     flags: _,
                     homomorphic: h1,
                 },
                 Prop::MappedTypeProp {
                     key_tparam: k2,
                     source: s2,
-                    prop: p2,
+                    prop: pr2,
+                    name_type: nt2,
                     flags: _,
                     homomorphic: h2,
                 },
             ) => {
                 self.on_type_param(env, k1, k2)?;
                 self.on_t(env, s1, s2)?;
-                self.on_t(env, p1, p2)?;
+                self.on_t(env, pr1, pr2)?;
+                match (nt1, nt2) {
+                    (Some(a), Some(b)) => self.on_t(env, a, b)?,
+                    (None, None) => {}
+                    _ => return self.fail_prop(env, p1, p2),
+                }
                 self.on_mapped_type_homomorphic_flag(env, h1, h2)
             }
             _ => self.fail_prop(env, p1, p2),
@@ -2934,12 +2946,16 @@ where
                 key_tparam,
                 source,
                 prop,
+                name_type,
                 flags: _,
                 homomorphic,
             } => {
                 let mut acc = self.on_type_param(env, key_tparam);
                 acc = Self::Acc::plus(acc, self.on_t(env, source));
                 acc = Self::Acc::plus(acc, self.on_t(env, prop));
+                if let Some(nt) = name_type {
+                    acc = Self::Acc::plus(acc, self.on_t(env, nt));
+                }
                 Self::Acc::plus(acc, self.on_mapped_type_homomorphic_flag(env, homomorphic))
             }
         }
@@ -3581,18 +3597,21 @@ where
                 key_tparam,
                 source,
                 prop,
+                name_type,
                 flags,
                 homomorphic,
             } => {
                 let key_tparam_new = self.on_type_param(env, key_tparam);
                 let source_new = self.on_t(env, source);
                 let prop_new = self.on_t(env, prop);
+                let name_type_new = name_type.map(|nt| self.on_t(env, nt));
                 let flags_new = self.on_mapped_type_flags(env, flags);
                 let homomorphic_new = self.on_mapped_type_homomorphic_flag(env, homomorphic);
                 Prop::MappedTypeProp {
                     key_tparam: key_tparam_new,
                     source: source_new,
                     prop: prop_new,
+                    name_type: name_type_new,
                     flags: flags_new,
                     homomorphic: homomorphic_new,
                 }
@@ -4402,12 +4421,16 @@ impl<L: Dupe> Prop<L> {
                 key_tparam,
                 source,
                 prop,
+                name_type,
                 flags,
                 homomorphic,
             } => Prop::MappedTypeProp {
                 key_tparam: key_tparam.map_locs(f),
                 source: Arc::new(source.as_ref().map_locs(f)),
                 prop: Arc::new(prop.as_ref().map_locs(f)),
+                name_type: name_type
+                    .as_ref()
+                    .map(|nt| Arc::new(nt.as_ref().map_locs(f))),
                 flags: *flags,
                 homomorphic: homomorphic.map_locs(f),
             },
