@@ -4186,8 +4186,6 @@ let to_printable_error :
       ]
     | MessageInvalidMappedTypeWithExtraProps ->
       [text "Mapped Types cannot be used when other properties or indexers are present."]
-    | MessageInvalidMappedTypeWithOptionalityRemoval ->
-      [text "Mapped Types do not yet support optionality removal."]
     | MessageInvalidMappedTypeWithVarianceOnArrayInput ->
       [text "Mapped Types do not yet support variance annotations on array inputs."]
     | MessageInvalidInferType ->
@@ -5409,6 +5407,7 @@ let to_printable_error :
         | AnonymousDefaultExportFunction -> "Anonymous default export function declaration"
         | MappedTypeKeyRemapping -> "Key remapping (`as`) in mapped types"
         | ReadonlyMappedTypeVarianceOp -> "`+readonly`/`-readonly` mapped type modifier"
+        | MinusOptionalMappedType -> "`-?` mapped type modifier"
         | OptionalUnlabeledTupleElement -> "Optional unlabeled tuple element"
         | OptionalIndexer -> "Optional indexer (`?:`)"
         | NamespaceExportDeclaration -> "`export as namespace`"

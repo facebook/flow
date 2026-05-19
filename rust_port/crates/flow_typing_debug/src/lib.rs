@@ -3758,7 +3758,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 InvalidMappedTypeErrorKind::InterfaceOrDeclaredClass => "InterfaceOrDeclaredClass",
                 InvalidMappedTypeErrorKind::ExtraProperties => "ExtraProperties",
                 InvalidMappedTypeErrorKind::ExplicitExactOrInexact => "ExplicitExactOrInexact",
-                InvalidMappedTypeErrorKind::RemoveOptionality => "RemoveOptionality",
                 InvalidMappedTypeErrorKind::VarianceOnArrayInput => "VarianceOnArrayInput",
             };
             format!(

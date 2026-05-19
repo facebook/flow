@@ -1476,14 +1476,24 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
              (obj_loc, Flow_intermediate_error_types.(TSLibSyntax MappedTypeKeyRemapping))
           );
         Tast_utils.error_mapper#type_ ot
-      ) else if Option.is_some variance_op && not (Context.tslib_syntax env.cx) then (
-        Flow_js_utils.add_output
-          env.cx
-          (Error_message.EUnsupportedSyntax
-             ( mapped_type_loc,
-               Flow_intermediate_error_types.(TSLibSyntax ReadonlyMappedTypeVarianceOp)
-             )
-          );
+      ) else if
+          (Option.is_some variance_op || optional = Ast.Type.Object.MappedType.MinusOptional)
+          && not (Context.tslib_syntax env.cx)
+        then (
+        if Option.is_some variance_op then
+          Flow_js_utils.add_output
+            env.cx
+            (Error_message.EUnsupportedSyntax
+               ( mapped_type_loc,
+                 Flow_intermediate_error_types.(TSLibSyntax ReadonlyMappedTypeVarianceOp)
+               )
+            );
+        if optional = Ast.Type.Object.MappedType.MinusOptional then
+          Flow_js_utils.add_output
+            env.cx
+            (Error_message.EUnsupportedSyntax
+               (mapped_type_loc, Flow_intermediate_error_types.(TSLibSyntax MinusOptionalMappedType))
+            );
         Tast_utils.error_mapper#type_ ot
       ) else
         let mapped_type_optionality =
@@ -1543,87 +1553,79 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             let (((_, source_type), _) as source_ast) = convert env t in
             (Unspecialized, source_type, source_ast, None, tparams_map)
         in
-        (match mapped_type_optionality with
-        | MakeOptional
-        | KeepOptionality ->
-          let (tparam_ast, ({ name; _ } as tparam), tparam_t) =
-            mk_type_param env ~kind:Flow_ast_mapper.ObjectMappedTypeTP key_tparam
-          in
-          let env = { env with tparams_map = Subst_name.Map.add name tparam_t tparams_map } in
-          let ((prop_loc, prop_type), prop_type_ast) = convert env prop_type in
-          let poly_prop_type =
-            poly_type_of_tparams
-              (Context.make_source_poly_id cx ~type_sig:false prop_loc)
-              (Some (fst key_tparam, Nel.one tparam))
-              prop_type
-          in
-          let reason = mk_reason RMappedType obj_loc in
-          let eval_t =
-            mk_type_destructor
-              cx
-              (Op (EvalMappedType { mapped_type = reason }))
-              reason
-              source_type
-              (MappedType
-                 {
-                   homomorphic;
-                   property_type = poly_prop_type;
-                   mapped_type_flags =
-                     {
-                       optional = mapped_type_optionality;
-                       variance =
-                         (let open Ast.Type.Object.MappedType in
-                         match (variance, variance_op) with
-                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Readonly; _ }), Some Add)
-                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Readonly; _ }), None) ->
-                           OverrideVariance Polarity.Positive
-                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Readonly; _ }), Some Remove)
-                           ->
-                           RemoveVariance Polarity.Positive
-                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Writeonly; _ }), Some Add)
-                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Writeonly; _ }), None) ->
-                           OverrideVariance Polarity.Negative
-                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Writeonly; _ }), Some Remove)
-                           ->
-                           RemoveVariance Polarity.Negative
-                         | _ ->
-                           let pol = polarity cx ~on:`Property variance in
-                           if pol = Polarity.Neutral then
-                             KeepVariance
-                           else
-                             OverrideVariance pol
-                         );
-                     };
-                   distributive_tparam_name;
-                 }
-              )
-              (Type.Eval.generate_id ())
-          in
-          let poly_prop_type_ast = ((prop_loc, poly_prop_type), prop_type_ast) in
-          let prop_ast =
-            T.Object.MappedType
-              ( mapped_type_loc,
-                {
-                  Object.MappedType.source_type = source_ast;
-                  prop_type = poly_prop_type_ast;
-                  key_tparam = tparam_ast;
-                  name_type = None;
-                  variance;
-                  variance_op;
-                  optional;
-                  comments = mapped_type_comments;
-                }
-              )
-          in
-          let obj_ast =
-            Ast.Type.Object { Ast.Type.Object.exact; properties = [prop_ast]; inexact; comments }
-          in
-          ((obj_loc, eval_t), obj_ast)
-        | RemoveOptional ->
-          Flow_js_utils.add_output
+        let (tparam_ast, ({ name; _ } as tparam), tparam_t) =
+          mk_type_param env ~kind:Flow_ast_mapper.ObjectMappedTypeTP key_tparam
+        in
+        let env = { env with tparams_map = Subst_name.Map.add name tparam_t tparams_map } in
+        let ((prop_loc, prop_type), prop_type_ast) = convert env prop_type in
+        let poly_prop_type =
+          poly_type_of_tparams
+            (Context.make_source_poly_id cx ~type_sig:false prop_loc)
+            (Some (fst key_tparam, Nel.one tparam))
+            prop_type
+        in
+        let reason = mk_reason RMappedType obj_loc in
+        let eval_t =
+          mk_type_destructor
             cx
-            Error_message.(EInvalidMappedType { loc = mapped_type_loc; kind = RemoveOptionality });
-          Tast_utils.error_mapper#type_ ot)
+            (Op (EvalMappedType { mapped_type = reason }))
+            reason
+            source_type
+            (MappedType
+               {
+                 homomorphic;
+                 property_type = poly_prop_type;
+                 mapped_type_flags =
+                   {
+                     optional = mapped_type_optionality;
+                     variance =
+                       (let open Ast.Type.Object.MappedType in
+                       match (variance, variance_op) with
+                       | (Some (_, { Ast.Variance.kind = Ast.Variance.Readonly; _ }), Some Add)
+                       | (Some (_, { Ast.Variance.kind = Ast.Variance.Readonly; _ }), None) ->
+                         OverrideVariance Polarity.Positive
+                       | (Some (_, { Ast.Variance.kind = Ast.Variance.Readonly; _ }), Some Remove)
+                         ->
+                         RemoveVariance Polarity.Positive
+                       | (Some (_, { Ast.Variance.kind = Ast.Variance.Writeonly; _ }), Some Add)
+                       | (Some (_, { Ast.Variance.kind = Ast.Variance.Writeonly; _ }), None) ->
+                         OverrideVariance Polarity.Negative
+                       | (Some (_, { Ast.Variance.kind = Ast.Variance.Writeonly; _ }), Some Remove)
+                         ->
+                         RemoveVariance Polarity.Negative
+                       | _ ->
+                         let pol = polarity cx ~on:`Property variance in
+                         if pol = Polarity.Neutral then
+                           KeepVariance
+                         else
+                           OverrideVariance pol
+                       );
+                   };
+                 distributive_tparam_name;
+               }
+            )
+            (Type.Eval.generate_id ())
+        in
+        let poly_prop_type_ast = ((prop_loc, poly_prop_type), prop_type_ast) in
+        let prop_ast =
+          T.Object.MappedType
+            ( mapped_type_loc,
+              {
+                Object.MappedType.source_type = source_ast;
+                prop_type = poly_prop_type_ast;
+                key_tparam = tparam_ast;
+                name_type = None;
+                variance;
+                variance_op;
+                optional;
+                comments = mapped_type_comments;
+              }
+            )
+        in
+        let obj_ast =
+          Ast.Type.Object { Ast.Type.Object.exact; properties = [prop_ast]; inexact; comments }
+        in
+        ((obj_loc, eval_t), obj_ast)
     | (loc, Component { Component.params; tparams; renders; comments }) ->
       let reason = mk_reason RComponentType loc in
       let (t, tparams, params, renders) =

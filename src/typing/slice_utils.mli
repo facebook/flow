@@ -227,6 +227,7 @@ val super :
   'a
 
 val mk_mapped_prop_type :
+  filter_optional:(Type.t -> Type.t) ->
   use_op:Type.use_op ->
   mapped_type_optionality:Type.mapped_type_optionality ->
   poly_prop:Type.t ->
@@ -237,6 +238,7 @@ val mk_mapped_prop_type :
 val is_prop_optional : Type.t -> bool
 
 val map_object :
+  filter_optional:(Type.t -> Type.t) ->
   Type.t ->
   Type.mapped_type_flags ->
   Context.t ->

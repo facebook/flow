@@ -121,8 +121,17 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         reachable_targs = [];
       }
     in
+    let filter_optional t = OpenT (reason, Flow.filter_optional cx reason t) in
     fun ~property_type mapped_type_flags ->
-      Slice_utils.map_object property_type mapped_type_flags cx reason use_op None slice
+      Slice_utils.map_object
+        ~filter_optional
+        property_type
+        mapped_type_flags
+        cx
+        reason
+        use_op
+        None
+        slice
 
   let run =
     let open Object in
@@ -571,10 +580,19 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         | Some keys -> Some (partition_keys_and_indexer cx trace use_op reason keys)
         | None -> None
       in
+      let filter_optional t = OpenT (reason, Flow.filter_optional cx reason t) in
       let t =
         match
           Nel.map
-            (Slice_utils.map_object prop_type mapped_type_flags cx reason use_op selected_keys)
+            (Slice_utils.map_object
+               ~filter_optional
+               prop_type
+               mapped_type_flags
+               cx
+               reason
+               use_op
+               selected_keys
+            )
             x
         with
         | (t, []) -> t

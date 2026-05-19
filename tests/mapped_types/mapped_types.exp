@@ -1735,10 +1735,26 @@ References:
 
 Error --------------------------------------------------------------------------------------------- optionality.js:28:19
 
-Mapped Types do not yet support optionality removal. [invalid-mapped-type]
+`-?` mapped type modifier is not enabled. [unsupported-syntax]
 
-   28|   type Removed = {[key in keyof O]-?: O[key]}; // ERROR
+   28|   type Removed = {[key in keyof O]-?: O[key]}; // ERROR - tslib_syntax not enabled
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- optionality.js:33:16
+
+`+readonly`/`-readonly` mapped type modifier is not enabled. [unsupported-syntax]
+
+   33|   type Both = {-readonly [key in keyof O]-?: O[key]}; // ERROR x2 - tslib_syntax not enabled
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- optionality.js:33:16
+
+`-?` mapped type modifier is not enabled. [unsupported-syntax]
+
+   33|   type Both = {-readonly [key in keyof O]-?: O[key]}; // ERROR x2 - tslib_syntax not enabled
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------- pick_and_omit.js:17:9
@@ -2463,4 +2479,4 @@ References:
 
 
 
-Found 150 errors
+Found 152 errors

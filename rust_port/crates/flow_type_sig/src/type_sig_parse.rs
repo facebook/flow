@@ -6375,7 +6375,6 @@ fn object_type<'arena, 'ast>(
         xs: &mut tparam_stack::TParamStack,
         p: &ast::types::object::MappedType<Loc, Loc>,
     ) -> Parsed<'arena, 'ast> {
-        use ast::types::object::MappedTypeOptionalFlag;
         let ast::types::object::MappedType {
             loc,
             key_tparam,
@@ -6391,54 +6390,54 @@ fn object_type<'arena, 'ast>(
 
         match name_type {
             Some(_) => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
+            None if *optional == ast::types::object::MappedTypeOptionalFlag::MinusOptional
+                && !opts.tslib_syntax =>
+            {
+                // `-?` is gated on `experimental.tslib_syntax`. type_annotation errors and falls
+                // back to Any in this case; mirror that here so a `-?` mapped type defined in an
+                // imported file does not silently produce a different result than one defined
+                // locally.
+                Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
+            }
             None => {
                 // The source type does not have the key_tparam in scope, but we need to parse locs in syntax
                 // order or we will violate type sig invariants.
-                match *optional {
-                    MappedTypeOptionalFlag::PlusOptional
-                    | MappedTypeOptionalFlag::Optional
-                    | MappedTypeOptionalFlag::NoOptionalFlag => {
-                        let key_loc = tbls.push_loc(p.key_tparam.name.loc.dupe());
-                        let key_name = key_tparam.name.name.dupe();
+                let key_loc = tbls.push_loc(p.key_tparam.name.loc.dupe());
+                let key_name = key_tparam.name.name.dupe();
 
-                        let (source_type, inline_keyof) = match source_type.deref() {
-                            TypeInner::Keyof { inner, .. } => {
-                                (annot(opts, scope, scopes, tbls, xs, &inner.argument), true)
-                            }
-                            _ => (annot(opts, scope, scopes, tbls, xs, source_type), false),
-                        };
-
-                        let key_tparam = TParam {
-                            name_loc: key_loc,
-                            name: key_name.clone(),
-                            polarity: Polarity::Neutral,
-                            bound: None,
-                            default: None,
-                            is_const: false,
-                        };
-
-                        xs.push_new_frame();
-                        xs.insert(key_name);
-                        let property_type = annot(opts, scope, scopes, tbls, xs, prop_type);
-                        xs.pop_frame();
-
-                        Parsed::Annot(Box::new(ParsedAnnot::MappedTypeAnnot(Box::new(
-                            AnnotMappedTypeAnnot {
-                                loc,
-                                source_type,
-                                property_type,
-                                key_tparam,
-                                variance: polarity(
-                                    variance.as_ref().map(|v| (v.loc.dupe(), v.clone())),
-                                ),
-                                variance_op: *variance_op,
-                                optional: p.optional.clone(),
-                                inline_keyof,
-                            },
-                        ))))
+                let (source_type, inline_keyof) = match source_type.deref() {
+                    TypeInner::Keyof { inner, .. } => {
+                        (annot(opts, scope, scopes, tbls, xs, &inner.argument), true)
                     }
-                    _ => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
-                }
+                    _ => (annot(opts, scope, scopes, tbls, xs, source_type), false),
+                };
+
+                let key_tparam = TParam {
+                    name_loc: key_loc,
+                    name: key_name.clone(),
+                    polarity: Polarity::Neutral,
+                    bound: None,
+                    default: None,
+                    is_const: false,
+                };
+
+                xs.push_new_frame();
+                xs.insert(key_name);
+                let property_type = annot(opts, scope, scopes, tbls, xs, prop_type);
+                xs.pop_frame();
+
+                Parsed::Annot(Box::new(ParsedAnnot::MappedTypeAnnot(Box::new(
+                    AnnotMappedTypeAnnot {
+                        loc,
+                        source_type,
+                        property_type,
+                        key_tparam,
+                        variance: polarity(variance.as_ref().map(|v| (v.loc.dupe(), v.clone()))),
+                        variance_op: *variance_op,
+                        optional: p.optional.clone(),
+                        inline_keyof,
+                    },
+                ))))
             }
         }
     }

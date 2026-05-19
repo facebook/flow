@@ -1722,7 +1722,8 @@ let super
   | AnyT (_, src) -> return cx use_op (AnyT.why src reason)
   | _ -> next cx use_op tool reason (Nel.one acc)
 
-let mk_mapped_prop_type ~use_op ~mapped_type_optionality ~poly_prop key_t prop_optional =
+let mk_mapped_prop_type
+    ~filter_optional ~use_op ~mapped_type_optionality ~poly_prop key_t prop_optional =
   (* We persist the original use_op here so that errors involving the typeapp are positioned
      * at the use site and not the typeapp site *)
   let t =
@@ -1737,8 +1738,10 @@ let mk_mapped_prop_type ~use_op ~mapped_type_optionality ~poly_prop key_t prop_o
   match mapped_type_optionality with
   | MakeOptional -> optional t
   | RemoveOptional ->
-    (* TODO(jmbrown): This is not supported yet and we error at the declaration site *)
-    t
+    if prop_optional then
+      filter_optional t
+    else
+      t
   | KeepOptionality ->
     if prop_optional then
       optional t
@@ -1750,6 +1753,7 @@ let is_prop_optional = function
   | _ -> false
 
 let map_object
+    ~filter_optional
     poly_prop
     { variance; optional = mapped_type_optionality }
     cx
@@ -1757,7 +1761,9 @@ let map_object
     use_op
     selected_keys_and_indexers
     { Object.reason = _; props; flags; frozen; generics; interface; reachable_targs } =
-  let mk_prop_type = mk_mapped_prop_type ~use_op ~mapped_type_optionality ~poly_prop in
+  let mk_prop_type =
+    mk_mapped_prop_type ~filter_optional ~use_op ~mapped_type_optionality ~poly_prop
+  in
   let mk_variance variance prop_polarity =
     match variance with
     | Type.KeepVariance -> prop_polarity

@@ -2446,6 +2446,7 @@ pub fn super_<'cx, A>(
 }
 
 pub fn mk_mapped_prop_type(
+    filter_optional: &dyn Fn(Type) -> Type,
     use_op: &UseOp,
     mapped_type_optionality: &MappedTypeOptionality,
     poly_prop: &Type,
@@ -2464,8 +2465,13 @@ pub fn mk_mapped_prop_type(
     );
     match mapped_type_optionality {
         MappedTypeOptionality::MakeOptional => type_util::optional(t, None, false),
-        // TODO(jmbrown): This is not supported yet and we error at the declaration site
-        MappedTypeOptionality::RemoveOptional => t,
+        MappedTypeOptionality::RemoveOptional => {
+            if prop_optional {
+                filter_optional(t)
+            } else {
+                t
+            }
+        }
         MappedTypeOptionality::KeepOptionality => {
             if prop_optional {
                 type_util::optional(t, None, false)
@@ -2481,6 +2487,7 @@ pub fn is_prop_optional(t: &Type) -> bool {
 }
 
 pub fn map_object<'cx>(
+    filter_optional: &dyn Fn(Type) -> Type,
     poly_prop: &Type,
     mapped_type_flags: &MappedTypeFlags,
     cx: &Context<'cx>,
@@ -2502,6 +2509,7 @@ pub fn map_object<'cx>(
     } = slice;
     let mk_prop_type = |key_t: Type, prop_optional: bool| {
         mk_mapped_prop_type(
+            filter_optional,
             use_op,
             mapped_type_optionality,
             poly_prop,

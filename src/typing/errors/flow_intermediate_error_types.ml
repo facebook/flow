@@ -146,6 +146,7 @@ and ts_lib_syntax_kind =
   | AnonymousDefaultExportFunction
   | MappedTypeKeyRemapping
   | ReadonlyMappedTypeVarianceOp
+  | MinusOptionalMappedType
   | OptionalUnlabeledTupleElement
   | OptionalIndexer
   | NamespaceExportDeclaration
@@ -996,7 +997,6 @@ type 'loc message =
   | MessageInvalidMappedTypeInInterfaceOrDeclaredClass
   | MessageInvalidMappedTypeWithExactOrInexact
   | MessageInvalidMappedTypeWithExtraProps
-  | MessageInvalidMappedTypeWithOptionalityRemoval
   | MessageInvalidMappedTypeWithVarianceOnArrayInput
   | MessageInvalidReactCreateElement of 'loc virtual_reason
   | MessageInvalidRefPropertyInSpread of {

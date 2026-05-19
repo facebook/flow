@@ -84,6 +84,7 @@ let load_lib_files files =
       for_builtins = true;
       locs_to_dirtify = [];
       is_ts_file = false;
+      tslib_syntax = true;
     }
   in
   let (_, master_cx) =

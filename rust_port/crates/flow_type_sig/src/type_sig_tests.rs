@@ -56,6 +56,7 @@ fn default_sig_options() -> TypeSigOptions {
         for_builtins: false,
         locs_to_dirtify: vec![],
         is_ts_file: false,
+        tslib_syntax: false,
     }
 }
 
@@ -15665,15 +15666,12 @@ Module {
 fn mapped_types_invalid() {
     let input = r#"
             type O = {foo: number, bar: string};
-    export type T = {[key in keyof O]-?: O[key]};
-    export type U = {[key in keyof O]: O[key], foo: number};
+    export type T = {[key in keyof O]: O[key], foo: number};
         "#;
     let expected_output = r#"
 Locs:
 0. [2:12-13]
-1. [2:17-43]
-2. [3:12-13]
-3. [3:16-55]
+1. [2:16-55]
 Type Sig:
 Module {
     module_kind: CJSModule {
@@ -15681,15 +15679,74 @@ Module {
             ExportTypeBinding(
                 0,
             ),
+        ],
+        exports: None,
+        info: CJSModuleInfo {
+            type_export_keys: [
+                "T",
+            ],
+            type_stars: [],
+            strict: true,
+            platform_availability_set: None,
+        },
+    },
+    module_refs: [],
+    local_defs: [
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "T",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: ExactObj,
+                            props: {},
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
+    ],
+    dirty_local_defs: [],
+    remote_refs: [],
+    pattern_defs: [],
+    dirty_pattern_defs: [],
+    patterns: [],
+}
+"#;
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
+}
+
+#[test]
+fn mapped_types_minus_optional_gate_off() {
+    // Without `experimental.tslib_syntax`, `-?` is gated off in type_annotation and resolves to
+    // `any`. type_sig must mirror that, so an imported `-?` mapped type does not silently
+    // produce a different result than a locally defined one.
+    let input = r#"
+            type O = {foo: number, bar: string};
+    export type T = {[key in keyof O]-?: O[key]};
+        "#;
+    let expected_output = r#"
+Locs:
+0. [2:12-13]
+1. [2:17-43]
+Type Sig:
+Module {
+    module_kind: CJSModule {
+        type_exports: [
             ExportTypeBinding(
-                1,
+                0,
             ),
         ],
         exports: None,
         info: CJSModuleInfo {
             type_export_keys: [
                 "T",
-                "U",
             ],
             type_stars: [],
             strict: true,
@@ -15711,20 +15768,157 @@ Module {
                 ),
             },
         ),
+    ],
+    dirty_local_defs: [],
+    remote_refs: [],
+    pattern_defs: [],
+    dirty_pattern_defs: [],
+    patterns: [],
+}
+"#;
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
+}
+
+#[test]
+fn mapped_types_minus_optional() {
+    let input = r#"
+            type O = {foo: number, bar: string};
+    export type T = {[key in keyof O]-?: O[key]};
+        "#;
+    let expected_output_tslib_on = r#"
+Locs:
+0. [1:13-14]
+1. [1:17-43]
+2. [1:18-21]
+3. [1:23-29]
+4. [1:31-34]
+5. [1:36-42]
+6. [2:12-13]
+7. [2:17-43]
+8. [2:18-21]
+9. [2:31-32]
+10. [2:37-43]
+11. [2:37-38]
+12. [2:39-42]
+Type Sig:
+Module {
+    module_kind: CJSModule {
+        type_exports: [
+            ExportTypeBinding(
+                1,
+            ),
+        ],
+        exports: None,
+        info: CJSModuleInfo {
+            type_export_keys: [
+                "T",
+            ],
+            type_stars: [],
+            strict: true,
+            platform_availability_set: None,
+        },
+    },
+    module_refs: [],
+    local_defs: [
         TypeAlias(
             DefTypeAlias {
-                id_loc: 2,
+                id_loc: 0,
                 custom_error_loc_opt: None,
-                name: "U",
+                name: "O",
                 tparams: Mono,
                 body: Annot(
                     ObjAnnot(
                         AnnotObjAnnot {
-                            loc: 3,
+                            loc: 1,
                             obj_kind: ExactObj,
-                            props: {},
+                            props: {
+                                "bar": ObjAnnotField(
+                                    (
+                                        4,
+                                        Annot(
+                                            String(
+                                                5,
+                                            ),
+                                        ),
+                                        Neutral,
+                                    ),
+                                ),
+                                "foo": ObjAnnotField(
+                                    (
+                                        2,
+                                        Annot(
+                                            Number(
+                                                3,
+                                            ),
+                                        ),
+                                        Neutral,
+                                    ),
+                                ),
+                            },
                             computed_props: [],
                             proto: ObjAnnotImplicitProto,
+                        },
+                    ),
+                ),
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 6,
+                custom_error_loc_opt: None,
+                name: "T",
+                tparams: Mono,
+                body: Annot(
+                    MappedTypeAnnot(
+                        AnnotMappedTypeAnnot {
+                            loc: 7,
+                            source_type: TyRef(
+                                Unqualified(
+                                    LocalRef(
+                                        PackedRefLocal {
+                                            ref_loc: 9,
+                                            index: 0,
+                                        },
+                                    ),
+                                ),
+                            ),
+                            property_type: Annot(
+                                ElementType(
+                                    AnnotElementType {
+                                        loc: 10,
+                                        obj: TyRef(
+                                            Unqualified(
+                                                LocalRef(
+                                                    PackedRefLocal {
+                                                        ref_loc: 11,
+                                                        index: 0,
+                                                    },
+                                                ),
+                                            ),
+                                        ),
+                                        elem: Annot(
+                                            Bound(
+                                                AnnotBound {
+                                                    ref_loc: 12,
+                                                    name: "key",
+                                                },
+                                            ),
+                                        ),
+                                    },
+                                ),
+                            ),
+                            key_tparam: TParam {
+                                name_loc: 8,
+                                name: "key",
+                                polarity: Neutral,
+                                bound: None,
+                                default: None,
+                                is_const: false,
+                            },
+                            variance: Neutral,
+                            variance_op: None,
+                            optional: MinusOptional,
+                            inline_keyof: true,
                         },
                     ),
                 ),
@@ -15738,7 +15932,15 @@ Module {
     patterns: [],
 }
 "#;
-    assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
+    assert_eq!(
+        dedent_trim(expected_output_tslib_on),
+        dedent_trim(&print_sig_with_options(
+            input,
+            Some(|opts: &mut TypeSigOptions| {
+                opts.tslib_syntax = true;
+            })
+        ))
+    )
 }
 
 #[test]

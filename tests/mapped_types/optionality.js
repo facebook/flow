@@ -23,7 +23,12 @@ type O = {foo: number, bar?: string};
 }
 
 
-// We do not yet support -?
+// -? is only available under experimental.tslib_syntax
 {
-  type Removed = {[key in keyof O]-?: O[key]}; // ERROR
+  type Removed = {[key in keyof O]-?: O[key]}; // ERROR - tslib_syntax not enabled
+}
+
+// -readonly + -? together both report under one pass
+{
+  type Both = {-readonly [key in keyof O]-?: O[key]}; // ERROR x2 - tslib_syntax not enabled
 }

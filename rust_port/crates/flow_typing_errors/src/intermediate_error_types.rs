@@ -316,6 +316,7 @@ pub enum TsLibSyntaxKind {
     AnonymousDefaultExportFunction,
     MappedTypeKeyRemapping,
     ReadonlyMappedTypeVarianceOp,
+    MinusOptionalMappedType,
     OptionalUnlabeledTupleElement,
     OptionalIndexer,
     NamespaceExportDeclaration,
@@ -2039,7 +2040,6 @@ pub enum Message<L: Dupe> {
     MessageInvalidMappedTypeInInterfaceOrDeclaredClass,
     MessageInvalidMappedTypeWithExactOrInexact,
     MessageInvalidMappedTypeWithExtraProps,
-    MessageInvalidMappedTypeWithOptionalityRemoval,
     MessageInvalidMappedTypeWithVarianceOnArrayInput,
 
     MessageInvalidReactCreateElement(VirtualReason<L>),

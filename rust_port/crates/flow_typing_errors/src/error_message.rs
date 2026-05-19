@@ -3033,7 +3033,6 @@ pub enum InvalidMappedTypeErrorKind {
     InterfaceOrDeclaredClass,
     ExtraProperties,
     ExplicitExactOrInexact,
-    RemoveOptionality,
     VarianceOnArrayInput,
 }
 
@@ -7367,9 +7366,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     }
                     InvalidMappedTypeErrorKind::ExplicitExactOrInexact => {
                         Message::MessageInvalidMappedTypeWithExactOrInexact
-                    }
-                    InvalidMappedTypeErrorKind::RemoveOptionality => {
-                        Message::MessageInvalidMappedTypeWithOptionalityRemoval
                     }
                     InvalidMappedTypeErrorKind::VarianceOnArrayInput => {
                         Message::MessageInvalidMappedTypeWithVarianceOnArrayInput

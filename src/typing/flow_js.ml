@@ -3923,6 +3923,7 @@ struct
                   OpenT tout
                 ))
           ) ->
+          let filter_optional t = OpenT (reason_op, filter_optional cx reason_op t) in
           let f value_t ~index ~optional =
             let key_t =
               let r = reason_of_t value_t in
@@ -3933,11 +3934,28 @@ struct
                   (r, SingletonNumT { from_annot = true; value = (float_of_int i, string_of_int i) })
             in
             Slice_utils.mk_mapped_prop_type
+              ~filter_optional
               ~use_op
               ~mapped_type_optionality
               ~poly_prop:property_type
               key_t
               optional
+          in
+          let new_element_optional optional =
+            match mapped_type_optionality with
+            | RemoveOptional -> false
+            | MakeOptional
+            | KeepOptionality ->
+              optional
+          in
+          let new_arity arity =
+            match mapped_type_optionality with
+            | RemoveOptional ->
+              let (_, max) = arity in
+              (max, max)
+            | MakeOptional
+            | KeepOptionality ->
+              arity
           in
           let () =
             match mapped_type_variance with
@@ -3949,12 +3967,22 @@ struct
                   EInvalidMappedType { loc = loc_of_reason reason_op; kind = VarianceOnArrayInput }
                 )
           in
+          let array_elem t =
+            (* For real arrays (no tuple shape) TS strips `undefined` from the element
+             * type under `-?`, since indexed access on an array is implicitly optional. *)
+            match mapped_type_optionality with
+            | RemoveOptional -> filter_optional t
+            | MakeOptional
+            | KeepOptionality ->
+              t
+          in
           let arrtype =
             match arrtype with
             | ArrayAT { elem_t; tuple_view; react_dro } ->
+              let mapped_elem_t = f ~optional:false ~index:None elem_t in
               ArrayAT
                 {
-                  elem_t = f ~optional:false ~index:None elem_t;
+                  elem_t = array_elem mapped_elem_t;
                   react_dro;
                   tuple_view =
                     Base.Option.map
@@ -3967,29 +3995,36 @@ struct
                                   name;
                                   t = f ~optional ~index:(Some i) t;
                                   polarity;
-                                  optional;
+                                  optional = new_element_optional optional;
                                   reason;
                                 })
                             elements
                         in
-                        TupleView { elements; arity; inexact })
+                        TupleView { elements; arity = new_arity arity; inexact })
                       tuple_view;
                 }
             | TupleAT { elem_t; elements; arity; inexact; react_dro } ->
               TupleAT
                 {
-                  elem_t = f ~optional:false ~index:None elem_t;
+                  elem_t = array_elem (f ~optional:false ~index:None elem_t);
                   react_dro;
                   elements =
                     Base.List.mapi
                       ~f:(fun i (TupleElement { name; t; polarity; optional; reason }) ->
                         TupleElement
-                          { name; t = f ~optional ~index:(Some i) t; polarity; optional; reason })
+                          {
+                            name;
+                            t = f ~optional ~index:(Some i) t;
+                            polarity;
+                            optional = new_element_optional optional;
+                            reason;
+                          })
                       elements;
-                  arity;
+                  arity = new_arity arity;
                   inexact;
                 }
-            | ROArrayAT (elemt, dro) -> ROArrayAT (f ~optional:false ~index:None elemt, dro)
+            | ROArrayAT (elemt, dro) ->
+              ROArrayAT (array_elem (f ~optional:false ~index:None elemt), dro)
           in
           let t =
             let reason = replace_desc_reason RArrayType reason_op in

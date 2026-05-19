@@ -965,7 +965,6 @@ and invalid_mapped_type_error_kind =
   | InterfaceOrDeclaredClass
   | ExtraProperties
   | ExplicitExactOrInexact
-  | RemoveOptionality
   | VarianceOnArrayInput
 
 and 'l hook_rule =
@@ -3828,7 +3827,6 @@ let friendly_message_of_msg = function
       | InterfaceOrDeclaredClass -> MessageInvalidMappedTypeInInterfaceOrDeclaredClass
       | ExtraProperties -> MessageInvalidMappedTypeWithExtraProps
       | ExplicitExactOrInexact -> MessageInvalidMappedTypeWithExactOrInexact
-      | RemoveOptionality -> MessageInvalidMappedTypeWithOptionalityRemoval
       | VarianceOnArrayInput -> MessageInvalidMappedTypeWithVarianceOnArrayInput
     in
     Normal msg

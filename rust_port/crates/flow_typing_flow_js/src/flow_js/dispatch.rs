@@ -6994,6 +6994,11 @@ fn __flow_impl<'cx>(
         {
             let mapped_type_variance = &mapped_type_flags.variance;
             let mapped_type_optionality = &mapped_type_flags.optional;
+            let filter_optional_t = |t: Type| -> Type {
+                let filter_id = crate::flow_js::filter_optional_non_speculating(cx, reason_op, &t)
+                    .expect("filter_optional not in speculation");
+                Type::new(TypeInner::OpenT(Tvar::new(reason_op.dupe(), filter_id)))
+            };
             let f = |value_t: &Type, index: Option<usize>, optional: bool| -> Type {
                 let r = reason_of_t(value_t).dupe();
                 let key_t = match index {
@@ -7007,12 +7012,30 @@ fn __flow_impl<'cx>(
                     )),
                 };
                 slice_utils::mk_mapped_prop_type(
+                    &filter_optional_t,
                     use_op,
                     mapped_type_optionality,
                     property_type,
                     key_t,
                     optional,
                 )
+            };
+            let new_element_optional = |optional: bool| -> bool {
+                match mapped_type_optionality {
+                    flow_typing_type::type_::MappedTypeOptionality::RemoveOptional => false,
+                    flow_typing_type::type_::MappedTypeOptionality::MakeOptional
+                    | flow_typing_type::type_::MappedTypeOptionality::KeepOptionality => optional,
+                }
+            };
+            let new_arity = |arity: (i32, i32)| -> (i32, i32) {
+                match mapped_type_optionality {
+                    flow_typing_type::type_::MappedTypeOptionality::RemoveOptional => {
+                        let (_, max) = arity;
+                        (max, max)
+                    }
+                    flow_typing_type::type_::MappedTypeOptionality::MakeOptional
+                    | flow_typing_type::type_::MappedTypeOptionality::KeepOptionality => arity,
+                }
             };
             if !matches!(
                 mapped_type_variance,
@@ -7026,34 +7049,48 @@ fn __flow_impl<'cx>(
                     },
                 )?;
             }
+            let array_elem = |t: Type| -> Type {
+                // For real arrays (no tuple shape) TS strips `undefined` from the element
+                // type under `-?`, since indexed access on an array is implicitly optional.
+                match mapped_type_optionality {
+                    flow_typing_type::type_::MappedTypeOptionality::RemoveOptional => {
+                        filter_optional_t(t)
+                    }
+                    flow_typing_type::type_::MappedTypeOptionality::MakeOptional
+                    | flow_typing_type::type_::MappedTypeOptionality::KeepOptionality => t,
+                }
+            };
             let new_arrtype = match arrtype.deref() {
                 ArrType::ArrayAT(box ArrayATData {
                     elem_t,
                     tuple_view,
                     react_dro,
-                }) => ArrType::ArrayAT(Box::new(ArrayATData {
-                    elem_t: f(elem_t, None, false),
-                    react_dro: react_dro.clone(),
-                    tuple_view: tuple_view.as_ref().map(|tv| {
-                        let elements = tv
-                            .elements
-                            .iter()
-                            .enumerate()
-                            .map(|(i, elem)| TupleElement {
-                                name: elem.name.dupe(),
-                                t: f(&elem.t, Some(i), elem.optional),
-                                polarity: elem.polarity,
-                                optional: elem.optional,
-                                reason: elem.reason.dupe(),
-                            })
-                            .collect();
-                        TupleView {
-                            elements,
-                            arity: tv.arity,
-                            inexact: tv.inexact,
-                        }
-                    }),
-                })),
+                }) => {
+                    let mapped_elem_t = f(elem_t, None, false);
+                    ArrType::ArrayAT(Box::new(ArrayATData {
+                        elem_t: array_elem(mapped_elem_t),
+                        react_dro: react_dro.clone(),
+                        tuple_view: tuple_view.as_ref().map(|tv| {
+                            let elements = tv
+                                .elements
+                                .iter()
+                                .enumerate()
+                                .map(|(i, elem)| TupleElement {
+                                    name: elem.name.dupe(),
+                                    t: f(&elem.t, Some(i), elem.optional),
+                                    polarity: elem.polarity,
+                                    optional: new_element_optional(elem.optional),
+                                    reason: elem.reason.dupe(),
+                                })
+                                .collect();
+                            TupleView {
+                                elements,
+                                arity: new_arity(tv.arity),
+                                inexact: tv.inexact,
+                            }
+                        }),
+                    }))
+                }
                 ArrType::TupleAT(box TupleATData {
                     elem_t,
                     elements,
@@ -7061,7 +7098,7 @@ fn __flow_impl<'cx>(
                     inexact,
                     react_dro,
                 }) => ArrType::TupleAT(Box::new(TupleATData {
-                    elem_t: f(elem_t, None, false),
+                    elem_t: array_elem(f(elem_t, None, false)),
                     react_dro: react_dro.clone(),
                     elements: elements
                         .iter()
@@ -7070,15 +7107,15 @@ fn __flow_impl<'cx>(
                             name: elem.name.dupe(),
                             t: f(&elem.t, Some(i), elem.optional),
                             polarity: elem.polarity,
-                            optional: elem.optional,
+                            optional: new_element_optional(elem.optional),
                             reason: elem.reason.dupe(),
                         })
                         .collect(),
-                    arity: *arity,
+                    arity: new_arity(*arity),
                     inexact: *inexact,
                 })),
                 ArrType::ROArrayAT(box (elemt, dro)) => {
-                    ArrType::ROArrayAT(Box::new((f(elemt, None, false), dro.clone())))
+                    ArrType::ROArrayAT(Box::new((array_elem(f(elemt, None, false)), dro.clone())))
                 }
             };
             let t = {

@@ -221,6 +221,7 @@ let sig_options
     ?relay_integration_module_prefix
     ?(for_builtins = false)
     ?(locs_to_dirtify = [])
+    ?(tslib_syntax = false)
     () =
   {
     Type_sig_options.munge;
@@ -239,6 +240,7 @@ let sig_options
     for_builtins;
     locs_to_dirtify;
     is_ts_file = false;
+    tslib_syntax;
   }
 
 let parse_and_pack_module ~parse_options ~strict sig_opts contents =
@@ -263,6 +265,7 @@ let print_sig
     ?relay_integration_module_prefix
     ?for_builtins
     ?locs_to_dirtify
+    ?tslib_syntax
     contents_indent =
   let contents = dedent_trim contents_indent in
   let sig_opts =
@@ -277,6 +280,7 @@ let print_sig
       ?relay_integration_module_prefix
       ?for_builtins
       ?locs_to_dirtify
+      ?tslib_syntax
       ~enable_component_syntax
       ()
   in
@@ -6952,14 +6956,36 @@ let%expect_test "mapped_types" =
 let%expect_test "mapped_types_invalid" =
   print_sig {|
     type O = {foo: number, bar: string};
-    export type T = {[key in keyof O]-?: O[key]};
-    export type U = {[key in keyof O]: O[key], foo: number};
+    export type T = {[key in keyof O]: O[key], foo: number};
   |};
   [%expect{|
-    CJSModule {type_exports = [|(ExportTypeBinding 0); (ExportTypeBinding 1)|];
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
       exports = None;
       info =
-      CJSModuleInfo {type_export_keys = [|"T"; "U"|];
+      CJSModuleInfo {type_export_keys = [|"T"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [2:12-13];
+         custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = (Annot (Any [2:16-55]))}
+  |}]
+
+let%expect_test "mapped_types_minus_optional_gate_off" =
+  (* Without `experimental.tslib_syntax`, `-?` is gated off in type_annotation.ml and
+     resolves to `any`. type_sig must mirror that, so an imported `-?` mapped type does
+     not silently produce a different result than a locally defined one. *)
+  print_sig {|
+    type O = {foo: number, bar: string};
+    export type T = {[key in keyof O]-?: O[key]};
+  |};
+  [%expect{|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"T"|];
         type_stars = []; strict = true;
         platform_availability_set = None}}
 
@@ -6968,10 +6994,52 @@ let%expect_test "mapped_types_invalid" =
          custom_error_loc_opt = None;
          name = "T"; tparams = Mono;
          body = (Annot (Any [2:17-43]))}
-    1. TypeAlias {id_loc = [3:12-13];
+  |}]
+
+let%expect_test "mapped_types_minus_optional" =
+  print_sig ~tslib_syntax:true {|
+    type O = {foo: number, bar: string};
+    export type T = {[key in keyof O]-?: O[key]};
+  |};
+  [%expect{|
+    CJSModule {type_exports = [|(ExportTypeBinding 1)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"T"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
+         name = "O"; tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [1:9-35];
+              obj_kind = ExactObj;
+              props =
+              { "bar" -> (ObjAnnotField ([1:23-26], (Annot (String [1:28-34])), Polarity.Neutral));
+                "foo" -> (ObjAnnotField ([1:10-13], (Annot (Number [1:15-21])), Polarity.Neutral)) };
+              computed_props = []; proto = ObjAnnotImplicitProto})}
+    1. TypeAlias {id_loc = [2:12-13];
          custom_error_loc_opt = None;
-         name = "U"; tparams = Mono;
-         body = (Annot (Any [3:16-55]))}
+         name = "T"; tparams = Mono;
+         body =
+         (Annot
+            MappedTypeAnnot {loc = [2:17-43];
+              source_type = (TyRef (Unqualified LocalRef {ref_loc = [2:31-32]; index = 0}));
+              property_type =
+              (Annot
+                 ElementType {loc = [2:37-43];
+                   obj = (TyRef (Unqualified LocalRef {ref_loc = [2:37-38]; index = 0}));
+                   elem = (Annot Bound {ref_loc = [2:39-42]; name = "key"})});
+              key_tparam =
+              TParam {name_loc = [2:18-21];
+                name = "key"; polarity = Polarity.Neutral;
+                bound = None; default = None;
+                is_const = false};
+              variance = Polarity.Neutral;
+              variance_op = None; optional = Flow_ast.Type.Object.MappedType.MinusOptional;
+              inline_keyof = true})}
   |}]
 
 let%expect_test "dirtify_defs" =

@@ -7259,9 +7259,6 @@ where
             MessageInvalidMappedTypeWithExtraProps => friendly::Message(vec![text(
                 "Mapped Types cannot be used when other properties or indexers are present.",
             )]),
-            MessageInvalidMappedTypeWithOptionalityRemoval => friendly::Message(vec![text(
-                "Mapped Types do not yet support optionality removal.",
-            )]),
             MessageInvalidMappedTypeWithVarianceOnArrayInput => friendly::Message(vec![text(
                 "Mapped Types do not yet support variance annotations on array inputs.",
             )]),
@@ -8949,6 +8946,7 @@ where
                             ReadonlyMappedTypeVarianceOp => {
                                 "`+readonly`/`-readonly` mapped type modifier"
                             }
+                            MinusOptionalMappedType => "`-?` mapped type modifier",
                             OptionalUnlabeledTupleElement => "Optional unlabeled tuple element",
                             OptionalIndexer => "Optional indexer (`?:`)",
                             NamespaceExportDeclaration => "`export as namespace`",

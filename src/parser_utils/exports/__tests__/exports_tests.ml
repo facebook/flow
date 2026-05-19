@@ -65,6 +65,7 @@ let sig_opts =
     for_builtins = false;
     locs_to_dirtify = [];
     is_ts_file = false;
+    tslib_syntax = false;
   }
 
 let print_index exports =

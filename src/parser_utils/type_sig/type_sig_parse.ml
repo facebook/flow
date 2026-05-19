@@ -3420,64 +3420,64 @@ and object_type =
     let loc = push_loc tbls loc in
     match name_type with
     | Some _ -> Annot (Any loc)
+    | None when optional = O.MappedType.MinusOptional && not opts.tslib_syntax ->
+      (* `-?` is gated on `experimental.tslib_syntax`. type_annotation.ml errors and
+         falls back to Any in this case; mirror that here so a `-?` mapped type defined
+         in an imported file does not silently produce a different result than one
+         defined locally. *)
+      Annot (Any loc)
     | None ->
       (* The source type does not have the key_tparam in scope, but we need to parse locs in syntax
        * order or we will violate type sig invariants. I keep track of old xs to make sure we don't
        * accidentally shadow a tparam in source_type *)
-      (match optional with
-      | Ast.Type.Object.MappedType.(
-          PlusOptional | Ast.Type.Object.MappedType.Optional | NoOptionalFlag) ->
-        let (key_loc, key_name) =
-          let ( _,
-                {
-                  T.TypeParam.name = (name_loc, { Ast.Identifier.name; comments = _ });
-                  bound = _;
-                  bound_kind = _;
-                  variance = _;
-                  default = _;
-                  const = _;
-                }
-              ) =
-            key_tparam
-          in
-          (push_loc tbls name_loc, name)
-        in
-
-        let (source_type, inline_keyof) =
-          match source_type with
-          | (_, Ast.Type.Keyof { Ast.Type.Keyof.argument; comments = _ }) ->
-            (annot opts scope tbls xs argument, true)
-          | t -> (annot opts scope tbls xs t, false)
-        in
-
-        let (key_tparam, xs) =
-          ( TParam
+      let (key_loc, key_name) =
+        let ( _,
               {
-                name_loc = key_loc;
-                name = key_name;
-                polarity = Polarity.Neutral;
-                bound = None;
-                default = None;
-                is_const = false;
-              },
-            SSet.add key_name xs
-          )
+                T.TypeParam.name = (name_loc, { Ast.Identifier.name; comments = _ });
+                bound = _;
+                bound_kind = _;
+                variance = _;
+                default = _;
+                const = _;
+              }
+            ) =
+          key_tparam
         in
-        let property_type = annot opts scope tbls xs prop_type in
-        Annot
-          (MappedTypeAnnot
-             {
-               loc;
-               source_type;
-               property_type;
-               key_tparam;
-               variance = polarity variance;
-               variance_op;
-               optional;
-               inline_keyof;
-             }
-          )
-      | _ -> Annot (Any loc))
+        (push_loc tbls name_loc, name)
+      in
+      let (source_type, inline_keyof) =
+        match source_type with
+        | (_, Ast.Type.Keyof { Ast.Type.Keyof.argument; comments = _ }) ->
+          (annot opts scope tbls xs argument, true)
+        | t -> (annot opts scope tbls xs t, false)
+      in
+      let (key_tparam, xs) =
+        ( TParam
+            {
+              name_loc = key_loc;
+              name = key_name;
+              polarity = Polarity.Neutral;
+              bound = None;
+              default = None;
+              is_const = false;
+            },
+          SSet.add key_name xs
+        )
+      in
+      let property_type = annot opts scope tbls xs prop_type in
+      Annot
+        (MappedTypeAnnot
+           {
+             loc;
+             source_type;
+             property_type;
+             key_tparam;
+             variance = polarity variance;
+             variance_op;
+             optional;
+             inline_keyof;
+           }
+        )
   in
 
   let dict opts scope tbls xs acc p =

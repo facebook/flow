@@ -2048,7 +2048,6 @@ let dump_error_message =
           | InterfaceOrDeclaredClass -> "InterfaceOrDeclaredClass"
           | ExtraProperties -> "ExtraProperties"
           | ExplicitExactOrInexact -> "ExplicitExactOrInexact"
-          | RemoveOptionality -> "RemoveOptionality"
           | VarianceOnArrayInput -> "VarianceOnArrayInput"
         )
     | EDuplicateComponentProp { spread; _ } ->

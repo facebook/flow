@@ -187,7 +187,13 @@ pub fn mapped_type_of_keys<'cx>(
         interface,
         reachable_targs: Rc::from([]),
     };
+    let filter_optional = |t: Type| -> Type {
+        let filter_id = crate::flow_js::filter_optional_non_speculating(cx, reason, &t)
+            .expect("filter_optional not in speculation");
+        Type::new(TypeInner::OpenT(Tvar::new(reason.dupe(), filter_id)))
+    };
     Ok(slice_utils::map_object(
+        &filter_optional,
         property_type,
         mapped_type_flags,
         cx,
@@ -918,8 +924,14 @@ pub fn run<'cx>(
             .as_ref()
             .map(|keys| partition_keys_and_indexer(cx, trace, use_op.dupe(), reason, keys))
             .transpose()?;
+        let filter_optional = |t: Type| -> Type {
+            let filter_id = crate::flow_js::filter_optional_non_speculating(cx, reason, &t)
+                .expect("filter_optional not in speculation");
+            Type::new(TypeInner::OpenT(Tvar::new(reason.dupe(), filter_id)))
+        };
         let ts = x.mapped_ref(|slice| {
             slice_utils::map_object(
+                &filter_optional,
                 prop_type,
                 mapped_type_flags,
                 cx,

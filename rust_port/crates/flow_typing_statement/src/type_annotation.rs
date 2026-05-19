@@ -3014,16 +3014,35 @@ fn convert_inner<'a>(
                     let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
                     v
                 }
-            } else if variance_op.is_some() && !cx.tslib_syntax() {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::EUnsupportedSyntax(Box::new((
-                        mapped_type_loc.dupe(),
-                        flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
-                            flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::ReadonlyMappedTypeVarianceOp,
-                        ),
-                    ))),
-                );
+            } else if (variance_op.is_some()
+                || optional
+                    == flow_parser::ast::types::object::MappedTypeOptionalFlag::MinusOptional)
+                && !cx.tslib_syntax()
+            {
+                if variance_op.is_some() {
+                    flow_js_utils::add_output_non_speculating(
+                        cx,
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
+                            mapped_type_loc.dupe(),
+                            flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                                flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::ReadonlyMappedTypeVarianceOp,
+                            ),
+                        ))),
+                    );
+                }
+                if optional
+                    == flow_parser::ast::types::object::MappedTypeOptionalFlag::MinusOptional
+                {
+                    flow_js_utils::add_output_non_speculating(
+                        cx,
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
+                            mapped_type_loc.dupe(),
+                            flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                                flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::MinusOptionalMappedType,
+                            ),
+                        ))),
+                    );
+                }
                 {
                     let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
                     v
@@ -3138,155 +3157,126 @@ fn convert_inner<'a>(
                         }
                     }
                 };
-                match mapped_type_optionality {
-                    type_::MappedTypeOptionality::MakeOptional
-                    | type_::MappedTypeOptionality::KeepOptionality => {
-                        let (tparam_ast, tparam, tparam_t) = mk_type_param_inner(
-                            cx,
-                            env,
-                            flow_parser::ast_visitor::TypeParamsContext::ObjectMappedType,
-                            key_tparam,
-                        )?;
-                        let tparam_name = tparam.name.dupe();
-                        env.tparams_map.insert(tparam_name.dupe(), tparam_t);
-                        let prop_type_ast = convert_inner(cx, env, prop_type)?;
-                        let (prop_loc, prop_type_t) = prop_type_ast.loc();
-                        let prop_loc = prop_loc.dupe();
-                        let prop_type_t = prop_type_t.dupe();
-                        let poly_prop_type = type_util::poly_type_of_tparams(
-                            cx.make_source_poly_id(false, &prop_loc),
-                            Some((key_tparam.loc.dupe(), vec1::Vec1::new(tparam))),
-                            prop_type_t,
-                        );
-                        let reason = reason::mk_reason(
-                            reason::VirtualReasonDesc::RMappedType,
-                            obj_loc.dupe(),
-                        );
-                        let use_op = type_::VirtualUseOp::Op(Arc::new(
-                            type_::VirtualRootUseOp::EvalMappedType {
-                                mapped_type: reason.dupe(),
-                            },
-                        ));
-                        let eval_t = FlowJs::mk_possibly_evaluated_destructor_for_annotations(
-                            cx,
-                            use_op,
-                            &reason,
-                            &source_type_t,
-                            &type_::Destructor::MappedType(Box::new(DestructorMappedTypeData {
-                                homomorphic,
-                                property_type: poly_prop_type.dupe(),
-                                mapped_type_flags: type_::MappedTypeFlags {
-                                    optional: mapped_type_optionality,
-                                    variance: {
-                                        use flow_parser::ast::types::object::MappedTypeVarianceOp;
-                                        match (variance, variance_op) {
-                                            (Some(v), Some(MappedTypeVarianceOp::Add))
-                                                if v.kind
-                                                    == flow_parser::ast::VarianceKind::Readonly =>
-                                            {
-                                                type_::MappedTypeVariance::OverrideVariance(
-                                                    Polarity::Positive,
-                                                )
-                                            }
-                                            (Some(v), None)
-                                                if v.kind
-                                                    == flow_parser::ast::VarianceKind::Readonly =>
-                                            {
-                                                type_::MappedTypeVariance::OverrideVariance(
-                                                    Polarity::Positive,
-                                                )
-                                            }
-                                            (Some(v), Some(MappedTypeVarianceOp::Remove))
-                                                if v.kind
-                                                    == flow_parser::ast::VarianceKind::Readonly =>
-                                            {
-                                                type_::MappedTypeVariance::RemoveVariance(
-                                                    Polarity::Positive,
-                                                )
-                                            }
-                                            (Some(v), Some(MappedTypeVarianceOp::Add))
-                                                if v.kind
-                                                    == flow_parser::ast::VarianceKind::Writeonly =>
-                                            {
-                                                type_::MappedTypeVariance::OverrideVariance(
-                                                    Polarity::Negative,
-                                                )
-                                            }
-                                            (Some(v), None)
-                                                if v.kind
-                                                    == flow_parser::ast::VarianceKind::Writeonly =>
-                                            {
-                                                type_::MappedTypeVariance::OverrideVariance(
-                                                    Polarity::Negative,
-                                                )
-                                            }
-                                            (Some(v), Some(MappedTypeVarianceOp::Remove))
-                                                if v.kind
-                                                    == flow_parser::ast::VarianceKind::Writeonly =>
-                                            {
-                                                type_::MappedTypeVariance::RemoveVariance(
-                                                    Polarity::Negative,
-                                                )
-                                            }
-                                            _ => {
-                                                let pol = polarity(
-                                                    cx,
-                                                    flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
-                                                    variance.as_ref(),
-                                                );
-                                                if pol == Polarity::Neutral {
-                                                    type_::MappedTypeVariance::KeepVariance
-                                                } else {
-                                                    type_::MappedTypeVariance::OverrideVariance(pol)
-                                                }
-                                            }
+                let (tparam_ast, tparam, tparam_t) = mk_type_param_inner(
+                    cx,
+                    env,
+                    flow_parser::ast_visitor::TypeParamsContext::ObjectMappedType,
+                    key_tparam,
+                )?;
+                let tparam_name = tparam.name.dupe();
+                env.tparams_map.insert(tparam_name.dupe(), tparam_t);
+                let prop_type_ast = convert_inner(cx, env, prop_type)?;
+                let (prop_loc, prop_type_t) = prop_type_ast.loc();
+                let prop_loc = prop_loc.dupe();
+                let prop_type_t = prop_type_t.dupe();
+                let poly_prop_type = type_util::poly_type_of_tparams(
+                    cx.make_source_poly_id(false, &prop_loc),
+                    Some((key_tparam.loc.dupe(), vec1::Vec1::new(tparam))),
+                    prop_type_t,
+                );
+                let reason =
+                    reason::mk_reason(reason::VirtualReasonDesc::RMappedType, obj_loc.dupe());
+                let use_op =
+                    type_::VirtualUseOp::Op(Arc::new(type_::VirtualRootUseOp::EvalMappedType {
+                        mapped_type: reason.dupe(),
+                    }));
+                let eval_t = FlowJs::mk_possibly_evaluated_destructor_for_annotations(
+                    cx,
+                    use_op,
+                    &reason,
+                    &source_type_t,
+                    &type_::Destructor::MappedType(Box::new(DestructorMappedTypeData {
+                        homomorphic,
+                        property_type: poly_prop_type.dupe(),
+                        mapped_type_flags: type_::MappedTypeFlags {
+                            optional: mapped_type_optionality,
+                            variance: {
+                                use flow_parser::ast::types::object::MappedTypeVarianceOp;
+                                match (variance, variance_op) {
+                                    (Some(v), Some(MappedTypeVarianceOp::Add))
+                                        if v.kind == flow_parser::ast::VarianceKind::Readonly =>
+                                    {
+                                        type_::MappedTypeVariance::OverrideVariance(
+                                            Polarity::Positive,
+                                        )
+                                    }
+                                    (Some(v), None)
+                                        if v.kind == flow_parser::ast::VarianceKind::Readonly =>
+                                    {
+                                        type_::MappedTypeVariance::OverrideVariance(
+                                            Polarity::Positive,
+                                        )
+                                    }
+                                    (Some(v), Some(MappedTypeVarianceOp::Remove))
+                                        if v.kind == flow_parser::ast::VarianceKind::Readonly =>
+                                    {
+                                        type_::MappedTypeVariance::RemoveVariance(
+                                            Polarity::Positive,
+                                        )
+                                    }
+                                    (Some(v), Some(MappedTypeVarianceOp::Add))
+                                        if v.kind == flow_parser::ast::VarianceKind::Writeonly =>
+                                    {
+                                        type_::MappedTypeVariance::OverrideVariance(
+                                            Polarity::Negative,
+                                        )
+                                    }
+                                    (Some(v), None)
+                                        if v.kind == flow_parser::ast::VarianceKind::Writeonly =>
+                                    {
+                                        type_::MappedTypeVariance::OverrideVariance(
+                                            Polarity::Negative,
+                                        )
+                                    }
+                                    (Some(v), Some(MappedTypeVarianceOp::Remove))
+                                        if v.kind == flow_parser::ast::VarianceKind::Writeonly =>
+                                    {
+                                        type_::MappedTypeVariance::RemoveVariance(
+                                            Polarity::Negative,
+                                        )
+                                    }
+                                    _ => {
+                                        let pol = polarity(
+                                            cx,
+                                            flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                                            variance.as_ref(),
+                                        );
+                                        if pol == Polarity::Neutral {
+                                            type_::MappedTypeVariance::KeepVariance
+                                        } else {
+                                            type_::MappedTypeVariance::OverrideVariance(pol)
                                         }
-                                    },
-                                },
-                                distributive_tparam_name,
-                            })),
-                            type_::eval::Id::generate_id(),
-                        )
-                        .expect("mk_type_destructor not in speculation");
-                        let prop_ast = ast::types::object::Property::MappedType(
-                            ast::types::object::MappedType {
-                                loc: mapped_type_loc.dupe(),
-                                source_type: source_ast,
-                                prop_type: prop_type_ast,
-                                key_tparam: tparam_ast,
-                                name_type: None,
-                                variance: variance.clone(),
-                                variance_op: *variance_op,
-                                optional,
-                                comments: mapped_type_comments.clone(),
+                                    }
+                                }
                             },
-                        );
-                        ast::types::Type::new(TypeInner::Object {
-                            loc: (obj_loc.dupe(), eval_t),
-                            inner: (ast::types::Object {
-                                exact,
-                                inexact,
-                                properties: vec![prop_ast].into(),
-                                comments: comments.clone(),
-                            })
-                            .into(),
-                        })
-                    }
-                    type_::MappedTypeOptionality::RemoveOptional => {
-                        flow_js_utils::add_output_non_speculating(
-                            cx,
-                            ErrorMessage::EInvalidMappedType {
-                                loc: mapped_type_loc.dupe(),
-                                kind: flow_typing_errors::error_message::InvalidMappedTypeErrorKind::RemoveOptionality,
-                            },
-                        );
-                        {
-                            let Ok(v) =
-                                polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
-                            v
-                        }
-                    }
-                }
+                        },
+                        distributive_tparam_name,
+                    })),
+                    type_::eval::Id::generate_id(),
+                )
+                .expect("mk_type_destructor not in speculation");
+                let prop_ast =
+                    ast::types::object::Property::MappedType(ast::types::object::MappedType {
+                        loc: mapped_type_loc.dupe(),
+                        source_type: source_ast,
+                        prop_type: prop_type_ast,
+                        key_tparam: tparam_ast,
+                        name_type: None,
+                        variance: variance.clone(),
+                        variance_op: *variance_op,
+                        optional,
+                        comments: mapped_type_comments.clone(),
+                    });
+                ast::types::Type::new(TypeInner::Object {
+                    loc: (obj_loc.dupe(), eval_t),
+                    inner: (ast::types::Object {
+                        exact,
+                        inexact,
+                        properties: vec![prop_ast].into(),
+                        comments: comments.clone(),
+                    })
+                    .into(),
+                })
             }
         }
         TypeInner::Object { loc, inner } => {
