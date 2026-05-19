@@ -1,0 +1,42 @@
+======Step 1: foo is untyped, resolves to @types/foo (val1: number)======
+Error ------------------------------------------------------------------------------------------------------ test.js:5:1
+
+Cannot cast `val1` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:5:1
+   5| val1 as string; // ERROR initially (@types says number), OK after foo gains own types (string)
+      ^^^^
+
+References:
+   node_modules/@types/foo/index.d.ts:1:28
+   1| export declare const val1: number;
+                                 ^^^^^^ [1]
+   test.js:5:9
+   5| val1 as string; // ERROR initially (@types says number), OK after foo gains own types (string)
+              ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+======Step 2: foo gains @flow `val1 as string`, should take priority over @types======
+Error ------------------------------------------------------------------------------------------------------ test.js:4:1
+
+Cannot cast `val1` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   test.js:4:1
+   4| val1 as number; // OK initially (@types says number), ERROR after foo gains own types (string)
+      ^^^^
+
+References:
+   node_modules/foo/index.js:2:20
+   2| export const val1: string = "hello";
+                         ^^^^^^ [1]
+   test.js:4:9
+   4| val1 as number; // OK initially (@types says number), ERROR after foo gains own types (string)
+              ^^^^^^ [2]
+
+
+
+Found 1 error

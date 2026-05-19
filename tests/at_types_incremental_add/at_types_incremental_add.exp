@@ -1,0 +1,28 @@
+======Step 1: foo untyped, no @types/foo => val1 is any, no errors======
+No errors!
+
+
+======Step 2: add @types/foo => @types resolution wins, val1 is number======
+Error ------------------------------------------------------------------------------------------------------ test.js:4:1
+
+Cannot cast `val1` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:4:1
+   4| val1 as string; // OK initially (foo is untyped, no @types/foo, val1 is any)
+      ^^^^
+
+References:
+   node_modules/@types/foo/index.d.ts:1:28
+   1| export declare const val1: number;
+                                 ^^^^^^ [1]
+   test.js:4:9
+   4| val1 as string; // OK initially (foo is untyped, no @types/foo, val1 is any)
+              ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+======Step 3: remove @types/foo => fall back to untyped foo, no errors======
+No errors!

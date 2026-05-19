@@ -907,6 +907,136 @@ mod node {
         None
     }
 
+    // Maps a package name to its @types equivalent name (no subpath):
+    //    "foo" -> "@types/foo"
+    //    "@scope/foo" -> "@types/scope__foo"
+    fn at_types_package_name(package_name: &str) -> String {
+        let parts: Vec<&str> = package_name.split('/').collect();
+        match parts.as_slice() {
+            [scope, name] if scope.len() > 1 && scope.starts_with('@') => {
+                format!("@types/{}__{}", &scope[1..], name)
+            }
+            _ => format!("@types/{}", package_name),
+        }
+    }
+
+    // Packages whose types must come from Flow's own lib definitions (e.g.
+    // lib/react.js), not from @types. Flow's JSX support implicitly imports
+    // from the "react" builtin module, so @types/react must never shadow it.
+    const AT_TYPES_EXCLUDED_PACKAGES: &[&str] = &["react"];
+
+    fn resolve_at_types(
+        options: &Options,
+        shared_mem: &SharedMem,
+        node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
+        phantom_acc: Option<&mut PhantomAcc>,
+        importing_file: &FileKey,
+        possible_node_module_container_dir: &str,
+        import_specifier: &str,
+    ) -> Option<Dependency> {
+        if options.typescript_library_definition_support {
+            let (package_name, package_subpath) = parse_package_name(import_specifier);
+            if package_name.is_empty()
+                || AT_TYPES_EXCLUDED_PACKAGES.contains(&package_name.as_str())
+                // Don't rewrite an explicit @types/* import: e.g. `import '@types/foo'`
+                // must not fall through to `@types/types__foo`.
+                || package_name.starts_with("@types/")
+            {
+                None
+            } else {
+                let at_types_import = format!(
+                    "{}{}",
+                    at_types_package_name(&package_name),
+                    package_subpath
+                        .strip_prefix('.')
+                        .unwrap_or(&package_subpath)
+                );
+                node_module(
+                    options,
+                    shared_mem,
+                    node_modules_containers,
+                    phantom_acc,
+                    importing_file,
+                    possible_node_module_container_dir,
+                    &at_types_import,
+                )
+            }
+        } else {
+            None
+        }
+    }
+
+    // Resolve via node_modules, falling back to @types when the resolved provider
+    // is untyped. This handles the common case where a package ships JS without
+    // type declarations and a separate @types package provides them.
+    pub(super) fn node_module_or_at_types(
+        options: &Options,
+        shared_mem: &SharedMem,
+        node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
+        mut phantom_acc: Option<&mut PhantomAcc>,
+        importing_file: &FileKey,
+        possible_node_module_container_dir: &str,
+        import_specifier: &str,
+    ) -> Option<Dependency> {
+        let result = node_module(
+            options,
+            shared_mem,
+            node_modules_containers,
+            phantom_acc.as_deref_mut(),
+            importing_file,
+            possible_node_module_container_dir,
+            import_specifier,
+        );
+        if !options.typescript_library_definition_support {
+            result
+        } else {
+            let try_at_types = |phantom_acc: Option<&mut PhantomAcc>| {
+                resolve_at_types(
+                    options,
+                    shared_mem,
+                    node_modules_containers,
+                    phantom_acc,
+                    importing_file,
+                    possible_node_module_container_dir,
+                    import_specifier,
+                )
+            };
+            match result {
+                None => {
+                    // No phantom dep needed here: the underlying [node_module] call already
+                    // populated [phantom_acc] with the paths it tried, so re-resolution will
+                    // trigger when any of those files appear.
+                    try_at_types(phantom_acc)
+                }
+                Some(dep) => {
+                    let is_typed = match shared_mem.get_provider(&dep) {
+                        Some(file_addr) => shared_mem.is_typed_file(&file_addr),
+                        None => false,
+                    };
+                    if is_typed {
+                        Some(dep)
+                    } else {
+                        match try_at_types(phantom_acc.as_deref_mut()) {
+                            Some(at_types_result) => {
+                                // Record the original (untyped) dep as a phantom so re-resolution
+                                // fires when its typed status changes (commit_modules treats
+                                // untyped<->typed transitions as "changed modules"), allowing the
+                                // package's own types to override @types.
+                                record_phantom_dependency(
+                                    dep.to_modulename(),
+                                    Some(dep),
+                                    phantom_acc,
+                                );
+                                Some(at_types_result)
+                            }
+                            None => Some(dep),
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     pub(super) fn resolve_root_relative(
         options: &Options,
         shared_mem: &SharedMem,
@@ -990,7 +1120,7 @@ mod node {
                 )
             })
             .or_else(|| {
-                node_module(
+                node_module_or_at_types(
                     options,
                     shared_mem,
                     node_modules_containers,
@@ -1401,7 +1531,7 @@ mod haste {
                 )
             })
             .or_else(|| {
-                super::node::node_module(
+                super::node::node_module_or_at_types(
                     options,
                     shared_mem,
                     node_modules_containers,
@@ -1447,7 +1577,7 @@ mod haste {
                     )
                 })
                 .or_else(|| {
-                    super::node::node_module(
+                    super::node::node_module_or_at_types(
                         options,
                         shared_mem,
                         node_modules_containers,
@@ -1500,7 +1630,7 @@ mod haste {
                         )
                     })
                     .or_else(|| {
-                        super::node::node_module(
+                        super::node::node_module_or_at_types(
                             options,
                             shared_mem,
                             node_modules_containers,

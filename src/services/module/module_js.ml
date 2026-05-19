@@ -559,6 +559,114 @@ module Node = struct
        )
     |> lazy_seq
 
+  (* Maps a package name to its @types equivalent name (no subpath):
+     "foo" -> "@types/foo"
+     "@scope/foo" -> "@types/scope__foo" *)
+  let at_types_package_name package_name =
+    match String.split_on_char '/' package_name with
+    | [scope; name] when String.length scope > 1 && scope.[0] = '@' ->
+      "@types/" ^ String.sub scope 1 (String.length scope - 1) ^ "__" ^ name
+    | _ -> "@types/" ^ package_name
+
+  (* Packages whose types must come from Flow's own lib definitions (e.g.
+     lib/react.js), not from @types. Flow's JSX support implicitly imports
+     from the "react" builtin module, so @types/react must never shadow it. *)
+  let at_types_excluded_packages = SSet.of_list ["react"]
+
+  let resolve_at_types
+      ~options
+      ~reader
+      ~node_modules_containers
+      ~phantom_acc
+      ~importing_file
+      ~possible_node_module_container_dir
+      ~import_specifier =
+    if Options.typescript_library_definition_support options then
+      let (package_name, package_subpath) = parse_package_name import_specifier in
+      if
+        package_name = ""
+        || SSet.mem package_name at_types_excluded_packages
+        (* Don't rewrite an explicit @types/* import: e.g. `import '@types/foo'`
+           must not fall through to `@types/types__foo`. *)
+        || Base.String.is_prefix package_name ~prefix:"@types/"
+      then
+        None
+      else
+        let at_types_import =
+          at_types_package_name package_name
+          ^ Base.String.chop_prefix_if_exists ~prefix:"." package_subpath
+        in
+        node_module
+          ~options
+          ~reader
+          ~node_modules_containers
+          ~phantom_acc
+          ~importing_file
+          ~possible_node_module_container_dir
+          ~import_specifier:at_types_import
+    else
+      None
+
+  (* Resolve via node_modules, falling back to @types when the resolved provider
+     is untyped. This handles the common case where a package ships JS without
+     type declarations and a separate @types package provides them. *)
+  let node_module_or_at_types
+      ~options
+      ~reader
+      ~node_modules_containers
+      ~phantom_acc
+      ~importing_file
+      ~possible_node_module_container_dir
+      ~import_specifier =
+    let result =
+      node_module
+        ~options
+        ~reader
+        ~node_modules_containers
+        ~phantom_acc
+        ~importing_file
+        ~possible_node_module_container_dir
+        ~import_specifier
+    in
+    if not (Options.typescript_library_definition_support options) then
+      result
+    else
+      let try_at_types () =
+        resolve_at_types
+          ~options
+          ~reader
+          ~node_modules_containers
+          ~phantom_acc
+          ~importing_file
+          ~possible_node_module_container_dir
+          ~import_specifier
+      in
+      match result with
+      | None ->
+        (* No phantom dep needed here: the underlying [node_module] call already
+           populated [phantom_acc] with the paths it tried, so re-resolution will
+           trigger when any of those files appear. *)
+        try_at_types ()
+      | Some dep ->
+        let is_typed =
+          match Parsing_heaps.Reader_dispatcher.get_provider ~reader dep with
+          | Some file_addr -> Parsing_heaps.Reader_dispatcher.is_typed_file ~reader file_addr
+          | None -> false
+        in
+        if is_typed then
+          result
+        else (
+          match try_at_types () with
+          | Some _ as at_types_result ->
+            (* Record the original (untyped) dep as a phantom so re-resolution
+               fires when its typed status changes (commit_modules treats
+               untyped<->typed transitions as "changed modules"), allowing the
+               package's own types to override @types. *)
+            record_phantom_dependency (Parsing_heaps.read_dependency dep) (Some dep) phantom_acc;
+            at_types_result
+          | None -> result
+        )
+
   (* The flowconfig option `module.system.node.allow_root_relative` tells Flow
    * to resolve requires like `require('foo/bar.js')` relative to the project
    * root directory. This is something bundlers like Webpack can be configured
@@ -618,7 +726,7 @@ module Node = struct
             (resolve_root_relative ~options ~reader ~phantom_acc ~importing_file ~import_specifier);
           lazy (flow_typed_module ~options ~reader ~phantom_acc ~importing_file ~import_specifier);
           lazy
-            (node_module
+            (node_module_or_at_types
                ~options
                ~reader
                ~node_modules_containers
@@ -881,7 +989,7 @@ module Haste : MODULE_SYSTEM = struct
                  ~import_specifier
               );
             lazy
-              (Node.node_module
+              (Node.node_module_or_at_types
                  ~options
                  ~reader
                  ~node_modules_containers
@@ -929,7 +1037,7 @@ module Haste : MODULE_SYSTEM = struct
                    ~import_specifier
                 );
               lazy
-                (Node.node_module
+                (Node.node_module_or_at_types
                    ~options
                    ~reader
                    ~node_modules_containers
@@ -981,7 +1089,7 @@ module Haste : MODULE_SYSTEM = struct
                      ~import_specifier
                   );
                 lazy
-                  (Node.node_module
+                  (Node.node_module_or_at_types
                      ~options
                      ~reader
                      ~node_modules_containers
