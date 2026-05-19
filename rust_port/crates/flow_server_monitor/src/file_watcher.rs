@@ -928,13 +928,18 @@ pub mod edenfs_file_watcher {
                 Err(flow_edenfs_watcher::EdenfsWatcherError::LostChanges(msg)) => {
                     flow_hh_logger::error!("EdenFS watcher lost changes: {}", msg);
                     flow_event_logger::edenfs_watcher_lost_changes(&msg, &msg);
+                    // Query the VCS for the current mergebase so the rechecker can trigger
+                    // reinit if it changed during the lost window. Without this, the
+                    // rechecker defaults [None] to [false] and skips reinit, leaving Flow
+                    // with a stale snapshot of committed code.
+                    let changed_mergebase = check_mergebase(env).await;
                     {
                         let mut shared = env.shared.lock().unwrap();
                         shared.metadata =
                             flow_monitor_rpc::monitor_prot::merge_file_watcher_metadata(
                                 &shared.metadata,
                                 &FileWatcherMetadata {
-                                    changed_mergebase: None,
+                                    changed_mergebase,
                                     missed_changes: true,
                                 },
                             );

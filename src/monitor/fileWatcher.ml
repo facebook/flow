@@ -740,10 +740,15 @@ end = struct
       | Error (Edenfs_watcher_types.LostChanges msg) ->
         Logger.error "EdenFS watcher lost changes: %s" msg;
         FlowEventLogger.edenfs_watcher_lost_changes ~msg ~backtrace:msg;
+        (* Query the VCS for the current mergebase so the rechecker can trigger
+           reinit if it changed during the lost window. Without this, the
+           rechecker defaults [None] to [false] and skips reinit, leaving Flow
+           with a stale snapshot of committed code. *)
+        let%lwt changed_mergebase = check_mergebase env in
         env.metadata <-
           MonitorProt.merge_file_watcher_metadata
             env.metadata
-            { MonitorProt.changed_mergebase = None; missed_changes = true };
+            { MonitorProt.changed_mergebase; missed_changes = true };
         broadcast env;
         Lwt.return env
       | Error _ when Edenfs_watcher.is_instance_destroyed () ->
