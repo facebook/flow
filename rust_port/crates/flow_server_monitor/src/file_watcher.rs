@@ -827,12 +827,25 @@ pub mod edenfs_file_watcher {
             true
         }
 
+        // [hg.transaction] is in [edenfs_defer_states] for correctness (we defer
+        // file notifications during it), but Watchman's [Defer_changes] mode
+        // coalesces it into [hg.update] and never surfaces it as a separate state
+        // event. Skip the scuba log on EdenFS to keep [FILE_WATCHER_EVENT_*]
+        // volume comparable to Watchman.
+        fn should_log_state_to_scuba(name: &str) -> bool {
+            name != "hg.transaction"
+        }
+
         pub fn log_state_enter(name: &str) {
-            flow_event_logger::file_watcher_event_started(name, "");
+            if should_log_state_to_scuba(name) {
+                flow_event_logger::file_watcher_event_started(name, "");
+            }
         }
 
         pub fn log_state_leave(name: &str) {
-            flow_event_logger::file_watcher_event_finished(name, "");
+            if should_log_state_to_scuba(name) {
+                flow_event_logger::file_watcher_event_finished(name, "");
+            }
         }
 
         pub fn broadcast(env: &Env) {

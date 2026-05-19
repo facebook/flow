@@ -692,9 +692,20 @@ end = struct
 
     let should_pause = ref true
 
-    let log_state_enter name = FlowEventLogger.file_watcher_event_started ~name ~data:""
+    (* [hg.transaction] is in [edenfs_defer_states] for correctness (we defer
+       file notifications during it), but Watchman's [Defer_changes] mode
+       coalesces it into [hg.update] and never surfaces it as a separate state
+       event. Skip the scuba log on EdenFS to keep [FILE_WATCHER_EVENT_*]
+       volume comparable to Watchman. *)
+    let should_log_state_to_scuba name = not (String.equal name "hg.transaction")
 
-    let log_state_leave name = FlowEventLogger.file_watcher_event_finished ~name ~data:""
+    let log_state_enter name =
+      if should_log_state_to_scuba name then
+        FlowEventLogger.file_watcher_event_started ~name ~data:""
+
+    let log_state_leave name =
+      if should_log_state_to_scuba name then
+        FlowEventLogger.file_watcher_event_finished ~name ~data:""
 
     let broadcast env =
       if (not (SSet.is_empty env.files)) || env.metadata.MonitorProt.missed_changes then
