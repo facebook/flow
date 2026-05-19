@@ -10,3 +10,5 @@ This post announced Flow Enums when it was introduced. For current syntax and be
 :::
 
 Flow Enums are an opt-in feature which allow you to define a fixed set of constants which create their own type.
+
+<!--truncate-->

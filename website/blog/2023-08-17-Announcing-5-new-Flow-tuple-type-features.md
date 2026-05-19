@@ -10,3 +10,5 @@ This post announced new tuple type features when it was introduced. For current 
 :::
 
 Labeled tuple elements, read-only tuples, optional tuple elements, tuple spread, and more.
+
+<!--truncate-->

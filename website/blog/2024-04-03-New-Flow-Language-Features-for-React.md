@@ -10,3 +10,5 @@ This post announced component and hook syntax for React when it was introduced. 
 :::
 
 Flow is excited to announce Component Syntax, adding first-class support for React primitives such as components and hooks to the Flow language. These features bring improved ergonomics, expressiveness, and static enforcement for many of the Rules of React.
+
+<!--truncate-->

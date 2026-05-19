@@ -10,3 +10,5 @@ This post announced indexed access types when it was introduced. For current syn
 :::
 
 Flow’s Indexed Access Types are a new type annotation syntax that allows you to get the type of a property from an object, array, or tuple type.
+
+<!--truncate-->

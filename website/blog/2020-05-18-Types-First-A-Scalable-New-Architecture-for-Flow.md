@@ -10,3 +10,5 @@ This post announced the Types-First architecture when it was introduced. Syntax 
 :::
 
 Flow Types-First mode is out! It unlocks Flow’s potential at scale by leveraging fully typed module boundaries. Read more in our latest blog post.
+
+<!--truncate-->

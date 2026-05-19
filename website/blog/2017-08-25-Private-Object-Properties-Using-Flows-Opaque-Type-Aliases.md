@@ -15,3 +15,5 @@ from users of your classes. However, locking yourself in to an OOP style of
 programming is not always ideal if you prefer a more functional style. Let’s
 talk about how you can use Flow’s [opaque type aliases](https://flow.org/en/docs/types/opaque-types/) to get private properties
  on any object type.
+
+<!--truncate-->

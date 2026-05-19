@@ -10,3 +10,5 @@ This post announced the constrained writes rule when it was introduced. For curr
 :::
 
 Flow is releasing a new language rule that determines the type of an unannotated variable at its initialization. Along with these new rules come several fixes to soundness bugs that were causing refinements to not be invalidated.
+
+<!--truncate-->

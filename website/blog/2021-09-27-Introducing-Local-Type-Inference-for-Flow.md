@@ -10,3 +10,5 @@ This post announced local type inference when it was introduced. For current syn
 :::
 
 We're replacing Flow’s current inference engine with a system that behaves more predictably and can be reasoned about more locally.
+
+<!--truncate-->

@@ -10,3 +10,5 @@ This post announced increased annotation requirements for functions and classes 
 :::
 
 Flow will now require more annotations to functions and classes.
+
+<!--truncate-->

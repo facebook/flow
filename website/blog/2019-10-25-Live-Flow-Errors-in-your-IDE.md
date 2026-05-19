@@ -10,3 +10,5 @@ This post announced live Flow errors in IDEs when it was introduced. For current
 :::
 
 Live errors while you type makes Flow feel faster in your IDE!
+
+<!--truncate-->

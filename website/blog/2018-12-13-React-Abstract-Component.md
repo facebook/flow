@@ -11,3 +11,5 @@ This post announced React.AbstractComponent when it was introduced. For current 
 
 We made some major changes to our React model to better model new React components. Let's
 talk about React.AbstractComponent!
+
+<!--truncate-->

@@ -10,3 +10,5 @@ This post announced changes to object spreads when it was introduced. For curren
 :::
 
 Changes are coming to how Flow models object spreads! Learn more in this post.
+
+<!--truncate-->

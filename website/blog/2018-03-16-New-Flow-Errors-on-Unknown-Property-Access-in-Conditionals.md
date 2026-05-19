@@ -11,3 +11,5 @@ This post announced errors on unknown property access in conditionals when it wa
 
 TL;DR: Starting in 0.68.0, Flow will now error when you access unknown
 properties in conditionals.
+
+<!--truncate-->

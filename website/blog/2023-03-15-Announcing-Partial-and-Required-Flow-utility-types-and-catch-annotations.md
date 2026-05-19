@@ -11,3 +11,5 @@ This post announced Partial, Required, and catch annotations when it was introdu
 
 Starting in Flow version 0.201, make an object type’s fields all optional using `Partial<ObjType>` (use instead of the unsafe `$Shape`),
 and make an object type’s optional fields required with `Required<ObjType>`.
+
+<!--truncate-->

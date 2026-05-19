@@ -10,3 +10,5 @@ This post described Flow's direction and open source engagement at the time of w
 :::
 
 An update on Flow's direction and open source engagement.
+
+<!--truncate-->

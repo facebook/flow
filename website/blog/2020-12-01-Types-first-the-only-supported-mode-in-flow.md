@@ -10,3 +10,5 @@ This post announced Types-First becoming the only supported mode when it was int
 :::
 
 Types-First will become the only mode in Flow in v0.143 (mid Jan 2021).
+
+<!--truncate-->

@@ -10,3 +10,5 @@ This post announced sound typing for `this` when it was introduced. For current 
 :::
 
 Improvements in soundness for `this`-typing in Flow, including the ability to annotate `this` on functions and methods.
+
+<!--truncate-->

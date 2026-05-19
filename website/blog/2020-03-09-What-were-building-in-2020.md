@@ -10,3 +10,5 @@ This post described the Flow team's plans for 2020 at the time of writing and ma
 :::
 
 Learn about how Flow will improve in 2020. 
+
+<!--truncate-->

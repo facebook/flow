@@ -10,3 +10,5 @@ This post announced conditional types when it was introduced. For current syntax
 :::
 
 Conditional types allow you to choose between two different output types by inspecting an input type.
+
+<!--truncate-->

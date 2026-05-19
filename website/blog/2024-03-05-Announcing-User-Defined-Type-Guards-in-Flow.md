@@ -10,3 +10,5 @@ This post announced user-defined type guards when it was introduced. For current
 :::
 
 Flow now lets you define a function that encodes a type predicate over its parameter.
+
+<!--truncate-->

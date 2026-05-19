@@ -10,3 +10,5 @@ This post announced improved handling of generic types when it was introduced. F
 :::
 
 Flow has improved its handling of generic types by banning unsafe behaviors previously allowed and clarifying error messages.
+
+<!--truncate-->

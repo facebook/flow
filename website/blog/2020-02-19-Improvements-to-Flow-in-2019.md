@@ -10,3 +10,5 @@ This post described improvements to Flow in 2019 at the time of writing and may 
 :::
 
 Take a look back at improvements we made to Flow in 2019.
+
+<!--truncate-->

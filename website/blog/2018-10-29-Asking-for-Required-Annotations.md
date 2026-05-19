@@ -11,3 +11,5 @@ This post announced required annotations when it was introduced. For current syn
 
 Flow will be asking for more annotations starting in 0.85.0. Learn how
 to deal with these errors in our latest blog post.
+
+<!--truncate-->

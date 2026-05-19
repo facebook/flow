@@ -10,3 +10,5 @@ This post announced TypeScript Enums vs. Flow Enums when it was introduced. For 
 :::
 
 A comparison of the enums features of TypeScript and Flow.
+
+<!--truncate-->

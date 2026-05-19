@@ -10,3 +10,5 @@ This post announced improved handling of the empty object when it was introduced
 :::
 
 Flow handled the empty object literal {} in a permissive but unsafe way. The fix described in this post increases safety and predictability, but requires using different patterns and behavior.
+
+<!--truncate-->

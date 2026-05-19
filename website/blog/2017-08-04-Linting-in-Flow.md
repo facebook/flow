@@ -10,3 +10,5 @@ This post announced Flow's linter when it was introduced. For current syntax and
 :::
 
 Flow’s type information is useful for so much more than just proving your programs are correct. Introducing Flow linter.
+
+<!--truncate-->

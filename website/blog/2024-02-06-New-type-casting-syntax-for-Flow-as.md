@@ -10,3 +10,5 @@ This post announced the `as` type casting syntax when it was introduced. For cur
 :::
 
 To make it easier for new users to get started with Flow, we’re updating our type casting syntax to use 'as'.
+
+<!--truncate-->

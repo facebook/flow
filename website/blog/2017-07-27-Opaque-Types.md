@@ -11,3 +11,5 @@ This post announced opaque type aliases when it was introduced. For current synt
 
 Do you ever wish that you could hide your implementation details away
 from your users? Find out how opaque type aliases can get the job done!
+
+<!--truncate-->

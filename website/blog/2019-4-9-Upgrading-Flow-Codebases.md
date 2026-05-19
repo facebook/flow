@@ -10,3 +10,5 @@ This post described upgrading Flow codebases at the time of writing. The migrati
 :::
 
 Having trouble upgrading from 0.84.0? Read about how the Flow team upgrades Flow at Facebook!
+
+<!--truncate-->

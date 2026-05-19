@@ -10,3 +10,5 @@ This post announced exact object types becoming the default when it was introduc
 :::
 
 We announced 5 years ago a plan to eventually make exact object types the default. We are now proceeding with this plan.
+
+<!--truncate-->

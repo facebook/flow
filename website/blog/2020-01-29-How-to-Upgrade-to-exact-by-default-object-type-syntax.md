@@ -10,3 +10,5 @@ This post described upgrading to exact-by-default object type syntax at the time
 :::
 
 Object types will become exact-by-default. Read this post to learn how to get your code ready!
+
+<!--truncate-->

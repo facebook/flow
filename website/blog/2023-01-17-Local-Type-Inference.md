@@ -10,3 +10,5 @@ This post announced local type inference when it was introduced. For current syn
 :::
 
 Local Type Inference makes Flow’s inference behavior more reliable and predictable, by modestly increasing Flow’s annotation requirement, bringing it closer to industry standard and capitalizing on increasingly strongly and explicitly typed codebases.
+
+<!--truncate-->

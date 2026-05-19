@@ -12,3 +12,5 @@ This post announced React support in Flow when it was introduced. For current sy
 The first version of Flow support for React was a magical implementation of
 `React.createClass()`. Since then, React has evolved significantly. It is time
 to rethink how Flow models React.
+
+<!--truncate-->

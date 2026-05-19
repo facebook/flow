@@ -10,3 +10,5 @@ This post described the Flow team's work in 2018 at the time of writing and may 
 :::
 
 Take a look at what the Flow was up to in 2018.
+
+<!--truncate-->
