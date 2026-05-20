@@ -53,6 +53,7 @@ use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::MapTypeTData;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NamedSymbol;
+use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::SetElemTData;
 use flow_typing_type::type_::SpecializeTData;
@@ -101,6 +102,51 @@ pub fn uses_of<'cx>(
                 cx.force_fully_resolved_tvar(s),
             ))]
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PolymorphicClassKind {
+    Poly,
+    Mono,
+    Other,
+}
+
+pub fn polymorphic_class_kind<'cx>(cx: &Context<'cx>, t: &Type) -> PolymorphicClassKind {
+    fn resolve<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
+        match t.deref() {
+            TypeInner::OpenT(open_t) => match cx.find_graph(open_t.id() as i32) {
+                Constraints::Resolved(t) => resolve(cx, &t),
+                Constraints::FullyResolved(s) => {
+                    let forced = cx.force_fully_resolved_tvar(&s);
+                    resolve(cx, &forced)
+                }
+                Constraints::Unresolved(_) => t.dupe(),
+            },
+            TypeInner::AnnotT(_, inner_t, _) => resolve(cx, inner_t),
+            _ => t.dupe(),
+        }
+    }
+
+    match resolve(cx, t).deref() {
+        TypeInner::DefT(_, def_t) => match def_t.deref() {
+            DefTInner::PolyT(box PolyTData { t_out, .. }) => match t_out.deref() {
+                TypeInner::DefT(_, inner_def_t) => match inner_def_t.deref() {
+                    DefTInner::ClassT(inst)
+                        if matches!(inst.deref(), TypeInner::ThisInstanceT(_)) =>
+                    {
+                        PolymorphicClassKind::Poly
+                    }
+                    _ => PolymorphicClassKind::Other,
+                },
+                _ => PolymorphicClassKind::Other,
+            },
+            DefTInner::ClassT(inst) if matches!(inst.deref(), TypeInner::ThisInstanceT(_)) => {
+                PolymorphicClassKind::Mono
+            }
+            _ => PolymorphicClassKind::Other,
+        },
+        _ => PolymorphicClassKind::Other,
     }
 }
 
@@ -272,6 +318,7 @@ pub mod invalid_cyclic_type_validation {
         fn type_<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, t: &Type) -> Acc {
             match t.deref() {
                 TypeInner::TypeAppT(..) | TypeInner::ThisTypeAppT(..) => acc,
+                TypeInner::ThisInstanceT(..) => acc,
                 TypeInner::EvalT { id, .. } => {
                     let evaluated = cx.evaluated();
                     match evaluated.get(id) {
@@ -318,7 +365,6 @@ pub mod invalid_cyclic_type_validation {
                 | TypeInner::FunProtoBindT(_)
                 | TypeInner::StrUtilT { .. }
                 | TypeInner::OpenT(_)
-                | TypeInner::ThisInstanceT(..)
                 | TypeInner::IntersectionT(_, _)
                 | TypeInner::UnionT(_, _)
                 | TypeInner::MaybeT(_, _)
@@ -3008,6 +3054,7 @@ pub mod import_type_t_kit {
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::InstanceKind;
     use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::ThisInstanceTData;
     use flow_typing_type::type_::Type;
@@ -3042,10 +3089,15 @@ pub mod import_type_t_kit {
                             *is_this,
                             this_name.dupe(),
                         );
-                        Some(Type::new(TypeInner::DefT(
-                            reason,
-                            DefT::new(DefTInner::ClassT(fixed)),
-                        )))
+                        let inner = match &i.inst.inst_kind {
+                            InstanceKind::InterfaceKind { .. } => {
+                                DefTInner::TypeT(TypeTKind::ImportClassKind, fixed)
+                            }
+                            InstanceKind::ClassKind | InstanceKind::RecordKind { .. } => {
+                                DefTInner::ClassT(fixed)
+                            }
+                        };
+                        Some(Type::new(TypeInner::DefT(reason, DefT::new(inner))))
                     }
                     _ => Some(Type::new(TypeInner::DefT(
                         reason,
@@ -3063,15 +3115,31 @@ pub mod import_type_t_kit {
                 }) => match t_out.deref() {
                     TypeInner::DefT(_, inner_def) => match inner_def.deref() {
                         DefTInner::ClassT(inst) => match inst.deref() {
-                            TypeInner::ThisInstanceT(..) => {
+                            TypeInner::ThisInstanceT(box ThisInstanceTData {
+                                instance: i, ..
+                            }) => {
                                 let (_, targs) = mk_tparams(cx, typeparams);
                                 let tapp = type_util::implicit_typeapp(t.dupe(), targs, None);
                                 let new_id = flow_typing_type::type_::poly::Id::generate_id();
+                                let inner = match &i.inst.inst_kind {
+                                    InstanceKind::InterfaceKind { .. } => {
+                                        Type::new(TypeInner::DefT(
+                                            reason,
+                                            DefT::new(DefTInner::TypeT(
+                                                TypeTKind::ImportClassKind,
+                                                tapp,
+                                            )),
+                                        ))
+                                    }
+                                    InstanceKind::ClassKind | InstanceKind::RecordKind { .. } => {
+                                        type_util::class_type(tapp, false, None)
+                                    }
+                                };
                                 Some(type_util::poly_type_of_tparam_list(
                                     new_id,
                                     tparams_loc.dupe(),
                                     typeparams.dupe(),
-                                    type_util::class_type(tapp, false, None),
+                                    inner,
                                 ))
                             }
                             _ => {
@@ -3486,11 +3554,24 @@ pub mod import_module_ns_t_kit {
         let value_exports_tmap = cx.find_exports(exports.value_exports_tmap);
         let type_exports_tmap = cx.find_exports(exports.type_exports_tmap);
 
+        // Prefer [type_for_extends] (the raw, un-canonicalized exporter-side
+        // type) when present, so polymorphic [this] survives the trip through
+        // a namespace synthesized for [import * as NS from ...]. Downstream
+        // [extends NS.X] / [implements NS.X] consumers go through
+        // [Annot_GetTypeFromNamespaceT] which reads [types_tmap] first and
+        // falls back to [GetPropT] on the values object — both paths need the
+        // raw form to detect the [Poly?{ClassT (ThisInstanceT _)}] shape and
+        // rebind [this]. When [type_for_extends] is [None] (the common case)
+        // we keep [type_] unchanged, matching the prior behavior.
         let named_symbol_to_field = |ns: &NamedSymbol| -> Property {
+            let type_ = ns
+                .type_for_extends
+                .clone()
+                .unwrap_or_else(|| ns.type_.dupe());
             Property::new(PropertyInner::Field(Box::new(FieldData {
                 preferred_def_locs: ns.preferred_def_locs.clone(),
                 key_loc: ns.name_loc.dupe(),
-                type_: ns.type_.dupe(),
+                type_,
                 polarity: Polarity::Positive,
             })))
         };
@@ -3682,6 +3763,67 @@ pub mod import_default_t_kit {
             ImportKind::ImportValue => Ok((loc_opt, export_t)),
         }
     }
+
+    pub fn on_module_t_for_extends<'cx>(
+        cx: &Context<'cx>,
+        reason: Reason,
+        _import_kind: ImportKind,
+        local_name: &str,
+        module_name: Userland,
+        is_strict: bool,
+        module_: &ModuleType,
+    ) -> Result<(Option<ALoc>, Type), FlowJsException> {
+        let ModuleTypeInner {
+            module_reason,
+            module_export_types: exports,
+            module_is_strict: imported_is_strict,
+            module_available_platforms: _ignored_todo,
+        } = &**module_;
+        check_nonstrict_import(cx, is_strict, *imported_is_strict, &reason)?;
+
+        match &exports.cjs_export {
+            Some((def_loc_opt, t)) => {
+                let def_loc = Some(match def_loc_opt {
+                    None => type_util::def_loc_of_t(t).dupe(),
+                    Some(l) => l.dupe(),
+                });
+                Ok((def_loc, t.dupe()))
+            }
+            None => {
+                let exports_tmap = cx.find_exports(exports.value_exports_tmap);
+                match exports_tmap.get(&Name::new("default")) {
+                    Some(ns) => {
+                        let t = ns
+                            .type_for_extends
+                            .as_ref()
+                            .map(|t| t.dupe())
+                            .unwrap_or_else(|| ns.type_.dupe());
+                        Ok((ns.name_loc.dupe(), t))
+                    }
+                    None => {
+                        let known_exports: Vec<&FlowSmolStr> =
+                            exports_tmap.keys().map(|n| n.as_smol_str()).collect();
+                        let suggestion = typo_suggestion(&known_exports, local_name);
+                        add_output(
+                            cx,
+                            ErrorMessage::ENoDefaultExport(Box::new((
+                                reason.dupe(),
+                                module_name,
+                                suggestion,
+                            ))),
+                        )?;
+                        Ok((
+                            None,
+                            Type::new(TypeInner::AnyT(
+                                module_reason.dupe(),
+                                AnySource::AnyError(None),
+                            )),
+                        ))
+                    }
+                }
+            }
+        }
+    }
 }
 
 pub mod import_named_t_kit {
@@ -3747,7 +3889,7 @@ pub mod import_named_t_kit {
             });
             value_exports_tmap.insert(
                 Name::new("default"),
-                NamedSymbol::new(name_loc, None, type_.dupe()),
+                NamedSymbol::new(name_loc, None, type_.dupe(), None),
             );
         }
         let type_exports_tmap = cx.find_exports(exports.type_exports_tmap);
@@ -3921,6 +4063,84 @@ pub mod import_named_t_kit {
                     Type::new(TypeInner::AnyT(reason, AnySource::AnyError(None))),
                 ))
             }
+        }
+    }
+
+    pub fn on_module_t_for_extends<'cx>(
+        cx: &Context<'cx>,
+        reason: Reason,
+        import_kind: ImportKind,
+        export_name: &FlowSmolStr,
+        _module_name: Userland,
+        is_strict: bool,
+        module_: &ModuleType,
+    ) -> Result<(Option<ALoc>, Type), FlowJsException> {
+        let ModuleTypeInner {
+            module_reason: _,
+            module_export_types: exports,
+            module_is_strict: imported_is_strict,
+            module_available_platforms: _ignored_todo,
+        } = &**module_;
+
+        check_nonstrict_import(cx, is_strict, *imported_is_strict, &reason)?;
+
+        let mut value_exports_tmap = cx.find_exports(exports.value_exports_tmap);
+        if let Some((def_loc_opt, type_)) = &exports.cjs_export {
+            let name_loc = Some(match def_loc_opt {
+                None => type_util::def_loc_of_t(type_).dupe(),
+                Some(l) => l.dupe(),
+            });
+            value_exports_tmap.insert(
+                Name::new("default"),
+                NamedSymbol::new(name_loc, None, type_.dupe(), None),
+            );
+        }
+        let type_exports_tmap = cx.find_exports(exports.type_exports_tmap);
+
+        let export_name_key = Name::new(export_name.dupe());
+        let exported_symbol_opt: Option<&NamedSymbol> = match import_kind {
+            ImportKind::ImportValue => value_exports_tmap.get(&export_name_key),
+            ImportKind::ImportType | ImportKind::ImportTypeof => {
+                match type_exports_tmap.get(&export_name_key) {
+                    Some(s) => Some(s),
+                    None => value_exports_tmap.get(&export_name_key),
+                }
+            }
+        };
+
+        match exported_symbol_opt {
+            Some(ns) => {
+                let t = ns
+                    .type_for_extends
+                    .as_ref()
+                    .map(|t| t.dupe())
+                    .unwrap_or_else(|| ns.type_.dupe());
+                Ok((ns.name_loc.dupe(), t))
+            }
+            None => match import_kind {
+                ImportKind::ImportValue if type_exports_tmap.contains_key(&export_name_key) => {
+                    if flow_common::files::has_ts_ext(cx.file()) {
+                        let ns = type_exports_tmap
+                            .get(&export_name_key)
+                            .expect("checked above");
+                        let t = ns
+                            .type_for_extends
+                            .as_ref()
+                            .map(|t| t.dupe())
+                            .unwrap_or_else(|| ns.type_.dupe());
+                        Ok((ns.name_loc.dupe(), t))
+                    } else {
+                        Ok((
+                            None,
+                            Type::new(TypeInner::AnyT(reason, AnySource::AnyError(None))),
+                        ))
+                    }
+                }
+                _ => Ok((
+                    None,
+                    Type::new(TypeInner::AnyT(reason, AnySource::AnyError(None))),
+                )),
+            },
         }
     }
 }
@@ -4227,8 +4447,12 @@ pub mod copy_type_exports_t_kit {
                 let exports_tmap = cx.find_exports(exports_tmap_id);
                 for (export_name, ns) in exports_tmap.iter() {
                     let type_ = concretize_export_type(cx, reason.dupe(), ns.type_.dupe())?;
-                    let concretized_ns =
-                        NamedSymbol::new(ns.name_loc.dupe(), ns.preferred_def_locs.clone(), type_);
+                    let concretized_ns = NamedSymbol::new(
+                        ns.name_loc.dupe(),
+                        ns.preferred_def_locs.clone(),
+                        type_,
+                        ns.type_for_extends.clone(),
+                    );
                     export_type_t_kit::on_concrete_type(
                         cx,
                         reason.dupe(),
@@ -4752,6 +4976,60 @@ pub mod import_export_utils {
         )
     }
 
+    pub fn import_named_specifier_type_for_extends<'cx>(
+        cx: &Context<'cx>,
+        import_reason: Reason,
+        import_kind: &AstImportKind,
+        module_name: Userland,
+        source_module: &Result<ModuleType, Type>,
+        remote_name: &FlowSmolStr,
+    ) -> Result<Type, FlowJsException> {
+        let import_kind = type_kind_of_kind(import_kind);
+        let is_strict = cx.is_strict();
+        match source_module {
+            Ok(m) => {
+                let (_name_loc_opt, t) = import_named_t_kit::on_module_t_for_extends(
+                    cx,
+                    import_reason,
+                    import_kind,
+                    remote_name,
+                    module_name,
+                    is_strict,
+                    m,
+                )?;
+                Ok(t)
+            }
+            Err(t) => Ok(t.dupe()),
+        }
+    }
+
+    pub fn import_default_specifier_type_for_extends<'cx>(
+        cx: &Context<'cx>,
+        import_reason: Reason,
+        import_kind: &AstImportKind,
+        module_name: Userland,
+        source_module: &Result<ModuleType, Type>,
+        local_name: &FlowSmolStr,
+    ) -> Result<Type, FlowJsException> {
+        let import_kind = type_kind_of_kind(import_kind);
+        let is_strict = cx.is_strict();
+        match source_module {
+            Ok(m) => {
+                let (_name_loc_opt, t) = import_default_t_kit::on_module_t_for_extends(
+                    cx,
+                    import_reason,
+                    import_kind,
+                    local_name.as_str(),
+                    module_name,
+                    is_strict,
+                    m,
+                )?;
+                Ok(t)
+            }
+            Err(t) => Ok(t.dupe()),
+        }
+    }
+
     pub fn cjs_require_type<'cx, R>(
         cx: &Context<'cx>,
         reason: Reason,
@@ -4896,7 +5174,7 @@ pub mod import_export_utils {
                 });
                 value_exports_tmap.insert(
                     Name::new(FlowSmolStr::new("default")),
-                    NamedSymbol::new(name_loc, None, type_.dupe()),
+                    NamedSymbol::new(name_loc, None, type_.dupe(), None),
                 );
             }
             None => {}

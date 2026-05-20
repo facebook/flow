@@ -42,3 +42,22 @@ type PolyAnonAlias<X> = interface {
 
 declare const polyAnonAlias: PolyAnonAlias<number>;
 //            ^
+
+/*
+ * Generic interface that uses `this`
+ */
+interface Box<T> {
+//        ^
+  clone(): this;
+  value(): T;
+}
+
+declare const box: Box<number>;
+//            ^
+const cloned = box.clone();
+//    ^
+const cloneFn = box.clone;
+//    ^
+
+declare const cls: Class<Box<number>>;
+//            ^

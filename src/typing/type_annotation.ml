@@ -1669,6 +1669,17 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           Error_message.(EInvalidMappedType { loc; kind = ExtraProperties });
         Tast_utils.error_mapper#type_ ot
       | None ->
+        (* Strip [this] from [tparams_map] before descending into a nested
+           object type. The enclosing interface's [this]-binding scope does
+           NOT extend into nested object types — TypeScript errors with
+           TS2526 and Flow errors elsewhere with [illegal-this] for the
+           same shape. Without this strip, [this] would resolve to the
+           enclosing interface's [this_t] inside arbitrary nesting like
+           [+nested: { clone(): this }] and [+list: ReadonlyArray<{ +item:
+           this }>]. *)
+        let env =
+          { env with tparams_map = Subst_name.Map.remove (Subst_name.Name "this") env.tparams_map }
+        in
         let (t, properties) = convert_object env loc ~exact:exact_type properties in
         if (not exact) && (not inexact) && not has_indexer then
           Flow_js_utils.add_output cx Error_message.(EAmbiguousObjectType loc);
@@ -1680,11 +1691,22 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         body
       in
       let reason = mk_annot_reason RInterfaceType loc in
+      (* Strip [this] from [tparams_map] before descending into an inline
+         interface annotation. An inline [interface { ... }] type annotation
+         introduces its own [this]-binding scope (which is not modeled —
+         [this_tparam = None; this_t = None] below), so the enclosing
+         scope's [this] should NOT leak in. Matches the [Object] case above:
+         [+nested: interface { clone(): this }] should error
+         [illegal-this]. *)
+      let env =
+        { env with tparams_map = Subst_name.Map.remove (Subst_name.Name "this") env.tparams_map }
+      in
       let (iface_sig, extend_asts) =
         let id = Context.make_aloc_id env.cx loc in
-        let (extends, extend_asts) =
+        let (extends_with_kinds, extend_asts) =
           extends |> Base.List.map ~f:(mk_interface_super env) |> List.split
         in
+        let (extends, extends_binding_kinds) = List.split extends_with_kinds in
         let super =
           let callable =
             List.exists
@@ -1695,7 +1717,15 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               )
               properties
           in
-          Class_type_sig.Types.Interface { Class_type_sig.Types.inline = true; extends; callable }
+          Class_type_sig.Types.Interface
+            {
+              Class_type_sig.Types.inline = true;
+              extends;
+              extends_binding_kinds;
+              callable;
+              this_tparam = None;
+              this_t = None;
+            }
         in
         (Class_type_sig.empty id None loc reason None env.tparams_map super, extend_asts)
       in
@@ -1748,7 +1778,14 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         let id = Context.make_aloc_id env.cx loc in
         let super =
           Class_type_sig.Types.Interface
-            { Class_type_sig.Types.inline = true; extends = []; callable = false }
+            {
+              Class_type_sig.Types.inline = true;
+              extends = [];
+              extends_binding_kinds = [];
+              callable = false;
+              this_tparam = None;
+              this_t = None;
+            }
         in
         let iface_sig = Class_type_sig.empty id None loc reason None env.tparams_map super in
         let (fsig, func_ast) =
@@ -3027,9 +3064,189 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let t = Type_env.query_var ~lookup_mode:ForType cx (OrdinaryName name) loc in
     TypeUtil.mod_reason_of_t (repos_reason loc) t
 
+  (* Compute the [class_like_binding_kind] of the leaf binding referenced by an
+     [extends]/[implements] AST identifier (qualified or unqualified), reading
+     untyped AST locs (so this can be called BEFORE [convert_qualification]).
+     Used by the [extends]/[implements] builders to record per-typeapp binding
+     kinds for [Class_sig.supertype] / [check_implements] dispatch. Cycle-safe
+     — never forces any tvar; only walks the AST and reads recorded [Name_def]
+     entries via [Type_env.local_classlike_binding_kind_at_loc]. *)
+  and binding_kind_of_generic_id_pre_convert cx id =
+    let open Func_class_sig_types.Class in
+    let leaf_loc =
+      let open Ast.Type.Generic.Identifier in
+      let rec leaf = function
+        | Unqualified (loc, _) -> Some loc
+        | Qualified (_, { qualification; _ }) -> leaf qualification
+        | ImportTypeAnnot _ -> None
+      in
+      leaf id
+    in
+    match leaf_loc with
+    | None -> BindingUnknown
+    | Some loc ->
+      (match Type_env.local_classlike_binding_kind_at_loc cx loc with
+      | None -> BindingUnknown
+      | Some `Mono -> ClassLikeMono
+      | Some `Poly -> ClassLikePoly
+      | Some `Other -> BindingOther)
+
+  (* Like [binding_kind_of_generic_id_pre_convert] but also handles two cases
+     that need the resolved type [c] to classify correctly:
+
+     - **Cross-module class-like imports** (e.g. [class C implements
+       ImportedI]): the regular [c] from [convert_qualification] is in
+       canonicalized form, having been run through
+       [canonicalize_imported_type]'s [fix_this_instance]. Here we use
+       [Type_env.import_info_at_loc] to recompute the raw exporter-side type
+       via [import_named_specifier_type_for_extends] (which routes through
+       [ImportNamedTKit.on_ModuleT_for_extends], skipping the unwrap), and
+       tag the binding kind as [ClassLikeRaw{Mono,Poly}].
+
+     - **Namespace-member class-like references** (e.g. [extends NS.I]): the
+       [c] from [convert_qualification] is already raw — namespaces' types
+       are stored in their [types_tmap] in raw form, and
+       [Annot_GetTypeFromNamespaceT] returns them directly without
+       canonicalization. Here we structurally peek at [c] (cycle-safely,
+       since cross-module / namespace-member refs never cycle through the
+       current file's interface body) to detect the polymorphic-class shape
+       and tag accordingly.
+
+     Cycle-safety: neither branch forces any in-file sig tvar. The cross-
+     module import path only inspects [Name_def] entries (AST). The
+     namespace-member peek resolves [OpenT]/[AnnotT] chains and inspects
+     constructors — but the only [c]s reaching this branch are
+     cross-module / qualified, never an in-file in-progress interface body. *)
+  and binding_kind_of_generic_id_post_convert cx ~id_pre_convert ~converted_t =
+    let open Func_class_sig_types.Class in
+    let id = id_pre_convert in
+    let c = converted_t in
+    let initial = binding_kind_of_generic_id_pre_convert cx id in
+    let polymorphic_class_kind t = Flow_js_utils.polymorphic_class_kind cx t in
+    let open Ast.Type.Generic.Identifier in
+    match initial with
+    | BindingUnknown ->
+      (* Cross-module import case. [Type_env.local_classlike_binding_kind_at_loc]
+         already returned [None] for imported bindings, falling through to
+         [BindingUnknown]. Try to recompute the raw form via the
+         [_for_extends] import path. *)
+      let leaf_loc =
+        let rec leaf = function
+          | Unqualified (loc, _) -> Some loc
+          | Qualified (_, { qualification; _ }) -> leaf qualification
+          | ImportTypeAnnot _ -> None
+        in
+        leaf id
+      in
+      (match Base.Option.bind leaf_loc ~f:(Type_env.import_info_at_loc cx) with
+      | Some (import_kind, import_spec, source, source_loc) ->
+        let module_name = Flow_import_specifier.userland source in
+        let mk_source_module import_kind =
+          let import_kind_for_untyped_import_validation =
+            match import_kind with
+            | Ast.Statement.ImportDeclaration.ImportType -> Some Type.ImportType
+            | Ast.Statement.ImportDeclaration.ImportTypeof -> Some Type.ImportTypeof
+            | Ast.Statement.ImportDeclaration.ImportValue -> Some Type.ImportValue
+          in
+          Flow_js_utils.ImportExportUtils.get_module_type_or_any
+            cx
+            ~import_kind_for_untyped_import_validation
+            (source_loc, module_name)
+        in
+        let import_reason = TypeUtil.reason_of_t c in
+        let raw_t_opt =
+          (* [mk_source_module] calls [Context.find_require], which raises
+             [Require_not_found] when the import's [mref] isn't in the file's
+             resolved-requires. This can happen for declaration-merged
+             interfaces in [.d.ts] files where the [name_defs] [Import] entry
+             at the leaf loc points to an [mref] that the file's
+             [resolve_require] doesn't know about (an env_builder /
+             resolved-requires desync we don't try to repair here). The
+             classification is only a hint for downstream class-like dispatch;
+             [BindingUnknown] is the well-defined fallback. *)
+          try
+            match import_spec with
+            | Name_def.Named { kind; remote; local = _ } ->
+              let import_kind = Base.Option.value ~default:import_kind kind in
+              let source_module = mk_source_module import_kind in
+              Some
+                (Flow_js_utils.ImportExportUtils.import_named_specifier_type_for_extends
+                   cx
+                   import_reason
+                   ~import_kind
+                   ~module_name
+                   ~source_module
+                   ~remote_name:remote
+                )
+            | Name_def.Default local_name ->
+              (* Mirror the [Named] case for [import X from ...] (default
+                 imports). [import_default_specifier_type_for_extends] routes
+                 through [ImportDefaultTKit.on_ModuleT_for_extends], which
+                 skips [canonicalize_imported_type] so polymorphic [this]
+                 survives across module boundaries when the parent is a
+                 default-exported class. *)
+              let source_module = mk_source_module import_kind in
+              Some
+                (Flow_js_utils.ImportExportUtils.import_default_specifier_type_for_extends
+                   cx
+                   import_reason
+                   ~import_kind
+                   ~module_name
+                   ~source_module
+                   ~local_name
+                )
+            | Name_def.Namespace _ -> None
+          with
+          | Context.Require_not_found _ -> None
+        in
+        (match raw_t_opt with
+        | None -> BindingUnknown
+        | Some raw_t ->
+          (match polymorphic_class_kind raw_t with
+          | `Mono -> ClassLikeRawMono raw_t
+          | `Poly -> ClassLikeRawPoly raw_t
+          | `Other -> BindingUnknown))
+      | _ -> BindingUnknown)
+    | BindingOther ->
+      (* The leaf binding wasn't class-like locally. For a [Qualified]
+         identifier this commonly means the leaf is a namespace whose
+         member [c] resolves to. Inspect the converted [c] structurally —
+         the namespace member's type is stored raw in the namespace's
+         [types_tmap]. *)
+      (match id with
+      | Qualified _ ->
+        (match polymorphic_class_kind c with
+        | `Mono -> ClassLikeRawMono c
+        | `Poly -> ClassLikeRawPoly c
+        | `Other -> BindingOther)
+      | _ -> BindingOther)
+    | (ClassLikeMono | ClassLikePoly) as k ->
+      (* Bug 3 (defensive): for [Qualified] ids, the [_pre_convert]
+         classification looks at the *leftmost qualifier*'s binding kind,
+         which may be a class-like local binding, but the actual referenced
+         member is the rightmost segment — for which the leftmost's class-
+         like classification is irrelevant. Currently this is unreachable
+         because Flow doesn't merge classes-with-namespaces and
+         [convert_qualification] validates value/type, but we defensively
+         inspect [c] structurally for [Qualified] to never trust a
+         leftmost-qualifier classification. For [Unqualified] the local
+         [LocalRef] classification is exact, so we keep it. *)
+      (match id with
+      | Qualified _ ->
+        (match polymorphic_class_kind c with
+        | `Mono -> ClassLikeRawMono c
+        | `Poly -> ClassLikeRawPoly c
+        | `Other -> BindingOther)
+      | _ -> k)
+    | (ClassLikeRawMono _ | ClassLikeRawPoly _) as k -> k
+
   and mk_interface_super env (loc, { Ast.Type.Generic.id; targs; comments }) =
     let lookup_mode = Type_env.LookupMode.ForType in
+    let id_pre_convert = id in
     let (c, id) = convert_qualification ~lookup_mode env.cx "extends" id in
+    let binding_kind =
+      binding_kind_of_generic_id_post_convert env.cx ~id_pre_convert ~converted_t:c
+    in
     let (typeapp, targs) =
       match targs with
       | None -> ((loc, c, None), None)
@@ -3037,7 +3254,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         let (ts, targs_ast) = convert_list env targs in
         ((loc, c, Some ts), Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
     in
-    (typeapp, (loc, { Ast.Type.Generic.id; targs; comments }))
+    ((typeapp, binding_kind), (loc, { Ast.Type.Generic.id; targs; comments }))
 
   and convert_indexer_internal env indexer =
     let { Ast.Type.Object.Indexer.id; key; value; variance; optional; _ } = indexer in
@@ -3804,12 +4021,29 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       mk_type_param_declarations env ~kind:Flow_ast_mapper.InterfaceTP tparams
     in
     Context.record_interface_tparams cx id_loc tparams env.tparams_map;
-    let (iface_sig, extends_ast) =
+    (* Resolve [extends] BEFORE adding [this] to scope. The lexical-scope
+       rule says [this] is bound for the body of an interface but NOT for
+       the [extends] clause. *)
+    let (extends_with_kinds, extends_ast) =
+      extends |> Base.List.map ~f:(mk_interface_super env) |> List.split
+    in
+    let (extends, extends_binding_kinds) = List.split extends_with_kinds in
+    (* Build a polymorphic [this] type for the interface. The bound on [this]
+       is just used for the interface side (when constructing the interface's
+       prop types) — at use sites, the substitution [this -> class_this] (in
+       [check_implements]) or [this -> child_this] (in [supertype]) replaces
+       the [GenericT this] with the receiver's concrete [this]. So we use
+       [implicit_mixed_this] as the bound (matching the existing fallback for
+       interfaces). *)
+    let (this_tparam, this_t) =
+      Class_type_sig.mk_this ~self:(implicit_mixed_this reason) cx reason
+    in
+    let env =
+      { env with tparams_map = Subst_name.Map.add (Subst_name.Name "this") this_t env.tparams_map }
+    in
+    let iface_sig =
       let class_name = id_name.Ast.Identifier.name in
       let id = Context.make_aloc_id cx id_loc in
-      let (extends, extends_ast) =
-        extends |> Base.List.map ~f:(mk_interface_super env) |> List.split
-      in
       let super =
         let callable =
           List.exists
@@ -3820,11 +4054,17 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             )
             properties
         in
-        Class_type_sig.Types.(Interface { inline = false; extends; callable })
+        Class_type_sig.Types.Interface
+          {
+            Class_type_sig.Types.inline = false;
+            extends;
+            extends_binding_kinds;
+            callable;
+            this_tparam = Some this_tparam;
+            this_t = Some this_t;
+          }
       in
-      ( Class_type_sig.empty id (Some class_name) intf_loc reason tparams env.tparams_map super,
-        extends_ast
-      )
+      Class_type_sig.empty id (Some class_name) intf_loc reason tparams env.tparams_map super
     in
     (* TODO: interfaces don't have a name field, or even statics *)
     let iface_sig = Class_type_sig.add_name_field iface_sig in
@@ -3834,10 +4074,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         ~record_for_interface:id_loc
         ~obj_kind:`Interface
         properties
-        ~this:(implicit_mixed_this reason)
+        ~this:this_t
         iface_sig
     in
-    let (_, t, (own_props, proto_props)) =
+    let (_t_inner, t, (own_props, proto_props)) =
       Class_type_sig.classtype
         ~check_polarity:true
         ~inst_kind:(InterfaceKind { inline = false })
@@ -4159,12 +4399,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           | None -> (None, None)
         in
         let (mixins, mixins_ast) = mixins |> Base.List.map ~f:(mk_mixins env) |> List.split in
-        let (implements, implements_ast) =
+        let (implements, implements_binding_kinds, implements_ast) =
           let open Ast.Class.Implements in
           match implements with
-          | None -> ([], None)
+          | None -> ([], [], None)
           | Some (implements_loc, { interfaces; comments }) ->
-            let (implements, interfaces_ast) =
+            let (implements_with_kinds, interfaces_ast) =
               interfaces
               |> Base.List.map ~f:(fun (loc, i) ->
                      let { Interface.id; targs } = i in
@@ -4178,12 +4418,16 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                             (loc, Flow_intermediate_error_types.(TSLibSyntax ImplementsDottedPath))
                          )
                      | _ -> ());
+                     let id_pre_convert = id in
                      let (c, id) =
                        convert_qualification
                          ~lookup_mode:Type_env.LookupMode.ForType
                          cx
                          "implements"
                          id
+                     in
+                     let binding_kind =
+                       binding_kind_of_generic_id_post_convert cx ~id_pre_convert ~converted_t:c
                      in
                      let (typeapp, targs) =
                        match targs with
@@ -4194,11 +4438,15 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                            Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                          )
                      in
-                     (typeapp, (loc, { Interface.id; targs }))
+                     ((typeapp, binding_kind), (loc, { Interface.id; targs }))
                  )
               |> List.split
             in
-            (implements, Some (implements_loc, { interfaces = interfaces_ast; comments }))
+            let (implements, implements_binding_kinds) = List.split implements_with_kinds in
+            ( implements,
+              implements_binding_kinds,
+              Some (implements_loc, { interfaces = interfaces_ast; comments })
+            )
         in
         let super =
           let extends =
@@ -4207,7 +4455,14 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             | Some extends -> Class_type_sig.Types.Explicit extends
           in
           Class_type_sig.Types.Class
-            { Class_type_sig.Types.extends; mixins; implements; this_t; this_tparam }
+            {
+              Class_type_sig.Types.extends;
+              mixins;
+              implements;
+              implements_binding_kinds;
+              this_t;
+              this_tparam;
+            }
         in
         ( Class_type_sig.empty id (Some class_name) class_loc reason tparams env.tparams_map super,
           extends_ast,

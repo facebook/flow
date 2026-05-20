@@ -15,7 +15,7 @@ type SurfaceEntryPoint<TRoute: Route<>> = Readonly<
   ...
 }
 
-'JSResourceReference' defined at JSResourceReference.js:3:17
+'JSResourceReference' defined at main.js:4:13
 'Module' defined at main.js:5:5
 'Route' defined at Route.js:3:6
 'SurfaceEntryPoint' defined at main.js:7:12

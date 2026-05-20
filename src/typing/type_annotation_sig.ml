@@ -65,6 +65,34 @@ module type S = sig
     (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.Generic.Identifier.t
 
+  (** Compute the [Func_class_sig_types.Class.class_like_binding_kind] of the
+      leaf binding referenced by an [extends]/[implements] AST identifier
+      (qualified or unqualified), reading untyped AST locs (so this can be
+      called BEFORE [convert_qualification]). Used to attach per-typeapp
+      binding-kind metadata to interface [extends] and class [implements]
+      lists for [Class_sig.supertype] / [check_implements] dispatch. Cycle-
+      safe — never forces any tvar. *)
+  val binding_kind_of_generic_id_pre_convert :
+    Context.t ->
+    (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t ->
+    Func_class_sig_types.Class.class_like_binding_kind
+
+  (** Like [binding_kind_of_generic_id_pre_convert] but also handles cross-
+      module class-like imports and namespace-member class-like references.
+      For cross-module imports, recomputes the raw exporter-side type via
+      [import_named_specifier_type_for_extends] (skipping
+      [canonicalize_imported_type]'s [fix_this_instance] unwrap) and tags as
+      [ClassLikeRaw{Mono,Poly}]. For namespace members ([NS.I]), the
+      converted [c] is already raw and we structurally peek at it.
+      Cycle-safe: only inspects [Name_def] entries (AST) for cross-module
+      imports, and resolves the converted [c] which is never an in-progress
+      in-file interface body (cross-module / qualified refs only). *)
+  val binding_kind_of_generic_id_post_convert :
+    Context.t ->
+    id_pre_convert:(ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t ->
+    converted_t:Type.t ->
+    Func_class_sig_types.Class.class_like_binding_kind
+
   val convert_render_type :
     Context.t ->
     Type.t Subst_name.Map.t ->

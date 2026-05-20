@@ -54,6 +54,7 @@ use crate::type_sig_options::TypeSigOptions;
 mod tparam_stack {
     use std::collections::HashSet;
 
+    use dupe::Dupe;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use vec1::Vec1;
 
@@ -83,6 +84,27 @@ mod tparam_stack {
 
         pub(super) fn contains(&self, name: &FlowSmolStr) -> bool {
             self.frames.iter().rev().any(|frame| frame.contains(name))
+        }
+
+        /// Temporarily remove [name] from all frames; returns the frames it was
+        /// present in so the caller can restore it after descending into a
+        /// nested scope. Mirrors OCaml's [SSet.remove "this" xs] which produces
+        /// a new immutable set scoped to the recursive call only.
+        pub(super) fn remove_all(&mut self, name: &FlowSmolStr) -> Vec<usize> {
+            let mut removed = Vec::new();
+            for (i, frame) in self.frames.iter_mut().enumerate() {
+                if frame.remove(name) {
+                    removed.push(i);
+                }
+            }
+            removed
+        }
+
+        /// Restore [name] in the frames previously recorded by [remove_all].
+        pub(super) fn restore_all(&mut self, name: &FlowSmolStr, frames: Vec<usize>) {
+            for i in frames {
+                self.frames[i].insert(name.dupe());
+            }
         }
     }
 }
@@ -5491,10 +5513,27 @@ fn annot_with_loc<'arena, 'ast>(
             Parsed::Annot(Box::new(ParsedAnnot::ComponentAnnot(Box::new((loc, def)))))
         }
         TypeInner::Object { inner, .. } => {
-            object_type(opts, scope, scopes, tbls, xs, loc, inner.as_ref())
+            // Strip [this] when descending into a nested object type. The
+            // enclosing interface's [this] is NOT in scope inside nested object
+            // types — matches both TypeScript (TS2526) and Flow's existing
+            // behavior in classes. Without this strip, [this] propagates from
+            // the enclosing [interface_def]'s [xs_body] all the way down through
+            // arbitrary annotation nesting.
+            let this_name = FlowSmolStr::new("this");
+            let removed = xs.remove_all(&this_name);
+            let result = object_type(opts, scope, scopes, tbls, xs, loc, inner.as_ref());
+            xs.restore_all(&this_name, removed);
+            result
         }
         TypeInner::Interface { inner, .. } => {
+            // Same reasoning as the [T.Object] case: an inline interface annotation
+            // introduces its own [this]-binding scope (controlled by its own
+            // [bind_this_in_body] flag, which defaults to false here), so the
+            // enclosing scope's [this] should NOT leak in.
+            let this_name = FlowSmolStr::new("this");
+            let removed = xs.remove_all(&this_name);
             let def = interface_def(
+                false,
                 opts,
                 scope,
                 scopes,
@@ -5503,6 +5542,7 @@ fn annot_with_loc<'arena, 'ast>(
                 &inner.extends,
                 &inner.body.1.properties,
             );
+            xs.restore_all(&this_name, removed);
             Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
         }
         TypeInner::Generic { inner, .. } => {
@@ -6505,6 +6545,7 @@ fn object_type<'arena, 'ast>(
 }
 
 fn interface_def<'arena, 'ast>(
+    bind_this_in_body: bool,
     opts: &TypeSigOptions,
     scope: ScopeId,
     scopes: &mut scope::Scopes<'arena, 'ast>,
@@ -6524,7 +6565,15 @@ fn interface_def<'arena, 'ast>(
         .collect();
 
     let mut acc = InterfaceAcc::empty();
+    let this_name = FlowSmolStr::new("this");
+    let added_this = bind_this_in_body && {
+        xs.insert(this_name.dupe());
+        true
+    };
     interface_props(opts, scope, scopes, tbls, xs, properties, &mut acc);
+    if added_this {
+        let _removed = xs.remove_all(&this_name);
+    }
     acc.interface_def(extends)
 }
 
@@ -11424,7 +11473,9 @@ fn interface_decl<'arena: 'ast, 'ast>(
         tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
             let mut xs = tparam_stack::TParamStack::new();
             let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps.as_ref());
-            let def = interface_def(opts, scope, scopes, tbls, &mut xs, extends, properties);
+            let def = interface_def(
+                true, opts, scope, scopes, tbls, &mut xs, extends, properties,
+            );
             Def::Interface(Box::new(DefInterface {
                 id_loc: id_loc_node_for_def,
                 name: name.clone(),

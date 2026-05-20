@@ -1634,6 +1634,40 @@ fn elab_t_concrete<'cx>(
                 )),
             )
         }
+        (
+            TypeInner::ThisInstanceT(box ThisInstanceTData {
+                reason: r,
+                instance: i,
+                is_this: _,
+                subst_name,
+            }),
+            OpInner::AnnotThisSpecializeT {
+                reason,
+                type_: this,
+            },
+        ) => {
+            let this_type = this.dupe();
+            let map = flow_data_structure_wrapper::ord_map::FlowOrdMap::from_iter(std::iter::once(
+                (subst_name.clone(), this_type),
+            ));
+            let i = flow_typing_flow_common::type_subst::subst_instance_type(
+                cx,
+                None,
+                false,
+                false,
+                flow_typing_flow_common::type_subst::Purpose::Normal,
+                &map,
+                i,
+            );
+            reposition(
+                cx,
+                reason.loc().dupe(),
+                Type::new(TypeInner::DefT(
+                    r.dupe(),
+                    type_::DefT::new(DefTInner::InstanceT(Rc::new(i))),
+                )),
+            )
+        }
         // this-specialization of non-this-abstracted classes is a no-op
         (TypeInner::DefT(_, def_t), OpInner::AnnotThisSpecializeT { reason, .. })
             if let DefTInner::ClassT(instance) = def_t.deref() =>
@@ -3136,6 +3170,82 @@ pub fn import_named<'cx>(
         let (_name_loc_opt, t) = flow_js_utils::import_named_t_kit::on_module_t(
             cx,
             &with_concretized_type,
+            reason2.dupe(),
+            import_kind.clone(),
+            &export_name2,
+            module_name2.clone(),
+            is_strict,
+            m,
+        )
+        .unwrap_or_else(|_| (None, type_::any_t::error(reason2.dupe())));
+        t
+    };
+    let lz = get_lazy_module_type_or_any_src(&resolved_require);
+    let why_reason = reason.dupe();
+    let resolved = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+        let result = lz.get_forced(cx).clone();
+        match result {
+            Ok(m) => on_module(cx, &m),
+            Err(src) => type_::any_t::why(src, why_reason.dupe()),
+        }
+    })
+        as Box<dyn FnOnce(&Context<'cx>) -> Type>));
+    mk_sig_tvar(cx, reason, resolved)
+}
+
+pub fn import_default_for_extends<'cx>(
+    cx: &Context<'cx>,
+    reason: Reason,
+    import_kind: type_::ImportKind,
+    local_name: &FlowSmolStr,
+    module_name: flow_common::flow_import_specifier::Userland,
+    is_strict: bool,
+    resolved_require: flow_typing_context::ResolvedRequire<'cx>,
+) -> Type {
+    let reason2 = reason.dupe();
+    let local_name = local_name.dupe();
+    let module_name2 = module_name.clone();
+    let on_module = move |cx: &Context<'cx>, m: &type_::ModuleType| -> Type {
+        let (_name_loc_opt, t) = flow_js_utils::import_default_t_kit::on_module_t_for_extends(
+            cx,
+            reason2.dupe(),
+            import_kind.clone(),
+            local_name.as_str(),
+            module_name2.clone(),
+            is_strict,
+            m,
+        )
+        .unwrap_or_else(|_| (None, type_::any_t::error(reason2.dupe())));
+        t
+    };
+    let lz = get_lazy_module_type_or_any_src(&resolved_require);
+    let why_reason = reason.dupe();
+    let resolved = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+        let result = lz.get_forced(cx).clone();
+        match result {
+            Ok(m) => on_module(cx, &m),
+            Err(src) => type_::any_t::why(src, why_reason.dupe()),
+        }
+    })
+        as Box<dyn FnOnce(&Context<'cx>) -> Type>));
+    mk_sig_tvar(cx, reason, resolved)
+}
+
+pub fn import_named_for_extends<'cx>(
+    cx: &Context<'cx>,
+    reason: Reason,
+    import_kind: type_::ImportKind,
+    export_name: &FlowSmolStr,
+    module_name: flow_common::flow_import_specifier::Userland,
+    is_strict: bool,
+    resolved_require: flow_typing_context::ResolvedRequire<'cx>,
+) -> Type {
+    let reason2 = reason.dupe();
+    let export_name2 = export_name.dupe();
+    let module_name2 = module_name.clone();
+    let on_module = move |cx: &Context<'cx>, m: &type_::ModuleType| -> Type {
+        let (_name_loc_opt, t) = flow_js_utils::import_named_t_kit::on_module_t_for_extends(
+            cx,
             reason2.dupe(),
             import_kind.clone(),
             &export_name2,

@@ -82,6 +82,13 @@ pub enum TsPendingClassified {
     TsPendingValue(NamedSymbol),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LocalDefBindingKind {
+    DefBindingClassLikeMono,
+    DefBindingClassLikePoly,
+    DefBindingOther,
+}
+
 pub type LazyTsPendingClassified<'cx> = Rc<
     flow_lazy::Lazy<
         Context<'cx>,
@@ -126,15 +133,21 @@ type DependenciesTable<'cx> = Table<(
 type LazyType<'cx> =
     Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>;
 
+type LocalDefEntry<'cx> = (
+    ALoc,
+    FlowSmolStr,
+    LocalDefBindingKind,
+    LazyType<'cx>,
+    LazyType<'cx>,
+);
+type RemoteRefEntry<'cx> = (ALoc, FlowSmolStr, Type, LazyType<'cx>);
+
 type LocalDefsTable<'cx> = Table<
     Rc<
         flow_lazy::Lazy<
             Context<'cx>,
-            (ALoc, FlowSmolStr, LazyType<'cx>, LazyType<'cx>),
-            Box<
-                dyn FnOnce(&Context<'cx>) -> (ALoc, FlowSmolStr, LazyType<'cx>, LazyType<'cx>)
-                    + 'cx,
-            >,
+            LocalDefEntry<'cx>,
+            Box<dyn FnOnce(&Context<'cx>) -> LocalDefEntry<'cx> + 'cx>,
         >,
     >,
 >;
@@ -143,8 +156,8 @@ type RemoteRefsTable<'cx> = Table<
     Rc<
         flow_lazy::Lazy<
             Context<'cx>,
-            (ALoc, FlowSmolStr, Type),
-            Box<dyn FnOnce(&Context<'cx>) -> (ALoc, FlowSmolStr, Type) + 'cx>,
+            RemoteRefEntry<'cx>,
+            Box<dyn FnOnce(&Context<'cx>) -> RemoteRefEntry<'cx> + 'cx>,
         >,
     >,
 >;
@@ -255,6 +268,31 @@ pub fn def_reason<T>(def: &Def<ALoc, T>) -> Reason {
             def.id_loc(),
         ),
         Def::NamespaceBinding(_) => reason::mk_reason(RNamespace(def.name().dupe()), def.id_loc()),
+    }
+}
+
+pub fn def_binding_kind<T>(def: &Def<ALoc, T>) -> LocalDefBindingKind {
+    let tparams_kind = |tparams: &TParams<ALoc, T>| match tparams {
+        TParams::Mono => LocalDefBindingKind::DefBindingClassLikeMono,
+        TParams::Poly(_) => LocalDefBindingKind::DefBindingClassLikePoly,
+    };
+    match def {
+        Def::Interface(inner) => tparams_kind(&inner.tparams),
+        Def::ClassBinding(inner) => tparams_kind(&inner.def.tparams),
+        Def::DeclareClassBinding(inner) => tparams_kind(&inner.def.tparams),
+        Def::RecordBinding(inner) => tparams_kind(&inner.def.tparams),
+        Def::TypeAlias(_)
+        | Def::OpaqueType(_)
+        | Def::DisabledRecordBinding(_)
+        | Def::FunBinding(_)
+        | Def::DeclareFun(_)
+        | Def::ComponentBinding(_)
+        | Def::DisabledComponentBinding(_)
+        | Def::Variable(_)
+        | Def::Parameter(_)
+        | Def::EnumBinding(_)
+        | Def::DisabledEnumBinding(_)
+        | Def::NamespaceBinding(_) => LocalDefBindingKind::DefBindingOther,
     }
 }
 
@@ -572,6 +610,44 @@ fn import<'cx>(
     }
 }
 
+fn import_for_extends<'cx>(
+    cx: &Context<'cx>,
+    file: &File<'cx>,
+    reason: Reason,
+    index: Index<FlowImportSpecifier>,
+    kind: type_::ImportKind,
+    remote: &FlowSmolStr,
+    local: &FlowSmolStr,
+) -> Type {
+    let (mref, lazy_resolved) = {
+        let deps = file.dependencies.borrow();
+        let (m, l) = deps.get(index);
+        (m.dupe(), l.dupe())
+    };
+    let resolved_require = lazy_resolved.get_forced(cx).dupe();
+    if remote.as_str() == "default" {
+        annotation_inference::import_default_for_extends(
+            cx,
+            reason,
+            kind,
+            local,
+            mref.dupe(),
+            false,
+            resolved_require,
+        )
+    } else {
+        annotation_inference::import_named_for_extends(
+            cx,
+            reason,
+            kind,
+            remote,
+            mref.dupe(),
+            false,
+            resolved_require,
+        )
+    }
+}
+
 fn import_ns<'cx>(
     cx: &Context<'cx>,
     file: &File<'cx>,
@@ -824,6 +900,73 @@ pub fn merge_remote_ref<'cx>(
     }
 }
 
+pub fn merge_remote_ref_for_extends<'cx>(
+    cx: &Context<'cx>,
+    file: &File<'cx>,
+    reason: Reason,
+    remote_ref: &Pack::RemoteRef<ALoc>,
+) -> Type {
+    match remote_ref {
+        Pack::RemoteRef::Import {
+            id_loc: _,
+            name,
+            index,
+            remote,
+        } => import_for_extends(
+            cx,
+            file,
+            reason,
+            index.clone(),
+            type_::ImportKind::ImportValue,
+            remote,
+            name,
+        ),
+        Pack::RemoteRef::ImportType {
+            id_loc: _,
+            name,
+            index,
+            remote,
+        } => import_for_extends(
+            cx,
+            file,
+            reason,
+            index.clone(),
+            type_::ImportKind::ImportType,
+            remote,
+            name,
+        ),
+        Pack::RemoteRef::ImportTypeof {
+            id_loc: _,
+            name,
+            index,
+            remote,
+        } => import_for_extends(
+            cx,
+            file,
+            reason,
+            index.clone(),
+            type_::ImportKind::ImportTypeof,
+            remote,
+            name,
+        ),
+        Pack::RemoteRef::ImportNs {
+            id_loc,
+            name,
+            index,
+        } => import_ns(cx, file, reason, name, id_loc.dupe(), *index),
+        Pack::RemoteRef::ImportTypeofNs {
+            id_loc,
+            name,
+            index,
+        } => import_typeof_ns(cx, file, reason, name, id_loc.dupe(), *index),
+        Pack::RemoteRef::ImportTypeNs {
+            id_loc,
+            name,
+            index,
+        } => import_ns(cx, file, reason, name, id_loc.dupe(), *index),
+    }
+}
+
 fn merge_ref<'cx, R>(
     cx: &Context<'cx>,
     file: &File<'cx>,
@@ -837,7 +980,7 @@ fn merge_ref<'cx, R>(
         Pack::PackedRef::LocalRef(box Pack::PackedRefLocal { ref_loc, index }) => {
             let __rc = file.local_defs.borrow().get(*index).dupe();
             let entry = __rc.get_forced(cx);
-            let (def_loc, name, t_general, t_const) = entry;
+            let (def_loc, name, _binding_kind, t_general, t_const) = entry;
             let t = if const_decl { t_const } else { t_general }
                 .get_forced(cx)
                 .dupe();
@@ -847,7 +990,7 @@ fn merge_ref<'cx, R>(
         Pack::PackedRef::RemoteRef(box Pack::PackedRefRemote { ref_loc, index }) => {
             let __rc = file.remote_refs.borrow().get(*index).dupe();
             let entry = __rc.get_forced(cx);
-            let (def_loc, name, t) = entry;
+            let (def_loc, name, t, _t_for_extends) = entry;
             let t = reposition_sig_tvar(cx, ref_loc.dupe(), t.dupe());
             f(t, ref_loc.dupe(), def_loc.dupe(), name)
         }
@@ -933,33 +1076,58 @@ pub fn merge_type_export<'cx>(
     type_export: &Pack::TypeExport<ALoc>,
 ) -> NamedSymbol {
     match type_export {
-        Pack::TypeExport::ExportTypeRef(ref_) => {
-            let reason = reason.dupe();
-            merge_ref(
-                cx,
-                file,
-                |t, _ref_loc, def_loc, name| {
-                    let type_ =
-                        annotation_inference::assert_export_is_type(cx, reason, name.as_str(), t);
-                    NamedSymbol::new(Some(def_loc), None, type_)
-                },
-                ref_,
-                false,
-            )
-        }
+        Pack::TypeExport::ExportTypeRef(ref_) => match ref_ {
+            Pack::PackedRef::RemoteRef(box Pack::PackedRefRemote { ref_loc, index }) => {
+                let __rc = file.remote_refs.borrow().get(*index).dupe();
+                let entry = __rc.get_forced(cx);
+                let (def_loc, name, t, t_for_extends) = entry;
+                let t = reposition_sig_tvar(cx, ref_loc.dupe(), t.dupe());
+                let type_ =
+                    annotation_inference::assert_export_is_type(cx, reason, name.as_str(), t);
+                NamedSymbol::new(
+                    Some(def_loc.dupe()),
+                    None,
+                    type_,
+                    Some(t_for_extends.get_forced(cx).dupe()),
+                )
+            }
+            _ => {
+                let reason = reason.dupe();
+                merge_ref(
+                    cx,
+                    file,
+                    |t, _ref_loc, def_loc, name| {
+                        let type_ = annotation_inference::assert_export_is_type(
+                            cx,
+                            reason,
+                            name.as_str(),
+                            t,
+                        );
+                        NamedSymbol::new(Some(def_loc), None, type_, None)
+                    },
+                    ref_,
+                    false,
+                )
+            }
+        },
         Pack::TypeExport::ExportTypeBinding(index) => {
             let __rc = file.local_defs.borrow().get(*index).dupe();
             let entry = __rc.get_forced(cx);
-            let (loc, name, t_general, _t_const) = entry;
+            let (loc, name, _binding_kind, t_general, _t_const) = entry;
             let t = t_general.get_forced(cx).dupe();
             let type_ = annotation_inference::assert_export_is_type(cx, reason, name.as_str(), t);
-            NamedSymbol::new(Some(loc.dupe()), None, type_)
+            NamedSymbol::new(Some(loc.dupe()), None, type_, None)
         }
         Pack::TypeExport::ExportTypeFrom(index) => {
             let __rc = file.remote_refs.borrow().get(*index).dupe();
             let entry = __rc.get_forced(cx);
-            let (loc, _name, type_) = entry;
-            NamedSymbol::new(Some(loc.dupe()), None, type_.dupe())
+            let (loc, _name, type_, t_for_extends) = entry;
+            NamedSymbol::new(
+                Some(loc.dupe()),
+                None,
+                type_.dupe(),
+                Some(t_for_extends.get_forced(cx).dupe()),
+            )
         }
     }
 }
@@ -3306,6 +3474,154 @@ fn merge_op<'cx>(
     op.map(&mut (), |_, t| merge_impl(env, cx, file, t, false, false))
 }
 
+fn merge_interface_extends<'cx>(
+    bind_this: bool,
+    env: &MergeEnv,
+    cx: &Context<'cx>,
+    file: &File<'cx>,
+    packed: &Pack::Packed<ALoc>,
+) -> (Type, bool, Option<Vec<Type>>) {
+    #[derive(Clone, Copy)]
+    enum PolymorphicClassKindForExtends {
+        Poly,
+        NonPoly,
+        Other,
+    }
+
+    let resolve_raw = |name: &Pack::TyRef<ALoc>| -> Type {
+        fn aux<'cx>(cx: &Context<'cx>, file: &File<'cx>, name: &Pack::TyRef<ALoc>) -> Type {
+            use flow_common::reason::VirtualReasonDesc::*;
+            match name {
+                Pack::TyRef::Unqualified(Pack::PackedRef::RemoteRef(
+                    box Pack::PackedRefRemote { ref_loc, index },
+                )) => {
+                    let __rc = file.remote_refs.borrow().get(*index).dupe();
+                    let entry = __rc.get_forced(cx);
+                    let (_def_loc, _name, _t, t_for_extends) = entry;
+                    let t = t_for_extends.get_forced(cx).dupe();
+                    reposition_sig_tvar(cx, ref_loc.dupe(), t)
+                }
+                Pack::TyRef::Qualified(box Pack::TyRefQualified {
+                    loc,
+                    id_loc,
+                    name,
+                    qualification,
+                }) => {
+                    let qual_t = aux(cx, file, qualification);
+                    let name_r = Name::new(name.dupe());
+                    let id_reason = reason::mk_reason(RType(name_r.dupe()), id_loc.dupe());
+                    let op_reason = reason::mk_reason(RType(name_r.dupe()), loc.dupe());
+                    let use_op = type_::VirtualUseOp::Op(Arc::new(
+                        type_::VirtualRootUseOp::GetProperty(op_reason.dupe()),
+                    ));
+                    annotation_inference::qualify_type(
+                        cx, use_op, id_reason, op_reason, name_r, qual_t,
+                    )
+                }
+                Pack::TyRef::Unqualified(_) => merge_tyref(cx, file, |t, _ref_loc, _names| t, name),
+            }
+        }
+        aux(cx, file, name)
+    };
+    let leaf_binding_kind = |name: &Pack::TyRef<ALoc>| match name {
+        Pack::TyRef::Unqualified(Pack::PackedRef::LocalRef(box Pack::PackedRefLocal {
+            index,
+            ..
+        })) => {
+            let __rc = file.local_defs.borrow().get(*index).dupe();
+            let entry = __rc.get_forced(cx);
+            let (_, _, kind, _, _) = entry;
+            Some(*kind)
+        }
+        _ => None,
+    };
+    let polymorphic_class_kind = |t: &Type| match flow_js_utils::polymorphic_class_kind(cx, t) {
+        flow_js_utils::PolymorphicClassKind::Poly => PolymorphicClassKindForExtends::Poly,
+        flow_js_utils::PolymorphicClassKind::Mono => PolymorphicClassKindForExtends::NonPoly,
+        flow_js_utils::PolymorphicClassKind::Other => PolymorphicClassKindForExtends::Other,
+    };
+
+    if !bind_this {
+        (merge_impl(env, cx, file, packed, false, false), false, None)
+    } else {
+        match packed {
+            Pack::Packed::TyRef(name) => {
+                let kind = leaf_binding_kind(name);
+                match kind {
+                    Some(LocalDefBindingKind::DefBindingOther) => {
+                        (merge_impl(env, cx, file, packed, false, false), false, None)
+                    }
+                    Some(LocalDefBindingKind::DefBindingClassLikeMono) => {
+                        let raw = resolve_raw(name);
+                        (raw, true, None)
+                    }
+                    Some(LocalDefBindingKind::DefBindingClassLikePoly) => {
+                        (merge_impl(env, cx, file, packed, false, false), false, None)
+                    }
+                    None => {
+                        let raw = resolve_raw(name);
+                        match polymorphic_class_kind(&raw) {
+                            PolymorphicClassKindForExtends::NonPoly => (raw, true, None),
+                            PolymorphicClassKindForExtends::Poly
+                            | PolymorphicClassKindForExtends::Other => {
+                                (merge_impl(env, cx, file, packed, false, false), false, None)
+                            }
+                        }
+                    }
+                }
+            }
+            Pack::Packed::TyRefApp(box Pack::PackedTyRefApp { loc, name, targs }) => {
+                let targs_t: Vec<Type> = targs
+                    .iter()
+                    .map(|t| merge_impl(env, cx, file, t, false, false))
+                    .collect();
+                let kind = leaf_binding_kind(name);
+                match kind {
+                    Some(LocalDefBindingKind::DefBindingOther) => {
+                        let raw = merge_impl(
+                            env,
+                            cx,
+                            file,
+                            &Pack::Packed::TyRef(Box::new(name.clone())),
+                            false,
+                            false,
+                        );
+                        let t = type_util::typeapp_annot(false, false, loc.dupe(), raw, targs_t);
+                        (t, false, None)
+                    }
+                    Some(LocalDefBindingKind::DefBindingClassLikePoly) => {
+                        let raw = resolve_raw(name);
+                        (raw, true, Some(targs_t))
+                    }
+                    Some(LocalDefBindingKind::DefBindingClassLikeMono) => {
+                        let raw = resolve_raw(name);
+                        let t = type_util::typeapp_annot(false, false, loc.dupe(), raw, targs_t);
+                        (t, false, None)
+                    }
+                    None => {
+                        let raw = resolve_raw(name);
+                        match polymorphic_class_kind(&raw) {
+                            PolymorphicClassKindForExtends::Poly => (raw, true, Some(targs_t)),
+                            PolymorphicClassKindForExtends::NonPoly
+                            | PolymorphicClassKindForExtends::Other => {
+                                let t = type_util::typeapp_annot(
+                                    false,
+                                    false,
+                                    loc.dupe(),
+                                    raw,
+                                    targs_t,
+                                );
+                                (t, false, None)
+                            }
+                        }
+                    }
+                }
+            }
+            _ => (merge_impl(env, cx, file, packed, false, false), false, None),
+        }
+    }
+}
+
 fn merge_interface<'cx>(
     env: &MergeEnv,
     cx: &Context<'cx>,
@@ -3326,33 +3642,6 @@ fn merge_interface<'cx>(
         calls,
         dict,
     } = def;
-    let super_ = {
-        let super_reason = reason.dupe().update_desc(|d| RSuperOf(Arc::new(d)));
-        let mut ts: Vec<Type> = extends
-            .iter()
-            .map(|t| merge_impl(env, cx, file, t, false, false))
-            .collect();
-        if !calls.is_empty() {
-            ts.insert(
-                0,
-                Type::new(type_::TypeInner::FunProtoT(super_reason.dupe())),
-            );
-        }
-        match ts.len() {
-            0 => Type::new(type_::TypeInner::ObjProtoT(super_reason)),
-            1 => ts.into_iter().next().unwrap(),
-            _ => {
-                let mut iter = ts.into_iter();
-                let t0 = iter.next().unwrap();
-                let t1 = iter.next().unwrap();
-                let rest: Vec<Type> = iter.collect();
-                Type::new(type_::TypeInner::IntersectionT(
-                    super_reason,
-                    type_::inter_rep::make(t0, t1, rest.into()),
-                ))
-            }
-        }
-    };
     let static_ = {
         let static_reason = reason.dupe().update_desc(|d| RStatics(Arc::new(d)));
         // interfaces don't have a name field, or even statics
@@ -3371,97 +3660,193 @@ fn merge_interface<'cx>(
             proto,
         )
     };
-    let (own_props, proto_props) = {
-        let mut own: BTreeMap<Name, type_::Property> = BTreeMap::new();
-        let mut proto: BTreeMap<Name, type_::Property> = BTreeMap::new();
-        for (k, prop) in props {
-            let t = merge_interface_prop(env, cx, file, prop, false);
-            let name = Name::new(k.dupe());
-            match prop {
-                InterfaceProp::InterfaceField(..) => {
-                    own.insert(name, t);
+    // Top-level interfaces get a polymorphic [this] type; inline interfaces
+    // don't (they don't introduce a fresh [this] binding).
+    let bind_this = !inline;
+    let build = |env: &MergeEnv,
+                 targs: Vec<(SubstName, Reason, Type, Polarity)>|
+     -> (type_::InstType, Box<dyn FnOnce(Option<Type>) -> Type + 'cx>) {
+        let extends_resolved: Vec<(Type, bool, Option<Vec<Type>>)> = extends
+            .iter()
+            .map(|t| merge_interface_extends(bind_this, env, cx, file, t))
+            .collect();
+        let calls_clone = calls.clone();
+        let reason_for_super = reason.dupe();
+        let make_super: Box<dyn FnOnce(Option<Type>) -> Type + 'cx> =
+            Box::new(move |this_opt: Option<Type>| {
+                let super_reason = reason_for_super.update_desc(|d| RSuperOf(Arc::new(d)));
+                let mut ts: Vec<Type> = extends_resolved
+                    .into_iter()
+                    .map(
+                        |(t, polymorphic_class, targs_opt)| match (&this_opt, polymorphic_class) {
+                            (Some(this), true) => {
+                                let annot_loc = type_util::reason_of_t(&t).loc().dupe();
+                                type_util::this_typeapp(t, this.dupe(), targs_opt, Some(annot_loc))
+                            }
+                            _ => t,
+                        },
+                    )
+                    .collect();
+                if !calls_clone.is_empty() {
+                    ts.insert(
+                        0,
+                        Type::new(type_::TypeInner::FunProtoT(super_reason.dupe())),
+                    );
                 }
-                InterfaceProp::InterfaceAccess(..) | InterfaceProp::InterfaceMethod(..) => {
-                    proto.insert(name, t);
+                match ts.len() {
+                    0 => Type::new(type_::TypeInner::ObjProtoT(super_reason)),
+                    1 => ts.into_iter().next().unwrap(),
+                    _ => {
+                        let mut iter = ts.into_iter();
+                        let t0 = iter.next().unwrap();
+                        let t1 = iter.next().unwrap();
+                        let rest: Vec<Type> = iter.collect();
+                        Type::new(type_::TypeInner::IntersectionT(
+                            super_reason,
+                            type_::inter_rep::make(t0, t1, rest.into()),
+                        ))
+                    }
                 }
-            }
-        }
-        for (key, prop) in computed_props {
-            if let Some(name) = resolve_computed_key(env, cx, file, key) {
+            });
+        let (own_props, proto_props) = {
+            let mut own: BTreeMap<Name, type_::Property> = BTreeMap::new();
+            let mut proto: BTreeMap<Name, type_::Property> = BTreeMap::new();
+            for (k, prop) in props {
                 let t = merge_interface_prop(env, cx, file, prop, false);
-                let update_map =
-                    |map: &mut BTreeMap<Name, type_::Property>| match map.entry(name.dupe()) {
-                        std::collections::btree_map::Entry::Vacant(e) => {
-                            e.insert(t.dupe());
-                        }
-                        std::collections::btree_map::Entry::Occupied(mut e) => {
-                            let merged = merge_overloaded_property(e.get(), t.dupe());
-                            e.insert(merged);
-                        }
-                    };
+                let name = Name::new(k.dupe());
                 match prop {
-                    InterfaceProp::InterfaceField(..) => update_map(&mut own),
+                    InterfaceProp::InterfaceField(..) => {
+                        own.insert(name, t);
+                    }
                     InterfaceProp::InterfaceAccess(..) | InterfaceProp::InterfaceMethod(..) => {
-                        update_map(&mut proto)
+                        proto.insert(name, t);
                     }
                 }
             }
-        }
-        (own.into(), proto.into())
-    };
-    let inst_call_t = {
-        let ts: Vec<Type> = calls
-            .iter()
-            .map(|t| merge_impl(env, cx, file, t, false, false))
-            .collect();
-        match ts.len() {
-            0 => None,
-            1 => Some(cx.make_call_prop(ts.into_iter().next().unwrap())),
-            _ => {
-                let mut iter = ts.into_iter();
-                let t0 = iter.next().unwrap();
-                let t1 = iter.next().unwrap();
-                let rest: Vec<Type> = iter.collect();
-                let call_reason = type_util::reason_of_t(&t0).dupe();
-                let t = Type::new(type_::TypeInner::IntersectionT(
-                    call_reason,
-                    type_::inter_rep::make(t0, t1, rest.into()),
-                ));
-                Some(cx.make_call_prop(t))
+            for (key, prop) in computed_props {
+                if let Some(name) = resolve_computed_key(env, cx, file, key) {
+                    let t = merge_interface_prop(env, cx, file, prop, false);
+                    let update_map =
+                        |map: &mut BTreeMap<Name, type_::Property>| match map.entry(name.dupe()) {
+                            std::collections::btree_map::Entry::Vacant(e) => {
+                                e.insert(t.dupe());
+                            }
+                            std::collections::btree_map::Entry::Occupied(mut e) => {
+                                let merged = merge_overloaded_property(e.get(), t.dupe());
+                                e.insert(merged);
+                            }
+                        };
+                    match prop {
+                        InterfaceProp::InterfaceField(..) => update_map(&mut own),
+                        InterfaceProp::InterfaceAccess(..) | InterfaceProp::InterfaceMethod(..) => {
+                            update_map(&mut proto)
+                        }
+                    }
+                }
             }
-        }
+            (own.into(), proto.into())
+        };
+        let inst_call_t = {
+            let ts: Vec<Type> = calls
+                .iter()
+                .map(|t| merge_impl(env, cx, file, t, false, false))
+                .collect();
+            match ts.len() {
+                0 => None,
+                1 => Some(cx.make_call_prop(ts.into_iter().next().unwrap())),
+                _ => {
+                    let mut iter = ts.into_iter();
+                    let t0 = iter.next().unwrap();
+                    let t1 = iter.next().unwrap();
+                    let rest: Vec<Type> = iter.collect();
+                    let call_reason = type_util::reason_of_t(&t0).dupe();
+                    let t = Type::new(type_::TypeInner::IntersectionT(
+                        call_reason,
+                        type_::inter_rep::make(t0, t1, rest.into()),
+                    ));
+                    Some(cx.make_call_prop(t))
+                }
+            }
+        };
+        let inst_dict = dict.as_ref().map(|d| merge_dict(env, cx, file, d, false));
+        let inst = type_::InstType::new(type_::InstTypeInner {
+            class_id: id,
+            inst_react_dro: None,
+            class_name: class_name.dupe(),
+            type_args: targs.into(),
+            own_props: cx.generate_property_map(own_props),
+            proto_props: cx.generate_property_map(proto_props),
+            inst_call_t,
+            initialized_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
+            initialized_static_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
+            inst_kind: type_::InstanceKind::InterfaceKind { inline },
+            inst_dict,
+            class_private_fields: cx.generate_property_map(type_::properties::PropertiesMap::new()),
+            class_private_methods: cx
+                .generate_property_map(type_::properties::PropertiesMap::new()),
+            class_private_static_fields: cx
+                .generate_property_map(type_::properties::PropertiesMap::new()),
+            class_private_static_methods: cx
+                .generate_property_map(type_::properties::PropertiesMap::new()),
+        });
+        (inst, make_super)
     };
-    let inst_dict = dict.as_ref().map(|d| merge_dict(env, cx, file, d, false));
-    let inst = type_::InstType::new(type_::InstTypeInner {
-        class_id: id,
-        inst_react_dro: None,
-        class_name,
-        type_args: targs.into(),
-        own_props: cx.generate_property_map(own_props),
-        proto_props: cx.generate_property_map(proto_props),
-        inst_call_t,
-        initialized_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
-        initialized_static_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
-        inst_kind: type_::InstanceKind::InterfaceKind { inline },
-        inst_dict,
-        class_private_fields: cx.generate_property_map(type_::properties::PropertiesMap::new()),
-        class_private_methods: cx.generate_property_map(type_::properties::PropertiesMap::new()),
-        class_private_static_fields: cx
-            .generate_property_map(type_::properties::PropertiesMap::new()),
-        class_private_static_methods: cx
-            .generate_property_map(type_::properties::PropertiesMap::new()),
-    });
-    Type::new(type_::TypeInner::DefT(
-        reason,
-        type_::DefT::new(type_::DefTInner::InstanceT(Rc::new(type_::InstanceT::new(
-            type_::InstanceTInner {
-                inst,
-                static_,
-                super_,
-                implements: vec![].into(),
+    if bind_this {
+        let this_reason = reason.dupe().replace_desc(RThisType);
+        let this_name = SubstName::name(FlowSmolStr::new("this"));
+        let result_cell: Rc<RefCell<Option<Type>>> = Rc::new(RefCell::new(None));
+        let result_cell_c = result_cell.dupe();
+        let this_reason_c = this_reason.dupe();
+        let rec_type = flow_typing_tvar::mk_fully_resolved_lazy(
+            cx,
+            this_reason.dupe(),
+            false,
+            Box::new(move |_cx: &Context| Ok(result_cell_c.borrow().as_ref().unwrap().dupe())),
+        );
+        let this_tp = type_::TypeParam::new(type_::TypeParamInner {
+            name: this_name.dupe(),
+            reason: this_reason_c,
+            bound: rec_type,
+            polarity: Polarity::Positive,
+            default: None,
+            is_this: true,
+            is_const: false,
+        });
+        let this = flow_js_utils::generic_of_tparam(cx, |x: &Type| x.dupe(), &this_tp);
+        let mut env = env.dupe();
+        env.tps.insert(FlowSmolStr::new("this"), this.dupe());
+        let (inst, make_super) = build(&env, targs);
+        let super_ = make_super(Some(this));
+        let result = Type::new(type_::TypeInner::ThisInstanceT(Box::new(
+            ThisInstanceTData {
+                reason,
+                instance: type_::InstanceT::new(type_::InstanceTInner {
+                    inst,
+                    static_,
+                    super_,
+                    implements: vec![].into(),
+                }),
+                is_this: false,
+                subst_name: this_name,
             },
-        )))),
-    ))
+        )));
+        *result_cell.borrow_mut() = Some(result.dupe());
+        result
+    } else {
+        let (inst, make_super) = build(env, targs);
+        let super_ = make_super(None);
+        Type::new(type_::TypeInner::DefT(
+            reason,
+            type_::DefT::new(type_::DefTInner::InstanceT(Rc::new(type_::InstanceT::new(
+                type_::InstanceTInner {
+                    inst,
+                    static_,
+                    super_,
+                    implements: vec![].into(),
+                },
+            )))),
+        ))
+    }
 }
 
 fn merge_class_extends<'cx>(
@@ -3864,7 +4249,7 @@ fn merge_namespace_symbols<'cx>(
         let t = merge_impl(env, cx, file, packed, false, false);
         result.insert(
             Name::new(name.dupe()),
-            NamedSymbol::new(Some(loc.dupe()), None, t),
+            NamedSymbol::new(Some(loc.dupe()), None, t, None),
         );
     }
     result
@@ -4730,22 +5115,54 @@ pub fn merge_export<'cx>(
     export: &Pack::Export<ALoc>,
 ) -> NamedSymbol {
     match export {
-        Pack::Export::ExportRef(ref_) => merge_ref(
-            cx,
-            file,
-            |type_, _ref_loc, def_loc, _name| NamedSymbol::new(Some(def_loc), None, type_),
-            ref_,
-            false,
-        ),
+        Pack::Export::ExportRef(ref_) => match ref_ {
+            Pack::PackedRef::RemoteRef(box Pack::PackedRefRemote { ref_loc, index }) => {
+                let __rc = file.remote_refs.borrow().get(*index).dupe();
+                let entry = __rc.get_forced(cx);
+                let (def_loc, _name, type_, t_for_extends) = entry;
+                let type_ = reposition_sig_tvar(cx, ref_loc.dupe(), type_.dupe());
+                NamedSymbol::new(
+                    Some(def_loc.dupe()),
+                    None,
+                    type_,
+                    Some(t_for_extends.get_forced(cx).dupe()),
+                )
+            }
+            _ => merge_ref(
+                cx,
+                file,
+                |type_, _ref_loc, def_loc, _name| {
+                    NamedSymbol::new(Some(def_loc), None, type_, None)
+                },
+                ref_,
+                false,
+            ),
+        },
         Pack::Export::ExportDefault(box Pack::ExportDefaultData { default_loc, def }) => {
             if let Pack::Packed::Ref(ref_) = def {
-                merge_ref(
-                    cx,
-                    file,
-                    |type_, _ref_loc, def_loc, _name| NamedSymbol::new(Some(def_loc), None, type_),
-                    ref_,
-                    false,
-                )
+                match ref_ {
+                    Pack::PackedRef::RemoteRef(box Pack::PackedRefRemote { ref_loc, index }) => {
+                        let __rc = file.remote_refs.borrow().get(*index).dupe();
+                        let entry = __rc.get_forced(cx);
+                        let (def_loc, _name, type_, t_for_extends) = entry;
+                        let type_ = reposition_sig_tvar(cx, ref_loc.dupe(), type_.dupe());
+                        NamedSymbol::new(
+                            Some(def_loc.dupe()),
+                            None,
+                            type_,
+                            Some(t_for_extends.get_forced(cx).dupe()),
+                        )
+                    }
+                    _ => merge_ref(
+                        cx,
+                        file,
+                        |type_, _ref_loc, def_loc, _name| {
+                            NamedSymbol::new(Some(def_loc), None, type_, None)
+                        },
+                        ref_,
+                        false,
+                    ),
+                }
             } else {
                 let type_ = merge_impl(
                     &mk_merge_env(FlowOrdMap::new()),
@@ -4755,15 +5172,15 @@ pub fn merge_export<'cx>(
                     false,
                     false,
                 );
-                NamedSymbol::new(Some(default_loc.dupe()), None, type_)
+                NamedSymbol::new(Some(default_loc.dupe()), None, type_, None)
             }
         }
         Pack::Export::ExportBinding(index) => {
             let __rc = file.local_defs.borrow().get(*index).dupe();
             let entry = __rc.get_forced(cx);
-            let (loc, _name, _t_general, t_const) = entry;
+            let (loc, _name, _binding_kind, _t_general, t_const) = entry;
             let type_ = t_const.get_forced(cx).dupe();
-            NamedSymbol::new(Some(loc.dupe()), None, type_)
+            NamedSymbol::new(Some(loc.dupe()), None, type_, None)
         }
         Pack::Export::ExportDefaultBinding(box Pack::ExportDefaultBindingData {
             default_loc: _,
@@ -4771,15 +5188,20 @@ pub fn merge_export<'cx>(
         }) => {
             let __rc = file.local_defs.borrow().get(*index).dupe();
             let entry = __rc.get_forced(cx);
-            let (loc, _name, _t_general, t_const) = entry;
+            let (loc, _name, _binding_kind, _t_general, t_const) = entry;
             let type_ = t_const.get_forced(cx).dupe();
-            NamedSymbol::new(Some(loc.dupe()), None, type_)
+            NamedSymbol::new(Some(loc.dupe()), None, type_, None)
         }
         Pack::Export::ExportFrom(index) => {
             let __rc = file.remote_refs.borrow().get(*index).dupe();
             let entry = __rc.get_forced(cx);
-            let (loc, _name, type_) = entry;
-            NamedSymbol::new(Some(loc.dupe()), None, type_.dupe())
+            let (loc, _name, type_, t_for_extends) = entry;
+            NamedSymbol::new(
+                Some(loc.dupe()),
+                None,
+                type_.dupe(),
+                Some(t_for_extends.get_forced(cx).dupe()),
+            )
         }
     }
 }
@@ -4832,6 +5254,7 @@ pub fn classify_ts_pending_export<'cx>(
                 Some(export_loc.dupe()),
                 merged.preferred_def_locs.clone(),
                 merged.type_.dupe(),
+                merged.type_for_extends.dupe(),
             )
         }
         Pack::TsPendingExport::TsExportFrom {
@@ -4849,8 +5272,9 @@ pub fn classify_ts_pending_export<'cx>(
                 reason::VirtualReasonDesc::RIdentifier(Name::new(remote_name.dupe())),
                 export_loc.dupe(),
             );
-            let type_ = merge_remote_ref(cx, file, reason, &remote_ref_node);
-            NamedSymbol::new(Some(export_loc.dupe()), None, type_)
+            let type_ = merge_remote_ref(cx, file, reason.dupe(), &remote_ref_node);
+            let type_for_extends = merge_remote_ref_for_extends(cx, file, reason, &remote_ref_node);
+            NamedSymbol::new(Some(export_loc.dupe()), None, type_, Some(type_for_extends))
         }
     };
     if is_type_only {
@@ -5012,46 +5436,8 @@ pub fn merge_builtins<'cx>(
     ) -> Rc<
         flow_lazy::Lazy<
             Context<'cx>,
-            (
-                ALoc,
-                FlowSmolStr,
-                Rc<
-                    flow_lazy::Lazy<
-                        Context<'cx>,
-                        Type,
-                        Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
-                    >,
-                >,
-                Rc<
-                    flow_lazy::Lazy<
-                        Context<'cx>,
-                        Type,
-                        Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
-                    >,
-                >,
-            ),
-            Box<
-                dyn FnOnce(
-                        &Context<'cx>,
-                    ) -> (
-                        ALoc,
-                        FlowSmolStr,
-                        Rc<
-                            flow_lazy::Lazy<
-                                Context<'cx>,
-                                Type,
-                                Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
-                            >,
-                        >,
-                        Rc<
-                            flow_lazy::Lazy<
-                                Context<'cx>,
-                                Type,
-                                Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
-                            >,
-                        >,
-                    ) + 'cx,
-            >,
+            LocalDefEntry<'cx>,
+            Box<dyn FnOnce(&Context<'cx>) -> LocalDefEntry<'cx> + 'cx>,
         >,
     > {
         let aloc = aloc.dupe();
@@ -5065,6 +5451,7 @@ pub fn merge_builtins<'cx>(
             ));
             let loc = def.id_loc();
             let name = def.name().dupe();
+            let binding_kind = def_binding_kind(&def);
             let reason = def_reason(&def);
             let make_type = |const_decl: bool| -> Rc<
                 flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>,
@@ -5092,30 +5479,9 @@ pub fn merge_builtins<'cx>(
                     annotation_inference::mk_sig_tvar(cx, reason_for_tvar, resolved)
                 })))
             };
-            (loc, name, make_type(false), make_type(true))
+            (loc, name, binding_kind, make_type(false), make_type(true))
         })
-            as Box<
-                dyn FnOnce(
-                        &Context<'cx>,
-                    ) -> (
-                        ALoc,
-                        FlowSmolStr,
-                        Rc<
-                            flow_lazy::Lazy<
-                                Context<'cx>,
-                                Type,
-                                Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
-                            >,
-                        >,
-                        Rc<
-                            flow_lazy::Lazy<
-                                Context<'cx>,
-                                Type,
-                                Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
-                            >,
-                        >,
-                    ) + 'cx,
-            >))
+            as Box<dyn FnOnce(&Context<'cx>) -> LocalDefEntry<'cx> + 'cx>))
     }
 
     let remote_ref_fn = {
@@ -5125,8 +5491,8 @@ pub fn merge_builtins<'cx>(
               -> Rc<
             flow_lazy::Lazy<
                 Context<'cx>,
-                (ALoc, FlowSmolStr, Type),
-                Box<dyn FnOnce(&Context<'cx>) -> (ALoc, FlowSmolStr, Type) + 'cx>,
+                RemoteRefEntry<'cx>,
+                Box<dyn FnOnce(&Context<'cx>) -> RemoteRefEntry<'cx> + 'cx>,
             >,
         > {
             let aloc = aloc.dupe();
@@ -5151,11 +5517,27 @@ pub fn merge_builtins<'cx>(
                     merge_remote_ref(cx, file, reason2, &rref2)
                 })));
                 let t = annotation_inference::mk_sig_tvar(cx, reason.dupe(), resolved);
-                (loc, name, t)
+                let file_and_dep2 = file_and_dep.dupe();
+                let reason2 = reason.dupe();
+                let rref2 = rref.clone();
+                let resolved_for_extends: Rc<
+                    flow_lazy::Lazy<
+                        Context<'cx>,
+                        Type,
+                        Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
+                    >,
+                > = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+                    let (file, _) = file_and_dep2.get_forced(cx);
+                    merge_remote_ref_for_extends(cx, file, reason2, &rref2)
+                })));
+                let t_for_extends: LazyType<'cx> =
+                    Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+                        annotation_inference::mk_sig_tvar(cx, reason, resolved_for_extends)
+                    })
+                        as Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>));
+                (loc, name, t, t_for_extends)
             })
-                as Box<
-                    dyn FnOnce(&Context<'cx>) -> (ALoc, FlowSmolStr, Type) + 'cx,
-                >))
+                as Box<dyn FnOnce(&Context<'cx>) -> RemoteRefEntry<'cx> + 'cx>))
         }
     };
 
@@ -5460,7 +5842,7 @@ pub fn merge_builtins<'cx>(
                 let lazy_val: flow_typing_builtins::LazyVal<'cx, Context<'cx>> =
                     Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
                         //   (fun (loc, _, (lazy t), _) -> (loc, t))
-                        let (loc, _, general, _) = inner_lazy.get_forced(cx);
+                        let (loc, _, _, general, _) = inner_lazy.get_forced(cx);
                         (loc.dupe(), general.get_forced(cx).dupe())
                     })
                         as Box<dyn FnOnce(&Context<'cx>) -> (ALoc, Type) + 'cx>));
@@ -5481,7 +5863,7 @@ pub fn merge_builtins<'cx>(
                 let lazy_val: flow_typing_builtins::LazyVal<'cx, Context<'cx>> =
                     Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
                         //   (fun (loc, _, (lazy t), _) -> (loc, t))
-                        let (loc, _, general, _) = inner_lazy.get_forced(cx);
+                        let (loc, _, _, general, _) = inner_lazy.get_forced(cx);
                         (loc.dupe(), general.get_forced(cx).dupe())
                     })
                         as Box<dyn FnOnce(&Context<'cx>) -> (ALoc, Type) + 'cx>));

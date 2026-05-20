@@ -23,6 +23,7 @@ use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_env_builder::name_def_types::Import as NameDefImport;
 use flow_parser::ast;
 use flow_parser::polymorphic_ast_mapper;
 use flow_parser::polymorphic_ast_mapper::LocMapper;
@@ -44,6 +45,7 @@ use flow_typing_flow_common::type_subst;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_loc_env::func_class_sig_types;
+use flow_typing_loc_env::func_class_sig_types::class::ClassLikeBindingKind;
 use flow_typing_type::type_;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
@@ -3330,8 +3332,11 @@ fn convert_inner<'a>(
                     }
                 }
                 None => {
+                    let mut env = env.clone();
+                    env.tparams_map
+                        .remove(&SubstName::name(FlowSmolStr::new_inline("this")));
                     let (obj_t, properties_ast) =
-                        convert_object(cx, env, loc.dupe(), exact_type, properties)?;
+                        convert_object(cx, &mut env, loc.dupe(), exact_type, properties)?;
                     if !exact && !inexact && !has_indexer {
                         flow_js_utils::add_output_non_speculating(
                             cx,
@@ -3360,12 +3365,17 @@ fn convert_inner<'a>(
             let iface_comments = &inner.comments;
             let reason =
                 reason::mk_annot_reason(reason::VirtualReasonDesc::RInterfaceType, loc.dupe());
+            let mut env = env.clone();
+            env.tparams_map
+                .remove(&SubstName::name(FlowSmolStr::new_inline("this")));
             let id = cx.make_aloc_id(loc);
             let mut extends_types = Vec::new();
+            let mut extends_binding_kinds = Vec::new();
             let mut extend_asts = Vec::new();
             for ext in extends.iter() {
-                let (typeapp, ext_ast) = mk_interface_super(cx, env, ext)?;
+                let ((typeapp, binding_kind), ext_ast) = mk_interface_super(cx, &mut env, ext)?;
                 extends_types.push(typeapp);
+                extends_binding_kinds.push(binding_kind);
                 extend_asts.push(ext_ast);
             }
             let callable = properties.iter().any(|prop| match prop {
@@ -3376,7 +3386,10 @@ fn convert_inner<'a>(
                 func_class_sig_types::class::InterfaceSuper {
                     inline: true,
                     extends: extends_types,
+                    extends_binding_kinds,
                     callable,
+                    this_tparam: None,
+                    this_t: None,
                 },
             );
             let iface_sig = class_sig::empty(
@@ -3394,7 +3407,7 @@ fn convert_inner<'a>(
             let this = type_::implicit_mixed_this(reason.dupe());
             let (iface_sig, property_asts) = add_interface_properties(
                 cx,
-                env,
+                &mut env,
                 None,
                 intermediate_error_types::ObjKind::Interface,
                 this,
@@ -3460,7 +3473,10 @@ fn convert_inner<'a>(
                     func_class_sig_types::class::InterfaceSuper {
                         inline: true,
                         extends: vec![],
+                        extends_binding_kinds: vec![],
                         callable: false,
+                        this_tparam: None,
+                        this_t: None,
                     },
                 );
                 let mut iface_sig = class_sig::empty(
@@ -6099,13 +6115,199 @@ fn type_identifier<'a>(
     ))
 }
 
+pub fn binding_kind_of_generic_id_pre_convert(
+    cx: &Context,
+    id: &ast::types::generic::Identifier<ALoc, ALoc>,
+) -> ClassLikeBindingKind {
+    use ast::types::generic::Identifier;
+
+    fn leaf(id: &ast::types::generic::Identifier<ALoc, ALoc>) -> Option<ALoc> {
+        match id {
+            Identifier::Unqualified(ident) => Some(ident.loc.dupe()),
+            Identifier::Qualified(q) => leaf(&q.qualification),
+            Identifier::ImportTypeAnnot(_) => None,
+        }
+    }
+
+    match leaf(id).and_then(|loc| type_env::local_classlike_binding_kind_at_loc(cx, loc)) {
+        None => ClassLikeBindingKind::BindingUnknown,
+        Some(type_env::LocalClasslikeBindingKind::Mono) => ClassLikeBindingKind::ClassLikeMono,
+        Some(type_env::LocalClasslikeBindingKind::Poly) => ClassLikeBindingKind::ClassLikePoly,
+        Some(type_env::LocalClasslikeBindingKind::Other) => ClassLikeBindingKind::BindingOther,
+    }
+}
+
+pub fn binding_kind_of_generic_id_post_convert(
+    cx: &Context,
+    id_pre_convert: &ast::types::generic::Identifier<ALoc, ALoc>,
+    converted_t: &Type,
+) -> Result<ClassLikeBindingKind, flow_utils_concurrency::job_error::JobError> {
+    use ast::types::generic::Identifier;
+
+    fn leaf(id: &ast::types::generic::Identifier<ALoc, ALoc>) -> Option<ALoc> {
+        match id {
+            Identifier::Unqualified(ident) => Some(ident.loc.dupe()),
+            Identifier::Qualified(q) => leaf(&q.qualification),
+            Identifier::ImportTypeAnnot(_) => None,
+        }
+    }
+
+    let initial = binding_kind_of_generic_id_pre_convert(cx, id_pre_convert);
+    match initial {
+        ClassLikeBindingKind::BindingUnknown => {
+            match leaf(id_pre_convert).and_then(|loc| type_env::import_info_at_loc(cx, loc)) {
+                Some((import_kind_at_loc, import_spec, source, source_loc)) => {
+                    let module_name = Userland::from_smol_str(source.dupe());
+                    let import_kind_for_untyped_import_validation = Some(
+                        flow_js_utils::import_export_utils::type_kind_of_kind(&import_kind_at_loc),
+                    );
+                    let source_module =
+                        match flow_js_utils::import_export_utils::get_module_type_or_any(
+                            cx,
+                            false,
+                            import_kind_for_untyped_import_validation,
+                            source_loc.dupe(),
+                            module_name.dupe(),
+                        ) {
+                            Ok(v) => v,
+                            Err(flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+                                return Err(flow_utils_concurrency::job_error::JobError::Canceled(
+                                    c,
+                                ));
+                            }
+                            Err(flow_js_utils::FlowJsException::TimedOut(t)) => {
+                                return Err(flow_utils_concurrency::job_error::JobError::TimedOut(
+                                    t,
+                                ));
+                            }
+                            Err(err) => panic!("Should not be under speculation: {:?}", err),
+                        };
+                    let import_reason = type_util::reason_of_t(converted_t).dupe();
+                    let raw_t_opt = match import_spec {
+                        NameDefImport::Named {
+                            kind,
+                            remote,
+                            local: _,
+                        } => {
+                            let import_kind = kind.as_ref().unwrap_or(&import_kind_at_loc);
+                            match flow_js_utils::import_export_utils::import_named_specifier_type_for_extends(
+                                cx,
+                                import_reason,
+                                import_kind,
+                                module_name,
+                                &source_module,
+                                &remote,
+                            ) {
+                                Ok(t) => Some(t),
+                                Err(flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+                                    return Err(
+                                        flow_utils_concurrency::job_error::JobError::Canceled(c),
+                                    );
+                                }
+                                Err(flow_js_utils::FlowJsException::TimedOut(t)) => {
+                                    return Err(
+                                        flow_utils_concurrency::job_error::JobError::TimedOut(t),
+                                    );
+                                }
+                                Err(err) => panic!("Should not be under speculation: {:?}", err),
+                            }
+                        }
+                        NameDefImport::Default(local_name) => {
+                            match flow_js_utils::import_export_utils::import_default_specifier_type_for_extends(
+                                cx,
+                                import_reason,
+                                &import_kind_at_loc,
+                                module_name,
+                                &source_module,
+                                &local_name,
+                            ) {
+                                Ok(t) => Some(t),
+                                Err(flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+                                    return Err(
+                                        flow_utils_concurrency::job_error::JobError::Canceled(c),
+                                    );
+                                }
+                                Err(flow_js_utils::FlowJsException::TimedOut(t)) => {
+                                    return Err(
+                                        flow_utils_concurrency::job_error::JobError::TimedOut(t),
+                                    );
+                                }
+                                Err(err) => panic!("Should not be under speculation: {:?}", err),
+                            }
+                        }
+                        NameDefImport::Namespace(_) => None,
+                    };
+                    match raw_t_opt {
+                        None => Ok(ClassLikeBindingKind::BindingUnknown),
+                        Some(raw_t) => {
+                            Ok(match flow_js_utils::polymorphic_class_kind(cx, &raw_t) {
+                                flow_js_utils::PolymorphicClassKind::Mono => {
+                                    ClassLikeBindingKind::ClassLikeRawMono(raw_t)
+                                }
+                                flow_js_utils::PolymorphicClassKind::Poly => {
+                                    ClassLikeBindingKind::ClassLikeRawPoly(raw_t)
+                                }
+                                flow_js_utils::PolymorphicClassKind::Other => {
+                                    ClassLikeBindingKind::BindingUnknown
+                                }
+                            })
+                        }
+                    }
+                }
+                None => Ok(ClassLikeBindingKind::BindingUnknown),
+            }
+        }
+        ClassLikeBindingKind::BindingOther => {
+            if matches!(id_pre_convert, Identifier::Qualified(_)) {
+                Ok(
+                    match flow_js_utils::polymorphic_class_kind(cx, converted_t) {
+                        flow_js_utils::PolymorphicClassKind::Mono => {
+                            ClassLikeBindingKind::ClassLikeRawMono(converted_t.dupe())
+                        }
+                        flow_js_utils::PolymorphicClassKind::Poly => {
+                            ClassLikeBindingKind::ClassLikeRawPoly(converted_t.dupe())
+                        }
+                        flow_js_utils::PolymorphicClassKind::Other => {
+                            ClassLikeBindingKind::BindingOther
+                        }
+                    },
+                )
+            } else {
+                Ok(ClassLikeBindingKind::BindingOther)
+            }
+        }
+        ClassLikeBindingKind::ClassLikeMono | ClassLikeBindingKind::ClassLikePoly => {
+            if matches!(id_pre_convert, Identifier::Qualified(_)) {
+                Ok(
+                    match flow_js_utils::polymorphic_class_kind(cx, converted_t) {
+                        flow_js_utils::PolymorphicClassKind::Mono => {
+                            ClassLikeBindingKind::ClassLikeRawMono(converted_t.dupe())
+                        }
+                        flow_js_utils::PolymorphicClassKind::Poly => {
+                            ClassLikeBindingKind::ClassLikeRawPoly(converted_t.dupe())
+                        }
+                        flow_js_utils::PolymorphicClassKind::Other => {
+                            ClassLikeBindingKind::BindingOther
+                        }
+                    },
+                )
+            } else {
+                Ok(initial)
+            }
+        }
+        ClassLikeBindingKind::ClassLikeRawMono(_) | ClassLikeBindingKind::ClassLikeRawPoly(_) => {
+            Ok(initial)
+        }
+    }
+}
+
 fn mk_interface_super<'a>(
     cx: &Context<'a>,
     env: &mut ConvertEnv,
     generic_with_loc: &(ALoc, ast::types::Generic<ALoc, ALoc>),
 ) -> Result<
     (
-        (ALoc, Type, Option<Vec<Type>>),
+        ((ALoc, Type, Option<Vec<Type>>), ClassLikeBindingKind),
         (ALoc, ast::types::Generic<ALoc, (ALoc, Type)>),
     ),
     flow_utils_concurrency::job_error::JobError,
@@ -6114,7 +6316,9 @@ fn mk_interface_super<'a>(
     let id = &generic.id;
     let targs = &generic.targs;
     let comments = &generic.comments;
+    let id_pre_convert = id;
     let (c, id_typed) = convert_qualification(cx, "extends", id)?;
+    let binding_kind = binding_kind_of_generic_id_post_convert(cx, id_pre_convert, &c)?;
     let (typeapp, targs_typed) = match targs {
         None => ((loc.dupe(), c, None), None),
         Some(targs_node) => {
@@ -6130,7 +6334,7 @@ fn mk_interface_super<'a>(
         }
     };
     Ok((
-        typeapp,
+        (typeapp, binding_kind),
         (
             loc.dupe(),
             ast::types::Generic {
@@ -7621,15 +7825,23 @@ pub fn mk_interface_sig<'a>(
         decl.tparams.as_ref(),
     )?;
     cx.record_interface_tparams(id_loc.dupe(), &tparams, &env.tparams_map);
-    let class_name = &id_name.name;
-    let id = cx.make_aloc_id(id_loc);
     let mut extends = Vec::new();
+    let mut extends_binding_kinds = Vec::new();
     let mut extends_ast = Vec::new();
     for ext in decl.extends.iter() {
-        let (typeapp, ext_ast) = mk_interface_super(cx, &mut env, ext)?;
+        let ((typeapp, binding_kind), ext_ast) = mk_interface_super(cx, &mut env, ext)?;
         extends.push(typeapp);
+        extends_binding_kinds.push(binding_kind);
         extends_ast.push(ext_ast);
     }
+    let (this_tparam, this_t) =
+        class_sig::mk_this(type_::implicit_mixed_this(reason.dupe()), cx, reason.dupe());
+    env.tparams_map.insert(
+        SubstName::name(FlowSmolStr::new_inline("this")),
+        this_t.dupe(),
+    );
+    let class_name = &id_name.name;
+    let id = cx.make_aloc_id(id_loc);
     let callable = body.properties.iter().any(|prop| match prop {
         ast::types::object::Property::CallProperty(cp) => !cp.static_,
         _ => false,
@@ -7638,7 +7850,10 @@ pub fn mk_interface_sig<'a>(
         func_class_sig_types::class::InterfaceSuper {
             inline: false,
             extends,
+            extends_binding_kinds,
             callable,
+            this_tparam: Some(this_tparam),
+            this_t: Some(this_t.dupe()),
         },
     );
     let mut iface_sig = class_sig::empty(
@@ -7655,13 +7870,12 @@ pub fn mk_interface_sig<'a>(
     );
     // TODO: interfaces don't have a name field, or even statics
     class_sig::add_name_field(&mut iface_sig);
-    let this = type_::implicit_mixed_this(reason.dupe());
     let (iface_sig, properties_ast) = add_interface_properties(
         cx,
         &mut env,
         Some(id_loc.dupe()),
         intermediate_error_types::ObjKind::Interface,
-        this,
+        this_t,
         &body.properties,
         iface_sig,
     )?;
@@ -8280,8 +8494,8 @@ pub fn mk_declare_class_sig<'a>(
         };
         let (mixins_list, mixins_ast_list): (Vec<_>, Vec<_>) =
             try_map_pair_vecs(&decl.mixins, |m| mk_mixins(cx, &mut env, m))?;
-        let (implements_list, implements_ast) = match &decl.implements {
-            None => (Vec::new(), None),
+        let (implements_list, implements_binding_kinds, implements_ast) = match &decl.implements {
+            None => (Vec::new(), Vec::new(), None),
             Some(impls) => {
                 let (impl_list, ifaces_ast): (Vec<_>, Vec<_>) = try_map_pair_vecs(
                     &impls.interfaces,
@@ -8304,7 +8518,10 @@ pub fn mk_declare_class_sig<'a>(
                             }
                             _ => {}
                         }
+                        let id_pre_convert = id;
                         let (c, id) = convert_qualification(cx, "implements", id)?;
+                        let binding_kind =
+                            binding_kind_of_generic_id_post_convert(cx, id_pre_convert, &c)?;
                         let (typeapp, targs_ast) = match &iface.targs {
                             None => ((iface.loc.dupe(), c.dupe(), None), None),
                             Some(targs) => {
@@ -8321,7 +8538,7 @@ pub fn mk_declare_class_sig<'a>(
                             }
                         };
                         Ok((
-                            typeapp,
+                            (typeapp, binding_kind),
                             ast::class::implements::Interface {
                                 loc: iface.loc.dupe(),
                                 id,
@@ -8330,8 +8547,11 @@ pub fn mk_declare_class_sig<'a>(
                         ))
                     },
                 )?;
+                let (implements, implements_binding_kinds): (Vec<_>, Vec<_>) =
+                    impl_list.into_iter().unzip();
                 (
-                    impl_list,
+                    implements,
+                    implements_binding_kinds,
                     Some(ast::class::Implements {
                         loc: impls.loc.dupe(),
                         interfaces: ifaces_ast.into(),
@@ -8351,6 +8571,7 @@ pub fn mk_declare_class_sig<'a>(
                 extends: extends_kind,
                 mixins: mixins_list,
                 implements: implements_list,
+                implements_binding_kinds,
                 this_t: this_t.dupe(),
                 this_tparam,
             })

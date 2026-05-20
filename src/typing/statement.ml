@@ -8339,11 +8339,11 @@ module Make
         let (class_sig, extends_ast_f, implements_ast) =
           let id = Context.make_aloc_id cx name_loc in
           let (extends, extends_ast_f) = mk_extends cx tparams_map extends in
-          let (implements, implements_ast) =
+          let (implements, implements_binding_kinds, implements_ast) =
             match implements with
-            | None -> ([], None)
+            | None -> ([], [], None)
             | Some (implements_loc, { Ast.Class.Implements.interfaces; comments }) ->
-              let (implements, interfaces_ast) =
+              let (implements_with_kinds, interfaces_ast) =
                 interfaces
                 |> Base.List.map ~f:(fun (loc, i) ->
                        let { Ast.Class.Implements.Interface.id; targs } = i in
@@ -8357,12 +8357,19 @@ module Make
                               (loc, Flow_intermediate_error_types.(TSLibSyntax ImplementsDottedPath))
                            )
                        | _ -> ());
+                       let id_pre_convert = id in
                        let (c, id) =
                          Anno.convert_qualification
                            ~lookup_mode:Type_env.LookupMode.ForType
                            cx
                            "implements"
                            id
+                       in
+                       let binding_kind =
+                         Anno.binding_kind_of_generic_id_post_convert
+                           cx
+                           ~id_pre_convert
+                           ~converted_t:c
                        in
                        let (typeapp, targs) =
                          match targs with
@@ -8373,16 +8380,26 @@ module Make
                              Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                            )
                        in
-                       (typeapp, (loc, { Ast.Class.Implements.Interface.id; targs }))
+                       ((typeapp, binding_kind), (loc, { Ast.Class.Implements.Interface.id; targs }))
                    )
                 |> List.split
               in
+              let (implements, implements_binding_kinds) = List.split implements_with_kinds in
               ( implements,
+                implements_binding_kinds,
                 Some (implements_loc, { Ast.Class.Implements.interfaces = interfaces_ast; comments })
               )
           in
           let super =
-            Class { Class_stmt_sig_types.extends; mixins = []; implements; this_t; this_tparam }
+            Class
+              {
+                Class_stmt_sig_types.extends;
+                mixins = [];
+                implements;
+                implements_binding_kinds;
+                this_t;
+                this_tparam;
+              }
           in
           ( Class_stmt_sig.empty id class_name class_loc reason tparams tparams_map super,
             extends_ast_f,
@@ -9563,11 +9580,11 @@ module Make
 
         let (class_sig, implements_ast) =
           let aloc_id = Context.make_aloc_id cx name_loc in
-          let (implements, implements_ast) =
+          let (implements, implements_binding_kinds, implements_ast) =
             match implements with
-            | None -> ([], None)
+            | None -> ([], [], None)
             | Some (implements_loc, { Ast.Class.Implements.interfaces; comments }) ->
-              let (implements, interfaces_ast) =
+              let (implements_with_kinds, interfaces_ast) =
                 interfaces
                 |> Base.List.map ~f:(fun (loc, i) ->
                        let { Ast.Class.Implements.Interface.id; targs } = i in
@@ -9581,12 +9598,19 @@ module Make
                               (loc, Flow_intermediate_error_types.(TSLibSyntax ImplementsDottedPath))
                            )
                        | _ -> ());
+                       let id_pre_convert = id in
                        let (c, id) =
                          Anno.convert_qualification
                            ~lookup_mode:Type_env.LookupMode.ForType
                            cx
                            "implements"
                            id
+                       in
+                       let binding_kind =
+                         Anno.binding_kind_of_generic_id_post_convert
+                           cx
+                           ~id_pre_convert
+                           ~converted_t:c
                        in
                        let (typeapp, targs) =
                          match targs with
@@ -9597,11 +9621,13 @@ module Make
                              Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                            )
                        in
-                       (typeapp, (loc, { Ast.Class.Implements.Interface.id; targs }))
+                       ((typeapp, binding_kind), (loc, { Ast.Class.Implements.Interface.id; targs }))
                    )
                 |> List.split
               in
+              let (implements, implements_binding_kinds) = List.split implements_with_kinds in
               ( implements,
+                implements_binding_kinds,
                 Some (implements_loc, { Ast.Class.Implements.interfaces = interfaces_ast; comments })
               )
           in
@@ -9612,6 +9638,7 @@ module Make
                 Class_stmt_sig_types.extends = Implicit { null = false };
                 mixins = [];
                 implements;
+                implements_binding_kinds;
                 this_t;
                 this_tparam;
               }

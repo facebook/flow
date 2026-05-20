@@ -1959,6 +1959,20 @@ module Make (I : INPUT) : S = struct
                 (TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ })
             ) ->
           toplevel ~env type_
+        (* Imported polymorphic interfaces. canonicalize_imported_type wraps a
+           polymorphic interface as [TypeT(ImportClassKind, TypeAppT _)] to mirror
+           the [ClassT(TypeAppT _)] wrapping used for classes, so [this] survives
+           the import. Unwrap to the original PolyT so the inner instance can be
+           rendered as an interface declaration rather than [Class<...>]. *)
+        | DefT
+            ( _,
+              TypeT
+                ( ImportClassKind,
+                  TypeAppT
+                    { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ }
+                )
+            ) ->
+          toplevel ~env type_
         | DefT
             ( reason,
               ReactAbstractComponentT { component_kind = Nominal (_, name, targs); config; renders }
@@ -2050,7 +2064,7 @@ module Make (I : INPUT) : S = struct
             Some t)
       in
       let from_exports_tmap ~env exports_tmap =
-        let step (x, { name_loc = _; preferred_def_locs = _; type_ = t }) =
+        let step (x, { name_loc = _; preferred_def_locs = _; type_ = t; type_for_extends = _ }) =
           match%map toplevel ~env t with
           | Ty.Decl d -> d
           | Ty.Type t -> Ty.VariableDecl (x, t)

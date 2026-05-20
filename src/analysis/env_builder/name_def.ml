@@ -3116,9 +3116,30 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
-      let { id = (name_loc, _); _ } = interface in
-      this#add_ordinary_binding name_loc (mk_reason RInterfaceType loc) (Interface (loc, interface));
-      this#in_new_tparams_env (fun () -> super#interface loc interface)
+      let { id = (name_loc, _); tparams; extends; body; comments = _ } = interface in
+      (* Force-register the binding so the synthetic [this] tparam (added below
+         at [name_loc]) always resolves. In declaration-merging cases like
+         [declare namespace X { type T = ... }] + [interface X { ... }] (TS
+         pattern, common in .d.ts files), the env_builder may not register an
+         AssigningWrite at [name_loc] for the interface, which would make the
+         conditional [add_ordinary_binding] a no-op and crash [init_type_param]
+         when it walks the interface's [tparams_locs] for any inner method. *)
+      this#force_add_binding
+        (Env_api.OrdinaryNameLoc, name_loc)
+        (mk_reason RInterfaceType loc)
+        (Interface (loc, interface));
+      this#in_new_tparams_env (fun () ->
+          (* Walk tparams and extends without [this] in scope (matching the
+             lexical-scope rule: [extends Holder<this>] still errors). Then
+             add [this] to the tparams env so method bodies — including their
+             own type-parameter constraints/defaults — can reference it. *)
+          ignore @@ Base.Option.map ~f:(this#type_params ~kind:Flow_ast_mapper.InterfaceTP) tparams;
+          ignore @@ Base.List.map ~f:(fun (eloc, e) -> (eloc, this#generic_type e)) extends;
+          this#add_tparam name_loc "this";
+          let (_bloc, b) = body in
+          ignore @@ this#object_type b;
+          interface
+      )
 
     method! declare_module loc (m : ('loc, 'loc) Ast.Statement.DeclareModule.t) =
       this#in_scope (super#declare_module loc) DeclareModule m

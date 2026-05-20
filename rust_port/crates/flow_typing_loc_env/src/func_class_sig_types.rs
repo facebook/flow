@@ -172,6 +172,37 @@ pub mod func {
 pub mod class {
     use super::*;
 
+    /// Tag identifying whether a [typeapp] in an [extends]/[implements] clause
+    /// resolves to a class-like binding ([class] / [declare class] / [interface]
+    /// / [record]). [ClassLikeMono]/[ClassLikePoly] mean we can wrap the parent
+    /// in [TypeUtil.this_typeapp] driven by binding-kind metadata alone (no
+    /// forcing of the resolved type tvar). [BindingOther] means the parent is a
+    /// type alias / variable / etc. — don't wrap. [BindingUnknown] is the
+    /// fallback when binding kind isn't statically visible.
+    ///
+    /// [ClassLikeRawMono]/[ClassLikeRawPoly] carry an explicit *raw*
+    /// ([ClassT(ThisInstanceT _)]-shaped) override of the converted [c]. Used
+    /// when [c] from [convert_qualification] is in canonicalized form (cross-
+    /// module imports go through [import_named_specifier_type] which calls
+    /// [canonicalize_imported_type]'s [fix_this_instance], destroying the
+    /// polymorphic-[this] shape). The raw override is computed via the parallel
+    /// [_for_extends] import path that bypasses canonicalization. The class-sig
+    /// consumer ([class_sig.ml]) wraps this raw override in [TypeUtil.this_typeapp]
+    /// so polymorphic [this] rebinds correctly across module boundaries. For
+    /// namespace-member references like [NS.I] the converted [c] is already raw
+    /// (the namespace's [types_tmap] stores raw exporter-side types), so the
+    /// override carries the same [c] — the variant is the marker that triggers
+    /// the [this_typeapp] wrap path.
+    #[derive(Debug, Clone)]
+    pub enum ClassLikeBindingKind {
+        ClassLikeMono,
+        ClassLikePoly,
+        ClassLikeRawMono(Type),
+        ClassLikeRawPoly(Type),
+        BindingOther,
+        BindingUnknown,
+    }
+
     pub type FuncSig<C> = func::Func<C>;
 
     #[allow(type_alias_bounds)]
@@ -217,6 +248,8 @@ pub mod class {
         // declare class only
         pub mixins: Vec<TypeApp>,
         pub implements: Vec<TypeApp>,
+        /// Parallel to [implements]: see comment on [ClassLikeBindingKind].
+        pub implements_binding_kinds: Vec<ClassLikeBindingKind>,
         pub this_tparam: TypeParam,
         pub this_t: Type,
     }
@@ -224,8 +257,14 @@ pub mod class {
     #[derive(Debug, Clone)]
     pub struct InterfaceSuper {
         pub inline: bool,
+        // Anonymous interface, can appear anywhere inside a type
         pub extends: Vec<TypeApp>,
+        /// Parallel to [extends]: see comment on [ClassLikeBindingKind].
+        pub extends_binding_kinds: Vec<ClassLikeBindingKind>,
         pub callable: bool,
+        /// Polymorphic [this] for the interface. None for inline interfaces.
+        pub this_tparam: Option<TypeParam>,
+        pub this_t: Option<Type>,
     }
 
     #[derive(Debug, Clone)]

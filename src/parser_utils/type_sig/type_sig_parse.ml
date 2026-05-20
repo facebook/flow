@@ -2948,13 +2948,26 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Component { T.Component.tparams; params; renders; _ } ->
       let def = component_type opts scope tbls xs tparams params renders in
       Annot (ComponentAnnot (loc, def))
-    | T.Object o -> object_type opts scope tbls xs loc o
+    | T.Object o ->
+      (* Strip [this] when descending into a nested object type. The
+         enclosing interface's [this] is NOT in scope inside nested object
+         types — matches both TypeScript (TS2526) and Flow's existing
+         behavior in classes. Without this strip, [this] propagates from
+         the enclosing [interface_def]'s [xs_body] all the way down through
+         arbitrary annotation nesting. *)
+      let xs = SSet.remove "this" xs in
+      object_type opts scope tbls xs loc o
     | T.Interface
         {
           T.Interface.body = (_, { T.Object.properties; exact = _; inexact = _; comments = _ });
           extends;
           comments = _;
         } ->
+      (* Same reasoning as the [T.Object] case: an inline interface annotation
+         introduces its own [this]-binding scope (controlled by its own
+         [bind_this_in_body] flag, which defaults to false here), so the
+         enclosing scope's [this] should NOT leak in. *)
+      let xs = SSet.remove "this" xs in
       let def = interface_def opts scope tbls xs extends properties in
       Annot (InlineInterface (loc, def))
     | T.Generic g -> maybe_special_generic opts scope tbls xs loc g
@@ -3543,7 +3556,7 @@ and object_type =
       | None -> Annot (Any loc)
       | Some acc -> Acc.object_type loc ~exact acc)
 
-and interface_def opts scope tbls xs extends properties =
+and interface_def ?(bind_this_in_body = false) opts scope tbls xs extends properties =
   let module Acc = InterfaceAcc in
   let extends =
     List.map
@@ -3552,7 +3565,13 @@ and interface_def opts scope tbls xs extends properties =
         generic opts scope tbls xs loc g)
       extends
   in
-  Acc.empty |> interface_props opts scope tbls xs properties |> Acc.interface_def extends
+  let xs_body =
+    if bind_this_in_body then
+      SSet.add "this" xs
+    else
+      xs
+  in
+  Acc.empty |> interface_props opts scope tbls xs_body properties |> Acc.interface_def extends
 
 and interface_props =
   let module O = Ast.Type.Object in
@@ -6262,7 +6281,7 @@ let interface_decl opts scope tbls decl =
     lazy
       (splice tbls id_loc (fun tbls ->
            let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
-           let def = interface_def opts scope tbls xs extends properties in
+           let def = interface_def ~bind_this_in_body:true opts scope tbls xs extends properties in
            Interface { id_loc; name; tparams; def }
        )
       )

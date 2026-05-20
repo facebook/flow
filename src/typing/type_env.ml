@@ -148,6 +148,82 @@ let local_export_binding_at_loc cx loc =
   | Ok { Env_api.def_loc; val_kind; _ } -> Some { def_loc; val_kind }
   | Error _ -> None
 
+(* For an unqualified identifier reference at [use_loc], inspect [Loc_env.name_defs]
+   at the resolved [def_loc] to recognize whether the binding is a local
+   class-like definition (class / declare class / interface / record). Returns
+   [Some `Mono | Some `Poly] for class-like local bindings, [Some `Other] for
+   other local bindings (type alias, variable, etc.), and [None] when no local
+   def is statically visible (cross-module imports, re-exports, etc.).
+
+   Cycle-safe: never forces any type tvar — only inspects the AST structure
+   recorded in [Name_def.def] entries. Used by [Class_type_sig.supertype]
+   and [check_implements] to decide whether to wrap an [extends]/[implements]
+   parent in [TypeUtil.this_typeapp] for polymorphic-[this] rebinding. *)
+let local_classlike_binding_kind_at_loc cx use_loc =
+  let { Loc_env.var_info; name_defs; _ } = Context.environment cx in
+  match find_var_opt var_info use_loc with
+  | Error _ -> None
+  | Ok { Env_api.def_loc = None; _ } -> None
+  | Ok { Env_api.def_loc = Some def_loc; val_kind; _ } ->
+    (match val_kind with
+    | Env_api.Type { imported = true; _ }
+    | Env_api.TsImport ->
+      (* Imported binding: the [Name_def] entry, if any, is an [Import]
+         constructor that points at the import statement, not at the
+         exporter's definition. We can't determine the exporter's binding
+         kind locally without crossing the module boundary. *)
+      None
+    | Env_api.Type { imported = false; _ }
+    | Env_api.Value
+    | Env_api.Internal ->
+      let entries = name_defs in
+      let lookup kind = Env_api.EnvMap.find_opt (kind, def_loc) entries in
+      let def_opt =
+        match lookup Env_api.OrdinaryNameLoc with
+        | Some _ as r -> r
+        | None -> lookup Env_api.ClassSelfLoc
+      in
+      (match def_opt with
+      | None -> None
+      | Some (def, _scope, _stack, _reason) ->
+        let poly_or_mono tparams =
+          match tparams with
+          | None -> `Mono
+          | Some _ -> `Poly
+        in
+        (match def with
+        | Name_def.Class { class_ = { Flow_ast.Class.tparams; _ }; _ } -> Some (poly_or_mono tparams)
+        | Name_def.Record { record = { Flow_ast.Statement.RecordDeclaration.tparams; _ }; _ } ->
+          Some (poly_or_mono tparams)
+        | Name_def.DeclaredClass (_, { Flow_ast.Statement.DeclareClass.tparams; _ }, _) ->
+          Some (poly_or_mono tparams)
+        | Name_def.Interface (_, { Flow_ast.Statement.Interface.tparams; _ }) ->
+          Some (poly_or_mono tparams)
+        | _ -> Some `Other)))
+
+(* For an imported binding at [use_loc], retrieve the recorded
+   [Name_def.Import] entry. Used by the [extends]/[implements] convert path
+   to recompute the raw (un-canonicalized) [c] for cross-module class-like
+   imports — the regular [Type_env.get_var] path returns a type already run
+   through [canonicalize_imported_type], destroying the polymorphic-[this]
+   shape needed for [TypeUtil.this_typeapp]. Returns [None] for non-imported
+   bindings or when no [Import] entry is recorded. *)
+let import_info_at_loc cx use_loc =
+  let { Loc_env.var_info; name_defs; _ } = Context.environment cx in
+  match find_var_opt var_info use_loc with
+  | Error _ -> None
+  | Ok { Env_api.def_loc = None; _ } -> None
+  | Ok { Env_api.def_loc = Some def_loc; val_kind; _ } ->
+    (match val_kind with
+    | Env_api.Type { imported = true; _ }
+    | Env_api.TsImport ->
+      let lookup kind = Env_api.EnvMap.find_opt (kind, def_loc) name_defs in
+      (match lookup Env_api.OrdinaryNameLoc with
+      | Some (Name_def.Import { import_kind; import; source; source_loc }, _, _, _) ->
+        Some (import_kind, import, source, source_loc)
+      | _ -> None)
+    | _ -> None)
+
 let find_refi { Env_api.refinement_of_id; _ } = refinement_of_id
 
 let find_providers { Env_api.providers; _ } loc =

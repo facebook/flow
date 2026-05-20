@@ -306,8 +306,9 @@ class ['a] t =
       self#type_ cx pole acc t
 
     method exports cx pole acc id =
-      let visit acc { name_loc = _; preferred_def_locs = _; type_ } =
-        self#type_ cx pole acc type_
+      let visit acc { name_loc = _; preferred_def_locs = _; type_; type_for_extends } =
+        let acc = self#type_ cx pole acc type_ in
+        Base.Option.fold type_for_extends ~init:acc ~f:(fun acc t -> self#type_ cx pole acc t)
       in
       Context.find_exports cx id |> self#namemap visit acc
 

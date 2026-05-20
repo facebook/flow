@@ -36,7 +36,12 @@ module Module_info = struct
             named =
               NameUtils.Map.singleton
                 name
-                { Type.preferred_def_locs = None; name_loc = Some name_loc; type_ };
+                {
+                  Type.preferred_def_locs = None;
+                  name_loc = Some name_loc;
+                  type_;
+                  type_for_extends = None;
+                };
             star = [];
           }
     | ES { named; star } ->
@@ -46,7 +51,12 @@ module Module_info = struct
             named =
               NameUtils.Map.add
                 name
-                { Type.preferred_def_locs = None; name_loc = Some name_loc; type_ }
+                {
+                  Type.preferred_def_locs = None;
+                  name_loc = Some name_loc;
+                  type_;
+                  type_for_extends = None;
+                }
                 named;
             star;
           }
@@ -66,7 +76,7 @@ module Module_info = struct
     info.type_named <-
       NameUtils.Map.add
         name
-        { Type.preferred_def_locs = None; name_loc = Some name_loc; type_ }
+        { Type.preferred_def_locs = None; name_loc = Some name_loc; type_; type_for_extends = None }
         info.type_named
 
   let export_type_star info loc module_type_opt =

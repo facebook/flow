@@ -82,14 +82,14 @@ mod module_info {
         match &mut info.kind {
             Kind::Unknown => {
                 let mut named = exports::T::new();
-                named.insert(name, NamedSymbol::new(Some(name_loc), None, type_));
+                named.insert(name, NamedSymbol::new(Some(name_loc), None, type_, None));
                 info.kind = Kind::ES {
                     named,
                     star: Vec::new(),
                 };
             }
             Kind::ES { named, star: _ } => {
-                named.insert(name, NamedSymbol::new(Some(name_loc), None, type_));
+                named.insert(name, NamedSymbol::new(Some(name_loc), None, type_, None));
             }
             Kind::Cjs(_) => {
                 // Indeterminate module. We already errored in module_exports_checker.
@@ -120,7 +120,7 @@ mod module_info {
 
     pub(super) fn export_type(info: &mut ModuleInfo, name: Name, name_loc: ALoc, type_: Type) {
         info.type_named
-            .insert(name, NamedSymbol::new(Some(name_loc), None, type_));
+            .insert(name, NamedSymbol::new(Some(name_loc), None, type_, None));
     }
 
     pub(super) fn export_type_star(

@@ -767,7 +767,11 @@ pub fn exports_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
 ) -> Acc {
     let exports = cx.find_exports(id);
     exports.values().fold(acc, |acc, named_symbol| {
-        visitor.type_(cx, pole, acc, &named_symbol.type_)
+        let acc = visitor.type_(cx, pole, acc, &named_symbol.type_);
+        match &named_symbol.type_for_extends {
+            None => acc,
+            Some(t) => visitor.type_(cx, pole, acc, t),
+        }
     })
 }
 

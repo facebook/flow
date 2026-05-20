@@ -50,6 +50,27 @@ type local_export_binding = {
 
 val local_export_binding_at_loc : Context.t -> ALoc.t -> local_export_binding option
 
+(** For an unqualified identifier reference, inspect the recorded [Name_def]
+    entry at the resolved [def_loc] to recognize whether the binding is a local
+    class-like definition (class / declare class / interface / record). Returns
+    [Some `Mono]/[Some `Poly] for class-like local bindings, [Some `Other] for
+    other local bindings, and [None] when no local def is statically visible
+    (cross-module imports, etc.).
+
+    Cycle-safe: never forces any type tvar — only inspects the AST structure
+    recorded in [Name_def_types.def] entries. *)
+val local_classlike_binding_kind_at_loc : Context.t -> ALoc.t -> [ `Mono | `Poly | `Other ] option
+
+(** For an imported binding at a use-site loc, retrieve the recorded
+    [Name_def.Import] entry as [(import_kind, import, source, source_loc)].
+    Returns [None] for non-imported bindings or when no [Import] entry is
+    recorded. Used by the [extends]/[implements] convert path to recompute
+    the raw (un-canonicalized) form of a class-like cross-module import. *)
+val import_info_at_loc :
+  Context.t ->
+  ALoc.t ->
+  (Flow_ast.Statement.ImportDeclaration.import_kind * Name_def.import * string * ALoc.t) option
+
 val in_toplevel_scope : Context.t -> bool
 
 val in_global_scope : Context.t -> bool

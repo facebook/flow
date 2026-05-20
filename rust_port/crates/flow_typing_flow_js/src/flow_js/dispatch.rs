@@ -3979,6 +3979,33 @@ fn __flow_impl<'cx>(
             ));
             continue_repos(cx, trace, r, false, &def_t, k)?;
         }
+        // this-specialize a this-abstracted interface
+        (
+            TypeInner::ThisInstanceT(box ThisInstanceTData {
+                reason: inst_r,
+                instance: i,
+                subst_name,
+                ..
+            }),
+            UseTInner::ThisSpecializeT(r, this, k),
+        ) => {
+            let mut map = FlowOrdMap::new();
+            map.insert(subst_name.dupe(), this.dupe());
+            let i = type_subst::subst_instance_type(
+                cx,
+                None,
+                true,
+                false,
+                type_subst::Purpose::Normal,
+                &map,
+                i,
+            );
+            let def_t = Type::new(TypeInner::DefT(
+                inst_r.dupe(),
+                DefT::new(DefTInner::InstanceT(Rc::new(i))),
+            ));
+            continue_repos(cx, trace, r, false, &def_t, k)?;
+        }
         // this-specialization of non-this-abstracted classes is a no-op
         (TypeInner::DefT(_, def_t), UseTInner::ThisSpecializeT(r, _this, k))
             if let DefTInner::ClassT(i) = def_t.deref() =>

@@ -23,6 +23,17 @@ type ts_pending_classified =
   | TsPendingType of Type.named_symbol
   | TsPendingValue of Type.named_symbol
 
+(* Tag for local definitions that affects how the binding's type is consumed in
+   contexts like [interface ... extends X]. [DefBindingClassLike] is set for
+   definitions that produce a [Poly?{ClassT(ThisInstanceT _)}] shape — namely
+   class, declare class, interface, and record bindings. For these, the
+   interface-extends consumer can wrap the parent in [this_typeapp] without
+   first forcing the resolved tvar. *)
+type local_def_binding_kind =
+  | DefBindingClassLikeMono
+  | DefBindingClassLikePoly
+  | DefBindingOther
+
 type exports =
   | CJSExports of {
       type_exports: Type.named_symbol Lazy.t SMap.t;
@@ -46,8 +57,16 @@ type file = {
   dependencies: (Flow_import_specifier.userland * Context.resolved_require Lazy.t) Module_refs.t;
   exports: unit -> (Type.moduletype, Type.t) result;
   local_defs:
-    (ALoc.t * string * Type.t Lazy.t (* general *) * Type.t Lazy.t (* const *)) Lazy.t Local_defs.t;
-  remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;
+    ( ALoc.t
+    * string
+    * local_def_binding_kind
+    * Type.t Lazy.t (* general *)
+    * Type.t Lazy.t (* const *)
+    )
+    Lazy.t
+    Local_defs.t;
+  remote_refs:
+    (ALoc.t * string * Type.t * Type.t Lazy.t (* raw, for interface-extends *)) Lazy.t Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
 }
@@ -77,6 +96,41 @@ let def_reason = function
   | EnumBinding { id_loc; name; _ } ->
     Reason.(mk_reason (REnum { name = Some name }) id_loc)
   | NamespaceBinding { id_loc; name; _ } -> Reason.(mk_reason (RNamespace name) id_loc)
+
+(* Returns the binding kind for a [Type_sig.def]. We tag class, declare class,
+   interface, and record bindings as [DefBindingClassLikeMono] /
+   [DefBindingClassLikePoly] (depending on whether they have type parameters)
+   because they all produce a [Poly?{ClassT(ThisInstanceT _)}]-shaped sig
+   tvar — which the interface-extends consumer needs to wrap in [this_typeapp]
+   to rebind [this] on the parent. The mono/poly distinction lets the consumer
+   decide between direct wrap (mono) and wrap-with-targs (poly), without
+   forcing the lazy sig tvar to inspect the resolved shape (which can trigger
+   spurious recursive-definition errors in cyclic graphs). *)
+let def_binding_kind : type a b. (a, b) Type_sig.def -> local_def_binding_kind =
+ fun def ->
+  let tparams_kind tparams =
+    match tparams with
+    | Type_sig.Mono -> DefBindingClassLikeMono
+    | Type_sig.Poly _ -> DefBindingClassLikePoly
+  in
+  match def with
+  | Interface { tparams; _ } -> tparams_kind tparams
+  | ClassBinding { def = ClassSig { tparams; _ }; _ } -> tparams_kind tparams
+  | DeclareClassBinding { def = DeclareClassSig { tparams; _ }; _ } -> tparams_kind tparams
+  | RecordBinding { def = ClassSig { tparams; _ }; _ } -> tparams_kind tparams
+  | TypeAlias _
+  | OpaqueType _
+  | DisabledRecordBinding _
+  | FunBinding _
+  | DeclareFun _
+  | ComponentBinding _
+  | DisabledComponentBinding _
+  | Variable _
+  | Parameter _
+  | EnumBinding _
+  | DisabledEnumBinding _
+  | NamespaceBinding _ ->
+    DefBindingOther
 
 let remote_ref_reason = function
   | Pack.Import { id_loc; name; _ }
@@ -278,6 +332,19 @@ let import file reason index kind ~remote ~local =
   else
     ConsGen.import_named file.cx reason kind remote mref false resolved_require
 
+(* Like [import] but uses the [_for_extends] variants which skip
+   [canonicalize_imported_type]'s [ClassT(ThisInstanceT _)] unwrap. Both the
+   default and the named branch dispatch to the corresponding
+   [_for_extends] [ConsGen] entry so that polymorphic [this] is preserved
+   across module boundaries regardless of which import form is used. Only
+   used on the interface-extends consumer site. *)
+let import_for_extends file reason index kind ~remote ~local =
+  let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  if remote = "default" then
+    ConsGen.import_default_for_extends file.cx reason kind local mref false resolved_require
+  else
+    ConsGen.import_named_for_extends file.cx reason kind remote mref false resolved_require
+
 let import_ns file reason name id_loc index =
   let (_, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let namespace_symbol =
@@ -382,6 +449,23 @@ let merge_remote_ref file reason = function
   | Pack.ImportTypeofNs { id_loc; name; index } -> import_typeof_ns file reason name id_loc index
   | Pack.ImportTypeNs { id_loc; name; index } -> import_ns file reason name id_loc index
 
+(* Like [merge_remote_ref] but for the interface-extends consumer site. For
+   [ImportType]/[ImportTypeof]/[Import], routes through [import_for_extends]
+   which skips [canonicalize_imported_type]'s [ClassT(ThisInstanceT _)] unwrap.
+   For namespace imports, the namespace itself doesn't need bypassing — its
+   [types_tmap] already stores raw exporter-side types — so we use the
+   regular path. *)
+let merge_remote_ref_for_extends file reason = function
+  | Pack.Import { id_loc = _; name; index; remote } ->
+    import_for_extends file reason index Type.ImportValue ~remote ~local:name
+  | Pack.ImportType { id_loc = _; name; index; remote } ->
+    import_for_extends file reason index Type.ImportType ~remote ~local:name
+  | Pack.ImportTypeof { id_loc = _; name; index; remote } ->
+    import_for_extends file reason index Type.ImportTypeof ~remote ~local:name
+  | Pack.ImportNs { id_loc; name; index } -> import_ns file reason name id_loc index
+  | Pack.ImportTypeofNs { id_loc; name; index } -> import_typeof_ns file reason name id_loc index
+  | Pack.ImportTypeNs { id_loc; name; index } -> import_ns file reason name id_loc index
+
 let merge_ref :
       'a.
       ?const_decl:bool ->
@@ -392,12 +476,14 @@ let merge_ref :
  fun ?(const_decl = false) file f ref ->
   match ref with
   | Pack.LocalRef { ref_loc; index } ->
-    let (lazy (def_loc, name, t_general, t_const)) = Local_defs.get file.local_defs index in
+    let (lazy (def_loc, name, _binding_kind, t_general, t_const)) =
+      Local_defs.get file.local_defs index
+    in
     let t = Lazy.force (Utils_js.ite const_decl t_const t_general) in
     let t = reposition_sig_tvar file.cx ref_loc t in
     f t ~ref_loc ~def_loc name
   | Pack.RemoteRef { ref_loc; index } ->
-    let (lazy (def_loc, name, t)) = Remote_refs.get file.remote_refs index in
+    let (lazy (def_loc, name, t, _t_for_extends)) = Remote_refs.get file.remote_refs index in
     let t = reposition_sig_tvar file.cx ref_loc t in
     f t ~ref_loc ~def_loc name
   | Pack.BuiltinRef { ref_loc; type_ref; name } ->
@@ -429,18 +515,49 @@ let rec merge_tyref file f = function
 
 let merge_type_export file reason = function
   | Pack.ExportTypeRef ref ->
-    let f t ~ref_loc:_ ~def_loc name =
+    (* For two-step barrels like [import type { X } from './base'; export type
+       { X };], the [ref] is a [Pack.RemoteRef] pointing to the imported [X].
+       The shared [merge_ref] callback only sees the canonicalized [t] and
+       drops the [t_for_extends] slot of the [Remote_refs] 4-tuple. Inline
+       the [RemoteRef] case here so we can populate [type_for_extends] from
+       the raw sig tvar — preserving polymorphic [this] across barrel chains
+       that go through a local [import type] + local [export type] pair. *)
+    (match ref with
+    | Pack.RemoteRef { ref_loc; index } ->
+      let (lazy (def_loc, name, t, t_for_extends)) = Remote_refs.get file.remote_refs index in
+      let t = reposition_sig_tvar file.cx ref_loc t in
       let type_ = ConsGen.assert_export_is_type file.cx reason name t in
-      { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ }
-    in
-    merge_ref file f ref
+      {
+        Type.name_loc = Some def_loc;
+        preferred_def_locs = None;
+        type_;
+        type_for_extends = Some (Lazy.force t_for_extends);
+      }
+    | _ ->
+      let f t ~ref_loc:_ ~def_loc name =
+        let type_ = ConsGen.assert_export_is_type file.cx reason name t in
+        { Type.name_loc = Some def_loc; preferred_def_locs = None; type_; type_for_extends = None }
+      in
+      merge_ref file f ref)
   | Pack.ExportTypeBinding index ->
-    let (lazy (loc, name, (lazy t), _)) = Local_defs.get file.local_defs index in
+    let (lazy (loc, name, _binding_kind, (lazy t), _)) = Local_defs.get file.local_defs index in
     let type_ = ConsGen.assert_export_is_type file.cx reason name t in
-    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_; type_for_extends = None }
   | Pack.ExportTypeFrom index ->
-    let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+    (* Re-export: [export type {X} from './base']. Carry the [t_for_extends]
+       sig tvar (resolved via [merge_remote_ref_for_extends], which skips
+       canonicalization) alongside the canonicalized [type_]. The
+       [_for_extends] consumer site
+       ([ImportNamedTKit.on_ModuleT_for_extends]) prefers
+       [type_for_extends] when [Some], preserving polymorphic [this] across
+       barrel re-export chains. *)
+    let (lazy (loc, _name, type_, t_for_extends)) = Remote_refs.get file.remote_refs index in
+    {
+      Type.name_loc = Some loc;
+      preferred_def_locs = None;
+      type_;
+      type_for_extends = Some (Lazy.force t_for_extends);
+    }
 
 let mk_commonjs_module_t cx module_reason ~module_is_strict ~module_available_platforms ~def_loc t =
   let open Type in
@@ -1609,22 +1726,146 @@ and merge_tparam ~from_infer env file tp =
 
 and merge_op env file op = map_op (merge env file) op
 
+(* For an interface [extends] clause, the parent must be wrappable in
+   [TypeUtil.this_typeapp] so that members returning [this] in the parent
+   rebind to the child's [this]. The wrap is only valid when the parent has
+   a [Poly?{ClassT(ThisInstanceT _)}] shape (the form produced for class,
+   declare class, interface, and record bindings during sig-merge).
+
+   The default merge path goes through [mk_type_reference] (and for
+   cross-module refs, [canonicalize_imported_type]), both of which unwrap
+   [ClassT(ThisInstanceT _)] into [InstanceT(self_subst)] via
+   [fix_this_instance], destroying the polymorphic [this].
+
+   Strategy:
+   - For [Pack.LocalRef] leaves: dispatch on the [binding_kind] now tagged
+     on [local_defs]. Class-like bindings produce the raw shape directly,
+     so we resolve via [merge_ref] (which bypasses [mk_type_reference]).
+   - For [Pack.RemoteRef] direct imports: route through [import_for_extends]
+     which uses [ConsGen.import_named_for_extends] (skips
+     [canonicalize_imported_type]).
+   - For [Pack.Qualified] (namespace-member): the existing [qualify_type]
+     path uses [Annot_GetTypeFromNamespaceT] which looks up the prop
+     directly from the namespace's [types_tmap] — that map stores the
+     exporter-side raw type, so the result is already in the raw shape. *)
+and merge_interface_extends ~bind_this env file packed =
+  (* Resolve a [Pack.tyref] without going through [mk_type_reference]. For
+     direct cross-module imports this also uses the [_for_extends] path to
+     skip [canonicalize_imported_type]. *)
+  let resolve_raw name =
+    let f t _ _ = t in
+    let rec aux = function
+      | Pack.Unqualified (Pack.RemoteRef { ref_loc; index }) ->
+        (* Use the [_for_extends] sig tvar from [remote_refs], which resolves
+           via [import_named_for_extends] (skips
+           [canonicalize_imported_type]'s [ClassT(ThisInstanceT _)] unwrap). *)
+        let (lazy (_def_loc, _name, _t, t_for_extends)) = Remote_refs.get file.remote_refs index in
+        let t = Lazy.force t_for_extends in
+        reposition_sig_tvar file.cx ref_loc t
+      | Pack.Qualified { loc; id_loc; name; qualification } ->
+        (* Walk the qualification chain. Intermediate qualifications go
+           through [qualify_type] / [Annot_GetTypeFromNamespaceT], which
+           returns raw exporter-side types from the namespace's
+           [types_tmap]. *)
+        let qual_t = aux qualification in
+        let name_r = Reason.OrdinaryName name in
+        let id_reason = Reason.(mk_reason (RType name_r) id_loc) in
+        let op_reason = Reason.(mk_reason (RType name_r) loc) in
+        let use_op = Type.Op (Type.GetProperty op_reason) in
+        ConsGen.qualify_type file.cx use_op id_reason ~op_reason name_r qual_t
+      | Pack.Unqualified _ as orig -> merge_tyref file f orig
+    in
+    aux name
+  in
+  (* Get the binding kind for an [Unqualified LocalRef] tyref. For qualified
+     names ([Pack.Qualified]) we return [None] because the leftmost qualifier
+     (which is what the recursive walk would reach) is the namespace/class
+     wrapper, not the actual member being referenced — using its binding
+     kind would miscategorize the member (e.g. [namespace NS { interface I
+     ... }] referenced as [NS.I] would classify as [Other] from [NS], not
+     [Poly] from [I]). For [RemoteRef] / [BuiltinRef] / qualified refs we
+     fall back to the structural peek below, which inspects the actually
+     resolved type. *)
+  let leaf_binding_kind = function
+    | Pack.Unqualified (Pack.LocalRef { index; _ }) ->
+      let (lazy (_, _, kind, _, _)) = Local_defs.get file.local_defs index in
+      Some kind
+    | _ -> None
+  in
+  (* Structural check for the polymorphic-class shape. Cycle-safe per the
+     [polymorphic_class_kind] contract: this site only reaches here from
+     cross-module ([RemoteRef]) or builtin ([BuiltinRef]) leaves, never an
+     in-file in-progress interface body (those are handled by the
+     binding-kind dispatch above without forcing). *)
+  let polymorphic_class_kind t =
+    match Flow_js_utils.polymorphic_class_kind file.cx t with
+    | `Poly -> `Poly
+    | `Mono -> `NonPoly
+    | `Other -> `Other
+  in
+  if not bind_this then
+    (* Inline interface extends: never wrap. The interface has no [this_t] to
+       rebind to anyway, and downstream consumers expect [InstanceT] (not
+       raw [Poly?{ClassT(ThisInstanceT _)}]) for the parent. *)
+    (merge env file packed, false, None)
+  else
+    match packed with
+    | Pack.TyRef name ->
+      let kind = leaf_binding_kind name in
+      (match kind with
+      | Some DefBindingOther ->
+        (* Type alias / variable / etc. parent: don't wrap. Falls through to
+           the regular merge so [TypeT] etc. unwrap correctly. *)
+        (merge env file packed, false, None)
+      | Some DefBindingClassLikeMono ->
+        (* Mono class-like local binding: wrap directly without inspecting. *)
+        let raw = resolve_raw name in
+        (raw, true, None)
+      | Some DefBindingClassLikePoly ->
+        (* Poly class-like local binding with no targs: missing-targs error
+           path — fall back to regular merge so [EMissingTypeArgs] fires. *)
+        (merge env file packed, false, None)
+      | None ->
+        (* Cross-module ref / namespace member / builtin with no LocalRef
+           leaf — the binding kind isn't statically visible. Inspect the
+           resolved shape; cycle-safe because we're not in any in-file
+           interface body cycle (those are handled by the [Some _] branches
+           above via binding-kind dispatch). *)
+        let raw = resolve_raw name in
+        (match polymorphic_class_kind raw with
+        | `NonPoly -> (raw, true, None)
+        | `Poly
+        | `Other ->
+          (merge env file packed, false, None)))
+    | Pack.TyRefApp { loc; name; targs } ->
+      let targs_t = List.map (merge env file) targs in
+      let kind = leaf_binding_kind name in
+      (match kind with
+      | Some DefBindingOther ->
+        let raw = merge env file (Pack.TyRef name) in
+        let t = TypeUtil.typeapp_annot ~from_value:false ~use_desc:false loc raw targs_t in
+        (t, false, None)
+      | Some DefBindingClassLikePoly ->
+        let raw = resolve_raw name in
+        (raw, true, Some targs_t)
+      | Some DefBindingClassLikeMono ->
+        (* Mono class-like with targs supplied — the targs are extra. Use
+           regular merge so the right error fires. *)
+        let raw = resolve_raw name in
+        let t = TypeUtil.typeapp_annot ~from_value:false ~use_desc:false loc raw targs_t in
+        (t, false, None)
+      | None ->
+        let raw = resolve_raw name in
+        (match polymorphic_class_kind raw with
+        | `Poly -> (raw, true, Some targs_t)
+        | `NonPoly
+        | `Other ->
+          let t = TypeUtil.typeapp_annot ~from_value:false ~use_desc:false loc raw targs_t in
+          (t, false, None)))
+    | t -> (merge env file t, false, None)
+
 and merge_interface ~inline env file reason class_name id def =
   let (InterfaceSig { extends; props; computed_props; calls; dict }) = def in
-  let super =
-    let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
-    let ts = List.map (merge env file) extends in
-    let ts =
-      if calls = [] then
-        ts
-      else
-        Type.FunProtoT super_reason :: ts
-    in
-    match ts with
-    | [] -> Type.ObjProtoT super_reason
-    | [t] -> t
-    | t0 :: t1 :: ts -> Type.(IntersectionT (super_reason, InterRep.make t0 t1 ts))
-  in
   let static =
     let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
     (* TODO: interfaces don't have a name field, or even statics *)
@@ -1632,57 +1873,83 @@ and merge_interface ~inline env file reason class_name id def =
     let proto = Type.NullProtoT static_reason in
     Obj_type.mk_with_proto file.cx static_reason proto ~props ~obj_kind:Type.Inexact
   in
-  let (own_props, proto_props) =
-    let open Reason in
-    let (own, proto) =
-      SMap.fold
-        (fun k prop (own, proto) ->
-          let t = merge_interface_prop env file prop in
-          match prop with
-          | InterfaceField _ -> (NameUtils.Map.add (OrdinaryName k) t own, proto)
-          | InterfaceAccess _
-          | InterfaceMethod _ ->
-            (own, NameUtils.Map.add (OrdinaryName k) t proto))
-        props
-        (NameUtils.Map.empty, NameUtils.Map.empty)
+  (* Top-level interfaces get a polymorphic [this] type; inline interfaces
+     don't (they don't introduce a fresh [this] binding). *)
+  let bind_this = not inline in
+  let build env targs =
+    let extends_resolved = List.map (merge_interface_extends ~bind_this env file) extends in
+    let make_super this_opt =
+      let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
+      let ts =
+        Base.List.map
+          ~f:(fun (t, polymorphic_class, targs_opt) ->
+            match (this_opt, polymorphic_class) with
+            | (Some this, true) ->
+              let annot_loc = Reason.loc_of_reason (TypeUtil.reason_of_t t) in
+              TypeUtil.this_typeapp ~annot_loc t this targs_opt
+            | _ -> t)
+          extends_resolved
+      in
+      let ts =
+        if calls = [] then
+          ts
+        else
+          Type.FunProtoT super_reason :: ts
+      in
+      match ts with
+      | [] -> Type.ObjProtoT super_reason
+      | [t] -> t
+      | t0 :: t1 :: ts -> Type.(IntersectionT (super_reason, InterRep.make t0 t1 ts))
     in
-    List.fold_left
-      (fun (own, proto) (key, prop) ->
-        match resolve_computed_key env file key with
-        | Some name ->
-          let t = merge_interface_prop env file prop in
-          let update_map map =
-            NameUtils.Map.update
-              name
-              (function
-                | None -> Some t
-                | Some existing -> Some (merge_overloaded_property existing t))
-              map
-          in
-          (match prop with
-          | InterfaceField _ -> (update_map own, proto)
-          | InterfaceAccess _
-          | InterfaceMethod _ ->
-            (own, update_map proto))
-        | None -> (own, proto))
-      (own, proto)
-      computed_props
-  in
-  let inst_call_t =
-    let ts = List.rev_map (merge env file) calls in
-    match ts with
-    | [] -> None
-    | [t] -> Some (Context.make_call_prop file.cx t)
-    | t0 :: t1 :: ts ->
-      let reason = TypeUtil.reason_of_t t0 in
-      let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
-      Some (Context.make_call_prop file.cx t)
-  in
-  let inst_dict = Option.map ~f:(merge_dict env file ~as_const:false) dict in
-  fun targs ->
+    let (own_props, proto_props) =
+      let open Reason in
+      let (own, proto) =
+        SMap.fold
+          (fun k prop (own, proto) ->
+            let t = merge_interface_prop env file prop in
+            match prop with
+            | InterfaceField _ -> (NameUtils.Map.add (OrdinaryName k) t own, proto)
+            | InterfaceAccess _
+            | InterfaceMethod _ ->
+              (own, NameUtils.Map.add (OrdinaryName k) t proto))
+          props
+          (NameUtils.Map.empty, NameUtils.Map.empty)
+      in
+      List.fold_left
+        (fun (own, proto) (key, prop) ->
+          match resolve_computed_key env file key with
+          | Some name ->
+            let t = merge_interface_prop env file prop in
+            let update_map map =
+              NameUtils.Map.update
+                name
+                (function
+                  | None -> Some t
+                  | Some existing -> Some (merge_overloaded_property existing t))
+                map
+            in
+            (match prop with
+            | InterfaceField _ -> (update_map own, proto)
+            | InterfaceAccess _
+            | InterfaceMethod _ ->
+              (own, update_map proto))
+          | None -> (own, proto))
+        (own, proto)
+        computed_props
+    in
+    let inst_call_t =
+      let ts = List.rev_map (merge env file) calls in
+      match ts with
+      | [] -> None
+      | [t] -> Some (Context.make_call_prop file.cx t)
+      | t0 :: t1 :: ts ->
+        let reason = TypeUtil.reason_of_t t0 in
+        let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
+        Some (Context.make_call_prop file.cx t)
+    in
+    let inst_dict = Option.map ~f:(merge_dict env file ~as_const:false) dict in
     let open Type in
-    let inst =
-      {
+    ( {
         class_id = id;
         inst_react_dro = None;
         class_name;
@@ -1698,9 +1965,43 @@ and merge_interface ~inline env file reason class_name id def =
         class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_static_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
-      }
-    in
-    DefT (reason, InstanceT { static; super; implements = []; inst })
+      },
+      make_super
+    )
+  in
+  fun targs ->
+    let open Type in
+    if bind_this then
+      let this_reason = Reason.(replace_desc_reason RThisType reason) in
+      let this_name = Subst_name.Name "this" in
+      let rec t =
+        lazy
+          (let rec_type =
+             Tvar.mk_fully_resolved_lazy file.cx this_reason ~force_post_component:false t
+           in
+           let this_tp =
+             {
+               Type.name = this_name;
+               reason = this_reason;
+               bound = rec_type;
+               polarity = Polarity.Positive;
+               default = None;
+               is_this = true;
+               is_const = false;
+             }
+           in
+           let this = Flow_js_utils.generic_of_tparam file.cx ~f:(fun x -> x) this_tp in
+           let env = { env with tps = SMap.add "this" this env.tps } in
+           let (inst, make_super) = build env targs in
+           let super = make_super (Some this) in
+           ThisInstanceT (reason, { static; super; implements = []; inst }, false, this_name)
+          )
+      in
+      Lazy.force t
+    else
+      let (inst, make_super) = build env targs in
+      let super = make_super None in
+      DefT (reason, InstanceT { static; super; implements = []; inst })
 
 and merge_class_extends env file this reason extends mixins =
   let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
@@ -1904,7 +2205,12 @@ and merge_namespace_symbols env file members =
     (fun name (loc, packed) acc ->
       NameUtils.Map.add
         (Reason.OrdinaryName name)
-        { Type.name_loc = Some loc; preferred_def_locs = None; type_ = merge env file packed }
+        {
+          Type.name_loc = Some loc;
+          preferred_def_locs = None;
+          type_ = merge env file packed;
+          type_for_extends = None;
+        }
         acc)
     members
     NameUtils.Map.empty
@@ -2355,6 +2661,7 @@ let merge_def ~const_decl file reason = function
               Type.name_loc = Some loc;
               preferred_def_locs = None;
               type_ = merge (mk_merge_env SMap.empty) file packed;
+              type_for_extends = None;
             })
         smap
         NameUtils.Map.empty
@@ -2365,23 +2672,59 @@ let merge_def ~const_decl file reason = function
 let merge_export file = function
   | Pack.ExportRef ref
   | Pack.ExportDefault { default_loc = _; def = Pack.Ref ref } ->
-    merge_ref
-      file
-      (fun type_ ~ref_loc:_ ~def_loc _ ->
-        { Type.name_loc = Some def_loc; preferred_def_locs = None; type_ })
-      ref
+    (* Symmetric to [merge_type_export]'s [ExportTypeRef] inline-[RemoteRef]
+       handling: a two-step value-re-export ([import { X } from './base';
+       export { X };]) goes through here as a [Pack.RemoteRef]. The shared
+       [merge_ref] callback drops the [t_for_extends] slot, so we inline
+       the [RemoteRef] case to populate [type_for_extends] from the raw
+       sig tvar — preserving polymorphic [this] across two-step value
+       barrels (e.g. a class re-exported then [implements]ed downstream). *)
+    (match ref with
+    | Pack.RemoteRef { ref_loc; index } ->
+      let (lazy (def_loc, _name, type_, t_for_extends)) = Remote_refs.get file.remote_refs index in
+      let type_ = reposition_sig_tvar file.cx ref_loc type_ in
+      {
+        Type.name_loc = Some def_loc;
+        preferred_def_locs = None;
+        type_;
+        type_for_extends = Some (Lazy.force t_for_extends);
+      }
+    | _ ->
+      merge_ref
+        file
+        (fun type_ ~ref_loc:_ ~def_loc _ ->
+          {
+            Type.name_loc = Some def_loc;
+            preferred_def_locs = None;
+            type_;
+            type_for_extends = None;
+          })
+        ref)
   | Pack.ExportBinding index ->
-    let (lazy (loc, _name, _, (lazy type_))) = Local_defs.get file.local_defs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+    let (lazy (loc, _name, _binding_kind, _, (lazy type_))) =
+      Local_defs.get file.local_defs index
+    in
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_; type_for_extends = None }
   | Pack.ExportDefault { default_loc; def } ->
     let type_ = merge (mk_merge_env SMap.empty) file def in
-    { Type.name_loc = Some default_loc; preferred_def_locs = None; type_ }
+    { Type.name_loc = Some default_loc; preferred_def_locs = None; type_; type_for_extends = None }
   | Pack.ExportDefaultBinding { default_loc = _; index } ->
-    let (lazy (loc, _name, _, (lazy type_))) = Local_defs.get file.local_defs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+    let (lazy (loc, _name, _binding_kind, _, (lazy type_))) =
+      Local_defs.get file.local_defs index
+    in
+    { Type.name_loc = Some loc; preferred_def_locs = None; type_; type_for_extends = None }
   | Pack.ExportFrom index ->
-    let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
-    { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+    (* Re-export of a value: [export {X} from './base']. Carry the
+       [t_for_extends] sig tvar so [implements] / [extends] consumers reading
+       this binding via a class import (e.g. [class C implements Re-X])
+       preserve polymorphic [this] across barrel re-exports. *)
+    let (lazy (loc, _name, type_, t_for_extends)) = Remote_refs.get file.remote_refs index in
+    {
+      Type.name_loc = Some loc;
+      preferred_def_locs = None;
+      type_;
+      type_for_extends = Some (Lazy.force t_for_extends);
+    }
 
 let classify_ts_pending_export file (pending : ALoc.t Pack.ts_pending_export) :
     ts_pending_classified =
@@ -2420,7 +2763,13 @@ let classify_ts_pending_export file (pending : ALoc.t Pack.ts_pending_export) :
       in
       let reason = Reason.(mk_reason (RIdentifier (OrdinaryName remote_name)) export_loc) in
       let type_ = merge_remote_ref file reason remote_ref_node in
-      { Type.name_loc = Some export_loc; preferred_def_locs = None; type_ }
+      let type_for_extends = merge_remote_ref_for_extends file reason remote_ref_node in
+      {
+        Type.name_loc = Some export_loc;
+        preferred_def_locs = None;
+        type_;
+        type_for_extends = Some type_for_extends;
+      }
   in
   if is_type_only then
     TsPendingType sym
@@ -2507,6 +2856,7 @@ let merge_builtins
       (let def = Pack.map_packed_def aloc def in
        let loc = Type_sig.def_id_loc def in
        let name = Type_sig.def_name def in
+       let binding_kind = def_binding_kind def in
        let reason = def_reason def in
        let type_ ~const_decl =
          let resolved =
@@ -2514,7 +2864,7 @@ let merge_builtins
          in
          ConsGen.mk_sig_tvar cx reason resolved
        in
-       (loc, name, lazy (type_ ~const_decl:false), lazy (type_ ~const_decl:true))
+       (loc, name, binding_kind, lazy (type_ ~const_decl:false), lazy (type_ ~const_decl:true))
       )
   in
 
@@ -2528,7 +2878,16 @@ let merge_builtins
          lazy (merge_remote_ref (Lazy.force file_and_dependency_map_rec |> fst) reason remote_ref)
        in
        let t = ConsGen.mk_sig_tvar cx reason resolved in
-       (loc, name, t)
+       let resolved_for_extends =
+         lazy
+           (merge_remote_ref_for_extends
+              (Lazy.force file_and_dependency_map_rec |> fst)
+              reason
+              remote_ref
+           )
+       in
+       let t_for_extends = lazy (ConsGen.mk_sig_tvar cx reason resolved_for_extends) in
+       (loc, name, t, t_for_extends)
       )
   in
 
@@ -2677,7 +3036,7 @@ let merge_builtins
       (fun name i acc ->
         let t =
           Lazy.map
-            (fun (loc, _, (lazy t), _) -> (loc, t))
+            (fun (loc, _, _, (lazy t), _) -> (loc, t))
             (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
         in
         SMap.add name t acc)
@@ -2689,7 +3048,7 @@ let merge_builtins
       (fun name i acc ->
         let t =
           Lazy.map
-            (fun (loc, _, (lazy t), _) -> (loc, t))
+            (fun (loc, _, _, (lazy t), _) -> (loc, t))
             (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
         in
         SMap.add name t acc)

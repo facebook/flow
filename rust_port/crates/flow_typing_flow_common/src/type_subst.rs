@@ -379,13 +379,23 @@ pub fn exports<'cx, MapCx, M: TypeMapper<'cx, MapCx>>(
     let exps = cx.find_exports(id);
     let exps_prime = exps.ident_map(|ns| {
         let type_prime = mapper.type_(cx, map_cx, ns.type_.dupe());
-        if ns.type_.ptr_eq(&type_prime) {
+        let type_for_extends_prime = ns
+            .type_for_extends
+            .as_ref()
+            .map(|t| mapper.type_(cx, map_cx, t.dupe()));
+        let type_for_extends_unchanged = match (&ns.type_for_extends, &type_for_extends_prime) {
+            (None, None) => true,
+            (Some(a), Some(b)) => a.ptr_eq(b),
+            _ => false,
+        };
+        if ns.type_.ptr_eq(&type_prime) && type_for_extends_unchanged {
             ns.dupe()
         } else {
             NamedSymbol::new(
                 ns.name_loc.dupe(),
                 ns.preferred_def_locs.clone(),
                 type_prime,
+                type_for_extends_prime,
             )
         }
     });

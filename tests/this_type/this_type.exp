@@ -1,3 +1,57 @@
+Error ----------------------------------------------------------------------------------------- barrel_consumer.js:26:12
+
+Cannot implement `IBarrel` [1] with `BadBarrel` because in property `clone` > the return value: `IBarrel` [2] is
+incompatible with `this` [3]. [incompatible-type]
+
+   barrel_consumer.js:26:12
+   26|   clone(): IBarrel { return this; } // ERROR — must return `this`, not `IBarrel`
+                  ^^^^^^^ [2]
+
+References:
+   barrel_consumer.js:25:28
+   25| class BadBarrel implements IBarrel {
+                                  ^^^^^^^ [1]
+   barrel_base.js:3:12
+    3|   clone(): this;
+                  ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- barrel_ns_consumer.js:30:1
+
+Cannot cast `sn.clone()` to `ChildOfNs` because property `extra` is missing in `SiblingOfNs` [1] but exists in
+`ChildOfNs` [2]. [incompatible-type]
+
+   barrel_ns_consumer.js:30:1
+   30| sn.clone() as ChildOfNs; // ERROR — sibling `this` doesn't rebind to ChildOfNs
+       ^^^^^^^^^^
+
+References:
+   barrel_ns_consumer.js:26:11
+   26| interface SiblingOfNs extends NS.IBarrel {
+                 ^^^^^^^^^^^ [1]
+   barrel_ns_consumer.js:30:15
+   30| sn.clone() as ChildOfNs; // ERROR — sibling `this` doesn't rebind to ChildOfNs
+                     ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- barrel_two_step.js:19:12
+
+Cannot implement `IBarrel` [1] with `BadTwoStep` because in property `clone` > the return value: `IBarrel` [2] is
+incompatible with `this` [3]. [incompatible-type]
+
+   barrel_two_step.js:19:12
+   19|   clone(): IBarrel { return this; } // ERROR — must return `this`, not `IBarrel`
+                  ^^^^^^^ [2]
+
+References:
+   barrel_two_step.js:18:29
+   18| class BadTwoStep implements IBarrel {
+                                   ^^^^^^^ [1]
+   barrel_base.js:3:12
+    3|   clone(): this;
+                  ^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------- class_expr.js:6:10
 
 Cannot assign `123` to `this.x` because property `x` is missing in `Thing` [1]. [prop-missing]
@@ -59,47 +113,26 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- contra.js:25:22
 
-Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
-[incompatible-variance]
+Unexpected use of `this` type. [illegal-this]
 
-   contra.js:25:22
    25|   out_object(): { _: this } { return { _: this }; }
                             ^^^^
-
-References:
-   contra.js:24:7
-   24| class Invariant {
-             ^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- contra.js:26:21
 
-Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
-[incompatible-variance]
+Unexpected use of `this` type. [illegal-this]
 
-   contra.js:26:21
    26|   in_object(_: { _: this }) { }
                            ^^^^
-
-References:
-   contra.js:24:7
-   24| class Invariant {
-             ^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- contra.js:27:22
 
-Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
-[incompatible-variance]
+Unexpected use of `this` type. [illegal-this]
 
-   contra.js:27:22
    27|   inout_object: { _: this };
                             ^^^^
-
-References:
-   contra.js:24:7
-   24| class Invariant {
-             ^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- contra.js:29:22
@@ -320,6 +353,47 @@ References:
              ^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ default_import.js:26:12
+
+Cannot extend `CDefaultV` [1] with `BadCloneSub` because in property `clone` > the return value: `CDefault` [2] is
+incompatible with `this` [3]. [incompatible-type]
+
+   default_import.js:26:12
+   26|   clone(): CDefaultV { return this; } // ERROR — must return `this`, not `CDefaultV`
+                  ^^^^^^^^^ [2]
+
+References:
+   default_import.js:25:27
+   25| class BadCloneSub extends CDefaultV {
+                                 ^^^^^^^^^ [1]
+   default_export.js:7:12
+    7|   clone(): this;
+                  ^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------------- export.js:26:13
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   export.js:26:13
+   26|   xs: Array<this>; // ERROR: invariant position
+                   ^^^^
+
+References:
+   export.js:25:18
+   25| export interface IBad {
+                        ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- export.js:55:46
+
+Unexpected use of `this` type. [illegal-this]
+
+   55| export interface IBadExtends extends IHolder<this> {} // ERROR
+                                                    ^^^^
+
+
 Error ------------------------------------------------------------------------------------------------- generics.js:6:30
 
 Cannot use `Implicit` [1] with fewer than 1 type argument. [missing-type-arg]
@@ -340,7 +414,7 @@ Cannot extend `A1` [1] with `B1` because in property `foo` > the return value: `
 [incompatible-type]
 
    import.js:8:10
-   8|   foo(): B1 { return new B1(); } // error
+   8|   foo(): B1 { return new B1(); } // ERROR
                ^^ [2]
 
 References:
@@ -358,7 +432,7 @@ Cannot extend `A3` [1] with `B3` because in property `foo` > the return value: `
 [incompatible-type]
 
    import.js:14:10
-   14|   foo(): B3<X> { return new B3(); } // error
+   14|   foo(): B3<X> { return new B3(); } // ERROR
                 ^^^^^ [2]
 
 References:
@@ -376,12 +450,12 @@ Cannot call `(new B3<...>()).qux` with `0` bound to `x` because number [1] is in
 [incompatible-type]
 
    import.js:18:22
-   18| new B3<string>().qux(0) as string; // error
+   18| new B3<string>().qux(0) as string; // ERROR
                             ^ [1]
 
 References:
    import.js:18:8
-   18| new B3<string>().qux(0) as string; // error
+   18| new B3<string>().qux(0) as string; // ERROR
               ^^^^^^ [2]
 
 
@@ -391,7 +465,7 @@ Cannot cast `(new B3<...>()).bar()` to `A2` because in type argument `X` [1]: st
 number [3]. [incompatible-type]
 
    import.js:21:30
-   21| new B3<string>().bar() as B3<string> as A2<number>; // error
+   21| new B3<string>().bar() as B3<string> as A2<number>; // ERROR
                                     ^^^^^^ [2]
 
 References:
@@ -399,7 +473,7 @@ References:
     6| export class A2<X> {
                        ^ [1]
    import.js:21:44
-   21| new B3<string>().bar() as B3<string> as A2<number>; // error
+   21| new B3<string>().bar() as B3<string> as A2<number>; // ERROR
                                                   ^^^^^^ [3]
 
 
@@ -408,24 +482,333 @@ Error --------------------------------------------------------------------------
 Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    import.js:22:1
-   22| (new B3() as A2<number>).qux(0) as string; // error
+   22| (new B3() as A2<number>).qux(0) as string; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    import.js:22:17
-   22| (new B3() as A2<number>).qux(0) as string; // error
+   22| (new B3() as A2<number>).qux(0) as string; // ERROR
                        ^^^^^^ [1]
    import.js:22:36
-   22| (new B3() as A2<number>).qux(0) as string; // error
+   22| (new B3() as A2<number>).qux(0) as string; // ERROR
                                           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ interface.js:1:25
+Error -------------------------------------------------------------------------------------------------- import.js:57:12
+
+Cannot implement exports [1] with `BadCloneCM` because in property `clone` > the return value: `ICloneable` [2] is
+incompatible with `this` [3]. [incompatible-type]
+
+   import.js:57:12
+   57|   clone(): ICloneable { return this; }  // ERROR — must return `this`, not `ICloneable`
+                  ^^^^^^^^^^ [2]
+
+References:
+   import.js:56:29
+   56| class BadCloneCM implements ICloneable {
+                                   ^^^^^^^^^^ [1]
+   export.js:37:40
+   37| export interface ICloneable { clone(): this; }
+                                              ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:78:1
+
+Cannot cast `exa.clone()` to `IExtendedViaAlias` because property `extra` is missing in `ICloneable` [1] but exists in
+`IExtendedViaAlias` [2]. [incompatible-type]
+
+   import.js:78:1
+   78| exa.clone() as IExtendedViaAlias; // OK — inherited `this` rebound through the imported alias (KNOWN LIMITATION: errors)
+       ^^^^^^^^^^^
+
+References:
+   export.js:37:18
+   37| export interface ICloneable { clone(): this; }
+                        ^^^^^^^^^^ [1]
+   import.js:78:16
+   78| exa.clone() as IExtendedViaAlias; // OK — inherited `this` rebound through the imported alias (KNOWN LIMITATION: errors)
+                      ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- import.js:106:5
+
+Cannot get `ici.zzz` because property `zzz` is missing in `IChildOfIntersection` [1]. [prop-missing]
+
+   import.js:106:5
+   106| ici.zzz; // ERROR: prop-missing at this line, not at the extends clause
+            ^^^
+
+References:
+   import.js:102:20
+   102| declare const ici: IChildOfIntersection;
+                           ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:70:1
+
+Cannot cast `mba.clone()` to `MyBoxViaAlias` because property `contents` is missing in `Cloneable` [1] but exists in
+`MyBoxViaAlias` [2]. [incompatible-type]
+
+   interface.js:70:1
+   70| mba.clone() as MyBoxViaAlias; // OK — inherited `this` rebound through the alias (KNOWN LIMITATION: errors)
+       ^^^^^^^^^^^
+
+References:
+   interface.js:47:11
+   47| interface Cloneable {
+                 ^^^^^^^^^ [1]
+   interface.js:70:16
+   70| mba.clone() as MyBoxViaAlias; // OK — inherited `this` rebound through the alias (KNOWN LIMITATION: errors)
+                      ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:104:12
+
+Cannot implement `MyBox` [1] with `BadCloneChild` because in property `clone` > the return value: `Cloneable` [2] is
+incompatible with `this` [3]. [incompatible-type]
+
+   interface.js:104:12
+   104|   clone(): Cloneable { return this; } // ERROR: returning `Cloneable` doesn't satisfy `(): this`
+                   ^^^^^^^^^ [2]
+
+References:
+   interface.js:102:32
+   102| class BadCloneChild implements MyBox {
+                                       ^^^^^ [1]
+   interface.js:48:12
+    48|   clone(): this;
+                   ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:109:12
+
+Cannot implement `Cloneable` [1] with `BadCloneSelf` because in property `clone` > the return value: `BadCloneSelf` [2]
+is incompatible with `this` [3]. [incompatible-type]
+
+   interface.js:109:12
+   109|   clone(): BadCloneSelf { return this; } // ERROR
+                   ^^^^^^^^^^^^ [2]
+
+References:
+   interface.js:108:31
+   108| class BadCloneSelf implements Cloneable {
+                                      ^^^^^^^^^ [1]
+   interface.js:48:12
+    48|   clone(): this;
+                   ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:115:12
+
+Cannot implement `MyBox` [1] with `BadInherited` because in property `clone` > the return value: `BadInherited` [2] is
+incompatible with `this` [3]. [incompatible-type]
+
+   interface.js:115:12
+   115|   clone(): BadInherited { return this; } // ERROR
+                   ^^^^^^^^^^^^ [2]
+
+References:
+   interface.js:113:31
+   113| class BadInherited implements MyBox {
+                                      ^^^^^ [1]
+   interface.js:48:12
+    48|   clone(): this;
+                   ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:123:12
+
+Cannot implement `Cloneable` [1] with `LeakBase` because in property `clone` > the return value: `LeakBase` [2] is
+incompatible with `this` [3]. [incompatible-type]
+
+   interface.js:123:12
+   123|   clone(): LeakBase { return this; } // ERROR
+                   ^^^^^^^^ [2]
+
+References:
+   interface.js:122:27
+   122| class LeakBase implements Cloneable {
+                                  ^^^^^^^^^ [1]
+   interface.js:48:12
+    48|   clone(): this;
+                   ^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:147:37
 
 Unexpected use of `this` type. [illegal-this]
 
-   1| interface I { xs: Array<this>; }
+   147| interface BadExtends extends Holder<this> { } // ERROR: this not in scope here
+                                            ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:154:23
+
+Unexpected use of `this` type. [illegal-this]
+
+   154|   +nested: { clone(): this }; // ERROR: `this` not in scope inside nested type
                               ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:157:33
+
+Unexpected use of `this` type. [illegal-this]
+
+   157|   +nested: interface { clone(): this }; // ERROR
+                                        ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:161:23
+
+Unexpected use of `this` type. [illegal-this]
+
+   161|   +nested: { clone(): this }; // ERROR
+                              ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:165:33
+
+Unexpected use of `this` type. [illegal-this]
+
+   165|   +list: ReadonlyArray<{ +item: this }>; // ERROR
+                                        ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:166:24
+
+Unexpected use of `this` type. [illegal-this]
+
+   166|   factory(): { make(): this }; // ERROR
+                               ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:170:24
+
+Unexpected use of `this` type. [illegal-this]
+
+   170|   +doubly: { +a: { +b: this } }; // ERROR
+                               ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- interface.js:188:4
+
+Cannot get `ci.zzz` because property `zzz` is missing in `ChildOfIntersection` [1]. [prop-missing]
+
+   interface.js:188:4
+   188| ci.zzz; // ERROR: prop-missing at this line
+           ^^^
+
+References:
+   interface.js:181:19
+   181| declare const ci: ChildOfIntersection;
+                          ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:198:27
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   interface.js:198:27
+   198|   refine<Ch extends (arg: this) => mixed>(check: Ch): void; // [incompatible-variance], not [illegal-this]
+                                  ^^^^
+
+References:
+   interface.js:197:1
+        v-------------------------------
+   197| interface WithMethodTparamThis {
+   198|   refine<Ch extends (arg: this) => mixed>(check: Ch): void; // [incompatible-variance], not [illegal-this]
+   199|   factory<T = this>(): T;                                   // [incompatible-variance], not [illegal-this]
+   200| }
+        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:199:15
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   interface.js:199:15
+   199|   factory<T = this>(): T;                                   // [incompatible-variance], not [illegal-this]
+                      ^^^^
+
+References:
+   interface.js:197:1
+        v-------------------------------
+   197| interface WithMethodTparamThis {
+   198|   refine<Ch extends (arg: this) => mixed>(check: Ch): void; // [incompatible-variance], not [illegal-this]
+   199|   factory<T = this>(): T;                                   // [incompatible-variance], not [illegal-this]
+   200| }
+        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:203:27
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   interface.js:203:27
+   203|   refine<Ch extends (arg: this) => mixed>(check: Ch): void {} // same: [incompatible-variance]
+                                  ^^^^
+
+References:
+   interface.js:202:7
+   202| class WithClassMethodTparamThis {
+              ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:204:15
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   interface.js:204:15
+   204|   factory<T = this>(): T { return (this: $FlowFixMe); }       // same: [incompatible-variance]
+                      ^^^^
+
+References:
+   interface.js:202:7
+   202| class WithClassMethodTparamThis {
+              ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:204:35
+
+Invalid type cast syntax. Use the form `<expr> as <type>` instead of the form `(<expr>: <type>)`.
+[invalid-type-cast-syntax]
+
+   204|   factory<T = this>(): T { return (this: $FlowFixMe); }       // same: [incompatible-variance]
+                                          ^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:209:27
+
+Unexpected use of `this` type. [illegal-this]
+
+   209| function freeFn<T extends this>(x: T): void {} // ERROR: [illegal-this]
+                                  ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:210:28
+
+Unexpected use of `this` type. [illegal-this]
+
+   210| type AliasOfThis<T extends this> = T;          // ERROR: [illegal-this]
+                                   ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:221:32
+
+Cannot use `IPolyArity` [1] without 1 type argument. [missing-type-arg]
+
+   interface.js:221:32
+   221| class CMissingArity implements IPolyArity { // ERROR: [missing-type-arg]
+                                       ^^^^^^^^^^
+
+References:
+   interface.js:217:21
+   217| interface IPolyArity<T> {
+                            ^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- statics.js:17:1
@@ -534,5 +917,35 @@ References:
              ^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- typed_array_lib.js:19:20
 
-Found 36 errors
+Cannot call `i16.set(...).copyWithin` because property `copyWithin` is missing in undefined [1]. [incompatible-use]
+
+   typed_array_lib.js:19:20
+     19| i16.set([1, 2, 3]).copyWithin(0, 1); // ERROR: void has no method copyWithin
+                            ^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:2618:58
+   2618|     set(array: Array<T> | $TypedArray, offset?: number): void;
+                                                                  ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- utility-type.js:3:27
+
+Unexpected use of `this` type. [illegal-this]
+
+   3|     baz: Readonly<{+prop: this}>, // ok due to unsoundness
+                                ^^^^
+
+
+Error --------------------------------------------------------------------------------------------- utility-type.js:4:22
+
+Unexpected use of `this` type. [illegal-this]
+
+   4|   ): Readonly<{prop: this}> { // ok
+                           ^^^^
+
+
+
+Found 68 errors

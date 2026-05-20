@@ -297,12 +297,12 @@ module Make
   let this_tparam x =
     match x.super with
     | Class { this_tparam; _ } -> Some this_tparam
-    | Interface _ -> None
+    | Interface { this_tparam; _ } -> this_tparam
 
   let this_t x =
     match x.super with
     | Class { this_t; _ } -> Some this_t
-    | Interface _ -> None
+    | Interface { this_t; _ } -> this_t
 
   let this_or_mixed loc = this_t %> Base.Option.value ~default:(Type.dummy_this loc)
 
@@ -565,16 +565,56 @@ module Make
     let open Type in
     let open TypeUtil in
     match x.super with
-    | Interface { inline = _; extends; callable } ->
+    | Interface
+        { inline = _; extends; extends_binding_kinds; callable; this_t = i_this_t; this_tparam = _ }
+      ->
+      (* Per-extends binding-kind metadata is recorded at convert time
+         ([Type_annotation.mk_interface_super]). For class-like local bindings
+         we wrap the parent in [this_typeapp] without inspecting the resolved
+         type tvar — the binding kind alone determines the wrap decision, so
+         no cycle-unsafe forcing is needed. For [BindingUnknown] (cross-module
+         imports / namespace members where the exporter-side binding kind
+         isn't visible), the cross-module rebinding is handled at the sig-
+         merge layer via [Type_sig_merge.merge_interface_extends]; here we
+         conservatively fall back to the no-wrap path. *)
+      (* The two lists are populated in lockstep by [mk_interface_sig] /
+         [mk_class_sig]; drift is impossible by construction. [List.combine]
+         raises [Invalid_argument] if the invariant ever broke. *)
+      let extends_with_kinds = List.combine extends extends_binding_kinds in
       let extends =
         Base.List.map
-          ~f:(fun (annot_loc, c, targs_opt) ->
-            match targs_opt with
-            | None ->
+          ~f:(fun ((annot_loc, c, targs_opt), binding_kind) ->
+            let open Func_class_sig_types.Class in
+            match (i_this_t, binding_kind, targs_opt) with
+            | (Some this_t, ClassLikeMono, _) ->
+              (* Mono class-like local binding: wrap directly. *)
+              this_typeapp ~annot_loc c this_t targs_opt
+            | (Some this_t, ClassLikePoly, Some _) ->
+              (* Polymorphic class-like local binding with explicit targs. *)
+              this_typeapp ~annot_loc c this_t targs_opt
+            | (Some _, ClassLikePoly, None) ->
+              (* Polymorphic class-like local binding, missing targs:
+                 route through [mk_instance] so [EMissingTypeArgs] fires. *)
               let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
               ConsGen.mk_instance cx reason c
-            | Some targs -> typeapp_annot ~from_value:false ~use_desc:false annot_loc c targs)
-          extends
+            | (Some this_t, ClassLikeRawMono raw_c, _) ->
+              (* Mono class-like cross-module / namespace member: wrap the
+                 raw (un-canonicalized) [c] override in [this_typeapp] so the
+                 parent's [this] rebinds to the child interface's [this_t]. *)
+              this_typeapp ~annot_loc raw_c this_t targs_opt
+            | (Some this_t, ClassLikeRawPoly raw_c, Some _) ->
+              this_typeapp ~annot_loc raw_c this_t targs_opt
+            | (Some _, ClassLikeRawPoly raw_c, None) ->
+              (* Missing targs: route through [mk_instance] on the raw [c] so
+                 [EMissingTypeArgs] fires (same as the local poly case). *)
+              let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t raw_c) in
+              ConsGen.mk_instance cx reason raw_c
+            | (_, _, None) ->
+              let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
+              ConsGen.mk_instance cx reason c
+            | (_, _, Some targs) ->
+              typeapp_annot ~from_value:false ~use_desc:false annot_loc c targs)
+          extends_with_kinds
       in
       (* If the interface definition includes a callable property, add the
          function prototype to the super type *)
@@ -673,7 +713,12 @@ module Make
 
   let thistype cx x =
     let (reason, instance_t) = this_instance_type cx x in
-    Type.(DefT (reason, InstanceT instance_t))
+    match x.super with
+    | Interface { this_tparam = Some _; _ } ->
+      (* Interface with polymorphic [this]: wrap in [ThisInstanceT] so
+         downstream [ThisSpecializeT] can substitute. *)
+      Type.ThisInstanceT (reason, instance_t, false, Subst_name.Name "this")
+    | _ -> Type.(DefT (reason, InstanceT instance_t))
 
   let check_methods cx def_reason x =
     let open Type in
@@ -682,18 +727,25 @@ module Make
       | Interface _ -> thistype cx x
       | Class { this_t; _ } -> this_t
     in
+    (* TypeScript only uses an explicit [this:] parameter as a constraint on
+       call-site [this], not as a requirement at the declaration site. Skip
+       the [self <: this_param] check in [.ts] files to match TS semantics. *)
+    let skip_in_ts = Files.has_ts_ext (Context.file cx) in
     let check_method msig ~static name id_loc =
       Base.Option.iter
         ~f:(fun this_param ->
-          let self =
-            if static then
-              TypeUtil.class_type self
-            else
-              self
-          in
-          let reason = mk_reason (RMethod (Some name)) id_loc in
-          let use_op = Op (ClassMethodDefinition { def = reason; name = def_reason }) in
-          Context.add_post_inference_subtyping_check cx self use_op this_param)
+          if skip_in_ts then
+            ()
+          else
+            let self =
+              if static then
+                TypeUtil.class_type self
+              else
+                self
+            in
+            let reason = mk_reason (RMethod (Some name)) id_loc in
+            let use_op = Op (ClassMethodDefinition { def = reason; name = def_reason }) in
+            Context.add_post_inference_subtyping_check cx self use_op this_param)
         (F.this_param msig.F.Types.fparams)
     in
 
@@ -720,25 +772,63 @@ module Make
   let check_implements cx def_reason x =
     match x.super with
     | Interface _ -> ()
-    | Class { implements; _ } ->
+    | Class { implements; implements_binding_kinds; this_t = class_this; _ } ->
       let this = thistype cx x in
       let reason = x.instance.reason in
       let open Type in
       let open TypeUtil in
-      List.iter
-        (fun (annot_loc, c, targs_opt) ->
+      (* Per-implements binding-kind metadata is recorded at convert time
+         ([Statement] / [Type_annotation.mk_declare_class_sig]). When the
+         implemented interface is a class-like local binding (the
+         [polymorphic this] case is what we care about), substitute the
+         interface's [this] with the implementing class's [this_t] so that
+         interface methods returning [this] are checked against the class's
+         [this] (not the interface itself). For [BindingOther]/[BindingUnknown]
+         (type aliases / cross-module imports), use the prior path which
+         doesn't do [this]-substitution. *)
+      (* [implements_binding_kinds] is populated in lockstep with [implements]
+         by [mk_class_sig]; drift is impossible by construction.
+         [List.iter2] raises [Invalid_argument] if the invariant ever broke. *)
+      List.iter2
+        (fun (annot_loc, c, targs_opt) binding_kind ->
+          let open Func_class_sig_types.Class in
           let i =
-            match targs_opt with
-            | None ->
+            match (binding_kind, targs_opt) with
+            | (ClassLikeMono, _) ->
+              (* Mono class-like local binding: wrap directly. *)
+              this_typeapp ~annot_loc c class_this targs_opt
+            | (ClassLikePoly, Some _) ->
+              (* Poly class-like local binding with explicit targs: wrap. *)
+              this_typeapp ~annot_loc c class_this targs_opt
+            | (ClassLikePoly, None) ->
+              (* Poly class-like local binding with missing targs: route
+                 through [mk_instance] so [EMissingTypeArgs] fires (mirrors
+                 the [supertype] extends arm). Wrapping in [this_typeapp]
+                 with [None] would silently bypass the arity check. *)
               let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
               ConsGen.mk_instance cx reason c
-            | Some targs -> typeapp_annot ~from_value:false ~use_desc:false annot_loc c targs
+            | (ClassLikeRawMono raw_c, _) ->
+              (* Mono class-like cross-module import / namespace member: wrap
+                 the raw (un-canonicalized) [c] override so the implemented
+                 interface's polymorphic [this] is substituted with the
+                 implementing class's [this_t] before the structural compare. *)
+              this_typeapp ~annot_loc raw_c class_this targs_opt
+            | (ClassLikeRawPoly raw_c, Some _) -> this_typeapp ~annot_loc raw_c class_this targs_opt
+            | (ClassLikeRawPoly raw_c, None) ->
+              let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t raw_c) in
+              ConsGen.mk_instance cx reason raw_c
+            | ((BindingOther | BindingUnknown), None) ->
+              let reason = annot_reason ~annot_loc @@ repos_reason annot_loc (reason_of_t c) in
+              ConsGen.mk_instance cx reason c
+            | ((BindingOther | BindingUnknown), Some targs) ->
+              typeapp_annot ~from_value:false ~use_desc:false annot_loc c targs
           in
           let use_op =
             Op (ClassImplementsCheck { def = def_reason; name = reason; implements = reason_of_t i })
           in
           Context.add_post_inference_validation_flow cx i (ImplementsT (use_op, this)))
         implements
+        implements_binding_kinds
 
   let check_super cx def_reason x =
     let reason = x.instance.reason in
@@ -826,7 +916,16 @@ module Make
     let open TypeUtil in
     let (t_inner, t_outer) =
       if structural x then
-        (this, class_type ~structural:true this)
+        match this_tparam with
+        | Some _ ->
+          (* Interface with polymorphic [this]: wrap in [ThisInstanceT] so
+             [ThisSpecializeT] can substitute the receiver's [this]. *)
+          ( Type.ThisInstanceT (this_reason, this_instance_t, true, this_name),
+            class_type
+              ~structural:true
+              (Type.ThisInstanceT (this_reason, this_instance_t, false, this_name))
+          )
+        | None -> (this, class_type ~structural:true this)
       else
         ( Type.ThisInstanceT (this_reason, this_instance_t, true, this_name),
           class_type

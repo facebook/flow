@@ -126,6 +126,35 @@ module type S = sig
     Context.resolved_require ->
     Type.t
 
+  (* Like [import_named], but skips
+     [Flow_js_utils.ImportTypeTKit.canonicalize_imported_type]'s
+     [ClassT(ThisInstanceT _)] -> [TypeT(ImportClassKind, fix_this_instance _)]
+     unwrap. Returns the raw exporter-side type. Intended for the
+     interface-extends consumer site, which needs the un-canonicalized
+     [Poly?{ClassT(ThisInstanceT _)}] form to wrap in [this_typeapp]. *)
+  val import_named_for_extends :
+    Context.t ->
+    Reason.t ->
+    Type.import_kind ->
+    string ->
+    Flow_import_specifier.userland ->
+    bool ->
+    Context.resolved_require ->
+    Type.t
+
+  (* Like [import_default], but skips canonicalization. Mirrors
+     [import_named_for_extends] for the default-import case
+     ([import X from ...]). *)
+  val import_default_for_extends :
+    Context.t ->
+    Reason.t ->
+    Type.import_kind ->
+    string ->
+    Flow_import_specifier.userland ->
+    bool ->
+    Context.resolved_require ->
+    Type.t
+
   val import_ns :
     Context.t -> Reason.t -> FlowSymbol.symbol -> bool -> Context.resolved_require -> Type.t
 
@@ -863,6 +892,10 @@ module rec ConsGen : S = struct
       ->
       let i = subst_instance_type cx (Subst_name.Map.singleton this_name this) i in
       reposition cx (loc_of_reason reason) (DefT (r, InstanceT i))
+    (* this-specialize a this-abstracted interface (no `ClassT` wrapper) *)
+    | (ThisInstanceT (r, i, _, this_name), Annot_ThisSpecializeT (reason, this)) ->
+      let i = subst_instance_type cx (Subst_name.Map.singleton this_name this) i in
+      reposition cx (loc_of_reason reason) (DefT (r, InstanceT i))
     (* this-specialization of non-this-abstracted classes is a no-op *)
     | (DefT (_, ClassT i), Annot_ThisSpecializeT (reason, _this)) ->
       reposition cx (loc_of_reason reason) i
@@ -1429,6 +1462,48 @@ module rec ConsGen : S = struct
           cx
           ~with_concretized_type
           (reason, import_kind, export_name, module_name, is_strict)
+          m
+      in
+      t
+    in
+    mk_sig_tvar
+      cx
+      reason
+      (get_lazy_module_type_or_any_src resolved_require
+      |> Lazy.map (function
+             | Ok m -> on_module m
+             | Error src -> Type.AnyT.why src reason
+             )
+      )
+
+  and import_named_for_extends
+      cx reason import_kind export_name module_name is_strict resolved_require =
+    let on_module m =
+      let (_name_loc_opt, t) =
+        Flow_js_utils.ImportNamedTKit.on_ModuleT_for_extends
+          cx
+          (reason, import_kind, export_name, module_name, is_strict)
+          m
+      in
+      t
+    in
+    mk_sig_tvar
+      cx
+      reason
+      (get_lazy_module_type_or_any_src resolved_require
+      |> Lazy.map (function
+             | Ok m -> on_module m
+             | Error src -> Type.AnyT.why src reason
+             )
+      )
+
+  and import_default_for_extends
+      cx reason import_kind local_name module_name is_strict resolved_require =
+    let on_module m =
+      let (_name_loc_opt, t) =
+        Flow_js_utils.ImportDefaultTKit.on_ModuleT_for_extends
+          cx
+          (reason, import_kind, (local_name, module_name), is_strict)
           m
       in
       t

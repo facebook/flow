@@ -626,6 +626,7 @@ pub fn mk_check_file(
                     ));
                     let loc = def.id_loc();
                     let name = def.name().dupe();
+                    let binding_kind = type_sig_merge::def_binding_kind(&def);
                     let reason = type_sig_merge::def_reason(&def);
                     let type_ =
                         |const_decl: bool,
@@ -660,6 +661,7 @@ pub fn mk_check_file(
                     (
                         loc,
                         name,
+                        binding_kind,
                         Rc::new(flow_lazy::Lazy::new(
                             Box::new(move |cx: &Context<'static>| {
                                 type_(false, file_cell, cx, reason, def)
@@ -680,6 +682,7 @@ pub fn mk_check_file(
                             ) -> (
                                 ALoc,
                                 FlowSmolStr,
+                                type_sig_merge::LocalDefBindingKind,
                                 Rc<
                                     flow_lazy::Lazy<
                                         Context<'static>,
@@ -728,9 +731,52 @@ pub fn mk_check_file(
                         },
                     )));
                     let t = annotation_inference::mk_sig_tvar(cx, reason.dupe(), resolved);
-                    (loc, name, t)
+                    let file_cell2 = file_cell.dupe();
+                    let reason2 = reason.dupe();
+                    let remote_ref2 = remote_ref.clone();
+                    let resolved_for_extends: Rc<
+                        flow_lazy::Lazy<
+                            Context<'static>,
+                            Type,
+                            Box<dyn FnOnce(&Context<'static>) -> Type + 'static>,
+                        >,
+                    > = Rc::new(flow_lazy::Lazy::new(Box::new(
+                        move |cx: &Context<'static>| {
+                            let file = type_sig_merge::File::from_weak(
+                                file_cell2.get().expect("file_rec not initialized"),
+                            );
+                            type_sig_merge::merge_remote_ref_for_extends(
+                                cx,
+                                &file,
+                                reason2,
+                                &remote_ref2,
+                            )
+                        },
+                    )));
+                    let t_for_extends = Rc::new(flow_lazy::Lazy::new(Box::new(
+                        move |cx: &Context<'static>| {
+                            annotation_inference::mk_sig_tvar(cx, reason, resolved_for_extends)
+                        },
+                    )
+                        as Box<dyn FnOnce(&Context<'static>) -> Type + 'static>));
+                    (loc, name, t, t_for_extends)
                 })
-                    as Box<dyn FnOnce(&Context<'static>) -> (ALoc, FlowSmolStr, Type) + 'static>,
+                    as Box<
+                        dyn FnOnce(
+                                &Context<'static>,
+                            ) -> (
+                                ALoc,
+                                FlowSmolStr,
+                                Type,
+                                Rc<
+                                    flow_lazy::Lazy<
+                                        Context<'static>,
+                                        Type,
+                                        Box<dyn FnOnce(&Context<'static>) -> Type + 'static>,
+                                    >,
+                                >,
+                            ) + 'static,
+                    >,
             ))
         };
 

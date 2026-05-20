@@ -6017,16 +6017,38 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         loc: &ALoc,
         interface: &ast::statement::Interface<ALoc, ALoc>,
     ) -> Result<(), !> {
-        let id_loc = interface.id.loc.dupe();
-
-        self.add_ordinary_binding(
-            id_loc.dupe(),
+        let name_loc = interface.id.loc.dupe();
+        let tparams = &interface.tparams;
+        let extends = &interface.extends;
+        let body = &interface.body;
+        // Force-register the binding so the synthetic [this] tparam (added below
+        // at [name_loc]) always resolves. In declaration-merging cases like
+        // [declare namespace X { type T = ... }] + [interface X { ... }] (TS
+        // pattern, common in .d.ts files), the env_builder may not register an
+        // AssigningWrite at [name_loc] for the interface, which would make the
+        // conditional [add_ordinary_binding] a no-op and crash [init_type_param]
+        // when it walks the interface's [tparams_locs] for any inner method.
+        self.force_add_binding(
+            EnvKey::ordinary(name_loc.dupe()),
             mk_reason(VirtualReasonDesc::RInterfaceType, loc.dupe()),
             Def::Interface(loc.dupe(), interface.clone()),
         );
 
         self.in_new_tparams_env(false, |this| {
-            ast_visitor::interface_default(this, loc, interface)
+            // Walk tparams and extends without [this] in scope (matching the
+            // lexical-scope rule: [extends Holder<this>] still errors). Then
+            // add [this] to the tparams env so method bodies — including their
+            // own type-parameter constraints/defaults — can reference it.
+            if let Some(tparams) = tparams {
+                this.type_params(&ast_visitor::TypeParamsContext::Interface, tparams)?;
+            }
+            for (_eloc, e) in extends.iter() {
+                this.generic_type(e)?;
+            }
+            this.add_tparam(name_loc, FlowSmolStr::new("this"));
+            let (_bloc, b) = body;
+            this.object_type(b)?;
+            Ok(())
         })
     }
 

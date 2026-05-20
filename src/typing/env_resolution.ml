@@ -411,7 +411,7 @@ let resolve_namespace_types cx namespace_types =
       let type_ = Type_env.checked_find_loc_env_write cx def_loc_type loc in
       NameUtils.Map.add
         (OrdinaryName name)
-        { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
+        { Type.name_loc = Some loc; preferred_def_locs = None; type_; type_for_extends = None }
         acc)
     namespace_types
     NameUtils.Map.empty
@@ -1660,11 +1660,13 @@ let entries_of_component graph component =
       elts
 
 let init_type_param =
+  let mk_synthetic_this cx reason =
+    Statement.Class_stmt_sig.mk_this ~self:(Type.implicit_mixed_this reason) cx reason
+  in
   let rec init_type_param cx graph def_loc =
-    let (def, _, _, reason) = EnvMap.find_ordinary def_loc graph in
     let tparam_entry =
-      match def with
-      | TypeParam { tparams_map = tparams_locs; kind; tparam } ->
+      match EnvMap.find_opt_ordinary def_loc graph with
+      | Some (TypeParam { tparams_map = tparams_locs; kind; tparam }, _, _, _) ->
         let tparams_map = mk_tparams_map cx graph tparams_locs in
         let ((_, ({ name; _ } as tparam), t) as info) =
           Anno.mk_type_param cx tparams_map ~kind tparam
@@ -1672,18 +1674,34 @@ let init_type_param =
         let cache = Context.node_cache cx in
         Node_cache.set_tparam cache info;
         (name, tparam, t)
-      | Class { class_loc; _ } ->
+      | Some (Class { class_loc; _ }, _, _, reason) ->
         let self = Type_env.read_class_self_type cx class_loc in
         let (this_param, this_t) = Statement.Class_stmt_sig.mk_this ~self cx reason in
         (Subst_name.Name "this", this_param, this_t)
-      | Record { record_loc; _ } ->
+      | Some (Record { record_loc; _ }, _, _, reason) ->
         let self = Type_env.read_class_self_type cx record_loc in
         let (this_param, this_t) = Statement.Class_stmt_sig.mk_this ~self cx reason in
         (Subst_name.Name "this", this_param, this_t)
-      | _ ->
+      | Some (Interface _, _, _, reason) ->
+        (* Interfaces have polymorphic [this]. The bound used here doesn't
+           need to match the interface's later [this_t] identity — [tparams_map]
+           lookups during convert just need a usable type so [extends this]
+           in a method's tparam constraint resolves rather than firing
+           [illegal-this]. The actual subtyping at use-sites goes through the
+           interface's own [this_t] via [check_implements] / [supertype]
+           substitution. *)
+        let (this_param, this_t) = mk_synthetic_this cx reason in
+        (Subst_name.Name "this", this_param, this_t)
+      | Some _ ->
         failwith
           (Utils_js.spf
              "tparam_locs contain a non-tparam location: %s"
+             (ALoc.debug_to_string ~include_source:true def_loc)
+          )
+      | None ->
+        failwith
+          (Utils_js.spf
+             "init_type_param: tparams_locs entry %s has no name_def binding (likely a synthetic [this] whose AssigningWrite was not registered by the env_builder)"
              (ALoc.debug_to_string ~include_source:true def_loc)
           )
     in

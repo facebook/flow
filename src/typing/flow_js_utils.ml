@@ -99,6 +99,7 @@ end = struct
         | DefT (_, FunT _)
         | DefT (_, ArrT _)
         | DefT (_, InstanceT _)
+        | ThisInstanceT _
         | DefT (_, ReactAbstractComponentT _)
         | DefT (_, RendersT _)
         | DefT (_, EnumValueT _)
@@ -140,7 +141,6 @@ end = struct
         (* composite types that don't allow self or cyclic reference *)
         | OpenT _
         | DefT (_, (ClassT _ | TypeT (_, _) | PolyT _))
-        | ThisInstanceT _
         | IntersectionT _
         | UnionT _
         | MaybeT _
@@ -237,6 +237,46 @@ let map_on_resolved_type cx reason_op l f =
     cx
     reason_op
     (lazy (Context.run_in_signature_tvar_env cx (fun () -> f l |> unwrap_fully_resolved_open_t cx)))
+
+(* Structural classification of a type as the polymorphic-class shape used by
+   the [extends]/[implements] [this]-rebinding machinery. The shape produced
+   by class / declare-class / interface / record sig-merge is
+   [Poly?{ClassT(ThisInstanceT _)}]; everything else (aliases, instantiated
+   classes, etc.) returns [`Other].
+
+   Cycle-safety contract: callers must guarantee that [t] is not an
+   in-progress in-file class-like sig tvar. The forced [FullyResolved] path
+   uses [on_error -> AnyT.error] to bottom out cycles defensively; this only
+   fires if the contract is violated. The dispatcher in [type_sig_merge]'s
+   [merge_interface_extends] only calls this on cross-module / namespace /
+   builtin leaves (LocalRef leaves are handled by binding-kind dispatch
+   beforehand without forcing); the dispatcher in [type_annotation]'s
+   [binding_kind_of_generic_id_post_convert] only calls this on
+   already-converted [c]s from cross-module imports or namespace member
+   refs. Both contracts hold by construction.
+
+   Returns [`Poly] for [Poly { ClassT (ThisInstanceT _) }], [`Mono] for
+   [ClassT (ThisInstanceT _)] (no surrounding tparams), [`Other] otherwise. *)
+let polymorphic_class_kind cx t =
+  let rec resolve t =
+    match t with
+    | Type.OpenT (_, id) ->
+      (match Context.find_graph cx id with
+      | Type.Constraint.Resolved t -> resolve t
+      | Type.Constraint.FullyResolved s ->
+        let forced =
+          Type.Constraint.ForcingState.force ~on_error:(fun reason -> Type.AnyT.error reason) s
+        in
+        resolve forced
+      | Type.Constraint.Unresolved _ -> t)
+    | Type.AnnotT (_, t, _) -> resolve t
+    | t -> t
+  in
+  match resolve t with
+  | Type.DefT (_, Type.PolyT { t_out = Type.DefT (_, Type.ClassT (Type.ThisInstanceT _)); _ }) ->
+    `Poly
+  | Type.DefT (_, Type.ClassT (Type.ThisInstanceT _)) -> `Mono
+  | _ -> `Other
 
 (** Type predicates *)
 
@@ -999,7 +1039,7 @@ let obj_key_mirror cx o reason_op =
   DefT (reason, ObjT { o with props_tmap; flags })
 
 let namespace_type_with_values_type cx _reason namespace_symbol values_type types =
-  let add name { preferred_def_locs; name_loc; type_ } acc =
+  let add name { preferred_def_locs; name_loc; type_; type_for_extends = _ } acc =
     NameUtils.Map.add
       name
       (Field { preferred_def_locs; key_loc = name_loc; type_; polarity = Polarity.Positive })
@@ -1011,7 +1051,7 @@ let namespace_type_with_values_type cx _reason namespace_symbol values_type type
   NamespaceT { namespace_symbol; values_type; types_tmap }
 
 let namespace_type cx reason namespace_symbol values types =
-  let add name { preferred_def_locs; name_loc; type_ } acc =
+  let add name { preferred_def_locs; name_loc; type_; type_for_extends = _ } acc =
     NameUtils.Map.add
       name
       (Field { preferred_def_locs; key_loc = name_loc; type_; polarity = Polarity.Positive })
@@ -1388,19 +1428,40 @@ end
 module ImportTypeTKit = struct
   let canonicalize_imported_type cx reason t =
     match t with
-    (* fix this-abstracted class when used as a type *)
+    (* fix this-abstracted class when used as a type. Interfaces share the
+       [ThisInstanceT] shape with classes but are not class values, so import
+       them as plain types via [TypeT] rather than re-wrapping in [ClassT]. *)
     | DefT (_, ClassT (ThisInstanceT (r, i, this, this_name))) ->
-      Some (DefT (reason, ClassT (fix_this_instance cx reason (r, i, this, this_name))))
+      let fixed = fix_this_instance cx reason (r, i, this, this_name) in
+      (match i.inst.inst_kind with
+      | InterfaceKind _ -> Some (DefT (reason, TypeT (ImportClassKind, fixed)))
+      | ClassKind
+      | RecordKind _ ->
+        Some (DefT (reason, ClassT fixed)))
     | DefT (_, ClassT inst) -> Some (DefT (reason, TypeT (ImportClassKind, inst)))
     (* delay fixing a polymorphic this-abstracted class until it is specialized,
-       by transforming the instance type to a type application *)
+       by transforming the instance type to a type application. As above,
+       interfaces import as types rather than class values. *)
     | DefT
         ( _,
-          PolyT { tparams_loc; tparams = typeparams; t_out = DefT (_, ClassT (ThisInstanceT _)); _ }
+          PolyT
+            {
+              tparams_loc;
+              tparams = typeparams;
+              t_out = DefT (_, ClassT (ThisInstanceT (_, i, _, _)));
+              _;
+            }
         ) ->
       let (_, targs) = typeparams |> Nel.to_list |> mk_tparams cx in
       let tapp = implicit_typeapp t targs in
-      Some (poly_type (Type.Poly.generate_id ()) tparams_loc typeparams (class_type tapp))
+      let inner =
+        match i.inst.inst_kind with
+        | InterfaceKind _ -> DefT (reason, TypeT (ImportClassKind, tapp))
+        | ClassKind
+        | RecordKind _ ->
+          class_type tapp
+      in
+      Some (poly_type (Type.Poly.generate_id ()) tparams_loc typeparams inner)
     | DefT (_, PolyT { tparams_loc; tparams = typeparams; t_out = DefT (_, ClassT inst); id }) ->
       Some (poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportClassKind, inst))))
     | DefT (_, PolyT { t_out = DefT (_, TypeT _); _ }) -> Some t
@@ -1493,7 +1554,7 @@ module CJSRequireTKit = struct
       (* Convert ES module's named exports to an object *)
       let mk_exports_namespace () =
         let proto = ObjProtoT reason in
-        let named_symbol_to_field { preferred_def_locs; name_loc; type_ } =
+        let named_symbol_to_field { preferred_def_locs; name_loc; type_; type_for_extends = _ } =
           Field { preferred_def_locs; key_loc = name_loc; type_; polarity = Polarity.Positive }
         in
         let value_props = NameUtils.Map.map named_symbol_to_field value_exports_tmap in
@@ -1518,13 +1579,13 @@ module CJSRequireTKit = struct
           in
           if automatic_require_default then
             match NameUtils.Map.find_opt (OrdinaryName "default") value_exports_tmap with
-            | Some { preferred_def_locs = _; name_loc = _; type_ } -> type_
+            | Some { preferred_def_locs = _; name_loc = _; type_; type_for_extends = _ } -> type_
             | _ -> mk_exports_namespace ()
           else
             mk_exports_namespace ()
       in
       let def_loc =
-        let def_loc_of_export { preferred_def_locs; name_loc; type_ } =
+        let def_loc_of_export { preferred_def_locs; name_loc; type_; type_for_extends = _ } =
           match preferred_def_locs with
           | Some l -> Nel.hd l
           | None ->
@@ -1575,7 +1636,17 @@ module ImportModuleNsTKit = struct
     in
     let value_exports_tmap = Context.find_exports cx exports.value_exports_tmap in
     let type_exports_tmap = Context.find_exports cx exports.type_exports_tmap in
-    let named_symbol_to_field { preferred_def_locs; name_loc; type_ } =
+    (* Prefer [type_for_extends] (the raw, un-canonicalized exporter-side type)
+       when present, so polymorphic [this] survives the trip through a
+       namespace synthesized for [import * as NS from ...]. Downstream
+       [extends NS.X] / [implements NS.X] consumers go through
+       [Annot_GetTypeFromNamespaceT] which reads [types_tmap] first and falls
+       back to [GetPropT] on the values object — both paths need the raw form
+       to detect the [Poly?{ClassT (ThisInstanceT _)}] shape and rebind
+       [this]. When [type_for_extends] is [None] (the common case) we keep
+       [type_] unchanged, matching the prior behavior. *)
+    let named_symbol_to_field { preferred_def_locs; name_loc; type_; type_for_extends } =
+      let type_ = Base.Option.value type_for_extends ~default:type_ in
       Field { preferred_def_locs; key_loc = name_loc; type_; polarity = Polarity.Positive }
     in
     let value_props = NameUtils.Map.map named_symbol_to_field value_exports_tmap in
@@ -1645,7 +1716,7 @@ module ImportDefaultTKit = struct
       | None ->
         let exports_tmap = Context.find_exports cx exports.value_exports_tmap in
         (match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
-        | Some { preferred_def_locs = _; name_loc; type_ } -> (name_loc, type_)
+        | Some { preferred_def_locs = _; name_loc; type_; type_for_extends = _ } -> (name_loc, type_)
         | None ->
           (*
            * A common error while using `import` syntax is to forget or
@@ -1686,6 +1757,47 @@ module ImportDefaultTKit = struct
           export_t
       )
     | ImportValue -> (loc_opt, export_t)
+
+  (* Like [on_ModuleT] but skips [ImportTypeTKit.canonicalize_imported_type]'s
+     [ClassT(ThisInstanceT _)] -> [TypeT(ImportClassKind, fix_this_instance _)]
+     unwrap. Used by the interface-extends consumer in [type_sig_merge.ml] so
+     that polymorphic [this] is preserved across module boundaries when the
+     parent is imported via [import X from ...] (default import).
+     Same fallback-to-canonical semantics as the named variant: for non-class-
+     like exports the [type_] returned is whatever the exporter produced. *)
+  let on_ModuleT_for_extends cx (reason, _import_kind, (local_name, module_name), is_strict) module_
+      =
+    let {
+      module_reason;
+      module_export_types = exports;
+      module_is_strict = imported_is_strict;
+      module_available_platforms = _IGNORED_TODO;
+    } =
+      module_
+    in
+    check_nonstrict_import cx is_strict imported_is_strict reason;
+    match exports.cjs_export with
+    | Some (def_loc_opt, t) ->
+      let def_loc =
+        Some
+          (match def_loc_opt with
+          | None -> def_loc_of_t t
+          | Some l -> l)
+      in
+      (def_loc, t)
+    | None ->
+      let exports_tmap = Context.find_exports cx exports.value_exports_tmap in
+      (match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
+      | Some { preferred_def_locs = _; name_loc; type_; type_for_extends } ->
+        let t = Base.Option.value type_for_extends ~default:type_ in
+        (name_loc, t)
+      | None ->
+        let known_exports =
+          NameUtils.Map.keys exports_tmap |> List.rev_map display_string_of_name
+        in
+        let suggestion = typo_suggestion known_exports local_name in
+        add_output cx (Error_message.ENoDefaultExport (reason, module_name, suggestion));
+        (None, AnyT.error module_reason))
 end
 
 module ImportNamedTKit = struct
@@ -1718,7 +1830,7 @@ module ImportNamedTKit = struct
         in
         NameUtils.Map.add
           (OrdinaryName "default")
-          { preferred_def_locs = None; name_loc; type_ }
+          { preferred_def_locs = None; name_loc; type_; type_for_extends = None }
           value_exports_tmap
       | None -> value_exports_tmap
     in
@@ -1734,7 +1846,7 @@ module ImportNamedTKit = struct
         | None -> NameUtils.Map.find_opt (OrdinaryName export_name) value_exports_tmap)
     in
     match (import_kind, exported_symbol_opt) with
-    | (ImportType, Some { preferred_def_locs = _; name_loc; type_ }) ->
+    | (ImportType, Some { preferred_def_locs = _; name_loc; type_; type_for_extends = _ }) ->
       ( name_loc,
         with_concretized_type
           cx
@@ -1750,7 +1862,7 @@ module ImportNamedTKit = struct
           (ImportTypeTKit.on_concrete_type cx reason export_name)
           (AnyT.untyped reason)
       )
-    | (ImportTypeof, Some { preferred_def_locs = _; name_loc; type_ }) ->
+    | (ImportTypeof, Some { preferred_def_locs = _; name_loc; type_; type_for_extends = _ }) ->
       ( name_loc,
         with_concretized_type
           cx
@@ -1766,14 +1878,15 @@ module ImportNamedTKit = struct
           (ImportTypeofTKit.on_concrete_type cx reason export_name)
           (AnyT.untyped reason)
       )
-    | (ImportValue, Some { preferred_def_locs = _; name_loc; type_ }) -> (name_loc, type_)
+    | (ImportValue, Some { preferred_def_locs = _; name_loc; type_; type_for_extends = _ }) ->
+      (name_loc, type_)
     | (ImportValue, None) when has_every_named_export ->
       let t = AnyT.untyped reason in
       (None, t)
     | (ImportValue, None) when NameUtils.Map.mem (OrdinaryName export_name) type_exports_tmap ->
       if Files.has_ts_ext (Context.file cx) then
         (* In .ts files, silently treat value import of type-only export as a type import *)
-        let { preferred_def_locs = _; name_loc; type_ } =
+        let { preferred_def_locs = _; name_loc; type_; type_for_extends = _ } =
           NameUtils.Map.find (OrdinaryName export_name) type_exports_tmap
         in
         ( name_loc,
@@ -1810,6 +1923,78 @@ module ImportNamedTKit = struct
       in
       add_output cx msg;
       (None, AnyT.error reason)
+
+  (* Like [on_ModuleT] but skips [ImportTypeTKit.canonicalize_imported_type]'s
+     [ClassT(ThisInstanceT _)] -> [TypeT(ImportClassKind, fix_this_instance _)]
+     unwrap. Used by the interface-extends consumer in [type_sig_merge.ml] so
+     that polymorphic [this] is preserved across module boundaries (the parent
+     can then be wrapped in [this_typeapp] to rebind [this] on the child).
+     For non-class-like exports the [type_] returned is whatever the exporter
+     produced — which is the same [type_] that the canonicalize path would
+     have started from, so consumers can fall back to the regular [merge]
+     pipeline. *)
+  let on_ModuleT_for_extends cx (reason, import_kind, export_name, _module_name, is_strict) module_
+      =
+    let {
+      module_reason = _;
+      module_export_types = exports;
+      module_is_strict = imported_is_strict;
+      module_available_platforms = _IGNORED_TODO;
+    } =
+      module_
+    in
+    check_nonstrict_import cx is_strict imported_is_strict reason;
+    let value_exports_tmap =
+      let value_exports_tmap = Context.find_exports cx exports.value_exports_tmap in
+      match exports.cjs_export with
+      | Some (def_loc_opt, type_) ->
+        let name_loc =
+          Some
+            (match def_loc_opt with
+            | None -> def_loc_of_t type_
+            | Some l -> l)
+        in
+        NameUtils.Map.add
+          (OrdinaryName "default")
+          { preferred_def_locs = None; name_loc; type_; type_for_extends = None }
+          value_exports_tmap
+      | None -> value_exports_tmap
+    in
+    let type_exports_tmap = Context.find_exports cx exports.type_exports_tmap in
+    let exported_symbol_opt =
+      match import_kind with
+      | ImportValue -> NameUtils.Map.find_opt (OrdinaryName export_name) value_exports_tmap
+      | ImportType
+      | ImportTypeof ->
+        (match NameUtils.Map.find_opt (OrdinaryName export_name) type_exports_tmap with
+        | Some _ as s -> s
+        | None -> NameUtils.Map.find_opt (OrdinaryName export_name) value_exports_tmap)
+    in
+    match exported_symbol_opt with
+    | Some { preferred_def_locs = _; name_loc; type_; type_for_extends } ->
+      (* Prefer the [_for_extends] variant when present (re-export chains
+         populated by [type_sig_merge]'s [Pack.ExportTypeFrom] /
+         [Pack.ExportFrom] / [TsExportFrom] cases). Falls back to the
+         canonicalized [type_] otherwise. *)
+      let t = Base.Option.value type_for_extends ~default:type_ in
+      (name_loc, t)
+    | None ->
+      (* Mirror the regular [on_ModuleT] behavior: in [.ts] files, an
+         [ImportValue] of a type-only export falls back to the type-exports
+         map (TS allows this). Without this fallback, cross-module interface
+         extends/implements via a value-import in a [.ts] file silently
+         drops to [AnyT] and polymorphic [this] rebinding never fires. *)
+      (match import_kind with
+      | ImportValue when NameUtils.Map.mem (OrdinaryName export_name) type_exports_tmap ->
+        if Files.has_ts_ext (Context.file cx) then
+          let { preferred_def_locs = _; name_loc; type_; type_for_extends } =
+            NameUtils.Map.find (OrdinaryName export_name) type_exports_tmap
+          in
+          let t = Base.Option.value type_for_extends ~default:type_ in
+          (name_loc, t)
+        else
+          (None, AnyT.error reason)
+      | _ -> (None, AnyT.error reason))
 end
 
 (**************************************************************************)
@@ -1959,14 +2144,21 @@ end
  * lower (so that the type can be filtered post-resolution). *)
 module ExportTypeTKit = struct
   let on_concrete_type
-      cx reason { preferred_def_locs; name_loc; type_ = l } (export_name, target_module_type) =
+      cx
+      reason
+      { preferred_def_locs; name_loc; type_ = l; type_for_extends }
+      (export_name, target_module_type) =
     let is_type_export =
       match l with
       | DefT (_, ObjT _) when export_name = OrdinaryName "default" -> true
       | l -> ImportTypeTKit.canonicalize_imported_type cx reason l <> None
     in
     if is_type_export then
-      let named = NameUtils.Map.singleton export_name { preferred_def_locs; name_loc; type_ = l } in
+      let named =
+        NameUtils.Map.singleton
+          export_name
+          { preferred_def_locs; name_loc; type_ = l; type_for_extends }
+      in
       ExportNamedTKit.mod_ModuleT cx (NameUtils.Map.empty, named, ReExport) target_module_type
 end
 
@@ -1984,12 +2176,12 @@ module CopyTypeExportsTKit = struct
     in
     let export_all exports_tmap =
       NameUtils.Map.iter
-        (fun export_name { name_loc; preferred_def_locs; type_ } ->
+        (fun export_name { name_loc; preferred_def_locs; type_; type_for_extends } ->
           let type_ = concretize_export_type cx reason type_ in
           ExportTypeTKit.on_concrete_type
             cx
             reason
-            { name_loc; preferred_def_locs; type_ }
+            { name_loc; preferred_def_locs; type_; type_for_extends }
             (export_name, target_module_type))
         (Context.find_exports cx exports_tmap)
     in
@@ -2119,6 +2311,34 @@ module ImportExportUtils : sig
     remote_name:string ->
     local_name:string ->
     ALoc.t option * Type.t
+
+  (* Like [import_named_specifier_type] but routes the result through
+     [ImportNamedTKit.on_ModuleT_for_extends], which skips
+     [canonicalize_imported_type]'s [ClassT(ThisInstanceT _)] -> [TypeT(...)]
+     unwrap. Returns the raw exporter-side type, suitable for wrapping in
+     [TypeUtil.this_typeapp] in [extends]/[implements] consumers so
+     polymorphic [this] rebinds across module boundaries. *)
+  val import_named_specifier_type_for_extends :
+    Context.t ->
+    reason ->
+    import_kind:Flow_ast.Statement.ImportDeclaration.import_kind ->
+    module_name:Flow_import_specifier.userland ->
+    source_module:(Type.moduletype, Type.t) result ->
+    remote_name:string ->
+    Type.t
+
+  (* Like [import_default_specifier_type] but routes the result through
+     [ImportDefaultTKit.on_ModuleT_for_extends]. Counterpart of
+     [import_named_specifier_type_for_extends] for [import X from ...]
+     (default imports). *)
+  val import_default_specifier_type_for_extends :
+    Context.t ->
+    reason ->
+    import_kind:Flow_ast.Statement.ImportDeclaration.import_kind ->
+    module_name:Flow_import_specifier.userland ->
+    source_module:(Type.moduletype, Type.t) result ->
+    local_name:string ->
+    Type.t
 
   val import_default_specifier_type :
     Context.t ->
@@ -2327,6 +2547,36 @@ end = struct
       ~remote_name
       ~local_name
 
+  let import_named_specifier_type_for_extends
+      cx import_reason ~import_kind ~module_name ~source_module ~remote_name =
+    let import_kind = type_kind_of_kind import_kind in
+    let is_strict = Context.is_strict cx in
+    match source_module with
+    | Ok m ->
+      let (_name_loc_opt, t) =
+        ImportNamedTKit.on_ModuleT_for_extends
+          cx
+          (import_reason, import_kind, remote_name, module_name, is_strict)
+          m
+      in
+      t
+    | Error t -> t
+
+  let import_default_specifier_type_for_extends
+      cx import_reason ~import_kind ~module_name ~source_module ~local_name =
+    let import_kind = type_kind_of_kind import_kind in
+    let is_strict = Context.is_strict cx in
+    match source_module with
+    | Ok m ->
+      let (_name_loc_opt, t) =
+        ImportDefaultTKit.on_ModuleT_for_extends
+          cx
+          (import_reason, import_kind, (local_name, module_name), is_strict)
+          m
+      in
+      t
+    | Error t -> t
+
   let import_default_specifier_type
       cx
       import_reason
@@ -2425,7 +2675,7 @@ end = struct
         in
         NameUtils.Map.add
           (OrdinaryName "default")
-          { Type.preferred_def_locs = None; name_loc; type_ }
+          { Type.preferred_def_locs = None; name_loc; type_; type_for_extends = None }
           value_exports_tmap
       | None -> value_exports_tmap
     in

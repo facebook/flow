@@ -1,0 +1,24 @@
+main.js:7:13
+Flags:
+type SurfaceEntryPoint<TRoute: Route<>> = Readonly<
+  {
+    getComponent: () => JSResourceReference<Module<TRoute>>,
+    getNavigationOptions: () => number,
+    getRoute: () => Class<TRoute>,
+    ...
+  },
+>
+= {
+  +getComponent: () => JSResourceReference<Module<TRoute>>,
+  +getNavigationOptions: () => number,
+  +getRoute: () => Class<TRoute>,
+  ...
+}
+
+'JSResourceReference' defined at JSResourceReference.js:3:17
+'Module' defined at main.js:5:5
+'Route' defined at Route.js:3:6
+'SurfaceEntryPoint' defined at main.js:7:12
+
+main.js:7:13,7:29
+

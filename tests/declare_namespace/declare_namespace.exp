@@ -581,6 +581,24 @@ Cannot resolve name `non_ns_type`. [cannot-resolve-name]
       ^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------- polymorphic_this_extends.js:28:12
+
+Cannot implement `NS.NSCloneable` [1] with `NSBadImpl` because in property `clone` > the return value: `NSCloneable` [2]
+is incompatible with `this` [3]. [incompatible-type]
+
+   polymorphic_this_extends.js:28:12
+   28|   clone(): NS.NSCloneable { return this; }  // ERROR — must return `this`
+                  ^^^^^^^^^^^^^^ [2]
+
+References:
+   polymorphic_this_extends.js:27:28
+   27| class NSBadImpl implements NS.NSCloneable {
+                                  ^^^^^^^^^^^^^^ [1]
+   polymorphic_this_extends.js:10:14
+   10|     clone(): this;
+                    ^^^^ [3]
+
+
 Error --------------------------------------------------------------------------------- type_only_react_namespace.js:3:3
 
 Cannot resolve name `React`. [cannot-resolve-name]
@@ -1320,4 +1338,4 @@ References:
 
 
 
-Found 92 errors
+Found 93 errors

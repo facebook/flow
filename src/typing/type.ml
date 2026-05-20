@@ -1423,6 +1423,15 @@ module rec TypeTerm : sig
     name_loc: ALoc.t option;
     preferred_def_locs: ALoc.t Nel.t option;
     type_: t;
+    (* Optional [_for_extends] variant of [type_], populated only for re-export
+       chains ([export type {X} from ...] and [export {X} from ...]) so that
+       barrel-style re-exports preserve polymorphic [this]. When [Some], it
+       carries the un-canonicalized exporter-side type ([Poly?{ClassT
+       (ThisInstanceT _)}]) suitable for [this_typeapp] wrapping in
+       [extends]/[implements] consumers. When [None], consumers fall back to
+       [type_]. The regular import path always reads [type_]; only the
+       [_for_extends] read paths consult this field. *)
+    type_for_extends: t option;
   }
 
   (* This has to go here so that Type doesn't depend on Scope *)
@@ -2140,7 +2149,10 @@ end = struct
             | Method _ -> unbind_this_method type_
             | _ -> type_
           in
-          NameUtils.Map.add x { name_loc = Property.read_loc p; preferred_def_locs; type_ } tmap
+          NameUtils.Map.add
+            x
+            { name_loc = Property.read_loc p; preferred_def_locs; type_; type_for_extends = None }
+            tmap
         | None -> tmap)
       pmap
       NameUtils.Map.empty

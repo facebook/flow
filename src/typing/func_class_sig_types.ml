@@ -126,6 +126,35 @@ module Func = struct
 end
 
 module Class = struct
+  (* Tag identifying whether a [typeapp] in an [extends]/[implements] clause
+     resolves to a class-like binding ([class] / [declare class] / [interface]
+     / [record]). [ClassLikeMono]/[ClassLikePoly] mean we can wrap the parent
+     in [TypeUtil.this_typeapp] driven by binding-kind metadata alone (no
+     forcing of the resolved type tvar). [BindingOther] means the parent is a
+     type alias / variable / etc. — don't wrap. [BindingUnknown] is the
+     fallback when binding kind isn't statically visible.
+
+     [ClassLikeRawMono]/[ClassLikeRawPoly] carry an explicit *raw*
+     ([ClassT(ThisInstanceT _)]-shaped) override of the converted [c]. Used
+     when [c] from [convert_qualification] is in canonicalized form (cross-
+     module imports go through [import_named_specifier_type] which calls
+     [canonicalize_imported_type]'s [fix_this_instance], destroying the
+     polymorphic-[this] shape). The raw override is computed via the parallel
+     [_for_extends] import path that bypasses canonicalization. The class-sig
+     consumer ([class_sig.ml]) wraps this raw override in [TypeUtil.this_typeapp]
+     so polymorphic [this] rebinds correctly across module boundaries. For
+     namespace-member references like [NS.I] the converted [c] is already raw
+     (the namespace's [types_tmap] stores raw exporter-side types), so the
+     override carries the same [c] — the variant is the marker that triggers
+     the [this_typeapp] wrap path. *)
+  type class_like_binding_kind =
+    | ClassLikeMono
+    | ClassLikePoly
+    | ClassLikeRawMono of Type.t
+    | ClassLikeRawPoly of Type.t
+    | BindingOther
+    | BindingUnknown
+
   module type S = sig
     module Config : Config.S
 
@@ -162,6 +191,10 @@ module Class = struct
       mixins: typeapp list;
       (* declare class only *)
       implements: typeapp list;
+      (* Parallel to [implements]: [class_like_binding_kind] for each
+         implemented type. Computed at convert time (not derived by peeking
+         the resolved tvar). *)
+      implements_binding_kinds: class_like_binding_kind list;
       this_tparam: Type.typeparam;
       this_t: Type.t;
     }
@@ -169,7 +202,14 @@ module Class = struct
     type interface_super = {
       inline: bool;
       extends: typeapp list;
+      (* Parallel to [extends]: [class_like_binding_kind] for each extended
+         type. Computed at convert time (not derived by peeking the resolved
+         tvar). *)
+      extends_binding_kinds: class_like_binding_kind list;
       callable: bool;
+      (* Polymorphic [this] for the interface. None for inline interfaces. *)
+      this_tparam: Type.typeparam option;
+      this_t: Type.t option;
     }
 
     type super =
@@ -248,6 +288,8 @@ module Class = struct
       mixins: typeapp list;
       (* declare class only *)
       implements: typeapp list;
+      (* Parallel to [implements]: see comment in the [.S] signature. *)
+      implements_binding_kinds: class_like_binding_kind list;
       this_tparam: Type.typeparam;
       this_t: Type.t;
     }
@@ -256,7 +298,12 @@ module Class = struct
       inline: bool;
       (* Anonymous interface, can appear anywhere inside a type *)
       extends: typeapp list;
+      (* Parallel to [extends]: see comment in the [.S] signature. *)
+      extends_binding_kinds: class_like_binding_kind list;
       callable: bool;
+      (* Polymorphic [this] for the interface. None for inline interfaces. *)
+      this_tparam: Type.typeparam option;
+      this_t: Type.t option;
     }
 
     type super =

@@ -1069,7 +1069,7 @@ fn wrap_with_namespace_types<'cx>(
                 );
                 (
                     reason::Name::new(name.dupe()),
-                    type_::NamedSymbol::new(Some(env_key.loc.dupe()), None, type_),
+                    type_::NamedSymbol::new(Some(env_key.loc.dupe()), None, type_, None),
                 )
             })
             .collect();
@@ -3207,15 +3207,24 @@ fn init_type_param<'cx>(
         Ok(subst_map)
     }
 
-    let (def, _, _, reason) = graph
-        .get_ordinary(&def_loc)
-        .expect("init_type_param: def_loc not found in graph");
-    let tparam_entry = match def {
-        Def::TypeParam(box TypeParamData {
-            tparams_map: tparams_locs,
-            kind,
-            tparam,
-        }) => {
+    fn mk_synthetic_this<'cx>(cx: &Context<'cx>, reason: Reason) -> (type_::TypeParam, Type) {
+        flow_typing_statement::class_sig::mk_this(
+            type_::implicit_mixed_this(reason.dupe()),
+            cx,
+            reason,
+        )
+    }
+    let tparam_entry = match graph.get_ordinary(&def_loc) {
+        Some((
+            Def::TypeParam(box TypeParamData {
+                tparams_map: tparams_locs,
+                kind,
+                tparam,
+            }),
+            _,
+            _,
+            _,
+        )) => {
             let tparams_map = mk_tparams_map_from_graph(cx, graph, tparams_locs)?;
             let (_, tparam_inner) = tparam;
             let info = type_annotation::mk_type_param(cx, tparams_map, *kind, tparam_inner)?;
@@ -3225,7 +3234,7 @@ fn init_type_param<'cx>(
             cache.set_tparam(info);
             result
         }
-        Def::Class(box ClassDefData { class_loc, .. }) => {
+        Some((Def::Class(box ClassDefData { class_loc, .. }), _, _, reason)) => {
             let self_ = type_env::read_class_self_type(cx, class_loc.dupe());
             let (this_param, this_t) =
                 flow_typing_statement::class_sig::mk_this(self_, cx, reason.dupe());
@@ -3235,7 +3244,7 @@ fn init_type_param<'cx>(
                 this_t,
             )
         }
-        Def::Record(box RecordDefData { record_loc, .. }) => {
+        Some((Def::Record(box RecordDefData { record_loc, .. }), _, _, reason)) => {
             let self_ = type_env::read_class_self_type(cx, record_loc.dupe());
             let (this_param, this_t) =
                 flow_typing_statement::class_sig::mk_this(self_, cx, reason.dupe());
@@ -3245,9 +3254,30 @@ fn init_type_param<'cx>(
                 this_t,
             )
         }
-        _ => {
+        Some((Def::Interface(_, _), _, _, reason)) => {
+            // Interfaces have polymorphic [this]. The bound used here doesn't
+            // need to match the interface's later [this_t] identity — [tparams_map]
+            // lookups during convert just need a usable type so [extends this]
+            // in a method's tparam constraint resolves rather than firing
+            // [illegal-this]. The actual subtyping at use-sites goes through the
+            // interface's own [this_t] via [check_implements] / [supertype]
+            // substitution.
+            let (this_param, this_t) = mk_synthetic_this(cx, reason.dupe());
+            (
+                SubstName::name(FlowSmolStr::new("this")),
+                this_param,
+                this_t,
+            )
+        }
+        Some(_) => {
             panic!(
                 "tparam_locs contain a non-tparam location: {:?}",
+                def_loc.debug_to_string(true)
+            )
+        }
+        None => {
+            panic!(
+                "init_type_param: tparams_locs entry {:?} has no name_def binding (likely a synthetic [this] whose AssigningWrite was not registered by the env_builder)",
                 def_loc.debug_to_string(true)
             )
         }

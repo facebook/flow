@@ -12,6 +12,11 @@ type ts_pending_classified =
   | TsPendingType of Type.named_symbol
   | TsPendingValue of Type.named_symbol
 
+type local_def_binding_kind =
+  | DefBindingClassLikeMono
+  | DefBindingClassLikePoly
+  | DefBindingOther
+
 type exports =
   | CJSExports of {
       type_exports: Type.named_symbol Lazy.t SMap.t;
@@ -34,8 +39,9 @@ type file = {
   cx: Context.t;
   dependencies: (Flow_import_specifier.userland * Context.resolved_require Lazy.t) Module_refs.t;
   exports: unit -> (Type.moduletype, Type.t) result;
-  local_defs: (ALoc.t * string * Type.t Lazy.t * Type.t Lazy.t) Lazy.t Local_defs.t;
-  remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;
+  local_defs:
+    (ALoc.t * string * local_def_binding_kind * Type.t Lazy.t * Type.t Lazy.t) Lazy.t Local_defs.t;
+  remote_refs: (ALoc.t * string * Type.t * Type.t Lazy.t) Lazy.t Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
 }
@@ -44,11 +50,15 @@ type tparams_map = Type.t SMap.t
 
 val def_reason : (ALoc.t, 'b) Type_sig.def -> Reason.t
 
+val def_binding_kind : ('a, 'b) Type_sig.def -> local_def_binding_kind
+
 val remote_ref_reason : ALoc.t Pack.remote_ref -> Reason.t
 
 val merge_pattern : file -> ALoc.t Pack.pattern -> Type.t
 
 val merge_remote_ref : file -> Reason.t -> ALoc.t Pack.remote_ref -> Type.t
+
+val merge_remote_ref_for_extends : file -> Reason.t -> ALoc.t Pack.remote_ref -> Type.t
 
 val merge_export : file -> ALoc.t Pack.export -> Type.named_symbol
 

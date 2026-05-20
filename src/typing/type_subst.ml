@@ -181,12 +181,13 @@ let props (mapper : 'a #Type_mapper.t) cx map_cx id =
 
 let exports (mapper : 'a #Type_mapper.t) cx map_cx id =
   let exps = Context.find_exports cx id in
-  let map_named_symbol ({ name_loc; preferred_def_locs; type_ } as orig) =
+  let map_named_symbol ({ name_loc; preferred_def_locs; type_; type_for_extends } as orig) =
     let type_' = mapper#type_ cx map_cx type_ in
-    if type_ == type_' then
+    let type_for_extends' = Base.Option.map type_for_extends ~f:(mapper#type_ cx map_cx) in
+    if type_ == type_' && type_for_extends == type_for_extends' then
       orig
     else
-      { name_loc; preferred_def_locs; type_ = type_' }
+      { name_loc; preferred_def_locs; type_ = type_'; type_for_extends = type_for_extends' }
   in
   let exps' = NameUtils.Map.ident_map map_named_symbol exps in
   if exps == exps' then

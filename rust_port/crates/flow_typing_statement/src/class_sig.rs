@@ -14,6 +14,7 @@ use std::sync::Arc;
 use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
+use flow_common::files;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -523,14 +524,14 @@ fn iter_methods<C: ConfigTypes>(
 fn this_tparam<C: ConfigTypes>(x: &class_types::Class<C>) -> Option<&TypeParam> {
     match &x.super_ {
         class_types::Super::Class(class_super) => Some(&class_super.this_tparam),
-        class_types::Super::Interface(_) => None,
+        class_types::Super::Interface(iface) => iface.this_tparam.as_ref(),
     }
 }
 
 fn this_t<C: ConfigTypes>(x: &class_types::Class<C>) -> Option<&Type> {
     match &x.super_ {
         class_types::Super::Class(class_super) => Some(&class_super.this_t),
-        class_types::Super::Interface(_) => None,
+        class_types::Super::Interface(iface) => iface.this_t.as_ref(),
     }
 }
 
@@ -1003,21 +1004,86 @@ fn supertype<'a, C: ConfigTypes>(cx: &Context<'a>, x: &class_types::Class<C>) ->
             let extends: Vec<Type> = iface
                 .extends
                 .iter()
-                .map(|(annot_loc, c, targs_opt)| match targs_opt {
-                    None => {
-                        let reason = type_util::reason_of_t(c)
-                            .dupe()
-                            .reposition(annot_loc.dupe())
-                            .annotate(annot_loc.dupe());
-                        type_annotation_cons_gen::mk_instance(cx, reason, c.dupe(), None, None)
+                .zip(iface.extends_binding_kinds.iter())
+                .map(|((annot_loc, c, targs_opt), binding_kind)| {
+                    match (&iface.this_t, binding_kind, targs_opt) {
+                        (Some(this_t), class_types::ClassLikeBindingKind::ClassLikeMono, _) => {
+                            type_util::this_typeapp(
+                                c.dupe(),
+                                this_t.dupe(),
+                                targs_opt.clone(),
+                                Some(annot_loc.dupe()),
+                            )
+                        }
+                        (
+                            Some(this_t),
+                            class_types::ClassLikeBindingKind::ClassLikePoly,
+                            Some(_),
+                        ) => type_util::this_typeapp(
+                            c.dupe(),
+                            this_t.dupe(),
+                            targs_opt.clone(),
+                            Some(annot_loc.dupe()),
+                        ),
+                        (Some(_), class_types::ClassLikeBindingKind::ClassLikePoly, None) => {
+                            let reason = type_util::reason_of_t(c)
+                                .dupe()
+                                .reposition(annot_loc.dupe())
+                                .annotate(annot_loc.dupe());
+                            type_annotation_cons_gen::mk_instance(cx, reason, c.dupe(), None, None)
+                        }
+                        (
+                            Some(this_t),
+                            class_types::ClassLikeBindingKind::ClassLikeRawMono(raw_c),
+                            _,
+                        ) => type_util::this_typeapp(
+                            raw_c.dupe(),
+                            this_t.dupe(),
+                            targs_opt.clone(),
+                            Some(annot_loc.dupe()),
+                        ),
+                        (
+                            Some(this_t),
+                            class_types::ClassLikeBindingKind::ClassLikeRawPoly(raw_c),
+                            Some(_),
+                        ) => type_util::this_typeapp(
+                            raw_c.dupe(),
+                            this_t.dupe(),
+                            targs_opt.clone(),
+                            Some(annot_loc.dupe()),
+                        ),
+                        (
+                            Some(_),
+                            class_types::ClassLikeBindingKind::ClassLikeRawPoly(raw_c),
+                            None,
+                        ) => {
+                            let reason = type_util::reason_of_t(raw_c)
+                                .dupe()
+                                .reposition(annot_loc.dupe())
+                                .annotate(annot_loc.dupe());
+                            type_annotation_cons_gen::mk_instance(
+                                cx,
+                                reason,
+                                raw_c.dupe(),
+                                None,
+                                None,
+                            )
+                        }
+                        (_, _, None) => {
+                            let reason = type_util::reason_of_t(c)
+                                .dupe()
+                                .reposition(annot_loc.dupe())
+                                .annotate(annot_loc.dupe());
+                            type_annotation_cons_gen::mk_instance(cx, reason, c.dupe(), None, None)
+                        }
+                        (_, _, Some(targs)) => type_util::typeapp_annot(
+                            false,
+                            false,
+                            annot_loc.dupe(),
+                            c.dupe(),
+                            targs.clone(),
+                        ),
                     }
-                    Some(targs) => type_util::typeapp_annot(
-                        false,
-                        false,
-                        annot_loc.dupe(),
-                        c.dupe(),
-                        targs.clone(),
-                    ),
                 })
                 .collect();
             // If the interface definition includes a callable property, add the
@@ -1177,10 +1243,20 @@ pub fn thistype<'a, C: crate::func_params_intf::Config>(
     x: &class_types::Class<C>,
 ) -> Type {
     let (reason, instance_t) = this_instance_type(cx, None, x);
-    Type::new(TypeInner::DefT(
-        reason,
-        DefT::new(DefTInner::InstanceT(Rc::new(instance_t))),
-    ))
+    match &x.super_ {
+        class_types::Super::Interface(iface) if iface.this_tparam.is_some() => {
+            Type::new(TypeInner::ThisInstanceT(Box::new(ThisInstanceTData {
+                reason,
+                instance: instance_t,
+                is_this: false,
+                subst_name: SubstName::name(FlowSmolStr::new_inline("this")),
+            })))
+        }
+        _ => Type::new(TypeInner::DefT(
+            reason,
+            DefT::new(DefTInner::InstanceT(Rc::new(instance_t))),
+        )),
+    }
 }
 
 fn check_methods<'a, C: crate::func_params_intf::Config>(
@@ -1192,9 +1268,13 @@ fn check_methods<'a, C: crate::func_params_intf::Config>(
         class_types::Super::Interface(_) => thistype(cx, x),
         class_types::Super::Class(class_super) => class_super.this_t.dupe(),
     };
+    let skip_in_ts = files::has_ts_ext(cx.file());
     let check_method =
         |msig: &func_class_sig_types::func::Func<C>, static_: bool, name: &str, id_loc: ALoc| {
             if let Some(this_param) = func_sig::this_param(&msig.fparams) {
+                if skip_in_ts {
+                    return;
+                }
                 let self_val = if static_ {
                     type_util::class_type(self_.dupe(), false, None)
                 } else {
@@ -1255,16 +1335,74 @@ fn check_implements<'a, C: crate::func_params_intf::Config>(
         class_types::Super::Class(class_super) => {
             let this = thistype(cx, x);
             let reason = x.instance.reason.dupe();
-            for (annot_loc, c, targs_opt) in &class_super.implements {
-                let i = match targs_opt {
-                    None => {
+            for ((annot_loc, c, targs_opt), binding_kind) in class_super
+                .implements
+                .iter()
+                .zip(class_super.implements_binding_kinds.iter())
+            {
+                let i = match (binding_kind, targs_opt) {
+                    (class_types::ClassLikeBindingKind::ClassLikeMono, _) => {
+                        type_util::this_typeapp(
+                            c.dupe(),
+                            class_super.this_t.dupe(),
+                            targs_opt.clone(),
+                            Some(annot_loc.dupe()),
+                        )
+                    }
+                    (class_types::ClassLikeBindingKind::ClassLikePoly, Some(_)) => {
+                        type_util::this_typeapp(
+                            c.dupe(),
+                            class_super.this_t.dupe(),
+                            targs_opt.clone(),
+                            Some(annot_loc.dupe()),
+                        )
+                    }
+                    (class_types::ClassLikeBindingKind::ClassLikePoly, None) => {
                         let r = type_util::reason_of_t(c)
                             .dupe()
                             .reposition(annot_loc.dupe())
                             .annotate(annot_loc.dupe());
                         type_annotation_cons_gen::mk_instance(cx, r, c.dupe(), None, None)
                     }
-                    Some(targs) => type_util::typeapp_annot(
+                    (class_types::ClassLikeBindingKind::ClassLikeRawMono(raw_c), _) => {
+                        type_util::this_typeapp(
+                            raw_c.dupe(),
+                            class_super.this_t.dupe(),
+                            targs_opt.clone(),
+                            Some(annot_loc.dupe()),
+                        )
+                    }
+                    (class_types::ClassLikeBindingKind::ClassLikeRawPoly(raw_c), Some(_)) => {
+                        type_util::this_typeapp(
+                            raw_c.dupe(),
+                            class_super.this_t.dupe(),
+                            targs_opt.clone(),
+                            Some(annot_loc.dupe()),
+                        )
+                    }
+                    (class_types::ClassLikeBindingKind::ClassLikeRawPoly(raw_c), None) => {
+                        let r = type_util::reason_of_t(raw_c)
+                            .dupe()
+                            .reposition(annot_loc.dupe())
+                            .annotate(annot_loc.dupe());
+                        type_annotation_cons_gen::mk_instance(cx, r, raw_c.dupe(), None, None)
+                    }
+                    (
+                        class_types::ClassLikeBindingKind::BindingOther
+                        | class_types::ClassLikeBindingKind::BindingUnknown,
+                        None,
+                    ) => {
+                        let r = type_util::reason_of_t(c)
+                            .dupe()
+                            .reposition(annot_loc.dupe())
+                            .annotate(annot_loc.dupe());
+                        type_annotation_cons_gen::mk_instance(cx, r, c.dupe(), None, None)
+                    }
+                    (
+                        class_types::ClassLikeBindingKind::BindingOther
+                        | class_types::ClassLikeBindingKind::BindingUnknown,
+                        Some(targs),
+                    ) => type_util::typeapp_annot(
                         false,
                         false,
                         annot_loc.dupe(),
@@ -1419,7 +1557,28 @@ pub fn classtype<'a, C: crate::func_params_intf::Config>(
         _ => {}
     }
     let (t_inner, t_outer) = if structural(x) {
-        (this.dupe(), type_util::class_type(this, true, None))
+        match this_tp {
+            Some(_) => {
+                let t_inner = Type::new(TypeInner::ThisInstanceT(Box::new(ThisInstanceTData {
+                    reason: this_reason.dupe(),
+                    instance: this_instance_t.dupe(),
+                    is_this: true,
+                    subst_name: this_name.dupe(),
+                })));
+                let t_outer = type_util::class_type(
+                    Type::new(TypeInner::ThisInstanceT(Box::new(ThisInstanceTData {
+                        reason: this_reason.dupe(),
+                        instance: this_instance_t.dupe(),
+                        is_this: false,
+                        subst_name: this_name.dupe(),
+                    }))),
+                    true,
+                    None,
+                );
+                (t_inner, t_outer)
+            }
+            None => (this.dupe(), type_util::class_type(this, true, None)),
+        }
     } else {
         let t_inner = Type::new(TypeInner::ThisInstanceT(Box::new(ThisInstanceTData {
             reason: this_reason.dupe(),

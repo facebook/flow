@@ -284,12 +284,13 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         (let def = Pack.map_packed_def aloc (Bin.read_local_def buf pos) in
          let loc = Type_sig.def_id_loc def in
          let name = Type_sig.def_name def in
+         let binding_kind = Type_sig_merge.def_binding_kind def in
          let reason = Type_sig_merge.def_reason def in
          let type_ ~const_decl =
            let resolved = lazy (Merge.merge_def ~const_decl (Lazy.force file_rec) reason def) in
            ConsGen.mk_sig_tvar cx reason resolved
          in
-         (loc, name, lazy (type_ ~const_decl:false), lazy (type_ ~const_decl:true))
+         (loc, name, binding_kind, lazy (type_ ~const_decl:false), lazy (type_ ~const_decl:true))
         )
     in
 
@@ -301,7 +302,11 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
          let reason = Type_sig_merge.remote_ref_reason remote_ref in
          let resolved = lazy (Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref) in
          let t = ConsGen.mk_sig_tvar cx reason resolved in
-         (loc, name, t)
+         let resolved_for_extends =
+           lazy (Merge.merge_remote_ref_for_extends (Lazy.force file_rec) reason remote_ref)
+         in
+         let t_for_extends = lazy (ConsGen.mk_sig_tvar cx reason resolved_for_extends) in
+         (loc, name, t, t_for_extends)
         )
     in
 

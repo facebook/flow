@@ -2346,6 +2346,10 @@ struct
           ->
           let i = Type_subst.subst_instance_type cx (Subst_name.Map.singleton this_name this) i in
           continue_repos cx trace r (DefT (inst_r, InstanceT i)) k
+        (* this-specialize a this-abstracted interface (no `ClassT` wrapper) *)
+        | (ThisInstanceT (inst_r, i, _, this_name), ThisSpecializeT (r, this, k)) ->
+          let i = Type_subst.subst_instance_type cx (Subst_name.Map.singleton this_name this) i in
+          continue_repos cx trace r (DefT (inst_r, InstanceT i)) k
         (* this-specialization of non-this-abstracted classes is a no-op *)
         | (DefT (_, ClassT i), ThisSpecializeT (r, _this, k)) ->
           (* TODO: check that this is a subtype of i? *)

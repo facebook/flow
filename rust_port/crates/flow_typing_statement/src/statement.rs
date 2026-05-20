@@ -15479,18 +15479,21 @@ pub fn mk_class_sig<'a>(
                 let (mut class_sig, extends_ast_f, implements_ast) = {
                     let id_val = cx.make_aloc_id(&name_loc);
                     let (extends_val, extends_ast_f) = mk_extends(cx, &tparams_map, extends)?;
-                    let (implements_val, implements_ast) = match implements {
-                        None => (vec![], None),
-                        Some(impl_) => {
-                            let implements_loc = &impl_.loc;
-                            let interfaces = &impl_.interfaces;
-                            let impl_comments = &impl_.comments;
-                            let (implements_list, interfaces_ast): (Vec<_>, Vec<_>) =
-                                try_map_pair_vecs(interfaces, |i| -> Result<_, CheckExprError> {
-                                    let loc = &i.loc;
-                                    let id = &i.id;
-                                    let targs = &i.targs;
-                                    match id {
+                    let (implements_val, implements_binding_kinds, implements_ast) =
+                        match implements {
+                            None => (vec![], vec![], None),
+                            Some(impl_) => {
+                                let implements_loc = &impl_.loc;
+                                let interfaces = &impl_.interfaces;
+                                let impl_comments = &impl_.comments;
+                                let (implements_list, interfaces_ast): (Vec<_>, Vec<_>) =
+                                    try_map_pair_vecs(
+                                        interfaces,
+                                        |i| -> Result<_, CheckExprError> {
+                                            let loc = &i.loc;
+                                            let id = &i.id;
+                                            let targs = &i.targs;
+                                            match id {
                                         ast::types::generic::Identifier::Qualified(_)
                                         | ast::types::generic::Identifier::ImportTypeAnnot(_)
                                             if !cx.tslib_syntax() =>
@@ -15507,54 +15510,69 @@ pub fn mk_class_sig<'a>(
                                         }
                                         _ => {}
                                     }
-                                    let (c, id) = type_annotation::convert_qualification(
-                                        cx,
-                                        "implements",
-                                        id,
-                                    )?;
-                                    let (typeapp, targs_ast) = match targs {
-                                        None => ((loc.dupe(), c.dupe(), None), None),
-                                        Some(type_args) => {
-                                            let targs_loc = &type_args.loc;
-                                            let (ts, targs_ast_inner) =
-                                                type_annotation::convert_list(
-                                                    cx,
-                                                    tparams_map.clone(),
-                                                    &type_args.arguments,
-                                                )?;
-                                            (
-                                                (loc.dupe(), c.dupe(), Some(ts)),
-                                                Some(ast::types::TypeArgs::<ALoc, (ALoc, Type)> {
-                                                    loc: targs_loc.dupe(),
-                                                    arguments: targs_ast_inner.into(),
-                                                    comments: type_args.comments.dupe(),
-                                                }),
-                                            )
-                                        }
-                                    };
-                                    Ok((
-                                        typeapp,
-                                        ast::class::implements::Interface {
-                                            loc: loc.dupe(),
-                                            id,
-                                            targs: targs_ast,
+                                            let id_pre_convert = id;
+                                            let (c, id) = type_annotation::convert_qualification(
+                                                cx,
+                                                "implements",
+                                                id,
+                                            )?;
+                                            let binding_kind =
+                                        type_annotation::binding_kind_of_generic_id_post_convert(
+                                            cx,
+                                            id_pre_convert,
+                                            &c,
+                                        )?;
+                                            let (typeapp, targs_ast) = match targs {
+                                                None => ((loc.dupe(), c.dupe(), None), None),
+                                                Some(type_args) => {
+                                                    let targs_loc = &type_args.loc;
+                                                    let (ts, targs_ast_inner) =
+                                                        type_annotation::convert_list(
+                                                            cx,
+                                                            tparams_map.clone(),
+                                                            &type_args.arguments,
+                                                        )?;
+                                                    (
+                                                        (loc.dupe(), c.dupe(), Some(ts)),
+                                                        Some(ast::types::TypeArgs::<
+                                                            ALoc,
+                                                            (ALoc, Type),
+                                                        > {
+                                                            loc: targs_loc.dupe(),
+                                                            arguments: targs_ast_inner.into(),
+                                                            comments: type_args.comments.dupe(),
+                                                        }),
+                                                    )
+                                                }
+                                            };
+                                            Ok((
+                                                (typeapp, binding_kind),
+                                                ast::class::implements::Interface {
+                                                    loc: loc.dupe(),
+                                                    id,
+                                                    targs: targs_ast,
+                                                },
+                                            ))
                                         },
-                                    ))
-                                })?;
-                            (
-                                implements_list,
-                                Some(ast::class::Implements {
-                                    loc: implements_loc.dupe(),
-                                    interfaces: interfaces_ast.into(),
-                                    comments: impl_comments.clone(),
-                                }),
-                            )
-                        }
-                    };
+                                    )?;
+                                let (implements, implements_binding_kinds): (Vec<_>, Vec<_>) =
+                                    implements_list.into_iter().unzip();
+                                (
+                                    implements,
+                                    implements_binding_kinds,
+                                    Some(ast::class::Implements {
+                                        loc: implements_loc.dupe(),
+                                        interfaces: interfaces_ast.into(),
+                                        comments: impl_comments.clone(),
+                                    }),
+                                )
+                            }
+                        };
                     let super_ = class_types::Super::Class(class_types::ClassSuper {
                         extends: extends_val,
                         mixins: vec![],
                         implements: implements_val,
+                        implements_binding_kinds,
                         this_t: this_t.dupe(),
                         this_tparam,
                     });
@@ -17698,9 +17716,9 @@ pub fn mk_record_sig<'a>(
 
                 let (mut class_sig, implements_ast) = {
                     let aloc_id = cx.make_aloc_id(&name_loc);
-                    let (implements, implements_ast) = {
+                    let (implements, implements_binding_kinds, implements_ast) = {
                         match &record.implements {
-                            None => (vec![], None),
+                            None => (vec![], vec![], None),
                             Some(impl_node) => {
                                 let implements_loc = impl_node.loc.dupe();
                                 let interfaces = &impl_node.interfaces;
@@ -17728,11 +17746,18 @@ pub fn mk_record_sig<'a>(
                                             }
                                             _ => {}
                                         }
+                                            let id_pre_convert = id;
                                             let (c, id) = type_annotation::convert_qualification(
                                                 cx,
                                                 "implements",
                                                 id,
                                             )?;
+                                            let binding_kind =
+                                                type_annotation::binding_kind_of_generic_id_post_convert(
+                                                    cx,
+                                                    id_pre_convert,
+                                                    &c,
+                                                )?;
                                             let (typeapp, targs_ast) = match &i.targs {
                                                 None => ((loc.dupe(), c.dupe(), None), None),
                                                 Some(targs_node) => {
@@ -17762,7 +17787,7 @@ pub fn mk_record_sig<'a>(
                                                 }
                                             };
                                             Ok((
-                                                typeapp,
+                                                (typeapp, binding_kind),
                                                 ast::class::implements::Interface {
                                                     loc: loc.dupe(),
                                                     id,
@@ -17771,8 +17796,11 @@ pub fn mk_record_sig<'a>(
                                             ))
                                         },
                                     )?;
+                                let (implements, implements_binding_kinds): (Vec<_>, Vec<_>) =
+                                    implements.into_iter().unzip();
                                 (
                                     implements,
+                                    implements_binding_kinds,
                                     Some(ast::class::Implements {
                                         loc: implements_loc,
                                         interfaces: interfaces_ast.into(),
@@ -17787,6 +17815,7 @@ pub fn mk_record_sig<'a>(
                         extends: class_types::Extends::Implicit { null: false },
                         mixins: vec![],
                         implements,
+                        implements_binding_kinds,
                         this_t: this_t.dupe(),
                         this_tparam,
                     });

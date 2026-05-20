@@ -63,3 +63,43 @@ PolyAnonAlias<number>
 
 interface.js:43:15,43:27
 
+interface.js:49:11
+Flags:
+interface Box<T>
+
+'Box' defined at interface.js:49:10
+
+interface.js:49:11,49:13
+
+interface.js:55:15
+Flags:
+Box<number>
+
+'Box' defined at interface.js:49:10
+
+interface.js:55:15,55:17
+
+interface.js:57:7
+Flags:
+Box<number>
+
+'Box' defined at interface.js:49:10
+
+interface.js:57:7,57:12
+
+interface.js:59:7
+Flags:
+() => Box<number>
+
+'Box' defined at interface.js:49:10
+
+interface.js:59:7,59:13
+
+interface.js:62:15
+Flags:
+Class<Box<number>>
+
+'Box' defined at interface.js:49:10
+
+interface.js:62:15,62:17
+

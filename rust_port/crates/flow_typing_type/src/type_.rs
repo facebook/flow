@@ -5349,6 +5349,15 @@ pub struct NamedSymbolInner {
     pub name_loc: Option<ALoc>,
     pub preferred_def_locs: Option<Vec1<ALoc>>,
     pub type_: Type,
+    /// Optional [_for_extends] variant of [type_], populated only for re-export
+    /// chains ([export type {X} from ...] and [export {X} from ...]) so that
+    /// barrel-style re-exports preserve polymorphic [this]. When [Some], it
+    /// carries the un-canonicalized exporter-side type ([Poly?{ClassT
+    /// (ThisInstanceT _)}]) suitable for [this_typeapp] wrapping in
+    /// [extends]/[implements] consumers. When [None], consumers fall back to
+    /// [type_]. The regular import path always reads [type_]; only the
+    /// [_for_extends] read paths consult this field.
+    pub type_for_extends: Option<Type>,
 }
 
 /// Rc-wrapped NamedSymbol for smaller B-tree entries (8 bytes vs 64 bytes).
@@ -5361,11 +5370,13 @@ impl NamedSymbol {
         name_loc: Option<ALoc>,
         preferred_def_locs: Option<Vec1<ALoc>>,
         type_: Type,
+        type_for_extends: Option<Type>,
     ) -> Self {
         NamedSymbol(Rc::new(NamedSymbolInner {
             name_loc,
             preferred_def_locs,
             type_,
+            type_for_extends,
         }))
     }
 
@@ -6509,7 +6520,7 @@ pub mod properties {
 
                     tmap.insert(
                         name.dupe(),
-                        NamedSymbol::new(property::read_loc(prop), preferred_def_locs, type_),
+                        NamedSymbol::new(property::read_loc(prop), preferred_def_locs, type_, None),
                     );
                 }
             }

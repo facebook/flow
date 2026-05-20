@@ -30,8 +30,11 @@ use flow_env_builder::env_api::Refinement;
 use flow_env_builder::env_api::RefinementKind;
 use flow_env_builder::env_api::ValKind;
 use flow_env_builder::env_api::WriteLoc;
+use flow_env_builder::name_def_types::Def as NameDef;
+use flow_env_builder::name_def_types::Import as NameDefImport;
 use flow_env_builder::name_def_types::ScopeKind;
 use flow_env_builder::provider_api;
+use flow_parser::ast::statement::ImportKind as AstImportKind;
 use flow_parser::loc_sig::LocSig;
 use flow_typing_context::Context;
 use flow_typing_context::PossiblyRefinedWriteState;
@@ -286,6 +289,15 @@ pub struct LocalExportBinding {
     pub val_kind: ValKind,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LocalClasslikeBindingKind {
+    Mono,
+    Poly,
+    Other,
+}
+
+pub type ImportInfo = (AstImportKind, NameDefImport, FlowSmolStr, ALoc);
+
 pub fn local_export_binding_at_loc<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
@@ -300,6 +312,93 @@ pub fn local_export_binding_at_loc<'cx>(
             val_kind: *val_kind,
         }),
         Err(_) => None,
+    }
+}
+
+pub fn local_classlike_binding_kind_at_loc<'cx>(
+    cx: &Context<'cx>,
+    use_loc: ALoc,
+) -> Option<LocalClasslikeBindingKind> {
+    let env = cx.environment();
+    let var_info = &env.var_info;
+    match find_var_opt(var_info, &use_loc) {
+        Err(_) => None,
+        Ok(EnvRead { def_loc: None, .. }) => None,
+        Ok(EnvRead {
+            def_loc: Some(def_loc),
+            val_kind,
+            ..
+        }) => match val_kind {
+            ValKind::Type { imported: true, .. } | ValKind::TsImport => None,
+            ValKind::Type {
+                imported: false, ..
+            }
+            | ValKind::Value
+            | ValKind::Internal => {
+                let lookup = |kind| env.name_defs.get(&EnvKey::new(kind, def_loc.dupe()));
+                let def_opt = match lookup(DefLocType::OrdinaryNameLoc) {
+                    Some(entry) => Some(entry),
+                    None => lookup(DefLocType::ClassSelfLoc),
+                };
+                match def_opt {
+                    None => None,
+                    Some((def, _scope, _stack, _reason)) => {
+                        let poly_or_mono = |has_tparams: bool| {
+                            if has_tparams {
+                                LocalClasslikeBindingKind::Poly
+                            } else {
+                                LocalClasslikeBindingKind::Mono
+                            }
+                        };
+                        match def {
+                            NameDef::Class(data) => {
+                                Some(poly_or_mono(data.class_.tparams.is_some()))
+                            }
+                            NameDef::Record(data) => {
+                                Some(poly_or_mono(data.record.tparams.is_some()))
+                            }
+                            NameDef::DeclaredClass(data) => {
+                                Some(poly_or_mono(data.decl.tparams.is_some()))
+                            }
+                            NameDef::Interface(_, iface) => {
+                                Some(poly_or_mono(iface.tparams.is_some()))
+                            }
+                            _ => Some(LocalClasslikeBindingKind::Other),
+                        }
+                    }
+                }
+            }
+        },
+    }
+}
+
+pub fn import_info_at_loc<'cx>(cx: &Context<'cx>, use_loc: ALoc) -> Option<ImportInfo> {
+    let env = cx.environment();
+    let var_info = &env.var_info;
+    match find_var_opt(var_info, &use_loc) {
+        Err(_) => None,
+        Ok(EnvRead { def_loc: None, .. }) => None,
+        Ok(EnvRead {
+            def_loc: Some(def_loc),
+            val_kind,
+            ..
+        }) => match val_kind {
+            ValKind::Type { imported: true, .. } | ValKind::TsImport => {
+                match env
+                    .name_defs
+                    .get(&EnvKey::new(DefLocType::OrdinaryNameLoc, def_loc.dupe()))
+                {
+                    Some((NameDef::Import(data), _scope, _stack, _reason)) => Some((
+                        data.import_kind.clone(),
+                        data.import.clone(),
+                        data.source.dupe(),
+                        data.source_loc.dupe(),
+                    )),
+                    _ => None,
+                }
+            }
+            _ => None,
+        },
     }
 }
 

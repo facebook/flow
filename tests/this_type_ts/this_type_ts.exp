@@ -1,0 +1,70 @@
+Error ------------------------------------------------------------------------------------------ import_type_ts.ts:10:12
+
+Cannot implement exports [1] with `BadCMT` because in property `clone` > the return value: `I` [2] is incompatible with
+`this` [3]. [incompatible-type]
+
+   import_type_ts.ts:10:12
+   10|   clone(): I { return this; }      // ERROR — must return `this`, not `I`
+                  ^ [2]
+
+References:
+   import_type_ts.ts:9:25
+    9| class BadCMT implements I {
+                               ^ [1]
+   module.ts:1:31
+    1| export interface I { clone(): this; }
+                                     ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------- import_value_ts.ts:14:12
+
+Cannot implement exports [1] with `BadCM` because in property `clone` > the return value: `I` [2] is incompatible with
+`this` [3]. [incompatible-type]
+
+   import_value_ts.ts:14:12
+   14|   clone(): I { return this; }      // ERROR — must return `this`, not `I`
+                  ^ [2]
+
+References:
+   import_value_ts.ts:13:24
+   13| class BadCM implements I {
+                              ^ [1]
+   module.ts:1:31
+    1| export interface I { clone(): this; }
+                                     ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------- import_value_ts.ts:24:12
+
+Cannot implement exports [1] with `BadGen` because in property `clone` > the return value: `IBox` [2] is incompatible
+with `this` [3]. [incompatible-type]
+
+   import_value_ts.ts:24:12
+   24|   clone(): IBox<number> { return this; } // ERROR — must return `this`, not `IBox<number>`
+                  ^^^^^^^^^^^^ [2]
+
+References:
+   import_value_ts.ts:22:25
+   22| class BadGen implements IBox<number> {
+                               ^^^^^^^^^^^^ [1]
+   module.ts:2:49
+    2| export interface IBox<T> { value(): T; clone(): this; }
+                                                       ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------- namespace_interface_merge.d.ts:15:11
+
+Cannot declare `MR` [1] because the name is already bound. [name-already-bound]
+
+   namespace_interface_merge.d.ts:15:11
+   15| interface MR<R> { // ERROR — name-already-bound (separate pre-existing limitation; Flow's `can_coexist` rejects type-only-namespace + interface declaration merging)
+                 ^^
+
+References:
+   namespace_interface_merge.d.ts:11:19
+   11| declare namespace MR {
+                         ^^ [1]
+
+
+
+Found 4 errors

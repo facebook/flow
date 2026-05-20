@@ -2304,9 +2304,17 @@ mod type_converter {
             t: &Type,
         ) -> Result<ALocTy, Error> {
             use flow_typing_type::type_::InstanceKind;
+            use flow_typing_type::type_::TypeTKind;
             match t.deref() {
                 TypeInner::DefT(r, def_t) => match def_t.deref() {
                     DefTInner::TypeT(kind, inner) => match inner.deref() {
+                        TypeInner::ThisInstanceT(box ThisInstanceTData {
+                            reason,
+                            instance,
+                            ..
+                        }) if matches!(kind, TypeTKind::ImportClassKind) => {
+                            instance_app::<I>(env, state, reason, &instance.inst, tparams, targs)
+                        }
                         TypeInner::DefT(inner_r, inner_def) => match inner_def.deref() {
                             DefTInner::InstanceT(instance_t) => {
                                 let r = if matches!(
@@ -2321,6 +2329,56 @@ mod type_converter {
                             }
                             _ => type_t_app::<I>(env, state, r, kind, tparams, targs),
                         },
+                        TypeInner::TypeAppT(box TypeAppTData {
+                            type_, from_value, ..
+                        }) => {
+                            let is_interface = if matches!(kind, TypeTKind::ImportClassKind) {
+                                match type_.deref() {
+                                    TypeInner::DefT(_, def_t) => match def_t.deref() {
+                                        DefTInner::PolyT(box PolyTData { t_out, .. }) => {
+                                            match t_out.deref() {
+                                                TypeInner::DefT(_, inner_def_t) => {
+                                                    match inner_def_t.deref() {
+                                                        DefTInner::ClassT(inner) => {
+                                                            match inner.deref() {
+                                                                TypeInner::ThisInstanceT(box ThisInstanceTData {
+                                                                    instance,
+                                                                    ..
+                                                                }) => matches!(
+                                                                    instance.inst.inst_kind,
+                                                                    InstanceKind::InterfaceKind { .. }
+                                                                ),
+                                                                TypeInner::DefT(_, inst_def_t) => {
+                                                                    match inst_def_t.deref() {
+                                                                        DefTInner::InstanceT(instance_t) => matches!(
+                                                                            instance_t.inst.inst_kind,
+                                                                            InstanceKind::InterfaceKind { .. }
+                                                                        ),
+                                                                        _ => false,
+                                                                    }
+                                                                }
+                                                                _ => false,
+                                                            }
+                                                        }
+                                                        _ => false,
+                                                    }
+                                                }
+                                                _ => false,
+                                            }
+                                        }
+                                        _ => false,
+                                    },
+                                    _ => false,
+                                }
+                            } else {
+                                false
+                            };
+                            if is_interface {
+                                type_app::<I>(env, state, *from_value, type_, targs)
+                            } else {
+                                type_t_app::<I>(env, state, r, kind, tparams, targs)
+                            }
+                        }
                         _ => type_t_app::<I>(env, state, r, kind, tparams, targs),
                     },
                     DefTInner::ClassT(inner) => match inner.deref() {
@@ -3616,6 +3674,20 @@ pub mod element_converter {
                     // Imported interfaces
                     DefTInner::TypeT(TypeTKind::ImportClassKind, inner_t) => {
                         match inner_t.deref() {
+                            TypeInner::ThisInstanceT(box ThisInstanceTData {
+                                reason: r,
+                                instance: inst_t,
+                                ..
+                            }) => {
+                                return class_or_interface_decl::<I>(
+                                    env,
+                                    state,
+                                    r,
+                                    Some(tparams),
+                                    &inst_t.super_,
+                                    &inst_t.inst,
+                                );
+                            }
                             TypeInner::DefT(r, inner_def_t) => match &**inner_def_t {
                                 DefTInner::InstanceT(inst_t) => {
                                     return class_or_interface_decl::<I>(
@@ -3629,6 +3701,16 @@ pub mod element_converter {
                                 }
                                 _ => {}
                             },
+                            // Imported polymorphic interfaces.
+                            // canonicalize_imported_type wraps a polymorphic interface as
+                            // [TypeT(ImportClassKind, TypeAppT _)] to mirror the
+                            // [ClassT(TypeAppT _)] wrapping used for classes, so [this]
+                            // survives the import. Unwrap to the original PolyT so the
+                            // inner instance can be rendered as an interface declaration
+                            // rather than [Class<...>].
+                            TypeInner::TypeAppT(box TypeAppTData { type_, .. }) => {
+                                return toplevel::<I>(env, state, type_);
+                            }
                             _ => {}
                         }
                     }
@@ -3799,6 +3881,20 @@ pub mod element_converter {
                             kind @ (TypeTKind::InstanceKind | TypeTKind::ImportClassKind),
                             inner_t,
                         ) => match inner_t.deref() {
+                            TypeInner::ThisInstanceT(box ThisInstanceTData {
+                                reason: inner_r,
+                                instance: inst_t,
+                                ..
+                            }) => {
+                                return class_or_interface_decl::<I>(
+                                    env,
+                                    state,
+                                    inner_r,
+                                    None,
+                                    &inst_t.super_,
+                                    &inst_t.inst,
+                                );
+                            }
                             TypeInner::DefT(inner_r, inner_def_t) => match &**inner_def_t {
                                 DefTInner::InstanceT(inst_t) => {
                                     return class_or_interface_decl::<I>(
