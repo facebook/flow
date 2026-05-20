@@ -72,6 +72,7 @@ A few `$`-prefixed types remain first-class Flow utilities — the `$` is just p
 
 ## See also {#toc-see-also}
 
+- [Flow for TypeScript Users](./flow-and-typescript.md) — broader comparison of Flow and TypeScript, including the TS-aligned subset of the renames covered here.
 - [Utility Types](./types/utilities.md) — reference for Flow's current utility types.
 - [Mapped Types](./types/mapped-types.md) — the modern replacement for `$ObjMap` / `$TupleMap` and friends.
 - [Type Casting](./types/casting.md) — the `as` cast syntax that replaces `(x: T)`.

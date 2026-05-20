@@ -27,6 +27,11 @@ module.exports = {
       label: 'FAQ',
     },
     {
+      type: 'doc',
+      id: 'flow-and-typescript',
+      label: 'Flow for TypeScript Users',
+    },
+    {
       type: 'category',
       label: 'Language Guide',
       items: [

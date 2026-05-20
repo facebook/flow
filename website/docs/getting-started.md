@@ -285,3 +285,4 @@ For the [code above](#toc-write-flow-code), running `flow` will yield:
 - [Editor Setup](./editors/index.md) — integrating Flow into your IDE
 - [Babel](./tools/babel.md) — detailed Babel setup for stripping Flow types
 - [ESLint](./tools/eslint.md) — setting up ESLint to work with Flow
+- [Flow for TypeScript Users](./flow-and-typescript.md) — what transfers from TypeScript, what differs, and what each language has that the other doesn't
