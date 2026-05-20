@@ -421,3 +421,4 @@ type NotActuallyCovariant<+T> = (T) => void; // Error
 - [Variance](../lang/variance.md) — how covariance and contravariance interact with generics
 - [Conditional Types](./conditional.md) — types computed from generic type parameters
 - [Mapped Types](./mapped-types.md) — transforming object types using generics
+- [Modernizing Legacy Flow Syntax](../modernizing-legacy-syntax.md) — migrating legacy `<T: Bound>` bounds and `+T` / `-T` variance sigils to modern keyword forms

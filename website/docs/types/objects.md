@@ -576,3 +576,4 @@ const obj: Flags = {...flags1, ...flags2};
 - [Variance](../lang/variance.md) — covariant (read-only) and contravariant (write-only) properties
 - [Depth Subtyping](../lang/depth-subtyping.md) — how width and depth subtyping interact with object types
 - [Mapped Types](./mapped-types.md) — systematically transforming object property types
+- [Modernizing Legacy Flow Syntax](../modernizing-legacy-syntax.md) — migrating legacy `{| ... |}` exact syntax, `+` / `-` property sigils, and `$Exact<T>` to modern forms

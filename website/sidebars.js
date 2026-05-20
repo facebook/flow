@@ -206,6 +206,11 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'modernizing-legacy-syntax',
+          label: 'Modernizing Legacy Syntax',
+        },
+        {
+          type: 'doc',
           id: 'glossary',
           label: 'Glossary',
         },

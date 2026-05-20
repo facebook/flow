@@ -189,3 +189,4 @@ clone.baz as string;  // Works!
 - [Any](./any.md) — casting through `any` for unsafe type conversions (last resort)
 - [Subtypes](../lang/subtypes.md) — understanding which casts are allowed based on subtyping rules
 - [Const Expressions](./const-expression.md) — `as const` for narrowing to literal and read-only types
+- [Modernizing Legacy Flow Syntax](../modernizing-legacy-syntax.md) — migrating legacy `(x: T)` colon casts to the `as` syntax

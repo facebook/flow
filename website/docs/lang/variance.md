@@ -202,3 +202,4 @@ produce values of type `T` (never accept them), remove the setter.
 - [Arrays](../types/arrays.md) — `ReadonlyArray` (covariant) vs `Array` (invariant)
 - [Interfaces](../types/interfaces.md) — covariant and contravariant interface properties
 - [Objects](../types/objects.md) — read-only and write-only object properties
+- [Modernizing Legacy Flow Syntax](../modernizing-legacy-syntax.md) — migrating `+` / `-` variance sigils to the `readonly` / `writeonly` and `in` / `out` keywords

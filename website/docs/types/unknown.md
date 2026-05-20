@@ -122,3 +122,4 @@ only be a `string` inside of the `if` statement. This is known as a
 
 - [Refinements](../lang/refinements.md) — how to narrow `unknown` values to specific types before use
 - [Type Hierarchy](../lang/type-hierarchy.md) — how `unknown`, `any`, and `empty` relate in the full type hierarchy
+- [Modernizing Legacy Flow Syntax](../modernizing-legacy-syntax.md) — migrating the legacy `mixed` type to `unknown`
