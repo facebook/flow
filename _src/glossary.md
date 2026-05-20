@@ -1,0 +1,55 @@
+---
+title: Glossary
+slug: /glossary
+description: "A short glossary of Flow terminology, with one-sentence definitions, links to the full reference pages, and notes on how a concept relates to TypeScript."
+---
+
+A short glossary of Flow terminology. Each entry is a one-sentence definition followed by a link to the full reference page. Where helpful, an entry also notes how the concept relates to a similar one in TypeScript.
+
+## Type system
+
+- **Refinement** — Narrowing a value's type inside a branch based on a runtime test such as `typeof`, `instanceof`, equality, or a [type guard](./types/type-guards.md). See [Type Refinements](./lang/refinements.md).
+- **Refinement invalidation** — When a previously established refinement is dropped because intervening code (such as a function call or a write to the refined location) might have changed the underlying value, requiring the check to be re-done. See [Refinement Invalidations](./lang/refinements.md#toc-refinement-invalidations).
+- **Maybe type (`?T`)** — Flow shorthand for the union `T | null | void`, used to express values that may be absent; TypeScript has no direct equivalent and typically writes `T | null | undefined`. See [Maybe Types](./types/maybe.md).
+- **Exact object type** — An object type that allows exactly the listed properties and no others, which is the default in Flow (the opposite of TypeScript, where object types are open). See [Exact and inexact object types](./types/objects.md#exact-and-inexact-object-types).
+- **Inexact object type** — An object type written with a trailing `...` (e.g. `{foo: number, ...}`) that allows additional unknown properties beyond those listed. See [Exact and inexact object types](./types/objects.md#exact-and-inexact-object-types).
+- **Object type spread** — Including the properties of another object type via `...` (e.g. `{...A, b: T}`), producing a new object type that combines `A`'s properties with the additional members, mirroring runtime object spread. See [Object type spread](./types/objects.md#object-type-spread).
+- **Indexer property** — An object type member of the form `[key: K]: V` that allows reads and writes for any key whose type matches `K` and any value whose type matches `V`, used to type objects that are used as maps. See [Objects as maps](./types/objects.md#toc-objects-as-maps).
+- **Disjoint union** — A union of separate object types (e.g. `{type: 'A', ...} | {type: 'B', ...}`) that each set a different [literal type](./types/literals.md) for a shared discriminant property, letting Flow refine the union to a specific arm by checking that property. See [Disjoint Object Unions](./types/unions.md#toc-disjoint-object-unions).
+- **Opaque type** — A type alias whose underlying type is hidden outside the file in which it is defined, enforcing abstraction across module boundaries; this concept does not exist in TypeScript. See [Opaque Type Aliases](./types/opaque-types.md).
+- **Empty type** — Flow's bottom type, the subtype of every other type, used for functions that never return and for exhaustiveness assertions; TypeScript's analogue is called `never`. See [Empty](./types/empty.md).
+- **Width subtyping** — The rule that an object type with more properties is a subtype of one with fewer properties (only valid against [inexact object types](./types/objects.md#exact-and-inexact-object-types) in Flow). See [Object Subtyping](./lang/depth-subtyping.md).
+- **Depth subtyping** — The rule that an object type with a subtype property at some key is a subtype of one with a supertype property at that key, which is only sound for read-only properties. See [Object Subtyping](./lang/depth-subtyping.md).
+- **Nominal typing** — Type compatibility determined by declaration identity rather than shape, which Flow uses for [classes](./types/classes.md), [opaque types](./types/opaque-types.md) (outside their defining file), and [Flow Enums](./enums/index.md). See [Nominal & Structural Typing](./lang/nominal-structural.md).
+- **Structural typing** — Type compatibility determined by the shape of a type, which Flow uses for [objects](./types/objects.md) and [interfaces](./types/interfaces.md). See [Nominal & Structural Typing](./lang/nominal-structural.md).
+- **Local Type Inference** — Flow's inference algorithm, which propagates types from immediate context but requires annotations at function parameters and other key boundaries. See [Annotation Requirement](./lang/annotation-requirement.md).
+- **One-sided type guard (`implies`)** — A predicate function whose return type is `implies param is T`, which refines the parameter to `T` only when the function returns `true` and leaves it unchanged otherwise; this has no TypeScript equivalent. See [Type Guards](./types/type-guards.md).
+- **Method unbinding** — Flow disallows extracting a class method as a bare function value (e.g. `obj.method` without calling it, destructuring it, or `.bind()`-ing it), since doing so would lose the `this` type that the method depends on. See [Class Methods](./types/classes.md#toc-class-methods).
+- **Input position / Output position** — The terminology Flow's [variance](./lang/variance.md) error messages use to refer to where a value is *written into* a type (input — function parameters, writable properties) versus *read out of* a type (output — return types, readable properties). See [Input and Output Positions](./lang/variance.md#toc-input-output-positions).
+
+## Modules and declarations
+
+- **`import typeof`** — A Flow-specific import form that brings in the *type of a value export* from another module so it can be used as a type annotation. See [Module Types](./types/modules.md).
+- **Declaration file (`.js.flow`)** — A `.flow` file placed next to a `.js` implementation that completely shadows the implementation's types when Flow is checking code. See [Declaration Files](./declarations/index.md).
+- **Libdef (library definition)** — A special file under `flow-typed/` that declares the type signature of a third-party module Flow cannot type-check directly. See [Library Definitions](./libdefs/index.md).
+- **Signature extraction / typed interface** — Flow builds a per-module "typed interface" from the module's exports alone (without analyzing the implementation), which is what enables parallel typechecking and is what the `[signature-verification-failure]` error refers to when it cannot do so. See [Module Exports](./lang/annotation-requirement.md#toc-module-exports).
+
+## React
+
+- **Component syntax (`component`)** — A first-class Flow keyword for declaring React components with named props, optional ref, and render-type support, replacing hand-written function-component types. See [Component Syntax](./react/component-syntax.md).
+- **Component type (`component(...)`)** — The type-level form of [Component Syntax](./react/component-syntax.md), used to describe the type of a React component (especially in libdefs and HOCs) without defining one. See [Component Types](./react/component-types.md).
+- **Render type (`renders`)** — A type that constrains what a component is allowed to render, enabling library authors to enforce composition rules like "a `Menu` only renders `MenuItem`s". See [Render Types](./react/render-types.md).
+- **Hook syntax (`hook`)** — A first-class Flow keyword for declaring React hooks, which lets Flow enforce the [Rules of React](https://react.dev/reference/rules) on hook call sites. See [Hook Syntax](./react/hook-syntax.md).
+
+## Language features
+
+- **Flow Enum** — A fixed set of constants that exists at runtime *and* as a type, with built-in exhaustiveness checking and no implicit coercion to its underlying primitive; semantically distinct from TypeScript `enum`. See [Flow Enums](./enums/index.md).
+- **Match expression / match statement** — A `match (...) { pattern => ... }` construct that pattern-matches a value with structural patterns, guards, and exhaustiveness checking. See [Match Expressions and Statements](./match/index.md).
+- **Exhaustiveness checking** — Verification that every possible value of an input has been handled, supported built-in by [`match`](./match/index.md#exhaustive-checking) and by `switch` over [Flow Enums](./enums/using-enums.md#toc-exhaustively-checking-enums-with-a-switch), or on demand for arbitrary `switch` statements by casting the default branch to [`empty`](./types/empty.md).
+
+## Workflow
+
+- **`@flow` pragma** — A `// @flow` comment at the top of a file that, by default, opts that file into Flow type checking. See [Getting Started](./getting-started.md).
+- **Flow Strict (`@flow strict` / `@flow strict-local`)** — A file-level pragma that turns on a configurable set of stricter lint rules (banning `any`, etc.) on a per-file basis; the more common `@flow strict-local` variant is the same but does not require dependencies to also be strict. See [Flow Strict](./strict/index.md).
+- **Suppression (`$FlowFixMe[code]`)** — A comment placed immediately above a Flow error that silences that specific error code without fixing the underlying issue, used when Flow is too conservative or a fix is deferred. See [Error Suppressions](./errors/index.md).
+- **Flowlint** — Flow's built-in lint system, which reports stylistic or risky patterns (e.g. `sketchy-null`, `untyped-import`) on top of regular type errors. See [Linting Overview](./linting/index.md).
