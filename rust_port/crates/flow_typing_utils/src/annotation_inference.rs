@@ -579,7 +579,7 @@ fn mk_lazy_tvar<'cx>(
     };
     let forcing_state = ForcingState::of_lazy_t(reason.dupe(), lazy_fn);
     let node = flow_utils_union_find::Node::create_root(Constraints::FullyResolved(forcing_state));
-    cx.add_tvar(id, node);
+    cx.add_fresh_tvar(id, node);
     tvar
 }
 

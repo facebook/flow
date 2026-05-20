@@ -1192,6 +1192,14 @@ pub(super) fn pick_use_op<'cx>(cx: &Context<'cx>, op1: &UseOp, op2: &UseOp) -> U
 }
 
 pub(super) fn flow_use_op<'cx, CX>(cx: &Context<'cx>, op1: UseOp, u: UseT<CX>) -> UseT<CX> {
+    use flow_typing_type::type_::VirtualRootUseOp;
+    use flow_typing_type::type_::root_of_use_op;
+
+    match root_of_use_op(&op1) {
+        VirtualRootUseOp::UnknownUse => return u,
+        VirtualRootUseOp::Speculation { .. } if !speculation::speculating(cx) => return u,
+        _ => {}
+    }
     type_util::mod_use_op_of_use_t(|op2| pick_use_op(cx, &op1, op2), &u)
 }
 
@@ -1514,29 +1522,25 @@ pub(super) fn mk_instance_source<'cx>(
     reason_type: &Reason,
     c: &Type,
 ) -> Result<Type, FlowJsException> {
-    flow_typing_tvar::mk_where(cx, instance_reason.dupe(), |cx, t| {
-        // this part is similar to making a runtime value
-        let tvar = match t.deref() {
-            TypeInner::OpenT(tvar) => tvar.dupe(),
-            _ => unreachable!("mk_where always creates OpenT"),
-        };
-        flow_opt(
-            cx,
-            trace,
-            (
-                c,
-                &UseT::new(UseTInner::ValueToTypeReferenceT(Box::new(
-                    ValueToTypeReferenceTData {
-                        use_op: unknown_use(),
-                        reason: reason_type.dupe(),
-                        kind: type_t_kind,
-                        tout: Box::new(tvar),
-                    },
-                ))),
-            ),
-        )?;
-        Ok(())
-    })
+    let tvar_id = flow_typing_tvar::mk_no_wrap(cx, instance_reason);
+    // this part is similar to making a runtime value
+    let tvar = Tvar::new(instance_reason.dupe(), tvar_id as u32);
+    flow_opt(
+        cx,
+        trace,
+        (
+            c,
+            &UseT::new(UseTInner::ValueToTypeReferenceT(Box::new(
+                ValueToTypeReferenceTData {
+                    use_op: unknown_use(),
+                    reason: reason_type.dupe(),
+                    kind: type_t_kind,
+                    tout: Box::new(tvar.dupe()),
+                },
+            ))),
+        ),
+    )?;
+    Ok(Type::new(TypeInner::OpenT(tvar)))
 }
 
 pub(super) fn mk_instance_raw<'cx>(
@@ -1635,11 +1639,11 @@ pub(super) fn reposition<'cx>(
     annot_loc: Option<ALoc>,
     t: Type,
 ) -> Result<Type, FlowJsException> {
-    use std::collections::BTreeMap;
     use std::ops::Deref;
     use std::rc::Rc;
 
     use flow_common::reason::is_instantiable_reason;
+    use flow_data_structure_wrapper::int_map::IntHashMap;
     use flow_typing_flow_common::flow_cache;
     use flow_typing_flow_common::flow_js_utils;
     use flow_typing_type::type_::CanonicalRendersForm;
@@ -1659,7 +1663,7 @@ pub(super) fn reposition<'cx>(
     let mod_reason = |reason: Reason| -> Reason {
         match desc {
             Some(d) => Reason::new(d.clone(), loc.dupe()),
-            None => reason.reposition(loc.dupe()).opt_annotate(annot_loc.dupe()),
+            None => reason.reposition_and_opt_annotate(loc.dupe(), annot_loc.dupe()),
         }
     };
 
@@ -1668,7 +1672,7 @@ pub(super) fn reposition<'cx>(
         trace: Option<DepthTrace>,
         desc: Option<&ReasonDesc>,
         mod_reason: &dyn Fn(Reason) -> Reason,
-        seen: &mut BTreeMap<i32, Type>,
+        seen: &mut IntHashMap<i32, Type>,
         t: &Type,
     ) -> Result<Type, FlowJsException> {
         match t.deref() {
@@ -1942,7 +1946,7 @@ pub(super) fn reposition<'cx>(
         }
     }
 
-    recurse(cx, trace, desc, &mod_reason, &mut BTreeMap::new(), &t)
+    recurse(cx, trace, desc, &mod_reason, &mut IntHashMap::default(), &t)
 }
 
 pub(super) fn get_builtin_type<'cx>(

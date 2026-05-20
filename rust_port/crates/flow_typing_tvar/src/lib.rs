@@ -21,7 +21,7 @@ use flow_utils_union_find::Node;
 
 pub fn mk_no_wrap<'cx>(cx: &Context<'cx>, reason: &Reason) -> i32 {
     let tvar = mk_id() as i32;
-    cx.add_tvar(
+    cx.add_fresh_tvar(
         tvar,
         Node::create_root(constraint::Constraints::Unresolved(Rc::new(RefCell::new(
             constraint::Bounds::default(),
@@ -76,7 +76,7 @@ pub fn mk_no_wrap_where<'cx, E>(
 fn mk_fully_resolved_helper<'cx>(cx: &Context<'cx>, state: ForcingState<'cx, Context<'cx>>) -> i32 {
     let id = mk_id() as i32;
     let node = Node::create_root(constraint::Constraints::FullyResolved(state));
-    cx.graph().borrow_mut().insert(id, node);
+    cx.graph().borrow_mut().insert_fresh(id, node);
     id
 }
 
@@ -118,6 +118,6 @@ pub fn mk_resolved<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
     let id = mk_id() as i32;
     let constraints = constraint::Constraints::Resolved(t);
     let node = Node::create_root(constraints);
-    cx.graph().borrow_mut().insert(id, node);
+    cx.graph().borrow_mut().insert_fresh(id, node);
     Type::new(TypeInner::OpenT(Tvar::new(reason, id as u32)))
 }

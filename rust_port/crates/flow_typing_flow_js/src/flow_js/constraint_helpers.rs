@@ -524,13 +524,16 @@ pub(super) fn goto<'cx>(
                 };
                 flows_across(cx, trace, use_op.dupe(), &lower, &upper)?;
             }
+            let mut flipped_use_op = None;
             if cond2 {
+                let flipped = unify_flip(use_op.dupe());
                 let (lower, upper) = {
                     let bounds1 = bounds1.borrow();
                     let bounds2 = bounds2.borrow();
                     (bounds2.lower.clone(), bounds1.upper.clone())
                 };
-                flows_across(cx, trace, unify_flip(use_op.dupe()), &lower, &upper)?;
+                flows_across(cx, trace, flipped.dupe(), &lower, &upper)?;
+                flipped_use_op = Some(flipped);
             }
             if cond1 {
                 add_upper_edges(
@@ -550,11 +553,11 @@ pub(super) fn goto<'cx>(
                     (id2, &bounds2),
                 );
             }
-            if cond2 {
+            if let Some(flipped_use_op) = flipped_use_op {
                 add_upper_edges(
                     cx,
                     trace,
-                    unify_flip(use_op.dupe()),
+                    flipped_use_op.dupe(),
                     false,
                     (id2, &bounds2),
                     (id1, &bounds1),
@@ -562,7 +565,7 @@ pub(super) fn goto<'cx>(
                 add_lower_edges(
                     cx,
                     trace,
-                    unify_flip(use_op.dupe()),
+                    flipped_use_op,
                     true,
                     (id2, &bounds2),
                     (id1, &bounds1),

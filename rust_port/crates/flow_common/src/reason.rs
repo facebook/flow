@@ -1042,6 +1042,57 @@ impl<L: Dupe + PartialEq> VirtualReason<L> {
             self.annot_loc_opt.as_ref().map(|l| l.dupe()),
         )
     }
+
+    pub fn reposition_and_annotate(self, loc: L) -> VirtualReason<L> {
+        let same_loc = loc == self.loc;
+        let same_annot = self.annot_loc_opt.as_ref() == Some(&loc);
+        if same_loc && same_annot {
+            return self;
+        }
+        let def_loc_opt = if same_loc {
+            self.def_loc_opt.as_ref().map(|l| l.dupe())
+        } else {
+            let def_loc = self.def_loc();
+            if loc == *def_loc {
+                None
+            } else {
+                Some(def_loc.dupe())
+            }
+        };
+        let reason_loc = if same_loc {
+            self.loc.dupe()
+        } else {
+            loc.dupe()
+        };
+        VirtualReason::new_with(self.desc.clone(), reason_loc, def_loc_opt, Some(loc))
+    }
+
+    pub fn reposition_and_opt_annotate(self, loc: L, annot_loc: Option<L>) -> VirtualReason<L> {
+        let same_loc = loc == self.loc;
+        let same_annot = match &annot_loc {
+            Some(annot_loc) => self.annot_loc_opt.as_ref() == Some(annot_loc),
+            None => true,
+        };
+        if same_loc && same_annot {
+            return self;
+        }
+        let def_loc_opt = if same_loc {
+            self.def_loc_opt.as_ref().map(|l| l.dupe())
+        } else {
+            let def_loc = self.def_loc();
+            if loc == *def_loc {
+                None
+            } else {
+                Some(def_loc.dupe())
+            }
+        };
+        let reason_loc = if same_loc { self.loc.dupe() } else { loc };
+        let annot_loc = match annot_loc {
+            Some(annot_loc) => Some(annot_loc),
+            None => self.annot_loc_opt.as_ref().map(|l| l.dupe()),
+        };
+        VirtualReason::new_with(self.desc.clone(), reason_loc, def_loc_opt, annot_loc)
+    }
 }
 
 impl<L: Dupe + PartialEq> VirtualReason<L> {

@@ -1240,15 +1240,11 @@ where
 
                 match (rep1.check_enum_with_tag(), rep2.check_enum_with_tag()) {
                     (Some((enums1, tag1)), Some((enums2, tag2))) => {
-                        if enums1.is_subset(&*enums2) {
+                        if enums1.is_subset(&enums2) {
                             UnionOptimizationGuardResult::True
                         } else if tag1.is_some() && tag1 == tag2 {
                             UnionOptimizationGuardResult::False {
-                                diff: enums1
-                                    .dupe()
-                                    .into_inner()
-                                    .relative_complement(enums2.dupe().into_inner())
-                                    .into(),
+                                diff: enums1.difference(&enums2).cloned().collect(),
                             }
                         } else {
                             UnionOptimizationGuardResult::Maybe
@@ -2650,7 +2646,7 @@ pub fn mk_distributive_tparam_subst_fn<'cx>(
                 let node = Node::create_root(Constraints::Unresolved(Rc::new(
                     std::cell::RefCell::new(bounds),
                 )));
-                cx.add_tvar(tvar_id, node);
+                cx.add_fresh_tvar(tvar_id, node);
 
                 Type::new(TypeInner::OpenT(flow_typing_type::type_::Tvar::new(
                     r,

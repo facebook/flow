@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::hash_map::Entry;
 use std::fmt;
 
 use flow_data_structure_wrapper::int_map::IntHashMap;
@@ -48,7 +49,10 @@ impl<C> Node<C> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Graph<C>(IntHashMap<Ident, Node<C>>);
+pub struct Graph<C> {
+    indices: IntHashMap<Ident, u32>,
+    nodes: Vec<Node<C>>,
+}
 
 impl<C> Default for Graph<C> {
     fn default() -> Self {
@@ -58,40 +62,66 @@ impl<C> Default for Graph<C> {
 
 impl<C> Graph<C> {
     pub fn new() -> Self {
-        Graph(IntHashMap::default())
+        Graph {
+            indices: IntHashMap::default(),
+            nodes: Vec::new(),
+        }
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
-        Graph(IntHashMap::with_capacity_and_hasher(
-            capacity,
-            Default::default(),
-        ))
+        Graph {
+            indices: IntHashMap::with_capacity_and_hasher(capacity, Default::default()),
+            nodes: Vec::with_capacity(capacity.min(256)),
+        }
     }
 
     pub fn len(&self) -> usize {
-        self.0.len()
+        self.nodes.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
+        self.nodes.is_empty()
     }
 
     pub fn insert(&mut self, id: Ident, node: Node<C>) {
-        self.0.insert(id, node);
+        match self.indices.entry(id) {
+            Entry::Occupied(entry) => {
+                self.nodes[*entry.get() as usize] = node;
+            }
+            Entry::Vacant(entry) => {
+                let index =
+                    u32::try_from(self.nodes.len()).expect("graph should fit in u32 dense indices");
+                entry.insert(index);
+                self.nodes.push(node);
+            }
+        }
+    }
+
+    pub fn insert_fresh(&mut self, id: Ident, node: Node<C>) {
+        let index = u32::try_from(self.nodes.len()).expect("graph should fit in u32 dense indices");
+        let old_index = self.indices.insert(id, index);
+        debug_assert!(old_index.is_none(), "fresh graph id should be new");
+        if let Some(old_index) = old_index {
+            self.indices.insert(id, old_index);
+            self.nodes[old_index as usize] = node;
+        } else {
+            self.nodes.push(node);
+        }
     }
 
     pub fn get(&self, id: &Ident) -> Option<&Node<C>> {
-        self.0.get(id)
+        self.node_index(id).and_then(|index| self.nodes.get(index))
     }
 
     pub fn get_mut(&mut self, id: &Ident) -> Option<&mut Node<C>> {
-        self.0.get_mut(id)
+        let index = self.node_index(id)?;
+        self.nodes.get_mut(index)
     }
 
     /// Iterate over all nodes in the graph mutably.
     /// Used to walk the graph for cycle-breaking cleanup.
     pub fn values_mut(&mut self) -> impl Iterator<Item = &mut Node<C>> {
-        self.0.values_mut()
+        self.nodes.iter_mut()
     }
 
     pub fn find_root(&mut self, id: Ident) -> Result<(Ident, &mut Root<C>), TvarNotFound> {
@@ -99,7 +129,9 @@ impl<C> Graph<C> {
         let root_id = self.find_root_id_inner(id)?;
 
         // Single mutable lookup to return the root
-        let node = self.0.get_mut(&root_id).unwrap();
+        let node = self
+            .get_mut(&root_id)
+            .expect("root id should exist after find_root_id_inner");
         match node {
             Node::Root(root) => Ok((root_id, root)),
             _ => unreachable!(),
@@ -109,19 +141,17 @@ impl<C> Graph<C> {
     /// Find the root id and perform path compression, without returning a mutable reference.
     /// This avoids the double-lookup problem in find_root.
     fn find_root_id_inner(&mut self, id: Ident) -> Result<Ident, TvarNotFound> {
-        let node = self.0.get(&id).ok_or(TvarNotFound(id))?;
-        match node {
-            Node::Root(_) => Ok(id),
-            Node::Goto { parent } => {
-                let parent_id = *parent;
-                let root_id = self.find_root_id_inner(parent_id)?;
-                // Path compression: point directly to root
-                if let Some(Node::Goto { parent }) = self.0.get_mut(&id) {
-                    *parent = root_id;
-                }
-                Ok(root_id)
-            }
+        let index = self.node_index(&id).ok_or(TvarNotFound(id))?;
+        let Node::Goto { parent } = &self.nodes[index] else {
+            return Ok(id);
+        };
+        let parent_id = *parent;
+        let root_id = self.find_root_id_inner(parent_id)?;
+        // Path compression: point directly to root
+        if let Node::Goto { parent } = &mut self.nodes[index] {
+            *parent = root_id;
         }
+        Ok(root_id)
     }
 
     pub fn find_root_id(&mut self, id: Ident) -> Result<Ident, TvarNotFound> {
@@ -136,6 +166,10 @@ impl<C> Graph<C> {
     pub fn find_graph(&mut self, id: Ident) -> Result<&mut C, TvarNotFound> {
         let (_, constraints) = self.find_constraints(id)?;
         Ok(constraints)
+    }
+
+    fn node_index(&self, id: &Ident) -> Option<usize> {
+        self.indices.get(id).map(|index| *index as usize)
     }
 }
 
@@ -343,6 +377,20 @@ mod tests {
         // Clone should have modification
         let constraints = graph2.find_graph(1).unwrap();
         assert_eq!(*constraints, "modified");
+    }
+
+    #[test]
+    fn test_insert_replaces_existing_node() {
+        let mut graph = Graph::new();
+        graph.insert(1, Node::create_root("first".to_string()));
+        graph.insert(2, Node::create_goto(1));
+
+        graph.insert(2, Node::create_root("second".to_string()));
+
+        assert_eq!(graph.len(), 2);
+        let (root_id, root) = graph.find_root(2).unwrap();
+        assert_eq!(root_id, 2);
+        assert_eq!(root.constraints, "second");
     }
 
     /// Test path compression on long chains (20+ nodes)

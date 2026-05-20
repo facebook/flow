@@ -2140,6 +2140,10 @@ fn convert_type_to_type_desc_in_errors<'cx>(
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
 ) {
+    let errors = cx.errors();
+    if errors.is_empty() {
+        return;
+    }
     let genv = crate::ty_normalizer_flow::mk_genv(
         flow_typing_ty_normalizer::env::Options {
             optimize_types: false,
@@ -2151,14 +2155,13 @@ fn convert_type_to_type_desc_in_errors<'cx>(
     );
     type TypeOrTypeDesc = type_or_type_desc::TypeOrTypeDescT<ALoc>;
     let convert = |tod: TypeOrTypeDesc| -> TypeOrTypeDesc {
-        match &tod {
+        match tod {
             TypeOrTypeDesc::Type(t) => TypeOrTypeDesc::TypeDesc(
-                flow_typing_ty_normalizer::no_flow::type_to_desc_for_errors(&genv, t),
+                flow_typing_ty_normalizer::no_flow::type_to_desc_for_errors(&genv, &t),
             ),
-            TypeOrTypeDesc::TypeDesc(d) => TypeOrTypeDesc::TypeDesc(d.clone()),
+            TypeOrTypeDesc::TypeDesc(d) => TypeOrTypeDesc::TypeDesc(d),
         }
     };
-    let errors = cx.errors().dupe();
     let converted = errors.map(|err| FlowError::convert_type_to_type_desc(&convert, err));
     cx.reset_errors(converted);
 }
@@ -2288,12 +2291,12 @@ impl<'b, 'a> type_visitor::TypeVisitor<()> for CopierVisitor<'b, 'a> {
             dst_cx
                 .graph()
                 .borrow_mut()
-                .insert(id, Node::create_root(Constraints::FullyResolved(state)));
+                .insert_fresh(id, Node::create_root(Constraints::FullyResolved(state)));
         } else {
             dst_cx
                 .graph()
                 .borrow_mut()
-                .insert(id, Node::create_goto(root_id));
+                .insert_fresh(id, Node::create_goto(root_id));
             self.tvar(_cx, pole, (), _r, root_id as u32);
         }
     }

@@ -2104,7 +2104,7 @@ pub fn optional(t: Type, annot_loc: Option<ALoc>, use_desc: bool) -> Type {
         .dupe()
         .update_desc_new(|desc| flow_common::reason::VirtualReasonDesc::ROptional(Arc::new(desc)));
     let reason = match annot_loc {
-        Some(loc) => reason.reposition(loc.dupe()).annotate(loc),
+        Some(loc) => reason.reposition_and_annotate(loc),
         None => reason,
     };
     Type::new(TypeInner::OptionalT {
@@ -2193,7 +2193,7 @@ pub fn class_type(t: Type, structural: bool, annot_loc: Option<ALoc>) -> Type {
             .update_desc_new(|desc| flow_common::reason::VirtualReasonDesc::RClass(Arc::new(desc)))
     };
     let reason = match annot_loc {
-        Some(loc) => reason.reposition(loc.dupe()).annotate(loc),
+        Some(loc) => reason.reposition_and_annotate(loc),
         None => reason,
     };
     Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::ClassT(t))))
@@ -2323,7 +2323,7 @@ pub fn implicit_typeapp(t: Type, targs: Vec<Type>, annot_loc: Option<ALoc>) -> T
         flow_common::reason::VirtualReasonDesc::RTypeAppImplicit(Arc::new(desc))
     });
     let reason = match annot_loc {
-        Some(loc) => reason.reposition(loc.dupe()).annotate(loc),
+        Some(loc) => reason.reposition_and_annotate(loc),
         None => reason,
     };
     let use_op = UseOp::Op(Arc::new(RootUseOp::TypeApplication {
@@ -2352,7 +2352,7 @@ pub fn this_typeapp(
         None => reason_of_t(&t).dupe(),
     };
     let reason = match annot_loc {
-        Some(loc) => reason.reposition(loc.dupe()).annotate(loc),
+        Some(loc) => reason.reposition_and_annotate(loc),
         None => reason,
     };
     Type::new(TypeInner::ThisTypeAppT(Box::new(ThisTypeAppTData {

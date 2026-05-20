@@ -763,7 +763,7 @@ pub fn empty_sig_cx<'cx>() -> TypeContext<'cx, Context<'cx>> {
     }
     TypeContext {
         graph: Rc::new(RefCell::new(flow_utils_union_find::Graph::with_capacity(
-            1024,
+            16,
         ))),
         property_maps: BTreeMap::new(),
         call_props: IntHashMap::with_capacity_and_hasher(128, Default::default()),
@@ -1978,6 +1978,20 @@ impl<'cx> Context<'cx> {
             .graph
             .borrow_mut()
             .insert(id, bounds);
+    }
+
+    pub fn add_fresh_tvar(
+        &self,
+        id: i32,
+        bounds: flow_utils_union_find::Node<type_::constraint::Constraints<'cx, Context<'cx>>>,
+    ) {
+        self.0
+            .ccx
+            .sig_cx
+            .borrow()
+            .graph
+            .borrow_mut()
+            .insert_fresh(id, bounds);
     }
 
     pub fn set_synthesis_produced_uncacheable_result(&self) {

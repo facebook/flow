@@ -6000,7 +6000,56 @@ pub enum UnionEnumTag {
     Null,
 }
 
-pub type UnionEnumSet = FlowOrdSet<UnionEnum>;
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct UnionEnumSet(Rc<[UnionEnum]>);
+
+impl UnionEnumSet {
+    pub fn new() -> Self {
+        Self(Rc::from([]))
+    }
+
+    pub fn from_vec(mut values: Vec<UnionEnum>) -> Self {
+        values.sort();
+        values.dedup();
+        Self(Rc::from(values))
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &UnionEnum> {
+        self.0.iter()
+    }
+
+    pub fn contains(&self, value: &UnionEnum) -> bool {
+        self.0.binary_search(value).is_ok()
+    }
+
+    pub fn is_subset(&self, other: &Self) -> bool {
+        self.iter().all(|value| other.contains(value))
+    }
+
+    pub fn difference<'a>(&'a self, other: &'a Self) -> impl Iterator<Item = &'a UnionEnum> {
+        self.iter().filter(move |value| !other.contains(value))
+    }
+}
+
+impl Default for UnionEnumSet {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl FromIterator<UnionEnum> for UnionEnumSet {
+    fn from_iter<T: IntoIterator<Item = UnionEnum>>(iter: T) -> Self {
+        Self::from_vec(iter.into_iter().collect())
+    }
+}
 
 pub mod property {
     use super::*;
@@ -7338,14 +7387,14 @@ pub mod union_rep {
 
         pub fn check_enum(&self) -> Option<UnionEnumSet> {
             match self.0.specialization.borrow().as_ref() {
-                Some(FinallyOptimizedRep::EnumUnion(enums, _)) => Some(enums.dupe()),
+                Some(FinallyOptimizedRep::EnumUnion(enums, _)) => Some(enums.clone()),
                 _ => None,
             }
         }
 
         pub fn check_enum_with_tag(&self) -> Option<(UnionEnumSet, Option<UnionEnumTag>)> {
             match self.0.specialization.borrow().as_ref() {
-                Some(FinallyOptimizedRep::EnumUnion(enums, tag)) => Some((enums.dupe(), *tag)),
+                Some(FinallyOptimizedRep::EnumUnion(enums, tag)) => Some((enums.clone(), *tag)),
                 _ => None,
             }
         }
@@ -7487,7 +7536,7 @@ pub mod union_rep {
         ts: Rc<[Type]>,
     ) -> UnionRep {
         fn mk_enum<'a>(
-            mut tset: BTreeSet<UnionEnum>,
+            mut tset: Vec<UnionEnum>,
             mut tag: Option<UnionEnumTag>,
             types: impl IntoIterator<Item = &'a Type>,
         ) -> Option<(UnionEnumSet, Option<UnionEnumTag>)> {
@@ -7496,16 +7545,16 @@ pub mod union_rep {
                     Some(tcanon) if is_base(t) => {
                         let t_tag = tag_of_member(t);
                         tag = if tag == t_tag { tag } else { None };
-                        tset.insert(tcanon);
+                        tset.push(tcanon);
                     }
                     _ => return None,
                 }
             }
-            Some((tset.into_iter().collect(), tag))
+            Some((UnionEnumSet::from_vec(tset), tag))
         }
 
         let enum_opt = mk_enum(
-            BTreeSet::new(),
+            Vec::new(),
             tag_of_member(&t0),
             std::iter::once(&t0)
                 .chain(std::iter::once(&t1))
@@ -7550,10 +7599,10 @@ pub mod union_rep {
     fn enum_optimize(ts: &[Type]) -> Result<FinallyOptimizedRep, OptimizedError<ALoc>> {
         fn split_enum(ts: &[Type]) -> (UnionEnumSet, Option<UnionEnumTag>, bool) {
             if ts.is_empty() {
-                return (FlowOrdSet::new(), None, false);
+                return (UnionEnumSet::new(), None, false);
             }
 
-            let mut tset = BTreeSet::new();
+            let mut tset = Vec::new();
             let mut acc_tag = tag_of_member(&ts[0]);
             let mut partial = false;
 
@@ -7562,7 +7611,7 @@ pub mod union_rep {
                     Some(tcanon) if is_base(t) => {
                         let t_tag = tag_of_member(t);
                         acc_tag = if acc_tag == t_tag { acc_tag } else { None };
-                        tset.insert(tcanon);
+                        tset.push(tcanon);
                     }
                     _ => {
                         acc_tag = None;
@@ -7571,7 +7620,7 @@ pub mod union_rep {
                 }
             }
 
-            (tset.into_iter().collect(), acc_tag, partial)
+            (UnionEnumSet::from_vec(tset), acc_tag, partial)
         }
         match ts.len() {
             0 => Ok(FinallyOptimizedRep::Empty),

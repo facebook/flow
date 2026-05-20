@@ -661,7 +661,7 @@ fn __flow_impl<'cx>(
             };
             let loc = reason.loc().dupe();
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
-            let r = r.dupe().reposition(loc.dupe()).opt_annotate(annot_loc);
+            let r = r.dupe().reposition_and_opt_annotate(loc, annot_loc);
             let r = if *use_desc {
                 r.replace_desc(reason.desc(true).clone())
             } else {
@@ -690,7 +690,7 @@ fn __flow_impl<'cx>(
         ) => {
             let loc = reason.loc().dupe();
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
-            let r = r.dupe().reposition(loc.dupe()).opt_annotate(annot_loc);
+            let r = r.dupe().reposition_and_opt_annotate(loc, annot_loc);
             let r = if *use_desc {
                 r.replace_desc(reason.desc(true).clone())
             } else {
@@ -724,7 +724,7 @@ fn __flow_impl<'cx>(
         ) => {
             let loc = reason.loc().dupe();
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
-            let r = r.dupe().reposition(loc.dupe()).opt_annotate(annot_loc);
+            let r = r.dupe().reposition_and_opt_annotate(loc, annot_loc);
             let r = if *use_desc {
                 r.replace_desc(reason.desc(true).clone())
             } else {
@@ -768,7 +768,7 @@ fn __flow_impl<'cx>(
             };
             let loc = reason.loc().dupe();
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
-            let r = r.dupe().reposition(loc.dupe()).opt_annotate(annot_loc);
+            let r = r.dupe().reposition_and_opt_annotate(loc, annot_loc);
             let r = if *use_desc {
                 r.replace_desc(reason.desc(true).clone())
             } else {
@@ -5103,10 +5103,7 @@ fn __flow_impl<'cx>(
                     Ok::<(), FlowJsException>(())
                 },
             )?;
-            let annot_r = reason_op
-                .dupe()
-                .reposition(annot_loc.dupe())
-                .annotate(annot_loc);
+            let annot_r = reason_op.dupe().reposition_and_annotate(annot_loc);
             // return this
             rec_flow(
                 cx,

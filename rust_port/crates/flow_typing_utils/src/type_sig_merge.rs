@@ -2383,18 +2383,17 @@ fn merge_annot<'cx>(
                     type_::ObjKind::Indexed(merge_dict(env, cx, file, dict, false))
                 }
             };
-            let mut props_smap: BTreeMap<FlowSmolStr, type_::Property> = props
+            let mut props_smap: BTreeMap<Name, type_::Property> = props
                 .iter()
                 .map(|(key, prop)| {
                     let p = merge_obj_annot_prop(env, cx, file, prop);
-                    (key.dupe(), p)
+                    (Name::new(key.dupe()), p)
                 })
                 .collect();
             for (key, prop) in computed_props {
                 if let Some(name) = resolve_computed_key(env, cx, file, key) {
-                    let name_str = name.into_smol_str();
                     let t = merge_obj_annot_prop(env, cx, file, prop);
-                    match props_smap.entry(name_str) {
+                    match props_smap.entry(name) {
                         std::collections::btree_map::Entry::Vacant(e) => {
                             e.insert(t);
                         }
@@ -2405,10 +2404,7 @@ fn merge_annot<'cx>(
                     }
                 }
             }
-            let props_map: type_::properties::PropertiesMap = props_smap
-                .into_iter()
-                .map(|(k, v)| (Name::new(k), v))
-                .collect();
+            let props_map = type_::properties::PropertiesMap::from_btree_map(props_smap);
             let mk_object = |call: Option<Type>, proto: Type| {
                 let id = type_::properties::Id::of_aloc_id(true, cx.make_aloc_id(loc));
                 let flags = type_::Flags {
@@ -2484,16 +2480,15 @@ fn merge_annot<'cx>(
                 ObjAnnotProp<ALoc, Pack::Packed<ALoc>>,
             )]| {
                 let dict = dict.as_ref().map(|d| merge_dict(env, cx, file, d, false));
-                let mut props_smap: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
+                let mut props_smap: BTreeMap<Name, type_::Property> = BTreeMap::new();
                 for (key, prop) in props {
                     let p = merge_obj_annot_prop(env, cx, file, prop);
-                    props_smap.insert(key.dupe(), p);
+                    props_smap.insert(Name::new(key.dupe()), p);
                 }
                 for (key, prop) in computed_props {
                     if let Some(name) = resolve_computed_key(env, cx, file, key) {
-                        let name_str = name.into_smol_str();
                         let t = merge_obj_annot_prop(env, cx, file, prop);
-                        match props_smap.entry(name_str) {
+                        match props_smap.entry(name) {
                             std::collections::btree_map::Entry::Vacant(e) => {
                                 e.insert(t);
                             }
@@ -2504,10 +2499,7 @@ fn merge_annot<'cx>(
                         }
                     }
                 }
-                let prop_map = props_smap
-                    .into_iter()
-                    .map(|(k, v)| (Name::new(k), v))
-                    .collect();
+                let prop_map = type_::properties::PropertiesMap::from_btree_map(props_smap);
                 type_::object::spread::OperandSlice::new(type_::object::spread::OperandSliceInner {
                     reason: reason.dupe(),
                     prop_map,
