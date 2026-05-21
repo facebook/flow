@@ -153,7 +153,6 @@ module Opts = struct
     relay_integration_excludes: string list;
     relay_integration_module_prefix: string option;
     relay_integration_module_prefix_includes: string list;
-    restart_on_flowconfig_change: bool;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
     saved_state_direct_serialization: bool;
@@ -324,7 +323,6 @@ module Opts = struct
       relay_integration_excludes = [];
       relay_integration_module_prefix = None;
       relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
-      restart_on_flowconfig_change = true;
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
       saved_state_direct_serialization = false;
@@ -1240,9 +1238,10 @@ module Opts = struct
           ~multiple:true
           (fun opts v -> Ok { opts with records_includes = v :: opts.records_includes })
       );
-      ( "experimental.restart_on_flowconfig_change",
-        boolean (fun opts v -> Ok { opts with restart_on_flowconfig_change = v })
-      );
+      (* Parsed for backwards compatibility with flowconfigs that still set
+         [experimental.restart_on_flowconfig_change]. Has no runtime effect;
+         kept so those flowconfigs do not error out. *)
+      ("experimental.restart_on_flowconfig_change", boolean (fun opts _ -> Ok opts));
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ( "experimental.allow_variance_keywords",
@@ -2244,8 +2243,6 @@ let relay_integration_module_prefix_includes c =
   c.options.Opts.relay_integration_module_prefix_includes
 
 let required_version c = c.version
-
-let restart_on_flowconfig_change c = c.options.Opts.restart_on_flowconfig_change
 
 let root_name c = c.options.Opts.root_name
 

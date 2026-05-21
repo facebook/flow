@@ -1689,7 +1689,6 @@ let make_options
         ~f:(fun pattern ->
           pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
         (FlowConfig.relay_integration_module_prefix_includes flowconfig);
-    opt_restart_on_flowconfig_change = FlowConfig.restart_on_flowconfig_change flowconfig;
     opt_root = root;
     opt_root_name = FlowConfig.root_name flowconfig;
     opt_saved_state_fetcher;

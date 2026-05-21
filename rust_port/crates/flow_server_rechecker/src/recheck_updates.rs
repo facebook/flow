@@ -91,10 +91,7 @@ fn get_updated_flowconfig(config_path: &str) -> Result<(FlowConfig, String), Err
     }
 }
 
-fn assert_compatible_flowconfig_version(
-    options: &Options,
-    config: &FlowConfig,
-) -> Result<(), Error> {
+fn assert_compatible_flowconfig_version(config: &FlowConfig) -> Result<(), Error> {
     let not_satisfied = |version_constraint: &str| -> bool {
         match semver::satisfies(Some(true), version_constraint, flow_version::version()) {
             Ok(result) => !result,
@@ -108,14 +105,10 @@ fn assert_compatible_flowconfig_version(
                 version_constraint,
                 flow_version::version(),
             );
-            // Killswitch: under the legacy behavior, version mismatches surfaced as
-            // FlowconfigChanged (exit code 16). Remove once the new behavior is fully rolled out.
-            let exit_status = if options.restart_on_flowconfig_change {
-                FlowExitStatus::InvalidFlowconfig
-            } else {
-                FlowExitStatus::FlowconfigChanged
-            };
-            Err(Error::Unrecoverable { msg, exit_status })
+            Err(Error::Unrecoverable {
+                msg,
+                exit_status: FlowExitStatus::FlowconfigChanged,
+            })
         }
         _ => Ok(()),
     }
@@ -131,7 +124,7 @@ fn assert_compatible_flowconfig_change(options: &Options, config_path: &str) -> 
             ".flowconfig changed (hash {} -> {}); server must restart",
             old_hash, new_hash
         );
-        assert_compatible_flowconfig_version(options, &new_config)?;
+        assert_compatible_flowconfig_version(&new_config)?;
         Err(Error::Unrecoverable {
             msg,
             exit_status: FlowExitStatus::FlowconfigChanged,

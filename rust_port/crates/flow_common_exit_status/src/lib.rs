@@ -33,7 +33,7 @@ pub enum FlowExitStatus {
     NoServerRunning,
     // Ran out of retries
     OutOfRetries,
-    // Invalid .flowconfig (parse error, version mismatch). Fatal — monitor exits.
+    // Invalid .flowconfig
     InvalidFlowconfig,
     // Provided path is not a file as required
     PathIsNotAFile,
@@ -52,7 +52,7 @@ pub enum FlowExitStatus {
     ServerOutOfDate,
     // When the shared memory is missing space (e.g. full /dev/shm)
     OutOfSharedMemory,
-    // The .flowconfig or package.json changed at runtime. Monitor restarts the server.
+    // The .flowconfig has changed and we're out of date
     FlowconfigChanged,
     // Failed to parse the command line or misuse of command line arguments
     CommandlineUsageError,
