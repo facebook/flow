@@ -196,12 +196,12 @@ pub mod opts {
         pub shm_heap_size: u64,
         pub supported_operating_systems: Vec<SupportedOs>,
         pub strict_es6_import_export: bool,
-        pub ts_syntax: bool,
+        pub ts_syntax: Option<bool>,
         pub allow_variance_keywords: bool,
         pub deprecated_variance_sigils: bool,
         pub deprecated_variance_sigils_excludes: Vec<String>,
         pub ts_utility_syntax: bool,
-        pub tslib_syntax: bool,
+        pub tslib_syntax: Option<bool>,
         pub typescript_library_definition_support: bool,
         pub deprecated_utilities: BTreeMap<String, Vec<String>>,
         pub deprecated_utilities_excludes: Vec<String>,
@@ -358,12 +358,12 @@ pub mod opts {
             shm_heap_size: /* 25GB */ 1024 * 1024 * 25,
             supported_operating_systems: Vec::new(),
             strict_es6_import_export: false,
-            ts_syntax: false,
+            ts_syntax: None,
             allow_variance_keywords: true,
             deprecated_variance_sigils: false,
             deprecated_variance_sigils_excludes: Vec::new(),
             ts_utility_syntax: true,
-            tslib_syntax: false,
+            tslib_syntax: None,
             typescript_library_definition_support: false,
             deprecated_utilities: BTreeMap::new(),
             deprecated_utilities_excludes: Vec::new(),
@@ -2568,7 +2568,7 @@ pub mod opts {
                 )),
                 "experimental.ts_syntax" => Some(parse_boolean(
                     |opts, v| {
-                        opts.ts_syntax = v;
+                        opts.ts_syntax = Some(v);
                         Ok(())
                     },
                     values,
@@ -2662,7 +2662,7 @@ pub mod opts {
                 )),
                 "experimental.tslib_syntax" => Some(parse_boolean(
                     |opts, v| {
-                        opts.tslib_syntax = v;
+                        opts.tslib_syntax = Some(v);
                         Ok(())
                     },
                     values,

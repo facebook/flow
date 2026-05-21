@@ -2145,6 +2145,11 @@ pub(super) fn make_options(
         version: _version,
     } = flowconfig;
 
+    // FlowConfig.ts_syntax: defaults to false when unset.
+    let ts_syntax = ts_syntax.unwrap_or(false);
+    // FlowConfig.tslib_syntax: falls back to ts_syntax when unset.
+    let tslib_syntax = tslib_syntax.unwrap_or(ts_syntax);
+
     let OptionsFlags {
         all: all_override,
         debug: debug_override,

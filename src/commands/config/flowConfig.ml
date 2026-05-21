@@ -164,13 +164,13 @@ module Opts = struct
     shm_heap_size: int;
     strict_es6_import_export: bool;
     supported_operating_systems: Options.supported_os list;
-    ts_syntax: bool;
+    ts_syntax: bool option;
     allow_variance_keywords: bool;
     deprecated_variance_sigils: bool;
     deprecated_variance_sigils_excludes: string list;
     deprecated_colon_extends: string list;
     deprecated_colon_extends_excludes: string list;
-    tslib_syntax: bool;
+    tslib_syntax: bool option;
     typescript_library_definition_support: bool;
     type_expansion_recursion_limit: int;
     unsuppressable_error_codes: SSet.t;
@@ -334,13 +334,13 @@ module Opts = struct
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       strict_es6_import_export = false;
       supported_operating_systems = [];
-      ts_syntax = false;
+      ts_syntax = None;
       allow_variance_keywords = true;
       deprecated_variance_sigils = false;
       deprecated_variance_sigils_excludes = [];
       deprecated_colon_extends = [];
       deprecated_colon_extends_excludes = [];
-      tslib_syntax = false;
+      tslib_syntax = None;
       typescript_library_definition_support = false;
       type_expansion_recursion_limit = 3;
       unsuppressable_error_codes = SSet.empty;
@@ -1243,7 +1243,7 @@ module Opts = struct
          kept so those flowconfigs do not error out. *)
       ("experimental.restart_on_flowconfig_change", boolean (fun opts _ -> Ok opts));
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
-      ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
+      ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = Some v }));
       ( "experimental.allow_variance_keywords",
         boolean (fun opts v -> Ok { opts with allow_variance_keywords = v })
       );
@@ -1279,7 +1279,7 @@ module Opts = struct
                 deprecated_colon_extends_excludes = v :: opts.deprecated_colon_extends_excludes;
               })
       );
-      ("experimental.tslib_syntax", boolean (fun opts v -> Ok { opts with tslib_syntax = v }));
+      ("experimental.tslib_syntax", boolean (fun opts v -> Ok { opts with tslib_syntax = Some v }));
       ( "experimental.typescript_library_definition_support",
         boolean (fun opts v -> Ok { opts with typescript_library_definition_support = v })
       );
@@ -2270,7 +2270,7 @@ let supported_operating_systems c = c.options.Opts.supported_operating_systems
 
 let stylex_shorthand_prop c = c.options.Opts.stylex_shorthand_prop
 
-let ts_syntax c = c.options.Opts.ts_syntax
+let ts_syntax c = Base.Option.value c.options.Opts.ts_syntax ~default:false
 
 let allow_variance_keywords c = c.options.Opts.allow_variance_keywords
 
@@ -2284,7 +2284,10 @@ let deprecated_colon_extends_excludes c = c.options.Opts.deprecated_colon_extend
 
 let ts_utility_syntax _c = true
 
-let tslib_syntax c = c.options.Opts.tslib_syntax
+let tslib_syntax c =
+  match c.options.Opts.tslib_syntax with
+  | Some b -> b
+  | None -> ts_syntax c
 
 let typescript_library_definition_support c = c.options.Opts.typescript_library_definition_support
 
