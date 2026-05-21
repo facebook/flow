@@ -3001,11 +3001,8 @@ pub enum UpperKind<L: Dupe> {
     serde::Deserialize
 )]
 pub enum TSSyntaxKind {
-    TSUnknown,
     TSNever,
     TSUndefined,
-    TSKeyof,
-    TSTypeParamExtends,
     TSReadonlyVariance,
     TSInOutVariance(InOutVariance),
     TSReadonlyType(Option<ReadonlyTypeKind>),
@@ -8863,11 +8860,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::ETSSyntax(box ETSSyntaxData { kind, .. }) => {
                 use crate::intermediate_error_types::Message;
                 let msg = match kind {
-                    TSSyntaxKind::TSUnknown => Message::MessageTSUnknownType,
                     TSSyntaxKind::TSNever => Message::MessageTSNeverType,
                     TSSyntaxKind::TSUndefined => Message::MessageTSUndefinedType,
-                    TSSyntaxKind::TSKeyof => Message::MessageTSKeyofType,
-                    TSSyntaxKind::TSTypeParamExtends => Message::MessageTSParamExtends,
                     TSSyntaxKind::TSReadonlyVariance => Message::MessageTSVarianceReadOnly,
                     TSSyntaxKind::TSInOutVariance(InOutVariance::In) => {
                         Message::MessageTSVarianceIn

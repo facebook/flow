@@ -946,11 +946,8 @@ and 'loc upper_kind =
   | IncompatibleUnclassified of string
 
 and ts_syntax_kind =
-  | TSUnknown
   | TSNever
   | TSUndefined
-  | TSKeyof
-  | TSTypeParamExtends
   | TSReadonlyVariance
   | TSInOutVariance of [ `In | `Out | `InOut ]
   | TSReadonlyType of [ `Tuple | `Array ] option
@@ -3793,11 +3790,8 @@ let friendly_message_of_msg = function
     Normal (MessageInvalidCatchParameterAnnotation { ts_utility_syntax })
   | ETSSyntax { kind; _ } -> begin
     match kind with
-    | TSUnknown -> Normal MessageTSUnknownType
     | TSNever -> Normal MessageTSNeverType
     | TSUndefined -> Normal MessageTSUndefinedType
-    | TSKeyof -> Normal MessageTSKeyofType
-    | TSTypeParamExtends -> Normal MessageTSParamExtends
     | TSReadonlyVariance -> Normal MessageTSVarianceReadOnly
     | TSInOutVariance `In -> Normal MessageTSVarianceIn
     | TSInOutVariance `Out -> Normal MessageTSVarianceOut

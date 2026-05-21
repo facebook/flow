@@ -1150,9 +1150,7 @@ type 'loc message =
   | MessageThisInComponent of 'loc
   | MessageThisInExportedFunction
   | MessageThisSuperInObject of 'loc virtual_reason * This_finder.kind
-  | MessageTSKeyofType
   | MessageTSNeverType
-  | MessageTSParamExtends
   | MessageTSReadonlyOperatorOnArray
   | MessageTSReadonlyOperatorOnTuple
   | MessageTSReadonlyType
@@ -1168,7 +1166,6 @@ type 'loc message =
   | MessageAbstractClass
   | MessageAbstractMethod
   | MessageTSUndefinedType
-  | MessageTSUnknownType
   | MessageTupleElementNotReadable of {
       reason: 'loc virtual_reason;
       index: int;

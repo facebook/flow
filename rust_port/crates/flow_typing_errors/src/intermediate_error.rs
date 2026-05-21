@@ -8131,31 +8131,11 @@ where
                 features.extend(suggestion);
                 friendly::Message(features)
             }
-            MessageTSKeyofType => friendly::Message(vec![
-                code("keyof"),
-                text(" is only supported when used inline in a mapped type. "),
-                text("The equivalent of TypeScript's "),
-                code("keyof"),
-                text(" type operator in Flow is the "),
-                code("$Keys"),
-                text(" utility type, used in the form "),
-                code("$Keys<T>"),
-                text("."),
-            ]),
             MessageTSNeverType => friendly::Message(vec![
                 text("The closest equivalent of TypeScript's "),
                 code("never"),
                 text(" type in Flow is "),
                 code("empty"),
-                text("."),
-            ]),
-            MessageTSParamExtends => friendly::Message(vec![
-                text("While TypeScript uses "),
-                code("extends"),
-                text(" to specify type parameter bounds, Flow uses "),
-                code(":"),
-                text(" in the form "),
-                code("type T<A: B> = ..."),
                 text("."),
             ]),
             MessageTSReadonlyOperatorOnArray => friendly::Message(vec![
@@ -8310,13 +8290,6 @@ where
                 text(" and "),
                 code("undefined"),
                 text(" types."),
-            ]),
-            MessageTSUnknownType => friendly::Message(vec![
-                text("The equivalent of TypeScript's "),
-                code("unknown"),
-                text(" type in Flow is "),
-                code("mixed"),
-                text("."),
             ]),
             MessageUnclearType => friendly::Message(vec![
                 text("Unclear type. Using "),

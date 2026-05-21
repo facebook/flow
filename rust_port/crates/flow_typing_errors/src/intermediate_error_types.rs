@@ -2179,9 +2179,7 @@ pub enum Message<L: Dupe> {
 
     MessageThisSuperInObject(VirtualReason<L>, ThisFinderKind),
 
-    MessageTSKeyofType,
     MessageTSNeverType,
-    MessageTSParamExtends,
     MessageTSReadonlyOperatorOnArray,
     MessageTSReadonlyOperatorOnTuple,
     MessageTSReadonlyType,
@@ -2196,7 +2194,6 @@ pub enum Message<L: Dupe> {
     MessageAbstractClass,
     MessageAbstractMethod,
     MessageTSUndefinedType,
-    MessageTSUnknownType,
 
     MessageTupleElementNotReadable(Box<MessageTupleElementNotReadableData<L>>),
 

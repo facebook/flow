@@ -796,15 +796,6 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::Unknown { loc, comments } => {
-            if !(cx.ts_syntax() || cx.ts_utility_syntax()) {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
-                        kind: flow_typing_errors::error_message::TSSyntaxKind::TSUnknown,
-                        loc: loc.dupe(),
-                    })),
-                );
-            }
             let rt = mixed_t::at(loc.dupe());
             ast::types::Type::new(TypeInner::Unknown {
                 loc: (loc.dupe(), rt),
@@ -963,15 +954,6 @@ fn convert_inner<'a>(
                 reason::mk_reason(reason::VirtualReasonDesc::RKeySet, loc.dupe()),
                 arg_t,
             ));
-            if !(cx.ts_syntax() || cx.ts_utility_syntax()) {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
-                        kind: flow_typing_errors::error_message::TSSyntaxKind::TSKeyof,
-                        loc: loc.dupe(),
-                    })),
-                );
-            }
             ast::types::Type::new(TypeInner::Keyof {
                 loc: (loc.dupe(), t),
                 inner: ast::types::Keyof {

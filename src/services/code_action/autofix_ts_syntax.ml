@@ -12,15 +12,10 @@ class mapper target_loc kind =
     method! type_ t =
       let open Flow_ast.Type in
       match t with
-      | (loc, Unknown comments) when kind = `UnknownType && this#is_target loc ->
-        Ast_builder.Types.mixed ?comments ()
       | (loc, Never comments) when kind = `NeverType && this#is_target loc ->
         Ast_builder.Types.empty ?comments ()
       | (loc, Undefined comments) when kind = `UndefinedType && this#is_target loc ->
         Ast_builder.Types.void ?comments ()
-      | (loc, Keyof { Keyof.argument; comments }) when kind = `KeyofType && this#is_target loc ->
-        let targs = Ast_builder.Types.type_args [super#type_ argument] in
-        Ast_builder.Types.unqualified_generic ?comments ~targs "$Keys"
       | (loc, ReadOnly { ReadOnly.argument = (_, Array { Array.argument; _ }); comments })
         when kind = `ReadOnlyArrayType && this#is_target loc ->
         let targs = Ast_builder.Types.type_args [super#type_ argument] in
@@ -34,8 +29,6 @@ class mapper target_loc kind =
     method! type_param ~kind:k (loc, tparam) =
       let open Flow_ast.Type.TypeParam in
       match tparam with
-      | { bound_kind = Extends; _ } when kind = `TypeParamExtends && this#is_target loc ->
-        (Loc.none, { tparam with bound_kind = Colon })
       | { bound_kind = Colon; _ } when kind = `TypeParamColon && this#is_target loc ->
         (Loc.none, { tparam with bound_kind = Extends })
       | { variance = Some (v_loc, Flow_ast.Variance.{ kind = InOut; _ }); _ }
@@ -77,24 +70,12 @@ class mapper target_loc kind =
       | _ -> super#expression e
   end
 
-let convert_unknown_type ast loc =
-  let mapper = new mapper loc `UnknownType in
-  mapper#program ast
-
 let convert_never_type ast loc =
   let mapper = new mapper loc `NeverType in
   mapper#program ast
 
 let convert_undefined_type ast loc =
   let mapper = new mapper loc `UndefinedType in
-  mapper#program ast
-
-let convert_keyof_type ast loc =
-  let mapper = new mapper loc `KeyofType in
-  mapper#program ast
-
-let convert_type_param_extends ast loc =
-  let mapper = new mapper loc `TypeParamExtends in
   mapper#program ast
 
 let convert_type_param_colon ast loc =

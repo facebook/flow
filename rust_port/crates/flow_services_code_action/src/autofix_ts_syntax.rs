@@ -25,13 +25,10 @@ use crate::contains_mapper::ContainsMapper;
 
 #[derive(PartialEq, Eq)]
 enum Kind {
-    UnknownType,
     NeverType,
     UndefinedType,
-    KeyofType,
     ReadOnlyArrayType,
     ReadOnlyTupleType,
-    TypeParamExtends,
     TypeParamColon,
     InOutVariance,
     ReadonlyVariance,
@@ -61,11 +58,6 @@ impl AstVisitor<'_, Loc> for Mapper {
 
     fn map_type_(&mut self, t: &ast::types::Type<Loc, Loc>) -> ast::types::Type<Loc, Loc> {
         match &**t {
-            TypeInner::Unknown { loc, comments }
-                if self.kind == Kind::UnknownType && self.contains.is_target(loc) =>
-            {
-                ast_builder::types::mixed(None, comments.clone())
-            }
             TypeInner::Never { loc, comments }
                 if self.kind == Kind::NeverType && self.contains.is_target(loc) =>
             {
@@ -75,21 +67,6 @@ impl AstVisitor<'_, Loc> for Mapper {
                 if self.kind == Kind::UndefinedType && self.contains.is_target(loc) =>
             {
                 ast_builder::types::void(None, comments.clone())
-            }
-            TypeInner::Keyof { loc, inner }
-                if self.kind == Kind::KeyofType && self.contains.is_target(loc) =>
-            {
-                let targs = ast_builder::types::type_args(
-                    None,
-                    None,
-                    vec![map_type_default(self, &inner.argument)],
-                );
-                ast_builder::types::unqualified_generic(
-                    inner.comments.clone(),
-                    None,
-                    Some(targs),
-                    "$Keys",
-                )
             }
             TypeInner::ReadOnly { loc, inner }
                 if self.kind == Kind::ReadOnlyArrayType && self.contains.is_target(loc) =>
@@ -144,17 +121,6 @@ impl AstVisitor<'_, Loc> for Mapper {
     ) -> ast::types::TypeParam<Loc, Loc> {
         use ast::types::type_param::BoundKind;
         match tparam {
-            ast::types::TypeParam {
-                bound_kind: BoundKind::Extends,
-                loc,
-                ..
-            } if self.kind == Kind::TypeParamExtends && self.contains.is_target(loc) => {
-                ast::types::TypeParam {
-                    loc: LOC_NONE,
-                    bound_kind: BoundKind::Colon,
-                    ..tparam.clone()
-                }
-            }
             ast::types::TypeParam {
                 bound_kind: BoundKind::Colon,
                 loc,
@@ -310,14 +276,6 @@ impl AstVisitor<'_, Loc> for Mapper {
     }
 }
 
-pub fn convert_unknown_type(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Program<Loc, Loc> {
-    let mut mapper = Mapper {
-        contains: ContainsMapper::new(loc),
-        kind: Kind::UnknownType,
-    };
-    mapper.map_program(ast)
-}
-
 pub fn convert_never_type(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Program<Loc, Loc> {
     let mut mapper = Mapper {
         contains: ContainsMapper::new(loc),
@@ -330,25 +288,6 @@ pub fn convert_undefined_type(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Pr
     let mut mapper = Mapper {
         contains: ContainsMapper::new(loc),
         kind: Kind::UndefinedType,
-    };
-    mapper.map_program(ast)
-}
-
-pub fn convert_keyof_type(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Program<Loc, Loc> {
-    let mut mapper = Mapper {
-        contains: ContainsMapper::new(loc),
-        kind: Kind::KeyofType,
-    };
-    mapper.map_program(ast)
-}
-
-pub fn convert_type_param_extends(
-    ast: &ast::Program<Loc, Loc>,
-    loc: Loc,
-) -> ast::Program<Loc, Loc> {
-    let mut mapper = Mapper {
-        contains: ContainsMapper::new(loc),
-        kind: Kind::TypeParamExtends,
     };
     mapper.map_program(ast)
 }

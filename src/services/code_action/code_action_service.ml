@@ -949,19 +949,6 @@ let ast_transforms_of_error
         [insert_void]
     else
       []
-  | Error_message.ETSSyntax { kind = Error_message.TSUnknown; loc = error_loc } ->
-    if loc_opt_intersects ~error_loc ~loc then
-      [
-        {
-          title = "Convert to `mixed`";
-          diagnostic_title = "convert_unknown_type";
-          transform = untyped_ast_transform Autofix_ts_syntax.convert_unknown_type;
-          target_loc = error_loc;
-          confidence = WillFixErrorAndSafeForRunningOnSave;
-        };
-      ]
-    else
-      []
   | Error_message.ETSSyntax { kind = Error_message.TSNever; loc = error_loc } ->
     if loc_opt_intersects ~error_loc ~loc then
       [
@@ -982,32 +969,6 @@ let ast_transforms_of_error
           title = "Convert to `void`";
           diagnostic_title = "convert_undefined_type";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_undefined_type;
-          target_loc = error_loc;
-          confidence = WillFixErrorAndSafeForRunningOnSave;
-        };
-      ]
-    else
-      []
-  | Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc = error_loc } ->
-    if loc_opt_intersects ~error_loc ~loc then
-      [
-        {
-          title = "Convert to `$Keys<T>`";
-          diagnostic_title = "convert_keyof_type";
-          transform = untyped_ast_transform Autofix_ts_syntax.convert_keyof_type;
-          target_loc = error_loc;
-          confidence = WillFixErrorAndSafeForRunningOnSave;
-        };
-      ]
-    else
-      []
-  | Error_message.ETSSyntax { kind = Error_message.TSTypeParamExtends; loc = error_loc } ->
-    if loc_opt_intersects ~error_loc ~loc then
-      [
-        {
-          title = "Convert to `: T`";
-          diagnostic_title = "convert_type_param_extends";
-          transform = untyped_ast_transform Autofix_ts_syntax.convert_type_param_extends;
           target_loc = error_loc;
           confidence = WillFixErrorAndSafeForRunningOnSave;
         };
