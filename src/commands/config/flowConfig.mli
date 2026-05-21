@@ -287,8 +287,6 @@ val relay_integration_module_prefix_includes : config -> string list
 
 val required_version : config -> string option
 
-val restart_on_flowconfig_change : config -> bool
-
 val root_name : config -> string option
 
 val saved_state_fetcher : config -> Options.saved_state_fetcher

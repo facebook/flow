@@ -996,8 +996,6 @@ mod keep_alive_loop {
         if monitor_options.no_restart {
             return (true, None, false);
         }
-        let restart_on_flowconfig_change =
-            monitor_options.server_options.restart_on_flowconfig_change;
         use flow_common_exit_status::FlowExitStatus;
         match exit_status {
             //*** Things the server might exit with that implies that the monitor should exit too ***
@@ -1009,6 +1007,8 @@ mod keep_alive_loop {
             // Parse/version/etc error. Server will never start correctly.
             | FlowExitStatus::PathIsNotAFile
             // Required a file but privided path was not a file
+            | FlowExitStatus::FlowconfigChanged
+            // We could survive some config changes, but it's too hard to tell
             | FlowExitStatus::InvalidSavedState
             // The saved state file won't automatically recover by restarting
             | FlowExitStatus::UnusedServer
@@ -1055,13 +1055,7 @@ mod keep_alive_loop {
                 false,
             ),
             FlowExitStatus::KilledByMonitor /* The server died because we asked it to die */ => (false, None, false),
-            FlowExitStatus::FlowconfigChanged if !restart_on_flowconfig_change => {
-                // Killswitch: revert to the legacy behavior where the monitor exits on
-                // flowconfig/package.json changes. Remove once the new behavior is fully rolled out.
-                (true, None, false)
-            }
-            FlowExitStatus::Restart /* The server asked to be restarted */
-            | FlowExitStatus::FlowconfigChanged /* .flowconfig or package.json changed; restart with new config */ => (
+            FlowExitStatus::Restart /* The server asked to be restarted */ => (
                 false,
                 Some(flow_server_env::server_status::RestartReason::Restart),
                 false,
@@ -1095,12 +1089,10 @@ mod keep_alive_loop {
             let msg = flow_server_env::lsp_prot::MessageFromServer::NotificationFromServer(
                 flow_server_env::lsp_prot::NotificationFromServer::ServerExit(exit_type),
             );
-            // Atomically write the ServerExit notification then close. Going through
-            // `WriteAndClose` keeps wire ordering correct: the command loop drains the
-            // write before the close fires. Using `write` + `try_flush_and_close` would
-            // race — `try_flush_and_close` aborts the read loop, whose catch handler
-            // closes the socket before the queued write reaches the wire.
-            conn.write_and_close(msg);
+            // it's ok if the stream is already closed, we must be shutting down already
+            conn.write(msg);
+            // it's also ok if the flush fails because the socket is already closed
+            conn.try_flush_and_close();
         }
     }
 

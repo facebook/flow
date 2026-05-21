@@ -185,7 +185,6 @@ pub mod opts {
         pub relay_integration_excludes: Vec<String>,
         pub relay_integration_module_prefix: Option<String>,
         pub relay_integration_module_prefix_includes: Vec<String>,
-        pub restart_on_flowconfig_change: bool,
         pub root_name: Option<String>,
         pub saved_state_direct_serialization: bool,
         pub saved_state_parallel_decompress: bool,
@@ -348,7 +347,6 @@ pub mod opts {
             relay_integration_module_prefix_includes: vec![ocaml_str_to_rust_regex(
                 "<PROJECT_ROOT>/.*",
             )],
-            restart_on_flowconfig_change: true,
             root_name: None,
             saved_state_direct_serialization: false,
             saved_state_parallel_decompress: false,
@@ -2179,6 +2177,7 @@ pub mod opts {
             "experimental.projects_path_mapping",
             "experimental.records",
             "experimental.records.includes",
+            "experimental.restart_on_flowconfig_change",
             "experimental.strict_es6_import_export",
             "experimental.ts_syntax",
             "experimental.allow_variance_keywords",
@@ -2549,14 +2548,12 @@ pub mod opts {
                         config,
                     ))
                 }
-                "experimental.restart_on_flowconfig_change" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.restart_on_flowconfig_change = v;
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
+                // Parsed for backwards compatibility with flowconfigs that still set
+                // `experimental.restart_on_flowconfig_change`. Has no runtime effect;
+                // kept so those flowconfigs do not error out.
+                "experimental.restart_on_flowconfig_change" => {
+                    Some(parse_boolean(|_, _| Ok(()), values, config))
+                }
                 "experimental.strict_es6_import_export" => {
                     Some(strict_es6_import_export_parser(values, config))
                 }

@@ -196,22 +196,8 @@ fn create_persistent_connection(
 
     Server::notify_new_persistent_connection(client_id, lsp_init_params);
 
-    // Hold a clone of the underlying TCP stream so the close callback can
-    // shut it down. The outer `close` from `socket_acceptor_loop` was disarmed
-    // when we accepted the persistent client, so on its own it no longer
-    // closes the wire — and the LSP would never see EOF. Shutting down here
-    // sends FIN to the LSP, which is what triggers its disconnect handling.
-    let shutdown_slot = std::sync::Arc::new(std::sync::Mutex::new(Some(
-        client_stream
-            .try_clone()
-            .expect("clone of TcpStream for persistent shutdown failed"),
-    )));
-
     let outer_close = close;
     let close: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
-        if let Some(s) = shutdown_slot.lock().unwrap().take() {
-            self::close(s);
-        }
         Server::notify_dead_persistent_connection(client_id);
         outer_close();
     });

@@ -55,7 +55,7 @@ let assert_compatible_flowconfig_version =
   let not_satisfied version_constraint =
     not (Semver.satisfies ~include_prereleases:true version_constraint Flow_version.version)
   in
-  fun ~options config ->
+  fun config ->
     match FlowConfig.required_version config with
     | Some version_constraint when not_satisfied version_constraint ->
       let msg =
@@ -64,15 +64,7 @@ let assert_compatible_flowconfig_version =
           version_constraint
           Flow_version.version
       in
-      (* Killswitch: under the legacy behavior, version mismatches surfaced as
-         Flowconfig_changed (exit code 16). Remove once the new behavior is fully rolled out. *)
-      let exit_status =
-        if Options.restart_on_flowconfig_change options then
-          Exit.Invalid_flowconfig
-        else
-          Exit.Flowconfig_changed
-      in
-      Error (Unrecoverable { msg; exit_status })
+      Error (Unrecoverable { msg; exit_status = Exit.Flowconfig_changed })
     | _ -> Ok ()
 
 (** determines whether the flowconfig changed in a way that requires restarting
@@ -92,7 +84,7 @@ let assert_compatible_flowconfig_change ~options config_path =
     Ok ()
   else
     let msg = spf ".flowconfig changed (hash %s -> %s); server must restart" old_hash new_hash in
-    let%bind () = assert_compatible_flowconfig_version ~options new_config in
+    let%bind () = assert_compatible_flowconfig_version new_config in
     Error (Unrecoverable { msg; exit_status = Exit.Flowconfig_changed })
 
 (** Checks whether [updates] includes the flowconfig, and if so whether the change can

@@ -15,8 +15,7 @@ type t =
   | Unused_server  (** The Flow server appears unused so it died out of sadness *)
   | No_server_running  (** There is no server running and we were told not to start one *)
   | Out_of_retries  (** Ran out of retries *)
-  | Invalid_flowconfig
-      (** Invalid .flowconfig (parse error, version mismatch). Fatal — monitor exits. *)
+  | Invalid_flowconfig  (** Invalid .flowconfig *)
   | Path_is_not_a_file  (** Provided path is not a file as required *)
   | Build_id_mismatch  (** Different binaries being used together *)
   | Input_error  (** Generic "Bad Input" kind of error *)
@@ -27,8 +26,7 @@ type t =
       (** Generic out-of-date error. This could be a version thing or maybe
       something changed and Flow can't handle it incrementally yet *)
   | Out_of_shared_memory  (** When the shared memory is missing space (e.g. full /dev/shm) *)
-  | Flowconfig_changed
-      (** The .flowconfig or package.json changed at runtime. Monitor restarts the server. *)
+  | Flowconfig_changed  (** The .flowconfig has changed and we're out of date *)
   | Commandline_usage_error
       (** Failed to parse the command line or misuse of command line arguments *)
   | No_input  (** No input *)
