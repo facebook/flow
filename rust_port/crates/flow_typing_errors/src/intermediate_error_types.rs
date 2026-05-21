@@ -327,6 +327,7 @@ pub enum TsLibSyntaxKind {
     PropertyValueInitializer,
     ClassExtendsCall,
     OverrideModifier,
+    Satisfies,
 }
 
 #[derive(
@@ -2184,7 +2185,6 @@ pub enum Message<L: Dupe> {
     MessageTSReadonlyOperatorOnArray,
     MessageTSReadonlyOperatorOnTuple,
     MessageTSReadonlyType,
-    MessageTSSatisfiesType(CastingSyntax),
     MessageTSVarianceIn,
     MessageTSVarianceInOut,
     MessageTSVarianceOut,

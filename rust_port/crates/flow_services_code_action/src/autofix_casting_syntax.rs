@@ -18,15 +18,8 @@ use flow_parser_utils::ast_builder;
 
 use crate::contains_mapper::ContainsMapper;
 
-#[derive(PartialEq, Eq)]
-enum Kind {
-    ColonCast,
-    SatisfiesExpression,
-}
-
 struct Mapper {
     contains: ContainsMapper,
-    kind: Kind,
 }
 
 impl Mapper {
@@ -56,16 +49,7 @@ impl AstVisitor<'_, Loc> for Mapper {
         expr: &ast::expression::Expression<Loc, Loc>,
     ) -> ast::expression::Expression<Loc, Loc> {
         match &**expr {
-            ExpressionInner::TypeCast { loc: _, inner }
-                if self.kind == Kind::ColonCast && self.contains.is_target(expr.loc()) =>
-            {
-                let annot = &inner.annot.annotation;
-                self.build_cast(&inner.comments, &inner.expression, annot)
-            }
-            ExpressionInner::TSSatisfies { loc: _, inner }
-                if self.kind == Kind::SatisfiesExpression
-                    && self.contains.is_target(expr.loc()) =>
-            {
+            ExpressionInner::TypeCast { loc: _, inner } if self.contains.is_target(expr.loc()) => {
                 let annot = &inner.annot.annotation;
                 self.build_cast(&inner.comments, &inner.expression, annot)
             }
@@ -99,28 +83,14 @@ impl AstVisitor<'_, Loc> for Mapper {
     }
 }
 
-pub fn convert_satisfies_expression(
-    ast: &ast::Program<Loc, Loc>,
-    loc: Loc,
-) -> ast::Program<Loc, Loc> {
-    let mut mapper = Mapper {
-        contains: ContainsMapper::new(loc),
-        kind: Kind::SatisfiesExpression,
-    };
-    mapper.map_program(ast)
-}
-
 pub fn convert_colon_cast(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Program<Loc, Loc> {
     let mut mapper = Mapper {
         contains: ContainsMapper::new(loc),
-        kind: Kind::ColonCast,
     };
     mapper.map_program(ast)
 }
 
-struct AllMapper {
-    kind: Kind,
-}
+struct AllMapper;
 
 impl AllMapper {
     fn build_cast(
@@ -149,13 +119,7 @@ impl AstVisitor<'_, Loc> for AllMapper {
         expr: &ast::expression::Expression<Loc, Loc>,
     ) -> ast::expression::Expression<Loc, Loc> {
         match &**expr {
-            ExpressionInner::TypeCast { loc: _, inner } if self.kind == Kind::ColonCast => {
-                let annot = &inner.annot.annotation;
-                self.build_cast(&inner.comments, &inner.expression, annot)
-            }
-            ExpressionInner::TSSatisfies { loc: _, inner }
-                if self.kind == Kind::SatisfiesExpression =>
-            {
+            ExpressionInner::TypeCast { loc: _, inner } => {
                 let annot = &inner.annot.annotation;
                 self.build_cast(&inner.comments, &inner.expression, annot)
             }
@@ -165,15 +129,6 @@ impl AstVisitor<'_, Loc> for AllMapper {
 }
 
 pub fn convert_all_colon_casts(ast: &ast::Program<Loc, Loc>) -> ast::Program<Loc, Loc> {
-    let mut mapper = AllMapper {
-        kind: Kind::ColonCast,
-    };
-    mapper.map_program(ast)
-}
-
-pub fn convert_all_satisfies_expressions(ast: &ast::Program<Loc, Loc>) -> ast::Program<Loc, Loc> {
-    let mut mapper = AllMapper {
-        kind: Kind::SatisfiesExpression,
-    };
+    let mut mapper = AllMapper;
     mapper.map_program(ast)
 }

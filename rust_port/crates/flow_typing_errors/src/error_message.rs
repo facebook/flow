@@ -3008,7 +3008,6 @@ pub enum TSSyntaxKind {
     TSTypeParamExtends,
     TSReadonlyVariance,
     TSInOutVariance(InOutVariance),
-    TSSatisfiesType(CastingSyntax),
     TSReadonlyType(Option<ReadonlyTypeKind>),
     TSClassAccessibility(ast::class::ts_accessibility::Kind),
     TSParameterProperty,
@@ -8878,9 +8877,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     }
                     TSSyntaxKind::TSInOutVariance(InOutVariance::InOut) => {
                         Message::MessageTSVarianceInOut
-                    }
-                    TSSyntaxKind::TSSatisfiesType(enabled_casting_syntax) => {
-                        Message::MessageTSSatisfiesType(enabled_casting_syntax)
                     }
                     TSSyntaxKind::TSReadonlyType(Some(arg_kind)) => match arg_kind {
                         ReadonlyTypeKind::Tuple => Message::MessageTSReadonlyOperatorOnTuple,

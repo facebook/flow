@@ -6702,20 +6702,45 @@ fn expression_<'a>(
             })
         }
         ExpressionInner::TSSatisfies { inner, .. } => {
-            flow_js_utils::add_output_non_speculating(
-                cx,
-                ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
-                    kind: TSSyntaxKind::TSSatisfiesType(cx.casting_syntax()),
-                    loc: loc.dupe(),
-                })),
-            );
-            let t = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());
-            let Ok(mapped) =
-                polymorphic_ast_mapper::ts_satisfies(&mut typed_ast_utils::ErrorMapper, inner);
-            expression::Expression::new(ExpressionInner::TSSatisfies {
-                loc: (loc, t),
-                inner: mapped.into(),
-            })
+            if !cx.tslib_syntax() {
+                flow_js_utils::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                        loc.dupe(),
+                        UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::Satisfies),
+                    ))),
+                );
+                let t = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());
+                let Ok(mapped) =
+                    polymorphic_ast_mapper::ts_satisfies(&mut typed_ast_utils::ErrorMapper, inner);
+                expression::Expression::new(ExpressionInner::TSSatisfies {
+                    loc: (loc, t),
+                    inner: mapped.into(),
+                })
+            } else {
+                let (t_annot, annot_prime) = type_annotation::mk_type_available_annotation(
+                    cx,
+                    Default::default(),
+                    &inner.annot,
+                )?;
+                let e_prime = expression(None, None, None, cx, &inner.expression)?;
+                let infer_t = e_prime.loc().1.dupe();
+                let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
+                    lower: mk_expression_reason(&inner.expression),
+                    upper: reason_of_t(&t_annot).dupe(),
+                }));
+                tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &infer_t);
+                type_operation_utils::perform_type_cast(cx, use_op, &infer_t, &t_annot).unwrap();
+                expression::Expression::new(ExpressionInner::TSSatisfies {
+                    loc: (loc, infer_t),
+                    inner: (expression::TSSatisfies {
+                        expression: e_prime,
+                        annot: annot_prime,
+                        comments: inner.comments.dupe(),
+                    })
+                    .into(),
+                })
+            }
         }
         ExpressionInner::Match { inner, .. } => {
             if !cx.enable_pattern_matching() {
@@ -15374,6 +15399,103 @@ pub fn mk_class_sig<'a>(
                                             ))
                                         }),
                                     )
+                                }
+                            }
+                        }
+                        ExpressionInner::TSSatisfies { inner, .. } => {
+                            let cast = inner.as_ref();
+                            let ts_comments = cast.comments.dupe();
+                            if !cx.tslib_syntax() {
+                                flow_js::add_output_non_speculating(
+                                    cx,
+                                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                                        loc.dupe(),
+                                        UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::Satisfies),
+                                    ))),
+                                );
+                                let t = any_t::at(type_::AnySource::AnyError(None), loc.dupe());
+                                let t_c = t.dupe();
+                                let cast_c = cast.clone();
+                                (
+                                    t,
+                                    Box::new(move |_cx| {
+                                        let Ok(mapped_cast) = polymorphic_ast_mapper::ts_satisfies(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            &cast_c,
+                                        );
+                                        Ok(expression::Expression::new(
+                                            ExpressionInner::TSSatisfies {
+                                                loc: (loc, t_c),
+                                                inner: mapped_cast.into(),
+                                            },
+                                        ))
+                                    }),
+                                )
+                            } else {
+                                let (t_annot, annot_ast) =
+                                    type_annotation::mk_type_available_annotation(
+                                        cx,
+                                        FlowOrdMap::new(),
+                                        &cast.annot,
+                                    )?;
+                                match expression(None, None, None, cx, &cast.expression) {
+                                    Ok(e_prime) => {
+                                        let infer_t = e_prime.loc().1.dupe();
+                                        let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
+                                            lower: mk_expression_reason(&cast.expression),
+                                            upper: reason_of_t(&t_annot).dupe(),
+                                        }));
+                                        tvar_resolver::resolve(
+                                            cx,
+                                            tvar_resolver::default_no_lowers,
+                                            true,
+                                            &infer_t,
+                                        );
+                                        type_operation_utils::perform_type_cast(
+                                            cx, use_op, &infer_t, &t_annot,
+                                        )
+                                        .unwrap();
+                                        let infer_t_c = infer_t.dupe();
+                                        (
+                                            infer_t,
+                                            Box::new(move |_cx| {
+                                                Ok(expression::Expression::new(
+                                                    ExpressionInner::TSSatisfies {
+                                                        loc: (loc, infer_t_c),
+                                                        inner: expression::TSSatisfies {
+                                                            expression: e_prime,
+                                                            annot: annot_ast,
+                                                            comments: ts_comments,
+                                                        }
+                                                        .into(),
+                                                    },
+                                                ))
+                                            }),
+                                        )
+                                    }
+                                    Err(CheckExprError::Canceled(c)) => {
+                                        return Err(
+                                            flow_utils_concurrency::job_error::JobError::Canceled(
+                                                c,
+                                            ),
+                                        );
+                                    }
+                                    Err(CheckExprError::TimedOut(t)) => {
+                                        return Err(
+                                            flow_utils_concurrency::job_error::JobError::TimedOut(
+                                                t,
+                                            ),
+                                        );
+                                    }
+                                    Err(CheckExprError::DebugThrow { loc }) => {
+                                        return Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc });
+                                    }
+                                    Err(err @ CheckExprError::Abnormal(_)) => {
+                                        let t =
+                                            any_t::at(type_::AnySource::AnyError(None), loc.dupe());
+                                        let err_cell = std::cell::Cell::new(Some(err));
+                                        (t, Box::new(move |_cx| Err(err_cell.take().unwrap())))
+                                    }
                                 }
                             }
                         }

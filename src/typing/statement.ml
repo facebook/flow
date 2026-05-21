@@ -3658,13 +3658,22 @@ module Make
       check_const_assertion cx e;
       ((loc, t), AsConstExpression { AsConstExpression.expression = e; comments })
     | TSSatisfies cast ->
-      Flow_js_utils.add_output
-        cx
-        (Error_message.ETSSyntax
-           { kind = Error_message.TSSatisfiesType (Context.casting_syntax cx); loc }
-        );
-      let t = AnyT.at (AnyError None) loc in
-      ((loc, t), TSSatisfies (Tast_utils.error_mapper#ts_satisfies cast))
+      if not (Context.tslib_syntax cx) then (
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.(TSLibSyntax Satisfies))
+          );
+        let t = AnyT.at (AnyError None) loc in
+        ((loc, t), TSSatisfies (Tast_utils.error_mapper#ts_satisfies cast))
+      ) else
+        let { TSSatisfies.expression = e; annot; comments } = cast in
+        let (t_annot, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+        let (((_, infer_t), _) as e') = expression cx e in
+        let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t_annot }) in
+        Tvar_resolver.resolve cx infer_t;
+        Type_operation_utils.perform_type_cast cx use_op infer_t t_annot;
+        ((loc, infer_t), TSSatisfies { TSSatisfies.expression = e'; annot = annot'; comments })
     | Match { Flow_ast.Match.arg; cases; match_keyword_loc; comments } ->
       if not @@ Context.enable_pattern_matching cx then (
         Flow.add_output
@@ -8295,6 +8304,31 @@ module Make
                   );
                 let t = AnyT.at (AnyError None) loc in
                 (t, (fun () -> ((loc, t), TypeCast (Tast_utils.error_mapper#type_cast cast)))))
+            | TSSatisfies ({ TSSatisfies.expression = expr; annot; comments } as cast) ->
+              if not (Context.tslib_syntax cx) then (
+                Flow_js_utils.add_output
+                  cx
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.(TSLibSyntax Satisfies))
+                  );
+                let t = AnyT.at (AnyError None) loc in
+                (t, (fun () -> ((loc, t), TSSatisfies (Tast_utils.error_mapper#ts_satisfies cast))))
+              ) else
+                let (t_annot, annot') =
+                  Anno.mk_type_available_annotation cx Subst_name.Map.empty annot
+                in
+                let (((_, infer_t), _) as e') = expression cx expr in
+                let use_op =
+                  Op (Cast { lower = mk_expression_reason expr; upper = reason_of_t t_annot })
+                in
+                Tvar_resolver.resolve cx infer_t;
+                Type_operation_utils.perform_type_cast cx use_op infer_t t_annot;
+                ( infer_t,
+                  fun () ->
+                    ( (loc, infer_t),
+                      TSSatisfies { TSSatisfies.expression = e'; annot = annot'; comments }
+                    )
+                )
             | _ ->
               Flow.add_output cx Error_message.(EInvalidExtends (mk_expression_reason (loc, expr)));
               (AnyT.at (AnyError None) loc, (fun () -> expression cx (loc, expr)))

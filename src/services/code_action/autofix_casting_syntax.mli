@@ -5,18 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val convert_satisfies_expression :
-  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
-  Loc.t ->
-  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
-
 val convert_colon_cast :
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
 
 val convert_all_colon_casts :
-  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t -> (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
-
-val convert_all_satisfies_expressions :
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t -> (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t

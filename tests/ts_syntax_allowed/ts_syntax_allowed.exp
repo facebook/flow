@@ -445,6 +445,20 @@ References:
                                      ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- satisfies.js:4:1
+
+Cannot cast `"hello"` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   satisfies.js:4:1
+   4| "hello" satisfies number; // ERROR: string is not a number — the subtype check still runs
+      ^^^^^^^ [1]
+
+References:
+   satisfies.js:4:19
+   4| "hello" satisfies number; // ERROR: string is not a number — the subtype check still runs
+                        ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- tparam_bound.js:2:3
 
 Cannot call `f` because in type argument `T`: number [1] is incompatible with string [2]. [incompatible-type]
@@ -598,4 +612,4 @@ Cannot assign empty string to `exported_with_ts_typenames.e.foo` because propert
 
 
 
-Found 46 errors
+Found 47 errors

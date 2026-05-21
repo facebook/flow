@@ -953,7 +953,6 @@ and ts_syntax_kind =
   | TSTypeParamExtends
   | TSReadonlyVariance
   | TSInOutVariance of [ `In | `Out | `InOut ]
-  | TSSatisfiesType of Options.CastingSyntax.t
   | TSReadonlyType of [ `Tuple | `Array ] option
   | TSClassAccessibility of Flow_ast.Class.TSAccessibility.kind
   | TSParameterProperty
@@ -3803,8 +3802,6 @@ let friendly_message_of_msg = function
     | TSInOutVariance `In -> Normal MessageTSVarianceIn
     | TSInOutVariance `Out -> Normal MessageTSVarianceOut
     | TSInOutVariance `InOut -> Normal MessageTSVarianceInOut
-    | TSSatisfiesType enabled_casting_syntax ->
-      Normal (MessageTSSatisfiesType enabled_casting_syntax)
     | TSReadonlyType (Some arg_kind) ->
       (match arg_kind with
       | `Tuple -> Normal MessageTSReadonlyOperatorOnTuple

@@ -134,3 +134,6 @@ declare class DeclareOverrideTest extends Base {
   override foo(): void; // ERROR
   override bar: string; // ERROR
 }
+
+// satisfies expression
+1 satisfies number; // ERROR

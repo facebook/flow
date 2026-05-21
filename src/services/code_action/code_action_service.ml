@@ -1131,27 +1131,6 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.ETSSyntax
-      { kind = Error_message.TSSatisfiesType enabled_casting_syntax; loc = error_loc } ->
-    if loc_opt_intersects ~error_loc ~loc then
-      let title =
-        let open Options.CastingSyntax in
-        match enabled_casting_syntax with
-        | As
-        | Both ->
-          "Convert to `as` expression `<expr> as <type>`"
-      in
-      [
-        {
-          title;
-          diagnostic_title = "convert_satisfies_expression";
-          transform = untyped_ast_transform Autofix_casting_syntax.convert_satisfies_expression;
-          target_loc = error_loc;
-          confidence = WillFixErrorAndSafeForRunningOnSave;
-        };
-      ]
-    else
-      []
   | Error_message.ETSSyntax { kind = Error_message.TSReadonlyType (Some `Array); loc = error_loc }
     ->
     if loc_opt_intersects ~error_loc ~loc then

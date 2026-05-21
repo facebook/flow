@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-class mapper target_loc kind =
+class mapper target_loc =
   object (this)
     inherit Flow_ast_contains_mapper.mapper target_loc as super
 
@@ -18,23 +18,16 @@ class mapper target_loc kind =
       let open Flow_ast.Expression in
       match e with
       | (loc, TypeCast { TypeCast.expression; annot = (_, annot); comments })
-        when kind = `ColonCast && this#is_target loc ->
-        this#build_cast ?comments expression annot
-      | (loc, TSSatisfies { TSSatisfies.expression; annot = (_, annot); comments })
-        when kind = `SatisfiesExpression && this#is_target loc ->
+        when this#is_target loc ->
         this#build_cast ?comments expression annot
       | _ -> super#expression e
   end
 
-let convert_satisfies_expression ast loc =
-  let mapper = new mapper loc `SatisfiesExpression in
-  mapper#program ast
-
 let convert_colon_cast ast loc =
-  let mapper = new mapper loc `ColonCast in
+  let mapper = new mapper loc in
   mapper#program ast
 
-class all_mapper kind =
+class all_mapper =
   object (this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
@@ -46,19 +39,11 @@ class all_mapper kind =
     method! expression e =
       let open Flow_ast.Expression in
       match e with
-      | (_, TypeCast { TypeCast.expression; annot = (_, annot); comments }) when kind = `ColonCast
-        ->
-        this#build_cast ?comments expression annot
-      | (_, TSSatisfies { TSSatisfies.expression; annot = (_, annot); comments })
-        when kind = `SatisfiesExpression ->
+      | (_, TypeCast { TypeCast.expression; annot = (_, annot); comments }) ->
         this#build_cast ?comments expression annot
       | _ -> super#expression e
   end
 
 let convert_all_colon_casts ast =
-  let mapper = new all_mapper `ColonCast in
-  mapper#program ast
-
-let convert_all_satisfies_expressions ast =
-  let mapper = new all_mapper `SatisfiesExpression in
+  let mapper = new all_mapper in
   mapper#program ast

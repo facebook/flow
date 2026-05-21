@@ -1,0 +1,121 @@
+Error ------------------------------------------------------------------------------------------------ importer.js:11:14
+
+Cannot get `keyedNumbers.invalid` because property `invalid` is missing in object literal [1]. [prop-missing]
+
+   importer.js:11:14
+   11| keyedNumbers.invalid; // ERROR: property `invalid` is missing
+                    ^^^^^^^
+
+References:
+   exporter.js:10:29
+   10| export const keyedNumbers = {x: 1, y: 2, z: 3} satisfies {
+                                   ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- satisfies.js:9:3
+
+Cannot cast `"hello"` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   satisfies.js:9:3
+   9|   "hello" satisfies number; // ERROR: string is not a number
+        ^^^^^^^ [1]
+
+References:
+   satisfies.js:9:21
+   9|   "hello" satisfies number; // ERROR: string is not a number
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ satisfies.js:33:5
+
+Cannot get `o.invalid` because property `invalid` is missing in object literal [1]. [prop-missing]
+
+   satisfies.js:33:5
+   33|   o.invalid; // ERROR: property `invalid` is missing — inferred type kept the known keys
+           ^^^^^^^
+
+References:
+   satisfies.js:31:13
+   31|   const o = {x: 1, y: 2, z: 3} satisfies {readonly [string]: number};
+                   ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ satisfies.js:55:4
+
+Cannot cast object literal to mapped type because property `blue` is missing in object literal [1] but exists in mapped
+type [2]. [incompatible-type]
+
+   satisfies.js:55:4
+          v
+   55|   ({
+   56|     red: "#ff0000",
+   57|     green: "#00ff00",
+   58|   }) satisfies {[K in Colors2]: string}; // ERROR: missing `blue`
+         ^ [1]
+
+References:
+   satisfies.js:58:16
+   58|   }) satisfies {[K in Colors2]: string}; // ERROR: missing `blue`
+                      ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ satisfies.js:63:8
+
+Cannot cast object literal to object type because in property `x`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   satisfies.js:63:8
+   63|   ({x: "not a number"}) satisfies {readonly x: number}; // ERROR: string is not number
+              ^^^^^^^^^^^^^^ [1]
+
+References:
+   satisfies.js:63:48
+   63|   ({x: "not a number"}) satisfies {readonly x: number}; // ERROR: string is not number
+                                                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- satisfies.js:115:5
+
+Cannot get `c.debug` because property `debug` is missing in object literal [1]. [prop-missing]
+
+   satisfies.js:115:5
+   115|   c.debug; // ERROR: `debug` was never provided; satisfies doesn't add it
+            ^^^^^
+
+References:
+   satisfies.js:113:13
+   113|   const c = {name: "x"} satisfies {readonly name: string, readonly debug?: boolean};
+                    ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- satisfies.js:130:4
+
+Cannot cast object literal to object type because property `b` is extra in object literal [1] but missing in object
+type [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   satisfies.js:130:4
+   130|   ({a: 1, b: 2}) satisfies {readonly a: number}; // ERROR: extra `b`
+           ^^^^^^^^^^^^ [1]
+
+References:
+   satisfies.js:130:28
+   130|   ({a: 1, b: 2}) satisfies {readonly a: number}; // ERROR: extra `b`
+                                   ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- satisfies.js:140:3
+
+Cannot cast `1` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   satisfies.js:140:3
+   140|   1 satisfies empty; // ERROR
+          ^ [1]
+
+References:
+   satisfies.js:140:15
+   140|   1 satisfies empty; // ERROR
+                      ^^^^^ [2]
+
+
+
+Found 8 errors

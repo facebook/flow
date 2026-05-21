@@ -8507,15 +8507,9 @@ fn expression<'arena: 'ast, 'ast>(
                 e => e,
             }
         }
-        E::TSSatisfies { .. } => Parsed::Err(
-            loc.dupe(),
-            Errno::SigError(Box::new(
-                signature_error::SignatureError::UnexpectedExpression(
-                    loc,
-                    ast_utils::expression_sort::ExpressionSort::Satisfies,
-                ),
-            )),
-        ),
+        E::TSSatisfies { inner, .. } => {
+            expression(opts, scope, scopes, tbls, frozen, &inner.expression)
+        }
         E::Object { inner, .. } => {
             let frozen_flag = frozen == FrozenKind::FrozenDirect;
             object_literal(opts, scope, scopes, tbls, frozen_flag, loc, inner)

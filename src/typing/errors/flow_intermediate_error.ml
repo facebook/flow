@@ -4937,15 +4937,6 @@ let to_printable_error :
       ]
     | MessageAbstractClass -> [text "Flow does not support "; code "abstract"; text " classes."]
     | MessageAbstractMethod -> [text "Flow does not support "; code "abstract"; text " methods."]
-    | MessageTSSatisfiesType enabled_casting_syntax ->
-      let (example, _) = type_casting_examples enabled_casting_syntax in
-      [
-        text "The closest equivalent of TypeScript's ";
-        code "satisfies";
-        text " expression in Flow is to do a cast in the form ";
-        code example;
-        text ".";
-      ]
     | MessageTSVarianceIn ->
       [
         text "The equivalent of TypeScript's ";
@@ -5420,6 +5411,7 @@ let to_printable_error :
         | PropertyValueInitializer -> "Property value initializer in declaration"
         | ClassExtendsCall -> "Call expression in class `extends` clause"
         | OverrideModifier -> "`override` modifier on class members"
+        | Satisfies -> "`satisfies` expression"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

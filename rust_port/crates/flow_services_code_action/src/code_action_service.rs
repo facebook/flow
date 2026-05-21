@@ -1704,29 +1704,6 @@ pub fn ast_transforms_of_error(
             }
         }
         ErrorMessage::ETSSyntax(box ETSSyntaxData {
-            kind: TSSyntaxKind::TSSatisfiesType(enabled_casting_syntax),
-            loc: error_loc,
-        }) => {
-            if loc_opt_intersects(loc, error_loc.dupe()) {
-                let title = match enabled_casting_syntax {
-                    CastingSyntax::As | CastingSyntax::Both => {
-                        "Convert to `as` expression `<expr> as <type>`"
-                    }
-                };
-                vec![AstTransformOfError {
-                    title: title.to_string(),
-                    diagnostic_title: "convert_satisfies_expression".to_string(),
-                    transform: untyped_ast_transform(Box::new(|ast, loc| {
-                        autofix_casting_syntax::convert_satisfies_expression(ast, loc)
-                    })),
-                    target_loc: error_loc.dupe(),
-                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
-                }]
-            } else {
-                vec![]
-            }
-        }
-        ErrorMessage::ETSSyntax(box ETSSyntaxData {
             kind: TSSyntaxKind::TSReadonlyType(Some(ReadonlyTypeKind::Array)),
             loc: error_loc,
         }) => {

@@ -8244,17 +8244,6 @@ where
                 code("abstract"),
                 text(" methods."),
             ]),
-            MessageTSSatisfiesType(enabled_casting_syntax) => {
-                use super::error_message::type_casting_examples;
-                let (example, _) = type_casting_examples(*enabled_casting_syntax);
-                friendly::Message(vec![
-                    text("The closest equivalent of TypeScript's "),
-                    code("satisfies"),
-                    text(" expression in Flow is to do a cast in the form "),
-                    code(example),
-                    text("."),
-                ])
-            }
             MessageTSVarianceIn => friendly::Message(vec![
                 text("The equivalent of TypeScript's "),
                 code("in"),
@@ -8962,6 +8951,7 @@ where
                             PropertyValueInitializer => "Property value initializer in declaration",
                             ClassExtendsCall => "Call expression in class `extends` clause",
                             OverrideModifier => "`override` modifier on class members",
+                            Satisfies => "`satisfies` expression",
                         };
                         friendly::Message(vec![text(kind_str), text(" is not enabled.")])
                     }

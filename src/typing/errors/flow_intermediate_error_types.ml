@@ -157,6 +157,7 @@ and ts_lib_syntax_kind =
   | PropertyValueInitializer
   | ClassExtendsCall
   | OverrideModifier
+  | Satisfies
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list
@@ -1155,7 +1156,6 @@ type 'loc message =
   | MessageTSReadonlyOperatorOnArray
   | MessageTSReadonlyOperatorOnTuple
   | MessageTSReadonlyType
-  | MessageTSSatisfiesType of Options.CastingSyntax.t
   | MessageTSVarianceIn
   | MessageTSVarianceInOut
   | MessageTSVarianceOut

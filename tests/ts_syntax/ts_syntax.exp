@@ -1271,23 +1271,12 @@ Cannot declare `Values` [1], because `Values` is a reserved type name. [reserved
                 ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ satisfies.js:4:18
+Error ------------------------------------------------------------------------------------------------- satisfies.js:3:1
 
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
-determine the type of this satisfies expression. Please provide an annotation, e.g., by adding a type cast around this
-expression. [signature-verification-failure]
+`satisfies` expression is not enabled. [unsupported-syntax]
 
-   4| export const a = m satisfies T; // ERROR
-                       ^^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------ satisfies.js:4:18
-
-The closest equivalent of TypeScript's `satisfies` expression in Flow is to do a cast in the form `<expr> as <type>`.
-[unsupported-syntax]
-
-   4| export const a = m satisfies T; // ERROR
-                       ^^^^^^^^^^^^^
+   3| 1 satisfies number; // ERROR: `satisfies` expression is not enabled
+      ^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------- type_param_colon_extends.js:2:23
@@ -1360,4 +1349,4 @@ types. [unsupported-syntax]
 
 
 
-Found 146 errors
+Found 145 errors

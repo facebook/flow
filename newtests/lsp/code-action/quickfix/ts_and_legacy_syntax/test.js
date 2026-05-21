@@ -380,39 +380,6 @@ module.exports = suite(
         ],
       ),
     ]),
-    test('provide quickfix for `satisfies` type cast', [
-      addFile(
-        'fix-satisfies-expression.js.ignored',
-        'fix-satisfies-expression.js',
-      ),
-      lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
-        textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL>/fix-satisfies-expression.js',
-        },
-        range: {
-          start: {
-            line: 2,
-            character: 3,
-          },
-          end: {
-            line: 2,
-            character: 3,
-          },
-        },
-        context: {
-          only: ['quickfix'],
-          diagnostics: [],
-        },
-      }).verifyLSPMessageSnapshot(
-        path.join(
-          __dirname,
-          '__snapshots__',
-          'quickfix-satisfies-type-cast.json',
-        ),
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
-      ),
-    ]),
     test('provide quickfix for `readonly` array type', [
       addFile(
         'fix-readonly-array-type.js.ignored',

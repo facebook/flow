@@ -4664,12 +4664,8 @@ and expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
       Eval (loc, Value (AsConst v), op)
     | e -> e
   end
-  | E.TSSatisfies _ ->
-    Err
-      ( loc,
-        SigError
-          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Satisfies))
-      )
+  | E.TSSatisfies { E.TSSatisfies.expression = e; annot = _; comments = _ } ->
+    expression opts scope tbls ~frozen e
   | E.Object { E.Object.properties; comments = _ } ->
     object_literal opts scope tbls loc ~frozen:(frozen = FrozenDirect) properties
   | E.Array { E.Array.elements; trailing_comma = _; comments = _ } ->
