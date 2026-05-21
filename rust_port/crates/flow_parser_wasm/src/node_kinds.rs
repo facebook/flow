@@ -429,11 +429,11 @@ define_nodes! {
             },
         },
     WhileStatement = 12 {
-        test: Node,
         body: Node,
+        test: Node,
     } from Statement::While { loc, inner } {
-            self.serialize_expression(&inner.test),
             self.serialize_statement(&inner.body),
+            self.serialize_expression(&inner.test),
         },
     DoWhileStatement = 13 {
         body: Node,
@@ -463,12 +463,10 @@ define_nodes! {
         left: Node,
         right: Node,
         body: Node,
-        each: Boolean,
     } from Statement::ForIn { loc, inner } {
             self.serialize_for_in_left(&inner.left),
             self.serialize_expression(&inner.right),
             self.serialize_statement(&inner.body),
-            self.write_bool(inner.each),
         },
     // ForOfStatement has a trailing `await` Boolean that's a JS keyword;
     // it can be a JS object key but not a Rust ident inside the schema
@@ -507,38 +505,36 @@ define_nodes! {
         id: Node,
         params: NodeList,
         body: Node,
-        returnType: Node,
         typeParameters: Node,
-        async: Boolean,
+        returnType: Node,
         generator: Boolean,
+        async: Boolean,
         predicate: Node,
         expression: Boolean,
     } from Statement::FunctionDeclaration { loc, inner }
         {=> self.serialize_function_decl(loc, inner, NodeKind::FunctionDeclaration)},
     VariableDeclaration = 20 {
-        declarations: NodeList,
         kind: String,
+        declarations: NodeList,
     } from Statement::VariableDeclaration { loc, inner }
         {=> self.serialize_variable_declaration(loc, inner)},
     VariableDeclarator = 21 {
-        id: Node,
         init: Node,
+        id: Node,
     },
     ClassDeclaration = 22 {
         id: Node,
-        body: Node,
         typeParameters: Node,
         superClass: Node,
-        superTypeArguments: Node,
         implements: NodeList,
+        body: Node,
+        superTypeArguments: Node,
         decorators: NodeList,
-        abstract: Boolean,
     } from Statement::ClassDeclaration { loc, inner }
         {=> self.serialize_class(loc, inner, NodeKind::ClassDeclaration)},
     ComponentDeclaration = 23 {
         body: Node,
         id: Node,
-        implicitDeclare: Boolean,
         params: NodeList,
         rendersType: Node,
         typeParameters: Node,
@@ -556,14 +552,13 @@ define_nodes! {
     EnumDeclaration = 25 {
         id: Node,
         body: Node,
-        const: Boolean,
     } from Statement::EnumDeclaration { loc, inner }
         {=> self.serialize_enum_declaration(loc, inner)},
     InterfaceDeclaration = 26 {
         id: Node,
         typeParameters: Node,
-        body: Node,
         extends: NodeList,
+        body: Node,
     } from Statement::InterfaceDeclaration { loc, inner }
         {=> self.serialize_interface_declaration(loc, inner)},
     TypeAlias = 27 {
@@ -627,7 +622,6 @@ define_nodes! {
         {=> self.serialize_export_named_declaration(loc, inner)},
     ExportDefaultDeclaration = 37 {
         declaration: Node,
-        exportKind: String,
     } from Statement::ExportDefaultDeclaration { loc, inner }
         {=> self.serialize_export_default_declaration(loc, inner)},
     ExportAllDeclaration = 38 {
@@ -636,9 +630,8 @@ define_nodes! {
         exportKind: String,
     },
     ExportSpecifier = 39 {
-        local: Node,
         exported: Node,
-        exportKind: String,
+        local: Node,
     },
     ExportNamespaceSpecifier = 40 {
         exported: Node,
@@ -668,24 +661,23 @@ define_nodes! {
         id: Node,
         params: NodeList,
         body: Node,
-        async: Boolean,
+        typeParameters: Node,
+        returnType: Node,
         generator: Boolean,
+        async: Boolean,
         predicate: Node,
         expression: Boolean,
-        returnType: Node,
-        typeParameters: Node,
     } from Expression::Function { loc, inner }
         {=> self.serialize_function_expr(loc, inner, NodeKind::FunctionExpression)},
     ArrowFunctionExpression = 47 {
-        id: Node,
         params: NodeList,
         body: Node,
+        typeParameters: Node,
+        returnType: Node,
         async: Boolean,
-        generator: Boolean,
+        id: Node,
         predicate: Node,
         expression: Boolean,
-        returnType: Node,
-        typeParameters: Node,
     } from Expression::ArrowFunction { loc, inner }
         {=> self.serialize_function_expr(loc, inner, NodeKind::ArrowFunctionExpression)},
     SequenceExpression = 48 {
@@ -694,40 +686,40 @@ define_nodes! {
         {=> self.serialize_sequence_expression(loc, inner)},
     UnaryExpression = 49 {
         operator: String,
-        prefix: Boolean,
         argument: Node,
+        prefix: Boolean,
     } from Expression::Unary { loc, inner }
         {=> self.serialize_unary_dispatch(loc, inner)},
     BinaryExpression = 50 {
-        operator: String,
         left: Node,
         right: Node,
+        operator: String,
     } from Expression::Binary { loc, inner } {
-            self.write_str(inner.operator.as_str()),
             self.serialize_expression(&inner.left),
             self.serialize_expression(&inner.right),
+            self.write_str(inner.operator.as_str()),
         },
     LogicalExpression = 51 {
-        operator: String,
         left: Node,
         right: Node,
+        operator: String,
     } from Expression::Logical { loc, inner } {
+            self.serialize_expression(&inner.left),
+            self.serialize_expression(&inner.right),
             self.write_str(match inner.operator {
                 ast::expression::LogicalOperator::Or => "||",
                 ast::expression::LogicalOperator::And => "&&",
                 ast::expression::LogicalOperator::NullishCoalesce => "??",
             }),
-            self.serialize_expression(&inner.left),
-            self.serialize_expression(&inner.right),
         },
     ConditionalExpression = 52 {
         test: Node,
-        consequent: Node,
         alternate: Node,
+        consequent: Node,
     } from Expression::Conditional { loc, inner } {
             self.serialize_expression(&inner.test),
-            self.serialize_expression(&inner.consequent),
             self.serialize_expression(&inner.alternate),
+            self.serialize_expression(&inner.consequent),
         },
     UpdateExpression = 53 {
         operator: String,
@@ -837,11 +829,9 @@ define_nodes! {
         },
     TaggedTemplateExpression = 64 {
         tag: Node,
-        typeArguments: Node,
         quasi: Node,
     } from Expression::TaggedTemplate { loc, inner } {
             self.serialize_expression(&inner.tag),
-            self.serialize_call_type_args_opt(&inner.targs),
             self.serialize_template_literal(&inner.quasi.0, &inner.quasi.1),
         },
     TemplateLiteral = 65 {
@@ -945,12 +935,10 @@ define_nodes! {
     ObjectPattern = 78 {
         properties: NodeList,
         typeAnnotation: Node,
-        optional: Boolean,
     },
     ArrayPattern = 79 {
         elements: NodeList,
         typeAnnotation: Node,
-        optional: Boolean,
     },
     RestElement = 80 {
         argument: Node,
@@ -980,13 +968,12 @@ define_nodes! {
     // ---------------------------------------------------------------
     ClassExpression = 84 {
         id: Node,
-        body: Node,
         typeParameters: Node,
         superClass: Node,
-        superTypeArguments: Node,
         implements: NodeList,
+        body: Node,
+        superTypeArguments: Node,
         decorators: NodeList,
-        abstract: Boolean,
     } from Expression::Class { loc, inner }
         {=> self.serialize_class(loc, inner, NodeKind::ClassExpression)},
     ClassBody = 85 {
@@ -1083,25 +1070,22 @@ define_nodes! {
     // Flow Declarations
     // ---------------------------------------------------------------
     DeclareVariable = 98 {
-        declarations: NodeList,
+        id: Node,
         kind: String,
     } from Statement::DeclareVariable { loc, inner }
         {=> self.serialize_declare_variable(loc, inner)},
     DeclareFunction = 99 {
         id: Node,
-        implicitDeclare: Boolean,
         predicate: Node,
-        typeAnnotation: Node,
     } from Statement::DeclareFunction { loc, inner }
         {=> self.serialize_declare_function(loc, inner)},
     DeclareClass = 100 {
         id: Node,
         typeParameters: Node,
-        body: Node,
         extends: NodeList,
         implements: NodeList,
         mixins: NodeList,
-        abstract: Boolean,
+        body: Node,
     } from Statement::DeclareClass { loc, inner }
         {=> self.serialize_declare_class(loc, inner)},
     DeclareComponent = 101 {
@@ -1114,8 +1098,6 @@ define_nodes! {
         {=> self.serialize_declare_component(loc, inner)},
     DeclareHook = 102 {
         id: Node,
-        implicitDeclare: Boolean,
-        typeAnnotation: Node,
     },
     DeclareModule = 103 {
         id: Node,
@@ -1140,9 +1122,6 @@ define_nodes! {
     DeclareNamespace = 107 {
         id: Node,
         body: Node,
-        implicitDeclare: Boolean,
-        keyword: String,
-        global: Boolean,
     } from Statement::DeclareNamespace { loc, inner }
         {=> self.serialize_declare_namespace(loc, inner)},
     DeclareInterface = 108 {
@@ -1164,11 +1143,9 @@ define_nodes! {
     DeclareEnum = 110 {
         id: Node,
         body: Node,
-        const: Boolean,
     } from Statement::DeclareEnum { loc, inner } {
             self.serialize_identifier_node(&inner.id),
             self.serialize_enum_body(&inner.body),
-            self.write_bool(inner.const_),
         },
 
     // ---------------------------------------------------------------
@@ -1254,7 +1231,7 @@ define_nodes! {
         value: String,
         raw: String,
     } from Type::StringLiteral { loc, literal } {
-            self.write_str(&literal.value),
+            self.write_string_literal_value(&literal.value, &literal.raw),
             self.write_str(&literal.raw),
         },
     NumberLiteralTypeAnnotation = 132 {
@@ -1336,12 +1313,12 @@ define_nodes! {
         typeAnnotation: Node,
     },
     ObjectTypeAnnotation = 147 {
-        inexact: Boolean,
-        exact: Boolean,
         properties: NodeList,
         indexers: NodeList,
         callProperties: NodeList,
         internalSlots: NodeList,
+        inexact: Boolean,
+        exact: Boolean,
     } from Type::Object { loc, inner }
         {=> self.serialize_type_object(loc, inner)},
     ObjectTypeProperty = 148 {
@@ -1351,13 +1328,8 @@ define_nodes! {
         optional: Boolean,
         static: Boolean,
         proto: Boolean,
-        abstract: Boolean,
         variance: Node,
         kind: String,
-        init: Node,
-        computed: Boolean,
-        override: Boolean,
-        tsAccessibility: String,
     },
     ObjectTypeSpreadProperty = 149 {
         argument: Node,
@@ -1368,7 +1340,6 @@ define_nodes! {
         value: Node,
         static: Boolean,
         variance: Node,
-        optional: Boolean,
     },
     ObjectTypeCallProperty = 151 {
         value: Node,
@@ -1378,9 +1349,7 @@ define_nodes! {
         keyTparam: Node,
         propType: Node,
         sourceType: Node,
-        nameType: Node,
         variance: Node,
-        varianceOp: String,
         optional: String,
     },
     ObjectTypeInternalSlot = 153 {
@@ -1430,8 +1399,8 @@ define_nodes! {
     },
     TypeParameter = 161 {
         name: String,
-        bound: Node,
         const: Boolean,
+        bound: Node,
         variance: Node,
         default: Node,
         usesExtendsBound: Boolean,
@@ -1465,8 +1434,8 @@ define_nodes! {
     // ---------------------------------------------------------------
     JSXElement = 167 {
         openingElement: Node,
-        closingElement: Node,
         children: NodeList,
+        closingElement: Node,
     } from Expression::JSXElement { loc, inner }
         {=> self.serialize_jsx_element(loc, inner)},
     JSXFragment = 168 {
@@ -1667,10 +1636,10 @@ define_nodes! {
     // ---------------------------------------------------------------
     FunctionTypeAnnotation = 214 {
         params: NodeList,
+        this: Node,
         returnType: Node,
         rest: Node,
         typeParameters: Node,
-        this: Node,
     } from Type::Function { loc, inner }
         {=> self.serialize_function_type(loc, inner)},
 
@@ -1798,9 +1767,8 @@ define_nodes! {
     // No `from` clause: there is no AST variant for ChainExpression. The
     // Rust `serialize_expression` emits a ChainExpression header before the
     // root MemberExpression/CallExpression of an optional chain (mirroring
-    // upstream Hermes' `mapChainExpression` and the JS adapter's
-    // `rewriteChain`). Defined here so the schema-driven codegen artifacts
-    // include it natively.
+    // upstream Hermes' `mapChainExpression`). Defined here so the
+    // schema-driven codegen artifacts include it natively.
     ChainExpression = 230 {
         expression: Node,
     },

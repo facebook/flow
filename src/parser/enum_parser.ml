@@ -71,7 +71,9 @@ end = struct
     | T_MINUS ->
       Eat.token env;
       (match Peek.token env with
-      | T_NUMBER { kind; raw } -> number_init env loc ~neg:true ~leading ~kind ~raw
+      | T_NUMBER { kind; raw } ->
+        let loc = Loc.btwn loc (Peek.loc env) in
+        number_init env loc ~neg:true ~leading ~kind ~raw
       | _ -> InvalidInit loc)
     | T_NUMBER { kind; raw } -> number_init env loc ~neg:false ~leading ~kind ~raw
     | T_STRING (loc, value, raw, octal) ->

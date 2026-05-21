@@ -136,8 +136,8 @@
       "range":[72,85],
       "expression":{
         "type":"BinaryExpression",
-        "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":7}},
-        "range":[72,79],
+        "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":12}},
+        "range":[72,84],
         "operator":"===",
         "left":{
           "type":"Identifier",
@@ -628,8 +628,8 @@
         "operator":"===",
         "left":{
           "type":"BinaryExpression",
-          "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":7}},
-          "range":[402,409],
+          "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":17}},
+          "range":[402,419],
           "operator":"===",
           "left":{
             "type":"Identifier",
@@ -703,8 +703,8 @@
       "range":[459,479],
       "expression":{
         "type":"BinaryExpression",
-        "loc":{"source":null,"start":{"line":16,"column":4},"end":{"line":16,"column":19}},
-        "range":[463,478],
+        "loc":{"source":null,"start":{"line":16,"column":0},"end":{"line":16,"column":19}},
+        "range":[459,478],
         "operator":"+",
         "left":{
           "type":"AsExpression",

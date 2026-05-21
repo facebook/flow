@@ -32,8 +32,8 @@
             "range":[12,25],
             "key":{
               "type":"PrivateIdentifier",
-              "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":9}},
-              "range":[16,19],
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":9}},
+              "range":[12,19],
               "name":"m",
               "typeAnnotation":null,
               "optional":false

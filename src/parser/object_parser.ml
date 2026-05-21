@@ -615,6 +615,13 @@ module Object
       Some (key_loc, name)
     | _ -> None
 
+  let adjust_private_method_key_start key start_loc =
+    match key with
+    | Ast.Expression.Object.Property.PrivateName (loc, private_name) ->
+      Ast.Expression.Object.Property.PrivateName
+        ({ loc with Loc.start = start_loc.Loc.start }, private_name)
+    | _ -> key
+
   (* In the ES6 draft, all elements are methods. No properties (though there
    * are getter and setters allowed *)
   let class_element =
@@ -743,13 +750,23 @@ module Object
           )
       | Error _ -> None
     in
-    let accessor env start_loc decorators static ~override ts_accessibility leading ~is_getter =
+    let accessor
+        env
+        start_loc
+        accessor_key_start_loc
+        decorators
+        static
+        ~override
+        ts_accessibility
+        leading
+        ~is_getter =
       if in_ambient_context env then (
         (* In ambient context, parse key + signature, then check for bodyless *)
         let async = false in
         let generator = false in
         let (key_loc, key) = key ~class_body:true env in
         let key = object_key_remove_trailing env key in
+        let key = adjust_private_method_key_start key accessor_key_start_loc in
         (match (static, string_value_of_key key) with
         | (false, Some (key_loc, "constructor")) ->
           error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
@@ -875,6 +892,7 @@ module Object
         let (loc, (key, value)) =
           with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true is_getter) env
         in
+        let key = adjust_private_method_key_start key accessor_key_start_loc in
         (match (static, string_value_of_key key) with
         | (false, Some (key_loc, "constructor")) ->
           error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
@@ -1560,7 +1578,7 @@ module Object
         match (async, generator, Peek.token env) with
         | (false, false, T_IDENTIFIER { raw = "get"; _ }) ->
           let leading_get = Peek.comments env in
-          let (_, key) = key ~class_body:true env in
+          let (accessor_key_start_loc, key) = key ~class_body:true env in
           if implies_identifier env then
             init
               env
@@ -1583,6 +1601,7 @@ module Object
             accessor
               env
               start_loc
+              accessor_key_start_loc
               decorators
               static
               ~override
@@ -1592,7 +1611,7 @@ module Object
           )
         | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
           let leading_set = Peek.comments env in
-          let (_, key) = key ~class_body:true env in
+          let (accessor_key_start_loc, key) = key ~class_body:true env in
           if implies_identifier env then
             init
               env
@@ -1615,6 +1634,7 @@ module Object
             accessor
               env
               start_loc
+              accessor_key_start_loc
               decorators
               static
               ~override

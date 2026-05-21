@@ -516,6 +516,7 @@ module Expression
             (is_unary, expr))
           env
       in
+      let expr_loc = ref expr_loc in
       let next = Peek.token env in
       ( if next = T_LESS_THAN then
         match expr with
@@ -531,16 +532,17 @@ module Expression
             let (stack, expr) =
               match stack with
               | (left, (lop, lpri), lloc) :: rest when is_tighter lpri (Left_assoc 6) ->
-                let expr_loc = Loc.btwn lloc expr_loc in
-                let expr = make_binary left expr lop expr_loc in
+                let loc = Loc.btwn lloc !expr_loc in
+                let expr = make_binary left expr lop loc in
                 (rest, expr)
               | _ -> (stack, expr)
             in
-            let (expr_loc, _) = expr in
+            let (new_expr_loc, _) = expr in
             let expr =
-              if keyword = "satisfies" then
+              if keyword = "satisfies" then (
                 let ((annot_loc, _) as annot) = Type._type env in
-                let loc = Loc.btwn expr_loc annot_loc in
+                let loc = Loc.btwn new_expr_loc annot_loc in
+                expr_loc := loc;
                 Cover_expr
                   ( loc,
                     Expression.TSSatisfies
@@ -550,8 +552,9 @@ module Expression
                         comments = None;
                       }
                   )
-              else if Peek.token env = T_CONST then (
-                let loc = Loc.btwn expr_loc (Peek.loc env) in
+              ) else if Peek.token env = T_CONST then (
+                let loc = Loc.btwn new_expr_loc (Peek.loc env) in
+                expr_loc := loc;
                 Eat.token env;
                 Cover_expr
                   ( loc,
@@ -560,7 +563,8 @@ module Expression
                   )
               ) else
                 let ((annot_loc, _) as annot) = Type._type env in
-                let loc = Loc.btwn expr_loc annot_loc in
+                let loc = Loc.btwn new_expr_loc annot_loc in
+                expr_loc := loc;
                 Cover_expr
                   ( loc,
                     Expression.AsExpression
@@ -581,12 +585,12 @@ module Expression
       | ([], None) -> expr
       | (_, None) ->
         let expr = as_expression env expr in
-        Cover_expr (collapse_stack expr expr_loc stack)
+        Cover_expr (collapse_stack expr !expr_loc stack)
       | (_, Some (rop, rpri)) ->
         if is_unary && rop = Expression.Binary.Exp then
-          error_at env (expr_loc, Parse_error.InvalidLHSInExponentiation);
+          error_at env (!expr_loc, Parse_error.InvalidLHSInExponentiation);
         let expr = as_expression env expr in
-        helper env (add_to_stack expr (rop, rpri) expr_loc stack)
+        helper env (add_to_stack expr (rop, rpri) !expr_loc stack)
     in
     (fun env -> helper env [])
 

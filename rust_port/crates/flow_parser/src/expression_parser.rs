@@ -713,7 +713,7 @@ fn binary_cover(env: &mut ParserEnv) -> Result<PatternCover, Rollback> {
 
     let mut stack = Vec::new();
     loop {
-        let (expr_loc, (is_unary, mut expr)) = with_loc(None, env, |env| {
+        let (mut expr_loc, (is_unary, mut expr)) = with_loc(None, env, |env| {
             let is_unary = peek_unary_op(env)?.is_some();
             let expr = env.with_no_in(false, unary_cover)?;
             Ok((is_unary, expr))
@@ -740,19 +740,19 @@ fn binary_cover(env: &mut ParserEnv) -> Result<PatternCover, Rollback> {
         } {
             eat::token(env)?;
             let as_expression_expr = as_expression(env, expr)?;
-            let new_expr = match stack
+            let (new_expr, new_expr_loc) = match stack
                 .pop_if(|(_, (_, lpri), _)| is_tighter(*lpri, OpPrecedence::LeftAssoc(6)))
             {
                 Some((left, (lop, _lpri), lloc)) => {
-                    let expr_loc = Loc::between(&lloc, &expr_loc);
-                    make_binary(left, as_expression_expr, lop, expr_loc)
+                    let loc = Loc::between(&lloc, &expr_loc);
+                    (make_binary(left, as_expression_expr, lop, loc.dupe()), loc)
                 }
-                None => as_expression_expr,
+                None => (as_expression_expr, expr_loc.dupe()),
             };
-            let expr_loc = new_expr.loc();
             expr = if keyword == "satisfies" {
                 let annot = type_parser::parse_type(env)?;
-                let loc = Loc::between(expr_loc, annot.loc());
+                let loc = Loc::between(&new_expr_loc, annot.loc());
+                expr_loc = loc.dupe();
                 PatternCover::CoverExpr(expression::Expression::new(ExpressionInner::TSSatisfies {
                     loc,
                     inner: Arc::new(expression::TSSatisfies {
@@ -765,8 +765,9 @@ fn binary_cover(env: &mut ParserEnv) -> Result<PatternCover, Rollback> {
                     }),
                 }))
             } else if peek::token(env) == &TokenKind::TConst {
-                let loc = Loc::between(expr_loc, peek::loc(env));
+                let loc = Loc::between(&new_expr_loc, peek::loc(env));
                 eat::token(env)?;
+                expr_loc = loc.dupe();
                 PatternCover::CoverExpr(expression::Expression::new(
                     ExpressionInner::AsConstExpression {
                         loc,
@@ -778,7 +779,8 @@ fn binary_cover(env: &mut ParserEnv) -> Result<PatternCover, Rollback> {
                 ))
             } else {
                 let annot = type_parser::parse_type(env)?;
-                let loc = Loc::between(expr_loc, annot.loc());
+                let loc = Loc::between(&new_expr_loc, annot.loc());
+                expr_loc = loc.dupe();
                 PatternCover::CoverExpr(expression::Expression::new(
                     ExpressionInner::AsExpression {
                         loc,

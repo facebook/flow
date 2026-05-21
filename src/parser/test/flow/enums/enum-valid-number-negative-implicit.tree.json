@@ -34,8 +34,8 @@
             },
             "init":{
               "type":"Literal",
-              "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":7}},
-              "range":[15,16],
+              "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":8}},
+              "range":[15,17],
               "value":-1,
               "raw":"-1"
             }
@@ -54,8 +54,8 @@
             },
             "init":{
               "type":"Literal",
-              "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":7}},
-              "range":[25,26],
+              "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":8}},
+              "range":[25,27],
               "value":-2,
               "raw":"-2"
             }

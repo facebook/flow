@@ -12,10 +12,13 @@
 //! - `program_buffer: Vec<u32>` — nodes and their properties
 //! - `position_buffer: Vec<PositionResult>` — source positions in UTF-16
 
+use std::borrow::Cow;
+
 use flow_parser::TokenSinkResult;
 use flow_parser::ast;
 use flow_parser::ast::CommentKind;
 use flow_parser::loc::Loc;
+use flow_parser::loc::Position;
 use flow_parser::parse_error::ParseError;
 use flow_parser::token::TokenKind;
 
@@ -33,7 +36,8 @@ include!("serializer_dispatch.rs");
 pub struct SerializerBuffers {
     pub program_buffer: Vec<u32>,
     pub position_buffer: Vec<PositionResult>,
-    /// Concatenated UTF-8 bytes for every string written via `write_str`.
+    /// Concatenated UTF-8/WTF-8 bytes for every string written via
+    /// `write_str`.
     /// The program buffer encodes string references as `(offset+1, len)`,
     /// reserving 0 as the null sentinel for `write_str_opt(None)`.
     pub string_buffer: Vec<u8>,
@@ -46,14 +50,14 @@ pub struct Serializer<'a> {
     positions: Vec<PositionInfo>,
     string_buffer: Vec<u8>,
     next_loc_id: u32,
-    /// Tracks whether we're currently inside an optional chain. Set when
-    /// emitting a ChainExpression wrapper around the chain root; reset
-    /// when a parenthesis boundary (plain Member/Call) is encountered
-    /// inside the chain. Mirrors upstream Hermes' post-rewrite shape:
-    /// every chain has exactly one ChainExpression at its root, and
-    /// MemberExpression/CallExpression nodes inside the chain carry an
-    /// `optional` boolean.
-    in_optional_chain: bool,
+}
+
+fn is_identifier_start(b: u8) -> bool {
+    b == b'$' || b == b'_' || b.is_ascii_alphabetic()
+}
+
+fn is_identifier_continue(b: u8) -> bool {
+    is_identifier_start(b) || b.is_ascii_digit()
 }
 
 impl<'a> Serializer<'a> {
@@ -64,20 +68,7 @@ impl<'a> Serializer<'a> {
             positions: Vec::with_capacity(1024),
             string_buffer: Vec::with_capacity(4096),
             next_loc_id: 0,
-            in_optional_chain: false,
         }
-    }
-
-    fn with_optional_chain_state<R>(
-        &mut self,
-        in_optional_chain: bool,
-        f: impl FnOnce(&mut Self) -> R,
-    ) -> R {
-        let prev = self.in_optional_chain;
-        self.in_optional_chain = in_optional_chain;
-        let result = f(self);
-        self.in_optional_chain = prev;
-        result
     }
 
     // ---------------------------------------------------------------
@@ -98,15 +89,19 @@ impl<'a> Serializer<'a> {
         self.buf.push((bits >> 32) as u32);
     }
 
-    fn write_str(&mut self, s: &str) {
+    fn write_str_bytes(&mut self, bytes: &[u8]) {
         // Append the bytes to a single shared string buffer and emit a
         // (offset+1, len) reference. The +1 reserves 0 as the null
         // sentinel used by `write_str_opt(None)`. The JS deserializer
         // subtracts 1 before reading from the string buffer.
         let offset = self.string_buffer.len() as u32;
-        self.string_buffer.extend_from_slice(s.as_bytes());
+        self.string_buffer.extend_from_slice(bytes);
         self.buf.push(offset + 1);
-        self.buf.push(s.len() as u32);
+        self.buf.push(bytes.len() as u32);
+    }
+
+    fn write_str(&mut self, s: &str) {
+        self.write_str_bytes(s.as_bytes());
     }
 
     fn write_str_opt(&mut self, s: Option<&str>) {
@@ -114,6 +109,27 @@ impl<'a> Serializer<'a> {
             Some(s) => self.write_str(s),
             None => self.buf.push(0), // null string: only 0, no size word
         }
+    }
+
+    fn write_string_literal_value(&mut self, value: &str, raw: &str) {
+        let bytes = string_literal_value_bytes(value, raw);
+        self.write_str_bytes(bytes.as_ref());
+    }
+
+    fn write_string_literal_preserving_value(&mut self, loc: &Loc, value: &str, raw: &str) {
+        self.write_node_header(NodeKind::Literal, loc);
+        self.buf.push(3);
+        self.write_str(value);
+        self.write_str("string");
+        self.write_str(raw);
+        self.write_str_opt(None);
+        self.write_str_opt(None);
+        self.write_str_opt(None);
+    }
+
+    fn write_template_cooked_value(&mut self, raw: &str, cooked: &str) {
+        let bytes = template_cooked_value_bytes(raw, cooked);
+        self.write_str_bytes(bytes.as_ref());
     }
 
     fn add_loc(&mut self, loc: &Loc) -> u32 {
@@ -135,6 +151,85 @@ impl<'a> Serializer<'a> {
         self.buf.push(loc_id);
     }
 
+    fn position_at_byte_offset(&self, offset: usize) -> Position {
+        let bytes = self.source.as_bytes();
+        let capped_offset = offset.min(bytes.len());
+        let prefix = &bytes[..capped_offset];
+        let line = prefix.iter().filter(|b| **b == b'\n').count() as i32 + 1;
+        let line_start = prefix
+            .iter()
+            .rposition(|b| *b == b'\n')
+            .map_or(0, |i| i + 1);
+        Position {
+            line,
+            column: (capped_offset - line_start) as i32,
+        }
+    }
+
+    fn byte_offset_at_position(&self, position: Position) -> Option<usize> {
+        if position.line < 1 || position.column < 0 {
+            return None;
+        }
+        let bytes = self.source.as_bytes();
+        let mut offset = 0;
+        for _ in 1..position.line {
+            offset += bytes[offset..].iter().position(|b| *b == b'\n')? + 1;
+        }
+        Some((offset + position.column as usize).min(bytes.len()))
+    }
+
+    fn next_token_loc_after(&self, loc: &Loc) -> Loc {
+        let Some(mut start) = self.byte_offset_at_position(loc.end) else {
+            return loc.clone();
+        };
+        let bytes = self.source.as_bytes();
+        while start < bytes.len() {
+            match bytes[start] {
+                b' ' | b'\t' | b'\n' | b'\r' | 0x0b | 0x0c => start += 1,
+                b'/' if start + 1 < bytes.len() && bytes[start + 1] == b'/' => {
+                    start += 2;
+                    while start < bytes.len() && bytes[start] != b'\n' && bytes[start] != b'\r' {
+                        start += 1;
+                    }
+                }
+                b'/' if start + 1 < bytes.len() && bytes[start + 1] == b'*' => {
+                    start += 2;
+                    while start + 1 < bytes.len()
+                        && !(bytes[start] == b'*' && bytes[start + 1] == b'/')
+                    {
+                        start += 1;
+                    }
+                    start = (start + 2).min(bytes.len());
+                }
+                _ => break,
+            }
+        }
+        let end = if start + 3 <= bytes.len() && &bytes[start..start + 3] == b"..." {
+            start + 3
+        } else if start + 2 <= bytes.len() && &bytes[start..start + 2] == b"=>" {
+            start + 2
+        } else if start < bytes.len() && is_identifier_start(bytes[start]) {
+            let mut end = start + 1;
+            while end < bytes.len() && is_identifier_continue(bytes[end]) {
+                end += 1;
+            }
+            end
+        } else if start < bytes.len() {
+            start
+                + self.source[start..]
+                    .chars()
+                    .next()
+                    .map_or(1, char::len_utf8)
+        } else {
+            start
+        };
+        Loc {
+            source: loc.source.clone(),
+            start: self.position_at_byte_offset(start),
+            end: self.position_at_byte_offset(end),
+        }
+    }
+
     fn write_null_node(&mut self) {
         self.buf.push(0);
     }
@@ -149,7 +244,7 @@ impl<'a> Serializer<'a> {
     fn write_string_literal(&mut self, loc: &Loc, value: &str, raw: &str) {
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(3);
-        self.write_str(value);
+        self.write_string_literal_value(value, raw);
         self.write_str("string");
         self.write_str(raw);
         self.write_str_opt(None);
@@ -342,6 +437,13 @@ impl<'a> Serializer<'a> {
         self.write_bool(false); // optional
     }
 
+    fn serialize_identifier_node_with_loc(&mut self, id: &ast::Identifier<Loc, Loc>, loc: &Loc) {
+        self.write_node_header(NodeKind::Identifier, loc);
+        self.write_str(&id.name);
+        self.write_null_node();
+        self.write_bool(false);
+    }
+
     fn serialize_block_statement(&mut self, loc: &Loc, block: &ast::statement::Block<Loc, Loc>) {
         // 2: BlockStatement — body(NodeList)
         self.write_node_header(NodeKind::BlockStatement, loc);
@@ -379,26 +481,26 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         decl: &ast::statement::VariableDeclaration<Loc, Loc>,
     ) {
-        // 20: VariableDeclaration — declarations(NodeList), kind(String)
+        // 20: VariableDeclaration — kind(String), declarations(NodeList)
         self.write_node_header(NodeKind::VariableDeclaration, loc);
+        self.write_str(decl.kind.as_str());
         self.buf.push(decl.declarations.len() as u32);
         for declarator in decl.declarations.iter() {
             self.serialize_variable_declarator(declarator);
         }
-        self.write_str(decl.kind.as_str());
     }
 
     fn serialize_variable_declarator(
         &mut self,
         decl: &ast::statement::variable::Declarator<Loc, Loc>,
     ) {
-        // 21: VariableDeclarator — id(Node), init(Node nullable)
+        // 21: VariableDeclarator — init(Node nullable), id(Node)
         self.write_node_header(NodeKind::VariableDeclarator, &decl.loc);
-        self.serialize_pattern(&decl.id);
         match &decl.init {
             Some(expr) => self.serialize_expression(expr),
             None => self.write_null_node(),
         }
+        self.serialize_pattern(&decl.id);
     }
 
     fn serialize_for_init(&mut self, init: &Option<ast::statement::for_::Init<Loc, Loc>>) {
@@ -436,14 +538,12 @@ impl<'a> Serializer<'a> {
     }
 
     fn serialize_expression(&mut self, expr: &ast::expression::Expression<Loc, Loc>) {
-        // Optional-chain rewrite: mirror upstream Hermes' post-rewrite shape
-        // by emitting `OptionalMember`/`OptionalCall` AST nodes as
-        // `MemberExpression`/`CallExpression` with `optional` flags, wrapped
-        // in a single `ChainExpression` at the chain root. Plain
-        // `Member`/`Call` inside an optional chain mark a parenthesis
-        // boundary: emit them with `optional: false` and reset the chain
-        // state for their children so an inner optional access starts a new
-        // chain.
+        // Optional-chain rewrite: mirror upstream Hermes' post-rewrite ESTree
+        // shape. OptionalMember/OptionalCall serialize as Member/Call with an
+        // `optional` flag and a ChainExpression wrapper at the chain root. Only
+        // the object/callee child of another optional chain is unwrapped; other
+        // sub-expressions such as call arguments, computed keys, array elements,
+        // and logical operands keep their own ChainExpression wrappers.
         use ast::expression::ExpressionInner;
         match &**expr {
             ExpressionInner::OptionalMember { loc, inner }
@@ -452,14 +552,8 @@ impl<'a> Serializer<'a> {
                     ast::expression::OptionalMemberKind::AssertNonnull
                 ) =>
             {
-                if !self.in_optional_chain {
-                    self.write_node_header(NodeKind::ChainExpression, loc);
-                    self.in_optional_chain = true;
-                    self.serialize_optional_member_as_member_expression(loc, inner);
-                    self.in_optional_chain = false;
-                } else {
-                    self.serialize_optional_member_as_member_expression(loc, inner);
-                }
+                self.write_node_header(NodeKind::ChainExpression, loc);
+                self.serialize_optional_member_as_member_expression(loc, inner);
             }
             ExpressionInner::OptionalCall { loc, inner }
                 if !matches!(
@@ -467,14 +561,8 @@ impl<'a> Serializer<'a> {
                     ast::expression::OptionalCallKind::AssertNonnull
                 ) =>
             {
-                if !self.in_optional_chain {
-                    self.write_node_header(NodeKind::ChainExpression, loc);
-                    self.in_optional_chain = true;
-                    self.serialize_optional_call_as_call_expression(loc, inner);
-                    self.in_optional_chain = false;
-                } else {
-                    self.serialize_optional_call_as_call_expression(loc, inner);
-                }
+                self.write_node_header(NodeKind::ChainExpression, loc);
+                self.serialize_optional_call_as_call_expression(loc, inner);
             }
             ExpressionInner::OptionalMember { loc, inner } => {
                 // AssertNonnull (`expr!.foo`): emit MemberExpression with
@@ -502,18 +590,30 @@ impl<'a> Serializer<'a> {
                 self.serialize_arg_list(&inner.call.arguments);
                 self.write_bool(false);
             }
-            ExpressionInner::Member { .. } | ExpressionInner::Call { .. }
-                if self.in_optional_chain =>
-            {
-                // Parenthesis boundary inside a chain: a plain Member/Call
-                // wrapping an optional sub-expression breaks the chain (the
-                // semantics of `(x?.y).z` differ from `x?.y.z`). Reset the
-                // chain state so the child starts its own ChainExpression.
-                self.with_optional_chain_state(false, |this| {
-                    this.serialize_expression_dispatch(expr);
-                });
-            }
             _ => self.serialize_expression_dispatch(expr),
+        }
+    }
+
+    fn serialize_optional_chain_child(&mut self, expr: &ast::expression::Expression<Loc, Loc>) {
+        use ast::expression::ExpressionInner;
+        match &**expr {
+            ExpressionInner::OptionalMember { loc, inner }
+                if !matches!(
+                    inner.optional,
+                    ast::expression::OptionalMemberKind::AssertNonnull
+                ) =>
+            {
+                self.serialize_optional_member_as_member_expression(loc, inner);
+            }
+            ExpressionInner::OptionalCall { loc, inner }
+                if !matches!(
+                    inner.optional,
+                    ast::expression::OptionalCallKind::AssertNonnull
+                ) =>
+            {
+                self.serialize_optional_call_as_call_expression(loc, inner);
+            }
+            _ => self.serialize_expression(expr),
         }
     }
 
@@ -528,7 +628,7 @@ impl<'a> Serializer<'a> {
     ) {
         // 55: MemberExpression — object(Node) property(Node) computed(Bool) optional(Bool)
         self.write_node_header(NodeKind::MemberExpression, loc);
-        self.serialize_expression(&inner.member.object);
+        self.serialize_optional_chain_child(&inner.member.object);
         self.serialize_member_property(&inner.member.property);
         self.write_bool(matches!(
             &inner.member.property,
@@ -551,7 +651,7 @@ impl<'a> Serializer<'a> {
     ) {
         // 57: CallExpression — callee(Node) typeArguments(Node) arguments(NodeList) optional(Bool)
         self.write_node_header(NodeKind::CallExpression, loc);
-        self.serialize_expression(&inner.call.callee);
+        self.serialize_optional_chain_child(&inner.call.callee);
         self.serialize_call_type_args_opt(&inner.call.targs);
         self.serialize_arg_list(&inner.call.arguments);
         self.write_bool(matches!(
@@ -644,23 +744,11 @@ impl<'a> Serializer<'a> {
     }
 
     fn serialize_type_parameter(&mut self, tp: &ast::types::TypeParam<Loc, Loc>) {
-        // 161: TypeParameter — name bound const variance default usesExtendsBound
+        // 161: TypeParameter — name const bound variance default usesExtendsBound
         self.write_node_header(NodeKind::TypeParameter, &tp.loc);
         self.write_str(&tp.name.name);
-        // bound: Hermes' deserializeTypeParameter reads `bound` as a plain
-        // Node (the inner annotation), NOT a TypeAnnotation-wrapped node.
-        // Emit the inner annotation directly rather than going through
-        // serialize_annotation_or_hint (which writes a TypeAnnotation
-        // header). When the bound is missing, write null.
-        match &tp.bound {
-            ast::types::AnnotationOrHint::Available(annot) => {
-                self.serialize_type(&annot.annotation);
-            }
-            ast::types::AnnotationOrHint::Missing(_) => {
-                self.write_null_node();
-            }
-        }
         self.write_bool(tp.const_.is_some());
+        self.serialize_annotation_or_hint(&tp.bound);
         match &tp.variance {
             Some(v) => self.serialize_variance(v),
             None => self.write_null_node(),
@@ -724,24 +812,22 @@ impl<'a> Serializer<'a> {
     fn serialize_pattern(&mut self, pat: &ast::pattern::Pattern<Loc, Loc>) {
         match pat {
             ast::pattern::Pattern::Object { loc, inner } => {
-                // 78: ObjectPattern — properties(NodeList) typeAnnotation(Node) optional(Bool)
+                // 78: ObjectPattern — properties(NodeList) typeAnnotation(Node)
                 self.write_node_header(NodeKind::ObjectPattern, loc);
                 self.buf.push(inner.properties.len() as u32);
                 for prop in inner.properties.iter() {
                     self.serialize_pattern_object_property(prop);
                 }
                 self.serialize_annotation_or_hint(&inner.annot);
-                self.write_bool(inner.optional);
             }
             ast::pattern::Pattern::Array { loc, inner } => {
-                // 79: ArrayPattern — elements(NodeList) typeAnnotation(Node) optional(Bool)
+                // 79: ArrayPattern — elements(NodeList) typeAnnotation(Node)
                 self.write_node_header(NodeKind::ArrayPattern, loc);
                 self.buf.push(inner.elements.len() as u32);
                 for elem in inner.elements.iter() {
                     self.serialize_pattern_array_element(elem);
                 }
                 self.serialize_annotation_or_hint(&inner.annot);
-                self.write_bool(inner.optional);
             }
             ast::pattern::Pattern::Identifier { loc, inner } => {
                 // 76: Identifier — name(String) typeAnnotation(Node) optional(Bool)
@@ -902,7 +988,17 @@ impl<'a> Serializer<'a> {
                         ast::match_pattern::object_pattern::Property::Valid { loc, property } => {
                             // 210: MatchObjectPatternProperty — key pattern shorthand
                             self.write_node_header(NodeKind::MatchObjectPatternProperty, loc);
-                            self.serialize_match_object_key(&property.key);
+                            let shorthand_key_loc = match (&property.key, &property.pattern) {
+                                (
+                                    ast::match_pattern::object_pattern::Key::Identifier(_),
+                                    MatchPattern::BindingPattern { loc, .. },
+                                ) if property.shorthand => Some(self.next_token_loc_after(loc)),
+                                _ => None,
+                            };
+                            self.serialize_match_object_key(
+                                &property.key,
+                                shorthand_key_loc.as_ref(),
+                            );
                             self.serialize_match_pattern(&property.pattern);
                             self.write_bool(property.shorthand);
                         }
@@ -933,7 +1029,8 @@ impl<'a> Serializer<'a> {
                             Some((bind_loc, bind)) => {
                                 // 208: MatchBindingPattern — id kind
                                 self.write_node_header(NodeKind::MatchBindingPattern, bind_loc);
-                                self.serialize_identifier_node(&bind.id);
+                                let id_loc = self.next_token_loc_after(bind_loc);
+                                self.serialize_identifier_node_with_loc(&bind.id, &id_loc);
                                 self.write_str(bind.kind.as_str());
                             }
                             None => self.write_null_node(),
@@ -955,7 +1052,8 @@ impl<'a> Serializer<'a> {
                         match &rest.argument {
                             Some((bind_loc, bind)) => {
                                 self.write_node_header(NodeKind::MatchBindingPattern, bind_loc);
-                                self.serialize_identifier_node(&bind.id);
+                                let id_loc = self.next_token_loc_after(bind_loc);
+                                self.serialize_identifier_node_with_loc(&bind.id, &id_loc);
                                 self.write_str(bind.kind.as_str());
                             }
                             None => self.write_null_node(),
@@ -985,7 +1083,17 @@ impl<'a> Serializer<'a> {
                     match prop {
                         ast::match_pattern::object_pattern::Property::Valid { loc, property } => {
                             self.write_node_header(NodeKind::MatchObjectPatternProperty, loc);
-                            self.serialize_match_object_key(&property.key);
+                            let shorthand_key_loc = match (&property.key, &property.pattern) {
+                                (
+                                    ast::match_pattern::object_pattern::Key::Identifier(_),
+                                    MatchPattern::BindingPattern { loc, .. },
+                                ) if property.shorthand => Some(self.next_token_loc_after(loc)),
+                                _ => None,
+                            };
+                            self.serialize_match_object_key(
+                                &property.key,
+                                shorthand_key_loc.as_ref(),
+                            );
                             self.serialize_match_pattern(&property.pattern);
                             self.write_bool(property.shorthand);
                         }
@@ -1013,7 +1121,8 @@ impl<'a> Serializer<'a> {
                         match &rest.argument {
                             Some((bind_loc, bind)) => {
                                 self.write_node_header(NodeKind::MatchBindingPattern, bind_loc);
-                                self.serialize_identifier_node(&bind.id);
+                                let id_loc = self.next_token_loc_after(bind_loc);
+                                self.serialize_identifier_node_with_loc(&bind.id, &id_loc);
                                 self.write_str(bind.kind.as_str());
                             }
                             None => self.write_null_node(),
@@ -1036,12 +1145,14 @@ impl<'a> Serializer<'a> {
                 self.serialize_match_pattern(&inner.pattern);
                 match &inner.target {
                     ast::match_pattern::as_pattern::Target::Identifier(id) => {
-                        self.serialize_identifier_node(id);
+                        let id_loc = self.next_token_loc_after(&id.loc);
+                        self.serialize_identifier_node_with_loc(id, &id_loc);
                     }
                     ast::match_pattern::as_pattern::Target::Binding { loc, pattern } => {
                         // 208: MatchBindingPattern — id kind
                         self.write_node_header(NodeKind::MatchBindingPattern, loc);
-                        self.serialize_identifier_node(&pattern.id);
+                        let id_loc = self.next_token_loc_after(loc);
+                        self.serialize_identifier_node_with_loc(&pattern.id, &id_loc);
                         self.write_str(pattern.kind.as_str());
                     }
                 }
@@ -1057,7 +1168,8 @@ impl<'a> Serializer<'a> {
             MatchPattern::BindingPattern { loc, inner } => {
                 // 208: MatchBindingPattern — id(Node) kind(String)
                 self.write_node_header(NodeKind::MatchBindingPattern, loc);
-                self.serialize_identifier_node(&inner.id);
+                let id_loc = self.next_token_loc_after(loc);
+                self.serialize_identifier_node_with_loc(&inner.id, &id_loc);
                 self.write_str(inner.kind.as_str());
             }
         }
@@ -1095,11 +1207,13 @@ impl<'a> Serializer<'a> {
     fn serialize_match_object_key(
         &mut self,
         key: &ast::match_pattern::object_pattern::Key<Loc, Loc>,
+        identifier_loc: Option<&Loc>,
     ) {
         match key {
-            ast::match_pattern::object_pattern::Key::Identifier(id) => {
-                self.serialize_identifier_node(id);
-            }
+            ast::match_pattern::object_pattern::Key::Identifier(id) => match identifier_loc {
+                Some(loc) => self.serialize_identifier_node_with_loc(id, loc),
+                None => self.serialize_identifier_node(id),
+            },
             ast::match_pattern::object_pattern::Key::StringLiteral((loc, lit)) => {
                 self.write_string_literal(loc, &lit.value, &lit.raw);
             }
@@ -1269,9 +1383,7 @@ impl<'a> Serializer<'a> {
                 self.serialize_private_name(pn);
             }
             ast::expression::member::Property::PropertyExpression(expr) => {
-                self.with_optional_chain_state(false, |this| {
-                    this.serialize_expression(expr);
-                });
+                self.serialize_expression(expr);
             }
         }
     }
@@ -1314,14 +1426,10 @@ impl<'a> Serializer<'a> {
         for arg in args.arguments.iter() {
             match arg {
                 ast::expression::ExpressionOrSpread::Expression(expr) => {
-                    self.with_optional_chain_state(false, |this| {
-                        this.serialize_expression(expr);
-                    });
+                    self.serialize_expression(expr);
                 }
                 ast::expression::ExpressionOrSpread::Spread(spread) => {
-                    self.with_optional_chain_state(false, |this| {
-                        this.serialize_spread_element(spread);
-                    });
+                    self.serialize_spread_element(spread);
                 }
             }
         }
@@ -1339,7 +1447,7 @@ impl<'a> Serializer<'a> {
             // 66: TemplateElement — tail(Bool) cooked(String) raw(String)
             self.write_node_header(NodeKind::TemplateElement, &quasi.loc);
             self.write_bool(quasi.tail);
-            self.write_str(&quasi.value.cooked);
+            self.write_template_cooked_value(&quasi.value.raw, &quasi.value.cooked);
             self.write_str(&quasi.value.raw);
         }
         self.buf.push(tl.expressions.len() as u32);
@@ -1359,23 +1467,38 @@ impl<'a> Serializer<'a> {
         kind: NodeKind,
     ) {
         // 46/47: FunctionExpression/ArrowFunctionExpression
-        // id params body async generator predicate expression returnType typeParameters
         self.write_node_header(kind, loc);
-        match &func.id {
-            Some(id) => self.serialize_identifier_node(id),
-            None => self.write_null_node(),
+
+        if kind == NodeKind::ArrowFunctionExpression {
+            // ArrowFunctionExpression: params body typeParameters returnType async id predicate expression
+            self.serialize_function_params(&func.params);
+            self.serialize_function_body(&func.body);
+            self.serialize_type_params_opt(&func.tparams);
+            self.serialize_return_type(&func.return_);
+            self.write_bool(func.async_);
+            match &func.id {
+                Some(id) => self.serialize_identifier_node(id),
+                None => self.write_null_node(),
+            }
+        } else {
+            // FunctionExpression: id params body typeParameters returnType generator async predicate expression
+            match &func.id {
+                Some(id) => self.serialize_identifier_node(id),
+                None => self.write_null_node(),
+            }
+            self.serialize_function_params(&func.params);
+            self.serialize_function_body(&func.body);
+            self.serialize_type_params_opt(&func.tparams);
+            self.serialize_return_type(&func.return_);
+            self.write_bool(func.generator);
+            self.write_bool(func.async_);
         }
-        self.serialize_function_params(&func.params);
-        self.serialize_function_body(&func.body);
-        self.write_bool(func.async_);
-        self.write_bool(func.generator);
+
         match &func.predicate {
             Some(pred) => self.serialize_predicate(pred),
             None => self.write_null_node(),
         }
         self.write_bool(matches!(&func.body, ast::function::Body::BodyExpression(_)));
-        self.serialize_return_type(&func.return_);
-        self.serialize_type_params_opt(&func.tparams);
     }
 
     fn serialize_function_decl(
@@ -1400,8 +1523,7 @@ impl<'a> Serializer<'a> {
             self.write_bool(func.async_);
             return;
         }
-        // 19: FunctionDeclaration — different property order
-        // id params body returnType typeParameters async generator predicate expression
+        // 19: FunctionDeclaration — id params body typeParameters returnType generator async predicate expression
         self.write_node_header(kind, loc);
         match &func.id {
             Some(id) => self.serialize_identifier_node(id),
@@ -1409,10 +1531,10 @@ impl<'a> Serializer<'a> {
         }
         self.serialize_function_params(&func.params);
         self.serialize_function_body(&func.body);
-        self.serialize_return_type(&func.return_);
         self.serialize_type_params_opt(&func.tparams);
-        self.write_bool(func.async_);
+        self.serialize_return_type(&func.return_);
         self.write_bool(func.generator);
+        self.write_bool(func.async_);
         match &func.predicate {
             Some(pred) => self.serialize_predicate(pred),
             None => self.write_null_node(),
@@ -1534,20 +1656,15 @@ impl<'a> Serializer<'a> {
 
     fn serialize_class(&mut self, loc: &Loc, class: &ast::class::Class<Loc, Loc>, kind: NodeKind) {
         // 22/84: ClassDeclaration/ClassExpression
-        // id body typeParameters superClass superTypeArguments implements decorators
+        // id typeParameters superClass implements body superTypeArguments decorators
         self.write_node_header(kind, loc);
         match &class.id {
             Some(id) => self.serialize_identifier_node(id),
             None => self.write_null_node(),
         }
-        self.serialize_class_body(&class.body);
         self.serialize_type_params_opt(&class.tparams);
         match &class.extends {
             Some(ext) => self.serialize_expression(&ext.expr),
-            None => self.write_null_node(),
-        }
-        match &class.extends {
-            Some(ext) => self.serialize_type_args_opt(&ext.targs),
             None => self.write_null_node(),
         }
         match &class.implements {
@@ -1562,13 +1679,17 @@ impl<'a> Serializer<'a> {
             }
             None => self.buf.push(0),
         }
+        self.serialize_class_body(&class.body);
+        match &class.extends {
+            Some(ext) => self.serialize_type_args_opt(&ext.targs),
+            None => self.write_null_node(),
+        }
         self.buf.push(class.class_decorators.len() as u32);
         for dec in class.class_decorators.iter() {
             // 90: Decorator — expression(Node)
             self.write_node_header(NodeKind::Decorator, &dec.loc);
             self.serialize_expression(&dec.expression);
         }
-        self.write_bool(class.abstract_);
     }
 
     fn serialize_class_body(&mut self, body: &ast::class::Body<Loc, Loc>) {
@@ -1640,7 +1761,9 @@ impl<'a> Serializer<'a> {
             ast::class::BodyElement::PrivateField(pf) => {
                 // 88: PropertyDefinition — key value typeAnnotation computed static variance
                 //     tsAccessibility declare optional override decorators
-                self.write_node_header(NodeKind::PropertyDefinition, &pf.loc);
+                let mut private_field_loc = pf.loc.clone();
+                private_field_loc.start = pf.key.loc.start;
+                self.write_node_header(NodeKind::PropertyDefinition, &private_field_loc);
                 // key: PrivateIdentifier
                 self.serialize_private_name(&pf.key);
                 match &pf.value {
@@ -1752,9 +1875,13 @@ impl<'a> Serializer<'a> {
     // ---------------------------------------------------------------
 
     fn serialize_jsx_element(&mut self, loc: &Loc, elem: &ast::jsx::Element<Loc, Loc>) {
-        // 167: JSXElement — openingElement closingElement children
+        // 167: JSXElement — openingElement children closingElement
         self.write_node_header(NodeKind::JSXElement, loc);
         self.serialize_jsx_opening_element(&elem.opening_element);
+        self.buf.push(elem.children.1.len() as u32);
+        for child in elem.children.1.iter() {
+            self.serialize_jsx_child(child);
+        }
         match &elem.closing_element {
             Some(closing) => {
                 // 171: JSXClosingElement — name(Node)
@@ -1762,10 +1889,6 @@ impl<'a> Serializer<'a> {
                 self.serialize_jsx_name(&closing.name);
             }
             None => self.write_null_node(),
-        }
-        self.buf.push(elem.children.1.len() as u32);
-        for child in elem.children.1.iter() {
-            self.serialize_jsx_child(child);
         }
     }
 
@@ -1863,7 +1986,7 @@ impl<'a> Serializer<'a> {
     fn serialize_jsx_attribute_value(&mut self, val: &ast::jsx::attribute::Value<Loc, Loc>) {
         match val {
             ast::jsx::attribute::Value::StringLiteral((loc, lit)) => {
-                self.write_string_literal(loc, &lit.value, &lit.raw);
+                self.write_string_literal_preserving_value(loc, &lit.value, &lit.raw);
             }
             ast::jsx::attribute::Value::ExpressionContainer((loc, container)) => {
                 // 176: JSXExpressionContainer — expression(Node)
@@ -2094,14 +2217,13 @@ impl<'a> Serializer<'a> {
                     ) => {
                         self.buf.push(specs.len() as u32);
                         for spec in specs.iter() {
-                            // 39: ExportSpecifier — local(Node) exported(Node) exportKind(String)
+                            // 39: ExportSpecifier — exported(Node) local(Node)
                             self.write_node_header(NodeKind::ExportSpecifier, &spec.loc);
-                            self.serialize_identifier_node(&spec.local);
                             match &spec.exported {
                                 Some(exported) => self.serialize_identifier_node(exported),
                                 None => self.serialize_identifier_node(&spec.local),
                             }
-                            self.write_str(export_kind_str(spec.export_kind));
+                            self.serialize_identifier_node(&spec.local);
                         }
                     }
                     None => self.buf.push(0),
@@ -2129,7 +2251,7 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         decl: &ast::statement::ExportDefaultDeclaration<Loc, Loc>,
     ) {
-        // 37: ExportDefaultDeclaration — declaration(Node) exportKind(String)
+        // 37: ExportDefaultDeclaration — declaration(Node)
         self.write_node_header(NodeKind::ExportDefaultDeclaration, loc);
         match &decl.declaration {
             ast::statement::export_default_declaration::Declaration::Declaration(stmt) => {
@@ -2139,7 +2261,6 @@ impl<'a> Serializer<'a> {
                 self.serialize_expression(expr);
             }
         }
-        self.write_str("value");
     }
 
     fn serialize_export_assignment(
@@ -2249,10 +2370,8 @@ impl<'a> Serializer<'a> {
     }
 
     fn serialize_type_object(&mut self, loc: &Loc, obj: &ast::types::Object<Loc, Loc>) {
-        // 147: ObjectTypeAnnotation — inexact exact properties indexers callProperties internalSlots
+        // 147: ObjectTypeAnnotation — properties indexers callProperties internalSlots inexact exact
         self.write_node_header(NodeKind::ObjectTypeAnnotation, loc);
-        self.write_bool(obj.inexact);
-        self.write_bool(obj.exact);
         // Properties are categorized into 4 separate NodeList sections
         // Serialize properties NodeList (NormalProperty + SpreadProperty + MappedType + PrivateField)
         let prop_count = obj
@@ -2280,26 +2399,15 @@ impl<'a> Serializer<'a> {
                     self.serialize_type(&sp.argument);
                 }
                 ast::types::object::Property::MappedType(mt) => {
-                    // 152: ObjectTypeMappedTypeProperty — keyTparam propType sourceType nameType variance varianceOp optional
+                    // 152: ObjectTypeMappedTypeProperty — keyTparam propType sourceType variance optional
                     self.write_node_header(NodeKind::ObjectTypeMappedTypeProperty, &mt.loc);
                     self.serialize_type_parameter(&mt.key_tparam);
                     self.serialize_type(&mt.prop_type);
                     self.serialize_type(&mt.source_type);
-                    match &mt.name_type {
-                        Some(t) => self.serialize_type(t),
-                        None => self.write_null_node(),
-                    }
                     match &mt.variance {
                         Some(v) => self.serialize_variance(v),
                         None => self.write_null_node(),
                     }
-                    // varianceOp: Add → "+", Remove → "-", None → null
-                    let variance_op_str = match mt.variance_op {
-                        Some(ast::types::object::MappedTypeVarianceOp::Add) => Some("+"),
-                        Some(ast::types::object::MappedTypeVarianceOp::Remove) => Some("-"),
-                        None => None,
-                    };
-                    self.write_str_opt(variance_op_str);
                     // optional: matches OCaml string()/null (no "none")
                     let optional_str = match mt.optional {
                         ast::types::object::MappedTypeOptionalFlag::PlusOptional => {
@@ -2330,7 +2438,7 @@ impl<'a> Serializer<'a> {
         self.buf.push(idx_count as u32);
         for prop in obj.properties.iter() {
             if let ast::types::object::Property::Indexer(idx) = prop {
-                // 150: ObjectTypeIndexer — id key value static variance optional
+                // 150: ObjectTypeIndexer — id key value static variance
                 self.write_node_header(NodeKind::ObjectTypeIndexer, &idx.loc);
                 match &idx.id {
                     Some(id) => self.serialize_identifier_node(id),
@@ -2343,7 +2451,6 @@ impl<'a> Serializer<'a> {
                     Some(v) => self.serialize_variance(v),
                     None => self.write_null_node(),
                 }
-                self.write_bool(idx.optional);
             }
         }
         // Serialize callProperties NodeList
@@ -2379,10 +2486,12 @@ impl<'a> Serializer<'a> {
                 self.serialize_type(&slot.value);
             }
         }
+        self.write_bool(obj.inexact);
+        self.write_bool(obj.exact);
     }
 
     fn serialize_object_type_property(&mut self, p: &ast::types::object::NormalProperty<Loc, Loc>) {
-        // 148: ObjectTypeProperty — key value method optional static proto abstract variance kind init computed override tsAccessibility
+        // 148: ObjectTypeProperty — key value method optional static proto variance kind
         self.write_node_header(NodeKind::ObjectTypeProperty, &p.loc);
         self.serialize_object_key(&p.key);
         // value: depends on PropertyValue variant
@@ -2407,23 +2516,11 @@ impl<'a> Serializer<'a> {
         self.write_bool(p.optional);
         self.write_bool(p.static_);
         self.write_bool(p.proto);
-        self.write_bool(p.abstract_);
         match &p.variance {
             Some(v) => self.serialize_variance(v),
             None => self.write_null_node(),
         }
         self.write_str(kind);
-        match &p.init {
-            Some(e) => self.serialize_expression(e),
-            None => self.write_null_node(),
-        }
-        self.write_bool(is_key_computed(&p.key));
-        self.write_bool(p.override_);
-        self.write_str_opt(
-            p.ts_accessibility
-                .as_ref()
-                .map(|a| ts_accessibility_str(a.kind)),
-        );
     }
 
     fn serialize_constructor_type(
@@ -2513,7 +2610,7 @@ impl<'a> Serializer<'a> {
     }
 
     fn serialize_function_type(&mut self, loc: &Loc, func: &ast::types::Function<Loc, Loc>) {
-        // FunctionTypeAnnotation — params returnType rest typeParameters this
+        // FunctionTypeAnnotation — params this returnType rest typeParameters
         // HookTypeAnnotation     — params returnType rest typeParameters    (no `this` slot)
         let is_hook = func.effect == ast::function::Effect::Hook;
         let kind = if is_hook {
@@ -2521,11 +2618,34 @@ impl<'a> Serializer<'a> {
         } else {
             NodeKind::FunctionTypeAnnotation
         };
+        let hook_loc;
+        let loc = if is_hook {
+            hook_loc = Loc {
+                start: func.params.loc.start,
+                ..loc.clone()
+            };
+            &hook_loc
+        } else {
+            loc
+        };
         self.write_node_header(kind, loc);
         // params NodeList
         self.buf.push(func.params.params.len() as u32);
         for param in func.params.params.iter() {
             self.serialize_function_type_param(param);
+        }
+        // this — omitted for HookTypeAnnotation
+        if !is_hook {
+            match &func.params.this {
+                Some(this) => {
+                    // FunctionTypeParam node: name(null) typeAnnotation optional(false)
+                    self.write_node_header(NodeKind::FunctionTypeParam, &this.loc);
+                    self.write_null_node();
+                    self.serialize_type(&this.annot.annotation);
+                    self.write_bool(false);
+                }
+                None => self.write_null_node(),
+            }
         }
         // returnType
         match &func.return_ {
@@ -2551,19 +2671,6 @@ impl<'a> Serializer<'a> {
         }
         // typeParameters
         self.serialize_type_params_opt(&func.tparams);
-        // this — omitted for HookTypeAnnotation
-        if !is_hook {
-            match &func.params.this {
-                Some(this) => {
-                    // FunctionTypeParam node: name(null) typeAnnotation optional(false)
-                    self.write_node_header(NodeKind::FunctionTypeParam, &this.loc);
-                    self.write_null_node();
-                    self.serialize_type(&this.annot.annotation);
-                    self.write_bool(false);
-                }
-                None => self.write_null_node(),
-            }
-        }
     }
 
     fn serialize_component_type(&mut self, loc: &Loc, comp: &ast::types::Component<Loc, Loc>) {
@@ -2735,7 +2842,8 @@ impl<'a> Serializer<'a> {
         // local: pattern, potentially wrapped with AssignmentPattern for default
         match &param.default {
             Some(def) => {
-                self.write_node_header(NodeKind::AssignmentPattern, &param.loc);
+                let ap_loc = Loc::between(param.local.loc(), def.loc());
+                self.write_node_header(NodeKind::AssignmentPattern, &ap_loc);
                 self.serialize_pattern(&param.local);
                 self.serialize_expression(def);
             }
@@ -2751,17 +2859,31 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         decl: &ast::statement::EnumDeclaration<Loc, Loc>,
     ) {
-        // 25: EnumDeclaration — id(Node) body(Node) const(Boolean)
+        // 25: EnumDeclaration — id(Node) body(Node)
         self.write_node_header(NodeKind::EnumDeclaration, loc);
         self.serialize_identifier_node(&decl.id);
         self.serialize_enum_body(&decl.body);
-        self.write_bool(decl.const_);
     }
 
     fn serialize_enum_body(&mut self, body: &ast::statement::enum_declaration::Body<Loc>) {
         use ast::statement::enum_declaration::Member;
-        // EnumBody — members(NodeList) explicitType(String) hasUnknownMembers(Boolean)
-        self.write_node_header(NodeKind::EnumBody, &body.loc);
+        let explicit_type = body.explicit_type.as_ref().map(|(_, t)| t.as_str());
+        let body_kind = match explicit_type {
+            Some("boolean") => NodeKind::EnumBooleanBody,
+            Some("number") => NodeKind::EnumNumberBody,
+            Some("bigint") => NodeKind::EnumBigIntBody,
+            Some("symbol") => NodeKind::EnumSymbolBody,
+            Some("string") | None => match body.members.first() {
+                Some(Member::BooleanMember(_)) => NodeKind::EnumBooleanBody,
+                Some(Member::NumberMember(_)) => NodeKind::EnumNumberBody,
+                Some(Member::BigIntMember(_)) => NodeKind::EnumBigIntBody,
+                Some(Member::StringMember(_)) | Some(Member::DefaultedMember(_)) | None => {
+                    NodeKind::EnumStringBody
+                }
+            },
+            Some(_) => NodeKind::EnumStringBody,
+        };
+        self.write_node_header(body_kind, &body.loc);
         self.buf.push(body.members.len() as u32);
         for member in body.members.iter() {
             match member {
@@ -2800,8 +2922,9 @@ impl<'a> Serializer<'a> {
                 }
             }
         }
-        // explicitType: Option<(M, ExplicitType)> -> string or null
-        self.write_str_opt(body.explicit_type.as_ref().map(|(_, t)| t.as_str()));
+        if body_kind != NodeKind::EnumSymbolBody {
+            self.write_bool(explicit_type.is_some());
+        }
         self.write_bool(body.has_unknown_members.is_some());
     }
 
@@ -2924,46 +3047,19 @@ impl<'a> Serializer<'a> {
                 match d {
                     Declaration::Variable { loc, declaration } => {
                         self.write_node_header(NodeKind::DeclareVariable, loc);
-                        self.buf.push(declaration.declarations.len() as u32);
-                        for declarator in declaration.declarations.iter() {
-                            self.serialize_variable_declarator(declarator);
+                        match declaration.declarations.first() {
+                            Some(declarator) => self.serialize_pattern(&declarator.id),
+                            None => self.write_null_node(),
                         }
                         self.write_str(declaration.kind.as_str());
                     }
                     Declaration::Function { loc, declaration } => {
                         // Defer entirely to serialize_declare_function, which
-                        // emits id+implicitDeclare+predicate (or DeclareHook
-                        // shape when annot is hook).
+                        // emits the upstream DeclareFunction/DeclareHook shape.
                         self.serialize_declare_function(loc, declaration);
                     }
                     Declaration::Class { loc, declaration } => {
-                        self.write_node_header(NodeKind::DeclareClass, loc);
-                        self.serialize_identifier_node(&declaration.id);
-                        self.serialize_type_params_opt(&declaration.tparams);
-                        self.serialize_type_object(&declaration.body.0, &declaration.body.1);
-                        match &declaration.extends {
-                            Some((ext_loc, ext)) => {
-                                self.buf.push(1);
-                                self.serialize_declare_class_extends(ext_loc, ext);
-                            }
-                            None => self.buf.push(0),
-                        }
-                        match &declaration.implements {
-                            Some(impls) => {
-                                self.buf.push(impls.interfaces.len() as u32);
-                                for iface in impls.interfaces.iter() {
-                                    self.write_node_header(NodeKind::ClassImplements, &iface.loc);
-                                    self.serialize_generic_type_identifier(&iface.id);
-                                    self.serialize_type_args_opt(&iface.targs);
-                                }
-                            }
-                            None => self.buf.push(0),
-                        }
-                        self.buf.push(declaration.mixins.len() as u32);
-                        for (mixin_loc, mixin) in declaration.mixins.iter() {
-                            self.serialize_interface_extends(mixin_loc, mixin);
-                        }
-                        self.write_bool(declaration.abstract_);
+                        self.serialize_declare_class(loc, declaration);
                     }
                     Declaration::Component { loc, declaration } => {
                         // 101: DeclareComponent — id params rest rendersType
@@ -3019,28 +3115,18 @@ impl<'a> Serializer<'a> {
                         self.write_node_header(NodeKind::DeclareEnum, loc);
                         self.serialize_identifier_node(&declaration.id);
                         self.serialize_enum_body(&declaration.body);
-                        self.write_bool(declaration.const_);
                     }
                     Declaration::Namespace { loc, declaration } => {
                         self.write_node_header(NodeKind::DeclareNamespace, loc);
-                        let global = match &declaration.id {
+                        match &declaration.id {
                             ast::statement::declare_namespace::Id::Global(id) => {
                                 self.serialize_identifier_node(id);
-                                true
                             }
                             ast::statement::declare_namespace::Id::Local(id) => {
                                 self.serialize_identifier_node(id);
-                                false
                             }
                         };
                         self.serialize_block_statement(&declaration.body.0, &declaration.body.1);
-                        self.write_bool(declaration.implicit_declare);
-                        let keyword_str = match declaration.keyword {
-                            ast::statement::declare_namespace::Keyword::Namespace => "namespace",
-                            ast::statement::declare_namespace::Keyword::Module => "module",
-                        };
-                        self.write_str(keyword_str);
-                        self.write_bool(global);
                     }
                 }
             }
@@ -3051,14 +3137,13 @@ impl<'a> Serializer<'a> {
             Some(ast::statement::export_named_declaration::Specifier::ExportSpecifiers(specs)) => {
                 self.buf.push(specs.len() as u32);
                 for spec in specs.iter() {
-                    // 39: ExportSpecifier — local exported exportKind
+                    // 39: ExportSpecifier — exported local
                     self.write_node_header(NodeKind::ExportSpecifier, &spec.loc);
-                    self.serialize_identifier_node(&spec.local);
                     match &spec.exported {
                         Some(exported) => self.serialize_identifier_node(exported),
                         None => self.serialize_identifier_node(&spec.local),
                     }
-                    self.write_str(export_kind_str(spec.export_kind));
+                    self.serialize_identifier_node(&spec.local);
                 }
             }
             Some(ast::statement::export_named_declaration::Specifier::ExportBatchSpecifier(
@@ -3094,11 +3179,10 @@ impl<'a> Serializer<'a> {
         inner: &ast::statement::ComponentDeclaration<Loc, Loc>,
     ) {
         // Dispatch on body presence:
-        //   None    -> ESTree "DeclareComponent", implicitDeclare = true
-        //   Some(_) -> ESTree "ComponentDeclaration", implicitDeclare = false
-        // Both shapes are: body, id, implicitDeclare, params, rendersType,
-        // typeParameters. NodeKind::DeclareComponentAmbient (228) is used for
-        // body=None so the JS deserializer emits type "DeclareComponent".
+        //   None    -> ESTree "DeclareComponent"
+        //   Some(_) -> ESTree "ComponentDeclaration"
+        // NodeKind::DeclareComponentAmbient (228) is used for body=None so the
+        // JS deserializer emits type "DeclareComponent".
         // The explicit `Statement::DeclareComponent` form has a different
         // SHORT shape and goes through `serialize_declare_component` below
         // (NodeKind::DeclareComponent, 101).
@@ -3118,8 +3202,9 @@ impl<'a> Serializer<'a> {
             None => self.write_null_node(),
         }
         self.serialize_identifier_node(&inner.id);
-        // implicitDeclare
-        self.write_bool(implicit_declare);
+        if implicit_declare {
+            self.write_bool(true);
+        }
         // params NodeList. Both body=Some (ComponentDeclaration) and body=None
         // (DeclareComponentAmbient) use value-position ComponentParameter(97)
         // with rest appended as RestElement(80), matching OCaml parser output.
@@ -3161,15 +3246,15 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::Interface<Loc, Loc>,
     ) {
-        // 26: InterfaceDeclaration — id typeParameters body extends
+        // 26: InterfaceDeclaration — id typeParameters extends body
         self.write_node_header(NodeKind::InterfaceDeclaration, loc);
         self.serialize_identifier_node(&inner.id);
         self.serialize_type_params_opt(&inner.tparams);
-        self.serialize_type_object(&inner.body.0, &inner.body.1);
         self.buf.push(inner.extends.len() as u32);
         for (ext_loc, ext) in inner.extends.iter() {
             self.serialize_interface_extends(ext_loc, ext);
         }
+        self.serialize_type_object(&inner.body.0, &inner.body.1);
     }
 
     fn serialize_opaque_type(&mut self, loc: &Loc, inner: &ast::statement::OpaqueType<Loc, Loc>) {
@@ -3204,11 +3289,11 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::DeclareVariable<Loc, Loc>,
     ) {
-        // 98: DeclareVariable — declarations(NodeList) kind(String)
+        // 98: DeclareVariable — id(Node) kind(String)
         self.write_node_header(NodeKind::DeclareVariable, loc);
-        self.buf.push(inner.declarations.len() as u32);
-        for declarator in inner.declarations.iter() {
-            self.serialize_variable_declarator(declarator);
+        match inner.declarations.first() {
+            Some(declarator) => self.serialize_pattern(&declarator.id),
+            None => self.write_null_node(),
         }
         self.write_str(inner.kind.as_str());
     }
@@ -3219,8 +3304,7 @@ impl<'a> Serializer<'a> {
         inner: &ast::statement::DeclareFunction<Loc, Loc>,
     ) {
         // Discriminate on the annotation's effect: a hook annotation produces
-        // DeclareHook (id, implicitDeclare); any other annotation produces
-        // DeclareFunction (id, implicitDeclare, predicate).
+        // DeclareHook; any other annotation produces DeclareFunction.
         use std::ops::Deref;
         let is_hook = matches!(
             inner.annot.annotation.deref(),
@@ -3228,33 +3312,16 @@ impl<'a> Serializer<'a> {
                 if f.effect == ast::function::Effect::Hook
         );
         if is_hook {
-            // 102: DeclareHook — id(Node) implicitDeclare(Bool) typeAnnotation(Node)
+            // 102: DeclareHook — id(Node)
             self.write_node_header(NodeKind::DeclareHook, loc);
             self.serialize_typed_identifier_opt(&inner.id, &inner.annot);
-            self.write_bool(inner.implicit_declare);
-            // Only emit the annotation here when it isn't already attached to
-            // the `id` (otherwise we'd duplicate it in the wire format).
-            if inner.id.is_none() {
-                self.serialize_type_annotation(&inner.annot);
-            } else {
-                self.write_null_node();
-            }
         } else {
-            // 99: DeclareFunction — id(Node) implicitDeclare(Bool)
-            //                       predicate(Node) typeAnnotation(Node)
+            // 99: DeclareFunction — id(Node) predicate(Node)
             self.write_node_header(NodeKind::DeclareFunction, loc);
             self.serialize_typed_identifier_opt(&inner.id, &inner.annot);
-            self.write_bool(inner.implicit_declare);
             match &inner.predicate {
                 Some(pred) => self.serialize_predicate(pred),
                 None => self.write_null_node(),
-            }
-            // Only emit the annotation here when it isn't already attached to
-            // the `id` (otherwise we'd duplicate it in the wire format).
-            if inner.id.is_none() {
-                self.serialize_type_annotation(&inner.annot);
-            } else {
-                self.write_null_node();
             }
         }
     }
@@ -3264,11 +3331,10 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::DeclareClass<Loc, Loc>,
     ) {
-        // 100: DeclareClass — id typeParameters body extends implements mixins
+        // 100: DeclareClass — id typeParameters extends implements mixins body
         self.write_node_header(NodeKind::DeclareClass, loc);
         self.serialize_identifier_node(&inner.id);
         self.serialize_type_params_opt(&inner.tparams);
-        self.serialize_type_object(&inner.body.0, &inner.body.1);
         // extends NodeList
         match &inner.extends {
             Some((ext_loc, ext)) => {
@@ -3295,7 +3361,7 @@ impl<'a> Serializer<'a> {
         for (mixin_loc, mixin) in inner.mixins.iter() {
             self.serialize_interface_extends(mixin_loc, mixin);
         }
-        self.write_bool(inner.abstract_);
+        self.serialize_type_object(&inner.body.0, &inner.body.1);
     }
 
     fn serialize_declare_component(
@@ -3350,27 +3416,17 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::DeclareNamespace<Loc, Loc>,
     ) {
-        // 107: DeclareNamespace — id(Node) body(Node) implicitDeclare(Bool)
-        //                         keyword(String) global(Bool)
+        // 107: DeclareNamespace — id(Node) body(Node)
         self.write_node_header(NodeKind::DeclareNamespace, loc);
-        let global = match &inner.id {
+        match &inner.id {
             ast::statement::declare_namespace::Id::Global(id) => {
                 self.serialize_identifier_node(id);
-                true
             }
             ast::statement::declare_namespace::Id::Local(id) => {
                 self.serialize_identifier_node(id);
-                false
             }
-        };
+        }
         self.serialize_block_statement(&inner.body.0, &inner.body.1);
-        self.write_bool(inner.implicit_declare);
-        let keyword_str = match inner.keyword {
-            ast::statement::declare_namespace::Keyword::Namespace => "namespace",
-            ast::statement::declare_namespace::Keyword::Module => "module",
-        };
-        self.write_str(keyword_str);
-        self.write_bool(global);
     }
 
     fn serialize_declare_interface(
@@ -3449,11 +3505,11 @@ impl<'a> Serializer<'a> {
                 self.write_bool(false);
             }
             _ => {
-                // 49: UnaryExpression — operator(String) prefix(Bool) argument(Node)
+                // 49: UnaryExpression — operator(String) argument(Node) prefix(Bool)
                 self.write_node_header(NodeKind::UnaryExpression, loc);
                 self.write_str(unary_operator_str(inner.operator));
-                self.write_bool(true);
                 self.serialize_expression(&inner.argument);
+                self.write_bool(true);
             }
         }
     }
@@ -3560,13 +3616,351 @@ impl<'a> Serializer<'a> {
             // Reuse TemplateElement node kind (66)
             self.write_node_header(NodeKind::TemplateElement, &quasi.loc);
             self.write_bool(quasi.tail);
-            self.write_str(&quasi.value.cooked);
+            self.write_template_cooked_value(&quasi.value.raw, &quasi.value.cooked);
             self.write_str(&quasi.value.raw);
         }
         self.buf.push(inner.types.len() as u32);
         for ty in inner.types.iter() {
             self.serialize_type(ty);
         }
+    }
+}
+
+fn string_literal_value_bytes<'a>(value: &'a str, raw: &str) -> Cow<'a, [u8]> {
+    if raw.as_bytes().contains(&b'\\')
+        && let Some(bytes) = decode_quoted_string_raw_bytes(raw)
+    {
+        return Cow::Owned(bytes);
+    }
+    Cow::Borrowed(value.as_bytes())
+}
+
+fn template_cooked_value_bytes<'a>(raw: &str, cooked: &'a str) -> Cow<'a, [u8]> {
+    if raw.as_bytes().contains(&b'\\')
+        && let Some(bytes) = decode_escaped_raw_bytes(raw)
+    {
+        return Cow::Owned(bytes);
+    }
+    match cooked_template_value(raw, cooked) {
+        Cow::Borrowed(cooked) => Cow::Borrowed(cooked.as_bytes()),
+        Cow::Owned(cooked) => Cow::Owned(cooked.into_bytes()),
+    }
+}
+
+fn decode_quoted_string_raw_bytes(raw: &str) -> Option<Vec<u8>> {
+    let bytes = raw.as_bytes();
+    let quote = *bytes.first()?;
+    if quote != b'\'' && quote != b'"' {
+        return None;
+    }
+    if bytes.len() < 2 || bytes[bytes.len() - 1] != quote {
+        return None;
+    }
+    decode_escaped_raw_bytes(&raw[1..raw.len() - 1])
+}
+
+fn decode_escaped_raw_bytes(raw: &str) -> Option<Vec<u8>> {
+    let bytes = raw.as_bytes();
+    let mut out = Vec::with_capacity(raw.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] != b'\\' {
+            let ch = raw[i..].chars().next()?;
+            push_wtf8_codepoint(&mut out, ch as u32)?;
+            i += ch.len_utf8();
+            continue;
+        }
+
+        i += 1;
+        if i >= bytes.len() {
+            return None;
+        }
+
+        match bytes[i] {
+            b'u' => {
+                i += 1;
+                if i < bytes.len() && bytes[i] == b'{' {
+                    i += 1;
+                    let mut value = 0u32;
+                    let mut digits = 0;
+                    while i < bytes.len() && bytes[i] != b'}' {
+                        value = value.checked_mul(16)?.checked_add(hex_value(bytes[i])?)?;
+                        digits += 1;
+                        i += 1;
+                    }
+                    if digits == 0 || i >= bytes.len() || bytes[i] != b'}' {
+                        return None;
+                    }
+                    i += 1;
+                    push_wtf8_codepoint(&mut out, value)?;
+                } else {
+                    let value = parse_hex_u16(bytes, i)?;
+                    i += 4;
+                    push_wtf8_codepoint(&mut out, value as u32)?;
+                }
+            }
+            b'x' => {
+                i += 1;
+                let value = parse_hex_u8(bytes, i)?;
+                i += 2;
+                push_wtf8_codepoint(&mut out, value as u32)?;
+            }
+            b'b' => {
+                out.push(0x08);
+                i += 1;
+            }
+            b'f' => {
+                out.push(0x0c);
+                i += 1;
+            }
+            b'n' => {
+                out.push(b'\n');
+                i += 1;
+            }
+            b'r' => {
+                out.push(b'\r');
+                i += 1;
+            }
+            b't' => {
+                out.push(b'\t');
+                i += 1;
+            }
+            b'v' => {
+                out.push(0x0b);
+                i += 1;
+            }
+            b'0'..=b'7' => {
+                let (value, len) = decode_octal_escape(bytes, i)?;
+                push_wtf8_codepoint(&mut out, value)?;
+                i += len;
+            }
+            b'\r' => {
+                i += 1;
+                if i < bytes.len() && bytes[i] == b'\n' {
+                    i += 1;
+                }
+            }
+            b'\n' => {
+                i += 1;
+            }
+            _ => {
+                let ch = raw[i..].chars().next()?;
+                push_wtf8_codepoint(&mut out, ch as u32)?;
+                i += ch.len_utf8();
+            }
+        }
+    }
+    Some(out)
+}
+
+fn decode_octal_escape(bytes: &[u8], start: usize) -> Option<(u32, usize)> {
+    let first = *bytes.get(start)?;
+    if !is_octal_digit(first) {
+        return None;
+    }
+    if first <= b'3'
+        && let (Some(second), Some(third)) = (bytes.get(start + 1), bytes.get(start + 2))
+        && is_octal_digit(*second)
+        && is_octal_digit(*third)
+    {
+        return Some((octal_value(&bytes[start..start + 3])?, 3));
+    }
+    if let Some(second) = bytes.get(start + 1)
+        && is_octal_digit(*second)
+    {
+        return Some((octal_value(&bytes[start..start + 2])?, 2));
+    }
+    Some(((first - b'0') as u32, 1))
+}
+
+fn is_octal_digit(b: u8) -> bool {
+    (b'0'..=b'7').contains(&b)
+}
+
+fn octal_value(bytes: &[u8]) -> Option<u32> {
+    let mut value = 0u32;
+    for b in bytes {
+        if !is_octal_digit(*b) {
+            return None;
+        }
+        value = value.checked_mul(8)?.checked_add((*b - b'0') as u32)?;
+    }
+    Some(value)
+}
+
+fn push_wtf8_codepoint(out: &mut Vec<u8>, value: u32) -> Option<()> {
+    match value {
+        0x0000..=0x007f => {
+            out.push(value as u8);
+            Some(())
+        }
+        0x0080..=0x07ff => {
+            out.push((0xc0 | (value >> 6)) as u8);
+            out.push((0x80 | (value & 0x3f)) as u8);
+            Some(())
+        }
+        0x0800..=0xffff => {
+            out.push((0xe0 | (value >> 12)) as u8);
+            out.push((0x80 | ((value >> 6) & 0x3f)) as u8);
+            out.push((0x80 | (value & 0x3f)) as u8);
+            Some(())
+        }
+        0x10000..=0x10ffff => {
+            out.push((0xf0 | (value >> 18)) as u8);
+            out.push((0x80 | ((value >> 12) & 0x3f)) as u8);
+            out.push((0x80 | ((value >> 6) & 0x3f)) as u8);
+            out.push((0x80 | (value & 0x3f)) as u8);
+            Some(())
+        }
+        _ => None,
+    }
+}
+
+fn cooked_template_value<'a>(raw: &str, cooked: &'a str) -> Cow<'a, str> {
+    if !cooked.contains('\u{FFFD}') || !raw.contains("\\u") {
+        return Cow::Borrowed(cooked);
+    }
+    match decode_template_raw(raw) {
+        Some(decoded) => Cow::Owned(decoded),
+        None => Cow::Borrowed(cooked),
+    }
+}
+
+fn decode_template_raw(raw: &str) -> Option<String> {
+    let bytes = raw.as_bytes();
+    let mut out = String::with_capacity(raw.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] != b'\\' {
+            let ch = raw[i..].chars().next()?;
+            out.push(ch);
+            i += ch.len_utf8();
+            continue;
+        }
+
+        i += 1;
+        if i >= bytes.len() {
+            return None;
+        }
+
+        match bytes[i] {
+            b'u' => {
+                i += 1;
+                if i < bytes.len() && bytes[i] == b'{' {
+                    i += 1;
+                    let mut value = 0u32;
+                    let mut digits = 0;
+                    while i < bytes.len() && bytes[i] != b'}' {
+                        value = value.checked_mul(16)?.checked_add(hex_value(bytes[i])?)?;
+                        digits += 1;
+                        i += 1;
+                    }
+                    if digits == 0 || i >= bytes.len() || bytes[i] != b'}' {
+                        return None;
+                    }
+                    i += 1;
+                    out.push(char::from_u32(value)?);
+                } else {
+                    let high = parse_hex_u16(bytes, i)?;
+                    i += 4;
+                    if (0xD800..=0xDBFF).contains(&high) {
+                        if i + 6 > bytes.len() || bytes[i] != b'\\' || bytes[i + 1] != b'u' {
+                            return None;
+                        }
+                        let low = parse_hex_u16(bytes, i + 2)?;
+                        if !(0xDC00..=0xDFFF).contains(&low) {
+                            return None;
+                        }
+                        i += 6;
+                        let codepoint =
+                            0x10000 + (((high as u32 - 0xD800) << 10) | (low as u32 - 0xDC00));
+                        out.push(char::from_u32(codepoint)?);
+                    } else if (0xDC00..=0xDFFF).contains(&high) {
+                        return None;
+                    } else {
+                        out.push(char::from_u32(high as u32)?);
+                    }
+                }
+            }
+            b'x' => {
+                i += 1;
+                let value = parse_hex_u8(bytes, i)?;
+                i += 2;
+                out.push(value as char);
+            }
+            b'b' => {
+                out.push('\u{0008}');
+                i += 1;
+            }
+            b'f' => {
+                out.push('\u{000C}');
+                i += 1;
+            }
+            b'n' => {
+                out.push('\n');
+                i += 1;
+            }
+            b'r' => {
+                out.push('\r');
+                i += 1;
+            }
+            b't' => {
+                out.push('\t');
+                i += 1;
+            }
+            b'v' => {
+                out.push('\u{000B}');
+                i += 1;
+            }
+            b'0' => {
+                out.push('\0');
+                i += 1;
+            }
+            b'\r' => {
+                i += 1;
+                if i < bytes.len() && bytes[i] == b'\n' {
+                    i += 1;
+                }
+            }
+            b'\n' => {
+                i += 1;
+            }
+            _ => {
+                let ch = raw[i..].chars().next()?;
+                out.push(ch);
+                i += ch.len_utf8();
+            }
+        }
+    }
+    Some(out)
+}
+
+fn parse_hex_u16(bytes: &[u8], start: usize) -> Option<u16> {
+    if start + 4 > bytes.len() {
+        return None;
+    }
+    let mut value = 0u16;
+    for b in &bytes[start..start + 4] {
+        value = value.checked_mul(16)?.checked_add(hex_value(*b)? as u16)?;
+    }
+    Some(value)
+}
+
+fn parse_hex_u8(bytes: &[u8], start: usize) -> Option<u8> {
+    if start + 2 > bytes.len() {
+        return None;
+    }
+    let high = hex_value(bytes[start])?;
+    let low = hex_value(bytes[start + 1])?;
+    Some((high * 16 + low) as u8)
+}
+
+fn hex_value(b: u8) -> Option<u32> {
+    match b {
+        b'0'..=b'9' => Some((b - b'0') as u32),
+        b'a'..=b'f' => Some((b - b'a' + 10) as u32),
+        b'A'..=b'F' => Some((b - b'A' + 10) as u32),
+        _ => None,
     }
 }
 
@@ -4050,6 +4444,38 @@ mod tests {
     }
 
     #[test]
+    fn test_template_literal_surrogate_pair_cooked_value() {
+        let cooked = cooked_template_value("\\uD83C\\uDFDE ", "\u{FFFD}\u{FFFD} ");
+        assert_eq!(cooked.as_ref(), "\u{1F3DE} ");
+    }
+
+    #[test]
+    fn string_literal_lone_surrogate_value_uses_wtf8() {
+        assert_eq!(
+            decode_quoted_string_raw_bytes(r#""\uD83E""#).as_deref(),
+            Some([0xed, 0xa0, 0xbe].as_slice())
+        );
+        assert_eq!(
+            decode_quoted_string_raw_bytes(r#""\uDD21""#).as_deref(),
+            Some([0xed, 0xb4, 0xa1].as_slice())
+        );
+    }
+
+    #[test]
+    fn string_literal_escaped_backslash_does_not_decode_surrogate_escape() {
+        assert_eq!(
+            decode_quoted_string_raw_bytes(r#""\\uD83E""#).as_deref(),
+            Some(br"\uD83E".as_slice())
+        );
+    }
+
+    #[test]
+    fn template_literal_lone_surrogate_value_uses_wtf8() {
+        let bytes = template_cooked_value_bytes("\\uD83E", "\\u0D83\\uD83E");
+        assert_eq!(bytes.as_ref(), [0xed, 0xa0, 0xbe].as_slice());
+    }
+
+    #[test]
     fn test_destructuring() {
         let source = "const { a, b: c, ...rest } = obj;";
         let buffers = parse_and_serialize(source);
@@ -4088,6 +4514,36 @@ mod tests {
     #[test]
     fn test_optional_chain_computed_property_starts_independent_chain() {
         let source = "foo?.[bar?.baz];";
+        let buffers = parse_and_serialize(source);
+        let chain_tag = NodeKind::ChainExpression as u32 + 1;
+        assert_eq!(
+            buffers
+                .program_buffer
+                .iter()
+                .filter(|&&tag| tag == chain_tag)
+                .count(),
+            2
+        );
+    }
+
+    #[test]
+    fn test_optional_chain_array_element_starts_independent_chain() {
+        let source = "[foo?.bar]?.map(Boolean);";
+        let buffers = parse_and_serialize(source);
+        let chain_tag = NodeKind::ChainExpression as u32 + 1;
+        assert_eq!(
+            buffers
+                .program_buffer
+                .iter()
+                .filter(|&&tag| tag == chain_tag)
+                .count(),
+            2
+        );
+    }
+
+    #[test]
+    fn test_optional_chain_logical_operand_starts_independent_chain() {
+        let source = "(foo?.bar ?? [])?.map(Boolean);";
         let buffers = parse_and_serialize(source);
         let chain_tag = NodeKind::ChainExpression as u32 + 1;
         assert_eq!(

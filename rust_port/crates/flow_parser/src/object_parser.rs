@@ -991,6 +991,12 @@ fn string_value_of_key(key: &expression::object::Key<Loc, Loc>) -> Option<(&Loc,
     }
 }
 
+fn adjust_private_method_key_start(key: &mut expression::object::Key<Loc, Loc>, start_loc: &Loc) {
+    if let expression::object::Key::PrivateName(private_name) = key {
+        private_name.loc.start = start_loc.start;
+    }
+}
+
 // In the ES6 draft, all elements are methods. No properties (though there
 // are getter and setters allowed
 fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Rollback> {
@@ -1181,6 +1187,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     fn accessor(
         env: &mut ParserEnv,
         start_loc: Loc,
+        accessor_key_start_loc: Loc,
         decorators: Vec<class::Decorator<Loc, Loc>>,
         static_: bool,
         override_: bool,
@@ -1194,6 +1201,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
             let generator = false;
             let (key_loc, mut obj_key) = key(env, true)?;
             comment_attachment::object_key_remove_trailing(env, &mut obj_key);
+            adjust_private_method_key_start(&mut obj_key, &accessor_key_start_loc);
             match (static_, string_value_of_key(&obj_key)) {
                 (false, Some((key_loc, "constructor"))) => {
                     env.error_at(key_loc.dupe(), ParseError::ConstructorCannotBeAccessor)?;
@@ -1332,9 +1340,10 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
             }
         } else {
             // Not in ambient context - use normal getter_or_setter
-            let (loc, (key, value)) = with_loc(Some(start_loc), env, |env| {
+            let (loc, (mut key, value)) = with_loc(Some(start_loc), env, |env| {
                 getter_or_setter(env, true, is_getter)
             })?;
+            adjust_private_method_key_start(&mut key, &accessor_key_start_loc);
             match (static_, string_value_of_key(&key)) {
                 (false, Some((key_loc, "constructor"))) => {
                     env.error_at(key_loc.dupe(), ParseError::ConstructorCannotBeAccessor)?;
@@ -1584,6 +1593,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         mut key: expression::object::Key<Loc, Loc>,
         async_: bool,
         generator: bool,
+        method_key_start_loc: Option<Loc>,
         static_: bool,
         abstract_: bool,
         override_: bool,
@@ -1714,6 +1724,10 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
 
         error_unsupported_declare(env, &declare)?;
         error_unsupported_variance(env, &variance)?;
+
+        if let Some(method_key_start_loc) = &method_key_start_loc {
+            adjust_private_method_key_start(&mut key, method_key_start_loc);
+        }
 
         let kind = method_kind_of_key(env, static_, async_, generator, &key)?;
         let allow_super = match kind {
@@ -2083,12 +2097,22 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     } else {
         false
     };
+    let async_start_loc = if async_ {
+        Some(peek::loc(env).dupe())
+    } else {
+        None
+    };
     let leading_async = if async_ {
         let leading = peek::comments(env);
         eat::token(env)?;
         leading
     } else {
         Vec::new()
+    };
+    let mut generator_start_loc = if peek::token(env) == &TokenKind::TMult {
+        Some(peek::loc(env).dupe())
+    } else {
+        None
     };
     let (mut generator, mut leading_generator) = declaration_parser::parse_generator(env)?;
 
@@ -2101,10 +2125,19 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     )?;
 
     if !generator && variance.is_some() {
+        let result_generator_start_loc = if peek::token(env) == &TokenKind::TMult {
+            Some(peek::loc(env).dupe())
+        } else {
+            None
+        };
         let result = declaration_parser::parse_generator(env)?;
         generator = result.0;
         leading_generator = result.1;
+        if generator {
+            generator_start_loc = result_generator_start_loc;
+        }
     }
+    let method_key_start_loc = async_start_loc.or(generator_start_loc);
 
     let leading = [
         leading_declare,
@@ -2121,7 +2154,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     match (async_, generator, peek::token(env)) {
         (false, false, TokenKind::TIdentifier { raw, .. }) if raw == "get" => {
             let leading_get = peek::comments(env);
-            let (_, mut obj_key) = key(env, true)?;
+            let (accessor_key_start_loc, mut obj_key) = key(env, true)?;
 
             if implies_identifier(env) {
                 init(
@@ -2131,6 +2164,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     obj_key,
                     async_,
                     generator,
+                    method_key_start_loc.clone(),
                     static_,
                     abstract_,
                     override_,
@@ -2148,6 +2182,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 accessor(
                     env,
                     start_loc,
+                    accessor_key_start_loc,
                     decorators,
                     static_,
                     override_,
@@ -2159,7 +2194,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         }
         (false, false, TokenKind::TIdentifier { raw, .. }) if raw == "set" => {
             let leading_set = peek::comments(env);
-            let (_, mut obj_key) = key(env, true)?;
+            let (accessor_key_start_loc, mut obj_key) = key(env, true)?;
 
             if implies_identifier(env) {
                 init(
@@ -2169,6 +2204,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     obj_key,
                     async_,
                     generator,
+                    method_key_start_loc.clone(),
                     static_,
                     abstract_,
                     override_,
@@ -2186,6 +2222,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 accessor(
                     env,
                     start_loc,
+                    accessor_key_start_loc,
                     decorators,
                     static_,
                     override_,
@@ -2272,6 +2309,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     key,
                     async_,
                     generator,
+                    method_key_start_loc.clone(),
                     static_,
                     abstract_,
                     override_,
@@ -2291,6 +2329,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 obj_key,
                 async_,
                 generator,
+                method_key_start_loc,
                 static_,
                 abstract_,
                 override_,

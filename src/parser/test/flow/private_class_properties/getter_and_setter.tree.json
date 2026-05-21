@@ -26,8 +26,8 @@
             "range":[12,23],
             "key":{
               "type":"PrivateIdentifier",
-              "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":8}},
-              "range":[16,18],
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":8}},
+              "range":[12,18],
               "name":"m",
               "typeAnnotation":null,
               "optional":false
@@ -62,8 +62,8 @@
             "range":[26,38],
             "key":{
               "type":"PrivateIdentifier",
-              "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":8}},
-              "range":[30,32],
+              "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":8}},
+              "range":[26,32],
               "name":"m",
               "typeAnnotation":null,
               "optional":false

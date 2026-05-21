@@ -10,8 +10,8 @@ to keep all Flow-specific edits inside `fbcode/flow/`.
 
 ```
 src/
-  index.js                       — entrypoint; calls FlowParser and applies loc fixups
-  FlowParser.js                  — JS wrapper around the Rust WASM parser
+  index.js                       — public entrypoint; calls FlowParser
+  FlowParser.js                  — JS wrapper around the Rust WASM parser; normalizes loc/range
   FlowParserDeserializer.js      — decodes the Rust binary parse-result protocol
   FlowParserNodeDeserializers.js — generated table of per-node deserializers
                                    (regenerate with the codegen target — see file header)

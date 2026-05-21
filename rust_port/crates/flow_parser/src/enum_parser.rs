@@ -105,6 +105,7 @@ fn member_init(env: &mut ParserEnv) -> Result<Init, Rollback> {
                 TokenKind::TNumber { kind, raw } => {
                     let kind = *kind;
                     let raw = raw.to_owned();
+                    let loc = Loc::between(&loc, peek::loc(env));
                     number_init(env, loc, true, leading, kind, raw)
                 }
                 _ => Ok(Init::InvalidInit(loc)),

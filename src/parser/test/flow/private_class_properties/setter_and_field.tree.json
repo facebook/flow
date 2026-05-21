@@ -1,7 +1,7 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":8}},
+      "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":8}},
       "message":"Private fields may only be declared once. `#m` is declared more than once."
     }
   ],
@@ -50,8 +50,8 @@
             "range":[18,30],
             "key":{
               "type":"PrivateIdentifier",
-              "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":8}},
-              "range":[22,24],
+              "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":8}},
+              "range":[18,24],
               "name":"m",
               "typeAnnotation":null,
               "optional":false

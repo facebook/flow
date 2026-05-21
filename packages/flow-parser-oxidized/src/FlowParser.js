@@ -305,9 +305,7 @@ function parse(source: string, options: ParserOptions): Program {
     // Lives here (not in src/index.js) so callers that bypass the public
     // hermes-parser-compatibility wrapper (e.g. the wasm fixture runner that
     // tests raw Flow ESTree parity with the OCaml parser) still get the
-    // canonical ESTree loc/range shape. The 6 hermes-parser adapter fixups
-    // (literalType / ChainExpression wrap / docblock / BigInt / ImportSpecifier /
-    // RegExpLiteral) are layered on top by src/index.js's parse().
+    // canonical ESTree loc/range shape.
     //
     // Track visited nodes so a malformed AST with a cycle doesn't blow the
     // stack; track visited locs separately because two nodes can share a loc

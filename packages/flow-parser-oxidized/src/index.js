@@ -137,10 +137,10 @@ export function parse(
   // from `loc.rangeStart`/`rangeEnd`, then cleanup of those wire-only loc
   // fields) is done at the parser level inside `FlowParser.parse` so callers
   // that bypass this hermes-parser-compatibility wrapper still get canonical
-  // ESTree loc/range. See FlowParser.js.
-  const ast = FlowParser.parse(code, options);
-
-  const estreeAST = ast;
+  // ESTree loc/range. Optional-chain ESTree wrapping is emitted by the WASM
+  // serializer, mirroring upstream `HermesToESTreeAdapter.mapChainExpression`.
+  // See FlowParser.js.
+  const estreeAST = FlowParser.parse(code, options);
 
   if (options.babel !== true) {
     return estreeAST;

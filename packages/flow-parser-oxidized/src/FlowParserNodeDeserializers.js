@@ -142,8 +142,8 @@ module.exports = [
     return {
       type: 'WhileStatement',
       loc: this.addEmptyLoc(),
-      test: this.deserializeNode(),
       body: this.deserializeNode(),
+      test: this.deserializeNode(),
     };
   },
 
@@ -177,7 +177,6 @@ module.exports = [
       left: this.deserializeNode(),
       right: this.deserializeNode(),
       body: this.deserializeNode(),
-      each: this.deserializeBoolean(),
     };
   },
 
@@ -219,10 +218,10 @@ module.exports = [
       id: this.deserializeNode(),
       params: this.deserializeNodeList(),
       body: this.deserializeNode(),
-      returnType: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
-      async: this.deserializeBoolean(),
+      returnType: this.deserializeNode(),
       generator: this.deserializeBoolean(),
+      async: this.deserializeBoolean(),
       predicate: this.deserializeNode(),
       expression: this.deserializeBoolean(),
     };
@@ -233,8 +232,8 @@ module.exports = [
     return {
       type: 'VariableDeclaration',
       loc: this.addEmptyLoc(),
-      declarations: this.deserializeNodeList(),
       kind: this.deserializeString(),
+      declarations: this.deserializeNodeList(),
     };
   },
 
@@ -243,8 +242,8 @@ module.exports = [
     return {
       type: 'VariableDeclarator',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
       init: this.deserializeNode(),
+      id: this.deserializeNode(),
     };
   },
 
@@ -254,13 +253,12 @@ module.exports = [
       type: 'ClassDeclaration',
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
-      body: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
       superClass: this.deserializeNode(),
-      superTypeArguments: this.deserializeNode(),
       implements: this.deserializeNodeList(),
+      body: this.deserializeNode(),
+      superTypeArguments: this.deserializeNode(),
       decorators: this.deserializeNodeList(),
-      abstract: this.deserializeBoolean(),
     };
   },
 
@@ -271,7 +269,6 @@ module.exports = [
       loc: this.addEmptyLoc(),
       body: this.deserializeNode(),
       id: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
       params: this.deserializeNodeList(),
       rendersType: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
@@ -300,7 +297,6 @@ module.exports = [
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
       body: this.deserializeNode(),
-      const: this.deserializeBoolean(),
     };
   },
 
@@ -311,8 +307,8 @@ module.exports = [
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
-      body: this.deserializeNode(),
       extends: this.deserializeNodeList(),
+      body: this.deserializeNode(),
     };
   },
 
@@ -429,7 +425,6 @@ module.exports = [
       type: 'ExportDefaultDeclaration',
       loc: this.addEmptyLoc(),
       declaration: this.deserializeNode(),
-      exportKind: this.deserializeString(),
     };
   },
 
@@ -449,9 +444,8 @@ module.exports = [
     return {
       type: 'ExportSpecifier',
       loc: this.addEmptyLoc(),
-      local: this.deserializeNode(),
       exported: this.deserializeNode(),
-      exportKind: this.deserializeString(),
+      local: this.deserializeNode(),
     };
   },
 
@@ -516,12 +510,12 @@ module.exports = [
       id: this.deserializeNode(),
       params: this.deserializeNodeList(),
       body: this.deserializeNode(),
-      async: this.deserializeBoolean(),
+      typeParameters: this.deserializeNode(),
+      returnType: this.deserializeNode(),
       generator: this.deserializeBoolean(),
+      async: this.deserializeBoolean(),
       predicate: this.deserializeNode(),
       expression: this.deserializeBoolean(),
-      returnType: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
     };
   },
 
@@ -530,15 +524,14 @@ module.exports = [
     return {
       type: 'ArrowFunctionExpression',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
       params: this.deserializeNodeList(),
       body: this.deserializeNode(),
+      typeParameters: this.deserializeNode(),
+      returnType: this.deserializeNode(),
       async: this.deserializeBoolean(),
-      generator: this.deserializeBoolean(),
+      id: this.deserializeNode(),
       predicate: this.deserializeNode(),
       expression: this.deserializeBoolean(),
-      returnType: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
     };
   },
 
@@ -557,8 +550,8 @@ module.exports = [
       type: 'UnaryExpression',
       loc: this.addEmptyLoc(),
       operator: this.deserializeString(),
-      prefix: this.deserializeBoolean(),
       argument: this.deserializeNode(),
+      prefix: this.deserializeBoolean(),
     };
   },
 
@@ -567,9 +560,9 @@ module.exports = [
     return {
       type: 'BinaryExpression',
       loc: this.addEmptyLoc(),
-      operator: this.deserializeString(),
       left: this.deserializeNode(),
       right: this.deserializeNode(),
+      operator: this.deserializeString(),
     };
   },
 
@@ -578,9 +571,9 @@ module.exports = [
     return {
       type: 'LogicalExpression',
       loc: this.addEmptyLoc(),
-      operator: this.deserializeString(),
       left: this.deserializeNode(),
       right: this.deserializeNode(),
+      operator: this.deserializeString(),
     };
   },
 
@@ -590,8 +583,8 @@ module.exports = [
       type: 'ConditionalExpression',
       loc: this.addEmptyLoc(),
       test: this.deserializeNode(),
-      consequent: this.deserializeNode(),
       alternate: this.deserializeNode(),
+      consequent: this.deserializeNode(),
     };
   },
 
@@ -721,7 +714,6 @@ module.exports = [
       type: 'TaggedTemplateExpression',
       loc: this.addEmptyLoc(),
       tag: this.deserializeNode(),
-      typeArguments: this.deserializeNode(),
       quasi: this.deserializeNode(),
     };
   },
@@ -893,7 +885,6 @@ module.exports = [
       loc: this.addEmptyLoc(),
       properties: this.deserializeNodeList(),
       typeAnnotation: this.deserializeNode(),
-      optional: this.deserializeBoolean(),
     };
   },
 
@@ -904,7 +895,6 @@ module.exports = [
       loc: this.addEmptyLoc(),
       elements: this.deserializeNodeList(),
       typeAnnotation: this.deserializeNode(),
-      optional: this.deserializeBoolean(),
     };
   },
 
@@ -956,13 +946,12 @@ module.exports = [
       type: 'ClassExpression',
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
-      body: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
       superClass: this.deserializeNode(),
-      superTypeArguments: this.deserializeNode(),
       implements: this.deserializeNodeList(),
+      body: this.deserializeNode(),
+      superTypeArguments: this.deserializeNode(),
       decorators: this.deserializeNodeList(),
-      abstract: this.deserializeBoolean(),
     };
   },
 
@@ -1134,7 +1123,7 @@ module.exports = [
     return {
       type: 'DeclareVariable',
       loc: this.addEmptyLoc(),
-      declarations: this.deserializeNodeList(),
+      id: this.deserializeNode(),
       kind: this.deserializeString(),
     };
   },
@@ -1145,9 +1134,7 @@ module.exports = [
       type: 'DeclareFunction',
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
       predicate: this.deserializeNode(),
-      typeAnnotation: this.deserializeNode(),
     };
   },
 
@@ -1158,11 +1145,10 @@ module.exports = [
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
-      body: this.deserializeNode(),
       extends: this.deserializeNodeList(),
       implements: this.deserializeNodeList(),
       mixins: this.deserializeNodeList(),
-      abstract: this.deserializeBoolean(),
+      body: this.deserializeNode(),
     };
   },
 
@@ -1185,8 +1171,6 @@ module.exports = [
       type: 'DeclareHook',
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
-      typeAnnotation: this.deserializeNode(),
     };
   },
 
@@ -1237,9 +1221,6 @@ module.exports = [
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
       body: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
-      keyword: this.deserializeString(),
-      global: this.deserializeBoolean(),
     };
   },
 
@@ -1273,7 +1254,6 @@ module.exports = [
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
       body: this.deserializeNode(),
-      const: this.deserializeBoolean(),
     };
   },
 
@@ -1623,12 +1603,12 @@ module.exports = [
     return {
       type: 'ObjectTypeAnnotation',
       loc: this.addEmptyLoc(),
-      inexact: this.deserializeBoolean(),
-      exact: this.deserializeBoolean(),
       properties: this.deserializeNodeList(),
       indexers: this.deserializeNodeList(),
       callProperties: this.deserializeNodeList(),
       internalSlots: this.deserializeNodeList(),
+      inexact: this.deserializeBoolean(),
+      exact: this.deserializeBoolean(),
     };
   },
 
@@ -1643,13 +1623,8 @@ module.exports = [
       optional: this.deserializeBoolean(),
       static: this.deserializeBoolean(),
       proto: this.deserializeBoolean(),
-      abstract: this.deserializeBoolean(),
       variance: this.deserializeNode(),
       kind: this.deserializeString(),
-      init: this.deserializeNode(),
-      computed: this.deserializeBoolean(),
-      override: this.deserializeBoolean(),
-      tsAccessibility: this.deserializeString(),
     };
   },
 
@@ -1672,7 +1647,6 @@ module.exports = [
       value: this.deserializeNode(),
       static: this.deserializeBoolean(),
       variance: this.deserializeNode(),
-      optional: this.deserializeBoolean(),
     };
   },
 
@@ -1694,9 +1668,7 @@ module.exports = [
       keyTparam: this.deserializeNode(),
       propType: this.deserializeNode(),
       sourceType: this.deserializeNode(),
-      nameType: this.deserializeNode(),
       variance: this.deserializeNode(),
-      varianceOp: this.deserializeString(),
       optional: this.deserializeString(),
     };
   },
@@ -1792,8 +1764,8 @@ module.exports = [
       type: 'TypeParameter',
       loc: this.addEmptyLoc(),
       name: this.deserializeString(),
-      bound: this.deserializeNode(),
       const: this.deserializeBoolean(),
+      bound: this.deserializeNode(),
       variance: this.deserializeNode(),
       default: this.deserializeNode(),
       usesExtendsBound: this.deserializeBoolean(),
@@ -1855,8 +1827,8 @@ module.exports = [
       type: 'JSXElement',
       loc: this.addEmptyLoc(),
       openingElement: this.deserializeNode(),
-      closingElement: this.deserializeNode(),
       children: this.deserializeNodeList(),
+      closingElement: this.deserializeNode(),
     };
   },
 
@@ -2317,10 +2289,10 @@ module.exports = [
       type: 'FunctionTypeAnnotation',
       loc: this.addEmptyLoc(),
       params: this.deserializeNodeList(),
+      this: this.deserializeNode(),
       returnType: this.deserializeNode(),
       rest: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
-      this: this.deserializeNode(),
     };
   },
 

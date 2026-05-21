@@ -34,7 +34,7 @@ pub struct ParseResult {
     error_column: u32,
     program_buffer: Vec<u32>,
     position_buffer: Vec<PositionResult>,
-    /// Concatenated UTF-8 bytes for every string written by the
+    /// Concatenated UTF-8/WTF-8 bytes for every string written by the
     /// serializer. The program buffer encodes string references as
     /// `(offset+1, len)` into this buffer, with 0 reserved as the null
     /// sentinel. The buffer must stay alive until the ParseResult is
@@ -359,7 +359,7 @@ pub extern "C" fn hermesParseResult_getPositionBufferSize(result: *const ParseRe
     result.position_buffer.len()
 }
 
-/// Return a pointer to the contiguous UTF-8 byte buffer holding all
+/// Return a pointer to the contiguous UTF-8/WTF-8 byte buffer holding all
 /// strings referenced by the program buffer. The program buffer encodes
 /// each non-null string reference as `(offset+1, len)` into this buffer
 /// (and `(0,)` for null strings). The JS deserializer reads
@@ -552,6 +552,50 @@ mod tests {
     fn buffer_contains_kind(buf: &[u32], kind: NodeKind) -> bool {
         let needle = kind as u32 + 1;
         buf.contains(&needle)
+    }
+
+    fn encoded_kind(kind: NodeKind) -> u32 {
+        kind as u32 + 1
+    }
+
+    #[test]
+    fn declare_export_class_serializes_declare_class_fields_in_schema_order() {
+        let buf = parse_and_serialize("declare export class Foo {}");
+        let declare_export_idx = buf
+            .iter()
+            .position(|v| *v == encoded_kind(NodeKind::DeclareExportDeclaration))
+            .expect("expected DeclareExportDeclaration node header in buffer");
+        let declare_class_idx = declare_export_idx + 3;
+        assert_eq!(
+            buf[declare_class_idx],
+            encoded_kind(NodeKind::DeclareClass),
+            "declare export class should serialize a nested DeclareClass declaration"
+        );
+
+        // DeclareClass serializes as:
+        // kind, loc, id, typeParameters, extends, implements, mixins, body.
+        // The `Foo` Identifier payload is six u32 values:
+        // kind, loc, string offset, string length, null typeAnnotation, optional=false.
+        let extends_count_idx = declare_class_idx + 2 + 6 + 1;
+        assert_eq!(
+            buf[extends_count_idx], 0,
+            "DeclareClass.extends should be the first field after id and typeParameters"
+        );
+        assert_eq!(
+            buf[extends_count_idx + 1],
+            0,
+            "DeclareClass.implements should follow extends"
+        );
+        assert_eq!(
+            buf[extends_count_idx + 2],
+            0,
+            "DeclareClass.mixins should follow implements"
+        );
+        assert_eq!(
+            buf[extends_count_idx + 3],
+            encoded_kind(NodeKind::ObjectTypeAnnotation),
+            "DeclareClass.body should follow extends, implements, and mixins"
+        );
     }
 
     #[test]

@@ -44,9 +44,8 @@ yarn install --offline
 
 # Build dist/ for each per-package src/ (and embed the WASM parser into
 # flow-parser-oxidized/dist/FlowParserWASM.js). The fixture runner requires
-# `../dist/FlowParser` directly (bypassing the public `dist/index.js` entry
-# which applies hermes-parser-compatible adapter fixups not present in the
-# raw OCaml-shape AST that the .tree.json fixtures were captured against).
+# `../dist/FlowParser` directly so it can pass fixture-specific parser options
+# without the public `dist/index.js` defaults.
 yarn build
 
 # Use the fbsource third-party Node toolchain (24.x). The system Node may be

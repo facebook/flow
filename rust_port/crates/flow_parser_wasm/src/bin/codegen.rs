@@ -638,23 +638,16 @@ fn extra_visitor_excludes(node: &str) -> &'static [&'static str] {
         // Schema has `value: Node` but the serializer always writes null
         // (BigIntLiteralTypeAnnotation never carries a child node).
         "BigIntLiteralTypeAnnotation" => &["value"],
-        // Upstream omits `typeAnnotation` from DeclareFunction/DeclareHook
-        // visitor keys even though the field exists on the AST.
-        "DeclareFunction" => &["typeAnnotation"],
-        "DeclareHook" => &["typeAnnotation"],
         // Hermes-only fields: not present in upstream visitor traversal.
-        "ObjectTypeMappedTypeProperty" => &["nameType"],
-        "ObjectTypeProperty" => &["init"],
         "PrivateIdentifier" => &["typeAnnotation"],
         "PropertyDefinition" => &["tsModifiers"],
-        "TaggedTemplateExpression" => &["typeArguments"],
         _ => &[],
     }
 }
 
 /// Per-node visitor-key INSERTIONS — fields present in upstream but not in
-/// our schema that should still be emitted as visitor keys (slots that are
-/// synthesized by the JS-side adapter fixups). Verified against upstream.
+/// our schema that should still be emitted as visitor keys (slots that
+/// upstream's adapter synthesizes). Verified against upstream.
 fn extra_visitor_inserts(node: &str) -> &'static [&'static str] {
     match node {
         // Upstream DeclareComponent visitor keys are
@@ -662,7 +655,6 @@ fn extra_visitor_inserts(node: &str) -> &'static [&'static str] {
         // Schema now includes `rest` natively; this entry pins the upstream
         // order so the generated visitor keys list matches byte-for-byte.
         "DeclareComponent" => &["id", "params", "rest", "typeParameters", "rendersType"],
-        // (No DeclareVariable insert — see comment in extra_visitor_excludes.)
         _ => &[],
     }
 }
@@ -767,12 +759,10 @@ module.exports = {{
         }
     }
 
-    // Synthesize visitor-keys entries for ESTree node types our parser
-    // doesn't emit directly but the JS-side adapter creates as fixups.
-    // ChainExpression wraps OptionalCall/OptionalMember per upstream
-    // `HermesToESTreeAdapter.mapChainExpression`; the equivalent fixup
-    // lives in `flow-parser-oxidized/src/index.js` (`rewriteChain`,
-    // ~lines 141-215) and produces the same shape.
+    // Synthesize visitor-keys entries for ESTree node types our schema
+    // doesn't model directly. ChainExpression wraps OptionalCall/OptionalMember
+    // per upstream `HermesToESTreeAdapter.mapChainExpression`; the equivalent
+    // shape is emitted by the WASM serializer.
     keys.insert("ChainExpression", vec!["expression"]);
 
     // Apply hard-coded order overrides.
@@ -1191,15 +1181,15 @@ const PREDICATE_EXCLUDED_TYPES: &[&str] = &[
     "InterpreterDirective",
 ];
 
-/// ESTree node types that the JS adapter synthesizes (or upstream emits a
-/// predicate for) but our SCHEMA does not directly model. Each entry is
-/// emitted as a bare-node predicate alongside the schema-derived ones, so
-/// the resulting `predicates.js` matches upstream byte-for-byte.
+/// ESTree node types that upstream emits a predicate for but our SCHEMA does
+/// not directly model. Each entry is emitted as a bare-node predicate alongside
+/// the schema-derived ones, so the resulting `predicates.js` matches upstream
+/// byte-for-byte.
 ///
 /// - `ChainExpression` is created by the `HermesToESTreeAdapter` chain-
 ///   expression fixup wrapping `OptionalCall` / `OptionalMember`. The
-///   equivalent fixup lives in `flow-parser-oxidized/src/index.js`
-///   (`rewriteChain`). Upstream JSON has the entry; our schema does not.
+///   equivalent shape is emitted by the WASM serializer. Upstream JSON has the
+///   entry; our schema does not.
 const PREDICATE_EXTRA_NODES: &[&str] = &["ChainExpression"];
 
 /// Token predicates emitted at the tail of `predicates.js`. Mirrors upstream's

@@ -4713,13 +4713,13 @@ fn variable_declaration(
         loc,
         decl.comments.as_ref(),
         vec![
+            ("kind", string(kind)),
             (
                 "declarations",
                 array_of_list(&decl.declarations, |d| {
                     variable_declarator(offset_table, config, d)
                 }),
             ),
-            ("kind", string(kind)),
         ],
     )
 }
@@ -5181,19 +5181,30 @@ fn function_type(
     let formatted_comments = format_internal_comments(func.params.comments.as_ref());
     let comments = ast_utils::merge_comments(formatted_comments, func.comments.dupe());
 
-    let name = if func.effect == ast::function::Effect::Hook {
+    let is_hook = func.effect == ast::function::Effect::Hook;
+    let name = if is_hook {
         "HookTypeAnnotation"
     } else {
         "FunctionTypeAnnotation"
     };
 
-    let mut fields = vec![
-        (
-            "params",
-            array_of_list(&func.params.params, |p| {
-                function_type_param(offset_table, config, &p.loc, p, None)
+    let mut fields = vec![(
+        "params",
+        array_of_list(&func.params.params, |p| {
+            function_type_param(offset_table, config, &p.loc, p, None)
+        }),
+    )];
+
+    if !is_hook {
+        fields.push((
+            "this",
+            option(&func.params.this, |t| {
+                function_type_this_constraint(offset_table, config, t)
             }),
-        ),
+        ));
+    }
+
+    fields.extend([
         (
             "returnType",
             function_return_annotation(offset_table, config, &func.return_),
@@ -5210,16 +5221,7 @@ fn function_type(
                 type_parameter_declaration(offset_table, config, t)
             }),
         ),
-    ];
-
-    if func.effect != ast::function::Effect::Hook {
-        fields.push((
-            "this",
-            option(&func.params.this, |t| {
-                function_type_this_constraint(offset_table, config, t)
-            }),
-        ));
-    }
+    ]);
 
     node(offset_table, config, name, loc, comments.as_ref(), fields)
 }
@@ -6600,8 +6602,8 @@ fn export_specifier(
         &spec.loc,
         None,
         vec![
-            ("local", identifier(offset_table, config, &spec.local)),
             ("exported", exported),
+            ("local", identifier(offset_table, config, &spec.local)),
             ("exportKind", string(export_kind_str)),
         ],
     )

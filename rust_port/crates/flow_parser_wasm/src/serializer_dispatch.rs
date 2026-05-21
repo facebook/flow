@@ -102,8 +102,8 @@ impl<'a> Serializer<'a> {
             }
             StatementInner::While { loc, inner } => {
                 self.write_node_header(NodeKind::WhileStatement, loc);
-                self.serialize_expression(&inner.test);
                 self.serialize_statement(&inner.body);
+                self.serialize_expression(&inner.test);
             }
             StatementInner::DoWhile { loc, inner } => {
                 self.write_node_header(NodeKind::DoWhileStatement, loc);
@@ -128,7 +128,6 @@ impl<'a> Serializer<'a> {
                 self.serialize_for_in_left(&inner.left);
                 self.serialize_expression(&inner.right);
                 self.serialize_statement(&inner.body);
-                self.write_bool(inner.each);
             }
             StatementInner::ForOf { loc, inner } => {
                 self.write_node_header(NodeKind::ForOfStatement, loc);
@@ -230,7 +229,6 @@ impl<'a> Serializer<'a> {
                 self.write_node_header(NodeKind::DeclareEnum, loc);
                 self.serialize_identifier_node(&inner.id);
                 self.serialize_enum_body(&inner.body);
-                self.write_bool(inner.const_);
             }
             StatementInner::NamespaceExportDeclaration { loc, inner } => {
                 self.write_node_header(NodeKind::NamespaceExportDeclaration, loc);
@@ -280,12 +278,14 @@ impl<'a> Serializer<'a> {
             }
             ExpressionInner::Binary { loc, inner } => {
                 self.write_node_header(NodeKind::BinaryExpression, loc);
-                self.write_str(inner.operator.as_str());
                 self.serialize_expression(&inner.left);
                 self.serialize_expression(&inner.right);
+                self.write_str(inner.operator.as_str());
             }
             ExpressionInner::Logical { loc, inner } => {
                 self.write_node_header(NodeKind::LogicalExpression, loc);
+                self.serialize_expression(&inner.left);
+                self.serialize_expression(&inner.right);
                 self.write_str(
                     match inner.operator {
                         ast::expression::LogicalOperator::Or => "||",
@@ -293,14 +293,12 @@ impl<'a> Serializer<'a> {
                         ast::expression::LogicalOperator::NullishCoalesce => "??",
                     },
                 );
-                self.serialize_expression(&inner.left);
-                self.serialize_expression(&inner.right);
             }
             ExpressionInner::Conditional { loc, inner } => {
                 self.write_node_header(NodeKind::ConditionalExpression, loc);
                 self.serialize_expression(&inner.test);
-                self.serialize_expression(&inner.consequent);
                 self.serialize_expression(&inner.alternate);
+                self.serialize_expression(&inner.consequent);
             }
             ExpressionInner::Update { loc, inner } => {
                 self.write_node_header(NodeKind::UpdateExpression, loc);
@@ -369,7 +367,6 @@ impl<'a> Serializer<'a> {
             ExpressionInner::TaggedTemplate { loc, inner } => {
                 self.write_node_header(NodeKind::TaggedTemplateExpression, loc);
                 self.serialize_expression(&inner.tag);
-                self.serialize_call_type_args_opt(&inner.targs);
                 self.serialize_template_literal(&inner.quasi.0, &inner.quasi.1);
             }
             ExpressionInner::TemplateLiteral { loc, inner } => {
@@ -509,7 +506,7 @@ impl<'a> Serializer<'a> {
             }
             TypeInner::StringLiteral { loc, literal } => {
                 self.write_node_header(NodeKind::StringLiteralTypeAnnotation, loc);
-                self.write_str(&literal.value);
+                self.write_string_literal_value(&literal.value, &literal.raw);
                 self.write_str(&literal.raw);
             }
             TypeInner::NumberLiteral { loc, literal } => {
