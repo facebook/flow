@@ -1300,9 +1300,39 @@ fn elab_t_concrete<'cx>(
         (TypeInner::DefT(_, def_t), OpInner::AnnotGetKeysT(reason_op))
             if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
         {
-            // methods are not enumerable, so only walk fields
-            let own_props = cx.find_props(inst_t.inst.own_props.dupe());
-            let keylist = flow_js_utils::keylist_of_props(&own_props, reason_op);
+            let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
+                cx,
+                |reason, t| -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError> {
+                    let collector = TypeCollector::create();
+                    elab_t(
+                        cx,
+                        dst_cx,
+                        Some(seen.dupe()),
+                        t.dupe(),
+                        Op::new(OpInner::AnnotConcretizeForInspection {
+                            reason: reason.dupe(),
+                            collector: collector.clone(),
+                        }),
+                    );
+                    Ok(collector.collect_to_vec())
+                },
+                inst_t,
+            )
+            .expect("annotation_inference::AnnotGetKeysT concretize closure is infallible");
+            let keylist = flow_js_utils::keylist_of_prop_ids(cx, &prop_ids, reason_op);
+            let keylist = dict_keys.into_iter().fold(keylist, |mut keylist, key| {
+                keylist.push(elab_t(
+                    cx,
+                    dst_cx,
+                    Some(seen.dupe()),
+                    key,
+                    Op::new(OpInner::AnnotToStringT {
+                        orig_t: None,
+                        reason: reason_op.dupe(),
+                    }),
+                ));
+                keylist
+            });
             type_util::union_of_ts(reason_op.dupe(), keylist, None)
         }
         (TypeInner::AnyT(_, _), OpInner::AnnotGetKeysT(reason_op)) => {

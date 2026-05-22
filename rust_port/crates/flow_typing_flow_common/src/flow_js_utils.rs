@@ -20,6 +20,7 @@ use std::sync::Arc;
 use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
+use flow_aloc::ALocId;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
@@ -50,6 +51,9 @@ use flow_typing_type::type_::ExportKind;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::HasOwnPropTData;
+use flow_typing_type::type_::InstType;
+use flow_typing_type::type_::InstanceKind;
+use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::MapTypeTData;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NamedSymbol;
@@ -69,6 +73,7 @@ use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::arith_kind::ArithKind;
 use flow_typing_type::type_::constraint::Constraints;
 use flow_typing_type::type_::inter_rep;
+use flow_typing_type::type_::properties;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_::unknown_use;
@@ -6493,6 +6498,118 @@ pub fn keylist_of_props(
         )));
     }
     acc
+}
+
+type KeySources = (Vec<properties::Id>, Vec<Type>);
+
+fn empty_key_sources() -> KeySources {
+    (Vec::new(), Vec::new())
+}
+
+fn append_key_sources(mut left: KeySources, right: KeySources) -> KeySources {
+    left.0.extend(right.0);
+    left.1.extend(right.1);
+    left
+}
+
+fn instance_own_key_sources(inst: &InstType) -> KeySources {
+    let dict_keys = inst
+        .inst_dict
+        .as_ref()
+        .map(|dict| vec![dict.key.dupe()])
+        .unwrap_or_default();
+    (vec![inst.own_props.dupe()], dict_keys)
+}
+
+fn ts_interface_key_sources<E>(
+    concretize: &mut dyn FnMut(&Reason, &Type) -> Result<Vec<Type>, E>,
+    instance: &InstanceT,
+) -> Result<KeySources, E> {
+    fn collect_type<E>(
+        concretize: &mut dyn FnMut(&Reason, &Type) -> Result<Vec<Type>, E>,
+        seen: &mut BTreeSet<ALocId>,
+        t: &Type,
+    ) -> Result<KeySources, E> {
+        use flow_typing_type::type_util::reason_of_t;
+
+        concretize(reason_of_t(t), t)?
+            .into_iter()
+            .try_fold(empty_key_sources(), |acc, t| {
+                Ok(append_key_sources(
+                    acc,
+                    collect_concrete(concretize, seen, &t)?,
+                ))
+            })
+    }
+
+    fn collect_concrete<E>(
+        concretize: &mut dyn FnMut(&Reason, &Type) -> Result<Vec<Type>, E>,
+        seen: &mut BTreeSet<ALocId>,
+        t: &Type,
+    ) -> Result<KeySources, E> {
+        match t.deref() {
+            TypeInner::DefT(_, def_t) => match def_t.deref() {
+                DefTInner::InstanceT(instance) => collect_instance(concretize, seen, instance),
+                DefTInner::ClassT(t) => collect_type(concretize, seen, t),
+                _ => Ok(empty_key_sources()),
+            },
+            TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
+                collect_instance(concretize, seen, instance)
+            }
+            TypeInner::IntersectionT(_, rep) => {
+                rep.members_iter().try_fold(empty_key_sources(), |acc, t| {
+                    Ok(append_key_sources(acc, collect_type(concretize, seen, t)?))
+                })
+            }
+            _ => Ok(empty_key_sources()),
+        }
+    }
+
+    fn collect_instance<E>(
+        concretize: &mut dyn FnMut(&Reason, &Type) -> Result<Vec<Type>, E>,
+        seen: &mut BTreeSet<ALocId>,
+        instance: &InstanceT,
+    ) -> Result<KeySources, E> {
+        if !matches!(instance.inst.inst_kind, InstanceKind::InterfaceKind { .. }) {
+            return Ok(empty_key_sources());
+        }
+
+        if !seen.insert(instance.inst.class_id.dupe()) {
+            return Ok(empty_key_sources());
+        }
+
+        let own_sources = instance_own_key_sources(&instance.inst);
+        let super_sources = collect_type(concretize, seen, &instance.super_)?;
+        Ok(append_key_sources(own_sources, super_sources))
+    }
+
+    let mut seen = BTreeSet::new();
+    collect_instance(concretize, &mut seen, instance)
+}
+
+/// Returns property maps and dictionary key types that contribute to `keyof`/`$Keys`
+/// for an instance type.
+pub fn key_sources_of_instance_t<'cx, E>(
+    cx: &Context<'cx>,
+    mut concretize: impl FnMut(&Reason, &Type) -> Result<Vec<Type>, E>,
+    instance: &InstanceT,
+) -> Result<KeySources, E> {
+    if cx.ts_syntax() && matches!(instance.inst.inst_kind, InstanceKind::InterfaceKind { .. }) {
+        ts_interface_key_sources(&mut concretize, instance)
+    } else {
+        Ok(instance_own_key_sources(&instance.inst))
+    }
+}
+
+pub fn keylist_of_prop_ids(
+    cx: &Context<'_>,
+    prop_ids: &[properties::Id],
+    reason_op: &Reason,
+) -> Vec<Type> {
+    prop_ids
+        .iter()
+        .flat_map(|id| keylist_of_props(&cx.find_props(id.dupe()), reason_op))
+        .collect()
 }
 
 pub fn objt_to_obj_rest<'cx>(

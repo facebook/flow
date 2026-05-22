@@ -1519,7 +1519,7 @@ struct
                 }
             in
             add_output cx err)
-        | ( DefT (reason_o, InstanceT { inst; _ }),
+        | ( DefT (reason_o, InstanceT instance),
             HasOwnPropT
               ( use_op,
                 reason_op,
@@ -1528,24 +1528,33 @@ struct
                 )
               )
           ) ->
-          let own_props = Context.find_props cx inst.own_props in
-          (match NameUtils.Map.find_opt x own_props with
-          | Some _ -> ()
-          | None ->
-            let err =
-              Error_message.EPropNotFoundInLookup
-                {
-                  prop_name = Some x;
-                  reason_prop = reason_op;
-                  reason_obj = reason_o;
-                  use_op;
-                  suggestion = prop_typo_suggestion cx [inst.own_props] (display_string_of_name x);
-                }
+          let concretize reason t = possible_concrete_types_for_inspection cx reason t in
+          let (prop_ids, dict_keys) = key_sources_of_instance_t cx ~concretize instance in
+          (match Base.List.exists prop_ids ~f:(fun prop_id -> Context.has_prop cx prop_id x) with
+          | true -> ()
+          | false ->
+            let dict_key =
+              match dict_keys with
+              | [] -> None
+              | [dict_key] -> Some dict_key
+              | dict_key0 :: dict_key1 :: dict_keys ->
+                Some (union_of_ts reason_op (dict_key0 :: dict_key1 :: dict_keys))
             in
-            (match inst.inst_dict with
-            | Some { key = dict_key; _ } ->
+            (match dict_key with
+            | Some dict_key ->
               rec_flow_t ~use_op cx trace (mod_reason_of_t (Fun.const reason_op) key, dict_key)
-            | None -> add_output cx err))
+            | None ->
+              let err =
+                Error_message.EPropNotFoundInLookup
+                  {
+                    prop_name = Some x;
+                    reason_prop = reason_op;
+                    reason_obj = reason_o;
+                    use_op;
+                    suggestion = prop_typo_suggestion cx prop_ids (display_string_of_name x);
+                  }
+              in
+              add_output cx err))
         | (DefT (reason_o, InstanceT _), HasOwnPropT (use_op, reason_op, _)) ->
           let err =
             Error_message.EPropNotFoundInLookup
@@ -1570,18 +1579,17 @@ struct
           Base.Option.iter dict_t ~f:(fun { key; _ } ->
               rec_flow cx trace (key, ToStringT { orig_t = None; reason = reason_op; t_out = keys })
           )
-        | (DefT (_, InstanceT { inst; _ }), GetKeysT (reason_op, keys)) ->
-          (* methods are not enumerable, so only walk fields *)
-          let own_props = Context.find_props cx inst.own_props in
-          let keylist = Flow_js_utils.keylist_of_props own_props reason_op in
+        | (DefT (_, InstanceT instance), GetKeysT (reason_op, keys)) ->
+          let concretize reason t = possible_concrete_types_for_inspection cx reason t in
+          let (prop_ids, dict_keys) = key_sources_of_instance_t cx ~concretize instance in
+          let keylist = keylist_of_prop_ids cx prop_ids reason_op in
           rec_flow cx trace (union_of_ts reason_op keylist, keys);
-          (match inst.inst_dict with
-          | Some { key = dict_key; _ } ->
-            rec_flow
-              cx
-              trace
-              (dict_key, ToStringT { orig_t = None; reason = reason_op; t_out = keys })
-          | None -> ())
+          Base.List.iter dict_keys ~f:(fun dict_key ->
+              rec_flow
+                cx
+                trace
+                (dict_key, ToStringT { orig_t = None; reason = reason_op; t_out = keys })
+          )
         | (AnyT _, GetKeysT (reason_op, keys)) -> rec_flow cx trace (StrModuleT.why reason_op, keys)
         (* In general, typechecking is monotonic in the sense that more constraints
            produce more errors. However, sometimes we may want to speculatively try

@@ -779,10 +779,20 @@ module rec ConsGen : S = struct
           key :: keylist
       in
       union_of_ts reason_op keylist
-    | (DefT (_, InstanceT { inst; _ }), Annot_GetKeysT reason_op) ->
-      (* methods are not enumerable, so only walk fields *)
-      let own_props = Context.find_props cx inst.own_props in
-      let keylist = Flow_js_utils.keylist_of_props own_props reason_op in
+    | (DefT (_, InstanceT instance), Annot_GetKeysT reason_op) ->
+      let concretize reason t =
+        let collector = TypeCollector.create () in
+        let (_ : Type.t) = elab_t cx t (Annot_ConcretizeForInspection (reason, collector)) in
+        TypeCollector.collect collector
+      in
+      let (prop_ids, dict_keys) = Flow_js_utils.key_sources_of_instance_t cx ~concretize instance in
+      let keylist = Flow_js_utils.keylist_of_prop_ids cx prop_ids reason_op in
+      let keylist =
+        Base.List.fold dict_keys ~init:keylist ~f:(fun acc key ->
+            let key = elab_t cx key (Annot_ToStringT { orig_t = None; reason = reason_op }) in
+            key :: acc
+        )
+      in
       union_of_ts reason_op keylist
     | (AnyT _, Annot_GetKeysT reason_op) -> StrModuleT.why reason_op
     (***********)

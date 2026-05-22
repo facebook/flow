@@ -2424,31 +2424,38 @@ fn __flow_impl<'cx>(
                 _ => None,
             } =>
         {
-            let inst = &instance_t.inst;
-            let own_props = cx.find_props(inst.own_props.dupe());
-            match own_props.get(x) {
-                Some(_) => {}
-                None => {
-                    let err =
-                        ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
-                            prop_name: Some(x.dupe()),
-                            reason_prop: reason_op.dupe(),
-                            reason_obj: reason_o.dupe(),
-                            use_op: use_op.dupe(),
-                            suggestion: prop_typo_suggestion(
-                                cx,
-                                &[inst.own_props.dupe()],
-                                x.as_str(),
-                            ),
-                        }));
-                    match &inst.inst_dict {
-                        Some(DictType { key: dict_key, .. }) => {
-                            let mod_key = type_util::mod_reason_of_t(&|_| reason_op.dupe(), key);
-                            rec_flow_t(cx, trace, use_op.dupe(), (&mod_key, dict_key))?;
-                        }
-                        None => {
-                            flow_js_utils::add_output(cx, err)?;
-                        }
+            let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
+                cx,
+                |reason, t| possible_concrete_types_for_inspection(cx, reason, t),
+                instance_t,
+            )?;
+            if prop_ids
+                .iter()
+                .any(|prop_id| cx.has_prop(prop_id.dupe(), x))
+            {
+                // no-op
+            } else {
+                let dict_key = match dict_keys.len() {
+                    0 => None,
+                    1 => dict_keys.into_iter().next(),
+                    _ => Some(type_util::union_of_ts(reason_op.dupe(), dict_keys, None)),
+                };
+                match dict_key {
+                    Some(dict_key) => {
+                        let mod_key = type_util::mod_reason_of_t(&|_| reason_op.dupe(), key);
+                        rec_flow_t(cx, trace, use_op.dupe(), (&mod_key, &dict_key))?;
+                    }
+                    None => {
+                        let err = ErrorMessage::EPropNotFoundInLookup(Box::new(
+                            EPropNotFoundInLookupData {
+                                prop_name: Some(x.dupe()),
+                                reason_prop: reason_op.dupe(),
+                                reason_obj: reason_o.dupe(),
+                                use_op: use_op.dupe(),
+                                suggestion: prop_typo_suggestion(cx, &prop_ids, x.as_str()),
+                            },
+                        ));
+                        flow_js_utils::add_output(cx, err)?;
                     }
                 }
             }
@@ -2509,28 +2516,27 @@ fn __flow_impl<'cx>(
         (TypeInner::DefT(_, def_t), UseTInner::GetKeysT(reason_op, keys))
             if let DefTInner::InstanceT(instance_t) = def_t.deref() =>
         {
-            let inst = &instance_t.inst;
-            // methods are not enumerable, so only walk fields
-            let own_props = cx.find_props(inst.own_props.dupe());
-            let keylist = flow_js_utils::keylist_of_props(&own_props, reason_op);
+            let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
+                cx,
+                |reason, t| possible_concrete_types_for_inspection(cx, reason, t),
+                instance_t,
+            )?;
+            let keylist = flow_js_utils::keylist_of_prop_ids(cx, &prop_ids, reason_op);
             let union_t = type_util::union_of_ts(reason_op.dupe(), keylist, None);
             rec_flow(cx, trace, (&union_t, keys))?;
-            match &inst.inst_dict {
-                Some(DictType { key: dict_key, .. }) => {
-                    rec_flow(
-                        cx,
-                        trace,
-                        (
-                            dict_key,
-                            &UseT::new(UseTInner::ToStringT {
-                                orig_t: None,
-                                reason: reason_op.dupe(),
-                                t_out: keys.clone(),
-                            }),
-                        ),
-                    )?;
-                }
-                None => {}
+            for dict_key in dict_keys {
+                rec_flow(
+                    cx,
+                    trace,
+                    (
+                        &dict_key,
+                        &UseT::new(UseTInner::ToStringT {
+                            orig_t: None,
+                            reason: reason_op.dupe(),
+                            t_out: keys.clone(),
+                        }),
+                    ),
+                )?;
             }
         }
         (TypeInner::AnyT(_, _), UseTInner::GetKeysT(reason_op, keys)) => {

@@ -142,3 +142,56 @@ type MethodTarget = {
 };
 const oneSidedOk: MethodTarget = {cb: (x: Animal): void => {}}; // OK: same param type, no variance to check
 const oneSidedErr: MethodTarget = {cb: (x: Dog): void => {}}; // ERROR: arrow source, no bivariance
+
+interface BaseEventMap {
+  base: Animal;
+}
+
+interface PreciseEventMap extends BaseEventMap {
+  dog: Dog;
+}
+
+type KeyedBaseEventLike = {
+  addEventListener<K extends keyof BaseEventMap>(type: K, listener: Listener<BaseEventMap[K]>): void;
+  addEventListener(type: string, listener: Listener<Animal>): void;
+};
+
+declare const preciseKeyedEventLike: {
+  addEventListener<K extends keyof PreciseEventMap>(
+    type: K,
+    listener: Listener<PreciseEventMap[K]>,
+  ): void;
+  addEventListener(type: string, listener: Listener<Animal>): void;
+};
+
+// `keyof` on TS interfaces includes inherited interface fields. This mirrors
+// DOM event maps like `DocumentEventMap extends GlobalEventHandlersEventMap`.
+const inheritedEventMapKeys: KeyedBaseEventLike = preciseKeyedEventLike; // OK
+
+interface WindowishEventMap {
+  afterprint: Animal;
+}
+
+interface ElementishEventMap {
+  click: Animal;
+}
+
+interface BodyEventMap extends ElementishEventMap, WindowishEventMap {
+}
+
+interface WindowishHandlers {
+  addEventListener<K extends keyof WindowishEventMap>(
+    type: K,
+    listener: (ev: WindowishEventMap[K]) => void,
+  ): void;
+}
+
+// Multiple `extends` entries are stored through lazy interface references in
+// the super chain. `keyof BodyEventMap` must force those references and include
+// `afterprint` from `WindowishEventMap`.
+interface BodyElement extends WindowishHandlers {
+  addEventListener<K extends keyof BodyEventMap>(
+    type: K,
+    listener: (ev: BodyEventMap[K]) => void,
+  ): void;
+}

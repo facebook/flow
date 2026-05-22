@@ -3230,6 +3230,49 @@ let keylist_of_props props reason_op =
     []
   |> List.rev
 
+let instance_own_key_sources inst =
+  let dict_keys =
+    match inst.inst_dict with
+    | None -> []
+    | Some { key; _ } -> [key]
+  in
+  ([inst.own_props], dict_keys)
+
+let ts_interface_key_sources ~concretize instance =
+  let append_sources (props1, dicts1) (props2, dicts2) = (props1 @ props2, dicts1 @ dicts2) in
+  let rec collect_type seen t =
+    concretize (reason_of_t t) t
+    |> Base.List.fold ~init:([], []) ~f:(fun acc t -> append_sources acc (collect_concrete seen t))
+  and collect_concrete seen = function
+    | DefT (_, InstanceT instance)
+    | ThisInstanceT (_, instance, _, _) ->
+      collect_instance seen instance
+    | DefT (_, ClassT t) -> collect_type seen t
+    | IntersectionT (_, rep) ->
+      InterRep.members rep
+      |> Base.List.fold ~init:([], []) ~f:(fun acc t -> append_sources acc (collect_type seen t))
+    | _ -> ([], [])
+  and collect_instance seen { super; inst; _ } =
+    let { class_id; inst_kind; _ } = inst in
+    match inst_kind with
+    | InterfaceKind _ when not (Base.List.exists seen ~f:(fun id -> ALoc.equal_id id class_id)) ->
+      let seen = class_id :: seen in
+      append_sources (instance_own_key_sources inst) (collect_type seen super)
+    | _ -> ([], [])
+  in
+  collect_instance [] instance
+
+let key_sources_of_instance_t cx ~concretize instance =
+  if Context.ts_syntax cx then
+    match instance.inst.inst_kind with
+    | InterfaceKind _ -> ts_interface_key_sources ~concretize instance
+    | _ -> instance_own_key_sources instance.inst
+  else
+    instance_own_key_sources instance.inst
+
+let keylist_of_prop_ids cx prop_ids reason_op =
+  Base.List.concat_map prop_ids ~f:(fun id -> keylist_of_props (Context.find_props cx id) reason_op)
+
 let objt_to_obj_rest cx props_tmap ~reachable_targs ~obj_kind ~reason_op ~reason_obj xs =
   let props = Context.find_props cx props_tmap in
   let props = List.fold_left (fun map x -> NameUtils.Map.remove (OrdinaryName x) map) props xs in
