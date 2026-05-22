@@ -798,22 +798,10 @@ pub mod edenfs_file_watcher {
                 }
                 flow_edenfs_watcher::Changes::StateEnter(_)
                 | flow_edenfs_watcher::Changes::StateLeave(_) => {}
-                flow_edenfs_watcher::Changes::CommitDistanceExceeded {
-                    from_commit,
-                    to_commit,
-                } => {
-                    flow_hh_logger::info!(
-                        "EdenFS watcher reports commit distance exceeded from {} to {}",
-                        from_commit,
-                        to_commit
-                    );
-                    metadata = flow_monitor_rpc::monitor_prot::merge_file_watcher_metadata(
-                        &metadata,
-                        &FileWatcherMetadata {
-                            changed_mergebase: Some(true),
-                            missed_changes: true,
-                        },
-                    );
+                flow_edenfs_watcher::Changes::CommitDistanceExceeded { .. } => {
+                    // Handled inline in [main] below — needs env.mergebase to compute
+                    // changed_mergebase against the Rust-supplied authoritative value
+                    // without a second VCS shellout.
                 }
             }
         }
@@ -978,7 +966,9 @@ pub mod edenfs_file_watcher {
                 Ok((changes_list, _clock, _telemetry)) => {
                     handle_state_changes(&changes_list);
                     let (new_files, mut new_metadata) = convert_changes(&changes_list);
-                    // If a commit transition occurred, check if mergebase actually changed
+                    // If a commit transition occurred, check if mergebase actually changed.
+                    // Run this BEFORE applying CommitDistanceExceeded below, so
+                    // check_mergebase compares against the still-stale env.mergebase.
                     if let Some(true) = new_metadata.changed_mergebase {
                         flow_hh_logger::debug!(
                             "EdenFS: CommitTransition reported changed_mergebase=true; verifying with VCS"
@@ -1005,6 +995,57 @@ pub mod edenfs_file_watcher {
                                 &shared.metadata,
                                 &new_metadata,
                             );
+                    }
+                    // Handle CommitDistanceExceeded inline using the authoritative
+                    // mergebase Rust shipped. Mirrors the Watchman [Missed_changes]
+                    // branch: compute changed_mergebase by comparing against the cached
+                    // env.mergebase, update the cache, and union the changes — no second
+                    // VCS shellout.
+                    for change in &changes_list {
+                        if let flow_edenfs_watcher::Changes::CommitDistanceExceeded {
+                            from_commit,
+                            to_commit,
+                            mergebase,
+                            changes_since_mergebase,
+                        } = change
+                        {
+                            let mut shared = env.shared.lock().unwrap();
+                            let changed_mergebase = match &shared.mergebase {
+                                Some(prev) => prev != mergebase,
+                                None => true,
+                            };
+                            flow_hh_logger::info!(
+                                "EdenFS watcher reports commit distance exceeded from {} to {} (mergebase={}{}, {} changes since mergebase)",
+                                from_commit,
+                                to_commit,
+                                mergebase,
+                                if changed_mergebase {
+                                    ", changed"
+                                } else {
+                                    ", unchanged"
+                                },
+                                changes_since_mergebase.len()
+                            );
+                            // Don't cache an empty mergebase — that would
+                            // falsely flip changed_mergebase on the next
+                            // event. Reinit still fires on this event via the
+                            // metadata below, which is what we want when
+                            // sapling couldn't resolve the mergebase.
+                            if !mergebase.is_empty() {
+                                shared.mergebase = Some(mergebase.clone());
+                            }
+                            for p in changes_since_mergebase {
+                                shared.files.insert(p.clone());
+                            }
+                            shared.metadata =
+                                flow_monitor_rpc::monitor_prot::merge_file_watcher_metadata(
+                                    &shared.metadata,
+                                    &FileWatcherMetadata {
+                                        changed_mergebase: Some(changed_mergebase),
+                                        missed_changes: true,
+                                    },
+                                );
+                        }
                     }
                     broadcast(env);
                     Ok(())
@@ -1144,6 +1185,7 @@ pub mod edenfs_file_watcher {
                 sync_queries_obey_deferral: false,
                 defer_states: edenfs_defer_states.clone(),
                 max_commit_distance: *edenfs_max_commit_distance as isize,
+                mergebase_with: self.mergebase_with.clone(),
             };
             *self.init_thread.lock().unwrap() =
                 Some(handle().spawn(async move { flow_edenfs_watcher::init(settings) }));

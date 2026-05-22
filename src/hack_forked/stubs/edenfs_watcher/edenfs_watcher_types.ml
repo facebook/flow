@@ -77,6 +77,7 @@ type settings = {
   sync_queries_obey_deferral: bool;
   defer_states: string list;
   max_commit_distance: int;
+  mergebase_with: string;
 }
 
 type changes =
@@ -91,6 +92,8 @@ type changes =
   | CommitDistanceExceeded of {
       from_commit: string;
       to_commit: string;
+      mergebase: string;
+      changes_since_mergebase: string list;
     }
 [@@deriving show]
 

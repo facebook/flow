@@ -674,16 +674,10 @@ end = struct
         | Edenfs_watcher_types.StateEnter _
         | Edenfs_watcher_types.StateLeave _ ->
           (files, metadata)
-        | Edenfs_watcher_types.CommitDistanceExceeded { from_commit; to_commit } ->
-          Logger.info
-            "EdenFS watcher reports commit distance exceeded from %s to %s"
-            from_commit
-            to_commit;
-          let metadata =
-            MonitorProt.merge_file_watcher_metadata
-              metadata
-              { MonitorProt.changed_mergebase = Some true; missed_changes = true }
-          in
+        | Edenfs_watcher_types.CommitDistanceExceeded _ ->
+          (* Handled inline in [main] below — needs env.mergebase to compute
+             changed_mergebase against the Rust-supplied authoritative value
+             without a second VCS shellout. *)
           (files, metadata)
     )
 
@@ -775,7 +769,9 @@ end = struct
       | Ok (changes_list, _clock, _telemetry) ->
         handle_state_changes changes_list;
         let (new_files, new_metadata) = convert_changes changes_list in
-        (* If a commit transition occurred, check if mergebase actually changed *)
+        (* If a commit transition occurred, check if mergebase actually changed.
+           Run this BEFORE applying CommitDistanceExceeded below, so
+           check_mergebase compares against the still-stale env.mergebase. *)
         let%lwt new_metadata =
           match new_metadata.MonitorProt.changed_mergebase with
           | Some true ->
@@ -796,6 +792,41 @@ end = struct
         in
         env.files <- SSet.union env.files new_files;
         env.metadata <- MonitorProt.merge_file_watcher_metadata env.metadata new_metadata;
+        (* Handle CommitDistanceExceeded inline using the authoritative
+           mergebase Rust shipped. Mirrors the Watchman [Missed_changes]
+           branch: compute changed_mergebase by comparing against the cached
+           env.mergebase, update the cache, and union the changes — no second
+           VCS shellout. *)
+        Base.List.iter changes_list ~f:(function
+            | Edenfs_watcher_types.CommitDistanceExceeded
+                { from_commit; to_commit; mergebase; changes_since_mergebase } ->
+              let changed_mergebase =
+                match env.mergebase with
+                | Some prev -> not (String.equal prev mergebase)
+                | None -> true
+              in
+              Logger.info
+                "EdenFS watcher reports commit distance exceeded from %s to %s (mergebase=%s%s, %d changes since mergebase)"
+                from_commit
+                to_commit
+                mergebase
+                (Utils_js.ite changed_mergebase ", changed" ", unchanged")
+                (List.length changes_since_mergebase);
+              (* Don't cache an empty mergebase — that would falsely flip
+                 [changed_mergebase] on the next event. The metadata above
+                 still triggers reinit on this event, which is what we want
+                 when sapling couldn't resolve the mergebase. *)
+              if mergebase <> "" then env.mergebase <- Some mergebase;
+              env.files <-
+                Base.List.fold changes_since_mergebase ~init:env.files ~f:(fun acc p ->
+                    SSet.add p acc
+                );
+              env.metadata <-
+                MonitorProt.merge_file_watcher_metadata
+                  env.metadata
+                  { MonitorProt.changed_mergebase = Some changed_mergebase; missed_changes = true }
+            | _ -> ()
+            );
         broadcast env;
         Lwt.return env
 
@@ -879,6 +910,7 @@ end = struct
             sync_queries_obey_deferral = false;
             defer_states = edenfs_defer_states;
             max_commit_distance = edenfs_max_commit_distance;
+            mergebase_with;
           }
         in
         init_thread <- Some (Lwt.return (Edenfs_watcher.init settings))

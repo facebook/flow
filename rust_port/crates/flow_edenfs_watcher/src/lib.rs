@@ -134,6 +134,7 @@ mod stub {
         pub sync_queries_obey_deferral: bool,
         pub defer_states: Vec<String>,
         pub max_commit_distance: isize,
+        pub mergebase_with: String,
     }
 
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -149,6 +150,8 @@ mod stub {
         CommitDistanceExceeded {
             from_commit: String,
             to_commit: String,
+            mergebase: String,
+            changes_since_mergebase: Vec<String>,
         },
     }
 
