@@ -2607,7 +2607,7 @@ pub fn map_object<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,
     use_op: &UseOp,
-    selected_keys: Option<(Vec<(Name, Reason)>, Vec<Type>)>,
+    selected_keys: Option<&(Vec<(Name, Reason)>, Vec<Type>)>,
     slice: &object::Slice,
 ) -> Type {
     let variance = mapped_type_flags.variance;
@@ -2696,7 +2696,7 @@ pub fn map_object<'cx>(
         Option<Polarity>,
     ) = match name_remap {
         None => {
-            let keys: Vec<Name> = match &selected_keys {
+            let keys: Vec<Name> = match selected_keys {
                 Some((keys_with_reason, _)) => {
                     keys_with_reason.iter().map(|(k, _)| k.clone()).collect()
                 }
@@ -2721,7 +2721,7 @@ pub fn map_object<'cx>(
             source_indexer: _,
             selected_xs_keys: _,
         }) => {
-            let source_keys: Vec<Name> = match &selected_keys {
+            let source_keys: Vec<Name> = match selected_keys {
                 Some((keys_with_reason, _)) => {
                     keys_with_reason.iter().map(|(k, _)| k.clone()).collect()
                 }
@@ -2790,7 +2790,7 @@ pub fn map_object<'cx>(
     };
     let props_map = out_props;
     let obj_kind = match name_remap {
-        None => match (&selected_keys, &flags.obj_kind) {
+        None => match (selected_keys, &flags.obj_kind) {
             (Some((_, indexers)), _) if indexers.is_empty() => ObjKind::Exact,
             (Some((_, xs)), ObjKind::Indexed(dict_t)) => {
                 let dict_optional = is_prop_optional(&dict_t.value);
@@ -2912,7 +2912,7 @@ pub fn map_object<'cx>(
                      * indexer, preserve flags.obj_kind only when the remap is identity (every source key maps
                      * to itself); a non-identity remap produces a closed shape because the result's only
                      * known properties are the explicitly-named destinations. */
-                    match &selected_keys {
+                    match selected_keys {
                         Some(_) => ObjKind::Exact,
                         None if source_indexer_dropped => ObjKind::Exact,
                         None if is_identity_remap => flags.obj_kind.clone(),

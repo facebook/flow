@@ -1156,7 +1156,7 @@ pub fn run<'cx>(
                 cx,
                 reason,
                 &use_op,
-                selected_keys.clone(),
+                selected_keys.as_ref(),
                 slice,
             ))
         };
