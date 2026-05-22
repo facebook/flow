@@ -79,11 +79,11 @@ type Obj = Required<PartialObj>; // Same as `{foo: string}`
 
 You can add [variance](../lang/variance.md) annotations to your object properties.
 
-To mark a property as read-only, you can use the `+`:
+To mark a property as read-only, you can use the `readonly` keyword. The legacy `+` sigil is still recognized but deprecated — see [Modernizing Legacy Syntax](../modernizing-legacy-syntax.md) for migration details.
 
 ```js flow-check
 type Obj = {
-  +foo: string,
+  readonly foo: string,
 };
 
 function func(o: Obj) {
@@ -99,14 +99,14 @@ type Obj = {
   foo: string,
 };
 
-type ReadOnlyObj = Readonly<Obj>; // Same as `{+foo: string}`
+type ReadOnlyObj = Readonly<Obj>; // Same as `{readonly foo: string}`
 ```
 
-You can also mark your properties as write-only with `-`:
+You can also mark your properties as write-only with the `writeonly` keyword. The legacy `-` sigil is still recognized but deprecated.
 
 ```js flow-check
 type Obj = {
-  -foo: string,
+  writeonly foo: string,
 };
 
 function func(o: Obj) {
@@ -403,8 +403,8 @@ function add(id: number, name: string) {
 You can mark an indexer property as read-only (or write-only) using [variance](../lang/variance.md) annotations:
 
 ```js flow-check
-type ReadOnly = {+[string]: number};
-type WriteOnly = {-[string]: number};
+type ReadOnly = {readonly [string]: number};
+type WriteOnly = {writeonly [string]: number};
 ```
 
 ## Keys, values, and indexed access
@@ -490,7 +490,7 @@ However, you can't access any properties off of `{...}`.
 You can also try using a [dictionary](#toc-objects-as-maps) with [`unknown`](./unknown.md) values, which would allow you to access any property (with a resulting `unknown` type):
 
 ```js flow-check
-function func(obj: {+[string]: unknown}) {
+function func(obj: {readonly [string]: unknown}) {
   const x: unknown = obj['bar'];
 }
 
