@@ -20,6 +20,7 @@ pub mod flow_version;
 pub mod hint;
 pub mod js_number;
 pub mod lock;
+pub mod name_utils;
 pub mod options;
 pub mod path_matcher;
 pub mod platform_set;

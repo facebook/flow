@@ -23,6 +23,7 @@ use flow_common::alpha_rename;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::flow_symbol::Symbol;
+use flow_common::name_utils;
 use flow_common::polarity::Polarity;
 use flow_common::reason;
 use flow_common::reason::Name;
@@ -3718,16 +3719,18 @@ fn merge_interface<'cx>(
             for (key, prop) in computed_props {
                 if let Some(name) = resolve_computed_key(env, cx, file, key) {
                     let t = merge_interface_prop(env, cx, file, prop, false);
-                    let update_map =
-                        |map: &mut BTreeMap<Name, type_::Property>| match map.entry(name.dupe()) {
-                            std::collections::btree_map::Entry::Vacant(e) => {
-                                e.insert(t.dupe());
-                            }
-                            std::collections::btree_map::Entry::Occupied(mut e) => {
-                                let merged = merge_overloaded_property(e.get(), t.dupe());
-                                e.insert(merged);
-                            }
-                        };
+                    let update_map = |map: &mut BTreeMap<Name, type_::Property>| {
+                        name_utils::map::update(
+                            name.dupe(),
+                            |existing| match existing {
+                                None => Some(t.dupe()),
+                                Some(existing) => {
+                                    Some(merge_overloaded_property(existing, t.dupe()))
+                                }
+                            },
+                            map,
+                        )
+                    };
                     match prop {
                         InterfaceProp::InterfaceField(..) => update_map(&mut own),
                         InterfaceProp::InterfaceAccess(..) | InterfaceProp::InterfaceMethod(..) => {

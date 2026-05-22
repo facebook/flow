@@ -15,6 +15,7 @@ use std::sync::Arc;
 use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
+use flow_common::name_utils;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -2543,7 +2544,11 @@ pub fn mapped_type_meet_polarity(p1: Polarity, p2: Polarity) -> Polarity {
  * top-level OptionalT, and Flow's missing-property logic would treat the merged property as
  * required. We unwrap any contributing OptionalT, union the inner types, and re-wrap if any
  * contributor was optional. */
-pub fn merge_field(reason: &Reason, existing: Option<Property>, incoming: Property) -> Property {
+pub fn merge_field(
+    reason: &Reason,
+    existing: Option<&Property>,
+    incoming: &Property,
+) -> Option<Property> {
     let unwrap_optional = |t: &Type| -> (Type, bool) {
         match t.deref() {
             TypeInner::OptionalT { type_, .. } => (type_.dupe(), true),
@@ -2551,7 +2556,7 @@ pub fn merge_field(reason: &Reason, existing: Option<Property>, incoming: Proper
         }
     };
     match existing {
-        None => incoming,
+        None => Some(incoming.dupe()),
         Some(existing_prop) => {
             match (existing_prop.deref(), incoming.deref()) {
                 (
@@ -2578,16 +2583,16 @@ pub fn merge_field(reason: &Reason, existing: Option<Property>, incoming: Proper
                         merged_inner
                     };
                     let merged_polarity = mapped_type_meet_polarity(*p1, *p2);
-                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                    Some(Property::new(PropertyInner::Field(Box::new(FieldData {
                         preferred_def_locs: pl1.clone(),
                         key_loc: kl1.clone(),
                         type_: merged_type,
                         polarity: merged_polarity,
-                    })))
+                    }))))
                 }
                 _ => {
                     /* map_object only ever produces Field props (line below). Other prop kinds shouldn't appear. */
-                    existing_prop
+                    Some(existing_prop.dupe())
                 }
             }
         }
@@ -2739,17 +2744,23 @@ pub fn map_object<'cx>(
                         None => {
                             let f = any_field();
                             for (n, _r) in dest_names {
-                                let existing = out_map.remove(n);
-                                let merged = merge_field(reason, existing, f.clone());
-                                out_map.insert(n.dupe(), merged);
+                                /* (fun m (n, _r) -> NameUtils.Map.update n (fun e -> merge_field reason e f) m) */
+                                name_utils::map::update(
+                                    n.dupe(),
+                                    |e| merge_field(reason, e, &f),
+                                    &mut out_map,
+                                );
                             }
                         }
                         Some(prop) => {
                             let (_, field) = build_source_field(src_key, prop);
                             for (n, _r) in dest_names {
-                                let existing = out_map.remove(n);
-                                let merged = merge_field(reason, existing, field.clone());
-                                out_map.insert(n.dupe(), merged);
+                                /* (fun m (n, _r) -> NameUtils.Map.update n (fun e -> merge_field reason e field) m) */
+                                name_utils::map::update(
+                                    n.dupe(),
+                                    |e| merge_field(reason, e, &field),
+                                    &mut out_map,
+                                );
                             }
                             let (value_ts_for_indexer, field_polarity) = match field.deref() {
                                 PropertyInner::Field(box FieldData {
