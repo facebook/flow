@@ -8,7 +8,7 @@
 /*
    Suppression comments have the following syntax:
 
-   <SUPPRESSOR> := $FlowIssue | $FlowFixMe | $FlowExpectedError | $FlowIgnore
+   <SUPPRESSOR> := $FlowFixMe | $FlowExpectedError
 
    //<SUPPRESSOR>[CODE]...
 */
