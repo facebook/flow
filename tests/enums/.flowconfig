@@ -5,6 +5,3 @@ lib.js
 all=true
 no_flowlib=false
 enums=true
-
-[lints]
-deprecated-type=off

@@ -7,7 +7,6 @@
 [lints]
 untyped-type-import=error
 internal-type=error
-deprecated-type-bool=error
 
 [options]
 all=true
