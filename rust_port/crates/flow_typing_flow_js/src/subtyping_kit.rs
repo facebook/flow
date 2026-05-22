@@ -382,49 +382,83 @@ fn func_type_guard_compat<'cx>(
     }
 }
 
-// TS-mode bivariant param flow for method-syntax properties: try the
-// contravariant direction (target -> source, the standard subtyping
-// direction) first via speculation; on failure, fall back to the covariant
-// direction (source -> target). Mirrors TS's bivariance for methods, which
-// accepts assignability whenever either direction holds.
-fn bivariant_param_flow<'cx>(
+fn funt_to_funt_check_this_contravariant<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
-    use_op: UseOp,
-    source: &Type,
-    target: &Type,
+    lreason: &Reason,
+    ft1: &flow_typing_type::type_::FunType,
+    ureason: &Reason,
+    ft2: &flow_typing_type::type_::FunType,
+    use_op: &UseOp,
 ) -> Result<(), FlowJsException> {
-    let source_spec = source.dupe();
-    let target_spec = target.dupe();
-    let use_op_spec = use_op.dupe();
-    match speculation_kit::try_singleton_custom_throw_on_failure(
-        cx,
-        Box::new(move |cx| {
+    let use_op = VirtualUseOp::Frame(
+        Arc::new(VirtualFrameUseOp::FunParam(Box::new(FunParamData {
+            n: 0,
+            name: Some(FlowSmolStr::new_inline("this")),
+            lower: lreason.dupe(),
+            upper: ureason.dupe(),
+        }))),
+        Arc::new(use_op.dupe()),
+    );
+    let (this_param1, this_status_1) = &ft1.this_t;
+    let (this_param2, this_status_2) = &ft2.this_t;
+    match (this_status_1, this_status_2) {
+        (ThisStatus::ThisMethod { .. }, ThisStatus::ThisMethod { .. }) => {
+            let sub_this2 = type_util::subtype_this_of_function(ft2);
+            let sub_this1 = type_util::subtype_this_of_function(ft1);
             FlowJs::rec_flow(
                 cx,
                 trace,
-                &target_spec,
-                &UseT::new(UseTInner::UseT(use_op_spec, source_spec)),
-            )
-        }),
-    ) {
-        Ok(()) => Ok(()),
-        Err(FlowJsException::SpeculationSingletonError) => FlowJs::rec_flow(
-            cx,
-            trace,
-            source,
-            &UseT::new(UseTInner::UseT(use_op, target.dupe())),
-        ),
-        Err(other) => Err(other),
+                &sub_this2,
+                &UseT::new(UseTInner::UseT(use_op, sub_this1)),
+            )?;
+        }
+        // lower bound method, upper bound function
+        // This is always banned, as it would allow methods to be unbound through casting
+        (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) => {
+            if !unbound && !flow_common::files::has_ts_ext(cx.file()) {
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
+                        use_op: use_op.dupe(),
+                        reason_op: lreason.dupe(),
+                        reason_prop: type_util::reason_of_t(this_param1).clone(),
+                    })),
+                )?;
+            }
+            let sub_this1 = type_util::subtype_this_of_function(ft1);
+            FlowJs::rec_flow(
+                cx,
+                trace,
+                this_param2,
+                &UseT::new(UseTInner::UseT(use_op, sub_this1)),
+            )?;
+        }
+        // lower bound function, upper bound method.
+        // Ok as long as the types match up
+        (ThisStatus::ThisFunction, ThisStatus::ThisMethod { .. })
+        | (ThisStatus::ThisFunction, ThisStatus::ThisFunction) => {
+            FlowJs::rec_flow(
+                cx,
+                trace,
+                this_param2,
+                &UseT::new(UseTInner::UseT(use_op, this_param1.dupe())),
+            )?;
+        }
     }
+    Ok(())
 }
 
-// Shared FunT ~> FunT subtyping driver. The this-binding, effect, return,
-// and type-guard checks are identical in the standard (contravariant) and
-// TS-mode bivariant paths; the only difference is how params are flowed.
-// `check_params` receives the FunCompatibility-rewritten use_op and is
-// responsible for the param-flow step (e.g. `multiflow_subtype` for the
-// standard path, a bivariant pairwise walk for the TS-mode path).
+fn funt_to_funt_check_this_ignore(_use_op: &UseOp) -> Result<(), FlowJsException> {
+    Ok(())
+}
+
+// Shared FunT ~> FunT subtyping driver. The effect, return, and type-guard
+// checks are identical across callers; the differences are how `this` and
+// regular params are flowed. `check_params` receives the FunCompatibility-
+// rewritten use_op and is responsible for the param-flow step (e.g.
+// `multiflow_subtype` for the standard path, a bivariant pairwise walk for
+// the TS-mode path).
 fn funt_to_funt_check<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -433,6 +467,7 @@ fn funt_to_funt_check<'cx>(
     ft1: &flow_typing_type::type_::FunType,
     ureason: &Reason,
     ft2: &flow_typing_type::type_::FunType,
+    check_this: &dyn Fn(&UseOp) -> Result<(), FlowJsException>,
     check_params: &dyn Fn(&UseOp) -> Result<(), FlowJsException>,
 ) -> Result<(), FlowJsException> {
     let inner_use_op = if let VirtualUseOp::Frame(ref frame, ref inner) = use_op {
@@ -462,63 +497,7 @@ fn funt_to_funt_check<'cx>(
         Arc::new(inner_use_op),
     );
 
-    {
-        let use_op = VirtualUseOp::Frame(
-            Arc::new(VirtualFrameUseOp::FunParam(Box::new(FunParamData {
-                n: 0,
-                name: Some(FlowSmolStr::new_inline("this")),
-                lower: lreason.dupe(),
-                upper: ureason.dupe(),
-            }))),
-            Arc::new(use_op.dupe()),
-        );
-        let (this_param1, this_status_1) = &ft1.this_t;
-        let (this_param2, this_status_2) = &ft2.this_t;
-        match (this_status_1, this_status_2) {
-            (ThisStatus::ThisMethod { .. }, ThisStatus::ThisMethod { .. }) => {
-                let sub_this2 = type_util::subtype_this_of_function(ft2);
-                let sub_this1 = type_util::subtype_this_of_function(ft1);
-                FlowJs::rec_flow(
-                    cx,
-                    trace,
-                    &sub_this2,
-                    &UseT::new(UseTInner::UseT(use_op, sub_this1)),
-                )?;
-            }
-            // lower bound method, upper bound function
-            // This is always banned, as it would allow methods to be unbound through casting
-            (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) => {
-                if !unbound && !flow_common::files::has_ts_ext(cx.file()) {
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
-                            use_op: use_op.dupe(),
-                            reason_op: lreason.dupe(),
-                            reason_prop: type_util::reason_of_t(this_param1).clone(),
-                        })),
-                    )?;
-                }
-                let sub_this1 = type_util::subtype_this_of_function(ft1);
-                FlowJs::rec_flow(
-                    cx,
-                    trace,
-                    this_param2,
-                    &UseT::new(UseTInner::UseT(use_op, sub_this1)),
-                )?;
-            }
-            // lower bound function, upper bound method.
-            // Ok as long as the types match up
-            (ThisStatus::ThisFunction, ThisStatus::ThisMethod { .. })
-            | (ThisStatus::ThisFunction, ThisStatus::ThisFunction) => {
-                FlowJs::rec_flow(
-                    cx,
-                    trace,
-                    this_param2,
-                    &UseT::new(UseTInner::UseT(use_op, this_param1.dupe())),
-                )?;
-            }
-        }
-    }
+    check_this(&use_op)?;
     check_params(&use_op)?;
     match (&ft1.effect_, &ft2.effect_) {
         (ReactEffectType::AnyEffect, _)
@@ -632,6 +611,87 @@ fn funt_to_funt_check<'cx>(
         (Some(_), None) | (None, None) => {}
     }
     Ok(())
+}
+
+// TS-mode bivariant param flow for method-syntax properties: try the
+// contravariant direction (target -> source, the standard subtyping
+// direction) first via speculation; on failure, fall back to the covariant
+// direction (source -> target). Mirrors TS's bivariance for methods, which
+// accepts assignability whenever either direction holds.
+//
+// If the method parameter is itself a callback function with an explicit
+// `this` parameter, do not recursively reject on that callback `this`.
+// TypeScript's DOM libraries rely on this when a subinterface narrows
+// listener context from `GlobalEventHandlers` to `Document`, `HTMLElement`,
+// and similar subtypes. The regular callback argument and return checks still
+// run in the chosen direction.
+fn bivariant_param_flow<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    use_op: UseOp,
+    source: &Type,
+    target: &Type,
+) -> Result<(), FlowJsException> {
+    fn flow_param<'cx>(
+        cx: &Context<'cx>,
+        trace: DepthTrace,
+        use_op: &UseOp,
+        lower: &Type,
+        upper: &Type,
+    ) -> Result<(), FlowJsException> {
+        match (cx.find_resolved(lower), cx.find_resolved(upper)) {
+            (Some(lower_resolved), Some(upper_resolved)) => {
+                match (lower_resolved.deref(), upper_resolved.deref()) {
+                    (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
+                        if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
+                            (ld.deref(), ud.deref()) =>
+                    {
+                        funt_to_funt_check(
+                            cx,
+                            trace,
+                            use_op.dupe(),
+                            lreason,
+                            ft1,
+                            ureason,
+                            ft2,
+                            &|use_op| funt_to_funt_check_this_ignore(use_op),
+                            &|use_op| {
+                                funt_to_funt_check_params_contravariant(
+                                    cx, trace, ureason, ft1, ft2, use_op,
+                                )
+                            },
+                        )
+                    }
+                    _ => FlowJs::rec_flow(
+                        cx,
+                        trace,
+                        lower,
+                        &UseT::new(UseTInner::UseT(use_op.dupe(), upper.dupe())),
+                    ),
+                }
+            }
+            _ => FlowJs::rec_flow(
+                cx,
+                trace,
+                lower,
+                &UseT::new(UseTInner::UseT(use_op.dupe(), upper.dupe())),
+            ),
+        }
+    }
+
+    let source_spec = source.dupe();
+    let target_spec = target.dupe();
+    let use_op_spec = use_op.dupe();
+    match speculation_kit::try_singleton_custom_throw_on_failure(
+        cx,
+        Box::new(move |cx| flow_param(cx, trace, &use_op_spec, &target_spec, &source_spec)),
+    ) {
+        Ok(()) => Ok(()),
+        Err(FlowJsException::SpeculationSingletonError) => {
+            flow_param(cx, trace, &use_op, source, target)
+        }
+        Err(other) => Err(other),
+    }
 }
 
 // The standard (contravariant) param-flow check: builds an arglist from
@@ -795,9 +855,21 @@ fn funt_to_funt_method_bivariant<'cx>(
     ureason: &Reason,
     ft2: &flow_typing_type::type_::FunType,
 ) -> Result<(), FlowJsException> {
-    funt_to_funt_check(cx, trace, use_op, lreason, ft1, ureason, ft2, &|use_op| {
-        funt_to_funt_check_params_bivariant(cx, trace, lreason, ureason, ft1, ft2, use_op)
-    })
+    funt_to_funt_check(
+        cx,
+        trace,
+        use_op,
+        lreason,
+        ft1,
+        ureason,
+        ft2,
+        &|use_op| {
+            funt_to_funt_check_this_contravariant(cx, trace, lreason, ft1, ureason, ft2, use_op)
+        },
+        &|use_op| {
+            funt_to_funt_check_params_bivariant(cx, trace, lreason, ureason, ft1, ft2, use_op)
+        },
+    )
 }
 
 // Returns true if (lt, ut) is a method-shape pair (FunT/FunT, compatible
@@ -4668,9 +4740,23 @@ pub fn rec_sub_t<'cx>(
             if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
                 (ld.deref(), ud.deref()) =>
         {
-            funt_to_funt_check(cx, trace, use_op, lreason, ft1, ureason, ft2, &|use_op| {
-                funt_to_funt_check_params_contravariant(cx, trace, ureason, ft1, ft2, use_op)
-            })
+            funt_to_funt_check(
+                cx,
+                trace,
+                use_op,
+                lreason,
+                ft1,
+                ureason,
+                ft2,
+                &|use_op| {
+                    funt_to_funt_check_this_contravariant(
+                        cx, trace, lreason, ft1, ureason, ft2, use_op,
+                    )
+                },
+                &|use_op| {
+                    funt_to_funt_check_params_contravariant(cx, trace, ureason, ft1, ft2, use_op)
+                },
+            )
         }
 
         // unwrap namespace type into object type, drop all information about types in the namespace

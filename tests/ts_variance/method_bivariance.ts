@@ -195,3 +195,24 @@ interface BodyElement extends WindowishHandlers {
     listener: (ev: BodyEventMap[K]) => void,
   ): void;
 }
+
+interface WindowishHandlersWithThis {
+  addEventListener<K extends keyof WindowishEventMap>(
+    type: K,
+    listener: (this: WindowishHandlersWithThis, ev: WindowishEventMap[K]) => void,
+  ): void;
+}
+
+interface BodyWithThisEventMap extends WindowishEventMap {
+}
+
+// DOM listener overloads also narrow the callback `this` context in subtypes.
+// In TS method-bivariant parameter checking, that callback `this` must not
+// recursively make `BodyWithThisElement` fail against its parent listener.
+interface BodyWithThisElement extends WindowishHandlersWithThis {
+  bodyOnly: Dog;
+  addEventListener<K extends keyof BodyWithThisEventMap>(
+    type: K,
+    listener: (this: BodyWithThisElement, ev: BodyWithThisEventMap[K]) => void,
+  ): void;
+}

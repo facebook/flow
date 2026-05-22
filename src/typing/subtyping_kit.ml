@@ -93,28 +93,41 @@ module Make (Flow : INPUT) : OUTPUT = struct
     else
       rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
 
-  (* TS-mode bivariant param flow for method-syntax properties: try the
-     contravariant direction (target -> source, the standard subtyping
-     direction) first via speculation; on failure, fall back to the covariant
-     direction (source -> target). Mirrors TS's bivariance for methods, which
-     accepts assignability whenever either direction holds. *)
-  let bivariant_param_flow cx trace ~use_op (source, target) =
-    match
-      SpeculationKit.try_singleton_custom_throw_on_failure cx (fun () ->
-          rec_flow cx trace (target, UseT (use_op, source))
-      )
-    with
-    | () -> ()
-    | exception Flow_js_utils.SpeculationSingletonError ->
-      rec_flow cx trace (source, UseT (use_op, target))
+  let funt_to_funt_check_this_contravariant cx trace ~lreason ~ureason ~ft1 ~ft2 ~use_op =
+    let use_op =
+      Frame (FunParam { n = 0; name = Some "this"; lower = lreason; upper = ureason }, use_op)
+    in
+    let (this_param1, this_status_1) = ft1.this_t in
+    let (this_param2, this_status_2) = ft2.this_t in
+    match (this_status_1, this_status_2) with
+    | (This_Method _, This_Method _) ->
+      rec_flow cx trace (subtype_this_of_function ft2, UseT (use_op, subtype_this_of_function ft1))
+    (* lower bound method, upper bound function
+       This is always banned, as it would allow methods to be unbound through casting *)
+    | (This_Method { unbound }, This_Function) ->
+      if (not unbound) && not (Files.has_ts_ext (Context.file cx)) then
+        add_output
+          cx
+          (Error_message.EMethodUnbinding
+             { use_op; reason_op = lreason; reason_prop = reason_of_t this_param1 }
+          );
+      rec_flow cx trace (this_param2, UseT (use_op, subtype_this_of_function ft1))
+    (* lower bound function, upper bound method.
+       Ok as long as the types match up *)
+    | (This_Function, This_Method _)
+    (* Both functions *)
+    | (This_Function, This_Function) ->
+      rec_flow cx trace (this_param2, UseT (use_op, this_param1))
 
-  (* Shared FunT ~> FunT subtyping driver. The this-binding, effect, return,
-     and type-guard checks are identical in the standard (contravariant) and
-     TS-mode bivariant paths; the only difference is how params are flowed.
-     `check_params` receives the FunCompatibility-rewritten use_op and is
-     responsible for the param-flow step (e.g. `multiflow_subtype` for the
-     standard path, a bivariant pairwise walk for the TS-mode path). *)
-  let funt_to_funt_check cx trace ~use_op (lreason, ft1) (ureason, ft2) ~check_params =
+  let funt_to_funt_check_this_ignore ~use_op:_ = ()
+
+  (* Shared FunT ~> FunT subtyping driver. The effect, return, and type-guard
+     checks are identical across callers; the differences are how `this` and
+     regular params are flowed. `check_params` receives the FunCompatibility-
+     rewritten use_op and is responsible for the param-flow step (e.g.
+     `multiflow_subtype` for the standard path, a bivariant pairwise walk for
+     the TS-mode path). *)
+  let funt_to_funt_check cx trace ~use_op (lreason, ft1) (ureason, ft2) ~check_this ~check_params =
     let use_op =
       Frame
         ( FunCompatibility { lower = lreason; upper = ureason },
@@ -126,32 +139,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | _ -> use_op
         )
     in
-    begin
-      let use_op =
-        Frame (FunParam { n = 0; name = Some "this"; lower = lreason; upper = ureason }, use_op)
-      in
-      let (this_param1, this_status_1) = ft1.this_t in
-      let (this_param2, this_status_2) = ft2.this_t in
-      match (this_status_1, this_status_2) with
-      | (This_Method _, This_Method _) ->
-        rec_flow cx trace (subtype_this_of_function ft2, UseT (use_op, subtype_this_of_function ft1))
-      (* lower bound method, upper bound function
-         This is always banned, as it would allow methods to be unbound through casting *)
-      | (This_Method { unbound }, This_Function) ->
-        if (not unbound) && not (Files.has_ts_ext (Context.file cx)) then
-          add_output
-            cx
-            (Error_message.EMethodUnbinding
-               { use_op; reason_op = lreason; reason_prop = reason_of_t this_param1 }
-            );
-        rec_flow cx trace (this_param2, UseT (use_op, subtype_this_of_function ft1))
-      (* lower bound function, upper bound method.
-         Ok as long as the types match up *)
-      | (This_Function, This_Method _)
-      (* Both functions *)
-      | (This_Function, This_Function) ->
-        rec_flow cx trace (this_param2, UseT (use_op, this_param1))
-    end;
+    check_this ~use_op;
     check_params ~use_op;
     begin
       match (ft1.effect_, ft2.effect_) with
@@ -236,6 +224,38 @@ module Make (Flow : INPUT) : OUTPUT = struct
     in
     multiflow_subtype cx trace ~use_op ureason args ft1
 
+  (* TS-mode bivariant param flow for method-syntax properties: try the
+     contravariant direction (target -> source, the standard subtyping
+     direction) first via speculation; on failure, fall back to the covariant
+     direction (source -> target). Mirrors TS's bivariance for methods, which
+     accepts assignability whenever either direction holds.
+
+     If the method parameter is itself a callback function with an explicit
+     `this` parameter, do not recursively reject on that callback `this`.
+     TypeScript's DOM libraries rely on this when a subinterface narrows
+     listener context from `GlobalEventHandlers` to `Document`, `HTMLElement`,
+     and similar subtypes. The regular callback argument and return checks still
+     run in the chosen direction. *)
+  let bivariant_param_flow cx trace ~use_op (source, target) =
+    let flow_param lower upper =
+      match (Context.find_resolved cx lower, Context.find_resolved cx upper) with
+      | (Some (DefT (lreason, FunT (_, ft1))), Some (DefT (ureason, FunT (_, ft2)))) ->
+        funt_to_funt_check
+          cx
+          trace
+          ~use_op
+          (lreason, ft1)
+          (ureason, ft2)
+          ~check_this:funt_to_funt_check_this_ignore
+          ~check_params:(funt_to_funt_check_params_contravariant cx trace ~ureason ~ft1 ~ft2)
+      | _ -> rec_flow cx trace (lower, UseT (use_op, upper))
+    in
+    match
+      SpeculationKit.try_singleton_custom_throw_on_failure cx (fun () -> flow_param target source)
+    with
+    | () -> ()
+    | exception Flow_js_utils.SpeculationSingletonError -> flow_param source target
+
   (* TS-mode bivariant param-flow check used for method-syntax properties: a
      pairwise walk over ft1.params/ft2.params using `bivariant_param_flow`,
      plus arity enforcement. Trailing ft1 params not provided by ft2 are
@@ -301,6 +321,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ~use_op
       (lreason, ft1)
       (ureason, ft2)
+      ~check_this:(funt_to_funt_check_this_contravariant cx trace ~lreason ~ureason ~ft1 ~ft2)
       ~check_params:(funt_to_funt_check_params_bivariant cx trace ~lreason ~ureason ~ft1 ~ft2)
 
   (* Returns true if (lt, ut) is a method-shape pair (FunT/FunT, compatible
@@ -2384,6 +2405,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ~use_op
         (lreason, ft1)
         (ureason, ft2)
+        ~check_this:(funt_to_funt_check_this_contravariant cx trace ~lreason ~ureason ~ft1 ~ft2)
         ~check_params:(funt_to_funt_check_params_contravariant cx trace ~ureason ~ft1 ~ft2)
     (* unwrap namespace type into object type, drop all information about types in the namespace *)
     | (NamespaceT { namespace_symbol = _; values_type; types_tmap = _ }, _) ->
