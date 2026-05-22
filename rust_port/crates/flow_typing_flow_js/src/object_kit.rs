@@ -1160,23 +1160,19 @@ pub fn run<'cx>(
                 slice,
             ))
         };
-        let mut mapped: Vec<Type> = Vec::new();
-        for slice in x.iter() {
-            mapped.push(map_one(slice)?);
-        }
-        let mut iter = mapped.into_iter();
-        let t0 = iter.next().expect("Vec1 has at least one element");
-        let rest: Vec<Type> = iter.collect();
-        let t = if rest.is_empty() {
-            t0
-        } else {
-            let mut iter = rest.into_iter();
-            let t1 = iter.next().unwrap();
-            let remaining: Rc<[Type]> = iter.collect();
-            Type::new(TypeInner::UnionT(
-                reason.dupe(),
-                union_rep::make(None, union_rep::UnionKind::UnknownKind, t0, t1, remaining),
-            ))
+        let mut slices = x.iter();
+        let t0 = map_one(slices.next().expect("Vec1 has at least one element"))?;
+        let t = match slices.next() {
+            None => t0,
+            Some(slice) => {
+                let t1 = map_one(slice)?;
+                let remaining: Rc<[Type]> =
+                    slices.map(map_one).collect::<Result<Vec<_>, _>>()?.into();
+                Type::new(TypeInner::UnionT(
+                    reason.dupe(),
+                    union_rep::make(None, union_rep::UnionKind::UnknownKind, t0, t1, remaining),
+                ))
+            }
         };
         // Intentional UnknownUse here.
         FlowJs::rec_flow_t(cx, trace, unknown_use(), &t, tout)?;
