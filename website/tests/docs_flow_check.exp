@@ -3786,7 +3786,7 @@ lack a subtyping relationship. If that happens, you can cast one side to the uni
 
    -:2:1
    2| 1 === 1 as boolean; // Error!
-      ^^^^^^^
+      ^^^^^^^^^^^^^^^^^^
 
 References:
    -:2:1
