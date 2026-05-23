@@ -889,7 +889,7 @@ Error --------------------------------------------------------------------------
 Cannot get `t.foo` because property `foo` is missing in object type [1]. [prop-missing]
 
    cond_prop.js:44:11
-   44|         t.foo as Object; // error, consider { baz: "x", quux: "y", bar: "boom" }
+   44|         t.foo as interface {}; // error, consider { baz: "x", quux: "y", bar: "boom" }
                  ^^^
 
 References:
@@ -9555,7 +9555,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [2] [InferError]
 
    mixed.js:104:5
-   104|     x as Object;
+   104|     x as interface {};
             ^
 
 References:
@@ -9586,7 +9586,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [2] [InferError]
 
    mixed.js:107:5
-   107|     x as Object;
+   107|     x as interface {};
             ^
 
 References:
@@ -9617,7 +9617,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [2] [InferError]
 
    mixed.js:110:5
-   110|     x as Object;
+   110|     x as interface {};
             ^
 
 References:
@@ -9648,7 +9648,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [2] [InferError]
 
    mixed.js:113:5
-   113|     x as Object;
+   113|     x as interface {};
             ^
 
 References:

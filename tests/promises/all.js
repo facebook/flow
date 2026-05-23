@@ -24,9 +24,6 @@ Promise.all<Array<unknown>>(); // Error: expected array instead of undefined (to
 // Mis-typed arg
 Promise.all<Array<unknown>>(0); // Error: expected array instead of number
 
-// Promise.all is a function
-Promise.all as Function;
-
 // Promise.all supports iterables
 function test(val: Iterable<Promise<number>>) {
   const r: Promise<ReadonlyArray<number>> = Promise.all(val);

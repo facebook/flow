@@ -101,16 +101,16 @@ function obj2(x: unknown) {
 
 function obj3(x: unknown) {
   if (typeof x === 'object' && x) {
-    x as Object;
+    x as interface {};
   }
   if (x && typeof x === 'object') {
-    x as Object;
+    x as interface {};
   }
   if (x != null && typeof x === 'object') {
-    x as Object;
+    x as interface {};
   }
   if (x !== null && typeof x === 'object') {
-    x as Object;
+    x as interface {};
   }
 }
 

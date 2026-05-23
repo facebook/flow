@@ -2,7 +2,7 @@
 var a : { someProp: number, ... } = function () {};
 
 // Expecting properties that do exist should be fine
-var b : { apply: Function, ... } = function () {};
+var b : { apply: any, ... } = function () {};
 
 // Expecting properties in the functions statics should be fine
 var f = function () {};

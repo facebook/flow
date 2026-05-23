@@ -3,7 +3,7 @@ declare module 'any' {
 }
 
 declare module 'object' {
-  declare module.exports: Object;
+  declare module.exports: any;
 }
 
 

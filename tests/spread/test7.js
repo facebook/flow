@@ -1,6 +1,6 @@
 let tests = [
   function(x: any) {
-    ({...x}) as Object;
+    ({...x}) as interface {};
     ({...x}) as void;
   },
 ];

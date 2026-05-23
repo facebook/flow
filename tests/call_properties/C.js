@@ -24,11 +24,11 @@ function e(x: {...}): () => string {
 }
 
 // AnyFunT should also be allowed
-function f(x: { (z: number): string, ... }): Function {
+function f(x: { (z: number): string, ... }): any {
   return x;
 }
 
 // ... but only if the object is callable
-function g(x: {...}): Function {
+function g(x: {...}): any {
   return x;
 }

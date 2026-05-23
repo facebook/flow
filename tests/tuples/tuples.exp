@@ -1941,8 +1941,8 @@ elements. [invalid-tuple-arity]
 
 References:
    too-few.js:3:17
-   3| function foo(a: [Object, Object]) {}
-                      ^^^^^^^^^^^^^^^^ [2]
+   3| function foo(a: [any, any]) {}
+                      ^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:2:13

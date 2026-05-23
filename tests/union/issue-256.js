@@ -1,5 +1,5 @@
 declare class Myclass {
-    myfun(myarray: Array<Function | string>): any;
+    myfun(myarray: Array<any | string>): any;
 }
 declare const myclass: Myclass;
 

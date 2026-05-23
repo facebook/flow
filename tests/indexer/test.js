@@ -20,5 +20,5 @@ class D extends C<{foo: number, bar: string, ...}> {
   x: { foo: number, qux: boolean, ... }; // error: qux not found
 }
 
-type AnyKey = keyof Object;
+type AnyKey = keyof any;
 var o3: {[key: AnyKey]: number} = { foo: 0 };

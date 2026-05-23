@@ -136,21 +136,5 @@ References:
                                   ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ generics.js:38:11
 
-Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
-
-   38| var obj : Object<string, string> = {} // error, arity 0
-                 ^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------ generics.js:39:11
-
-Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
-
-   39| var fn1 : Function<string> = function() { return 'foo'; } // error, arity 0
-                 ^^^^^^^^^^^^^^^^
-
-
-
-Found 9 errors
+Found 7 errors

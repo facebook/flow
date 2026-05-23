@@ -1,6 +1,6 @@
 import React from 'react';
 
-React.Component as Object; // OK
+React.Component as interface {}; // OK
 React.Component as number; // Error
 'Hello, world!' as React.Node; // Ok: in namespace.
 ({} as React.Node); // Error.

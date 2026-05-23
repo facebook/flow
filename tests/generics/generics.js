@@ -34,6 +34,3 @@ class H<Z> extends G<Array<Z>> {
 var h1 = new H<Array<string>>();
 h1.foo(["..."]);
 var h2:F<Array<Array<Array<number>>>> = h1;
-
-var obj : Object<string, string> = {} // error, arity 0
-var fn1 : Function<string> = function() { return 'foo'; } // error, arity 0

@@ -1,13 +1,13 @@
 /* @flow */
 
-function testKeysOfObject(str: string, lit: 'hi') {
-  str as keyof Object; // Any string should be fine
+function testKeysOfAny(str: string, lit: 'hi') {
+  str as keyof any; // Any string should be fine
   if (str) {
-    str as keyof Object; // No error, truthy string should be fine
+    str as keyof any; // No error, truthy string should be fine
   }
-  'hi' as keyof Object; // String literal should be fine
+  'hi' as keyof any; // String literal should be fine
 
-  123 as keyof Object; // Error: number -> keys of Object
+  123 as keyof any; // Error: number -> keys of any
 }
 
 type StrDict = {[key: string]: unknown};

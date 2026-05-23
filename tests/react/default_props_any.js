@@ -1,7 +1,7 @@
 import React from 'react';
 
 class Foo extends React.Component<{required: number, ...}> {
-  static defaultProps: Object;
+  static defaultProps: any;
 }
 
 class Bar extends React.Component<{required: number, ...}> {

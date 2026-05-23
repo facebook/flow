@@ -41,7 +41,7 @@ let tests = [
 
     function testSometimesTruthyProp(t: T) {
       if (t.bar) {
-        t.foo as Object; // error, consider { baz: "x", quux: "y", bar: "boom" }
+        t.foo as interface {}; // error, consider { baz: "x", quux: "y", bar: "boom" }
       } else {
         t.quux as string; // error, consider { foo: {}, bar: "" }
       }

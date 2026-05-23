@@ -11,7 +11,7 @@
  * leading to an error.
  */
 
-type MyObj = Object;
+type MyObj = any;
 
 function foo(x: {[key: string]: unknown}) {
   bar(x);

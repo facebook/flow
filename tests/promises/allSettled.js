@@ -4,9 +4,6 @@ Promise.allSettled<Array<unknown>>(); // Error: expected $Iterable instead of un
 // Invalid arg type
 Promise.allSettled<Array<unknown>>(0); // Error: expected $Iterable instead of number
 
-// Promise.allSettled is a function
-Promise.allSettled as Function;
-
 class Foo {
   foo() {}
 }
