@@ -157,18 +157,7 @@ module.exports = {
       type: 'category',
       label: 'Tooling',
       items: [
-        {
-          type: 'category',
-          label: 'Editors',
-          items: [
-            'editors/index',
-            'editors/vscode',
-            'editors/webstorm',
-            'editors/sublime-text',
-            'editors/vim',
-            'editors/emacs',
-          ],
-        },
+        'editors/index',
         'tools/babel',
         'tools/prettier',
         'tools/eslint',
