@@ -559,26 +559,155 @@ References:
                           ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- libdef_test.js:8:14
+Error ---------------------------------------------------------------------------------------------- libdef_test.js:9:13
+
+Cannot cast object literal to `Box` because in property `b`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   libdef_test.js:9:13
+    9| ({a: "", b: ""}) as ns_decl_merge_interface.Box; // error: string ~> number
+                   ^^ [1]
+
+References:
+   flow-typed/namespaces.js:34:22
+   34|   interface Box { b: number }
+                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- libdef_test.js:12:1
+
+Cannot cast `(new ns_decl_merge_class.Box()).b` to string because number [1] is incompatible with string [2].
+[incompatible-type]
+
+   libdef_test.js:12:1
+   12| (new ns_decl_merge_class.Box()).b as string; // error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/namespaces.js:41:22
+   41|   interface Box { b: number }
+                            ^^^^^^ [1]
+   libdef_test.js:12:38
+   12| (new ns_decl_merge_class.Box()).b as string; // error: number ~> string
+                                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- libdef_test.js:14:1
+
+Cannot cast `(new ns_decl_merge_class_reverse.Box()).a` to number because string [1] is incompatible with number [2].
+[incompatible-type]
+
+   libdef_test.js:14:1
+   14| (new ns_decl_merge_class_reverse.Box()).a as number; // error: string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/namespaces.js:45:22
+   45|   interface Box { a: string }
+                            ^^^^^^ [1]
+   libdef_test.js:14:46
+   14| (new ns_decl_merge_class_reverse.Box()).a as number; // error: string ~> number
+                                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- libdef_test.js:18:1
+
+Cannot cast `ns_decl_merge_overload.f(...)` to string because number [1] is incompatible with string [2].
+[incompatible-type]
+
+   libdef_test.js:18:1
+   18| ns_decl_merge_overload.f(1) as string; // error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/namespaces.js:55:34
+   55|   declare function f(x: number): number;
+                                        ^^^^^^ [1]
+   libdef_test.js:18:32
+   18| ns_decl_merge_overload.f(1) as string; // error: number ~> string
+                                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- libdef_test.js:22:1
+
+Cannot cast `1` to `A` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   libdef_test.js:22:1
+   22| 1 as ns_decl_merge_nested.Inner.A; // error: number ~> string
+       ^ [1]
+
+References:
+   libdef_test.js:22:6
+   22| 1 as ns_decl_merge_nested.Inner.A; // error: number ~> string
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- libdef_test.js:26:1
+
+Cannot cast `ns_decl_merge_type_then_value_namespace.Inner.x` to string because number [1] is incompatible with
+string [2]. [incompatible-type]
+
+   libdef_test.js:26:1
+   26| ns_decl_merge_type_then_value_namespace.Inner.x as string; // error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/namespaces.js:76:22
+   76|     declare const x: number;
+                            ^^^^^^ [1]
+   libdef_test.js:26:52
+   26| ns_decl_merge_type_then_value_namespace.Inner.x as string; // error: number ~> string
+                                                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- libdef_test.js:29:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   libdef_test.js:29:1
+   29| 1 as ns_decl_merge_fn_namespace.f.T; // error: number ~> string
+       ^ [1]
+
+References:
+   libdef_test.js:29:6
+   29| 1 as ns_decl_merge_fn_namespace.f.T; // error: number ~> string
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- libdef_test.js:31:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   libdef_test.js:31:1
+   31| 1 as ns_decl_merge_class_namespace.C.T; // error: number ~> string
+       ^ [1]
+
+References:
+   libdef_test.js:31:6
+   31| 1 as ns_decl_merge_class_namespace.C.T; // error: number ~> string
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- libdef_test.js:33:14
 
 Cannot get `non_ns_value.b` because property `b` is missing in `String` [1]. [prop-missing]
 
-   libdef_test.js:8:14
-    8| non_ns_value.b as empty; // error: value namespace ~> empty
+   libdef_test.js:33:14
+   33| non_ns_value.b as empty; // error: value namespace ~> empty
                     ^
 
 References:
-   flow-typed/namespaces.js:30:29
-   30| declare const non_ns_value: string;
+   flow-typed/namespaces.js:98:29
+   98| declare const non_ns_value: string;
                                    ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- libdef_test.js:9:1
+Error ---------------------------------------------------------------------------------------------- libdef_test.js:34:1
 
 Cannot resolve name `non_ns_type`. [cannot-resolve-name]
 
-   9| non_ns_type; // error: it's a type
-      ^^^^^^^^^^^
+   34| non_ns_type; // error: it's a type
+       ^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------- polymorphic_this_extends.js:28:12
@@ -1338,4 +1467,4 @@ References:
 
 
 
-Found 93 errors
+Found 101 errors

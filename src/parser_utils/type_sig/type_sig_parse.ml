@@ -2161,43 +2161,285 @@ module Scope = struct
     in
     (values, types)
 
-  let merge_namespace_entries tbls existing_values existing_types values types =
+  let scope_local_type_binding scope name =
+    match scope with
+    | Global { types; _ }
+    | DeclareModule { types; _ }
+    | DeclareNamespace { types; _ }
+    | Module { types; _ }
+    | Lexical { types; _ } ->
+      SMap.find_opt name types
+    | ConditionalTypeExtends _ -> None
+
+  let scope_local_value_binding scope name =
+    match scope with
+    | Global { values; _ }
+    | DeclareModule { values; _ }
+    | DeclareNamespace { values; _ }
+    | Module { values; _ }
+    | Lexical { values; _ } ->
+      SMap.find_opt name values
+    | ConditionalTypeExtends _ -> None
+
+  let local_binding_node_of_namespace_entry ~type_only name = function
+    | (_, ValRef { lookup; ref = Ref { scope; name = ref_name; resolved = _; ref_loc = _ } })
+      when ref_name = name
+           && lookup
+              =
+              if type_only then
+                TypeRefLookup
+              else
+                ValueRefLookup ->
+      let binding =
+        if type_only then
+          scope_local_type_binding scope name
+        else
+          scope_local_value_binding scope name
+      in
+      (match binding with
+      | Some (LocalBinding node) -> Some node
+      | _ -> None)
+    | _ -> None
+
+  let local_value_binding_node_of_namespace_entry name entry =
+    local_binding_node_of_namespace_entry ~type_only:false name entry
+
+  let merge_interface_type_bindings tbls name existing_node new_node existing_entry entry =
+    match
+      ( (Local_defs.value existing_node : _ local_binding),
+        (Local_defs.value new_node : _ local_binding)
+      )
+    with
+    | (TypeBinding { id_loc = existing_id_loc; def = old_def }, TypeBinding { def = new_def; _ }) ->
+      let (invalid_binding_loc, _) = entry in
+      let (existing_binding_loc, _) = existing_entry in
+      let merged_def =
+        lazy
+          (match (Lazy.force old_def, Lazy.force new_def) with
+          | ( Interface { id_loc; name; tparams = old_tp; def = old_sig },
+              Interface { id_loc = new_id_loc; tparams = new_tp; def = new_sig; _ }
+            ) ->
+            if tparams_arity old_tp = tparams_arity new_tp then
+              Interface
+                {
+                  id_loc;
+                  name;
+                  tparams = old_tp;
+                  def =
+                    merge_interface_sigs
+                      ~existing_id_loc:id_loc
+                      ~current_id_loc:new_id_loc
+                      ~old_tparams:old_tp
+                      ~new_tparams:new_tp
+                      tbls
+                      old_sig
+                      new_sig;
+                }
+            else begin
+              tbls.additional_errors <-
+                Signature_error.InterfaceMergeTparamMismatch
+                  { name; current_binding_loc = new_id_loc; existing_binding_loc = id_loc }
+                :: tbls.additional_errors;
+              Lazy.force old_def
+            end
+          | _ ->
+            tbls.additional_errors <-
+              Signature_error.NamespacedNameAlreadyBound
+                { name; invalid_binding_loc; existing_binding_loc }
+              :: tbls.additional_errors;
+            Lazy.force old_def)
+      in
+      Local_defs.modify existing_node (fun _ ->
+          TypeBinding { id_loc = existing_id_loc; def = merged_def }
+      );
+      true
+    | _ -> false
+
+  let merge_interface_into_declare_class_binding tbls class_node iface_node =
+    match
+      ( (Local_defs.value class_node : _ local_binding),
+        (Local_defs.value iface_node : _ local_binding)
+      )
+    with
+    | ( DeclareClassBinding
+          { id_loc = dc_id_loc; nominal_id_loc; name; def = dc_def; namespace_types },
+        TypeBinding { def = iface_def; _ }
+      ) ->
+      (match Lazy.force iface_def with
+      | Interface { id_loc = iface_id_loc; tparams = iface_tp; def = iface_sig; _ } ->
+        let merged_def =
+          lazy
+            (let (DeclareClassSig dc as forced_dc) = Lazy.force dc_def in
+             if tparams_arity dc.tparams = tparams_arity iface_tp then
+               merge_interface_into_declare_class_sig
+                 ~existing_id_loc:dc_id_loc
+                 ~current_id_loc:iface_id_loc
+                 ~iface_tparams:iface_tp
+                 tbls
+                 forced_dc
+                 iface_sig
+             else begin
+               tbls.additional_errors <-
+                 Signature_error.InterfaceMergeTparamMismatch
+                   { name; current_binding_loc = iface_id_loc; existing_binding_loc = dc_id_loc }
+                 :: tbls.additional_errors;
+               forced_dc
+             end
+            )
+        in
+        Local_defs.modify class_node (fun _ ->
+            DeclareClassBinding
+              { id_loc = dc_id_loc; nominal_id_loc; name; def = merged_def; namespace_types }
+        );
+        true
+      | _ -> false)
+    | _ -> false
+
+  let rec merge_namespace_entries tbls existing_values existing_types values types =
     SMap.iter
       (fun name ((loc, _) as entry) ->
         match SMap.find_opt name !existing_values with
-        | Some (existing_binding_loc, _) ->
-          tbls.additional_errors <-
-            Signature_error.NamespacedNameAlreadyBound
-              { name; invalid_binding_loc = loc; existing_binding_loc }
-            :: tbls.additional_errors
-        | None ->
-          (match SMap.find_opt name !existing_types with
-          | Some (existing_binding_loc, _) ->
+        | Some ((existing_binding_loc, _) as existing_entry) ->
+          if merge_namespace_value_value_entry tbls name existing_entry entry then
+            ()
+          else
             tbls.additional_errors <-
               Signature_error.NamespacedNameAlreadyBound
                 { name; invalid_binding_loc = loc; existing_binding_loc }
               :: tbls.additional_errors
+        | None ->
+          (match SMap.find_opt name !existing_types with
+          | Some ((existing_binding_loc, _) as existing_entry) ->
+            (match merge_namespace_value_type_entry tbls name existing_entry entry with
+            | Some merged_entry ->
+              existing_types := SMap.remove name !existing_types;
+              existing_values := SMap.add name merged_entry !existing_values
+            | None ->
+              tbls.additional_errors <-
+                Signature_error.NamespacedNameAlreadyBound
+                  { name; invalid_binding_loc = loc; existing_binding_loc }
+                :: tbls.additional_errors)
           | None -> existing_values := SMap.add name entry !existing_values))
       values;
     SMap.iter
       (fun name ((loc, _) as entry) ->
         match SMap.find_opt name !existing_values with
-        | Some (existing_binding_loc, _) ->
-          tbls.additional_errors <-
-            Signature_error.NamespacedNameAlreadyBound
-              { name; invalid_binding_loc = loc; existing_binding_loc }
-            :: tbls.additional_errors
-        | None ->
-          (match SMap.find_opt name !existing_types with
-          | Some (existing_binding_loc, _) ->
+        | Some ((existing_binding_loc, _) as existing_entry) ->
+          if merge_namespace_type_value_entry tbls name existing_entry entry then
+            ()
+          else
             tbls.additional_errors <-
               Signature_error.NamespacedNameAlreadyBound
                 { name; invalid_binding_loc = loc; existing_binding_loc }
               :: tbls.additional_errors
+        | None ->
+          (match SMap.find_opt name !existing_types with
+          | Some ((existing_binding_loc, _) as existing_entry) ->
+            if merge_namespace_type_type_entry tbls name existing_entry entry then
+              ()
+            else
+              tbls.additional_errors <-
+                Signature_error.NamespacedNameAlreadyBound
+                  { name; invalid_binding_loc = loc; existing_binding_loc }
+                :: tbls.additional_errors
           | None -> existing_types := SMap.add name entry !existing_types))
       types
 
-  let merge_namespace_into_local_binding_node tbls node values types =
+  and merge_namespace_value_value_entry tbls name existing_entry entry =
+    match
+      ( local_value_binding_node_of_namespace_entry name existing_entry,
+        local_value_binding_node_of_namespace_entry name entry
+      )
+    with
+    | (Some existing_node, Some new_node) ->
+      (match (Local_defs.value existing_node, Local_defs.value new_node) with
+      | ( DeclareFunBinding
+            {
+              name = fun_name;
+              defs_rev;
+              statics = existing_statics;
+              namespace_types = existing_namespace_types;
+            },
+          DeclareFunBinding
+            {
+              defs_rev = new_defs_rev;
+              statics = new_statics;
+              namespace_types = new_namespace_types;
+              _;
+            }
+        ) ->
+        let statics = ref existing_statics in
+        let namespace_types = ref existing_namespace_types in
+        merge_namespace_entries tbls statics namespace_types new_statics new_namespace_types;
+        Local_defs.modify existing_node (fun _ ->
+            DeclareFunBinding
+              {
+                name = fun_name;
+                defs_rev = Nel.append new_defs_rev defs_rev;
+                statics = !statics;
+                namespace_types = !namespace_types;
+              }
+        );
+        true
+      | (_, NamespaceBinding { values; types; _ }) ->
+        merge_namespace_into_local_binding_node tbls existing_node values types
+      | _ -> false)
+    | _ -> false
+
+  and merge_namespace_type_type_entry tbls name existing_entry entry =
+    match
+      ( local_binding_node_of_namespace_entry ~type_only:true name existing_entry,
+        local_binding_node_of_namespace_entry ~type_only:true name entry
+      )
+    with
+    | (Some existing_node, Some new_node) ->
+      (match (Local_defs.value existing_node, Local_defs.value new_node) with
+      | (TypeBinding _, TypeBinding _) ->
+        merge_interface_type_bindings tbls name existing_node new_node existing_entry entry
+      | (_, NamespaceBinding { values; types; _ }) ->
+        merge_namespace_into_local_binding_node tbls existing_node values types
+      | _ -> false)
+    | _ -> false
+
+  and merge_namespace_value_type_entry tbls name existing_entry entry =
+    match
+      ( local_binding_node_of_namespace_entry ~type_only:true name existing_entry,
+        local_value_binding_node_of_namespace_entry name entry
+      )
+    with
+    | (Some existing_node, Some new_node) ->
+      (match (Local_defs.value existing_node, Local_defs.value new_node) with
+      | ( NamespaceBinding { values = existing_values; types = existing_types; _ },
+          NamespaceBinding { id_loc; name; values; types }
+        ) ->
+        let merged_values = ref existing_values in
+        let merged_types = ref existing_types in
+        merge_namespace_entries tbls merged_values merged_types values types;
+        Local_defs.modify new_node (fun _ ->
+            NamespaceBinding { id_loc; name; values = !merged_values; types = !merged_types }
+        );
+        Some entry
+      | _ ->
+        if merge_interface_into_declare_class_binding tbls new_node existing_node then
+          Some entry
+        else
+          None)
+    | _ -> None
+
+  and merge_namespace_type_value_entry tbls name existing_entry entry =
+    match
+      ( local_value_binding_node_of_namespace_entry name existing_entry,
+        local_binding_node_of_namespace_entry ~type_only:true name entry
+      )
+    with
+    | (Some existing_node, Some new_node) ->
+      (match Local_defs.value new_node with
+      | NamespaceBinding { values; types; _ } ->
+        merge_namespace_into_local_binding_node tbls existing_node values types
+      | _ -> merge_interface_into_declare_class_binding tbls existing_node new_node)
+    | _ -> false
+
+  and merge_namespace_into_local_binding_node tbls node values types =
     let merged = ref false in
     Local_defs.modify node (fun (binding : _ local_binding) ->
         match binding with

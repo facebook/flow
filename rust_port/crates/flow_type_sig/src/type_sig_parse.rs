@@ -1400,6 +1400,36 @@ pub(super) mod scope {
         }
     }
 
+    fn lookup_local_type<'arena, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        id: ScopeId,
+        name: &FlowSmolStr,
+    ) -> Option<BindingNode<'arena, 'ast>> {
+        match scopes.get(id) {
+            Scope::Global { types, .. }
+            | Scope::DeclareModule { types, .. }
+            | Scope::DeclareNamespace { types, .. }
+            | Scope::Module { types, .. }
+            | Scope::Lexical { types, .. } => types.get(name).map(|binding| binding.dupe()),
+            Scope::ConditionalTypeExtends(_) => None,
+        }
+    }
+
+    fn lookup_local_value<'arena, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        id: ScopeId,
+        name: &FlowSmolStr,
+    ) -> Option<BindingNode<'arena, 'ast>> {
+        match scopes.get(id) {
+            Scope::Global { values, .. }
+            | Scope::DeclareModule { values, .. }
+            | Scope::DeclareNamespace { values, .. }
+            | Scope::Module { values, .. }
+            | Scope::Lexical { values, .. } => values.get(name).map(|binding| binding.dupe()),
+            Scope::ConditionalTypeExtends(_) => None,
+        }
+    }
+
     fn find_host(scopes: &Scopes, mut id: ScopeId, b: &LocalBinding) -> ScopeId {
         loop {
             match scopes.get(id) {
@@ -4141,7 +4171,589 @@ pub(super) mod scope {
         (new_values, new_types)
     }
 
-    fn merge_namespace_entries<'arena, 'ast>(
+    fn local_binding_node_of_namespace_entry<'arena, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        type_only: bool,
+        name: &FlowSmolStr,
+        entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+    ) -> Option<LocalDefNode<'arena, 'ast>> {
+        match &entry.1 {
+            Parsed::ValRef { lookup, ref_ }
+                if &ref_.name == name
+                    && matches!(
+                        (type_only, lookup),
+                        (true, ValRefLookup::TypeRefLookup) | (false, ValRefLookup::ValueRefLookup)
+                    ) =>
+            {
+                let binding = if type_only {
+                    lookup_local_type(scopes, ref_.scope, name)
+                } else {
+                    lookup_local_value(scopes, ref_.scope, name)
+                };
+                match binding {
+                    Some(BindingNode::LocalBinding(node)) => Some(node),
+                    _ => None,
+                }
+            }
+            _ => None,
+        }
+    }
+
+    fn local_value_binding_node_of_namespace_entry<'arena, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        name: &FlowSmolStr,
+        entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+    ) -> Option<LocalDefNode<'arena, 'ast>> {
+        local_binding_node_of_namespace_entry(scopes, false, name, entry)
+    }
+
+    fn merge_interface_type_bindings<'arena: 'ast, 'ast>(
+        name: &FlowSmolStr,
+        existing_node: &LocalDefNode<'arena, 'ast>,
+        new_node: &LocalDefNode<'arena, 'ast>,
+        existing_entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+        entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+    ) -> bool {
+        let existing_id_loc = {
+            let data = existing_node.0.data();
+            match &*data {
+                LocalBinding::TypeBinding { id_loc, .. } => id_loc.dupe(),
+                _ => return false,
+            }
+        };
+        let new_id_loc = {
+            let data = new_node.0.data();
+            match &*data {
+                LocalBinding::TypeBinding { id_loc, .. } => id_loc.dupe(),
+                _ => return false,
+            }
+        };
+
+        let old_def = {
+            let mut data = existing_node.0.data_mut();
+            let old = std::mem::replace(
+                &mut *data,
+                LocalBinding::TypeBinding {
+                    id_loc: existing_id_loc.dupe(),
+                    def: Lazy::new(Box::new(|_, _, _| {
+                        unreachable!("placeholder during namespace interface merge")
+                    })),
+                },
+            );
+            match old {
+                LocalBinding::TypeBinding { def, .. } => def,
+                _ => unreachable!(),
+            }
+        };
+        let new_def = {
+            let mut data = new_node.0.data_mut();
+            let old = std::mem::replace(
+                &mut *data,
+                LocalBinding::TypeBinding {
+                    id_loc: new_id_loc.dupe(),
+                    def: Lazy::new(Box::new(|_, _, _| {
+                        unreachable!("placeholder during namespace interface merge")
+                    })),
+                },
+            );
+            match old {
+                LocalBinding::TypeBinding { def, .. } => def,
+                _ => unreachable!(),
+            }
+        };
+        let new_def = std::rc::Rc::new(new_def);
+        {
+            let mut data = new_node.0.data_mut();
+            let new_def = std::rc::Rc::clone(&new_def);
+            *data = LocalBinding::TypeBinding {
+                id_loc: new_id_loc,
+                def: Lazy::new(Box::new(move |opts, scopes, tbls| {
+                    new_def.get_forced(opts, scopes, tbls).clone()
+                })),
+            };
+        }
+
+        let merge_name = name.dupe();
+        let invalid_binding_loc = entry.0.dupe();
+        let existing_binding_loc = existing_entry.0.dupe();
+        let merged_def = Lazy::new(Box::new(
+            move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
+                let old_val = old_def.get_forced(opts, scopes, tbls);
+                let new_val = new_def.get_forced(opts, scopes, tbls);
+                match (old_val, new_val) {
+                    (Def::Interface(old_iface), Def::Interface(new_iface)) => {
+                        if tparams_arity(&old_iface.tparams) == tparams_arity(&new_iface.tparams) {
+                            let merged_sig = merge_interface_sigs(
+                                old_iface.id_loc.dupe(),
+                                new_iface.id_loc.dupe(),
+                                tbls,
+                                &old_iface.tparams,
+                                &new_iface.tparams,
+                                &old_iface.def,
+                                &new_iface.def,
+                            );
+                            Def::Interface(Box::new(DefInterface {
+                                id_loc: old_iface.id_loc.dupe(),
+                                name: old_iface.name.dupe(),
+                                tparams: old_iface.tparams.clone(),
+                                def: merged_sig,
+                            }))
+                        } else {
+                            tbls.additional_errors.push(
+                                signature_error::BindingValidation::InterfaceMergeTparamMismatch {
+                                    name: merge_name.dupe(),
+                                    current_binding_loc: new_iface.id_loc.dupe(),
+                                    existing_binding_loc: old_iface.id_loc.dupe(),
+                                },
+                            );
+                            old_val.clone()
+                        }
+                    }
+                    _ => {
+                        tbls.additional_errors.push(
+                            signature_error::BindingValidation::NamespacedNameAlreadyBound {
+                                name: merge_name,
+                                invalid_binding_loc,
+                                existing_binding_loc,
+                            },
+                        );
+                        old_val.clone()
+                    }
+                }
+            },
+        ));
+
+        {
+            let mut data = existing_node.0.data_mut();
+            *data = LocalBinding::TypeBinding {
+                id_loc: existing_id_loc,
+                def: merged_def,
+            };
+        }
+        true
+    }
+
+    fn merge_interface_into_declare_class_binding<'arena: 'ast, 'ast>(
+        name: &FlowSmolStr,
+        class_node: &LocalDefNode<'arena, 'ast>,
+        iface_node: &LocalDefNode<'arena, 'ast>,
+        existing_entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+        entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+    ) -> bool {
+        let (dc_id_loc, dc_nominal_id_loc, dc_name, dc_namespace_types) = {
+            let data = class_node.0.data();
+            match &*data {
+                LocalBinding::DeclareClassBinding {
+                    id_loc,
+                    nominal_id_loc,
+                    name,
+                    namespace_types,
+                    ..
+                } => (
+                    id_loc.dupe(),
+                    nominal_id_loc.dupe(),
+                    name.dupe(),
+                    namespace_types.clone(),
+                ),
+                _ => return false,
+            }
+        };
+        let iface_id_loc = {
+            let data = iface_node.0.data();
+            match &*data {
+                LocalBinding::TypeBinding { id_loc, .. } => id_loc.dupe(),
+                _ => return false,
+            }
+        };
+
+        let dc_def = {
+            let mut data = class_node.0.data_mut();
+            let old = std::mem::replace(
+                &mut *data,
+                LocalBinding::DeclareClassBinding {
+                    id_loc: dc_id_loc.dupe(),
+                    nominal_id_loc: dc_nominal_id_loc.dupe(),
+                    name: dc_name.dupe(),
+                    def: Lazy::new(Box::new(|_, _, _| {
+                        unreachable!("placeholder during namespace declare-class merge")
+                    })),
+                    namespace_types: dc_namespace_types.clone(),
+                },
+            );
+            match old {
+                LocalBinding::DeclareClassBinding { def, .. } => def,
+                _ => unreachable!(),
+            }
+        };
+        let iface_def = {
+            let mut data = iface_node.0.data_mut();
+            let old = std::mem::replace(
+                &mut *data,
+                LocalBinding::TypeBinding {
+                    id_loc: iface_id_loc.dupe(),
+                    def: Lazy::new(Box::new(|_, _, _| {
+                        unreachable!("placeholder during namespace interface merge")
+                    })),
+                },
+            );
+            match old {
+                LocalBinding::TypeBinding { def, .. } => def,
+                _ => unreachable!(),
+            }
+        };
+        let iface_def = std::rc::Rc::new(iface_def);
+        {
+            let mut data = iface_node.0.data_mut();
+            let iface_def = std::rc::Rc::clone(&iface_def);
+            *data = LocalBinding::TypeBinding {
+                id_loc: iface_id_loc,
+                def: Lazy::new(Box::new(move |opts, scopes, tbls| {
+                    iface_def.get_forced(opts, scopes, tbls).clone()
+                })),
+            };
+        }
+
+        let merge_dc_id_loc = dc_id_loc.dupe();
+        let merge_name = name.dupe();
+        let invalid_binding_loc = entry.0.dupe();
+        let existing_binding_loc = existing_entry.0.dupe();
+        let merged_def = Lazy::new(Box::new(
+            move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
+                let forced_dc = dc_def.get_forced(opts, scopes, tbls).clone();
+                match iface_def.get_forced(opts, scopes, tbls) {
+                    Def::Interface(iface) => {
+                        if tparams_arity(&forced_dc.tparams) == tparams_arity(&iface.tparams) {
+                            let iface_id_loc_local = iface.id_loc.dupe();
+                            let iface_def_local = iface.def.clone();
+                            merge_interface_into_declare_class_sig(
+                                merge_dc_id_loc.dupe(),
+                                iface_id_loc_local,
+                                tbls,
+                                &forced_dc,
+                                &iface.tparams,
+                                &iface_def_local,
+                            )
+                        } else {
+                            tbls.additional_errors.push(
+                                signature_error::BindingValidation::InterfaceMergeTparamMismatch {
+                                    name: merge_name,
+                                    current_binding_loc: iface.id_loc.dupe(),
+                                    existing_binding_loc: merge_dc_id_loc,
+                                },
+                            );
+                            forced_dc
+                        }
+                    }
+                    _ => {
+                        tbls.additional_errors.push(
+                            signature_error::BindingValidation::NamespacedNameAlreadyBound {
+                                name: merge_name,
+                                invalid_binding_loc,
+                                existing_binding_loc,
+                            },
+                        );
+                        forced_dc
+                    }
+                }
+            },
+        ));
+
+        {
+            let mut data = class_node.0.data_mut();
+            *data = LocalBinding::DeclareClassBinding {
+                id_loc: dc_id_loc,
+                nominal_id_loc: dc_nominal_id_loc,
+                name: dc_name,
+                def: merged_def,
+                namespace_types: dc_namespace_types,
+            };
+        }
+        true
+    }
+
+    fn clone_fun_sig_lazy<'arena: 'ast, 'ast>(
+        def: std::rc::Rc<Lazy<'arena, 'ast, FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>>>,
+    ) -> Lazy<'arena, 'ast, FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>> {
+        Lazy::new(Box::new(move |opts, scopes, tbls| {
+            def.get_forced(opts, scopes, tbls).clone()
+        }))
+    }
+
+    fn restore_declare_fun_defs<'arena: 'ast, 'ast>(
+        defs: Vec<(
+            LocNode<'arena>,
+            LocNode<'arena>,
+            Lazy<'arena, 'ast, FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        )>,
+    ) -> (
+        Vec<(
+            LocNode<'arena>,
+            LocNode<'arena>,
+            Lazy<'arena, 'ast, FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        )>,
+        Vec<(
+            LocNode<'arena>,
+            LocNode<'arena>,
+            Lazy<'arena, 'ast, FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        )>,
+    ) {
+        let mut defs_for_existing = Vec::new();
+        let mut defs_for_restore = Vec::new();
+        for (id_loc, fn_loc, def) in defs {
+            let def = std::rc::Rc::new(def);
+            defs_for_existing.push((
+                id_loc.dupe(),
+                fn_loc.dupe(),
+                clone_fun_sig_lazy(std::rc::Rc::clone(&def)),
+            ));
+            defs_for_restore.push((id_loc, fn_loc, clone_fun_sig_lazy(def)));
+        }
+        (defs_for_existing, defs_for_restore)
+    }
+
+    fn merge_namespace_value_value_entry<'arena: 'ast, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        tbls: &mut Tables<'arena, 'ast>,
+        name: &FlowSmolStr,
+        existing_entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+        entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+    ) -> bool {
+        let existing_node =
+            local_value_binding_node_of_namespace_entry(scopes, name, existing_entry);
+        let new_node = local_value_binding_node_of_namespace_entry(scopes, name, entry);
+        let (Some(existing_node), Some(new_node)) = (existing_node, new_node) else {
+            return false;
+        };
+
+        let new_namespace = {
+            let data = new_node.0.data();
+            match &*data {
+                LocalBinding::NamespaceBinding { values, types, .. } => {
+                    Some((values.clone(), types.clone()))
+                }
+                _ => None,
+            }
+        };
+        if let Some((values, types)) = new_namespace {
+            return merge_namespace_into_local_binding_node(
+                scopes,
+                tbls,
+                &existing_node,
+                values,
+                types,
+            );
+        }
+
+        let new_declare_fun = {
+            let mut data = new_node.0.data_mut();
+            match &mut *data {
+                LocalBinding::DeclareFunBinding {
+                    name,
+                    defs,
+                    statics,
+                    namespace_types,
+                } => {
+                    let name = name.dupe();
+                    let defs = std::mem::take(defs);
+                    let statics = statics.clone();
+                    let namespace_types = namespace_types.clone();
+                    let (defs_for_existing, defs_for_restore) = restore_declare_fun_defs(defs);
+                    *data = LocalBinding::DeclareFunBinding {
+                        name: name.dupe(),
+                        defs: defs_for_restore,
+                        statics: statics.clone(),
+                        namespace_types: namespace_types.clone(),
+                    };
+                    Some((defs_for_existing, statics, namespace_types))
+                }
+                _ => None,
+            }
+        };
+        let Some((new_defs, new_statics, new_namespace_types)) = new_declare_fun else {
+            return false;
+        };
+        let mut data = existing_node.0.data_mut();
+        match &mut *data {
+            LocalBinding::DeclareFunBinding {
+                defs,
+                statics,
+                namespace_types,
+                ..
+            } => {
+                merge_namespace_entries(
+                    scopes,
+                    tbls,
+                    statics,
+                    namespace_types,
+                    new_statics,
+                    new_namespace_types,
+                );
+                defs.extend(new_defs);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    fn merge_namespace_type_type_entry<'arena: 'ast, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        tbls: &mut Tables<'arena, 'ast>,
+        name: &FlowSmolStr,
+        existing_entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+        entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+    ) -> bool {
+        let existing_node =
+            local_binding_node_of_namespace_entry(scopes, true, name, existing_entry);
+        let new_node = local_binding_node_of_namespace_entry(scopes, true, name, entry);
+        let (Some(existing_node), Some(new_node)) = (existing_node, new_node) else {
+            return false;
+        };
+        let new_namespace = {
+            let data = new_node.0.data();
+            match &*data {
+                LocalBinding::NamespaceBinding { values, types, .. } => {
+                    Some((values.clone(), types.clone()))
+                }
+                _ => None,
+            }
+        };
+        if let Some((values, types)) = new_namespace {
+            return merge_namespace_into_local_binding_node(
+                scopes,
+                tbls,
+                &existing_node,
+                values,
+                types,
+            );
+        }
+        merge_interface_type_bindings(name, &existing_node, &new_node, existing_entry, entry)
+    }
+
+    fn merge_namespace_value_type_entry<'arena: 'ast, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        tbls: &mut Tables<'arena, 'ast>,
+        name: &FlowSmolStr,
+        existing_entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+        entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+    ) -> Option<(LocNode<'arena>, Parsed<'arena, 'ast>)> {
+        let existing_node =
+            local_binding_node_of_namespace_entry(scopes, true, name, existing_entry);
+        let new_node = local_value_binding_node_of_namespace_entry(scopes, name, entry);
+        match (existing_node, new_node) {
+            (Some(existing_node), Some(new_node)) => {
+                let namespace_merge = {
+                    let existing_data = existing_node.0.data();
+                    let data = new_node.0.data();
+                    match (&*existing_data, &*data) {
+                        (
+                            LocalBinding::NamespaceBinding {
+                                values: existing_values,
+                                types: existing_types,
+                                ..
+                            },
+                            LocalBinding::NamespaceBinding {
+                                id_loc,
+                                name,
+                                values,
+                                types,
+                            },
+                        ) => Some((
+                            existing_values.clone(),
+                            existing_types.clone(),
+                            id_loc.dupe(),
+                            name.dupe(),
+                            values.clone(),
+                            types.clone(),
+                        )),
+                        _ => None,
+                    }
+                };
+                if let Some((
+                    mut merged_values,
+                    mut merged_types,
+                    id_loc,
+                    namespace_name,
+                    values,
+                    types,
+                )) = namespace_merge
+                {
+                    merge_namespace_entries(
+                        scopes,
+                        tbls,
+                        &mut merged_values,
+                        &mut merged_types,
+                        values,
+                        types,
+                    );
+                    let mut data = new_node.0.data_mut();
+                    *data = LocalBinding::NamespaceBinding {
+                        id_loc,
+                        name: namespace_name,
+                        values: merged_values,
+                        types: merged_types,
+                    };
+                    Some(entry.clone())
+                } else if merge_interface_into_declare_class_binding(
+                    name,
+                    &new_node,
+                    &existing_node,
+                    existing_entry,
+                    entry,
+                ) {
+                    Some(entry.clone())
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
+    }
+
+    fn merge_namespace_type_value_entry<'arena: 'ast, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        tbls: &mut Tables<'arena, 'ast>,
+        name: &FlowSmolStr,
+        existing_entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+        entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
+    ) -> bool {
+        let existing_node =
+            local_value_binding_node_of_namespace_entry(scopes, name, existing_entry);
+        let new_node = local_binding_node_of_namespace_entry(scopes, true, name, entry);
+        match (existing_node, new_node) {
+            (Some(existing_node), Some(new_node)) => {
+                let new_namespace = {
+                    let data = new_node.0.data();
+                    match &*data {
+                        LocalBinding::NamespaceBinding { values, types, .. } => {
+                            Some((values.clone(), types.clone()))
+                        }
+                        _ => None,
+                    }
+                };
+                if let Some((values, types)) = new_namespace {
+                    merge_namespace_into_local_binding_node(
+                        scopes,
+                        tbls,
+                        &existing_node,
+                        values,
+                        types,
+                    )
+                } else {
+                    merge_interface_into_declare_class_binding(
+                        name,
+                        &existing_node,
+                        &new_node,
+                        existing_entry,
+                        entry,
+                    )
+                }
+            }
+            _ => false,
+        }
+    }
+
+    fn merge_namespace_entries<'arena: 'ast, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
         tbls: &mut Tables<'arena, 'ast>,
         existing_values: &mut BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
         existing_types: &mut BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
@@ -4149,47 +4761,65 @@ pub(super) mod scope {
         ns_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
     ) {
         for (n, entry) in ns_values {
-            if let Some((existing_binding_loc, _)) = existing_values.get(&n) {
-                tbls.additional_errors
-                    .push(BindingValidation::NamespacedNameAlreadyBound {
-                        name: n,
-                        invalid_binding_loc: entry.0,
-                        existing_binding_loc: existing_binding_loc.dupe(),
-                    });
-            } else if let Some((existing_binding_loc, _)) = existing_types.get(&n) {
-                tbls.additional_errors
-                    .push(BindingValidation::NamespacedNameAlreadyBound {
-                        name: n,
-                        invalid_binding_loc: entry.0,
-                        existing_binding_loc: existing_binding_loc.dupe(),
-                    });
+            if let Some(existing_entry) = existing_values.get(&n).cloned() {
+                let existing_binding_loc = existing_entry.0.dupe();
+                if !merge_namespace_value_value_entry(scopes, tbls, &n, &existing_entry, &entry) {
+                    tbls.additional_errors
+                        .push(BindingValidation::NamespacedNameAlreadyBound {
+                            name: n,
+                            invalid_binding_loc: entry.0,
+                            existing_binding_loc,
+                        });
+                }
+            } else if let Some(existing_entry) = existing_types.get(&n).cloned() {
+                let existing_binding_loc = existing_entry.0.dupe();
+                if let Some(merged_entry) =
+                    merge_namespace_value_type_entry(scopes, tbls, &n, &existing_entry, &entry)
+                {
+                    existing_types.remove(&n);
+                    existing_values.insert(n, merged_entry);
+                } else {
+                    tbls.additional_errors
+                        .push(BindingValidation::NamespacedNameAlreadyBound {
+                            name: n,
+                            invalid_binding_loc: entry.0,
+                            existing_binding_loc,
+                        });
+                }
             } else {
                 existing_values.insert(n, entry);
             }
         }
 
         for (n, entry) in ns_types {
-            if let Some((existing_binding_loc, _)) = existing_values.get(&n) {
-                tbls.additional_errors
-                    .push(BindingValidation::NamespacedNameAlreadyBound {
-                        name: n,
-                        invalid_binding_loc: entry.0,
-                        existing_binding_loc: existing_binding_loc.dupe(),
-                    });
-            } else if let Some((existing_binding_loc, _)) = existing_types.get(&n) {
-                tbls.additional_errors
-                    .push(BindingValidation::NamespacedNameAlreadyBound {
-                        name: n,
-                        invalid_binding_loc: entry.0,
-                        existing_binding_loc: existing_binding_loc.dupe(),
-                    });
+            if let Some(existing_entry) = existing_values.get(&n).cloned() {
+                let existing_binding_loc = existing_entry.0.dupe();
+                if !merge_namespace_type_value_entry(scopes, tbls, &n, &existing_entry, &entry) {
+                    tbls.additional_errors
+                        .push(BindingValidation::NamespacedNameAlreadyBound {
+                            name: n,
+                            invalid_binding_loc: entry.0,
+                            existing_binding_loc,
+                        });
+                }
+            } else if let Some(existing_entry) = existing_types.get(&n).cloned() {
+                let existing_binding_loc = existing_entry.0.dupe();
+                if !merge_namespace_type_type_entry(scopes, tbls, &n, &existing_entry, &entry) {
+                    tbls.additional_errors
+                        .push(BindingValidation::NamespacedNameAlreadyBound {
+                            name: n,
+                            invalid_binding_loc: entry.0,
+                            existing_binding_loc,
+                        });
+                }
             } else {
                 existing_types.insert(n, entry);
             }
         }
     }
 
-    fn merge_namespace_into_local_binding_node<'arena, 'ast>(
+    fn merge_namespace_into_local_binding_node<'arena: 'ast, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
         tbls: &mut Tables<'arena, 'ast>,
         node: &LocalDefNode<'arena, 'ast>,
         ns_values: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
@@ -4212,7 +4842,14 @@ pub(super) mod scope {
                 namespace_types: existing_types,
                 ..
             } => {
-                merge_namespace_entries(tbls, existing_values, existing_types, ns_values, ns_types);
+                merge_namespace_entries(
+                    scopes,
+                    tbls,
+                    existing_values,
+                    existing_types,
+                    ns_values,
+                    ns_types,
+                );
                 true
             }
             LocalBinding::ClassBinding {
@@ -4225,6 +4862,7 @@ pub(super) mod scope {
             } => {
                 let mut dummy_values = BTreeMap::new();
                 merge_namespace_entries(
+                    scopes,
                     tbls,
                     &mut dummy_values,
                     existing_types,
@@ -4237,7 +4875,7 @@ pub(super) mod scope {
         }
     }
 
-    pub(super) fn finalize_declare_namespace_exn<'arena, 'ast>(
+    pub(super) fn finalize_declare_namespace_exn<'arena: 'ast, 'ast>(
         id: ScopeId,
         scopes: &mut Scopes<'arena, 'ast>,
         tbls: &mut Tables<'arena, 'ast>,
@@ -4294,6 +4932,7 @@ pub(super) mod scope {
             (false, Some(BindingNode::LocalBinding(node)), None)
             | (true, None, Some(BindingNode::LocalBinding(node))) => {
                 if !merge_namespace_into_local_binding_node(
+                    scopes,
                     tbls,
                     &node,
                     ns_values.clone(),
@@ -4304,6 +4943,7 @@ pub(super) mod scope {
             }
             (true, Some(BindingNode::LocalBinding(node)), None) => {
                 if !merge_namespace_into_local_binding_node(
+                    scopes,
                     tbls,
                     &node,
                     ns_values.clone(),
@@ -4318,15 +4958,15 @@ pub(super) mod scope {
             (false, None, Some(BindingNode::LocalBinding(node)))
                 if matches!(node.0.data().deref(), LocalBinding::NamespaceBinding { .. }) =>
             {
-                merge_namespace_into_local_binding_node(tbls, &node, ns_values, ns_types);
                 types.remove(&name);
-                values.insert(name, BindingNode::LocalBinding(node));
+                values.insert(name, BindingNode::LocalBinding(node.dupe()));
+                merge_namespace_into_local_binding_node(scopes, tbls, &node, ns_values, ns_types);
             }
             (false, None, Some(_)) => {}
         }
     }
 
-    pub(super) fn finalize_declare_namespace_exported_exn<'arena, 'ast>(
+    pub(super) fn finalize_declare_namespace_exported_exn<'arena: 'ast, 'ast>(
         id: ScopeId,
         scopes: &mut Scopes<'arena, 'ast>,
         tbls: &mut Tables<'arena, 'ast>,
@@ -4366,6 +5006,7 @@ pub(super) mod scope {
                     | (true, Some(BindingNode::LocalBinding(node)), None)
                     | (true, None, Some(BindingNode::LocalBinding(node)))
                         if merge_namespace_into_local_binding_node(
+                            scopes,
                             tbls,
                             &node,
                             ns_values.clone(),
@@ -11354,7 +11995,7 @@ fn declare_class_decl<'arena: 'ast, 'ast>(
     scope::bind_declare_class(opts, scope, scopes, tbls, id_loc_node, name.clone(), def, k);
 }
 
-fn namespace_decl<'arena, 'ast, F>(
+fn namespace_decl<'arena: 'ast, 'ast, F>(
     opts: &TypeSigOptions,
     scope: ScopeId,
     scopes: &mut scope::Scopes<'arena, 'ast>,

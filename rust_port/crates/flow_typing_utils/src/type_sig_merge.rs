@@ -4974,19 +4974,40 @@ pub fn merge_def<'cx>(
         }
         Def::ClassBinding(inner) => {
             let id = cx.make_aloc_id(&inner.id_loc);
-            merge_class(
-                &mk_merge_env(FlowOrdMap::new()),
+            let env = mk_merge_env(FlowOrdMap::new());
+            let class_t = merge_class(
+                &env,
                 cx,
                 file,
-                reason,
+                reason.dupe(),
                 Some(&inner.name),
                 id,
                 &inner.def,
+            );
+            wrap_with_namespace_types(
+                cx,
+                &inner.name,
+                inner.id_loc.dupe(),
+                class_t,
+                &inner.namespace_types,
+                &env,
+                file,
             )
         }
         Def::DeclareClassBinding(inner) => {
             let nominal_id = cx.make_aloc_id(&inner.nominal_id_loc);
-            merge_declare_class(cx, file, reason, &inner.name, nominal_id, &inner.def)
+            let env = mk_merge_env(FlowOrdMap::new());
+            let class_t =
+                merge_declare_class(cx, file, reason, &inner.name, nominal_id, &inner.def);
+            wrap_with_namespace_types(
+                cx,
+                &inner.name,
+                inner.nominal_id_loc.dupe(),
+                class_t,
+                &inner.namespace_types,
+                &env,
+                file,
+            )
         }
         Def::RecordBinding(inner) => {
             let id = cx.make_aloc_id(&inner.id_loc);
