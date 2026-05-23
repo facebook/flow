@@ -285,7 +285,7 @@ export const genericArray: Array<string> = array.map(a => a)
 
 Flow shares most of TypeScript's surface syntax — generics, conditional and mapped types, `keyof`, `unknown`, `param is T` type guards, `as const`, JSX — and Flow has deliberately aligned spellings with TypeScript over the last several releases (`unknown` replacing `mixed`, `<T extends Bound>` replacing `<T: Bound>`, `as` replacing `(x: T)` casts, `readonly` / `in` / `out` replacing `+`/`-` variance sigils). The substantive divergences are deliberate Flow choices in favor of stronger static guarantees: object types are exact by default, mutable properties and arrays are invariant, methods are contravariant (not bivariant), `as` casts only widen, and type-guard bodies are validated. React is one area where the two diverge: Flow has first-class `component` / `hook` / `renders` syntax rather than modeling components through function types, `forwardRef`, and framework/library patterns.
 
-See [Flow for TypeScript Users](./flow-and-typescript.md) for the full comparison, organized by what transfers cleanly, what looks the same but means something different, what only Flow has, and what only TypeScript has.
+See [Flow for TypeScript Users](./flow-vs-typescript.md) for the full comparison, organized by what transfers cleanly, what looks the same but means something different, what only Flow has, and what only TypeScript has.
 
 ## See Also {#toc-see-also}
 
@@ -294,4 +294,4 @@ See [Flow for TypeScript Users](./flow-and-typescript.md) for the full compariso
 - [Variance](./lang/variance.md) — why containers of subtypes aren't always compatible
 - [Generics](./types/generics.md) — understanding generic return types and annotation requirements
 - [Annotation Requirement](./lang/annotation-requirement.md) — when and why Flow requires explicit annotations
-- [Flow for TypeScript Users](./flow-and-typescript.md) — full TypeScript-comparison reference
+- [Flow for TypeScript Users](./flow-vs-typescript.md) — full TypeScript-comparison reference

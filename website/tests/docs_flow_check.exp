@@ -758,7 +758,7 @@ Found 1 error
 === faq.md block 18 ===
 No errors!
 
-=== flow-and-typescript.md block 1 ===
+=== flow-vs-typescript.md block 1 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:14
 
 Cannot assign `extra` to `v` because property `y` is extra in object literal [1] but missing in `T` [2]. Exact objects
@@ -780,7 +780,10 @@ References:
 
 Found 1 error
 
-=== flow-and-typescript.md block 2 ===
+=== flow-vs-typescript.md block 2 ===
+No errors!
+
+=== flow-vs-typescript.md block 3 ===
 Error ---------------------------------------------------------------------------------------------------------- -:15:12
 
 Cannot call `acceptsObj` with `new Foo()` bound to `x` because `Foo` [1] is not a subtype of `Obj` [2]. Class instances
@@ -817,7 +820,7 @@ References:
 
 Found 2 errors
 
-=== flow-and-typescript.md block 3 ===
+=== flow-vs-typescript.md block 4 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:20
 
 Cannot implement `ObjType` because it is not an interface. [cannot-implement]
@@ -843,7 +846,7 @@ References:
 
 Found 2 errors
 
-=== flow-and-typescript.md block 4 ===
+=== flow-vs-typescript.md block 5 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:22
 
 Cannot assign `s` to `i` because string [1], a primitive, cannot be used as a subtype of `HasLength` [2]. You can wrap
@@ -883,83 +886,48 @@ References:
 
 Found 2 errors
 
-=== flow-and-typescript.md block 5 ===
+=== flow-vs-typescript.md block 6 ===
+No errors!
+
+=== flow-vs-typescript.md block 7 ===
+Error ----------------------------------------------------------------------------------------------------------- -:3:29
+
+Cannot assign array literal to `y` because array literal [1] has an unknown number of elements, so is incompatible with
+tuple type [2]. [invalid-tuple-arity]
+
+   -:3:29
+   3| const y: [0, 1 | void, 2] = [0, ...x, 2]; // ERROR
+                                  ^^^^^^^^^^^^ [1]
+
+References:
+   -:3:10
+   3| const y: [0, 1 | void, 2] = [0, ...x, 2]; // ERROR
+               ^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
+
+=== flow-vs-typescript.md block 8 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:15
 
 The equivalent of TypeScript's `undefined` type in Flow is `void`. Flow does not have separate `void` and `undefined`
 types. [unsupported-syntax]
 
-   2| function f(): undefined { // ERROR
+   2| function f(): undefined { // ERROR — [unsupported-syntax]
                     ^^^^^^^^^
 
 
 
 Found 1 error
 
-=== flow-and-typescript.md block 6 ===
+=== flow-vs-typescript.md block 9 ===
 No errors!
 
-=== flow-and-typescript.md block 7 ===
+=== flow-vs-typescript.md block 10 ===
 No errors!
 
-=== flow-and-typescript.md block 8 ===
-Error ----------------------------------------------------------------------------------------------------------- -:2:11
-
-Cannot cast object literal to object type because property `bar` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
-
-   -:2:11
-   2| const v = {foo: 1} as {foo: number, bar: string}; // ERROR
-                ^^^^^^^^ [1]
-
-References:
-   -:2:23
-   2| const v = {foo: 1} as {foo: number, bar: string}; // ERROR
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-
-Found 1 error
-
-=== flow-and-typescript.md block 9 ===
-Error ----------------------------------------------------------------------------------------------------------- -:3:13
-
-Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
-
-   3| type Bad1 = {-[K in keyof Tuple]: string}; // ERROR
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------------------- -:4:13
-
-Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
-
-   4| type Bad2 = {+[K in keyof Tuple]: string}; // ERROR
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-
-Found 2 errors
-
-=== flow-and-typescript.md block 10 ===
-Error ----------------------------------------------------------------------------------------------------------- -:3:10
-
-Cannot use `Foo` [1] without 0-1 type arguments. [missing-type-arg]
-
-   -:3:10
-   3| type A = Foo;   // ERROR — [missing-type-arg]
-               ^^^
-
-References:
-   -:2:9
-   2| type Foo<T = string> = {x: T};
-              ^^^^^^^^^^^^ [1]
-
-
-
-Found 1 error
-
-=== flow-and-typescript.md block 11 ===
+=== flow-vs-typescript.md block 11 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:10
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -978,7 +946,7 @@ References:
 
 Found 1 error
 
-=== flow-and-typescript.md block 12 ===
+=== flow-vs-typescript.md block 12 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:3
 
 Cannot call `f` with `o` bound to `obj` because in property `x`: `number` [1] is not exactly the same as
@@ -1011,7 +979,10 @@ References:
 
 Found 1 error
 
-=== flow-and-typescript.md block 13 ===
+=== flow-vs-typescript.md block 13 ===
+No errors!
+
+=== flow-vs-typescript.md block 14 ===
 Error ------------------------------------------------------------------------------------------------------------ -:6:3
 
 Cannot call `f` with `o` bound to `obj` because property `value` is read-only in object type [1] but writable in object
@@ -1033,7 +1004,10 @@ References:
 
 Found 1 error
 
-=== flow-and-typescript.md block 14 ===
+=== flow-vs-typescript.md block 15 ===
+No errors!
+
+=== flow-vs-typescript.md block 16 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:3
 
 Cannot call `f` with `xs` bound to `a` because in array element: `number` [1] is not exactly the same as
@@ -1066,7 +1040,10 @@ References:
 
 Found 1 error
 
-=== flow-and-typescript.md block 15 ===
+=== flow-vs-typescript.md block 17 ===
+No errors!
+
+=== flow-vs-typescript.md block 18 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:3
 
 Cannot call `f` with `c` bound to `c` because in type argument `T` [1]: string [2] is incompatible with number [3].
@@ -1091,7 +1068,7 @@ References:
 
 Found 1 error
 
-=== flow-and-typescript.md block 16 ===
+=== flow-vs-typescript.md block 19 ===
 Error ------------------------------------------------------------------------------------------------------------ -:6:3
 
 Cannot call `f` with `nn` bound to `w` because: [incompatible-type]
@@ -1145,7 +1122,7 @@ References:
 
 Found 2 errors
 
-=== flow-and-typescript.md block 17 ===
+=== flow-vs-typescript.md block 20 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:27
 
 Cannot get `c.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
@@ -1164,26 +1141,78 @@ References:
 
 Found 1 error
 
-=== flow-and-typescript.md block 18 ===
-Error ----------------------------------------------------------------------------------------------------------- -:3:29
+=== flow-vs-typescript.md block 21 ===
+Error ----------------------------------------------------------------------------------------------------------- -:4:20
 
-Cannot assign array literal to `y` because array literal [1] has an unknown number of elements, so is incompatible with
-tuple type [2]. [invalid-tuple-arity]
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
-   -:3:29
-   3| const y: [0, 1 | void, 2] = [0, ...x, 2]; // ERROR
-                                  ^^^^^^^^^^^^ [1]
+   -:4:20
+   4|   takesSelf(other: this): void {}       // ERROR — input position
+                         ^^^^
 
 References:
-   -:3:10
-   3| const y: [0, 1 | void, 2] = [0, ...x, 2]; // ERROR
-               ^^^^^^^^^^^^^^^^ [2]
+   -:2:7
+   2| class Builder {
+            ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------------- -:5:11
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:5:11
+   5|   parent: this | null = null;           // ERROR — invariant field
+                ^^^^
+
+References:
+   -:2:7
+   2| class Builder {
+            ^^^^^^^ [1]
+
+
+
+Found 2 errors
+
+=== flow-vs-typescript.md block 22 ===
+Error ----------------------------------------------------------------------------------------------------------- -:2:11
+
+Cannot cast object literal to object type because property `bar` is missing in object literal [1] but exists in object
+type [2]. [incompatible-type]
+
+   -:2:11
+   2| const v = {foo: 1} as {foo: number, bar: string}; // ERROR
+                ^^^^^^^^ [1]
+
+References:
+   -:2:23
+   2| const v = {foo: 1} as {foo: number, bar: string}; // ERROR
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 
 Found 1 error
 
-=== flow-and-typescript.md block 19 ===
+=== flow-vs-typescript.md block 23 ===
+Error ----------------------------------------------------------------------------------------------------------- -:3:10
+
+Cannot use `Foo` [1] without 0-1 type arguments. [missing-type-arg]
+
+   -:3:10
+   3| type A = Foo;   // ERROR — [missing-type-arg]
+               ^^^
+
+References:
+   -:2:9
+   2| type Foo<T = string> = {x: T};
+              ^^^^^^^^^^^^ [1]
+
+
+
+Found 1 error
+
+=== flow-vs-typescript.md block 24 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:10
 
 Cannot return `(typeof x) === "boolean"` because boolean [1] is incompatible with number [2]. [incompatible-type-guard]
@@ -1223,7 +1252,7 @@ References:
 
 Found 2 errors
 
-=== flow-and-typescript.md block 20 ===
+=== flow-vs-typescript.md block 25 ===
 Error ----------------------------------------------------------------------------------------------------------- -:5:10
 
 Cannot return `x instanceof B` because the negation of the predicate encoded in this expression needs to completely
@@ -1243,7 +1272,7 @@ References:
 
 Found 1 error
 
-=== flow-and-typescript.md block 21 ===
+=== flow-vs-typescript.md block 26 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:10
 
 Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
@@ -1264,7 +1293,7 @@ References:
 
 Found 1 error
 
-=== flow-and-typescript.md block 22 ===
+=== flow-vs-typescript.md block 27 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:32
 
 Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
@@ -1285,13 +1314,10 @@ References:
 
 Found 1 error
 
-=== flow-and-typescript.md block 23 ===
+=== flow-vs-typescript.md block 28 ===
 No errors!
 
-=== flow-and-typescript.md block 24 ===
-No errors!
-
-=== flow-and-typescript.md block 25 ===
+=== flow-vs-typescript.md block 29 ===
 Error ---------------------------------------------------------------------------------------------------------- -:14:23
 
 Cannot assign `obj.x` to `a` because null or undefined [1] is incompatible with number [2]. [incompatible-type]
@@ -1314,7 +1340,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `x` to `a` because null [1] is incompatible with number [2]. [incompatible-type]
 
    -:21:23
-   21|     const a: number = x;    // ERROR — direct write invalidates the refinement
+   21|     const a: number = x; // ERROR — direct write invalidates the refinement
                              ^
 
 References:
@@ -1322,44 +1348,47 @@ References:
    20|     x = null;
                ^^^^ [1]
    -:21:14
-   21|     const a: number = x;    // ERROR — direct write invalidates the refinement
+   21|     const a: number = x; // ERROR — direct write invalidates the refinement
                     ^^^^^^ [2]
 
 
 
 Found 2 errors
 
-=== flow-and-typescript.md block 26 ===
+=== flow-vs-typescript.md block 30 ===
 No errors!
 
-=== flow-and-typescript.md block 27 ===
+=== flow-vs-typescript.md block 31 ===
 No errors!
 
-=== flow-and-typescript.md block 28 ===
+=== flow-vs-typescript.md block 32 ===
 No errors!
 
-=== flow-and-typescript.md block 29 ===
+=== flow-vs-typescript.md block 33 ===
 No errors!
 
-=== flow-and-typescript.md block 30 ===
+=== flow-vs-typescript.md block 34 ===
 No errors!
 
-=== flow-and-typescript.md block 31 ===
+=== flow-vs-typescript.md block 35 ===
 No errors!
 
-=== flow-and-typescript.md block 32 ===
+=== flow-vs-typescript.md block 36 ===
 No errors!
 
-=== flow-and-typescript.md block 33 ===
+=== flow-vs-typescript.md block 37 ===
 No errors!
 
-=== flow-and-typescript.md block 34 ===
+=== flow-vs-typescript.md block 38 ===
 No errors!
 
-=== flow-and-typescript.md block 35 ===
+=== flow-vs-typescript.md block 39 ===
 No errors!
 
-=== flow-and-typescript.md block 36 ===
+=== flow-vs-typescript.md block 40 ===
+No errors!
+
+=== flow-vs-typescript.md block 41 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:10
 
 The equivalent of TypeScript's `readonly` type operator applied to a tuple type is `Readonly<[T, S]>`.
@@ -1374,7 +1403,7 @@ Error --------------------------------------------------------------------------
 The equivalent of TypeScript's `readonly` type operator applied to an array type is `ReadonlyArray<T>`.
 [unsupported-syntax]
 
-   3| type B = readonly number[];          // ERROR — use ReadonlyArray<number>
+   3| type B = readonly number[];         // ERROR — use ReadonlyArray<number>
                ^^^^^^^^^^^^^^^^^
 
 
@@ -1382,14 +1411,14 @@ Error --------------------------------------------------------------------------
 
 Optional unlabeled tuple element is not enabled. [unsupported-syntax]
 
-   4| type C = [number, string?];          // ERROR — use the labeled form below
+   4| type C = [number, string?];         // ERROR — use the labeled form below
                         ^^^^^^^
 
 
 
 Found 3 errors
 
-=== flow-and-typescript.md block 37 ===
+=== flow-vs-typescript.md block 42 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:15
 
 Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
@@ -1402,7 +1431,7 @@ the constructor. [unsupported-syntax]
 
 Found 1 error
 
-=== flow-and-typescript.md block 38 ===
+=== flow-vs-typescript.md block 43 ===
 Error ------------------------------------------------------------------------------------------------------------ -:3:3
 
 Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
@@ -1431,6 +1460,39 @@ to `#foo`. [unsupported-syntax]
 
 
 Found 3 errors
+
+=== flow-vs-typescript.md block 44 ===
+Error ----------------------------------------------------------------------------------------------------------- -:2:40
+
+Type guard assertions are not yet supported. [unsupported-syntax]
+
+   2| function specificAssert(arg: unknown): asserts arg is string { // ERROR — [unsupported-syntax]
+                                             ^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+=== flow-vs-typescript.md block 45 ===
+Error ----------------------------------------------------------------------------------------------------------- -:9:21
+
+Cannot assign `value` to `r` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:9:21
+   9|   const r: number = value; // ERROR — `value` keeps its full `number | string` type
+                          ^^^^^
+
+References:
+   -:4:29
+   4|   | {kind: 'square', value: string};
+                                  ^^^^^^ [1]
+   -:9:12
+   9|   const r: number = value; // ERROR — `value` keeps its full `number | string` type
+                 ^^^^^^ [2]
+
+
+
+Found 1 error
 
 === getting-started.md block 1 ===
 Error ------------------------------------------------------------------------------------------------------------ -:6:8

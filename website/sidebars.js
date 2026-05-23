@@ -28,7 +28,7 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'flow-and-typescript',
+      id: 'flow-vs-typescript',
       label: 'Flow for TypeScript Users',
     },
     {
