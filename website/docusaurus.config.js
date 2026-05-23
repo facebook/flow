@@ -240,6 +240,10 @@ module.exports = async () => ({
         docs: {
           routeBasePath: 'en/docs',
           sidebarPath: require.resolve('./sidebars.js'),
+          // Docusaurus shells out to `git log` to get the timestamp; works for
+          // the public GitHub-driven build but throws in fbsource (Sapling, no
+          // `.git`), which would break the internal staticdocs build.
+          showLastUpdateTime: !process.env.INTERNAL_STATIC_DOCS,
           editUrl: fbContent({
             internal:
               'https://www.internalfb.com/code/fbsource/fbcode/flow/website/',
