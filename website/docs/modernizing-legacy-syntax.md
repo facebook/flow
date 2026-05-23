@@ -8,9 +8,9 @@ Flow's syntax has evolved substantially over time, with many forms converging on
 
 The forms fall into three groups:
 
-- **(i) Removed** — Flow no longer recognizes these and they must be rewritten.
-- **(ii) Deprecated** — a modern equivalent exists, and the Flow team intends to remove the legacy form in the future. Migrate now — it is cheaper than migrating later.
-- **(iii) Discouraged** — still recognized by the type checker, but new code should avoid the form.
+- [**Removed**](#toc-removed) — Flow no longer recognizes these and they must be rewritten.
+- [**Deprecated**](#toc-deprecated) — a modern equivalent exists, and the Flow team intends to remove the legacy form in the future. Migrate now — it is cheaper than migrating later.
+- [**Discouraged**](#toc-discouraged) — still recognized by the type checker, but new code should avoid the form.
 
 ## Removed {#toc-removed}
 
@@ -29,6 +29,8 @@ Flow no longer recognizes these.
 | `$ObjMap<O, F>` | 0.246.0 | [Mapped type](./types/mapped-types.md) with `F` inlined — e.g. `$ObjMap<O, <V>(V) => Promise<V>>` becomes `{[K in keyof O]: Promise<O[K]>}`. |
 | `$ObjMapi<O, F>` | 0.246.0 | [Mapped type](./types/mapped-types.md) with key access and `F` inlined — e.g. `{[K in keyof O]: [K, O[K]]}`. |
 | `React.Element<typeof Foo>` | 0.245.0 | Prefer [render types](./react/render-types.md) when expressing composition constraints ("a `Menu` only renders `MenuItem`s") — that is what most uses of `React.Element<typeof Foo>` were really expressing. For generic "any element / any node" positions, use `React.MixedElement` / `React.Node`. Reach for `ExactReactElement_DEPRECATED<typeof Foo>` only as an escape hatch when exact element identity is genuinely required. |
+| `$Shape<T>` | 0.206.0 | [`Partial<T>`](./types/utilities.md#toc-partial). **Not always semantically identical** — `$Shape` was permissive about depth in ways `Partial` is not, so migrate per call site rather than blindly renaming. |
+| `$Partial<T>` | 0.203.0 | [`Partial<T>`](./types/utilities.md#toc-partial). |
 
 ## Deprecated {#toc-deprecated}
 
@@ -38,8 +40,6 @@ A modern equivalent exists. Some forms already error today; others still parse b
 
 | Legacy Flow | Modern Flow |
 |---|---|
-| `$Partial<T>` | [`Partial<T>`](./types/utilities.md#toc-partial) |
-| `$Shape<T>` | [`Partial<T>`](./types/utilities.md#toc-partial). **Not always semantically identical** — `$Shape` was permissive about depth in ways `Partial` is not, so migrate per call site rather than blindly renaming. |
 | `$Keys<T>` | [`keyof T`](./types/utilities.md#toc-keys) |
 | `$ReadOnly<T>` | [`Readonly<T>`](./types/utilities.md#toc-readonly) |
 | `$NonMaybeType<T>` | [`NonNullable<T>`](./types/utilities.md#toc-nonmaybe) |
