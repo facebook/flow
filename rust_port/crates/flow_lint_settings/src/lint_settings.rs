@@ -11,7 +11,6 @@ use std::collections::HashSet;
 use dupe::Dupe;
 use flow_parser::loc::Loc;
 
-use crate::lints::DeprecatedTypeKind;
 use crate::lints::LintKind;
 use crate::severity::Severity;
 
@@ -33,10 +32,6 @@ const IGNORED_BY_ALL: &[LintKind] = &[
 impl<T: Copy> LintSettings<T> {
     fn default_explicit_values() -> BTreeMap<LintKind, (Severity, Option<Loc>)> {
         let mut map = BTreeMap::new();
-        map.insert(
-            LintKind::DeprecatedType(DeprecatedTypeKind::Bool),
-            (Severity::Err, None),
-        );
         map.insert(LintKind::InternalType, (Severity::Err, None));
         map.insert(LintKind::LibdefOverride, (Severity::Err, None));
         map.insert(LintKind::NestedComponent, (Severity::Err, None));

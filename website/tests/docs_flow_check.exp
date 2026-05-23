@@ -2718,14 +2718,6 @@ Please write this object type as explicitly exact (use `{|` and `|}` instead of 
 Found 1 error
 
 === linting/rule-reference.md block 2 ===
-Error ----------------------------------------------------------------------------------------------------------- -:2:13
-
-Redundant argument. This argument doesn't change any lint settings. [lint-setting]
-
-   2| // flowlint deprecated-type:error
-                  ^^^^^^^^^^^^^^^^^^^^^
-
-
 Error ----------------------------------------------------------------------------------------------------------- -:4:16
 
 Deprecated type. Use `boolean` instead. [deprecated-type]
@@ -2735,7 +2727,7 @@ Deprecated type. Use `boolean` instead. [deprecated-type]
 
 
 
-Found 2 errors
+Found 1 error
 
 === linting/rule-reference.md block 3 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:3

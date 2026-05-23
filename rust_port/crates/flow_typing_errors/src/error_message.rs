@@ -32,7 +32,6 @@ use flow_env_builder::env_api::AnnotLoc;
 use flow_env_builder::env_api::DefLocType;
 use flow_env_builder::env_api::EnvInvariantFailure;
 use flow_lint_settings::lint_settings::LintParseError;
-use flow_lint_settings::lints::DeprecatedTypeKind;
 use flow_lint_settings::lints::LintKind;
 use flow_lint_settings::lints::PropertyAssignmentKind;
 use flow_lint_settings::lints::SketchyNullKind;
@@ -6057,7 +6056,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             ErrorMessage::ENonstrictImport(_) => LintError(NonstrictImport),
             ErrorMessage::EInternalType(_, _) => LintError(InternalType),
             ErrorMessage::EUnclearType(_) => LintError(UnclearType),
-            ErrorMessage::EDeprecatedBool(_) => LintError(DeprecatedType(DeprecatedTypeKind::Bool)),
             ErrorMessage::EUnsafeGettersSetters(_) => LintError(UnsafeGettersSetters),
             ErrorMessage::EUnsafeObjectAssign(_) => LintError(UnsafeObjectAssign),
             ErrorMessage::ESketchyNullLint(box ESketchyNullLintData { kind, .. }) => {
@@ -9575,12 +9573,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EUnnecessaryDeclareTypeOnlyExport { .. } => {
                 Some(UnnecessaryDeclareTypeOnlyExport)
             }
+            ErrorMessage::EDeprecatedBool { .. } => Some(DeprecatedType),
             ErrorMessage::EUntypedTypeImport { .. }
             | ErrorMessage::EUntypedImport { .. }
             | ErrorMessage::ENonstrictImport { .. }
             | ErrorMessage::EInternalType { .. }
             | ErrorMessage::EUnclearType { .. }
-            | ErrorMessage::EDeprecatedBool { .. }
             | ErrorMessage::EUnsafeObjectAssign { .. }
             | ErrorMessage::EUnsafeGettersSetters { .. }
             | ErrorMessage::ESketchyNullLint(box ESketchyNullLintData { .. })

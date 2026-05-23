@@ -2706,7 +2706,6 @@ let kind_of_msg =
     | ENonstrictImport _ -> LintError Lints.NonstrictImport
     | EInternalType _ -> LintError Lints.InternalType
     | EUnclearType _ -> LintError Lints.UnclearType
-    | EDeprecatedBool _ -> LintError Lints.(DeprecatedType DeprecatedBool)
     | EUnsafeGettersSetters _ -> LintError Lints.UnsafeGettersSetters
     | EUnsafeObjectAssign _ -> LintError Lints.UnsafeObjectAssign
     | ESketchyNullLint { kind; _ } -> LintError (Lints.SketchyNull kind)
@@ -4266,13 +4265,13 @@ let error_code_of_message err : error_code option =
   | EInvalidCatchParameterAnnotation _ -> Some InvalidCatchParameterAnnotation
   | EInvalidRendersTypeArgument _ -> Some InvalidRendersTypeArgument
   | EUnnecessaryDeclareTypeOnlyExport _ -> Some UnnecessaryDeclareTypeOnlyExport
+  | EDeprecatedBool _ -> Some DeprecatedType
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _
   | ENonstrictImport _
   | EInternalType _
   | EUnclearType _
-  | EDeprecatedBool _
   | EUnsafeObjectAssign _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
