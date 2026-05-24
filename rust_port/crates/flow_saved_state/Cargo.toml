@@ -25,5 +25,5 @@ flow_server_files = { path = "../flow_server_files" }
 flow_services_export = { path = "../flow_services_export" }
 flow_typing_errors = { path = "../flow_typing_errors" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
-lz4_flex = "0.13.0"
+lz4_flex = "0.13.1"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
