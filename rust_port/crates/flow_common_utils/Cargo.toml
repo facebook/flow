@@ -12,4 +12,4 @@ flow_parser = { path = "../flow_parser" }
 rand = "0.10.1"
 
 [dev-dependencies]
-tokio = { version = "1.52.1", features = ["full", "test-util", "tracing"] }
+tokio = { version = "1.52.3", features = ["full", "test-util", "tracing"] }
