@@ -909,6 +909,25 @@ References:
 Found 1 error
 
 === flow-vs-typescript.md block 8 ===
+Error ----------------------------------------------------------------------------------------------------------- -:7:27
+
+Cannot get `c.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   -:7:27
+   7| const f: () => number = c.m; // ERROR — [method-unbinding]
+                                ^ [1]
+
+References:
+   -:4:3
+   4|   m(): number { return this.x; }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
+
+=== flow-vs-typescript.md block 9 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:15
 
 The equivalent of TypeScript's `undefined` type in Flow is `void`. Flow does not have separate `void` and `undefined`
@@ -921,13 +940,13 @@ types. [unsupported-syntax]
 
 Found 1 error
 
-=== flow-vs-typescript.md block 9 ===
-No errors!
-
 === flow-vs-typescript.md block 10 ===
 No errors!
 
 === flow-vs-typescript.md block 11 ===
+No errors!
+
+=== flow-vs-typescript.md block 12 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:10
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -946,7 +965,7 @@ References:
 
 Found 1 error
 
-=== flow-vs-typescript.md block 12 ===
+=== flow-vs-typescript.md block 13 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:3
 
 Cannot call `f` with `o` bound to `obj` because in property `x`: `number` [1] is not exactly the same as
@@ -979,10 +998,10 @@ References:
 
 Found 1 error
 
-=== flow-vs-typescript.md block 13 ===
+=== flow-vs-typescript.md block 14 ===
 No errors!
 
-=== flow-vs-typescript.md block 14 ===
+=== flow-vs-typescript.md block 15 ===
 Error ------------------------------------------------------------------------------------------------------------ -:6:3
 
 Cannot call `f` with `o` bound to `obj` because property `value` is read-only in object type [1] but writable in object
@@ -1004,10 +1023,10 @@ References:
 
 Found 1 error
 
-=== flow-vs-typescript.md block 15 ===
+=== flow-vs-typescript.md block 16 ===
 No errors!
 
-=== flow-vs-typescript.md block 16 ===
+=== flow-vs-typescript.md block 17 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:3
 
 Cannot call `f` with `xs` bound to `a` because in array element: `number` [1] is not exactly the same as
@@ -1040,10 +1059,10 @@ References:
 
 Found 1 error
 
-=== flow-vs-typescript.md block 17 ===
+=== flow-vs-typescript.md block 18 ===
 No errors!
 
-=== flow-vs-typescript.md block 18 ===
+=== flow-vs-typescript.md block 19 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:3
 
 Cannot call `f` with `c` bound to `c` because in type argument `T` [1]: string [2] is incompatible with number [3].
@@ -1068,7 +1087,7 @@ References:
 
 Found 1 error
 
-=== flow-vs-typescript.md block 19 ===
+=== flow-vs-typescript.md block 20 ===
 Error ------------------------------------------------------------------------------------------------------------ -:6:3
 
 Cannot call `f` with `nn` bound to `w` because: [incompatible-type]
@@ -1122,25 +1141,6 @@ References:
 
 Found 2 errors
 
-=== flow-vs-typescript.md block 20 ===
-Error ----------------------------------------------------------------------------------------------------------- -:7:27
-
-Cannot get `c.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   -:7:27
-   7| const f: () => number = c.m; // ERROR — [method-unbinding]
-                                ^ [1]
-
-References:
-   -:4:3
-   4|   m(): number { return this.x; }
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-
-Found 1 error
-
 === flow-vs-typescript.md block 21 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:20
 
@@ -1176,43 +1176,6 @@ References:
 Found 2 errors
 
 === flow-vs-typescript.md block 22 ===
-Error ----------------------------------------------------------------------------------------------------------- -:2:11
-
-Cannot cast object literal to object type because property `bar` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
-
-   -:2:11
-   2| const v = {foo: 1} as {foo: number, bar: string}; // ERROR
-                ^^^^^^^^ [1]
-
-References:
-   -:2:23
-   2| const v = {foo: 1} as {foo: number, bar: string}; // ERROR
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-
-Found 1 error
-
-=== flow-vs-typescript.md block 23 ===
-Error ----------------------------------------------------------------------------------------------------------- -:3:10
-
-Cannot use `Foo` [1] without 0-1 type arguments. [missing-type-arg]
-
-   -:3:10
-   3| type A = Foo;   // ERROR — [missing-type-arg]
-               ^^^
-
-References:
-   -:2:9
-   2| type Foo<T = string> = {x: T};
-              ^^^^^^^^^^^^ [1]
-
-
-
-Found 1 error
-
-=== flow-vs-typescript.md block 24 ===
 Error ----------------------------------------------------------------------------------------------------------- -:3:10
 
 Cannot return `(typeof x) === "boolean"` because boolean [1] is incompatible with number [2]. [incompatible-type-guard]
@@ -1252,7 +1215,7 @@ References:
 
 Found 2 errors
 
-=== flow-vs-typescript.md block 25 ===
+=== flow-vs-typescript.md block 23 ===
 Error ----------------------------------------------------------------------------------------------------------- -:5:10
 
 Cannot return `x instanceof B` because the negation of the predicate encoded in this expression needs to completely
@@ -1272,7 +1235,7 @@ References:
 
 Found 1 error
 
-=== flow-vs-typescript.md block 26 ===
+=== flow-vs-typescript.md block 24 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:10
 
 Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
@@ -1293,7 +1256,7 @@ References:
 
 Found 1 error
 
-=== flow-vs-typescript.md block 27 ===
+=== flow-vs-typescript.md block 25 ===
 Error ----------------------------------------------------------------------------------------------------------- -:2:32
 
 Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
@@ -1314,10 +1277,10 @@ References:
 
 Found 1 error
 
-=== flow-vs-typescript.md block 28 ===
+=== flow-vs-typescript.md block 26 ===
 No errors!
 
-=== flow-vs-typescript.md block 29 ===
+=== flow-vs-typescript.md block 27 ===
 Error ---------------------------------------------------------------------------------------------------------- -:14:23
 
 Cannot assign `obj.x` to `a` because null or undefined [1] is incompatible with number [2]. [incompatible-type]
@@ -1355,11 +1318,48 @@ References:
 
 Found 2 errors
 
+=== flow-vs-typescript.md block 28 ===
+No errors!
+
+=== flow-vs-typescript.md block 29 ===
+Error ----------------------------------------------------------------------------------------------------------- -:2:11
+
+Cannot cast object literal to object type because property `bar` is missing in object literal [1] but exists in object
+type [2]. [incompatible-type]
+
+   -:2:11
+   2| const v = {foo: 1} as {foo: number, bar: string}; // ERROR
+                ^^^^^^^^ [1]
+
+References:
+   -:2:23
+   2| const v = {foo: 1} as {foo: number, bar: string}; // ERROR
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
+
 === flow-vs-typescript.md block 30 ===
 No errors!
 
 === flow-vs-typescript.md block 31 ===
-No errors!
+Error ----------------------------------------------------------------------------------------------------------- -:3:10
+
+Cannot use `Foo` [1] without 0-1 type arguments. [missing-type-arg]
+
+   -:3:10
+   3| type A = Foo;   // ERROR — [missing-type-arg]
+               ^^^
+
+References:
+   -:2:9
+   2| type Foo<T = string> = {x: T};
+              ^^^^^^^^^^^^ [1]
+
+
+
+Found 1 error
 
 === flow-vs-typescript.md block 32 ===
 No errors!
