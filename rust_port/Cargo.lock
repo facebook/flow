@@ -3658,9 +3658,9 @@ dependencies = [
 
 [[package]]
 name = "sval_fmt"
-version = "2.5.0"
+version = "2.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d3ccd10346f925c2fbd97b75e8573b38e34431bfba04cc531cd23aad0fbabb8"
+checksum = "94398bdd2ee99eee108e0b7b0df9081700a96cdefac3add5c09ad3e6f2376bcb"
 dependencies = [
  "itoa",
  "ryu",
