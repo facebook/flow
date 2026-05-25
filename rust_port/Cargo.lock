@@ -3679,6 +3679,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sval_nested"
+version = "2.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3abe05be8455348e3f6edc14a85fd2fcf32f801a14f0126ce025e63851b4f13b"
+dependencies = [
+ "sval",
+ "sval_buffer",
+ "sval_ref",
+]
+
+[[package]]
 name = "sval_ref"
 version = "2.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3689,14 +3700,13 @@ dependencies = [
 
 [[package]]
 name = "sval_serde"
-version = "2.5.0"
+version = "2.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "810fa9a837e67a23e0efa7536250fc4d24043306cc1efd076f1943ba2fc2e62d"
+checksum = "fb76707179eccecab345902a803aacacab6889f3af675dbe89766bc790b1a6cb"
 dependencies = [
- "serde",
+ "serde_core",
  "sval",
- "sval_buffer",
- "sval_fmt",
+ "sval_nested",
 ]
 
 [[package]]
