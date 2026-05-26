@@ -25,7 +25,6 @@ use crate::ty_utils;
  ***********/
 
 const CROP_SYMBOL: &str = "...";
-const MAX_SIZE: usize = 1000;
 
 pub fn better_quote(prefer_single_quotes: bool, s: &str) -> String {
     let single_quotes = s.chars().filter(|&c| c == '\'').count();
@@ -188,22 +187,34 @@ where
 (*************************/
 
 fn layout_of_elt<L: Dupe>(opts: &PrinterOptions, elt: &Elt<L>) -> LayoutNode {
+    // OCaml: let size = ref size in
+    let mut size = opts.size;
     match elt {
-        Elt::Type(t) => type_impl(opts, 0, t, opts.size),
-        Elt::Decl(d) => decl(opts, 0, d),
+        // OCaml: | Type t -> type_ ~depth:0 t
+        Elt::Type(t) => type_(opts, 0, t, &mut size),
+        // OCaml: | Decl d -> decl ~depth:0 d
+        Elt::Decl(d) => decl(opts, 0, d, &mut size),
     }
 }
 
 // The depth parameter is useful for formatting unions: Top-level does not
 // get parentheses.
+fn type_<L: Dupe>(opts: &PrinterOptions, depth: usize, t: &Ty<L>, size: &mut usize) -> LayoutNode {
+    let depth = depth + 1;
+    if *size == 0 {
+        crop_atom()
+    } else {
+        *size -= 1;
+        type_impl(opts, depth, t, size)
+    }
+}
+
 fn type_impl<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     t: &Ty<L>,
-    mut size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
-    let depth = depth + 1;
-
     match t {
         Ty::Bound(data) => {
             let (_, name) = data.as_ref();
@@ -261,9 +272,9 @@ fn type_impl<L: Dupe>(
         } => {
             let left_delim = if *optional { "?.[" } else { "[" };
             layout::fuse(vec![
-                type_impl(opts, depth, _object.as_ref(), size),
+                type_(opts, depth, _object.as_ref(), size),
                 LayoutNode::atom(left_delim.to_string()),
-                type_impl(opts, depth, index.as_ref(), size),
+                type_(opts, depth, index.as_ref(), size),
                 LayoutNode::atom("]".to_string()),
             ])
         }
@@ -271,11 +282,10 @@ fn type_impl<L: Dupe>(
         Ty::Tup { elements, inexact } => {
             let mut elts_rev = Vec::new();
             for (idx, elem) in elements.iter().enumerate() {
-                if size == 0 {
+                if *size == 0 {
                     elts_rev.push(crop_atom());
                     break;
                 }
-                size -= 1;
                 elts_rev.push(tuple_element(opts, depth, idx, elem, size));
             }
             if *inexact {
@@ -331,11 +341,11 @@ fn type_impl<L: Dupe>(
                 layout::pretty_line(),
                 LayoutNode::atom("?".to_string()),
                 layout::pretty_space(),
-                type_impl(opts, depth, true_type.as_ref(), size),
+                type_(opts, depth, true_type.as_ref(), size),
                 layout::pretty_line(),
                 LayoutNode::atom(":".to_string()),
                 layout::pretty_space(),
-                type_impl(opts, depth, false_type.as_ref(), size),
+                type_(opts, depth, false_type.as_ref(), size),
             ])),
         ]),
 
@@ -352,7 +362,7 @@ fn type_impl<L: Dupe>(
                                 layout::space(),
                                 LayoutNode::atom("extends".to_string()),
                                 layout::space(),
-                                type_impl(opts, depth, t.as_ref(), size),
+                                type_(opts, depth, t.as_ref(), size),
                             ])
                         },
                         bound,
@@ -410,38 +420,34 @@ fn type_function<L: Dupe>(
     depth: usize,
     sep: &LayoutNode,
     func: &FunT<L>,
-    mut size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let mut params = Vec::new();
     for param in func.fun_params.iter() {
-        if size == 0 {
+        if *size == 0 {
             params.push(crop_atom());
             break;
         }
-        size -= 1;
         params.push(type_function_param(opts, depth, param, size));
     }
 
     if let Some((name, t)) = &func.fun_rest_param {
-        if size > 0 {
-            size -= 1;
-            let rest_param = type_function_param(
-                opts,
-                depth,
-                &(
-                    name.dupe(),
-                    t.dupe(),
-                    FunParam {
-                        prm_optional: false,
-                    },
-                ),
-                size,
-            );
-            params.push(layout::fuse(vec![
-                LayoutNode::atom("...".to_string()),
-                rest_param,
-            ]));
-        }
+        let rest_param = type_function_param(
+            opts,
+            depth,
+            &(
+                name.dupe(),
+                t.dupe(),
+                FunParam {
+                    prm_optional: false,
+                },
+            ),
+            size,
+        );
+        params.push(layout::fuse(vec![
+            LayoutNode::atom("...".to_string()),
+            rest_param,
+        ]));
     }
 
     let hook_prefix = if matches!(func.fun_effect, FunEffect::Hook) {
@@ -451,10 +457,7 @@ fn type_function<L: Dupe>(
     };
 
     let type_params = match &func.fun_type_params {
-        Some(tparams) if size > 0 => {
-            size -= 1;
-            type_parameter(opts, depth, tparams, size)
-        }
+        Some(tparams) => type_parameter(opts, depth, tparams, size),
         _ => LayoutNode::empty(),
     };
 
@@ -471,12 +474,7 @@ fn type_function<L: Dupe>(
         params,
     );
 
-    let return_type = if size > 0 {
-        size -= 1;
-        return_t(opts, depth, &func.fun_return, size)
-    } else {
-        crop_atom()
-    };
+    let return_type = return_t(opts, depth, &func.fun_return, size);
 
     let mut elements = hook_prefix;
     elements.push(type_params);
@@ -492,7 +490,7 @@ fn type_function_param<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     param: &(Option<FlowSmolStr>, std::sync::Arc<Ty<L>>, FunParam),
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let (name, annot, fun_param) = param;
 
@@ -510,20 +508,17 @@ fn type_function_param<L: Dupe>(
         None => LayoutNode::empty(),
     };
 
-    layout::fuse(vec![
-        name_part,
-        type_impl(opts, depth, annot.as_ref(), size),
-    ])
+    layout::fuse(vec![name_part, type_(opts, depth, annot.as_ref(), size)])
 }
 
 fn return_t<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     ret: &ReturnT<L>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     match ret {
-        ReturnT::ReturnType(t) => type_impl(opts, depth, t.as_ref(), size),
+        ReturnT::ReturnType(t) => type_(opts, depth, t.as_ref(), size),
         ReturnT::TypeGuard(implies, x, t) => {
             let mut elements = Vec::new();
             if *implies {
@@ -531,7 +526,7 @@ fn return_t<L: Dupe>(
             }
             elements.push(LayoutNode::atom(x.to_string()));
             elements.push(LayoutNode::atom("is".to_string()));
-            elements.push(type_impl(opts, depth, t.as_ref(), size));
+            elements.push(type_(opts, depth, t.as_ref(), size));
             layout::fuse_with_space(elements)
         }
     }
@@ -541,15 +536,14 @@ fn type_parameter<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     params: &[TypeParam<L>],
-    mut size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let mut elements = Vec::new();
     for param in params.iter() {
-        if size == 0 {
+        if *size == 0 {
             elements.push(crop_atom());
             break;
         }
-        size -= 1;
         elements.push(type_param(opts, depth, param, size));
     }
 
@@ -571,7 +565,7 @@ fn type_param<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     param: &TypeParam<L>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let const_prefix = if param.tp_const {
         layout::fuse(vec![LayoutNode::atom("const".to_string()), layout::space()])
@@ -580,16 +574,16 @@ fn type_param<L: Dupe>(
     };
 
     let bound = match &param.tp_bound {
-        Some(t) if size > 0 => type_annotation(opts, depth, t.as_ref(), size),
+        Some(t) => type_annotation(opts, depth, t.as_ref(), size),
         _ => LayoutNode::empty(),
     };
 
     let default = match &param.tp_default {
-        Some(t) if size > 0 => layout::fuse(vec![
+        Some(t) => layout::fuse(vec![
             layout::pretty_space(),
             LayoutNode::atom("=".to_string()),
             layout::pretty_space(),
-            type_impl(opts, depth, t.as_ref(), size),
+            type_(opts, depth, t.as_ref(), size),
         ]),
         _ => LayoutNode::empty(),
     };
@@ -607,12 +601,12 @@ fn type_annotation<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     t: &Ty<L>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     layout::fuse(vec![
         LayoutNode::atom(":".to_string()),
         layout::pretty_space(),
-        type_impl(opts, depth, t, size),
+        type_(opts, depth, t, size),
     ])
 }
 
@@ -620,21 +614,19 @@ fn type_object<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     obj: &ObjT<L>,
-    mut size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let mut props = Vec::new();
     for prop in obj.obj_props.iter() {
-        if size == 0 {
+        if *size == 0 {
             props.push(crop_atom());
             break;
         }
-        size -= 1;
         props.push(type_object_property(opts, depth, prop, size));
     }
 
     match &obj.obj_kind {
-        ObjKind::IndexedObj(d) if size > 0 => {
-            size -= 1;
+        ObjKind::IndexedObj(d) => {
             props.insert(0, type_dict(opts, depth, d, size));
         }
         ObjKind::InexactObj => {
@@ -661,7 +653,7 @@ fn type_object_property<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     prop: &Prop<L>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let to_key = |name: &Name| -> LayoutNode {
         let name_str = name.to_string();
@@ -697,7 +689,7 @@ fn type_object_property<L: Dupe>(
                 },
                 LayoutNode::atom(":".to_string()),
                 layout::pretty_space(),
-                type_impl(opts, depth, t.as_ref(), size),
+                type_(opts, depth, t.as_ref(), size),
             ]),
             NamedProp::Method(func) => layout::fuse(vec![
                 to_key(name),
@@ -712,7 +704,7 @@ fn type_object_property<L: Dupe>(
                 LayoutNode::atom(")".to_string()),
                 LayoutNode::atom(":".to_string()),
                 layout::pretty_space(),
-                type_impl(opts, depth, t.as_ref(), size),
+                type_(opts, depth, t.as_ref(), size),
             ])]),
             NamedProp::Set(t) => layout::group(vec![layout::fuse(vec![
                 LayoutNode::atom("set".to_string()),
@@ -724,11 +716,11 @@ fn type_object_property<L: Dupe>(
                         LayoutNode::atom(")".to_string()),
                     ),
                     None,
-                    vec![type_impl(opts, depth, t.as_ref(), size)],
+                    vec![type_(opts, depth, t.as_ref(), size)],
                 ),
                 LayoutNode::atom(":".to_string()),
                 layout::pretty_space(),
-                type_impl(opts, depth, &Ty::<L>::Void, size),
+                type_(opts, depth, &Ty::<L>::Void, size),
             ])]),
         },
         Prop::CallProp(func) => {
@@ -736,7 +728,7 @@ fn type_object_property<L: Dupe>(
         }
         Prop::SpreadProp(t) => layout::fuse(vec![
             LayoutNode::atom("...".to_string()),
-            type_impl(opts, depth, t.as_ref(), size),
+            type_(opts, depth, t.as_ref(), size),
         ]),
         Prop::MappedTypeProp {
             key_tparam,
@@ -765,7 +757,7 @@ fn type_object_property<L: Dupe>(
                 None => LayoutNode::empty(),
                 Some(nt) => layout::fuse(vec![
                     LayoutNode::atom(" as ".to_string()),
-                    type_impl(opts, depth, nt.as_ref(), size),
+                    type_(opts, depth, nt.as_ref(), size),
                 ]),
             };
 
@@ -781,13 +773,13 @@ fn type_object_property<L: Dupe>(
                     MappedTypeHomomorphicFlag::SemiHomomorphic(_)
                     | MappedTypeHomomorphicFlag::Unspecialized => LayoutNode::empty(),
                 },
-                type_impl(opts, depth, source.as_ref(), size),
+                type_(opts, depth, source.as_ref(), size),
                 as_clause,
                 LayoutNode::atom("]".to_string()),
                 optional_modifier,
                 LayoutNode::atom(":".to_string()),
                 layout::pretty_space(),
-                type_impl(opts, depth, prop.as_ref(), size),
+                type_(opts, depth, prop.as_ref(), size),
             ])
         }
     }
@@ -797,7 +789,7 @@ fn type_dict<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     dict: &Dict<L>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let name_part = match &dict.dict_name {
         Some(id) => layout::fuse(vec![
@@ -812,11 +804,11 @@ fn type_dict<L: Dupe>(
         variance(dict.dict_polarity),
         LayoutNode::atom("[".to_string()),
         name_part,
-        type_impl(opts, depth, dict.dict_key.as_ref(), size),
+        type_(opts, depth, dict.dict_key.as_ref(), size),
         LayoutNode::atom("]".to_string()),
         LayoutNode::atom(":".to_string()),
         layout::pretty_space(),
-        type_impl(opts, depth, dict.dict_value.as_ref(), size),
+        type_(opts, depth, dict.dict_value.as_ref(), size),
     ])
 }
 
@@ -826,18 +818,17 @@ fn type_interface<L: Dupe>(
     extends: &[GenericT<L>],
     props: &[Prop<L>],
     dict: &Option<Dict<L>>,
-    mut size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let extends_node = if extends.is_empty() {
         LayoutNode::empty()
     } else {
         let mut extend_list = Vec::new();
         for g in extends.iter() {
-            if size == 0 {
+            if *size == 0 {
                 extend_list.push(crop_atom());
                 break;
             }
-            size -= 1;
             extend_list.push(type_generic(opts, depth, g, size));
         }
         layout::fuse_with_space(vec![
@@ -856,19 +847,15 @@ fn type_interface<L: Dupe>(
 
     let mut properties = Vec::new();
     for prop in props.iter() {
-        if size == 0 {
+        if *size == 0 {
             properties.push(crop_atom());
             break;
         }
-        size -= 1;
         properties.push(type_object_property(opts, depth, prop, size));
     }
 
     if let Some(d) = dict {
-        if size > 0 {
-            size -= 1;
-            properties.insert(0, type_dict(opts, depth, d, size));
-        }
+        properties.push(type_dict(opts, depth, d, size));
     }
 
     let body = layout::list(
@@ -896,7 +883,7 @@ fn type_component_sig<L: Dupe>(
     depth: usize,
     regular_props: &ComponentProps<L>,
     renders: Option<&Arc<Ty<L>>>,
-    mut size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let to_key = |name: &Name| -> LayoutNode {
         let name_str = name.to_string();
@@ -916,17 +903,16 @@ fn type_component_sig<L: Dupe>(
         ComponentProps::UnflattenedComponentProps(t) => {
             vec![layout::fuse(vec![
                 LayoutNode::atom("...".to_string()),
-                type_impl(opts, depth, t.as_ref(), size),
+                type_(opts, depth, t.as_ref(), size),
             ])]
         }
         ComponentProps::FlattenedComponentProps { props, inexact } => {
             let mut params_list = Vec::new();
             for prop in props.iter() {
-                if size == 0 {
+                if *size == 0 {
                     params_list.push(crop_atom());
                     break;
                 }
-                size -= 1;
                 let FlattenedComponentProp::FlattenedComponentProp {
                     name, optional, t, ..
                 } = prop;
@@ -939,7 +925,7 @@ fn type_component_sig<L: Dupe>(
                     },
                     LayoutNode::atom(":".to_string()),
                     layout::pretty_space(),
-                    type_impl(opts, depth, t.as_ref(), size),
+                    type_(opts, depth, t.as_ref(), size),
                 ]));
             }
             if *inexact {
@@ -952,10 +938,9 @@ fn type_component_sig<L: Dupe>(
     let renders_node = match renders {
         None => LayoutNode::empty(),
         Some(t) => match t.as_ref() {
-            Ty::Renders(_, _) => layout::fuse(vec![
-                layout::space(),
-                type_impl(opts, depth, t.as_ref(), size),
-            ]),
+            Ty::Renders(_, _) => {
+                layout::fuse(vec![layout::space(), type_(opts, depth, t.as_ref(), size)])
+            }
             _ => layout::fuse(vec![
                 layout::space(),
                 LayoutNode::atom("renders".to_string()),
@@ -987,7 +972,7 @@ fn tuple_element<L: Dupe>(
     depth: usize,
     idx: usize,
     elem: &TupleElement<L>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     match elem {
         TupleElement::TupleElement {
@@ -1021,7 +1006,7 @@ fn tuple_element<L: Dupe>(
 
             let mut nodes = vec![variance(*polarity)];
             nodes.extend(name_nodes);
-            nodes.push(type_impl(opts, depth, t.as_ref(), size));
+            nodes.push(type_(opts, depth, t.as_ref(), size));
             layout::fuse(nodes)
         }
         TupleElement::TupleSpread { name, t } => {
@@ -1036,7 +1021,7 @@ fn tuple_element<L: Dupe>(
             layout::fuse(vec![
                 LayoutNode::atom("...".to_string()),
                 name_part,
-                type_impl(opts, depth, t.as_ref(), size),
+                type_(opts, depth, t.as_ref(), size),
             ])
         }
     }
@@ -1046,7 +1031,7 @@ fn utility<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     u: &Utility<L>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     use crate::ty::string_of_utility_ctor;
     use crate::ty::types_of_utility;
@@ -1057,7 +1042,7 @@ fn utility<L: Dupe>(
                 layout::fuse(vec![
                     LayoutNode::atom("readonly".to_string()),
                     layout::space(),
-                    type_impl(opts, depth, t.as_ref(), size),
+                    type_(opts, depth, t.as_ref(), size),
                 ])
             } else {
                 let ctor = string_of_utility_ctor(u);
@@ -1094,7 +1079,7 @@ fn type_array<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     arr: &ArrT<L>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let arr_name = if arr.arr_readonly {
         "ReadonlyArray"
@@ -1104,7 +1089,7 @@ fn type_array<L: Dupe>(
     layout::fuse(vec![
         LayoutNode::atom(arr_name.to_string()),
         LayoutNode::atom("<".to_string()),
-        type_impl(opts, depth, &arr.arr_elt_t, size),
+        type_(opts, depth, &arr.arr_elt_t, size),
         LayoutNode::atom(">".to_string()),
     ])
 }
@@ -1113,7 +1098,7 @@ fn type_generic<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     g: &GenericT<L>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let (symbol, _, targs) = g;
     let name = identifier(&local_name_of_symbol(symbol));
@@ -1125,7 +1110,7 @@ fn type_reference<L: Dupe>(
     depth: usize,
     name: LayoutNode,
     targs: Option<&[std::sync::Arc<Ty<L>>]>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let targs_layout = match targs {
         Some(args) => type_args(opts, depth, args, size),
@@ -1138,16 +1123,15 @@ fn type_args<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     targs: &[std::sync::Arc<Ty<L>>],
-    mut size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let mut elements = Vec::new();
     for arg in targs.iter() {
-        if size == 0 {
+        if *size == 0 {
             elements.push(crop_atom());
             break;
         }
-        size -= 1;
-        elements.push(type_impl(opts, depth, arg.as_ref(), size));
+        elements.push(type_(opts, depth, arg.as_ref(), size));
     }
     layout::list(
         None, // break_mode
@@ -1167,7 +1151,7 @@ fn type_union<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     types: &[&Ty<L>],
-    mut size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     let has_null = types.iter().any(|t| matches!(t, Ty::Null));
     let has_void = types.iter().any(|t| matches!(t, Ty::Void));
@@ -1189,7 +1173,7 @@ fn type_union<L: Dupe>(
             (LayoutNode::empty(), types.to_vec())
         };
 
-    let elements = intersperse_pretty_line(opts, depth, "|", &filtered_types, &mut size);
+    let elements = intersperse_pretty_line(opts, depth, "|", &filtered_types, size);
     layout::group(vec![layout::fuse(
         std::iter::once(prefix).chain(elements).collect(),
     )])
@@ -1199,9 +1183,9 @@ fn type_intersection<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     types: &[&Ty<L>],
-    mut size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
-    let elements = intersperse_pretty_line(opts, depth, "&", types, &mut size);
+    let elements = intersperse_pretty_line(opts, depth, "&", types, size);
     layout::group(vec![layout::fuse(elements)])
 }
 
@@ -1218,9 +1202,7 @@ fn intersperse_pretty_line<L: Dupe>(
             elts.push(crop_atom());
             break;
         }
-        *size -= 1;
-
-        let typ = type_with_parens(opts, depth, t, *size);
+        let typ = type_with_parens(opts, depth, t, size);
         if i == 0 {
             elts.push(typ);
         } else {
@@ -1252,13 +1234,13 @@ fn type_with_parens<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     t: &Ty<L>,
-    size: usize,
+    size: &mut usize,
 ) -> LayoutNode {
     match t {
         Ty::Fun(_) | Ty::Union(_, _, _, _) | Ty::Inter(_, _, _) | Ty::Conditional { .. } => {
-            wrap_in_parens(type_impl(opts, depth, t, size))
+            wrap_in_parens(type_(opts, depth, t, size))
         }
-        _ => type_impl(opts, depth, t, size),
+        _ => type_(opts, depth, t, size),
     }
 }
 
@@ -1267,13 +1249,15 @@ fn class_decl<L: Dupe>(
     depth: usize,
     s: &Symbol<L>,
     type_parameters: &Option<Arc<[TypeParam<L>]>>,
+    size: &mut usize,
 ) -> LayoutNode {
     layout::fuse(vec![
         LayoutNode::atom("class".to_string()),
         layout::space(),
         identifier(&local_name_of_symbol(s)),
         option(
-            |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, MAX_SIZE),
+            // OCaml: option ~f:(type_parameter ~depth) typeParameters
+            |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, size),
             type_parameters,
         ),
     ])
@@ -1284,13 +1268,15 @@ fn interface_decl<L: Dupe>(
     depth: usize,
     s: &Symbol<L>,
     type_parameters: &Option<Arc<[TypeParam<L>]>>,
+    size: &mut usize,
 ) -> LayoutNode {
     layout::fuse(vec![
         LayoutNode::atom("interface".to_string()),
         layout::space(),
         identifier(&local_name_of_symbol(s)),
         option(
-            |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, MAX_SIZE),
+            // OCaml: option ~f:(type_parameter ~depth) typeParameters
+            |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, size),
             type_parameters,
         ),
     ])
@@ -1301,13 +1287,15 @@ fn record_decl<L: Dupe>(
     depth: usize,
     s: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
+    size: &mut usize,
 ) -> LayoutNode {
     layout::fuse(vec![
         LayoutNode::atom("record".to_string()),
         layout::space(),
         identifier(&local_name_of_symbol(s)),
         option(
-            |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, MAX_SIZE),
+            // OCaml: option ~f:(type_parameter ~depth) tparams
+            |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, size),
             tparams,
         ),
     ])
@@ -1322,13 +1310,16 @@ fn nominal_component_decl<L: Dupe>(
     regular_props: &ComponentProps<L>,
     renders: &Option<Ty<L>>,
     is_type: bool,
+    size: &mut usize,
 ) -> LayoutNode {
     if is_type {
         // Prefer displaying type arguments if they exist
         let type_args_or_params = match targs {
-            Some(ts) => type_args(opts, depth, ts, MAX_SIZE),
+            // OCaml: | Some ts -> type_args ~depth ts
+            Some(ts) => type_args(opts, depth, ts, size),
             None => option(
-                |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, MAX_SIZE),
+                // OCaml: | None -> option ~f:(type_parameter ~depth) typeParameters
+                |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, size),
                 type_parameters,
             ),
         };
@@ -1357,9 +1348,11 @@ fn nominal_component_decl<L: Dupe>(
         // component ComponentName<...>(props) renders Type
         // Prefer displaying type arguments if they exist
         let type_args_or_params = match targs {
-            Some(ts) => type_args(opts, depth, ts, MAX_SIZE),
+            // OCaml: | Some ts -> type_args ~depth ts
+            Some(ts) => type_args(opts, depth, ts, size),
             None => option(
-                |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, MAX_SIZE),
+                // OCaml: | None -> option ~f:(type_parameter ~depth) typeParameters
+                |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, size),
                 type_parameters,
             ),
         };
@@ -1369,12 +1362,13 @@ fn nominal_component_decl<L: Dupe>(
             layout::space(),
             identifier(&local_name_of_symbol(s)),
             type_args_or_params,
+            // OCaml: type_component_sig ~depth ~regular_props ~renders
             type_component_sig(
                 opts,
                 depth,
                 regular_props,
                 renders.as_ref().map(|t| Arc::new(t.clone())).as_ref(),
-                MAX_SIZE,
+                size,
             ),
         ])
     }
@@ -1386,10 +1380,12 @@ fn type_alias<L: Dupe>(
     name: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
     t_opt: &Option<Arc<Ty<L>>>,
+    size: &mut usize,
 ) -> LayoutNode {
     let name_str = &name.sym_name;
     let tparams_node = option(
-        |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, MAX_SIZE),
+        // OCaml: let tparams = option ~f:(type_parameter ~depth) tparams
+        |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, size),
         tparams,
     );
     let body = match t_opt {
@@ -1397,7 +1393,8 @@ fn type_alias<L: Dupe>(
             layout::pretty_space(),
             LayoutNode::atom("=".to_string()),
             layout::pretty_space(),
-            type_impl(opts, depth, t, MAX_SIZE),
+            // OCaml: Some t -> fuse [pretty_space; Atom "="; pretty_space; type_ ~depth t]
+            type_(opts, depth, t, size),
         ]),
         None => LayoutNode::empty(),
     };
@@ -1416,6 +1413,7 @@ fn variable_decl<L: Dupe>(
     depth: usize,
     name: &Name,
     t: &Ty<L>,
+    size: &mut usize,
 ) -> LayoutNode {
     layout::fuse(vec![
         LayoutNode::atom("declare".to_string()),
@@ -1425,7 +1423,8 @@ fn variable_decl<L: Dupe>(
         identifier(name),
         LayoutNode::atom(":".to_string()),
         layout::space(),
-        type_impl(opts, depth, t, MAX_SIZE),
+        // OCaml: type_ ~depth t
+        type_(opts, depth, t, size),
     ])
 }
 
@@ -1502,18 +1501,18 @@ fn module_<L: Dupe>(opts: &PrinterOptions, name: &Option<Symbol<L>>) -> LayoutNo
     layout::fuse(vec![LayoutNode::atom("module".to_string()), name_node])
 }
 
-fn decl<L: Dupe>(opts: &PrinterOptions, depth: usize, d: &Decl<L>) -> LayoutNode {
+fn decl<L: Dupe>(opts: &PrinterOptions, depth: usize, d: &Decl<L>, size: &mut usize) -> LayoutNode {
     match d {
-        Decl::VariableDecl(box (name, t)) => variable_decl(opts, depth, name, t),
+        Decl::VariableDecl(box (name, t)) => variable_decl(opts, depth, name, t, size),
         Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
             name,
             tparams,
             type_,
             ..
-        }) => type_alias(opts, depth, name, tparams, type_),
-        Decl::ClassDecl(box (s, ps)) => class_decl(opts, depth, s, ps),
-        Decl::InterfaceDecl(box (s, ps)) => interface_decl(opts, depth, s, ps),
-        Decl::RecordDecl(box (s, ps)) => record_decl(opts, depth, s, ps),
+        }) => type_alias(opts, depth, name, tparams, type_, size),
+        Decl::ClassDecl(box (s, ps)) => class_decl(opts, depth, s, ps, size),
+        Decl::InterfaceDecl(box (s, ps)) => interface_decl(opts, depth, s, ps, size),
+        Decl::RecordDecl(box (s, ps)) => record_decl(opts, depth, s, ps, size),
         Decl::EnumDecl(box DeclEnumDeclData {
             name,
             members,
@@ -1532,7 +1531,9 @@ fn decl<L: Dupe>(opts: &PrinterOptions, depth: usize, d: &Decl<L>) -> LayoutNode
             props,
             renders,
             is_type,
-        }) => nominal_component_decl(opts, depth, name, tparams, targs, props, renders, *is_type),
+        }) => nominal_component_decl(
+            opts, depth, name, tparams, targs, props, renders, *is_type, size,
+        ),
         Decl::NamespaceDecl(box DeclNamespaceDeclData { name, .. }) => namespace(name),
         Decl::ModuleDecl(box DeclModuleDeclData { name, .. }) => module_(opts, name),
     }

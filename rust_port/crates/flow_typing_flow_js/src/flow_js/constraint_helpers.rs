@@ -6,7 +6,6 @@
  */
 
 use std::collections::BTreeMap;
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::helpers::*;
@@ -106,7 +105,7 @@ fn add_upper_to_bounds<'cx>(
     if bounds
         .upper
         .get(&key)
-        .is_some_and(|existing_trace| *existing_trace == trace)
+        .is_some_and(|existing| *existing == trace)
     {
         return;
     }
@@ -121,10 +120,14 @@ fn add_lower_to_bounds<'cx>(
     use_op: UseOp,
 ) {
     let mut bounds = bounds.borrow_mut();
-    if let Some((existing_trace, existing_use_op)) = bounds.lower.get(l) {
-        if *existing_trace == trace && existing_use_op == &use_op {
-            return;
-        }
+    if bounds
+        .lower
+        .get(l)
+        .is_some_and(|(existing_trace, existing_use_op)| {
+            *existing_trace == trace && existing_use_op == &use_op
+        })
+    {
+        return;
     }
     bounds.lower.insert(l.dupe(), (trace, use_op));
 }
@@ -136,9 +139,9 @@ fn add_lower_to_bounds<'cx>(
 /// so we don't want to redo that work. We also don't want to consider any tvar
 /// that has already been resolved, because the resolved type will be processed
 /// separately, too, as part of the bounds of skip_tvar.
-pub(super) fn iter_with_filter<'cx, F, S: std::hash::BuildHasher>(
+pub(super) fn iter_with_filter<'cx, F>(
     cx: &Context<'cx>,
-    bindings: &HashMap<i32, (DepthTrace, UseOp), S>,
+    bindings: &BTreeMap<i32, (DepthTrace, UseOp)>,
     skip_id: i32,
     each: F,
 ) where

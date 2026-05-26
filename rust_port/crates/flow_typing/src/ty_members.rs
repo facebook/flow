@@ -176,8 +176,9 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
                     // OCaml: ty = Nel.cons ty tys (prepend ty_opt's ty to tys_opt's tys)
                     let mut new_tys = vec![ty_info.ty.clone()];
                     new_tys.extend(tys_info.ty);
-                    let mut new_def_locs = tys_info.def_locs;
-                    new_def_locs.extend(ty_info.def_locs.clone());
+                    let mut new_def_locs = ty_info.def_locs.clone();
+                    new_def_locs.reverse();
+                    new_def_locs.extend(tys_info.def_locs);
                     result.insert(
                         key,
                         MemberInfo {
@@ -221,6 +222,7 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
                         let mut new_tys = vec![ty_info.ty.clone()];
                         new_tys.extend(tys_info.ty.clone());
                         let mut new_def_locs = ty_info.def_locs.clone();
+                        new_def_locs.reverse();
                         new_def_locs.extend(tys_info.def_locs.clone());
                         result.insert(
                             key,
@@ -321,9 +323,10 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
                 (
                     k,
                     map_member_info(
-                        |mut tys: Vec<ALocTy>| {
-                            tys.extend(special_cases.to_vec());
-                            tys
+                        |tys: Vec<ALocTy>| {
+                            let mut new_tys = special_cases.to_vec();
+                            new_tys.extend(tys);
+                            new_tys
                         },
                         v,
                     ),

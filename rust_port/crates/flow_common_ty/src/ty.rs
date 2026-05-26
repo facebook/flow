@@ -1723,11 +1723,7 @@ where
             }
             (Ty::Renders(t1, k1), Ty::Renders(t2, k2)) => {
                 self.on_t(env, t1, t2)?;
-                if k1 == k2 {
-                    Ok(())
-                } else {
-                    Err(StructuralMismatch::Difference(1))
-                }
+                self.on_renders_kind(env, k1, k2)
             }
             _ => self.fail_t(env, t1, t2),
         }
@@ -1959,14 +1955,16 @@ where
         f1: &FunT<L>,
         f2: &FunT<L>,
     ) -> Result<(), StructuralMismatch> {
-        if f1.fun_params.len() != f2.fun_params.len() {
-            return self.fail_list(env, &f1.fun_params, &f2.fun_params);
-        }
-        for ((n1, ty1, fp1), (n2, ty2, fp2)) in f1.fun_params.iter().zip(f2.fun_params.iter()) {
-            self.on_option(|s, e, n1, n2| s.on_string(e, n1, n2), env, n1, n2)?;
-            self.on_t(env, ty1, ty2)?;
-            self.on_bool(env, fp1.prm_optional, fp2.prm_optional)?;
-        }
+        self.on_list(
+            |s, e, (n1, ty1, fp1), (n2, ty2, fp2)| {
+                s.on_option(|s, e, n1, n2| s.on_string(e, n1, n2), e, n1, n2)?;
+                s.on_t(e, ty1, ty2)?;
+                s.on_bool(e, fp1.prm_optional, fp2.prm_optional)
+            },
+            env,
+            &f1.fun_params,
+            &f2.fun_params,
+        )?;
         self.on_option(
             |s, e, (n1, t1), (n2, t2)| {
                 s.on_option(|s, e, n1, n2| s.on_string(e, n1, n2), e, n1, n2)?;
@@ -1979,10 +1977,7 @@ where
         self.on_return_t(env, &f1.fun_return, &f2.fun_return)?;
         self.on_option_vec_type_param(env, &f1.fun_type_params, &f2.fun_type_params)?;
         self.on_t(env, &f1.fun_static, &f2.fun_static)?;
-        if f1.fun_effect != f2.fun_effect {
-            return Err(StructuralMismatch::Difference(1));
-        }
-        Ok(())
+        self.on_fun_effect(env, &f1.fun_effect, &f2.fun_effect)
     }
 
     fn on_return_t(
@@ -2344,8 +2339,34 @@ where
                     p2,
                 )
             }
-            _ => Err(StructuralMismatch::Difference(1)),
+            _ => self.fail_component_props(cp1, cp2),
         }
+    }
+
+    fn on_fun_effect(
+        &mut self,
+        _env: &Env,
+        fe1: &FunEffect,
+        fe2: &FunEffect,
+    ) -> Result<(), StructuralMismatch> {
+        StructuralMismatch::fail_gen(tag_of_fun_effect, fe1, fe2)
+    }
+
+    fn fail_component_props(
+        &mut self,
+        cp1: &ComponentProps<L>,
+        cp2: &ComponentProps<L>,
+    ) -> Result<(), StructuralMismatch> {
+        StructuralMismatch::fail_gen(tag_of_component_props, cp1, cp2)
+    }
+
+    fn on_renders_kind(
+        &mut self,
+        _env: &Env,
+        rk1: &RendersKind,
+        rk2: &RendersKind,
+    ) -> Result<(), StructuralMismatch> {
+        StructuralMismatch::fail_gen(tag_of_renders_kind, rk1, rk2)
     }
 
     fn on_flattened_component_prop(
@@ -4030,6 +4051,13 @@ pub fn tag_of_gen_kind(_g: &GenKind) -> i32 {
     }
 }
 
+pub fn tag_of_fun_effect(_fe: &FunEffect) -> i32 {
+    match _fe {
+        FunEffect::Hook => 0,
+        FunEffect::Arbitrary => 1,
+    }
+}
+
 pub fn tag_of_obj_kind<L>(_o: &ObjKind<L>) -> i32 {
     match _o {
         ObjKind::ExactObj => 0,
@@ -4043,6 +4071,21 @@ pub fn tag_of_tuple_element<L>(_te: &TupleElement<L>) -> i32 {
     match _te {
         TupleElement::TupleElement { .. } => 0,
         TupleElement::TupleSpread { .. } => 1,
+    }
+}
+
+pub fn tag_of_component_props<L>(_cp: &ComponentProps<L>) -> i32 {
+    match _cp {
+        ComponentProps::UnflattenedComponentProps(_) => 0,
+        ComponentProps::FlattenedComponentProps { .. } => 1,
+    }
+}
+
+pub fn tag_of_renders_kind(_rk: &RendersKind) -> i32 {
+    match _rk {
+        RendersKind::RendersNormal => 0,
+        RendersKind::RendersMaybe => 1,
+        RendersKind::RendersStar => 2,
     }
 }
 

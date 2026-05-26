@@ -11,7 +11,6 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -83,6 +82,7 @@ use vec1::Vec1;
 // bounds of the solution, or a singleton containing the solution itself.
 pub fn types_of<'cx>(cx: &Context<'cx>, constraints: &Constraints<'cx, Context<'cx>>) -> Vec<Type> {
     match constraints {
+        // OCaml: | Unresolved { lower; _ } -> TypeMap.keys lower
         Constraints::Unresolved(bounds) => bounds.borrow().lower.keys().duped().collect(),
         Constraints::Resolved(t) => vec![t.dupe()],
         Constraints::FullyResolved(s) => vec![cx.force_fully_resolved_tvar(s)],
@@ -2645,8 +2645,8 @@ pub fn mk_distributive_tparam_subst_fn<'cx>(
                 let bounds = Bounds {
                     lower,
                     upper: BTreeMap::default(),
-                    lowertvars: HashMap::default(),
-                    uppertvars: HashMap::default(),
+                    lowertvars: BTreeMap::default(),
+                    uppertvars: BTreeMap::default(),
                 };
                 let node = Node::create_root(Constraints::Unresolved(Rc::new(
                     std::cell::RefCell::new(bounds),
@@ -2737,6 +2737,7 @@ pub mod value_to_type_reference_transform {
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_::TypeTKind;
     use flow_typing_type::type_::UseOp;
+    use flow_typing_type::type_::any_t;
     use flow_typing_type::type_util::reason_of_t;
 
     use super::FlowJsException;
@@ -2837,10 +2838,7 @@ pub mod value_to_type_reference_transform {
                         })),
                     )?;
 
-                    Ok(Type::new(TypeInner::AnyT(
-                        reason.dupe(),
-                        AnySource::AnyError(None),
-                    )))
+                    Ok(any_t::error(reason.dupe()))
                 }
 
                 DefTInner::ClassT(it) => {
@@ -2876,10 +2874,7 @@ pub mod value_to_type_reference_transform {
                             },
                         ))),
                     )?;
-                    Ok(Type::new(TypeInner::AnyT(
-                        reason_op.dupe(),
-                        AnySource::AnyError(None),
-                    )))
+                    Ok(any_t::error(reason_op.dupe()))
                 }
 
                 DefTInner::ReactAbstractComponentT(_) => {
@@ -2893,10 +2888,7 @@ pub mod value_to_type_reference_transform {
                             reason_use: reason_op.dupe(),
                         },
                     )?;
-                    Ok(Type::new(TypeInner::AnyT(
-                        reason.dupe(),
-                        AnySource::AnyError(None),
-                    )))
+                    Ok(any_t::error(reason.dupe()))
                 }
 
                 _ => {
@@ -2906,10 +2898,7 @@ pub mod value_to_type_reference_transform {
                             reason_use: reason_op.dupe(),
                         },
                     )?;
-                    Ok(Type::new(TypeInner::AnyT(
-                        reason_of_t(&t).dupe(),
-                        AnySource::AnyError(None),
-                    )))
+                    Ok(any_t::error(reason_of_t(&t).dupe()))
                 }
             },
 
@@ -2920,10 +2909,7 @@ pub mod value_to_type_reference_transform {
                         reason_use: reason_op.dupe(),
                     },
                 )?;
-                Ok(Type::new(TypeInner::AnyT(
-                    r.dupe(),
-                    AnySource::AnyError(None),
-                )))
+                Ok(any_t::error(r.dupe()))
             }
 
             // Short-circut as we already error on the unresolved name.
@@ -2935,10 +2921,7 @@ pub mod value_to_type_reference_transform {
                         reason_use: reason_op.dupe(),
                     },
                 )?;
-                Ok(Type::new(TypeInner::AnyT(
-                    r.dupe(),
-                    AnySource::AnyError(None),
-                )))
+                Ok(any_t::error(r.dupe()))
             }
 
             _ => {
@@ -2948,10 +2931,7 @@ pub mod value_to_type_reference_transform {
                         reason_use: reason_op.dupe(),
                     },
                 )?;
-                Ok(Type::new(TypeInner::AnyT(
-                    reason_of_t(&t).dupe(),
-                    AnySource::AnyError(None),
-                )))
+                Ok(any_t::error(reason_of_t(&t).dupe()))
             }
         }
     }

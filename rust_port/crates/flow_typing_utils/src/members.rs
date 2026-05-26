@@ -544,6 +544,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
         }
         (TypeInner::UnionT(_, rep1), TypeInner::UnionT(_, rep2)) => {
             let mut all: Vec<Type> = rep1.members_iter().duped().collect();
+            all.reverse();
             all.extend(rep2.members_iter().duped());
             if all.len() >= 2 {
                 let t0 = all.remove(0);

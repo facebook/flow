@@ -161,9 +161,9 @@ type DocumentationAndTags = (Option<String>, Option<Vec<LspCompletionItemTag>>);
 fn printer_options(prefer_single_quotes: bool, ts_syntax: bool) -> ty_printer::PrinterOptions {
     ty_printer::PrinterOptions {
         prefer_single_quotes,
-        size: 80,
         with_comments: false,
         ts_syntax,
+        ..Default::default()
     }
 }
 
@@ -264,9 +264,9 @@ fn detail_of_ty_decl(ts_syntax: bool, decl: &Decl<ALoc>) -> (Option<String>, Opt
         decl,
         &ty_printer::PrinterOptions {
             prefer_single_quotes: false,
-            size: 80,
             with_comments: false,
             ts_syntax,
+            ..Default::default()
         },
     );
     let detail = match decl {

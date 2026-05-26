@@ -34,13 +34,11 @@ use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty::BotKind;
 use flow_common_ty::ty::UpperBoundKind;
-use flow_common_ty::ty_symbol::ALocImportedIdent;
 use flow_common_ty::ty_symbol::ALocSymbol;
 use flow_common_ty::ty_symbol::ImportMode;
 use flow_common_ty::ty_symbol::Provenance;
 use flow_common_ty::ty_symbol::Symbol;
 use flow_common_ty::ty_utils::simplify_elt;
-use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_lazy::Lazy;
 use flow_parser::file_key::FileKeyInner;
@@ -75,6 +73,7 @@ use flow_utils_concurrency::job_error::JobError;
 use crate::env::Env;
 use crate::env::EvaluateTypeDestructorsMode;
 use crate::env::Genv;
+use crate::env::ImportedNamesMap;
 use crate::env::Options;
 
 // =============================================================================
@@ -911,6 +910,7 @@ fn type_variable<'cx>(
             let ty_result = cont(env, state, Some(IdKey::TVarKey(id)), t)?;
             result.extend(ty::bk_union(&ty_result));
         }
+        // OCaml: >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
         result.sort();
         result.dedup();
         Ok(result)
@@ -1258,7 +1258,7 @@ mod type_converter {
                 }
                 let old_seen_tvar_ids = env.seen_tvar_ids.dupe();
                 env.seen_tvar_ids.insert(root_id);
-                let result = type_variable(env, state, &mut type_converter::type__::<I>, id_);
+                let result = type_variable(env, state, &mut type_converter::type__::<I>, root_id);
                 env.seen_tvar_ids = old_seen_tvar_ids;
                 result
             }
@@ -5319,7 +5319,7 @@ impl<I: NormalizerInput> Normalizer<I> {
         typed_ast_opt: Option<&flow_parser::ast::Program<ALoc, (ALoc, Type)>>,
         options: &Options,
         imports: Vec<(String, ALoc, ImportMode, Type)>,
-    ) -> FlowOrdMap<ALoc, ALocImportedIdent> {
+    ) -> ImportedNamesMap {
         fn def_loc_of_ty(t: &ty::Ty<ALoc>) -> Option<ALoc> {
             match t {
                 ty::Ty::Utility(ty::Utility::Class(inner)) => match inner.as_ref() {
@@ -5378,15 +5378,10 @@ impl<I: NormalizerInput> Normalizer<I> {
         let imported_names: std::rc::Rc<
             Lazy<
                 Context<'cx>,
-                Result<FlowOrdMap<ALoc, ALocImportedIdent>, JobError>,
-                Box<
-                    dyn FnOnce(
-                        &Context<'cx>,
-                    )
-                        -> Result<FlowOrdMap<ALoc, ALocImportedIdent>, JobError>,
-                >,
+                Result<ImportedNamesMap, JobError>,
+                Box<dyn FnOnce(&Context<'cx>) -> Result<ImportedNamesMap, JobError>>,
             >,
-        > = std::rc::Rc::new(Lazy::new_forced(Ok(FlowOrdMap::new())));
+        > = std::rc::Rc::new(Lazy::new_forced(Ok(ImportedNamesMap::new())));
         let genv = Genv {
             cx,
             typed_ast_opt,
@@ -5398,7 +5393,7 @@ impl<I: NormalizerInput> Normalizer<I> {
         };
 
         let mut state = State::empty();
-        let mut result = FlowOrdMap::new();
+        let mut result = ImportedNamesMap::new();
 
         fn convert<I: NormalizerInput>(
             genv: &Genv<'_, '_>,

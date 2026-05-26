@@ -171,7 +171,7 @@ mod tests {
         );
 
         let intersection = Ty::Inter(
-            Arc::new(any2),
+            Arc::new(any2.clone()),
             Arc::new(inner_union),
             Arc::from([] as [Arc<Ty<ALoc>>; 0]),
         );

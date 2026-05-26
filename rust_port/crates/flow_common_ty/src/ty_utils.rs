@@ -393,7 +393,9 @@ pub mod simplify {
             match comparator.on_t(&(), t1, t2) {
                 Ok(()) => 0,
                 Err(StructuralMismatch::Difference(n)) => n,
-                Err(StructuralMismatch::Mismatch) => 1,
+                Err(StructuralMismatch::Mismatch) => {
+                    panic!("unexpected StructuralMismatch::Mismatch")
+                }
             }
         }
 
@@ -402,7 +404,9 @@ pub mod simplify {
             match comparator.on_t(&(), t1, t2) {
                 Ok(()) => 0,
                 Err(StructuralMismatch::Difference(n)) => n,
-                Err(StructuralMismatch::Mismatch) => 1,
+                Err(StructuralMismatch::Mismatch) => {
+                    panic!("unexpected StructuralMismatch::Mismatch")
+                }
             }
         }
 
@@ -478,6 +482,19 @@ pub mod simplify {
         acc
     }
 
+    fn simplify_nel<L, F1, F2>(is_zero: &F1, is_one: &F2, list: &[Arc<Ty<L>>]) -> Vec<Arc<Ty<L>>>
+    where
+        F1: Fn(&Ty<L>) -> bool,
+        F2: Fn(&Ty<L>) -> bool,
+    {
+        let simplified = simplify_list(is_zero, is_one, Vec::new(), list);
+        if simplified.is_empty() {
+            vec![list[0].dupe()]
+        } else {
+            simplified
+        }
+    }
+
     pub fn run_type(merge_kinds: bool, sort: bool, t: ALocTy) -> ALocTy {
         let config = mk_config(merge_kinds, sort);
         let mut simplifier = Simplifier { config };
@@ -544,10 +561,9 @@ pub mod simplify {
             let is_bot_fn = self.config.is_bot;
             let is_top_fn = self.config.is_top;
 
-            let simplified = simplify_list(
+            let simplified = simplify_nel(
                 &|t: &Ty<ALoc>| is_top_fn(&Arc::new((*t).clone())),
                 &|t: &Ty<ALoc>| is_bot_fn(&Arc::new((*t).clone())),
-                vec![],
                 &ts2,
             );
 
@@ -599,10 +615,9 @@ pub mod simplify {
             let is_bot_fn = self.config.is_bot;
             let is_top_fn = self.config.is_top;
 
-            let simplified = simplify_list(
+            let simplified = simplify_nel(
                 &|t: &Ty<ALoc>| is_bot_fn(&Arc::new((*t).clone())),
                 &|t: &Ty<ALoc>| is_top_fn(&Arc::new((*t).clone())),
-                vec![],
                 &ts2,
             );
 

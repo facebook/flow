@@ -155,13 +155,16 @@ pub trait TyIter2Base<Env, L> {
     where
         F: Fn(&mut Self, &Env, &T, &T) -> Result<(), StructuralMismatch>,
     {
-        if list1.len() != list2.len() {
-            return self.fail_list(env, list1, list2);
+        let mut i = 0;
+        while i < list1.len() && i < list2.len() {
+            f(self, env, &list1[i], &list2[i])?;
+            i += 1;
         }
-        for (item1, item2) in list1.iter().zip(list2.iter()) {
-            f(self, env, item1, item2)?;
+        if i == list1.len() && i == list2.len() {
+            Ok(())
+        } else {
+            self.fail_list(env, &list1[i..], &list2[i..])
         }
-        Ok(())
     }
 }
 

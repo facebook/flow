@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -304,7 +304,7 @@ where
         all_ts.extend(ts_.iter().map(|t| t.dupe()));
         let flattened = union_flatten(cx, all_ts);
         let mut acc: Vec<Type> = Vec::new();
-        let mut seen = HashSet::new();
+        let mut seen = BTreeSet::new();
         for t_item in flattened {
             if seen.insert(t_item.dupe()) {
                 acc.push(t_item);

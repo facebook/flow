@@ -400,16 +400,26 @@ pub struct ReactAbstractComponentTData {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum DefTInner {
-    BoolGeneralT,
-    EmptyT,
-    NullT,
-    VoidT,
-    SymbolT,
-    UniqueSymbolT(ALocId),
+    // OCaml: | NumGeneralT of literal
     NumGeneralT(Literal),
+    // OCaml: | StrGeneralT of literal
     StrGeneralT(Literal),
+    // OCaml: | BoolGeneralT
+    BoolGeneralT,
+    // OCaml: | BigIntGeneralT of literal
     BigIntGeneralT(Literal),
+    // OCaml: | EmptyT
+    EmptyT,
+    // OCaml: | MixedT of mixed_flavor
     MixedT(MixedFlavor),
+    // OCaml: | NullT
+    NullT,
+    // OCaml: | VoidT
+    VoidT,
+    // OCaml: | SymbolT
+    SymbolT,
+    // OCaml: | UniqueSymbolT of ALoc.id
+    UniqueSymbolT(ALocId),
     FunT(Type, Rc<FunType>),
     ObjT(Rc<ObjType>),
     ArrT(Rc<ArrType>),
@@ -538,7 +548,6 @@ impl DefT {
 ///  * renders number would produce a Structural number
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CanonicalRendersForm {
-    DefaultRenders,
     IntrinsicRenders(FlowSmolStr),
     NominalRenders {
         renders_id: ALocId,
@@ -549,6 +558,7 @@ pub enum CanonicalRendersForm {
         renders_variant: RendersVariant,
         renders_structural_type: Type,
     },
+    DefaultRenders,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1051,7 +1061,6 @@ pub struct TypeArgCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord>
     serde::Deserialize
 )]
 pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
-    UnknownUse,
     ObjectAddComputedProperty {
         op: VirtualReason<L>,
     },
@@ -1161,6 +1170,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         rest_param: VirtualReason<L>,
     },
     PositiveTypeGuardConsistency(Box<PositiveTypeGuardConsistencyData<L>>),
+    UnknownUse,
 }
 
 #[derive(
@@ -1175,11 +1185,6 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     serde::Deserialize
 )]
 pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
-    ImplicitTypeParam,
-    ReactConfigCheck,
-    TypeGuardCompatibility,
-    RendersCompatibility,
-    UnifyFlip,
     ConstrainedAssignment(Box<ConstrainedAssignmentData<L>>),
     ReactDeepReadOnly(Box<(L, DroType)>),
     ArrayElementCompatibility {
@@ -1200,6 +1205,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
     },
+    ImplicitTypeParam,
     IndexerKeyCompatibility {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
@@ -1218,6 +1224,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         mapped_type: VirtualReason<L>,
     },
     PropertyCompatibility(Box<PropertyCompatibilityData<L>>),
+    ReactConfigCheck,
     ReactGetConfig {
         polarity: Polarity,
     },
@@ -1235,6 +1242,9 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     OpaqueTypeUpperBound {
         opaque_t_reason: VirtualReason<L>,
     },
+    TypeGuardCompatibility,
+    RendersCompatibility,
+    UnifyFlip,
     EnumRepresentationTypeCompatibility {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
@@ -4393,10 +4403,10 @@ pub enum MixedFlavor {
 pub enum AnySource {
     CatchAny,
     AnnotatedAny,
-    Untyped,
-    Placeholder,
     AnyError(Option<AnyErrorKind>),
     Unsound(UnsoundnessKind),
+    Untyped,
+    Placeholder,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -5680,13 +5690,6 @@ pub struct DestructorMappedTypeData {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Destructor {
     NonMaybeType,
-    ExactType,
-    ReadOnlyType,
-    PartialType,
-    RequiredType,
-    ValuesType,
-    ReactElementConfigType,
-    EnumType,
     PropertyType {
         name: Name,
     },
@@ -5699,24 +5702,31 @@ pub enum Destructor {
     OptionalIndexedAccessResultType {
         void_reason: Reason,
     },
+    ExactType,
+    ReadOnlyType,
+    PartialType,
+    RequiredType,
     SpreadType(Box<DestructorSpreadTypeData>),
     SpreadTupleType(Box<DestructorSpreadTupleTypeData>),
     RestType(object::rest::MergeMode, Type),
+    ValuesType,
     ConditionalType(Box<DestructorConditionalTypeData>),
     TypeMap(TypeMap),
+    ReactElementConfigType,
     ReactCheckComponentConfig {
         props: properties::PropertiesMap,
         allow_ref_in_spread: bool,
     },
     ReactDRO(Box<ReactDro>),
     MappedType(Box<DestructorMappedTypeData>),
+    EnumType,
 }
 
 #[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MappedTypeHomomorphicFlag {
     Homomorphic,
-    Unspecialized,
     SemiHomomorphic(Type),
+    Unspecialized,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -5902,12 +5912,12 @@ impl DepthTrace {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum UnionEnum {
-    Void,
-    Null,
     Str(Name),
     Num(NumberLiteral),
     Bool(bool),
     BigInt(BigIntLiteral),
+    Void,
+    Null,
 }
 
 impl PartialEq for UnionEnum {
@@ -7162,9 +7172,12 @@ pub mod union_rep {
         serde::Deserialize
     )]
     pub enum OptimizedError<L: Dupe> {
-        NoCandidateMembers,
-        NoCommonKeys,
+        // OCaml: | ContainsUnresolved of 'loc virtual_reason
         ContainsUnresolved(VirtualReason<L>),
+        // OCaml: | NoCandidateMembers
+        NoCandidateMembers,
+        // OCaml: | NoCommonKeys
+        NoCommonKeys,
     }
 
     /// quick membership tests for enums and disjoint unions
@@ -9345,8 +9358,8 @@ pub mod constraint {
     pub struct Bounds<CX = ()> {
         pub lower: BTreeMap<Type, (DepthTrace, UseOp)>,
         pub upper: BTreeMap<UseTypeKey<CX>, DepthTrace>,
-        pub lowertvars: flow_data_structure_wrapper::int_map::IntHashMap<i32, (DepthTrace, UseOp)>,
-        pub uppertvars: flow_data_structure_wrapper::int_map::IntHashMap<i32, (DepthTrace, UseOp)>,
+        pub lowertvars: BTreeMap<i32, (DepthTrace, UseOp)>,
+        pub uppertvars: BTreeMap<i32, (DepthTrace, UseOp)>,
     }
 
     impl<CX> Clone for Bounds<CX> {
@@ -9371,8 +9384,8 @@ pub mod constraint {
             Bounds {
                 lower: BTreeMap::new(),
                 upper: BTreeMap::new(),
-                lowertvars: flow_data_structure_wrapper::int_map::IntHashMap::default(),
-                uppertvars: flow_data_structure_wrapper::int_map::IntHashMap::default(),
+                lowertvars: BTreeMap::new(),
+                uppertvars: BTreeMap::new(),
             }
         }
     }

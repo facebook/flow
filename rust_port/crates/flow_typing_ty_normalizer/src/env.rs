@@ -17,9 +17,9 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_aloc::ALocMap;
 use flow_common_ty::ty_symbol::ALocImportedIdent;
 use flow_common_ty::ty_symbol::ALocSymbol;
-use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_lazy::Lazy;
 use flow_parser::ast;
@@ -146,7 +146,7 @@ pub struct Genv<'a, 'cx> {
     pub ref_type_bodies: Option<Rc<RefCell<BTreeMap<String, Type>>>>,
 }
 
-pub type ImportedNamesMap = FlowOrdMap<ALoc, ALocImportedIdent>;
+pub type ImportedNamesMap = ALocMap<ALocImportedIdent>;
 
 pub type SymbolSet = BTreeSet<ALocSymbol>;
 
