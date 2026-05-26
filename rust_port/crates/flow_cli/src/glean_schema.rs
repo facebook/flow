@@ -8,6 +8,8 @@
 use serde_json::Value;
 use serde_json::json;
 
+pub(crate) type OffsetTable = std::sync::Arc<flow_parser::offset_utils::OffsetTable>;
+
 fn key(v: Value) -> Value {
     json!({"key": v})
 }
@@ -156,10 +158,10 @@ pub(crate) mod file_of_string_module {
 
 pub(crate) mod range {
     use flow_parser::loc::Loc;
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::key;
     use super::module_;
     use super::src;
@@ -182,8 +184,14 @@ pub(crate) mod range {
                 length: 0,
             },
             Some(table) => {
-                let start_offset = table.offset(*start).unwrap_or(0) as i32;
-                let end_offset = table.offset(*_end).unwrap_or(0) as i32;
+                let offset = |position| {
+                    table
+                        .convert_flow_position_to_js_position(position)
+                        .and_then(|position| table.offset_utf8(position))
+                        .unwrap_or(0) as i32
+                };
+                let start_offset = offset(*start);
+                let end_offset = offset(*_end);
                 let length = end_offset - start_offset;
                 src::byte_span::T {
                     start: start_offset,
@@ -224,9 +232,9 @@ pub(crate) mod type_ {
 
 pub(crate) mod documentation {
     use flow_parser::loc::Loc;
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
 
+    use super::OffsetTable;
     use super::key;
     use super::range;
 
@@ -248,10 +256,10 @@ pub(crate) mod documentation {
 }
 
 pub(crate) mod declaration {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::key;
     use super::name;
     use super::range;
@@ -276,9 +284,9 @@ pub(crate) mod declaration {
 }
 
 pub(crate) mod declaration_info {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
 
+    use super::OffsetTable;
     use super::declaration;
     use super::documentation;
     use super::key;
@@ -333,10 +341,10 @@ pub(crate) mod declaration_info {
 }
 
 pub(crate) mod local_declaration_reference {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::declaration;
     use super::key;
     use super::range;
@@ -363,10 +371,10 @@ pub(crate) mod local_declaration_reference {
 }
 
 pub(crate) mod member_declaration {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::key;
     use super::name;
     use super::range;
@@ -391,10 +399,10 @@ pub(crate) mod member_declaration {
 }
 
 pub(crate) mod member_declaration_reference {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::key;
     use super::member_declaration;
     use super::range;
@@ -421,9 +429,9 @@ pub(crate) mod member_declaration_reference {
 }
 
 pub(crate) mod member_declaration_info {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
 
+    use super::OffsetTable;
     use super::documentation;
     use super::key;
     use super::member_declaration;
@@ -483,10 +491,10 @@ pub(crate) mod member_declaration_info {
 }
 
 pub(crate) mod module_doc {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::documentation;
     use super::key;
     use super::src;
@@ -571,10 +579,10 @@ pub(crate) mod module_export {
 }
 
 pub(crate) mod import_declaration {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::declaration;
     use super::key;
     use super::module_;
@@ -620,10 +628,10 @@ pub(crate) mod import_declaration {
 }
 
 pub(crate) mod source_of_export {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::declaration;
     use super::key;
     use super::member_declaration;
@@ -689,10 +697,10 @@ pub(crate) mod source_of_export {
 }
 
 pub(crate) mod type_declaration {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::key;
     use super::name;
     use super::range;
@@ -717,10 +725,10 @@ pub(crate) mod type_declaration {
 }
 
 pub(crate) mod type_declaration_reference {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::key;
     use super::range;
     use super::type_declaration;
@@ -747,9 +755,9 @@ pub(crate) mod type_declaration_reference {
 }
 
 pub(crate) mod type_declaration_info {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
 
+    use super::OffsetTable;
     use super::documentation;
     use super::key;
     use super::range;
@@ -855,10 +863,10 @@ pub(crate) mod module_type_export {
 }
 
 pub(crate) mod type_import_declaration {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::key;
     use super::module_;
     use super::module_export;
@@ -905,10 +913,10 @@ pub(crate) mod type_import_declaration {
 }
 
 pub(crate) mod source_of_type_export {
-    use flow_parser::offset_utils::OffsetTable;
     use serde_json::Value;
     use serde_json::json;
 
+    use super::OffsetTable;
     use super::key;
     use super::module_;
     use super::module_type_export;

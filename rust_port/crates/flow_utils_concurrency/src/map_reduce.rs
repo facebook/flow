@@ -407,7 +407,7 @@ where
 pub fn call<W, A, J, M, N>(pool: &ThreadPool, next: N, job: J, merge: M) -> A
 where
     W: Send + 'static,
-    A: Send + Sync + Default + std::fmt::Debug,
+    A: Send + Sync + Default,
     J: Fn(&mut A, Vec<W>) + Send + Sync,
     M: Fn(&mut A, A) + Send + Sync,
     N: Next<W> + 'static,
@@ -480,9 +480,10 @@ where
     });
     sample_worker_done(&done_start_times);
 
-    Arc::try_unwrap(results_mutex)
-        .expect("All workers should be done")
-        .into_inner()
+    match Arc::try_unwrap(results_mutex) {
+        Ok(results_mutex) => results_mutex.into_inner(),
+        Err(_) => panic!("All workers should be done"),
+    }
 }
 
 /// Like `call()`, but with work stealing between batches.

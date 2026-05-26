@@ -7,8 +7,12 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering;
 
 use flow_common::files::LibDir;
 use flow_common::options::Options;
@@ -18,6 +22,7 @@ use flow_parser::loc::Loc;
 use flow_server_env::server_env::Env as ServerEnv;
 use flow_server_env::server_env::Genv;
 use flow_typing_context::Metadata;
+use flow_utils_concurrency::map_reduce::Bucket;
 use flow_utils_concurrency::thread_pool::ThreadPool;
 
 use super::codemod_context;
@@ -363,15 +368,18 @@ fn post_check<A>(
 
 #[allow(unreachable_code)]
 fn mk_check<'a, A>(
-    _visit: &'a dyn Fn(
+    _visit: &'a (
+            dyn Fn(
         &Options,
         &ast::Program<Loc, Loc>,
         codemod_context::typed::TypedCodemodContext<'_>,
-    ) -> A,
+    ) -> A
+                + Sync
+        ),
     _iteration: i32,
     reader: &'a Arc<flow_heap::parsing_heaps::SharedMem>,
     options: &'a Options,
-    _metadata: &'a Metadata,
+    _metadata: Metadata,
     master_cx: &'a flow_typing_context::MasterContext,
 ) -> impl FnMut(
     FileKey,
@@ -392,32 +400,207 @@ fn mk_check<'a, A>(
             flow_services_inference::merge_service::CheckJobOutcome::Canceled(c) => return Err(c),
         };
         Ok(post_check(
-            _visit, _iteration, reader, options, _metadata, &file, result,
+            _visit, _iteration, reader, options, &_metadata, &file, result,
         ))
     }
 }
 
-fn mk_next_for_check<R: 'static>(
-    options: &Options,
-    workers: &Option<ThreadPool>,
-    roots: &BTreeSet<FileKey>,
+struct CheckJobResults<A> {
+    finished: ResultList<A>,
+    unfinished: Vec<FileKey>,
+    canceled: Option<flow_utils_concurrency::worker_cancel::WorkerCanceled>,
+}
+
+impl<A> Default for CheckJobResults<A> {
+    fn default() -> Self {
+        Self {
+            finished: Vec::new(),
+            unfinished: Vec::new(),
+            canceled: None,
+        }
+    }
+}
+
+fn check_one_file<A>(
+    check: &mut dyn FnMut(
+        FileKey,
+    ) -> Result<
+        UnitResult<Option<((), A)>>,
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    >,
+    file: FileKey,
+) -> Result<(FileKey, UnitResult<Option<A>>), flow_utils_concurrency::worker_cancel::WorkerCanceled>
+{
+    let check_result = match check(file.clone())? {
+        Ok(Some(((), acc))) => Ok(Some(acc)),
+        Ok(None) => Ok(None),
+        Err(err) => Err(err),
+    };
+    Ok((file, check_result))
+}
+
+fn mk_next_for_check<A>(
+    max_size: usize,
+    num_workers: usize,
+    files: Vec<FileKey>,
+    canceled: Arc<AtomicBool>,
 ) -> (
     impl flow_utils_concurrency::map_reduce::Next<FileKey>,
-    impl Fn(&mut Vec<R>, Vec<R>) + Send + Sync,
-    std::sync::Arc<std::sync::atomic::AtomicUsize>,
+    impl Fn(&mut CheckJobResults<A>, CheckJobResults<A>) + Send + Sync,
 ) {
-    let intermediate_result_callback: std::sync::Arc<dyn Fn(&[R]) + Send + Sync> =
-        std::sync::Arc::new(|_| ());
+    let total_count = files.len();
+    let todo = Arc::new(Mutex::new((VecDeque::from(files), total_count)));
+    let files_completed = Arc::new(AtomicUsize::new(0));
+    let num_workers = num_workers.max(1);
+
+    let todo_for_next = todo.clone();
+    let files_completed_for_next = files_completed.clone();
+    let canceled_for_next = canceled.clone();
+    let next = move || {
+        if canceled_for_next.load(Ordering::Acquire) {
+            return Bucket::Done;
+        }
+
+        let mut todo = todo_for_next.lock().unwrap();
+        let (ref mut remaining_files, ref mut remaining_count) = *todo;
+        let bucket_size = if *remaining_count >= max_size * num_workers {
+            max_size
+        } else {
+            (*remaining_count / num_workers) + 1
+        };
+        let split_at = bucket_size.min(remaining_files.len());
+        let bucket: Vec<FileKey> = remaining_files.drain(..split_at).collect();
+        let bucket_size = bucket.len();
+        *remaining_count -= bucket_size;
+
+        if bucket_size == 0 {
+            if files_completed_for_next.load(Ordering::Acquire) >= total_count {
+                Bucket::Done
+            } else {
+                Bucket::Wait
+            }
+        } else {
+            Bucket::Job(bucket)
+        }
+    };
+
+    let todo_for_merge = todo.clone();
+    let files_completed_for_merge = files_completed.clone();
+    let merge = move |acc: &mut CheckJobResults<A>, mut batch: CheckJobResults<A>| {
+        files_completed_for_merge.fetch_add(batch.finished.len(), Ordering::Release);
+
+        if !batch.unfinished.is_empty() {
+            let mut todo = todo_for_merge.lock().unwrap();
+            let (ref mut remaining_files, ref mut remaining_count) = *todo;
+            *remaining_count += batch.unfinished.len();
+            for file in batch.unfinished.drain(..) {
+                remaining_files.push_front(file);
+            }
+        }
+
+        acc.finished.append(&mut batch.finished);
+        if acc.canceled.is_none() {
+            acc.canceled = batch.canceled;
+        }
+    };
+
+    (next, merge)
+}
+
+fn check_all_files_sequential<A>(
+    check: &mut dyn FnMut(
+        FileKey,
+    ) -> Result<
+        UnitResult<Option<((), A)>>,
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    >,
+    options: &Options,
+    mut files: Vec<FileKey>,
+) -> Result<ResultList<A>, flow_utils_concurrency::worker_cancel::WorkerCanceled> {
+    let mut result = Vec::new();
+    while !files.is_empty() {
+        let files_len = files.len();
+        let (mut job_results, unfinished) =
+            flow_services_inference::job_utils::mk_job(check, options, files)?;
+        result.append(&mut job_results);
+
+        if unfinished.is_empty() {
+            break;
+        }
+
+        if unfinished.len() == files_len {
+            let mut unfinished = unfinished.into_iter();
+            let file = unfinished
+                .next()
+                .expect("unfinished files should be nonempty");
+            result.push(check_one_file(check, file)?);
+            files = unfinished.collect();
+        } else {
+            files = unfinished;
+        }
+    }
+    Ok(result)
+}
+
+fn check_all_files<A, MakeCheck, Check>(
+    workers: &Option<ThreadPool>,
+    options: &Options,
+    files: Vec<FileKey>,
+    make_check: MakeCheck,
+) -> Result<ResultList<A>, flow_utils_concurrency::worker_cancel::WorkerCanceled>
+where
+    A: Send + Sync + 'static,
+    MakeCheck: Fn() -> Check + Send + Sync,
+    Check: FnMut(
+        FileKey,
+    ) -> Result<
+        UnitResult<Option<((), A)>>,
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    >,
+{
+    let Some(workers) = workers else {
+        let mut check = make_check();
+        return check_all_files_sequential(&mut check, options, files);
+    };
+
+    let canceled = Arc::new(AtomicBool::new(false));
+    let num_workers = workers.num_workers();
     let max_size = options.max_files_checked_per_worker as usize;
-    let num_workers = workers.as_ref().map_or(1, |w| w.num_workers());
-    let files: Vec<FileKey> = roots.iter().cloned().collect();
-    flow_services_inference::job_utils::mk_next(
-        intermediate_result_callback,
-        false,
-        max_size,
-        num_workers,
-        files,
-    )
+    let (next, merge) = mk_next_for_check(max_size, num_workers, files, canceled.clone());
+    let job = |acc: &mut CheckJobResults<A>, batch: Vec<FileKey>| {
+        let mut check = make_check();
+        let batch_len = batch.len();
+        match flow_services_inference::job_utils::mk_job(&mut check, options, batch) {
+            Ok((mut finished, unfinished)) => {
+                acc.finished.append(&mut finished);
+                if unfinished.len() == batch_len {
+                    let mut unfinished = unfinished.into_iter();
+                    let file = unfinished
+                        .next()
+                        .expect("unfinished files should be nonempty");
+                    match check_one_file(&mut check, file) {
+                        Ok(result) => acc.finished.push(result),
+                        Err(err) => {
+                            canceled.store(true, Ordering::Release);
+                            acc.canceled = Some(err);
+                        }
+                    }
+                    acc.unfinished.extend(unfinished);
+                } else {
+                    acc.unfinished = unfinished;
+                }
+            }
+            Err(err) => {
+                canceled.store(true, Ordering::Release);
+                acc.canceled = Some(err);
+            }
+        }
+    };
+    let result = flow_utils_concurrency::map_reduce::call(workers, next, job, merge);
+    match result.canceled {
+        Some(err) => Err(err),
+        None => Ok(result.finished),
+    }
 }
 
 pub trait TypedRunnerWithPrepassConfig {
@@ -543,28 +726,26 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
         flow_hh_logger::info!("Merging done.");
         flow_hh_logger::info!("Checking {} files", _roots.len());
         let options = C::check_options(_options.clone());
-        let metadata = flow_typing_context::metadata_of_options(&options);
-        let visit_fn: &dyn Fn(
+        let visit_fn: &(
+             dyn Fn(
             &Options,
             &ast::Program<Loc, Loc>,
             codemod_context::typed::TypedCodemodContext<'_>,
-        ) -> Self::Accumulator = &C::visit;
-        let mut check_fn = mk_check(
-            visit_fn,
-            _iteration,
-            &reader,
-            &options,
-            &metadata,
-            &_env.master_cx,
-        );
-        let (_next, _merge, _count) = mk_next_for_check::<(
-            FileKey,
-            UnitResult<Option<((), Self::Accumulator)>>,
-        )>(&options, _workers, &_roots);
+        ) -> Self::Accumulator
+                 + Sync
+         ) = &C::visit;
         let files: Vec<FileKey> = _roots.iter().cloned().collect();
-        let (job_results, _remaining) =
-            flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files)?;
-        let result: ResultList<Self::Accumulator> = job_results;
+        let make_check = || {
+            mk_check(
+                visit_fn,
+                _iteration,
+                &reader,
+                &options,
+                flow_typing_context::metadata_of_options(&options),
+                &_env.master_cx,
+            )
+        };
+        let result = check_all_files(_workers, &options, files, make_check)?;
         flow_hh_logger::info!("Done");
         Ok(result)
     }
@@ -667,7 +848,6 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         flow_hh_logger::info!("Merging done.");
         flow_hh_logger::info!("Checking {} files", _roots.len());
         let options = C::check_options(_options.clone());
-        let metadata = flow_typing_context::metadata_of_options(&options);
         let visit = |options: &Options,
                      ast: &ast::Program<Loc, Loc>,
                      ctx: codemod_context::typed::TypedCodemodContext<'_>| {
@@ -676,18 +856,18 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
             let files = cx.reachable_deps().clone();
             (acc, files)
         };
-        let mut check_fn = mk_check(
-            &visit,
-            _iteration,
-            &reader,
-            &options,
-            &metadata,
-            &_env.master_cx,
-        );
         let files: Vec<FileKey> = _roots.iter().cloned().collect();
-        let (job_results, _remaining) =
-            flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files)?;
-        let initial_run_result: ResultList<Self::Accumulator> = job_results;
+        let make_check = || {
+            mk_check(
+                &visit,
+                _iteration,
+                &reader,
+                &options,
+                flow_typing_context::metadata_of_options(&options),
+                &_env.master_cx,
+            )
+        };
+        let initial_run_result = check_all_files(_workers, &options, files, make_check)?;
         flow_hh_logger::info!("Initial run done");
         let second_run_roots: BTreeSet<FileKey> = initial_run_result.iter().fold(
             BTreeSet::<FileKey>::new(),
@@ -741,17 +921,18 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
             )?;
         }
         flow_hh_logger::info!("Merging done.");
-        let mut check_fn2 = mk_check(
-            &visit,
-            _iteration,
-            &reader,
-            &options,
-            &metadata,
-            &_env.master_cx,
-        );
         let files2: Vec<FileKey> = second_run_roots.iter().cloned().collect();
-        let (job_results2, _remaining2) =
-            flow_services_inference::job_utils::mk_job(&mut check_fn2, &options, files2)?;
+        let make_check2 = || {
+            mk_check(
+                &visit,
+                _iteration,
+                &reader,
+                &options,
+                flow_typing_context::metadata_of_options(&options),
+                &_env.master_cx,
+            )
+        };
+        let job_results2 = check_all_files(_workers, &options, files2, make_check2)?;
         let mut result: ResultList<Self::Accumulator> = initial_run_result;
         result.extend(job_results2);
         flow_hh_logger::info!("Pruned-deps run done");
@@ -888,23 +1069,24 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
         flow_hh_logger::info!("Checking+Codemodding {} files", _roots.len());
         let options = C::check_options(_options.clone());
         let metadata = flow_typing_context::metadata_of_options(&options);
-        let visit_fn: &dyn Fn(
+        let visit_fn: &(
+             dyn Fn(
             &Options,
             &ast::Program<Loc, Loc>,
             codemod_context::typed::TypedCodemodContext<'_>,
-        ) -> Self::Accumulator = &C::visit;
+        ) -> Self::Accumulator
+                 + Sync
+         ) = &C::visit;
         let mut check_fn = mk_check(
             visit_fn,
             _iteration,
             &reader,
             &options,
-            &metadata,
+            metadata,
             &_env.master_cx,
         );
         let files: Vec<FileKey> = _roots.iter().cloned().collect();
-        let (job_results, _remaining) =
-            flow_services_inference::job_utils::mk_job(&mut check_fn, &options, files)?;
-        let result: ResultList<Self::Accumulator> = job_results;
+        let result = check_all_files_sequential(&mut check_fn, &options, files)?;
         flow_hh_logger::info!("Checking+Codemodding Done");
         Ok(result)
     }

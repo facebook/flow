@@ -14,7 +14,7 @@ use flow_parser::file_key::FileKeyInner;
 use flow_parser::offset_utils::OffsetTable;
 
 pub(crate) struct Info {
-    pub(crate) offsets: OffsetTable,
+    pub(crate) offsets: Arc<OffsetTable>,
     pub(crate) ends_in_newline: bool,
 }
 
@@ -31,7 +31,7 @@ pub(crate) fn info_of_file_key(file_key: &FileKey) -> Option<Arc<Info>> {
                 Some(info) => Some(info.clone()),
                 None => {
                     let contents = std::fs::read_to_string(&file).unwrap();
-                    let offsets = OffsetTable::make(&contents);
+                    let offsets = Arc::new(OffsetTable::make(&contents));
                     let ends_in_newline = contents.ends_with('\n');
                     let info = Info {
                         offsets,
@@ -46,8 +46,8 @@ pub(crate) fn info_of_file_key(file_key: &FileKey) -> Option<Arc<Info>> {
     }
 }
 
-pub(crate) fn offset_table_of_file_key(file_key: &FileKey) -> Option<Arc<Info>> {
-    info_of_file_key(file_key)
+pub(crate) fn offset_table_of_file_key(file_key: &FileKey) -> Option<Arc<OffsetTable>> {
+    info_of_file_key(file_key).map(|info| info.offsets.clone())
 }
 
 pub(crate) fn ends_in_newline_of_file_key(file_key: &FileKey) -> Option<bool> {

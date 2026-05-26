@@ -58,7 +58,6 @@ use flow_typing_ty_normalizer::env::Options as TyNormalizerOptions;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_util;
 use serde_json::Value;
-use serde_json::json;
 
 use crate::codemod_command::PreparedCodemod;
 use crate::glean_schema::declaration;
@@ -94,6 +93,8 @@ pub(crate) struct GleanRuntimeConfig {
 }
 
 pub(crate) static GLEAN_RUNTIME_CONFIG: OnceLock<GleanRuntimeConfig> = OnceLock::new();
+
+type OffsetTableOfFileKey<'a> = dyn Fn(&FileKey) -> Option<Arc<OffsetTable>> + 'a;
 
 #[allow(dead_code)]
 fn implementation_file(
@@ -335,7 +336,7 @@ fn source_of_type_exports(
         FlowImportSpecifier,
         Result<Dependency, Option<FlowImportSpecifier>>,
     >,
-    offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
+    offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     let packed_type_sig::Module {
         module_kind,
@@ -516,7 +517,7 @@ fn type_import_declarations(
         Result<Dependency, Option<FlowImportSpecifier>>,
     >,
     file_sig: &FileSig,
-    offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
+    offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     let results: Vec<type_import_declaration::T> = file_sig
         .requires()
@@ -654,7 +655,7 @@ fn type_declaration_references(
     reader: &SharedMem,
     cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
-    offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
+    offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     let mut results: Vec<type_declaration_reference::T> = Vec::new();
     let add_reference = |id: &ast::Identifier<ALoc, (ALoc, Type)>| {
@@ -731,7 +732,7 @@ fn member_declaration_references<'a, 'cx>(
     cx: &'a Context<'cx>,
     typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     file_sig: &Arc<FileSig>,
-    offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
+    offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     let mut results: Vec<member_declaration_reference::T> = Vec::new();
     let add_member = |type_: &Type, aloc: &ALoc, name: &str| {
@@ -740,10 +741,9 @@ fn member_declaration_references<'a, 'cx>(
                 name: name.to_string(),
                 loc: reader.loc_of_aloc(&def_aloc),
             };
-            let loc = reader.loc_of_aloc(aloc);
             results.push(member_declaration_reference::T {
                 member_declaration,
-                loc,
+                loc: reader.loc_of_aloc(aloc),
             });
         }
     };
@@ -770,7 +770,7 @@ fn import_declarations(
         Result<Dependency, Option<FlowImportSpecifier>>,
     >,
     file_sig: &FileSig,
-    offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
+    offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     let results: Vec<import_declaration::T> = file_sig
         .requires()
@@ -950,7 +950,7 @@ fn source_of_exports(
         Result<Dependency, Option<FlowImportSpecifier>>,
     >,
     reader: &SharedMem,
-    offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
+    offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     let packed_type_sig::Module {
         module_kind,
@@ -1395,7 +1395,7 @@ fn local_declaration_references(
     root: &str,
     write_root: &str,
     scope_info: &scope_api::ScopeInfo<Loc>,
-    offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
+    offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     let uses_of_all_defs = scope_info.uses_of_all_defs();
     let mut acc: Vec<Value> = Vec::new();
@@ -1438,7 +1438,7 @@ fn module_documentations(
     write_root: &str,
     ast: &ast::Program<Loc, Loc>,
     file: &FileKey,
-    offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
+    offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     match (
         module_::of_file_key(root, write_root, file),
@@ -1592,7 +1592,7 @@ fn declaration_infos<'a, 'cx>(
     reader: &SharedMem,
     typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     ast: &ast::Program<Loc, Loc>,
-    offset_table_of_file_key: &dyn Fn(&FileKey) -> Option<OffsetTable>,
+    offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
     let infos = std::cell::RefCell::new(Vec::<((DeclarationKind, String, Loc), Type)>::new());
     let add_var_info = |name: &str, loc: Loc, type_: &Type| {
@@ -1621,7 +1621,10 @@ fn declaration_infos<'a, 'cx>(
         add_type_info,
     };
     let Ok(()) = collector.program(typed_ast);
-    let infos = infos.into_inner();
+    // OCaml builds this list with `::`; append and reverse once to keep the
+    // same order without front-inserting every declaration.
+    let mut infos = infos.into_inner();
+    infos.reverse();
 
     let options = TyNormalizerOptions::default();
     let genv = ty_normalizer_flow::mk_genv_with_imported_names(
@@ -1639,7 +1642,18 @@ fn declaration_infos<'a, 'cx>(
     let mut var_infos = Vec::new();
     let mut member_infos = Vec::new();
     let mut type_infos = Vec::new();
-    for ((kind, name, loc), elt_result) in ty_normalizer_flow::from_types(None, &genv, infos) {
+    let log_normalizing = |(_, _, loc): &(DeclarationKind, String, Loc)| {
+        if glean_log {
+            eprintln!("normalizing: {:?}", loc);
+        }
+    };
+    for ((kind, name, loc), elt_result) in
+        ty_normalizer_flow::from_types(Some(&log_normalizing), &genv, infos)
+    {
+        let Ok(elt) = elt_result else {
+            continue;
+        };
+        let type_ = ty_printer::string_of_elt(&elt, &printer_opts);
         let (documentation, span) = match docs_and_spans.get(&loc) {
             None => (None, None),
             Some(documentation_fullspan_map::DocSpan {
@@ -1651,13 +1665,6 @@ fn declaration_infos<'a, 'cx>(
                 span,
             }) => (documentation.clone(), span.clone()),
         };
-        let Ok(elt) = elt_result else {
-            continue;
-        };
-        if glean_log {
-            eprintln!("normalizing: {:?}", loc);
-        }
-        let type_ = ty_printer::string_of_elt(&elt, &printer_opts);
         match kind {
             DeclarationKind::Declaration => {
                 let declaration = declaration::T { name, loc };
@@ -1703,6 +1710,9 @@ fn declaration_infos<'a, 'cx>(
             }
         }
     }
+    var_infos.reverse();
+    member_infos.reverse();
+    type_infos.reverse();
     (var_infos, member_infos, type_infos)
 }
 
@@ -1735,7 +1745,7 @@ fn file_liness(root: &str, write_root: &str, file_key: &FileKey) -> Vec<Value> {
         module_::T::File(file) => file,
         _ => return vec![],
     };
-    let info = match crate::offset_cache::offset_table_of_file_key(file_key) {
+    let info = match crate::offset_cache::info_of_file_key(file_key) {
         Some(info) => info,
         None => return vec![],
     };
@@ -1778,12 +1788,14 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
             report: codemod_report::Reporter::StringReporter(Box::new(|_, value| {
                 use std::io::Write;
                 for output_file in &value.json_filenames {
-                    let mut oc = std::fs::OpenOptions::new()
+                    let oc = std::fs::OpenOptions::new()
                         .create(true)
                         .append(true)
                         .open(output_file)
                         .unwrap();
+                    let mut oc = std::io::BufWriter::new(oc);
                     oc.write_all(b"]").unwrap();
+                    oc.flush().unwrap();
                 }
                 format!(
                     "Wrote facts about {} JavaScript files.",
@@ -1863,10 +1875,8 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
             log("scope info");
             let scope_info = scope_builder::program(options.enums, false, ast);
             log("module documentations");
-            let offset_table_of_file_key = |file_key: &FileKey| -> Option<OffsetTable> {
-                let path = file_key.to_absolute();
-                let contents = std::fs::read_to_string(&path).ok()?;
-                Some(OffsetTable::make(&contents))
+            let offset_table_of_file_key = |file_key: &FileKey| -> Option<Arc<OffsetTable>> {
+                crate::offset_cache::offset_table_of_file_key(file_key)
             };
             let module_documentation = module_documentations(
                 root,
@@ -1965,26 +1975,31 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                 Some(output_dir) => {
                     log("outputting");
                     let output_file = {
-                        let file_name = format!("{}.json", std::process::id());
+                        let file_name = format!(
+                            "{}-{:?}.json",
+                            std::process::id(),
+                            std::thread::current().id()
+                        );
                         output_dir.join(file_name).to_string_lossy().to_string()
                     };
                     let is_first_write_to_file = !std::path::Path::new(&output_file).exists();
-                    let mut out_channel = std::fs::OpenOptions::new()
+                    let out_channel = std::fs::OpenOptions::new()
                         .create(true)
                         .append(true)
                         .open(&output_file)
                         .unwrap();
+                    let mut out_channel = std::io::BufWriter::new(out_channel);
                     use std::io::Write;
-                    fn output_facts(
-                        out_channel: &mut std::fs::File,
+                    fn output_facts<W: std::io::Write>(
+                        out_channel: &mut W,
                         predicate: &str,
                         facts: &[Value],
                     ) {
-                        let obj = json!({
-                            "predicate": predicate,
-                            "facts": facts,
-                        });
-                        serde_json::to_writer(&mut *out_channel, &obj).unwrap();
+                        out_channel.write_all(b"{\"predicate\":").unwrap();
+                        serde_json::to_writer(&mut *out_channel, predicate).unwrap();
+                        out_channel.write_all(b",\"facts\":").unwrap();
+                        serde_json::to_writer(&mut *out_channel, facts).unwrap();
+                        out_channel.write_all(b"}").unwrap();
                     }
                     if is_first_write_to_file {
                         out_channel.write_all(b"[").unwrap();
@@ -2066,7 +2081,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                     );
                     out_channel.write_all(b",").unwrap();
                     output_facts(&mut out_channel, "src.FileLines.1", &file_lines);
-                    drop(out_channel);
+                    out_channel.flush().unwrap();
                     let mut set = BTreeSet::new();
                     set.insert(output_file);
                     set
