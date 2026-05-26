@@ -1,3 +1,9 @@
+### 0.315.0
+
+Misc:
+* Variance keywords (`readonly`, `writeonly`, `in`, `out`) on type parameters and object/class properties are now enabled by default. The `experimental.allow_variance_keywords` is no longer needed to opt in.
+* The deprecated variance sigils error message now suggests the contextually correct keyword (`readonly`/`writeonly` for property positions, `out`/`in` for type parameter positions) instead of listing both alternatives.
+
 ### 0.314.0
 
 Likely to cause new Flow errors:
