@@ -76,41 +76,45 @@ pub fn make_next_files(
     root: String,
 ) -> impl FnMut() -> Vec<String> {
     fn process(
-        sz: usize,
+        mut sz: usize,
         mut acc: Vec<String>,
         mut files: VecDeque<(String, DtKind)>,
-        dir: String,
-        stack: Stack,
+        mut dir: String,
+        mut stack: Stack,
         filter: &dyn Fn(&str) -> bool,
     ) -> (Vec<String>, Stack) {
-        if sz >= MAX_FILES {
-            return (acc, Stack::Dir(files, dir, Box::new(stack)));
-        }
-        match files.pop_front() {
-            None => process_stack(sz, acc, stack, filter),
-            Some((name, kind)) => {
-                let name = if dir.is_empty() {
-                    name
-                } else {
-                    format!("{}/{}", dir, name)
-                };
-                match kind {
-                    DtKind::Reg if filter(&name) => {
-                        acc.push(name);
-                        process(sz + 1, acc, files, dir, stack, filter)
+        loop {
+            if sz >= MAX_FILES {
+                return (acc, Stack::Dir(files, dir, Box::new(stack)));
+            }
+            match files.pop_front() {
+                None => match stack {
+                    Stack::Nil => return (acc, Stack::Nil),
+                    Stack::Dir(stack_files, stack_dir, next_stack) => {
+                        files = stack_files;
+                        dir = stack_dir;
+                        stack = *next_stack;
                     }
-                    DtKind::Dir => {
-                        let dirfiles = hh_readdir(&name);
-                        process(
-                            sz,
-                            acc,
-                            VecDeque::from(dirfiles),
-                            name,
-                            Stack::Dir(files, dir, Box::new(stack)),
-                            filter,
-                        )
+                },
+                Some((name, kind)) => {
+                    let name = if dir.is_empty() {
+                        name
+                    } else {
+                        format!("{}/{}", dir, name)
+                    };
+                    match kind {
+                        DtKind::Reg if filter(&name) => {
+                            acc.push(name);
+                            sz += 1;
+                        }
+                        DtKind::Dir => {
+                            let dirfiles = hh_readdir(&name);
+                            stack = Stack::Dir(files, dir, Box::new(stack));
+                            files = VecDeque::from(dirfiles);
+                            dir = name;
+                        }
+                        _ => {}
                     }
-                    _ => process(sz, acc, files, dir, stack, filter),
                 }
             }
         }

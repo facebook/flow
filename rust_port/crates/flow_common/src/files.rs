@@ -677,21 +677,17 @@ pub fn wanted(
 
 // Calls `next` repeatedly until it is resolved, returning a SSet of results
 pub fn get_all(next: &mut dyn FnMut() -> Vec<String>) -> BTreeSet<String> {
-    fn get_all_rec(
-        next: &mut dyn FnMut() -> Vec<String>,
-        mut accum: BTreeSet<String>,
-    ) -> BTreeSet<String> {
+    let mut accum = BTreeSet::new();
+    loop {
         let result = next();
         if result.is_empty() {
-            accum
+            return accum;
         } else {
             for x in result {
                 accum.insert(x);
             }
-            get_all_rec(next, accum)
         }
     }
-    get_all_rec(next, BTreeSet::new())
 }
 
 lazy_static! {
