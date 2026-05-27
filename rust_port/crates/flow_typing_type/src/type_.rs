@@ -27,6 +27,7 @@
 
 use std::borrow::Cow;
 use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashSet;
@@ -56,7 +57,7 @@ use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use vec1::Vec1;
 
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, Hash)]
 pub struct Tvar(Reason, u32);
 
 impl Tvar {
@@ -70,6 +71,20 @@ impl Tvar {
 
     pub fn id(&self) -> u32 {
         self.1
+    }
+}
+
+impl PartialOrd for Tvar {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Tvar {
+    #[inline]
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.1.cmp(&other.1).then_with(|| self.0.cmp(&other.0))
     }
 }
 
