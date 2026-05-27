@@ -29,10 +29,11 @@ flow_typing_context = { path = "../flow_typing_context" }
 flow_typing_errors = { path = "../flow_typing_errors" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 flow_utils_tty = { path = "../flow_utils_tty" }
-lsp-types = "0.94.1"
+lsp-types = "0.97"
 rayon = "1.11.0"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+tower-lsp-server = "0.21.1"
 vec1 = { version = "1.12.1", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

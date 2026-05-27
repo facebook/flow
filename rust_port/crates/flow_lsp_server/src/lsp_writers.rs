@@ -18,7 +18,7 @@ use flow_server_env::lsp_helpers;
 use lsp_types::InitializeParams;
 use lsp_types::MessageType;
 use lsp_types::PublishDiagnosticsParams;
-use lsp_types::Url;
+use lsp_types::Uri;
 
 use crate::jsonrpc;
 
@@ -64,9 +64,9 @@ pub fn log_info(writer: fn(&serde_json::Value), message: &str) {
 
 pub fn dismiss_diagnostics(
     writer: fn(&serde_json::Value),
-    diagnostic_uris: BTreeSet<Url>,
-) -> BTreeSet<Url> {
-    let dismiss_one = |uri: &Url| {
+    diagnostic_uris: BTreeSet<Uri>,
+) -> BTreeSet<Uri> {
+    let dismiss_one = |uri: &Uri| {
         let message = PublishDiagnosticsParams {
             uri: uri.clone(),
             diagnostics: vec![],

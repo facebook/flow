@@ -24,7 +24,7 @@ use lsp_types::DocumentSymbol;
 use lsp_types::Location;
 use lsp_types::SymbolInformation;
 use lsp_types::SymbolKind;
-use lsp_types::Url;
+use lsp_types::Uri;
 
 fn name_opt(name: &str) -> Option<String> {
     if name.is_empty() {
@@ -675,11 +675,11 @@ pub fn provide_document_symbols(program: &ast::Program<Loc, Loc>) -> Vec<Documen
 }
 
 pub fn provide_symbol_information(
-    uri: &Url,
+    uri: &Uri,
     program: &ast::Program<Loc, Loc>,
 ) -> Vec<SymbolInformation> {
     fn flatten(
-        uri: &Url,
+        uri: &Uri,
         container_name: Option<String>,
         acc: &mut Vec<SymbolInformation>,
         items: &[DocumentSymbol],

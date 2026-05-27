@@ -32,7 +32,7 @@ use lsp_types::NumberOrString;
 use lsp_types::Position;
 use lsp_types::PublishDiagnosticsParams;
 use lsp_types::Range;
-use lsp_types::Url;
+use lsp_types::Uri;
 
 type Errors = Vec<Diagnostic>;
 
@@ -59,8 +59,8 @@ struct PerFileErrors {
 
 #[derive(Debug, Clone)]
 pub struct T {
-    dirty_files: BTreeSet<Url>,
-    file_to_errors_map: BTreeMap<Url, PerFileErrors>,
+    dirty_files: BTreeSet<Uri>,
+    file_to_errors_map: BTreeMap<Uri, PerFileErrors>,
 }
 
 fn empty_per_file_errors() -> PerFileErrors {
@@ -208,7 +208,7 @@ fn have_errors_changed(before: &PerFileErrors, after: &PerFileErrors) -> bool {
 
 // We need to send the errors for this file. This is when we need to decide exactly which errors to
 // send.
-fn send_errors_for_file(state: &T, send_json: &mut dyn FnMut(serde_json::Value), uri: &Url) {
+fn send_errors_for_file(state: &T, send_json: &mut dyn FnMut(serde_json::Value), uri: &Uri) {
     let default = empty_per_file_errors();
     let per_file = state.file_to_errors_map.get(uri).unwrap_or(&default);
     let (parse_errors, non_parse_errors) = choose_errors(per_file);
@@ -240,7 +240,7 @@ fn send_all_errors(send_json: &mut dyn FnMut(serde_json::Value), state: T) -> T 
 
 // Helper function to modify the data for a specific file
 fn modify_per_file_errors(
-    uri: &Url,
+    uri: &Uri,
     state: T,
     f: impl FnOnce(PerFileErrors) -> PerFileErrors,
 ) -> T {
@@ -270,7 +270,7 @@ fn modify_per_file_errors(
 
 // Helper function to modify the server errors for a specific file
 fn modify_server_errors(
-    uri: &Url,
+    uri: &Uri,
     new_errors: Errors,
     state: T,
     f: impl FnOnce(ServerErrors, SplitErrors) -> ServerErrors,
@@ -288,7 +288,7 @@ fn modify_server_errors(
 // We've parsed a file locally and now want to record the number of parse errors for this file
 pub fn set_live_parse_errors_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
-    uri: &Url,
+    uri: &Uri,
     live_parse_errors: Errors,
     state: T,
 ) -> T {
@@ -308,7 +308,7 @@ pub fn set_live_parse_errors_and_send(
 // check-contents
 pub fn set_live_non_parse_errors_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
-    uri: &Url,
+    uri: &Uri,
     live_non_parse_errors: Errors,
     state: T,
 ) -> T {
@@ -328,7 +328,7 @@ pub fn set_live_non_parse_errors_and_send(
 // keep around the server errors
 pub fn clear_all_live_errors_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
-    uri: &Url,
+    uri: &Uri,
     state: T,
 ) -> T {
     let state = modify_per_file_errors(uri, state, |per_file_errors| PerFileErrors {
@@ -358,7 +358,7 @@ fn append(list_a: Errors, list_b: Errors) -> Errors {
 // from a previous recheck or add to streamed server errors from this recheck
 pub fn add_streamed_server_errors_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
-    uri_to_error_map: BTreeMap<Url, Errors>,
+    uri_to_error_map: BTreeMap<Uri, Errors>,
     state: T,
 ) -> T {
     // When a recheck streams in new errors, we stop showing the old finalized errors
@@ -393,13 +393,13 @@ pub fn add_streamed_server_errors_and_send(
 // already had.
 pub fn set_finalized_server_errors_and_send(
     send_json: &mut dyn FnMut(serde_json::Value),
-    uri_to_error_map: BTreeMap<Url, Errors>,
+    uri_to_error_map: BTreeMap<Uri, Errors>,
     state: T,
 ) -> T {
     // At the end of the recheck, the finalized errors will replace either the errors from
     // the previous recheck or the streamed errors.
     let mut state = state;
-    let mut files_with_new_errors: BTreeSet<Url> = BTreeSet::new();
+    let mut files_with_new_errors: BTreeSet<Uri> = BTreeSet::new();
     for (uri, new_errors_unsplit) in uri_to_error_map {
         state = modify_server_errors(&uri, new_errors_unsplit, state, |_, new_errors| {
             ServerErrors::Finalized(new_errors)
@@ -409,7 +409,7 @@ pub fn set_finalized_server_errors_and_send(
     // All the errors in uri_to_error_map have been added to state. But uri_to_error_map doesn't
     // include files which used to have >0 errors but now have 0 errors. So we need to go through
     // every file that used to have errors and clear them out
-    let uris_to_clear: Vec<Url> = state
+    let uris_to_clear: Vec<Uri> = state
         .file_to_errors_map
         .keys()
         .filter(|uri| !files_with_new_errors.contains(*uri))
@@ -420,7 +420,7 @@ pub fn set_finalized_server_errors_and_send(
             ServerErrors::Finalized(cleared_errors)
         });
     }
-    let extra_dirty: Vec<Url> = state
+    let extra_dirty: Vec<Uri> = state
         .file_to_errors_map
         .iter()
         .filter_map(|(uri, per_file)| {
@@ -446,7 +446,7 @@ pub fn set_finalized_server_errors_and_send(
 // TODO: Don't clear live parse errors. Those don't require the server, so we can still keep
 //       providing them
 pub fn clear_all_errors_and_send(send_json: &mut dyn FnMut(serde_json::Value), state: T) -> T {
-    let uris: Vec<Url> = state.file_to_errors_map.keys().cloned().collect();
+    let uris: Vec<Uri> = state.file_to_errors_map.keys().cloned().collect();
     let mut state = state;
     for uri in uris {
         state = modify_per_file_errors(&uri, state, |_| empty_per_file_errors());
@@ -530,16 +530,18 @@ pub fn update_errors_due_to_change_and_send(
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr as _;
+
     use super::*;
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
     struct Error {
-        uri: Url,
+        uri: Uri,
         kind: String,
         msg: String,
     }
 
-    fn mk_clear_error(uri: &Url) -> Error {
+    fn mk_clear_error(uri: &Uri) -> Error {
         Error {
             uri: uri.clone(),
             kind: "<FAKE ERROR>".to_string(),
@@ -574,7 +576,7 @@ mod tests {
     // Take the json output and convert it back into a list of errors
     fn error_list_of_json_response(json: serde_json::Value) -> Vec<Error> {
         let uri_str = json["params"]["uri"].as_str().unwrap();
-        let uri = Url::parse(uri_str).unwrap();
+        let uri = Uri::from_str(uri_str).unwrap();
         let diagnostics = json["params"]["diagnostics"].as_array().unwrap();
         if diagnostics.is_empty() {
             vec![mk_clear_error(&uri)]
@@ -620,8 +622,8 @@ mod tests {
     }
 
     // Given an error list, group it by uri and convert to diagnostics
-    fn map_of_error_list(error_list: &[Error]) -> BTreeMap<Url, Errors> {
-        let mut map: BTreeMap<Url, Errors> = BTreeMap::new();
+    fn map_of_error_list(error_list: &[Error]) -> BTreeMap<Uri, Errors> {
+        let mut map: BTreeMap<Uri, Errors> = BTreeMap::new();
         for error in error_list.iter() {
             let entry = map.entry(error.uri.clone()).or_default();
             entry.push(mk_diagnostic(error));
@@ -629,12 +631,12 @@ mod tests {
         map
     }
 
-    fn path_to_foo() -> Url {
-        Url::parse("file:///path/to/foo.js").unwrap()
+    fn path_to_foo() -> Uri {
+        Uri::from_str("file:///path/to/foo.js").unwrap()
     }
 
-    fn path_to_bar() -> Url {
-        Url::parse("file:///path/to/bar.js").unwrap()
+    fn path_to_bar() -> Uri {
+        Uri::from_str("file:///path/to/bar.js").unwrap()
     }
 
     fn foo_infer_error_1() -> Error {

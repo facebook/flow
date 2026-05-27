@@ -12,9 +12,9 @@ use lsp_types::*;
 
 pub type LspId = NumberOrString;
 
-pub type DocumentUri = Url;
+pub type DocumentUri = Uri;
 
-pub type UriMap<V> = std::collections::BTreeMap<Url, V>;
+pub type UriMap<V> = std::collections::BTreeMap<Uri, V>;
 
 pub fn flow_position_to_lsp(line: i32, char: i32) -> Position {
     Position {
@@ -175,13 +175,13 @@ pub mod connection_status {
 }
 
 pub mod rename_files {
-    use lsp_types::Url;
+    use lsp_types::Uri;
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct FileRename {
-        pub old_uri: Url,
-        pub new_uri: Url,
+        pub old_uri: Uri,
+        pub new_uri: Uri,
     }
 }
 
@@ -290,9 +290,12 @@ pub mod auto_close_jsx {
 }
 
 pub mod document_paste {
+    use std::str::FromStr as _;
+
     use lsp_types::Range;
     use lsp_types::TextDocumentItem;
-    use lsp_types::Url;
+    use lsp_types::Uri;
+    use tower_lsp_server::UriExt as _;
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum ImportType {
@@ -329,9 +332,9 @@ pub mod document_paste {
             }
 
             let import_source = if self.import_source_is_resolved {
-                lsp_types::Url::from_file_path(&self.import_source)
+                lsp_types::Uri::from_file_path(&self.import_source)
                     .map(|url| url.to_string())
-                    .unwrap_or_else(|()| self.import_source.clone())
+                    .unwrap_or_else(|| self.import_source.clone())
             } else {
                 self.import_source.clone()
             };
@@ -362,10 +365,10 @@ pub mod document_paste {
             }
             let h = Helper::deserialize(deserializer)?;
             let import_source = if h.import_source_is_resolved {
-                match lsp_types::Url::parse(&h.import_source) {
+                match lsp_types::Uri::from_str(&h.import_source) {
                     Ok(url) => match url.to_file_path() {
-                        Ok(p) => p.to_string_lossy().into_owned(),
-                        Err(()) => h.import_source,
+                        Some(p) => p.to_string_lossy().into_owned(),
+                        None => h.import_source,
                     },
                     Err(_) => h.import_source,
                 }
@@ -390,7 +393,7 @@ pub mod document_paste {
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub struct PrepareParams {
-        pub uri: Url,
+        pub uri: Uri,
         pub ranges: Vec<Range>,
     }
 
@@ -413,7 +416,7 @@ pub mod document_paste {
         #[derive(serde::Deserialize)]
         #[serde(rename_all = "camelCase")]
         struct Helper {
-            uri: lsp_types::Url,
+            uri: lsp_types::Uri,
             #[serde(default)]
             language_id: String,
             #[serde(default)]

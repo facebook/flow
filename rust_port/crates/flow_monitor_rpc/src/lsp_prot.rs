@@ -247,7 +247,7 @@ pub fn string_of_request(request: &Request) -> String {
     match request {
         Request::Subscribe => "subscribe".to_string(),
         Request::LspToServer(msg) => format!("lspToServer {:?}", msg),
-        Request::LiveErrorsRequest(uri) => format!("liveErrorsRequest {}", uri),
+        Request::LiveErrorsRequest(uri) => format!("liveErrorsRequest {}", **uri),
     }
 }
 
@@ -295,7 +295,7 @@ pub fn string_of_response(response: &Response) -> String {
                     });
             format!(
                 "liveErrorsResponse OK ({} errors, {} warnings, {} other) {}",
-                errors, warnings, others, live_errors_uri
+                errors, warnings, others, **live_errors_uri
             )
         }
         Response::LiveErrorsResponse(Err(LiveErrorsFailure {
@@ -310,7 +310,7 @@ pub fn string_of_response(response: &Response) -> String {
                     ErrorResponseKind::ErroredErrorResponse => "ERRORED",
                 },
                 live_errors_failure_reason,
-                live_errors_failure_uri
+                **live_errors_failure_uri
             )
         }
         Response::UncaughtException {

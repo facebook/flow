@@ -24,6 +24,6 @@ flow_typing_tvar = { path = "../flow_typing_tvar" }
 flow_typing_type = { path = "../flow_typing_type" }
 flow_typing_utils = { path = "../flow_typing_utils" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
-lsp-types = "0.94.1"
+lsp-types = "0.97"
 once_cell = "1.21.4"
 vec1 = { version = "1.12.1", features = ["serde"] }

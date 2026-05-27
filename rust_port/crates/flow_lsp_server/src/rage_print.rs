@@ -66,7 +66,7 @@ pub fn string_of_open_file(ofi: &OpenFileInfo) -> String {
     } = ofi;
     format!(
         "(uri={} version={} text=[{} bytes] ast=[{}] unsaved={})",
-        o_open_doc.uri,
+        *o_open_doc.uri,
         o_open_doc.version,
         o_open_doc.text.len(),
         if o_ast.is_some() { "present" } else { "absent" },

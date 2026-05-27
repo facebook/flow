@@ -8,6 +8,7 @@
 use flow_server_utils::file_content;
 use lsp_types::Position;
 use lsp_types::Range;
+use tower_lsp_server::UriExt as _;
 
 use crate::lsp::DocumentUri;
 use crate::lsp::error as lsp_error;
@@ -21,16 +22,16 @@ pub type FilePath = std::path::PathBuf;
 fn invalid_file_url_error(uri: &DocumentUri) -> lsp_error::T {
     lsp_error::T {
         code: lsp_error::Code::InvalidParams,
-        message: format!("Not a valid file url '{}'", uri),
+        message: format!("Not a valid file url '{}'", **uri),
         data: None,
     }
 }
 
 pub fn lsp_uri_to_path(uri: &DocumentUri) -> Result<String, lsp_error::T> {
-    if uri.scheme() == "file" {
+    if uri.scheme().map(|scheme| scheme.as_str()) == Some("file") {
         uri.to_file_path()
             .map(|p| p.to_string_lossy().to_string())
-            .map_err(|_| invalid_file_url_error(uri))
+            .ok_or_else(|| invalid_file_url_error(uri))
     } else {
         Err(invalid_file_url_error(uri))
     }

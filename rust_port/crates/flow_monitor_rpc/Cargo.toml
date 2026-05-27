@@ -18,6 +18,6 @@ flow_server_utils = { path = "../flow_server_utils" }
 flow_services_coverage = { path = "../flow_services_coverage" }
 flow_services_export_index = { path = "../flow_services_export_index" }
 log = { version = "0.4.29", features = ["kv_unstable", "kv_unstable_std"] }
-lsp-types = "0.94.1"
+lsp-types = "0.97"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }

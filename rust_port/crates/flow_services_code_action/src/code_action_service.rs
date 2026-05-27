@@ -8,6 +8,7 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
+use std::str::FromStr as _;
 use std::sync::Arc;
 
 use dupe::Dupe;
@@ -99,8 +100,9 @@ use lsp_types::Command;
 use lsp_types::Diagnostic;
 use lsp_types::NumberOrString;
 use lsp_types::TextEdit;
-use lsp_types::Url;
+use lsp_types::Uri;
 use lsp_types::WorkspaceEdit;
+use tower_lsp_server::UriExt as _;
 
 use crate::autofix_casting_syntax;
 use crate::autofix_class_member_access;
@@ -197,7 +199,7 @@ fn autofix_insert_type_annotation_helper(
     options: &Options,
     ast: &ast::Program<Loc, Loc>,
     diagnostics: &[Diagnostic],
-    uri: &Url,
+    uri: &Uri,
     new_ast: &ast::Program<Loc, Loc>,
 ) -> Vec<CodeActionOrCommand> {
     let diff = insert_type::mk_diff(ast, new_ast);
@@ -241,7 +243,7 @@ fn autofix_exports_code_actions<'a, 'b>(
     tolerable_errors: &[TolerableError<Loc>],
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     diagnostics: &[Diagnostic],
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Result<Vec<CodeActionOrCommand>, insert_type::Errors> {
     let fixable_locs =
@@ -289,7 +291,7 @@ fn autofix_missing_local_annot_code_actions<'a, 'b>(
     _tolerable_errors: &[TolerableError<Loc>],
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     diagnostics: &[Diagnostic],
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Result<Vec<CodeActionOrCommand>, insert_type::Errors> {
     let fixable_locs = autofix_missing_local_annots::map_of_fixable_missing_local_params(cx);
@@ -339,7 +341,7 @@ fn code_action_insert_inferred_render_type<'a, 'b>(
     ast: &ast::Program<Loc, Loc>,
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Result<Vec<CodeActionOrCommand>, String> {
     let result = insert_inferred_render_type::insert_render_type_at_loc(
@@ -401,7 +403,7 @@ fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
         >,
     >,
     only: Option<&[CodeActionKind]>,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     match loc.source {
@@ -514,7 +516,7 @@ fn insert_inferred_type_as_cast_code_actions<'a>(
             flow_type_sig::packed_type_sig::Module<flow_type_sig::compact_table::Index<ALoc>>,
         >,
     >,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     if loc.start == loc.end {
@@ -610,7 +612,7 @@ fn insert_inferred_type_as_cast_code_actions<'a>(
 fn insert_jsdoc_code_actions(
     options: &Options,
     ast: &ast::Program<Loc, Loc>,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     match insert_jsdoc::insert_stub_for_target(false, loc, ast) {
@@ -650,7 +652,7 @@ fn convert_type_to_readonly_form_code_actions(
     options: &Options,
     ast: &ast::Program<Loc, Loc>,
     only: Option<&[CodeActionKind]>,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     if include_rewrite_refactors(only) {
@@ -704,7 +706,7 @@ fn refactor_arrow_function_code_actions(
     scope_info: &ScopeInfo<Loc>,
     options: &Options,
     only: Option<&[CodeActionKind]>,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     if include_rewrite_refactors(only) {
@@ -741,7 +743,7 @@ fn refactor_switch_to_match_statement_actions(
     ast: &ast::Program<Loc, Loc>,
     options: &Options,
     only: Option<&[CodeActionKind]>,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     if cx.enable_pattern_matching()
@@ -782,7 +784,7 @@ fn refactor_match_coded_like_switch(
     options: &Options,
     only: Option<&[CodeActionKind]>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     if cx.enable_pattern_matching()
@@ -827,7 +829,7 @@ fn add_jsx_props_code_actions(
     ast: &ast::Program<Loc, Loc>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     options: &Options,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     match refactor_add_jsx_props::fill_props(cx, snippets_enabled, ast, typed_ast, loc) {
@@ -943,7 +945,7 @@ fn suggest_imports(
     imports_ranked_usage: bool,
     exports: &ExportSearch,
     name: &str,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     let files = if autofix_imports::loc_is_type(ast, loc.dupe()) {
@@ -1050,7 +1052,7 @@ fn autofix_in_upstream_file(
     title: &str,
     transform: &AstTransform,
     diagnostic_title: &str,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Option<CodeActionOrCommand> {
     let src = loc.source.dupe();
@@ -1062,8 +1064,8 @@ fn autofix_in_upstream_file(
                 None => (ast.clone(), uri.clone()),
                 Some(upstream_ast) => {
                     let file_path = source_file.to_path_buf();
-                    let file_uri = Url::from_file_path(&file_path).unwrap_or_else(|_| {
-                        Url::parse(&format!("file://{}", file_path.display()))
+                    let file_uri = Uri::from_file_path(&file_path).unwrap_or_else(|| {
+                        Uri::from_str(&format!("file://{}", file_path.display()))
                             .unwrap_or_else(|_| uri.clone())
                     });
                     (upstream_ast, file_uri)
@@ -2419,7 +2421,7 @@ fn fix_all_in_file_code_actions(
     diagnostics: &[Diagnostic],
     errors: ErrorSet,
     loc: Loc,
-    uri: &Url,
+    uri: &Uri,
 ) -> Vec<CodeActionOrCommand> {
     let has_invalid_cast_at_loc = errors.exists(|error| {
         let error_message = ErrorMessage::map_loc_of_error_message(
@@ -2486,7 +2488,7 @@ fn code_actions_of_errors(
     errors: ErrorSet,
     only: Option<&[CodeActionKind]>,
     imports_ranked_usage: bool,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     let include_quick_fixes = include_quick_fixes(only);
@@ -2514,8 +2516,8 @@ fn code_actions_of_errors(
                             &code_action_utils::layout_options(options),
                             module_system_info,
                             match uri.to_file_path() {
-                                Ok(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
-                                Err(_) => None,
+                                Some(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
+                                None => None,
                             }
                             .as_deref(),
                             ast,
@@ -2604,7 +2606,7 @@ fn code_actions_of_errors(
 fn code_action_for_parser_error_with_suggestion(
     mut acc: Vec<CodeActionOrCommand>,
     diagnostics: &[Diagnostic],
-    uri: &Url,
+    uri: &Uri,
     error_loc: Loc,
     editor_loc: Loc,
     title: &str,
@@ -2642,7 +2644,7 @@ fn code_action_for_parser_error_with_suggestion(
 
 fn code_actions_of_parse_errors(
     diagnostics: &[Diagnostic],
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
     parse_errors: &[(Loc, ParseError)],
 ) -> Vec<CodeActionOrCommand> {
@@ -2730,7 +2732,7 @@ pub fn kind_is_supported(only: Option<&[CodeActionKind]>) -> bool {
     }
 }
 
-fn organize_imports_code_action(uri: &Url) -> CodeActionOrCommand {
+fn organize_imports_code_action(uri: &Uri) -> CodeActionOrCommand {
     CodeActionOrCommand::CodeAction(CodeAction {
         title: "Organize imports".to_string(),
         kind: Some(CodeActionKind::new("source.organizeImports.flow")),
@@ -2774,7 +2776,7 @@ pub fn code_actions_at_loc<'a>(
     parse_errors: &[(Loc, ParseError)],
     diagnostics: &[Diagnostic],
     only: Option<&[CodeActionKind]>,
-    uri: &Url,
+    uri: &Uri,
     loc: Loc,
 ) -> Result<Vec<CodeActionOrCommand>, String> {
     let support_experimental_snippet_text_edit = lsp_init_params
@@ -2933,8 +2935,8 @@ pub fn code_actions_at_loc<'a>(
                         &code_action_utils::layout_options(options),
                         module_system_info,
                         match uri.to_file_path() {
-                            Ok(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
-                            Err(_) => None,
+                            Some(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
+                            None => None,
                         }
                         .as_deref(),
                         ast,
@@ -3376,11 +3378,11 @@ pub fn autofix_imports_lsp(
     module_system_info: &LspModuleSystemInfo,
     cx: &Context,
     ast: &ast::Program<Loc, Loc>,
-    uri: &Url,
+    uri: &Uri,
 ) -> Vec<TextEdit> {
     let src_dir = match uri.to_file_path() {
-        Ok(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
-        Err(_) => None,
+        Some(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
+        None => None,
     };
     let edits = autofix_imports_fn(
         options,

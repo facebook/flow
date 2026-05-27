@@ -11,6 +11,7 @@ use flow_common_errors::error_utils::StdinFile;
 use flow_lint_settings::severity::Severity;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
+use tower_lsp_server::UriExt as _;
 
 use crate::lsp::loc_to_lsp_range;
 use crate::lsp::lsp_position_to_flow;
@@ -270,10 +271,10 @@ pub fn flow_completions_to_lsp(
     })
 }
 
-pub fn file_key_to_uri(file_key_opt: Option<&FileKey>) -> Result<lsp_types::Url, String> {
+pub fn file_key_to_uri(file_key_opt: Option<&FileKey>) -> Result<lsp_types::Uri, String> {
     let file_key = file_key_opt.ok_or_else(|| "File_key is None".to_string())?;
-    lsp_types::Url::from_file_path(file_key.to_path_buf())
-        .map_err(|_| "Invalid file path".to_string())
+    lsp_types::Uri::from_file_path(file_key.to_path_buf())
+        .ok_or_else(|| "Invalid file path".to_string())
 }
 
 pub fn loc_to_lsp(loc: &Loc) -> Result<lsp_types::Location, String> {
@@ -284,7 +285,7 @@ pub fn loc_to_lsp(loc: &Loc) -> Result<lsp_types::Location, String> {
     })
 }
 
-pub fn loc_to_lsp_with_default(loc: &Loc, default_uri: &lsp_types::Url) -> lsp_types::Location {
+pub fn loc_to_lsp_with_default(loc: &Loc, default_uri: &lsp_types::Uri) -> lsp_types::Location {
     let uri = match file_key_to_uri(loc.source.as_ref()) {
         Ok(uri) => uri,
         Err(_) => default_uri.clone(),
@@ -334,7 +335,7 @@ pub fn diagnostics_of_flow_errors(
         should_include_vscode_detailed_diagnostics: &dyn Fn(&PrintableError<Loc>) -> bool,
         severity: Severity,
         printable_error: &PrintableError<Loc>,
-    ) -> Option<(lsp_types::Url, lsp_types::Diagnostic)> {
+    ) -> Option<(lsp_types::Uri, lsp_types::Diagnostic)> {
         let has_detailed_diagnostics = should_include_vscode_detailed_diagnostics(printable_error);
         let lsp_error = flow_common_errors::error_utils::lsp_output::lsp_of_error(
             has_detailed_diagnostics,
@@ -342,13 +343,13 @@ pub fn diagnostics_of_flow_errors(
         );
         let loc = &lsp_error.loc;
         let source = loc.source.as_ref()?;
-        let uri = lsp_types::Url::from_file_path(source.to_path_buf()).ok()?;
+        let uri = lsp_types::Uri::from_file_path(source.to_path_buf())?;
         let related_information: Vec<lsp_types::DiagnosticRelatedInformation> = lsp_error
             .related_locations
             .iter()
             .filter_map(|(loc, related_message)| {
                 let source = loc.source.as_ref()?;
-                let uri = lsp_types::Url::from_file_path(source.to_path_buf()).ok()?;
+                let uri = lsp_types::Uri::from_file_path(source.to_path_buf())?;
                 Some(lsp_types::DiagnosticRelatedInformation {
                     location: lsp_types::Location {
                         uri,

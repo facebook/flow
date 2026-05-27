@@ -8,6 +8,7 @@
 #![allow(dead_code)]
 
 use std::rc::Rc;
+use std::str::FromStr as _;
 use std::sync::Arc;
 use std::sync::LazyLock;
 use std::sync::Mutex;
@@ -49,6 +50,7 @@ use flow_services_inference_types::FileArtifacts;
 use flow_services_inference_types::ParseArtifacts;
 use flow_services_inference_types::TypeContentsError;
 use lsp_types::MessageType;
+use tower_lsp_server::UriExt as _;
 
 type CheckResult<'cx> = FileArtifacts<'cx>;
 type FileArtifactsResult<'cx> = Result<CheckResult<'cx>, TypeContentsError>;
@@ -87,7 +89,7 @@ static URI_TO_LATEST_METADATA_MAP: LazyLock<
     Mutex<std::collections::BTreeMap<String, lsp_prot::Metadata>>,
 > = LazyLock::new(|| Mutex::new(std::collections::BTreeMap::new()));
 
-fn lsp_uri_to_flow_path(uri: &lsp_types::Url) -> String {
+fn lsp_uri_to_flow_path(uri: &lsp_types::Uri) -> String {
     flow_lsp_conversions::lsp_DocumentIdentifier_to_flow_path(&lsp_types::TextDocumentIdentifier {
         uri: uri.clone(),
     })
@@ -118,9 +120,9 @@ fn live_errors_canceled_response(
         lsp_prot::Response::LiveErrorsResponse(Err(lsp_prot::LiveErrorsFailure {
             live_errors_failure_kind: lsp_prot::ErrorResponseKind::CanceledErrorResponse,
             live_errors_failure_reason: "Subsumed by a later request".to_string(),
-            live_errors_failure_uri: lsp_types::Url::parse(uri)
-                .or_else(|_| lsp_types::Url::from_file_path(uri).map_err(|_| ()))
-                .unwrap_or_else(|_| lsp_types::Url::parse(&format!("file://{}", uri)).unwrap()),
+            live_errors_failure_uri: lsp_types::Uri::from_str(uri)
+                .or_else(|_| lsp_types::Uri::from_file_path(uri).ok_or(()))
+                .unwrap_or_else(|_| lsp_types::Uri::from_str(&format!("file://{}", uri)).unwrap()),
         })),
         metadata,
     )
@@ -4831,7 +4833,7 @@ fn handle_persistent_get_def(
 }
 
 fn loc_to_vscode_linked_location_in_markdown(
-    default_uri: &lsp_types::Url,
+    default_uri: &lsp_types::Uri,
     loc: &flow_parser::loc::Loc,
 ) -> Option<String> {
     let source = &loc.source;
@@ -5790,7 +5792,7 @@ fn handle_persistent_find_references(
             let uri = loc
                 .source
                 .as_ref()
-                .and_then(|f| lsp_types::Url::from_file_path(f.to_path_buf()).ok())?;
+                .and_then(|f| lsp_types::Uri::from_file_path(f.to_path_buf()))?;
             Some(lsp_types::Location {
                 uri,
                 range: loc_to_lsp_range(loc),
@@ -5989,7 +5991,7 @@ fn handle_persistent_rename(
                 flow_parser_utils_output::replacement_printer::mk_loc_patch_ast_differ(
                     &opts, &all_diffs,
                 );
-            let mut changes: std::collections::HashMap<lsp_types::Url, Vec<lsp_types::TextEdit>> =
+            let mut changes: std::collections::HashMap<lsp_types::Uri, Vec<lsp_types::TextEdit>> =
                 std::collections::HashMap::new();
             for (loc, new_text) in loc_patches {
                 if let Ok(uri) = flow_lsp_conversions::file_key_to_uri(loc.source.as_ref()) {
@@ -6175,13 +6177,13 @@ fn handle_persistent_llm_context(
     let file_artifacts = edited_file_paths
         .iter()
         .filter_map(|file_uri_str| {
-            let file_path = lsp_types::Url::parse(file_uri_str)
+            let file_path = lsp_types::Uri::from_str(file_uri_str)
                 .ok()
                 .map(|uri| lsp_uri_to_flow_path(&uri))
                 .unwrap_or_else(|| file_uri_str.clone());
             let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(&file_path);
             let text_document = lsp_types::TextDocumentIdentifier {
-                uri: lsp_types::Url::parse(file_uri_str).ok()?,
+                uri: lsp_types::Uri::from_str(file_uri_str).ok()?,
             };
             let file_input = file_input_of_text_document_identifier(client_id, &text_document);
             let (_file_key, content) = match of_file_input(options, env, &file_input) {
@@ -6872,10 +6874,10 @@ fn live_diagnostics_of_uri(
     Result<lsp_prot::LiveErrorsResponse, (lsp_prot::LiveErrorsFailure, FileInput)>,
     lsp_prot::Metadata,
 ) {
-    let live_errors_uri = match lsp_types::Url::parse(uri) {
+    let live_errors_uri = match lsp_types::Uri::from_str(uri) {
         Ok(u) => u,
-        Err(_) => lsp_types::Url::from_file_path(uri)
-            .unwrap_or_else(|_| lsp_types::Url::parse(&format!("file://{}", uri)).unwrap()),
+        Err(_) => lsp_types::Uri::from_file_path(uri)
+            .unwrap_or_else(|| lsp_types::Uri::from_str(&format!("file://{}", uri)).unwrap()),
     };
     let file_path = lsp_uri_to_flow_path(&live_errors_uri);
     let file_input = persistent_connection::get_client(client_id)

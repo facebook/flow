@@ -12,12 +12,14 @@ use std::io;
 use std::io::Write as _;
 use std::net::Shutdown;
 use std::net::TcpStream;
+use std::str::FromStr as _;
 use std::sync::Mutex;
 use std::time::Duration;
 
 use crossbeam::channel::Receiver;
 use crossbeam::channel::TryRecvError;
 use flow_common_exit_status::FlowExitStatus;
+use tower_lsp_server::UriExt as _;
 
 pub type FilePath = std::path::PathBuf;
 use flow_server_env::file_watcher_status;
@@ -245,7 +247,7 @@ impl fmt::Display for FlowLspError {
                 write!(f, "{}", error.message)
             }
             FlowLspError::ChangedFileNotOpen(uri) => {
-                write!(f, "Changed file not open: {}", uri)
+                write!(f, "Changed file not open: {}", **uri)
             }
         }
     }
@@ -1075,21 +1077,19 @@ fn get_initialize_params(state: &ServerState) -> &lsp_types::InitializeParams {
     &get_ienv(state).i_initialize_params
 }
 
+#[expect(deprecated)]
 fn command_key_of_ienv(ienv: &InitializedEnv) -> String {
     let path = ienv
         .i_initialize_params
         .root_uri
         .as_ref()
         .map(|u| u.path().to_string())
-        .or_else(|| {
-            #[allow(deprecated)]
-            ienv.i_initialize_params.root_path.clone()
-        })
+        .or_else(|| ienv.i_initialize_params.root_path.clone())
         .unwrap_or_default();
-    let file_url = lsp_types::Url::from_file_path(&path)
+    let file_uri = lsp_types::Uri::from_file_path(&path)
         .map(|u| u.to_string())
-        .unwrap_or_else(|_| format!("file://{}", path));
-    format!("org.flow:{}", file_url)
+        .unwrap_or_else(|| format!("file://{}", path));
+    format!("org.flow:{}", file_uri)
 }
 
 fn command_key_of_server_state(state: &ServerState) -> String {
@@ -1356,13 +1356,13 @@ fn convert_to_client_uris(state: &State, event: Event) -> Event {
                         .expect("initialized LSP state must have a root");
                     let client_root = format!(
                         "{}/",
-                        lsp_types::Url::from_file_path(&client_path)
-                            .unwrap_or_else(|_| lsp_types::Url::parse("file:///").unwrap())
+                        *lsp_types::Uri::from_file_path(&client_path)
+                            .unwrap_or_else(|| lsp_types::Uri::from_str("file:///").unwrap())
                     );
                     let server_root = format!(
                         "{}/",
-                        lsp_types::Url::from_file_path(i_root)
-                            .unwrap_or_else(|_| lsp_types::Url::parse("file:///").unwrap())
+                        *lsp_types::Uri::from_file_path(i_root)
+                            .unwrap_or_else(|| lsp_types::Uri::from_str("file:///").unwrap())
                     );
                     let mut mapper = lsp_mapper::default_mapper();
                     let client_root_clone = client_root.clone();
@@ -1371,7 +1371,7 @@ fn convert_to_client_uris(state: &State, event: Event) -> Event {
                         let uri_str = uri.as_str().to_string();
                         if let Some(relative) = uri_str.strip_prefix(&server_root_clone) {
                             let new_uri_str = format!("{}{}", client_root_clone, relative);
-                            lsp_types::Url::parse(&new_uri_str).unwrap_or(uri)
+                            lsp_types::Uri::from_str(&new_uri_str).unwrap_or(uri)
                         } else {
                             uri
                         }
@@ -1394,11 +1394,11 @@ fn convert_to_client_uris(state: &State, event: Event) -> Event {
 fn convert_to_server_uris(request: lsp_prot::Request) -> lsp_prot::Request {
     let server_uri_of_client_uri = |uri: DocumentUri| -> DocumentUri {
         match uri.to_file_path() {
-            Ok(path) => {
-                let canonical = std::fs::canonicalize(&path).unwrap_or(path);
-                lsp_types::Url::from_file_path(&canonical).unwrap_or(uri)
+            Some(path) => {
+                let canonical = std::fs::canonicalize(&path).unwrap_or(path.into_owned());
+                lsp_types::Uri::from_file_path(&canonical).unwrap_or(uri)
             }
-            Err(_) => uri,
+            None => uri,
         }
     };
     let mut client_to_server_mapper = lsp_mapper::default_mapper();
@@ -3950,7 +3950,7 @@ fn main_handle_error(
             FlowLspError::ChangedFileNotOpen(uri) => {
                 main_log_error(
                     false,
-                    &format!("Changed file not open: {}", uri),
+                    &format!("Changed file not open: {}", *uri),
                     &stack,
                     event.as_ref(),
                 );

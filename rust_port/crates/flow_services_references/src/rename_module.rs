@@ -28,7 +28,7 @@ use flow_parser_utils_output::js_layout_generator;
 use flow_parser_utils_output::pretty_printer;
 use flow_server_env::flow_lsp_conversions;
 use lsp_types::TextEdit;
-use lsp_types::Url;
+use lsp_types::Uri;
 use lsp_types::WorkspaceEdit;
 
 fn get_dependents(
@@ -149,7 +149,7 @@ pub fn get_rename_edits(
     let workspace_edit = {
         get_dependents(shared_mem, old_file_key).map(|dependents| {
             // TODO: Allow partial edits
-            let changes: Result<HashMap<Url, Vec<TextEdit>>, String> = dependents
+            let changes: Result<HashMap<Uri, Vec<TextEdit>>, String> = dependents
                 .into_iter()
                 .try_fold(HashMap::new(), |mut uri_map, (file_key, ast_)| {
                     let Some(ast) = ast_ else {
