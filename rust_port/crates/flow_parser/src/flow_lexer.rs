@@ -20,16 +20,7 @@ use crate::lex_env::LexEnv;
 use crate::lex_env::LexErrors;
 use crate::loc::Loc;
 use crate::loc::Position;
-use crate::logos_tokens::CommentToken;
-use crate::logos_tokens::JsxChildTextToken;
-use crate::logos_tokens::JsxQuoteTextToken;
-use crate::logos_tokens::JsxTagToken;
 use crate::logos_tokens::MainToken;
-use crate::logos_tokens::RegexpBodyToken;
-use crate::logos_tokens::RegexpClassToken;
-use crate::logos_tokens::RegexpToken;
-use crate::logos_tokens::TemplatePartToken;
-use crate::logos_tokens::TemplateTailToken;
 use crate::parse_error::ParseError;
 use crate::token::BigintType;
 use crate::token::NumberType;
@@ -50,8 +41,40 @@ static ASCII_ID_CONTINUE: [char; 63] = [
     '4', '5', '6', '7', '8', '9',
 ];
 
+#[derive(Clone, Copy, PartialEq)]
+enum IdentifierMode {
+    Normal,
+    Jsx,
+}
+
+fn line_terminator_len(s: &str) -> Option<usize> {
+    if s.starts_with("\r\n") {
+        Some(2)
+    } else if s.starts_with(['\r', '\n', '\u{2028}', '\u{2029}']) {
+        Some(s.chars().next().unwrap().len_utf8())
+    } else {
+        None
+    }
+}
+
+fn is_trivia_space(c: char) -> bool {
+    matches!(
+        c,
+        '\t' | '\u{000b}'
+            | '\u{000c}'
+            | '\u{0020}'
+            | '\u{00a0}'
+            | '\u{feff}'
+            | '\u{1680}'
+            | '\u{2000}'..='\u{200a}' | '\u{202f}' | '\u{205f}' | '\u{3000}'
+    )
+}
+
 /// Precondition: remainder is not empty
-fn starts_with_id_continues(remainder: &str) -> Option<usize> {
+fn starts_with_id_continues(remainder: &str, identifier_mode: IdentifierMode) -> Option<usize> {
+    if identifier_mode == IdentifierMode::Jsx && remainder.starts_with('-') {
+        return Some(1);
+    }
     if remainder.starts_with(ASCII_ID_CONTINUE) {
         return Some(1);
     }
@@ -86,36 +109,17 @@ fn starts_with_id_continues(remainder: &str) -> Option<usize> {
 
 /// Assuming that the first code point is already lexed
 /// return true means that the whole remaining buffer is valid identifier
-fn loop_id_continues(lexer: &mut logos::Lexer<MainToken>) -> bool {
+fn loop_id_continues(lexer: &mut logos::Lexer<MainToken>, identifier_mode: IdentifierMode) -> bool {
     loop {
         let remainder = lexer.remainder();
         if remainder.is_empty() {
             return true;
         }
-        if let Some(l) = starts_with_id_continues(remainder) {
+        if let Some(l) = starts_with_id_continues(remainder, identifier_mode) {
             lexer.bump(l);
             continue;
         }
         return false;
-    }
-}
-
-/// Assuming that the first code point is already lexed
-fn loop_jsx_id_continues(lexer: &mut logos::Lexer<JsxTagToken>) {
-    loop {
-        let remainder = lexer.remainder();
-        if remainder.is_empty() {
-            return;
-        }
-        if remainder.starts_with('-') {
-            lexer.bump(1);
-            continue;
-        }
-        if let Some(l) = starts_with_id_continues(remainder) {
-            lexer.bump(l);
-            continue;
-        }
-        return;
     }
 }
 
@@ -340,84 +344,80 @@ fn decode_identifier<'a>(
 }
 
 fn comment(
-    lexer: &mut logos::Lexer<CommentToken>,
+    lexer: &mut logos::Lexer<MainToken>,
     env: &mut LexEnv,
     errors: &mut LexErrors,
     buf: &mut String,
 ) -> usize {
+    let start_offset = lexer.span().end;
+    let mut offset = start_offset;
     loop {
-        match lexer.next() {
-            Some(Ok(CommentToken::LineTerminatorSequence)) => {
-                env.new_line(lexer.span());
-                buf.push_str(lexer.slice());
-            }
-
-            // */
-            Some(Ok(CommentToken::EndComment)) => {
-                let range = lexer.span();
-                if env.in_comment_syntax {
-                    let loc = env.loc_of_span(&range);
-                    errors.push(
-                        loc,
-                        ParseError::UnexpectedTokenWithSuggestion(
-                            "*/".to_owned(),
-                            "*-/".to_owned(),
-                        ),
-                    );
-                }
-                return range.end;
-            }
-
-            // *-/
-            Some(Ok(CommentToken::EndCommentBar)) => {
-                if env.in_comment_syntax {
-                    return lexer.span().end;
-                } else {
-                    buf.push_str("*-/");
-                }
-            }
-
-            None => {
-                let loc = env.loc_of_span(&lexer.span());
-                errors.push(loc, ParseError::UnexpectedTokenIllegal);
-                return lexer.source().len();
-            }
-
-            Some(Ok(CommentToken::Other)) => {
-                buf.push_str(lexer.slice());
-            }
-
-            Some(Err(_)) => unreachable!("unreachable comment"),
+        let remainder = &lexer.source()[offset..];
+        if remainder.is_empty() {
+            let end = lexer.source().len();
+            let loc = env.loc_of_offsets(end, end);
+            errors.push(loc, ParseError::UnexpectedTokenIllegal);
+            lexer.bump(end - start_offset);
+            return end;
         }
+        if let Some(len) = line_terminator_len(remainder) {
+            env.new_line(offset..(offset + len));
+            buf.push_str(&remainder[..len]);
+            offset += len;
+            continue;
+        }
+        if remainder.starts_with("*/") {
+            let end = offset + 2;
+            if env.in_comment_syntax {
+                let loc = env.loc_of_offsets(offset, end);
+                errors.push(
+                    loc,
+                    ParseError::UnexpectedTokenWithSuggestion("*/".to_owned(), "*-/".to_owned()),
+                );
+            }
+            lexer.bump(end - start_offset);
+            return end;
+        }
+        if remainder.starts_with("*-/") {
+            let end = offset + 3;
+            if env.in_comment_syntax {
+                lexer.bump(end - start_offset);
+                return end;
+            } else {
+                buf.push_str("*-/");
+                offset = end;
+                continue;
+            }
+        }
+        let c = remainder.chars().next().unwrap();
+        buf.push(c);
+        offset += c.len_utf8();
     }
 }
 
 fn line_comment(
-    lexer: &mut logos::Lexer<CommentToken>,
+    lexer: &mut logos::Lexer<MainToken>,
     env: &mut LexEnv,
     buf: &mut String,
 ) -> Position {
+    let start_offset = lexer.span().end;
+    let mut offset = start_offset;
     loop {
-        match lexer.next() {
-            None => {
-                return env.pos_at_offset(lexer.source().len());
-            }
-
-            Some(Ok(CommentToken::LineTerminatorSequence)) => {
-                let range = lexer.span();
-                let mut end_pos = env.pos_at_offset(range.end);
-                let len = range.len();
-                env.new_line(range);
-                end_pos.column -= len as i32;
-                return end_pos;
-            }
-
-            Some(Ok(_)) => {
-                buf.push_str(lexer.slice());
-            }
-
-            Some(Err(())) => unreachable!("unreachable line_comment"),
+        let remainder = &lexer.source()[offset..];
+        if remainder.is_empty() {
+            let end = lexer.source().len();
+            lexer.bump(end - start_offset);
+            return env.pos_at_offset(end);
         }
+        if let Some(len) = line_terminator_len(remainder) {
+            let end_pos = env.pos_at_offset(offset);
+            env.new_line(offset..(offset + len));
+            lexer.bump(offset + len - start_offset);
+            return end_pos;
+        }
+        let c = remainder.chars().next().unwrap();
+        buf.push(c);
+        offset += c.len_utf8();
     }
 }
 
@@ -690,61 +690,52 @@ fn string_quote<'a>(
     }
 }
 
-fn template_part<'a>(
-    mut lexer: logos::Lexer<'a, TemplatePartToken>,
+fn template_part(
+    lexer: &mut logos::Lexer<MainToken>,
     env: &mut LexEnv,
     errors: &mut LexErrors,
     cooked: &mut String,
     raw: &mut String,
-) -> (logos::Lexer<'a, TemplatePartToken>, bool) {
+) -> bool {
     loop {
-        match lexer.next() {
-            // EOF
-            None => {
-                let end_offset = lexer.source().len();
-                let loc = env.loc_of_offsets(end_offset, end_offset);
-                errors.push(loc, ParseError::UnexpectedTokenIllegal);
-                return (lexer, true);
-            }
-            Some(Ok(TemplatePartToken::Backtick)) => {
-                return (lexer, true);
-            }
-            // ${
-            Some(Ok(TemplatePartToken::SubstitutionStart)) => {
-                return (lexer, false);
-            }
-            // \
-            Some(Ok(TemplatePartToken::Backslash)) => {
-                raw.push('\\');
-                let (bump_len, codes, _) =
-                    string_escape(lexer.remainder(), lexer.span().end, env, errors);
-                let str = &lexer.remainder()[..bump_len];
-                raw.push_str(str);
-                lexer.bump(bump_len);
-                for code in codes {
-                    add_codepoint_to_string(cooked, code);
-                }
-            }
-            // \r\n
-            Some(Ok(TemplatePartToken::Crlf)) => {
-                raw.push_str("\r\n");
-                cooked.push('\n');
-                env.new_line(lexer.span());
-            }
-            // \n or \r
-            Some(Ok(TemplatePartToken::Newline)) => {
-                let s = lexer.slice();
-                raw.push_str(s);
-                cooked.push('\n');
-                env.new_line(lexer.span());
-            }
-            Some(Ok(TemplatePartToken::Other)) => {
-                let s = lexer.slice();
-                cooked.push_str(s);
-                raw.push_str(s);
-            }
-            Some(Err(())) => unreachable!("unreachable template_part"),
+        let offset = lexer.span().end;
+        let remainder = lexer.remainder();
+        if remainder.is_empty() {
+            let end_offset = lexer.source().len();
+            let loc = env.loc_of_offsets(end_offset, end_offset);
+            errors.push(loc, ParseError::UnexpectedTokenIllegal);
+            return true;
         }
+        if remainder.starts_with('`') {
+            lexer.bump(1);
+            return true;
+        }
+        if remainder.starts_with("${") {
+            lexer.bump(2);
+            return false;
+        }
+        if remainder.starts_with('\\') {
+            raw.push('\\');
+            lexer.bump(1);
+            let (bump_len, codes, _) = string_escape(lexer.remainder(), offset + 1, env, errors);
+            raw.push_str(&lexer.remainder()[..bump_len]);
+            lexer.bump(bump_len);
+            for code in codes {
+                add_codepoint_to_string(cooked, code);
+            }
+            continue;
+        }
+        if let Some(len) = line_terminator_len(remainder) {
+            raw.push_str(&remainder[..len]);
+            cooked.push('\n');
+            env.new_line(offset..(offset + len));
+            lexer.bump(len);
+            continue;
+        }
+        let c = remainder.chars().next().unwrap();
+        cooked.push(c);
+        raw.push(c);
+        lexer.bump(c.len_utf8());
     }
 }
 
@@ -985,19 +976,15 @@ fn token_base_inner<'a>(
             }
             let start = env.pos_at_offset(lexer.span().start);
             let mut buf = String::new();
-            let mut comment_lexer = lexer.clone().morph(); // clone needed: logos::Lexer doesn't implement Dupe
-            let end_offset = comment(&mut comment_lexer, env, errors, &mut buf);
+            let end_offset = comment(lexer, env, errors, &mut buf);
             let end = env.pos_at_offset(end_offset);
             let c = mk_comment(env, start, end, buf, true);
-            *lexer = comment_lexer.morph();
             TokenResult::Comment(c)
         }
         MainToken::LineCommentStart => {
             let start = env.pos_at_offset(lexer.span().start);
             let mut buf = String::new();
-            let mut comment_lexer = lexer.clone().morph(); // clone needed: logos::Lexer doesn't implement Dupe
-            let end = line_comment(&mut comment_lexer, env, &mut buf);
-            *lexer = comment_lexer.morph();
+            let end = line_comment(lexer, env, &mut buf);
             let c = mk_comment(env, start, end, buf, false);
             TokenResult::Comment(c)
         }
@@ -1010,9 +997,7 @@ fn token_base_inner<'a>(
             } else if lexer.span().start == 0 {
                 let start = env.pos_at_offset(lexer.span().start);
                 let mut buf = String::new();
-                let mut comment_lexer = lexer.clone().morph(); // clone needed: logos::Lexer doesn't implement Dupe
-                let end = line_comment(&mut comment_lexer, env, &mut buf);
-                *lexer = comment_lexer.morph();
+                let end = line_comment(lexer, env, &mut buf);
                 let loc = Loc {
                     source: env.source(),
                     start,
@@ -1054,9 +1039,7 @@ fn token_base_inner<'a>(
             let mut value = String::new();
             let mut raw = String::new();
             let start = env.pos_at_offset(lexer.span().start);
-            let (template_lexer, is_tail) =
-                template_part(lexer.clone().morph(), env, errors, &mut value, &mut raw);
-            *lexer = template_lexer.morph();
+            let is_tail = template_part(lexer, env, errors, &mut value, &mut raw);
             let end = env.pos_at_offset(lexer.span().end);
             let loc = Loc {
                 source: env.source(),
@@ -1595,7 +1578,7 @@ fn token_base_inner<'a>(
         }
         MainToken::JsIdStart => {
             let start_offset = lexer.span().start;
-            loop_id_continues(lexer);
+            loop_id_continues(lexer, IdentifierMode::Normal);
             let end_offset = lexer.span().end;
             let loc = env.loc_of_offsets(start_offset, end_offset);
             let id_str = &lexer.source()[start_offset..end_offset];
@@ -1731,7 +1714,7 @@ fn token_base_inner<'a>(
                 lexer.slice().chars().next().unwrap() as u32
             ) {
                 let start_offset = lexer.span().start;
-                loop_id_continues(lexer);
+                loop_id_continues(lexer, IdentifierMode::Normal);
                 let end_offset = lexer.span().end;
                 let loc = env.loc_of_offsets(start_offset, end_offset);
                 let id_str = &lexer.source()[start_offset..end_offset];
@@ -1752,156 +1735,146 @@ fn token_base_inner<'a>(
     }
 }
 
-fn regexp_class<'a>(
-    mut lexer: logos::Lexer<'a, RegexpClassToken>,
+fn regexp_body(
+    lexer: &mut logos::Lexer<MainToken>,
     env: &mut LexEnv,
     errors: &mut LexErrors,
     buf: &mut String,
-) -> logos::Lexer<'a, RegexpClassToken> {
+) -> String {
+    let mut in_class = false;
     loop {
-        match lexer.next() {
-            // EOF
-            None => {
-                return lexer;
-            }
-            // \\, \\]
-            Some(Ok(RegexpClassToken::EscapedBackslash))
-            | Some(Ok(RegexpClassToken::EscapedClosingBracket)) => {
-                buf.push_str(lexer.slice());
-            }
-            // ]
-            Some(Ok(RegexpClassToken::ClosingBracket)) => {
-                buf.push_str(lexer.slice());
-                return lexer;
-            }
-            Some(Ok(RegexpClassToken::LineTerminatorSequence)) => {
-                let range = lexer.span();
-                let loc = env.loc_of_span(&range);
-                env.new_line(range);
-                errors.push(loc, ParseError::UnterminatedRegExp);
-                return lexer;
-            }
-            Some(Ok(RegexpClassToken::Other)) => {
-                buf.push_str(lexer.slice());
-            }
-            Some(Err(())) => unreachable!("unreachable regexp_class"),
+        let offset = lexer.span().end;
+        let remainder = lexer.remainder();
+        if remainder.is_empty() {
+            let end = lexer.source().len();
+            let loc = env.loc_of_offsets(end, end);
+            errors.push(loc, ParseError::UnterminatedRegExp);
+            return String::new();
         }
-    }
-}
-
-fn regexp_body<'a>(
-    mut lexer: logos::Lexer<'a, RegexpBodyToken>,
-    env: &mut LexEnv,
-    errors: &mut LexErrors,
-    buf: &mut String,
-) -> (logos::Lexer<'a, RegexpBodyToken>, &'a str) {
-    loop {
-        match lexer.next() {
-            None => {
-                let end = lexer.source().len();
-                let loc = env.loc_of_offsets(end, end);
-                errors.push(loc, ParseError::UnterminatedRegExp);
-                return (lexer, "");
-            }
-            Some(Ok(RegexpBodyToken::BackslashFollowedByLineTerminator)) => {
-                let range = lexer.span();
-                let loc = env.loc_of_span(&range);
-                env.new_line(range);
-                errors.push(loc, ParseError::UnterminatedRegExp);
-                return (lexer, "");
-            }
-            Some(Ok(RegexpBodyToken::BackslashFollowedByAny)) => {
-                buf.push_str(lexer.slice());
-            }
-            Some(Ok(RegexpBodyToken::SlashWithFlags)) => {
-                let lexeme = lexer.slice();
-                // Skip the '/' and get flags
-                let flags = &lexeme[1..];
-                return (lexer, flags);
-            }
-            Some(Ok(RegexpBodyToken::Slash)) => {
-                return (lexer, "");
-            }
-            Some(Ok(RegexpBodyToken::OpenBracket)) => {
-                buf.push('[');
-                lexer = regexp_class(lexer.morph(), env, errors, buf).morph();
-            }
-            Some(Ok(RegexpBodyToken::LineTerminatorSequence)) => {
-                let range = lexer.span();
-                let loc = env.loc_of_span(&range);
-                env.new_line(range);
-                errors.push(loc, ParseError::UnterminatedRegExp);
-                return (lexer, "");
-            }
-            Some(Ok(RegexpBodyToken::Other)) => {
-                buf.push_str(lexer.slice());
-            }
-            Some(Err(())) => unreachable!("unreachable regexp_body"),
+        if let Some(len) = line_terminator_len(remainder) {
+            let loc = env.loc_of_offsets(offset, offset + len);
+            env.new_line(offset..(offset + len));
+            lexer.bump(len);
+            errors.push(loc, ParseError::UnterminatedRegExp);
+            return String::new();
         }
+        if remainder.starts_with('/') && !in_class {
+            lexer.bump(1);
+            let mut flags = String::new();
+            loop {
+                let remainder = lexer.remainder();
+                if remainder.is_empty() {
+                    break;
+                }
+                let c = remainder.chars().next().unwrap();
+                if c == '_' || c == '$' || c.is_ascii_alphabetic() {
+                    flags.push(c);
+                    lexer.bump(c.len_utf8());
+                } else {
+                    break;
+                }
+            }
+            return flags;
+        }
+        let c = remainder.chars().next().unwrap();
+        let len = c.len_utf8();
+        match c {
+            '[' => in_class = true,
+            ']' => in_class = false,
+            '\\' => {
+                buf.push(c);
+                lexer.bump(len);
+                let offset = lexer.span().end;
+                let remainder = lexer.remainder();
+                if remainder.is_empty() {
+                    let loc = env.loc_of_offsets(offset, offset);
+                    errors.push(loc, ParseError::UnterminatedRegExp);
+                    return String::new();
+                }
+                if let Some(len) = line_terminator_len(remainder) {
+                    let loc = env.loc_of_offsets(offset, offset + len);
+                    env.new_line(offset..(offset + len));
+                    lexer.bump(len);
+                    errors.push(loc, ParseError::UnterminatedRegExp);
+                    return String::new();
+                }
+                let c = remainder.chars().next().unwrap();
+                buf.push(c);
+                lexer.bump(c.len_utf8());
+                continue;
+            }
+            _ => {}
+        }
+        buf.push(c);
+        lexer.bump(len);
     }
 }
 
 fn regexp_inner<'a>(
-    lexer: &mut logos::Lexer<'a, RegexpToken>,
+    lexer: &mut logos::Lexer<'a, MainToken>,
     env: &mut LexEnv,
     errors: &mut LexErrors,
 ) -> TokenResult {
-    let token = match lexer.next() {
-        None => {
-            let end_pos = lexer.source().len();
-            let loc = env.loc_of_offsets(end_pos, end_pos);
-            return TokenResult::Token(loc, TokenKind::TEof);
-        }
-        Some(Err(_)) => unreachable!("unreachable regexp"),
-        Some(Ok(t)) => t,
-    };
-    match token {
-        RegexpToken::LineTerminatorSequence => {
-            env.new_line(lexer.span());
-            TokenResult::Continue
-        }
-        RegexpToken::Whitespace => TokenResult::Continue,
-        RegexpToken::LineCommentStart => {
-            let start = env.pos_at_offset(lexer.span().start);
-            let mut buf = String::new();
-            let mut comment_lexer = lexer.clone().morph(); // clone needed: logos::Lexer doesn't implement Dupe
-            let end = line_comment(&mut comment_lexer, env, &mut buf);
-            *lexer = comment_lexer.morph();
-            let c = mk_comment(env, start, end, buf, false);
-            TokenResult::Comment(c)
-        }
-        RegexpToken::BlockCommentStart => {
-            let start = env.pos_at_offset(lexer.span().start);
-            let mut buf = String::new();
-            let mut comment_lexer = lexer.clone().morph(); // clone needed: logos::Lexer doesn't implement Dupe
-            let end_offset = comment(&mut comment_lexer, env, errors, &mut buf);
-            let end = env.pos_at_offset(end_offset);
-            let c = mk_comment(env, start, end, buf, true);
-            *lexer = comment_lexer.morph();
-            TokenResult::Comment(c)
-        }
-        RegexpToken::Slash => {
-            let start = env.pos_at_offset(lexer.span().start);
-            let mut buf = String::new();
-            let (regexp_lexer, flags) = regexp_body(lexer.clone().morph(), env, errors, &mut buf);
-            *lexer = regexp_lexer.morph();
-            let end = env.pos_at_offset(lexer.span().end);
-            let loc = Loc {
-                source: env.source(),
-                start,
-                end,
-            };
-            TokenResult::Token(
-                loc.dupe(),
-                TokenKind::TRegexp(loc, FlowSmolStr::new(&buf), FlowSmolStr::new(flags)),
-            )
-        }
-        RegexpToken::Other => {
-            let loc = env.loc_of_span(&lexer.span());
-            errors.push(loc.dupe(), ParseError::UnexpectedTokenIllegal);
-            let s = lexer.slice().to_owned();
-            TokenResult::Token(loc, TokenKind::TError(s))
-        }
+    let offset = lexer.span().end;
+    let remainder = lexer.remainder();
+    if remainder.is_empty() {
+        let end_pos = lexer.source().len();
+        let loc = env.loc_of_offsets(end_pos, end_pos);
+        return TokenResult::Token(loc, TokenKind::TEof);
+    }
+    if let Some(len) = line_terminator_len(remainder) {
+        env.new_line(offset..(offset + len));
+        lexer.bump(len);
+        return TokenResult::Continue;
+    }
+    if let Some(c) = remainder.chars().next()
+        && is_trivia_space(c)
+    {
+        lexer.bump(c.len_utf8());
+        return TokenResult::Continue;
+    }
+    if remainder.starts_with("//") {
+        let span = offset..(offset + 2);
+        lexer.bump(2);
+        let start = env.pos_at_offset(span.start);
+        let mut buf = String::new();
+        let end = line_comment(lexer, env, &mut buf);
+        let c = mk_comment(env, start, end, buf, false);
+        return TokenResult::Comment(c);
+    }
+    if remainder.starts_with("/*") {
+        let span = offset..(offset + 2);
+        lexer.bump(2);
+        let start = env.pos_at_offset(span.start);
+        let mut buf = String::new();
+        let end_offset = comment(lexer, env, errors, &mut buf);
+        let end = env.pos_at_offset(end_offset);
+        let c = mk_comment(env, start, end, buf, true);
+        return TokenResult::Comment(c);
+    }
+    if remainder.starts_with('/') {
+        let start = env.pos_at_offset(offset);
+        lexer.bump(1);
+        let mut buf = String::new();
+        let flags = regexp_body(lexer, env, errors, &mut buf);
+        let end = env.pos_at_offset(lexer.span().end);
+        let loc = Loc {
+            source: env.source(),
+            start,
+            end,
+        };
+        TokenResult::Token(
+            loc.dupe(),
+            TokenKind::TRegexp(loc, FlowSmolStr::new(&buf), FlowSmolStr::new(&flags)),
+        )
+    } else {
+        let c = remainder.chars().next().unwrap();
+        let len = c.len_utf8();
+        let loc = env.loc_of_offsets(offset, offset + len);
+        errors.push(loc.dupe(), ParseError::UnexpectedTokenIllegal);
+        let s = c.to_string();
+        lexer.bump(len);
+        TokenResult::Token(loc, TokenKind::TError(s))
     }
 }
 
@@ -2191,13 +2164,82 @@ fn jsx_child_text_remainder_has_normal(remainder: &str) -> bool {
 }
 
 // (* let rec jsx_child_text env buf raw lexbuf = *)
-fn jsx_child_text<'a>(
-    mut lexer: logos::Lexer<'a, JsxChildTextToken>,
+fn consume_jsx_entity(remainder: &str) -> Option<(usize, String)> {
+    if let Some(after_prefix) = remainder.strip_prefix("&#x") {
+        let len = after_prefix
+            .chars()
+            .take_while(|c| c.is_ascii_hexdigit())
+            .map(char::len_utf8)
+            .sum::<usize>();
+        if len > 0 && after_prefix[len..].starts_with(';') {
+            let raw_len = 3 + len + 1;
+            let n = &after_prefix[..len];
+            if let Ok(code) = u32::from_str_radix(n, 16) {
+                let mut value = String::new();
+                add_codepoint_to_string(&mut value, code);
+                return Some((raw_len, value));
+            }
+        }
+    }
+    if let Some(after_prefix) = remainder.strip_prefix("&#") {
+        let len = after_prefix
+            .chars()
+            .take_while(|c| c.is_ascii_digit())
+            .map(char::len_utf8)
+            .sum::<usize>();
+        if len > 0 && after_prefix[len..].starts_with(';') {
+            let raw_len = 2 + len + 1;
+            let n = &after_prefix[..len];
+            if let Ok(code) = n.parse::<u32>() {
+                let mut value = String::new();
+                add_codepoint_to_string(&mut value, code);
+                return Some((raw_len, value));
+            }
+        }
+    }
+    if remainder.starts_with('&') {
+        let mut len = 0;
+        for c in remainder[1..].chars() {
+            if c == ';' {
+                if (2..=8).contains(&len) {
+                    let raw_len = 1 + len + 1;
+                    let entity = &remainder[1..(1 + len)];
+                    return Some((
+                        raw_len,
+                        decode_html_entity(entity)
+                            .map(|code| {
+                                let mut value = String::new();
+                                add_codepoint_to_string(&mut value, code);
+                                value
+                            })
+                            .unwrap_or_else(|| remainder[..raw_len].to_owned()),
+                    ));
+                }
+                break;
+            }
+            if len == 0 {
+                if !c.is_ascii_alphabetic() {
+                    break;
+                }
+            } else if !c.is_ascii_alphanumeric() {
+                break;
+            }
+            len += c.len_utf8();
+            if len > 7 {
+                break;
+            }
+        }
+    }
+    None
+}
+
+fn jsx_child_text(
+    lexer: &mut logos::Lexer<MainToken>,
     env: &mut LexEnv,
     errors: &mut LexErrors,
     buf: &mut String,
     raw: &mut String,
-) -> logos::Lexer<'a, JsxChildTextToken> {
+) {
     // In OCaml, `normal_prev` doesn't exist. Instead, sedlex longest-match
     // semantics handle '>' and '}' within `Plus (Compl ...)`. The Rust logos
     // lexer tokenizes them separately, so we simulate the sedlex behavior:
@@ -2208,192 +2250,115 @@ fn jsx_child_text<'a>(
     //   over the single-char error pattern). Otherwise, the error pattern wins.
     let mut normal_prev = false;
     loop {
+        let offset = lexer.span().end;
         let remainder = lexer.remainder();
         if remainder.starts_with('<') || remainder.starts_with('{') {
             // Don't actually want to consume these guys
             // yet...they're not part of the JSX text
-            return lexer;
+            return;
         }
 
-        match lexer.next() {
-            Some(Ok(JsxChildTextToken::GreaterThan)) => {
-                // In OCaml sedlex, '>' is in `Compl ('<' | '{' | '&' | eof | lt_start)`.
-                // When preceded by normal text, or when followed by a "normal" char,
-                // `Plus (Compl ...)` matches it as text. Otherwise, the '>' error arm wins.
-                if normal_prev || jsx_child_text_remainder_has_normal(lexer.remainder()) {
-                    let c = lexer.slice();
-                    raw.push_str(c);
-                    buf.push_str(c);
-                    normal_prev = true;
-                } else {
-                    let loc = env.loc_of_span(&lexer.span());
-                    errors.push(
-                        loc,
+        if remainder.is_empty() {
+            let end = lexer.source().len();
+            let loc = env.loc_of_offsets(end, end);
+            errors.push(loc, ParseError::UnexpectedTokenIllegal);
+            return;
+        }
+        if let Some(len) = line_terminator_len(remainder) {
+            raw.push_str(&remainder[..len]);
+            buf.push_str(&remainder[..len]);
+            env.new_line(offset..(offset + len));
+            lexer.bump(len);
+            normal_prev = true;
+            continue;
+        }
+        if remainder.starts_with('>') || remainder.starts_with('}') {
+            let c = remainder.chars().next().unwrap();
+            let len = c.len_utf8();
+            if normal_prev || jsx_child_text_remainder_has_normal(&remainder[len..]) {
+                raw.push(c);
+                buf.push(c);
+                lexer.bump(len);
+                normal_prev = true;
+            } else {
+                let loc = env.loc_of_offsets(offset, offset + len);
+                errors.push(
+                    loc,
+                    if c == '>' {
                         ParseError::UnexpectedTokenWithSuggestion(
                             ">".to_owned(),
                             "{'>'}".to_owned(),
-                        ),
-                    );
-                    return lexer;
-                }
-            }
-            Some(Ok(JsxChildTextToken::RCurly)) => {
-                // Same longest-match logic as '>' above.
-                if normal_prev || jsx_child_text_remainder_has_normal(lexer.remainder()) {
-                    let c = lexer.slice();
-                    raw.push_str(c);
-                    buf.push_str(c);
-                    normal_prev = true;
-                } else {
-                    let loc = env.loc_of_span(&lexer.span());
-                    errors.push(
-                        loc,
+                        )
+                    } else {
                         ParseError::UnexpectedTokenWithSuggestion(
                             "}".to_owned(),
                             "{'}'}".to_owned(),
-                        ),
-                    );
-                    return lexer;
-                }
+                        )
+                    },
+                );
+                lexer.bump(len);
+                return;
             }
-            None => {
-                let end = lexer.source().len();
-                let loc = env.loc_of_offsets(end, end);
-                errors.push(loc, ParseError::UnexpectedTokenIllegal);
-                return lexer;
-            }
-            Some(Ok(JsxChildTextToken::LineTerminatorSequence)) => {
-                let lt = lexer.slice();
-                raw.push_str(lt);
-                buf.push_str(lt);
-                env.new_line(lexer.span());
-                normal_prev = true;
-            }
-            Some(Ok(JsxChildTextToken::HexEntityRef)) => {
-                let s = lexer.slice();
-                // Extract hex digits between &#x and ;
-                let n = &s[3..s.len() - 1];
-                raw.push_str(s);
-                if let Ok(code) = u32::from_str_radix(n, 16) {
-                    add_codepoint_to_string(buf, code);
-                }
-                normal_prev = true;
-            }
-            Some(Ok(JsxChildTextToken::DecimalEntityRef)) => {
-                let s = lexer.slice();
-                // Extract decimal digits between &# and ;
-                let n = &s[2..s.len() - 1];
-                raw.push_str(s);
-                if let Ok(code) = n.parse::<u32>() {
-                    add_codepoint_to_string(buf, code);
-                }
-                normal_prev = true;
-            }
-            Some(Ok(JsxChildTextToken::NamedEntityRef)) => {
-                let s = lexer.slice();
-                let entity = &s[1..s.len() - 1];
-                raw.push_str(s);
-                match decode_html_entity(entity) {
-                    Some(code) => add_codepoint_to_string(buf, code),
-                    None => {
-                        buf.push_str(s);
-                    }
-                }
-                normal_prev = true;
-            }
-            Some(Ok(JsxChildTextToken::Other)) => {
-                let c = lexer.slice();
-                raw.push_str(c);
-                buf.push_str(c);
-                normal_prev = true;
-            }
-            Some(Err(())) => unreachable!("unreachable jsx_child_text"),
+            continue;
         }
+        if let Some((len, value)) = consume_jsx_entity(remainder) {
+            raw.push_str(&remainder[..len]);
+            buf.push_str(&value);
+            lexer.bump(len);
+            normal_prev = true;
+            continue;
+        }
+        let c = remainder.chars().next().unwrap();
+        raw.push(c);
+        buf.push(c);
+        lexer.bump(c.len_utf8());
+        normal_prev = true;
     }
 }
 
-fn jsx_quote_text<'a>(
-    mut lexer: logos::Lexer<'a, JsxQuoteTextToken>,
+fn jsx_quote_text(
+    lexer: &mut logos::Lexer<MainToken>,
     env: &mut LexEnv,
     errors: &mut LexErrors,
     single: bool,
     buf: &mut String,
     raw: &mut String,
-) -> logos::Lexer<'a, JsxQuoteTextToken> {
+) {
     loop {
-        match lexer.next() {
-            // Single quote
-            Some(Ok(JsxQuoteTextToken::SingleQuote)) => {
-                if single {
-                    // End of single-quoted string
-                    return lexer;
-                } else {
-                    // Single quote inside double-quoted string
-                    raw.push('\'');
-                    buf.push('\'');
-                }
-            }
-            // Double quote
-            Some(Ok(JsxQuoteTextToken::DoubleQuote)) => {
-                if !single {
-                    return lexer;
-                } else {
-                    raw.push('"');
-                    buf.push('"');
-                }
-            }
-            // EOF - illegal
-            None => {
-                let end = lexer.source().len();
-                let loc = env.loc_of_offsets(end, end);
-                errors.push(loc, ParseError::UnexpectedTokenIllegal);
-                return lexer;
-            }
-            Some(Ok(JsxQuoteTextToken::LineTerminatorSequence)) => {
-                let lt = lexer.slice();
-                raw.push_str(lt);
-                buf.push_str(lt);
-                env.new_line(lexer.span());
-            }
-            Some(Ok(JsxQuoteTextToken::HexEntityRef)) => {
-                let s = lexer.slice();
-                let n = &s[3..s.len() - 1];
-                raw.push_str(s);
-                if let Ok(code) = u32::from_str_radix(n, 16) {
-                    add_codepoint_to_string(buf, code);
-                }
-            }
-            Some(Ok(JsxQuoteTextToken::DecimalEntityRef)) => {
-                let s = lexer.slice();
-                let n = &s[2..s.len() - 1];
-                raw.push_str(s);
-                if let Ok(code) = n.parse::<u32>() {
-                    add_codepoint_to_string(buf, code);
-                }
-            }
-            Some(Ok(JsxQuoteTextToken::NamedEntityRef)) => {
-                let s = lexer.slice();
-                let entity = &s[1..s.len() - 1];
-                raw.push_str(s);
-                match decode_html_entity(entity) {
-                    Some(code) => add_codepoint_to_string(buf, code),
-                    None => {
-                        buf.push_str(s);
-                    }
-                }
-            }
-            Some(Ok(JsxQuoteTextToken::Other)) => {
-                let c = lexer.slice();
-                raw.push_str(c);
-                buf.push_str(c);
-            }
-            Some(Err(())) => unreachable!("unreachable jsx_quote_text"),
+        let offset = lexer.span().end;
+        let remainder = lexer.remainder();
+        if remainder.is_empty() {
+            let end = lexer.source().len();
+            let loc = env.loc_of_offsets(end, end);
+            errors.push(loc, ParseError::UnexpectedTokenIllegal);
+            return;
         }
+        if (single && remainder.starts_with('\'')) || (!single && remainder.starts_with('"')) {
+            lexer.bump(1);
+            return;
+        }
+        if let Some(len) = line_terminator_len(remainder) {
+            raw.push_str(&remainder[..len]);
+            buf.push_str(&remainder[..len]);
+            env.new_line(offset..(offset + len));
+            lexer.bump(len);
+            continue;
+        }
+        if let Some((len, value)) = consume_jsx_entity(remainder) {
+            raw.push_str(&remainder[..len]);
+            buf.push_str(&value);
+            lexer.bump(len);
+            continue;
+        }
+        let c = remainder.chars().next().unwrap();
+        raw.push(c);
+        buf.push(c);
+        lexer.bump(c.len_utf8());
     }
 }
 
 fn jsx_tag_inner<'a>(
-    lexer: &mut logos::Lexer<'a, JsxTagToken>,
+    lexer: &mut logos::Lexer<'a, MainToken>,
     env: &mut LexEnv,
     errors: &mut LexErrors,
 ) -> TokenResult {
@@ -2407,74 +2372,62 @@ fn jsx_tag_inner<'a>(
         Some(Ok(t)) => t,
     };
     match token {
-        JsxTagToken::LineTerminatorSequence => {
+        MainToken::LineTerminatorSequence => {
             env.new_line(lexer.span());
             TokenResult::Continue
         }
-        JsxTagToken::Whitespace => TokenResult::Continue,
-        JsxTagToken::LineCommentStart => {
+        MainToken::Whitespace => TokenResult::Continue,
+        MainToken::LineCommentStart => {
             let start = env.pos_at_offset(lexer.span().start);
             let mut buf = String::new();
-            let mut comment_lexer = lexer.clone().morph();
-            let end = line_comment(&mut comment_lexer, env, &mut buf);
-            *lexer = comment_lexer.morph();
+            let end = line_comment(lexer, env, &mut buf);
             let c = mk_comment(env, start, end, buf, false);
             TokenResult::Comment(c)
         }
-        JsxTagToken::BlockCommentStart => {
+        MainToken::BlockCommentStart => {
             let start = env.pos_at_offset(lexer.span().start);
             let mut buf = String::new();
-            let mut comment_lexer = lexer.clone().morph();
-            let end_offset = comment(&mut comment_lexer, env, errors, &mut buf);
+            let end_offset = comment(lexer, env, errors, &mut buf);
             let end = env.pos_at_offset(end_offset);
             let c = mk_comment(env, start, end, buf, true);
-            *lexer = comment_lexer.morph();
             TokenResult::Comment(c)
         }
-        JsxTagToken::LessThan => {
+        MainToken::LessThan => {
             let loc = env.loc_of_span(&lexer.span());
             TokenResult::Token(loc, TokenKind::TLessThan)
         }
-        JsxTagToken::Div => {
+        MainToken::Div => {
             let loc = env.loc_of_span(&lexer.span());
             TokenResult::Token(loc, TokenKind::TDiv)
         }
-        JsxTagToken::GreaterThan => {
+        MainToken::GreaterThan => {
             let loc = env.loc_of_span(&lexer.span());
             TokenResult::Token(loc, TokenKind::TGreaterThan)
         }
-        JsxTagToken::LCurly => {
+        MainToken::LCurly => {
             let loc = env.loc_of_span(&lexer.span());
             TokenResult::Token(loc, TokenKind::TLcurly)
         }
-        JsxTagToken::Colon => {
+        MainToken::Colon => {
             let loc = env.loc_of_span(&lexer.span());
             TokenResult::Token(loc, TokenKind::TColon)
         }
-        JsxTagToken::Period => {
+        MainToken::Period => {
             let loc = env.loc_of_span(&lexer.span());
             TokenResult::Token(loc, TokenKind::TPeriod)
         }
-        JsxTagToken::Assign => {
+        MainToken::Assign => {
             let loc = env.loc_of_span(&lexer.span());
             TokenResult::Token(loc, TokenKind::TAssign)
         }
-        JsxTagToken::SingleQuote | JsxTagToken::DoubleQuote => {
+        MainToken::SingleQuote | MainToken::DoubleQuote => {
             let quote = lexer.slice();
             let start = env.pos_at_offset(lexer.span().start);
             let mut buf = String::new();
             let mut raw = String::new();
             raw.push_str(quote);
-            let single = token == JsxTagToken::SingleQuote;
-            let jsx_quote_lexer = jsx_quote_text(
-                lexer.clone().morph(),
-                env,
-                errors,
-                single,
-                &mut buf,
-                &mut raw,
-            );
-            *lexer = jsx_quote_lexer.morph();
+            let single = token == MainToken::SingleQuote;
+            jsx_quote_text(lexer, env, errors, single, &mut buf, &mut raw);
             let end = env.pos_at_offset(lexer.span().end);
             raw.push_str(quote);
             let loc = Loc {
@@ -2487,10 +2440,10 @@ fn jsx_tag_inner<'a>(
                 TokenKind::TJsxQuoteText(loc, FlowSmolStr::new(&buf), FlowSmolStr::new(&raw)),
             )
         }
-        JsxTagToken::JsxIdStart => {
+        MainToken::JsIdStart => {
             let start_offset = lexer.span().start;
             // see #3837, we should fix it - the work could be done in decoding later - cold path
-            loop_jsx_id_continues(lexer);
+            loop_id_continues(lexer, IdentifierMode::Jsx);
             let end_offset = lexer.span().end;
             let raw = &lexer.source()[start_offset..end_offset];
             let loc = env.loc_of_offsets(start_offset, end_offset);
@@ -2502,7 +2455,12 @@ fn jsx_tag_inner<'a>(
                 },
             )
         }
-        JsxTagToken::Other => {
+        MainToken::Other => {
+            let loc = env.loc_of_span(&lexer.span());
+            let s = lexer.slice().to_owned();
+            TokenResult::Token(loc, TokenKind::TError(s))
+        }
+        _ => {
             let loc = env.loc_of_span(&lexer.span());
             let s = lexer.slice().to_owned();
             TokenResult::Token(loc, TokenKind::TError(s))
@@ -2511,7 +2469,7 @@ fn jsx_tag_inner<'a>(
 }
 
 fn jsx_child_inner<'a>(
-    lexer: &mut logos::Lexer<'a, JsxChildTextToken>,
+    lexer: &mut logos::Lexer<'a, MainToken>,
     env: &mut LexEnv,
     errors: &mut LexErrors,
     mut buf: String,
@@ -2550,7 +2508,7 @@ fn jsx_child_inner<'a>(
                     raw.push_str(lt);
                     buf.push_str(lt);
                     env.new_line(span);
-                    *lexer = jsx_child_text(lexer.clone().morph(), env, errors, &mut buf, &mut raw);
+                    jsx_child_text(lexer, env, errors, &mut buf, &mut raw);
                     let end = env.pos_at_offset(lexer.span().end);
                     let loc = Loc {
                         source: env.source(),
@@ -2567,7 +2525,7 @@ fn jsx_child_inner<'a>(
                     );
                 }
             }
-            *lexer = jsx_child_text(lexer.clone().morph(), env, errors, &mut buf, &mut raw);
+            jsx_child_text(lexer, env, errors, &mut buf, &mut raw);
             let end = env.pos_at_offset(lexer.span().end);
             let loc = Loc {
                 source: env.source(),
@@ -2583,7 +2541,7 @@ fn jsx_child_inner<'a>(
 }
 
 fn template_tail_inner<'a>(
-    lexer: &mut logos::Lexer<'a, TemplateTailToken>,
+    lexer: &mut logos::Lexer<'a, MainToken>,
     env: &mut LexEnv,
     errors: &mut LexErrors,
 ) -> TokenResult {
@@ -2597,37 +2555,31 @@ fn template_tail_inner<'a>(
         Some(Ok(t)) => t,
     };
     match token {
-        TemplateTailToken::LineTerminatorSequence => {
+        MainToken::LineTerminatorSequence => {
             env.new_line(lexer.span());
             TokenResult::Continue
         }
-        TemplateTailToken::Whitespace => TokenResult::Continue,
-        TemplateTailToken::LineCommentStart => {
+        MainToken::Whitespace => TokenResult::Continue,
+        MainToken::LineCommentStart => {
             let start = env.pos_at_offset(lexer.span().start);
             let mut buf = String::new();
-            let mut comment_lexer = lexer.clone().morph(); // clone needed: logos::Lexer doesn't implement Dupe
-            let end = line_comment(&mut comment_lexer, env, &mut buf);
-            *lexer = comment_lexer.morph();
+            let end = line_comment(lexer, env, &mut buf);
             let c = mk_comment(env, start, end, buf, false);
             TokenResult::Comment(c)
         }
-        TemplateTailToken::BlockCommentStart => {
+        MainToken::BlockCommentStart => {
             let start = env.pos_at_offset(lexer.span().start);
             let mut buf = String::new();
-            let mut comment_lexer = lexer.clone().morph(); // clone needed: logos::Lexer doesn't implement Dupe
-            let end_offset = comment(&mut comment_lexer, env, errors, &mut buf);
+            let end_offset = comment(lexer, env, errors, &mut buf);
             let end = env.pos_at_offset(end_offset);
             let c = mk_comment(env, start, end, buf, true);
-            *lexer = comment_lexer.morph();
             TokenResult::Comment(c)
         }
-        TemplateTailToken::RCurly => {
+        MainToken::RCurly => {
             let start = env.pos_at_offset(lexer.span().start);
             let mut value = String::new();
             let mut raw = String::new();
-            let (template_part_lexer, is_tail) =
-                template_part(lexer.clone().morph(), env, errors, &mut value, &mut raw);
-            *lexer = template_part_lexer.morph();
+            let is_tail = template_part(lexer, env, errors, &mut value, &mut raw);
             let end = env.pos_at_offset(lexer.span().end);
             let loc = Loc {
                 source: env.source(),
@@ -2645,7 +2597,7 @@ fn template_tail_inner<'a>(
                 }),
             )
         }
-        TemplateTailToken::Other => {
+        _ => {
             let loc = env.loc_of_span(&lexer.span());
             errors.push(loc.dupe(), ParseError::UnexpectedTokenIllegal);
             TokenResult::Token(
@@ -2671,7 +2623,7 @@ pub struct LexResult {
 }
 
 pub(super) fn jsx_child<'a>(
-    lexer: &mut logos::Lexer<'a, JsxChildTextToken>,
+    lexer: &mut logos::Lexer<'a, MainToken>,
     env: &mut LexEnv,
 ) -> LexResult {
     let mut errors = LexErrors::empty();
@@ -2716,19 +2668,16 @@ fn lex_wrapped<L, F: FnMut(&mut L, &mut LexEnv, &mut LexErrors) -> TokenResult>(
     }
 }
 
-pub(super) fn regexp<'a>(lexer: &mut logos::Lexer<'a, RegexpToken>, env: &mut LexEnv) -> LexResult {
+pub(super) fn regexp<'a>(lexer: &mut logos::Lexer<'a, MainToken>, env: &mut LexEnv) -> LexResult {
     lex_wrapped(lexer, env, &mut regexp_inner)
 }
 
-pub(super) fn jsx_tag<'a>(
-    lexer: &mut logos::Lexer<'a, JsxTagToken>,
-    env: &mut LexEnv,
-) -> LexResult {
+pub(super) fn jsx_tag<'a>(lexer: &mut logos::Lexer<'a, MainToken>, env: &mut LexEnv) -> LexResult {
     lex_wrapped(lexer, env, &mut jsx_tag_inner)
 }
 
 pub(super) fn template_tail_start<'a>(
-    lexer: &mut logos::Lexer<'a, TemplateTailToken>,
+    lexer: &mut logos::Lexer<'a, MainToken>,
     env: &mut LexEnv,
 ) -> LexResult {
     lex_wrapped(lexer, env, &mut template_tail_inner)

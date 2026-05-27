@@ -70,38 +70,24 @@ pub(crate) mod wrapped_lex_env {
                     crate::flow_lexer::type_token(&mut self.lexer, &mut self.lex_env)
                 }
                 super::LexMode::JsxTag => {
-                    let mut morphed_lexer = self.lexer.clone().morph();
-                    let lex_result =
-                        crate::flow_lexer::jsx_tag(&mut morphed_lexer, &mut self.lex_env);
-                    self.lexer = morphed_lexer.morph();
-                    lex_result
+                    crate::flow_lexer::jsx_tag(&mut self.lexer, &mut self.lex_env)
                 }
                 super::LexMode::JsxChild => {
-                    let mut morphed_lexer = self.lexer.clone().morph();
-                    let lex_result =
-                        crate::flow_lexer::jsx_child(&mut morphed_lexer, &mut self.lex_env);
-                    self.lexer = morphed_lexer.morph();
-                    lex_result
+                    crate::flow_lexer::jsx_child(&mut self.lexer, &mut self.lex_env)
                 }
                 super::LexMode::Regexp => {
-                    let mut morphed_lexer = self.lexer.clone().morph();
-                    let lex_result =
-                        crate::flow_lexer::regexp(&mut morphed_lexer, &mut self.lex_env);
-                    self.lexer = morphed_lexer.morph();
-                    lex_result
+                    crate::flow_lexer::regexp(&mut self.lexer, &mut self.lex_env)
                 }
             }
         }
 
         pub(crate) fn lex_template_tail_start(&mut self) -> crate::flow_lexer::LexResult {
             let span = self.lexer.span();
-            let mut morphed_lexer: logos::Lexer<'a, MainToken> = logos::Lexer::new(self.source);
-            morphed_lexer.bump(span.start);
-            let mut morphed_lexer = morphed_lexer.morph();
+            let mut lexer: logos::Lexer<'a, MainToken> = logos::Lexer::new(self.source);
+            lexer.bump(span.start);
             let prev_last_loc = self.lex_env.last_loc.dupe();
-            let lex_result =
-                crate::flow_lexer::template_tail_start(&mut morphed_lexer, &mut self.lex_env);
-            self.lexer = morphed_lexer.morph();
+            let lex_result = crate::flow_lexer::template_tail_start(&mut lexer, &mut self.lex_env);
+            self.lexer = lexer;
             self.lex_env.last_loc = prev_last_loc;
             lex_result
         }
