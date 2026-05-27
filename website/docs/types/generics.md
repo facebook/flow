@@ -295,6 +295,10 @@ function identity<T extends string>(val: T): T {
 identity('bar');
 ```
 
+:::info Legacy bound syntax
+The `extends` keyword for generic bounds is enabled by default as of Flow 0.302. Older code may use the legacy colon syntax (e.g. `<T: string>` instead of `<T extends string>`). See [Modernizing Legacy Syntax](../modernizing-legacy-syntax.md#toc-deprecated-syntax) for migration details.
+:::
+
 ### Parameterized generics {#toc-parameterized-generics}
 
 Generics sometimes allow you to pass types in like arguments to a function.
