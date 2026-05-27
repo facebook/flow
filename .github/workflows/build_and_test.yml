@@ -546,6 +546,11 @@ jobs:
     - build_js_rust_port
     steps:
     - uses: actions/checkout@v3.6.0
+      with:
+        # Full history so Docusaurus's `showLastUpdateTime` can find the real
+        # last-touched commit for each doc page; the default shallow clone
+        # only sees HEAD and makes every page show the deploy date.
+        fetch-depth: 0
     - uses: actions/download-artifact@v4.1.7
       with:
         name: build_linux_bin
