@@ -5,15 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::LazyCell;
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::OnceLock;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_aloc::ALocTable;
+use flow_aloc::LazyALocTable;
 use flow_aloc::aloc_representation_do_not_use;
 use flow_analysis::scope_api;
 use flow_analysis::scope_builder;
@@ -95,6 +101,34 @@ pub(crate) struct GleanRuntimeConfig {
 pub(crate) static GLEAN_RUNTIME_CONFIG: OnceLock<GleanRuntimeConfig> = OnceLock::new();
 
 type OffsetTableOfFileKey<'a> = dyn Fn(&FileKey) -> Option<Arc<OffsetTable>> + 'a;
+type LocOfALoc = dyn Fn(&ALoc) -> Loc;
+
+fn make_loc_of_aloc(reader: Arc<SharedMem>) -> impl Fn(&ALoc) -> Loc {
+    let tables: RefCell<HashMap<FileKey, LazyALocTable>> = RefCell::new(HashMap::new());
+    move |aloc| {
+        let source = match aloc.source() {
+            Some(source) => source.dupe(),
+            None => return aloc.to_loc_exn().dupe(),
+        };
+        {
+            let tables = tables.borrow();
+            if let Some(table) = tables.get(&source) {
+                return aloc.to_loc(table);
+            }
+        }
+        let Some(packed) = reader.get_aloc_table(&source) else {
+            return aloc.to_loc_exn().dupe();
+        };
+        let source_for_table = source.dupe();
+        let table: LazyALocTable = Rc::new(LazyCell::new(Box::new(move || {
+            Rc::new(ALocTable::unpack(source_for_table.dupe(), &packed))
+        })
+            as Box<dyn FnOnce() -> Rc<ALocTable>>));
+        tables.borrow_mut().insert(source.dupe(), table);
+        let tables = tables.borrow();
+        aloc.to_loc(tables.get(&source).expect("ALoc table should be cached"))
+    }
+}
 
 #[allow(dead_code)]
 fn implementation_file(
@@ -310,26 +344,30 @@ pub(crate) fn module_of_module_ref(
     }
 }
 
-pub(crate) fn loc_of_index(loc_source: Option<FileKey>, reader: &SharedMem, i: Index<Loc>) -> Loc {
+pub(crate) fn loc_of_index(
+    loc_source: Option<FileKey>,
+    loc_of_aloc: &LocOfALoc,
+    i: Index<Loc>,
+) -> Loc {
     let key = i.as_usize() as u32;
     let aloc = aloc_representation_do_not_use::make_keyed(loc_source, key);
-    reader.loc_of_aloc(&aloc)
+    loc_of_aloc(&aloc)
 }
 
 pub(crate) fn loc_of_def(
     loc_source: Option<FileKey>,
-    reader: &SharedMem,
+    loc_of_aloc: &LocOfALoc,
     packed_def: &PackedDef<Index<Loc>>,
 ) -> Loc {
     let idx = packed_def.id_loc();
-    loc_of_index(loc_source, reader, idx)
+    loc_of_index(loc_source, loc_of_aloc, idx)
 }
 
 fn source_of_type_exports(
     root: &str,
     write_root: &str,
     file: &FileKey,
-    reader: &SharedMem,
+    loc_of_aloc: &LocOfALoc,
     loc_source: Option<FileKey>,
     type_sig: &packed_type_sig::Module<Loc>,
     resolved_modules: &BTreeMap<
@@ -362,7 +400,7 @@ fn source_of_type_exports(
                     )]
                 }
                 type_sig_pack::RemoteRef::ImportTypeof { id_loc, name, .. } => {
-                    let loc = loc_of_index(loc_source.clone(), reader, *id_loc);
+                    let loc = loc_of_index(loc_source.clone(), loc_of_aloc, *id_loc);
                     vec![source_of_type_export::Source::TypeDeclaration(
                         type_declaration::T {
                             name: name.as_str().to_string(),
@@ -390,7 +428,7 @@ fn source_of_type_exports(
                 type_sig_pack::PackedRef::LocalRef(inner) => {
                     let packed_def = local_defs.get(inner.index);
                     let name = packed_def.name();
-                    let loc = loc_of_def(loc_source.clone(), reader, packed_def);
+                    let loc = loc_of_def(loc_source.clone(), loc_of_aloc, packed_def);
                     vec![source_of_type_export::Source::TypeDeclaration(
                         type_declaration::T {
                             name: name.as_str().to_string(),
@@ -403,7 +441,7 @@ fn source_of_type_exports(
                     source_of_remote_ref(remote_ref)
                 }
                 type_sig_pack::PackedRef::BuiltinRef(inner) => {
-                    let loc = loc_of_index(loc_source.clone(), reader, inner.ref_loc);
+                    let loc = loc_of_index(loc_source.clone(), loc_of_aloc, inner.ref_loc);
                     vec![source_of_type_export::Source::TypeDeclaration(
                         type_declaration::T {
                             name: inner.name.as_str().to_string(),
@@ -469,7 +507,8 @@ fn source_of_type_exports(
                         type_sig_pack::TypeExport::ExportTypeBinding(index) => {
                             let packed_def = local_defs.get(*index);
                             let name = packed_def.name();
-                            let loc = loc_of_index(loc_source.clone(), reader, packed_def.id_loc());
+                            let loc =
+                                loc_of_index(loc_source.clone(), loc_of_aloc, packed_def.id_loc());
                             vec![source_of_type_export::Source::TypeDeclaration(
                                 type_declaration::T {
                                     name: name.as_str().to_string(),
@@ -652,18 +691,18 @@ fn type_import_declarations(
 fn type_declaration_references(
     root: &str,
     write_root: &str,
-    reader: &SharedMem,
+    loc_of_aloc: &LocOfALoc,
     cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     let mut results: Vec<type_declaration_reference::T> = Vec::new();
     let add_reference = |id: &ast::Identifier<ALoc, (ALoc, Type)>| {
-        let loc = reader.loc_of_aloc(&id.loc.0);
+        let loc = loc_of_aloc(&id.loc.0);
         let def_loc_of_t = |t: &Type| -> Option<Loc> {
             let mut t = t.dupe();
             loop {
-                let def_loc = reader.loc_of_aloc(type_util::def_loc_of_t(&t));
+                let def_loc = loc_of_aloc(type_util::def_loc_of_t(&t));
                 if Loc::contains(&def_loc, &loc) {
                     let possible = flow_js_utils::possible_types_of_type(cx, &t);
                     match possible.as_slice() {
@@ -728,7 +767,7 @@ fn member_declaration_references<'a, 'cx>(
     imported_names: &ty_normalizer_flow::ImportedNames<'a, 'cx>,
     root: &str,
     write_root: &str,
-    reader: &SharedMem,
+    loc_of_aloc: &LocOfALoc,
     cx: &'a Context<'cx>,
     typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     file_sig: &Arc<FileSig>,
@@ -739,11 +778,11 @@ fn member_declaration_references<'a, 'cx>(
         for def_aloc in extract_member_def(imported_names, cx, typed_ast, file_sig, type_, name) {
             let member_declaration = member_declaration::T {
                 name: name.to_string(),
-                loc: reader.loc_of_aloc(&def_aloc),
+                loc: loc_of_aloc(&def_aloc),
             };
             results.push(member_declaration_reference::T {
                 member_declaration,
-                loc: reader.loc_of_aloc(aloc),
+                loc: loc_of_aloc(aloc),
             });
         }
     };
@@ -905,38 +944,42 @@ fn import_declarations(
 
 pub(crate) fn loc_of_obj_value_prop<T>(
     loc_source: Option<FileKey>,
-    reader: &SharedMem,
+    loc_of_aloc: &LocOfALoc,
     prop: &ObjValueProp<Index<Loc>, T>,
 ) -> Loc {
     match prop {
-        ObjValueProp::ObjValueField(box (index, _, _)) => loc_of_index(loc_source, reader, *index),
+        ObjValueProp::ObjValueField(box (index, _, _)) => {
+            loc_of_index(loc_source, loc_of_aloc, *index)
+        }
         ObjValueProp::ObjValueAccess(box accessor) => match accessor {
-            Accessor::Get(box (index, _)) => loc_of_index(loc_source, reader, *index),
-            Accessor::Set(box (index, _)) => loc_of_index(loc_source, reader, *index),
-            Accessor::GetSet(box (_, _, index, _)) => loc_of_index(loc_source, reader, *index),
+            Accessor::Get(box (index, _)) => loc_of_index(loc_source, loc_of_aloc, *index),
+            Accessor::Set(box (index, _)) => loc_of_index(loc_source, loc_of_aloc, *index),
+            Accessor::GetSet(box (_, _, index, _)) => loc_of_index(loc_source, loc_of_aloc, *index),
         },
         ObjValueProp::ObjValueMethod(box ms) => {
             let type_sig::ObjValueMethodData { id_loc: index, .. } = &ms[0];
-            loc_of_index(loc_source, reader, *index)
+            loc_of_index(loc_source, loc_of_aloc, *index)
         }
     }
 }
 
 pub(crate) fn loc_of_obj_annot_prop<T>(
     loc_source: Option<FileKey>,
-    reader: &SharedMem,
+    loc_of_aloc: &LocOfALoc,
     prop: &ObjAnnotProp<Index<Loc>, T>,
 ) -> Loc {
     match prop {
-        ObjAnnotProp::ObjAnnotField(box (index, _, _)) => loc_of_index(loc_source, reader, *index),
+        ObjAnnotProp::ObjAnnotField(box (index, _, _)) => {
+            loc_of_index(loc_source, loc_of_aloc, *index)
+        }
         ObjAnnotProp::ObjAnnotAccess(box accessor) => match accessor {
-            Accessor::Get(box (index, _)) => loc_of_index(loc_source, reader, *index),
-            Accessor::Set(box (index, _)) => loc_of_index(loc_source, reader, *index),
-            Accessor::GetSet(box (_, _, index, _)) => loc_of_index(loc_source, reader, *index),
+            Accessor::Get(box (index, _)) => loc_of_index(loc_source, loc_of_aloc, *index),
+            Accessor::Set(box (index, _)) => loc_of_index(loc_source, loc_of_aloc, *index),
+            Accessor::GetSet(box (_, _, index, _)) => loc_of_index(loc_source, loc_of_aloc, *index),
         },
         ObjAnnotProp::ObjAnnotMethod(box type_sig::ObjAnnotMethodData {
             id_loc: index, ..
-        }) => loc_of_index(loc_source, reader, *index),
+        }) => loc_of_index(loc_source, loc_of_aloc, *index),
     }
 }
 
@@ -949,7 +992,7 @@ fn source_of_exports(
         FlowImportSpecifier,
         Result<Dependency, Option<FlowImportSpecifier>>,
     >,
-    reader: &SharedMem,
+    loc_of_aloc: &LocOfALoc,
     offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
 ) -> Vec<Value> {
     let packed_type_sig::Module {
@@ -998,7 +1041,7 @@ fn source_of_exports(
                     let source = {
                         let packed_def = local_defs.get(inner.index);
                         let name = packed_def.name();
-                        let loc = loc_of_def(loc_source.clone(), reader, packed_def);
+                        let loc = loc_of_def(loc_source.clone(), loc_of_aloc, packed_def);
                         source_of_export::Source::Declaration(declaration::T {
                             name: name.as_str().to_string(),
                             loc,
@@ -1011,7 +1054,7 @@ fn source_of_exports(
                     source_of_remote_ref(remote_ref)
                 }
                 type_sig_pack::PackedRef::BuiltinRef(inner) => {
-                    let loc = loc_of_index(loc_source.clone(), reader, inner.ref_loc);
+                    let loc = loc_of_index(loc_source.clone(), loc_of_aloc, inner.ref_loc);
                     vec![source_of_export::Source::Declaration(declaration::T {
                         name: inner.name.as_str().to_string(),
                         loc,
@@ -1024,7 +1067,7 @@ fn source_of_exports(
             fn soes_of_packed_value<'a>(
                 module_: &'a module_::T,
                 loc_source: Option<FileKey>,
-                reader: &'a SharedMem,
+                loc_of_aloc: &'a LocOfALoc,
             ) -> Box<
                 dyn Fn(
                         &type_sig::Value<Index<Loc>, type_sig_pack::Packed<Index<Loc>>>,
@@ -1041,7 +1084,8 @@ fn source_of_exports(
                                 export: export::T::CommonJSMember(name.as_str().to_string()),
                             };
                             let source = {
-                                let loc = loc_of_obj_value_prop(loc_source.clone(), reader, prop);
+                                let loc =
+                                    loc_of_obj_value_prop(loc_source.clone(), loc_of_aloc, prop);
                                 source_of_export::Source::MemberDeclaration(member_declaration::T {
                                     name: name.as_str().to_string(),
                                     loc,
@@ -1059,7 +1103,7 @@ fn source_of_exports(
             fn soes_of_packed_def<'a>(
                 module_: &'a module_::T,
                 loc_source: Option<FileKey>,
-                reader: &'a SharedMem,
+                loc_of_aloc: &'a LocOfALoc,
                 local_defs: &'a Table<PackedDef<Index<Loc>>>,
                 module_refs: &'a Table<Userland>,
                 remote_refs: &'a Table<type_sig_pack::RemoteRef<Index<Loc>>>,
@@ -1076,7 +1120,7 @@ fn source_of_exports(
                     type_sig::Def::Variable(inner) => soes_of_packed(
                         module_,
                         loc_source,
-                        reader,
+                        loc_of_aloc,
                         local_defs,
                         module_refs,
                         remote_refs,
@@ -1092,7 +1136,7 @@ fn source_of_exports(
             fn soes_of_packed_annot(
                 module_: &module_::T,
                 loc_source: Option<FileKey>,
-                reader: &SharedMem,
+                loc_of_aloc: &LocOfALoc,
                 annot: &type_sig::Annot<Index<Loc>, type_sig_pack::Packed<Index<Loc>>>,
             ) -> Vec<source_of_export::T> {
                 match annot {
@@ -1105,7 +1149,8 @@ fn source_of_exports(
                                 export: export::T::CommonJSMember(name.as_str().to_string()),
                             };
                             let source = {
-                                let loc = loc_of_obj_annot_prop(loc_source.clone(), reader, prop);
+                                let loc =
+                                    loc_of_obj_annot_prop(loc_source.clone(), loc_of_aloc, prop);
                                 source_of_export::Source::MemberDeclaration(member_declaration::T {
                                     name: name.as_str().to_string(),
                                     loc,
@@ -1123,7 +1168,7 @@ fn source_of_exports(
             fn soes_of_packed<'a>(
                 module_: &'a module_::T,
                 loc_source: Option<FileKey>,
-                reader: &'a SharedMem,
+                loc_of_aloc: &'a LocOfALoc,
                 local_defs: &'a Table<PackedDef<Index<Loc>>>,
                 module_refs: &'a Table<Userland>,
                 remote_refs: &'a Table<type_sig_pack::RemoteRef<Index<Loc>>>,
@@ -1138,7 +1183,7 @@ fn source_of_exports(
             ) -> Vec<source_of_export::T> {
                 match packed {
                     type_sig_pack::Packed::Value(packed_value) => {
-                        soes_of_packed_value(module_, loc_source, reader)(packed_value)
+                        soes_of_packed_value(module_, loc_source, loc_of_aloc)(packed_value)
                     }
                     type_sig_pack::Packed::Ref(packed_ref) => {
                         let source_of_packed_ref_fn = |pr: &type_sig_pack::PackedRef<Index<Loc>>| -> Vec<source_of_export::Source> {
@@ -1146,7 +1191,7 @@ fn source_of_exports(
                                 type_sig_pack::PackedRef::LocalRef(inner) => {
                                     let pd = local_defs.get(inner.index);
                                     let name = pd.name();
-                                    let loc = loc_of_def(loc_source.clone(), reader, pd);
+                                    let loc = loc_of_def(loc_source.clone(), loc_of_aloc, pd);
                                     vec![source_of_export::Source::Declaration(declaration::T {
                                         name: name.as_str().to_string(),
                                         loc,
@@ -1177,7 +1222,7 @@ fn source_of_exports(
                                     }
                                 }
                                 type_sig_pack::PackedRef::BuiltinRef(inner) => {
-                                    let loc = loc_of_index(loc_source.clone(), reader, inner.ref_loc);
+                                    let loc = loc_of_index(loc_source.clone(), loc_of_aloc, inner.ref_loc);
                                     vec![source_of_export::Source::Declaration(declaration::T {
                                         name: inner.name.as_str().to_string(),
                                         loc,
@@ -1208,7 +1253,7 @@ fn source_of_exports(
                                 soes_of_packed_def(
                                     module_,
                                     loc_source,
-                                    reader,
+                                    loc_of_aloc,
                                     local_defs,
                                     module_refs,
                                     remote_refs,
@@ -1226,7 +1271,7 @@ fn source_of_exports(
                         result
                     }
                     type_sig_pack::Packed::Annot(packed_annot) => {
-                        soes_of_packed_annot(module_, loc_source, reader, packed_annot)
+                        soes_of_packed_annot(module_, loc_source, loc_of_aloc, packed_annot)
                     }
                     // if we want to, we could follow TyRefs through to Annots
                     type_sig_pack::Packed::TyRef(_) => vec![],
@@ -1240,7 +1285,7 @@ fn source_of_exports(
                     soes_of_packed(
                         &module_,
                         loc_source.clone(),
-                        reader,
+                        loc_of_aloc,
                         local_defs,
                         module_refs,
                         remote_refs,
@@ -1288,7 +1333,7 @@ fn source_of_exports(
                                 export: export::T::Named(name.as_str().to_string()),
                             };
                             let source = {
-                                let loc = loc_of_def(loc_source.clone(), reader, packed_def);
+                                let loc = loc_of_def(loc_source.clone(), loc_of_aloc, packed_def);
                                 source_of_export::Source::Declaration(declaration::T {
                                     name: name.as_str().to_string(),
                                     loc,
@@ -1310,8 +1355,11 @@ fn source_of_exports(
                                 }
                                 _ => {
                                     let name = "default";
-                                    let loc =
-                                        loc_of_index(loc_source.clone(), reader, inner.default_loc);
+                                    let loc = loc_of_index(
+                                        loc_source.clone(),
+                                        loc_of_aloc,
+                                        inner.default_loc,
+                                    );
                                     vec![source_of_export::Source::Declaration(declaration::T {
                                         name: name.to_string(),
                                         loc,
@@ -1334,7 +1382,7 @@ fn source_of_exports(
                             let source = {
                                 let packed_def = local_defs.get(inner.index);
                                 let name = packed_def.name();
-                                let loc = loc_of_def(loc_source.clone(), reader, packed_def);
+                                let loc = loc_of_def(loc_source.clone(), loc_of_aloc, packed_def);
                                 source_of_export::Source::Declaration(declaration::T {
                                     name: name.as_str().to_string(),
                                     loc,
@@ -1466,7 +1514,7 @@ enum DeclarationKind {
 
 struct DeclarationInfoCollector<'a, F, G, H> {
     scope_info: &'a scope_api::ScopeInfo<Loc>,
-    reader: &'a SharedMem,
+    loc_of_aloc: &'a LocOfALoc,
     add_var_info: F,
     add_member_info: G,
     add_type_info: H,
@@ -1488,7 +1536,7 @@ where
     }
 
     fn identifier(&mut self, ident: &'ast ast::Identifier<ALoc, (ALoc, Type)>) -> Result<(), !> {
-        let loc = self.reader.loc_of_aloc(&ident.loc.0);
+        let loc = (self.loc_of_aloc)(&ident.loc.0);
         if self.scope_info.is_local_use(&loc) && self.scope_info.use_is_def(&loc) {
             (self.add_var_info)(ident.name.as_str(), loc, &ident.loc.1);
         }
@@ -1499,7 +1547,7 @@ where
         &mut self,
         ident: &'ast ast::Identifier<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
-        let loc = self.reader.loc_of_aloc(&ident.loc.0);
+        let loc = (self.loc_of_aloc)(&ident.loc.0);
         (self.add_member_info)(ident.name.as_str(), loc, &ident.loc.1);
         Ok(())
     }
@@ -1509,7 +1557,7 @@ where
         _loc: &'ast ALoc,
         alias: &'ast ast::statement::TypeAlias<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
-        let loc = self.reader.loc_of_aloc(&alias.id.loc.0);
+        let loc = (self.loc_of_aloc)(&alias.id.loc.0);
         (self.add_type_info)(alias.id.name.as_str(), loc, &alias.id.loc.1);
         Ok(())
     }
@@ -1519,7 +1567,7 @@ where
         _loc: &'ast ALoc,
         otype: &'ast ast::statement::OpaqueType<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
-        let loc = self.reader.loc_of_aloc(&otype.id.loc.0);
+        let loc = (self.loc_of_aloc)(&otype.id.loc.0);
         (self.add_type_info)(otype.id.name.as_str(), loc, &otype.id.loc.1);
         Ok(())
     }
@@ -1529,7 +1577,7 @@ where
         _loc: &'ast ALoc,
         iface: &'ast ast::statement::Interface<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
-        let loc = self.reader.loc_of_aloc(&iface.id.loc.0);
+        let loc = (self.loc_of_aloc)(&iface.id.loc.0);
         (self.add_type_info)(iface.id.name.as_str(), loc, &iface.id.loc.1);
         Ok(())
     }
@@ -1538,7 +1586,7 @@ where
         &mut self,
         ident: &'ast ast::Identifier<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
-        let loc = self.reader.loc_of_aloc(&ident.loc.0);
+        let loc = (self.loc_of_aloc)(&ident.loc.0);
         (self.add_type_info)(ident.name.as_str(), loc, &ident.loc.1);
         ast_visitor::class_identifier_default(self, ident)
     }
@@ -1548,7 +1596,7 @@ where
         _loc: &'ast ALoc,
         enum_: &'ast ast::statement::EnumDeclaration<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
-        let loc = self.reader.loc_of_aloc(&enum_.id.loc.0);
+        let loc = (self.loc_of_aloc)(&enum_.id.loc.0);
         (self.add_type_info)(enum_.id.name.as_str(), loc, &enum_.id.loc.1);
         for member in enum_.body.members.iter() {
             let (aloc, name) = match member {
@@ -1573,7 +1621,7 @@ where
                     ast_utils::string_of_enum_member_name(&member.id),
                 ),
             };
-            let loc = self.reader.loc_of_aloc(aloc);
+            let loc = (self.loc_of_aloc)(aloc);
             (self.add_member_info)(name, loc, &enum_.id.loc.1);
         }
         ast_visitor::enum_declaration_default(self, _loc, enum_)
@@ -1589,7 +1637,7 @@ fn declaration_infos<'a, 'cx>(
     file: &FileKey,
     file_sig: &Arc<FileSig>,
     cx: &'a Context<'cx>,
-    reader: &SharedMem,
+    loc_of_aloc: &LocOfALoc,
     typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     ast: &ast::Program<Loc, Loc>,
     offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
@@ -1615,7 +1663,7 @@ fn declaration_infos<'a, 'cx>(
     };
     let mut collector = DeclarationInfoCollector {
         scope_info,
-        reader,
+        loc_of_aloc,
         add_var_info,
         add_member_info,
         add_type_info,
@@ -1856,6 +1904,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
             let root = options.root.to_string_lossy().to_string();
             let root = &root;
             let reader = &cctx.reader;
+            let loc_of_aloc = make_loc_of_aloc(cctx.reader.dupe());
             let resolved_modules = reader.get_resolved_modules_unsafe(file);
             let log = |msg: &str| {
                 if config.glean_log {
@@ -1896,7 +1945,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                     file,
                     file_sig,
                     &cctx.cx,
-                    reader.as_ref(),
+                    &loc_of_aloc,
                     &cctx.typed_ast,
                     ast,
                     &offset_table_of_file_key,
@@ -1917,7 +1966,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                 loc_source.clone(),
                 type_sig.as_ref(),
                 &resolved_modules,
-                reader.as_ref(),
+                &loc_of_aloc,
                 &offset_table_of_file_key,
             );
             log("source of type exports");
@@ -1925,7 +1974,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                 root,
                 &config.write_root,
                 file,
-                reader.as_ref(),
+                &loc_of_aloc,
                 loc_source.clone(),
                 type_sig.as_ref(),
                 &resolved_modules,
@@ -1951,7 +2000,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                 &imported_names,
                 root,
                 &config.write_root,
-                reader.as_ref(),
+                &loc_of_aloc,
                 &cctx.cx,
                 &cctx.typed_ast,
                 file_sig,
@@ -1961,7 +2010,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
             let type_declaration_reference = type_declaration_references(
                 root,
                 &config.write_root,
-                reader.as_ref(),
+                &loc_of_aloc,
                 &cctx.cx,
                 &cctx.typed_ast,
                 &offset_table_of_file_key,
