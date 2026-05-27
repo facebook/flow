@@ -112,6 +112,49 @@ code {
   opacity: 1;
 }
 
+/* Doc sidebar links rendered inside the dark navbar-sidebar need light text
+   to be readable — the wide-layout sidebar lives on a light background. */
+.navbar-sidebar .menu__link {
+  color: rgba(255, 255, 255, 0.7);
+}
+.navbar-sidebar .theme-doc-sidebar-menu > .theme-doc-sidebar-item-category > .menu__list-item-collapsible > .menu__link,
+.navbar-sidebar .theme-doc-sidebar-menu > .theme-doc-sidebar-item-link > .menu__link {
+  color: rgba(255, 255, 255, 0.85);
+}
+.navbar-sidebar .menu__link:hover,
+.navbar-sidebar .menu__list-item-collapsible:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+.navbar-sidebar .menu__link--active {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.navbar-sidebar .menu__caret::before,
+.navbar-sidebar .menu__link--sublist-caret::after {
+  filter: invert(1);
+}
+.navbar-sidebar__back {
+  background: transparent;
+  box-shadow: none;
+}
+.navbar-sidebar__back:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+.navbar-sidebar .menu__list .menu__list {
+  border-left-color: rgba(255, 255, 255, 0.1);
+}
+.navbar-sidebar .theme-doc-sidebar-menu > .theme-doc-sidebar-item-category,
+.navbar-sidebar .theme-doc-sidebar-menu > .theme-doc-sidebar-item-link {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* When the mobile sidebar is open, replace the navbar's dark drop-shadow with
+   a soft white hairline matching the dividers between sidebar items. */
+.navbar-sidebar__brand {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
 /* ── Sidebar hierarchy improvements ── */
 
 /* Top-level items: separator between sections */
