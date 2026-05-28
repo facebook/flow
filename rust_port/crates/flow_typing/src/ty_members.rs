@@ -177,7 +177,6 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
                     let mut new_tys = vec![ty_info.ty.clone()];
                     new_tys.extend(tys_info.ty);
                     let mut new_def_locs = ty_info.def_locs.clone();
-                    new_def_locs.reverse();
                     new_def_locs.extend(tys_info.def_locs);
                     result.insert(
                         key,
@@ -222,7 +221,6 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
                         let mut new_tys = vec![ty_info.ty.clone()];
                         new_tys.extend(tys_info.ty.clone());
                         let mut new_def_locs = ty_info.def_locs.clone();
-                        new_def_locs.reverse();
                         new_def_locs.extend(tys_info.def_locs.clone());
                         result.insert(
                             key,

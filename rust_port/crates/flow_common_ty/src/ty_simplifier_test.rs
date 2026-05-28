@@ -184,7 +184,7 @@ mod tests {
         );
 
         let output = simplify_type(true, Some(false), Arc::new(input));
-        assert_eq!(*output, any1);
+        assert_eq!(*output, any2);
     }
 
     #[test]

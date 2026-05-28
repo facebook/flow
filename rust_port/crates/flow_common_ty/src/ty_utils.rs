@@ -465,21 +465,24 @@ pub mod simplify {
     fn simplify_list<L, F1, F2>(
         is_zero: &F1,
         is_one: &F2,
-        mut acc: Vec<Arc<Ty<L>>>,
+        acc: Vec<Arc<Ty<L>>>,
         list: &[Arc<Ty<L>>],
     ) -> Vec<Arc<Ty<L>>>
     where
         F1: Fn(&Ty<L>) -> bool,
         F2: Fn(&Ty<L>) -> bool,
     {
+        let mut kept = Vec::new();
         for t in list {
             if is_zero(t.as_ref()) {
                 return vec![t.dupe()];
             } else if !is_one(t.as_ref()) {
-                acc.push(t.dupe());
+                kept.push(t.dupe());
             }
         }
-        acc
+        kept.reverse();
+        kept.extend(acc);
+        kept
     }
 
     fn simplify_nel<L, F1, F2>(is_zero: &F1, is_one: &F2, list: &[Arc<Ty<L>>]) -> Vec<Arc<Ty<L>>>
