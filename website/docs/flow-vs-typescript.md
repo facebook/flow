@@ -38,8 +38,7 @@ The features below are close enough in syntax and semantics that you can reuse y
 - [Utility types](./types/utilities.md): `Readonly`, `ReadonlyArray`, `ReadonlyMap`, `ReadonlySet`, `Pick`, `Omit`, `Record`, `Partial`, `Required`, `Exclude`, `Extract`, `NonNullable`, `Parameters`, `ReturnType`, `Awaited`, `ThisParameterType`, `OmitThisParameter`, `NoInfer`.
 - [Type-only imports and exports](./types/modules.md#toc-importing-and-exporting-types) — `import type` and `export type`.
 - [Function-overload encoding via intersection](./types/intersections.md#toc-intersection-of-function-types) — `((x: number) => string) & ((x: string) => number)` resolves the per-call return type by argument type in both languages.
-- Ambient declaration forms like `declare const`, `declare let`, `declare class`, and `declare function`.
-- JSX type-argument syntax at call sites — `<Box<number> value={42} />`.
+- [Ambient declaration forms](./libdefs/creation.md) like `declare const`, `declare let`, `declare class`, and `declare function`.
 
 ## Shared concepts, different rules {#toc-shared-concepts-different-rules}
 
