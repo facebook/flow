@@ -94,6 +94,7 @@ type error_code =
   | InvalidLhs
   | InvalidMappedType
   | InvalidModule
+  | InvalidTemplateLiteralType
   | InvalidPropType
   | InvalidReactCreateElement
   | InvalidRendersTypeArgument
@@ -311,6 +312,7 @@ let string_of_code : error_code -> string = function
   | InvalidLhs -> "invalid-lhs"
   | InvalidMappedType -> "invalid-mapped-type"
   | InvalidModule -> "invalid-module"
+  | InvalidTemplateLiteralType -> "invalid-template-literal-type"
   | InvalidPropType -> "invalid-prop-type"
   | InvalidReactCreateElement -> "invalid-react-create-element"
   | InvalidRendersTypeArgument -> "invalid-render"

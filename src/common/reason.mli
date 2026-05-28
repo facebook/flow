@@ -27,10 +27,7 @@ type 'loc virtual_reason_desc =
   | RExports
   | RNullOrVoid
   | RStringLit of name
-  | RStringPrefix of { prefix: string }
-  | RStringWithoutPrefix of { prefix: string }
-  | RStringSuffix of { suffix: string }
-  | RStringWithoutSuffix of { suffix: string }
+  | RTemplateLiteralType
   | RNumberLit of string
   | RBigIntLit of string
   | RBooleanLit of bool

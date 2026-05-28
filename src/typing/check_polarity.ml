@@ -65,10 +65,10 @@ end = struct
     | ObjProtoT _ ->
       ()
     | OptionalT { type_ = t; _ }
-    | MaybeT (_, t)
-    | StrUtilT { remainder = Some t; _ } ->
+    | MaybeT (_, t) ->
       check_polarity cx ?trace seen tparams polarity t
-    | StrUtilT { remainder = None; _ } -> ()
+    | TemplateLiteralT { types; _ } ->
+      List.iter (check_polarity cx ?trace seen tparams polarity) types
     | DefT (_, ClassT t) -> check_polarity cx ?trace seen tparams polarity t
     | DefT (_, InstanceT { static; super; implements; inst }) ->
       let {

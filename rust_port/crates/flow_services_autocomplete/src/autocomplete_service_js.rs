@@ -212,7 +212,8 @@ fn lsp_completion_of_type(ty_: &Ty<ALoc>) -> LspCompletionItemKind {
             renders: _,
         }
         | Ty::Infer(..)
-        | Ty::Renders(..) => LspCompletionItemKind::VARIABLE,
+        | Ty::Renders(..)
+        | Ty::TemplateLiteral { .. } => LspCompletionItemKind::VARIABLE,
     }
 }
 

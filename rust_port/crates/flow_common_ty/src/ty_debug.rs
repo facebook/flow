@@ -94,6 +94,7 @@ pub fn string_of_ctor_t<L>(t: &Ty<L>) -> &'static str {
         Ty::Infer(_) => "Infer",
         Ty::Component { .. } => "Component",
         Ty::Renders(_, _) => "Renders",
+        Ty::TemplateLiteral { .. } => "TemplateLiteral",
     }
 }
 
@@ -673,6 +674,22 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
             format!("Component({}): {}", props.join(", "), renders_str)
         }
         Ty::Renders(t, _) => format!("Renders ({})", dump_t(depth, t)),
+        Ty::TemplateLiteral { quasis, types } => {
+            let types_str = types
+                .iter()
+                .map(|t| dump_t(depth, t))
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!(
+                "TemplateLiteral(quasis=[{}], types=[{}])",
+                quasis
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>()
+                    .join("; "),
+                types_str
+            )
+        }
     }
 }
 
@@ -1506,6 +1523,23 @@ fn json_of_t_list<L: Debug + Clone + Dupe>(
             vec![
                 ("argument".to_string(), json_of_t(converter, t, strip_root)),
                 ("variant".to_string(), Json::String(variant_str.to_string())),
+            ]
+        }
+        Ty::TemplateLiteral { quasis, types } => {
+            vec![
+                (
+                    "quasis".to_string(),
+                    Json::Array(quasis.iter().map(|s| Json::String(s.to_string())).collect()),
+                ),
+                (
+                    "types".to_string(),
+                    Json::Array(
+                        types
+                            .iter()
+                            .map(|t| json_of_t(converter, t, strip_root))
+                            .collect(),
+                    ),
+                ),
             ]
         }
     }

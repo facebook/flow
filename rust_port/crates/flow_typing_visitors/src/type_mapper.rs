@@ -501,29 +501,27 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 Type::new(TypeInner::KeysT(r.dupe(), inner_t_prime))
             }
         }
-        TypeInner::StrUtilT {
+        TypeInner::TemplateLiteralT {
             reason,
-            op,
-            remainder,
+            quasis,
+            types,
         } => {
-            let remainder_prime = option_utils::ident_map(
-                |r| mapper.type_(cx, map_cx, r.dupe()),
+            let types_prime = list_utils::ident_map(
+                |t| mapper.type_(cx, map_cx, t.dupe()),
                 Type::ptr_eq,
-                remainder.clone(),
+                types.clone().into(),
             );
-            let remainder_unchanged = match (remainder, &remainder_prime) {
-                (None, None) => true,
-                (Some(a), Some(b)) => a.ptr_eq(b),
-                _ => false,
-            };
-            if remainder_unchanged {
+            let types_unchanged = types
+                .iter()
+                .zip(types_prime.iter())
+                .all(|(a, b)| a.ptr_eq(b));
+            if types_unchanged {
                 t
             } else {
-                //   StrUtilT { reason; op; remainder = remainder' }
-                Type::new(TypeInner::StrUtilT {
+                Type::new(TypeInner::TemplateLiteralT {
                     reason: reason.dupe(),
-                    op: op.clone(),
-                    remainder: remainder_prime,
+                    quasis: quasis.to_vec(),
+                    types: types_prime.to_vec(),
                 })
             }
         }

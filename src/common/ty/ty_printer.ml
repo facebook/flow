@@ -210,6 +210,33 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         | RendersStar -> "renders*"
       in
       fuse [Atom renders_str; space; type_with_parens ~depth t]
+    | TemplateLiteral { quasis; types } ->
+      let escape_quasi s =
+        let buf = Buffer.create (String.length s) in
+        let len = String.length s in
+        let i = ref 0 in
+        while !i < len do
+          let c = s.[!i] in
+          (match c with
+          | '\\' -> Buffer.add_string buf "\\\\"
+          | '`' -> Buffer.add_string buf "\\`"
+          | '$' when !i + 1 < len && s.[!i + 1] = '{' -> Buffer.add_string buf "\\$"
+          | _ -> Buffer.add_char buf c);
+          incr i
+        done;
+        Buffer.contents buf
+      in
+      let parts =
+        let rec aux quasis types =
+          match (quasis, types) with
+          | ([q], []) -> [Atom (escape_quasi q)]
+          | (q :: qs, t :: ts) ->
+            Atom (escape_quasi q) :: Atom "${" :: type_ ~depth t :: Atom "}" :: aux qs ts
+          | _ -> []
+        in
+        aux quasis types
+      in
+      fuse ((Atom "`" :: parts) @ [Atom "`"])
   and type_component_sig ~depth ~regular_props ~renders =
     let to_key x =
       if property_key_quotes_needed x then

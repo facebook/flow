@@ -43,7 +43,7 @@ class ['a] t =
         acc
       | GenericT { bound; _ } -> self#type_ cx pole acc bound
       | KeysT (_, t) -> self#type_ cx P.Positive acc t
-      | StrUtilT _ -> acc
+      | TemplateLiteralT { types; _ } -> self#list (self#type_ cx pole_TODO) acc types
       | AnnotT (_, t, _) -> self#type_ cx P.Positive acc t
       | NominalT (_, ot) ->
         let { nominal_id = _; underlying_t; lower_t; upper_t; nominal_type_args } = ot in

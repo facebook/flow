@@ -139,6 +139,7 @@ use flow_typing_errors::error_message::EnumUnknownNotCheckedData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::InvalidMappedTypeErrorKind;
+use flow_typing_errors::error_message::InvalidTemplateLiteralTypeErrorKind;
 use flow_typing_errors::error_message::MatchDuplicateObjectPropertyData;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidCaseSyntaxData;
@@ -202,7 +203,6 @@ use flow_typing_type::type_::SealGenericTData;
 use flow_typing_type::type_::Selector;
 use flow_typing_type::type_::SetElemTData;
 use flow_typing_type::type_::SpecializeTData;
-use flow_typing_type::type_::StrUtilOp;
 use flow_typing_type::type_::SuperTData;
 use flow_typing_type::type_::TestPropTData;
 use flow_typing_type::type_::ThisInstanceTData;
@@ -714,16 +714,20 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
             let extra = kid(tvars, arg);
             p(cx, t, true, &extra)
         }
-        TypeInner::StrUtilT { op, remainder, .. } => {
-            let (op_str, arg) = match op {
-                StrUtilOp::StrPrefix(s) => ("prefix", s.as_str()),
-                StrUtilOp::StrSuffix(s) => ("suffix", s.as_str()),
-            };
-            let remainder_str = match remainder {
-                Some(t) => kid(tvars, t),
-                None => "<None>".to_string(),
-            };
-            let extra = format!("{}:{:?}, remainder:{}", op_str, arg, remainder_str);
+        TypeInner::TemplateLiteralT { quasis, types, .. } => {
+            let extra = format!(
+                "quasis:[{}], types:[{}]",
+                quasis
+                    .iter()
+                    .map(|s| format!("{:?}", s.as_str()))
+                    .collect::<Vec<_>>()
+                    .join("; "),
+                types
+                    .iter()
+                    .map(|t| kid(tvars, t))
+                    .collect::<Vec<_>>()
+                    .join("; ")
+            );
             p(cx, t, true, &extra)
         }
         TypeInner::NamespaceT(ns) => {
@@ -2582,9 +2586,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EInvalidExtends(reason) => {
             format!("EInvalidExtends ({})", dump_reason(cx, reason))
         }
-        ErrorMessage::EStrUtilTypeNonLiteralArg(loc) => {
-            format!("EStrUtilTypeNonLiteralArg ({})", string_of_aloc(None, loc))
-        }
         ErrorMessage::EExportsAnnot(loc) => {
             format!("EExportsAnnot ({})", string_of_aloc(None, loc))
         }
@@ -3762,6 +3763,19 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             };
             format!(
                 "EInvalidMappedType ({}, {})",
+                string_of_aloc(None, loc),
+                kind_str
+            )
+        }
+        ErrorMessage::EInvalidTemplateLiteralType { loc, kind } => {
+            let kind_str = match kind {
+                InvalidTemplateLiteralTypeErrorKind::TooComplex => "TooComplex",
+                InvalidTemplateLiteralTypeErrorKind::InvalidPlaceholderType => {
+                    "InvalidPlaceholderType"
+                }
+            };
+            format!(
+                "EInvalidTemplateLiteralType ({}, {})",
                 string_of_aloc(None, loc),
                 kind_str
             )

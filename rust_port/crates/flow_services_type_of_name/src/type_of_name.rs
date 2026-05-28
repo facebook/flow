@@ -299,7 +299,13 @@ fn compute_ref_summary(genv: &Genv<'_, '_>, body_type: &Type) -> Option<String> 
     // Strip the RTypeAlias reason to force the normalizer to expand the body
     // instead of creating another Generic node
     let stripped = type_util::mod_reason_of_t(
-        &|r| r.replace_desc(VirtualReasonDesc::RCustom("ref_expansion".into())),
+        &|r| {
+            if matches!(r.desc(false), VirtualReasonDesc::RTypeAlias(_)) {
+                r.replace_desc(VirtualReasonDesc::RCustom("ref_expansion".into()))
+            } else {
+                r
+            }
+        },
         body_type,
     );
     // Use compact options: disable ref body collection to avoid recursion,

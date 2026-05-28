@@ -151,7 +151,7 @@ let visitor =
       | FunProtoBindT _
       | ThisInstanceT _
       | KeysT _
-      | StrUtilT _
+      | TemplateLiteralT _
       | MaybeT _
       | NamespaceT _
       | NullProtoT _

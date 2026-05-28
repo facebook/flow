@@ -1787,11 +1787,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let l = DefT (reason_s, SingletonStrT { value = OrdinaryName s; from_annot = false }) in
       let u = HasOwnPropT (use_op, reason_next, l) in
       rec_flow cx trace (o, ReposLowerT { reason = reason_op; use_desc = false; use_t = u })
-    | ( ( StrUtilT { reason = reason_s; op; remainder }
-        | GenericT { reason = reason_s; bound = StrUtilT { reason = _; op; remainder }; _ } ),
+    | ( ( TemplateLiteralT { reason = reason_s; _ }
+        | GenericT { reason = reason_s; bound = TemplateLiteralT _; _ } ),
         KeysT (reason_op, o)
       ) ->
-      let l = StrUtilT { reason = reason_s; op; remainder } in
       let u = HasOwnPropT (use_op, reason_s, l) in
       rec_flow cx trace (o, ReposLowerT { reason = reason_op; use_desc = false; use_t = u })
     | (KeysT (reason1, o1), _) ->
@@ -1994,6 +1993,22 @@ module Make (Flow : INPUT) : OUTPUT = struct
           in
           rec_flow_t cx trace ~use_op (UnionT (lreason, union_of_opaques), u)
       end
+    (* TemplateLiteralT <: UnionT: if we can enumerate the strings the LHS could
+       produce, flow each one into the RHS union independently. The default
+       union-RHS handler below would otherwise speculate per branch and require
+       a single branch to absorb every expansion, which is too restrictive. *)
+    | (TemplateLiteralT { quasis; types; _ }, UnionT _)
+      when Base.Option.is_some
+             (Template_literal_type.try_resolve_to_strings ~expand_generics:true quasis types) ->
+      Template_literal_type.subtype_template_into_union
+        ~rec_flow_t
+        cx
+        trace
+        use_op
+        ~lower:l
+        ~upper:u
+        quasis
+        types
     | (_, UnionT (r, rep)) ->
       (* Try the branches of the union in turn, with the goal of selecting the
        * correct branch. This process is reused for intersections as well. See
@@ -2038,68 +2053,71 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (IntersectionT (r, rep), _) ->
       SpeculationKit.try_intersection cx trace (UseT (use_op, u)) r rep
     | (NullProtoT reason, _) -> rec_flow_t cx trace ~use_op (DefT (reason, NullT), u)
-    (************)
-    (* StrUtilT *)
-    (************)
-    (* prefix *)
-    | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
-        StrUtilT { reason = _; op = StrPrefix prefix2; remainder = None }
-      )
-      when String.starts_with ~prefix:prefix2 prefix1 ->
-      ()
-    | ( StrUtilT { reason; op = StrPrefix prefix1; remainder = remainder1 },
-        StrUtilT { reason = _; op = StrPrefix prefix2; remainder = Some remainder2 }
-      )
-      when prefix1 = prefix2 ->
-      let remainder1 = Option.value ~default:(StrModuleT.why reason) remainder1 in
-      rec_flow_t cx trace ~use_op (remainder1, remainder2)
-    | ( DefT (reason, SingletonStrT { value = OrdinaryName s; _ }),
-        StrUtilT { reason = _; op = StrPrefix prefix; remainder }
-      )
-      when String.starts_with ~prefix s ->
-      Flow_js_utils.update_lit_type_from_annot cx l;
-      Base.Option.iter remainder ~f:(fun remainder ->
-          let chopped = Base.String.chop_prefix_exn ~prefix s in
-          let reason = replace_desc_reason (RStringWithoutPrefix { prefix }) reason in
-          let str_t =
-            DefT (reason, SingletonStrT { value = OrdinaryName chopped; from_annot = true })
-          in
-          rec_flow_t cx trace ~use_op (str_t, remainder)
-      )
-    (* suffix *)
-    | ( StrUtilT { reason = _; op = StrSuffix suffix1; remainder = _ },
-        StrUtilT { reason = _; op = StrSuffix suffix2; remainder = None }
-      )
-      when String.ends_with ~suffix:suffix2 suffix1 ->
-      ()
-    | ( StrUtilT { reason; op = StrSuffix suffix1; remainder = remainder1 },
-        StrUtilT { reason = _; op = StrSuffix suffix2; remainder = Some remainder2 }
-      )
-      when suffix1 = suffix2 ->
-      let remainder1 = Option.value ~default:(StrModuleT.why reason) remainder1 in
-      rec_flow_t cx trace ~use_op (remainder1, remainder2)
-    | ( DefT (reason, SingletonStrT { value = OrdinaryName s; _ }),
-        StrUtilT { reason = _; op = StrSuffix suffix; remainder }
-      )
-      when String.ends_with ~suffix s ->
-      Flow_js_utils.update_lit_type_from_annot cx l;
-      Base.Option.iter remainder ~f:(fun remainder ->
-          let chopped = Base.String.chop_suffix_exn ~suffix s in
-          let reason = replace_desc_reason (RStringWithoutSuffix { suffix }) reason in
-          let str_t =
-            DefT (reason, SingletonStrT { value = OrdinaryName chopped; from_annot = true })
-          in
-          rec_flow_t cx trace ~use_op (str_t, remainder)
-      )
-    (* both *)
-    | (StrUtilT { reason; op = StrPrefix arg | StrSuffix arg; remainder = _ }, _) ->
-      let literal_kind =
-        if arg = "" then
-          AnyLiteral
-        else
-          Truthy
-      in
-      rec_flow_t cx trace ~use_op (DefT (reason, StrGeneralT literal_kind), u)
+    (**********************)
+    (* TemplateLiteralT   *)
+    (**********************)
+    (* Subtyping arm bodies live in Template_literal_type; the patterns and
+       `when` guards stay here so dispatch order remains visible. *)
+    | (DefT (_, SingletonStrT { value = OrdinaryName s; _ }), TemplateLiteralT { quasis; types; _ })
+      ->
+      Template_literal_type.subtype_str_lit_into_template
+        ~possible_concrete_types_for_inspection
+        ~rec_flow_t
+        cx
+        trace
+        use_op
+        ~lower:l
+        ~upper:u
+        s
+        quasis
+        types
+    (* TemplateLiteralT <: TemplateLiteralT: dispatch through the combined
+       helper, which folds once and tries (in order) pairwise / prefix-
+       extension / suffix-extension / wide-string. Falls through to
+       subtype_template_to_other when none apply. *)
+    | ( TemplateLiteralT { reason = l_reason; quasis = lq; types = lt; _ },
+        TemplateLiteralT { quasis = rq; types = rt; _ }
+      ) ->
+      (match
+         Template_literal_type.try_subtype_template_to_template
+           ~rec_flow_t
+           cx
+           trace
+           use_op
+           l_reason
+           ~upper:u
+           lq
+           lt
+           rq
+           rt
+       with
+      | Template_literal_type.Handled -> ()
+      | Template_literal_type.Not_applicable ->
+        Template_literal_type.subtype_template_to_other
+          ~rec_flow_t
+          ~possible_concrete_types_for_inspection
+          cx
+          trace
+          use_op
+          ~reason:l_reason
+          ~upper:u
+          lq
+          lt)
+    (* TemplateLiteralT on the left, any non-TemplateLiteralT upper: enumerate
+       the producible strings (expanding generics) and flow as a singleton or
+       union. Falls back to a generic string type when the cross product can't
+       be resolved. *)
+    | (TemplateLiteralT { reason; quasis; types; _ }, _) ->
+      Template_literal_type.subtype_template_to_other
+        ~rec_flow_t
+        ~possible_concrete_types_for_inspection
+        cx
+        trace
+        use_op
+        ~reason
+        ~upper:u
+        quasis
+        types
     (*
      * When do we consider a polymorphic type <X:U> T to be a subtype of another
      * polymorphic type <X:U'> T'? This is the subject of a long line of

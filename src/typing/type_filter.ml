@@ -445,7 +445,7 @@ let string loc t =
   | AnyT _
   | DefT (_, MixedT _) ->
     DefT (mk_reason RString loc, StrGeneralT AnyLiteral) |> changed_result
-  | StrUtilT _
+  | TemplateLiteralT _
   | DefT (_, StrGeneralT _)
   | DefT (_, SingletonStrT _)
   | DefT
@@ -460,7 +460,7 @@ let string loc t =
 
 let not_string t =
   match t with
-  | StrUtilT _
+  | TemplateLiteralT _
   | DefT
       ( _,
         EnumValueT
@@ -933,7 +933,7 @@ and tag_of_t cx t =
   | NominalT (_, { upper_t = Some t; _ }) -> tag_of_t cx t
   (* Most of the types below should have boiled away thanks to concretization. *)
   | NamespaceT { values_type; _ } -> tag_of_t cx values_type
-  | StrUtilT _ -> Some (TypeTagSet.singleton StringTag)
+  | TemplateLiteralT _ -> Some (TypeTagSet.singleton StringTag)
   | EvalT _
   | GenericT _
   | ThisTypeAppT _

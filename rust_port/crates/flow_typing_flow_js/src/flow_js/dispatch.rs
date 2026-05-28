@@ -9400,24 +9400,12 @@ fn __flow_impl<'cx>(
             collector.add(l.dupe());
         }
 
-        // ******************************
-        // * String utils (e.g. prefix) *
-        // ******************************
-
-        // StrUtilT just becomes a StrT so we can access properties and methods.
-        (
-            TypeInner::StrUtilT {
-                reason,
-                op: StrUtilOp::StrPrefix(arg) | StrUtilOp::StrSuffix(arg),
-                remainder: _,
-            },
-            _,
-        ) => {
+        (TypeInner::TemplateLiteralT { reason, quasis, .. }, _) => {
             let reason = reason.dupe().replace_desc(VirtualReasonDesc::RString);
-            let literal_kind = if arg.is_empty() {
-                Literal::AnyLiteral
-            } else {
+            let literal_kind = if quasis.iter().any(|q| !q.is_empty()) {
                 Literal::Truthy
+            } else {
+                Literal::AnyLiteral
             };
             let str_t = Type::new(TypeInner::DefT(
                 reason,

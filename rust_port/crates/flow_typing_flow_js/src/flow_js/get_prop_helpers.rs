@@ -404,7 +404,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
                 )?;
                 Ok(())
             }
-            TypeInner::StrUtilT { .. } => {
+            TypeInner::TemplateLiteralT { .. } => {
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {

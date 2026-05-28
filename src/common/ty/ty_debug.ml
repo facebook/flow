@@ -45,6 +45,7 @@ let string_of_ctor_t = function
   | Infer _ -> "Infer"
   | Component _ -> "Component"
   | Renders _ -> "Renders"
+  | TemplateLiteral _ -> "TemplateLiteral"
 
 let string_of_ctor_decl = function
   | TypeAliasDecl _ -> "TypeAlias"
@@ -422,6 +423,12 @@ struct
           (Base.String.concat ~sep:", " props)
           (Base.Option.value_map ~default:"<missing>" ~f:(dump_t ~depth) renders)
       | Renders (t, _) -> spf "Renders (%s)" (dump_t ~depth t)
+      | TemplateLiteral { quasis; types } ->
+        let types_str = Base.List.map ~f:(dump_t ~depth) types |> Base.String.concat ~sep:", " in
+        spf
+          "TemplateLiteral(quasis=[%s], types=[%s])"
+          (Base.String.concat ~sep:"; " quasis)
+          types_str
 
   and dump_class_decl ~depth (name, ps) =
     spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
@@ -613,6 +620,11 @@ struct
               | RendersMaybe -> Hh_json.JSON_String "maybe"
               | RendersStar -> Hh_json.JSON_String "star"
             );
+          ]
+        | TemplateLiteral { quasis; types } ->
+          [
+            ("quasis", Hh_json.JSON_Array (Base.List.map ~f:(fun s -> Hh_json.JSON_String s) quasis));
+            ("types", Hh_json.JSON_Array (Base.List.map ~f:json_of_t types));
           ]
       )
     and json_of_component regular_props renders =

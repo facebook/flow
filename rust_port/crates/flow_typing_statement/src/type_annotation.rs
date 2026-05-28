@@ -30,7 +30,6 @@ use flow_parser::polymorphic_ast_mapper::LocMapper;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
 use flow_typing_errors::error_message::ETSSyntaxData;
-use flow_typing_errors::error_message::ETooManyTypeArgsData;
 use flow_typing_errors::error_message::ETypeGuardIncompatibleWithFunctionKindData;
 use flow_typing_errors::error_message::ETypeGuardInvalidParameterData;
 use flow_typing_errors::error_message::EVarianceKeywordData;
@@ -44,6 +43,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::type_subst;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
+use flow_typing_flow_js::template_literal_type;
 use flow_typing_loc_env::func_class_sig_types;
 use flow_typing_loc_env::func_class_sig_types::class::ClassLikeBindingKind;
 use flow_typing_type::type_;
@@ -1671,152 +1671,6 @@ fn convert_inner<'a>(
                             Ok(reconstruct_ast(elem_t, None, targs_ast))
                         })?
                     }
-                    "StringPrefix" => {
-                        let (ts, targs_ast) = convert_type_params(cx, env, inner.targs.as_ref())?;
-                        let create_string_prefix_type =
-                            |prefix: &Type,
-                             remainder: Option<Type>,
-                             targs_ast: Option<ast::types::TypeArgs<ALoc, (ALoc, Type)>>|
-                             -> ast::types::Type<ALoc, (ALoc, Type)> {
-                                if let type_::TypeInner::DefT(_, ref def) = *prefix.deref() {
-                                    if let type_::DefTInner::SingletonStrT {
-                                        value: ref sst_value,
-                                        ..
-                                    } = *def.deref()
-                                    {
-                                        let prefix_str = sst_value.as_smol_str();
-                                        let reason = reason::mk_reason(
-                                            reason::VirtualReasonDesc::RStringPrefix {
-                                                prefix: prefix_str.dupe(),
-                                            },
-                                            loc.dupe(),
-                                        );
-                                        return reconstruct_ast(
-                                            Type::new(type_::TypeInner::StrUtilT {
-                                                reason,
-                                                op: type_::StrUtilOp::StrPrefix(prefix_str.dupe()),
-                                                remainder,
-                                            }),
-                                            None,
-                                            targs_ast,
-                                        );
-                                    }
-                                }
-                                error_type(
-                                    cx,
-                                    loc.dupe(),
-                                    ErrorMessage::EStrUtilTypeNonLiteralArg(loc.dupe()),
-                                    t,
-                                )
-                            };
-                        let reason = reason::mk_reason(
-                            reason::VirtualReasonDesc::RType(Name::new(FlowSmolStr::new_inline(
-                                "StringPrefix",
-                            ))),
-                            loc.dupe(),
-                        );
-                        match ts.len() {
-                            0 => error_type(
-                                cx,
-                                loc.dupe(),
-                                ErrorMessage::ETypeParamMinArity(loc.dupe(), 1),
-                                t,
-                            ),
-                            1 => create_string_prefix_type(&ts[0], None, targs_ast),
-                            2 => {
-                                let uo = use_op(&reason);
-                                cx.add_post_inference_subtyping_check(
-                                    ts[1].dupe(),
-                                    uo,
-                                    type_::str_module_t::at(loc.dupe()),
-                                );
-                                create_string_prefix_type(&ts[0], Some(ts[1].dupe()), targs_ast)
-                            }
-                            _ => error_type(
-                                cx,
-                                loc.dupe(),
-                                ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
-                                    reason_tapp: reason,
-                                    arity_loc: loc.dupe(),
-                                    maximum_arity: 2,
-                                })),
-                                t,
-                            ),
-                        }
-                    }
-                    "StringSuffix" => {
-                        let (ts, targs_ast) = convert_type_params(cx, env, inner.targs.as_ref())?;
-                        let create_string_suffix_type =
-                            |suffix: &Type,
-                             remainder: Option<Type>,
-                             targs_ast: Option<ast::types::TypeArgs<ALoc, (ALoc, Type)>>|
-                             -> ast::types::Type<ALoc, (ALoc, Type)> {
-                                if let type_::TypeInner::DefT(_, ref def) = *suffix.deref() {
-                                    if let type_::DefTInner::SingletonStrT {
-                                        value: ref sst_value,
-                                        ..
-                                    } = *def.deref()
-                                    {
-                                        let suffix_str = sst_value.as_smol_str();
-                                        let reason = reason::mk_reason(
-                                            reason::VirtualReasonDesc::RStringSuffix {
-                                                suffix: suffix_str.dupe(),
-                                            },
-                                            loc.dupe(),
-                                        );
-                                        return reconstruct_ast(
-                                            Type::new(type_::TypeInner::StrUtilT {
-                                                reason,
-                                                op: type_::StrUtilOp::StrSuffix(suffix_str.dupe()),
-                                                remainder,
-                                            }),
-                                            None,
-                                            targs_ast,
-                                        );
-                                    }
-                                }
-                                error_type(
-                                    cx,
-                                    loc.dupe(),
-                                    ErrorMessage::EStrUtilTypeNonLiteralArg(loc.dupe()),
-                                    t,
-                                )
-                            };
-                        let reason = reason::mk_reason(
-                            reason::VirtualReasonDesc::RType(Name::new(FlowSmolStr::new_inline(
-                                "StringSuffix",
-                            ))),
-                            loc.dupe(),
-                        );
-                        match ts.len() {
-                            0 => error_type(
-                                cx,
-                                loc.dupe(),
-                                ErrorMessage::ETypeParamMinArity(loc.dupe(), 1),
-                                t,
-                            ),
-                            1 => create_string_suffix_type(&ts[0], None, targs_ast),
-                            2 => {
-                                let uo = use_op(&reason);
-                                cx.add_post_inference_subtyping_check(
-                                    ts[1].dupe(),
-                                    uo,
-                                    type_::str_module_t::at(loc.dupe()),
-                                );
-                                create_string_suffix_type(&ts[0], Some(ts[1].dupe()), targs_ast)
-                            }
-                            _ => error_type(
-                                cx,
-                                loc.dupe(),
-                                ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
-                                    reason_tapp: reason,
-                                    arity_loc: loc.dupe(),
-                                    maximum_arity: 2,
-                                })),
-                                t,
-                            ),
-                        }
-                    }
                     // Array<T>
                     "Array" => {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
@@ -3416,18 +3270,33 @@ fn convert_inner<'a>(
                 .into(),
             })
         }
-        TypeInner::TemplateLiteral { loc, .. } => {
-            flow_js_utils::add_output_non_speculating(
-                cx,
-                ErrorMessage::EUnsupportedSyntax(Box::new((
-                    loc.dupe(),
-                    intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
-                        TsLibSyntaxKind::TemplateLiteralType,
-                    ),
-                ))),
-            );
-            let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
-            v
+        TypeInner::TemplateLiteral { loc, inner } => {
+            if !cx.tslib_syntax() {
+                flow_js_utils::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                        loc.dupe(),
+                        intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                            TsLibSyntaxKind::TemplateLiteralType,
+                        ),
+                    ))),
+                );
+                let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
+                v
+            } else {
+                let quasis = inner.quasis.iter().map(|q| q.value.cooked.dupe()).collect();
+                let (ts, type_asts) = convert_list_inner(cx, env, &inner.types)?;
+                let result_t = template_literal_type::resolve(quasis, ts, loc.dupe(), cx);
+                ast::types::Type::new(TypeInner::TemplateLiteral {
+                    loc: (loc.dupe(), result_t),
+                    inner: ast::types::TypeTemplateLiteral {
+                        quasis: inner.quasis.clone(),
+                        types: type_asts.into(),
+                        comments: inner.comments.clone(),
+                    }
+                    .into(),
+                })
+            }
         }
         TypeInner::ConstructorType {
             loc,

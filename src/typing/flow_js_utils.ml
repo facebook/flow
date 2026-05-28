@@ -137,7 +137,7 @@ end = struct
         | ObjProtoT _
         | NullProtoT _
         | FunProtoBindT _
-        | StrUtilT _
+        | TemplateLiteralT _
         (* composite types that don't allow self or cyclic reference *)
         | OpenT _
         | DefT (_, (ClassT _ | TypeT (_, _) | PolyT _))
@@ -3471,8 +3471,9 @@ let is_same_instance_type { class_id = class_id1; _ } { class_id = class_id2; _ 
  * (x: ReadOnly<O2>); // ERROR
  *
  * In order to prevent this in common mapped type and other cases, we do a best-effort
- * check to see if the RHS contains a mapped type, or other utility type. This traversal
- * is extremely limited and does not attempt to be exhaustive.
+ * check to see if the RHS contains a mapped type, other utility type, or a
+ * template literal type (whose subtyping is not captured by parameter variance).
+ * This traversal is extremely limited and does not attempt to be exhaustive.
  *)
 let wraps_utility_type cx tin =
   let seen_open_id = ref ISet.empty in
@@ -3502,6 +3503,14 @@ let wraps_utility_type cx tin =
         loop t
       )
     | EvalT { type_ = _; defer_use_t = TypeDestructorT (_, _, MappedType _); id = _ } -> true
+    (* Transparent type aliases whose body is a template literal type cannot be
+     * checked by parameter-variance comparison alone: template literal subtyping
+     * admits relationships (e.g. prefix extension) that aren't captured by
+     * pointwise covariance/contravariance of the type arguments. Treat these like
+     * other utility types — skip the TypeAppT-vs-TypeAppT fast path and force
+     * expansion of both sides so the template-literal subtyping rules in
+     * subtyping_kit can run. *)
+    | TemplateLiteralT _ -> true
     | DefT (_, TypeT (_, t)) -> loop t
     | OpenT (_, id) ->
       let (root_id, constraints) = Context.find_constraints cx id in

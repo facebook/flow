@@ -563,7 +563,7 @@ let rec extract_type cx this_t =
   | DefT (_, FunT _) as t -> Success t
   | IntersectionT _ as t -> Success t
   | UnionT _ as t -> Success t
-  | StrUtilT { reason; _ }
+  | TemplateLiteralT { reason; _ }
   | DefT (reason, SingletonStrT _)
   | DefT (reason, StrGeneralT _)
   | DefT (reason, NumericStrKeyT _) ->

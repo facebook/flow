@@ -772,7 +772,6 @@ type 'loc message =
       interface_reason: 'loc virtual_reason;
       kind: [ `Boolean | `Number | `String ];
     }
-  | MessageCannotUseStrUtilType
   | MessageCannotUseThisSuperBeforeSuperCall of concrete_reason
   | MessageCannotUseTypeDueToPolarityMismatch of {
       reason_targ: 'loc virtual_reason;
@@ -1000,6 +999,8 @@ type 'loc message =
   | MessageInvalidMappedTypeWithExactOrInexact
   | MessageInvalidMappedTypeWithExtraProps
   | MessageInvalidMappedTypeWithVarianceOnArrayInput
+  | MessageInvalidTemplateLiteralTypeComplexity
+  | MessageInvalidTemplateLiteralTypePlaceholder
   | MessageInvalidReactCreateElement of 'loc virtual_reason
   | MessageInvalidRefPropertyInSpread of {
       ref_loc: 'loc;

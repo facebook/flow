@@ -3098,7 +3098,7 @@ module Make
       value =
     let valid_computed_key = function
       | DefT (_, StrGeneralT _)
-      | StrUtilT _
+      | TemplateLiteralT _
       | DefT (_, NumGeneralT _)
       | DefT (_, EnumValueT _)
       | AnyT _ ->

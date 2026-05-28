@@ -249,7 +249,7 @@ impl CoverageVisitor {
             | TypeInner::FunProtoBindT(_)
             | TypeInner::ThisInstanceT(..)
             | TypeInner::KeysT(..)
-            | TypeInner::StrUtilT { .. }
+            | TypeInner::TemplateLiteralT { .. }
             | TypeInner::MaybeT(..)
             | TypeInner::NamespaceT(_)
             | TypeInner::NullProtoT(_)

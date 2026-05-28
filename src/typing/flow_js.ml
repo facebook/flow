@@ -5099,17 +5099,16 @@ struct
         (*********)
         | (t, ConcretizeT { reason = _; kind = ConcretizeForMatchArg _; seen = _; collector }) ->
           TypeCollector.add collector t
-        (******************************)
-        (* String utils (e.g. prefix) *)
-        (******************************)
-        (* StrUtilT just becomes a StrT so we can access properties and methods. *)
-        | (StrUtilT { reason; op = StrPrefix arg | StrSuffix arg; remainder = _ }, _) ->
+        (* TemplateLiteralT becomes StrT for property access — Truthy when
+           any quasi is non-empty (literal characters guarantee a non-empty
+           result), AnyLiteral otherwise. *)
+        | (TemplateLiteralT { reason; quasis; _ }, _) ->
           let reason = replace_desc_reason RString reason in
           let literal_kind =
-            if arg = "" then
-              AnyLiteral
-            else
+            if List.exists (fun q -> q <> "") quasis then
               Truthy
+            else
+              AnyLiteral
           in
           rec_flow cx trace (DefT (reason, StrGeneralT literal_kind), u)
         (*******************************)
@@ -6013,7 +6012,7 @@ struct
       false
     (* Should never occur as the lower bound of any *)
     | NamespaceT _ -> false
-    | StrUtilT _
+    | TemplateLiteralT _
     | DefT _
     | AnyT _ ->
       true
@@ -7375,7 +7374,7 @@ struct
         let src = any_mod_src_keep_placeholder Untyped src in
         rec_flow_t cx trace ~use_op:unknown_use (tin, AnyT.why src reason)
       | DefT (_, StrGeneralT _)
-      | StrUtilT _ ->
+      | TemplateLiteralT _ ->
         add_output
           cx
           (Error_message.EPropNotFoundInLookup

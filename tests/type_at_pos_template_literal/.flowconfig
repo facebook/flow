@@ -1,0 +1,5 @@
+[options]
+all=true
+experimental.ts_syntax=true
+experimental.tslib_syntax=true
+no_flowlib=false

@@ -448,7 +448,7 @@ pub mod operators {
                             def_t.deref(),
                             DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
                         ),
-                        TypeInner::StrUtilT { .. } => true,
+                        TypeInner::TemplateLiteralT { .. } => true,
                         _ => false,
                     };
                     let r_is_str = match r_inner {
@@ -456,7 +456,7 @@ pub mod operators {
                             def_t.deref(),
                             DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
                         ),
-                        TypeInner::StrUtilT { .. } => true,
+                        TypeInner::TemplateLiteralT { .. } => true,
                         _ => false,
                     };
                     if l_is_str && r_is_str {

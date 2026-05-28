@@ -443,6 +443,21 @@ pub struct ComponentT<'cx> {
         )>,
     >,
     post_inference_validation_flows: RefCell<VecDeque<(Type, type_::UseT<Context<'cx>>)>>,
+    /// Arbitrary deferred validation thunks. Run after main inference (when
+    /// Flow_js is fully available), so a thunk can concretize types and emit
+    /// context-specific errors that don't fit a simple subtyping flow. The
+    /// thunk is expected to close over the [Context] it needs.
+    post_inference_validation_callbacks: RefCell<
+        Vec<
+            Box<
+                dyn for<'a> Fn(
+                        &'a Context<'cx>,
+                    )
+                        -> Result<(), flow_utils_concurrency::job_error::JobError>
+                    + 'cx,
+            >,
+        >,
+    >,
     post_inference_projects_strict_boundary_import_pattern_opt_outs_validations:
         RefCell<Vec<(ALoc, String, Vec<FlowProjects>)>>,
     /// Supports interface declaration merging. When two or more
@@ -785,6 +800,7 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
         post_component_tvar_forcing_states: RefCell::new(FlowVector::new()),
         post_inference_polarity_checks: RefCell::new(Vec::new()),
         post_inference_validation_flows: RefCell::new(VecDeque::new()),
+        post_inference_validation_callbacks: RefCell::new(Vec::new()),
         post_inference_projects_strict_boundary_import_pattern_opt_outs_validations: RefCell::new(
             Vec::new(),
         ),
@@ -954,6 +970,14 @@ impl<'cx> Context<'cx> {
         self.0
             .ccx
             .post_inference_validation_flows
+            .borrow_mut()
+            .clear();
+
+        // post_inference_validation_callbacks are user-supplied closures that
+        // may capture cx (e.g. via Type references holding back-pointers).
+        self.0
+            .ccx
+            .post_inference_validation_callbacks
             .borrow_mut()
             .clear();
     }
@@ -1462,7 +1486,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn tslib_syntax(&self) -> bool {
-        self.0.metadata.frozen.tslib_syntax
+        self.0.metadata.frozen.tslib_syntax || self.0.file.is_lib_file()
     }
 
     pub fn typescript_library_definition_support(&self) -> bool {
@@ -1515,6 +1539,23 @@ impl<'cx> Context<'cx> {
         &self,
     ) -> std::cell::Ref<'_, VecDeque<(Type, type_::UseT<Context<'cx>>)>> {
         self.0.ccx.post_inference_validation_flows.borrow()
+    }
+
+    pub fn post_inference_validation_callbacks(
+        &self,
+    ) -> std::cell::Ref<
+        '_,
+        Vec<
+            Box<
+                dyn for<'a> Fn(
+                        &'a Context<'cx>,
+                    )
+                        -> Result<(), flow_utils_concurrency::job_error::JobError>
+                    + 'cx,
+            >,
+        >,
+    > {
+        self.0.ccx.post_inference_validation_callbacks.borrow()
     }
 
     pub fn post_inference_projects_strict_boundary_import_pattern_opt_outs_validations(
@@ -1929,6 +1970,17 @@ impl<'cx> Context<'cx> {
         *self.0.ccx.errors.borrow_mut() = errors;
     }
 
+    /// Run [f] with the current error set snapshotted, then restore it.
+    /// Useful when a probe must call into machinery that can emit unrelated
+    /// errors as a side effect (e.g. concretization). The snapshot is
+    /// restored even if [f] returns an [Err].
+    pub fn with_suppressed_errors<T, E>(&self, f: impl FnOnce() -> Result<T, E>) -> Result<T, E> {
+        let saved = self.errors();
+        let r = f();
+        self.reset_errors(saved);
+        r
+    }
+
     pub fn add_error_suppressions(&self, suppressions: ErrorSuppressions) {
         self.0
             .ccx
@@ -2051,6 +2103,23 @@ impl<'cx> Context<'cx> {
             l,
             type_::UseT::new(type_::UseTInner::UseT(use_op, u)),
         );
+    }
+
+    pub fn add_post_inference_validation_callback(
+        &self,
+        f: Box<
+            dyn for<'a> Fn(
+                    &'a Context<'cx>,
+                )
+                    -> Result<(), flow_utils_concurrency::job_error::JobError>
+                + 'cx,
+        >,
+    ) {
+        self.0
+            .ccx
+            .post_inference_validation_callbacks
+            .borrow_mut()
+            .push(f);
     }
 
     pub fn add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validation(

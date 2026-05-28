@@ -172,8 +172,8 @@ module Operators = struct
     (* If we allow `==` on these two types. *)
     let equatable = function
       | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, (NumGeneralT _ | SingletonNumT _)))
-      | ( (DefT (_, (StrGeneralT _ | SingletonStrT _)) | StrUtilT _),
-          (DefT (_, (StrGeneralT _ | SingletonStrT _)) | StrUtilT _)
+      | ( (DefT (_, (StrGeneralT _ | SingletonStrT _)) | TemplateLiteralT _),
+          (DefT (_, (StrGeneralT _ | SingletonStrT _)) | TemplateLiteralT _)
         )
       | (DefT (_, (BoolGeneralT | SingletonBoolT _)), DefT (_, (BoolGeneralT | SingletonBoolT _)))
       | (DefT (_, (SymbolT | UniqueSymbolT _)), DefT (_, (SymbolT | UniqueSymbolT _))) ->

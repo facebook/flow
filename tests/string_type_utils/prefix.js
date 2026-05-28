@@ -43,9 +43,11 @@ type Dict = {+[DataProp]: unknown};
   x.at(0); // OK
 }
 
-// Only string literal prefixes are allowed
-type Err = StringPrefix<string>; // ERROR
-declare function err<T extends string>(x: StringPrefix<T>): void; // ERROR
+// Non-literal prefixes are accepted: `StringPrefix<string>` resolves to
+// `` `${string}${string}` `` which is just `string`; `StringPrefix<T>` works
+// for any bounded `T extends string`.
+type Err = StringPrefix<string>; // OK
+declare function err<T extends string>(x: StringPrefix<T>): void; // OK
 
 // Refinements works
 {
@@ -72,9 +74,9 @@ type DataFooProp = StringPrefix<'data-foo-'>;
 declare export const data: DataProp;
 
 // Type arg arity
-type NoArgs = StringPrefix;
-type ZeroTypeArgs = StringPrefix<>;
-type TooManyTypeArgs = StringPrefix<'foo', 'bar', 'baz'>;
+type NoArgs = StringPrefix; // ERROR
+type ZeroTypeArgs = StringPrefix<>; // ERROR
+type TooManyTypeArgs = StringPrefix<'foo', 'bar', 'baz'>; // ERROR
 
 // With remainder (second type arg)
 type Price = StringPrefix<'$', '1' | '2'>;
@@ -88,7 +90,7 @@ type Price = StringPrefix<'$', '1' | '2'>;
 {
   declare const x: Price;
   x as string; // OK
-  x as '$1' | '$2'; // ERROR: we don't support this
+  x as '$1' | '$2'; // OK (template literal eagerly resolves to '$1' | '$2')
 }
 {
   declare const x: StringPrefix<'foo'>;

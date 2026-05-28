@@ -1950,17 +1950,10 @@ pub struct AnnotTuple<Loc, T> {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct AnnotStringPrefix<Loc, T> {
+pub struct AnnotTemplateLiteral<Loc, T> {
     pub loc: Loc,
-    pub prefix: FlowSmolStr,
-    pub remainder: Option<T>,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct AnnotStringSuffix<Loc, T> {
-    pub loc: Loc,
-    pub suffix: FlowSmolStr,
-    pub remainder: Option<T>,
+    pub quasis: Vec<FlowSmolStr>,
+    pub types: Vec<T>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -2083,8 +2076,7 @@ pub enum Annot<Loc, T> {
     SingletonNumber(Box<(Loc, f64, FlowSmolStr)>),
     SingletonBigInt(Box<(Loc, Option<i64>, FlowSmolStr)>),
     SingletonBoolean(Box<(Loc, bool)>),
-    StringPrefix(Box<AnnotStringPrefix<Loc, T>>),
-    StringSuffix(Box<AnnotStringSuffix<Loc, T>>),
+    TemplateLiteral(Box<AnnotTemplateLiteral<Loc, T>>),
     Typeof(Box<AnnotTypeof<Loc, T>>),
     Bound(Box<AnnotBound<Loc>>),
     NoInfer(Box<T>),
@@ -2178,15 +2170,10 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
                 inner.0.hash(state);
                 inner.1.hash(state);
             }
-            Annot::StringPrefix(inner) => {
+            Annot::TemplateLiteral(inner) => {
                 inner.loc.hash(state);
-                inner.prefix.hash(state);
-                inner.remainder.hash(state);
-            }
-            Annot::StringSuffix(inner) => {
-                inner.loc.hash(state);
-                inner.suffix.hash(state);
-                inner.remainder.hash(state);
+                inner.quasis.hash(state);
+                inner.types.hash(state);
             }
             Annot::Typeof(inner) => {
                 inner.loc.hash(state);
@@ -2379,15 +2366,9 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::SingletonNumber(inner) => f_loc(cx, &inner.0),
             Annot::SingletonBigInt(inner) => f_loc(cx, &inner.0),
             Annot::SingletonBoolean(inner) => f_loc(cx, &inner.0),
-            Annot::StringPrefix(inner) => {
+            Annot::TemplateLiteral(inner) => {
                 f_loc(cx, &inner.loc);
-                if let Some(t) = &inner.remainder {
-                    f_t(cx, t);
-                }
-            }
-            Annot::StringSuffix(inner) => {
-                f_loc(cx, &inner.loc);
-                if let Some(t) = &inner.remainder {
+                for t in &inner.types {
                     f_t(cx, t);
                 }
             }
@@ -2677,16 +2658,13 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::SingletonBoolean(inner) => {
                 Annot::SingletonBoolean(Box::new((f_loc(cx, &inner.0), inner.1)))
             }
-            Annot::StringPrefix(inner) => Annot::StringPrefix(Box::new(AnnotStringPrefix {
-                loc: f_loc(cx, &inner.loc),
-                prefix: inner.prefix.dupe(),
-                remainder: inner.remainder.as_ref().map(|t| f_t(cx, t)),
-            })),
-            Annot::StringSuffix(inner) => Annot::StringSuffix(Box::new(AnnotStringSuffix {
-                loc: f_loc(cx, &inner.loc),
-                suffix: inner.suffix.dupe(),
-                remainder: inner.remainder.as_ref().map(|t| f_t(cx, t)),
-            })),
+            Annot::TemplateLiteral(inner) => {
+                Annot::TemplateLiteral(Box::new(AnnotTemplateLiteral {
+                    loc: f_loc(cx, &inner.loc),
+                    quasis: inner.quasis.clone(),
+                    types: inner.types.iter().map(|t| f_t(cx, t)).collect(),
+                }))
+            }
             Annot::Typeof(inner) => Annot::Typeof(Box::new(AnnotTypeof {
                 loc: f_loc(cx, &inner.loc),
                 qname: inner.qname.clone(),

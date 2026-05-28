@@ -82,6 +82,10 @@ type t =
       renders: t option;
     }
   | Renders of t * renders_kind
+  | TemplateLiteral of {
+      quasis: string list;
+      types: t list;
+    }
 
 (* Recursive variable *)
 and generic_t = symbol * gen_kind * t list option
@@ -275,14 +279,6 @@ and utility =
   | NonMaybeType of t
   | ObjKeyMirror of t
   | Class of t
-  | StringPrefix of {
-      prefix: string;
-      remainder: t option;
-    }
-  | StringSuffix of {
-      suffix: string;
-      remainder: t option;
-    }
   (* React utils *)
   | ReactElementConfigType of t
 
@@ -600,6 +596,7 @@ class ['A] comparator_ty =
       | Infer _ -> 28
       | Component _ -> 29
       | Renders _ -> 30
+      | TemplateLiteral _ -> 31
 
     method tag_of_decl _ =
       function
@@ -697,8 +694,6 @@ class ['A] comparator_ty =
       | Partial _ -> 23
       | Required _ -> 24
       | Enum _ -> 27
-      | StringPrefix _ -> 28
-      | StringSuffix _ -> 29
       | Omit _ -> 30
 
     method tag_of_polarity _ =
@@ -824,7 +819,8 @@ let mk_exact ty =
   | InlineInterface _
   | Infer _
   | Component _
-  | Renders _ ->
+  | Renders _
+  | TemplateLiteral _ ->
     ty
   (* Do not nest $Exact *)
   | Utility (Exact _) -> ty
@@ -862,8 +858,6 @@ let string_of_utility_ctor = function
   | NonMaybeType _ -> "NonNullable"
   | ObjKeyMirror _ -> "$KeyMirror"
   | Class _ -> "Class"
-  | StringPrefix _ -> "StringPrefix"
-  | StringSuffix _ -> "StringSuffix"
   | ReactElementConfigType _ -> "React$ElementConfig"
 
 let types_of_utility = function
@@ -879,12 +873,6 @@ let types_of_utility = function
   | NonMaybeType t -> Some [t]
   | ObjKeyMirror t -> Some [t]
   | Class t -> Some [t]
-  | StringPrefix { prefix = arg; remainder = None }
-  | StringSuffix { suffix = arg; remainder = None } ->
-    Some [StrLit (Reason.OrdinaryName arg)]
-  | StringPrefix { prefix = arg; remainder = Some t }
-  | StringSuffix { suffix = arg; remainder = Some t } ->
-    Some [StrLit (Reason.OrdinaryName arg); t]
   | ReactElementConfigType t -> Some [t]
 
 let string_of_prop_source = function

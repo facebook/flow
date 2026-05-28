@@ -249,7 +249,7 @@ class implicit_instantiation_literal_mapper ~singleton_action =
         | NullProtoT _
         | FunProtoBindT _
         | NamespaceT _
-        | StrUtilT _
+        | TemplateLiteralT _
         | AnyT _ ->
           t
 

@@ -3252,6 +3252,15 @@ and annot_with_loc opts scope tbls xs (loc, t) =
       let t = annot opts scope tbls xs argument in
       Annot (ReadOnlyArray (loc, t))
     | T.ReadOnly _ -> Annot (Any loc)
+    | T.TemplateLiteral { T.TemplateLiteral.quasis; types; comments = _ } when opts.tslib_syntax ->
+      let quasis_strs =
+        List.map
+          (fun (_, { T.TemplateLiteral.Element.value = { T.TemplateLiteral.Element.cooked; _ }; _ }) ->
+            cooked)
+          quasis
+      in
+      let ts = List.map (annot opts scope tbls xs) types in
+      Annot (TemplateLiteral { loc; quasis = quasis_strs; types = ts })
     | T.TemplateLiteral { T.TemplateLiteral.types; _ } ->
       List.iter (fun t -> ignore (annot opts scope tbls xs t)) types;
       Annot (Any loc)
@@ -4373,32 +4382,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReactElementConfig (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | "StringPrefix" ->
-    (match targs with
-    | Some (_, { arguments = [(loc, T.StringLiteral { Ast.StringLiteral.value = s; _ })]; _ }) ->
-      let loc = push_loc tbls loc in
-      Annot (StringPrefix { loc; prefix = s; remainder = None })
-    | Some
-        ( _,
-          { arguments = [(loc, T.StringLiteral { Ast.StringLiteral.value = s; _ }); remainder]; _ }
-        ) ->
-      let loc = push_loc tbls loc in
-      let remainder = Some (annot opts scope tbls xs remainder) in
-      Annot (StringPrefix { loc; prefix = s; remainder })
-    | _ -> Err (loc, CheckError))
-  | "StringSuffix" ->
-    (match targs with
-    | Some (_, { arguments = [(loc, T.StringLiteral { Ast.StringLiteral.value = s; _ })]; _ }) ->
-      let loc = push_loc tbls loc in
-      Annot (StringSuffix { loc; suffix = s; remainder = None })
-    | Some
-        ( _,
-          { arguments = [(loc, T.StringLiteral { Ast.StringLiteral.value = s; _ }); remainder]; _ }
-        ) ->
-      let loc = push_loc tbls loc in
-      let remainder = Some (annot opts scope tbls xs remainder) in
-      Annot (StringSuffix { loc; suffix = s; remainder })
-    | _ -> Err (loc, CheckError))
   | "$Flow$EnforceOptimized" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) -> annot opts scope tbls xs t

@@ -75,7 +75,6 @@ use flow_typing_type::type_::InstTypeInner;
 use flow_typing_type::type_::InstanceKind;
 use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::InstanceTInner;
-use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::LookupAction;
 use flow_typing_type::type_::LookupKind;
 use flow_typing_type::type_::LookupPropForSubtypingData;
@@ -97,7 +96,6 @@ use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::ReposUseTData;
-use flow_typing_type::type_::StrUtilOp;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisStatus;
 use flow_typing_type::type_::ThisTypeAppTData;
@@ -127,7 +125,6 @@ use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::property;
 use flow_typing_type::type_::react;
-use flow_typing_type::type_::str_module_t;
 use flow_typing_type::type_::type_or_type_desc;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::void;
@@ -138,6 +135,7 @@ use vec1::Vec1;
 use crate::flow_js::FlowJs;
 use crate::renders_kit;
 use crate::speculation_kit;
+use crate::template_literal_type;
 use crate::type_inference_hooks_js;
 
 fn flow_all_in_union<'cx>(
@@ -3456,17 +3454,17 @@ pub fn rec_sub_t<'cx>(
             )
         }
         (
-            TypeInner::StrUtilT {
+            TypeInner::TemplateLiteralT {
                 reason: reason_s,
-                op,
-                remainder,
+                quasis,
+                types,
             },
             TypeInner::KeysT(reason_op, o),
         ) => {
-            let l_new = Type::new(TypeInner::StrUtilT {
+            let l_new = Type::new(TypeInner::TemplateLiteralT {
                 reason: reason_s.dupe(),
-                op: op.dupe(),
-                remainder: remainder.dupe(),
+                quasis: quasis.to_vec(),
+                types: types.to_vec(),
             });
             let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
@@ -3491,11 +3489,11 @@ pub fn rec_sub_t<'cx>(
                 ..
             }),
             TypeInner::KeysT(reason_op, o),
-        ) if let TypeInner::StrUtilT { op, remainder, .. } = bound.deref() => {
-            let l_new = Type::new(TypeInner::StrUtilT {
+        ) if let TypeInner::TemplateLiteralT { quasis, types, .. } = bound.deref() => {
+            let l_new = Type::new(TypeInner::TemplateLiteralT {
                 reason: reason_s.dupe(),
-                op: op.dupe(),
-                remainder: remainder.dupe(),
+                quasis: quasis.to_vec(),
+                types: types.to_vec(),
             });
             let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
@@ -3945,6 +3943,13 @@ pub fn rec_sub_t<'cx>(
                 }
             }
         }
+        (TypeInner::TemplateLiteralT { quasis, types, .. }, TypeInner::UnionT(_, _))
+            if template_literal_type::try_resolve_to_strings(quasis, types, true).is_some() =>
+        {
+            template_literal_type::subtype_template_into_union(
+                cx, trace, use_op, l, u, quasis, types,
+            )
+        }
         (_, TypeInner::UnionT(r, rep)) => {
             // Try the branches of the union in turn, with the goal of selecting the
             // correct branch. This process is reused for intersections as well. See
@@ -4031,146 +4036,66 @@ pub fn rec_sub_t<'cx>(
             FlowJs::rec_flow_t(cx, trace, use_op, &null, u)
         }
 
-        // ***********
-        // StrUtilT
-        // ***********
-
-        // prefix
-        (
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrPrefix(prefix1),
-                ..
-            },
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrPrefix(prefix2),
-                remainder: None,
-                ..
-            },
-        ) if prefix1.starts_with(prefix2.as_str()) => Ok(()),
-        (
-            TypeInner::StrUtilT {
-                reason,
-                op: StrUtilOp::StrPrefix(prefix1),
-                remainder: remainder1,
-            },
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrPrefix(prefix2),
-                remainder: Some(remainder2),
-                ..
-            },
-        ) if prefix1 == prefix2 => {
-            let remainder1 = remainder1
-                .as_ref()
-                .duped()
-                .unwrap_or_else(|| str_module_t::why(reason.dupe()));
-            FlowJs::rec_flow_t(cx, trace, use_op, &remainder1, remainder2)
-        }
-        (
-            TypeInner::DefT(reason, ld),
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrPrefix(prefix),
-                remainder,
-                ..
-            },
-        ) if let DefTInner::SingletonStrT { value, .. } = ld.deref()
-            && value.as_str().starts_with(prefix.as_str()) =>
+        // Subtyping arm bodies live in template_literal_type; patterns and
+        // guards stay here so dispatch order remains visible.
+        (TypeInner::DefT(_, ld), TypeInner::TemplateLiteralT { quasis, types, .. })
+            if let DefTInner::SingletonStrT { value, .. } = ld.deref() =>
         {
-            let s = value.as_str();
-            flow_js_utils::update_lit_type_from_annot(cx, l);
-            if let Some(remainder) = remainder {
-                let chopped = &s[prefix.len()..];
-                let reason = reason
-                    .dupe()
-                    .replace_desc(VirtualReasonDesc::RStringWithoutPrefix {
-                        prefix: prefix.dupe(),
-                    });
-                let str_t = Type::new(TypeInner::DefT(
-                    reason,
-                    DefT::new(DefTInner::SingletonStrT {
-                        value: Name::new(chopped),
-                        from_annot: true,
-                    }),
-                ));
-                FlowJs::rec_flow_t(cx, trace, use_op, &str_t, remainder)?;
-            }
-            Ok(())
+            template_literal_type::subtype_str_lit_into_template(
+                Some(&|cx, r, t| FlowJs::possible_concrete_types_for_inspection(cx, r, t)),
+                cx,
+                trace,
+                use_op,
+                l,
+                u,
+                value.as_str(),
+                quasis,
+                types,
+            )
         }
-        // suffix
+        // TemplateLiteralT <: TemplateLiteralT: dispatch through the combined
+        // helper, which folds once and tries (in order) pairwise / prefix-
+        // extension / suffix-extension / wide-string. Falls through to
+        // subtype_template_to_other when none apply.
         (
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrSuffix(suffix1),
+            TypeInner::TemplateLiteralT {
+                reason: l_reason,
+                quasis: lq,
+                types: lt,
+            },
+            TypeInner::TemplateLiteralT {
+                quasis: rq,
+                types: rt,
                 ..
             },
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrSuffix(suffix2),
-                remainder: None,
-                ..
-            },
-        ) if suffix1.ends_with(suffix2.as_str()) => Ok(()),
+        ) => match template_literal_type::try_subtype_template_to_template(
+            cx,
+            trace,
+            use_op.dupe(),
+            l_reason,
+            u,
+            lq,
+            lt,
+            rq,
+            rt,
+        )? {
+            template_literal_type::TlToTlResult::Handled => Ok(()),
+            template_literal_type::TlToTlResult::NotApplicable => {
+                template_literal_type::subtype_template_to_other(
+                    cx, trace, use_op, l_reason, u, lq, lt,
+                )
+            }
+        },
         (
-            TypeInner::StrUtilT {
+            TypeInner::TemplateLiteralT {
                 reason,
-                op: StrUtilOp::StrSuffix(suffix1),
-                remainder: remainder1,
+                quasis,
+                types,
             },
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrSuffix(suffix2),
-                remainder: Some(remainder2),
-                ..
-            },
-        ) if suffix1 == suffix2 => {
-            let remainder1 = remainder1
-                .as_ref()
-                .duped()
-                .unwrap_or_else(|| str_module_t::why(reason.dupe()));
-            FlowJs::rec_flow_t(cx, trace, use_op, &remainder1, remainder2)
-        }
-        (
-            TypeInner::DefT(reason, ld),
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrSuffix(suffix),
-                remainder,
-                ..
-            },
-        ) if let DefTInner::SingletonStrT { value, .. } = ld.deref()
-            && value.as_str().ends_with(suffix.as_str()) =>
-        {
-            let s = value.as_str();
-            flow_js_utils::update_lit_type_from_annot(cx, l);
-            if let Some(remainder) = remainder {
-                let chopped = &s[..s.len() - suffix.len()];
-                let reason = reason
-                    .dupe()
-                    .replace_desc(VirtualReasonDesc::RStringWithoutSuffix {
-                        suffix: suffix.dupe(),
-                    });
-                let str_t = Type::new(TypeInner::DefT(
-                    reason,
-                    DefT::new(DefTInner::SingletonStrT {
-                        value: Name::new(chopped),
-                        from_annot: true,
-                    }),
-                ));
-                FlowJs::rec_flow_t(cx, trace, use_op, &str_t, remainder)?;
-            }
-            Ok(())
-        }
-        // both
-        (TypeInner::StrUtilT { reason, op, .. }, _) => {
-            let arg = match op {
-                StrUtilOp::StrPrefix(s) | StrUtilOp::StrSuffix(s) => s,
-            };
-            let literal_kind = if arg.is_empty() {
-                Literal::AnyLiteral
-            } else {
-                Literal::Truthy
-            };
-            let str_t = Type::new(TypeInner::DefT(
-                reason.dupe(),
-                DefT::new(DefTInner::StrGeneralT(literal_kind)),
-            ));
-            FlowJs::rec_flow_t(cx, trace, use_op, &str_t, u)
-        }
+            _,
+        ) => template_literal_type::subtype_template_to_other(
+            cx, trace, use_op, reason, u, quasis, types,
+        ),
 
         // When do we consider a polymorphic type <X:U> T to be a subtype of another
         // polymorphic type <X:U'> T'? This is the subject of a long line of

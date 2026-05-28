@@ -346,6 +346,8 @@ val post_inference_polarity_checks :
 
 val post_inference_validation_flows : t -> (Type.t * Type.use_t) list
 
+val post_inference_validation_callbacks : t -> (unit -> unit) list
+
 val post_inference_projects_strict_boundary_import_pattern_opt_outs_validations :
   t -> (ALoc.t * string * Flow_projects.t list) list
 
@@ -450,6 +452,11 @@ val add_error : t -> ALoc.t Flow_error.t -> unit
 
 val reset_errors : t -> Flow_error.ErrorSet.t -> unit
 
+(* Run [f] with the current error set snapshotted, then restore it. Useful
+   when a probe must call into machinery that can emit unrelated errors as a
+   side effect (e.g. concretization). *)
+val with_suppressed_errors : t -> (unit -> 'a) -> 'a
+
 val add_error_suppressions : t -> Error_suppressions.t -> unit
 
 val add_severity_covers : t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t -> unit
@@ -475,6 +482,8 @@ val add_post_inference_polarity_check :
 val add_post_inference_validation_flow : t -> Type.t -> Type.use_t -> unit
 
 val add_post_inference_subtyping_check : t -> Type.t -> Type.use_op -> Type.t -> unit
+
+val add_post_inference_validation_callback : t -> (unit -> unit) -> unit
 
 val add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validation :
   t -> ALoc.t -> string -> Flow_projects.t list -> unit

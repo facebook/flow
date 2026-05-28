@@ -27,9 +27,11 @@ type Percent = StringSuffix<'%'>;
   x.at(0); // OK
 }
 
-// Only string literal suffixes are allowed
-type Err = StringSuffix<string>; // ERROR
-declare function err<T extends string>(x: StringSuffix<T>): void; // ERROR
+// Non-literal suffixes are accepted: `StringSuffix<string>` resolves to
+// `` `${string}${string}` `` which is just `string`; `StringSuffix<T>` works
+// for any bounded `T extends string`.
+type Err = StringSuffix<string>; // OK
+declare function err<T extends string>(x: StringSuffix<T>): void; // OK
 
 // Refinements works
 {
@@ -57,9 +59,9 @@ type Bar = StringSuffix<'bar'>;
 declare export const percent: Percent;
 
 // Type arg arity
-type NoArgs = StringSuffix;
-type ZeroTypeArgs = StringSuffix<>;
-type TooManyTypeArgs = StringSuffix<'foo', 'bar', 'baz'>;
+type NoArgs = StringSuffix; // ERROR
+type ZeroTypeArgs = StringSuffix<>; // ERROR
+type TooManyTypeArgs = StringSuffix<'foo', 'bar', 'baz'>; // ERROR
 
 // With remainder (second type arg)
 type Exclamation = StringSuffix<'!', 'woo' | 'yay'>;
@@ -73,7 +75,7 @@ type Exclamation = StringSuffix<'!', 'woo' | 'yay'>;
 {
   declare const x: Exclamation;
   x as string; // OK
-  x as 'woo!' | 'yay!'; // ERROR: we don't support this
+  x as 'woo!' | 'yay!'; // OK (template literal eagerly resolves to 'woo!' | 'yay!')
 }
 {
   declare const x: StringSuffix<'!'>;

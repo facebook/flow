@@ -2480,8 +2480,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInvalidExtends(VirtualReason<L>),
 
-    EStrUtilTypeNonLiteralArg(L),
-
     EExportsAnnot(L),
 
     EInvalidConstructor(VirtualReason<L>),
@@ -2771,6 +2769,11 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         kind: InvalidMappedTypeErrorKind,
     },
 
+    EInvalidTemplateLiteralType {
+        loc: L,
+        kind: InvalidTemplateLiteralTypeErrorKind,
+    },
+
     EDuplicateComponentProp(Box<EDuplicateComponentPropData<L>>),
 
     ERefComponentProp(Box<ERefComponentPropData<L>>),
@@ -3029,6 +3032,23 @@ pub enum InvalidMappedTypeErrorKind {
     ExtraProperties,
     ExplicitExactOrInexact,
     VarianceOnArrayInput,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum InvalidTemplateLiteralTypeErrorKind {
+    TooComplex,
+    InvalidPlaceholderType,
 }
 
 #[derive(
@@ -4031,8 +4051,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EInvalidExtends(r) => EInvalidExtends(map_reason(r)),
 
-            EStrUtilTypeNonLiteralArg(loc) => EStrUtilTypeNonLiteralArg(f(loc)),
-
             EExportsAnnot(loc) => EExportsAnnot(f(loc)),
 
             EUnsupportedKeyInObject {
@@ -4872,6 +4890,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             EInvalidMappedType { loc, kind } => EInvalidMappedType { loc: f(loc), kind },
+            EInvalidTemplateLiteralType { loc, kind } => {
+                EInvalidTemplateLiteralType { loc: f(loc), kind }
+            }
 
             EDuplicateComponentProp(box EDuplicateComponentPropData { spread, duplicates }) => {
                 EDuplicateComponentProp(Box::new(EDuplicateComponentPropData {
@@ -5743,8 +5764,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             Self::EReactIntrinsicOverlap(box EReactIntrinsicOverlapData { def, .. }) => {
                 Some(def.dupe())
             }
-            Self::EStrUtilTypeNonLiteralArg(loc) => Some(loc.dupe()),
-
             Self::EInvalidPrototype(box (loc, _))
             | Self::EUntypedTypeImport(box (loc, _))
             | Self::EUntypedImport(box (loc, _))
@@ -5806,6 +5825,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::ETrivialRecursiveDefinition(box (loc, _))
             | Self::EInvalidCatchParameterAnnotation { loc, .. }
             | Self::EInvalidMappedType { loc, .. }
+            | Self::EInvalidTemplateLiteralType { loc, .. }
             | Self::EReferenceInAnnotation(box (loc, _, _))
             | Self::EReferenceInDefault(box (_, _, loc))
             | Self::EDuplicateComponentProp(box EDuplicateComponentPropData {
@@ -7368,6 +7388,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(msg)
             }
 
+            ErrorMessage::EInvalidTemplateLiteralType { kind, .. } => {
+                let msg = match kind {
+                    InvalidTemplateLiteralTypeErrorKind::TooComplex => {
+                        Message::MessageInvalidTemplateLiteralTypeComplexity
+                    }
+                    InvalidTemplateLiteralTypeErrorKind::InvalidPlaceholderType => {
+                        Message::MessageInvalidTemplateLiteralTypePlaceholder
+                    }
+                };
+                Normal(msg)
+            }
+
             ErrorMessage::EDuplicateComponentProp(box EDuplicateComponentPropData {
                 spread,
                 duplicates,
@@ -7924,10 +7956,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     use_op,
                     explanation: None,
                 }))
-            }
-
-            ErrorMessage::EStrUtilTypeNonLiteralArg(_) => {
-                Normal(Message::MessageCannotUseStrUtilType)
             }
 
             ErrorMessage::EUnsupportedKeyInObject {
@@ -9361,7 +9389,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Some(IncompatibleType)
             }
             ErrorMessage::EPrivateLookupFailed { .. } => Some(PropMissing),
-            ErrorMessage::EStrUtilTypeNonLiteralArg { .. } => Some(InvalidTypeArg),
             ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 use_op, ..
             }) => {
@@ -9501,6 +9528,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Some(InvalidDeclaration)
             }
             ErrorMessage::EInvalidMappedType { .. } => Some(InvalidMappedType),
+            ErrorMessage::EInvalidTemplateLiteralType { .. } => Some(InvalidTemplateLiteralType),
             ErrorMessage::EDuplicateComponentProp(box EDuplicateComponentPropData { .. }) => {
                 Some(InvalidComponentProp)
             }

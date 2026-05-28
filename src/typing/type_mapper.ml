@@ -110,12 +110,12 @@ class virtual ['a] t =
           t
         else
           KeysT (r, t'')
-      | StrUtilT { reason; op; remainder } ->
-        let remainder' = OptionUtils.ident_map (self#type_ cx map_cx) remainder in
-        if remainder' == remainder then
+      | TemplateLiteralT { reason; quasis; types } ->
+        let types' = ListUtils.ident_map (self#type_ cx map_cx) types in
+        if types' == types then
           t
         else
-          StrUtilT { reason; op; remainder = remainder' }
+          TemplateLiteralT { reason; quasis; types = types' }
       | AnnotT (r, t', use_desc) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

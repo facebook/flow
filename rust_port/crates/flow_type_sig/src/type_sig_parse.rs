@@ -6285,6 +6285,17 @@ fn annot_with_loc<'arena, 'ast>(
             }
             _ => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
         },
+        TypeInner::TemplateLiteral { inner, .. } if opts.tslib_syntax => {
+            let quasis = inner.quasis.iter().map(|q| q.value.cooked.dupe()).collect();
+            let types = inner
+                .types
+                .iter()
+                .map(|t| annot(opts, scope, scopes, tbls, xs, t))
+                .collect();
+            Parsed::Annot(Box::new(ParsedAnnot::TemplateLiteral(Box::new(
+                AnnotTemplateLiteral { loc, quasis, types },
+            ))))
+        }
         TypeInner::TemplateLiteral { inner, .. } => {
             for t in inner.types.iter() {
                 annot(opts, scope, scopes, tbls, xs, t);
@@ -8145,100 +8156,6 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
                 Parsed::Annot(Box::new(ParsedAnnot::ReactElementConfig(Box::new((
                     loc, t,
                 )))))
-            }
-            _ => Parsed::Err(loc, Errno::CheckError),
-        },
-        "StringPrefix" => match targs {
-            Some(type_args) if type_args.arguments.len() == 1 => {
-                match type_args.arguments[0].deref() {
-                    TypeInner::StringLiteral {
-                        loc: arg_loc,
-                        literal,
-                    } => {
-                        let loc = tbls.push_loc(arg_loc.clone());
-                        Parsed::Annot(Box::new(ParsedAnnot::StringPrefix(Box::new(
-                            AnnotStringPrefix {
-                                loc,
-                                prefix: literal.value.dupe(),
-                                remainder: None,
-                            },
-                        ))))
-                    }
-                    _ => Parsed::Err(loc, Errno::CheckError),
-                }
-            }
-            Some(type_args) if type_args.arguments.len() == 2 => {
-                match type_args.arguments[0].deref() {
-                    TypeInner::StringLiteral {
-                        loc: arg_loc,
-                        literal,
-                    } => {
-                        let loc = tbls.push_loc(arg_loc.clone());
-                        let remainder = Some(annot(
-                            opts,
-                            scope,
-                            scopes,
-                            tbls,
-                            xs,
-                            &type_args.arguments[1],
-                        ));
-                        Parsed::Annot(Box::new(ParsedAnnot::StringPrefix(Box::new(
-                            AnnotStringPrefix {
-                                loc,
-                                prefix: literal.value.dupe(),
-                                remainder,
-                            },
-                        ))))
-                    }
-                    _ => Parsed::Err(loc, Errno::CheckError),
-                }
-            }
-            _ => Parsed::Err(loc, Errno::CheckError),
-        },
-        "StringSuffix" => match targs {
-            Some(type_args) if type_args.arguments.len() == 1 => {
-                match type_args.arguments[0].deref() {
-                    TypeInner::StringLiteral {
-                        loc: arg_loc,
-                        literal,
-                    } => {
-                        let loc = tbls.push_loc(arg_loc.clone());
-                        Parsed::Annot(Box::new(ParsedAnnot::StringSuffix(Box::new(
-                            AnnotStringSuffix {
-                                loc,
-                                suffix: literal.value.dupe(),
-                                remainder: None,
-                            },
-                        ))))
-                    }
-                    _ => Parsed::Err(loc, Errno::CheckError),
-                }
-            }
-            Some(type_args) if type_args.arguments.len() == 2 => {
-                match type_args.arguments[0].deref() {
-                    TypeInner::StringLiteral {
-                        loc: arg_loc,
-                        literal,
-                    } => {
-                        let loc = tbls.push_loc(arg_loc.clone());
-                        let remainder = Some(annot(
-                            opts,
-                            scope,
-                            scopes,
-                            tbls,
-                            xs,
-                            &type_args.arguments[1],
-                        ));
-                        Parsed::Annot(Box::new(ParsedAnnot::StringSuffix(Box::new(
-                            AnnotStringSuffix {
-                                loc,
-                                suffix: literal.value.dupe(),
-                                remainder,
-                            },
-                        ))))
-                    }
-                    _ => Parsed::Err(loc, Errno::CheckError),
-                }
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },

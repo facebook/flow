@@ -307,7 +307,7 @@ where
 
 Found exact match 'Array' defined as a library definition (no need to import) with type `class Array<T>` 
 where
-'Array' is defined at [LIB] prelude.js:30:15-19
+'Array' is defined at [LIB] core.js:1025:15-19
 
 
 === Enums ===
@@ -484,12 +484,16 @@ Found exact match 'RequiredUser' defined at complex_types.js:19:6,19:17 with typ
 where
 'RequiredUser' is defined at complex_types.js:19:6-17
 
-Found exact match 'UserSummary' defined at complex_types.js:22:6,22:16 with type `type UserSummary = any (implicit)` 
+Found exact match 'UserSummary' defined at complex_types.js:22:6,22:16 with type `type UserSummary = Pick<User, "name" | "email">` 
 where
+'Pick' is defined at [LIB] core.js:3182:6-9
+'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
 'UserSummary' is defined at complex_types.js:22:6-16
 
-Found exact match 'UserWithoutEmail' defined at complex_types.js:25:6,25:21 with type `type UserWithoutEmail = any (implicit)` 
+Found exact match 'UserWithoutEmail' defined at complex_types.js:25:6,25:21 with type `type UserWithoutEmail = Omit<User, "email">` 
 where
+'Omit' is defined at [LIB] core.js:3187:6-9
+'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
 'UserWithoutEmail' is defined at complex_types.js:25:6-21
 
 Found exact match 'UserKeys' defined at complex_types.js:28:6,28:13 with type `type UserKeys = "age" | "email" | "isAdmin" | "name"` 
@@ -501,8 +505,9 @@ where
 'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
 'UserValues' is defined at complex_types.js:29:6-15
 
-Found exact match 'StatusMap' defined at complex_types.js:32:6,32:14 with type `type StatusMap = any (implicit)` 
+Found exact match 'StatusMap' defined at complex_types.js:32:6,32:14 with type `type StatusMap = Record<"active" | "inactive" | "pending", number>` 
 where
+'Record' is defined at [LIB] core.js:3193:6-11
 'StatusMap' is defined at complex_types.js:32:6-14
 
 
@@ -516,22 +521,30 @@ where
 'DefinitelyString' is defined at complex_types.js:36:6-21
 'MaybeString' is defined at complex_types.js:35:6-16 = ?string
 
-Found exact match 'ActiveStatus' defined at complex_types.js:40:6,40:17 with type `type ActiveStatus = any (implicit)` 
+Found exact match 'ActiveStatus' defined at complex_types.js:40:6,40:17 with type `type ActiveStatus = Exclude<AllStatus, "deleted">` 
 where
 'ActiveStatus' is defined at complex_types.js:40:6-17
+'AllStatus' is defined at complex_types.js:39:6-14 = "active" | "inactive" | "pending" | "deleted"
+'Exclude' is defined at [LIB] core.js:3161:6-12
 
-Found exact match 'DangerStatus' defined at complex_types.js:41:6,41:17 with type `type DangerStatus = any (implicit)` 
+Found exact match 'DangerStatus' defined at complex_types.js:41:6,41:17 with type `type DangerStatus = Extract<AllStatus, "inactive" | "deleted">` 
 where
+'AllStatus' is defined at complex_types.js:39:6-14 = "active" | "inactive" | "pending" | "deleted"
 'DangerStatus' is defined at complex_types.js:41:6-17
+'Extract' is defined at [LIB] core.js:3164:6-12
 
 
 === ReturnType, Parameters, Class ===
-Found exact match 'SampleReturn' defined at complex_types.js:45:6,45:17 with type `type SampleReturn = any (implicit)` 
+Found exact match 'SampleReturn' defined at complex_types.js:45:6,45:17 with type `type SampleReturn = ReturnType<SampleFn>` 
 where
+'ReturnType' is defined at [LIB] core.js:3151:6-15
+'SampleFn' is defined at complex_types.js:44:6-13 = (x: string, y: number) => boolean
 'SampleReturn' is defined at complex_types.js:45:6-17
 
-Found exact match 'SampleParams' defined at complex_types.js:46:6,46:17 with type `type SampleParams = any (implicit)` 
+Found exact match 'SampleParams' defined at complex_types.js:46:6,46:17 with type `type SampleParams = Parameters<SampleFn>` 
 where
+'Parameters' is defined at [LIB] core.js:3156:6-15
+'SampleFn' is defined at complex_types.js:44:6-13 = (x: string, y: number) => boolean
 'SampleParams' is defined at complex_types.js:46:6-17
 
 Found exact match 'AnimalClass' defined at complex_types.js:55:6,55:16 with type `type AnimalClass = Class<Animal>` 
@@ -580,13 +593,13 @@ where
 === Promise Types ===
 Found exact match 'StringPromise' defined at complex_types.js:79:6,79:18 with type `type StringPromise = Promise<string>` 
 where
-'Promise' is defined at [LIB] prelude.js:46:15-21
+'Promise' is defined at [LIB] core.js:2285:15-21
 'StringPromise' is defined at complex_types.js:79:6-18
 
 Found exact match 'NestedPromise' defined at complex_types.js:80:6,80:18 with type `type NestedPromise = Promise<Promise<number>>` 
 where
 'NestedPromise' is defined at complex_types.js:80:6-18
-'Promise' is defined at [LIB] prelude.js:46:15-21
+'Promise' is defined at [LIB] core.js:2285:15-21
 
 
 === Readonly Collections ===
@@ -594,13 +607,15 @@ Found exact match 'ReadOnlyArray_t' defined at complex_types.js:84:6,84:20 with 
 where
 'ReadOnlyArray_t' is defined at complex_types.js:84:6-20
 
-Found exact match 'ReadOnlyMap_t' defined at complex_types.js:85:6,85:18 with type `type ReadOnlyMap_t = any (implicit)` 
+Found exact match 'ReadOnlyMap_t' defined at complex_types.js:85:6,85:18 with type `type ReadOnlyMap_t = ReadonlyMap<string, number>` 
 where
 'ReadOnlyMap_t' is defined at complex_types.js:85:6-18
+'ReadonlyMap' is defined at [LIB] core.js:3216:6-16
 
-Found exact match 'ReadOnlySet_t' defined at complex_types.js:86:6,86:18 with type `type ReadOnlySet_t = any (implicit)` 
+Found exact match 'ReadOnlySet_t' defined at complex_types.js:86:6,86:18 with type `type ReadOnlySet_t = ReadonlySet<string>` 
 where
 'ReadOnlySet_t' is defined at complex_types.js:86:6-18
+'ReadonlySet' is defined at [LIB] core.js:3218:6-16
 
 
 === Interfaces ===
@@ -666,7 +681,7 @@ where
 === Conditional Types ===
 Found exact match 'UnwrapPromise' defined at complex_types.js:125:6,125:18 with type `type UnwrapPromise<T> = T extends Promise<infer V> ? V : T` 
 where
-'Promise' is defined at [LIB] prelude.js:46:15-21
+'Promise' is defined at [LIB] core.js:2285:15-21
 'UnwrapPromise' is defined at complex_types.js:125:6-18
 'V' is defined at complex_types.js:125:49
 
@@ -685,14 +700,15 @@ Found exact match 'Middleware' defined at complex_types.js:143:6,143:15 with typ
 where
 'Middleware' is defined at complex_types.js:143:6-15
 
-Found exact match 'Callback' defined at complex_types.js:144:6,144:13 with type `type Callback<T> = (error: any | null, result: T) => void` 
+Found exact match 'Callback' defined at complex_types.js:144:6,144:13 with type `type Callback<T> = (error: Error | null, result: T) => void` 
 where
 'Callback' is defined at complex_types.js:144:6-13
+'Error' is defined at [LIB] core.js:1776:15-19
 
 Found exact match 'AsyncFn' defined at complex_types.js:145:6,145:12 with type `type AsyncFn<T> = () => Promise<T>` 
 where
 'AsyncFn' is defined at complex_types.js:145:6-12
-'Promise' is defined at [LIB] prelude.js:46:15-21
+'Promise' is defined at [LIB] core.js:2285:15-21
 
 
 === Nested/Deep Object Types ===
@@ -725,13 +741,14 @@ Found exact match 'ComplexComponent' defined at complex_types.js:175:11,175:26 w
 ```
 component ComplexComponent(
   config: DeepConfig,
-  result: Result<string, any>,
+  result: Result<string, Error>,
   user: ReadOnlyUser
 )
 ```
 where
 'ComplexComponent' is defined at complex_types.js:175:1,179:1
 'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
+'Error' is defined at [LIB] core.js:1776:15-19
 'ReadOnlyUser' is defined at complex_types.js:13:6-17 = Readonly<User>
 'Result' is defined at complex_types.js:110:6-11
 
@@ -761,14 +778,18 @@ where
 Found exact match 'DataAttr' defined at complex_types.js:199:6,199:13 with type `type DataAttr = StringPrefix<"data-">` 
 where
 'DataAttr' is defined at complex_types.js:199:6-13
+'StringPrefix' is defined at [LIB] core.js:3204:6-17
 
 Found exact match 'ExclaimStr' defined at complex_types.js:200:6,200:15 with type `type ExclaimStr = StringSuffix<"!">` 
 where
 'ExclaimStr' is defined at complex_types.js:200:6-15
+'StringSuffix' is defined at [LIB] core.js:3213:6-17
 
 Found exact match 'CSSVar' defined at complex_types.js:201:6,201:11 with type `type CSSVar = StringPrefix<"var(--"> & StringSuffix<")">` 
 where
 'CSSVar' is defined at complex_types.js:201:6-11
+'StringPrefix' is defined at [LIB] core.js:3204:6-17
+'StringSuffix' is defined at [LIB] core.js:3213:6-17
 
 
 === Mapped Types over Tuples ===
@@ -796,13 +817,14 @@ Found exact match 'ComplexComponent' defined at complex_types.js:175:1,179:1 wit
 ```
 component ComplexComponent(
   config: DeepConfig,
-  result: Result<string, any>,
+  result: Result<string, Error>,
   user: ReadOnlyUser
 )
 ```
 where
 'ComplexComponent' is defined at complex_types.js:175:1,179:1
 'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
+'Error' is defined at [LIB] core.js:1776:15-19
 'ReadOnlyUser' is defined at complex_types.js:13:6-17 = Readonly<User>
 'Result' is defined at complex_types.js:110:6-11
 

@@ -391,6 +391,40 @@ fn type_impl<L: Dupe>(
                 type_with_parens(opts, depth, t.as_ref(), size),
             ])
         }
+
+        Ty::TemplateLiteral { quasis, types } => {
+            fn escape_quasi(s: &str) -> String {
+                let bytes = s.as_bytes();
+                let mut out = String::with_capacity(s.len());
+                let mut i = 0;
+                while i < bytes.len() {
+                    let c = bytes[i] as char;
+                    match c {
+                        '\\' => out.push_str("\\\\"),
+                        '`' => out.push_str("\\`"),
+                        '$' if i + 1 < bytes.len() && bytes[i + 1] as char == '{' => {
+                            out.push_str("\\$")
+                        }
+                        _ => out.push(c),
+                    }
+                    i += 1;
+                }
+                out
+            }
+            let mut parts = vec![LayoutNode::atom("`".to_string())];
+            let mut quasis_iter = quasis.iter();
+            if let Some(q) = quasis_iter.next() {
+                parts.push(LayoutNode::atom(escape_quasi(q)));
+            }
+            for (t, q) in types.iter().zip(quasis_iter) {
+                parts.push(LayoutNode::atom("${".to_string()));
+                parts.push(type_impl(opts, depth, t.as_ref(), size));
+                parts.push(LayoutNode::atom("}".to_string()));
+                parts.push(LayoutNode::atom(escape_quasi(q)));
+            }
+            parts.push(LayoutNode::atom("`".to_string()));
+            layout::fuse(parts)
+        }
     }
 }
 

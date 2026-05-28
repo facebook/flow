@@ -356,6 +356,30 @@ impl Serializer {
                 loc: LOC_NONE,
                 inner: Arc::new(self.renders(t, *kind)),
             }),
+            Ty::TemplateLiteral { quasis, types } => {
+                let last = quasis.len().saturating_sub(1);
+                let quasis_ast: Arc<[_]> = quasis
+                    .iter()
+                    .enumerate()
+                    .map(|(i, q)| ast::types::type_template_literal::Element {
+                        loc: LOC_NONE,
+                        value: ast::types::type_template_literal::Value {
+                            raw: q.dupe(),
+                            cooked: q.dupe(),
+                        },
+                        tail: i == last,
+                    })
+                    .collect();
+                let types_ast: Arc<[_]> = types.iter().map(|t| self.type_(t)).collect();
+                ast::types::Type::new(TypeInner::TemplateLiteral {
+                    loc: LOC_NONE,
+                    inner: Arc::new(ast::types::TypeTemplateLiteral {
+                        quasis: quasis_ast,
+                        types: types_ast,
+                        comments: None,
+                    }),
+                })
+            }
         }
     }
 

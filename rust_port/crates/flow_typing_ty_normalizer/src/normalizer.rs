@@ -1471,26 +1471,19 @@ mod type_converter {
                     Some(t),
                 )),
             },
-            TypeInner::StrUtilT { op, remainder, .. } => {
-                use flow_typing_type::type_::StrUtilOp;
-                let remainder_ty = match remainder {
-                    Some(t) => Some(type__::<I>(env, state, None, t)?),
-                    None => None,
-                };
-                match op {
-                    StrUtilOp::StrPrefix(prefix) => {
-                        Ok(Arc::new(ty::Ty::Utility(ty::Utility::StringPrefix {
-                            prefix: prefix.clone(),
-                            remainder: remainder_ty.clone(),
-                        })))
-                    }
-                    StrUtilOp::StrSuffix(suffix) => {
-                        Ok(Arc::new(ty::Ty::Utility(ty::Utility::StringSuffix {
-                            suffix: suffix.clone(),
-                            remainder: remainder_ty,
-                        })))
-                    }
-                }
+            TypeInner::TemplateLiteralT {
+                reason: _,
+                quasis,
+                types,
+            } => {
+                let norm_types: Result<Vec<_>, _> = types
+                    .iter()
+                    .map(|t| type__::<I>(env, state, None, t))
+                    .collect();
+                Ok(Arc::new(ty::Ty::TemplateLiteral {
+                    quasis: quasis.clone().into(),
+                    types: norm_types?.into(),
+                }))
             }
             TypeInner::MaybeT(_, inner_t) => maybe_t(type__::<I>, env, state, id, inner_t),
             TypeInner::OptionalT { type_, .. } => optional_t(type__::<I>, env, state, id, type_),

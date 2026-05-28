@@ -212,6 +212,11 @@ type component_t = {
   mutable post_inference_polarity_checks:
     (Type.typeparam Subst_name.Map.t * Polarity.t * Type.t) list;
   mutable post_inference_validation_flows: (Type.t * Type.use_t) list;
+  (* Arbitrary deferred validation thunks. Run after main inference (when
+     Flow_js is fully available), so a thunk can concretize types and emit
+     context-specific errors that don't fit a simple subtyping flow. The
+     thunk is expected to close over the Context.t it needs. *)
+  mutable post_inference_validation_callbacks: (unit -> unit) list;
   mutable post_inference_projects_strict_boundary_import_pattern_opt_outs_validations:
     (ALoc.t * string * Flow_projects.t list) list;
   (* Supports interface declaration merging. When two or more
@@ -482,6 +487,7 @@ let make_ccx () =
     post_component_tvar_forcing_states = [];
     post_inference_polarity_checks = [];
     post_inference_validation_flows = [];
+    post_inference_validation_callbacks = [];
     post_inference_projects_strict_boundary_import_pattern_opt_outs_validations = [];
     merging_interface_field_types = Hashtbl.create 0;
     merging_interface_typeparams = Hashtbl.create 0;
@@ -805,7 +811,7 @@ let is_colon_extends_deprecated cx =
 
 let ts_utility_syntax _cx = true
 
-let tslib_syntax cx = cx.metadata.tslib_syntax
+let tslib_syntax cx = cx.metadata.tslib_syntax || File_key.is_lib_file cx.file
 
 let assert_operator_enabled cx = Options.AssertOperator.usable cx.metadata.assert_operator
 
@@ -825,6 +831,8 @@ let post_component_tvar_forcing_states cx =
 let post_inference_polarity_checks cx = cx.ccx.post_inference_polarity_checks
 
 let post_inference_validation_flows cx = cx.ccx.post_inference_validation_flows
+
+let post_inference_validation_callbacks cx = cx.ccx.post_inference_validation_callbacks
 
 let post_inference_projects_strict_boundary_import_pattern_opt_outs_validations cx =
   cx.ccx.post_inference_projects_strict_boundary_import_pattern_opt_outs_validations
@@ -1051,6 +1059,10 @@ let add_error cx error = cx.ccx.errors <- Flow_error.ErrorSet.add error cx.ccx.e
 
 let reset_errors cx errors = cx.ccx.errors <- errors
 
+let with_suppressed_errors cx f =
+  let saved = cx.ccx.errors in
+  Exception.protect ~f ~finally:(fun () -> cx.ccx.errors <- saved)
+
 let add_error_suppressions cx suppressions =
   cx.ccx.error_suppressions <- Error_suppressions.union suppressions cx.ccx.error_suppressions
 
@@ -1095,6 +1107,9 @@ let add_post_inference_validation_flow cx t use_t =
 
 let add_post_inference_subtyping_check cx l use_op u =
   add_post_inference_validation_flow cx l (Type.UseT (use_op, u))
+
+let add_post_inference_validation_callback cx f =
+  cx.ccx.post_inference_validation_callbacks <- f :: cx.ccx.post_inference_validation_callbacks
 
 let add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validation
     cx l import_specifier projects =

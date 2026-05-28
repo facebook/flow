@@ -806,21 +806,9 @@ module Make (I : INPUT) : S = struct
       | DefT (_, SingletonStrT { value = lit; _ }) -> return (Ty.StrLit lit)
       | DefT (_, SingletonBoolT { value = lit; _ }) -> return (Ty.BoolLit lit)
       | DefT (_, SingletonBigIntT { value = (_, lit); _ }) -> return (Ty.BigIntLit lit)
-      | StrUtilT { reason = _; op; remainder = None } ->
-        return
-          (Ty.Utility
-             (match op with
-             | StrPrefix prefix -> Ty.StringPrefix { prefix; remainder = None }
-             | StrSuffix suffix -> Ty.StringSuffix { suffix; remainder = None })
-          )
-      | StrUtilT { reason = _; op; remainder = Some remainder } ->
-        let%bind remainder = type__ ~env remainder in
-        return
-          (Ty.Utility
-             (match op with
-             | StrPrefix prefix -> Ty.StringPrefix { prefix; remainder = Some remainder }
-             | StrSuffix suffix -> Ty.StringSuffix { suffix; remainder = Some remainder })
-          )
+      | TemplateLiteralT { reason = _; quasis; types } ->
+        let%bind norm_types = mapM (type__ ~env) types in
+        return (Ty.TemplateLiteral { quasis; types = norm_types })
       | MaybeT (_, t) -> maybe_t ~env ?id ~cont:type__ t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:type__ t
       | DefT (_, FunT (static, f)) ->

@@ -518,15 +518,10 @@ type ('loc, 'a) annot =
   | SingletonNumber of 'loc * float * string
   | SingletonBigInt of 'loc * int64 option * string
   | SingletonBoolean of 'loc * bool
-  | StringPrefix of {
+  | TemplateLiteral of {
       loc: 'loc;
-      prefix: string;
-      remainder: 'a option;
-    }
-  | StringSuffix of {
-      loc: 'loc;
-      suffix: string;
-      remainder: 'a option;
+      quasis: string list;
+      types: 'a list;
     }
   | Typeof of {
       loc: 'loc;

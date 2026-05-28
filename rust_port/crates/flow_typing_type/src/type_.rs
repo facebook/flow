@@ -266,11 +266,11 @@ pub enum TypeInner {
     },
     /// collects the keys of an object
     KeysT(Reason, Type),
-    /// advanced string types
-    StrUtilT {
+    /// template literal types, e.g. `hello ${string}`
+    TemplateLiteralT {
         reason: Reason,
-        op: StrUtilOp,
-        remainder: Option<Type>,
+        quasis: Vec<FlowSmolStr>,
+        types: Vec<Type>,
     },
     /// annotations
     /// A type that annotates a storage location performs two functions:
@@ -681,12 +681,6 @@ impl TypeDestructorT {
     pub fn ptr_eq(&self, other: &TypeDestructorT) -> bool {
         Rc::ptr_eq(&self.0, &other.0)
     }
-}
-
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum StrUtilOp {
-    StrPrefix(FlowSmolStr),
-    StrSuffix(FlowSmolStr),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -10724,7 +10718,7 @@ pub fn string_of_ctor(t: &Type) -> &'static str {
         TypeInner::FunProtoBindT(_) => "FunProtoBindT",
         TypeInner::GenericT(..) => "GenericT",
         TypeInner::KeysT(_, _) => "KeysT",
-        TypeInner::StrUtilT { .. } => "StrUtilT",
+        TypeInner::TemplateLiteralT { .. } => "TemplateLiteralT",
         TypeInner::NamespaceT(_) => "NamespaceT",
         TypeInner::NullProtoT(_) => "NullProtoT",
         TypeInner::ObjProtoT(_) => "ObjProtoT",

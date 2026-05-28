@@ -304,7 +304,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
   | Conditional _
   | Component _
   | Infer _
-  | Renders _ ->
+  | Renders _
+  | TemplateLiteral _ ->
     (NameUtils.Map.empty, [])
 
 type ty_members = {

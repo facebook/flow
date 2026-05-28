@@ -18,5 +18,6 @@ pub mod renders_kit;
 pub mod slice_utils;
 pub mod speculation_kit;
 pub mod subtyping_kit;
+pub mod template_literal_type;
 pub mod tvar_resolver;
 pub mod type_inference_hooks_js;

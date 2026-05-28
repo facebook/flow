@@ -110,9 +110,9 @@ fn check_polarity_impl<'cx>(
         TypeInner::OptionalT { type_, .. } | TypeInner::MaybeT(_, type_) => {
             check_polarity_impl(cx, trace, seen, tparams, polarity, type_)?;
         }
-        TypeInner::StrUtilT { remainder, .. } => {
-            if let Some(inner_t) = remainder {
-                check_polarity_impl(cx, trace, seen, tparams, polarity, inner_t)?;
+        TypeInner::TemplateLiteralT { types, .. } => {
+            for t in types {
+                check_polarity_impl(cx, trace, seen, tparams, polarity, t)?;
             }
         }
         TypeInner::NamespaceT(ns) => {

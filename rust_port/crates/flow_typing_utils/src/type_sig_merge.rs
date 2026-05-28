@@ -1768,47 +1768,13 @@ fn merge_annot<'cx>(
                 }),
             ))
         }
-        Annot::StringPrefix(inner) => {
-            let AnnotStringPrefix {
-                loc,
-                prefix,
-                remainder,
-            } = inner.as_ref();
-            let reason = reason::mk_reason(
-                RStringPrefix {
-                    prefix: prefix.dupe(),
-                },
-                loc.dupe(),
-            );
-            let remainder = remainder
-                .as_ref()
-                .map(|t| merge_impl(env, cx, file, t, false, false));
-            Type::new(type_::TypeInner::StrUtilT {
-                reason,
-                op: type_::StrUtilOp::StrPrefix(prefix.dupe()),
-                remainder,
-            })
-        }
-        Annot::StringSuffix(inner) => {
-            let AnnotStringSuffix {
-                loc,
-                suffix,
-                remainder,
-            } = inner.as_ref();
-            let reason = reason::mk_reason(
-                RStringSuffix {
-                    suffix: suffix.dupe(),
-                },
-                loc.dupe(),
-            );
-            let remainder = remainder
-                .as_ref()
-                .map(|t| merge_impl(env, cx, file, t, false, false));
-            Type::new(type_::TypeInner::StrUtilT {
-                reason,
-                op: type_::StrUtilOp::StrSuffix(suffix.dupe()),
-                remainder,
-            })
+        Annot::TemplateLiteral(inner) => {
+            let AnnotTemplateLiteral { loc, quasis, types } = inner.as_ref();
+            let ts = types
+                .iter()
+                .map(|t| merge_impl(env, cx, file, t, false, false))
+                .collect();
+            flow_typing_flow_js::template_literal_type::resolve(quasis.clone(), ts, loc.dupe(), cx)
         }
         Annot::Typeof(inner) => {
             let AnnotTypeof {

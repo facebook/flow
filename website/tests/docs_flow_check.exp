@@ -8615,8 +8615,8 @@ Found 1 error
 === types/utilities.md block 36 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
 
-Cannot cast `'random string'` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
-[incompatible-type]
+Cannot cast `'random string'` to `DataProp` because string literal `random string` [1] is incompatible with template
+literal type [2]. [incompatible-type]
 
    -:5:1
    5| 'random string' as DataProp; // ERROR
@@ -8634,8 +8634,8 @@ Found 1 error
 === types/utilities.md block 37 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
 
-Cannot cast `'random string'` to `Exclaim` because string [1] is incompatible with string suffixed with `!` [2].
-[incompatible-type]
+Cannot cast `'random string'` to `Exclaim` because string literal `random string` [1] is incompatible with template
+literal type [2]. [incompatible-type]
 
    -:5:1
    5| 'random string' as Exclaim; // ERROR
@@ -8653,8 +8653,8 @@ Found 1 error
 === types/utilities.md block 38 ===
 Error ------------------------------------------------------------------------------------------------------------ -:4:1
 
-Cannot cast `'random string'` to `CSSVar` because string [1] is incompatible with string prefixed with `var(--` [2].
-[incompatible-type]
+Cannot cast `'random string'` to `CSSVar` because string literal `random string` [1] is incompatible with template
+literal type [2]. [incompatible-type]
 
    -:4:1
    4| 'random string' as CSSVar; // ERROR
@@ -8668,8 +8668,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------------ -:4:1
 
-Cannot cast `'random string'` to `CSSVar` because string [1] is incompatible with string suffixed with `)` [2].
-[incompatible-type]
+Cannot cast `'random string'` to `CSSVar` because string literal `random string` [1] is incompatible with template
+literal type [2]. [incompatible-type]
 
    -:4:1
    4| 'random string' as CSSVar; // ERROR
@@ -8687,7 +8687,7 @@ Found 2 errors
 === types/utilities.md block 39 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:1
 
-Cannot cast `'$999'` to `Price` because string with prefix `$` removed [1] is incompatible with union type [2].
+Cannot cast `'$999'` to `Price` because string literal `$999` [1] is incompatible with template literal type [2].
 [incompatible-type]
 
    -:5:1
@@ -8695,9 +8695,9 @@ Cannot cast `'$999'` to `Price` because string with prefix `$` removed [1] is in
       ^^^^^^ [1]
 
 References:
-   -:2:32
-   2| type Price = StringPrefix<'$', '1' | '2'>;
-                                     ^^^^^^^^^ [2]
+   -:5:11
+   5| '$999' as Price; // ERROR
+                ^^^^^ [2]
 
 
 

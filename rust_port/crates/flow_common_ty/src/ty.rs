@@ -79,6 +79,10 @@ pub enum Ty<L> {
         renders: Option<Arc<Ty<L>>>,
     },
     Renders(Arc<Ty<L>>, RendersKind),
+    TemplateLiteral {
+        quasis: Arc<[FlowSmolStr]>,
+        types: Arc<[Arc<Ty<L>>]>,
+    },
 }
 
 /* Recursive variable */
@@ -574,14 +578,6 @@ pub enum Utility<L> {
     NonMaybeType(Arc<Ty<L>>),
     ObjKeyMirror(Arc<Ty<L>>),
     Class(Arc<Ty<L>>),
-    StringPrefix {
-        prefix: FlowSmolStr,
-        remainder: Option<Arc<Ty<L>>>,
-    },
-    StringSuffix {
-        suffix: FlowSmolStr,
-        remainder: Option<Arc<Ty<L>>>,
-    },
     /* React utils */
     ReactElementConfigType(Arc<Ty<L>>),
 }
@@ -983,7 +979,8 @@ pub fn mk_exact<L>(ty: Ty<L>) -> Ty<L> {
         | Ty::InlineInterface(_)
         | Ty::Infer(_)
         | Ty::Component { .. }
-        | Ty::Renders(_, _) => ty,
+        | Ty::Renders(_, _)
+        | Ty::TemplateLiteral { .. } => ty,
         // Do not nest $Exact
         Ty::Utility(Utility::Exact(_)) => ty,
         // Wrap in $Exact<...>
@@ -1030,8 +1027,6 @@ pub fn string_of_utility_ctor<L>(u: &Utility<L>) -> &'static str {
         Utility::NonMaybeType(_) => "NonNullable",
         Utility::ObjKeyMirror(_) => "$KeyMirror",
         Utility::Class(_) => "Class",
-        Utility::StringPrefix { .. } => "StringPrefix",
-        Utility::StringSuffix { .. } => "StringSuffix",
         Utility::ReactElementConfigType(_) => "React$ElementConfig",
     }
 }
@@ -1050,20 +1045,6 @@ pub fn types_of_utility<L: Dupe>(u: &Utility<L>) -> Option<Vec<Arc<Ty<L>>>> {
         | Utility::Class(t)
         | Utility::ReactElementConfigType(t) => Some(vec![t.dupe()]),
         Utility::Omit(t1, t2) | Utility::ElementType(t1, t2) => Some(vec![t1.dupe(), t2.dupe()]),
-        Utility::StringPrefix { prefix, remainder } => match remainder {
-            None => Some(vec![Arc::new(Ty::StrLit(Name::new(prefix.dupe())))]),
-            Some(t) => Some(vec![
-                Arc::new(Ty::StrLit(Name::new(prefix.dupe()))),
-                t.dupe(),
-            ]),
-        },
-        Utility::StringSuffix { suffix, remainder } => match remainder {
-            None => Some(vec![Arc::new(Ty::StrLit(Name::new(suffix.dupe())))]),
-            Some(t) => Some(vec![
-                Arc::new(Ty::StrLit(Name::new(suffix.dupe()))),
-                t.dupe(),
-            ]),
-        },
     }
 }
 
@@ -1203,6 +1184,11 @@ where
             }
             Ty::Renders(t, _kind) => {
                 self.on_t(env, t);
+            }
+            Ty::TemplateLiteral { quasis: _, types } => {
+                for t in types.iter() {
+                    self.on_t(env, t);
+                }
             }
         }
     }
@@ -1547,18 +1533,6 @@ where
                 self.on_t(env, t1);
                 self.on_t(env, t2);
             }
-            Utility::StringPrefix {
-                prefix: _,
-                remainder,
-            }
-            | Utility::StringSuffix {
-                suffix: _,
-                remainder,
-            } => {
-                if let Some(t) = remainder {
-                    self.on_t(env, t);
-                }
-            }
         }
     }
 
@@ -1724,6 +1698,22 @@ where
             (Ty::Renders(t1, k1), Ty::Renders(t2, k2)) => {
                 self.on_t(env, t1, t2)?;
                 self.on_renders_kind(env, k1, k2)
+            }
+            (
+                Ty::TemplateLiteral {
+                    quasis: q1,
+                    types: ts1,
+                },
+                Ty::TemplateLiteral {
+                    quasis: q2,
+                    types: ts2,
+                },
+            ) => {
+                if q1 == q2 {
+                    self.on_list(|s, e, t1, t2| s.on_t(e, t1, t2), env, ts1, ts2)
+                } else {
+                    Err(StructuralMismatch::Difference(0))
+                }
             }
             _ => self.fail_t(env, t1, t2),
         }
@@ -2286,26 +2276,6 @@ where
                 self.on_t(env, a1, a2)?;
                 self.on_t(env, b1, b2)
             }
-            (
-                Utility::StringPrefix {
-                    prefix: p1,
-                    remainder: r1,
-                },
-                Utility::StringPrefix {
-                    prefix: p2,
-                    remainder: r2,
-                },
-            ) if p1 == p2 => self.on_option(|s, e, t1, t2| s.on_t(e, t1, t2), env, r1, r2),
-            (
-                Utility::StringSuffix {
-                    suffix: s1,
-                    remainder: r1,
-                },
-                Utility::StringSuffix {
-                    suffix: s2,
-                    remainder: r2,
-                },
-            ) if s1 == s2 => self.on_option(|s, e, t1, t2| s.on_t(e, t1, t2), env, r1, r2),
             _ => self.fail_utility(env, u1, u2),
         }
     }
@@ -2752,6 +2722,11 @@ where
                 acc
             }
             Ty::Renders(t, _kind) => self.on_t(env, t),
+            Ty::TemplateLiteral { quasis: _, types } => {
+                types.iter().fold(Self::Acc::zero(), |acc, t| {
+                    Self::Acc::plus(acc, self.on_t(env, t))
+                })
+            }
         }
     }
 
@@ -3059,20 +3034,6 @@ where
             Utility::Omit(t1, t2) | Utility::ElementType(t1, t2) => {
                 Self::Acc::plus(self.on_t(env, t1), self.on_t(env, t2))
             }
-            Utility::StringPrefix {
-                prefix: _,
-                remainder,
-            }
-            | Utility::StringSuffix {
-                suffix: _,
-                remainder,
-            } => {
-                if let Some(t) = remainder {
-                    self.on_t(env, t)
-                } else {
-                    Self::Acc::zero()
-                }
-            }
         }
     }
 
@@ -3265,6 +3226,13 @@ where
                 let t_new = self.on_t(env, t.dupe());
                 let kind_new = self.on_renders_kind(env, *kind);
                 Arc::new(Ty::Renders(t_new, kind_new))
+            }
+            Ty::TemplateLiteral { quasis, types } => {
+                let types_new: Arc<[_]> = self.on_list(|s, e, t| s.on_t(e, t), env, types).into();
+                Arc::new(Ty::TemplateLiteral {
+                    quasis: quasis.clone(),
+                    types: types_new,
+                })
             }
         }
     }
@@ -3831,20 +3799,6 @@ where
                 let t2_new = self.on_t(env, t2);
                 Utility::ElementType(t1_new, t2_new)
             }
-            Utility::StringPrefix { prefix, remainder } => {
-                let remainder_new = self.on_option(|s, e, t| s.on_t(e, t), env, remainder);
-                Utility::StringPrefix {
-                    prefix,
-                    remainder: remainder_new,
-                }
-            }
-            Utility::StringSuffix { suffix, remainder } => {
-                let remainder_new = self.on_option(|s, e, t| s.on_t(e, t), env, remainder);
-                Utility::StringSuffix {
-                    suffix,
-                    remainder: remainder_new,
-                }
-            }
         }
     }
 
@@ -4016,6 +3970,7 @@ pub fn tag_of_t<L>(_t: &Ty<L>) -> i32 {
         Ty::Infer { .. } => 28,
         Ty::Component { .. } => 29,
         Ty::Renders { .. } => 30,
+        Ty::TemplateLiteral { .. } => 31,
     }
 }
 
@@ -4157,8 +4112,6 @@ pub fn tag_of_utility<L>(_u: &Utility<L>) -> i32 {
         Utility::Partial(_) => 23,
         Utility::Required(_) => 24,
         Utility::Enum(_) => 27,
-        Utility::StringPrefix { .. } => 28,
-        Utility::StringSuffix { .. } => 29,
         Utility::Omit(_, _) => 30,
     }
 }
@@ -4651,18 +4604,6 @@ impl<L: Dupe> Utility<L> {
                 Utility::ObjKeyMirror(Arc::new(arc_ty.as_ref().map_locs(f)))
             }
             Utility::Class(arc_ty) => Utility::Class(Arc::new(arc_ty.as_ref().map_locs(f))),
-            Utility::StringPrefix { prefix, remainder } => Utility::StringPrefix {
-                prefix: prefix.clone(),
-                remainder: remainder
-                    .as_ref()
-                    .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f))),
-            },
-            Utility::StringSuffix { suffix, remainder } => Utility::StringSuffix {
-                suffix: suffix.clone(),
-                remainder: remainder
-                    .as_ref()
-                    .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f))),
-            },
             Utility::ReactElementConfigType(arc_ty) => {
                 Utility::ReactElementConfigType(Arc::new(arc_ty.as_ref().map_locs(f)))
             }
@@ -4836,6 +4777,13 @@ impl<L: Dupe> Ty<L> {
                     .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f))),
             },
             Ty::Renders(arc_ty, kind) => Ty::Renders(Arc::new(arc_ty.as_ref().map_locs(f)), *kind),
+            Ty::TemplateLiteral { quasis, types } => Ty::TemplateLiteral {
+                quasis: quasis.clone(),
+                types: types
+                    .iter()
+                    .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f)))
+                    .collect(),
+            },
         }
     }
 }

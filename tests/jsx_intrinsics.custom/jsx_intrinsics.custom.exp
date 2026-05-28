@@ -14,8 +14,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:7:12
 
-Cannot create `div` element because in the indexer property's key: string `id` [1] is incompatible with string prefixed
-with `data-` [2]. [incompatible-type]
+Cannot create `div` element because in the indexer property's key: string `id` [1] is incompatible with template literal
+type [2]. [incompatible-type]
 
    main.js:7:12
    7| const d = <div {...dataProps} />; // OK with data props, but missing id

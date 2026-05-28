@@ -260,18 +260,7 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RRendersNothing,
     RAutocompleteToken,
     RStringLit(Name),
-    RStringPrefix {
-        prefix: FlowSmolStr,
-    },
-    RStringWithoutPrefix {
-        prefix: FlowSmolStr,
-    },
-    RStringSuffix {
-        suffix: FlowSmolStr,
-    },
-    RStringWithoutSuffix {
-        suffix: FlowSmolStr,
-    },
+    RTemplateLiteralType,
     RNumberLit(FlowSmolStr),
     RBigIntLit(FlowSmolStr),
     RBooleanLit(bool),
@@ -429,18 +418,7 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RExports => RExports,
             RNullOrVoid => RNullOrVoid,
             RStringLit(n) => RStringLit(n.dupe()),
-            RStringPrefix { prefix } => RStringPrefix {
-                prefix: prefix.dupe(),
-            },
-            RStringWithoutPrefix { prefix } => RStringWithoutPrefix {
-                prefix: prefix.dupe(),
-            },
-            RStringSuffix { suffix } => RStringSuffix {
-                suffix: suffix.dupe(),
-            },
-            RStringWithoutSuffix { suffix } => RStringWithoutSuffix {
-                suffix: suffix.dupe(),
-            },
+            RTemplateLiteralType => RTemplateLiteralType,
             RNumberLit(s) => RNumberLit(s.dupe()),
             RBigIntLit(s) => RBigIntLit(s.dupe()),
             RBooleanLit(b) => RBooleanLit(*b),
@@ -703,27 +681,9 @@ impl<L: Dupe> VirtualReasonDesc<L> {
         use VirtualReasonDesc::*;
 
         match self.unwrap() {
-            RNumber
-            | RBigInt
-            | RString
-            | RSymbol
-            | RUniqueSymbol
-            | RBoolean
-            | RStringLit(_)
-            | RStringPrefix { .. }
-            | RStringWithoutPrefix { .. }
-            | RStringSuffix { .. }
-            | RStringWithoutSuffix { .. }
-            | RNumberLit(_)
-            | RBigIntLit(_)
-            | RBooleanLit(_)
-            | RJSXText
-            | RFbt
-            | RTemplateString
-            | RUnknownString
-            | RUnionEnum
-            | RKeySet
-            | RRegExp => Scalar,
+            RNumber | RBigInt | RString | RSymbol | RUniqueSymbol | RBoolean | RStringLit(_)
+            | RTemplateLiteralType | RNumberLit(_) | RBigIntLit(_) | RBooleanLit(_) | RJSXText
+            | RFbt | RTemplateString | RUnknownString | RUnionEnum | RKeySet | RRegExp => Scalar,
 
             RVoid | RNull | RVoidedNull | RUninitialized | RPossiblyUninitialized | RNullOrVoid => {
                 Nullish
@@ -1386,10 +1346,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // String literals
         RStringLit(name) if name.as_str().is_empty() => "empty string".to_string(),
         RStringLit(name) => format!("string literal `{}`", name.as_str()),
-        RStringPrefix { prefix } => format!("string prefixed with `{}`", prefix),
-        RStringWithoutPrefix { prefix } => format!("string with prefix `{}` removed", prefix),
-        RStringSuffix { suffix } => format!("string suffixed with `{}`", suffix),
-        RStringWithoutSuffix { suffix } => format!("string with suffix `{}` removed", suffix),
+        RTemplateLiteralType => "template literal type".to_string(),
 
         // Number and boolean literals
         RNumberLit(x) => format!("number literal `{}`", x),

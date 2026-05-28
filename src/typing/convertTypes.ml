@@ -249,18 +249,14 @@ and type_to_json : Context.t -> int -> t -> json =
           ("types_tmap", json_of_property_map cx depth namespace_t.types_tmap);
         ]
     | AnyT _ -> json_with_type "Any" []
-    | StrUtilT { reason = _; op; remainder } ->
+    | TemplateLiteralT { reason = _; quasis; types } ->
       let fields =
-        match op with
-        | StrPrefix s -> [("op", JSON_String "StrPrefix"); ("prefix", JSON_String s)]
-        | StrSuffix s -> [("op", JSON_String "StrSuffix"); ("suffix", JSON_String s)]
+        [
+          ("quasis", JSON_Array (List.map (fun s -> JSON_String s) quasis));
+          ("types", JSON_Array (List.map (type_to_json cx (depth - 1)) types));
+        ]
       in
-      let fields =
-        match remainder with
-        | None -> fields
-        | Some t -> fields @ [("remainder", type_to_json cx (depth - 1) t)]
-      in
-      json_with_type "StrUtil" fields
+      json_with_type "TemplateLiteral" fields
 
 (* Convert typeparams to JSON *)
 and json_of_typeparams cx depth tparams =

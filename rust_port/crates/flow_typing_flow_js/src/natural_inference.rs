@@ -545,7 +545,7 @@ impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, ()>
             | TypeInner::NullProtoT(_)
             | TypeInner::FunProtoBindT(_)
             | TypeInner::NamespaceT(_)
-            | TypeInner::StrUtilT { .. }
+            | TypeInner::TemplateLiteralT { .. }
             | TypeInner::AnyT(..) => t,
         }
     }

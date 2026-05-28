@@ -1,8 +1,8 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:14:23
 
 Cannot assign object literal to `error1` because property `foo` is missing in `Props` [1] but exists in object
-literal [2]. Any property that does not exist in `Props` [1] must be compatible with its indexer string prefixed with
-`data-` [3]. [incompatible-type]
+literal [2]. Any property that does not exist in `Props` [1] must be compatible with its indexer `StringPrefix` [3].
+[incompatible-type]
 
    test.js:14:23
    14| const error1: Props = {foo: 3}; // One error

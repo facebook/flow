@@ -131,7 +131,8 @@ let lsp_completion_of_type =
   | Conditional _
   | Component _
   | Infer _
-  | Renders _ ->
+  | Renders _
+  | TemplateLiteral _ ->
     Lsp.Completion.Variable
 
 let lsp_completion_of_decl =

@@ -290,7 +290,9 @@ pub fn type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
         }
         TypeInner::GenericT(box GenericTData { bound, .. }) => visitor.type_(cx, pole, acc, bound),
         TypeInner::KeysT(_, t) => visitor.type_(cx, Polarity::Positive, acc, t),
-        TypeInner::StrUtilT { .. } => acc,
+        TypeInner::TemplateLiteralT { types, .. } => types
+            .iter()
+            .fold(acc, |acc, t| visitor.type_(cx, pole_todo(), acc, t)),
         TypeInner::AnnotT(_, t, _) => visitor.type_(cx, Polarity::Positive, acc, t),
         TypeInner::NominalT { nominal_type, .. } => {
             let acc =

@@ -620,6 +620,6 @@ pub(super) fn any_propagated_use<'cx>(
         | TypeInner::ThisTypeAppT(..) => Ok(false),
         // Should never occur as the lower bound of any
         TypeInner::NamespaceT(_) => Ok(false),
-        TypeInner::StrUtilT { .. } | TypeInner::AnyT(..) => Ok(true),
+        TypeInner::TemplateLiteralT { .. } | TypeInner::AnyT(..) => Ok(true),
     }
 }

@@ -490,7 +490,8 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
         | Ty::Conditional { .. }
         | Ty::Component { .. }
         | Ty::Infer(_)
-        | Ty::Renders(_, _) => (BTreeMap::new(), vec![]),
+        | Ty::Renders(_, _)
+        | Ty::TemplateLiteral { .. } => (BTreeMap::new(), vec![]),
     }
 }
 

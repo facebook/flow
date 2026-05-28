@@ -312,7 +312,7 @@ let try_eval_concrete_type_truthyness cx t =
   | FunProtoBindT _ -> ConstCond_Unknown
   | IntersectionT _ -> ConstCond_Unknown
   | KeysT _ -> ConstCond_Unknown
-  | StrUtilT _ -> ConstCond_Unknown
+  | TemplateLiteralT _ -> ConstCond_Unknown
   | NominalT _ -> ConstCond_Unknown
   | NamespaceT _ -> ConstCond_Unknown
   | AnyT _ -> ConstCond_Unknown
@@ -825,7 +825,8 @@ let check_polarity cx =
   )
 
 let check_general_post_inference_validations cx =
-  Base.List.iter (Context.post_inference_validation_flows cx) ~f:(fun pair -> Flow_js.flow cx pair)
+  Base.List.iter (Context.post_inference_validation_flows cx) ~f:(fun pair -> Flow_js.flow cx pair);
+  Base.List.iter (Context.post_inference_validation_callbacks cx) ~f:(fun f -> f ())
 
 let check_interface_merge_prop_conflicts cx =
   Base.List.iter

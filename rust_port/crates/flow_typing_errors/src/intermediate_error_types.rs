@@ -1802,7 +1802,6 @@ pub enum Message<L: Dupe> {
         kind: PrimitiveKind,
     },
 
-    MessageCannotUseStrUtilType,
     MessageCannotUseThisSuperBeforeSuperCall(VirtualReason<L>),
 
     MessageCannotUseTypeDueToPolarityMismatch {
@@ -2043,6 +2042,8 @@ pub enum Message<L: Dupe> {
     MessageInvalidMappedTypeWithExactOrInexact,
     MessageInvalidMappedTypeWithExtraProps,
     MessageInvalidMappedTypeWithVarianceOnArrayInput,
+    MessageInvalidTemplateLiteralTypeComplexity,
+    MessageInvalidTemplateLiteralTypePlaceholder,
 
     MessageInvalidReactCreateElement(VirtualReason<L>),
 

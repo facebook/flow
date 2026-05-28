@@ -6081,11 +6081,6 @@ where
                     ),
                 ])
             }
-            MessageCannotUseStrUtilType => friendly::Message(vec![
-                text("Cannot use "),
-                code("StringPrefix"),
-                text(" because the first type argument must be a string literal."),
-            ]),
             MessageCannotUseTypeDueToPolarityMismatch {
                 reason_targ,
                 expected_polarity,
@@ -7262,6 +7257,14 @@ where
             MessageInvalidMappedTypeWithVarianceOnArrayInput => friendly::Message(vec![text(
                 "Mapped Types do not yet support variance annotations on array inputs.",
             )]),
+            MessageInvalidTemplateLiteralTypeComplexity => friendly::Message(vec![text(
+                "Template literal type produces a union type that is too complex to represent.",
+            )]),
+            MessageInvalidTemplateLiteralTypePlaceholder => friendly::Message(vec![
+                text("Template literal type placeholder must be a subtype of "),
+                code("string | number | bigint | boolean | null | undefined"),
+                text("."),
+            ]),
             MessageInvalidInferType => friendly::Message(vec![
                 text("Invalid infer type declaration. "),
                 code("infer"),

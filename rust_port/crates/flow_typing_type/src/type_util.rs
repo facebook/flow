@@ -98,7 +98,7 @@ pub fn reason_of_t(t: &Type) -> &Reason {
         TypeInner::FunProtoT(reason) => reason,
         TypeInner::FunProtoBindT(reason) => reason,
         TypeInner::KeysT(reason, _) => reason,
-        TypeInner::StrUtilT { reason, .. } => reason,
+        TypeInner::TemplateLiteralT { reason, .. } => reason,
         TypeInner::NamespaceT(namespace) => reason_of_t(&namespace.values_type),
         TypeInner::NullProtoT(reason) => reason,
         TypeInner::ObjProtoT(reason) => reason,
@@ -357,14 +357,14 @@ pub fn mod_reason_of_t(f: &dyn Fn(Reason) -> Reason, t: &Type) -> Type {
         TypeInner::KeysT(reason, inner_t) => {
             Type::new(TypeInner::KeysT(f(reason.dupe()), inner_t.dupe()))
         }
-        TypeInner::StrUtilT {
+        TypeInner::TemplateLiteralT {
             reason,
-            op,
-            remainder,
-        } => Type::new(TypeInner::StrUtilT {
+            quasis,
+            types,
+        } => Type::new(TypeInner::TemplateLiteralT {
             reason: f(reason.dupe()),
-            op: op.dupe(),
-            remainder: remainder.dupe(),
+            quasis: quasis.to_vec(),
+            types: types.to_vec(),
         }),
         TypeInner::NamespaceT(ns) => Type::new(TypeInner::NamespaceT(Rc::new(NamespaceType {
             namespace_symbol: ns.namespace_symbol.dupe(),
@@ -1494,7 +1494,7 @@ pub fn reasonless_cmp_inner_fast(
     use crate::type_::TypeInner::NullProtoT;
     use crate::type_::TypeInner::ObjProtoT;
     use crate::type_::TypeInner::OpenT;
-    use crate::type_::TypeInner::StrUtilT;
+    use crate::type_::TypeInner::TemplateLiteralT;
     use crate::type_::TypeInner::UnionT;
     match (inner1, inner2) {
         (DefT(_, d1), DefT(_, d2)) => Some(d1.cmp(d2)),
@@ -1505,17 +1505,17 @@ pub fn reasonless_cmp_inner_fast(
         (KeysT(_, ity1), KeysT(_, ity2)) => Some(ity1.cmp(ity2)),
         (AnnotT(_, ity1, b1), AnnotT(_, ity2, b2)) => Some(ity1.cmp(ity2).then_with(|| b1.cmp(b2))),
         (
-            StrUtilT {
-                op: o1,
-                remainder: rem1,
+            TemplateLiteralT {
+                quasis: q1,
+                types: t1,
                 ..
             },
-            StrUtilT {
-                op: o2,
-                remainder: rem2,
+            TemplateLiteralT {
+                quasis: q2,
+                types: t2,
                 ..
             },
-        ) => Some(o1.cmp(o2).then_with(|| rem1.cmp(rem2))),
+        ) => Some(q1.cmp(q2).then_with(|| t1.cmp(t2))),
         (FunProtoT(_), FunProtoT(_))
         | (FunProtoBindT(_), FunProtoBindT(_))
         | (NullProtoT(_), NullProtoT(_))
@@ -1814,7 +1814,6 @@ where
 {
     use crate::type_::DefTInner as D;
     use crate::type_::Literal;
-    use crate::type_::StrUtilOp;
 
     match (l.deref(), u.deref()) {
         (TypeInner::OpenT(_), _) | (_, TypeInner::OpenT(_)) | (TypeInner::UnionT(_, _), _) => false,
@@ -1933,61 +1932,79 @@ where
             _ => false,
         },
 
-        (
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrPrefix(prefix1),
-                ..
-            },
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrPrefix(prefix2),
-                remainder: None,
-                ..
-            },
-        ) if prefix1.starts_with(prefix2.as_str()) => true,
-        (
-            TypeInner::DefT(_, l_def),
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrPrefix(prefix),
-                remainder: None,
-                ..
-            },
-        ) if matches!(&**l_def, D::SingletonStrT { value, .. } if value.as_str().starts_with(prefix.as_str())) =>
+        (TypeInner::TemplateLiteralT { quasis, .. }, TypeInner::DefT(_, u_def))
+            if matches!(&**u_def, D::StrGeneralT(Literal::Truthy))
+                && quasis.iter().any(|q| !q.is_empty()) =>
         {
-            on_singleton_eq(l);
             true
         }
-        (
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrSuffix(suffix1),
-                ..
-            },
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrSuffix(suffix2),
-                remainder: None,
-                ..
-            },
-        ) if suffix1.ends_with(suffix2.as_str()) => true,
-        (
-            TypeInner::DefT(_, l_def),
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrSuffix(suffix),
-                remainder: None,
-                ..
-            },
-        ) if matches!(&**l_def, D::SingletonStrT { value, .. } if value.as_str().ends_with(suffix.as_str())) =>
-        {
-            on_singleton_eq(l);
-            true
-        }
-        (
-            TypeInner::StrUtilT {
-                op: StrUtilOp::StrPrefix(arg) | StrUtilOp::StrSuffix(arg),
-                ..
-            },
-            TypeInner::DefT(_, u_def),
-        ) if matches!(&**u_def, D::StrGeneralT(Literal::Truthy)) && !arg.is_empty() => true,
-        (TypeInner::StrUtilT { .. }, TypeInner::DefT(_, u_def))
+        (TypeInner::TemplateLiteralT { .. }, TypeInner::DefT(_, u_def))
             if matches!(&**u_def, D::StrGeneralT(Literal::AnyLiteral)) =>
+        {
+            true
+        }
+
+        // SingletonStrT <: `${prefix}${string}`
+        (TypeInner::DefT(_, l_def), TypeInner::TemplateLiteralT { quasis, types, .. })
+            if matches!(&**l_def, D::SingletonStrT { .. })
+                && quasis.len() == 2
+                && quasis[1].is_empty()
+                && types.len() == 1
+                && matches!(types[0].deref(), TypeInner::DefT(_, d) if matches!(&**d, D::StrGeneralT(_)))
+                && matches!(&**l_def, D::SingletonStrT { value, .. } if value.as_str().starts_with(quasis[0].as_str())) =>
+        {
+            on_singleton_eq(l);
+            true
+        }
+        // SingletonStrT <: `${string}${suffix}`
+        (TypeInner::DefT(_, l_def), TypeInner::TemplateLiteralT { quasis, types, .. })
+            if matches!(&**l_def, D::SingletonStrT { .. })
+                && quasis.len() == 2
+                && quasis[0].is_empty()
+                && types.len() == 1
+                && matches!(types[0].deref(), TypeInner::DefT(_, d) if matches!(&**d, D::StrGeneralT(_)))
+                && matches!(&**l_def, D::SingletonStrT { value, .. } if value.as_str().ends_with(quasis[1].as_str())) =>
+        {
+            on_singleton_eq(l);
+            true
+        }
+        // Prefix-extends-prefix: `${p1}${string}` <: `${p2}${string}` when p1 starts with p2
+        (
+            TypeInner::TemplateLiteralT {
+                quasis: l_quasis, ..
+            },
+            TypeInner::TemplateLiteralT {
+                quasis: u_quasis,
+                types: u_types,
+                ..
+            },
+        ) if l_quasis.len() == 2
+            && l_quasis[1].is_empty()
+            && u_quasis.len() == 2
+            && u_quasis[1].is_empty()
+            && u_types.len() == 1
+            && matches!(u_types[0].deref(), TypeInner::DefT(_, d) if matches!(&**d, D::StrGeneralT(_)))
+            && l_quasis[0].as_str().starts_with(u_quasis[0].as_str()) =>
+        {
+            true
+        }
+        // Suffix-extends-suffix mirror
+        (
+            TypeInner::TemplateLiteralT {
+                quasis: l_quasis, ..
+            },
+            TypeInner::TemplateLiteralT {
+                quasis: u_quasis,
+                types: u_types,
+                ..
+            },
+        ) if l_quasis.len() == 2
+            && l_quasis[0].is_empty()
+            && u_quasis.len() == 2
+            && u_quasis[0].is_empty()
+            && u_types.len() == 1
+            && matches!(u_types[0].deref(), TypeInner::DefT(_, d) if matches!(&**d, D::StrGeneralT(_)))
+            && l_quasis[1].as_str().ends_with(u_quasis[1].as_str()) =>
         {
             true
         }

@@ -23,7 +23,7 @@ let rec reason_of_t = function
   | FunProtoT reason -> reason
   | FunProtoBindT reason -> reason
   | KeysT (reason, _) -> reason
-  | StrUtilT { reason; _ } -> reason
+  | TemplateLiteralT { reason; _ } -> reason
   | NamespaceT { values_type; _ } -> reason_of_t values_type
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
@@ -159,7 +159,8 @@ let rec mod_reason_of_t f = function
   | FunProtoT reason -> FunProtoT (f reason)
   | FunProtoBindT reason -> FunProtoBindT (f reason)
   | KeysT (reason, t) -> KeysT (f reason, t)
-  | StrUtilT { reason; op; remainder } -> StrUtilT { reason = f reason; op; remainder }
+  | TemplateLiteralT { reason; quasis; types } ->
+    TemplateLiteralT { reason = f reason; quasis; types }
   | NamespaceT { namespace_symbol; values_type; types_tmap } ->
     NamespaceT { namespace_symbol; values_type = mod_reason_of_t f values_type; types_tmap }
   | NullProtoT reason -> NullProtoT (f reason)
@@ -597,36 +598,37 @@ let ground_subtype ~on_singleton_eq (l, u) =
     if result then on_singleton_eq l;
     result
   | (DefT (_, UniqueSymbolT id1), DefT (_, UniqueSymbolT id2)) -> ALoc.equal_id id1 id2
-  | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
-      StrUtilT { reason = _; op = StrPrefix prefix2; remainder = None }
-    )
-    when String.starts_with ~prefix:prefix2 prefix1 ->
+  | (TemplateLiteralT { quasis; _ }, DefT (_, StrGeneralT Truthy))
+    when List.exists (fun q -> q <> "") quasis ->
     true
+  | (TemplateLiteralT _, DefT (_, StrGeneralT AnyLiteral)) -> true
+  (* SingletonStrT <: `${prefix}${string}` *)
   | ( DefT (_, SingletonStrT { value = OrdinaryName s; _ }),
-      StrUtilT { reason = _; op = StrPrefix prefix; remainder = None }
+      TemplateLiteralT { quasis = [prefix; ""]; types = [DefT (_, StrGeneralT _)]; _ }
     )
     when String.starts_with ~prefix s ->
     on_singleton_eq l;
     true
-  | ( StrUtilT { reason = _; op = StrSuffix suffix1; remainder = _ },
-      StrUtilT { reason = _; op = StrSuffix suffix2; remainder = None }
-    )
-    when String.ends_with ~suffix:suffix2 suffix1 ->
-    true
+  (* SingletonStrT <: `${string}${suffix}` *)
   | ( DefT (_, SingletonStrT { value = OrdinaryName s; _ }),
-      StrUtilT { reason = _; op = StrSuffix suffix; remainder = None }
+      TemplateLiteralT { quasis = [""; suffix]; types = [DefT (_, StrGeneralT _)]; _ }
     )
     when String.ends_with ~suffix s ->
     on_singleton_eq l;
     true
-  | ( StrUtilT { reason = _; op = StrPrefix arg | StrSuffix arg; remainder = _ },
-      DefT (_, StrGeneralT Truthy)
+  (* Prefix-extends-prefix: `${p1}${string}` <: `${p2}${string}` when p1 starts with p2 *)
+  | ( TemplateLiteralT { quasis = [p1; ""]; _ },
+      TemplateLiteralT { quasis = [p2; ""]; types = [DefT (_, StrGeneralT _)]; _ }
     )
-    when arg <> "" ->
+    when String.starts_with ~prefix:p2 p1 ->
     true
-  | (StrUtilT _, DefT (_, StrGeneralT AnyLiteral))
-  | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _))) ->
+  (* Suffix-extends-suffix mirror *)
+  | ( TemplateLiteralT { quasis = [""; s1]; _ },
+      TemplateLiteralT { quasis = [""; s2]; types = [DefT (_, StrGeneralT _)]; _ }
+    )
+    when String.ends_with ~suffix:s2 s1 ->
     true
+  | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _))) -> true
   | (DefT (_, NumericStrKeyT (actual, _)), DefT (_, SingletonNumT { value = (expected, _); _ })) ->
     actual = expected
   | (DefT (_, NumericStrKeyT (_, actual)), DefT (_, SingletonStrT { value = expected; _ })) ->

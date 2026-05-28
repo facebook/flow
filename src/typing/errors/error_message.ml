@@ -466,7 +466,6 @@ and 'loc t' =
     }
   | EInvalidTypeArgs of 'loc virtual_reason * 'loc virtual_reason
   | EInvalidExtends of 'loc virtual_reason
-  | EStrUtilTypeNonLiteralArg of 'loc
   | EExportsAnnot of 'loc
   | EInvalidConstructor of 'loc virtual_reason
   | EUnsupportedKeyInObject of {
@@ -785,6 +784,10 @@ and 'loc t' =
       loc: 'loc;
       kind: invalid_mapped_type_error_kind;
     }
+  | EInvalidTemplateLiteralType of {
+      loc: 'loc;
+      kind: invalid_template_literal_type_error_kind;
+    }
   | EDuplicateComponentProp of {
       spread: 'loc;
       duplicates: ('loc * name * 'loc) Nel.t;
@@ -962,6 +965,10 @@ and invalid_mapped_type_error_kind =
   | ExtraProperties
   | ExplicitExactOrInexact
   | VarianceOnArrayInput
+
+and invalid_template_literal_type_error_kind =
+  | TooComplex
+  | InvalidPlaceholderType
 
 and 'l hook_rule =
   | ConditionalHook
@@ -1485,7 +1492,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason = Base.Option.map ~f:map_reason reason;
       }
   | EInvalidExtends r -> EInvalidExtends (map_reason r)
-  | EStrUtilTypeNonLiteralArg loc -> EStrUtilTypeNonLiteralArg (f loc)
   | EExportsAnnot loc -> EExportsAnnot (f loc)
   | EUnsupportedKeyInObject { loc; obj_kind; key_error_kind } ->
     EUnsupportedKeyInObject { loc = f loc; obj_kind; key_error_kind }
@@ -1880,6 +1886,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         kind;
       }
   | EInvalidMappedType { loc; kind } -> EInvalidMappedType { loc = f loc; kind }
+  | EInvalidTemplateLiteralType { loc; kind } -> EInvalidTemplateLiteralType { loc = f loc; kind }
   | EDuplicateComponentProp { spread; duplicates } ->
     EDuplicateComponentProp
       {
@@ -2244,7 +2251,6 @@ let util_use_op_of_msg nope util = function
   | EConstantCondition _
   | EInvalidExtends _
   | EInvalidReactCreateElement _
-  | EStrUtilTypeNonLiteralArg _
   | EExportsAnnot _
   | EUnsupportedKeyInObject _
   | EAmbiguousNumericKeyWithVariance _
@@ -2351,6 +2357,7 @@ let util_use_op_of_msg nope util = function
   | EVarianceKeyword _
   | EInvalidBinaryArith _
   | EInvalidMappedType _
+  | EInvalidTemplateLiteralType _
   | ETupleRequiredAfterOptional _
   | ETupleInvalidTypeSpread _
   | ETupleElementAfterInexactSpread _
@@ -2547,7 +2554,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EHookRuleViolation { call_loc = loc; _ }
   | EHookNaming loc
   | EExportsAnnot loc
-  | EStrUtilTypeNonLiteralArg loc
   | EUnexpectedThisType loc
   | ETypeParamMinArity (loc, _)
   | EAssignConstLikeBinding { loc; _ }
@@ -2562,6 +2568,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETrivialRecursiveDefinition (loc, _)
   | EInvalidCatchParameterAnnotation { loc; _ }
   | EInvalidMappedType { loc; _ }
+  | EInvalidTemplateLiteralType { loc; _ }
   | ETSSyntax { loc; _ }
   | EVarianceKeyword { loc; _ }
   | EReferenceInAnnotation (loc, _, _)
@@ -3249,7 +3256,6 @@ let friendly_message_of_msg = function
       }
   | EUnsupportedExact (_, lower) -> Normal (MessageCannotCreateExactType lower)
   | EUnexpectedThisType _ -> Normal MessageUnexpectedUseOfThisType
-  | EStrUtilTypeNonLiteralArg _ -> Normal MessageCannotUseStrUtilType
   | EExportsAnnot _ -> Normal MessageCannotUseDollarExports
   | EUnsupportedKeyInObject { key_error_kind; obj_kind; _ } ->
     Normal (MessageUnsupportedKeyInObject { key_error_kind; obj_kind })
@@ -3820,6 +3826,13 @@ let friendly_message_of_msg = function
       | VarianceOnArrayInput -> MessageInvalidMappedTypeWithVarianceOnArrayInput
     in
     Normal msg
+  | EInvalidTemplateLiteralType { kind; _ } ->
+    let msg =
+      match kind with
+      | TooComplex -> MessageInvalidTemplateLiteralTypeComplexity
+      | InvalidPlaceholderType -> MessageInvalidTemplateLiteralTypePlaceholder
+    in
+    Normal msg
   | EDuplicateComponentProp { spread; duplicates } ->
     Normal (MessageRedeclareComponentProp { duplicates; spread_loc = spread })
   | ERefComponentProp { spread = spread_loc; loc = ref_loc } ->
@@ -4152,7 +4165,6 @@ let error_code_of_message err : error_code option =
   | EPolarityMismatch _ -> Some IncompatibleVariance
   | EPrimitiveAsInterface _ -> Some IncompatibleType
   | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
-  | EStrUtilTypeNonLiteralArg _ -> Some InvalidTypeArg
   | EPropNotFoundInLookup { use_op; _ } ->
     let default =
       match use_op with
@@ -4225,6 +4237,7 @@ let error_code_of_message err : error_code option =
   | EComponentBodyInAmbientContext _ -> Some ComponentBodyInAmbientContext
   | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EInvalidMappedType _ -> Some InvalidMappedType
+  | EInvalidTemplateLiteralType _ -> Some InvalidTemplateLiteralType
   | EDuplicateComponentProp _ -> Some InvalidComponentProp
   | ERefComponentProp _ -> Some InvalidComponentProp
   | EKeySpreadProp _ -> Some InvalidSpreadProp

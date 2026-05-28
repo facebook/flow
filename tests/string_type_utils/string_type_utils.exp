@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- combo.js:3:1
 
-Cannot cast `'bar(--color)'` to `CSSVarInter` because string [1] is incompatible with string prefixed with `var(--` [2].
-[incompatible-type]
+Cannot cast `'bar(--color)'` to `CSSVarInter` because string literal `bar(--color)` [1] is incompatible with template
+literal type [2]. [incompatible-type]
 
    combo.js:3:1
    3| 'bar(--color)' as CSSVarInter; // ERROR
@@ -15,8 +15,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- combo.js:4:1
 
-Cannot cast `'var(--color'` to `CSSVarInter` because string [1] is incompatible with string suffixed with `)` [2].
-[incompatible-type]
+Cannot cast `'var(--color'` to `CSSVarInter` because string literal `var(--color` [1] is incompatible with template
+literal type [2]. [incompatible-type]
 
    combo.js:4:1
    4| 'var(--color' as CSSVarInter; // ERROR
@@ -30,8 +30,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- combo.js:8:1
 
-Cannot cast `'bar(--color)'` to `CSSVarRemainder` because string [1] is incompatible with string prefixed with
-`var(--` [2]. [incompatible-type]
+Cannot cast `'bar(--color)'` to `CSSVarRemainder` because string literal `bar(--color)` [1] is incompatible with
+template literal type [2]. [incompatible-type]
 
    combo.js:8:1
    8| 'bar(--color)' as CSSVarRemainder; // ERROR
@@ -45,8 +45,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- combo.js:9:1
 
-Cannot cast `'var(--color'` to `CSSVarRemainder` because string with prefix `var(--` removed [1] is incompatible with
-string suffixed with `)` [2]. [incompatible-type]
+Cannot cast `'var(--color'` to `CSSVarRemainder` because string literal `color` [1] is incompatible with template
+literal type [2]. [incompatible-type]
 
    combo.js:9:1
    9| 'var(--color' as CSSVarRemainder; // ERROR
@@ -137,16 +137,16 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-prefix.js:6:1
 
-Cannot cast `data` to string literal `data-` because string prefixed with `data-` [1] is incompatible with string
-literal `data-` [2]. [incompatible-type]
+Cannot cast `data` to string literal `data-` because template literal type [1] is incompatible with string literal
+`data-` [2]. [incompatible-type]
 
    import-prefix.js:6:1
     6| data as 'data-'; // ERROR
        ^^^^
 
 References:
-   prefix.js:72:28
-   72| declare export const data: DataProp;
+   prefix.js:74:28
+   74| declare export const data: DataProp;
                                   ^^^^^^^^ [1]
    import-prefix.js:6:9
     6| data as 'data-'; // ERROR
@@ -155,15 +155,15 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-suffix.js:6:1
 
-Cannot cast `percent` to empty because string suffixed with `%` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `percent` to empty because template literal type [1] is incompatible with empty [2]. [incompatible-type]
 
    import-suffix.js:6:1
     6| percent as empty; // ERROR
        ^^^^^^^
 
 References:
-   suffix.js:57:31
-   57| declare export const percent: Percent;
+   suffix.js:59:31
+   59| declare export const percent: Percent;
                                      ^^^^^^^ [1]
    import-suffix.js:6:12
     6| percent as empty; // ERROR
@@ -172,7 +172,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- prefix.js:6:1
 
-Cannot cast `'data'` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
+Cannot cast `'data'` to `DataProp` because string literal `data` [1] is incompatible with template literal type [2].
 [incompatible-type]
 
    prefix.js:6:1
@@ -187,8 +187,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- prefix.js:7:1
 
-Cannot cast `'x-data-x'` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
-[incompatible-type]
+Cannot cast `'x-data-x'` to `DataProp` because string literal `x-data-x` [1] is incompatible with template literal
+type [2]. [incompatible-type]
 
    prefix.js:7:1
    7| 'x-data-x' as DataProp; // ERROR
@@ -202,8 +202,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:12:3
 
-Cannot cast `x` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
-[incompatible-type]
+Cannot cast `x` to `DataProp` because string [1] is incompatible with template literal type [2]. [incompatible-type]
 
    prefix.js:12:3
    12|   x as DataProp; // ERROR
@@ -220,7 +219,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:20:3
 
-Cannot cast `x` to string literal `data-` because string prefixed with `data-` [1] is incompatible with string literal
+Cannot cast `x` to string literal `data-` because template literal type [1] is incompatible with string literal
 `data-` [2]. [incompatible-type]
 
    prefix.js:20:3
@@ -252,7 +251,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:36:3
 
-Cannot cast `x` to key set because string prefixed with `data-` [1] is incompatible with string literal `xxx` [2].
+Cannot cast `x` to key set because template literal type [1] is incompatible with string literal `xxx` [2].
 [incompatible-type]
 
    prefix.js:36:3
@@ -268,257 +267,239 @@ References:
                       ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- prefix.js:47:12
+Error --------------------------------------------------------------------------------------------------- prefix.js:57:5
 
-Cannot use `StringPrefix` because the first type argument must be a string literal. [invalid-type-arg]
+Cannot cast `x` to empty because template literal type [1] is incompatible with empty [2]. [incompatible-type]
 
-   47| type Err = StringPrefix<string>; // ERROR
-                  ^^^^^^^^^^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------------- prefix.js:48:43
-
-Cannot use `StringPrefix` because the first type argument must be a string literal. [invalid-type-arg]
-
-   48| declare function err<T extends string>(x: StringPrefix<T>): void; // ERROR
-                                                 ^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------------------- prefix.js:55:5
-
-Cannot cast `x` to empty because string prefixed with `data-` [1] is incompatible with empty [2]. [incompatible-type]
-
-   prefix.js:55:5
-   55|     x as empty; // ERROR
+   prefix.js:57:5
+   57|     x as empty; // ERROR
            ^
 
 References:
-   prefix.js:52:20
-   52|   declare const x: DataProp | number;
+   prefix.js:54:20
+   54|   declare const x: DataProp | number;
                           ^^^^^^^^ [1]
-   prefix.js:55:10
-   55|     x as empty; // ERROR
+   prefix.js:57:10
+   57|     x as empty; // ERROR
                 ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- prefix.js:68:3
+Error --------------------------------------------------------------------------------------------------- prefix.js:70:3
 
-Cannot cast `dataProp` to `DataFooProp` because string prefixed with `data-` [1] is incompatible with string prefixed
-with `data-foo-` [2]. [incompatible-type]
+Cannot cast `dataProp` to `DataFooProp` because template literal type [1] is incompatible with template literal
+type [2]. [incompatible-type]
 
-   prefix.js:68:3
-   68|   dataProp as DataFooProp; // ERROR
+   prefix.js:70:3
+   70|   dataProp as DataFooProp; // ERROR
          ^^^^^^^^
 
 References:
-   prefix.js:64:27
-   64|   declare const dataProp: DataProp;
+   prefix.js:66:27
+   66|   declare const dataProp: DataProp;
                                  ^^^^^^^^ [1]
-   prefix.js:68:15
-   68|   dataProp as DataFooProp; // ERROR
+   prefix.js:70:15
+   70|   dataProp as DataFooProp; // ERROR
                      ^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- prefix.js:75:15
+Error -------------------------------------------------------------------------------------------------- prefix.js:77:15
 
-Cannot use type without at least 1 type argument. [missing-type-arg]
+Cannot use `StringPrefix` [1] without 1-2 type arguments. [missing-type-arg]
 
-   75| type NoArgs = StringPrefix;
-                     ^^^^^^^^^^^^
+   prefix.js:77:15
+     77| type NoArgs = StringPrefix; // ERROR
+                       ^^^^^^^^^^^^
 
-
-Error -------------------------------------------------------------------------------------------------- prefix.js:76:21
-
-Cannot use type without at least 1 type argument. [missing-type-arg]
-
-   76| type ZeroTypeArgs = StringPrefix<>;
-                           ^^^^^^^^^^^^^^
+References:
+   <BUILTINS>/core.js:3204:18
+   3204| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- prefix.js:77:24
+Error -------------------------------------------------------------------------------------------------- prefix.js:78:21
+
+Cannot use `StringPrefix` [1] with fewer than 1 type argument. [missing-type-arg]
+
+   prefix.js:78:21
+     78| type ZeroTypeArgs = StringPrefix<>; // ERROR
+                             ^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:3204:18
+   3204| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- prefix.js:79:24
 
 Cannot use `StringPrefix` [1] with more than 2 type arguments. [extra-type-arg]
 
-   77| type TooManyTypeArgs = StringPrefix<'foo', 'bar', 'baz'>;
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   prefix.js:79:24
+     79| type TooManyTypeArgs = StringPrefix<'foo', 'bar', 'baz'>; // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:3204:18
+   3204| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- prefix.js:82:1
+Error --------------------------------------------------------------------------------------------------- prefix.js:84:1
 
-Cannot cast `'$'` to `Price` because string with prefix `$` removed [1] is incompatible with union type [2].
+Cannot cast `'$'` to `Price` because string literal `$` [1] is incompatible with template literal type [2].
 [incompatible-type]
 
-   prefix.js:82:1
-   82| '$' as Price; // ERROR
+   prefix.js:84:1
+   84| '$' as Price; // ERROR
        ^^^ [1]
 
 References:
-   prefix.js:80:32
-   80| type Price = StringPrefix<'$', '1' | '2'>;
-                                      ^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- prefix.js:83:1
-
-Cannot cast `'1'` to `Price` because string [1] is incompatible with string prefixed with `$` [2]. [incompatible-type]
-
-   prefix.js:83:1
-   83| '1' as Price; // ERROR
-       ^^^ [1]
-
-References:
-   prefix.js:83:8
-   83| '1' as Price; // ERROR
+   prefix.js:84:8
+   84| '$' as Price; // ERROR
               ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- prefix.js:91:3
+Error --------------------------------------------------------------------------------------------------- prefix.js:85:1
 
-Cannot cast `x` to union type because: [incompatible-type]
- - Either string prefixed with `$` [1] is incompatible with string literal `$1` [2].
- - Or string prefixed with `$` [1] is incompatible with string literal `$2` [3].
-
-   prefix.js:91:3
-   91|   x as '$1' | '$2'; // ERROR: we don't support this
-         ^
-
-References:
-   prefix.js:89:20
-   89|   declare const x: Price;
-                          ^^^^^ [1]
-   prefix.js:91:8
-   91|   x as '$1' | '$2'; // ERROR: we don't support this
-              ^^^^ [2]
-   prefix.js:91:15
-   91|   x as '$1' | '$2'; // ERROR: we don't support this
-                     ^^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------------------- prefix.js:96:3
-
-Cannot cast `x` to string prefixed with `foo` because string [1] is incompatible with string literal `xxx` [2].
+Cannot cast `'1'` to `Price` because string literal `1` [1] is incompatible with template literal type [2].
 [incompatible-type]
 
-   prefix.js:96:3
-   96|   x as StringPrefix<'foo', 'xxx'>; // ERROR
+   prefix.js:85:1
+   85| '1' as Price; // ERROR
+       ^^^ [1]
+
+References:
+   prefix.js:85:8
+   85| '1' as Price; // ERROR
+              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- prefix.js:98:3
+
+Cannot cast `x` to `StringPrefix` because template literal type [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   prefix.js:98:3
+   98|   x as StringPrefix<'foo', 'xxx'>; // ERROR
          ^
 
 References:
-   prefix.js:94:20
-   94|   declare const x: StringPrefix<'foo'>;
+   prefix.js:96:20
+   96|   declare const x: StringPrefix<'foo'>;
                           ^^^^^^^^^^^^^^^^^^^ [1]
-   prefix.js:96:28
-   96|   x as StringPrefix<'foo', 'xxx'>; // ERROR
-                                  ^^^^^ [2]
+   prefix.js:98:8
+   98|   x as StringPrefix<'foo', 'xxx'>; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- prefix.js:104:3
+Error -------------------------------------------------------------------------------------------------- prefix.js:106:3
 
-Cannot cast `x` to string prefixed with `foo` because string literal `bar` [1] is incompatible with string literal
-`xxx` [2]. [incompatible-type]
+Cannot cast `x` to `StringPrefix` because string literal `foobar` [1] is incompatible with template literal type [2].
+[incompatible-type]
 
-   prefix.js:104:3
-   104|   x as StringPrefix<'foo', 'xxx'>; // ERROR
+   prefix.js:106:3
+   106|   x as StringPrefix<'foo', 'xxx'>; // ERROR
           ^
 
 References:
-   prefix.js:99:40
-    99|   declare const x: StringPrefix<'foo', 'bar'>;
-                                               ^^^^^ [1]
-   prefix.js:104:28
-   104|   x as StringPrefix<'foo', 'xxx'>; // ERROR
-                                   ^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- prefix.js:107:3
-
-Cannot cast `x` to string prefixed with `f` because string prefixed with `foo` [1] is incompatible with string prefixed
-with `f` [2]. [incompatible-type]
-
-   prefix.js:107:3
-   107|   x as StringPrefix<'f', 'bar'>; // ERROR
-          ^
-
-References:
-   prefix.js:99:20
-    99|   declare const x: StringPrefix<'foo', 'bar'>;
+   prefix.js:101:20
+   101|   declare const x: StringPrefix<'foo', 'bar'>;
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   prefix.js:107:8
-   107|   x as StringPrefix<'f', 'bar'>; // ERROR
+   prefix.js:106:8
+   106|   x as StringPrefix<'foo', 'xxx'>; // ERROR
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- prefix.js:109:3
+
+Cannot cast `x` to `StringPrefix` because string literal `foobar` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   prefix.js:109:3
+   109|   x as StringPrefix<'f', 'bar'>; // ERROR
+          ^
+
+References:
+   prefix.js:101:20
+   101|   declare const x: StringPrefix<'foo', 'bar'>;
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   prefix.js:109:8
+   109|   x as StringPrefix<'f', 'bar'>; // ERROR
                ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- prefix.js:109:45
+Error ------------------------------------------------------------------------------------------------- prefix.js:111:45
 
-Cannot instantiate `StringPrefix` because number literal `1` [1] is incompatible with string [2]. [incompatible-type]
+Cannot instantiate `StringPrefix` because in type argument `R`: number literal `1` [1] is incompatible with string [2].
+[incompatible-type]
 
-   prefix.js:109:45
-   109| type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
-                                                    ^ [1]
+   prefix.js:111:45
+    111| type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
+                                                     ^ [1]
 
 References:
-   prefix.js:109:25
-   109| type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
-                                ^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:3204:55
+   3204| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+                                                               ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- prefix.js:114:3
+Error -------------------------------------------------------------------------------------------------- prefix.js:116:3
 
-Cannot cast `x` to string literal `3` because string with prefix `$` removed [1] is incompatible with string literal
-`3` [2]. [incompatible-type]
+Cannot cast `x` to string literal `3` because string literal `2` [1] is incompatible with string literal `3` [2].
+[incompatible-type]
 
-   prefix.js:114:3
-   114|   x as '3'; // ERROR
+   prefix.js:116:3
+   116|   x as '3'; // ERROR
           ^
 
 References:
-   prefix.js:112:25
-   112|   const x = stripDollar('$2');
+   prefix.js:114:25
+   114|   const x = stripDollar('$2');
                                 ^^^^ [1]
-   prefix.js:114:8
-   114|   x as '3'; // ERROR
+   prefix.js:116:8
+   116|   x as '3'; // ERROR
                ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- prefix.js:128:5
+Error -------------------------------------------------------------------------------------------------- prefix.js:130:5
 
 Cannot assign `obj` to `noCopyReadWrite` because in the indexer property's key: string `bar` [1] is incompatible with
-string prefixed with `foo` [2]. [incompatible-type]
+template literal type [2]. [incompatible-type]
 
-   prefix.js:128:5
-   128|     obj; // ERROR
+   prefix.js:130:5
+   130|     obj; // ERROR
             ^^^
 
 References:
-   prefix.js:127:26
-   127|   const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} =
+   prefix.js:129:26
+   129|   const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} =
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   prefix.js:119:16
-   119|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
+   prefix.js:121:16
+   121|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- prefix.js:132:7
+Error -------------------------------------------------------------------------------------------------- prefix.js:134:7
 
 Cannot assign `obj` to `validKeyInvalidValue` because in property `foobar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
-   prefix.js:132:7
-   132|   } = obj; // ERROR
+   prefix.js:134:7
+   134|   } = obj; // ERROR
               ^^^
 
 References:
-   prefix.js:119:46
-   119|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
+   prefix.js:121:46
+   121|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
                                                      ^^^^^^ [1]
-   prefix.js:131:15
-   131|     +foobar?: string,
+   prefix.js:133:15
+   133|     +foobar?: string,
                       ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- suffix.js:6:1
 
-Cannot cast empty string to `Percent` because string [1] is incompatible with string suffixed with `%` [2].
+Cannot cast empty string to `Percent` because empty string [1] is incompatible with template literal type [2].
 [incompatible-type]
 
    suffix.js:6:1
@@ -533,7 +514,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- suffix.js:7:1
 
-Cannot cast `'%6'` to `Percent` because string [1] is incompatible with string suffixed with `%` [2].
+Cannot cast `'%6'` to `Percent` because string literal `%6` [1] is incompatible with template literal type [2].
 [incompatible-type]
 
    suffix.js:7:1
@@ -548,7 +529,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:12:3
 
-Cannot cast `x` to `Percent` because string [1] is incompatible with string suffixed with `%` [2]. [incompatible-type]
+Cannot cast `x` to `Percent` because string [1] is incompatible with template literal type [2]. [incompatible-type]
 
    suffix.js:12:3
    12|   x as Percent; // ERROR
@@ -565,7 +546,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:20:3
 
-Cannot cast `x` to string literal `%` because string suffixed with `%` [1] is incompatible with string literal `%` [2].
+Cannot cast `x` to string literal `%` because template literal type [1] is incompatible with string literal `%` [2].
 [incompatible-type]
 
    suffix.js:20:3
@@ -581,218 +562,199 @@ References:
               ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- suffix.js:31:12
+Error --------------------------------------------------------------------------------------------------- suffix.js:41:5
 
-Cannot use `StringPrefix` because the first type argument must be a string literal. [invalid-type-arg]
+Cannot cast `x` to empty because template literal type [1] is incompatible with empty [2]. [incompatible-type]
 
-   31| type Err = StringSuffix<string>; // ERROR
-                  ^^^^^^^^^^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------------- suffix.js:32:43
-
-Cannot use `StringPrefix` because the first type argument must be a string literal. [invalid-type-arg]
-
-   32| declare function err<T extends string>(x: StringSuffix<T>): void; // ERROR
-                                                 ^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------------------- suffix.js:39:5
-
-Cannot cast `x` to empty because string suffixed with `%` [1] is incompatible with empty [2]. [incompatible-type]
-
-   suffix.js:39:5
-   39|     x as empty; // ERROR
+   suffix.js:41:5
+   41|     x as empty; // ERROR
            ^
 
 References:
-   suffix.js:36:20
-   36|   declare const x: Percent | number;
+   suffix.js:38:20
+   38|   declare const x: Percent | number;
                           ^^^^^^^ [1]
-   suffix.js:39:10
-   39|     x as empty; // ERROR
+   suffix.js:41:10
+   41|     x as empty; // ERROR
                 ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- suffix.js:53:3
+Error --------------------------------------------------------------------------------------------------- suffix.js:55:3
 
-Cannot cast `bar` to `FooBar` because string suffixed with `bar` [1] is incompatible with string suffixed with
-`foobar` [2]. [incompatible-type]
+Cannot cast `bar` to `FooBar` because template literal type [1] is incompatible with template literal type [2].
+[incompatible-type]
 
-   suffix.js:53:3
-   53|   bar as FooBar; // ERROR
+   suffix.js:55:3
+   55|   bar as FooBar; // ERROR
          ^^^
 
 References:
-   suffix.js:50:22
-   50|   declare const bar: Bar;
+   suffix.js:52:22
+   52|   declare const bar: Bar;
                             ^^^ [1]
-   suffix.js:53:10
-   53|   bar as FooBar; // ERROR
+   suffix.js:55:10
+   55|   bar as FooBar; // ERROR
                 ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- suffix.js:60:15
+Error -------------------------------------------------------------------------------------------------- suffix.js:62:15
 
-Cannot use type without at least 1 type argument. [missing-type-arg]
+Cannot use `StringSuffix` [1] without 1-2 type arguments. [missing-type-arg]
 
-   60| type NoArgs = StringSuffix;
-                     ^^^^^^^^^^^^
+   suffix.js:62:15
+     62| type NoArgs = StringSuffix; // ERROR
+                       ^^^^^^^^^^^^
 
-
-Error -------------------------------------------------------------------------------------------------- suffix.js:61:21
-
-Cannot use type without at least 1 type argument. [missing-type-arg]
-
-   61| type ZeroTypeArgs = StringSuffix<>;
-                           ^^^^^^^^^^^^^^
+References:
+   <BUILTINS>/core.js:3213:18
+   3213| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- suffix.js:62:24
+Error -------------------------------------------------------------------------------------------------- suffix.js:63:21
+
+Cannot use `StringSuffix` [1] with fewer than 1 type argument. [missing-type-arg]
+
+   suffix.js:63:21
+     63| type ZeroTypeArgs = StringSuffix<>; // ERROR
+                             ^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:3213:18
+   3213| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- suffix.js:64:24
 
 Cannot use `StringSuffix` [1] with more than 2 type arguments. [extra-type-arg]
 
-   62| type TooManyTypeArgs = StringSuffix<'foo', 'bar', 'baz'>;
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   suffix.js:64:24
+     64| type TooManyTypeArgs = StringSuffix<'foo', 'bar', 'baz'>; // ERROR
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:3213:18
+   3213| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- suffix.js:67:1
+Error --------------------------------------------------------------------------------------------------- suffix.js:69:1
 
-Cannot cast `'!'` to `Exclamation` because string with suffix `!` removed [1] is incompatible with union type [2].
+Cannot cast `'!'` to `Exclamation` because string literal `!` [1] is incompatible with template literal type [2].
 [incompatible-type]
 
-   suffix.js:67:1
-   67| '!' as Exclamation; // ERROR
+   suffix.js:69:1
+   69| '!' as Exclamation; // ERROR
        ^^^ [1]
 
 References:
-   suffix.js:65:38
-   65| type Exclamation = StringSuffix<'!', 'woo' | 'yay'>;
-                                            ^^^^^^^^^^^^^ [2]
+   suffix.js:69:8
+   69| '!' as Exclamation; // ERROR
+              ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- suffix.js:68:1
+Error --------------------------------------------------------------------------------------------------- suffix.js:70:1
 
-Cannot cast `'yay'` to `Exclamation` because string [1] is incompatible with string suffixed with `!` [2].
+Cannot cast `'yay'` to `Exclamation` because string literal `yay` [1] is incompatible with template literal type [2].
 [incompatible-type]
 
-   suffix.js:68:1
-   68| 'yay' as Exclamation; // ERROR
+   suffix.js:70:1
+   70| 'yay' as Exclamation; // ERROR
        ^^^^^ [1]
 
 References:
-   suffix.js:68:10
-   68| 'yay' as Exclamation; // ERROR
+   suffix.js:70:10
+   70| 'yay' as Exclamation; // ERROR
                 ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- suffix.js:76:3
+Error --------------------------------------------------------------------------------------------------- suffix.js:83:3
 
-Cannot cast `x` to union type because: [incompatible-type]
- - Either string suffixed with `!` [1] is incompatible with string literal `woo!` [2].
- - Or string suffixed with `!` [1] is incompatible with string literal `yay!` [3].
-
-   suffix.js:76:3
-   76|   x as 'woo!' | 'yay!'; // ERROR: we don't support this
-         ^
-
-References:
-   suffix.js:74:20
-   74|   declare const x: Exclamation;
-                          ^^^^^^^^^^^ [1]
-   suffix.js:76:8
-   76|   x as 'woo!' | 'yay!'; // ERROR: we don't support this
-              ^^^^^^ [2]
-   suffix.js:76:17
-   76|   x as 'woo!' | 'yay!'; // ERROR: we don't support this
-                       ^^^^^^ [3]
-
-
-Error --------------------------------------------------------------------------------------------------- suffix.js:81:3
-
-Cannot cast `x` to string suffixed with `!` because string [1] is incompatible with string literal `xxx` [2].
+Cannot cast `x` to `StringSuffix` because template literal type [1] is incompatible with template literal type [2].
 [incompatible-type]
 
-   suffix.js:81:3
-   81|   x as StringSuffix<'!', 'xxx'>; // ERROR
+   suffix.js:83:3
+   83|   x as StringSuffix<'!', 'xxx'>; // ERROR
          ^
 
 References:
-   suffix.js:79:20
-   79|   declare const x: StringSuffix<'!'>;
+   suffix.js:81:20
+   81|   declare const x: StringSuffix<'!'>;
                           ^^^^^^^^^^^^^^^^^ [1]
-   suffix.js:81:26
-   81|   x as StringSuffix<'!', 'xxx'>; // ERROR
-                                ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- suffix.js:89:3
-
-Cannot cast `x` to string suffixed with `foo` because string literal `bar` [1] is incompatible with string literal
-`xxx` [2]. [incompatible-type]
-
-   suffix.js:89:3
-   89|   x as StringSuffix<'foo', 'xxx'>; // ERROR
-         ^
-
-References:
-   suffix.js:84:40
-   84|   declare const x: StringSuffix<'foo', 'bar'>;
-                                              ^^^^^ [1]
-   suffix.js:89:28
-   89|   x as StringSuffix<'foo', 'xxx'>; // ERROR
-                                  ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- suffix.js:92:3
-
-Cannot cast `x` to string suffixed with `o` because string suffixed with `foo` [1] is incompatible with string suffixed
-with `o` [2]. [incompatible-type]
-
-   suffix.js:92:3
-   92|   x as StringSuffix<'o', 'bar'>; // ERROR
-         ^
-
-References:
-   suffix.js:84:20
-   84|   declare const x: StringSuffix<'foo', 'bar'>;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   suffix.js:92:8
-   92|   x as StringSuffix<'o', 'bar'>; // ERROR
+   suffix.js:83:8
+   83|   x as StringSuffix<'!', 'xxx'>; // ERROR
               ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- suffix.js:94:45
+Error --------------------------------------------------------------------------------------------------- suffix.js:91:3
 
-Cannot instantiate `StringSuffix` because number literal `1` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to `StringSuffix` because string literal `barfoo` [1] is incompatible with template literal type [2].
+[incompatible-type]
 
-   suffix.js:94:45
-   94| type RemainderTypeErr = StringSuffix<'foo', 1>; // ERROR
-                                                   ^ [1]
-
-References:
-   suffix.js:94:25
-   94| type RemainderTypeErr = StringSuffix<'foo', 1>; // ERROR
-                               ^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- suffix.js:99:3
-
-Cannot cast `x` to string literal `yay!` because string with suffix `!` removed [1] is incompatible with string literal
-`yay!` [2]. [incompatible-type]
-
-   suffix.js:99:3
-   99|   x as "yay!"; // ERROR
+   suffix.js:91:3
+   91|   x as StringSuffix<'foo', 'xxx'>; // ERROR
          ^
 
 References:
-   suffix.js:97:23
-   97|   const x =  unexcite("yay!");
-                             ^^^^^^ [1]
-   suffix.js:99:8
-   99|   x as "yay!"; // ERROR
-              ^^^^^^ [2]
+   suffix.js:86:20
+   86|   declare const x: StringSuffix<'foo', 'bar'>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   suffix.js:91:8
+   91|   x as StringSuffix<'foo', 'xxx'>; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- suffix.js:94:3
+
+Cannot cast `x` to `StringSuffix` because string literal `barfoo` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   suffix.js:94:3
+   94|   x as StringSuffix<'o', 'bar'>; // ERROR
+         ^
+
+References:
+   suffix.js:86:20
+   86|   declare const x: StringSuffix<'foo', 'bar'>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   suffix.js:94:8
+   94|   x as StringSuffix<'o', 'bar'>; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- suffix.js:96:45
+
+Cannot instantiate `StringSuffix` because in type argument `R`: number literal `1` [1] is incompatible with string [2].
+[incompatible-type]
+
+   suffix.js:96:45
+     96| type RemainderTypeErr = StringSuffix<'foo', 1>; // ERROR
+                                                     ^ [1]
+
+References:
+   <BUILTINS>/core.js:3213:55
+   3213| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+                                                               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- suffix.js:101:3
+
+Cannot cast `x` to string literal `yay!` because string literal `yay` [1] is incompatible with string literal
+`yay!` [2]. [incompatible-type]
+
+   suffix.js:101:3
+   101|   x as "yay!"; // ERROR
+          ^
+
+References:
+   suffix.js:99:23
+    99|   const x =  unexcite("yay!");
+                              ^^^^^^ [1]
+   suffix.js:101:8
+   101|   x as "yay!"; // ERROR
+               ^^^^^^ [2]
 
 
 
-Found 53 errors
+Found 47 errors

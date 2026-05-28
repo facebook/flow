@@ -368,7 +368,7 @@ pub mod invalid_cyclic_type_validation {
                 | TypeInner::ObjProtoT(_)
                 | TypeInner::NullProtoT(_)
                 | TypeInner::FunProtoBindT(_)
-                | TypeInner::StrUtilT { .. }
+                | TypeInner::TemplateLiteralT { .. }
                 | TypeInner::OpenT(_)
                 | TypeInner::IntersectionT(_, _)
                 | TypeInner::UnionT(_, _)
@@ -6998,7 +6998,8 @@ pub fn is_same_instance_type(
 // (x: ReadOnly<O2>); // ERROR
 //
 // In order to prevent this in common mapped type and other cases, we do a best-effort
-// check to see if the RHS contains a mapped type, or other utility type. This traversal
+// check to see if the RHS contains a mapped type, other utility type, or a template
+// literal type (whose subtyping is not captured by parameter variance). This traversal
 // is extremely limited and does not attempt to be exhaustive.
 pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
     use std::collections::BTreeSet;
@@ -7076,6 +7077,14 @@ pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
             {
                 true
             }
+            // Transparent type aliases whose body is a template literal type cannot
+            // be checked by parameter-variance comparison alone: template literal
+            // subtyping admits relationships (e.g. prefix extension) that aren't
+            // captured by pointwise covariance/contravariance of the type arguments.
+            // Treat these like other utility types — skip the TypeAppT-vs-TypeAppT
+            // fast path and force expansion of both sides so the template-literal
+            // subtyping rules in subtyping_kit can run.
+            TypeInner::TemplateLiteralT { .. } => true,
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::TypeT(_, inner_t) => loop_inner(cx, inner_t, seen_open_id, seen_eval_id),
                 DefTInner::PolyT(box PolyTData { t_out, .. }) => {

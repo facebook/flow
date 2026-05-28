@@ -849,56 +849,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               let elem_t = List.hd elemts in
               reconstruct_ast elem_t targs
           )
-        | "StringPrefix" ->
-          let (ts, targs) = convert_type_params () in
-          let create_string_prefix_type ~prefix ~remainder =
-            match prefix with
-            | DefT (_, SingletonStrT { value = OrdinaryName prefix; _ }) ->
-              let reason = mk_reason (RStringPrefix { prefix }) loc in
-              reconstruct_ast (StrUtilT { reason; op = StrPrefix prefix; remainder }) targs
-            | _ -> error_type cx loc (Error_message.EStrUtilTypeNonLiteralArg loc) t_ast
-          in
-          let reason = mk_reason (RType (OrdinaryName "StringPrefix")) loc in
-          (match ts with
-          | [] -> error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast
-          | [prefix] -> create_string_prefix_type ~prefix ~remainder:None
-          | [prefix; remainder] ->
-            let use_op = Op (TypeApplication { type_ = reason }) in
-            Context.add_post_inference_subtyping_check cx remainder use_op (StrModuleT.at loc);
-            create_string_prefix_type ~prefix ~remainder:(Some remainder)
-          | _ ->
-            error_type
-              cx
-              loc
-              (Error_message.ETooManyTypeArgs
-                 { reason_tapp = reason; arity_loc = loc; maximum_arity = 2 }
-              )
-              t_ast)
-        | "StringSuffix" ->
-          let (ts, targs) = convert_type_params () in
-          let create_string_suffix_type ~suffix ~remainder =
-            match suffix with
-            | DefT (_, SingletonStrT { value = OrdinaryName suffix; _ }) ->
-              let reason = mk_reason (RStringSuffix { suffix }) loc in
-              reconstruct_ast (StrUtilT { reason; op = StrSuffix suffix; remainder }) targs
-            | _ -> error_type cx loc (Error_message.EStrUtilTypeNonLiteralArg loc) t_ast
-          in
-          let reason = mk_reason (RType (OrdinaryName "StringSuffix")) loc in
-          (match ts with
-          | [] -> error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast
-          | [suffix] -> create_string_suffix_type ~suffix ~remainder:None
-          | [suffix; remainder] ->
-            let use_op = Op (TypeApplication { type_ = reason }) in
-            Context.add_post_inference_subtyping_check cx remainder use_op (StrModuleT.at loc);
-            create_string_suffix_type ~suffix ~remainder:(Some remainder)
-          | _ ->
-            error_type
-              cx
-              loc
-              (Error_message.ETooManyTypeArgs
-                 { reason_tapp = reason; arity_loc = loc; maximum_arity = 2 }
-              )
-              t_ast)
         (* Array<T> *)
         | "Array" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -1754,13 +1704,33 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             comments;
           }
       )
-    | (loc, TemplateLiteral _) as t ->
-      Flow_js_utils.add_output
-        env.cx
-        (Error_message.EUnsupportedSyntax
-           (loc, Flow_intermediate_error_types.(TSLibSyntax TemplateLiteralType))
-        );
-      Tast_utils.error_mapper#type_ t
+    | (loc, TemplateLiteral { T.TemplateLiteral.quasis; types; comments }) ->
+      if not (Context.tslib_syntax env.cx) then begin
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.(TSLibSyntax TemplateLiteralType))
+          );
+        Tast_utils.error_mapper#type_
+          (loc, TemplateLiteral { T.TemplateLiteral.quasis; types; comments })
+      end else
+        let quasis_strs =
+          List.map
+            (fun ( _,
+                   { T.TemplateLiteral.Element.value = { T.TemplateLiteral.Element.cooked; _ }; _ }
+                 ) -> cooked)
+            quasis
+        in
+        let (ts, type_asts) = convert_list env types in
+        let result_t =
+          Template_literal_type.resolve
+            ~possible_concrete_types_for_inspection:Flow_js.possible_concrete_types_for_inspection
+            ~quasis:quasis_strs
+            ~types:ts
+            loc
+            env.cx
+        in
+        ((loc, result_t), TemplateLiteral { T.TemplateLiteral.quasis; types = type_asts; comments })
     | (loc, ConstructorType { ConstructorType.abstract_; func }) as t ->
       if not (Context.tslib_syntax env.cx) then (
         Flow_js_utils.add_output

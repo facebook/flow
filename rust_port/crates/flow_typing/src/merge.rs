@@ -612,7 +612,7 @@ fn try_eval_concrete_type_truthyness<'cx>(cx: &Context<'cx>, t: &Type) -> Truthy
         TypeInner::FunProtoBindT(_) => TruthynessResult::ConstCondUnknown,
         TypeInner::IntersectionT(_, _) => TruthynessResult::ConstCondUnknown,
         TypeInner::KeysT(_, _) => TruthynessResult::ConstCondUnknown,
-        TypeInner::StrUtilT { .. } => TruthynessResult::ConstCondUnknown,
+        TypeInner::TemplateLiteralT { .. } => TruthynessResult::ConstCondUnknown,
         TypeInner::NominalT { .. } => TruthynessResult::ConstCondUnknown,
         TypeInner::NamespaceT(_) => TruthynessResult::ConstCondUnknown,
         TypeInner::AnyT(_, _) => TruthynessResult::ConstCondUnknown,
@@ -1298,6 +1298,9 @@ fn check_general_post_inference_validations<'cx>(
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     for (t, use_t) in cx.post_inference_validation_flows().iter() {
         flow_js::flow_non_speculating(cx, (t, use_t))?
+    }
+    for f in cx.post_inference_validation_callbacks().iter() {
+        f(cx)?
     }
     Ok(())
 }

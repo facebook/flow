@@ -5632,7 +5632,7 @@ fn create_computed_prop<'a>(
                 def.deref(),
                 DefTInner::StrGeneralT(_) | DefTInner::NumGeneralT(_) | DefTInner::EnumValueT(_)
             ),
-            TypeInner::StrUtilT { .. } => true,
+            TypeInner::TemplateLiteralT { .. } => true,
             TypeInner::AnyT(_, _) => true,
             _ => false,
         }

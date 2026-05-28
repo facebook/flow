@@ -120,11 +120,11 @@ module rec TypeTerm : sig
       }
     (* collects the keys of an object *)
     | KeysT of reason * t
-    (* advanced string types *)
-    | StrUtilT of {
+    (* template literal types, e.g. `hello ${string}` *)
+    | TemplateLiteralT of {
         reason: reason;
-        op: str_util_op;
-        remainder: t option;
+        quasis: string list;
+        types: t list;
       }
     (* annotations *)
     (* A type that annotates a storage location performs two functions:
@@ -317,10 +317,6 @@ module rec TypeTerm : sig
   and defer_use_t =
     (* destructors that extract parts of various kinds of types *)
     | TypeDestructorT of use_op * reason * destructor
-
-  and str_util_op =
-    | StrPrefix of string
-    | StrSuffix of string
 
   and enum_concrete_info = {
     enum_name: string;
@@ -4130,7 +4126,7 @@ let string_of_ctor = function
   | FunProtoBindT _ -> "FunProtoBindT"
   | GenericT _ -> "GenericT"
   | KeysT _ -> "KeysT"
-  | StrUtilT _ -> "StrUtilT"
+  | TemplateLiteralT _ -> "TemplateLiteralT"
   | NamespaceT _ -> "NamespaceT"
   | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"

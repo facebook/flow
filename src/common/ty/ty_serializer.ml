@@ -232,6 +232,24 @@ let type_ =
       in
       just (T.Component { T.Component.tparams = None; params; renders; comments = None })
     | Renders (t, kind) -> just (T.Renders (renders t kind))
+    | TemplateLiteral { quasis; types } ->
+      let last = List.length quasis - 1 in
+      let quasis_ast =
+        List.mapi
+          (fun i q ->
+            ( Loc.none,
+              {
+                T.TemplateLiteral.Element.value = { T.TemplateLiteral.Element.raw = q; cooked = q };
+                tail = i = last;
+              }
+            ))
+          quasis
+      in
+      let types_ast = Base.List.map ~f:type_ types in
+      just
+        (T.TemplateLiteral
+           { T.TemplateLiteral.quasis = quasis_ast; types = types_ast; comments = None }
+        )
   and renders t kind =
     let argument = type_ t in
     let variant =

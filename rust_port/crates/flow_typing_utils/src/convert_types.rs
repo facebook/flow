@@ -44,7 +44,6 @@ use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::RendersVariant;
-use flow_typing_type::type_::StrUtilOp;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisStatus;
 use flow_typing_type::type_::ThisTypeAppTData;
@@ -397,25 +396,27 @@ pub fn type_to_json<'cx>(cx: &Context<'cx>, depth: i32, t: &Type) -> Json {
             ],
         ),
         TypeInner::AnyT(_, _) => json_with_type("Any", vec![]),
-        TypeInner::StrUtilT {
+        TypeInner::TemplateLiteralT {
             reason: _,
-            op,
-            remainder,
+            quasis,
+            types,
         } => {
-            let mut fields: Vec<(&str, Json)> = match op {
-                StrUtilOp::StrPrefix(s) => vec![
-                    ("op", Json::String("StrPrefix".to_string())),
-                    ("prefix", Json::String(s.to_string())),
-                ],
-                StrUtilOp::StrSuffix(s) => vec![
-                    ("op", Json::String("StrSuffix".to_string())),
-                    ("suffix", Json::String(s.to_string())),
-                ],
-            };
-            if let Some(t) = remainder {
-                fields.push(("remainder", type_to_json(cx, depth - 1, t)));
-            }
-            json_with_type("StrUtil", fields)
+            let fields = vec![
+                (
+                    "quasis",
+                    Json::Array(quasis.iter().map(|s| Json::String(s.to_string())).collect()),
+                ),
+                (
+                    "types",
+                    Json::Array(
+                        types
+                            .iter()
+                            .map(|t| type_to_json(cx, depth - 1, t))
+                            .collect(),
+                    ),
+                ),
+            ];
+            json_with_type("TemplateLiteral", fields)
         }
     }
 }

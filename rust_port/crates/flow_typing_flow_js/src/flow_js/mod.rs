@@ -130,7 +130,6 @@ use flow_typing_type::type_::Selector;
 use flow_typing_type::type_::SetMode;
 use flow_typing_type::type_::SetPrivatePropTData;
 use flow_typing_type::type_::SpreadResolve;
-use flow_typing_type::type_::StrUtilOp;
 use flow_typing_type::type_::Targ;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
