@@ -279,6 +279,10 @@ and utility =
   | NonMaybeType of t
   | ObjKeyMirror of t
   | Class of t
+  | Uppercase of t
+  | Lowercase of t
+  | Capitalize of t
+  | Uncapitalize of t
   (* React utils *)
   | ReactElementConfigType of t
 
@@ -695,6 +699,10 @@ class ['A] comparator_ty =
       | Required _ -> 24
       | Enum _ -> 27
       | Omit _ -> 30
+      | Uppercase _ -> 31
+      | Lowercase _ -> 32
+      | Capitalize _ -> 33
+      | Uncapitalize _ -> 34
 
     method tag_of_polarity _ =
       function
@@ -858,6 +866,10 @@ let string_of_utility_ctor = function
   | NonMaybeType _ -> "NonNullable"
   | ObjKeyMirror _ -> "$KeyMirror"
   | Class _ -> "Class"
+  | Uppercase _ -> "Uppercase"
+  | Lowercase _ -> "Lowercase"
+  | Capitalize _ -> "Capitalize"
+  | Uncapitalize _ -> "Uncapitalize"
   | ReactElementConfigType _ -> "React$ElementConfig"
 
 let types_of_utility = function
@@ -873,6 +885,11 @@ let types_of_utility = function
   | NonMaybeType t -> Some [t]
   | ObjKeyMirror t -> Some [t]
   | Class t -> Some [t]
+  | Uppercase t
+  | Lowercase t
+  | Capitalize t
+  | Uncapitalize t ->
+    Some [t]
   | ReactElementConfigType t -> Some [t]
 
 let string_of_prop_source = function

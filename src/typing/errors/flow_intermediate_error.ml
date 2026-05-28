@@ -2058,6 +2058,12 @@ let to_printable_error :
         text ", e.g. ";
         code (spf "%s {...}" record_name);
       ]
+    | ExplanationStringCasingMustBeCanonical { kind_name } ->
+      [
+        text "The string literal must already be in ";
+        code kind_name;
+        text " canonical form to be a member of this type";
+      ]
   in
   let frame_to_friendly_msgs ~include_incompatibility_pair =
     let map =

@@ -613,6 +613,7 @@ fn try_eval_concrete_type_truthyness<'cx>(cx: &Context<'cx>, t: &Type) -> Truthy
         TypeInner::IntersectionT(_, _) => TruthynessResult::ConstCondUnknown,
         TypeInner::KeysT(_, _) => TruthynessResult::ConstCondUnknown,
         TypeInner::TemplateLiteralT { .. } => TruthynessResult::ConstCondUnknown,
+        TypeInner::StringMappingT { .. } => TruthynessResult::ConstCondUnknown,
         TypeInner::NominalT { .. } => TruthynessResult::ConstCondUnknown,
         TypeInner::NamespaceT(_) => TruthynessResult::ConstCondUnknown,
         TypeInner::AnyT(_, _) => TruthynessResult::ConstCondUnknown,

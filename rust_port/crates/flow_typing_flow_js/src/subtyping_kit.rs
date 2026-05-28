@@ -53,6 +53,7 @@ use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::instantiation_utils;
 use flow_typing_flow_common::obj_type;
 use flow_typing_flow_common::speculation;
+use flow_typing_flow_common::string_case_transform;
 use flow_typing_type::type_::AnyErrorKind;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrType;
@@ -75,6 +76,7 @@ use flow_typing_type::type_::InstTypeInner;
 use flow_typing_type::type_::InstanceKind;
 use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::InstanceTInner;
+use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::LookupAction;
 use flow_typing_type::type_::LookupKind;
 use flow_typing_type::type_::LookupPropForSubtypingData;
@@ -4096,6 +4098,91 @@ pub fn rec_sub_t<'cx>(
         ) => template_literal_type::subtype_template_to_other(
             cx, trace, use_op, reason, u, quasis, types,
         ),
+        // StringMappingT<kind, arg> on the right: we get here when `arg` couldn't
+        //    be eagerly reduced by `string_case_transform::resolve` (generic,
+        //    `string`, unresolved tvar, EvalT for indexed/property access, OpenT,
+        //    AnnotT, ...). We first try to concretize `arg`: if it reduces to a
+        //    shape `resolve` can enumerate, re-resolve and re-flow against the
+        //    eager result. This catches cases hidden behind generic substitution
+        //    or sig-merge that weren't eagerly resolved at annotation time. If
+        //    concretization yields nothing useful, fall back to the canonical-form
+        //    check: the only way a string can satisfy `Kind<arg>` for opaque `arg`
+        //    is to (a) already be in canonical form for `kind` and (b) flow to `arg`.
+        (TypeInner::DefT(_, ld), TypeInner::StringMappingT { reason, kind, arg })
+            if let DefTInner::SingletonStrT { value, .. } = ld.deref() =>
+        {
+            flow_js_utils::update_lit_type_from_annot(cx, l);
+            let arg_loc = reason.loc().dupe();
+            let ts = FlowJs::possible_concrete_types_for_inspection(
+                cx,
+                type_util::reason_of_t(arg),
+                arg,
+            )?;
+            let arg_concretized: Option<Type> = match ts.as_slice() {
+                [] => None,
+                [t] if Type::ptr_eq(t, arg) => None,
+                [t] => Some(t.dupe()),
+                [t0, t1, rest @ ..] => {
+                    let rest_rc: Rc<[Type]> = rest.iter().cloned().collect();
+                    Some(Type::new(TypeInner::UnionT(
+                        type_util::reason_of_t(arg).dupe(),
+                        union_rep::make(
+                            Some(cx.make_aloc_id(&arg_loc)),
+                            union_rep::UnionKind::UnknownKind,
+                            t0.dupe(),
+                            t1.dupe(),
+                            rest_rc,
+                        ),
+                    )))
+                }
+            };
+            match arg_concretized {
+                Some(arg_prime) => {
+                    let resolved = string_case_transform::resolve(
+                        Some(&|cx, r, t| FlowJs::possible_concrete_types_for_inspection(cx, r, t)),
+                        cx,
+                        *kind,
+                        arg_loc,
+                        arg_prime,
+                    );
+                    FlowJs::rec_flow_t(cx, trace, use_op, l, &resolved)
+                }
+                None => {
+                    if string_case_transform::is_canonical(*kind, value.as_str()) {
+                        FlowJs::rec_flow_t(cx, trace, use_op, l, arg)
+                    } else {
+                        flow_js_utils::add_output(
+                            cx,
+                            ErrorMessage::EIncompatibleWithUseOp(Box::new(
+                                flow_typing_errors::error_message::EIncompatibleWithUseOpData {
+                                    use_op,
+                                    reason_lower: type_util::reason_of_t(l).dupe(),
+                                    reason_upper: type_util::reason_of_t(u).dupe(),
+                                    explanation: Some(
+                                        flow_typing_errors::intermediate_error_types::Explanation::ExplanationStringCasingMustBeCanonical {
+                                            kind_name: FlowSmolStr::new_inline(
+                                                string_case_transform::name_of_kind(*kind),
+                                            ),
+                                        },
+                                    ),
+                                },
+                            )),
+                        )?;
+                        Ok(())
+                    }
+                }
+            }
+        }
+        // StringMappingT on the left: every string the deferred form could produce
+        //    is a string, so flow `string` outward. The post-inference `arg <: string`
+        //    check on the original annotation guarantees this is safe.
+        (TypeInner::StringMappingT { reason, .. }, _) => {
+            let str_t = Type::new(TypeInner::DefT(
+                reason.dupe(),
+                DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
+            ));
+            FlowJs::rec_flow_t(cx, trace, use_op, &str_t, u)
+        }
 
         // When do we consider a polymorphic type <X:U> T to be a subtype of another
         // polymorphic type <X:U'> T'? This is the subject of a long line of

@@ -138,6 +138,7 @@ end = struct
         | NullProtoT _
         | FunProtoBindT _
         | TemplateLiteralT _
+        | StringMappingT _
         (* composite types that don't allow self or cyclic reference *)
         | OpenT _
         | DefT (_, (ClassT _ | TypeT (_, _) | PolyT _))

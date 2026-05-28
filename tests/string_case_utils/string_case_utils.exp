@@ -1,0 +1,977 @@
+Error ------------------------------------------------------------------------------------------------ capitalize.js:5:1
+
+Cannot cast `'foo'` to `C1` because string literal `foo` [1] is incompatible with string literal `Foo` [2].
+[incompatible-type]
+
+   capitalize.js:5:1
+   5| 'foo' as C1; // ERROR
+      ^^^^^ [1]
+
+References:
+   capitalize.js:5:10
+   5| 'foo' as C1; // ERROR
+               ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ capitalize.js:6:1
+
+Cannot cast `'FOO'` to `C1` because string literal `FOO` [1] is incompatible with string literal `Foo` [2].
+[incompatible-type]
+
+   capitalize.js:6:1
+   6| 'FOO' as C1; // ERROR
+      ^^^^^ [1]
+
+References:
+   capitalize.js:6:10
+   6| 'FOO' as C1; // ERROR
+               ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- capitalize.js:22:1
+
+Cannot cast `'A'` to `C4` because string literal `A` [1] is incompatible with empty string [2]. [incompatible-type]
+
+   capitalize.js:22:1
+   22| 'A' as C4; // ERROR
+       ^^^ [1]
+
+References:
+   capitalize.js:22:8
+   22| 'A' as C4; // ERROR
+              ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- capitalize.js:34:1
+
+Cannot cast `'foo'` to `C6` because string literal `foo` [1] is incompatible with `C6` [2]. [incompatible-type]
+
+   capitalize.js:34:1
+   34| 'foo' as C6; // ERROR
+       ^^^^^ [1]
+
+References:
+   capitalize.js:34:10
+   34| 'foo' as C6; // ERROR
+                ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- capitalize.js:41:1
+
+Cannot cast `'anything'` to `C7` because string literal `anything` [1] is incompatible with `C7` [2].
+[incompatible-type]
+
+The string literal must already be in `Capitalize` canonical form to be a member of this type.
+
+   capitalize.js:41:1
+   41| 'anything' as C7; // ERROR (first char is lowercase)
+       ^^^^^^^^^^ [1]
+
+References:
+   capitalize.js:41:15
+   41| 'anything' as C7; // ERROR (first char is lowercase)
+                     ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- capitalize.js:48:1
+
+Cannot cast `'abcxyz'` to `C8` because string literal `abcxyz` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   capitalize.js:48:1
+   48| 'abcxyz' as C8; // ERROR (first char must be capital)
+       ^^^^^^^^ [1]
+
+References:
+   capitalize.js:48:13
+   48| 'abcxyz' as C8; // ERROR (first char must be capital)
+                   ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- capitalize.js:56:1
+
+Cannot cast `'abc'` to `C9` because string literal `abc` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   capitalize.js:56:1
+   56| 'abc' as C9; // ERROR (first char is lowercase)
+       ^^^^^ [1]
+
+References:
+   capitalize.js:54:11
+   54| type C9 = Capitalize<`${string}abc`>;
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- capitalize.js:58:1
+
+Cannot cast `'xYZabc'` to `C9` because string literal `xYZabc` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   capitalize.js:58:1
+   58| 'xYZabc' as C9; // ERROR (first char of inner is lowercase)
+       ^^^^^^^^ [1]
+
+References:
+   capitalize.js:54:11
+   54| type C9 = Capitalize<`${string}abc`>;
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- capitalize.js:67:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   67| type Bad1 = Capitalize; // ERROR
+                   ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- capitalize.js:68:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   68| type Bad2 = Capitalize<>; // ERROR
+                   ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- capitalize.js:69:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   69| type Bad3 = Capitalize<'a', 'b'>; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- capitalize.js:73:24
+
+Cannot instantiate `Capitalize` because number literal `42` [1] is incompatible with string [2]. [incompatible-type]
+
+   capitalize.js:73:24
+   73| type Bad4 = Capitalize<42>; // ERROR
+                              ^^ [1]
+
+References:
+   capitalize.js:73:13
+   73| type Bad4 = Capitalize<42>; // ERROR
+                   ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:13:1
+
+Cannot cast `'foo'` to `IA1` because string literal `foo` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   concretization.js:13:1
+   13| 'foo' as IA1; // ERROR
+       ^^^^^ [1]
+
+References:
+   concretization.js:13:10
+   13| 'foo' as IA1; // ERROR
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:14:1
+
+Cannot cast `'BAR'` to `IA1` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   concretization.js:14:1
+   14| 'BAR' as IA1; // ERROR (concretized arg is 'foo', so result is 'FOO')
+       ^^^^^ [1]
+
+References:
+   concretization.js:14:10
+   14| 'BAR' as IA1; // ERROR (concretized arg is 'foo', so result is 'FOO')
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:20:1
+
+Cannot cast `'BAR'` to `PA1` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   concretization.js:20:1
+   20| 'BAR' as PA1; // ERROR
+       ^^^^^ [1]
+
+References:
+   concretization.js:20:10
+   20| 'BAR' as PA1; // ERROR
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:27:1
+
+Cannot cast `'BAZ'` to `IA2` because string literal `BAZ` [1] is incompatible with `Uppercase` [2]. [incompatible-type]
+
+   concretization.js:27:1
+   27| 'BAZ' as IA2; // ERROR
+       ^^^^^ [1]
+
+References:
+   concretization.js:27:10
+   27| 'BAZ' as IA2; // ERROR
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:33:1
+
+Cannot cast `'FOO'` to `PA2` because string literal `FOO` [1] is incompatible with string literal `foo` [2].
+[incompatible-type]
+
+   concretization.js:33:1
+   33| 'FOO' as PA2; // ERROR
+       ^^^^^ [1]
+
+References:
+   concretization.js:33:10
+   33| 'FOO' as PA2; // ERROR
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:39:1
+
+Cannot cast `'foo'` to `IA3` because string literal `foo` [1] is incompatible with string literal `Foo` [2].
+[incompatible-type]
+
+   concretization.js:39:1
+   39| 'foo' as IA3; // ERROR
+       ^^^^^ [1]
+
+References:
+   concretization.js:39:10
+   39| 'foo' as IA3; // ERROR
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:45:1
+
+Cannot cast `'FOO'` to `PA3` because string literal `FOO` [1] is incompatible with string literal `fOO` [2].
+[incompatible-type]
+
+   concretization.js:45:1
+   45| 'FOO' as PA3; // ERROR
+       ^^^^^ [1]
+
+References:
+   concretization.js:45:10
+   45| 'FOO' as PA3; // ERROR
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:51:1
+
+Cannot cast `'abc'` to `IA4` because string literal `abc` [1] is incompatible with string literal `ABC` [2].
+[incompatible-type]
+
+   concretization.js:51:1
+   51| 'abc' as IA4; // ERROR
+       ^^^^^ [1]
+
+References:
+   concretization.js:51:10
+   51| 'abc' as IA4; // ERROR
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:65:1
+
+Cannot cast `'foo'` to `AI1` because string literal `foo` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   concretization.js:65:1
+   65| 'foo' as AI1; // ERROR
+       ^^^^^ [1]
+
+References:
+   concretization.js:65:10
+   65| 'foo' as AI1; // ERROR
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:66:1
+
+Cannot cast `'BAR'` to `AI1` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   concretization.js:66:1
+   66| 'BAR' as AI1; // ERROR
+       ^^^^^ [1]
+
+References:
+   concretization.js:66:10
+   66| 'BAR' as AI1; // ERROR
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:71:1
+
+Cannot cast `'FOO'` to `AI2` because string literal `FOO` [1] is incompatible with string literal `foo` [2].
+[incompatible-type]
+
+   concretization.js:71:1
+   71| 'FOO' as AI2; // ERROR
+       ^^^^^ [1]
+
+References:
+   concretization.js:71:10
+   71| 'FOO' as AI2; // ERROR
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:83:1
+
+Cannot cast `'_world'` to `LE1` because empty string [1] is incompatible with string literal `Hello` [2].
+[incompatible-type]
+
+   concretization.js:83:1
+   83| '_world' as LE1;       // ERROR
+       ^^^^^^^^ [1]
+
+References:
+   concretization.js:81:12
+   81| type LE1 = Capitalize<`${T_alias}_world`>;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:87:1
+
+Cannot cast `'_world'` to `LE2` because empty string [1] is incompatible with string literal `Hello` [2].
+[incompatible-type]
+
+   concretization.js:87:1
+   87| '_world' as LE2;       // ERROR
+       ^^^^^^^^ [1]
+
+References:
+   concretization.js:85:12
+   85| type LE2 = Capitalize<`${['Hello'][0]}_world`>;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:91:1
+
+Cannot cast `'_world'` to `LE3` because empty string [1] is incompatible with string literal `Hello` [2].
+[incompatible-type]
+
+   concretization.js:91:1
+   91| '_world' as LE3;       // ERROR
+       ^^^^^^^^ [1]
+
+References:
+   concretization.js:89:12
+   89| type LE3 = Capitalize<`${{f: 'Hello'}['f']}_world`>;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- concretization.js:96:1
+
+Cannot cast `'_WORLD'` to `LE4` because empty string [1] is incompatible with string literal `hELLO` [2].
+[incompatible-type]
+
+   concretization.js:96:1
+   96| '_WORLD' as LE4;       // ERROR
+       ^^^^^^^^ [1]
+
+References:
+   concretization.js:94:12
+   94| type LE4 = Uncapitalize<`${T_alias_u}_WORLD`>;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- cross_file_b.js:4:1
+
+Cannot cast `'foo'` to `X` because string literal `foo` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   cross_file_b.js:4:1
+   4| 'foo' as X; // ERROR
+      ^^^^^ [1]
+
+References:
+   cross_file_b.js:4:10
+   4| 'foo' as X; // ERROR
+               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- cross_file_b.js:5:1
+
+Cannot cast `'BAR'` to `X` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   cross_file_b.js:5:1
+   5| 'BAR' as X; // ERROR
+      ^^^^^ [1]
+
+References:
+   cross_file_b.js:5:10
+   5| 'BAR' as X; // ERROR
+               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- cross_file_b.js:8:1
+
+Cannot cast `'FOO'` to `Y` because string literal `FOO` [1] is incompatible with string literal `foo` [2].
+[incompatible-type]
+
+   cross_file_b.js:8:1
+   8| 'FOO' as Y; // ERROR
+      ^^^^^ [1]
+
+References:
+   cross_file_b.js:8:10
+   8| 'FOO' as Y; // ERROR
+               ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- lowercase.js:5:1
+
+Cannot cast `'FOO'` to `L1` because string literal `FOO` [1] is incompatible with string literal `foo` [2].
+[incompatible-type]
+
+   lowercase.js:5:1
+   5| 'FOO' as L1; // ERROR
+      ^^^^^ [1]
+
+References:
+   lowercase.js:5:10
+   5| 'FOO' as L1; // ERROR
+               ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ lowercase.js:16:1
+
+Cannot cast `'FooBar'` to `L3` because string literal `FooBar` [1] is incompatible with string literal `foobar` [2].
+[incompatible-type]
+
+   lowercase.js:16:1
+   16| 'FooBar' as L3; // ERROR
+       ^^^^^^^^ [1]
+
+References:
+   lowercase.js:16:13
+   16| 'FooBar' as L3; // ERROR
+                   ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ lowercase.js:28:1
+
+Cannot cast `'BAR'` to `L5` because string literal `BAR` [1] is incompatible with `L5` [2]. [incompatible-type]
+
+   lowercase.js:28:1
+   28| 'BAR' as L5; // ERROR
+       ^^^^^ [1]
+
+References:
+   lowercase.js:28:10
+   28| 'BAR' as L5; // ERROR
+                ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ lowercase.js:34:1
+
+Cannot cast `'ANYTHING'` to `L6` because string literal `ANYTHING` [1] is incompatible with `L6` [2].
+[incompatible-type]
+
+The string literal must already be in `Lowercase` canonical form to be a member of this type.
+
+   lowercase.js:34:1
+   34| 'ANYTHING' as L6; // ERROR (not lowercase)
+       ^^^^^^^^^^ [1]
+
+References:
+   lowercase.js:34:15
+   34| 'ANYTHING' as L6; // ERROR (not lowercase)
+                     ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ lowercase.js:45:1
+
+Cannot cast `'abcXYZ'` to `L7` because string literal `abcXYZ` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   lowercase.js:45:1
+   45| 'abcXYZ' as L7; // ERROR (inner not lowercase)
+       ^^^^^^^^ [1]
+
+References:
+   lowercase.js:45:13
+   45| 'abcXYZ' as L7; // ERROR (inner not lowercase)
+                   ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ lowercase.js:46:1
+
+Cannot cast `'ABCxyz'` to `L7` because string literal `ABCxyz` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   lowercase.js:46:1
+   46| 'ABCxyz' as L7; // ERROR (prefix wrong case)
+       ^^^^^^^^ [1]
+
+References:
+   lowercase.js:46:13
+   46| 'ABCxyz' as L7; // ERROR (prefix wrong case)
+                   ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ lowercase.js:63:1
+
+Cannot cast `'FOO'` to `Y` because string literal `FOO` [1] is incompatible with string literal `foo` [2].
+[incompatible-type]
+
+   lowercase.js:63:1
+   63| 'FOO' as Y<'FOO'>; // ERROR
+       ^^^^^ [1]
+
+References:
+   lowercase.js:63:10
+   63| 'FOO' as Y<'FOO'>; // ERROR
+                ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ lowercase.js:64:1
+
+Cannot cast `'anything'` to `Y` because string literal `anything` [1] is incompatible with string literal `foo` [2].
+[incompatible-type]
+
+   lowercase.js:64:1
+   64| 'anything' as Y<'FOO'>; // ERROR
+       ^^^^^^^^^^ [1]
+
+References:
+   lowercase.js:64:15
+   64| 'anything' as Y<'FOO'>; // ERROR
+                     ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- lowercase.js:68:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   68| type Bad1 = Lowercase; // ERROR
+                   ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- lowercase.js:69:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   69| type Bad2 = Lowercase<>; // ERROR
+                   ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- lowercase.js:70:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   70| type Bad3 = Lowercase<'a', 'b'>; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- lowercase.js:74:23
+
+Cannot instantiate `Lowercase` because number literal `42` [1] is incompatible with string [2]. [incompatible-type]
+
+   lowercase.js:74:23
+   74| type Bad4 = Lowercase<42>; // ERROR
+                             ^^ [1]
+
+References:
+   lowercase.js:74:13
+   74| type Bad4 = Lowercase<42>; // ERROR
+                   ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- uncapitalize.js:5:1
+
+Cannot cast `'Foo'` to `U1` because string literal `Foo` [1] is incompatible with string literal `foo` [2].
+[incompatible-type]
+
+   uncapitalize.js:5:1
+   5| 'Foo' as U1; // ERROR (still capital)
+      ^^^^^ [1]
+
+References:
+   uncapitalize.js:5:10
+   5| 'Foo' as U1; // ERROR (still capital)
+               ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- uncapitalize.js:6:1
+
+Cannot cast `'fOO'` to `U1` because string literal `fOO` [1] is incompatible with string literal `foo` [2].
+[incompatible-type]
+
+   uncapitalize.js:6:1
+   6| 'fOO' as U1; // ERROR
+      ^^^^^ [1]
+
+References:
+   uncapitalize.js:6:10
+   6| 'fOO' as U1; // ERROR
+               ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- uncapitalize.js:12:1
+
+Cannot cast `'foo'` to `U1b` because string literal `foo` [1] is incompatible with string literal `fOO` [2].
+[incompatible-type]
+
+   uncapitalize.js:12:1
+   12| 'foo' as U1b; // ERROR (Uncapitalize does not lower the tail)
+       ^^^^^ [1]
+
+References:
+   uncapitalize.js:12:10
+   12| 'foo' as U1b; // ERROR (Uncapitalize does not lower the tail)
+                ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- uncapitalize.js:13:1
+
+Cannot cast `'FOO'` to `U1b` because string literal `FOO` [1] is incompatible with string literal `fOO` [2].
+[incompatible-type]
+
+   uncapitalize.js:13:1
+   13| 'FOO' as U1b; // ERROR (first char must be lowercased)
+       ^^^^^ [1]
+
+References:
+   uncapitalize.js:13:10
+   13| 'FOO' as U1b; // ERROR (first char must be lowercased)
+                ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- uncapitalize.js:40:1
+
+Cannot cast `'FOO'` to `U6` because string literal `FOO` [1] is incompatible with `U6` [2]. [incompatible-type]
+
+   uncapitalize.js:40:1
+   40| 'FOO' as U6; // ERROR
+       ^^^^^ [1]
+
+References:
+   uncapitalize.js:40:10
+   40| 'FOO' as U6; // ERROR
+                ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- uncapitalize.js:47:1
+
+Cannot cast `'Anything'` to `U7` because string literal `Anything` [1] is incompatible with `U7` [2].
+[incompatible-type]
+
+The string literal must already be in `Uncapitalize` canonical form to be a member of this type.
+
+   uncapitalize.js:47:1
+   47| 'Anything' as U7; // ERROR (first char is uppercase)
+       ^^^^^^^^^^ [1]
+
+References:
+   uncapitalize.js:47:15
+   47| 'Anything' as U7; // ERROR (first char is uppercase)
+                     ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- uncapitalize.js:55:1
+
+Cannot cast `'ABCxyz'` to `U8` because string literal `ABCxyz` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   uncapitalize.js:55:1
+   55| 'ABCxyz' as U8; // ERROR (first char must be lowercase)
+       ^^^^^^^^ [1]
+
+References:
+   uncapitalize.js:55:13
+   55| 'ABCxyz' as U8; // ERROR (first char must be lowercase)
+                   ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- uncapitalize.js:64:1
+
+Cannot cast `'ABC'` to `U8b` because string literal `ABC` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   uncapitalize.js:64:1
+   64| 'ABC' as U8b; // ERROR (first char must be lowercase)
+       ^^^^^ [1]
+
+References:
+   uncapitalize.js:62:12
+   62| type U8b = Uncapitalize<`${string}ABC`>;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- uncapitalize.js:66:1
+
+Cannot cast `'XABC'` to `U8b` because string literal `XABC` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   uncapitalize.js:66:1
+   66| 'XABC' as U8b; // ERROR (first char of inner is uppercase)
+       ^^^^^^ [1]
+
+References:
+   uncapitalize.js:62:12
+   62| type U8b = Uncapitalize<`${string}ABC`>;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- uncapitalize.js:75:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   75| type Bad1 = Uncapitalize; // ERROR
+                   ^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- uncapitalize.js:76:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   76| type Bad2 = Uncapitalize<>; // ERROR
+                   ^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- uncapitalize.js:77:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   77| type Bad3 = Uncapitalize<'a', 'b'>; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- uncapitalize.js:81:26
+
+Cannot instantiate `Uncapitalize` because number literal `42` [1] is incompatible with string [2]. [incompatible-type]
+
+   uncapitalize.js:81:26
+   81| type Bad4 = Uncapitalize<42>; // ERROR
+                                ^^ [1]
+
+References:
+   uncapitalize.js:81:13
+   81| type Bad4 = Uncapitalize<42>; // ERROR
+                   ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- uppercase.js:5:1
+
+Cannot cast `'foo'` to `U1` because string literal `foo` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   uppercase.js:5:1
+   5| 'foo' as U1; // ERROR
+      ^^^^^ [1]
+
+References:
+   uppercase.js:5:10
+   5| 'foo' as U1; // ERROR
+               ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:16:1
+
+Cannot cast `'fooBar'` to `U3` because string literal `fooBar` [1] is incompatible with string literal `FOOBAR` [2].
+[incompatible-type]
+
+   uppercase.js:16:1
+   16| 'fooBar' as U3; // ERROR
+       ^^^^^^^^ [1]
+
+References:
+   uppercase.js:16:13
+   16| 'fooBar' as U3; // ERROR
+                   ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:22:1
+
+Cannot cast `'A'` to `U4` because string literal `A` [1] is incompatible with empty string [2]. [incompatible-type]
+
+   uppercase.js:22:1
+   22| 'A' as U4; // ERROR
+       ^^^ [1]
+
+References:
+   uppercase.js:22:8
+   22| 'A' as U4; // ERROR
+              ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:29:1
+
+Cannot cast `'foo'` to `U5` because string literal `foo` [1] is incompatible with `U5` [2]. [incompatible-type]
+
+   uppercase.js:29:1
+   29| 'foo' as U5; // ERROR
+       ^^^^^ [1]
+
+References:
+   uppercase.js:29:10
+   29| 'foo' as U5; // ERROR
+                ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:30:1
+
+Cannot cast `'baz'` to `U5` because string literal `baz` [1] is incompatible with `U5` [2]. [incompatible-type]
+
+   uppercase.js:30:1
+   30| 'baz' as U5; // ERROR
+       ^^^^^ [1]
+
+References:
+   uppercase.js:30:10
+   30| 'baz' as U5; // ERROR
+                ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:42:1
+
+Cannot cast `'anything'` to `U7` because string literal `anything` [1] is incompatible with `U7` [2].
+[incompatible-type]
+
+The string literal must already be in `Uppercase` canonical form to be a member of this type.
+
+   uppercase.js:42:1
+   42| 'anything' as U7; // ERROR (not in canonical uppercase form)
+       ^^^^^^^^^^ [1]
+
+References:
+   uppercase.js:42:15
+   42| 'anything' as U7; // ERROR (not in canonical uppercase form)
+                     ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:51:1
+
+Cannot cast `'ABCxyz'` to `U9` because string literal `ABCxyz` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   uppercase.js:51:1
+   51| 'ABCxyz' as U9; // ERROR (inner is not uppercase)
+       ^^^^^^^^ [1]
+
+References:
+   uppercase.js:51:13
+   51| 'ABCxyz' as U9; // ERROR (inner is not uppercase)
+                   ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:52:1
+
+Cannot cast `'abcXYZ'` to `U9` because string literal `abcXYZ` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   uppercase.js:52:1
+   52| 'abcXYZ' as U9; // ERROR (prefix has wrong case)
+       ^^^^^^^^ [1]
+
+References:
+   uppercase.js:52:13
+   52| 'abcXYZ' as U9; // ERROR (prefix has wrong case)
+                   ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:59:1
+
+Cannot cast `'foo'` to `X` because string literal `foo` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   uppercase.js:59:1
+   59| 'foo' as X<'foo'>; // ERROR
+       ^^^^^ [1]
+
+References:
+   uppercase.js:59:10
+   59| 'foo' as X<'foo'>; // ERROR
+                ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:60:1
+
+Cannot cast `'anything'` to `X` because string literal `anything` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
+
+   uppercase.js:60:1
+   60| 'anything' as X<'foo'>; // ERROR
+       ^^^^^^^^^^ [1]
+
+References:
+   uppercase.js:60:15
+   60| 'anything' as X<'foo'>; // ERROR
+                     ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:85:1
+
+Cannot cast `'V3'` to `U12` because string literal `V3` [1] is incompatible with `U12` [2]. [incompatible-type]
+
+   uppercase.js:85:1
+   85| 'V3' as U12; // ERROR
+       ^^^^ [1]
+
+References:
+   uppercase.js:85:9
+   85| 'V3' as U12; // ERROR
+               ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- uppercase.js:89:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   89| type Bad1 = Uppercase; // ERROR (missing type arg)
+                   ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- uppercase.js:90:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   90| type Bad2 = Uppercase<>; // ERROR (zero type args)
+                   ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- uppercase.js:91:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   91| type Bad3 = Uppercase<'a', 'b'>; // ERROR (too many)
+                   ^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- uppercase.js:95:23
+
+Cannot instantiate `Uppercase` because number literal `42` [1] is incompatible with string [2]. [incompatible-type]
+
+   uppercase.js:95:23
+   95| type Bad4 = Uppercase<42>; // ERROR
+                             ^^ [1]
+
+References:
+   uppercase.js:95:13
+   95| type Bad4 = Uppercase<42>; // ERROR
+                   ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- uppercase.js:96:23
+
+Cannot instantiate `Uppercase` because object type [1] is incompatible with string [2]. [incompatible-type]
+
+   uppercase.js:96:23
+   96| type Bad5 = Uppercase<{a: 1}>; // ERROR
+                             ^^^^^^ [1]
+
+References:
+   uppercase.js:96:13
+   96| type Bad5 = Uppercase<{a: 1}>; // ERROR
+                   ^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 71 errors

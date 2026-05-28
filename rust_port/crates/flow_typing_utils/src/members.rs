@@ -864,7 +864,7 @@ pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type
         }
         TypeInner::IntersectionT(_, _) => GenericT::Success(this_t),
         TypeInner::UnionT(_, _) => GenericT::Success(this_t),
-        TypeInner::TemplateLiteralT { reason, .. } => {
+        TypeInner::TemplateLiteralT { reason, .. } | TypeInner::StringMappingT { reason, .. } => {
             let builtin = flow_js::get_builtin_type(cx, reason, None, "String");
             match builtin {
                 Ok(t) => extract_type(cx, t),

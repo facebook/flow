@@ -418,6 +418,23 @@ pub fn type_to_json<'cx>(cx: &Context<'cx>, depth: i32, t: &Type) -> Json {
             ];
             json_with_type("TemplateLiteral", fields)
         }
+        TypeInner::StringMappingT {
+            reason: _,
+            kind,
+            arg,
+        } => {
+            let fields = vec![
+                (
+                    "kind",
+                    Json::String(
+                        flow_typing_flow_common::string_case_transform::name_of_kind(*kind)
+                            .to_string(),
+                    ),
+                ),
+                ("arg", type_to_json(cx, depth - 1, arg)),
+            ];
+            json_with_type("StringMapping", fields)
+        }
     }
 }
 

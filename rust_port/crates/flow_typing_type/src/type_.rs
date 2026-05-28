@@ -272,6 +272,16 @@ pub enum TypeInner {
         quasis: Vec<FlowSmolStr>,
         types: Vec<Type>,
     },
+    // casing transform on a string-like type — `Uppercase<T>`, `Lowercase<T>`,
+    //    `Capitalize<T>`, `Uncapitalize<T>`. Held in deferred form when `arg`
+    //    isn't a literal we can rewrite at construction time (generic, `string`,
+    //    template-literal interpolation), so the dependency on `arg` survives
+    //    substitution.
+    StringMappingT {
+        reason: Reason,
+        kind: StringMappingKind,
+        arg: Type,
+    },
     /// annotations
     /// A type that annotates a storage location performs two functions:
     ///
@@ -738,6 +748,14 @@ impl EnumInfo {
     pub fn ptr_eq(&self, other: &EnumInfo) -> bool {
         Rc::ptr_eq(&self.0, &other.0)
     }
+}
+
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum StringMappingKind {
+    StringMappingUppercase,
+    StringMappingLowercase,
+    StringMappingCapitalize,
+    StringMappingUncapitalize,
 }
 
 #[derive(
@@ -10719,6 +10737,7 @@ pub fn string_of_ctor(t: &Type) -> &'static str {
         TypeInner::GenericT(..) => "GenericT",
         TypeInner::KeysT(_, _) => "KeysT",
         TypeInner::TemplateLiteralT { .. } => "TemplateLiteralT",
+        TypeInner::StringMappingT { .. } => "StringMappingT",
         TypeInner::NamespaceT(_) => "NamespaceT",
         TypeInner::NullProtoT(_) => "NullProtoT",
         TypeInner::ObjProtoT(_) => "ObjProtoT",

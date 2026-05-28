@@ -1485,6 +1485,28 @@ mod type_converter {
                     types: norm_types?.into(),
                 }))
             }
+            TypeInner::StringMappingT {
+                reason: _,
+                kind,
+                arg,
+            } => {
+                let arg = type__::<I>(env, state, None, arg)?;
+                let utility = match kind {
+                    flow_typing_type::type_::StringMappingKind::StringMappingUppercase => {
+                        ty::Utility::Uppercase(arg)
+                    }
+                    flow_typing_type::type_::StringMappingKind::StringMappingLowercase => {
+                        ty::Utility::Lowercase(arg)
+                    }
+                    flow_typing_type::type_::StringMappingKind::StringMappingCapitalize => {
+                        ty::Utility::Capitalize(arg)
+                    }
+                    flow_typing_type::type_::StringMappingKind::StringMappingUncapitalize => {
+                        ty::Utility::Uncapitalize(arg)
+                    }
+                };
+                Ok(Arc::new(ty::Ty::Utility(utility)))
+            }
             TypeInner::MaybeT(_, inner_t) => maybe_t(type__::<I>, env, state, id, inner_t),
             TypeInner::OptionalT { type_, .. } => optional_t(type__::<I>, env, state, id, type_),
             TypeInner::UnionT(_, rep) => {

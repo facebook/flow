@@ -518,6 +518,10 @@ type ('loc, 'a) annot =
   | SingletonNumber of 'loc * float * string
   | SingletonBigInt of 'loc * int64 option * string
   | SingletonBoolean of 'loc * bool
+  | Uppercase of 'loc * 'a
+  | Lowercase of 'loc * 'a
+  | Capitalize of 'loc * 'a
+  | Uncapitalize of 'loc * 'a
   | TemplateLiteral of {
       loc: 'loc;
       quasis: string list;

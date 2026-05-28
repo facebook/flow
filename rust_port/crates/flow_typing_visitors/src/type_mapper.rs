@@ -525,6 +525,18 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                 })
             }
         }
+        TypeInner::StringMappingT { reason, kind, arg } => {
+            let arg_prime = mapper.type_(cx, map_cx, arg.dupe());
+            if arg_prime.ptr_eq(arg) {
+                t
+            } else {
+                Type::new(TypeInner::StringMappingT {
+                    reason: reason.dupe(),
+                    kind: *kind,
+                    arg: arg_prime,
+                })
+            }
+        }
         TypeInner::AnnotT(r, inner_t, use_desc) => {
             let inner_t_prime = mapper.type_(cx, map_cx, inner_t.dupe());
             if inner_t_prime.ptr_eq(inner_t) {

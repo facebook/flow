@@ -313,6 +313,7 @@ let try_eval_concrete_type_truthyness cx t =
   | IntersectionT _ -> ConstCond_Unknown
   | KeysT _ -> ConstCond_Unknown
   | TemplateLiteralT _ -> ConstCond_Unknown
+  | StringMappingT _ -> ConstCond_Unknown
   | NominalT _ -> ConstCond_Unknown
   | NamespaceT _ -> ConstCond_Unknown
   | AnyT _ -> ConstCond_Unknown

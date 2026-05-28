@@ -4048,6 +4048,11 @@ where
                 text(", e.g. "),
                 code(&format!("{} {{...}}", record_name)),
             ]),
+            ExplanationStringCasingMustBeCanonical { kind_name } => friendly::Message(vec![
+                text("The string literal must already be in "),
+                code(kind_name),
+                text(" canonical form to be a member of this type"),
+            ]),
             ExplanationPropertyMissingDueToNeutralOptionalProperty(data) => {
                 let ExplanationPropertyMissingDueToNeutralOptionalPropertyData {
                     props_plural,

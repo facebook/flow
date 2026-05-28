@@ -849,6 +849,25 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               let elem_t = List.hd elemts in
               reconstruct_ast elem_t targs
           )
+        | ("Uppercase" | "Lowercase" | "Capitalize" | "Uncapitalize") as kind_name ->
+          let kind = Option.get (String_case_transform.kind_of_name kind_name) in
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (ts, targs) = convert_type_params () in
+              let arg = List.hd ts in
+              let result_reason = mk_reason (RType (OrdinaryName kind_name)) loc in
+              let use_op = Op (TypeApplication { type_ = result_reason }) in
+              Context.add_post_inference_subtyping_check cx arg use_op (StrModuleT.at loc);
+              let t =
+                String_case_transform.resolve
+                  ~possible_concrete_types_for_inspection:
+                    Flow_js.possible_concrete_types_for_inspection
+                  cx
+                  ~kind
+                  loc
+                  arg
+              in
+              reconstruct_ast t targs
+          )
         (* Array<T> *)
         | "Array" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->

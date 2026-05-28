@@ -369,6 +369,7 @@ pub mod invalid_cyclic_type_validation {
                 | TypeInner::NullProtoT(_)
                 | TypeInner::FunProtoBindT(_)
                 | TypeInner::TemplateLiteralT { .. }
+                | TypeInner::StringMappingT { .. }
                 | TypeInner::OpenT(_)
                 | TypeInner::IntersectionT(_, _)
                 | TypeInner::UnionT(_, _)

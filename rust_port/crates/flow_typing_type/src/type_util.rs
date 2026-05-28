@@ -99,6 +99,7 @@ pub fn reason_of_t(t: &Type) -> &Reason {
         TypeInner::FunProtoBindT(reason) => reason,
         TypeInner::KeysT(reason, _) => reason,
         TypeInner::TemplateLiteralT { reason, .. } => reason,
+        TypeInner::StringMappingT { reason, .. } => reason,
         TypeInner::NamespaceT(namespace) => reason_of_t(&namespace.values_type),
         TypeInner::NullProtoT(reason) => reason,
         TypeInner::ObjProtoT(reason) => reason,
@@ -365,6 +366,11 @@ pub fn mod_reason_of_t(f: &dyn Fn(Reason) -> Reason, t: &Type) -> Type {
             reason: f(reason.dupe()),
             quasis: quasis.to_vec(),
             types: types.to_vec(),
+        }),
+        TypeInner::StringMappingT { reason, kind, arg } => Type::new(TypeInner::StringMappingT {
+            reason: f(reason.dupe()),
+            kind: *kind,
+            arg: arg.dupe(),
         }),
         TypeInner::NamespaceT(ns) => Type::new(TypeInner::NamespaceT(Rc::new(NamespaceType {
             namespace_symbol: ns.namespace_symbol.dupe(),

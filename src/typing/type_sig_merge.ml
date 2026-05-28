@@ -870,6 +870,18 @@ and merge_annot env file = function
   | SingletonBoolean (loc, b) ->
     let reason = Reason.(mk_annot_reason (RBooleanLit b) loc) in
     Type.(DefT (reason, SingletonBoolT { from_annot = true; value = b }))
+  | Uppercase (loc, t) ->
+    let t = merge env file t in
+    String_case_transform.resolve file.cx ~kind:Type.StringMappingUppercase loc t
+  | Lowercase (loc, t) ->
+    let t = merge env file t in
+    String_case_transform.resolve file.cx ~kind:Type.StringMappingLowercase loc t
+  | Capitalize (loc, t) ->
+    let t = merge env file t in
+    String_case_transform.resolve file.cx ~kind:Type.StringMappingCapitalize loc t
+  | Uncapitalize (loc, t) ->
+    let t = merge env file t in
+    String_case_transform.resolve file.cx ~kind:Type.StringMappingUncapitalize loc t
   | TemplateLiteral { loc; quasis; types } ->
     let ts = List.map (merge env file) types in
     Template_literal_type.resolve ~quasis ~types:ts loc file.cx

@@ -1827,6 +1827,10 @@ const UTILITY_TYPES: &[&str] = &[
     "Values",
     "StringPrefix",
     "StringSuffix",
+    "Uppercase",
+    "Lowercase",
+    "Capitalize",
+    "Uncapitalize",
 ];
 
 fn make_type_param(edit_locs: &(Loc, Loc), name: &str) -> ac_completion::CompletionItem {

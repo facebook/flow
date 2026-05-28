@@ -126,6 +126,16 @@ module rec TypeTerm : sig
         quasis: string list;
         types: t list;
       }
+    (* casing transform on a string-like type — `Uppercase<T>`, `Lowercase<T>`,
+       `Capitalize<T>`, `Uncapitalize<T>`. Held in deferred form when `arg`
+       isn't a literal we can rewrite at construction time (generic, `string`,
+       template-literal interpolation), so the dependency on `arg` survives
+       substitution. *)
+    | StringMappingT of {
+        reason: reason;
+        kind: string_mapping_kind;
+        arg: t;
+      }
     (* annotations *)
     (* A type that annotates a storage location performs two functions:
 
@@ -329,6 +339,12 @@ module rec TypeTerm : sig
   and enum_info =
     | ConcreteEnum of enum_concrete_info
     | AbstractEnum of { representation_t: t }
+
+  and string_mapping_kind =
+    | StringMappingUppercase
+    | StringMappingLowercase
+    | StringMappingCapitalize
+    | StringMappingUncapitalize
 
   and 'loc virtual_root_use_op =
     | ObjectAddComputedProperty of { op: 'loc virtual_reason }
@@ -4127,6 +4143,7 @@ let string_of_ctor = function
   | GenericT _ -> "GenericT"
   | KeysT _ -> "KeysT"
   | TemplateLiteralT _ -> "TemplateLiteralT"
+  | StringMappingT _ -> "StringMappingT"
   | NamespaceT _ -> "NamespaceT"
   | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"

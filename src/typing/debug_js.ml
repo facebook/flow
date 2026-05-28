@@ -342,6 +342,18 @@ let rec dump_t_ (depth, tvars) cx t =
              (String.concat "; " (List.map kid types))
           )
         t
+    | StringMappingT { kind; arg; _ } ->
+      (* Inlined rather than calling `String_case_transform.name_of_kind` —
+         this module is in the `debug` BUCK target, which is a dependency of
+         `flow_common` (where String_case_transform lives). *)
+      let kind_s =
+        match kind with
+        | StringMappingUppercase -> "Uppercase"
+        | StringMappingLowercase -> "Lowercase"
+        | StringMappingCapitalize -> "Capitalize"
+        | StringMappingUncapitalize -> "Uncapitalize"
+      in
+      p ~extra:(spf "%s<%s>" kind_s (kid arg)) t
     | DefT (_, NumericStrKeyT (_, s)) -> p ~extra:s t
     | DefT (_, SingletonStrT { from_annot; value = s }) ->
       p ~extra:(spf "%S (from_annot=%b)" (display_string_of_name s) from_annot) t

@@ -959,6 +959,9 @@ pub enum Explanation<L: Dupe> {
         record_name: FlowSmolStr,
         obj_reason: VirtualReason<L>,
     },
+    ExplanationStringCasingMustBeCanonical {
+        kind_name: FlowSmolStr,
+    },
 }
 
 #[derive(

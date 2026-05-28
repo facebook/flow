@@ -2076,6 +2076,10 @@ pub enum Annot<Loc, T> {
     SingletonNumber(Box<(Loc, f64, FlowSmolStr)>),
     SingletonBigInt(Box<(Loc, Option<i64>, FlowSmolStr)>),
     SingletonBoolean(Box<(Loc, bool)>),
+    Uppercase(Box<(Loc, T)>),
+    Lowercase(Box<(Loc, T)>),
+    Capitalize(Box<(Loc, T)>),
+    Uncapitalize(Box<(Loc, T)>),
     TemplateLiteral(Box<AnnotTemplateLiteral<Loc, T>>),
     Typeof(Box<AnnotTypeof<Loc, T>>),
     Bound(Box<AnnotBound<Loc>>),
@@ -2167,6 +2171,22 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
                 inner.2.hash(state);
             }
             Annot::SingletonBoolean(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
+            }
+            Annot::Uppercase(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
+            }
+            Annot::Lowercase(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
+            }
+            Annot::Capitalize(inner) => {
+                inner.0.hash(state);
+                inner.1.hash(state);
+            }
+            Annot::Uncapitalize(inner) => {
                 inner.0.hash(state);
                 inner.1.hash(state);
             }
@@ -2366,6 +2386,22 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::SingletonNumber(inner) => f_loc(cx, &inner.0),
             Annot::SingletonBigInt(inner) => f_loc(cx, &inner.0),
             Annot::SingletonBoolean(inner) => f_loc(cx, &inner.0),
+            Annot::Uppercase(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
+            }
+            Annot::Lowercase(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
+            }
+            Annot::Capitalize(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
+            }
+            Annot::Uncapitalize(inner) => {
+                f_loc(cx, &inner.0);
+                f_t(cx, &inner.1);
+            }
             Annot::TemplateLiteral(inner) => {
                 f_loc(cx, &inner.loc);
                 for t in &inner.types {
@@ -2657,6 +2693,18 @@ impl<Loc, T> Annot<Loc, T> {
             }
             Annot::SingletonBoolean(inner) => {
                 Annot::SingletonBoolean(Box::new((f_loc(cx, &inner.0), inner.1)))
+            }
+            Annot::Uppercase(inner) => {
+                Annot::Uppercase(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
+            }
+            Annot::Lowercase(inner) => {
+                Annot::Lowercase(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
+            }
+            Annot::Capitalize(inner) => {
+                Annot::Capitalize(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
+            }
+            Annot::Uncapitalize(inner) => {
+                Annot::Uncapitalize(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1))))
             }
             Annot::TemplateLiteral(inner) => {
                 Annot::TemplateLiteral(Box::new(AnnotTemplateLiteral {

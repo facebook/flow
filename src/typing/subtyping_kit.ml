@@ -2118,6 +2118,67 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ~upper:u
         quasis
         types
+    (* StringMappingT<kind, arg> on the right: we get here when `arg` couldn't
+       be eagerly reduced by `String_case_transform.resolve` (generic, `string`,
+       unresolved tvar, EvalT for indexed/property access, OpenT, AnnotT, ...).
+       We first try to concretize `arg`: if it reduces to a shape `resolve`
+       can enumerate, re-resolve and re-flow against the eager result. This
+       catches cases hidden behind generic substitution or sig-merge that
+       weren't eagerly resolved at annotation time. If concretization yields
+       nothing useful, fall back to the canonical-form check: the only way a
+       string can satisfy `Kind<arg>` for opaque `arg` is to (a) already be
+       in canonical form for `kind` and (b) flow to `arg`. *)
+    | (DefT (_, SingletonStrT { value = OrdinaryName s; _ }), StringMappingT { reason; kind; arg })
+      ->
+      Flow_js_utils.update_lit_type_from_annot cx l;
+      let arg_loc = loc_of_reason reason in
+      let arg_concretized =
+        match possible_concrete_types_for_inspection cx (reason_of_t arg) arg with
+        | [] -> None
+        | [t] when t == arg -> None
+        | [t] -> Some t
+        | t0 :: t1 :: rest ->
+          Some
+            (UnionT
+               ( reason_of_t arg,
+                 UnionRep.make ~source_aloc:(Context.make_aloc_id cx arg_loc) t0 t1 rest
+               )
+            )
+      in
+      (match arg_concretized with
+      | Some arg' ->
+        let resolved =
+          String_case_transform.resolve
+            ~possible_concrete_types_for_inspection
+            cx
+            ~kind
+            arg_loc
+            arg'
+        in
+        rec_flow_t cx trace ~use_op (l, resolved)
+      | None ->
+        if String_case_transform.is_canonical kind s then
+          rec_flow_t cx trace ~use_op (l, arg)
+        else
+          add_output
+            cx
+            (Error_message.EIncompatibleWithUseOp
+               {
+                 use_op;
+                 reason_lower = reason_of_t l;
+                 reason_upper = reason_of_t u;
+                 explanation =
+                   Some
+                     (Flow_intermediate_error_types.ExplanationStringCasingMustBeCanonical
+                        { kind_name = String_case_transform.name_of_kind kind }
+                     );
+               }
+            ))
+    (* StringMappingT on the left: every string the deferred form could produce
+       is a string, so flow `string` outward. The post-inference `arg <: string`
+       check on the original annotation guarantees this is safe. *)
+    | (StringMappingT { reason; _ }, _) ->
+      rec_flow_t cx trace ~use_op (DefT (reason, StrGeneralT AnyLiteral), u)
     (*
      * When do we consider a polymorphic type <X:U> T to be a subtype of another
      * polymorphic type <X:U'> T'? This is the subject of a long line of

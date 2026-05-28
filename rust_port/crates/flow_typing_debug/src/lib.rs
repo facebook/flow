@@ -730,6 +730,22 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
             );
             p(cx, t, true, &extra)
         }
+        TypeInner::StringMappingT { kind, arg, .. } => {
+            // Inlined rather than calling
+            // `flow_typing_flow_common::string_case_transform::name_of_kind` —
+            // this crate is a dependency of `flow_typing_flow_common` (where
+            // `string_case_transform` lives).
+            let kind_s = match kind {
+                flow_typing_type::type_::StringMappingKind::StringMappingUppercase => "Uppercase",
+                flow_typing_type::type_::StringMappingKind::StringMappingLowercase => "Lowercase",
+                flow_typing_type::type_::StringMappingKind::StringMappingCapitalize => "Capitalize",
+                flow_typing_type::type_::StringMappingKind::StringMappingUncapitalize => {
+                    "Uncapitalize"
+                }
+            };
+            let extra = format!("{}<{}>", kind_s, kid(tvars, arg));
+            p(cx, t, true, &extra)
+        }
         TypeInner::NamespaceT(ns) => {
             let extra = format!(
                 "name={}, values={}, types={}",

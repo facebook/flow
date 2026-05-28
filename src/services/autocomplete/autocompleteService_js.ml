@@ -1413,6 +1413,10 @@ let utility_types =
     "Values";
     "StringPrefix";
     "StringSuffix";
+    "Uppercase";
+    "Lowercase";
+    "Capitalize";
+    "Uncapitalize";
   ]
 
 let make_type_param ~edit_locs name =

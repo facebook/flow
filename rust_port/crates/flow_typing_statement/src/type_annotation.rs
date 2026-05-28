@@ -40,6 +40,7 @@ use flow_typing_errors::intermediate_error_types::InternalType;
 use flow_typing_errors::intermediate_error_types::InvalidObjKey;
 use flow_typing_errors::intermediate_error_types::TsLibSyntaxKind;
 use flow_typing_flow_common::flow_js_utils;
+use flow_typing_flow_common::string_case_transform;
 use flow_typing_flow_common::type_subst;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
@@ -1669,6 +1670,36 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, &mut env_no_infer, inner.targs.as_ref())?;
                             let elem_t = elemts.into_iter().next().unwrap();
                             Ok(reconstruct_ast(elem_t, None, targs_ast))
+                        })?
+                    }
+                    kind_name @ ("Uppercase" | "Lowercase" | "Capitalize" | "Uncapitalize") => {
+                        let kind = string_case_transform::kind_of_name(kind_name).unwrap();
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                            let (ts, targs_ast) =
+                                convert_type_params(cx, env, inner.targs.as_ref())?;
+                            let arg = ts.into_iter().next().unwrap();
+                            let result_reason = reason::mk_reason(
+                                reason::VirtualReasonDesc::RType(Name::new(
+                                    FlowSmolStr::new_inline(kind_name),
+                                )),
+                                loc.dupe(),
+                            );
+                            let uo = use_op(&result_reason);
+                            cx.add_post_inference_subtyping_check(
+                                arg.dupe(),
+                                uo,
+                                type_::str_module_t::at(loc.dupe()),
+                            );
+                            let t = string_case_transform::resolve(
+                                Some(&|cx, r, t| {
+                                    FlowJs::possible_concrete_types_for_inspection(cx, r, t)
+                                }),
+                                cx,
+                                kind,
+                                loc.dupe(),
+                                arg,
+                            );
+                            Ok(reconstruct_ast(t, None, targs_ast))
                         })?
                     }
                     // Array<T>

@@ -564,6 +564,7 @@ let rec extract_type cx this_t =
   | IntersectionT _ as t -> Success t
   | UnionT _ as t -> Success t
   | TemplateLiteralT { reason; _ }
+  | StringMappingT { reason; _ }
   | DefT (reason, SingletonStrT _)
   | DefT (reason, StrGeneralT _)
   | DefT (reason, NumericStrKeyT _) ->

@@ -1131,7 +1131,9 @@ pub fn string(loc: ALoc, t: Type) -> FilterResult {
             }
             _ => changed_result(empty_t::why(reason_of_t(&t).dupe())),
         },
-        TypeInner::TemplateLiteralT { .. } => unchanged_result(t),
+        TypeInner::TemplateLiteralT { .. } | TypeInner::StringMappingT { .. } => {
+            unchanged_result(t)
+        }
         TypeInner::AnyT(_, _) => changed_result(Type::new(TypeInner::DefT(
             mk_reason(VirtualReasonDesc::RString, loc),
             DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
@@ -1142,7 +1144,9 @@ pub fn string(loc: ALoc, t: Type) -> FilterResult {
 
 pub fn not_string(t: Type) -> FilterResult {
     match t.deref() {
-        TypeInner::TemplateLiteralT { .. } => changed_result(empty_t::why(reason_of_t(&t).dupe())),
+        TypeInner::TemplateLiteralT { .. } | TypeInner::StringMappingT { .. } => {
+            changed_result(empty_t::why(reason_of_t(&t).dupe()))
+        }
         TypeInner::DefT(_, d) => match d.deref() {
             DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. } => {
                 changed_result(empty_t::why(reason_of_t(&t).dupe()))
@@ -2036,9 +2040,9 @@ pub fn tag_of_t<'cx>(cx: &Context<'cx>, t: &Type) -> Option<TypeTagSet> {
         },
         // Most of the types below should have boiled away thanks to concretization.
         TypeInner::NamespaceT(ns) => tag_of_t(cx, &ns.values_type),
-        TypeInner::TemplateLiteralT { .. } => Some(BTreeSet::from([type_tag::TypeTag(
-            type_tag::TypeTagInner::StringTag,
-        )])),
+        TypeInner::TemplateLiteralT { .. } | TypeInner::StringMappingT { .. } => Some(
+            BTreeSet::from([type_tag::TypeTag(type_tag::TypeTagInner::StringTag)]),
+        ),
         TypeInner::EvalT { .. }
         | TypeInner::GenericT(..)
         | TypeInner::ThisTypeAppT(..)

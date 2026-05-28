@@ -6013,6 +6013,7 @@ struct
     (* Should never occur as the lower bound of any *)
     | NamespaceT _ -> false
     | TemplateLiteralT _
+    | StringMappingT _
     | DefT _
     | AnyT _ ->
       true

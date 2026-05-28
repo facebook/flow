@@ -116,6 +116,12 @@ class virtual ['a] t =
           t
         else
           TemplateLiteralT { reason; quasis; types = types' }
+      | StringMappingT { reason; kind; arg } ->
+        let arg' = self#type_ cx map_cx arg in
+        if arg' == arg then
+          t
+        else
+          StringMappingT { reason; kind; arg = arg' }
       | AnnotT (r, t', use_desc) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

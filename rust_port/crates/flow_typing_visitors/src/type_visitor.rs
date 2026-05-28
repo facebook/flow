@@ -293,6 +293,7 @@ pub fn type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
         TypeInner::TemplateLiteralT { types, .. } => types
             .iter()
             .fold(acc, |acc, t| visitor.type_(cx, pole_todo(), acc, t)),
+        TypeInner::StringMappingT { arg, .. } => visitor.type_(cx, pole, acc, arg),
         TypeInner::AnnotT(_, t, _) => visitor.type_(cx, Polarity::Positive, acc, t),
         TypeInner::NominalT { nominal_type, .. } => {
             let acc =

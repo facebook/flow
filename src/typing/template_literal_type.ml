@@ -325,11 +325,31 @@ let is_bool_text = function
    those base types; None otherwise. Callers using this to short-circuit
    subtyping must skip flowing the matched substring to t, since validation
    has already happened lexically. *)
-let lexical_validator_of = function
+let rec lexical_validator_of = function
   | DefT (_, StrGeneralT _) -> Some (fun (_ : string) -> true)
   | DefT (_, NumGeneralT _) -> Some is_number_text
   | DefT (_, BigIntGeneralT _) -> Some is_bigint_text
   | DefT (_, BoolGeneralT) -> Some is_bool_text
+  (* `Uppercase<X>` etc.: the substring is accepted iff it's in the canonical
+     casing form for `kind` AND it satisfies the lexical validator for `arg`.
+     This is what makes `'ABC' as Uppercase<\`a${string}\`>` reject 'aBc' but
+     accept 'ABC' once the prefix is matched: the inner `${Uppercase<string>}`
+     places `'BC'` against `string`-with-uppercase-canonical-form, and 'BC'
+     uppercased is itself.
+
+     For `Capitalize` / `Uncapitalize`, an EMPTY substring is rejected here
+     even though the empty string is trivially canonical: in placeholder
+     context, an empty placeholder means the leading character of the produced
+     string comes from a neighboring quasi or interpolation, not from this
+     placeholder — so the cap/uncap constraint must not "discharge" on an
+     empty match. Callers that want to admit the empty-placeholder case (e.g.
+     `Capitalize<\`${string}abc\`>` accepting `'Abc'`) handle it by emitting
+     a separate union arm in `String_case_transform.resolve`. *)
+  | StringMappingT { kind; arg; _ } ->
+    (match lexical_validator_of arg with
+    | Some inner ->
+      Some (fun s -> String_case_transform.is_canonical_for_placeholder kind s && inner s)
+    | None -> None)
   | _ -> None
 
 (* Result of attempting an exact split of a concrete string against a

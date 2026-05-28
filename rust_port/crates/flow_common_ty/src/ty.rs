@@ -578,6 +578,10 @@ pub enum Utility<L> {
     NonMaybeType(Arc<Ty<L>>),
     ObjKeyMirror(Arc<Ty<L>>),
     Class(Arc<Ty<L>>),
+    Uppercase(Arc<Ty<L>>),
+    Lowercase(Arc<Ty<L>>),
+    Capitalize(Arc<Ty<L>>),
+    Uncapitalize(Arc<Ty<L>>),
     /* React utils */
     ReactElementConfigType(Arc<Ty<L>>),
 }
@@ -1027,6 +1031,10 @@ pub fn string_of_utility_ctor<L>(u: &Utility<L>) -> &'static str {
         Utility::NonMaybeType(_) => "NonNullable",
         Utility::ObjKeyMirror(_) => "$KeyMirror",
         Utility::Class(_) => "Class",
+        Utility::Uppercase(_) => "Uppercase",
+        Utility::Lowercase(_) => "Lowercase",
+        Utility::Capitalize(_) => "Capitalize",
+        Utility::Uncapitalize(_) => "Uncapitalize",
         Utility::ReactElementConfigType(_) => "React$ElementConfig",
     }
 }
@@ -1045,6 +1053,10 @@ pub fn types_of_utility<L: Dupe>(u: &Utility<L>) -> Option<Vec<Arc<Ty<L>>>> {
         | Utility::Class(t)
         | Utility::ReactElementConfigType(t) => Some(vec![t.dupe()]),
         Utility::Omit(t1, t2) | Utility::ElementType(t1, t2) => Some(vec![t1.dupe(), t2.dupe()]),
+        Utility::Uppercase(t)
+        | Utility::Lowercase(t)
+        | Utility::Capitalize(t)
+        | Utility::Uncapitalize(t) => Some(vec![t.dupe()]),
     }
 }
 
@@ -1532,6 +1544,12 @@ where
             Utility::Omit(t1, t2) | Utility::ElementType(t1, t2) => {
                 self.on_t(env, t1);
                 self.on_t(env, t2);
+            }
+            Utility::Uppercase(t)
+            | Utility::Lowercase(t)
+            | Utility::Capitalize(t)
+            | Utility::Uncapitalize(t) => {
+                self.on_t(env, t);
             }
         }
     }
@@ -2276,6 +2294,10 @@ where
                 self.on_t(env, a1, a2)?;
                 self.on_t(env, b1, b2)
             }
+            (Utility::Uppercase(t1), Utility::Uppercase(t2))
+            | (Utility::Lowercase(t1), Utility::Lowercase(t2))
+            | (Utility::Capitalize(t1), Utility::Capitalize(t2))
+            | (Utility::Uncapitalize(t1), Utility::Uncapitalize(t2)) => self.on_t(env, t1, t2),
             _ => self.fail_utility(env, u1, u2),
         }
     }
@@ -3034,6 +3056,10 @@ where
             Utility::Omit(t1, t2) | Utility::ElementType(t1, t2) => {
                 Self::Acc::plus(self.on_t(env, t1), self.on_t(env, t2))
             }
+            Utility::Uppercase(t)
+            | Utility::Lowercase(t)
+            | Utility::Capitalize(t)
+            | Utility::Uncapitalize(t) => self.on_t(env, t),
         }
     }
 
@@ -3799,6 +3825,22 @@ where
                 let t2_new = self.on_t(env, t2);
                 Utility::ElementType(t1_new, t2_new)
             }
+            Utility::Uppercase(t) => {
+                let t_new = self.on_t(env, t);
+                Utility::Uppercase(t_new)
+            }
+            Utility::Lowercase(t) => {
+                let t_new = self.on_t(env, t);
+                Utility::Lowercase(t_new)
+            }
+            Utility::Capitalize(t) => {
+                let t_new = self.on_t(env, t);
+                Utility::Capitalize(t_new)
+            }
+            Utility::Uncapitalize(t) => {
+                let t_new = self.on_t(env, t);
+                Utility::Uncapitalize(t_new)
+            }
         }
     }
 
@@ -4113,6 +4155,10 @@ pub fn tag_of_utility<L>(_u: &Utility<L>) -> i32 {
         Utility::Required(_) => 24,
         Utility::Enum(_) => 27,
         Utility::Omit(_, _) => 30,
+        Utility::Uppercase(_) => 31,
+        Utility::Lowercase(_) => 32,
+        Utility::Capitalize(_) => 33,
+        Utility::Uncapitalize(_) => 34,
     }
 }
 
@@ -4604,6 +4650,14 @@ impl<L: Dupe> Utility<L> {
                 Utility::ObjKeyMirror(Arc::new(arc_ty.as_ref().map_locs(f)))
             }
             Utility::Class(arc_ty) => Utility::Class(Arc::new(arc_ty.as_ref().map_locs(f))),
+            Utility::Uppercase(arc_ty) => Utility::Uppercase(Arc::new(arc_ty.as_ref().map_locs(f))),
+            Utility::Lowercase(arc_ty) => Utility::Lowercase(Arc::new(arc_ty.as_ref().map_locs(f))),
+            Utility::Capitalize(arc_ty) => {
+                Utility::Capitalize(Arc::new(arc_ty.as_ref().map_locs(f)))
+            }
+            Utility::Uncapitalize(arc_ty) => {
+                Utility::Uncapitalize(Arc::new(arc_ty.as_ref().map_locs(f)))
+            }
             Utility::ReactElementConfigType(arc_ty) => {
                 Utility::ReactElementConfigType(Arc::new(arc_ty.as_ref().map_locs(f)))
             }

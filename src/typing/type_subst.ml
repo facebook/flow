@@ -352,6 +352,18 @@ let substituter =
               let use_op = Base.Option.value use_op ~default:op in
               Flow_cache.Eval.id cx x' (TypeDestructorT (use_op, r, d'))
           | UnionT (r, urep) -> union_ident_map_and_dedup cx (self#type_ cx map_cx) t r urep
+          | StringMappingT { reason; kind; arg } ->
+            let arg' = self#type_ cx map_cx arg in
+            if arg' == arg then
+              t
+            else
+              (* After substitution, `arg` may have become a shape we can
+                 eagerly reduce (e.g. a singleton string, a union of singletons,
+                 a template literal type). Re-resolve so that `Uppercase<T>`
+                 with `T = 'foo'` collapses to `'FOO'` instead of remaining a
+                 deferred `StringMappingT { arg = 'foo' }`, which subtyping
+                 would otherwise compare against the un-cased literal. *)
+              String_case_transform.resolve cx ~kind (Reason.loc_of_reason reason) arg'
           | t -> super#type_ cx map_cx t
         in
         if t == t_out then

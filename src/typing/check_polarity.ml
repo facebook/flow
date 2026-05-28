@@ -69,6 +69,7 @@ end = struct
       check_polarity cx ?trace seen tparams polarity t
     | TemplateLiteralT { types; _ } ->
       List.iter (check_polarity cx ?trace seen tparams polarity) types
+    | StringMappingT { arg; _ } -> check_polarity cx ?trace seen tparams polarity arg
     | DefT (_, ClassT t) -> check_polarity cx ?trace seen tparams polarity t
     | DefT (_, InstanceT { static; super; implements; inst }) ->
       let {

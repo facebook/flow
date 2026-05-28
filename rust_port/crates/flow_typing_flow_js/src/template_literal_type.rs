@@ -23,6 +23,7 @@ use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::InvalidTemplateLiteralTypeErrorKind;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
+use flow_typing_flow_common::string_case_transform;
 use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
@@ -244,15 +245,39 @@ pub fn is_bool_text(s: &str) -> bool {
     s == "true" || s == "false"
 }
 
-pub fn lexical_validator_of(t: &Type) -> Option<fn(&str) -> bool> {
+pub fn lexical_validator_of(t: &Type) -> Option<Box<dyn Fn(&str) -> bool>> {
     match t.deref() {
         TypeInner::DefT(_, def) => match def.deref() {
-            DefTInner::StrGeneralT(_) => Some(is_string_text),
-            DefTInner::NumGeneralT(_) => Some(is_number_text),
-            DefTInner::BigIntGeneralT(_) => Some(is_bigint_text),
-            DefTInner::BoolGeneralT => Some(is_bool_text),
+            DefTInner::StrGeneralT(_) => Some(Box::new(is_string_text)),
+            DefTInner::NumGeneralT(_) => Some(Box::new(is_number_text)),
+            DefTInner::BigIntGeneralT(_) => Some(Box::new(is_bigint_text)),
+            DefTInner::BoolGeneralT => Some(Box::new(is_bool_text)),
             _ => None,
         },
+        // `Uppercase<X>` etc.: the substring is accepted iff it's in the canonical
+        //    casing form for `kind` AND it satisfies the lexical validator for `arg`.
+        //    This is what makes `'ABC' as Uppercase<\`a${string}\`>` reject 'aBc' but
+        //    accept 'ABC' once the prefix is matched: the inner `${Uppercase<string>}`
+        //    places `'BC'` against `string`-with-uppercase-canonical-form, and 'BC'
+        //    uppercased is itself.
+        //
+        //    For `Capitalize` / `Uncapitalize`, an EMPTY substring is rejected here
+        //    even though the empty string is trivially canonical: in placeholder
+        //    context, an empty placeholder means the leading character of the produced
+        //    string comes from a neighboring quasi or interpolation, not from this
+        //    placeholder — so the cap/uncap constraint must not "discharge" on an
+        //    empty match. Callers that want to admit the empty-placeholder case (e.g.
+        //    `Capitalize<\`${string}abc\`>` accepting `'Abc'`) handle it by emitting
+        //    a separate union arm in `string_case_transform::resolve`.
+        TypeInner::StringMappingT { kind, arg, .. } => {
+            let kind = *kind;
+            match lexical_validator_of(arg) {
+                Some(inner) => Some(Box::new(move |s| {
+                    string_case_transform::is_canonical_for_placeholder(kind, s) && inner(s)
+                })),
+                None => None,
+            }
+        }
         _ => None,
     }
 }

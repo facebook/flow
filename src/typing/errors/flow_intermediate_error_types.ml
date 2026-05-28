@@ -442,6 +442,7 @@ type 'loc explanation =
       record_name: string;
       obj_reason: 'loc virtual_reason;
     }
+  | ExplanationStringCasingMustBeCanonical of { kind_name: string }
 
 type access_chain_segment =
   | PropSegment of name

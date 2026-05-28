@@ -250,6 +250,7 @@ impl CoverageVisitor {
             | TypeInner::ThisInstanceT(..)
             | TypeInner::KeysT(..)
             | TypeInner::TemplateLiteralT { .. }
+            | TypeInner::StringMappingT { .. }
             | TypeInner::MaybeT(..)
             | TypeInner::NamespaceT(_)
             | TypeInner::NullProtoT(_)

@@ -1768,6 +1768,50 @@ fn merge_annot<'cx>(
                 }),
             ))
         }
+        Annot::Uppercase(inner) => {
+            let (loc, t) = inner.as_ref();
+            let t = merge_impl(env, cx, file, t, false, false);
+            flow_typing_flow_common::string_case_transform::resolve(
+                None,
+                cx,
+                type_::StringMappingKind::StringMappingUppercase,
+                loc.dupe(),
+                t,
+            )
+        }
+        Annot::Lowercase(inner) => {
+            let (loc, t) = inner.as_ref();
+            let t = merge_impl(env, cx, file, t, false, false);
+            flow_typing_flow_common::string_case_transform::resolve(
+                None,
+                cx,
+                type_::StringMappingKind::StringMappingLowercase,
+                loc.dupe(),
+                t,
+            )
+        }
+        Annot::Capitalize(inner) => {
+            let (loc, t) = inner.as_ref();
+            let t = merge_impl(env, cx, file, t, false, false);
+            flow_typing_flow_common::string_case_transform::resolve(
+                None,
+                cx,
+                type_::StringMappingKind::StringMappingCapitalize,
+                loc.dupe(),
+                t,
+            )
+        }
+        Annot::Uncapitalize(inner) => {
+            let (loc, t) = inner.as_ref();
+            let t = merge_impl(env, cx, file, t, false, false);
+            flow_typing_flow_common::string_case_transform::resolve(
+                None,
+                cx,
+                type_::StringMappingKind::StringMappingUncapitalize,
+                loc.dupe(),
+                t,
+            )
+        }
         Annot::TemplateLiteral(inner) => {
             let AnnotTemplateLiteral { loc, quasis, types } = inner.as_ref();
             let ts = types

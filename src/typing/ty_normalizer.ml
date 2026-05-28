@@ -809,6 +809,16 @@ module Make (I : INPUT) : S = struct
       | TemplateLiteralT { reason = _; quasis; types } ->
         let%bind norm_types = mapM (type__ ~env) types in
         return (Ty.TemplateLiteral { quasis; types = norm_types })
+      | StringMappingT { reason = _; kind; arg } ->
+        let%map arg = type__ ~env arg in
+        let utility =
+          match kind with
+          | StringMappingUppercase -> Ty.Uppercase arg
+          | StringMappingLowercase -> Ty.Lowercase arg
+          | StringMappingCapitalize -> Ty.Capitalize arg
+          | StringMappingUncapitalize -> Ty.Uncapitalize arg
+        in
+        Ty.Utility utility
       | MaybeT (_, t) -> maybe_t ~env ?id ~cont:type__ t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:type__ t
       | DefT (_, FunT (static, f)) ->

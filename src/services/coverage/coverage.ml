@@ -152,6 +152,7 @@ let visitor =
       | ThisInstanceT _
       | KeysT _
       | TemplateLiteralT _
+      | StringMappingT _
       | MaybeT _
       | NamespaceT _
       | NullProtoT _

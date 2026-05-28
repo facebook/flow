@@ -3408,6 +3408,9 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
             record_name,
             obj_reason: map_reason(obj_reason),
         },
+        Explanation::ExplanationStringCasingMustBeCanonical { kind_name } => {
+            Explanation::ExplanationStringCasingMustBeCanonical { kind_name }
+        }
     }
 }
 

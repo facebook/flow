@@ -115,6 +115,9 @@ fn check_polarity_impl<'cx>(
                 check_polarity_impl(cx, trace, seen, tparams, polarity, t)?;
             }
         }
+        TypeInner::StringMappingT { arg, .. } => {
+            check_polarity_impl(cx, trace, seen, tparams, polarity, arg)?;
+        }
         TypeInner::NamespaceT(ns) => {
             let NamespaceType {
                 namespace_symbol: _,

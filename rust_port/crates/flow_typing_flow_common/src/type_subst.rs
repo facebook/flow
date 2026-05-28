@@ -807,6 +807,27 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                 r,
                 urep,
             ),
+            TypeInner::StringMappingT { reason, kind, arg } => {
+                let arg_prime = self.type_(cx, map_cx, arg.dupe());
+                if arg.ptr_eq(&arg_prime) {
+                    t.dupe()
+                } else {
+                    // After substitution, `arg` may have become a shape we can
+                    // eagerly reduce (e.g. a singleton string, a union of
+                    // singletons, a template literal type). Re-resolve so that
+                    // `Uppercase<T>` with `T = 'foo'` collapses to `'FOO'`
+                    // instead of remaining a deferred
+                    // `StringMappingT { arg = 'foo' }`, which subtyping would
+                    // otherwise compare against the un-cased literal.
+                    crate::string_case_transform::resolve(
+                        None,
+                        cx,
+                        *kind,
+                        reason.loc().dupe(),
+                        arg_prime,
+                    )
+                }
+            }
             _ => type_mapper::type_default(self, cx, map_cx, t.dupe()),
         };
         if t.ptr_eq(&t_out) {

@@ -4382,6 +4382,18 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReactElementConfig (loc, t))
     | _ -> Err (loc, CheckError)
   end
+  | ("Uppercase" | "Lowercase" | "Capitalize" | "Uncapitalize") as kind_name -> begin
+    match targs with
+    | Some (_, { arguments = [t]; _ }) ->
+      let t = annot opts scope tbls xs t in
+      (match kind_name with
+      | "Uppercase" -> Annot (Uppercase (loc, t))
+      | "Lowercase" -> Annot (Lowercase (loc, t))
+      | "Capitalize" -> Annot (Capitalize (loc, t))
+      | "Uncapitalize" -> Annot (Uncapitalize (loc, t))
+      | _ -> assert false)
+    | _ -> Err (loc, CheckError)
+  end
   | "$Flow$EnforceOptimized" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) -> annot opts scope tbls xs t

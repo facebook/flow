@@ -24,6 +24,7 @@ let rec reason_of_t = function
   | FunProtoBindT reason -> reason
   | KeysT (reason, _) -> reason
   | TemplateLiteralT { reason; _ } -> reason
+  | StringMappingT { reason; _ } -> reason
   | NamespaceT { values_type; _ } -> reason_of_t values_type
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
@@ -161,6 +162,7 @@ let rec mod_reason_of_t f = function
   | KeysT (reason, t) -> KeysT (f reason, t)
   | TemplateLiteralT { reason; quasis; types } ->
     TemplateLiteralT { reason = f reason; quasis; types }
+  | StringMappingT { reason; kind; arg } -> StringMappingT { reason = f reason; kind; arg }
   | NamespaceT { namespace_symbol; values_type; types_tmap } ->
     NamespaceT { namespace_symbol; values_type = mod_reason_of_t f values_type; types_tmap }
   | NullProtoT reason -> NullProtoT (f reason)

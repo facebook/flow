@@ -8159,6 +8159,27 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
+        kind_name @ ("Uppercase" | "Lowercase" | "Capitalize" | "Uncapitalize") => match targs {
+            Some(type_args) if type_args.arguments.len() == 1 => {
+                let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
+                match kind_name {
+                    "Uppercase" => {
+                        Parsed::Annot(Box::new(ParsedAnnot::Uppercase(Box::new((loc, t)))))
+                    }
+                    "Lowercase" => {
+                        Parsed::Annot(Box::new(ParsedAnnot::Lowercase(Box::new((loc, t)))))
+                    }
+                    "Capitalize" => {
+                        Parsed::Annot(Box::new(ParsedAnnot::Capitalize(Box::new((loc, t)))))
+                    }
+                    "Uncapitalize" => {
+                        Parsed::Annot(Box::new(ParsedAnnot::Uncapitalize(Box::new((loc, t)))))
+                    }
+                    _ => unreachable!(),
+                }
+            }
+            _ => Parsed::Err(loc, Errno::CheckError),
+        },
         "$Flow$EnforceOptimized" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0])

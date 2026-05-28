@@ -257,6 +257,14 @@ and type_to_json : Context.t -> int -> t -> json =
         ]
       in
       json_with_type "TemplateLiteral" fields
+    | StringMappingT { reason = _; kind; arg } ->
+      let fields =
+        [
+          ("kind", JSON_String (String_case_transform.name_of_kind kind));
+          ("arg", type_to_json cx (depth - 1) arg);
+        ]
+      in
+      json_with_type "StringMapping" fields
 
 (* Convert typeparams to JSON *)
 and json_of_typeparams cx depth tparams =

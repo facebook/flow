@@ -1000,8 +1000,35 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Acmem",
-        "completion":"Class",
+        "completion":"Capitalize",
         "index":30,
+        "session_requests":null,
+        "token":null,
+        "typed_length":null
+      }
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Capitalize",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Capitalize",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Capitalize",
+    "range":{"end":{"character":11,"line":7},"start":{"character":11,"line":7}}
+  }
+}
+{
+  "command":{
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "ac_type":"Acmem",
+        "completion":"Class",
+        "index":31,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1028,7 +1055,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"keyof",
-        "index":31,
+        "index":32,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1054,8 +1081,35 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Acmem",
+        "completion":"Lowercase",
+        "index":33,
+        "session_requests":null,
+        "token":null,
+        "typed_length":null
+      }
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Lowercase",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Lowercase",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Lowercase",
+    "range":{"end":{"character":11,"line":7},"start":{"character":11,"line":7}}
+  }
+}
+{
+  "command":{
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "ac_type":"Acmem",
         "completion":"NonNullable",
-        "index":32,
+        "index":34,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1082,7 +1136,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Partial",
-        "index":33,
+        "index":35,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1109,7 +1163,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Readonly",
-        "index":34,
+        "index":36,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1136,7 +1190,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Required",
-        "index":35,
+        "index":37,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1163,7 +1217,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"StringPrefix",
-        "index":36,
+        "index":38,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1190,7 +1244,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"StringSuffix",
-        "index":37,
+        "index":39,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1216,8 +1270,62 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Acmem",
+        "completion":"Uncapitalize",
+        "index":40,
+        "session_requests":null,
+        "token":null,
+        "typed_length":null
+      }
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Uncapitalize",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Uncapitalize",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Uncapitalize",
+    "range":{"end":{"character":11,"line":7},"start":{"character":11,"line":7}}
+  }
+}
+{
+  "command":{
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "ac_type":"Acmem",
+        "completion":"Uppercase",
+        "index":41,
+        "session_requests":null,
+        "token":null,
+        "typed_length":null
+      }
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Uppercase",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Uppercase",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Uppercase",
+    "range":{"end":{"character":11,"line":7},"start":{"character":11,"line":7}}
+  }
+}
+{
+  "command":{
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "ac_type":"Acmem",
         "completion":"Values",
-        "index":38,
+        "index":42,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2199,8 +2307,35 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Acmem",
-        "completion":"Class",
+        "completion":"Capitalize",
         "index":30,
+        "session_requests":null,
+        "token":null,
+        "typed_length":null
+      }
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Capitalize",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Capitalize",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Capitalize",
+    "range":{"end":{"character":13,"line":6},"start":{"character":13,"line":6}}
+  }
+}
+{
+  "command":{
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "ac_type":"Acmem",
+        "completion":"Class",
+        "index":31,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2227,7 +2362,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"keyof",
-        "index":31,
+        "index":32,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2253,8 +2388,35 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Acmem",
+        "completion":"Lowercase",
+        "index":33,
+        "session_requests":null,
+        "token":null,
+        "typed_length":null
+      }
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Lowercase",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Lowercase",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Lowercase",
+    "range":{"end":{"character":13,"line":6},"start":{"character":13,"line":6}}
+  }
+}
+{
+  "command":{
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "ac_type":"Acmem",
         "completion":"NonNullable",
-        "index":32,
+        "index":34,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2281,7 +2443,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Partial",
-        "index":33,
+        "index":35,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2308,7 +2470,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Readonly",
-        "index":34,
+        "index":36,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2335,7 +2497,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Required",
-        "index":35,
+        "index":37,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2362,7 +2524,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"StringPrefix",
-        "index":36,
+        "index":38,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2389,7 +2551,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"StringSuffix",
-        "index":37,
+        "index":39,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2415,8 +2577,62 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Acmem",
+        "completion":"Uncapitalize",
+        "index":40,
+        "session_requests":null,
+        "token":null,
+        "typed_length":null
+      }
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Uncapitalize",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Uncapitalize",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Uncapitalize",
+    "range":{"end":{"character":13,"line":6},"start":{"character":13,"line":6}}
+  }
+}
+{
+  "command":{
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "ac_type":"Acmem",
+        "completion":"Uppercase",
+        "index":41,
+        "session_requests":null,
+        "token":null,
+        "typed_length":null
+      }
+    ],
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "title":""
+  },
+  "detail":"Uppercase",
+  "insertTextFormat":1,
+  "kind":3,
+  "label":"Uppercase",
+  "sortText":"00000000000000000300",
+  "textEdit":{
+    "newText":"Uppercase",
+    "range":{"end":{"character":13,"line":6},"start":{"character":13,"line":6}}
+  }
+}
+{
+  "command":{
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "ac_type":"Acmem",
         "completion":"Values",
-        "index":38,
+        "index":42,
         "session_requests":null,
         "token":null,
         "typed_length":null
