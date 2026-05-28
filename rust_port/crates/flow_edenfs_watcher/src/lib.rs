@@ -135,6 +135,7 @@ mod stub {
         pub defer_states: Vec<String>,
         pub max_commit_distance: isize,
         pub mergebase_with: String,
+        pub force_subprocess_mergebase: bool,
     }
 
     #[derive(Debug, Clone, PartialEq, Eq)]

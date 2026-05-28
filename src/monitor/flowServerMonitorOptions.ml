@@ -22,6 +22,10 @@ type edenfs_options = {
   edenfs_defer_states: string list;  (** States to track and defer in the EdenFS watcher *)
   edenfs_max_commit_distance: int;
       (** Skip file diff and signal a restart when a commit transition exceeds this many commits. 0 disables. *)
+  edenfs_force_subprocess_mergebase: bool;
+      (** Opt-out: when true, the watcher's mergebase computation always shells out to `sl`
+          instead of using the in-process sapling Dag + metalog path. Kill switch for the
+          flow team. Default false. *)
   edenfs_watchman_fallback: watchman_options;
       (** Watchman options to use if EdenFS watcher fails to initialize (e.g., non-Eden mount) *)
 }

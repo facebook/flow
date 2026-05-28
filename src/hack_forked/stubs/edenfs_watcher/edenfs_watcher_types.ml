@@ -78,6 +78,7 @@ type settings = {
   defer_states: string list;
   max_commit_distance: int;
   mergebase_with: string;
+  force_subprocess_mergebase: bool;
 }
 
 type changes =

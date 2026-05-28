@@ -30,6 +30,10 @@ pub struct EdenfsOptions {
     pub edenfs_defer_states: Vec<String>,
     /// Skip file diff and signal a restart when a commit transition exceeds this many commits. 0 disables.
     pub edenfs_max_commit_distance: u32,
+    /// Opt-out: when true, the watcher's mergebase computation always shells out to `sl`
+    /// instead of using the in-process sapling Dag + metalog path. Kill switch for the
+    /// flow team. Default false.
+    pub edenfs_force_subprocess_mergebase: bool,
     /// Watchman options to use if EdenFS watcher fails to initialize (e.g., non-Eden mount)
     pub edenfs_watchman_fallback: WatchmanOptions,
 }

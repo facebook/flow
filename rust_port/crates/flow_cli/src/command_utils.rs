@@ -2032,6 +2032,7 @@ pub(super) fn make_options(
                 file_watcher_edenfs_throttle_time_ms: _file_watcher_edenfs_throttle_time_ms,
                 file_watcher_edenfs_timeout: _file_watcher_edenfs_timeout,
                 file_watcher_edenfs_max_commit_distance: _file_watcher_edenfs_max_commit_distance,
+                file_watcher_edenfs_subprocess_mergebase: _file_watcher_edenfs_subprocess_mergebase,
                 file_watcher_mergebase_with: _file_watcher_mergebase_with,
                 file_watcher_mergebase_with_git: _file_watcher_mergebase_with_git,
                 file_watcher_mergebase_with_hg: _file_watcher_mergebase_with_hg,
@@ -3438,6 +3439,9 @@ pub(crate) fn choose_file_watcher(
                     Some(v) => v.parse::<u32>().unwrap_or(0),
                     None => flowconfig.options.file_watcher_edenfs_max_commit_distance,
                 },
+                edenfs_force_subprocess_mergebase: flowconfig
+                    .options
+                    .file_watcher_edenfs_subprocess_mergebase,
                 edenfs_watchman_fallback: watchman_fallback,
             })
         }

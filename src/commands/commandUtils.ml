@@ -2142,6 +2142,8 @@ let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug
             (try int_of_string v with
             | Failure _ -> 0)
           | None -> FlowConfig.file_watcher_edenfs_max_commit_distance flowconfig);
+        edenfs_force_subprocess_mergebase =
+          FlowConfig.file_watcher_edenfs_subprocess_mergebase flowconfig;
         edenfs_watchman_fallback = watchman_fallback;
       }
 

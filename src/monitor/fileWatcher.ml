@@ -894,6 +894,7 @@ end = struct
           edenfs_throttle_time_ms;
           edenfs_defer_states;
           edenfs_max_commit_distance;
+          edenfs_force_subprocess_mergebase;
           edenfs_watchman_fallback = _;
         } =
           edenfs_options
@@ -911,6 +912,7 @@ end = struct
             defer_states = edenfs_defer_states;
             max_commit_distance = edenfs_max_commit_distance;
             mergebase_with;
+            force_subprocess_mergebase = edenfs_force_subprocess_mergebase;
           }
         in
         init_thread <- Some (Lwt.return (Edenfs_watcher.init settings))

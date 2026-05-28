@@ -76,6 +76,7 @@ module Opts = struct
     file_watcher_edenfs_throttle_time_ms: int;
     file_watcher_edenfs_timeout: int;
     file_watcher_edenfs_max_commit_distance: int;
+    file_watcher_edenfs_subprocess_mergebase: bool;
     file_watcher_mergebase_with: string option;
     file_watcher_mergebase_with_git: string option;
     file_watcher_mergebase_with_hg: string option;
@@ -246,6 +247,7 @@ module Opts = struct
       file_watcher_edenfs_throttle_time_ms = 50;
       file_watcher_edenfs_timeout = 60;
       file_watcher_edenfs_max_commit_distance = 0;
+      file_watcher_edenfs_subprocess_mergebase = false;
       file_watcher_mergebase_with = None;
       file_watcher_mergebase_with_git = None;
       file_watcher_mergebase_with_hg = None;
@@ -737,6 +739,9 @@ module Opts = struct
         else
           Ok { opts with file_watcher_edenfs_max_commit_distance = v }
     )
+
+  let file_watcher_edenfs_subprocess_mergebase_parser =
+    boolean (fun opts v -> Ok { opts with file_watcher_edenfs_subprocess_mergebase = v })
 
   let file_watcher_mergebase_with_parser =
     string (fun opts v -> Ok { opts with file_watcher_mergebase_with = Some v })
@@ -1292,6 +1297,7 @@ module Opts = struct
       ("file_watcher.edenfs.throttle_time_ms", file_watcher_edenfs_throttle_time_ms_parser);
       ("file_watcher.edenfs.timeout", file_watcher_edenfs_timeout_parser);
       ("file_watcher.edenfs.max_commit_distance", file_watcher_edenfs_max_commit_distance_parser);
+      ("file_watcher.edenfs.subprocess_mergebase", file_watcher_edenfs_subprocess_mergebase_parser);
       ("file_watcher.mergebase_with", file_watcher_mergebase_with_parser);
       ("file_watcher.mergebase_with_git", file_watcher_mergebase_with_git_parser);
       ("file_watcher.mergebase_with_hg", file_watcher_mergebase_with_hg_parser);
@@ -2090,6 +2096,9 @@ let file_watcher_edenfs_throttle_time_ms c = c.options.Opts.file_watcher_edenfs_
 
 let file_watcher_edenfs_max_commit_distance c =
   c.options.Opts.file_watcher_edenfs_max_commit_distance
+
+let file_watcher_edenfs_subprocess_mergebase c =
+  c.options.Opts.file_watcher_edenfs_subprocess_mergebase
 
 let files_implicitly_include_root c = c.options.Opts.files_implicitly_include_root
 

@@ -1172,6 +1172,7 @@ pub mod edenfs_file_watcher {
                 edenfs_throttle_time_ms,
                 edenfs_defer_states,
                 edenfs_max_commit_distance,
+                edenfs_force_subprocess_mergebase,
                 edenfs_watchman_fallback: _,
             } = &self.edenfs_options;
             let settings = flow_edenfs_watcher::Settings {
@@ -1186,6 +1187,7 @@ pub mod edenfs_file_watcher {
                 defer_states: edenfs_defer_states.clone(),
                 max_commit_distance: *edenfs_max_commit_distance as isize,
                 mergebase_with: self.mergebase_with.clone(),
+                force_subprocess_mergebase: *edenfs_force_subprocess_mergebase,
             };
             *self.init_thread.lock().unwrap() =
                 Some(handle().spawn(async move { flow_edenfs_watcher::init(settings) }));
