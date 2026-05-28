@@ -1265,7 +1265,8 @@ pub(crate) mod peek {
             TokenKind::TString { .. }
             | TokenKind::TNumber { .. }
             | TokenKind::TBigint { .. }
-            | TokenKind::TLbracket => true,
+            | TokenKind::TLbracket
+            | TokenKind::TFunction => true,
             TokenKind::TPound if is_class => true,
             _ => ith_is_identifier_name(env, i),
         }

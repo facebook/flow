@@ -1072,7 +1072,8 @@ module Peek = struct
     | T_STRING _
     | T_NUMBER _
     | T_BIGINT _
-    | T_LBRACKET ->
+    | T_LBRACKET
+    | T_FUNCTION ->
       true
     | T_POUND when is_class -> true
     | _ -> ith_is_identifier_name ~i env
