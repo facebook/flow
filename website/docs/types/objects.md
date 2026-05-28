@@ -15,6 +15,10 @@ Flow supports several variants:
 - **[Inexact object types](#exact-and-inexact-object-types)**: at least a set of properties, e.g. `{a: number, ...}`.
 - **[Indexed object types](#toc-objects-as-maps)**: used as a map, e.g. `{[string]: boolean}`.
 
+:::info TypeScript comparison
+TypeScript's object types look identical but are open by default — `{x: number}` admits extra properties in TypeScript, while Flow's [exact-by-default](../flow-vs-typescript.md#toc-object-exactness) `{x: number}` rejects them. TypeScript's excess-property check only fires on direct literal assignment. The Flow spelling of TS's open shape is the inexact form `{x: number, ...}`. Two related divergences: Flow's [class/interface/object subtyping](../flow-vs-typescript.md#toc-classes-nominal) is asymmetric because classes are nominal, and combining object types uses Flow's [type-level spread](../flow-vs-typescript.md#toc-type-spread) `{...A, b: T}` rather than the TS intersection `A & {b: T}`.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use object types for plain data and simple structures. When you need methods, inheritance, or nominal typing, use [classes](./classes.md). When you need to accept both class instances and plain objects with the same shape, use [interfaces](./interfaces.md).

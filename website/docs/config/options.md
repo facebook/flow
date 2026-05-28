@@ -650,6 +650,10 @@ affects *reads*.
 
 The default value for `no_unchecked_indexed_access` is `false`.
 
+:::info TypeScript comparison
+TypeScript's `noUncheckedIndexedAccess` and Flow's `no_unchecked_indexed_access` are direct equivalents. See [Config options aligned with TypeScript](../flow-vs-typescript.md#toc-shared-options) for the full comparison.
+:::
+
 ### react.custom_jsx_typing {#toc-react-custom-jsx-typing}
 
 Type: `boolean`
@@ -855,6 +859,10 @@ try {
 
 in the above example, if the option is `true`, `catch` will be typed as
 `unknown` as it lacks an explicit type annotation.
+
+:::info TypeScript comparison
+TypeScript's `useUnknownInCatchVariables` and Flow's `use_unknown_in_catch_variables` are direct equivalents. See [Config options aligned with TypeScript](../flow-vs-typescript.md#toc-shared-options) for the full comparison.
+:::
 
 ### log.file {#toc-log-file}
 

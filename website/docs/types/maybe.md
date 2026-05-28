@@ -18,6 +18,10 @@ acceptsMaybeNumber(null);      // Works!
 acceptsMaybeNumber("42");      // Error!
 ```
 
+:::info TypeScript comparison
+Flow's `?T` shorthand has no equivalent TypeScript shorthand — it expands to `T | null | void`, the Flow spelling of TypeScript's `T | null | undefined`. See [Flow and TypeScript type spellings](../flow-vs-typescript.md#toc-type-spellings) for the full comparison.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Prefer `?T` for values that may be absent entirely (optional config, uninitialized state). Use `T | null` instead when you want to accept `null` but still require the caller to explicitly pass an argument. For optional object properties, use the `key?: T` syntax rather than `key: ?T` — see [optional properties](./objects.md#toc-optional-object-type-properties).

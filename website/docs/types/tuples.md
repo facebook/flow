@@ -10,6 +10,10 @@ Tuple types represent a fixed length list, where the elements can have different
 const pair: [string, number] = ["age", 42];
 ```
 
+:::info TypeScript comparison
+Three TS tuple forms have no direct Flow equivalent. (1) [Spreading a tuple with optional elements](../flow-vs-typescript.md#toc-tuple-spread-optional): Flow errors with "invalid tuple arity", while TS accepts the spread and, in tuple-preserving contexts, models the optional slot as `T | undefined` while keeping following positions fixed — unsound when the optional element is absent at runtime. (2) Optional unlabeled elements like `[number, string?]`: Flow requires the labeled form, `[a: number, b?: string]`. (3) The `readonly [T, S]` [shorthand](../flow-vs-typescript.md#toc-ts-only-syntax) is not supported in Flow; use `Readonly<[T, S]>` instead (TS supports both).
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use tuples over [arrays](./arrays.md) when the list has a fixed number of elements where each position has a specific meaning and potentially a different type. Use arrays when the length is variable and all elements share the same type.

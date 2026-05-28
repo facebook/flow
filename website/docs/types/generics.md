@@ -12,6 +12,10 @@ function identity<T>(value: T): T {
 }
 ```
 
+:::info TypeScript comparison
+Two divergences from TypeScript: generic type arguments [cannot be omitted](../flow-vs-typescript.md#toc-generic-default-omission) when every parameter has a default — write `Foo<>`, not `Foo`. And type parameters are [invariant by default](../flow-vs-typescript.md#toc-variance-generics), so widening `C<number>` to `C<number | string>` is rejected; opt into variance with `out T` / `in T`. TS infers variance from usage with compatibility exceptions, which can leave read-write fields with weaker static guarantees.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use generics when a function, class, or type alias needs to work across multiple types while preserving the relationship between inputs and outputs. If the type doesn't matter and you don't need to track it, use [`unknown`](./unknown.md) instead. If there are a fixed number of specific types, a [union](./unions.md) may be clearer.

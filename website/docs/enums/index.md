@@ -10,6 +10,10 @@ Unlike other features of Flow, Flow Enums exist as values at runtime, as well as
 
 To get started, see [how to enable Flow Enums in your project](#toc-enabling-enums).
 
+:::info TypeScript comparison
+Flow Enums and TypeScript's `enum` look superficially similar but differ in many details — Flow Enums are nominally typed, enforce exhaustive checking, block implicit coercion, require explicit initialization for number enums, supply methods like `.cast`, and have more definition restrictions. See [Flow and TypeScript enums comparison](../flow-vs-typescript.md#toc-flow-enums) for more.
+:::
+
 ## Benefits {#toc-benefits}
 Enums provide several benefits over existing patterns:
 

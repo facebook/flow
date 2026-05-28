@@ -37,6 +37,10 @@ function func(value: "A" | "B") {
 Inside of the `else` block we know that value must be `"B"` because it can only
 be `"A"` or `"B"` and we've removed `"A"` from the possibilities.
 
+:::info TypeScript comparison
+Both Flow and TypeScript narrow via `typeof` / `instanceof` / equality / type guards, but the rules for when a refinement is dropped diverge. See [Flow and TypeScript refinement invalidation comparison](../flow-vs-typescript.md#toc-refinement-invalidation) for more.
+:::
+
 ## Ways to refine in Flow
 
 ### `typeof` checks

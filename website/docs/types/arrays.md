@@ -10,6 +10,10 @@ Array types represent variable-length lists where all items have the same type.
 const arr: Array<number> = [1, 2, 3];
 ```
 
+:::info TypeScript comparison
+TypeScript's `readonly T[]` [shorthand](../flow-vs-typescript.md#toc-ts-only-syntax) is not supported in Flow, use `ReadonlyArray<T>` instead (TS supports both). Mutable `Array<T>` is also [invariant in Flow but covariant in TS](../flow-vs-typescript.md#toc-variance-arrays), which can block unsafe widenings that TS would accept.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use arrays when you have a variable-length list of values that all share the same type. When the list has a fixed number of elements where each position has a specific type, use [tuples](./tuples.md) instead.

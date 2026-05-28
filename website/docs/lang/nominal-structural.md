@@ -7,6 +7,10 @@ description: "How Flow uses nominal typing for classes and structural typing for
 A static type checker can use either the name (nominal typing) or the structure (structural typing)
 of types when comparing them against other types (like when checking if one is a [subtype](./subtypes.md) of another).
 
+:::info TypeScript comparison
+TypeScript is primarily structural with narrow nominal carve-outs, while Flow is structural for plain objects and functions but nominal for classes, opaque types, and Flow Enums. See [Flow and TypeScript nominal typing comparison](../flow-vs-typescript.md#toc-classes-nominal) for more.
+:::
+
 ## Nominal typing {#toc-nominal-typing}
 
 Languages like C++, Java, and Swift have primarily nominal type systems.

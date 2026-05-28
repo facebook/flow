@@ -25,6 +25,10 @@ const foo2: Serializable = new Foo(); // Works!
 const bar2: Serializable = new Bar(); // Works!
 ```
 
+:::info TypeScript comparison
+TypeScript types classes structurally, making interfaces and object types largely interchangeable. Flow diverges in three places: an [interface is not a subtype of an object type](../flow-vs-typescript.md#toc-classes-nominal) because interfaces may be backed by classes, which Flow types nominally; `implements` and `extends` [clauses must name an interface or class](../flow-vs-typescript.md#toc-implements-extends-rhs), not an arbitrary object type; and [primitives are not subtypes](../flow-vs-typescript.md#toc-primitives-interfaces) of interfaces or object types in Flow, while TS lets a `string` satisfy `{length: number}`.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use interfaces over [object types](./objects.md) when you need to accept both class instances and plain objects with the same shape. Use interfaces over [classes](./classes.md) when you want structural compatibility — any value with matching properties is assignable, regardless of which class it was constructed from.

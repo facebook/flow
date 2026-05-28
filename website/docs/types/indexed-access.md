@@ -11,6 +11,10 @@ type Person = {name: string, age: number};
 type Age = Person['age']; // number
 ```
 
+:::info TypeScript comparison
+`T[K]` indexed access works the same as TypeScript, including the use of `keyof` and unions of literal keys as the index. The [Optional Indexed Access Type](#toc-optional-indexed-access-types) `Obj?.['prop']` is Flow-only — it mirrors the runtime `?.` operator at the type level, returning `void` when the source is nullish. See [Flow-only syntactic forms](../flow-vs-typescript.md#toc-flow-only-syntax) for the full comparison.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use indexed access types to derive a property's type from an existing type rather than duplicating it. This keeps types in sync — if the source type changes, the extracted type updates automatically. For transformations across all keys, use [mapped types](./mapped-types.md) instead.

@@ -242,6 +242,10 @@ acceptsUndefined(undefined); // Works!
 acceptsUndefined(null);      // Error!
 ```
 
+:::info TypeScript comparison
+Flow has no `undefined` type — only `void`. TypeScript's `T | undefined` corresponds to Flow's `T | void`. See [void vs undefined](../flow-vs-typescript.md#toc-void-vs-undefined) for the full comparison.
+:::
+
 You can [refine](../lang/refinements.md) a value to `null` or `void` using equality checks:
 
 ```js flow-check

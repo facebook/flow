@@ -12,6 +12,10 @@ function throwIt(msg: string): empty {
 }
 ```
 
+:::info TypeScript comparison
+`empty` is Flow's bottom type — the same concept TypeScript spells `never`. See [Flow and TypeScript type spellings](../flow-vs-typescript.md#toc-type-spellings) for the full comparison.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use `empty` as the return type of functions that never return (they always throw). You can also cast to `empty` to assert exhaustiveness — if you've refined away all members of a union, the remaining value should be `empty`:

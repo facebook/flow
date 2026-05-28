@@ -10,6 +10,10 @@ Type cast expressions let you assert a value's type inline using the `as` keywor
 const x = 42 as number;
 ```
 
+:::info TypeScript comparison
+Flow's `as` only widens or asserts, while TypeScript's `as` permits unsafe downcasts that invent properties. The cast `{foo: 1} as {foo: number, bar: string}` type-checks in TypeScript (asserting a non-existent `bar`) but errors in Flow. See [as casts are stricter in Flow](../flow-vs-typescript.md#toc-as-casts) for the full comparison.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use casts to widen a value to a less specific type or to verify that a value matches an expected type at a specific point in your code. For narrowing a value to a more specific type, prefer [refinements](../lang/refinements.md) or [type guards](./type-guards.md) — casting through [`any`](./any.md) is unsafe and should be a last resort.

@@ -22,6 +22,10 @@ when it is used in an input position, and when it is used in either one.
 
 Here we'll dive deeper into each one of these cases.
 
+:::info TypeScript comparison
+Flow defaults to stricter variance than TypeScript at every position where they diverge — mutable object properties, mutable arrays, generic type parameters, and class method parameters. Variance keywords mostly align (`readonly` on properties, `in` / `out` on type parameters); `writeonly` is Flow-only, and TS's `<in out T>` has no Flow counterpart because Flow's default is already invariance. See [Flow and TypeScript variance comparison](../flow-vs-typescript.md#toc-variance) for the per-position breakdown.
+:::
+
 ## Covariance {#toc-covariance}
 
 Consider for example the type

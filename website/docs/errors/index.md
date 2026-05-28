@@ -11,6 +11,10 @@ If you are confident your code is correct, and that Flow is
 erroring too conservatively, you can suppress the error so that
 Flow does not report it.
 
+:::info TypeScript comparison
+Both Flow's `$FlowFixMe[code]` and TypeScript's `// @ts-ignore` go on the line before the error and target the next line. The difference is scope: Flow silences only the named error code, so any other error on that line still surfaces; TS silences every error on the line indiscriminately. See [Flow and TypeScript error suppression comparison](../flow-vs-typescript.md#toc-suppressions) for more.
+:::
+
 ### What is a Suppression? {#toc-what-is-a-suppression}
 
 A suppression is a special kind of comment that you can place on the line before a type

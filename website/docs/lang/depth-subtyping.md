@@ -4,6 +4,12 @@ slug: /lang/object-subtyping
 description: "How Flow handles subtyping for objects, including depth subtyping with read-only properties and width subtyping."
 ---
 
+Object types relate to one another through two complementary rules: *depth* subtyping, over the types of nested properties, and *width* subtyping, over the set of properties an object carries.
+
+:::info TypeScript comparison
+Flow defaults to stricter variance than TypeScript. Mutable object properties and mutable arrays are invariant in Flow but covariant in TS. This is what blocks `{x: number}` from unsafely widening to `{x: number | string}`. See [Flow and TypeScript variance comparison](../flow-vs-typescript.md#toc-variance) for more.
+:::
+
 ## Depth Subtyping {#toc-depth-subtyping}
 
 Assume we have two [classes](../types/classes.md), which have a subtype relationship using `extends`:

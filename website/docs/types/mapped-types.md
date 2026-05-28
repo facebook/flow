@@ -11,6 +11,10 @@ type O = {foo: number, bar: string};
 type ReadOnly = {readonly [key in keyof O]: O[key]};
 ```
 
+:::info TypeScript comparison
+Mapped types match TypeScript including distributivity, `keyof`-based source iteration, and the homomorphic `{[K in keyof T]: ...}` form.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use mapped types when you need to systematically transform every property of an existing object type — for example, making all properties optional, read-only, or wrapping their values. If you only need to change a few specific properties, [object type spread](./objects.md#object-type-spread) is simpler.

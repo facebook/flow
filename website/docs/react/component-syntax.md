@@ -10,6 +10,10 @@ description: "How to use Flow's component syntax to declare React components wit
 2. Type system support tailored specifically for writing React
 3. Better support for [React refs](https://react.dev/learn/manipulating-the-dom-with-refs)
 
+:::info TypeScript comparison
+`component` syntax is Flow-only. TypeScript models the equivalent shape with function types and `forwardRef`. Flow's compiler enforces rules that TS's function-type component model does not encode as syntax — return type fixed to `React.Node`, no `this`, no nested components, ref parameters in their dedicated position. See [Flow's component syntax](../flow-vs-typescript.md#toc-component-syntax) for the full comparison.
+:::
+
 ## Basic Usage
 You can declare a component with Component Syntax similar to how you'd declare a function:
 

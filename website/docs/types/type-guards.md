@@ -17,6 +17,10 @@ The type of this function can also be written as a type annotation:
 type PredicateFunc = (param: InputType) => param is PredicateType;
 ```
 
+:::info TypeScript comparison
+Unlike TypeScript, Flow validates the body of an `x is T` predicate function in both directions (positive and negative) and forbids parameter reassignment along the path to `return`. TypeScript checks that the predicate type relates to the parameter type but does not check the body. When only the positive direction holds, Flow has `implies x is T` (one-sided type guards) — a Flow-only feature with no TS equivalent. See [Flow's type guard bodies are validated](../flow-vs-typescript.md#toc-type-guard-validation) for the full comparison.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use type guards when built-in [refinements](../lang/refinements.md) (`typeof`, `instanceof`, equality checks) aren't sufficient to narrow a type. They let you encapsulate custom narrowing logic in a reusable function — for example, filtering arrays to a specific subtype with `.filter()`, or checking domain-specific invariants that Flow can't infer on its own. Use [one-sided type guards](#toc-one-sided-type-guards) (`implies`) when the predicate is only meaningful in the true case.

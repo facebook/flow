@@ -10,6 +10,10 @@ Opaque type aliases are type aliases that hide their underlying type outside of 
 opaque type ID = string;
 ```
 
+:::info TypeScript comparison
+Opaque types are Flow-only — TypeScript has no native equivalent. The common TS idiom is "branded types" (intersection with a private symbol-typed property), which is a userland pattern rather than a language feature. The boundary it enforces is weaker than Flow's file-scoped abstraction: TS brands are userland and forgeable with an `as` cast, and are structurally constructible when the brand key is exposed or string-keyed rather than a private `unique symbol`. See [Flow's opaque types](../flow-vs-typescript.md#toc-opaque-types) for the full comparison.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use opaque types over regular [type aliases](./aliases.md) when you need to enforce abstraction boundaries across module boundaries — for example, preventing callers from treating an `ID` as a plain `string`. Use the optional [supertype constraint](#toc-subtyping-constraints) when consumers need partial access (e.g. reading an `ID` as a `string` but not creating one from a `string`).

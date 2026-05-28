@@ -9,6 +9,10 @@ Flow uses [Local Type Inference](https://medium.com/flow-type/local-type-inferen
 Flow tries to avoid requiring type annotation for parts of programs where types can easily
 be inferred from the immediate context of an expression, variable, parameter, etc.
 
+:::info TypeScript comparison
+TypeScript infers types across module boundaries, while Flow requires annotations at the boundary (function parameters, exports) to enable parallel checks. See [Annotations are required at module boundaries](../flow-vs-typescript.md#toc-annotations-boundaries) for the full comparison.
+:::
+
 ## Variable declarations
 
 Take for example the following variable definition

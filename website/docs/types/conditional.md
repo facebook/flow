@@ -13,6 +13,10 @@ type A = IsString<string>; // 'yes'
 type B = IsString<number>; // 'no'
 ```
 
+:::info TypeScript comparison
+Conditional types match TypeScript in shape and most behaviors: distributivity over unions, `infer` on the right-hand side of `extends`, and the `[T] extends [...]` non-distributive opt-out all work the same way. The one remaining gap is `infer T extends Bound` — Flow's `infer` doesn't support a constraint clause yet. See [infer extends](../flow-vs-typescript.md#toc-infer-extends) for the full comparison.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use conditional types when a type needs to depend on another type — for example, extracting parts of a generic type or expressing return types that vary with input. For simple cases where you know the concrete types upfront, a plain [union](./unions.md) is usually clearer. For functions with multiple signatures, consider [overloads](./intersections.md#toc-intersection-of-function-types) instead.

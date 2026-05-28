@@ -6,6 +6,10 @@ description: "Reference for Flow's built-in utility types: keyof, Partial, Requi
 
 Flow provides a set of utility types to operate on other types to create new types.
 
+:::info TypeScript comparison
+Most utility types align directly with TypeScript: `Readonly`, `Pick`, `Omit`, `Record`, `Partial`, `Required`, `Exclude`, `Extract`, `NonNullable`, `Parameters`, `ReturnType`, `Awaited`, `ThisParameterType`, `OmitThisParameter`, `NoInfer`, and `keyof`. See [Concepts that transfer cleanly from TypeScript](../flow-vs-typescript.md#toc-transfer-cleanly) for more.
+:::
+
 ## `keyof T` {#toc-keys}
 
 You can extract the type of the keys from an [object type](./objects.md). Typically this will be a [union](./unions.md) of [string literal](./literals.md) types:

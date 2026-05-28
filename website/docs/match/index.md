@@ -24,6 +24,10 @@ component AgePane(
 }
 ```
 
+:::info TypeScript comparison
+`match` is Flow-only — TypeScript has no built-in pattern-matching construct. See [match expressions and statements](../flow-vs-typescript.md#toc-match) for the full comparison.
+:::
+
 ## Match Expressions
 
 Match expressions allow you to define conditional logic as an expression. They can replace nested conditional ternary expressions.

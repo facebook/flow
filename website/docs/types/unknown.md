@@ -6,6 +6,10 @@ description: "How the unknown type works in Flow as the safe supertype of all ty
 
 `unknown` is the [supertype of all types](../lang/type-hierarchy.md). All values are `unknown`, but you must [refine](../lang/refinements.md) an `unknown` value before performing any operations on it.
 
+:::info TypeScript comparison
+Flow's `unknown` is the same top type as TypeScript's `unknown`. See [Flow and TypeScript type spellings](../flow-vs-typescript.md#toc-type-spellings) for the full comparison.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use `unknown` instead of [`any`](./any.md) when you need to accept arbitrary values — `unknown` forces you to [refine](../lang/refinements.md) before use, so it is type-safe to use. If you know the set of possible types upfront, prefer a [union](./unions.md) for better specificity.

@@ -59,6 +59,10 @@ const bar: WithXNum = new B(); // Works!
 const n: number = foo.x; // Works!
 ```
 
+:::info TypeScript comparison
+TypeScript types classes structurally, while Flow types them [nominally](../flow-vs-typescript.md#toc-classes-nominal) — two distinct classes with the same shape are different types. Flow also rejects [method unbinding](../flow-vs-typescript.md#toc-method-unbinding) (`const f = c.m`) because the extracted method would lose its `this`, while TS lets the same extraction through silently. And several TS-only [class syntax extensions](../flow-vs-typescript.md#toc-class-extensions) — parameter properties, access modifiers — are not adopted in Flow, write the equivalent JS instead.
+:::
+
 ## When to use this {#toc-when-to-use}
 
 Use classes when you need methods, inheritance, or [nominal typing](../lang/nominal-structural.md) — two classes with the same shape are distinct types. When you only need to describe data shape, use [object types](./objects.md). When you need structural compatibility across classes, use [interfaces](./interfaces.md).
