@@ -1100,21 +1100,17 @@ pub fn string_of_source(strip_root: Option<&str>, source: &FileKey) -> String {
     match source.inner() {
         FileKeyInner::LibFile(_) => {
             if let Some(root) = strip_root {
-                let suffix = source.suffix();
-                let flowlib_suffix = suffix
-                    .strip_prefix(flow_parser::file_key::FLOWLIB_MARKER)
-                    .unwrap_or(suffix);
                 let file = source.to_absolute();
-                let root_str = format!("{}/", root);
-                if file.starts_with(&root_str) {
-                    format!("[LIB] {}", &file[root_str.len()..])
+                let root = std::path::Path::new(root);
+                if std::path::Path::new(&file).strip_prefix(root).is_ok() {
+                    format!("[LIB] {}", crate::files::relative_path(root, &file))
                 } else {
                     format!(
                         "[LIB] {}",
-                        std::path::Path::new(flowlib_suffix)
+                        std::path::Path::new(&file)
                             .file_name()
                             .and_then(|s| s.to_str())
-                            .unwrap_or(flowlib_suffix)
+                            .unwrap_or(&file)
                     )
                 }
             } else {
@@ -1124,12 +1120,7 @@ pub fn string_of_source(strip_root: Option<&str>, source: &FileKey) -> String {
         FileKeyInner::SourceFile(_) | FileKeyInner::JsonFile(_) | FileKeyInner::ResourceFile(_) => {
             let file = source.to_absolute();
             if let Some(root) = strip_root {
-                let root_str = format!("{}/", root);
-                if file.starts_with(&root_str) {
-                    file[root_str.len()..].to_string()
-                } else {
-                    file
-                }
+                crate::files::relative_path(std::path::Path::new(root), &file)
             } else {
                 file
             }
