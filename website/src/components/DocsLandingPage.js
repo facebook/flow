@@ -98,6 +98,20 @@ const icons = {
       <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
     </svg>
   ),
+  compare: (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round">
+      <path d="M8 3 4 7l4 4" />
+      <path d="M4 7h16" />
+      <path d="m16 21 4-4-4-4" />
+      <path d="M20 17H4" />
+    </svg>
+  ),
 };
 
 const SECTIONS = [
@@ -116,6 +130,14 @@ const SECTIONS = [
     description: 'Have a question about using Flow? Check here first!',
     icon: icons.help,
     color: '#9cd732',
+  },
+  {
+    title: 'Flow for TypeScript Users',
+    href: '/en/docs/flow-vs-typescript',
+    description:
+      'Coming from TypeScript? What transfers cleanly, what looks the same but behaves differently, and what only Flow has.',
+    icon: icons.compare,
+    color: '#ec5990',
   },
   {
     title: 'Language Guide',
@@ -184,8 +206,10 @@ export default function DocsLandingPage(): React.Node {
             href={section.href}
             className={styles.card}
             style={{'--accent': section.color}}>
-            <span className={styles.cardIcon}>{section.icon}</span>
-            <h3 className={styles.cardTitle}>{section.title}</h3>
+            <div className={styles.cardHeader}>
+              <span className={styles.cardIcon}>{section.icon}</span>
+              <h3 className={styles.cardTitle}>{section.title}</h3>
+            </div>
             <p className={styles.cardDescription}>{section.description}</p>
           </Link>
         ))}
