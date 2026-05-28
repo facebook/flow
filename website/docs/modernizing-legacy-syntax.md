@@ -16,21 +16,21 @@ The forms fall into three groups:
 
 Flow no longer recognizes these.
 
-| Legacy Flow | Removed in | Modern rewrite |
+| Legacy Flow | Modern rewrite | Removed in |
 |---|---|---|
-| `$Diff<A, B>` | 0.268.0 | Typically [`Omit<A, keyof B>`](./types/utilities.md#toc-omit) or restructuring. Not always semantically identical — handle case by case. |
-| `$Rest<A, B>` | 0.267.0 | Same status as `$Diff`. Usually replaceable with [`Omit`](./types/utilities.md#toc-omit) + [spread](./types/objects.md#object-type-spread). |
-| `$PropertyType<T, K>` | 0.266.0 | [`T[K]` (indexed access)](./types/indexed-access.md). |
-| `$ElementType<T, K>` | 0.266.0 | [`T[K]` (indexed access)](./types/indexed-access.md). |
-| `$TupleMap<T, F>` | 0.248.0 | [Mapped type](./types/mapped-types.md) with the body of `F` inlined — e.g. `$TupleMap<T, <V>(V) => Promise<V>>` becomes `{[K in keyof T]: Promise<T[K]>}`. |
-| `$TupleMapi<T, F>` | 0.248.0 | [Mapped type](./types/mapped-types.md) with key access and `F` inlined — e.g. `{[K in keyof T]: [K, T[K]]}`. |
-| `%checks` predicate functions | 0.248.0 | [Type guards](./types/type-guards.md) — e.g. `function isString(x: unknown): boolean %checks` becomes `function isString(x: unknown): x is string`. |
-| `$Call<F, ...Args>` | 0.247.0 | [`ReturnType<F>`](./types/utilities.md#toc-return-type) plus [indexed access](./types/indexed-access.md), or a [conditional type](./types/conditional.md) with `infer`. |
-| `$ObjMap<O, F>` | 0.246.0 | [Mapped type](./types/mapped-types.md) with `F` inlined — e.g. `$ObjMap<O, <V>(V) => Promise<V>>` becomes `{[K in keyof O]: Promise<O[K]>}`. |
-| `$ObjMapi<O, F>` | 0.246.0 | [Mapped type](./types/mapped-types.md) with key access and `F` inlined — e.g. `{[K in keyof O]: [K, O[K]]}`. |
-| `React.Element<typeof Foo>` | 0.245.0 | Prefer [render types](./react/render-types.md) when expressing composition constraints ("a `Menu` only renders `MenuItem`s") — that is what most uses of `React.Element<typeof Foo>` were really expressing. For generic "any element / any node" positions, use `React.MixedElement` / `React.Node`. Reach for `ExactReactElement_DEPRECATED<typeof Foo>` only as an escape hatch when exact element identity is genuinely required. |
-| `$Shape<T>` | 0.206.0 | [`Partial<T>`](./types/utilities.md#toc-partial). **Not always semantically identical** — `$Shape` was permissive about depth in ways `Partial` is not, so migrate per call site rather than blindly renaming. |
-| `$Partial<T>` | 0.203.0 | [`Partial<T>`](./types/utilities.md#toc-partial). |
+| `$Diff<A, B>` | Typically [`Omit<A, keyof B>`](./types/utilities.md#toc-omit) or restructuring. Not always semantically identical — handle case by case. | 0.268.0 |
+| `$Rest<A, B>` | Same status as `$Diff`. Usually replaceable with [`Omit`](./types/utilities.md#toc-omit) + [spread](./types/objects.md#object-type-spread). | 0.267.0 |
+| `$PropertyType<T, K>` | [`T[K]` (indexed access)](./types/indexed-access.md). | 0.266.0 |
+| `$ElementType<T, K>` | [`T[K]` (indexed access)](./types/indexed-access.md). | 0.266.0 |
+| `$TupleMap<T, F>` | [Mapped type](./types/mapped-types.md) with the body of `F` inlined — e.g. `$TupleMap<T, <V>(V) => Promise<V>>` becomes `{[K in keyof T]: Promise<T[K]>}`. | 0.248.0 |
+| `$TupleMapi<T, F>` | [Mapped type](./types/mapped-types.md) with key access and `F` inlined — e.g. `{[K in keyof T]: [K, T[K]]}`. | 0.248.0 |
+| `%checks` predicate functions | [Type guards](./types/type-guards.md) — e.g. `function isString(x: unknown): boolean %checks` becomes `function isString(x: unknown): x is string`. | 0.248.0 |
+| `$Call<F, ...Args>` | [`ReturnType<F>`](./types/utilities.md#toc-return-type) plus [indexed access](./types/indexed-access.md), or a [conditional type](./types/conditional.md) with `infer`. | 0.247.0 |
+| `$ObjMap<O, F>` | [Mapped type](./types/mapped-types.md) with `F` inlined — e.g. `$ObjMap<O, <V>(V) => Promise<V>>` becomes `{[K in keyof O]: Promise<O[K]>}`. | 0.246.0 |
+| `$ObjMapi<O, F>` | [Mapped type](./types/mapped-types.md) with key access and `F` inlined — e.g. `{[K in keyof O]: [K, O[K]]}`. | 0.246.0 |
+| `React.Element<typeof Foo>` | Prefer [render types](./react/render-types.md) when expressing composition constraints ("a `Menu` only renders `MenuItem`s") — that is what most uses of `React.Element<typeof Foo>` were really expressing. For generic "any element / any node" positions, use `React.MixedElement` / `React.Node`. Reach for `ExactReactElement_DEPRECATED<typeof Foo>` only as an escape hatch when exact element identity is genuinely required. | 0.245.0 |
+| `$Shape<T>` | [`Partial<T>`](./types/utilities.md#toc-partial). **Not always semantically identical** — `$Shape` was permissive about depth in ways `Partial` is not, so migrate per call site rather than blindly renaming. | 0.206.0 |
+| `$Partial<T>` | [`Partial<T>`](./types/utilities.md#toc-partial). | 0.203.0 |
 
 ## Deprecated {#toc-deprecated}
 
@@ -38,25 +38,25 @@ A modern equivalent exists. Some forms already error today; others still parse b
 
 ### Utility types {#toc-deprecated-utilities}
 
-| Legacy Flow | Modern Flow |
-|---|---|
-| `$Keys<T>` | [`keyof T`](./types/utilities.md#toc-keys) |
-| `$ReadOnly<T>` | [`Readonly<T>`](./types/utilities.md#toc-readonly) |
-| `$NonMaybeType<T>` | [`NonNullable<T>`](./types/utilities.md#toc-nonmaybe) |
-| `$ReadOnlyArray<T>` | `ReadonlyArray<T>` |
-| `$ReadOnlyMap<K, V>` / `$ReadOnlySet<T>` / `$ReadOnlyWeakMap<K, V>` / `$ReadOnlyWeakSet<T>` | `ReadonlyMap` / `ReadonlySet` / `ReadonlyWeakMap` / `ReadonlyWeakSet` |
-| `$Values<T>` | [`Values<T>`](./types/utilities.md#toc-values) (renamed within Flow's own utilities) |
-| `mixed` | [`unknown`](./types/unknown.md) |
+| Legacy Flow | Modern Flow | Enabled by default since |
+|---|---|---|
+| `$Keys<T>` | [`keyof T`](./types/utilities.md#toc-keys) | 0.290 |
+| `$ReadOnly<T>` | [`Readonly<T>`](./types/utilities.md#toc-readonly) | 0.290 |
+| `$NonMaybeType<T>` | [`NonNullable<T>`](./types/utilities.md#toc-nonmaybe) | 0.290 |
+| `$ReadOnlyArray<T>` | `ReadonlyArray<T>` | 0.290 |
+| `$ReadOnlyMap<K, V>` / `$ReadOnlySet<T>` / `$ReadOnlyWeakMap<K, V>` / `$ReadOnlyWeakSet<T>` | `ReadonlyMap` / `ReadonlySet` / `ReadonlyWeakMap` / `ReadonlyWeakSet` | 0.290 |
+| `$Values<T>` | [`Values<T>`](./types/utilities.md#toc-values) (renamed within Flow's own utilities) | 0.290 |
+| `mixed` | [`unknown`](./types/unknown.md) | 0.290 |
 
 ### Non-utility syntax forms {#toc-deprecated-syntax}
 
-| Legacy Flow | Modern Flow |
-|---|---|
-| `(x: T)` cast | [`x as T`](./types/casting.md) |
-| `<T: Bound>` | [`<T extends Bound>`](./types/generics.md#toc-generic-types-act-as-bounds) |
-| `{\| a: number \|}` exact | [`{a: number}` (exact is the default)](./types/objects.md#exact-and-inexact-object-types) |
-| `+foo` / `-foo` property variance sigils | [`readonly foo`](./types/objects.md#read-only-object-properties) / `writeonly foo` keywords (`writeonly` is Flow-specific) |
-| `+T` / `-T` type parameter variance sigils | [`out T` / `in T` keywords](./types/generics.md#toc-variance-sigils) |
+| Legacy Flow | Modern Flow | Enabled by default since |
+|---|---|---|
+| `(x: T)` cast | [`x as T`](./types/casting.md) | 0.229 |
+| `<T: Bound>` | [`<T extends Bound>`](./types/generics.md#toc-generic-types-act-as-bounds) | 0.302 |
+| `{\| a: number \|}` exact | [`{a: number}` (exact is the default)](./types/objects.md#exact-and-inexact-object-types) | 0.202 |
+| `+foo` / `-foo` property variance sigils | [`readonly foo`](./types/objects.md#read-only-object-properties) / `writeonly foo` keywords (`writeonly` is Flow-specific) | 0.315 |
+| `+T` / `-T` type parameter variance sigils | [`out T` / `in T` keywords](./types/generics.md#toc-variance-sigils) | 0.315 |
 
 ## Discouraged {#toc-discouraged}
 
