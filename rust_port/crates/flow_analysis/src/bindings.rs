@@ -69,8 +69,9 @@ impl<Loc: Dupe> Bindings<Loc> {
         self.0.push(entry);
     }
 
-    pub fn push(&mut self, other: Self) {
-        self.0.extend(other.0);
+    pub fn push(&mut self, mut other: Self) {
+        other.0.extend(std::mem::take(&mut self.0));
+        self.0 = other.0;
     }
 
     pub fn exists(&self, pred: impl Fn(&Entry<Loc>) -> bool) -> bool {

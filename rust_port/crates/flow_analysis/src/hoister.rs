@@ -440,6 +440,17 @@ impl<Loc: Dupe> AstVisitor<'_, Loc> for HoisterBase<Loc> {
                 }
             }
         }
+        if !self.lexical_only {
+            for declarator in decl.declarations.iter() {
+                if let ast::pattern::Pattern::Identifier { inner, .. } = &declarator.id {
+                    match kind {
+                        ast::VariableKind::Var => {}
+                        ast::VariableKind::Let => self.add_declared_let_binding(&inner.name),
+                        ast::VariableKind::Const => self.add_declared_const_binding(&inner.name),
+                    }
+                }
+            }
+        }
         Ok(())
     }
 
