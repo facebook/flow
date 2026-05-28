@@ -12846,10 +12846,10 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
             loc: _,
             inner: decl,
         } => {
-            // Check if scope is not global (import declarations are illegal at global scope)
             match scopes.get(scope) {
                 scope::Scope::Global { .. } => {
-                    // this is illegal. it should be caught in the parser.
+                    // Illegal in libdefs; errors from type_inference.rs
+                    // (EUnsupportedSyntax ToplevelLibraryImport).
                 }
                 _ => {
                     import_decl(scope, scopes, tbls, decl);
@@ -13059,58 +13059,69 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
                 is_export,
                 comments: _,
             } = inner.as_ref();
-            let id_loc = tbls.push_loc(id.loc.dupe());
-            let local = id.name.dupe();
-            match module_reference {
-                ast::statement::import_equals_declaration::ModuleReference::ExternalModuleReference(
-                    _,
-                    lit,
-                ) => {
-                    let mref = Userland::from_smol_str(lit.value.dupe());
-                    let mref = tbls.push_module_ref(mref);
-                    scope::bind_import(
-                        scope,
-                        scopes,
-                        tbls,
-                        *import_kind,
-                        id_loc,
-                        local,
-                        FlowSmolStr::new_inline("default"),
-                        mref,
-                    );
-                    if *is_export {
-                        let export_kind = match import_kind {
-                            ast::statement::ImportKind::ImportType => {
-                                ast::statement::ExportKind::ExportType
-                            }
-                            _ => ast::statement::ExportKind::ExportValue,
-                        };
-                        scope::export_ref(opts, scopes, scope, tbls, export_kind, id, None);
-                    }
+            match scopes.get(scope) {
+                scope::Scope::Global { .. } => {
+                    // Illegal in libdefs; errors from type_inference.rs
+                    // (EUnsupportedSyntax ToplevelLibraryImport). Mirrors the
+                    // ImportDeclaration guard above.
                 }
-                ast::statement::import_equals_declaration::ModuleReference::Identifier(_) => {
-                    let id_loc_for_any = id_loc.dupe();
-                    let def = Lazy::new(Box::new(move |_, _, _| {
-                        Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(id_loc_for_any))))
-                    }));
-                    scope::bind_var(
-                        scope,
-                        scopes,
-                        tbls,
-                        ast::VariableKind::Const,
-                        id_loc,
-                        local,
-                        def,
-                        |_, _, _| {},
-                    );
-                    if *is_export {
-                        let export_kind = match import_kind {
-                            ast::statement::ImportKind::ImportType => {
-                                ast::statement::ExportKind::ExportType
+                _ => {
+                    let id_loc = tbls.push_loc(id.loc.dupe());
+                    let local = id.name.dupe();
+                    match module_reference {
+                        ast::statement::import_equals_declaration::ModuleReference::ExternalModuleReference(
+                            _,
+                            lit,
+                        ) => {
+                            let mref = Userland::from_smol_str(lit.value.dupe());
+                            let mref = tbls.push_module_ref(mref);
+                            scope::bind_import(
+                                scope,
+                                scopes,
+                                tbls,
+                                *import_kind,
+                                id_loc,
+                                local,
+                                FlowSmolStr::new_inline("default"),
+                                mref,
+                            );
+                            if *is_export {
+                                let export_kind = match import_kind {
+                                    ast::statement::ImportKind::ImportType => {
+                                        ast::statement::ExportKind::ExportType
+                                    }
+                                    _ => ast::statement::ExportKind::ExportValue,
+                                };
+                                scope::export_ref(opts, scopes, scope, tbls, export_kind, id, None);
                             }
-                            _ => ast::statement::ExportKind::ExportValue,
-                        };
-                        scope::export_ref(opts, scopes, scope, tbls, export_kind, id, None);
+                        }
+                        ast::statement::import_equals_declaration::ModuleReference::Identifier(_) => {
+                            // import Foo = A.B.C: qualified name form is not supported;
+                            // bind as any so downstream code doesn't break.
+                            let id_loc_for_any = id_loc.dupe();
+                            let def = Lazy::new(Box::new(move |_, _, _| {
+                                Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(id_loc_for_any))))
+                            }));
+                            scope::bind_var(
+                                scope,
+                                scopes,
+                                tbls,
+                                ast::VariableKind::Const,
+                                id_loc,
+                                local,
+                                def,
+                                |_, _, _| {},
+                            );
+                            if *is_export {
+                                let export_kind = match import_kind {
+                                    ast::statement::ImportKind::ImportType => {
+                                        ast::statement::ExportKind::ExportType
+                                    }
+                                    _ => ast::statement::ExportKind::ExportValue,
+                                };
+                                scope::export_ref(opts, scopes, scope, tbls, export_kind, id, None);
+                            }
+                        }
                     }
                 }
             }

@@ -1,3 +1,6 @@
+[libs]
+lib
+
 [options]
 all=true
 experimental.tslib_syntax=true

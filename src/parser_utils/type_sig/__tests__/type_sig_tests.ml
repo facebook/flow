@@ -6040,6 +6040,51 @@ let%expect_test "builtin_interface_merge_with_type_alias" =
          name = "Foo"; override_binding_loc = [1:5-8];
          existing_binding_loc = [2:10-13]}) |}]
 
+let%expect_test "builtin_toplevel_import_equals" =
+  (* TypeScript `import X = require(...)` at the top level of a libdef must be
+     ignored (not bound into Global), otherwise pack_builtin crashes with
+     `unexpected remote builtin`. Same shape as `builtin_toplevel_import` but
+     exercises the ImportEqualsDeclaration parser path. *)
+  print_builtins [{|
+    declare module foo {
+      declare export var x: string;
+    }
+    import F = require('foo');
+    declare module bar {
+      declare export var y: F;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Variable {id_loc = [2:21-22]; name = "x"; def = (Annot (String [2:24-30]))}
+    1. Variable {id_loc = [6:21-22];
+         name = "y";
+         def = (TyRef (Unqualified BuiltinRef {ref_loc = [6:24-25]; type_ref = true; name = "F"}))}
+    2. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 2})) };
+         types = {}}
+
+    Builtin global value globalThis
+    Builtin module bar:
+    [5:15-18] ESModule {type_exports = [||];
+                exports = [|(ExportBinding 1)|];
+                ts_pending = [||];
+                info =
+                ESModuleInfo {type_export_keys = [||];
+                  type_stars = []; export_keys = [|"y"|];
+                  stars = []; ts_pending_keys = [||];
+                  strict = true; platform_availability_set = None}}
+    Builtin module foo:
+    [1:15-18] ESModule {type_exports = [||];
+                exports = [|(ExportBinding 0)|];
+                ts_pending = [||];
+                info =
+                ESModuleInfo {type_export_keys = [||];
+                  type_stars = []; export_keys = [|"x"|];
+                  stars = []; ts_pending_keys = [||];
+                  strict = true; platform_availability_set = None}} |}]
+
 let%expect_test "builtin_toplevel_import" =
   (* this should be a parse error, but in the meantime, make sure we don't fatal.
      the `import` gets ignored and the `x` becomes a BuiltinRef. *)

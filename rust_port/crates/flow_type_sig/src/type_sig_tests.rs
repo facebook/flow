@@ -20671,6 +20671,131 @@ Builtin global type C
 }
 
 #[test]
+fn builtin_toplevel_import_equals() {
+    // TypeScript `import X = require(...)` at the top level of a libdef must be
+    // ignored (not bound into Global), otherwise pack_builtin crashes with
+    // `unexpected remote builtin`. Same shape as `builtin_toplevel_import` but
+    // exercises the ImportEqualsDeclaration parser path.
+    let input = r#"
+        declare module foo {
+          declare export var x: string;
+        }
+        import F = require('foo');
+        declare module bar {
+          declare export var y: F;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:15-18]
+1. [2:21-22]
+2. [2:24-30]
+3. [5:15-18]
+4. [6:21-22]
+5. [6:24-25]
+6. [0:0]
+Local defs:
+0. Variable(
+    DefVariable {
+        id_loc: 1,
+        name: "x",
+        def: Annot(
+            String(
+                2,
+            ),
+        ),
+    },
+)
+1. Variable(
+    DefVariable {
+        id_loc: 4,
+        name: "y",
+        def: TyRef(
+            Unqualified(
+                BuiltinRef(
+                    PackedRefBuiltin {
+                        ref_loc: 5,
+                        type_ref: true,
+                        name: "F",
+                    },
+                ),
+            ),
+        ),
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 6,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                6,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 6,
+                            index: 2,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+Builtin global value globalThis
+Builtin module bar:
+Loc: 3
+ESModule {
+    type_exports: [],
+    exports: [
+        ExportBinding(
+            1,
+        ),
+    ],
+    ts_pending: [],
+    info: ESModuleInfo {
+        type_export_keys: [],
+        type_stars: [],
+        export_keys: [
+            "y",
+        ],
+        stars: [],
+        ts_pending_keys: [],
+        strict: true,
+        platform_availability_set: None,
+    },
+}
+Builtin module foo:
+Loc: 0
+ESModule {
+    type_exports: [],
+    exports: [
+        ExportBinding(
+            0,
+        ),
+    ],
+    ts_pending: [],
+    info: ESModuleInfo {
+        type_export_keys: [],
+        type_stars: [],
+        export_keys: [
+            "x",
+        ],
+        stars: [],
+        ts_pending_keys: [],
+        strict: true,
+        platform_availability_set: None,
+    },
+}
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
 fn builtin_toplevel_import() {
     let input = r#"
         declare module foo {

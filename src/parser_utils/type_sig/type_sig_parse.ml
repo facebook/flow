@@ -6793,7 +6793,8 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.ImportDeclaration decl ->
     (match scope with
     | Global _ ->
-      (* this is illegal. it should be caught in the parser. *)
+      (* Illegal in libdefs; errors from type_inference_js.ml
+         (EUnsupportedSyntax ToplevelLibraryImport). *)
       ()
     | _ -> import_decl opts scope tbls decl)
   | S.ExportNamedDeclaration decl ->
@@ -6940,32 +6941,39 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.NamespaceExportDeclaration _ -> ()
   | S.ImportEqualsDeclaration
       { S.ImportEqualsDeclaration.id; module_reference; import_kind; is_export; comments = _ } ->
-    let (id_loc, { Ast.Identifier.name = local; comments = _ }) = id in
-    let id_loc = push_loc tbls id_loc in
-    (match module_reference with
-    | S.ImportEqualsDeclaration.ExternalModuleReference (_, { Ast.StringLiteral.value = mref; _ })
-      ->
-      let mref = Flow_import_specifier.userland mref in
-      Scope.bind_import scope tbls import_kind id_loc ~local ~remote:"default" mref;
-      if is_export then
-        let export_kind =
-          match import_kind with
-          | S.ImportDeclaration.ImportType -> Ast.Statement.ExportType
-          | _ -> Ast.Statement.ExportValue
-        in
-        Scope.export_ref opts scope tbls export_kind ~local:id ~exported:None
-    | S.ImportEqualsDeclaration.Identifier _ ->
-      (* import Foo = A.B.C: qualified name form is not supported;
-         bind as any so downstream code doesn't break. *)
-      let def = lazy (Annot (Any id_loc)) in
-      Scope.bind_var scope tbls Ast.Variable.Const id_loc local def ignore2;
-      if is_export then
-        let export_kind =
-          match import_kind with
-          | S.ImportDeclaration.ImportType -> Ast.Statement.ExportType
-          | _ -> Ast.Statement.ExportValue
-        in
-        Scope.export_ref opts scope tbls export_kind ~local:id ~exported:None)
+    (match scope with
+    | Global _ ->
+      (* Illegal in libdefs; errors from type_inference_js.ml
+         (EUnsupportedSyntax ToplevelLibraryImport). Mirrors the
+         ImportDeclaration guard above. *)
+      ()
+    | _ ->
+      let (id_loc, { Ast.Identifier.name = local; comments = _ }) = id in
+      let id_loc = push_loc tbls id_loc in
+      (match module_reference with
+      | S.ImportEqualsDeclaration.ExternalModuleReference (_, { Ast.StringLiteral.value = mref; _ })
+        ->
+        let mref = Flow_import_specifier.userland mref in
+        Scope.bind_import scope tbls import_kind id_loc ~local ~remote:"default" mref;
+        if is_export then
+          let export_kind =
+            match import_kind with
+            | S.ImportDeclaration.ImportType -> Ast.Statement.ExportType
+            | _ -> Ast.Statement.ExportValue
+          in
+          Scope.export_ref opts scope tbls export_kind ~local:id ~exported:None
+      | S.ImportEqualsDeclaration.Identifier _ ->
+        (* import Foo = A.B.C: qualified name form is not supported;
+           bind as any so downstream code doesn't break. *)
+        let def = lazy (Annot (Any id_loc)) in
+        Scope.bind_var scope tbls Ast.Variable.Const id_loc local def ignore2;
+        if is_export then
+          let export_kind =
+            match import_kind with
+            | S.ImportDeclaration.ImportType -> Ast.Statement.ExportType
+            | _ -> Ast.Statement.ExportValue
+          in
+          Scope.export_ref opts scope tbls export_kind ~local:id ~exported:None))
   | S.DeclareModule { S.DeclareModule.id; body; comments = _ } ->
     let (loc, name) =
       match id with

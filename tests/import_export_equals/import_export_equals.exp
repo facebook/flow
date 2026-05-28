@@ -1,3 +1,12 @@
+Error ------------------------------------------------------------------------------ lib/import_equals_in_libdef.js:10:1
+
+Cannot use an import statement at the toplevel of a library file. Import statements may only appear inside a
+`declare module`. The statement will be ignored. [unsupported-syntax]
+
+   10| import F = require("lib_foo"); // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------- import_equals_declaration.js:5:1
 
 Cannot cast `Foo.x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
@@ -32,4 +41,4 @@ Cannot resolve name `Bar`. [cannot-resolve-name]
 
 
 
-Found 3 errors
+Found 4 errors
