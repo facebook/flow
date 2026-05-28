@@ -30,11 +30,11 @@ Here are some examples of primitive values:
 
 Containers become read-only and the modifier is applied deeply
 ```js
-{ f: 42 } as const; // {+f: 42}
+{ f: 42 } as const; // {readonly f: 42}
 
 [42, "hello"] as const; // Readonly<[42, "hello"]>
 
-{ f: { g: 42 } } as const; // {+f: {+g: 42}}
+{ f: { g: 42 } } as const; // {readonly f: {readonly g: 42}}
 ```
 
 Note that the effect of the modifier does not persist through variables. For example
@@ -44,7 +44,7 @@ const nonConstObject = { g: 42 };
 const constObject = { f: nonConstObject } as const;
 ```
 the type of `nonConstObject` will be `{g: number}` and the type of `constObject` will
-be `{+f: {g: number}}`. In other words, only the top-level property `f` will
+be `{readonly f: {g: number}}`. In other words, only the top-level property `f` will
 be read-only.
 
 Finally, it is an error to apply `as const` to non-literal expressions:
@@ -78,10 +78,10 @@ const STATUS = {
 } as const;
 
 type State =
-  | { +kind: typeof STATUS.INIT; }
-  | { +kind: typeof STATUS.LOADING; progress: number; }
-  | { +kind: typeof STATUS.SUCCESS; result: string; }
-  | { +kind: typeof STATUS.ERROR; msg: string; };
+  | { readonly kind: typeof STATUS.INIT; }
+  | { readonly kind: typeof STATUS.LOADING; progress: number; }
+  | { readonly kind: typeof STATUS.SUCCESS; result: string; }
+  | { readonly kind: typeof STATUS.ERROR; msg: string; };
 ```
 Without the use of `as const` the type `typeof STATUS.INIT` would be `string`, which
 would make it unsuitable as a distinguishing tag in a disjoint union.
@@ -160,7 +160,7 @@ declare function foo<X>(x: X): X;
 const x1 = foo({ f: 42 } as const);
 const x2 = foo([42, "hello"] as const);
 ```
-The variables `x1` and `x2` will have the types `{+f: 42}` and `Readonly<[42, "hello"]>`,
+The variables `x1` and `x2` will have the types `{readonly f: 42}` and `Readonly<[42, "hello"]>`,
 respectively.
 
 To avoid repeating and potentially forgetting to pass `as const`, you can use the

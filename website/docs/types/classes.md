@@ -242,7 +242,7 @@ These can only be written to in the constructor:
 
 ```js flow-check
 class MyClass {
-  +prop: number;
+  readonly prop: number;
 
   constructor() {
     this.prop = 1; // Works!

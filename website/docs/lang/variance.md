@@ -17,7 +17,7 @@ class SanFrancisco extends City {}
 
 We saw in the section on [generic types](../types/generics.md#toc-variance-sigils)
 that it is possible to
-use variance sigils to describe when a type parameter is used in an output position,
+use variance keywords to describe when a type parameter is used in an output position,
 when it is used in an input position, and when it is used in either one.
 
 Here we'll dive deeper into each one of these cases.
@@ -27,7 +27,7 @@ Here we'll dive deeper into each one of these cases.
 Consider for example the type
 ```js flow-check
 type CovariantOf<X> = {
-  +prop: X;
+  readonly prop: X;
   getter(): X;
 }
 ```
@@ -38,11 +38,11 @@ or through calls to `o.getter()`.
 Notably, there is no way to input data through the reference to the object `o`,
 given that `prop` is a readonly property.
 
-When these conditions hold, we can use the sigil `+` to annotate `X` in the definition
+When these conditions hold, we can use the `out` keyword to annotate `X` in the definition
 of `CovariantOf`:
 ```js flow-check
-type CovariantOf<+X> = {
-  +prop: X;
+type CovariantOf<out X> = {
+  readonly prop: X;
   getter(): X;
 }
 ```
@@ -101,7 +101,7 @@ const nonCovariantNoun: NonCovariantOf<Noun> = nonCovariantCity; // Error!
 What distinguishes `NonCovariantOf` from the `CovariantOf` definition is that type parameter `X` is used both
 in input and output positions, as it is being used to both read and write to
 property `prop`. Such a type parameter is called *invariant* and is the default case
-of variance, thus requiring no prepending sigil:
+of variance, thus requiring no prepending keyword:
 ```js flow-check
 type InvariantOf<X> = {
   prop: X;
@@ -124,12 +124,12 @@ a subtype of `InvariantOf<SanFrancisco>`.
 
 When a type parameter is only used in *input* positions, we say that it is used in
 a *contravariant* way. This means that it only appears in positions through which
-we write data to the structure. We use the sigil `-` to describe this kind of type
-parameters:
+we write data to the structure. We use the `in` keyword to annotate such a type
+parameter, paired with the `writeonly` keyword to mark a contravariant property:
 
 ```js flow-check
-type ContravariantOf<-X> = {
-  -prop: X;
+type ContravariantOf<in X> = {
+  writeonly prop: X;
   setter(X): void;
 };
 ```
@@ -171,34 +171,34 @@ reporting variance errors. These terms correspond directly to the variance
 concepts described above:
 
 - An **output position** is a place where a value is *read out* of a type: return
-  types, read-only properties, getter results. A type parameter marked with `+`
+  types, read-only properties, getter results. A type parameter marked with `out`
   (covariant) can only appear in output positions.
 - An **input position** is a place where a value is *written into* a type: function
   parameters, write-only properties, setter arguments. A type parameter marked
-  with `-` (contravariant) can only appear in input positions.
-- A type parameter with no sigil (invariant) can appear in both input and output
+  with `in` (contravariant) can only appear in input positions.
+- A type parameter with no keyword (invariant) can appear in both input and output
   positions.
 
 When you see an error like "Cannot use `T` in an input position because `T` is
 expected to occur only in output positions," it means you have a type parameter
-marked as covariant (`+T`) but you are using it somewhere that writes a value
+marked as covariant (`out T`) but you are using it somewhere that writes a value
 in, such as a function parameter:
 
 ```js flow-check
-type Box<+T> = {
+type Box<out T> = {
   get(): T;
   set(val: T): void; // Error: T is in an input position but is expected only in output positions
 };
 ```
 
 The fix depends on your intent: if the type genuinely needs to both read and
-write `T`, remove the `+` sigil to make `T` invariant. If the type should only
+write `T`, remove the `out` keyword to make `T` invariant. If the type should only
 produce values of type `T` (never accept them), remove the setter.
 
 ## See Also {#toc-see-also}
 
 - [Subtypes](./subtypes.md) — the underlying subtyping relationships that variance builds on
-- [Generics](../types/generics.md) — variance sigils on generic type parameters
+- [Generics](../types/generics.md) — variance keywords on generic type parameters
 - [Arrays](../types/arrays.md) — `ReadonlyArray` (covariant) vs `Array` (invariant)
 - [Interfaces](../types/interfaces.md) — covariant and contravariant interface properties
 - [Objects](../types/objects.md) — read-only and write-only object properties

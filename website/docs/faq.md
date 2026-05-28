@@ -178,7 +178,7 @@ This happens because mutable object properties are *invariantly* typed — the p
 The function argument allows `string` values in its field, but in this case Flow prevents the original object from having a `number` written to it.
 Within the body of the function you would be able to mutate the object so that the property `a` would receive a `number`, causing the type of the original object to no longer be accurate.
 
-You can fix this error by making the property [covariant](./lang/variance.md#toc-covariance) (read-only): `{+a: string | number}`.
+You can fix this error by making the property [covariant](./lang/variance.md#toc-covariance) (read-only): `{readonly a: string | number}`.
 This prevents the function body from writing to the property, making it safe to pass more restricted types to the function.
 
 As an example, this would not work:
@@ -197,8 +197,8 @@ fn(object); // Error!
 but with a covariant property you can achieve what you were looking for:
 
 ```js flow-check
-const fn = (obj: {+a: string | number}) => {
-  // obj.a = 123 NOTE! Since you are using covariant {+a: string | number}, you can't mutate it
+const fn = (obj: {readonly a: string | number}) => {
+  // obj.a = 123 NOTE! Since you are using covariant {readonly a: string | number}, you can't mutate it
   return obj;
 };
 

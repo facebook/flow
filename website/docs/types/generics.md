@@ -381,26 +381,27 @@ let bar: Item<2> = { prop: 2 };
 You must always include the brackets `<>` when using the type (just like
 parentheses for a function call).
 
-### Variance Sigils {#toc-variance-sigils}
+### Variance Keywords {#toc-variance-sigils}
 
-You can also specify the subtyping behavior of a generic via variance sigils.
-By default, generics behave invariantly, but you may add a `+` to their
-declaration to make them behave covariantly, or a `-` to their declaration to
-make them behave contravariantly. See [our docs on variance](../lang/variance.md)
-for a more information on variance in Flow.
+You can also specify the subtyping behavior of a generic via variance keywords.
+By default, generics behave invariantly, but you may add an `out` keyword
+before their declaration to make them behave covariantly, or an `in` keyword
+before their declaration to make them behave contravariantly. See
+[our docs on variance](../lang/variance.md) for a more information on variance
+in Flow.
 
-Variance sigils allow you to be more specific about how you intend to
+Variance keywords allow you to be more specific about how you intend to
 use your generics, giving Flow the power to do more precise type checking.
 For example, you may want this relationship to hold:
 
 ```js flow-check
-type GenericBox<+T> = T;
+type GenericBox<out T> = T;
 
 const x: GenericBox<number> = 3;
 x as GenericBox<number| string>;
 ```
 
-The example above could not be accomplished without the `+` variance sigil:
+The example above could not be accomplished without the `out` variance keyword:
 
 ```js flow-check
 type GenericBoxError<T> = T;
@@ -409,14 +410,18 @@ const x: GenericBoxError<number> = 3;
 x as GenericBoxError<number| string>; // Error: number | string is not compatible with number.
 ```
 
-Note that if you annotate your generic with variance sigils then Flow will
+Note that if you annotate your generic with variance keywords then Flow will
 check to make sure those types only appear in positions that make sense for
-that variance sigil. For example, you cannot declare a generic type parameter
+that variance keyword. For example, you cannot declare a generic type parameter
 to behave covariantly and use it in a contravariant position:
 
 ```js flow-check
-type NotActuallyCovariant<+T> = (T) => void; // Error
+type NotActuallyCovariant<out T> = (T) => void; // Error
 ```
+
+:::info Legacy sigil syntax
+The `out` and `in` variance keywords are enabled by default as of Flow 0.315. Older code may use the legacy `+` and `-` sigils (e.g. `<+T>` instead of `<out T>`, `<-T>` instead of `<in T>`); these are still recognized but deprecated. See [Modernizing Legacy Syntax](../modernizing-legacy-syntax.md#toc-deprecated-syntax) for migration details.
+:::
 
 ## See Also {#toc-see-also}
 

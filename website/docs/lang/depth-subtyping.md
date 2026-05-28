@@ -62,11 +62,11 @@ class Person { name: string }
 class Employee extends Person { department: string }
 
 const employee: {who: Employee} = {who: new Employee()};
-const person: {+who: Person} = employee; // OK
+const person: {readonly who: Person} = employee; // OK
 person.who = new Person(); // Error!
 ```
 
-The plus sign `+` indicates that the `who` property is [covariant](./variance.md#toc-covariance).
+The `readonly` keyword indicates that the `who` property is [covariant](./variance.md#toc-covariance).
 Using a covariant property allows us to use objects which have subtype-compatible
 values for that property. By default, object properties are invariant, which allow
 both reads and writes, but are more restrictive in the values they accept.

@@ -79,7 +79,7 @@ type Obj = Required<PartialObj>; // Same as `{foo: string}`
 
 You can add [variance](../lang/variance.md) annotations to your object properties.
 
-To mark a property as read-only, you can use the `readonly` keyword. The legacy `+` sigil is still recognized but deprecated — see [Modernizing Legacy Syntax](../modernizing-legacy-syntax.md) for migration details.
+To mark a property as read-only, you can use the `readonly` keyword.
 
 ```js flow-check
 type Obj = {
@@ -102,7 +102,7 @@ type Obj = {
 type ReadOnlyObj = Readonly<Obj>; // Same as `{readonly foo: string}`
 ```
 
-You can also mark your properties as write-only with the `writeonly` keyword. The legacy `-` sigil is still recognized but deprecated.
+You can also mark your properties as write-only with the `writeonly` keyword.
 
 ```js flow-check
 type Obj = {
@@ -114,6 +114,10 @@ function func(o: Obj) {
   o.foo = 'hi'; // Works!
 }
 ```
+
+:::info Legacy sigil syntax
+The `readonly` and `writeonly` keywords are enabled by default as of Flow 0.315. Older code may use the legacy `+` and `-` sigils (e.g. `{+foo: string}` instead of `{readonly foo: string}`, `{-foo: string}` instead of `{writeonly foo: string}`); these are still recognized but deprecated. See [Modernizing Legacy Syntax](../modernizing-legacy-syntax.md#toc-deprecated-syntax) for migration details.
+:::
 
 
 ## Object methods {#toc-object-methods}

@@ -8,7 +8,7 @@ Mapped types transform object types by iterating over their keys and producing n
 
 ```js flow-check
 type O = {foo: number, bar: string};
-type ReadOnly = {+[key in keyof O]: O[key]};
+type ReadOnly = {readonly [key in keyof O]: O[key]};
 ```
 
 ## When to use this {#toc-when-to-use}
@@ -115,17 +115,17 @@ undefined as MaybeMapped; // OK
 
 ## Property Modifiers {#toc-property-modifiers}
 
-You can also add `+` or `-` variance modifiers and the optionality modifier `?` in mapped types:
+You can also add `readonly` or `writeonly` variance modifiers and the optionality modifier `?` in mapped types:
 ```js flow-check
 type O = {foo: number, bar: string}
-type ReadOnlyPartialO = {+[key in keyof O]?: O[key]}; // = {+foo?: number, +bar?: string};
+type ReadOnlyPartialO = {readonly [key in keyof O]?: O[key]}; // = {readonly foo?: number, readonly bar?: string};
 ```
 
 When no variance nor optionality modifiers are provided and the mapped type is distributive,
 the variance and optionality are determined by the input object:
 ```js flow-check
-type O = {+foo: number, bar?: string};
-type Mapped = {[key in keyof O]: O[key]}; // = {+foo: number, bar?: string}
+type O = {readonly foo: number, bar?: string};
+type Mapped = {[key in keyof O]: O[key]}; // = {readonly foo: number, bar?: string}
 ```
 
 Otherwise, the properties are read-write and required when no property modifiers are present:
@@ -150,7 +150,7 @@ then `type_1` is allowed to be an array or tuple type.
 This feature will be especially useful if you want to map over elements of a tuple:
 
 ```js flow-check
-type Tuple = [+a: number, b?: string];
+type Tuple = [readonly a: number, b?: string];
 type MappedTuple = {[K in keyof Tuple]: Tuple[K] extends number ? boolean : string};
 const a: MappedTuple[0] = true;
 const b: MappedTuple[1] = '';
@@ -163,10 +163,10 @@ mapped[0] = true; // error: cannot-write
 For now, the only supported property modifier on array input is the optionality modifier `?`.
 
 ```js flow-check
-type Tuple = [+a: number, b?: string];
+type Tuple = [readonly a: number, b?: string];
 type Supported = {[K in keyof Tuple]?: string};
-type Unsupported1 = {+[K in keyof Tuple]: string}; // Error
-type Unsupported2 = {-[K in keyof Tuple]: string}; // Error
+type Unsupported1 = {readonly [K in keyof Tuple]: string}; // Error
+type Unsupported2 = {writeonly [K in keyof Tuple]: string}; // Error
 ```
 
 ## Adoption {#toc-adoption}

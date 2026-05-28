@@ -207,19 +207,19 @@ can add modifiers to make them covariant (read-only) or contravariant
 
 ```js flow-check
 interface MyInterface {
-  +covariant: number;     // read-only
-  -contravariant: number; // write-only
+  readonly covariant: number;      // read-only
+  writeonly contravariant: number; // write-only
 }
 ```
 
 #### Covariant (read-only) properties on interfaces {#toc-covariant-read-only-properties-on-interfaces}
 
-You can make a property covariant by adding a plus symbol `+` in front of the
+You can make a property covariant by adding the `readonly` keyword in front of the
 property name:
 
 ```js flow-check
 interface MyInterface {
-  +readOnly: number | string;
+  readonly readOnly: number | string;
 }
 ```
 
@@ -230,7 +230,7 @@ interface Invariant {
   property: number | string;
 }
 interface Covariant {
-  +readOnly: number | string;
+  readonly readOnly: number | string;
 }
 
 const x: {property: number} = {property: 42};
@@ -248,7 +248,7 @@ interface Invariant {
   property: number | string;
 }
 interface Covariant {
-  +readOnly: number | string;
+  readonly readOnly: number | string;
 }
 
 function func1(value: Invariant) {
@@ -264,12 +264,12 @@ function func2(value: Covariant) {
 
 #### Contravariant (write-only) properties on interfaces {#toc-contravariant-write-only-properties-on-interfaces}
 
-You can make a property contravariant by adding a minus symbol - in front of
+You can make a property contravariant by adding the `writeonly` keyword in front of
 the property name.
 
 ```js flow-check
 interface InterfaceName {
-  -writeOnly: number;
+  writeonly writeOnly: number;
 }
 ```
 
@@ -280,7 +280,7 @@ interface Invariant {
   property: number;
 }
 interface Contravariant {
-  -writeOnly: number;
+  writeonly writeOnly: number;
 }
 
 const numberOrString = Math.random() > 0.5 ? 42 : 'forty-two';
@@ -297,7 +297,7 @@ interface Invariant {
   property: number;
 }
 interface Contravariant {
-  -writeOnly: number;
+  writeonly writeOnly: number;
 }
 
 function func1(value: Invariant) {

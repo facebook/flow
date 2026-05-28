@@ -175,13 +175,13 @@ The label is also necessary to add a variance annotation or optionality modifier
 You can add [variance](../lang/variance.md)  annotations (to denote read-only/write-only) on labeled tuple elements, just like on object properties:
 
 ```js flow-check
-type T = [+foo: number, -bar: string];
+type T = [readonly foo: number, writeonly bar: string];
 ```
 
 This allows you to mark elements as read-only or write-only. For example:
 
 ```js flow-check
-function f(readOnlyTuple: [+foo: number, +bar: string]) {
+function f(readOnlyTuple: [readonly foo: number, readonly bar: string]) {
   const n: number = readOnlyTuple[0]; // OK to read
   readOnlyTuple[1] = 1; // ERROR! Cannot write
 }
@@ -190,7 +190,7 @@ function f(readOnlyTuple: [+foo: number, +bar: string]) {
 You can also use the [`Readonly`](./utilities.md#toc-readonly)  on tuple types as a shorthand for marking each property as read-only:
 
 ```js flow-check
-type T = Readonly<[number, string]>; // Same as `[+a: number, +b: string]`
+type T = Readonly<[number, string]>; // Same as `[readonly a: number, readonly b: string]`
 ```
 
 ## Optional tuple elements

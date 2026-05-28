@@ -98,9 +98,9 @@ Similarly, a read-only tuple is one where each element is [read-only](./tuples.m
 This means that the following are equivalent:
 ```js flow-check
 type ReadOnlyObj = {
-  +key: number,  // read-only field, marked by the `+` annotation
+  readonly key: number,  // read-only field, marked by the `readonly` keyword
 };
-type ReadOnlyTuple = [+foo: number];
+type ReadOnlyTuple = [readonly foo: number];
 ```
 &rarr;
 ```js flow-check
@@ -130,7 +130,7 @@ Additionally, other utility types, such as [spread](./objects.md#object-type-spr
 
 ```js flow-check
 type Obj = {
-  +key: number,
+  readonly key: number,
 };
 
 type MappedObj = Readonly<{...Obj, foo: string}> // Still read-only

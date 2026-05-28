@@ -171,8 +171,8 @@ instance which is retrieved using
 The definition for `React.RefSetter<T>` is roughly:
 
 ```js
-type Ref<-T> =
-  | { -current: T | null, ... }
+type Ref<in T> =
+  | { writeonly current: T | null, ... }
   | ((T | null) => unknown)
   | null
   | void;

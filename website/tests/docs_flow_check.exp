@@ -2619,9 +2619,9 @@ Cannot use `T` [1] in an input position because `T` [1] is expected to occur onl
                  ^
 
 References:
-   -:2:11
-   2| type Box<+T> = {
-                ^ [1]
+   -:2:14
+   2| type Box<out T> = {
+                   ^ [1]
 
 
 
@@ -4997,19 +4997,19 @@ References:
 Found 1 error
 
 === types/generics.md block 31 ===
-Error ----------------------------------------------------------------------------------------------------------- -:2:34
+Error ----------------------------------------------------------------------------------------------------------- -:2:37
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   -:2:34
-   2| type NotActuallyCovariant<+T> = (T) => void; // Error
-                                       ^
+   -:2:37
+   2| type NotActuallyCovariant<out T> = (T) => void; // Error
+                                          ^
 
 References:
-   -:2:28
-   2| type NotActuallyCovariant<+T> = (T) => void; // Error
-                                 ^ [1]
+   -:2:31
+   2| type NotActuallyCovariant<out T> = (T) => void; // Error
+                                    ^ [1]
 
 
 
@@ -5694,16 +5694,16 @@ Error --------------------------------------------------------------------------
 
 Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
 
-   4| type Unsupported1 = {+[K in keyof Tuple]: string}; // Error
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   4| type Unsupported1 = {readonly [K in keyof Tuple]: string}; // Error
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------------- -:5:21
 
 Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
 
-   5| type Unsupported2 = {-[K in keyof Tuple]: string}; // Error
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   5| type Unsupported2 = {writeonly [K in keyof Tuple]: string}; // Error
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -6903,9 +6903,9 @@ Cannot assign `1` to `readOnlyTuple[1]` because number [1] is incompatible with 
                            ^ [1]
 
 References:
-   -:2:48
-   2| function f(readOnlyTuple: [+foo: number, +bar: string]) {
-                                                     ^^^^^^ [2]
+   -:2:64
+   2| function f(readOnlyTuple: [readonly foo: number, readonly bar: string]) {
+                                                                     ^^^^^^ [2]
 
 
 
