@@ -1340,6 +1340,7 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with no_unchecked_indexed_access = v })
       );
       ("node_modules_errors", boolean (fun opts v -> Ok { opts with node_modules_errors = v }));
+      ("pattern_matching", boolean (fun opts v -> Ok { opts with pattern_matching = Some v }));
       ( "react.custom_jsx_typing",
         boolean (fun opts v -> Ok { opts with react_custom_jsx_typing = v })
       );

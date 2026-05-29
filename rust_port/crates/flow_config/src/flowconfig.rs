@@ -2251,6 +2251,7 @@ pub mod opts {
             "no_flowlib",
             "no_unchecked_indexed_access",
             "node_modules_errors",
+            "pattern_matching",
             "react.custom_jsx_typing",
             "react.ref_as_prop",
             "react.runtime",
@@ -2879,6 +2880,14 @@ pub mod opts {
                 "node_modules_errors" => Some(parse_boolean(
                     |opts, v| {
                         opts.node_modules_errors = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
+                "pattern_matching" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.pattern_matching = Some(v);
                         Ok(())
                     },
                     values,
