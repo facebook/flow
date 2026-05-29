@@ -1400,11 +1400,6 @@ fn mk_merge_env(tps: FlowOrdMap<FlowSmolStr, Type>) -> MergeEnv {
     }
 }
 
-/* Build a Type.Method property from a Nel of overload representations. The
-intersection is built so that overloads end up in source order (the storage
-Nel is in reverse source order), and the key_loc is the id_loc of the first
-source overload (= the last visited). Mirrors how InterfaceMethod overloads
-were already merged in the [merge_interface_prop] path. */
 fn merge_overloaded_methods<M>(
     ms: &Vec1<M>,
     merge_one: impl Fn(&M) -> Type,

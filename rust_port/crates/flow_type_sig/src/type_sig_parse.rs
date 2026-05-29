@@ -2511,8 +2511,8 @@ pub(super) mod scope {
                 InterfaceProp::InterfaceMethod(old_sigs),
                 InterfaceProp::InterfaceMethod(new_sigs),
             ) => {
-                let mut merged: Vec<_> = old_sigs.iter().cloned().collect();
-                merged.extend(new_sigs.iter().cloned());
+                let mut merged: Vec<_> = new_sigs.iter().cloned().collect();
+                merged.extend(old_sigs.iter().cloned());
                 let merged = Vec1::try_from_vec(merged).unwrap();
                 Some(InterfaceProp::InterfaceMethod(Box::new(merged)))
             }
@@ -2612,8 +2612,10 @@ pub(super) mod scope {
                     ) = (e.get(), new_prop)
                     {
                         // merge overloads
-                        let mut merged: Vec<_> = old_sigs.iter().cloned().collect();
-                        merged.extend(new_sigs.iter().cloned());
+                        // OCaml: Some (InterfaceMethod (Nel.append old_sigs new_sigs))
+                        // Method Vecs store the OCaml Nel reversed, so append is new then old.
+                        let mut merged: Vec<_> = new_sigs.iter().cloned().collect();
+                        merged.extend(old_sigs.iter().cloned());
                         let merged = Vec1::try_from_vec(merged).unwrap();
                         *e.get_mut() = InterfaceProp::InterfaceMethod(Box::new(merged));
                     } else {

@@ -19654,23 +19654,6 @@ Local defs:
                 "bar": InterfaceMethod(
                     [
                         (
-                            2,
-                            1,
-                            FunSig {
-                                tparams: Mono,
-                                params: [],
-                                rest_param: None,
-                                this_param: None,
-                                return_: Annot(
-                                    String(
-                                        3,
-                                    ),
-                                ),
-                                type_guard: None,
-                                effect_: ArbitraryEffect,
-                            },
-                        ),
-                        (
                             5,
                             4,
                             FunSig {
@@ -19681,6 +19664,23 @@ Local defs:
                                 return_: Annot(
                                     Number(
                                         6,
+                                    ),
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        ),
+                        (
+                            2,
+                            1,
+                            FunSig {
+                                tparams: Mono,
+                                params: [],
+                                rest_param: None,
+                                this_param: None,
+                                return_: Annot(
+                                    String(
+                                        3,
                                     ),
                                 ),
                                 type_guard: None,
