@@ -12724,7 +12724,7 @@ fn assignment<'arena: 'ast, 'ast>(
                     if let ast::expression::member::Property::PropertyIdentifier(prop_id) =
                         &member.property
                     {
-                        let id_loc = tbls.push_loc(id.loc.dupe());
+                        let id_loc = tbls.push_loc(prop_id.loc.dupe());
                         let t =
                             expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, &a.right);
                         scope::assign_binding(
