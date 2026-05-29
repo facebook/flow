@@ -1,3 +1,8 @@
+### 0.316.0
+
+Likely to cause new Flow errors:
+* `deprecated-type` and `deprecated-type-bool` errors are now always on (the lints were on by default already). Update any references of the type `bool` to `boolean`, and delete references to the lints in your `.flowconfig` and `flowlint` comments — the setting is a no-op for this release and will be removed in a future release.
+
 ### 0.315.0
 
 Misc:
