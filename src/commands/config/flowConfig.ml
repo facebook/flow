@@ -134,7 +134,6 @@ module Opts = struct
     node_resolver_root_relative_dirnames: (string option * string) list;
     opaque_type_new_bound_syntax: bool;
     pattern_matching: bool option;
-    pattern_matching_instance_patterns: bool option;
     projects: string list;
     projects_overlap_mapping: SSet.t SMap.t;
     projects_path_mapping: (string * string list) list;
@@ -305,7 +304,6 @@ module Opts = struct
       node_resolver_root_relative_dirnames = [(None, "")];
       opaque_type_new_bound_syntax = false;
       pattern_matching = None;
-      pattern_matching_instance_patterns = None;
       projects = ["default"];
       projects_overlap_mapping = SMap.empty;
       projects_path_mapping = [];
@@ -1219,9 +1217,6 @@ module Opts = struct
       );
       ( "experimental.pattern_matching",
         boolean (fun opts v -> Ok { opts with pattern_matching = Some v })
-      );
-      ( "experimental.pattern_matching.instance_patterns",
-        boolean (fun opts v -> Ok { opts with pattern_matching_instance_patterns = Some v })
       );
       ("experimental.projects", projects_parser);
       ( "experimental.projects.strict_boundary",
@@ -2209,8 +2204,6 @@ let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_r
 let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
 
 let pattern_matching c = c.options.Opts.pattern_matching
-
-let pattern_matching_instance_patterns c = c.options.Opts.pattern_matching_instance_patterns
 
 let projects c = Nel.of_list_exn c.options.Opts.projects
 

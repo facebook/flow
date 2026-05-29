@@ -123,7 +123,6 @@ let stub_metadata ~root ~checked =
     enable_enums = true;
     enable_jest_integration = false;
     enable_pattern_matching = true;
-    enable_pattern_matching_instance_patterns = true;
     enable_records = true;
     enable_relay_integration = false;
     facebook_fbs = None;

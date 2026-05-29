@@ -17,13 +17,5 @@ Records are not enabled. [unsupported-syntax]
                 ^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- error/error.js:9:3
 
-`match` instance patterns are not supported. [unsupported-syntax]
-
-   9|   R {...} => {} // ERROR
-        ^^^^^^^
-
-
-
-Found 3 errors
+Found 2 errors

@@ -380,8 +380,6 @@ end = struct
       (pattern_union, next_i)
     | ObjectPattern x ->
       object_pattern cx ~raise_errors ~reason ~next_i ~pattern_union ~guarded ~class_info:None x
-    | InstancePattern _ when not @@ Context.enable_pattern_matching_instance_patterns cx ->
-      (pattern_union, next_i)
     | InstancePattern { InstancePattern.constructor; properties = (_, properties); _ } ->
       let (constructor_t, constructor_name) =
         match constructor with
@@ -731,34 +729,31 @@ end = struct
               Some reason
           in
           let class_info =
-            if Context.enable_pattern_matching_instance_patterns cx then
-              let rec get_super_ids acc t =
-                match singleton_concrete_type cx t with
-                | Type.DefT
-                    ( _,
-                      Type.InstanceT
-                        {
-                          Type.inst =
-                            {
-                              Type.inst_kind = Type.ClassKind | Type.RecordKind _;
-                              class_id = super_class_id;
-                              _;
-                            };
-                          super;
-                          _;
-                        }
-                    ) ->
-                  if ALoc.equal_id super_class_id class_id || ALocIDSet.mem super_class_id acc then
-                    (* Recursive extends: stop looping *)
-                    acc
-                  else
-                    let acc = ALocIDSet.add super_class_id acc in
-                    get_super_ids acc super
-                | _ -> acc
-              in
-              Some (class_id, class_name, get_super_ids ALocIDSet.empty super)
-            else
-              None
+            let rec get_super_ids acc t =
+              match singleton_concrete_type cx t with
+              | Type.DefT
+                  ( _,
+                    Type.InstanceT
+                      {
+                        Type.inst =
+                          {
+                            Type.inst_kind = Type.ClassKind | Type.RecordKind _;
+                            class_id = super_class_id;
+                            _;
+                          };
+                        super;
+                        _;
+                      }
+                  ) ->
+                if ALoc.equal_id super_class_id class_id || ALocIDSet.mem super_class_id acc then
+                  (* Recursive extends: stop looping *)
+                  acc
+                else
+                  let acc = ALocIDSet.add super_class_id acc in
+                  get_super_ids acc super
+              | _ -> acc
+            in
+            Some (class_id, class_name, get_super_ids ALocIDSet.empty super)
           in
           let obj =
             ( reason,

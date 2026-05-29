@@ -249,8 +249,6 @@ val opaque_type_new_bound_syntax : config -> bool
 
 val pattern_matching : config -> bool option
 
-val pattern_matching_instance_patterns : config -> bool option
-
 val projects : config -> string Nel.t
 
 val projects_overlap_mapping : config -> SSet.t SMap.t

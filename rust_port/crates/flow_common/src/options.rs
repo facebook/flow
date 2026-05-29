@@ -188,7 +188,6 @@ pub struct Options {
     pub enable_custom_error: bool,
     pub enable_jest_integration: bool,
     pub enable_pattern_matching: bool,
-    pub enable_pattern_matching_instance_patterns: bool,
     pub enable_records: bool,
     pub enable_relay_integration: bool,
     pub enabled_rollouts: Arc<BTreeMap<String, String>>,

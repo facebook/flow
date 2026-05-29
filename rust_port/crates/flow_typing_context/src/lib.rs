@@ -170,7 +170,6 @@ pub struct FrozenMetadata {
     pub enable_enums: bool,
     pub enable_jest_integration: bool,
     pub enable_pattern_matching: bool,
-    pub enable_pattern_matching_instance_patterns: bool,
     pub enable_records: bool,
     pub enable_relay_integration: bool,
     pub facebook_fbs: Option<FlowSmolStr>,
@@ -237,7 +236,6 @@ impl Default for FrozenMetadata {
             enable_enums: true,
             enable_jest_integration: false,
             enable_pattern_matching: false,
-            enable_pattern_matching_instance_patterns: false,
             enable_records: false,
             enable_relay_integration: false,
             facebook_fbs: None,
@@ -654,8 +652,6 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             enable_enums: options.enums,
             enable_jest_integration: options.enable_jest_integration,
             enable_pattern_matching: options.enable_pattern_matching,
-            enable_pattern_matching_instance_patterns: options
-                .enable_pattern_matching_instance_patterns,
             enable_records: options.enable_records,
             enable_relay_integration: options.enable_relay_integration,
             facebook_fbs: options.facebook_fbs.dupe(),
@@ -1126,17 +1122,6 @@ impl<'cx> Context<'cx> {
 
     pub fn enable_pattern_matching(&self) -> bool {
         self.0.metadata.frozen.enable_pattern_matching
-    }
-
-    pub fn enable_pattern_matching_instance_patterns(&self) -> bool {
-        self.0
-            .metadata
-            .frozen
-            .enable_pattern_matching_instance_patterns
-            && match &self.0.metadata.frozen.records_includes[..] {
-                [] => true,
-                dirs => self.in_dirlist(dirs),
-            }
     }
 
     pub fn enable_records(&self) -> bool {

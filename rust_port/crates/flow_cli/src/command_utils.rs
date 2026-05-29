@@ -2090,7 +2090,6 @@ pub(super) fn make_options(
                 node_resolver_root_relative_dirnames,
                 opaque_type_new_bound_syntax,
                 pattern_matching,
-                pattern_matching_instance_patterns,
                 projects,
                 projects_overlap_mapping,
                 projects_path_mapping,
@@ -2211,8 +2210,6 @@ pub(super) fn make_options(
     };
     let enable_const_params = enable_const_params.unwrap_or(false);
     let enable_pattern_matching = pattern_matching.unwrap_or(false);
-    let enable_pattern_matching_instance_patterns =
-        pattern_matching_instance_patterns.unwrap_or(false);
     let enable_records = records.unwrap_or(false);
     let estimate_recheck_time = estimate_recheck_time_override
         .or(estimate_recheck_time)
@@ -2682,7 +2679,6 @@ pub(super) fn make_options(
         enable_custom_error,
         enable_jest_integration,
         enable_pattern_matching,
-        enable_pattern_matching_instance_patterns,
         enable_records,
         enable_relay_integration,
         enabled_rollouts,

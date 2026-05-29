@@ -101,7 +101,6 @@ type metadata = {
   enable_enums: bool;
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
-  enable_pattern_matching_instance_patterns: bool;
   enable_records: bool;
   enable_relay_integration: bool;
   facebook_fbs: string option;
@@ -221,8 +220,6 @@ val enable_enums : t -> bool
 val enable_jest_integration : t -> bool
 
 val enable_pattern_matching : t -> bool
-
-val enable_pattern_matching_instance_patterns : t -> bool
 
 val enable_records : t -> bool
 

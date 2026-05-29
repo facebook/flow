@@ -682,23 +682,6 @@ fn pattern_<'a>(
                 inner: typed_op.into(),
             }
         }
-        match_pattern::MatchPattern::InstancePattern { loc, inner }
-            if !cx.enable_pattern_matching_instance_patterns() =>
-        {
-            flow_js::add_output_non_speculating(
-                cx,
-                ErrorMessage::EUnsupportedSyntax(Box::new((
-                    loc.dupe(),
-                    intermediate_error_types::UnsupportedSyntax::MatchInstancePattern,
-                ))),
-            );
-            let mut mapper = ErrorMapper;
-            let Ok(typed_ip) = polymorphic_ast_mapper::match_instance_pattern(&mut mapper, inner);
-            match_pattern::MatchPattern::InstancePattern {
-                loc: loc.dupe(),
-                inner: typed_ip.into(),
-            }
-        }
         match_pattern::MatchPattern::InstancePattern { loc, inner } => {
             let typed_constructor = match &inner.constructor {
                 match_pattern::InstancePatternConstructor::IdentifierConstructor(id) => {

@@ -51,7 +51,6 @@ type metadata = {
   enable_enums: bool;
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
-  enable_pattern_matching_instance_patterns: bool;
   enable_records: bool;
   enable_relay_integration: bool;
   facebook_fbs: string option;
@@ -356,8 +355,6 @@ let metadata_of_options options =
     enable_enums = Options.enums options;
     enable_jest_integration = Options.enable_jest_integration options;
     enable_pattern_matching = Options.enable_pattern_matching options;
-    enable_pattern_matching_instance_patterns =
-      Options.enable_pattern_matching_instance_patterns options;
     enable_records = Options.enable_records options;
     enable_relay_integration = Options.enable_relay_integration options;
     facebook_fbs = Options.facebook_fbs options;
@@ -629,13 +626,6 @@ let enable_enums cx = cx.metadata.enable_enums
 let enable_jest_integration cx = cx.metadata.enable_jest_integration
 
 let enable_pattern_matching cx = cx.metadata.enable_pattern_matching
-
-let enable_pattern_matching_instance_patterns cx =
-  cx.metadata.enable_pattern_matching_instance_patterns
-  &&
-  match cx.metadata.records_includes with
-  | [] -> true
-  | dirs -> in_dirlist cx dirs
 
 let enable_records cx =
   cx.metadata.enable_records

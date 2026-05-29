@@ -166,7 +166,6 @@ pub mod opts {
         pub node_resolver_root_relative_dirnames: Vec<(Option<String>, String)>,
         pub opaque_type_new_bound_syntax: bool,
         pub pattern_matching: Option<bool>,
-        pub pattern_matching_instance_patterns: Option<bool>,
         pub projects: Vec<FlowSmolStr>,
         pub projects_overlap_mapping: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         pub projects_path_mapping: Vec<(String, Vec<FlowSmolStr>)>,
@@ -327,7 +326,6 @@ pub mod opts {
             node_resolver_root_relative_dirnames: vec![(None, String::new())],
             opaque_type_new_bound_syntax: false,
             pattern_matching: None,
-            pattern_matching_instance_patterns: None,
             projects: vec![FlowSmolStr::new_inline("default")],
             projects_overlap_mapping: BTreeMap::new(),
             projects_path_mapping: Vec::new(),
@@ -2185,7 +2183,6 @@ pub mod opts {
             "experimental.multi_platform.extension_group_mapping",
             "experimental.opaque_type_new_bound_syntax",
             "experimental.pattern_matching",
-            "experimental.pattern_matching.instance_patterns",
             "experimental.projects",
             "experimental.projects.strict_boundary",
             "experimental.projects.strict_boundary.import_pattern_opt_outs",
@@ -2504,14 +2501,6 @@ pub mod opts {
                 "experimental.pattern_matching" => Some(parse_boolean(
                     |opts, v| {
                         opts.pattern_matching = Some(v);
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.pattern_matching.instance_patterns" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.pattern_matching_instance_patterns = Some(v);
                         Ok(())
                     },
                     values,

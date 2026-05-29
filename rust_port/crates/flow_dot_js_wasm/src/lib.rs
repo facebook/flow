@@ -179,7 +179,6 @@ fn config_options(config: Option<&Value>) -> Options {
         component_syntax: true,
         enable_const_params: bool_config(config, "experimental.const_params", false),
         enable_pattern_matching: true,
-        enable_pattern_matching_instance_patterns: true,
         enable_records: true,
         enums: bool_config(config, "enums", true),
         hook_compatibility: true,

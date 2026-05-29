@@ -599,45 +599,39 @@ pub mod pattern_union_builder {
                 inner,
             ),
             MatchPattern::InstancePattern { inner, .. } => {
-                if !cx.enable_pattern_matching_instance_patterns() {
-                    (pattern_union, next_i)
-                } else {
-                    use flow_parser::ast::match_pattern::InstancePatternConstructor;
-                    use flow_parser::ast::match_pattern::member_pattern::Property as MemberProperty;
-                    let (constructor_t, constructor_name): (&Type, Option<FlowSmolStr>) =
-                        match &inner.constructor {
-                            InstancePatternConstructor::IdentifierConstructor(id) => {
-                                let (_, ref t) = id.loc;
-                                (t, Some(id.name.dupe()))
-                            }
-                            InstancePatternConstructor::MemberConstructor(member) => {
-                                let (_, ref t) = member.loc;
-                                match &member.property {
-                                    MemberProperty::PropertyIdentifier(id) => {
-                                        (t, Some(id.name.dupe()))
-                                    }
-                                    _ => (t, None),
-                                }
-                            }
-                        };
-                    match get_class_info(cx, constructor_t) {
-                        Some((class_id, class_name)) => {
-                            let class_name = constructor_name.or(class_name);
-                            let class_info = Some((class_id, class_name));
-                            let (_, ref properties) = inner.properties;
-                            object_pattern(
-                                cx,
-                                raise_errors,
-                                &reason,
-                                next_i,
-                                pattern_union,
-                                guarded,
-                                class_info,
-                                properties,
-                            )
+                use flow_parser::ast::match_pattern::InstancePatternConstructor;
+                use flow_parser::ast::match_pattern::member_pattern::Property as MemberProperty;
+                let (constructor_t, constructor_name): (&Type, Option<FlowSmolStr>) =
+                    match &inner.constructor {
+                        InstancePatternConstructor::IdentifierConstructor(id) => {
+                            let (_, ref t) = id.loc;
+                            (t, Some(id.name.dupe()))
                         }
-                        None => (pattern_union, next_i),
+                        InstancePatternConstructor::MemberConstructor(member) => {
+                            let (_, ref t) = member.loc;
+                            match &member.property {
+                                MemberProperty::PropertyIdentifier(id) => (t, Some(id.name.dupe())),
+                                _ => (t, None),
+                            }
+                        }
+                    };
+                match get_class_info(cx, constructor_t) {
+                    Some((class_id, class_name)) => {
+                        let class_name = constructor_name.or(class_name);
+                        let class_info = Some((class_id, class_name));
+                        let (_, ref properties) = inner.properties;
+                        object_pattern(
+                            cx,
+                            raise_errors,
+                            &reason,
+                            next_i,
+                            pattern_union,
+                            guarded,
+                            class_info,
+                            properties,
+                        )
                     }
+                    None => (pattern_union, next_i),
                 }
             }
         }
@@ -1096,16 +1090,11 @@ mod value_union_builder {
                                     Some(reason.dupe())
                                 }
                             };
-                            // let class_info =
-                            //   if Context.enable_pattern_matching_instance_patterns cx then
-                            //     ...
-                            //   else
-                            //     None
                             let class_info: Option<(
                                 ALocId,
                                 Option<FlowSmolStr>,
                                 FlowOrdSet<ALocId>,
-                            )> = if cx.enable_pattern_matching_instance_patterns() {
+                            )> = {
                                 // let rec get_super_ids acc t =
                                 fn get_super_ids<'cx>(
                                     cx: &Context<'cx>,
@@ -1150,8 +1139,6 @@ mod value_union_builder {
                                     class_name.as_ref().map(|n| n.dupe()),
                                     get_super_ids(cx, class_id, FlowOrdSet::default(), super_),
                                 ))
-                            } else {
-                                None
                             };
                             let obj_value = value_object::ValueObject(
                                 reason.dupe(),
