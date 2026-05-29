@@ -283,11 +283,11 @@ export const genericArray: Array<string> = array.map(a => a)
 
 ## I'm coming from TypeScript. What's different?
 
-Flow and TypeScript share most of the same syntax, much of the same vocabulary, and a large set of overlapping concepts — conditional and mapped types, `keyof`, `as const`, `unknown`, `Readonly`, generics, and `param is T` type guards. The convergence is largely intentional: Flow's syntax has shifted to align with TypeScript's over the past several years, so if you know TypeScript your intuition will get you most of the way through a Flow program.
+Flow and TypeScript share most of the same syntax, much of the same vocabulary, and a large set of overlapping concepts (conditional and mapped types, `keyof`, `as const`, `unknown`, `Readonly`, generics, and `param is T` type guards). The convergence is largely intentional: Flow's syntax has shifted to align with TypeScript's over the past several years, so if you know TypeScript your intuition will get you most of the way through a Flow program.
 
-Where the two diverge, the divergence is usually a deliberate Flow choice in favor of stronger static guarantees — Flow rejects a number of patterns that TypeScript accepts but that can throw at runtime or leave the program with inaccurate static types. React is the other notable area where Flow does not mirror TypeScript: Flow ships first-class `component`, `hook`, and `renders` syntax.
+Where the two diverge, the divergence is usually a deliberate Flow choice in favor of stronger static guarantees. Flow rejects a number of patterns that TypeScript accepts but that can throw at runtime, silently corrupt values, or cause logic bugs. React is the other notable area where Flow does not mirror TypeScript: Flow ships first-class `component`, `hook`, and `renders` syntax.
 
-See [Flow for TypeScript Users](./flow-vs-typescript.md) for the full comparison, organized in four buckets: what transfers cleanly, shared concepts with different rules, Flow-only concepts, and TypeScript-only features.
+See [Flow for TypeScript Users](./flow-vs-typescript.md) for the full comparison, organized in four sections: what transfers cleanly, shared concepts with different rules, Flow-only concepts, and TypeScript-only features.
 
 ## See Also {#toc-see-also}
 
