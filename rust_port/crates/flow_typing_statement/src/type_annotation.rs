@@ -1158,9 +1158,25 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::Conditional { loc, inner } => {
+            let distributive_tparam_restore = {
+                use flow_parser::ast::types::TypeInner;
+                use flow_parser::ast::types::generic::Identifier as GenericId;
+                match inner.check_type.deref() {
+                    TypeInner::Generic { inner, .. }
+                        if let GenericId::Unqualified(ref ident) = inner.id
+                            && inner.targs.is_none() =>
+                    {
+                        let subst_name = SubstName::name(ident.name.dupe());
+                        env.tparams_map
+                            .get(&subst_name)
+                            .map(|t| (subst_name, t.dupe()))
+                    }
+                    _ => None,
+                }
+            };
             let distributive_tparam_name =
                 use_distributive_tparam_name_from_ast(cx, &inner.check_type, &mut env.tparams_map);
-            let check_type_ast = convert_inner(cx, env, &inner.check_type)?;
+            let check_type_ast = convert_inner(cx, &mut *env, &inner.check_type)?;
             let check_t = check_type_ast.loc().1.dupe();
             let hoisted_infer_types =
                 flow_analysis::infer_type_hoister::hoist_infer_types(&inner.extends_type);
@@ -1175,7 +1191,7 @@ fn convert_inner<'a>(
                     std::mem::replace(&mut env.infer_tparams_map, Rc::new(ALocMap::new()));
                 let (tparam_tast, tparam, t) = mk_type_param_inner(
                     cx,
-                    env,
+                    &mut *env,
                     flow_parser::ast_visitor::TypeParamsContext::Infer,
                     &infer.tparam,
                 )?;
@@ -1213,18 +1229,32 @@ fn convert_inner<'a>(
                 &mut env.infer_tparams_map,
                 Rc::new(extends_infer_tparams_map),
             );
-            let extends_type_ast = convert_inner(cx, env, &inner.extends_type)?;
+            let extends_type_ast = convert_inner(cx, &mut *env, &inner.extends_type)?;
             let extends_t = extends_type_ast.loc().1.dupe();
             env.infer_tparams_map = old_infer_tparams_map;
-            let old_tparams_map = env.tparams_map.dupe();
+            let mut old_true_tparams = Vec::new();
             for (k, v) in additional_true_type_tparams_map.iter() {
+                let old = env.tparams_map.get(k).map(|v| v.dupe());
                 env.tparams_map.insert(k.dupe(), v.dupe());
+                old_true_tparams.push((k.dupe(), old));
             }
-            let true_type_ast = convert_inner(cx, env, &inner.true_type)?;
+            let true_type_ast = convert_inner(cx, &mut *env, &inner.true_type)?;
             let true_t = true_type_ast.loc().1.dupe();
-            env.tparams_map = old_tparams_map;
-            let false_type_ast = convert_inner(cx, env, &inner.false_type)?;
+            for (k, v) in old_true_tparams.into_iter().rev() {
+                match v {
+                    Some(v) => {
+                        env.tparams_map.insert(k, v);
+                    }
+                    None => {
+                        env.tparams_map.remove(&k);
+                    }
+                }
+            }
+            let false_type_ast = convert_inner(cx, &mut *env, &inner.false_type)?;
             let false_t = false_type_ast.loc().1.dupe();
+            if let Some((subst_name, t)) = distributive_tparam_restore {
+                env.tparams_map.insert(subst_name, t);
+            }
             let reason = reason::mk_reason(reason::VirtualReasonDesc::RConditionalType, loc.dupe());
             let destructor =
                 type_::Destructor::ConditionalType(Box::new(DestructorConditionalTypeData {
